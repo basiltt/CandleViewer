@@ -151,6 +151,10 @@ CandleViewer/
 
 ## 3. How to pick up a ticket
 
+> **Cadence:** 1-week sprints, Fri→Thu; Sprint 01 = 2026-09-25; GA cut = 2027-03-25 (owner decision 2026-09-24 —
+> delivery is executed by parallel AI agents; 90 story points/sprint unchanged). The board's `Sprint`, `Start`
+> and `Due` fields are derived from `docs/plan/backlog/_tools/calendar_cv.py`; do not hand-edit dates.
+
 ```mermaid
 flowchart TD
   A[Assigned issue] --> B[Read issue + linked plan docs]

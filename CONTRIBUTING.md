@@ -92,7 +92,7 @@ cd services/api && ruff check . && black --check . && mypy --strict . && pytest
 
 ## Design and architecture decisions
 
-Design runs at least two sprints ahead of engineering; no frontend screen work starts before its design
+Sprints are **1 week** (Fri→Thu; Sprint 01 = 2026-09-25; calendar in `docs/plan/backlog/_tools/calendar_cv.py`). Design runs at least two sprints ahead of engineering; no frontend screen work starts before its design
 ticket is Done. Architectural decisions are recorded as MADR ADRs in `docs/adr/` and must be proposed
 before implementation (Constitution §15.1).
 

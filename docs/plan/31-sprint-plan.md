@@ -13,9 +13,9 @@ Scope (inherited, unchanged): **web app only** - React + TypeScript + custom Web
 
 | Constant | Value | Source |
 |---|---|---|
-| Sprint length | 2 weeks, Mon -> Fri of week 2 | `00-planning-brief.md` |
-| S01 start / S26 end | **2026-09-28** -> **2027-09-24** | roadmap 1.1 |
-| Engineering capacity | **90 pts/sprint** (S07 = 45, holidays) | roadmap 1.1 |
+| Sprint length | **1 week**, Fri -> Thu (AI-driven cadence, owner decision 2026-09-24) | roadmap 1, `calendar_cv.py` |
+| S01 start / S26 end | **2026-09-25** -> **2027-03-25** | roadmap 1.1 |
+| Engineering capacity | **90 pts/sprint** (S07 = 45, reduced) | roadmap 1.1 |
 | Engineering pool | BE 40 / FE 40 / QA 6 / DevSecOps 2 / Security 2 pts | `01-sdlc-and-branching.md` 11.3 |
 | Separate discipline pools | Design ~60, QA ~45, Security ~20 pts/sprint | section 2.2 |
 | Estimation scale | Fibonacci 1-2-3-5-8; >8 must split | DoR |
@@ -64,32 +64,32 @@ The org described in `00-planning-brief.md` has a large design organisation, 2 Q
 
 | Sprint | Dates | Train | Eng | Cap | Head | Design | QA | Sec | Total | Flag |
 |---|---|---|---|---|---|---|---|---|---|---|
-| **S01** | 2026-09-28 -> 2026-10-09 | R0 | 90 | 90 | +0 | 63 | 1 | 8 | 162 | DES +3 |
-| **S02** | 2026-10-12 -> 2026-10-23 | R0 | 90 | 90 | +0 | 98 | 6 | 15 | 209 | DES +38 |
-| **S03** | 2026-10-26 -> 2026-11-06 | R0 | 87 | 90 | +3 | 49 | 17 | 7 | 160 | ok |
-| **S04** | 2026-11-09 -> 2026-11-20 | R0 | 88 | 90 | +2 | 81 | 70 | 26 | 265 | DES +21, **QA +25**, SEC +6 |
-| **S05** | 2026-11-23 -> 2026-12-04 | R1 | 90 | 90 | +0 | 80 | 0 | 9 | 179 | DES +20 |
-| **S06** | 2026-12-07 -> 2026-12-18 | R1 | 90 | 90 | +0 | 10 | 17 | 8 | 125 | ok |
-| **S07** | 2026-12-21 -> 2027-01-01 | R1 | 47 | 45 | -2 | 18 | 32 | 9 | 106 | **ENG -2** |
-| **S08** | 2027-01-04 -> 2027-01-15 | R1 | 90 | 90 | +0 | 59 | 51 | 18 | 218 | **QA +6** |
-| **S09** | 2027-01-18 -> 2027-01-29 | R1 | 90 | 90 | +0 | 25 | 69 | 19 | 203 | **QA +24** |
-| **S10** | 2027-02-01 -> 2027-02-12 | R2 | 89 | 90 | +1 | 23 | 2 | 16 | 130 | ok |
-| **S11** | 2027-02-15 -> 2027-02-26 | R2 | 89 | 90 | +1 | 24 | 13 | 8 | 134 | ok |
-| **S12** | 2027-03-01 -> 2027-03-12 | R2 | 89 | 90 | +1 | 18 | 55 | 11 | 173 | **QA +10** |
-| **S13** | 2027-03-15 -> 2027-03-26 | R2 | 90 | 90 | +0 | 52 | 83 | 19 | 244 | **QA +38** |
-| **S14** | 2027-03-29 -> 2027-04-09 | R3 | 88 | 90 | +2 | 58 | 6 | 12 | 164 | ok |
-| **S15** | 2027-04-12 -> 2027-04-23 | R3 | 89 | 90 | +1 | 66 | 20 | 21 | 196 | DES +6, SEC +1 |
-| **S16** | 2027-04-26 -> 2027-05-07 | R3 | 89 | 90 | +1 | 35 | 32 | 13 | 169 | ok |
-| **S17** | 2027-05-10 -> 2027-05-21 | R3 | 89 | 90 | +1 | 20 | 35 | 16 | 160 | ok |
-| **S18** | 2027-05-24 -> 2027-06-04 | R3 | 88 | 90 | +2 | 15 | 46 | 13 | 162 | **QA +1** |
-| **S19** | 2027-06-07 -> 2027-06-18 | R3 | 45 | 90 | +45 | 31 | 113 | 30 | 219 | **QA +68**, SEC +10 |
-| **S20** | 2027-06-21 -> 2027-07-02 | R4 | 87 | 90 | +3 | 6 | 11 | 12 | 116 | ok |
-| **S21** | 2027-07-05 -> 2027-07-16 | R4 | 56 | 90 | +34 | 8 | 22 | 16 | 102 | ok |
-| **S22** | 2027-07-19 -> 2027-07-30 | R4 | 11 | 90 | +79 | 2 | 9 | 13 | 35 | ok |
-| **S23** | 2027-08-02 -> 2027-08-13 | R5 | 87 | 90 | +3 | 66 | 26 | 9 | 188 | DES +6 |
-| **S24** | 2027-08-16 -> 2027-08-27 | R5 | 62 | 90 | +28 | 0 | 20 | 5 | 87 | ok |
-| **S25** | 2027-08-30 -> 2027-09-10 | R5 | 48 | 90 | +42 | 5 | 30 | 9 | 92 | ok |
-| **S26** | 2027-09-13 -> 2027-09-24 | R5 | 5 | 90 | +85 | 6 | 16 | 11 | 38 | ok |
+| **S01** | 2026-09-25 -> 2026-10-01 | R0 | 90 | 90 | +0 | 63 | 1 | 8 | 162 | DES +3 |
+| **S02** | 2026-10-02 -> 2026-10-08 | R0 | 90 | 90 | +0 | 98 | 6 | 15 | 209 | DES +38 |
+| **S03** | 2026-10-09 -> 2026-10-15 | R0 | 87 | 90 | +3 | 49 | 17 | 7 | 160 | ok |
+| **S04** | 2026-10-16 -> 2026-10-22 | R0 | 88 | 90 | +2 | 81 | 70 | 26 | 265 | DES +21, **QA +25**, SEC +6 |
+| **S05** | 2026-10-23 -> 2026-10-29 | R1 | 90 | 90 | +0 | 80 | 0 | 9 | 179 | DES +20 |
+| **S06** | 2026-10-30 -> 2026-11-05 | R1 | 90 | 90 | +0 | 10 | 17 | 8 | 125 | ok |
+| **S07** | 2026-11-06 -> 2026-11-12 | R1 | 47 | 45 | -2 | 18 | 32 | 9 | 106 | **ENG -2** |
+| **S08** | 2026-11-13 -> 2026-11-19 | R1 | 90 | 90 | +0 | 59 | 51 | 18 | 218 | **QA +6** |
+| **S09** | 2026-11-20 -> 2026-11-26 | R1 | 90 | 90 | +0 | 25 | 69 | 19 | 203 | **QA +24** |
+| **S10** | 2026-11-27 -> 2026-12-03 | R2 | 89 | 90 | +1 | 23 | 2 | 16 | 130 | ok |
+| **S11** | 2026-12-04 -> 2026-12-10 | R2 | 89 | 90 | +1 | 24 | 13 | 8 | 134 | ok |
+| **S12** | 2026-12-11 -> 2026-12-17 | R2 | 89 | 90 | +1 | 18 | 55 | 11 | 173 | **QA +10** |
+| **S13** | 2026-12-18 -> 2026-12-24 | R2 | 90 | 90 | +0 | 52 | 83 | 19 | 244 | **QA +38** |
+| **S14** | 2026-12-25 -> 2026-12-31 | R3 | 88 | 90 | +2 | 58 | 6 | 12 | 164 | ok |
+| **S15** | 2027-01-01 -> 2027-01-07 | R3 | 89 | 90 | +1 | 66 | 20 | 21 | 196 | DES +6, SEC +1 |
+| **S16** | 2027-01-08 -> 2027-01-14 | R3 | 89 | 90 | +1 | 35 | 32 | 13 | 169 | ok |
+| **S17** | 2027-01-15 -> 2027-01-21 | R3 | 89 | 90 | +1 | 20 | 35 | 16 | 160 | ok |
+| **S18** | 2027-01-22 -> 2027-01-28 | R3 | 88 | 90 | +2 | 15 | 46 | 13 | 162 | **QA +1** |
+| **S19** | 2027-01-29 -> 2027-02-04 | R3 | 45 | 90 | +45 | 31 | 113 | 30 | 219 | **QA +68**, SEC +10 |
+| **S20** | 2027-02-05 -> 2027-02-11 | R4 | 87 | 90 | +3 | 6 | 11 | 12 | 116 | ok |
+| **S21** | 2027-02-12 -> 2027-02-18 | R4 | 56 | 90 | +34 | 8 | 22 | 16 | 102 | ok |
+| **S22** | 2027-02-19 -> 2027-02-25 | R4 | 11 | 90 | +79 | 2 | 9 | 13 | 35 | ok |
+| **S23** | 2027-02-26 -> 2027-03-04 | R5 | 87 | 90 | +3 | 66 | 26 | 9 | 188 | DES +6 |
+| **S24** | 2027-03-05 -> 2027-03-11 | R5 | 62 | 90 | +28 | 0 | 20 | 5 | 87 | ok |
+| **S25** | 2027-03-12 -> 2027-03-18 | R5 | 48 | 90 | +42 | 5 | 30 | 9 | 92 | ok |
+| **S26** | 2027-03-19 -> 2027-03-25 | R5 | 5 | 90 | +85 | 6 | 16 | 11 | 38 | ok |
 | | | **Total** | **1963** | **2295** | **+332** | **918** | **802** | **353** | **4036** | |
 
 Unscheduled (`Backlog`, section 32.2): **4** tickets, 8 pts - not in any row above.
@@ -107,7 +107,7 @@ Unscheduled (`Backlog`, section 32.2): **4** tickets, 8 pts - not in any row abo
 | | |
 |---|---|
 | Sprints | S01-S04 |
-| Dates | 2026-09-28 -> 2026-11-20 |
+| Dates | 2026-09-25 -> 2026-10-22 |
 | Version at cut | `0.1.0` |
 | Deploys to | dev continuous, staging smoke only |
 | Gate | PRR-lite |
@@ -118,14 +118,14 @@ Nothing in R0 is user-visible. Its entire job is to make every later sprint *pos
 
 ---
 
-## 3. S01 - 2026-09-28 -> 2026-10-09 (R0)
+## 3. S01 - 2026-09-25 -> 2026-10-01 (R0)
 
 ### 3.1 Sprint goal(s)
 
 - **Make the repo governable before any feature code exists.** Ratify `CONSTITUTION.md`, enforce `CODEOWNERS` over every path, and prove a 2-approval PR gate is unbypassable (E01).
 - Stand up the monorepo skeleton and toolchain so every later epic has a place to land (E02).
 - Open the CI spine: lint/typecheck/unit on every PR, merge queue configured (E03).
-- Start the **chart-engine spike** on day 1 - it is the longest pole in the plan and its go/no-go is 2026-10-23 (E06).
+- Start the **chart-engine spike** on day 1 - it is the longest pole in the plan and its go/no-go is 2026-10-08 (E06).
 - **Design is over pool: 63 pts vs 60 (+3).**
 
 ### 3.2 Capacity by discipline vs planned points
@@ -233,24 +233,24 @@ Nothing in R0 is user-visible. Its entire job is to make every later sprint *pos
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E01-D01` | Design the contributor information architecture and issue-form field set | 1 | 2026-10-09 |
-| `E02-D01` | Design: define the design-token → code handoff contract for the packages/ui build | 2 | 2026-10-09 |
-| `E04-D01` | Design the system-health, incident-log and degraded-state surfaces (SCR-143, SCR-144, SCR-152, SCR-156) | 5 | 2026-10-09 |
-| `E05-D01` | Build Figma Foundations file: token variables for 3 themes x 2 densities | 5 | 2026-10-09 |
-| `E05-D07` | UX research: density, numeric legibility and CVD palette validation | 3 | 2026-10-09 |
-| `E06-D01` | UX research: footprint LOD legibility thresholds and non-colour encodings | 2 | 2026-10-09 |
-| `E06-D02` | Design SCR-046 diagnostics overlay and heatmap colour/legend convention | 1 | 2026-10-09 |
-| `E08-D01` | UX research: how traders read staleness, gaps and resync in live data | 3 | 2026-10-09 |
-| `E08-D02` | Wireframes: market-data connection, staleness and resync states | 3 | 2026-10-09 |
-| `E08-D03` | Hi-fi: SCR-152 disconnected / reconnecting banner and per-panel treatment | 5 | 2026-10-09 |
-| `E08-D04` | Design-system contribution: data-confidence tokens, states and badges | 5 | 2026-10-09 |
-| `E08-D05` | Hi-fi: SCR-102 symbol search and SCR-041 quick-switcher from the catalogue | 5 | 2026-10-09 |
-| `E09-D01` | UX research: sign-in, 2FA and recovery mental models | 3 | 2026-10-09 |
-| `E09-D02` | Wireframes: end-to-end auth, session and onboarding flow | 5 | 2026-10-09 |
-| `E09-D03` | Hi-fi design: Login and TOTP challenge (SCR-001, SCR-002) | 5 | 2026-10-09 |
-| `E09-D04` | Hi-fi design: TOTP enrolment, recovery codes and owner reset | 5 | 2026-10-09 |
-| `E10-D02` | Wireframe app shell, nav rail, command surfaces and system states | 2 | 2026-10-09 |
-| `E12-D01` | UX research: how traders choose, parameterise and trust non-time bars | 3 | 2026-10-09 |
+| `E01-D01` | Design the contributor information architecture and issue-form field set | 1 | 2026-10-01 |
+| `E02-D01` | Design: define the design-token → code handoff contract for the packages/ui build | 2 | 2026-10-01 |
+| `E04-D01` | Design the system-health, incident-log and degraded-state surfaces (SCR-143, SCR-144, SCR-152, SCR-156) | 5 | 2026-10-01 |
+| `E05-D01` | Build Figma Foundations file: token variables for 3 themes x 2 densities | 5 | 2026-10-01 |
+| `E05-D07` | UX research: density, numeric legibility and CVD palette validation | 3 | 2026-10-01 |
+| `E06-D01` | UX research: footprint LOD legibility thresholds and non-colour encodings | 2 | 2026-10-01 |
+| `E06-D02` | Design SCR-046 diagnostics overlay and heatmap colour/legend convention | 1 | 2026-10-01 |
+| `E08-D01` | UX research: how traders read staleness, gaps and resync in live data | 3 | 2026-10-01 |
+| `E08-D02` | Wireframes: market-data connection, staleness and resync states | 3 | 2026-10-01 |
+| `E08-D03` | Hi-fi: SCR-152 disconnected / reconnecting banner and per-panel treatment | 5 | 2026-10-01 |
+| `E08-D04` | Design-system contribution: data-confidence tokens, states and badges | 5 | 2026-10-01 |
+| `E08-D05` | Hi-fi: SCR-102 symbol search and SCR-041 quick-switcher from the catalogue | 5 | 2026-10-01 |
+| `E09-D01` | UX research: sign-in, 2FA and recovery mental models | 3 | 2026-10-01 |
+| `E09-D02` | Wireframes: end-to-end auth, session and onboarding flow | 5 | 2026-10-01 |
+| `E09-D03` | Hi-fi design: Login and TOTP challenge (SCR-001, SCR-002) | 5 | 2026-10-01 |
+| `E09-D04` | Hi-fi design: TOTP enrolment, recovery codes and owner reset | 5 | 2026-10-01 |
+| `E10-D02` | Wireframe app shell, nav rail, command surfaces and system states | 2 | 2026-10-01 |
+| `E12-D01` | UX research: how traders choose, parameterise and trust non-time bars | 3 | 2026-10-01 |
 
 Design total: **63 pts** across 18 tickets.
 
@@ -308,12 +308,12 @@ Design total: **63 pts** across 18 tickets.
 
 ---
 
-## 4. S02 - 2026-10-12 -> 2026-10-23 (R0)
+## 4. S02 - 2026-10-02 -> 2026-10-08 (R0)
 
 ### 4.1 Sprint goal(s)
 
 - Finish the monorepo scaffold: workspaces, shared tsconfig/ruff/mypy, dependency policy, reproducible dev container (E02).
-- **Engine spike go/no-go (2026-10-23)** - WebGL text-LOD and Electron-vs-Tauri measurements land as ADR-0006 (E06).
+- **Engine spike go/no-go (2026-10-08)** - WebGL text-LOD and Electron-vs-Tauri measurements land as ADR-0006 (E06).
 - Storage spike: prove QuestDB hot-path write rates and Parquet/DuckDB cold reads against a recorded Bybit fixture (E07).
 - Observability baseline: structured logs, Prometheus scrape, first Grafana board (E04).
 - **Design is over pool: 98 pts vs 60 (+38).**
@@ -433,34 +433,34 @@ Design total: **63 pts** across 18 tickets.
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E01-D02` | Design-QA and accessibility review of the built contributor surfaces | 1 | 2026-10-23 |
-| `E05-D02` | Design Figma atoms and molecules library (CMP-001..CMP-069 v0 subset) | 8 | 2026-10-23 |
-| `E05-D03` | Specify motion recipes with motion-safe/motion-reduce pairs | 3 | 2026-10-23 |
-| `E05-D06` | Document handoff spec and the design-to-code token pipeline | 2 | 2026-10-23 |
-| `E07-D01` | Define the operator content model for storage telemetry and review the StorageUsage contract | 3 | 2026-10-23 |
-| `E08-D06` | Hi-fi: SCR-103 symbol info drawer - contract specs and precision rules | 3 | 2026-10-23 |
-| `E08-D07` | Hi-fi: SCR-100 watchlist panel & SCR-101 manager with live-column states | 5 | 2026-10-23 |
-| `E08-D08` | Hi-fi: SCR-104 scanner panel - live criteria, caps and estimated metrics | 3 | 2026-10-23 |
-| `E08-D09` | Hi-fi: SCR-147 exchange connectivity, rate limits and clock skew | 5 | 2026-10-23 |
-| `E08-D10` | Hi-fi: SCR-151 empty/backfill states for history, coverage and gaps | 3 | 2026-10-23 |
-| `E08-D11` | Motion spec: connection transitions, resync and freshness without strobing | 3 | 2026-10-23 |
-| `E08-D12` | Accessibility design review of all E08 market-data surfaces | 3 | 2026-10-23 |
-| `E08-D13` | Handoff pack for E08 market-data surfaces (specs, tokens, states, test ids) | 3 | 2026-10-23 |
-| `E09-D05` | Hi-fi design: forced password change & password policy surface | 3 | 2026-10-23 |
-| `E09-D06` | Hi-fi design: idle lock, session-expiry re-auth and step-up modals | 5 | 2026-10-23 |
-| `E09-D07` | Design-system contribution: auth component band CMP-200..206 + CMP-097/098 | 5 | 2026-10-23 |
-| `E09-D08` | Motion & transition spec for auth, lock and step-up surfaces | 2 | 2026-10-23 |
-| `E09-D09` | Design the RBAC permission-denied pattern (owner/manager/viewer) | 5 | 2026-10-23 |
-| `E09-D10` | Accessibility design review & screen-reader script for the auth band | 3 | 2026-10-23 |
-| `E09-D12` | Engineering handoff pack for the auth, session and RBAC band | 3 | 2026-10-23 |
-| `E10-D03` | Produce hi-fi Figma designs for shell chrome, Electron windows and system states | 3 | 2026-10-23 |
-| `E10-D04` | Specify shell motion, run the a11y design review and publish handoff | 1 | 2026-10-23 |
-| `E12-D02` | Wireframes: bar-mode selection, parameter entry and rebuild flow | 5 | 2026-10-23 |
-| `E12-D03` | Hi-fi design: SCR-042 interval & bar-mode menu with parameter entry | 5 | 2026-10-23 |
-| `E12-D06` | Hi-fi design: price series visual language (candle, bar, line, area, HA) | 5 | 2026-10-23 |
-| `E13-D01` | UX research: how traders add, tune and manage indicators | 2 | 2026-10-23 |
-| `E14-D01` | UX research: drawing, magnet and object-management mental models | 3 | 2026-10-23 |
-| `E15-D01` | UX research: multi-pane workflows, sync groups and panel-docking mental models | 3 | 2026-10-23 |
+| `E01-D02` | Design-QA and accessibility review of the built contributor surfaces | 1 | 2026-10-08 |
+| `E05-D02` | Design Figma atoms and molecules library (CMP-001..CMP-069 v0 subset) | 8 | 2026-10-08 |
+| `E05-D03` | Specify motion recipes with motion-safe/motion-reduce pairs | 3 | 2026-10-08 |
+| `E05-D06` | Document handoff spec and the design-to-code token pipeline | 2 | 2026-10-08 |
+| `E07-D01` | Define the operator content model for storage telemetry and review the StorageUsage contract | 3 | 2026-10-08 |
+| `E08-D06` | Hi-fi: SCR-103 symbol info drawer - contract specs and precision rules | 3 | 2026-10-08 |
+| `E08-D07` | Hi-fi: SCR-100 watchlist panel & SCR-101 manager with live-column states | 5 | 2026-10-08 |
+| `E08-D08` | Hi-fi: SCR-104 scanner panel - live criteria, caps and estimated metrics | 3 | 2026-10-08 |
+| `E08-D09` | Hi-fi: SCR-147 exchange connectivity, rate limits and clock skew | 5 | 2026-10-08 |
+| `E08-D10` | Hi-fi: SCR-151 empty/backfill states for history, coverage and gaps | 3 | 2026-10-08 |
+| `E08-D11` | Motion spec: connection transitions, resync and freshness without strobing | 3 | 2026-10-08 |
+| `E08-D12` | Accessibility design review of all E08 market-data surfaces | 3 | 2026-10-08 |
+| `E08-D13` | Handoff pack for E08 market-data surfaces (specs, tokens, states, test ids) | 3 | 2026-10-08 |
+| `E09-D05` | Hi-fi design: forced password change & password policy surface | 3 | 2026-10-08 |
+| `E09-D06` | Hi-fi design: idle lock, session-expiry re-auth and step-up modals | 5 | 2026-10-08 |
+| `E09-D07` | Design-system contribution: auth component band CMP-200..206 + CMP-097/098 | 5 | 2026-10-08 |
+| `E09-D08` | Motion & transition spec for auth, lock and step-up surfaces | 2 | 2026-10-08 |
+| `E09-D09` | Design the RBAC permission-denied pattern (owner/manager/viewer) | 5 | 2026-10-08 |
+| `E09-D10` | Accessibility design review & screen-reader script for the auth band | 3 | 2026-10-08 |
+| `E09-D12` | Engineering handoff pack for the auth, session and RBAC band | 3 | 2026-10-08 |
+| `E10-D03` | Produce hi-fi Figma designs for shell chrome, Electron windows and system states | 3 | 2026-10-08 |
+| `E10-D04` | Specify shell motion, run the a11y design review and publish handoff | 1 | 2026-10-08 |
+| `E12-D02` | Wireframes: bar-mode selection, parameter entry and rebuild flow | 5 | 2026-10-08 |
+| `E12-D03` | Hi-fi design: SCR-042 interval & bar-mode menu with parameter entry | 5 | 2026-10-08 |
+| `E12-D06` | Hi-fi design: price series visual language (candle, bar, line, area, HA) | 5 | 2026-10-08 |
+| `E13-D01` | UX research: how traders add, tune and manage indicators | 2 | 2026-10-08 |
+| `E14-D01` | UX research: drawing, magnet and object-management mental models | 3 | 2026-10-08 |
+| `E15-D01` | UX research: multi-pane workflows, sync groups and panel-docking mental models | 3 | 2026-10-08 |
 
 Design total: **98 pts** across 28 tickets.
 
@@ -497,7 +497,7 @@ Design total: **98 pts** across 28 tickets.
 
 ### 4.7 Risks & dependency watch-list
 
-- **Go/no-go gate 2026-10-23 on E06.** Architect + Owner decision required; a 'no-go' triggers an immediate re-plan of R1.
+- **Go/no-go gate 2026-10-08 on E06.** Architect + Owner decision required; a 'no-go' triggers an immediate re-plan of R1.
 - E07 storage spike may show QuestDB write rates below the ingestion budget - contingency is a partitioning-strategy change, not a storage swap.
 - E02 at 25 pts is the sprint's largest item; scaffold churn blocks every other lane.
 
@@ -536,7 +536,7 @@ Design total: **98 pts** across 28 tickets.
 
 ---
 
-## 5. S03 - 2026-10-26 -> 2026-11-06 (R0)
+## 5. S03 - 2026-10-09 -> 2026-10-15 (R0)
 
 ### 5.1 Sprint goal(s)
 
@@ -640,21 +640,21 @@ Design total: **98 pts** across 28 tickets.
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E04-D02` | Run design QA and the accessibility review on the shipped observability surfaces | 2 | 2026-11-06 |
-| `E06-D03` | A11y design review: cost and shape of the engine DOM-mirror layer | 1 | 2026-11-06 |
-| `E07-D02` | Verify the shipped StorageUsage payload against the operator content model | 2 | 2026-11-06 |
-| `E11-D01` | Run UX research on chart navigation, scale control and keyboard-first charting | 3 | 2026-11-06 |
-| `E12-D04` | Hi-fi design: SCR-041 symbol/interval quick-switcher & hotkey ladder | 3 | 2026-11-06 |
-| `E12-D05` | Hi-fi design: SCR-031 chart settings — bar mode, chart type & precision | 5 | 2026-11-06 |
-| `E12-D07` | Hi-fi design: SCR-045 data-table alternative for every bar mode | 5 | 2026-11-06 |
-| `E12-D08` | Hi-fi design: rebuild, partial history, empty & error states (SCR-047/048) | 5 | 2026-11-06 |
-| `E12-D09` | Design-system: bar-mode & series components (CMP-181, 220, 222, 226) | 5 | 2026-11-06 |
-| `E12-D10` | Motion spec: bar-mode transitions, forming bar, rebuild progress, LOD change | 2 | 2026-11-06 |
-| `E13-D02` | Wireframe SCR-034, SCR-035 and SCR-036 with all states | 3 | 2026-11-06 |
-| `E14-D02` | Wireframes: drawing toolbar, canvas interaction model and object tree | 5 | 2026-11-06 |
-| `E15-D02` | Wireframes: workspace shell, dock model, presets and sync - greyscale end to end | 5 | 2026-11-06 |
-| `E17-D01` | UX research: how a trader must experience a degraded or dropped feed | 2 | 2026-11-06 |
-| `E17-D03` | Confirm the heatmap column legibility band (DES-HEATMAP-01) | 1 | 2026-11-06 |
+| `E04-D02` | Run design QA and the accessibility review on the shipped observability surfaces | 2 | 2026-10-15 |
+| `E06-D03` | A11y design review: cost and shape of the engine DOM-mirror layer | 1 | 2026-10-15 |
+| `E07-D02` | Verify the shipped StorageUsage payload against the operator content model | 2 | 2026-10-15 |
+| `E11-D01` | Run UX research on chart navigation, scale control and keyboard-first charting | 3 | 2026-10-15 |
+| `E12-D04` | Hi-fi design: SCR-041 symbol/interval quick-switcher & hotkey ladder | 3 | 2026-10-15 |
+| `E12-D05` | Hi-fi design: SCR-031 chart settings — bar mode, chart type & precision | 5 | 2026-10-15 |
+| `E12-D07` | Hi-fi design: SCR-045 data-table alternative for every bar mode | 5 | 2026-10-15 |
+| `E12-D08` | Hi-fi design: rebuild, partial history, empty & error states (SCR-047/048) | 5 | 2026-10-15 |
+| `E12-D09` | Design-system: bar-mode & series components (CMP-181, 220, 222, 226) | 5 | 2026-10-15 |
+| `E12-D10` | Motion spec: bar-mode transitions, forming bar, rebuild progress, LOD change | 2 | 2026-10-15 |
+| `E13-D02` | Wireframe SCR-034, SCR-035 and SCR-036 with all states | 3 | 2026-10-15 |
+| `E14-D02` | Wireframes: drawing toolbar, canvas interaction model and object tree | 5 | 2026-10-15 |
+| `E15-D02` | Wireframes: workspace shell, dock model, presets and sync - greyscale end to end | 5 | 2026-10-15 |
+| `E17-D01` | UX research: how a trader must experience a degraded or dropped feed | 2 | 2026-10-15 |
+| `E17-D03` | Confirm the heatmap column legibility band (DES-HEATMAP-01) | 1 | 2026-10-15 |
 
 Design total: **49 pts** across 15 tickets.
 
@@ -725,7 +725,7 @@ Design total: **49 pts** across 15 tickets.
 
 ---
 
-## 6. S04 - 2026-11-09 -> 2026-11-20 (R0)
+## 6. S04 - 2026-10-16 -> 2026-10-22 (R0)
 
 ### 6.1 Sprint goal(s)
 
@@ -856,28 +856,28 @@ Design total: **49 pts** across 15 tickets.
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E05-D04` | Run accessibility and CVD design review and record sign-off | 3 | 2026-11-20 |
-| `E05-D05` | Perform design QA of the built component library against spec | 3 | 2026-11-20 |
-| `E08-D14` | Design QA of the implemented E08 market-data surfaces | 3 | 2026-11-20 |
-| `E09-D11` | Design QA of the built auth, session and RBAC surfaces | 3 | 2026-11-20 |
-| `E11-D02` | Design the chart chassis: pane chrome, axes, crosshair, legend, diagnostics | 8 | 2026-11-20 |
-| `E11-D03` | Design the price/time scale menus, scale settings and the go-to-date dialog | 3 | 2026-11-20 |
-| `E11-D05` | Contribute chart primitives, tokens and density modes to the design system | 3 | 2026-11-20 |
-| `E11-D06` | Specify chart motion: momentum, transitions and reduced-motion variants | 2 | 2026-11-20 |
-| `E12-D11` | Accessibility design review & screen-reader script for the bar/series band | 3 | 2026-11-20 |
-| `E12-D12` | Engineering handoff pack for the bar-builder & series-rendering band | 3 | 2026-11-20 |
-| `E13-D03` | Hi-fi design for SCR-034/035/036 and the indicator visual language | 5 | 2026-11-20 |
-| `E13-D04` | Design-system contribution: indicator palette tokens and motion spec | 3 | 2026-11-20 |
-| `E13-D05` | Accessibility design review of the indicator surfaces | 2 | 2026-11-20 |
-| `E14-D03` | Hi-fi design: drawing tool rail & tool palette (SCR-037, CMP-223) | 5 | 2026-11-20 |
-| `E14-D04` | Hi-fi design: drawing properties popover, styling & template library | 5 | 2026-11-20 |
-| `E15-D03` | Hi-fi design: SCR-020 workspace page, tab strip and panel chrome | 5 | 2026-11-20 |
-| `E15-D04` | Hi-fi design: SCR-021 dock system - drop zones, drag preview, keyboard move mode | 5 | 2026-11-20 |
-| `E15-D05` | Hi-fi design: SCR-022 layout preset gallery & SCR-011 workspace switcher | 3 | 2026-11-20 |
-| `E16-D01` | UX research: recorder mental model, auto-record surprise and disk anxiety | 3 | 2026-11-20 |
-| `E16-D02` | Design SCR-140 recorder & storage screen and CMP-177 RecorderStatusRow | 5 | 2026-11-20 |
-| `E16-D03` | Design SCR-141 retention policy editor with destructive-change confirmation | 3 | 2026-11-20 |
-| `E17-D02` | Design SCR-152 and the connection-state component set to hi-fi with handoff | 3 | 2026-11-20 |
+| `E05-D04` | Run accessibility and CVD design review and record sign-off | 3 | 2026-10-22 |
+| `E05-D05` | Perform design QA of the built component library against spec | 3 | 2026-10-22 |
+| `E08-D14` | Design QA of the implemented E08 market-data surfaces | 3 | 2026-10-22 |
+| `E09-D11` | Design QA of the built auth, session and RBAC surfaces | 3 | 2026-10-22 |
+| `E11-D02` | Design the chart chassis: pane chrome, axes, crosshair, legend, diagnostics | 8 | 2026-10-22 |
+| `E11-D03` | Design the price/time scale menus, scale settings and the go-to-date dialog | 3 | 2026-10-22 |
+| `E11-D05` | Contribute chart primitives, tokens and density modes to the design system | 3 | 2026-10-22 |
+| `E11-D06` | Specify chart motion: momentum, transitions and reduced-motion variants | 2 | 2026-10-22 |
+| `E12-D11` | Accessibility design review & screen-reader script for the bar/series band | 3 | 2026-10-22 |
+| `E12-D12` | Engineering handoff pack for the bar-builder & series-rendering band | 3 | 2026-10-22 |
+| `E13-D03` | Hi-fi design for SCR-034/035/036 and the indicator visual language | 5 | 2026-10-22 |
+| `E13-D04` | Design-system contribution: indicator palette tokens and motion spec | 3 | 2026-10-22 |
+| `E13-D05` | Accessibility design review of the indicator surfaces | 2 | 2026-10-22 |
+| `E14-D03` | Hi-fi design: drawing tool rail & tool palette (SCR-037, CMP-223) | 5 | 2026-10-22 |
+| `E14-D04` | Hi-fi design: drawing properties popover, styling & template library | 5 | 2026-10-22 |
+| `E15-D03` | Hi-fi design: SCR-020 workspace page, tab strip and panel chrome | 5 | 2026-10-22 |
+| `E15-D04` | Hi-fi design: SCR-021 dock system - drop zones, drag preview, keyboard move mode | 5 | 2026-10-22 |
+| `E15-D05` | Hi-fi design: SCR-022 layout preset gallery & SCR-011 workspace switcher | 3 | 2026-10-22 |
+| `E16-D01` | UX research: recorder mental model, auto-record surprise and disk anxiety | 3 | 2026-10-22 |
+| `E16-D02` | Design SCR-140 recorder & storage screen and CMP-177 RecorderStatusRow | 5 | 2026-10-22 |
+| `E16-D03` | Design SCR-141 retention policy editor with destructive-change confirmation | 3 | 2026-10-22 |
+| `E17-D02` | Design SCR-152 and the connection-state component set to hi-fi with handoff | 3 | 2026-10-22 |
 
 Design total: **81 pts** across 22 tickets.
 
@@ -930,7 +930,7 @@ Design total: **81 pts** across 22 tickets.
 
 ### 6.7 Risks & dependency watch-list
 
-- **R0 exit gate 2026-11-20.** All four exit criteria must have evidence links or R1 cannot open.
+- **R0 exit gate 2026-10-22.** All four exit criteria must have evidence links or R1 cannot open.
 - E05 at 47 pts is the heaviest single-epic sprint load in R0 - a design-system slip cascades to every FE lane.
 - Recorder (E16) must begin recording now: roadmap 11.3 rule 4 requires >=2 sprints of history before any view that depends on it ships.
 
@@ -956,7 +956,7 @@ Design total: **81 pts** across 22 tickets.
 
 **Sprint Review demo (on staging/demo, never live):** Storybook published with the full DS v0 primitive set; Electron app launches and navigates; recorder is writing ticks for the seed symbol list.
 
-**Exit expectation:** **R0 gate (PRR-lite) 2026-11-20 - `0.1.0` tagged.** All four R0 exit criteria evidenced.
+**Exit expectation:** **R0 gate (PRR-lite) 2026-10-22 - `0.1.0` tagged.** All four R0 exit criteria evidenced.
 
 ### 6.9 Burn-up - R0 train
 
@@ -974,7 +974,7 @@ Design total: **81 pts** across 22 tickets.
 | | |
 |---|---|
 | Sprints | S05-S09 |
-| Dates | 2026-11-23 -> 2027-01-29 |
+| Dates | 2026-10-23 -> 2026-11-26 |
 | Version at cut | `0.2.0` |
 | Deploys to | staging (demo) |
 | Gate | PRR |
@@ -985,7 +985,7 @@ R1 turns the engine spike into a real chart: scene graph, axes, interaction, LOD
 
 ---
 
-## 7. S05 - 2026-11-23 -> 2026-12-04 (R1)
+## 7. S05 - 2026-10-23 -> 2026-10-29 (R1)
 
 ### 7.1 Sprint goal(s)
 
@@ -1089,32 +1089,32 @@ R1 turns the engine spike into a real chart: scene graph, axes, interaction, LOD
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E11-D04` | Design the data-table alternative and the chart empty and error states | 5 | 2026-12-04 |
-| `E11-D07` | Run an accessibility design review of the chart engine's canvas strategy | 3 | 2026-12-04 |
-| `E11-D09` | Produce the chart-engine design handoff pack and run the engineering walkthrough | 2 | 2026-12-04 |
-| `E13-D06` | Design handoff pack for E13 indicator surfaces | 2 | 2026-12-04 |
-| `E14-D05` | Hi-fi design: Fibonacci, anchored VWAP and measure tool visual language | 5 | 2026-12-04 |
-| `E14-D06` | Hi-fi design: long/short position tool and its send-to-ticket handoff | 5 | 2026-12-04 |
-| `E14-D07` | Hi-fi design: drawings branch of the object tree & cross-chart sync (SCR-036) | 3 | 2026-12-04 |
-| `E14-D08` | Design-system contribution: drawing primitives, tokens & CMP-191/CMP-223 entries | 3 | 2026-12-04 |
-| `E14-D09` | Motion spec: drawing creation, selection, snap feedback and undo | 2 | 2026-12-04 |
-| `E14-D10` | Accessibility design review & keyboard-draw screen-reader script for E14 | 3 | 2026-12-04 |
-| `E14-D12` | Engineering handoff pack for the drawing-tools band | 2 | 2026-12-04 |
-| `E15-D06` | Hi-fi design: SCR-023 cross-pane sync groups and price-scale linking | 5 | 2026-12-04 |
-| `E15-D07` | Hi-fi design: SCR-024 panel picker and SCR-028 panel context menu | 3 | 2026-12-04 |
-| `E15-D08` | Hi-fi design: SCR-025 workspace settings & SCR-029 unsaved / conflict dialog | 3 | 2026-12-04 |
-| `E15-D09` | Hi-fi design: SCR-026 workspace import/export, preview and rejection states | 3 | 2026-12-04 |
-| `E15-D10` | Hi-fi design: SCR-027 floating panel window (Electron) and its browser fallback | 3 | 2026-12-04 |
-| `E15-D11` | Hi-fi design: SCR-049 multi-chart grid panel - cells, per-cell header, maximise | 3 | 2026-12-04 |
-| `E15-D12` | Hi-fi design: responsive & reduced-capability layout (SCR-153, SCR-150 restore) | 3 | 2026-12-04 |
-| `E15-D13` | Design-system contribution: layout tokens, dock primitives, catalogue entries | 3 | 2026-12-04 |
-| `E15-D14` | Motion spec: docking, layout transitions, workspace switching and reduced motion | 2 | 2026-12-04 |
-| `E15-D15` | Accessibility design review: keyboard model and screen-reader script (E15) | 3 | 2026-12-04 |
-| `E15-D16` | Engineering handoff pack for the layouts & workspaces band | 2 | 2026-12-04 |
-| `E16-D04` | Design SCR-142 storage & database panel with tier health and projections | 3 | 2026-12-04 |
-| `E16-D05` | Design recorder-dependent empty and partial-history states (SCR-047, SCR-151) | 3 | 2026-12-04 |
-| `E16-D06` | Accessibility review and engineering handoff for the recorder design set | 3 | 2026-12-04 |
-| `E19-D01` | UX research: how traders read value, POC and profile period modes | 3 | 2026-12-04 |
+| `E11-D04` | Design the data-table alternative and the chart empty and error states | 5 | 2026-10-29 |
+| `E11-D07` | Run an accessibility design review of the chart engine's canvas strategy | 3 | 2026-10-29 |
+| `E11-D09` | Produce the chart-engine design handoff pack and run the engineering walkthrough | 2 | 2026-10-29 |
+| `E13-D06` | Design handoff pack for E13 indicator surfaces | 2 | 2026-10-29 |
+| `E14-D05` | Hi-fi design: Fibonacci, anchored VWAP and measure tool visual language | 5 | 2026-10-29 |
+| `E14-D06` | Hi-fi design: long/short position tool and its send-to-ticket handoff | 5 | 2026-10-29 |
+| `E14-D07` | Hi-fi design: drawings branch of the object tree & cross-chart sync (SCR-036) | 3 | 2026-10-29 |
+| `E14-D08` | Design-system contribution: drawing primitives, tokens & CMP-191/CMP-223 entries | 3 | 2026-10-29 |
+| `E14-D09` | Motion spec: drawing creation, selection, snap feedback and undo | 2 | 2026-10-29 |
+| `E14-D10` | Accessibility design review & keyboard-draw screen-reader script for E14 | 3 | 2026-10-29 |
+| `E14-D12` | Engineering handoff pack for the drawing-tools band | 2 | 2026-10-29 |
+| `E15-D06` | Hi-fi design: SCR-023 cross-pane sync groups and price-scale linking | 5 | 2026-10-29 |
+| `E15-D07` | Hi-fi design: SCR-024 panel picker and SCR-028 panel context menu | 3 | 2026-10-29 |
+| `E15-D08` | Hi-fi design: SCR-025 workspace settings & SCR-029 unsaved / conflict dialog | 3 | 2026-10-29 |
+| `E15-D09` | Hi-fi design: SCR-026 workspace import/export, preview and rejection states | 3 | 2026-10-29 |
+| `E15-D10` | Hi-fi design: SCR-027 floating panel window (Electron) and its browser fallback | 3 | 2026-10-29 |
+| `E15-D11` | Hi-fi design: SCR-049 multi-chart grid panel - cells, per-cell header, maximise | 3 | 2026-10-29 |
+| `E15-D12` | Hi-fi design: responsive & reduced-capability layout (SCR-153, SCR-150 restore) | 3 | 2026-10-29 |
+| `E15-D13` | Design-system contribution: layout tokens, dock primitives, catalogue entries | 3 | 2026-10-29 |
+| `E15-D14` | Motion spec: docking, layout transitions, workspace switching and reduced motion | 2 | 2026-10-29 |
+| `E15-D15` | Accessibility design review: keyboard model and screen-reader script (E15) | 3 | 2026-10-29 |
+| `E15-D16` | Engineering handoff pack for the layouts & workspaces band | 2 | 2026-10-29 |
+| `E16-D04` | Design SCR-142 storage & database panel with tier health and projections | 3 | 2026-10-29 |
+| `E16-D05` | Design recorder-dependent empty and partial-history states (SCR-047, SCR-151) | 3 | 2026-10-29 |
+| `E16-D06` | Accessibility review and engineering handoff for the recorder design set | 3 | 2026-10-29 |
+| `E19-D01` | UX research: how traders read value, POC and profile period modes | 3 | 2026-10-29 |
 
 Design total: **80 pts** across 26 tickets.
 
@@ -1182,7 +1182,7 @@ None scheduled. The qa pool works the continuous track bars above.
 
 ---
 
-## 8. S06 - 2026-12-07 -> 2026-12-18 (R1)
+## 8. S06 - 2026-10-30 -> 2026-11-05 (R1)
 
 ### 8.1 Sprint goal(s)
 
@@ -1264,9 +1264,9 @@ None scheduled. The qa pool works the continuous track bars above.
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E17-D04` | Design QA and accessibility review of the shipped connection-state chrome | 2 | 2026-12-18 |
-| `E19-D02` | Wireframes: SCR-038 profile panel and SCR-039 settings dialog | 5 | 2026-12-18 |
-| `E21-D01` | UX research: how traders read a ladder and a liquidity trail | 3 | 2026-12-18 |
+| `E17-D04` | Design QA and accessibility review of the shipped connection-state chrome | 2 | 2026-11-05 |
+| `E19-D02` | Wireframes: SCR-038 profile panel and SCR-039 settings dialog | 5 | 2026-11-05 |
+| `E21-D01` | UX research: how traders read a ladder and a liquidity trail | 3 | 2026-11-05 |
 
 Design total: **10 pts** across 3 tickets.
 
@@ -1339,7 +1339,7 @@ Design total: **10 pts** across 3 tickets.
 
 ---
 
-## 9. S07 - 2026-12-21 -> 2027-01-01 (R1)
+## 9. S07 - 2026-11-06 -> 2026-11-12 (R1)
 
 ### 9.1 Sprint goal(s)
 
@@ -1415,11 +1415,11 @@ Design total: **10 pts** across 3 tickets.
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E19-D03` | Hi-fi SCR-038/SCR-039 and design-system contribution for profile primitives | 5 | 2027-01-01 |
-| `E19-D04` | Design the profile preset, period-anchoring and drawing-anchor flows | 3 | 2027-01-01 |
-| `E21-D02` | Wireframe to hi-fi SCR-050 Heatmap + DOM ladder panel | 5 | 2027-01-01 |
-| `E22-D01` | UX research: how traders read the tape and size on the chart | 2 | 2027-01-01 |
-| `E26-D01` | UX research: how traders study a recorded session and what replay must not hide | 3 | 2027-01-01 |
+| `E19-D03` | Hi-fi SCR-038/SCR-039 and design-system contribution for profile primitives | 5 | 2026-11-12 |
+| `E19-D04` | Design the profile preset, period-anchoring and drawing-anchor flows | 3 | 2026-11-12 |
+| `E21-D02` | Wireframe to hi-fi SCR-050 Heatmap + DOM ladder panel | 5 | 2026-11-12 |
+| `E22-D01` | UX research: how traders read the tape and size on the chart | 2 | 2026-11-12 |
+| `E26-D01` | UX research: how traders study a recorded session and what replay must not hide | 3 | 2026-11-12 |
 
 Design total: **18 pts** across 5 tickets.
 
@@ -1494,7 +1494,7 @@ Design total: **18 pts** across 5 tickets.
 
 ---
 
-## 10. S08 - 2027-01-04 -> 2027-01-15 (R1)
+## 10. S08 - 2026-11-13 -> 2026-11-19 (R1)
 
 ### 10.1 Sprint goal(s)
 
@@ -1616,28 +1616,28 @@ Design total: **18 pts** across 5 tickets.
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E12-D13` | Design QA of the built bar modes, series rendering and their states | 3 | 2027-01-15 |
-| `E13-D07` | Design QA of the built indicator surfaces | 2 | 2027-01-15 |
-| `E18-D01` | UX research: how order-flow traders read and act on footprint cells | 2 | 2027-01-15 |
-| `E18-D02` | Wireframe the footprint layer on SCR-030, SCR-032 and the SCR-056 imbalance rows | 3 | 2027-01-15 |
-| `E18-D03` | Hi-fi footprint designs and design-system entries for the cell components | 3 | 2027-01-15 |
-| `E18-D04` | Motion spec and accessibility review for the footprint surfaces | 2 | 2027-01-15 |
-| `E18-D05` | Design handoff pack for E18 with sign-off | 2 | 2027-01-15 |
-| `E19-D05` | Motion spec: developing value area, recompute and profile transitions | 2 | 2027-01-15 |
-| `E19-D06` | Accessibility design review of the profile panel and settings dialog | 2 | 2027-01-15 |
-| `E19-D07` | Engineering handoff pack for the profile surface (SCR-038/039, CMP-110/183/184) | 3 | 2027-01-15 |
-| `E21-D03` | Hi-fi SCR-051 settings dialog and the SCR-153 depth-shed banner variant | 3 | 2027-01-15 |
-| `E21-D04` | Design-system contributions: ladder, heatmap and own-order components | 3 | 2027-01-15 |
-| `E21-D05` | Motion and reduced-motion spec for the trail, re-centring and resync states | 2 | 2027-01-15 |
-| `E21-D06` | Accessibility design review of the ladder grid and windowed heatmap reveal | 2 | 2027-01-15 |
-| `E22-D02` | Wireframe SCR-053 tape + bubble panel with all states | 3 | 2027-01-15 |
-| `E22-D03` | Hi-fi SCR-053 and design-system entry for CMP-112 BigTradeBubble | 3 | 2027-01-15 |
-| `E26-D02` | Wireframe to hi-fi SCR-097 replay page: transport, coverage scrubber, states | 5 | 2027-01-15 |
-| `E26-D03` | Hi-fi SCR-098 replay setup modal with coverage timeline and honest preparation | 3 | 2027-01-15 |
-| `E26-D04` | Hi-fi SCR-099 replay paper-trading results with simulated framing throughout | 3 | 2027-01-15 |
-| `E26-D05` | Design-system entries for CMP-170, CMP-171 and CMP-172 replay components | 3 | 2027-01-15 |
-| `E26-D06` | Motion spec and accessibility design review for the replay transport and chrome | 3 | 2027-01-15 |
-| `E26-D07` | Produce the replay design handoff pack and run the engineering handoff session | 2 | 2027-01-15 |
+| `E12-D13` | Design QA of the built bar modes, series rendering and their states | 3 | 2026-11-19 |
+| `E13-D07` | Design QA of the built indicator surfaces | 2 | 2026-11-19 |
+| `E18-D01` | UX research: how order-flow traders read and act on footprint cells | 2 | 2026-11-19 |
+| `E18-D02` | Wireframe the footprint layer on SCR-030, SCR-032 and the SCR-056 imbalance rows | 3 | 2026-11-19 |
+| `E18-D03` | Hi-fi footprint designs and design-system entries for the cell components | 3 | 2026-11-19 |
+| `E18-D04` | Motion spec and accessibility review for the footprint surfaces | 2 | 2026-11-19 |
+| `E18-D05` | Design handoff pack for E18 with sign-off | 2 | 2026-11-19 |
+| `E19-D05` | Motion spec: developing value area, recompute and profile transitions | 2 | 2026-11-19 |
+| `E19-D06` | Accessibility design review of the profile panel and settings dialog | 2 | 2026-11-19 |
+| `E19-D07` | Engineering handoff pack for the profile surface (SCR-038/039, CMP-110/183/184) | 3 | 2026-11-19 |
+| `E21-D03` | Hi-fi SCR-051 settings dialog and the SCR-153 depth-shed banner variant | 3 | 2026-11-19 |
+| `E21-D04` | Design-system contributions: ladder, heatmap and own-order components | 3 | 2026-11-19 |
+| `E21-D05` | Motion and reduced-motion spec for the trail, re-centring and resync states | 2 | 2026-11-19 |
+| `E21-D06` | Accessibility design review of the ladder grid and windowed heatmap reveal | 2 | 2026-11-19 |
+| `E22-D02` | Wireframe SCR-053 tape + bubble panel with all states | 3 | 2026-11-19 |
+| `E22-D03` | Hi-fi SCR-053 and design-system entry for CMP-112 BigTradeBubble | 3 | 2026-11-19 |
+| `E26-D02` | Wireframe to hi-fi SCR-097 replay page: transport, coverage scrubber, states | 5 | 2026-11-19 |
+| `E26-D03` | Hi-fi SCR-098 replay setup modal with coverage timeline and honest preparation | 3 | 2026-11-19 |
+| `E26-D04` | Hi-fi SCR-099 replay paper-trading results with simulated framing throughout | 3 | 2026-11-19 |
+| `E26-D05` | Design-system entries for CMP-170, CMP-171 and CMP-172 replay components | 3 | 2026-11-19 |
+| `E26-D06` | Motion spec and accessibility design review for the replay transport and chrome | 3 | 2026-11-19 |
+| `E26-D07` | Produce the replay design handoff pack and run the engineering handoff session | 2 | 2026-11-19 |
 
 Design total: **59 pts** across 22 tickets.
 
@@ -1724,7 +1724,7 @@ Design total: **59 pts** across 22 tickets.
 
 ---
 
-## 11. S09 - 2027-01-18 -> 2027-01-29 (R1)
+## 11. S09 - 2026-11-20 -> 2026-11-26 (R1)
 
 ### 11.1 Sprint goal(s)
 
@@ -1844,16 +1844,16 @@ Design total: **59 pts** across 22 tickets.
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E11-D08` | Run design QA on the built chart engine surfaces against the specs | 3 | 2027-01-29 |
-| `E14-D11` | Design QA of the built drawing tools, object tree and position tool | 3 | 2027-01-29 |
-| `E15-D17` | Design QA of the built workspace, dock system, presets and sync surfaces | 3 | 2027-01-29 |
-| `E16-D07` | Design QA of the built recorder screens against spec | 2 | 2027-01-29 |
-| `E20-D01` | UX research: how traders read per-bar statistics | 2 | 2027-01-29 |
-| `E20-D02` | Wireframe SCR-033 and the CMP-225 strip with all states | 3 | 2027-01-29 |
-| `E20-D03` | Hi-fi design for SCR-033 and design-system entry for CMP-225 | 3 | 2027-01-29 |
-| `E21-D07` | Design handoff package for the DOM ladder and heatmap build | 2 | 2027-01-29 |
-| `E22-D04` | Motion spec and accessibility review for tape and bubbles | 2 | 2027-01-29 |
-| `E22-D05` | Design handoff pack for E22 with sign-off | 2 | 2027-01-29 |
+| `E11-D08` | Run design QA on the built chart engine surfaces against the specs | 3 | 2026-11-26 |
+| `E14-D11` | Design QA of the built drawing tools, object tree and position tool | 3 | 2026-11-26 |
+| `E15-D17` | Design QA of the built workspace, dock system, presets and sync surfaces | 3 | 2026-11-26 |
+| `E16-D07` | Design QA of the built recorder screens against spec | 2 | 2026-11-26 |
+| `E20-D01` | UX research: how traders read per-bar statistics | 2 | 2026-11-26 |
+| `E20-D02` | Wireframe SCR-033 and the CMP-225 strip with all states | 3 | 2026-11-26 |
+| `E20-D03` | Hi-fi design for SCR-033 and design-system entry for CMP-225 | 3 | 2026-11-26 |
+| `E21-D07` | Design handoff package for the DOM ladder and heatmap build | 2 | 2026-11-26 |
+| `E22-D04` | Motion spec and accessibility review for tape and bubbles | 2 | 2026-11-26 |
+| `E22-D05` | Design handoff pack for E22 with sign-off | 2 | 2026-11-26 |
 
 Design total: **25 pts** across 10 tickets.
 
@@ -1905,7 +1905,7 @@ Design total: **25 pts** across 10 tickets.
 
 ### 11.7 Risks & dependency watch-list
 
-- **R1 exit gate 2027-01-29 + PRR.** Engineering is only 3 pts - the risk is that exit *evidence* (benchmarks, E2E, a11y) is treated as slack and slips.
+- **R1 exit gate 2026-11-26 + PRR.** Engineering is only 3 pts - the risk is that exit *evidence* (benchmarks, E2E, a11y) is treated as slack and slips.
 - Load & soak campaigns open (q07, running to S20). Early results may invalidate R2 render budgets.
 - Design load is 31 pts against a 3-pt eng load: confirm the design org is actually ahead, not just busy.
 
@@ -1931,7 +1931,7 @@ Design total: **25 pts** across 10 tickets.
 
 **Sprint Review demo (on staging/demo, never live):** R1 acceptance walkthrough: charting alpha on staging (demo) with FPS budgets met, axe-core clean, E2E suite green.
 
-**Exit expectation:** **R1 gate (PRR) 2027-01-29 - `0.2.0` tagged, deployed to staging (demo).**
+**Exit expectation:** **R1 gate (PRR) 2026-11-26 - `0.2.0` tagged, deployed to staging (demo).**
 
 ### 11.9 Burn-up - R1 train
 
@@ -1950,7 +1950,7 @@ Design total: **25 pts** across 10 tickets.
 | | |
 |---|---|
 | Sprints | S10-S13 |
-| Dates | 2027-02-01 -> 2027-03-26 |
+| Dates | 2026-11-27 -> 2026-12-24 |
 | Version at cut | `0.3.0` |
 | Deploys to | staging (demo) |
 | Gate | PRR |
@@ -1961,7 +1961,7 @@ R2 is the order-flow differentiator: footprint, profiles, Deep-Stats rows, DOM l
 
 ---
 
-## 12. S10 - 2027-02-01 -> 2027-02-12 (R2)
+## 12. S10 - 2026-11-27 -> 2026-12-03 (R2)
 
 ### 12.1 Sprint goal(s)
 
@@ -2056,15 +2056,15 @@ R2 is the order-flow differentiator: footprint, profiles, Deep-Stats rows, DOM l
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E20-D04` | Motion spec and accessibility review for the Deep-Stats strip | 2 | 2027-02-12 |
-| `E20-D05` | Design handoff pack for E20 with sign-off | 2 | 2027-02-12 |
-| `E23-D01` | UX research: how traders read cumulative delta and divergence | 2 | 2027-02-12 |
-| `E23-D02` | Wireframe SCR-052 CVD / delta panel with every state | 3 | 2027-02-12 |
-| `E23-D03` | Hi-fi SCR-052 and design-system entry for CMP-185 CvdPane | 3 | 2027-02-12 |
-| `E24-D01` | UX research: how perp traders read OI, funding and liquidations | 2 | 2027-02-12 |
-| `E24-D02` | Wireframe SCR-054 derivatives panel with every state | 3 | 2027-02-12 |
-| `E25-D01` | UX research: how traders read speed, imbalance and estimated signals | 3 | 2027-02-12 |
-| `E25-D05` | Design-system contribution: detector components and the estimated badge | 3 | 2027-02-12 |
+| `E20-D04` | Motion spec and accessibility review for the Deep-Stats strip | 2 | 2026-12-03 |
+| `E20-D05` | Design handoff pack for E20 with sign-off | 2 | 2026-12-03 |
+| `E23-D01` | UX research: how traders read cumulative delta and divergence | 2 | 2026-12-03 |
+| `E23-D02` | Wireframe SCR-052 CVD / delta panel with every state | 3 | 2026-12-03 |
+| `E23-D03` | Hi-fi SCR-052 and design-system entry for CMP-185 CvdPane | 3 | 2026-12-03 |
+| `E24-D01` | UX research: how perp traders read OI, funding and liquidations | 2 | 2026-12-03 |
+| `E24-D02` | Wireframe SCR-054 derivatives panel with every state | 3 | 2026-12-03 |
+| `E25-D01` | UX research: how traders read speed, imbalance and estimated signals | 3 | 2026-12-03 |
+| `E25-D05` | Design-system contribution: detector components and the estimated badge | 3 | 2026-12-03 |
 
 Design total: **23 pts** across 9 tickets.
 
@@ -2137,7 +2137,7 @@ Design total: **23 pts** across 9 tickets.
 
 ---
 
-## 13. S11 - 2027-02-15 -> 2027-02-26 (R2)
+## 13. S11 - 2026-12-04 -> 2026-12-10 (R2)
 
 ### 13.1 Sprint goal(s)
 
@@ -2229,16 +2229,16 @@ Design total: **23 pts** across 9 tickets.
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E23-D04` | Motion spec and accessibility review for the CVD / delta pane | 2 | 2027-02-26 |
-| `E23-D05` | Design handoff pack for E23 with CDO sign-off | 2 | 2027-02-26 |
-| `E24-D03` | Hi-fi SCR-054 and design-system entries for CMP-186, CMP-126, CMP-127 | 3 | 2027-02-26 |
-| `E24-D04` | Motion spec and accessibility review for the derivatives panel | 2 | 2027-02-26 |
-| `E24-D05` | Design handoff pack for E24 with sign-off | 2 | 2027-02-26 |
-| `E25-D02` | Wireframe SCR-055..059 detector surfaces with all documented states | 3 | 2027-02-26 |
-| `E25-D03` | Hi-fi design: speed-of-tape, imbalance and regime panels (SCR-055..057) | 3 | 2027-02-26 |
-| `E25-D04` | Hi-fi design: methodology drawer and detector settings (SCR-058, SCR-059) | 3 | 2027-02-26 |
-| `E25-D06` | Accessibility design review of SCR-055..059 before handoff | 2 | 2027-02-26 |
-| `E25-D07` | Design handoff and sign-off for the five detector surfaces | 2 | 2027-02-26 |
+| `E23-D04` | Motion spec and accessibility review for the CVD / delta pane | 2 | 2026-12-10 |
+| `E23-D05` | Design handoff pack for E23 with CDO sign-off | 2 | 2026-12-10 |
+| `E24-D03` | Hi-fi SCR-054 and design-system entries for CMP-186, CMP-126, CMP-127 | 3 | 2026-12-10 |
+| `E24-D04` | Motion spec and accessibility review for the derivatives panel | 2 | 2026-12-10 |
+| `E24-D05` | Design handoff pack for E24 with sign-off | 2 | 2026-12-10 |
+| `E25-D02` | Wireframe SCR-055..059 detector surfaces with all documented states | 3 | 2026-12-10 |
+| `E25-D03` | Hi-fi design: speed-of-tape, imbalance and regime panels (SCR-055..057) | 3 | 2026-12-10 |
+| `E25-D04` | Hi-fi design: methodology drawer and detector settings (SCR-058, SCR-059) | 3 | 2026-12-10 |
+| `E25-D06` | Accessibility design review of SCR-055..059 before handoff | 2 | 2026-12-10 |
+| `E25-D07` | Design handoff and sign-off for the five detector surfaces | 2 | 2026-12-10 |
 
 Design total: **24 pts** across 10 tickets.
 
@@ -2308,7 +2308,7 @@ Design total: **24 pts** across 10 tickets.
 
 ---
 
-## 14. S12 - 2027-03-01 -> 2027-03-12 (R2)
+## 14. S12 - 2026-12-11 -> 2026-12-17 (R2)
 
 ### 14.1 Sprint goal(s)
 
@@ -2421,12 +2421,12 @@ Design total: **24 pts** across 10 tickets.
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E20-D06` | Design QA sweep of the built Deep-Stats surfaces | 2 | 2027-03-12 |
-| `E21-D08` | Design QA of the shipped DOM ladder and heatmap | 3 | 2027-03-12 |
-| `E27-D01` | UX research: how the owner actually manages exchange keys, rotation and compromise | 2 | 2027-03-12 |
-| `E27-D02` | Wireframe SCR-125, SCR-126, SCR-127, SCR-128, SCR-129 and SCR-079 with every state | 3 | 2027-03-12 |
-| `E29-D01` | UX research: what traders need from a positions and orders blotter | 3 | 2027-03-12 |
-| `E29-D02` | Wireframe to hi-fi: SCR-063 positions & orders grid panel | 5 | 2027-03-12 |
+| `E20-D06` | Design QA sweep of the built Deep-Stats surfaces | 2 | 2026-12-17 |
+| `E21-D08` | Design QA of the shipped DOM ladder and heatmap | 3 | 2026-12-17 |
+| `E27-D01` | UX research: how the owner actually manages exchange keys, rotation and compromise | 2 | 2026-12-17 |
+| `E27-D02` | Wireframe SCR-125, SCR-126, SCR-127, SCR-128, SCR-129 and SCR-079 with every state | 3 | 2026-12-17 |
+| `E29-D01` | UX research: what traders need from a positions and orders blotter | 3 | 2026-12-17 |
+| `E29-D02` | Wireframe to hi-fi: SCR-063 positions & orders grid panel | 5 | 2026-12-17 |
 
 Design total: **18 pts** across 6 tickets.
 
@@ -2512,7 +2512,7 @@ Design total: **18 pts** across 6 tickets.
 
 ---
 
-## 15. S13 - 2027-03-15 -> 2027-03-26 (R2)
+## 15. S13 - 2026-12-18 -> 2026-12-24 (R2)
 
 ### 15.1 Sprint goal(s)
 
@@ -2662,29 +2662,29 @@ Design total: **18 pts** across 6 tickets.
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E18-D06` | Design QA sweep of the built footprint surfaces at all densities | 2 | 2027-03-26 |
-| `E19-D08` | Design QA of the shipped profile panel, settings dialog and TPO pane | 3 | 2027-03-26 |
-| `E22-D06` | Design QA sweep of the built tape and bubble overlay | 2 | 2027-03-26 |
-| `E23-D06` | Design QA sweep of the built CVD / delta pane | 2 | 2027-03-26 |
-| `E24-D06` | Design QA sweep of the built derivatives panel | 2 | 2027-03-26 |
-| `E25-D08` | Design QA sweep of the built detector surfaces against the specs | 2 | 2027-03-26 |
-| `E26-D08` | Design QA of the built replay surfaces against spec | 2 | 2027-03-26 |
-| `E27-D03` | Hi-fi design and design-system contributions for the accounts and key-vault surfaces | 3 | 2027-03-26 |
-| `E27-D04` | Specify motion and state-transition choreography for key verification, rotation and danger states | 1 | 2027-03-26 |
-| `E27-D05` | Accessibility design review of the six accounts and key-vault surfaces | 1 | 2027-03-26 |
-| `E27-D06` | Produce and sign off the engineering handoff pack for the accounts and key-vault epic | 1 | 2027-03-26 |
-| `E28-D01` | UX research: how the owner sets risk policy per account and thinks about fan-out | 2 | 2027-03-26 |
-| `E28-D02` | Wireframe SCR-130, SCR-131, SCR-132, SCR-133, SCR-062 and the SCR-061 preview with every state | 3 | 2027-03-26 |
-| `E29-D03` | Hi-fi: SCR-078 fills detail and the reconciling/desync states on SCR-152 | 3 | 2027-03-26 |
-| `E29-D04` | Design-system contributions and motion spec for blotter components | 3 | 2027-03-26 |
-| `E29-D05` | Accessibility design review of the blotters and correction messaging | 2 | 2027-03-26 |
-| `E29-D06` | Design handoff package for the OMS blotters | 2 | 2027-03-26 |
-| `E30-D01` | UX research: how traders decide, size and fire an order under time pressure | 3 | 2027-03-26 |
-| `E32-D01` | Run UX research on bracket, ladder and mandatory-stop mental models | 3 | 2027-03-26 |
-| `E37-D01` | UX research: how rule authors reason about a node graph vs a condition list | 2 | 2027-03-26 |
-| `E39-D01` | UX research and wireframes for risk caps, lockout and kill-switch flows | 3 | 2027-03-26 |
-| `E42-D01` | UX research: how an owner supervises, delegates and investigates | 2 | 2027-03-26 |
-| `E42-D02` | Wireframe the admin area: shell, overview, users, audit, health and flags | 3 | 2027-03-26 |
+| `E18-D06` | Design QA sweep of the built footprint surfaces at all densities | 2 | 2026-12-24 |
+| `E19-D08` | Design QA of the shipped profile panel, settings dialog and TPO pane | 3 | 2026-12-24 |
+| `E22-D06` | Design QA sweep of the built tape and bubble overlay | 2 | 2026-12-24 |
+| `E23-D06` | Design QA sweep of the built CVD / delta pane | 2 | 2026-12-24 |
+| `E24-D06` | Design QA sweep of the built derivatives panel | 2 | 2026-12-24 |
+| `E25-D08` | Design QA sweep of the built detector surfaces against the specs | 2 | 2026-12-24 |
+| `E26-D08` | Design QA of the built replay surfaces against spec | 2 | 2026-12-24 |
+| `E27-D03` | Hi-fi design and design-system contributions for the accounts and key-vault surfaces | 3 | 2026-12-24 |
+| `E27-D04` | Specify motion and state-transition choreography for key verification, rotation and danger states | 1 | 2026-12-24 |
+| `E27-D05` | Accessibility design review of the six accounts and key-vault surfaces | 1 | 2026-12-24 |
+| `E27-D06` | Produce and sign off the engineering handoff pack for the accounts and key-vault epic | 1 | 2026-12-24 |
+| `E28-D01` | UX research: how the owner sets risk policy per account and thinks about fan-out | 2 | 2026-12-24 |
+| `E28-D02` | Wireframe SCR-130, SCR-131, SCR-132, SCR-133, SCR-062 and the SCR-061 preview with every state | 3 | 2026-12-24 |
+| `E29-D03` | Hi-fi: SCR-078 fills detail and the reconciling/desync states on SCR-152 | 3 | 2026-12-24 |
+| `E29-D04` | Design-system contributions and motion spec for blotter components | 3 | 2026-12-24 |
+| `E29-D05` | Accessibility design review of the blotters and correction messaging | 2 | 2026-12-24 |
+| `E29-D06` | Design handoff package for the OMS blotters | 2 | 2026-12-24 |
+| `E30-D01` | UX research: how traders decide, size and fire an order under time pressure | 3 | 2026-12-24 |
+| `E32-D01` | Run UX research on bracket, ladder and mandatory-stop mental models | 3 | 2026-12-24 |
+| `E37-D01` | UX research: how rule authors reason about a node graph vs a condition list | 2 | 2026-12-24 |
+| `E39-D01` | UX research and wireframes for risk caps, lockout and kill-switch flows | 3 | 2026-12-24 |
+| `E42-D01` | UX research: how an owner supervises, delegates and investigates | 2 | 2026-12-24 |
+| `E42-D02` | Wireframe the admin area: shell, overview, users, audit, health and flags | 3 | 2026-12-24 |
 
 Design total: **52 pts** across 23 tickets.
 
@@ -2751,7 +2751,7 @@ Design total: **52 pts** across 23 tickets.
 
 - **QA at 72 pts and design at 56 pts** - both far above steady state. This is an R2-exit evidence pile-up.
 - **10 DESIGN-AHEAD errors land here**: E24-S01/S03/S05/S08 consume E24-D05 (same sprint) and E25-S01..S06 consume E25-D07 (one sprint prior). Both violate the >=2-sprint rule - needs an Architect/CDO waiver or a re-sequence before S13 opens.
-- **R2 exit gate 2027-03-26 + PRR.**
+- **R2 exit gate 2026-12-24 + PRR.**
 
 **External `blocked_by` entering this sprint** (must be Done before the dependent ticket starts):
 
@@ -2775,7 +2775,7 @@ Design total: **52 pts** across 23 tickets.
 
 **Sprint Review demo (on staging/demo, never live):** R2 acceptance: replay a recorded session with footprint, profiles, heatmap, CVD, derivatives and detectors all active and deterministic.
 
-**Exit expectation:** **R2 gate (PRR) 2027-03-26 - `0.3.0` tagged, deployed to staging (demo).**
+**Exit expectation:** **R2 gate (PRR) 2026-12-24 - `0.3.0` tagged, deployed to staging (demo).**
 
 ### 15.9 Burn-up - R2 train
 
@@ -2793,7 +2793,7 @@ Design total: **52 pts** across 23 tickets.
 | | |
 |---|---|
 | Sprints | S14-S19 |
-| Dates | 2027-03-29 -> 2027-06-18 |
+| Dates | 2026-12-25 -> 2027-02-04 |
 | Version at cut | `0.4.0` |
 | Deploys to | staging (demo), 7-day soak |
 | Gate | PRR + demo-trading soak gate |
@@ -2804,7 +2804,7 @@ R3 is the largest train in the plan: accounts and the key vault, per-account pro
 
 ---
 
-## 16. S14 - 2027-03-29 -> 2027-04-09 (R3)
+## 16. S14 - 2026-12-25 -> 2026-12-31 (R3)
 
 ### 16.1 Sprint goal(s)
 
@@ -2915,25 +2915,25 @@ R3 is the largest train in the plan: accounts and the key vault, per-account pro
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E28-D03` | Hi-fi design and design-system contributions for the profile and trade-group surfaces | 3 | 2027-04-09 |
-| `E28-D04` | Specify motion and state-transition choreography for profile saves, previews and readiness | 1 | 2027-04-09 |
-| `E28-D05` | Accessibility design review of the six profile and trade-group surfaces | 1 | 2027-04-09 |
-| `E28-D06` | Produce and sign off the engineering handoff pack for the profiles and trade-groups epic | 1 | 2027-04-09 |
-| `E30-D02` | Wireframe to hi-fi SCR-060 order ticket with every state drawn | 5 | 2027-04-09 |
-| `E30-D03` | Hi-fi SCR-076, SCR-077, SCR-114 and the account / trade-group selector | 5 | 2027-04-09 |
-| `E31-D01` | UX research and hi-fi design for the chart trading layer (SCR-030, SCR-040) | 2 | 2027-04-09 |
-| `E32-D02` | Wireframe SCR-064, SCR-065 and SCR-069 with every state enumerated | 3 | 2027-04-09 |
-| `E33-D01` | UX research: how traders configure and trust an emulated algorithm | 3 | 2027-04-09 |
-| `E35-D01` | UX research: how a trader decides to trust an automated rule with real orders | 3 | 2027-04-09 |
-| `E36-D01` | UX research: how a trader expresses a stop-management rule in words | 3 | 2027-04-09 |
-| `E36-D02` | Wireframe to hi-fi: SCR-081 form editor and SCR-083 templates gallery | 5 | 2027-04-09 |
-| `E36-D03` | Hi-fi SCR-080, SCR-088, SCR-089 plus rule-editor design-system contributions and motion | 3 | 2027-04-09 |
-| `E37-D02` | Wireframe to hi-fi: SCR-082 node editor, all states and round-trip indicator | 5 | 2027-04-09 |
-| `E37-D03` | Design-system tokens and motion spec for node, port, edge and canvas primitives | 3 | 2027-04-09 |
-| `E39-D02` | Hi-fi SCR-071 risk dashboard and SCR-073 lockout notice with CMP-117/CMP-138 specs | 3 | 2027-04-09 |
-| `E39-D03` | Hi-fi SCR-072 kill-switch modal and SCR-134 risk policy, CMP-211 spec and handoff | 3 | 2027-04-09 |
-| `E42-D03` | Hi-fi: admin shell, re-auth gate, SCR-120 overview, SCR-121/122/123/124 users | 3 | 2027-04-09 |
-| `E42-D04` | Hi-fi: SCR-135/136 audit, SCR-145 flags, SCR-148 maintenance, motion spec | 3 | 2027-04-09 |
+| `E28-D03` | Hi-fi design and design-system contributions for the profile and trade-group surfaces | 3 | 2026-12-31 |
+| `E28-D04` | Specify motion and state-transition choreography for profile saves, previews and readiness | 1 | 2026-12-31 |
+| `E28-D05` | Accessibility design review of the six profile and trade-group surfaces | 1 | 2026-12-31 |
+| `E28-D06` | Produce and sign off the engineering handoff pack for the profiles and trade-groups epic | 1 | 2026-12-31 |
+| `E30-D02` | Wireframe to hi-fi SCR-060 order ticket with every state drawn | 5 | 2026-12-31 |
+| `E30-D03` | Hi-fi SCR-076, SCR-077, SCR-114 and the account / trade-group selector | 5 | 2026-12-31 |
+| `E31-D01` | UX research and hi-fi design for the chart trading layer (SCR-030, SCR-040) | 2 | 2026-12-31 |
+| `E32-D02` | Wireframe SCR-064, SCR-065 and SCR-069 with every state enumerated | 3 | 2026-12-31 |
+| `E33-D01` | UX research: how traders configure and trust an emulated algorithm | 3 | 2026-12-31 |
+| `E35-D01` | UX research: how a trader decides to trust an automated rule with real orders | 3 | 2026-12-31 |
+| `E36-D01` | UX research: how a trader expresses a stop-management rule in words | 3 | 2026-12-31 |
+| `E36-D02` | Wireframe to hi-fi: SCR-081 form editor and SCR-083 templates gallery | 5 | 2026-12-31 |
+| `E36-D03` | Hi-fi SCR-080, SCR-088, SCR-089 plus rule-editor design-system contributions and motion | 3 | 2026-12-31 |
+| `E37-D02` | Wireframe to hi-fi: SCR-082 node editor, all states and round-trip indicator | 5 | 2026-12-31 |
+| `E37-D03` | Design-system tokens and motion spec for node, port, edge and canvas primitives | 3 | 2026-12-31 |
+| `E39-D02` | Hi-fi SCR-071 risk dashboard and SCR-073 lockout notice with CMP-117/CMP-138 specs | 3 | 2026-12-31 |
+| `E39-D03` | Hi-fi SCR-072 kill-switch modal and SCR-134 risk policy, CMP-211 spec and handoff | 3 | 2026-12-31 |
+| `E42-D03` | Hi-fi: admin shell, re-auth gate, SCR-120 overview, SCR-121/122/123/124 users | 3 | 2026-12-31 |
+| `E42-D04` | Hi-fi: SCR-135/136 audit, SCR-145 flags, SCR-148 maintenance, motion spec | 3 | 2026-12-31 |
 
 Design total: **58 pts** across 19 tickets.
 
@@ -3004,7 +3004,7 @@ Design total: **58 pts** across 19 tickets.
 
 ---
 
-## 17. S15 - 2027-04-12 -> 2027-04-23 (R3)
+## 17. S15 - 2027-01-01 -> 2027-01-07 (R3)
 
 ### 17.1 Sprint goal(s)
 
@@ -3137,30 +3137,30 @@ Design total: **58 pts** across 19 tickets.
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E30-D04` | Design-system contributions and motion spec for the trading ticket components | 3 | 2027-04-23 |
-| `E30-D05` | Accessibility design review of ticket, confirmation and defaults | 2 | 2027-04-23 |
-| `E30-D06` | Assemble and sign off the engineering handoff pack for the order ticket | 2 | 2027-04-23 |
-| `E31-D02` | Hi-fi DOM trading, design-system, motion spec and a11y review | 2 | 2027-04-23 |
-| `E31-D03` | Design handoff package for chart and DOM trading | 1 | 2027-04-23 |
-| `E32-D03` | Design hi-fi SCR-069 bracket builder and the CMP-119 BracketEditor spec | 3 | 2027-04-23 |
-| `E32-D04` | Design hi-fi SCR-065 scaled/DCA ladder builder with its preview table | 3 | 2027-04-23 |
-| `E32-D05` | Design hi-fi SCR-064 position SL/TP editor and the CMP-120 TrailingStopEditor | 3 | 2027-04-23 |
-| `E32-D06` | Contribute CMP-158, the native-SL affordance pattern and motion to the DS | 2 | 2027-04-23 |
-| `E32-D07` | Run the a11y design review and publish the E32 engineering handoff pack | 3 | 2027-04-23 |
-| `E33-D02` | Wireframe to hi-fi: TWAP, iceberg and chase builders (SCR-066, 067, 068) | 5 | 2027-04-23 |
-| `E33-D03` | Hi-fi: OCO builder (SCR-069) and algo monitor panel (SCR-070) | 5 | 2027-04-23 |
-| `E34-D01` | UX research: how an owner reasons about a multi-account fan-out and its partial failure | 3 | 2027-04-23 |
-| `E35-D02` | Wireframe to hi-fi: rule simulation panel SCR-084 and arming dialog SCR-085 | 5 | 2027-04-23 |
-| `E35-D03` | Hi-fi for conflict resolver, fire history, IR inspector and import/export | 5 | 2027-04-23 |
-| `E35-D04` | Accessibility design review of the six rule-engine screens | 2 | 2027-04-23 |
-| `E35-D05` | Design handoff package and design-system entries for the rule-engine screens | 2 | 2027-04-23 |
-| `E36-D04` | Accessibility design review of the form editor as the mandated non-canvas alternative | 2 | 2027-04-23 |
-| `E36-D05` | Assemble and sign off the rule-form-editor engineering handoff pack | 2 | 2027-04-23 |
-| `E37-D04` | Accessibility design review of the node editor keyboard authoring strategy | 2 | 2027-04-23 |
-| `E37-D05` | Design handoff package for SCR-082 and the node-graph component set | 3 | 2027-04-23 |
-| `E40-D01` | Research alert attention behaviour and run the a11y design review | 1 | 2027-04-23 |
-| `E42-D05` | Hi-fi: SCR-143/144 health and incidents, SCR-146 backups, onboarding wizard | 3 | 2027-04-23 |
-| `E42-D06` | Accessibility design review and engineering handoff pack for the admin area | 2 | 2027-04-23 |
+| `E30-D04` | Design-system contributions and motion spec for the trading ticket components | 3 | 2027-01-07 |
+| `E30-D05` | Accessibility design review of ticket, confirmation and defaults | 2 | 2027-01-07 |
+| `E30-D06` | Assemble and sign off the engineering handoff pack for the order ticket | 2 | 2027-01-07 |
+| `E31-D02` | Hi-fi DOM trading, design-system, motion spec and a11y review | 2 | 2027-01-07 |
+| `E31-D03` | Design handoff package for chart and DOM trading | 1 | 2027-01-07 |
+| `E32-D03` | Design hi-fi SCR-069 bracket builder and the CMP-119 BracketEditor spec | 3 | 2027-01-07 |
+| `E32-D04` | Design hi-fi SCR-065 scaled/DCA ladder builder with its preview table | 3 | 2027-01-07 |
+| `E32-D05` | Design hi-fi SCR-064 position SL/TP editor and the CMP-120 TrailingStopEditor | 3 | 2027-01-07 |
+| `E32-D06` | Contribute CMP-158, the native-SL affordance pattern and motion to the DS | 2 | 2027-01-07 |
+| `E32-D07` | Run the a11y design review and publish the E32 engineering handoff pack | 3 | 2027-01-07 |
+| `E33-D02` | Wireframe to hi-fi: TWAP, iceberg and chase builders (SCR-066, 067, 068) | 5 | 2027-01-07 |
+| `E33-D03` | Hi-fi: OCO builder (SCR-069) and algo monitor panel (SCR-070) | 5 | 2027-01-07 |
+| `E34-D01` | UX research: how an owner reasons about a multi-account fan-out and its partial failure | 3 | 2027-01-07 |
+| `E35-D02` | Wireframe to hi-fi: rule simulation panel SCR-084 and arming dialog SCR-085 | 5 | 2027-01-07 |
+| `E35-D03` | Hi-fi for conflict resolver, fire history, IR inspector and import/export | 5 | 2027-01-07 |
+| `E35-D04` | Accessibility design review of the six rule-engine screens | 2 | 2027-01-07 |
+| `E35-D05` | Design handoff package and design-system entries for the rule-engine screens | 2 | 2027-01-07 |
+| `E36-D04` | Accessibility design review of the form editor as the mandated non-canvas alternative | 2 | 2027-01-07 |
+| `E36-D05` | Assemble and sign off the rule-form-editor engineering handoff pack | 2 | 2027-01-07 |
+| `E37-D04` | Accessibility design review of the node editor keyboard authoring strategy | 2 | 2027-01-07 |
+| `E37-D05` | Design handoff package for SCR-082 and the node-graph component set | 3 | 2027-01-07 |
+| `E40-D01` | Research alert attention behaviour and run the a11y design review | 1 | 2027-01-07 |
+| `E42-D05` | Hi-fi: SCR-143/144 health and incidents, SCR-146 backups, onboarding wizard | 3 | 2027-01-07 |
+| `E42-D06` | Accessibility design review and engineering handoff pack for the admin area | 2 | 2027-01-07 |
 
 Design total: **66 pts** across 24 tickets.
 
@@ -3243,7 +3243,7 @@ Design total: **66 pts** across 24 tickets.
 
 ---
 
-## 18. S16 - 2027-04-26 -> 2027-05-07 (R3)
+## 18. S16 - 2027-01-08 -> 2027-01-14 (R3)
 
 ### 18.1 Sprint goal(s)
 
@@ -3355,19 +3355,19 @@ Design total: **66 pts** across 24 tickets.
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E27-D07` | Design QA the implemented accounts and key-vault screens against the handoff pack | 1 | 2027-05-07 |
-| `E33-D04` | Design-system contribution and motion spec for emulated-algo surfaces | 3 | 2027-05-07 |
-| `E33-D05` | Accessibility design review of the algo builders and monitor panel | 2 | 2027-05-07 |
-| `E33-D06` | Design handoff package for the emulated-algo builders and monitor | 2 | 2027-05-07 |
-| `E34-D02` | Wireframe to hi-fi: trade-group ticket SCR-061 including every failure state | 5 | 2027-05-07 |
-| `E34-D03` | Hi-fi for the trade-group manager SCR-062 plus design-system and motion specs | 3 | 2027-05-07 |
-| `E34-D04` | Accessibility design review of the fan-out ticket and trade-group manager | 2 | 2027-05-07 |
-| `E38-D01` | UX research: how traders tell demo from live and trust simulated fills | 2 | 2027-05-07 |
-| `E38-D02` | Hi-fi design: environment switcher SCR-074 and demo/live chrome SCR-075 | 5 | 2027-05-07 |
-| `E39-D04` | Design QA of the built risk, lockout and kill-switch surfaces | 2 | 2027-05-07 |
-| `E40-D02` | Design all five alert surfaces and ship the engineering handoff pack | 2 | 2027-05-07 |
-| `E41-D01` | UX research + wireframes for the journal surfaces (SCR-093..096) | 3 | 2027-05-07 |
-| `E41-D02` | Hi-fi SCR-093 journal list and SCR-096 tag manager | 3 | 2027-05-07 |
+| `E27-D07` | Design QA the implemented accounts and key-vault screens against the handoff pack | 1 | 2027-01-14 |
+| `E33-D04` | Design-system contribution and motion spec for emulated-algo surfaces | 3 | 2027-01-14 |
+| `E33-D05` | Accessibility design review of the algo builders and monitor panel | 2 | 2027-01-14 |
+| `E33-D06` | Design handoff package for the emulated-algo builders and monitor | 2 | 2027-01-14 |
+| `E34-D02` | Wireframe to hi-fi: trade-group ticket SCR-061 including every failure state | 5 | 2027-01-14 |
+| `E34-D03` | Hi-fi for the trade-group manager SCR-062 plus design-system and motion specs | 3 | 2027-01-14 |
+| `E34-D04` | Accessibility design review of the fan-out ticket and trade-group manager | 2 | 2027-01-14 |
+| `E38-D01` | UX research: how traders tell demo from live and trust simulated fills | 2 | 2027-01-14 |
+| `E38-D02` | Hi-fi design: environment switcher SCR-074 and demo/live chrome SCR-075 | 5 | 2027-01-14 |
+| `E39-D04` | Design QA of the built risk, lockout and kill-switch surfaces | 2 | 2027-01-14 |
+| `E40-D02` | Design all five alert surfaces and ship the engineering handoff pack | 2 | 2027-01-14 |
+| `E41-D01` | UX research + wireframes for the journal surfaces (SCR-093..096) | 3 | 2027-01-14 |
+| `E41-D02` | Hi-fi SCR-093 journal list and SCR-096 tag manager | 3 | 2027-01-14 |
 
 Design total: **35 pts** across 13 tickets.
 
@@ -3448,7 +3448,7 @@ Design total: **35 pts** across 13 tickets.
 
 ---
 
-## 19. S17 - 2027-05-10 -> 2027-05-21 (R3)
+## 19. S17 - 2027-01-15 -> 2027-01-21 (R3)
 
 ### 19.1 Sprint goal(s)
 
@@ -3562,14 +3562,14 @@ Design total: **35 pts** across 13 tickets.
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E34-D05` | Design handoff package for the fan-out ticket and trade-group manager | 3 | 2027-05-21 |
-| `E36-D06` | Design QA the shipped form editor against the handoff pack | 2 | 2027-05-21 |
-| `E38-D03` | Hi-fi design: parity report, paper fidelity panel, reset and eligibility | 3 | 2027-05-21 |
-| `E38-D04` | Hi-fi design: simulated-fill results SCR-099 and simulated-everywhere labelling | 3 | 2027-05-21 |
-| `E38-D05` | Accessibility design review of every E38 surface | 2 | 2027-05-21 |
-| `E38-D06` | Design handoff package for the E38 surfaces | 2 | 2027-05-21 |
-| `E41-D03` | Hi-fi SCR-094 trade post-mortem and SCR-095 analytics dashboard | 3 | 2027-05-21 |
-| `E41-D04` | Journal a11y design review, motion spec and engineering handoff | 2 | 2027-05-21 |
+| `E34-D05` | Design handoff package for the fan-out ticket and trade-group manager | 3 | 2027-01-21 |
+| `E36-D06` | Design QA the shipped form editor against the handoff pack | 2 | 2027-01-21 |
+| `E38-D03` | Hi-fi design: parity report, paper fidelity panel, reset and eligibility | 3 | 2027-01-21 |
+| `E38-D04` | Hi-fi design: simulated-fill results SCR-099 and simulated-everywhere labelling | 3 | 2027-01-21 |
+| `E38-D05` | Accessibility design review of every E38 surface | 2 | 2027-01-21 |
+| `E38-D06` | Design handoff package for the E38 surfaces | 2 | 2027-01-21 |
+| `E41-D03` | Hi-fi SCR-094 trade post-mortem and SCR-095 analytics dashboard | 3 | 2027-01-21 |
+| `E41-D04` | Journal a11y design review, motion spec and engineering handoff | 2 | 2027-01-21 |
 
 Design total: **20 pts** across 8 tickets.
 
@@ -3653,7 +3653,7 @@ Design total: **20 pts** across 8 tickets.
 
 ---
 
-## 20. S18 - 2027-05-24 -> 2027-06-04 (R3)
+## 20. S18 - 2027-01-22 -> 2027-01-28 (R3)
 
 ### 20.1 Sprint goal(s)
 
@@ -3761,11 +3761,11 @@ Design total: **20 pts** across 8 tickets.
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E33-D07` | Design QA of the shipped algo builders and monitor panel | 2 | 2027-06-04 |
-| `E37-D06` | Design QA of the built node-graph editor against the SCR-082 specification | 2 | 2027-06-04 |
-| `E43-D01` | Wireframe to hi-fi: SCR-137 security centre and the Live-enablement gate | 5 | 2027-06-04 |
-| `E43-D02` | Hi-fi SCR-128 key health panel and SCR-136 audit event detail hardening states | 3 | 2027-06-04 |
-| `E44-D01` | Wireframe the live-enablement gate, hardened switch and live visual language | 3 | 2027-06-04 |
+| `E33-D07` | Design QA of the shipped algo builders and monitor panel | 2 | 2027-01-28 |
+| `E37-D06` | Design QA of the built node-graph editor against the SCR-082 specification | 2 | 2027-01-28 |
+| `E43-D01` | Wireframe to hi-fi: SCR-137 security centre and the Live-enablement gate | 5 | 2027-01-28 |
+| `E43-D02` | Hi-fi SCR-128 key health panel and SCR-136 audit event detail hardening states | 3 | 2027-01-28 |
+| `E44-D01` | Wireframe the live-enablement gate, hardened switch and live visual language | 3 | 2027-01-28 |
 
 Design total: **15 pts** across 5 tickets.
 
@@ -3854,7 +3854,7 @@ Design total: **15 pts** across 5 tickets.
 
 ---
 
-## 21. S19 - 2027-06-07 -> 2027-06-18 (R3)
+## 21. S19 - 2027-01-29 -> 2027-02-04 (R3)
 
 ### 21.1 Sprint goal(s)
 
@@ -3993,20 +3993,20 @@ The design org is past D-S18 and is on **design-QA and defect support** (roadmap
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E28-D07` | Design QA the implemented profile and trade-group screens against the handoff pack | 1 | 2027-06-18 |
-| `E29-D07` | Design QA of the shipped OMS blotters | 3 | 2027-06-18 |
-| `E30-D07` | Design QA the shipped order ticket against the handoff pack | 3 | 2027-06-18 |
-| `E31-D07` | Design QA of shipped chart and DOM trading | 1 | 2027-06-18 |
-| `E32-D08` | Execute design QA on the built bracket, ladder and SL/TP screens | 2 | 2027-06-18 |
-| `E34-D06` | Design QA of the shipped trade-group ticket and manager | 3 | 2027-06-18 |
-| `E35-D06` | Design QA of the shipped rule-engine screens | 2 | 2027-06-18 |
-| `E38-D07` | Design QA of the shipped E38 surfaces | 2 | 2027-06-18 |
-| `E40-D03` | Design QA the shipped alert surfaces against the handoff pack | 1 | 2027-06-18 |
-| `E41-D05` | Design QA of the built journal screens against the hi-fi | 2 | 2027-06-18 |
-| `E42-D07` | Design QA the built admin screens against spec and sign off | 2 | 2027-06-18 |
-| `E43-D03` | Accessibility review, design QA and handoff for E43 security surfaces | 3 | 2027-06-18 |
-| `E44-D02` | Hi-fi designs for SCR-137/SCR-145 gate and SCR-074 hardened switch | 3 | 2027-06-18 |
-| `E44-D03` | Live visual language, eligibility control, motion, a11y review and handoff | 3 | 2027-06-18 |
+| `E28-D07` | Design QA the implemented profile and trade-group screens against the handoff pack | 1 | 2027-02-04 |
+| `E29-D07` | Design QA of the shipped OMS blotters | 3 | 2027-02-04 |
+| `E30-D07` | Design QA the shipped order ticket against the handoff pack | 3 | 2027-02-04 |
+| `E31-D07` | Design QA of shipped chart and DOM trading | 1 | 2027-02-04 |
+| `E32-D08` | Execute design QA on the built bracket, ladder and SL/TP screens | 2 | 2027-02-04 |
+| `E34-D06` | Design QA of the shipped trade-group ticket and manager | 3 | 2027-02-04 |
+| `E35-D06` | Design QA of the shipped rule-engine screens | 2 | 2027-02-04 |
+| `E38-D07` | Design QA of the shipped E38 surfaces | 2 | 2027-02-04 |
+| `E40-D03` | Design QA the shipped alert surfaces against the handoff pack | 1 | 2027-02-04 |
+| `E41-D05` | Design QA of the built journal screens against the hi-fi | 2 | 2027-02-04 |
+| `E42-D07` | Design QA the built admin screens against spec and sign off | 2 | 2027-02-04 |
+| `E43-D03` | Accessibility review, design QA and handoff for E43 security surfaces | 3 | 2027-02-04 |
+| `E44-D02` | Hi-fi designs for SCR-137/SCR-145 gate and SCR-074 hardened switch | 3 | 2027-02-04 |
+| `E44-D03` | Live visual language, eligibility control, motion, a11y review and handoff | 3 | 2027-02-04 |
 
 Design total: **31 pts** across 14 tickets.
 
@@ -4087,7 +4087,7 @@ Design total: **31 pts** across 14 tickets.
 ### 21.7 Risks & dependency watch-list
 
 - E30 (30 pts landing here, 87 across the epic) and E34 (40 pts here, 91 across the epic) both complete in this sprint and both gate R4. Neither can slip without moving the Live train.
-- **7-day soak (q09) closes 2027-06-17, one day before the R3 gate** - zero recovery time if the soak surfaces a defect.
+- **7-day soak (q09) closes 2027-02-03, one day before the R3 gate** - zero recovery time if the soak surfaces a defect.
 - Mitigation to decide at S18 planning: pull E41 advanced analytics (ladder #7) and E40 webhook delivery (ladder #6) into R5.
 
 **External `blocked_by` entering this sprint** (must be Done before the dependent ticket starts):
@@ -4112,7 +4112,7 @@ Design total: **31 pts** across 14 tickets.
 
 **Sprint Review demo (on staging/demo, never live):** **Full R3 walkthrough on demo:** ticket -> fan-out to N accounts -> every child order carries a native SL -> positions manager -> journal entry -> alert.
 
-**Exit expectation:** **R3 gate (PRR + 7-day demo-trading soak) 2027-06-18 - `0.4.0`.** Soak closes 2027-06-17.
+**Exit expectation:** **R3 gate (PRR + 7-day demo-trading soak) 2027-02-04 - `0.4.0`.** Soak closes 2027-02-03.
 
 ### 21.9 Burn-up - R3 train
 
@@ -4132,24 +4132,24 @@ Design total: **31 pts** across 14 tickets.
 | | |
 |---|---|
 | Sprints | S20-S22 |
-| Dates | 2027-06-21 -> 2027-07-30 |
+| Dates | 2027-02-05 -> 2027-02-25 |
 | Version at cut | `1.0.0` |
 | Deploys to | prod (live) |
 | Gate | PRR + **Live-enablement gate** |
 | Eng pts in backlog | 154 of 270 capacity (57%) |
 | All-discipline pts | 253 |
 
-R4 exists to earn the right to touch real money: pre-pen-test hardening, an independent pen-test with a pre-allocated 90-pt remediation reserve, reconciliation and chaos resilience, and the live-enablement gate that defaults OFF. Code freeze is 2027-07-02.
+R4 exists to earn the right to touch real money: pre-pen-test hardening, an independent pen-test with a pre-allocated 90-pt remediation reserve, reconciliation and chaos resilience, and the live-enablement gate that defaults OFF. Code freeze is 2027-02-11.
 
 ---
 
-## 22. S20 - 2027-06-21 -> 2027-07-02 (R4)
+## 22. S20 - 2027-02-05 -> 2027-02-11 (R4)
 
 ### 22.1 Sprint goal(s)
 
 - **Open R4.** Pre-pen-test hardening sweep and full STRIDE refresh across all ten areas (E43).
 - Live-enablement gating and environment separation - the gate defaults **OFF** (E44).
-- No new feature scope enters R4. Code freeze for pen-test is 2027-07-02.
+- No new feature scope enters R4. Code freeze for pen-test is 2027-02-11.
 
 ### 22.2 Capacity by discipline vs planned points
 
@@ -4214,8 +4214,8 @@ The design org is past D-S18 and is on **design-QA and defect support** (roadmap
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E45-D01` | Wireframe the reconciliation, discrepancy and drill surfaces | 3 | 2027-07-02 |
-| `E45-D02` | Deliver hi-fi designs, motion and engineering handoff for the discrepancy flow | 3 | 2027-07-02 |
+| `E45-D01` | Wireframe the reconciliation, discrepancy and drill surfaces | 3 | 2027-02-11 |
+| `E45-D02` | Deliver hi-fi designs, motion and engineering handoff for the discrepancy flow | 3 | 2027-02-11 |
 
 Design total: **6 pts** across 2 tickets.
 
@@ -4248,7 +4248,7 @@ Design total: **6 pts** across 2 tickets.
 
 ### 22.7 Risks & dependency watch-list
 
-- **Code freeze for pen-test is 2027-07-02 (end of this sprint).** Anything not merged does not get pen-tested.
+- **Code freeze for pen-test is 2027-02-11 (end of this sprint).** Anything not merged does not get pen-tested.
 - E43 at 77 pts is the largest single-epic sprint load in the entire plan.
 - Pre-pen-test hardening (s07) is a hard-dated bar - the pen-test vendor slot is booked and non-movable.
 
@@ -4274,7 +4274,7 @@ Design total: **6 pts** across 2 tickets.
 
 **Sprint Review demo (on staging/demo, never live):** Live gate demonstrated in the OFF position: no code path can reach live regardless of input. STRIDE refresh presented.
 
-**Exit expectation:** **Code freeze 2027-07-02 for pen-test.**
+**Exit expectation:** **Code freeze 2027-02-11 for pen-test.**
 
 ### 22.9 Burn-up - R4 train
 
@@ -4286,13 +4286,13 @@ Design total: **6 pts** across 2 tickets.
 
 ---
 
-## 23. S21 - 2027-07-05 -> 2027-07-16 (R4)
+## 23. S21 - 2027-02-12 -> 2027-02-18 (R4)
 
 ### 23.1 Sprint goal(s)
 
 - **Independent pen-test runs this sprint.** Engineering load is deliberately held at 43 pts to absorb findings.
 - Live gating completes (E44); reconciliation and chaos/failover begin (E45).
-- The 90-pt pen-test remediation reserve is live from 2027-07-12.
+- The 90-pt pen-test remediation reserve is live from 2027-02-16.
 
 ### 23.2 Capacity by discipline vs planned points
 
@@ -4355,9 +4355,9 @@ The design org is past D-S18 and is on **design-QA and defect support** (roadmap
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E44-D04` | Design QA of the built live-gating surfaces against the hi-fi specs | 2 | 2027-07-16 |
-| `E46-D01` | Design the completed engine diagnostics overlay and the compact latency indicator | 3 | 2027-07-16 |
-| `E46-D02` | Design SCR-118 benchmark flow, recommended preset, degradation indicator and handoff | 3 | 2027-07-16 |
+| `E44-D04` | Design QA of the built live-gating surfaces against the hi-fi specs | 2 | 2027-02-18 |
+| `E46-D01` | Design the completed engine diagnostics overlay and the compact latency indicator | 3 | 2027-02-18 |
+| `E46-D02` | Design SCR-118 benchmark flow, recommended preset, degradation indicator and handoff | 3 | 2027-02-18 |
 
 Design total: **8 pts** across 3 tickets.
 
@@ -4431,12 +4431,12 @@ Design total: **8 pts** across 3 tickets.
 
 ---
 
-## 24. S22 - 2027-07-19 -> 2027-07-30 (R4)
+## 24. S22 - 2027-02-19 -> 2027-02-25 (R4)
 
 ### 24.1 Sprint goal(s)
 
 - **Close R4 and cut `1.0.0`.** Reconciliation correctness and chaos/failover complete (E45).
-- Pen-test remediation finishes (E43); **key-permission audit** runs in week 1 (2027-07-19).
+- Pen-test remediation finishes (E43); **key-permission audit** runs in week 1 (2027-02-19).
 - The Live-enablement gate is walked through under PRR - the only controlled live exception.
 
 ### 24.2 Capacity by discipline vs planned points
@@ -4480,7 +4480,7 @@ The design org is past D-S18 and is on **design-QA and defect support** (roadmap
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E45-D03` | Design QA and accessibility review of the shipped reconciliation surfaces | 2 | 2027-07-30 |
+| `E45-D03` | Design QA and accessibility review of the shipped reconciliation surfaces | 2 | 2027-02-25 |
 
 Design total: **2 pts** across 1 tickets.
 
@@ -4512,8 +4512,8 @@ Design total: **2 pts** across 1 tickets.
 
 ### 24.7 Risks & dependency watch-list
 
-- **R4 exit = Live-enablement gate 2027-07-30.** This is the highest-consequence gate in the plan.
-- Key-permission audit (s10) closes 2027-07-23, a week before the gate - enough margin for one remediation cycle only.
+- **R4 exit = Live-enablement gate 2027-02-25.** This is the highest-consequence gate in the plan.
+- Key-permission audit (s10) closes 2027-02-21, a week before the gate - enough margin for one remediation cycle only.
 - E45 reconciliation correctness is **never-cut**: a reconciliation bug at the Live gate is a stop-ship.
 
 **External `blocked_by` entering this sprint** (must be Done before the dependent ticket starts):
@@ -4538,7 +4538,7 @@ Design total: **2 pts** across 1 tickets.
 
 **Sprint Review demo (on staging/demo, never live):** **Live-enablement gate walkthrough** - the one controlled exception where a demo touches prod (`07-release-and-prr.md` 6). Chaos suite passes: WS disconnect, exchange 5xx, rate-limit 10018.
 
-**Exit expectation:** **R4 gate + Live-enablement gate 2027-07-30 - `1.0.0` to prod (live).**
+**Exit expectation:** **R4 gate + Live-enablement gate 2027-02-25 - `1.0.0` to prod (live).**
 
 ### 24.9 Burn-up - R4 train
 
@@ -4555,7 +4555,7 @@ Design total: **2 pts** across 1 tickets.
 | | |
 |---|---|
 | Sprints | S23-S26 |
-| Dates | 2027-08-02 -> 2027-09-24 |
+| Dates | 2027-02-26 -> 2027-03-25 |
 | Version at cut | `1.1.0` (GA) |
 | Deploys to | prod (live) |
 | Gate | PRR re-run + GA checklist |
@@ -4566,7 +4566,7 @@ R5 is hardening only: performance budget enforcement, WCAG 2.2 AA conformance, c
 
 ---
 
-## 25. S23 - 2027-08-02 -> 2027-08-13 (R5)
+## 25. S23 - 2027-02-26 -> 2027-03-04 (R5)
 
 ### 25.1 Sprint goal(s)
 
@@ -4659,24 +4659,24 @@ The design org is past D-S18 and is on **design-QA and defect support** (roadmap
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E47-D01` | UX research: keyboard-only and screen-reader trading baseline study | 3 | 2027-08-13 |
-| `E47-D02` | Accessibility design audit of all screens: annotated findings catalogue | 5 | 2027-08-13 |
-| `E47-D03` | High-contrast and colour-vision-safe theme design (SCR-116) | 5 | 2027-08-13 |
-| `E47-D04` | Focus order, focus visibility and landmark model spec | 3 | 2027-08-13 |
-| `E47-D05` | Accessibility settings hi-fi (SCR-117) incl. preference previews | 3 | 2027-08-13 |
-| `E47-D06` | Canvas accessibility design: DOM mirror, surrogates and table alternatives | 5 | 2027-08-13 |
-| `E47-D07` | Live-region announcement design: content, politeness and throttling | 5 | 2027-08-13 |
-| `E47-D08` | Motion design: reduced-motion variants and flash-rate safety | 3 | 2027-08-13 |
-| `E47-D09` | Keyboard operability design: cheatsheet, command palette and drag alternatives | 3 | 2027-08-13 |
-| `E47-D10` | Design-system contribution: a11y primitives, patterns and Storybook a11y stories | 5 | 2027-08-13 |
-| `E47-D11` | Handoff pack: a11y remediation specs, redlines and acceptance checklists | 3 | 2027-08-13 |
-| `E47-D13` | Accessibility statement and VPAT-shaped conformance report design | 3 | 2027-08-13 |
-| `E47-D14` | Standing a11y design-review gate for all new and changed UI | 2 | 2027-08-13 |
-| `E48-D01` | Design the Help & about surface and the user-guide information architecture | 5 | 2027-08-13 |
-| `E49-D01` | Author the design-QA audit protocol and open the per-screen findings ledger | 5 | 2027-08-13 |
-| `E49-D02` | Specify the unified empty, loading and error state patterns for the GA sweep | 3 | 2027-08-13 |
-| `E49-D03` | Write the GA copy and terminology specification for every user-visible string | 3 | 2027-08-13 |
-| `E49-D04` | Sweep motion and reduced-motion behaviour across every animated surface | 2 | 2027-08-13 |
+| `E47-D01` | UX research: keyboard-only and screen-reader trading baseline study | 3 | 2027-03-04 |
+| `E47-D02` | Accessibility design audit of all screens: annotated findings catalogue | 5 | 2027-03-04 |
+| `E47-D03` | High-contrast and colour-vision-safe theme design (SCR-116) | 5 | 2027-03-04 |
+| `E47-D04` | Focus order, focus visibility and landmark model spec | 3 | 2027-03-04 |
+| `E47-D05` | Accessibility settings hi-fi (SCR-117) incl. preference previews | 3 | 2027-03-04 |
+| `E47-D06` | Canvas accessibility design: DOM mirror, surrogates and table alternatives | 5 | 2027-03-04 |
+| `E47-D07` | Live-region announcement design: content, politeness and throttling | 5 | 2027-03-04 |
+| `E47-D08` | Motion design: reduced-motion variants and flash-rate safety | 3 | 2027-03-04 |
+| `E47-D09` | Keyboard operability design: cheatsheet, command palette and drag alternatives | 3 | 2027-03-04 |
+| `E47-D10` | Design-system contribution: a11y primitives, patterns and Storybook a11y stories | 5 | 2027-03-04 |
+| `E47-D11` | Handoff pack: a11y remediation specs, redlines and acceptance checklists | 3 | 2027-03-04 |
+| `E47-D13` | Accessibility statement and VPAT-shaped conformance report design | 3 | 2027-03-04 |
+| `E47-D14` | Standing a11y design-review gate for all new and changed UI | 2 | 2027-03-04 |
+| `E48-D01` | Design the Help & about surface and the user-guide information architecture | 5 | 2027-03-04 |
+| `E49-D01` | Author the design-QA audit protocol and open the per-screen findings ledger | 5 | 2027-03-04 |
+| `E49-D02` | Specify the unified empty, loading and error state patterns for the GA sweep | 3 | 2027-03-04 |
+| `E49-D03` | Write the GA copy and terminology specification for every user-visible string | 3 | 2027-03-04 |
+| `E49-D04` | Sweep motion and reduced-motion behaviour across every animated surface | 2 | 2027-03-04 |
 
 Design total: **66 pts** across 18 tickets.
 
@@ -4744,7 +4744,7 @@ Design total: **66 pts** across 18 tickets.
 
 ---
 
-## 26. S24 - 2027-08-16 -> 2027-08-27 (R5)
+## 26. S24 - 2027-03-05 -> 2027-03-11 (R5)
 
 ### 26.1 Sprint goal(s)
 
@@ -4865,13 +4865,13 @@ No design tickets are scheduled in this sprint.
 
 ---
 
-## 27. S25 - 2027-08-30 -> 2027-09-10 (R5)
+## 27. S25 - 2027-03-12 -> 2027-03-18 (R5)
 
 ### 27.1 Sprint goal(s)
 
 - Documentation, runbooks and GA readiness ramp up (E48).
 - Performance hardening completes (E46); defect burn-down peaks (E49).
-- **GA regression + 72h soak starts in week 2** (2027-09-06); final security sweep runs.
+- **GA regression + 72h soak starts in week 2** (2027-03-16); final security sweep runs.
 
 ### 27.2 Capacity by discipline vs planned points
 
@@ -4929,7 +4929,7 @@ The design org is past D-S18 and is on **design-QA and defect support** (roadmap
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E47-D12` | Design QA of a11y remediation across all screens | 5 | 2027-09-10 |
+| `E47-D12` | Design QA of a11y remediation across all screens | 5 | 2027-03-18 |
 
 Design total: **5 pts** across 1 tickets.
 
@@ -4964,7 +4964,7 @@ Design total: **5 pts** across 1 tickets.
 
 ### 27.7 Risks & dependency watch-list
 
-- **GA regression + 72h soak starts 2027-09-06 (week 2).** A soak failure here has only one sprint of recovery.
+- **GA regression + 72h soak starts 2027-03-16 (week 2).** A soak failure here has only one sprint of recovery.
 - E48 docs at 30 pts plus E49 at 33 and E46 at 29 - 65 eng pts across three epics closing simultaneously.
 - Final security sweep (s11) runs S25-S26; findings at this point are GA-blocking by definition.
 
@@ -5003,11 +5003,11 @@ Design total: **5 pts** across 1 tickets.
 
 ---
 
-## 28. S26 - 2027-09-13 -> 2027-09-24 (R5)
+## 28. S26 - 2027-03-19 -> 2027-03-25 (R5)
 
 ### 28.1 Sprint goal(s)
 
-- **GA cut 2027-09-24 - `1.1.0`.** Docs and runbooks complete (E48); final defect sweep (E49).
+- **GA cut 2027-03-25 - `1.1.0`.** Docs and runbooks complete (E48); final defect sweep (E49).
 - GA regression and 72h soak close on the cut date. PRR re-run + GA checklist is the exit.
 
 ### 28.2 Capacity by discipline vs planned points
@@ -5051,8 +5051,8 @@ The design org is past D-S18 and is on **design-QA and defect support** (roadmap
 
 | Key | Title | Est | Due |
 |---|---|---|---|
-| `E48-D02` | Design QA and a11y review of the Help, guide and release-notes surfaces | 3 | 2027-09-24 |
-| `E49-D05` | Run the final design QA over the GA candidate and record design sign-off | 3 | 2027-09-24 |
+| `E48-D02` | Design QA and a11y review of the Help, guide and release-notes surfaces | 3 | 2027-03-25 |
+| `E49-D05` | Run the final design QA over the GA candidate and record design sign-off | 3 | 2027-03-25 |
 
 Design total: **6 pts** across 2 tickets.
 
@@ -5082,7 +5082,7 @@ Design total: **6 pts** across 2 tickets.
 
 ### 28.7 Risks & dependency watch-list
 
-- **GA cut 2027-09-24.** No scope may be added. Only defect fixes with a named GA-blocking justification.
+- **GA cut 2027-03-25.** No scope may be added. Only defect fixes with a named GA-blocking justification.
 - E48 must land the runbooks - an un-runbooked production system fails the GA checklist regardless of code quality.
 - Unused reserve converts to post-GA backlog, never to an earlier date claim (roadmap 3.1).
 
@@ -5108,7 +5108,7 @@ Design total: **6 pts** across 2 tickets.
 
 **Sprint Review demo (on staging/demo, never live):** **GA walkthrough against the GA checklist.** Every exit criterion of every train re-evidenced.
 
-**Exit expectation:** **R5 / GA gate 2027-09-24 - `1.1.0` (GA).** PRR re-run + GA checklist complete.
+**Exit expectation:** **R5 / GA gate 2027-03-25 - `1.1.0` (GA).** PRR re-run + GA checklist complete.
 
 ### 28.9 Burn-up - R5 train
 
@@ -5355,19 +5355,19 @@ Every even-sprint check-in answers exactly these, in this order, in writing:
 
 | Check-in | Date | Train | Special focus |
 |---|---|---|---|
-| S02 check-in | 2026-10-23 | R0 | **Engine spike go/no-go (2026-10-23)** + first velocity recalibration (31.6) |
-| S04 check-in | 2026-11-20 | R0 | **R0 gate / PRR-lite** + second velocity recalibration; R1 re-baselined here |
-| S06 check-in | 2026-12-18 | R1 | R1 mid-train; **S06/S07 eng over-capacity must already be resolved**; engine core FPS trend |
-| S08 check-in | 2027-01-15 | R1 | R1 pre-exit; golden-fixture corpus readiness; DAST first-run triage |
-| S10 check-in | 2027-02-12 | R2 | R2 open; footprint render budget - the single number that decides R2 scope |
-| S12 check-in | 2027-03-12 | R2 | R2 mid-train; **S13 QA pile-up decision must be made here, not in S13** |
-| S14 check-in | 2027-04-09 | R3 | R3 open; safety ordering confirmed; design-ahead for S16-S17 verified |
-| S16 check-in | 2027-05-07 | R3 | R3 mid-train; native-SL invariant evidence; **S19 QA over-commit mitigation decided here** |
-| S18 check-in | 2027-06-04 | R3 | R3 pre-exit; rule-editor joint-merge readiness; soak window pre-flight |
-| S20 check-in | 2027-07-02 | R4 | R4 open; **code-freeze readiness for 2027-07-02** |
-| S22 check-in | 2027-07-30 | R4 | **R4 / Live-enablement gate** - highest-consequence check-in in the plan |
-| S24 check-in | 2027-08-27 | R5 | R5 mid-train; defect burn-down trend; GA scope freeze |
-| S26 check-in | 2027-09-24 | R5 | **GA** - PRR re-run + GA checklist |
+| S02 check-in | 2026-10-08 | R0 | **Engine spike go/no-go (2026-10-08)** + first velocity recalibration (31.6) |
+| S04 check-in | 2026-10-22 | R0 | **R0 gate / PRR-lite** + second velocity recalibration; R1 re-baselined here |
+| S06 check-in | 2026-11-05 | R1 | R1 mid-train; **S06/S07 eng over-capacity must already be resolved**; engine core FPS trend |
+| S08 check-in | 2026-11-19 | R1 | R1 pre-exit; golden-fixture corpus readiness; DAST first-run triage |
+| S10 check-in | 2026-12-03 | R2 | R2 open; footprint render budget - the single number that decides R2 scope |
+| S12 check-in | 2026-12-17 | R2 | R2 mid-train; **S13 QA pile-up decision must be made here, not in S13** |
+| S14 check-in | 2026-12-31 | R3 | R3 open; safety ordering confirmed; design-ahead for S16-S17 verified |
+| S16 check-in | 2027-01-14 | R3 | R3 mid-train; native-SL invariant evidence; **S19 QA over-commit mitigation decided here** |
+| S18 check-in | 2027-01-28 | R3 | R3 pre-exit; rule-editor joint-merge readiness; soak window pre-flight |
+| S20 check-in | 2027-02-11 | R4 | R4 open; **code-freeze readiness for 2027-02-11** |
+| S22 check-in | 2027-02-25 | R4 | **R4 / Live-enablement gate** - highest-consequence check-in in the plan |
+| S24 check-in | 2027-03-11 | R5 | R5 mid-train; defect burn-down trend; GA scope freeze |
+| S26 check-in | 2027-03-25 | R5 | **GA** - PRR re-run + GA checklist |
 
 ## 31.5 What may and may not change
 
@@ -5384,7 +5384,7 @@ Every even-sprint check-in answers exactly these, in this order, in writing:
 
 The 90-pt engineering capacity and the design/QA/security pool sizes in section 2.2 are **assumptions inherited from the planning brief**. They have never been measured on this team, on this codebase. Two recalibration points are scheduled deliberately early, while the cost of being wrong is still small.
 
-### Recalibration 1 - end of S02 (2026-10-23)
+### Recalibration 1 - end of S02 (2026-10-08)
 
 Two sprints of actuals exist. This is a *sanity* check, not a re-baseline: S01-S02 are scaffolding-heavy and unrepresentative of steady-state feature work.
 
@@ -5404,7 +5404,7 @@ estimate_bias     = completed_pts / originally_estimated_pts   # per discipline
 
 > S01 and S02 are planned at **90** and **89** eng pts against 90 - i.e. at the line. There is no slack to hide a low velocity in, which is precisely why this check-in is scheduled.
 
-### Recalibration 2 - end of S04 (2026-11-20), at the R0 gate
+### Recalibration 2 - end of S04 (2026-10-22), at the R0 gate
 
 **This one is a real re-baseline.** Four sprints of actuals, a completed train, and a PRR-lite gate that forces honest evidence. R1 is re-planned against the recalibrated numbers *before* S05 opens.
 
@@ -5435,7 +5435,7 @@ After S04, velocity is re-computed as a **rolling 3-sprint mean** at every train
 | Critical-path item slips >1 sprint | Any stand-up or check-in | Architect + affected lead + QA lead + Owner | Within 2 working days |
 | Rolling velocity <85% of mean for 2 sprints | Train check-in | Lane leads + Architect + Owner | Next sprint planning |
 | A pool over capacity 2 sprints running | Train check-in | That pool lead + Architect + Owner | Next sprint planning |
-| Engine spike returns no-go (S02) | 2026-10-23 | Architect + CDO + Owner | Immediately - R1 is re-planned wholesale |
+| Engine spike returns no-go (S02) | 2026-10-08 | Architect + CDO + Owner | Immediately - R1 is re-planned wholesale |
 | Pen-test findings exceed the 90-pt reserve | S21 | Security + Architect + Owner | Within 2 working days; Live gate date is at risk |
 | Soak failure in S19 or S25 | q09 / q11 | QA lead + Architect + Owner | Immediately - these have near-zero recovery margin |
 | A never-cut item is proposed for cutting | Anywhere | Owner (decision), Architect, Security | ADR before the decision is actioned |

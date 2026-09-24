@@ -9,60 +9,62 @@ Scope (locked, repeated because it constrains every line below): **web app only*
 
 ## 1. Planning constants
 
+> **Calendar (owner decision 2026-09-24): AI-driven delivery.** Development is executed by Claude Code agents working in parallel, so sprints are **1 week (7 calendar days, Fri → Thu)** with **Sprint 01 = Fri 2026-09-25** and GA cut **Thu 2027-03-25**. Story points per sprint are unchanged (90 eng; S07 = 45); only the calendar is compressed. The gating resource is the owner's review/QA/design sign-off bandwidth, not coding time. Single source of truth for dates: `docs/plan/backlog/_tools/calendar_cv.py`. "Mon/Fri" column headings kept from the original 2-week template read as sprint start/end.
+
 | Constant | Value | Source |
 |---|---|---|
-| Sprint length | 2 weeks, Mon → Fri of week 2 | `00-planning-brief.md` |
-| Sprint 01 start | **2026-09-28** (Mon), ends **2026-10-09** (Fri) | owner |
+| Sprint length | **1 week**, Fri → Thu (7 calendar days; AI-driven cadence) | `calendar_cv.py`, owner decision 2026-09-24 |
+| Sprint 01 start | **2026-09-25** (Fri), ends **2026-10-01** (Thu) | owner |
 | Engineering capacity | **90 pts/sprint** (BE 40 · FE 40 · QA 6 · DevSecOps 2 · Security 2 · Architect 0) | `01-sdlc-and-branching.md` §11.3 |
 | Estimation scale | Fibonacci 1-2-3-5-8; >8 must split | `01-sdlc-and-branching.md` §11.1 |
 | Design-ahead rule | Design for a screen is **Done ≥2 sprints** before the frontend story enters a sprint | `00-planning-brief.md`, board DoR |
-| Total plan horizon | **Sprint 01 – Sprint 26** (2026-09-28 → 2027-09-24), GA cut 2027-09-24 | this doc §3 |
+| Total plan horizon | **Sprint 01 – Sprint 26** (2026-09-25 → 2027-03-25), GA cut 2027-03-25 | this doc §3 |
 | Planned engineering budget | 26 × 90 = **2 340 pts**; allocated **1 911 pts to epics (82%)**, plus **230 pts of named reserves** (90 pen-test remediation, 140 defect/polish) = 2 141 committed (91%), **199 pts (9%) held as train-level buffer** | this doc §3.1 |
 
 ### 1.1 Sprint calendar (S01–S26)
 
-| Sprint | Start (Mon) | End (Fri) | Release train | Sprint | Start | End | Train |
+| Sprint | Start (Fri) | End (Thu) | Release train | Sprint | Start | End | Train |
 |---|---|---|---|---|---|---|---|
-| S01 | 2026-09-28 | 2026-10-09 | R0 | S14 | 2027-03-29 | 2027-04-09 | R3 |
-| S02 | 2026-10-12 | 2026-10-23 | R0 | S15 | 2027-04-12 | 2027-04-23 | R3 |
-| S03 | 2026-10-26 | 2026-11-06 | R0 | S16 | 2027-04-26 | 2027-05-07 | R3 |
-| S04 | 2026-11-09 | 2026-11-20 | R0 | S17 | 2027-05-10 | 2027-05-21 | R3 |
-| S05 | 2026-11-23 | 2026-12-04 | R1 | S18 | 2027-05-24 | 2027-06-04 | R3 |
-| S06 | 2026-12-07 | 2026-12-18 | R1 | S19 | 2027-06-07 | 2027-06-18 | R3 |
-| S07 | 2026-12-21 | 2027-01-01 | R1 (holiday, 45 pts) | S20 | 2027-06-21 | 2027-07-02 | R4 |
-| S08 | 2027-01-04 | 2027-01-15 | R1 | S21 | 2027-07-05 | 2027-07-16 | R4 |
-| S09 | 2027-01-18 | 2027-01-29 | R1 | S22 | 2027-07-19 | 2027-07-30 | R4 |
-| S10 | 2027-02-01 | 2027-02-12 | R2 | S23 | 2027-08-02 | 2027-08-13 | R5 |
-| S11 | 2027-02-15 | 2027-02-26 | R2 | S24 | 2027-08-16 | 2027-08-27 | R5 |
-| S12 | 2027-03-01 | 2027-03-12 | R2 | S25 | 2027-08-30 | 2027-09-10 | R5 |
-| S13 | 2027-03-15 | 2027-03-26 | R2 | S26 | 2027-09-13 | 2027-09-24 | R5 (GA cut) |
+| S01 | 2026-09-25 | 2026-10-01 | R0 | S14 | 2026-12-25 | 2026-12-31 | R3 |
+| S02 | 2026-10-02 | 2026-10-08 | R0 | S15 | 2027-01-01 | 2027-01-07 | R3 |
+| S03 | 2026-10-09 | 2026-10-15 | R0 | S16 | 2027-01-08 | 2027-01-14 | R3 |
+| S04 | 2026-10-16 | 2026-10-22 | R0 | S17 | 2027-01-15 | 2027-01-21 | R3 |
+| S05 | 2026-10-23 | 2026-10-29 | R1 | S18 | 2027-01-22 | 2027-01-28 | R3 |
+| S06 | 2026-10-30 | 2026-11-05 | R1 | S19 | 2027-01-29 | 2027-02-04 | R3 |
+| S07 | 2026-11-06 | 2026-11-12 | R1 (reduced, 45 pts) | S20 | 2027-02-05 | 2027-02-11 | R4 |
+| S08 | 2026-11-13 | 2026-11-19 | R1 | S21 | 2027-02-12 | 2027-02-18 | R4 |
+| S09 | 2026-11-20 | 2026-11-26 | R1 | S22 | 2027-02-19 | 2027-02-25 | R4 |
+| S10 | 2026-11-27 | 2026-12-03 | R2 | S23 | 2027-02-26 | 2027-03-04 | R5 |
+| S11 | 2026-12-04 | 2026-12-10 | R2 | S24 | 2027-03-05 | 2027-03-11 | R5 |
+| S12 | 2026-12-11 | 2026-12-17 | R2 | S25 | 2027-03-12 | 2027-03-18 | R5 |
+| S13 | 2026-12-18 | 2026-12-24 | R2 | S26 | 2027-03-19 | 2027-03-25 | R5 (GA cut) |
 
-> **S07 capacity exception**: the sprint spanning 2026-12-21 → 2027-01-01 is planned at **45 pts** (half capacity) for holidays. The 45-pt shortfall is absorbed by the train buffer, not by descoping R1 exit criteria.
+> **S07 capacity exception**: the sprint spanning 2026-11-06 → 2026-11-12 is planned at **45 pts** (half capacity) — retained from the original plan as an owner-availability buffer (originally the year-end holiday sprint). The 45-pt shortfall is absorbed by the train buffer, not by descoping R1 exit criteria.
 
 ### 1.2 Design-ahead track calendar
 
-Design sprints are numbered `D-Snn` and run on the same 2-week cadence but **offset two sprints earlier** than the engineering sprint that consumes them. The design track therefore starts **before** engineering Sprint 01 is meaningful for UI: design sprints D-S01 and D-S02 run in parallel with engineering S01–S02 producing artifacts consumed in S03–S04, and the design org front-loads R1/R2 screens.
+Design sprints are numbered `D-Snn` and run on the same 1-week cadence but **offset two sprints earlier** than the engineering sprint that consumes them. The design track therefore starts **before** engineering Sprint 01 is meaningful for UI: design sprints D-S01 and D-S02 run in parallel with engineering S01–S02 producing artifacts consumed in S03–S04, and the design org front-loads R1/R2 screens.
 
 | Design sprint | Dates | Produces (Done, CDO-signed) | Consumed by eng sprint |
 |---|---|---|---|
-| D-S01 | 2026-09-28 → 2026-10-09 | Design-system v0 tokens, grid, density, theming, motion spec (`16-design-system-brief.md`); auth/onboarding screens | S03 |
-| D-S02 | 2026-10-12 → 2026-10-23 | Shell/navigation, workspace chrome, symbol picker, admin IA | S04 |
-| D-S03 | 2026-10-26 → 2026-11-06 | Chart surface, time/price axes, crosshair, chart toolbar, indicator UI | S05 |
-| D-S04 | 2026-11-09 → 2026-11-20 | Drawing-tool UX, layouts/workspaces, recorder UI | S06 |
-| D-S05 | 2026-11-23 → 2026-12-04 | Footprint cell design, profiles, Deep-Stats rows | S07 |
-| D-S06 | 2026-12-07 → 2026-12-18 | DOM ladder + heatmap, big-trade bubbles, tape | S08 |
-| D-S07 | 2026-12-21 → 2027-01-01 (reduced) | CVD/derivatives panes, detector badges + "(estimated)" pattern | S09 |
-| D-S08 | 2027-01-04 → 2027-01-15 | Replay UI, alerts UI | S10 |
-| D-S09 | 2027-01-18 → 2027-01-29 | Accounts, API-key flows, per-account profiles, trade-group picker | S11 |
-| D-S10 | 2027-02-01 → 2027-02-12 | Order ticket, chart trading, DOM trading, arm/lock + env badge | S12 |
-| D-S11 | 2027-02-15 → 2027-02-26 | Bracket/scaled/emulated-algo UI, positions & orders manager | S13 |
-| D-S12 | 2027-03-01 → 2027-03-12 | Rule engine **form editor** | S14 |
-| D-S13 | 2027-03-15 → 2027-03-26 | Rule engine **node-graph editor**, simulation UX | S15 |
-| D-S14 | 2027-03-29 → 2027-04-09 | Journal & analytics, paper-vs-live comparison | S16 |
-| D-S15 | 2027-04-12 → 2027-04-23 | Admin screens: users/roles, audit log, health, feature flags, kill-switch | S17 |
-| D-S16 | 2027-04-26 → 2027-05-07 | Live-mode visual language, danger states, confirmation patterns | S18 |
-| D-S17 | 2027-05-10 → 2027-05-21 | A11y remediation designs, high-contrast + colour-blind themes | S19/S20 |
-| D-S18 | 2027-05-24 → 2027-06-04 | Design-QA sweep specs, empty/error/loading state audit, GA polish | S21–S24 |
+| D-S01 | 2026-09-25 → 2026-10-01 | Design-system v0 tokens, grid, density, theming, motion spec (`16-design-system-brief.md`); auth/onboarding screens | S03 |
+| D-S02 | 2026-10-02 → 2026-10-08 | Shell/navigation, workspace chrome, symbol picker, admin IA | S04 |
+| D-S03 | 2026-10-09 → 2026-10-15 | Chart surface, time/price axes, crosshair, chart toolbar, indicator UI | S05 |
+| D-S04 | 2026-10-16 → 2026-10-22 | Drawing-tool UX, layouts/workspaces, recorder UI | S06 |
+| D-S05 | 2026-10-23 → 2026-10-29 | Footprint cell design, profiles, Deep-Stats rows | S07 |
+| D-S06 | 2026-10-30 → 2026-11-05 | DOM ladder + heatmap, big-trade bubbles, tape | S08 |
+| D-S07 | 2026-11-06 → 2026-11-12 (reduced) | CVD/derivatives panes, detector badges + "(estimated)" pattern | S09 |
+| D-S08 | 2026-11-13 → 2026-11-19 | Replay UI, alerts UI | S10 |
+| D-S09 | 2026-11-20 → 2026-11-26 | Accounts, API-key flows, per-account profiles, trade-group picker | S11 |
+| D-S10 | 2026-11-27 → 2026-12-03 | Order ticket, chart trading, DOM trading, arm/lock + env badge | S12 |
+| D-S11 | 2026-12-04 → 2026-12-10 | Bracket/scaled/emulated-algo UI, positions & orders manager | S13 |
+| D-S12 | 2026-12-11 → 2026-12-17 | Rule engine **form editor** | S14 |
+| D-S13 | 2026-12-18 → 2026-12-24 | Rule engine **node-graph editor**, simulation UX | S15 |
+| D-S14 | 2026-12-25 → 2026-12-31 | Journal & analytics, paper-vs-live comparison | S16 |
+| D-S15 | 2027-01-01 → 2027-01-07 | Admin screens: users/roles, audit log, health, feature flags, kill-switch | S17 |
+| D-S16 | 2027-01-08 → 2027-01-14 | Live-mode visual language, danger states, confirmation patterns | S18 |
+| D-S17 | 2027-01-15 → 2027-01-21 | A11y remediation designs, high-contrast + colour-blind themes | S19/S20 |
+| D-S18 | 2027-01-22 → 2027-01-28 | Design-QA sweep specs, empty/error/loading state audit, GA polish | S21–S24 |
 
 After D-S18 the design org shifts to **design-QA and defect support** (no new screens), reserving capacity for R5 polish.
 
@@ -72,23 +74,23 @@ After D-S18 the design org shifts to **design-QA and defect support** (no new sc
 
 ```mermaid
 timeline
-    title CandleViewer release trains (Sprint 01 = 2026-09-28)
-    R0 Foundations (S01-S04) : 2026-09-28 to 2026-11-20 : governance, monorepo, CI/CD, design-system v0, engine spike, ingestion skeleton, auth
-    R1 Charting alpha (S05-S09) : 2026-11-23 to 2027-01-29 : engine core, bars, indicators, drawings, layouts, recording
-    R2 Order-flow beta (S10-S13) : 2027-02-01 to 2027-03-26 : footprint, profiles, stats rows, heatmap+ladder, big trades, CVD/OI/funding/liq, detectors, replay
-    R3 Trading on demo (S14-S19) : 2027-03-29 to 2027-06-18 : accounts/keys/profiles, ticket, chart+DOM trading, brackets, emulated algos, fan-out, rules, alerts, journal, admin
-    R4 Live enablement (S20-S22) : 2027-06-21 to 2027-07-30 : pen-test, PRR, kill-switch, key audits, live gating
-    R5 Hardening / GA (S23-S26) : 2027-08-02 to 2027-09-24 : perf, a11y, chaos, docs, GA
+    title CandleViewer release trains (Sprint 01 = 2026-09-25)
+    R0 Foundations (S01-S04) : 2026-09-25 to 2026-10-22 : governance, monorepo, CI/CD, design-system v0, engine spike, ingestion skeleton, auth
+    R1 Charting alpha (S05-S09) : 2026-10-23 to 2026-11-26 : engine core, bars, indicators, drawings, layouts, recording
+    R2 Order-flow beta (S10-S13) : 2026-11-27 to 2026-12-24 : footprint, profiles, stats rows, heatmap+ladder, big trades, CVD/OI/funding/liq, detectors, replay
+    R3 Trading on demo (S14-S19) : 2026-12-25 to 2027-02-04 : accounts/keys/profiles, ticket, chart+DOM trading, brackets, emulated algos, fan-out, rules, alerts, journal, admin
+    R4 Live enablement (S20-S22) : 2027-02-05 to 2027-02-25 : pen-test, PRR, kill-switch, key audits, live gating
+    R5 Hardening / GA (S23-S26) : 2027-02-26 to 2027-03-25 : perf, a11y, chaos, docs, GA
 ```
 
 | Train | Sprints | Dates | Version at cut | Deploys to | Gate |
 |---|---|---|---|---|---|
-| **R0 Foundations** | S01–S04 | 2026-09-28 → 2026-11-20 | `0.1.0` | dev + staging smoke | PRR-lite |
-| **R1 Charting alpha** | S05–S09 | 2026-11-23 → 2027-01-29 | `0.2.0` | staging (demo) | PRR |
-| **R2 Order-flow beta** | S10–S13 | 2027-02-01 → 2027-03-26 | `0.3.0` | staging (demo) | PRR |
-| **R3 Trading on demo** | S14–S19 | 2027-03-29 → 2027-06-18 | `0.4.0` | staging (demo), 7-day soak | PRR + demo-trading soak gate |
-| **R4 Live enablement** | S20–S22 | 2027-06-21 → 2027-07-30 | `1.0.0` | prod (live) | PRR + **Live-enablement gate** (`07` §6) |
-| **R5 Hardening / GA** | S23–S26 | 2027-08-02 → 2027-09-24 | `1.1.0` (GA) | prod (live) | PRR re-run + GA checklist |
+| **R0 Foundations** | S01–S04 | 2026-09-25 → 2026-10-22 | `0.1.0` | dev + staging smoke | PRR-lite |
+| **R1 Charting alpha** | S05–S09 | 2026-10-23 → 2026-11-26 | `0.2.0` | staging (demo) | PRR |
+| **R2 Order-flow beta** | S10–S13 | 2026-11-27 → 2026-12-24 | `0.3.0` | staging (demo) | PRR |
+| **R3 Trading on demo** | S14–S19 | 2026-12-25 → 2027-02-04 | `0.4.0` | staging (demo), 7-day soak | PRR + demo-trading soak gate |
+| **R4 Live enablement** | S20–S22 | 2027-02-05 → 2027-02-25 | `1.0.0` | prod (live) | PRR + **Live-enablement gate** (`07` §6) |
+| **R5 Hardening / GA** | S23–S26 | 2027-02-26 → 2027-03-25 | `1.1.0` (GA) | prod (live) | PRR re-run + GA checklist |
 
 ---
 
@@ -214,7 +216,7 @@ Three things make this acceptable rather than reckless, and all three are condit
 
 ## 4. R0 — Foundations
 
-**Sprints S01–S04 · 2026-09-28 → 2026-11-20 · version `0.1.0` · environments: dev continuous, staging smoke only**
+**Sprints S01–S04 · 2026-09-25 → 2026-10-22 · version `0.1.0` · environments: dev continuous, staging smoke only**
 
 ### 4.1 Goals
 
@@ -272,17 +274,17 @@ Three things make this acceptable rather than reckless, and all three are condit
 
 | Date | Milestone |
 |---|---|
-| 2026-09-28 | S01 starts; governance epics land day 1–3 so all later work is compliant |
-| 2026-10-09 | Engine spike first numbers reviewed at Sprint Review |
-| 2026-10-23 | **ADR-0006 / ADR-0007 merged** (engine + shell decision) — hard checkpoint before R1 design lock |
-| 2026-11-06 | **ADR-0008 merged** (hot tier); 24 h ingestion soak starts |
-| 2026-11-20 | **R0 complete**, tag `v0.1.0`, PRR-lite passed |
+| 2026-09-25 | S01 starts; governance epics land day 1–3 so all later work is compliant |
+| 2026-10-01 | Engine spike first numbers reviewed at Sprint Review |
+| 2026-10-08 | **ADR-0006 / ADR-0007 merged** (engine + shell decision) — hard checkpoint before R1 design lock |
+| 2026-10-15 | **ADR-0008 merged** (hot tier); 24 h ingestion soak starts |
+| 2026-10-22 | **R0 complete**, tag `v0.1.0`, PRR-lite passed |
 
 ---
 
 ## 5. R1 — Charting alpha
 
-**Sprints S05–S09 · 2026-11-23 → 2027-01-29 · version `0.2.0` · environment: staging (demo)**
+**Sprints S05–S09 · 2026-10-23 → 2026-11-26 · version `0.2.0` · environment: staging (demo)**
 
 ### 5.1 Goals
 
@@ -334,16 +336,16 @@ Three things make this acceptable rather than reckless, and all three are condit
 
 | Date | Milestone |
 |---|---|
-| 2026-11-23 | S05 starts; engine core + WS protocol begin |
-| 2026-12-18 | Engine core feature-complete; **recorder switched on for the owner's symbol list** — start of real order-flow history accumulation |
-| 2027-01-15 | Indicators + drawings complete; 7-day recorder soak begins |
-| 2027-01-29 | **R1 complete**, tag `v0.2.0`, PRR passed, staging demo |
+| 2026-10-23 | S05 starts; engine core + WS protocol begin |
+| 2026-11-05 | Engine core feature-complete; **recorder switched on for the owner's symbol list** — start of real order-flow history accumulation |
+| 2026-11-19 | Indicators + drawings complete; 7-day recorder soak begins |
+| 2026-11-26 | **R1 complete**, tag `v0.2.0`, PRR passed, staging demo |
 
 ---
 
 ## 6. R2 — Order-flow beta
 
-**Sprints S10–S13 · 2027-02-01 → 2027-03-26 · version `0.3.0` · environment: staging (demo)**
+**Sprints S10–S13 · 2026-11-27 → 2026-12-24 · version `0.3.0` · environment: staging (demo)**
 
 ### 6.1 Goals
 
@@ -397,16 +399,16 @@ Three things make this acceptable rather than reckless, and all three are condit
 
 | Date | Milestone |
 |---|---|
-| 2027-02-01 | S10 starts; footprint + heatmap begin (highest-risk rendering work first) |
-| 2027-02-26 | Footprint, profiles, heatmap feature-complete; frame-budget re-benchmark checkpoint |
-| 2027-03-12 | Detectors + derivatives complete; replay determinism suite green |
-| 2027-03-26 | **R2 complete**, tag `v0.3.0`, PRR passed |
+| 2026-11-27 | S10 starts; footprint + heatmap begin (highest-risk rendering work first) |
+| 2026-12-10 | Footprint, profiles, heatmap feature-complete; frame-budget re-benchmark checkpoint |
+| 2026-12-17 | Detectors + derivatives complete; replay determinism suite green |
+| 2026-12-24 | **R2 complete**, tag `v0.3.0`, PRR passed |
 
 ---
 
 ## 7. R3 — Trading on demo
 
-**Sprints S14–S19 · 2027-03-29 → 2027-06-18 · version `0.4.0` · environment: staging (demo), 7-day soak**
+**Sprints S14–S19 · 2026-12-25 → 2027-02-04 · version `0.4.0` · environment: staging (demo), 7-day soak**
 
 This is the largest and most dangerous train. Everything in it executes against **Bybit demo** only; there is no code path that can reach live until R4 flips the gate, and that gate is enforced in the backend configuration layer (M1), not in the UI.
 
@@ -474,17 +476,17 @@ This is the largest and most dangerous train. Everything in it executes against 
 
 | Date | Milestone |
 |---|---|
-| 2027-03-29 | S14 starts; OMS core + rule IR + accounts begin |
-| 2027-04-23 | Key vault + profiles + risk caps + kill-switch complete — **safety scaffolding lands before the first order ticket ships** |
-| 2027-05-21 | Order ticket, chart/DOM trading, brackets complete; first end-to-end demo trade at Sprint Review |
-| 2027-06-04 | Fan-out, emulated algos, both rule editors complete |
-| 2027-06-18 | **R3 complete**, tag `v0.4.0`, 7-day soak clean, PRR passed |
+| 2026-12-25 | S14 starts; OMS core + rule IR + accounts begin |
+| 2027-01-07 | Key vault + profiles + risk caps + kill-switch complete — **safety scaffolding lands before the first order ticket ships** |
+| 2027-01-21 | Order ticket, chart/DOM trading, brackets complete; first end-to-end demo trade at Sprint Review |
+| 2027-01-28 | Fan-out, emulated algos, both rule editors complete |
+| 2027-02-04 | **R3 complete**, tag `v0.4.0`, 7-day soak clean, PRR passed |
 
 ---
 
 ## 8. R4 — Live enablement
 
-**Sprints S20–S22 · 2027-06-21 → 2027-07-30 · version `1.0.0` · environment: prod (live) · gate: Live-enablement (`07-release-and-prr.md` §6)**
+**Sprints S20–S22 · 2027-02-05 → 2027-02-25 · version `1.0.0` · environment: prod (live) · gate: Live-enablement (`07-release-and-prr.md` §6)**
 
 R4 adds **almost no new features**. Its product is *assurance*. The scope is deliberately small so the pen-test remediation reserve has somewhere to go.
 
@@ -534,17 +536,17 @@ R4 adds **almost no new features**. Its product is *assurance*. The scope is del
 
 | Date | Milestone |
 |---|---|
-| 2027-06-21 | S20 starts; hardening pass + environment separation begin |
-| 2027-07-02 | Code freeze for pen-test; **pen-test window opens 2027-07-05** |
-| 2027-07-16 | Pen-test report delivered; remediation begins against the reserve |
-| 2027-07-23 | Key-permission audit + kill-switch test executed; chaos suite green |
-| 2027-07-30 | **R4 complete**, tag `v1.0.0`, Live enabled for the Owner, ramp begins |
+| 2027-02-05 | S20 starts; hardening pass + environment separation begin |
+| 2027-02-11 | Code freeze for pen-test; **pen-test window opens 2027-02-12** |
+| 2027-02-18 | Pen-test report delivered; remediation begins against the reserve |
+| 2027-02-21 | Key-permission audit + kill-switch test executed; chaos suite green |
+| 2027-02-25 | **R4 complete**, tag `v1.0.0`, Live enabled for the Owner, ramp begins |
 
 ---
 
 ## 9. R5 — Hardening / GA
 
-**Sprints S23–S26 · 2027-08-02 → 2027-09-24 · version `1.1.0` (GA) · environment: prod (live)**
+**Sprints S23–S26 · 2027-02-26 → 2027-03-25 · version `1.1.0` (GA) · environment: prod (live)**
 
 ### 9.1 Goals
 
@@ -589,10 +591,10 @@ R4 adds **almost no new features**. Its product is *assurance*. The scope is del
 
 | Date | Milestone |
 |---|---|
-| 2027-08-02 | S23 starts; perf + a11y audits begin in parallel |
-| 2027-08-27 | Perf budgets CI-enforced; a11y remediation complete |
-| 2027-09-10 | Documentation and runbook rehearsals complete; 72 h soak starts |
-| 2027-09-24 | **GA**, tag `v1.1.0`, final PRR passed |
+| 2027-02-26 | S23 starts; perf + a11y audits begin in parallel |
+| 2027-03-11 | Perf budgets CI-enforced; a11y remediation complete |
+| 2027-03-18 | Documentation and runbook rehearsals complete; 72 h soak starts |
+| 2027-03-25 | **GA**, tag `v1.1.0`, final PRR passed |
 
 ---
 ## 10. Gantt — engineering, design-ahead, security and QA tracks
@@ -603,169 +605,168 @@ Dates are sprint-aligned. The **design track runs ≥2 sprints ahead** of the en
 
 #### 10.1.0 How to read the bar durations (day→sprint mapping)
 
-The chart is declared with `excludes weekends`, so **every `d` in this Gantt is a working day, not a calendar day**. That makes the mapping to the sprint calendar in §1.1 exact and mechanical:
+Agents work every day, so **every `d` in this Gantt is a calendar day** (no `excludes weekends`). The mapping to the sprint calendar in §1.1 is exact and mechanical:
 
-| Gantt duration | Working days | Calendar span | Sprints covered |
+| Gantt duration | Calendar days | Calendar span | Sprints covered |
 |---|---|---|---|
-| `5d` | 5 | 1 week | half a sprint (week 1 or week 2) |
-| `10d` | 10 | 2 weeks | **exactly 1 sprint** |
-| `20d` | 20 | 4 weeks | exactly 2 sprints |
-| `30d` | 30 | 6 weeks | exactly 3 sprints |
-| `40d` | 40 | 8 weeks | exactly 4 sprints |
-| `60d` / `80d` / `120d` / `180d` / `260d` | — | 12 / 16 / 24 / 36 / 52 weeks | 6 / 8 / 12 / 18 / 26 sprints |
+| `4d` | 4 | ~half a week | half a sprint |
+| `7d` | 7 | 1 week | **exactly 1 sprint** |
+| `14d` | 14 | 2 weeks | exactly 2 sprints |
+| `21d` | 21 | 3 weeks | exactly 3 sprints |
+| `28d` | 28 | 4 weeks | exactly 4 sprints |
+| `42d` / `56d` / `84d` / `126d` / `182d` | — | 6 / 8 / 12 / 18 / 26 weeks | 6 / 8 / 12 / 18 / 26 sprints |
 
-Every bar's start date is a **Monday**, and all sprint-aligned bars start on a Monday that is the **first day of a sprint** in §1.1 (i.e. 2026-09-28 + a multiple of 14 calendar days). Consequently a bar starting at sprint *n* with duration *10k* days ends on the last Friday of sprint *n + k − 1*, with no bar straddling a train boundary except where the text below says so explicitly.
+Every bar's start date is a **Friday**, and all sprint-aligned bars start on a Friday that is the **first day of a sprint** in §1.1 (i.e. 2026-09-25 + a multiple of 7 calendar days). Consequently a bar starting at sprint *n* with duration *7k* days ends on the Thursday closing sprint *n + k − 1*, with no bar straddling a train boundary except where the text below says so explicitly.
 
-To remove the need to re-derive this, **every bar label carries its sprint range in square brackets** — `E11 Engine core [S05-S07]` means the bar occupies sprints S05, S06 and S07 inclusive, which per §1.1 is 2026-11-23 → 2027-01-01. Where a bar deliberately starts mid-sprint (the only cases are three security/QA events keyed to fixed external bookings), the label says `wk1`/`wk2`:
+To remove the need to re-derive this, **every bar label carries its sprint range in square brackets** — `E11 Engine core [S05-S07]` means the bar occupies sprints S05, S06 and S07 inclusive, which per §1.1 is 2026-10-23 → 2026-11-12. Where a bar deliberately starts mid-sprint (the only cases are three security/QA events keyed to fixed external bookings), the label says `1st half`/`2nd half`:
 
 | Bar | Dates | Label | Why it is not sprint-aligned |
 |---|---|---|---|
-| `s09` Pen-test remediation | 2027-07-12 → 2027-07-30 (15 wd) | `[S21wk2-S22]` | Starts the Monday after the pen-test report lands (s08 ends 2027-07-16 for reporting; remediation of interim findings begins 07-12). Funded by the named 90-pt R4 reserve, so it needs no sprint boundary of its own. |
-| `s10` Key-permission audit | 2027-07-19 → 2027-07-23 (5 wd) | `[S22wk1]` | A one-week audit deliberately placed in the first week of S22 so findings still have a full week of S22 to be fixed before the R4 gate on 2027-07-30. |
-| `q09` R3 7-day soak | 2027-06-09 → 2027-06-17 (7 wd) | `[S19]` | The soak must end *before* the R3 gate on 2027-06-18, so it is back-scheduled from the gate rather than from a sprint start. It sits entirely inside S19 (2027-06-07 → 2027-06-18). |
-| `q11` GA regression + 72h soak | 2027-09-06 → 2027-09-24 (15 wd) | `[S25wk2-S26]` | Back-scheduled from the GA cut on 2027-09-24 so the 72-hour soak finishes on the gate date; starting it a full sprint earlier would soak a build that S25 is still changing. |
+| `s09` Pen-test remediation | 2027-02-16 → 2027-02-25 (10 d) | `[S21 2nd half-S22]` | Starts the day after the pen-test report lands (s08 ends 2027-02-18 for reporting; remediation of interim findings begins as they are reported). Funded by the named 90-pt R4 reserve, so it needs no sprint boundary of its own. |
+| `s10` Key-permission audit | 2027-02-19 → 2027-02-21 (3 d) | `[S22 1st half]` | A short audit deliberately placed in the first half of S22 so findings still have the rest of S22 to be fixed before the R4 gate on 2027-02-25. |
+| `q09` R3 7-day soak | 2027-01-30 → 2027-02-03 (5 d) | `[S19]` | The soak must end *before* the R3 gate on 2027-02-04, so it is back-scheduled from the gate rather than from a sprint start. It sits entirely inside S19 (2027-01-29 → 2027-02-04). |
+| `q11` GA regression + 72h soak | 2027-03-16 → 2027-03-25 (10 d) | `[S25 2nd half-S26]` | Back-scheduled from the GA cut on 2027-03-25 so the 72-hour soak finishes on the gate date; starting it a full sprint earlier would soak a build that S25 is still changing. |
 
 Two further reading notes:
 
-- **Holidays are not modelled by the chart.** Mermaid's `excludes weekends` removes Saturdays and Sundays only; the S07 holiday reduction (§1.1, 45 pts instead of 90) is a *capacity* statement, not a *duration* statement. Bars crossing S07 (`e11`, `e12`, `e16`, `d07`) keep their calendar length and absorb the reduced capacity through the train buffer, exactly as §1.1 states.
-- **Milestone dates equal train exit dates.** `m0`–`m5` are placed on the final Friday of the last sprint of each train (S04, S09, S13, S19, S22, S26 → 2026-11-20, 2027-01-29, 2027-03-26, 2027-06-18, 2027-07-30, 2027-09-24), matching §1.1 and the per-train "key dates" tables in §4.5–§9.5.
+- **Capacity is not modelled by the chart.** The S07 reduction (§1.1, 45 pts instead of 90) is a *capacity* statement, not a *duration* statement. Bars crossing S07 (`e11`, `e12`, `e16`, `d07`) keep their calendar length and absorb the reduced capacity through the train buffer, exactly as §1.1 states.
+- **Milestone dates equal train exit dates.** `m0`–`m5` are placed on the final Thursday of the last sprint of each train (S04, S09, S13, S19, S22, S26 → 2026-10-22, 2026-11-26, 2026-12-24, 2027-02-04, 2027-02-25, 2027-03-25), matching §1.1 and the per-train "key dates" tables in §4.5–§9.5.
 
 #### 10.1.1 Line-by-line sprint reconciliation
 
-Verified for all 48 epic bars, 19 design bars, 11 security bars and 11 QA bars: each bar's start date is the Monday of the sprint named in its label, and `start + duration` (working days) lands on the Friday that ends the last sprint named in its label. The four exceptions are the `wk1`/`wk2` bars tabulated above (`s09`, `s10`, `q09`, `q11`). Long-running continuous bars — `s02` SAST/SCA `[S01-S26]` at 260 wd, `s06` DAST `[S08-S25]` at 180 wd, `q07` load & soak `[S09-S20]` at 120 wd, `d19` design-QA support `[S19-S26]` at 80 wd, `q08` chaos `[S18-S23]` at 60 wd, `q04` E2E `[S05-S10]` at 60 wd, `s05` OMS threat-model refresh `[S14-S19]` at 60 wd — are cadence bars, not single work items; their length is `10 × (number of sprints spanned)` by construction, which is why each is an exact multiple of 10. Train-boundary spot checks, which are where a mismatch would hurt most:
+Verified for all 48 epic bars, 19 design bars, 11 security bars and 11 QA bars: each bar's start date is the Friday opening the sprint named in its label, and `start + duration` (working days) lands on the Friday that ends the last sprint named in its label. The four exceptions are the `wk1`/`wk2` bars tabulated above (`s09`, `s10`, `q09`, `q11`). Long-running continuous bars — `s02` SAST/SCA `[S01-S26]` at 260 wd, `s06` DAST `[S08-S25]` at 180 wd, `q07` load & soak `[S09-S20]` at 120 wd, `d19` design-QA support `[S19-S26]` at 80 wd, `q08` chaos `[S18-S23]` at 60 wd, `q04` E2E `[S05-S10]` at 60 wd, `s05` OMS threat-model refresh `[S14-S19]` at 60 wd — are cadence bars, not single work items; their length is `10 × (number of sprints spanned)` by construction, which is why each is an exact multiple of 10. Train-boundary spot checks, which are where a mismatch would hurt most:
 
 | Boundary | Last bar of the outgoing train | Ends | Train milestone | First bar of the incoming train | Starts | Verdict |
 |---|---|---|---|---|---|---|
-| R0 → R1 | `e08` Bybit adapter `[S02-S04]` | 2026-11-20 (Fri, end S04) | m0 2026-11-20 | `e11`/`e12`/`e17` `[S05-…]` | 2026-11-23 (Mon, start S05) | aligned, no straddle |
-| R1 → R2 | `e13`/`e14` `[S08-S09]`, `e15` `[S09]` | 2027-01-29 (Fri, end S09) | m1 2027-01-29 | `e18`/`e19`/`e21` `[S10-…]` | 2027-02-01 (Mon, start S10) | aligned |
-| R2 → R3 | `e24`/`e25` `[S12-S13]`, `e26` `[S11-S13]` | 2027-03-26 (Fri, end S13) | m2 2027-03-26 | `e27`/`e29`/`e35` `[S14-…]` | 2027-03-29 (Mon, start S14) | aligned |
-| R3 → R4 | `e34`/`e38`/`e40`/`e41` `[S18-S19]` | 2027-06-18 (Fri, end S19) | m3 2027-06-18 | `e43`/`e44` `[S20-…]` | 2027-06-21 (Mon, start S20) | aligned; `q09` soak closes 2027-06-17, one day before the gate |
-| R4 → R5 | `e43` `[S20-S22]`, `e45` `[S21-S22]` | 2027-07-30 (Fri, end S22) | m4 2027-07-30 | `e46`/`e47`/`e49` `[S23-…]` | 2027-08-02 (Mon, start S23) | aligned; `s10` key audit closes 2027-07-23, a week before the gate |
-| R5 → GA | `e49` `[S23-S26]`, `e48` `[S25-S26]` | 2027-09-24 (Fri, end S26) | m5 2027-09-24 | — | — | aligned; `q11` GA regression `[S25wk2-S26]` closes 2027-09-24 |
+| R0 → R1 | `e08` Bybit adapter `[S02-S04]` | 2026-10-22 (Fri, end S04) | m0 2026-10-22 | `e11`/`e12`/`e17` `[S05-…]` | 2026-10-23 (Mon, start S05) | aligned, no straddle |
+| R1 → R2 | `e13`/`e14` `[S08-S09]`, `e15` `[S09]` | 2026-11-26 (Fri, end S09) | m1 2026-11-26 | `e18`/`e19`/`e21` `[S10-…]` | 2026-11-27 (Mon, start S10) | aligned |
+| R2 → R3 | `e24`/`e25` `[S12-S13]`, `e26` `[S11-S13]` | 2026-12-24 (Fri, end S13) | m2 2026-12-24 | `e27`/`e29`/`e35` `[S14-…]` | 2026-12-25 (Mon, start S14) | aligned |
+| R3 → R4 | `e34`/`e38`/`e40`/`e41` `[S18-S19]` | 2027-02-04 (Fri, end S19) | m3 2027-02-04 | `e43`/`e44` `[S20-…]` | 2027-02-05 (Mon, start S20) | aligned; `q09` soak closes 2027-02-03, one day before the gate |
+| R4 → R5 | `e43` `[S20-S22]`, `e45` `[S21-S22]` | 2027-02-25 (Fri, end S22) | m4 2027-02-25 | `e46`/`e47`/`e49` `[S23-…]` | 2027-02-26 (Mon, start S23) | aligned; `s10` key audit closes 2027-02-21, a week before the gate |
+| R5 → GA | `e49` `[S23-S26]`, `e48` `[S25-S26]` | 2027-03-25 (Fri, end S26) | m5 2027-03-25 | — | — | aligned; `q11` GA regression `[S25wk2-S26]` closes 2027-03-25 |
 
 Design-ahead invariant re-verified on the chart itself: for every design bar `D-Sk` at sprint *n*, the engineering bar that consumes it starts no earlier than sprint *n+2* (§1.2 column 4). Worked examples — `d03` Chart surface `[S03]` feeds `e11` `[S05-S07]` (+2); `d10` Ticket & chart/DOM trading `[S10]` feeds `e30`/`e31` starting S16/S17 (+6, ahead of requirement); the tightest case is `d17` A11y & contrast themes `[S17]` feeding `e47` `[S23-S25]` (+6). No design bar in the chart is less than two sprints ahead of its consumer.
 
 ```mermaid
 gantt
-    title CandleViewer delivery — R0 to GA (Sprint 01 = 2026-09-28)
+    title CandleViewer delivery — R0 to GA (Sprint 01 = 2026-09-25)
     dateFormat YYYY-MM-DD
     axisFormat %b-%y
-    excludes weekends
 
     section Trains
-    R0 Foundations              :milestone, m0, 2026-11-20, 0d
-    R1 Charting alpha           :milestone, m1, 2027-01-29, 0d
-    R2 Order-flow beta          :milestone, m2, 2027-03-26, 0d
-    R3 Trading on demo          :milestone, m3, 2027-06-18, 0d
-    R4 Live enablement 1.0.0    :milestone, m4, 2027-07-30, 0d
-    R5 GA 1.1.0                 :milestone, m5, 2027-09-24, 0d
+    R0 Foundations              :milestone, m0, 2026-10-22, 1d
+    R1 Charting alpha           :milestone, m1, 2026-11-26, 1d
+    R2 Order-flow beta          :milestone, m2, 2026-12-24, 1d
+    R3 Trading on demo          :milestone, m3, 2027-02-04, 1d
+    R4 Live enablement 1.0.0    :milestone, m4, 2027-02-25, 1d
+    R5 GA 1.1.0                 :milestone, m5, 2027-03-25, 1d
 
     section R0 engineering
-    E01 Governance [S01]                                :e01, 2026-09-28, 10d
-    E02 Monorepo scaffold [S01-S02]                     :e02, 2026-09-28, 20d
-    E03 CI/CD & environments [S01-S03]                  :e03, 2026-09-28, 30d
-    E04 Observability baseline [S02-S03]                :e04, 2026-10-12, 20d
-    E06 Engine spike + ADR [S01-S02]                    :crit, e06, 2026-09-28, 20d
-    E07 Storage spike + wiring [S02-S03]                :crit, e07, 2026-10-12, 20d
-    E08 Bybit adapter/ingestion [S02-S04]               :e08, 2026-10-12, 30d
-    E09 Auth & RBAC [S03-S04]                           :e09, 2026-10-26, 20d
-    E10 Shell & Electron [S03-S04]                      :e10, 2026-10-26, 20d
+    E01 Governance [S01]                                :e01, 2026-09-25, 7d
+    E02 Monorepo scaffold [S01-S02]                     :e02, 2026-09-25, 14d
+    E03 CI/CD & environments [S01-S03]                  :e03, 2026-09-25, 21d
+    E04 Observability baseline [S02-S03]                :e04, 2026-10-02, 14d
+    E06 Engine spike + ADR [S01-S02]                    :crit, e06, 2026-09-25, 14d
+    E07 Storage spike + wiring [S02-S03]                :crit, e07, 2026-10-02, 14d
+    E08 Bybit adapter/ingestion [S02-S04]               :e08, 2026-10-02, 21d
+    E09 Auth & RBAC [S03-S04]                           :e09, 2026-10-09, 14d
+    E10 Shell & Electron [S03-S04]                      :e10, 2026-10-09, 14d
 
     section R1 engineering
-    E17 WS protocol [S05-S06]                           :e17, 2026-11-23, 20d
-    E11 Engine core [S05-S07]                           :crit, e11, 2026-11-23, 30d
-    E12 Bars & series [S05-S07]                         :e12, 2026-11-23, 30d
-    E16 Recorder & retention [S06-S07]                  :e16, 2026-12-07, 20d
-    E13 Indicators [S08-S09]                            :e13, 2027-01-04, 20d
-    E14 Drawing tools [S08-S09]                         :e14, 2027-01-04, 20d
-    E15 Layouts & workspaces [S09]                      :e15, 2027-01-18, 10d
+    E17 WS protocol [S05-S06]                           :e17, 2026-10-23, 14d
+    E11 Engine core [S05-S07]                           :crit, e11, 2026-10-23, 21d
+    E12 Bars & series [S05-S07]                         :e12, 2026-10-23, 21d
+    E16 Recorder & retention [S06-S07]                  :e16, 2026-10-30, 14d
+    E13 Indicators [S08-S09]                            :e13, 2026-11-13, 14d
+    E14 Drawing tools [S08-S09]                         :e14, 2026-11-13, 14d
+    E15 Layouts & workspaces [S09]                      :e15, 2026-11-20, 7d
 
     section R2 engineering
-    E18 Footprint [S10-S11]                             :crit, e18, 2027-02-01, 20d
-    E19 Profiles [S10-S11]                              :e19, 2027-02-01, 20d
-    E21 DOM ladder & heatmap [S10-S12]                  :crit, e21, 2027-02-01, 30d
-    E20 Deep-Stats rows [S11]                           :e20, 2027-02-15, 10d
-    E26 Replay engine [S11-S13]                         :e26, 2027-02-15, 30d
-    E22 Big trades [S12]                                :e22, 2027-03-01, 10d
-    E23 CVD & delta panes [S12]                         :e23, 2027-03-01, 10d
-    E24 Derivatives metrics [S12-S13]                   :e24, 2027-03-01, 20d
-    E25 Detectors [S12-S13]                             :e25, 2027-03-01, 20d
+    E18 Footprint [S10-S11]                             :crit, e18, 2026-11-27, 14d
+    E19 Profiles [S10-S11]                              :e19, 2026-11-27, 14d
+    E21 DOM ladder & heatmap [S10-S12]                  :crit, e21, 2026-11-27, 21d
+    E20 Deep-Stats rows [S11]                           :e20, 2026-12-04, 7d
+    E26 Replay engine [S11-S13]                         :e26, 2026-12-04, 21d
+    E22 Big trades [S12]                                :e22, 2026-12-11, 7d
+    E23 CVD & delta panes [S12]                         :e23, 2026-12-11, 7d
+    E24 Derivatives metrics [S12-S13]                   :e24, 2026-12-11, 14d
+    E25 Detectors [S12-S13]                             :e25, 2026-12-11, 14d
 
     section R3 engineering
-    E29 OMS core [S14-S16]                              :crit, e29, 2027-03-29, 30d
-    E35 Rule IR & runtime [S14-S16]                     :e35, 2027-03-29, 30d
-    E27 Accounts & key vault [S14-S15]                  :crit, e27, 2027-03-29, 20d
-    E39 Risk caps & kill-switch [S15-S16]               :crit, e39, 2027-04-12, 20d
-    E28 Profiles & trade groups [S15-S16]               :e28, 2027-04-12, 20d
-    E32 Brackets & native SL [S16-S17]                  :crit, e32, 2027-04-26, 20d
-    E30 Order ticket UI [S16-S17]                       :e30, 2027-04-26, 20d
-    E42 Admin screens [S16-S17]                         :e42, 2027-04-26, 20d
-    E31 Chart & DOM trading [S17-S18]                   :e31, 2027-05-10, 20d
-    E33 Emulated algos [S17-S18]                        :e33, 2027-05-10, 20d
-    E36 Rule form editor [S16-S17]                      :e36, 2027-04-26, 20d
-    E37 Rule node editor [S17-S18]                      :e37, 2027-05-10, 20d
-    E34 Fan-out & rate governor [S18-S19]               :crit, e34, 2027-05-24, 20d
-    E38 Paper & demo parity [S18-S19]                   :e38, 2027-05-24, 20d
-    E40 Alerts [S18-S19]                                :e40, 2027-05-24, 20d
-    E41 Journal & analytics [S18-S19]                   :e41, 2027-05-24, 20d
+    E29 OMS core [S14-S16]                              :crit, e29, 2026-12-25, 21d
+    E35 Rule IR & runtime [S14-S16]                     :e35, 2026-12-25, 21d
+    E27 Accounts & key vault [S14-S15]                  :crit, e27, 2026-12-25, 14d
+    E39 Risk caps & kill-switch [S15-S16]               :crit, e39, 2027-01-01, 14d
+    E28 Profiles & trade groups [S15-S16]               :e28, 2027-01-01, 14d
+    E32 Brackets & native SL [S16-S17]                  :crit, e32, 2027-01-08, 14d
+    E30 Order ticket UI [S16-S17]                       :e30, 2027-01-08, 14d
+    E42 Admin screens [S16-S17]                         :e42, 2027-01-08, 14d
+    E31 Chart & DOM trading [S17-S18]                   :e31, 2027-01-15, 14d
+    E33 Emulated algos [S17-S18]                        :e33, 2027-01-15, 14d
+    E36 Rule form editor [S16-S17]                      :e36, 2027-01-08, 14d
+    E37 Rule node editor [S17-S18]                      :e37, 2027-01-15, 14d
+    E34 Fan-out & rate governor [S18-S19]               :crit, e34, 2027-01-22, 14d
+    E38 Paper & demo parity [S18-S19]                   :e38, 2027-01-22, 14d
+    E40 Alerts [S18-S19]                                :e40, 2027-01-22, 14d
+    E41 Journal & analytics [S18-S19]                   :e41, 2027-01-22, 14d
 
     section R4 engineering
-    E43 Hardening & remediation [S20-S22]               :crit, e43, 2027-06-21, 30d
-    E44 Live gating & env split [S20-S21]               :crit, e44, 2027-06-21, 20d
-    E45 Reconciliation & chaos [S21-S22]                :e45, 2027-07-05, 20d
+    E43 Hardening & remediation [S20-S22]               :crit, e43, 2027-02-05, 21d
+    E44 Live gating & env split [S20-S21]               :crit, e44, 2027-02-05, 14d
+    E45 Reconciliation & chaos [S21-S22]                :e45, 2027-02-12, 14d
 
     section R5 engineering
-    E46 Performance hardening [S23-S25]                 :e46, 2027-08-02, 30d
-    E47 A11y conformance [S23-S25]                      :e47, 2027-08-02, 30d
-    E49 Defect & design-QA [S23-S26]                    :e49, 2027-08-02, 40d
-    E48 Docs & runbooks [S25-S26]                       :e48, 2027-08-30, 20d
+    E46 Performance hardening [S23-S25]                 :e46, 2027-02-26, 21d
+    E47 A11y conformance [S23-S25]                      :e47, 2027-02-26, 21d
+    E49 Defect & design-QA [S23-S26]                    :e49, 2027-02-26, 28d
+    E48 Docs & runbooks [S25-S26]                       :e48, 2027-03-12, 14d
 
     section Design-ahead track
-    D-S01 DS v0 + auth screens [S01]                    :d01, 2026-09-28, 10d
-    D-S02 Shell, nav, admin IA [S02]                    :d02, 2026-10-12, 10d
-    D-S03 Chart surface & axes [S03]                    :d03, 2026-10-26, 10d
-    D-S04 Drawings, layouts, recorder [S04]             :d04, 2026-11-09, 10d
-    D-S05 Footprint, profiles, stats [S05]              :d05, 2026-11-23, 10d
-    D-S06 DOM, heatmap, bubbles [S06]                   :d06, 2026-12-07, 10d
-    D-S07 CVD, derivs, detector UX [S07]                :d07, 2026-12-21, 10d
-    D-S08 Replay & alerts UI [S08]                      :d08, 2027-01-04, 10d
-    D-S09 Accounts, keys, profiles [S09]                :d09, 2027-01-18, 10d
-    D-S10 Ticket, chart/DOM trading [S10]               :d10, 2027-02-01, 10d
-    D-S11 Algos, positions manager [S11]                :d11, 2027-02-15, 10d
-    D-S12 Rule form editor [S12]                        :d12, 2027-03-01, 10d
-    D-S13 Rule node editor [S13]                        :d13, 2027-03-15, 10d
-    D-S14 Journal & analytics [S14]                     :d14, 2027-03-29, 10d
-    D-S15 Admin screens [S15]                           :d15, 2027-04-12, 10d
-    D-S16 Live-mode visual language [S16]               :d16, 2027-04-26, 10d
-    D-S17 A11y & contrast themes [S17]                  :d17, 2027-05-10, 10d
-    D-S18 Design-QA & GA polish [S18]                   :d18, 2027-05-24, 10d
-    Design-QA support (no new screens) [S19-S26]        :d19, 2027-06-07, 80d
+    D-S01 DS v0 + auth screens [S01]                    :d01, 2026-09-25, 7d
+    D-S02 Shell, nav, admin IA [S02]                    :d02, 2026-10-02, 7d
+    D-S03 Chart surface & axes [S03]                    :d03, 2026-10-09, 7d
+    D-S04 Drawings, layouts, recorder [S04]             :d04, 2026-10-16, 7d
+    D-S05 Footprint, profiles, stats [S05]              :d05, 2026-10-23, 7d
+    D-S06 DOM, heatmap, bubbles [S06]                   :d06, 2026-10-30, 7d
+    D-S07 CVD, derivs, detector UX [S07]                :d07, 2026-11-06, 7d
+    D-S08 Replay & alerts UI [S08]                      :d08, 2026-11-13, 7d
+    D-S09 Accounts, keys, profiles [S09]                :d09, 2026-11-20, 7d
+    D-S10 Ticket, chart/DOM trading [S10]               :d10, 2026-11-27, 7d
+    D-S11 Algos, positions manager [S11]                :d11, 2026-12-04, 7d
+    D-S12 Rule form editor [S12]                        :d12, 2026-12-11, 7d
+    D-S13 Rule node editor [S13]                        :d13, 2026-12-18, 7d
+    D-S14 Journal & analytics [S14]                     :d14, 2026-12-25, 7d
+    D-S15 Admin screens [S15]                           :d15, 2027-01-01, 7d
+    D-S16 Live-mode visual language [S16]               :d16, 2027-01-08, 7d
+    D-S17 A11y & contrast themes [S17]                  :d17, 2027-01-15, 7d
+    D-S18 Design-QA & GA polish [S18]                   :d18, 2027-01-22, 7d
+    Design-QA support (no new screens) [S19-S26]        :d19, 2027-01-29, 56d
 
     section Security track
-    STRIDE R0 epics [S01-S04]                           :s01, 2026-09-28, 40d
-    SAST/SCA/secrets continuous [S01-S26]               :s02, 2026-09-28, 260d
-    STRIDE R1 epics [S05-S09]                           :s03, 2026-11-23, 50d
-    STRIDE R2 epics [S10-S13]                           :s04, 2027-02-01, 40d
-    Threat-model refresh (OMS) [S14-S19]                :s05, 2027-03-29, 60d
-    DAST full scans (quarterly) [S08-S25]               :s06, 2027-01-04, 180d
-    Pre-pen-test hardening [S20]                        :crit, s07, 2027-06-21, 10d
-    Independent pen-test [S21]                          :crit, s08, 2027-07-05, 10d
-    Pen-test remediation [S21wk2-S22]                   :crit, s09, 2027-07-12, 15d
-    Key-permission audit [S22wk1]                       :crit, s10, 2027-07-19, 5d
-    Final security sweep [S25-S26]                      :s11, 2027-08-30, 20d
+    STRIDE R0 epics [S01-S04]                           :s01, 2026-09-25, 28d
+    SAST/SCA/secrets continuous [S01-S26]               :s02, 2026-09-25, 182d
+    STRIDE R1 epics [S05-S09]                           :s03, 2026-10-23, 35d
+    STRIDE R2 epics [S10-S13]                           :s04, 2026-11-27, 28d
+    Threat-model refresh (OMS) [S14-S19]                :s05, 2026-12-25, 42d
+    DAST full scans (quarterly) [S08-S25]               :s06, 2026-11-13, 126d
+    Pre-pen-test hardening [S20]                        :crit, s07, 2027-02-05, 7d
+    Independent pen-test [S21]                          :crit, s08, 2027-02-12, 7d
+    Pen-test remediation [S21wk2-S22]                   :crit, s09, 2027-02-16, 10d
+    Key-permission audit [S22wk1]                       :crit, s10, 2027-02-19, 4d
+    Final security sweep [S25-S26]                      :s11, 2027-03-12, 14d
 
     section QA track
-    Test framework build-out [S01-S04]                  :q01, 2026-09-28, 40d
-    Contract test harness [S02-S03]                     :q02, 2026-10-12, 20d
-    Golden-fixture corpus [S06-S09]                     :q03, 2026-12-07, 40d
-    E2E suite (web + Electron) [S05-S10]                :q04, 2026-11-23, 60d
-    Order-flow correctness suite [S10-S13]              :q05, 2027-02-01, 40d
-    Safety-invariant suite [S15-S18]                    :crit, q06, 2027-04-12, 40d
-    Load & soak campaigns [S09-S20]                     :q07, 2027-01-18, 120d
-    Chaos catalogue [S18-S23]                           :q08, 2027-05-24, 60d
-    R3 7-day soak [S19]                              :crit, q09, 2027-06-09, 7d
-    Live ramp verification [S23-S24]                    :crit, q10, 2027-08-02, 20d
-    GA regression + 72h soak [S25wk2-S26]               :q11, 2027-09-06, 15d
+    Test framework build-out [S01-S04]                  :q01, 2026-09-25, 28d
+    Contract test harness [S02-S03]                     :q02, 2026-10-02, 14d
+    Golden-fixture corpus [S06-S09]                     :q03, 2026-10-30, 28d
+    E2E suite (web + Electron) [S05-S10]                :q04, 2026-10-23, 42d
+    Order-flow correctness suite [S10-S13]              :q05, 2026-11-27, 28d
+    Safety-invariant suite [S15-S18]                    :crit, q06, 2027-01-01, 28d
+    Load & soak campaigns [S09-S20]                     :q07, 2026-11-20, 84d
+    Chaos catalogue [S18-S23]                           :q08, 2027-01-22, 42d
+    R3 7-day soak [S19]                              :crit, q09, 2027-01-30, 5d
+    Live ramp verification [S23-S24]                    :crit, q10, 2027-02-26, 14d
+    GA regression + 72h soak [S25wk2-S26]               :q11, 2027-03-16, 10d
 ```
 
 ### 10.2 Track responsibilities
@@ -976,12 +977,12 @@ with a second, safety-critical chain that converges at R4:
 
 | Chain element | Why it is critical | Slip consequence | Mitigation |
 |---|---|---|---|
-| E06 engine spike | Decides whether the whole frontend approach is viable | Every R1+ frontend estimate is invalid | Fallback to Lightweight Charts pre-decided in ADR-0006; spike timeboxed to 2 sprints with a go/no-go at 2026-10-23 |
+| E06 engine spike | Decides whether the whole frontend approach is viable | Every R1+ frontend estimate is invalid | Fallback to Lightweight Charts pre-decided in ADR-0006; spike timeboxed to 2 sprints with a go/no-go at 2026-10-08 |
 | E11 engine core | Every visual feature renders through it | R1 and R2 both slip | Staffed with the chart-engine lead + 2 FE from S05; benchmark harness in CI from day 1 so regressions surface same-day |
 | E18 footprint | The heaviest render path; sets the ceiling for the rest of R2 | R2 scope must be cut | Scheduled first in R2, with the text-LOD strategy already proven in E06 |
 | E26 replay | Prerequisite for deterministic testing of R3 trading logic | R3 loses its best test harness and QA cost rises sharply | Started S11, one train early relative to its consumer |
 | E27/E29 accounts + OMS | Everything trading depends on them | All of R3 | Started S14 day 1; key vault and risk caps land before any order-placing UI |
-| E43/E44 pen-test + gating | Gate to live money | `1.0.0` slips | Code freeze 2027-07-02, pen-test booked in advance, 90-pt remediation reserve pre-allocated |
+| E43/E44 pen-test + gating | Gate to live money | `1.0.0` slips | Code freeze 2027-02-11, pen-test booked in advance, 90-pt remediation reserve pre-allocated |
 
 ### 11.3 Cross-train dependency rules
 

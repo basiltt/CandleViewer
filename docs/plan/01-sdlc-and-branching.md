@@ -10,7 +10,7 @@ Related: `00-planning-brief.md` (team, cadence, locked decisions), `02-definitio
 
 - ~15 engineers: 5 backend, 5 frontend (incl. chart engine), 2 QA/SDET, 1 DevSecOps, 1 Security engineer, 1 Architect.
 - UI/UX org: Chief Design Officer (CDO), UX researchers, product designers, design-system team, motion designer, accessibility specialist.
-- 2-week sprints. Sprint 01 starts **Monday 2026-09-28**. All sprint boundaries are Monday→Friday of the second week (10 working days), with the last Friday reserved for review + retro.
+- **1-week sprints** (7 calendar days, Friday→Thursday; owner decision 2026-09-24 — delivery is executed by parallel Claude Code agents, so the human 2-week cadence was compressed while story points per sprint stay at 90). Sprint 01 starts **Friday 2026-09-25**; Sprint 26 / GA cut ends **Thursday 2027-03-25**. The final day of each sprint is reserved for review + retro. Canonical calendar: `docs/plan/backlog/_tools/calendar_cv.py`.
 - Capacity: **90 engineering story points/sprint** across engineering disciplines (see §11 for the breakdown). Design/UX capacity is tracked separately in design-sprint units, not story points, but design tickets still live on the same board.
 - **Design-ahead rule (non-negotiable):** design work for a screen/feature must reach Status=Done at least **2 sprints** before the corresponding frontend engineering ticket can enter Ready. No frontend screen implementation starts against a design that is not signed off.
 
@@ -40,18 +40,20 @@ flowchart LR
 
 ---
 
-## 3. Ceremonies (2-week sprint)
+## 3. Ceremonies (1-week sprint; asynchronous, agent-driven)
+
+With AI agents doing the implementation, ceremonies are **owner checkpoints**, not meetings: each is a written artefact (issue comment, PR review, doc update) that the owner completes in minutes. Durations below are upper bounds.
 
 | Ceremony | Cadence | Duration | Attendees | Purpose / Output |
 |---|---|---|---|---|
-| **Sprint Planning** | Day 1 of sprint, 09:00 | 2h | Full eng team + Architect + CDO delegate | Confirm sprint goal(s), pull Ready tickets into sprint up to capacity (90 pts eng + design capacity), record in `31-sprint-plan.md`. Exit: every ticket in the sprint has an owner, estimate, and Status=Ready→In Progress commitment. |
-| **Daily Standup** | Every working day, 09:30 | 15 min, timeboxed | Sub-team (backend/frontend/QA standups may run separately, 15 min each) | Blockers, board hygiene (Status accuracy), no problem-solving in the meeting — spin off follow-ups. |
-| **Backlog Refinement** | Twice per sprint (Tue wk1, Thu wk1) | 1h each | Product/Architect + rotating discipline reps + CDO for design items | Groom next 2 sprints of backlog: split >8pt tickets, write/refresh acceptance criteria, confirm DoR, re-estimate stale tickets. |
+| **Sprint Planning** | Day 1 of sprint (Fri) | ≤1h | Full eng team + Architect + CDO delegate | Confirm sprint goal(s), pull Ready tickets into sprint up to capacity (90 pts eng + design capacity), record in `31-sprint-plan.md`. Exit: every ticket in the sprint has an owner, estimate, and Status=Ready→In Progress commitment. |
+| **Daily Standup** | Every day, async (agent status comments on claimed issues) | ≤15 min owner scan | Sub-team (backend/frontend/QA standups may run separately, 15 min each) | Blockers, board hygiene (Status accuracy), no problem-solving in the meeting — spin off follow-ups. |
+| **Backlog Refinement** | Once per sprint (mid-sprint, Mon) | ≤1h | Product/Architect + rotating discipline reps + CDO for design items | Groom next 2 sprints of backlog: split >8pt tickets, write/refresh acceptance criteria, confirm DoR, re-estimate stale tickets. |
 | **Design Review** | Weekly, Wed | 1h | CDO, product designers, a11y specialist, 1 frontend rep, Product | Review in-flight design tickets against `16-design-system-brief.md` tokens and `15-component-catalogue.md`; gate for design Status→Done. |
-| **Security Review** | Per-epic kickoff + ad hoc for `security` labelled tickets, plus a standing biweekly slot (Thu wk2, 30 min) | 30–60 min | Security engineer, DevSecOps, ticket owner, Architect | STRIDE threat-model walkthrough for new epics; review of SAST/SCA/secrets findings; sign-off recorded on ticket. |
+| **Security Review** | Per-epic kickoff + ad hoc for `security` labelled tickets, plus a standing weekly slot (Wed, 30 min) | 30–60 min | Security engineer, DevSecOps, ticket owner, Architect | STRIDE threat-model walkthrough for new epics; review of SAST/SCA/secrets findings; sign-off recorded on ticket. |
 | **PRR (Production Readiness Review)** | Before every release train gate (R0–R5) and before any Live-enablement | 1–2h | Architect, DevSecOps, Security, QA lead, on-call owner | Run `07-release-and-prr.md` checklist; go/no-go decision. |
-| **Sprint Review / Demo** | Last day of sprint, afternoon | 1h | Full team + Owner (basiltt) | Demo Done tickets on staging(demo); Owner accepts or reopens. |
-| **Retro** | Last day of sprint, after review | 45 min | Full eng+design team | Start/Stop/Continue; action items become Chore tickets with an owner and next-sprint target. |
+| **Sprint Review / Demo** | Last day of sprint (Thu) | ≤1h | Full team + Owner (basiltt) | Demo Done tickets on staging(demo); Owner accepts or reopens. |
+| **Retro** | Last day of sprint, after review | ≤30 min | Full eng+design team | Start/Stop/Continue; action items become Chore tickets with an owner and next-sprint target. |
 
 Design runs its own weekly design crit outside this list when volume requires it, but Design Review above is the mandatory gate ceremony.
 

@@ -122,7 +122,7 @@ def run(args, retries=8, input_text=None, retry_on_empty=False):
 # --------------------------------------------------------------------------
 import datetime
 
-SPRINT01_START = datetime.date(2026, 9, 28)
+SPRINT01_START = None  # calendar owned by calendar_cv.py
 
 
 def sprint_num_from_label(label):
@@ -133,13 +133,7 @@ def sprint_num_from_label(label):
     return int(digits) if digits else None
 
 
-def sprint_dates(label):
-    n = sprint_num_from_label(label)
-    if n is None:
-        return None, None
-    start = SPRINT01_START + datetime.timedelta(days=(n - 1) * 14)
-    end = start + datetime.timedelta(days=11)  # Fri of 2nd week
-    return start.isoformat(), end.isoformat()
+from calendar_cv import sprint_dates  # noqa: E402  (1-week AI cadence; see calendar_cv.py)
 
 
 # --------------------------------------------------------------------------

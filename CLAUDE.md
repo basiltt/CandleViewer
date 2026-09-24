@@ -214,7 +214,12 @@ outside `cv.statechart.factory`.
 
 ## 10. Multi-agent coordination
 
-The owner runs **several AI agents on this backlog in parallel**. These rules keep them from colliding:
+The owner runs **several AI agents on this backlog in parallel**. Because of that, the delivery calendar is
+**1-week sprints (Fri→Thu), Sprint 01 = 2026-09-25, GA cut = 2027-03-25** — story points per sprint are the
+original 90; only the calendar is compressed (owner decision 2026-09-24; canonical dates in
+`docs/plan/backlog/_tools/calendar_cv.py`, mirrored on the board's `Start`/`Due` fields). The pacing
+constraint is the owner's review/sign-off bandwidth, so keep PRs small and evidence complete so reviews are fast.
+These rules keep agents from colliding:
 
 1. **Claim before you code.** Assign yourself on the GitHub issue, set project Status **In Progress**,
    and comment `claimed by <agent/session id> — branch <name>`. An issue already assigned or In Progress

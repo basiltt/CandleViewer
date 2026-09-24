@@ -679,26 +679,26 @@ Each milestone is independently demoable and maps to backlog epics; estimates ar
 
 ### 15.1 Calendar mapping (sprint numbers and dates)
 
-Estimates above are **engineer-weeks**. The engine squad is 2 engineers, so a 2-week sprint supplies **4 engineer-weeks** of engine capacity (≈ 24 of the ~90 team story points per sprint are reserved for chart-engine work; the rest of the 5-person frontend group works on shell, screens and the design system). Sprint 01 starts **Monday 2026-09-28**; sprints are 2 weeks, Monday→Friday-of-next-week. This table is the derivation that `31-sprint-plan.md` consumes — if the two ever disagree, `31-sprint-plan.md` wins for ticket-level scheduling and this table must be corrected to match.
+Estimates above are **engineer-weeks**. The engine squad is 2 engineers, so a sprint supplies **4 engineer-week-equivalents** of engine capacity (1-week AI-driven sprints; capacity is expressed in the original human units) (≈ 24 of the ~90 team story points per sprint are reserved for chart-engine work; the rest of the 5-person frontend group works on shell, screens and the design system). Sprint 01 starts **Friday 2026-09-25**; sprints are 1 week, Friday→Thursday (owner decision 2026-09-24). This table is the derivation that `31-sprint-plan.md` consumes — if the two ever disagree, `31-sprint-plan.md` wins for ticket-level scheduling and this table must be corrected to match.
 
-| Sprint | Dates (Mon → Fri) | Engine capacity (eng-wk) | Milestone work in this sprint | Cumulative eng-wk | Release |
+| Sprint | Dates (Fri → Thu) | Engine capacity (eng-wk) | Milestone work in this sprint | Cumulative eng-wk | Release |
 |---|---|---|---|---|---|
-| S01 | 2026-09-28 → 2026-10-09 | 4 | M0 spike (3) + M1 start (1) | 4 | R0 Foundations |
-| S02 | 2026-10-12 → 2026-10-23 | 4 | M1 (4 of 6) | 8 | R0 |
-| S03 | 2026-10-26 → 2026-11-06 | 4 | M1 finish (1) + M2 start (3) — **ADR-0011 decision deadline lands at the end of this sprint** | 12 | R0 → R1 |
-| S04 | 2026-11-09 → 2026-11-20 | 4 | M2 finish (1) + M3 start (3) | 16 | R1 Charting alpha |
-| S05 | 2026-11-23 → 2026-12-04 | 4 | M3 finish (2) + M4 start (2) | 20 | R1 ships end of S05 (M1+M2+M3 complete) |
-| S06 | 2026-12-07 → 2026-12-18 | 4 | M4 finish (2) + M5 start (2) | 24 | R2 Order-flow beta |
-| S07 | 2027-01-04 → 2027-01-15 *(holiday gap after S06)* | 4 | M5 finish (2) + M6 start (2) | 28 | R2 ships end of S07 (M4 + M5 complete) |
-| S08 | 2027-01-18 → 2027-01-29 | 4 | M6 finish (1) + M7 (3 of 4) | 32 | R3 Trading on demo |
-| S09 | 2027-02-01 → 2027-02-12 | 4 | M7 finish (1) + M8 (3 of 4) | 36 | R3 |
-| S10 | 2027-02-15 → 2027-02-26 | 4 | M8 finish (1) + buffer (3) | 40 | **R3 closes — engine feature-complete** |
+| S01 | 2026-09-25 → 2026-10-01 | 4 | M0 spike (3) + M1 start (1) | 4 | R0 Foundations |
+| S02 | 2026-10-02 → 2026-10-08 | 4 | M1 (4 of 6) | 8 | R0 |
+| S03 | 2026-10-09 → 2026-10-15 | 4 | M1 finish (1) + M2 start (3) — **ADR-0011 decision deadline lands at the end of this sprint** | 12 | R0 → R1 |
+| S04 | 2026-10-16 → 2026-10-22 | 4 | M2 finish (1) + M3 start (3) | 16 | R1 Charting alpha |
+| S05 | 2026-10-23 → 2026-10-29 | 4 | M3 finish (2) + M4 start (2) | 20 | R1 ships end of S05 (M1+M2+M3 complete) |
+| S06 | 2026-10-30 → 2026-11-05 | 4 | M4 finish (2) + M5 start (2) | 24 | R2 Order-flow beta |
+| S07 | 2026-11-13 → 2026-11-19 *(holiday gap after S06)* | 4 | M5 finish (2) + M6 start (2) | 28 | R2 ships end of S07 (M4 + M5 complete) |
+| S08 | 2026-11-20 → 2026-11-26 | 4 | M6 finish (1) + M7 (3 of 4) | 32 | R3 Trading on demo |
+| S09 | 2026-11-27 → 2026-12-03 | 4 | M7 finish (1) + M8 (3 of 4) | 36 | R3 |
+| S10 | 2026-12-04 → 2026-12-10 | 4 | M8 finish (1) + buffer (3) | 40 | **R3 closes — engine feature-complete** |
 
-**How the 33 eng-weeks become 10 sprints.** 33 eng-weeks ÷ 4 eng-weeks/sprint = 8.25 sprints of pure delivery. Two sprints of slack are deliberately added: one holiday gap (no sprint spans the 2026-12-21 → 2027-01-01 shutdown) and 3 eng-weeks of buffer in S10 for the final perf pass, bug burn-down and PRR evidence. Hence the engine is **feature-complete at the end of Sprint 10 (2027-02-26), which is the end of R3** — this is the concrete basis for the "lands at end of R3" claim, verifiable here without needing `31-sprint-plan.md`.
+**How the 33 eng-weeks become 10 sprints.** 33 eng-weeks ÷ 4 eng-weeks/sprint = 8.25 sprints of pure delivery. Two sprints of slack are deliberately added: one holiday gap (no sprint spans the 2026-11-06 → 2026-11-12 shutdown) and 3 eng-weeks of buffer in S10 for the final perf pass, bug burn-down and PRR evidence. Hence the engine is **feature-complete at the end of Sprint 10 (2026-12-10), which is the end of R3** — this is the concrete basis for the "lands at end of R3" claim, verifiable here without needing `31-sprint-plan.md`.
 
 **Release checkpoints this implies.** R1 (Charting alpha) needs M1–M3 → available end of S05. R2 (Order-flow beta) needs M4–M5 → available end of S07. R3 (Trading on demo) needs M6 → available mid-S08, with M7/M8 completing the engine inside R3. R4 (Live enablement) and R5 (GA) require no new engine milestones, only the hardening carried in S10's buffer.
 
-**Design-ahead compliance.** The brief requires design to run ≥ 2 sprints ahead and no frontend screen work to start before its design ticket is Done. Concretely: M1's chassis designs (axes, crosshair, pane chrome, theme tokens) must be signed off by the end of **S-01/pre-sprint design runway before 2026-09-28**; M3 footprint cell designs by end of **S02**; M4 heatmap colour/legend designs by end of **S03**; M6 trading-overlay designs by end of **S05**; M7 drawing-tool designs by end of **S06**; M8 a11y/replay designs by end of **S07**. Any design slip pushes the corresponding milestone right by a whole sprint and consumes the S10 buffer first.
+**Design-ahead compliance.** The brief requires design to run ≥ 2 sprints ahead and no frontend screen work to start before its design ticket is Done. Concretely: M1's chassis designs (axes, crosshair, pane chrome, theme tokens) must be signed off by the end of **S-01/pre-sprint design runway before 2026-09-25**; M3 footprint cell designs by end of **S02**; M4 heatmap colour/legend designs by end of **S03**; M6 trading-overlay designs by end of **S05**; M7 drawing-tool designs by end of **S06**; M8 a11y/replay designs by end of **S07**. Any design slip pushes the corresponding milestone right by a whole sprint and consumes the S10 buffer first.
 
 **Slip policy.** The S10 buffer absorbs up to 3 eng-weeks of overall slip. Beyond that, the cut order is: M7 drawings (reduce to the 6 most-used tools) → M8 screenshot export and polish → M5 TPO/naked-POC. M1–M4 and M6 are not cuttable — they are the product.
 
