@@ -1,0 +1,1547 @@
+PASS [def]B4.happy.completed  | ['oco.completed']
+PASS [def]B4.happy.arm_then_settle  | ['submit_both_legs', 'settle_other_leg']
+PASS [def]B4.happy.snapshot  | ['t0:v=3:sched=0', 't1:v=3:sched=0', 't2:v=3:sched=0']
+PASS [def]B4.overshoot.completed  | ['oco.completed']
+PASS [def]B4.overshoot.alerts  | ['record_child_ids', 'record_fill_b', 'raise_warning_alert', 'journal_double_fill']
+PASS [def]B4.overshoot.flatten_called  | ['submit_both_legs', 'reduce_only_market_excess']
+ERROR:xstate_statemachine.interpreter:💥 Service 'submit_both_legs' (ID: 'arm') failed: down
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+RuntimeError: down
+PASS [def]B4.arm_fail.failed  | ['oco.failed']
+PASS [def]B4.arm_fail.map_error  | ['map_error']
+ERROR:xstate_statemachine.interpreter:💥 Service 'settle_other_leg' (ID: 'settle_b') failed: x
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+RuntimeError: x
+ERROR:xstate_statemachine.interpreter:💥 Service 'settle_other_leg' (ID: 'settle_b') failed: x
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+RuntimeError: x
+ERROR:xstate_statemachine.interpreter:💥 Service 'settle_other_leg' (ID: 'settle_b') failed: x
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+RuntimeError: x
+PASS [def]B4.settle.retry_bounded  | settle_other_leg x3 -> ['oco.failed']
+PASS [def]B4.settle.retry_terminal  | ['oco.failed']
+PASS [def]B4.settle.alert
+ERROR:xstate_statemachine.interpreter:💥 Service 'settle_other_leg' (ID: 'settle_b') failed: gone
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+RuntimeError: gone
+PASS [def]B4.reconcile.completed  | ['oco.completed']
+PASS [def]B4.R6-01.pingpong_terminates  | [{'ev': 'LEG_A_FILL', 'ok': True, 'sec': 0.00263950000226032}]
+PASS [def]B4.R6-01.pingpong_settles  | states=['oco.racing'] settle x1 status=running
+PASS [def]B4.cancel.cancelled  | ['oco.cancelled']
+PASS [def]B4.parity.states  | async=['oco.completed'] sync=['oco.completed']
+PASS [def]B4.parity.svc  | async=['submit_both_legs', 'settle_other_leg'] sync=['submit_both_legs', 'settle_other_leg']
+PASS [def]B5.refill.loop_progresses  | states=['iceberg.waiting_refill'] slices=2
+PASS [def]B5.refill.two_slices  | 2
+PASS [def]B5.refill.snapshot  | ['t0:v=3:sched=0', 't1:v=3:sched=0', 't2:v=3:sched=0', 't3:v=3:sched=0']
+PASS [def]B5.complete.completed  | ['iceberg.completed']
+PASS [def]B5.preflight.failed  | ['iceberg.failed']
+PASS [def]B5.preflight.no_submit  | []
+ERROR:xstate_statemachine.interpreter:💥 Service 'submit_child' (ID: 'slice') failed: post-only
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+RuntimeError: post-only
+ERROR:xstate_statemachine.interpreter:💥 Service 'submit_child' (ID: 'slice') failed: post-only
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+RuntimeError: post-only
+PASS [def]B5.R6-01.reprice_terminates  | states=['iceberg.cooling_down'] submit_child x2 status=running
+PASS [def]B5.R6-01.reprice_bounded  | submit_child x2
+ERROR:xstate_statemachine.interpreter:💥 Service 'submit_child' (ID: 'slice') failed: nope
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+RuntimeError: nope
+ERROR:xstate_statemachine.interpreter:💥 Service 'submit_child' (ID: 'slice') failed: nope
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+RuntimeError: nope
+ERROR:xstate_statemachine.interpreter:💥 Service 'submit_child' (ID: 'slice') failed: nope
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+RuntimeError: nope
+ERROR:xstate_statemachine.interpreter:💥 Service 'submit_child' (ID: 'slice') failed: nope
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+RuntimeError: nope
+PASS [def]B5.fail_ladder.terminal  | states=['iceberg.failed'] submit_child x4
+PASS [def]B5.fail_ladder.bounded  | submit_child x4
+PASS [def]B5.pause.resume_to_working  | ['iceberg.working']
+PASS [def]B5.pause.reconciled  | ['submit_child', 'reconcile_children']
+ERROR:xstate_statemachine.interpreter:💥 Service 'reconcile_children' (ID: 'rec') failed: r
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3221, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+    raise v
+RuntimeError: r
+PASS [def]B5.disconnect.freeze_then_fail  | ['iceberg.failed']
+PASS [def]B5.flat.cancelled  | ['iceberg.cancelled']
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'record_child' raised while handling event 'done.invoke.slice'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:record_child
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'iceberg.submitting_slice' failed; rolling back to the pre-transition configuration.
+PASS [def]B5.R6-03.observed  | submit_child x116 states=['iceberg.submitting_slice'] status=running err=None action_errors=116
+PASS [def]B5.parity.states  | async=['iceberg.working'] sync=['iceberg.working']
+PASS [def]B5.parity.context  | async={'algo_id': None, 'total_qty': '0', 'remaining_qty': '0', 'slices_done': 2, 'max_slices': 450, 'active_child_id': None, 'post_only_rejects': 0, 'next_refill_at_us': None, 'failure_count': 0}
+sync={'algo_id': None, 'total_qty': '0', 'remaining_qty': '0', 'slices_done': 2, 'max_slices': 450, 'active_child_id': None, 'post_only_rejects': 0, 'next_refill_at_us': None, 'failure_count': 0}
+
+--- 34 checks, 0 FAIL: []

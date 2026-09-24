@@ -1,0 +1,210 @@
+{
+ "[async]B6/happy": {
+  "pass": true,
+  "note": "{\"states\": [\"twap.completed\"], \"svc\": [\"submit_child\", \"submit_child\"], \"snap\": true, \"notes\": []}"
+ },
+ "[async]B6/INV-a slice counter 1:1": {
+  "pass": true,
+  "note": "bumps=2"
+ },
+ "[async]B6/INV-c sub-min rolls forward, no child": {
+  "pass": true,
+  "note": "{\"states\": [\"twap.armed\"], \"svc\": []}"
+ },
+ "[async]B6/INV-d price_blocked visible + shortfall": {
+  "pass": true,
+  "note": "{\"acts\": [\"precompute_all_slice_deadlines\", \"register_deadlines_with_scheduler\", \"raise_price_limit_notice\", \"record_shortfall\"], \"states\": [\"twap.armed\"]}"
+ },
+ "[async]B6/defer USER_PAUSE across invoke": {
+  "pass": true,
+  "note": "{\"deferred\": 1, \"states\": [\"twap.paused\"], \"unh\": [[\"USER_PAUSE\", \"deferred\"]], \"send\": {\"ok\": true, \"sec\": 0.0004007000243291259}}"
+ },
+ "[async]B6/rollback entry-raise -> no invoke": {
+  "pass": true,
+  "note": "{\"states\": [\"twap.armed\"], \"svc\": [], \"aerr\": [\"bump_slices_done:RuntimeError('boom:bump_slices_done')\"]}"
+ },
+ "[async]B6/strict unknown event refused": {
+  "pass": true,
+  "note": "{\"ok\": false, \"exc\": \"UnknownEventError(\\\"Event 'NOT_A_REAL_EVENT' is not declared by machine 'twap'. Known events: CHILDREN_TERMINAL, DURATION_END, MAX_DURATION, PRICE_OK, RESUME, SLICE_DUE, USER_CANCEL, USER_PAUSE, WS_DISCONNECT, done.invoke.cx, done.invoke.rec, done.invoke.slice, done.invoke.sweep, error.platform.cx, error.platform.rec, error.platform.slice, error.platform.sweep.\\\")\", \"sec\": 0.0025438999873586}"
+ },
+ "[async]B6/onError retry records shortfall": {
+  "pass": true,
+  "note": "{\"states\": [\"twap.armed\"], \"acts\": [\"precompute_all_slice_deadlines\", \"register_deadlines_with_scheduler\", \"compute_slice_qty_with_participation_cap\", \"apply_catch_up\", \"bump_slices_done\", \"bump_failure\", \"record_shortfall\"]}"
+ },
+ "[async]B6/onError exhausted -> failed": {
+  "pass": true,
+  "note": "[\"twap.failed\"]"
+ },
+ "[async]B6/guardErrorPolicy raise surfaces": {
+  "pass": true,
+  "note": "{\"send\": {\"ok\": true, \"sec\": 0.009506900038104504}, \"states\": [\"twap.submitting_slice\"], \"gerr\": [\"RuntimeError('guard:price_limit_breached')\"]}"
+ },
+ "[async]B6/preflight always -> failed": {
+  "pass": true,
+  "note": "[\"twap.failed\"]"
+ },
+ "[async]B7/happy arming->working->repricing->completed": {
+  "pass": true,
+  "note": "{\"states\": [\"chase.completed\"], \"svc\": [\"submit_initial_limit\", \"amend_child_price\"], \"snap\": true, \"notes\": []}"
+ },
+ "[async]B7/INV-b recompute bound 1:1 to reprice": {
+  "pass": true,
+  "note": "[\"record_child\", \"stamp_arm_price\", \"drain_deferred\", \"compute_target_excluding_own_size\", \"bump_repricings\", \"stamp_last_reprice\", \"drain_deferred\", \"apply_fill\"]"
+ },
+ "[async]B7/INV-a beyond_max_chase_ticks -> bound_exceeded->parked": {
+  "pass": true,
+  "note": "{\"states\": [\"chase.parked\"], \"acts\": [\"record_child\", \"stamp_arm_price\", \"drain_deferred\", \"raise_warning_alert\"]}"
+ },
+ "[async]B7/INV-a repricings_exhausted -> bound_exceeded->parked": {
+  "pass": true,
+  "note": "{\"states\": [\"chase.parked\"], \"acts\": [\"record_child\", \"stamp_arm_price\", \"drain_deferred\", \"raise_warning_alert\"]}"
+ },
+ "[async]B7/INV-c rate budget parks, no amend": {
+  "pass": true,
+  "note": "{\"states\": [\"chase.paused\"], \"svc\": [\"submit_initial_limit\"]}"
+ },
+ "[async]B7/INV-e timeout policy {'on_timeout_is_market': True} -> completing": {
+  "pass": true,
+  "note": "{\"states\": [\"chase.completing\"], \"svc\": [\"submit_initial_limit\", \"convert_to_market\"]}"
+ },
+ "[async]B7/INV-e timeout policy {'on_timeout_is_cancel': True} -> cancelled": {
+  "pass": true,
+  "note": "{\"states\": [\"chase.cancelled\"], \"svc\": [\"submit_initial_limit\", \"cancel_child\"]}"
+ },
+ "[async]B7/INV-e timeout policy neither -> parked": {
+  "pass": true,
+  "note": "{\"states\": [\"chase.parked\"], \"svc\": [\"submit_initial_limit\"]}"
+ },
+ "[async]B7/amend onError fill-race -> completing": {
+  "pass": true,
+  "note": "[\"chase.completing\"]"
+ },
+ "[async]B7/defer USER_CANCEL across amend": {
+  "pass": true,
+  "note": "{\"deferred\": 1, \"states\": [\"chase.cancelled\"], \"unh\": [[\"USER_CANCEL\", \"deferred\"]]}"
+ },
+ "[async]B7/rollback repricing entry -> no amend": {
+  "pass": true,
+  "note": "{\"states\": [\"chase.working\"], \"svc\": [\"submit_initial_limit\"], \"aerr\": [\"bump_repricings:RuntimeError('boom:bump_repricings')\"]}"
+ },
+ "[async]B7/arming onError -> failed": {
+  "pass": true,
+  "note": "{\"states\": [\"chase.failed\"], \"acts\": [\"map_error\"]}"
+ },
+ "[async]B8/happy flat->attaching->verifying->protected": {
+  "pass": true,
+  "note": "{\"states\": [\"position_protection.sl.protected\", \"position_protection.watchdog.scanning\"], \"svc\": [\"attach_native_sl\", \"read_position_sl\"], \"snap\": true, \"notes\": []}"
+ },
+ "[async]B8/INV-a unverified -> naked, never protected": {
+  "pass": true,
+  "note": "{\"states\": [\"position_protection.sl.verifying\", \"position_protection.watchdog.scanning\"], \"acts\": [\"arm_sl_deadline\", \"bump_attach_attempts\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\"]}"
+ },
+ "[async]B8/INV-b naked raises critical + metric": {
+  "pass": true,
+  "note": "[\"arm_sl_deadline\", \"bump_attach_attempts\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\"]"
+ },
+ "[async]B8/naked fallback fails -> unrecoverable + page": {
+  "pass": true,
+  "note": "{\"states\": [\"position_protection.sl.naked_unrecoverable\", \"position_protection.watchdog.scanning\"], \"acts\": [\"bump_attach_attempts\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\", \"page_owner\", \"consider_reduce_only_close\"]}"
+ },
+ "[async]B8/INV-c loosen refused without override": {
+  "pass": true,
+  "note": "{\"states\": [\"position_protection.sl.protected\", \"position_protection.watchdog.scanning\"], \"svc\": [\"attach_native_sl\", \"read_position_sl\"]}"
+ },
+ "[async]B8/INV-c loosen allowed WITH override, re-verified": {
+  "pass": true,
+  "note": "{\"states\": [\"position_protection.sl.protected\", \"position_protection.watchdog.scanning\"], \"svc\": [\"attach_native_sl\", \"read_position_sl\", \"set_trading_stop\", \"read_position_sl\"]}"
+ },
+ "[async]B8/INV-d watchdog miss -> naked (visited, then self-heals)": {
+  "pass": true,
+  "note": "{\"states\": [\"position_protection.sl.protected\", \"position_protection.watchdog.scanning\"], \"acts\": [\"arm_sl_deadline\", \"bump_attach_attempts\", \"bump_miss_counter\", \"maybe_raise_watchdog_miss\", \"stamp_naked_since\", \"raise_critical_alert\", \"emit_naked_metric\"]}"
+ },
+ "[async]B8/attach reenter retry re-runs entry (bounded by guard)": {
+  "pass": true,
+  "note": "{\"n\": 29, \"states\": [\"position_protection.sl.attaching\", \"position_protection.watchdog.scanning\"], \"err\": null, \"notes\": []}"
+ },
+ "[async]B8/actionErrorPolicy=fail surfaces entry raise": {
+  "pass": true,
+  "note": "{\"aerr\": [\"arm_sl_deadline:RuntimeError('boom:arm_sl_deadline')\"], \"status\": \"stopped\", \"send\": {\"ok\": true, \"sec\": 0.003410800010897219}}"
+ },
+ "[async]B9/happy draft->sim->armed->evaluating->acting->cooling->armed": {
+  "pass": true,
+  "note": "{\"states\": [\"rule_instance.armed\"], \"svc\": [\"evaluate_condition_dag\", \"dispatch_actions_in_order\"], \"snap\": true, \"notes\": []}"
+ },
+ "[async]B9/INV-a promotion gate refuses with a reason": {
+  "pass": true,
+  "note": "{\"states\": [\"rule_instance.simulating\"], \"acts\": [\"stamp_simulation_start\", \"reject_promotion_with_reason\"]}"
+ },
+ "[async]B9/INV-b skip debounce_blocked recorded, stays armed": {
+  "pass": true,
+  "note": "{\"states\": [\"rule_instance.armed\"], \"acts\": [\"stamp_simulation_start\", \"subscribe_triggers\", \"emit_armed_audit\", \"record_skip_debounced\"], \"svc\": []}"
+ },
+ "[async]B9/INV-b skip data_stale recorded, stays armed": {
+  "pass": true,
+  "note": "{\"states\": [\"rule_instance.armed\"], \"acts\": [\"stamp_simulation_start\", \"subscribe_triggers\", \"emit_armed_audit\", \"record_skip_stale_data\"], \"svc\": []}"
+ },
+ "[async]B9/INV-b skip limits_blocked recorded, stays armed": {
+  "pass": true,
+  "note": "{\"states\": [\"rule_instance.armed\"], \"acts\": [\"stamp_simulation_start\", \"subscribe_triggers\", \"emit_armed_audit\", \"record_skip_limit\"], \"svc\": []}"
+ },
+ "[async]B9/INV-c requires-confirmation parks in pending_confirmation": {
+  "pass": true,
+  "note": "{\"states\": [\"rule_instance.pending_confirmation\"], \"svc\": [\"evaluate_condition_dag\"]}"
+ },
+ "[async]B9/INV-c rejection records a skip, no dispatch": {
+  "pass": true,
+  "note": "{\"states\": [\"rule_instance.armed\"], \"svc\": [\"evaluate_condition_dag\"]}"
+ },
+ "[async]B9/INV-d partial fire recorded + alerted": {
+  "pass": true,
+  "note": "{\"states\": [\"rule_instance.cooling_down\"], \"acts\": [\"assert_safety_limits\", \"record_partial_fire\", \"bump_consecutive_errors\", \"raise_partial_alert\", \"stamp_cooldown_deadline\"]}"
+ },
+ "[async]B9/INV-e error budget -> kill_switched + critical": {
+  "pass": true,
+  "note": "{\"states\": [\"rule_instance.kill_switched\"], \"acts\": [\"emit_armed_audit\", \"unsubscribe_triggers\", \"raise_critical_alert\", \"emit_kill_switch_audit\"]}"
+ },
+ "[async]B9/INV-e un-elevated HUMAN_REARM refused": {
+  "pass": true,
+  "note": "[\"rule_instance.kill_switched\"]"
+ },
+ "[async]B9/once_satisfied always -> spent": {
+  "pass": true,
+  "note": "[\"rule_instance.spent\"]"
+ },
+ "[async]B9/armed exit unsubscribes on kill switch": {
+  "pass": true,
+  "note": "{\"acts\": [\"emit_armed_audit\", \"unsubscribe_triggers\", \"raise_critical_alert\", \"emit_kill_switch_audit\"], \"states\": [\"rule_instance.kill_switched\"]}"
+ },
+ "[async]B10/happy armed->firing->delivered->ack->resolved": {
+  "pass": true,
+  "note": "{\"states\": [\"alert.resolved\"], \"svc\": [\"dispatch_to_channels\"], \"snap\": true, \"notes\": []}"
+ },
+ "[async]B10/INV-a storm -> suppressed + counted + metric": {
+  "pass": true,
+  "note": "{\"states\": [\"alert.suppressed\"], \"acts\": [\"bump_storm_count\", \"emit_suppression_metric\"]}"
+ },
+ "[async]B10/INV-b partial delivery is its own degraded state": {
+  "pass": true,
+  "note": "[\"alert.partially_delivered\"]"
+ },
+ "[async]B10/INV-c retry bounded, attempts bumped": {
+  "pass": true,
+  "note": "{\"states\": [\"alert.retrying\"], \"acts\": [\"persist_fired_row\", \"stamp_storm_window\", \"bump_delivery_attempts\", \"schedule_backoff_deadline\", \"persist_fired_row\", \"stamp_storm_window\", \"bump_delivery_attempts\", \"schedule_backoff_deadline\"]}"
+ },
+ "[async]B10/INV-c exhaustion -> delivery_failed + metric": {
+  "pass": true,
+  "note": "{\"states\": [\"alert.delivery_failed\"], \"acts\": [\"persist_fired_row\", \"stamp_storm_window\", \"emit_delivery_failure_metric\"]}"
+ },
+ "[async]B10/INV-d persist_fired_row precedes dispatch": {
+  "pass": true,
+  "note": "[\"persist\", \"dispatch\"]"
+ },
+ "[async]B10/ACK during retry -> acknowledged -> resolved": {
+  "pass": true,
+  "note": "[\"alert.resolved\"]"
+ },
+ "[async]B10/disabled defers CONDITION_MET, applied on ENABLE": {
+  "pass": true,
+  "note": "{\"mid\": [\"alert.disabled\"], \"deferred\": 1, \"after\": [\"alert.delivered\"], \"unh\": [[\"CONDITION_MET\", \"deferred\"]]}"
+ }
+}

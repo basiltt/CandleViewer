@@ -1,0 +1,27 @@
+{
+  "probe": "q1_chain_budget_external",
+  "py": "3.13.7",
+  "senders_0": {
+    "senders": 0,
+    "external_sent": 0,
+    "tripped": true,
+    "laps_at_trip": 1000,
+    "laps_after_settling": 1000,
+    "seconds_to_trip": 0.064,
+    "still_alive": "receipt changed=True error=RunawayChainError(\"Machine 'spin' exceeded 1000 chained self-generated events in one macrostep and discarded 0 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")",
+    "status": "running"
+  },
+  "senders_16": {
+    "senders": 16,
+    "external_sent": 714,
+    "tripped": true,
+    "laps_at_trip": 25024,
+    "laps_after_settling": 72071,
+    "seconds_to_trip": 0.749,
+    "still_alive": "raised TimeoutError",
+    "status": "running"
+  },
+  "A1_trip_observed_both": true,
+  "A2_bound_not_reset_by_external": false,
+  "result": "FAIL"
+}

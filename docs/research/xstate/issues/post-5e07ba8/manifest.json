@@ -1,0 +1,503 @@
+{
+  "new_issues": [
+    {
+      "file": "new/R4-01-torn-midstep-snapshot.md",
+      "r4": "R4-01",
+      "title": "Bug: Mid-macrostep configuration is snapshottable; a snapshot taken in the exit→actions→enter window restores as a permanently inert machine reporting healthy",
+      "labels": [
+        "bug",
+        "severity/blocker",
+        "area/persistence"
+      ]
+    },
+    {
+      "file": "new/R4-04-sync-start-nonterminating.md",
+      "r4": "R4-04",
+      "title": "Bug: SyncInterpreter.start() never terminates for a cross-region `always` transition that re-enters an invoking state",
+      "labels": [
+        "bug",
+        "severity/blocker",
+        "area/sync-interpreter"
+      ]
+    },
+    {
+      "file": "new/R4-03-block-policy-fire-and-forget-drop.md",
+      "r4": "R4-03",
+      "title": "Bug: OverflowPolicy.BLOCK silently discards every fire-and-forget send(), even on an empty inbox",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/interpreter"
+      ]
+    },
+    {
+      "file": "new/R4-06-external-events-charged-to-chain-budget.md",
+      "r4": "R4-06",
+      "title": "Bug: external `send()` issued while a macrostep is in flight is charged to the self-raised chain budget and silently dropped",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/interpreter",
+        "area/events"
+      ]
+    },
+    {
+      "file": "new/R4-07-receipt-deferred-id-keyed-false-positives.md",
+      "r4": "R4-07",
+      "title": "Bug: `Receipt.deferred` is keyed on `id(event)` in a set that never shrinks on replay — unbounded growth and false positives on fully-handled events",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/receipts",
+        "area/interpreter",
+        "area/sync-interpreter"
+      ]
+    },
+    {
+      "file": "new/R4-11-priority-lane-not-persisted.md",
+      "r4": "R4-11",
+      "title": "Bug: the priority (timer) lane is never persisted — an already-fired `after` event is lost across a snapshot",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/persistence",
+        "area/timers"
+      ]
+    },
+    {
+      "file": "new/R4-12-always-root-target-empties-configuration.md",
+      "r4": "R4-12",
+      "title": "Bug: a transition targeting the machine root empties the configuration on both engines, leaving status='running'",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/validation",
+        "area/interpreter"
+      ]
+    },
+    {
+      "file": "new/R4-19-invoke-done-carries-child-context-not-output.md",
+      "r4": "R4-19",
+      "title": "Bug: an invoked child's `output` is discarded — `done.invoke` carries the child's private `context` instead",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/actors",
+        "area/interpreter",
+        "area/sync-interpreter"
+      ]
+    },
+    {
+      "file": "new/R4-02-from-snapshot-no-validation.md",
+      "r4": "R4-02",
+      "title": "Bug: from_snapshot() performs no validation and leaks untyped exceptions on malformed snapshots",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/persistence",
+        "area/validation"
+      ]
+    },
+    {
+      "file": "new/R4-08-detach-strips-provenance.md",
+      "r4": "R4-08",
+      "title": "Bug: send(engine_event, wait=True) silently strips engine provenance via _detach()'s dataclasses.replace()",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/interpreter"
+      ]
+    },
+    {
+      "file": "new/R4-13-settling-budget-orphan-leaf.md",
+      "r4": "R4-13",
+      "title": "Bug: settling-budget trip leaves an orphaned active leaf reported as healthy, and mutates on restore",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/interpreter",
+        "area/sync-interpreter"
+      ]
+    },
+    {
+      "file": "new/R4-14-untyped-event-type-errors.md",
+      "r4": "R4-14",
+      "title": "Bug: dict/non-str event `type` raises untyped AttributeError/TypeError, escaping the documented exception hierarchy",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/events",
+        "area/validation"
+      ]
+    },
+    {
+      "file": "new/R4-16-run-loop-death-status-not-normalized.md",
+      "r4": "R4-16",
+      "title": "Bug: run loop death from a manufactured CancelledError leaves status='running' and hangs pending receipts forever",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/interpreter",
+        "area/plugins"
+      ]
+    },
+    {
+      "file": "new/R4-18-simulatedclock-settler-leak.md",
+      "r4": "R4-18",
+      "title": "Perf: SimulatedClock._attach() has no paired detach, leaking every restored interpreter forever",
+      "labels": [
+        "bug",
+        "performance",
+        "severity/medium",
+        "area/timers"
+      ]
+    },
+    {
+      "file": "new/R4-21-sync-async-invoke-timing-divergence.md",
+      "r4": "R4-21",
+      "title": "Semantics: plain-sync `invoke` completion timing diverges between SyncInterpreter and Interpreter for the identical event script",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/interpreter",
+        "area/sync-interpreter"
+      ]
+    },
+    {
+      "file": "new/R4-22-from-snapshot-no-clock-param.md",
+      "r4": "R4-22",
+      "title": "Feature: from_snapshot() has no clock= parameter, so a custom clock cannot be restored",
+      "labels": [
+        "enhancement",
+        "severity/medium",
+        "area/timers",
+        "area/persistence"
+      ]
+    },
+    {
+      "file": "new/R4-23-afterevent-lateness-lost.md",
+      "r4": "R4-23",
+      "title": "Bug: AfterEvent lateness telemetry (scheduled_for/fired_at) resets to 0.0 across a snapshot round-trip",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/timers",
+        "area/persistence",
+        "area/events"
+      ]
+    },
+    {
+      "file": "new/R4-24-receipt-arity-changelog.md",
+      "r4": "R4-24",
+      "title": "Docs: Receipt's new 4th field (deferred) is an undeclared breaking API change in the CHANGELOG",
+      "labels": [
+        "documentation",
+        "severity/medium",
+        "area/events"
+      ]
+    },
+    {
+      "file": "new/R4-25-async-completion-sparing-missing.md",
+      "r4": "R4-25",
+      "title": "Docs: 'engine completions are never discarded' (#94) is implemented on the sync engine only",
+      "labels": [
+        "documentation",
+        "bug",
+        "severity/medium",
+        "area/interpreter",
+        "area/sync-interpreter"
+      ]
+    },
+    {
+      "file": "new/R4-26-ducktyped-logic-mutation.md",
+      "r4": "R4-26",
+      "title": "Bug: create_machine() still mutates a duck-typed logic object's registries in place",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/interpreter"
+      ]
+    },
+    {
+      "file": "new/R4-27-sync-tick-chained-deadlines.md",
+      "r4": "R4-27",
+      "title": "Bug: SyncInterpreter.tick() delivers only one due `after` deadline per call on chained deadlines",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/timers",
+        "area/sync-interpreter"
+      ]
+    },
+    {
+      "file": "new/R4-28-sync-send-stopped-silent.md",
+      "r4": "R4-28",
+      "title": "Bug: send() to a stopped SyncInterpreter is silent while the async engine fires on_event_dropped",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/interpreter",
+        "area/sync-interpreter",
+        "area/observability"
+      ]
+    },
+    {
+      "file": "new/R4-29-sync-start-synthetic-init-hook.md",
+      "r4": "R4-29",
+      "title": "Bug: SyncInterpreter.start() emits a synthetic init on_transition hook the async engine never emits",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/interpreter",
+        "area/sync-interpreter",
+        "area/observability"
+      ]
+    },
+    {
+      "file": "new/R4-30-deferred-replay-folds-receipt.md",
+      "r4": "R4-30",
+      "title": "Semantics: a deferred event's replay folds into the triggering event's own Receipt",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/events",
+        "area/interpreter"
+      ]
+    },
+    {
+      "file": "new/R4-31-logging-inspector-no-redaction.md",
+      "r4": "R4-31",
+      "title": "Docs/Security: shipped LoggingInspector reference plugin logs context and event payloads unredacted at INFO",
+      "labels": [
+        "documentation",
+        "severity/medium",
+        "area/plugins"
+      ]
+    },
+    {
+      "file": "new/R4-32-async-hook-not-awaited.md",
+      "r4": "R4-32",
+      "title": "Bug: async-def plugin hook overrides are never awaited, and swallowed hook failures have no programmatic surface",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/plugins"
+      ]
+    },
+    {
+      "file": "new/R4-10-after-timer-not-rearmed.md",
+      "r4": "R4-10",
+      "title": "Bug: `after` timers are never re-armed by `from_snapshot()`, and there is no dormancy signal for a lost timer",
+      "labels": [
+        "bug",
+        "severity/low",
+        "area/persistence",
+        "area/timers"
+      ]
+    },
+    {
+      "file": "new/R4-15-stop-abandons-events-silently.md",
+      "r4": "R4-15",
+      "title": "Bug: events abandoned by `stop()` are lost with no `on_event_dropped` hook and no log",
+      "labels": [
+        "bug",
+        "severity/low",
+        "area/interpreter"
+      ]
+    },
+    {
+      "file": "new/R4-20-escalate-unroutable.md",
+      "r4": "R4-20",
+      "title": "Bug: escalate() from an invoked child is unroutable -- reaches neither onError nor \"*\"",
+      "labels": [
+        "bug",
+        "severity/low",
+        "area/actors",
+        "area/events"
+      ]
+    },
+    {
+      "file": "new/R4-33-done-data-stringified.md",
+      "r4": "R4-33",
+      "title": "Bug: DoneEvent.data is silently stringified into the snapshot by json.dumps(default=str)",
+      "labels": [
+        "bug",
+        "severity/low",
+        "area/persistence",
+        "area/events"
+      ]
+    },
+    {
+      "file": "new/R4-34-statein-ambiguous-suffix.md",
+      "r4": "R4-34",
+      "title": "Bug: stateIn resolves an ambiguous bare state name by suffix match instead of rejecting it",
+      "labels": [
+        "bug",
+        "severity/low",
+        "area/validation"
+      ]
+    },
+    {
+      "file": "new/R4-35-sendto-unresolved-silent.md",
+      "r4": "R4-35",
+      "title": "Bug: sendTo with an unresolvable target silently drops the event with no observable signal",
+      "labels": [
+        "bug",
+        "severity/low",
+        "area/plugins",
+        "area/events"
+      ]
+    },
+    {
+      "file": "new/R4-36-resolve-error-hook.md",
+      "r4": "R4-36",
+      "title": "Feature: add an on_resolve_error plugin hook for unresolved transition targets",
+      "labels": [
+        "enhancement",
+        "severity/low",
+        "area/observability"
+      ]
+    },
+    {
+      "file": "new/R4-37-restart-services-docs.md",
+      "r4": "R4-37",
+      "title": "Docs: from_snapshot(restart_services=True) reports status=\"running\" before dormant invokes are actually restarted",
+      "labels": [
+        "documentation",
+        "severity/low",
+        "area/persistence"
+      ]
+    },
+    {
+      "file": "new/R4-38-config-cycle-recursionerror.md",
+      "r4": "R4-38",
+      "title": "Bug: self-referential (aliased-cycle) machine config raises RecursionError instead of InvalidConfigError",
+      "labels": [
+        "bug",
+        "severity/low",
+        "area/validation"
+      ]
+    },
+    {
+      "file": "new/R4-39-provenance-unexported.md",
+      "r4": "R4-39",
+      "title": "Docs: is_system_event and system_event are undocumented and unexported from the package root",
+      "labels": [
+        "documentation",
+        "severity/low",
+        "area/events"
+      ]
+    },
+    {
+      "file": "new/R4-40-provenance-deepcopy-pickle.md",
+      "r4": "R4-40",
+      "title": "Docs: engine-event provenance does not survive deepcopy or pickle",
+      "labels": [
+        "documentation",
+        "severity/low",
+        "area/events"
+      ]
+    }
+  ],
+  "comments": [
+    {
+      "issue": 31,
+      "file": "comments/31.md",
+      "action": "comment"
+    },
+    {
+      "issue": 77,
+      "file": "comments/77.md",
+      "action": "comment"
+    },
+    {
+      "issue": 79,
+      "file": "comments/79.md",
+      "action": "comment"
+    },
+    {
+      "issue": 84,
+      "file": "comments/84.md",
+      "action": "comment"
+    },
+    {
+      "issue": 85,
+      "file": "comments/85.md",
+      "action": "comment"
+    },
+    {
+      "issue": 86,
+      "file": "comments/86.md",
+      "action": "comment"
+    },
+    {
+      "issue": 87,
+      "file": "comments/87.md",
+      "action": "comment"
+    },
+    {
+      "issue": 88,
+      "file": "comments/88.md",
+      "action": "comment"
+    },
+    {
+      "issue": 89,
+      "file": "comments/89.md",
+      "action": "comment"
+    },
+    {
+      "issue": 90,
+      "file": "comments/90.md",
+      "action": "comment"
+    },
+    {
+      "issue": 91,
+      "file": "comments/91.md",
+      "action": "comment+reopen"
+    },
+    {
+      "issue": 92,
+      "file": "comments/92.md",
+      "action": "comment"
+    },
+    {
+      "issue": 93,
+      "file": "comments/93.md",
+      "action": "comment"
+    },
+    {
+      "issue": 94,
+      "file": "comments/94.md",
+      "action": "comment"
+    },
+    {
+      "issue": 95,
+      "file": "comments/95.md",
+      "action": "comment"
+    },
+    {
+      "issue": 96,
+      "file": "comments/96.md",
+      "action": "comment"
+    },
+    {
+      "issue": 97,
+      "file": "comments/97.md",
+      "action": "comment"
+    },
+    {
+      "issue": 98,
+      "file": "comments/98.md",
+      "action": "comment"
+    },
+    {
+      "issue": 99,
+      "file": "comments/99.md",
+      "action": "comment+reopen"
+    }
+  ],
+  "meta": {
+    "issue": 26,
+    "file": "meta-26.md"
+  }
+}

@@ -1,0 +1,6 @@
+[PASS ] C1  200 machines x 1 ms raise(delay=) ping-pong for 10 s: CPU bounded by the clock, 0 Runawa
+[PASS ] C2  MIXED chain: a step that arms a delayed raise AND a zero-delay raise must STILL trip max
+[PASS ] C3  100 concurrent start()s whose initial descent settles an `always` chain (#215): bounded,
+[PASS ] C4  200 v3 snapshots carrying scheduled_sends restored CONCURRENTLY: every one re-arms and w
+
+c_concurrency: 4/4 PASS

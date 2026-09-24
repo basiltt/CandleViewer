@@ -1,0 +1,78 @@
+{
+  "probe": "p6_determinism_surface",
+  "py": "3.13.7",
+  "a_determinism": {
+    "reps": 50,
+    "async_distinct_trace_hashes": 1,
+    "sync_distinct_trace_hashes": 1,
+    "async_final": {
+      "states": [
+        "det.idle"
+      ],
+      "context": {
+        "n": 4,
+        "trace": [
+          "ok",
+          "ok",
+          "ok",
+          "ok"
+        ]
+      }
+    },
+    "sync_final": {
+      "states": [
+        "det.idle"
+      ],
+      "context": {
+        "n": 4,
+        "trace": [
+          "ok",
+          "ok",
+          "ok",
+          "ok"
+        ]
+      }
+    },
+    "cross_engine_states_equal": true,
+    "cross_engine_context_equal": true,
+    "pass": true
+  },
+  "b_hash_seed": {
+    "seeds": {
+      "0": [
+        "396458db6d0d8fe3",
+        "396458db6d0d8fe3"
+      ],
+      "1": [
+        "396458db6d0d8fe3",
+        "396458db6d0d8fe3"
+      ],
+      "2": [
+        "396458db6d0d8fe3",
+        "396458db6d0d8fe3"
+      ],
+      "7": [
+        "396458db6d0d8fe3",
+        "396458db6d0d8fe3"
+      ],
+      "12345": [
+        "396458db6d0d8fe3",
+        "396458db6d0d8fe3"
+      ]
+    },
+    "distinct": 1,
+    "pass": true
+  },
+  "c_surface": {
+    "missing_exports": [],
+    "public_names_total": 78,
+    "missing_plugin_hooks": [],
+    "Interpreter_has_service_executor": true,
+    "Receipt_has_denied": true,
+    "debug_log_lines": 28,
+    "secret_leaks_in_logs": 0,
+    "leak_sample": [],
+    "pass": true
+  },
+  "result": "PASS"
+}

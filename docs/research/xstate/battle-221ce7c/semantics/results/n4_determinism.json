@@ -1,0 +1,99 @@
+[
+ {
+  "id": "N4-01",
+  "title": "50x the same script on SyncInterpreter (executor-backed service) yields ONE byte-identical trace",
+  "intent": "determinism is the precondition for replay-based reconciliation",
+  "detail": {
+   "ok": true,
+   "distinct_traces": 1,
+   "trace": "[\"go:1\", \"svc:calc\", \"done\", \"|d.idle\", \"|d.idle\", \"go:2\", \"svc:calc\", \"done\", \"|d.idle\", \"|d.idle\", \"go:3\", \"svc:calc\", \"done\", \"|d.idle\", \"|d.idle\", \"go:4\", \"svc:calc\", \"done\", \"|d.idle\"]"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N4-02",
+  "title": "50x the same script on Interpreter (async, service on the executor) yields ONE byte-identical trace",
+  "intent": "#149 moved services to a thread pool \u2014 the ORDER of their completion must not float",
+  "detail": {
+   "ok": true,
+   "distinct_traces": 1,
+   "trace": "[\"go:1\", \"svc:calc\", \"done\", \"|d.idle\", \"|d.idle\", \"go:2\", \"svc:calc\", \"done\", \"|d.idle\", \"|d.idle\", \"go:3\", \"svc:calc\", \"done\", \"|d.idle\", \"|d.idle\", \"go:4\", \"svc:calc\", \"done\", \"|d.idle\"]"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N4-03",
+  "title": "#116 parity survives #149: the async trace EQUALS the sync trace with an executor service",
+  "intent": "the executor hop must not reorder a completion relative to a user event",
+  "detail": {
+   "ok": true,
+   "sync": [
+    "go:1",
+    "svc:calc",
+    "done",
+    "|d.idle",
+    "|d.idle",
+    "go:2",
+    "svc:calc",
+    "done",
+    "|d.idle",
+    "|d.idle",
+    "go:3",
+    "svc:calc",
+    "done",
+    "|d.idle",
+    "|d.idle",
+    "go:4",
+    "svc:calc",
+    "done",
+    "|d.idle"
+   ],
+   "async": [
+    "go:1",
+    "svc:calc",
+    "done",
+    "|d.idle",
+    "|d.idle",
+    "go:2",
+    "svc:calc",
+    "done",
+    "|d.idle",
+    "|d.idle",
+    "go:3",
+    "svc:calc",
+    "done",
+    "|d.idle",
+    "|d.idle",
+    "go:4",
+    "svc:calc",
+    "done",
+    "|d.idle"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N4-04",
+  "title": "The trace is stable across 5 PYTHONHASHSEED values (fresh subprocess each)",
+  "intent": "dict/set iteration order must never reach transition selection",
+  "detail": {
+   "ok": true,
+   "distinct": 1,
+   "sample": "[\"go:1\", \"svc:calc\", \"done\", \"|d.idle\", \"|d.idle\", \"go:2\", \"svc:calc\", \"done\", \"|d.idle\", \"|d.idle\", \"go:3\", \"svc:calc\", \"done\", \"|d.idle\", \"|d.idle\", \"go:4\", \"svc:calc\", \"done\", \"|d.idle\"]"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N4-05",
+  "title": "A PARALLEL machine's region-entry and action order is identical 50x on both engines",
+  "intent": "parallel region ordering is where a set-iteration leak would show first",
+  "detail": {
+   "ok": true,
+   "sync_distinct": 1,
+   "async_distinct": 1,
+   "engines_agree": true,
+   "trace": "[\"e_r0a\", \"e_r1a\", \"e_r2a\", \"e_r0b\", \"e_r1b\", \"e_r2b\", \"|p.r0.b,p.r1.b,p.r2.b\"]"
+  },
+  "status": "PASS"
+ }
+]

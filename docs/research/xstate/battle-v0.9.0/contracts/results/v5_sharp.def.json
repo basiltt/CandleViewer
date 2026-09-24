@@ -1,0 +1,54 @@
+{
+ "[def]C-07b/denied RELEASE is fatal": {
+  "pass": true,
+  "note": "{\"after_denied\": [\"kill_switch.engaged\"], \"status\": \"error\", \"err\": \"UnhandledEventError(\\\"Event 'RELEASE' is not handled in any active state ['kill_switch.engaged'] and the machine's onUnhandled policy is 'err\"}"
+ },
+ "[def]C-07b/kill switch BRICKED (valid RELEASE cannot land)": {
+  "pass": true,
+  "note": "{\"final\": [\"kill_switch.engaged\"], \"r3\": {\"ok\": true, \"sec\": 0.0002773000014713034}, \"status\": \"error\"}"
+ },
+ "[def]#207/B18 rollback+onDone strands observably": {
+  "pass": true,
+  "note": "{\"plateau\": 7, \"limit\": 5, \"state\": [\"kill_switch.flattening\"], \"stranded\": [[\"kill_switch.flattening\", \"fl\", \"RunawayChainError(\\\"Machine 'kill_switch' exceeded 5 chained self-generated event\"]], \"dormant\": true, \"pending\": [\"PendingInvocation(state_id='kill_switch.flattening', invoke_id='fl', src='flatten_all_positions')\"], \"last_error\": \"RunawayChainError(\\\"Machine 'kill_switch' exceeded 5 chained self-generated events in one macrostep and discard\", \"laps\": [7, 7]}"
+ },
+ "[def]#207/B18 plateau == maxIterations+2 svc calls": {
+  "pass": true,
+  "note": "{\"plateau\": 7, \"limit\": 5}"
+ },
+ "[def]#207/B19 rollback+onDone strands observably": {
+  "pass": true,
+  "note": "{\"plateau\": 27, \"limit\": 25, \"state\": [\"reconciliation.diffing\"], \"stranded\": [[\"reconciliation.diffing\", \"diff\", \"RunawayChainError(\\\"Machine 'reconciliation' exceeded 25 chained self-generated e\"]], \"dormant\": true, \"pending\": [\"PendingInvocation(state_id='reconciliation.diffing', invoke_id='diff', src='diff_against_local')\"], \"last_error\": \"RunawayChainError(\\\"Machine 'reconciliation' exceeded 25 chained self-generated events in one macrostep and dis\", \"laps\": [27, 27]}"
+ },
+ "[def]#207/B19 plateau == maxIterations+2 svc calls": {
+  "pass": true,
+  "note": "{\"plateau\": 27, \"limit\": 25}"
+ },
+ "[def]#204/invoke never arms for a state exited in the same macrostep": {
+  "pass": true,
+  "note": "{\"st\": [\"kill_switch.engaged\"], \"svc\": []}"
+ },
+ "[def]#204/sync engine same": {
+  "pass": true,
+  "note": "{\"st\": [\"kill_switch.engaged\"], \"svc\": []}"
+ },
+ "[def]parity/B16 config+action+service trace": {
+  "pass": true,
+  "note": "{\"async\": {\"st\": [\"session.auth.active\", \"session.elevation.elevated\"], \"n_act\": 12, \"svc\": []}, \"sync\": {\"st\": [\"session.auth.active\", \"session.elevation.elevated\"], \"n_act\": 12, \"svc\": []}, \"act_delta\": []}"
+ },
+ "[def]parity/B17 config+action+service trace": {
+  "pass": true,
+  "note": "{\"async\": {\"st\": [\"live_gate.eligible\"], \"n_act\": 7, \"svc\": []}, \"sync\": {\"st\": [\"live_gate.eligible\"], \"n_act\": 7, \"svc\": []}, \"act_delta\": []}"
+ },
+ "[def]parity/B18 config+action+service trace": {
+  "pass": true,
+  "note": "{\"async\": {\"st\": [\"kill_switch.clear\"], \"n_act\": 6, \"svc\": [\"cancel_all_working_orders\", \"flatten_all_positions\"]}, \"sync\": {\"st\": [\"kill_switch.clear\"], \"n_act\": 6, \"svc\": [\"cancel_all_working_orders\", \"flatten_all_positions\"]}, \"act_delta\": []}"
+ },
+ "[def]parity/B19 config+action+service trace": {
+  "pass": true,
+  "note": "{\"async\": {\"st\": [\"reconciliation.idle\"], \"n_act\": 10, \"svc\": [\"fetch_exchange_state\", \"diff_against_local\", \"apply_remediations\"]}, \"sync\": {\"st\": [\"reconciliation.idle\"], \"n_act\": 10, \"svc\": [\"fetch_exchange_state\", \"diff_against_local\", \"apply_remediations\"]}, \"act_delta\": []}"
+ },
+ "[def]parity/B20 config+action+service trace": {
+  "pass": true,
+  "note": "{\"async\": {\"st\": [\"risk_lockout.clear\"], \"n_act\": 9, \"svc\": []}, \"sync\": {\"st\": [\"risk_lockout.clear\"], \"n_act\": 9, \"svc\": []}, \"act_delta\": []}"
+ }
+}

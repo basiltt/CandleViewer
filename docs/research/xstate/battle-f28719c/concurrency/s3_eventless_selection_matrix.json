@@ -1,0 +1,225 @@
+{
+  "probe": "s3_eventless_selection_matrix",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "always_at": "same",
+      "always_guard": true,
+      "service_kind": "def",
+      "engine": "async",
+      "named_ran": 1,
+      "eventless_ran": 3,
+      "last_error": "None",
+      "state": [
+        "s3.outer.spin"
+      ]
+    },
+    {
+      "always_at": "same",
+      "always_guard": true,
+      "service_kind": "def",
+      "engine": "sync",
+      "named_ran": 1,
+      "eventless_ran": 3,
+      "last_error": "None",
+      "state": [
+        "s3.outer.spin"
+      ]
+    },
+    {
+      "always_at": "same",
+      "always_guard": true,
+      "service_kind": "async def",
+      "engine": "async",
+      "named_ran": 1,
+      "eventless_ran": 3,
+      "last_error": "None",
+      "state": [
+        "s3.outer.spin"
+      ]
+    },
+    {
+      "always_at": "same",
+      "always_guard": false,
+      "service_kind": "def",
+      "engine": "async",
+      "named_ran": 1,
+      "eventless_ran": 0,
+      "last_error": "None",
+      "state": [
+        "s3.outer.a"
+      ]
+    },
+    {
+      "always_at": "same",
+      "always_guard": false,
+      "service_kind": "def",
+      "engine": "sync",
+      "named_ran": 1,
+      "eventless_ran": 0,
+      "last_error": "None",
+      "state": [
+        "s3.outer.a"
+      ]
+    },
+    {
+      "always_at": "same",
+      "always_guard": false,
+      "service_kind": "async def",
+      "engine": "async",
+      "named_ran": 1,
+      "eventless_ran": 0,
+      "last_error": "None",
+      "state": [
+        "s3.outer.a"
+      ]
+    },
+    {
+      "always_at": "deeper",
+      "always_guard": true,
+      "service_kind": "def",
+      "engine": "async",
+      "named_ran": 1,
+      "eventless_ran": 3,
+      "last_error": "None",
+      "state": [
+        "s3.outer.b"
+      ]
+    },
+    {
+      "always_at": "deeper",
+      "always_guard": true,
+      "service_kind": "def",
+      "engine": "sync",
+      "named_ran": 1,
+      "eventless_ran": 3,
+      "last_error": "None",
+      "state": [
+        "s3.outer.b"
+      ]
+    },
+    {
+      "always_at": "deeper",
+      "always_guard": true,
+      "service_kind": "async def",
+      "engine": "async",
+      "named_ran": 1,
+      "eventless_ran": 3,
+      "last_error": "None",
+      "state": [
+        "s3.outer.b"
+      ]
+    },
+    {
+      "always_at": "deeper",
+      "always_guard": false,
+      "service_kind": "def",
+      "engine": "async",
+      "named_ran": 1,
+      "eventless_ran": 0,
+      "last_error": "None",
+      "state": [
+        "s3.outer.a"
+      ]
+    },
+    {
+      "always_at": "deeper",
+      "always_guard": false,
+      "service_kind": "def",
+      "engine": "sync",
+      "named_ran": 1,
+      "eventless_ran": 0,
+      "last_error": "None",
+      "state": [
+        "s3.outer.a"
+      ]
+    },
+    {
+      "always_at": "deeper",
+      "always_guard": false,
+      "service_kind": "async def",
+      "engine": "async",
+      "named_ran": 1,
+      "eventless_ran": 0,
+      "last_error": "None",
+      "state": [
+        "s3.outer.a"
+      ]
+    },
+    {
+      "always_at": "shallower",
+      "always_guard": true,
+      "service_kind": "def",
+      "engine": "async",
+      "named_ran": 1,
+      "eventless_ran": 3,
+      "last_error": "None",
+      "state": [
+        "s3.outer.spin"
+      ]
+    },
+    {
+      "always_at": "shallower",
+      "always_guard": true,
+      "service_kind": "def",
+      "engine": "sync",
+      "named_ran": 1,
+      "eventless_ran": 3,
+      "last_error": "None",
+      "state": [
+        "s3.outer.spin"
+      ]
+    },
+    {
+      "always_at": "shallower",
+      "always_guard": true,
+      "service_kind": "async def",
+      "engine": "async",
+      "named_ran": 1,
+      "eventless_ran": 3,
+      "last_error": "None",
+      "state": [
+        "s3.outer.spin"
+      ]
+    },
+    {
+      "always_at": "shallower",
+      "always_guard": false,
+      "service_kind": "def",
+      "engine": "async",
+      "named_ran": 1,
+      "eventless_ran": 0,
+      "last_error": "None",
+      "state": [
+        "s3.outer.a"
+      ]
+    },
+    {
+      "always_at": "shallower",
+      "always_guard": false,
+      "service_kind": "def",
+      "engine": "sync",
+      "named_ran": 1,
+      "eventless_ran": 0,
+      "last_error": "None",
+      "state": [
+        "s3.outer.a"
+      ]
+    },
+    {
+      "always_at": "shallower",
+      "always_guard": false,
+      "service_kind": "async def",
+      "engine": "async",
+      "named_ran": 1,
+      "eventless_ran": 0,
+      "last_error": "None",
+      "state": [
+        "s3.outer.a"
+      ]
+    }
+  ],
+  "violations": [],
+  "engine_parity_gaps": [],
+  "result": "PASS"
+}

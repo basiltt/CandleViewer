@@ -1,0 +1,26 @@
+{
+ "[def]D5/after/armed-not-fired": {
+  "pass": true,
+  "note": "['tmr.waiting']"
+ },
+ "[def]D5/after/59s-still-waiting": {
+  "pass": true,
+  "note": "['tmr.waiting'] marks=[]"
+ },
+ "[def]D5/after/60s-fires-once": {
+  "pass": true,
+  "note": "['tmr.fired'] marks=['after.60000.tmr.waiting']"
+ },
+ "[def]D5/after/cancel-disarms": {
+  "pass": true,
+  "note": "['tmr.idle'] marks=[]"
+ },
+ "[def]D5/after/forged-AfterEvent-refused": {
+  "pass": true,
+  "note": "send-refused:UnknownEventError(\"Event 'after.60000.tmr.waiting' is an engine-generated name and cannot be sent as user traffic to machine 'tmr'. Completions (`done.invoke.*`, `error.platform.*`), timers (`after.*`) and engine sentinels are minted by the interpreter when the work they describe actually happens; a hand-built one is refused under strict mode.\") states=['tmr.waiting'] marks=[] unhandled=[]"
+ },
+ "[def]D5/after/sync-engine-parity": {
+  "pass": true,
+  "note": "arm=['tmr.waiting'] t59=['tmr.waiting'] t61=['tmr.fired'] marks=['after.60000.tmr.waiting']"
+ }
+}

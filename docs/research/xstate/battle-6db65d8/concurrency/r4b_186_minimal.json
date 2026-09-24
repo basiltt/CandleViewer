@@ -1,0 +1,117 @@
+{
+  "probe": "r4b_186_minimal",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "case": "configuration lies, state_ids truthful",
+      "engine": "async",
+      "kind": "def",
+      "snapshot_state_ids": [
+        "r4b.b"
+      ],
+      "snapshot_configuration": [
+        "r4b.a"
+      ],
+      "truth": "r4b.b",
+      "disposition": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "state_ids lies, configuration truthful",
+      "engine": "async",
+      "kind": "def",
+      "snapshot_state_ids": [
+        "r4b.a"
+      ],
+      "snapshot_configuration": [
+        "r4b",
+        "r4b.b"
+      ],
+      "truth": "r4b.b",
+      "disposition": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "configuration lies, state_ids truthful",
+      "engine": "sync",
+      "kind": "def",
+      "snapshot_state_ids": [
+        "r4b.b"
+      ],
+      "snapshot_configuration": [
+        "r4b.a"
+      ],
+      "truth": "r4b.b",
+      "disposition": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "state_ids lies, configuration truthful",
+      "engine": "sync",
+      "kind": "def",
+      "snapshot_state_ids": [
+        "r4b.a"
+      ],
+      "snapshot_configuration": [
+        "r4b",
+        "r4b.b"
+      ],
+      "truth": "r4b.b",
+      "disposition": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "configuration lies, state_ids truthful",
+      "engine": "async",
+      "kind": "async def",
+      "snapshot_state_ids": [
+        "r4b.b"
+      ],
+      "snapshot_configuration": [
+        "r4b.a"
+      ],
+      "truth": "r4b.b",
+      "disposition": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "state_ids lies, configuration truthful",
+      "engine": "async",
+      "kind": "async def",
+      "snapshot_state_ids": [
+        "r4b.a"
+      ],
+      "snapshot_configuration": [
+        "r4b",
+        "r4b.b"
+      ],
+      "truth": "r4b.b",
+      "disposition": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "configuration lies, state_ids truthful",
+      "engine": "sync",
+      "kind": "async def",
+      "snapshot_state_ids": [
+        "r4b.b"
+      ],
+      "snapshot_configuration": [
+        "r4b.a"
+      ],
+      "truth": "r4b.b",
+      "disposition": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "state_ids lies, configuration truthful",
+      "engine": "sync",
+      "kind": "async def",
+      "snapshot_state_ids": [
+        "r4b.a"
+      ],
+      "snapshot_configuration": [
+        "r4b",
+        "r4b.b"
+      ],
+      "truth": "r4b.b",
+      "disposition": "refused:SnapshotCorruptError"
+    }
+  ],
+  "accepted_contradictions": 0,
+  "expected": "every row refused with SnapshotCorruptError (#186)",
+  "result": "PASS"
+}

@@ -1,0 +1,48 @@
+{
+ "async-engine/async": {
+  "svc_calls": 22,
+  "receipt": {
+   "type": "NoneType",
+   "ok": "<no attr>",
+   "error": "'<no attr>'",
+   "deferred": "<no attr>"
+  },
+  "states": [
+   "m.arm"
+  ],
+  "status": "running",
+  "interp_error": "None",
+  "last_error": "RunawayChainError(\"Machine 'm' exceeded 20 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")"
+ },
+ "async-engine/def": {
+  "svc_calls": 22,
+  "receipt": {
+   "type": "NoneType",
+   "ok": "<no attr>",
+   "error": "'<no attr>'",
+   "deferred": "<no attr>"
+  },
+  "states": [
+   "m.arm"
+  ],
+  "status": "running",
+  "interp_error": "None",
+  "last_error": "RunawayChainError(\"Machine 'm' exceeded 20 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")"
+ },
+ "sync-engine/def": {
+  "svc_calls": 2,
+  "receipt": {
+   "type": "NoneType",
+   "ok": "<no attr>",
+   "error": "'<no attr>'",
+   "deferred": "<no attr>"
+  },
+  "raised": null,
+  "states": [
+   "m.arm"
+  ],
+  "status": "running",
+  "interp_error": "None",
+  "last_error": "RuntimeError('boom')"
+ }
+}

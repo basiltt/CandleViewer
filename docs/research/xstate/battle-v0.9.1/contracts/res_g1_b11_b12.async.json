@@ -1,0 +1,98 @@
+{
+ "[async]G1.B11.happy.lands_stopped": {
+  "pass": false,
+  "note": "states=['recording.degraded'] ctx={'symbol': None, 'reasons': [], 'streams': [], 'streams_healthy': {'trades': True}, 'gap_count_24h': 0, 'linger_until_us': None, 'error': None}"
+ },
+ "[async]G1.B11.happy.snapshot_ok": {
+  "pass": true,
+  "note": ""
+ },
+ "[async]G1.B11.happy.chain_trips_zero": {
+  "pass": true,
+  "note": "trips=0 lce=None"
+ },
+ "[async]G1.B11.happy.no_fatal": {
+  "pass": true,
+  "note": "status=running err=None"
+ },
+ "[async]G1.B11.inv.gap_counted": {
+  "pass": false,
+  "note": "gap=0"
+ },
+ "[async]G1.B11.inv.both_services_ran": {
+  "pass": false,
+  "note": "svc=['subscribe_streams']"
+ },
+ "[async]G1.B11.inv.degraded_alert_once": {
+  "pass": true,
+  "note": "acts=['add_reason', 'cancel_linger', 'emit_recording_metric', 'mark_stream_unhealthy', 'raise_degraded_alert', 'mark_stream_healthy', 'remove_reason']"
+ },
+ "[async]G1.B11.rollback.reported": {
+  "pass": true,
+  "note": "action_errors=[\"emit_recording_metric:RuntimeError('boom:emit_recording_metric')\", \"emit_recording_metric:RuntimeError('boom:emit_recording_metric')\"] states=['recording.starting']"
+ },
+ "[async]G1.B11.rollback.context_intact": {
+  "pass": true,
+  "note": "ctx={'symbol': None, 'reasons': ['user'], 'streams': [], 'streams_healthy': {}, 'gap_count_24h': 0, 'linger_until_us': None, 'error': None}"
+ },
+ "[async]G1.B11.rollback.no_fatal": {
+  "pass": true,
+  "note": "status=running err=None"
+ },
+ "[async]G1.B11.onError.lands_error": {
+  "pass": true,
+  "note": "states=['recording.error']"
+ },
+ "[async]G1.B11.degraded.snapshot_ok": {
+  "pass": true,
+  "note": ""
+ },
+ "[async]G1.B11.guard_raise.surfaced": {
+  "pass": true,
+  "note": "guard_errors=[\"RuntimeError('guard:reasons_remain')\"] err=None states=['recording.lingering']"
+ },
+ "[async]G1.B12.happy.lands_finished": {
+  "pass": true,
+  "note": "states=['replay.finished']"
+ },
+ "[async]G1.B12.happy.snapshot_ok": {
+  "pass": true,
+  "note": ""
+ },
+ "[async]G1.B12.happy.chain_trips_zero": {
+  "pass": true,
+  "note": "trips=0"
+ },
+ "[async]G1.B12.inv.clock_paired": {
+  "pass": true,
+  "note": "start=2 stop=2"
+ },
+ "[async]G1.B12.inv.speed_applied": {
+  "pass": true,
+  "note": "speed=4.0"
+ },
+ "[async]G1.B12.inv.cursor_advanced": {
+  "pass": true,
+  "note": "cursor=2"
+ },
+ "[async]G1.B12.star.buffering_reached": {
+  "pass": true,
+  "note": "mid=['replay.buffering']"
+ },
+ "[async]G1.B12.star.deferred_then_drained": {
+  "pass": true,
+  "note": "deferred_while_buffering=0 after=['replay.paused'] drain=1"
+ },
+ "[async]G1.B12.star.no_drop": {
+  "pass": true,
+  "note": "dropped=[]"
+ },
+ "[async]G1.B12.final.destroyed": {
+  "pass": true,
+  "note": "states=['replay.destroyed'] status=done"
+ },
+ "[async]G1.B12.final.snapshot_ok": {
+  "pass": true,
+  "note": ""
+ }
+}

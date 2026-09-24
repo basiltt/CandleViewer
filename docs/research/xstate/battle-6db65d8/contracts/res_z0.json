@@ -1,0 +1,42 @@
+{
+ "B1.build.async": {
+  "pass": true,
+  "note": "acts=25 guards=7 svcs=4 delays=[]"
+ },
+ "B1.build.def": {
+  "pass": true,
+  "note": "acts=25 guards=7 svcs=4 delays=[]"
+ },
+ "B2.build.async": {
+  "pass": true,
+  "note": "acts=14 guards=7 svcs=1 delays=[]"
+ },
+ "B2.build.def": {
+  "pass": true,
+  "note": "acts=14 guards=7 svcs=1 delays=[]"
+ },
+ "B3.build.async": {
+  "pass": true,
+  "note": "acts=11 guards=7 svcs=5 delays=[]"
+ },
+ "B3.build.def": {
+  "pass": true,
+  "note": "acts=11 guards=7 svcs=5 delays=[]"
+ },
+ "B4.build.async": {
+  "pass": true,
+  "note": "acts=8 guards=6 svcs=5 delays=[]"
+ },
+ "B4.build.def": {
+  "pass": true,
+  "note": "acts=8 guards=6 svcs=5 delays=[]"
+ },
+ "B5.build.async": {
+  "pass": true,
+  "note": "acts=9 guards=8 svcs=3 delays=[]"
+ },
+ "B5.build.def": {
+  "pass": true,
+  "note": "acts=9 guards=8 svcs=3 delays=[]"
+ }
+}

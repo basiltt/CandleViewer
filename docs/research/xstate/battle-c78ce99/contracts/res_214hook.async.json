@@ -1,0 +1,18 @@
+{
+ "[async]#214.hook/on_invalid_event never reaches a plugin": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]#214.hook/refusal IS visible on last_error (not silent)": {
+  "pass": true,
+  "note": "UnknownEventError(\"Event 'NOT_IN_CHART' is not declared by machine 'order'. Known events: AMEND, AMEND_REJECTED, CANCEL, EXEC, EXPIRE, FAULT, FIRST_FILL, RECON_"
+ },
+ "[async]#214.hook/plugin list was empty at refusal time": {
+  "pass": true,
+  "note": "n_plugins_after_use=1"
+ },
+ "[async]#214.hook/forged event was indeed dropped": {
+  "pass": true,
+  "note": "['order.lifecycle.validated', 'order.protection.not_required']"
+ }
+}

@@ -1,0 +1,35 @@
+{
+  "probe": "n2_per_task_gate",
+  "py": "3.13.7",
+  "a_create_task_producers": {
+    "producers": 24,
+    "context_n": 24,
+    "chain_budget_drops": 0,
+    "last_transition_ok": true,
+    "last_error": "None",
+    "pass": true
+  },
+  "b_send_threadsafe_threads": {
+    "producers": 24,
+    "context_n": 24,
+    "chain_budget_drops": 0,
+    "last_error": "None",
+    "pass": true
+  },
+  "c_child_actor_tasks": {
+    "producers": 72,
+    "context_n": 72,
+    "chain_budget_drops": 0,
+    "last_error": "None",
+    "pass": true
+  },
+  "d_control_real_self_send": {
+    "self_send_action_runs": 9,
+    "maxIterations": 8,
+    "chain_budget_drops": 1,
+    "last_transition_ok": false,
+    "last_error": "RunawayChainError(\"Machine 'selfsend' exceeded 8 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")",
+    "pass": true
+  },
+  "result": "PASS"
+}

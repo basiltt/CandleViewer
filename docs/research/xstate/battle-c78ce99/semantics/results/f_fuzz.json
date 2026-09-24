@@ -1,0 +1,54 @@
+[
+ {
+  "id": "F1",
+  "status": "PASS",
+  "detail": {
+   "ok": true,
+   "configs": 120,
+   "runs": 320,
+   "hangs": 0,
+   "n_findings": 0,
+   "findings": [],
+   "per_shape": {
+    "always": {
+     "runs": 40,
+     "tripped": 40,
+     "periodic_alive": 0
+    },
+    "raise0": {
+     "runs": 40,
+     "tripped": 40,
+     "periodic_alive": 0
+    },
+    "raise_delay": {
+     "runs": 40,
+     "tripped": 0,
+     "periodic_alive": 40
+    },
+    "after": {
+     "runs": 40,
+     "tripped": 0,
+     "periodic_alive": 40
+    },
+    "mixed": {
+     "runs": 40,
+     "tripped": 40,
+     "periodic_alive": 0
+    },
+    "invoke": {
+     "runs": 40,
+     "tripped": 40,
+     "periodic_alive": 0
+    }
+   },
+   "oracle": {
+    "always": "trip",
+    "raise0": "trip",
+    "raise_delay": "periodic",
+    "after": "periodic",
+    "mixed": "trip",
+    "invoke": "trip"
+   }
+  }
+ }
+]

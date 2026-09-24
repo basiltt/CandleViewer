@@ -1,0 +1,139 @@
+[
+ {
+  "id": "STAR-1",
+  "inv": "strict",
+  "title": "which contracts carry the A3 wildcard?",
+  "detail": {
+   "ok": true,
+   "per_machine": {
+    "B11": {
+     "wildcard_states": [],
+     "known_events": [
+      "GAP_DETECTED",
+      "LINGER_DUE",
+      "REASON_ADDED",
+      "REASON_REMOVED",
+      "RETRY",
+      "STREAM_HEALTHY",
+      "STREAM_UNHEALTHY",
+      "done.invoke.sub",
+      "done.invoke.unsub",
+      "error.platform.sub",
+      "error.platform.unsub"
+     ]
+    },
+    "B12": {
+     "wildcard_states": [
+      "replay.buffering"
+     ],
+     "known_events": [
+      "*",
+      "CANCEL",
+      "CONSUMER_SLOW",
+      "DESTROY",
+      "PAUSE",
+      "PLAY",
+      "PREPARE",
+      "RANGE_END",
+      "SEEK",
+      "SET_SPEED",
+      "SOURCE_ERROR",
+      "STEP"
+     ]
+    },
+    "B13": {
+     "wildcard_states": [
+      "ws_conn.subscribing"
+     ],
+     "known_events": [
+      "*",
+      "BACKOFF_DUE",
+      "BUDGET_RECHECK",
+      "CONNECT",
+      "PONG",
+      "PONG_DEADLINE",
+      "SHUTDOWN",
+      "SOCKET_CLOSED",
+      "TOPICS_CHANGED",
+      "TOPIC_STALE",
+      "done.invoke.auth",
+      "done.invoke.cl"
+     ]
+    },
+    "B14": {
+     "wildcard_states": [],
+     "known_events": [
+      "DELTA",
+      "SEQUENCE_GAP",
+      "SNAPSHOT",
+      "SNAPSHOT_TIMEOUT",
+      "SUBSCRIBE",
+      "UNSUBSCRIBE"
+     ]
+    },
+    "B15": {
+     "wildcard_states": [],
+     "known_events": [
+      "MARK_UPDATE"
+     ]
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "STAR-2",
+  "inv": "strict",
+  "title": "wildcard makes is_known_event() true for any garbage",
+  "detail": {
+   "ok": false,
+   "per_machine": {
+    "B11": {
+     "has_star": false,
+     "TYPO_known": false,
+     "onUnhandled": "defer"
+    },
+    "B12": {
+     "has_star": true,
+     "TYPO_known": true,
+     "onUnhandled": "defer"
+    },
+    "B13": {
+     "has_star": true,
+     "TYPO_known": true,
+     "onUnhandled": "error"
+    },
+    "B14": {
+     "has_star": false,
+     "TYPO_known": false,
+     "onUnhandled": "error"
+    },
+    "B15": {
+     "has_star": false,
+     "TYPO_known": false,
+     "onUnhandled": "defer"
+    }
+   },
+   "strict_defeated_in": [
+    "B12",
+    "B13"
+   ]
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "STAR-3",
+  "inv": "strict",
+  "title": "removing the A3 wildcard restores strict on B13",
+  "detail": {
+   "ok": true,
+   "results": {
+    "NOT_A_REAL_EVENT": "UnknownEventError (strict works)",
+    "after.party": "UnknownEventError (strict works)",
+    "done.invoke.bogus": "UnknownEventError (strict works)"
+   },
+   "finding": "with the dead A3 `*` handler deleted, strict=true behaves as the catalogue says it should"
+  },
+  "status": "PASS"
+ }
+]

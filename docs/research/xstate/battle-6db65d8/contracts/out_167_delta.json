@@ -1,0 +1,26 @@
+[
+ {
+  "shape": "entry-action (library pinned #167)",
+  "svc_at_0.6s": 659,
+  "svc_at_1.5s": 1003,
+  "stopped_spinning": false,
+  "status": "running",
+  "last_error": "RunawayChainError(\"Machine 'spin' exceeded 1000 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")",
+  "chain_budget_dropped": true,
+  "drop_reasons": [
+   "chain_budget"
+  ]
+ },
+ {
+  "shape": "onDone transition-action (B1-B5 contracts)",
+  "svc_at_0.6s": 573,
+  "svc_at_1.5s": 1003,
+  "stopped_spinning": false,
+  "status": "running",
+  "last_error": "RunawayChainError(\"Machine 'spin' exceeded 1000 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")",
+  "chain_budget_dropped": true,
+  "drop_reasons": [
+   "chain_budget"
+  ]
+ }
+]

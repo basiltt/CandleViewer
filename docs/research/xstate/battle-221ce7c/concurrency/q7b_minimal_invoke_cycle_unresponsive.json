@@ -1,0 +1,117 @@
+{
+  "probe": "q7b_minimal_invoke_cycle_unresponsive",
+  "py": "3.13.7",
+  "single_machine_is_fine": [
+    {
+      "shape": "invoke_pingpong",
+      "driven_by_external_traffic": false,
+      "tripped_before_probe": true,
+      "external_probe_answered": true,
+      "probe_seconds": 0.0,
+      "laps_burned": 55,
+      "status": "running",
+      "stop": "ok"
+    },
+    {
+      "shape": "invoke_pingpong",
+      "driven_by_external_traffic": true,
+      "tripped_before_probe": true,
+      "external_probe_answered": true,
+      "probe_seconds": 0.0,
+      "laps_burned": 55,
+      "status": "running",
+      "stop": "ok"
+    }
+  ],
+  "under_sustained_load": [
+    {
+      "shape": "plain(control)",
+      "machines": 10,
+      "seconds_driven": 6,
+      "events_sent": 18400,
+      "inbox_backlog_trace_per_0.05s": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_inbox_backlog": 0,
+      "machines_not_answering_in_5s": 0,
+      "statuses": [
+        "running"
+      ],
+      "laps_burned": 18410,
+      "stop": "ok"
+    },
+    {
+      "shape": "always_cycle(control)",
+      "machines": 10,
+      "seconds_driven": 6,
+      "events_sent": 6200,
+      "inbox_backlog_trace_per_0.05s": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_inbox_backlog": 0,
+      "machines_not_answering_in_5s": 0,
+      "statuses": [
+        "running"
+      ],
+      "laps_burned": 317210,
+      "stop": "ok"
+    },
+    {
+      "shape": "invoke_pingpong",
+      "machines": 10,
+      "seconds_driven": 6,
+      "events_sent": 21200,
+      "inbox_backlog_trace_per_0.05s": [
+        202,
+        404,
+        591,
+        786,
+        980,
+        1170,
+        1366,
+        1563,
+        1750,
+        1948,
+        2146,
+        2334
+      ],
+      "final_inbox_backlog": 19834,
+      "machines_not_answering_in_5s": 10,
+      "statuses": [
+        "running"
+      ],
+      "laps_burned": 70400,
+      "stop": "ok"
+    }
+  ],
+  "shapes_that_wedged": [
+    [
+      "invoke_pingpong",
+      10,
+      19834
+    ]
+  ],
+  "result": "FAIL"
+}

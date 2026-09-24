@@ -1,0 +1,91 @@
+{
+ "round": 14,
+ "library": "xstate-statemachine",
+ "version": "0.9.1",
+ "tag": "v0.9.1",
+ "tag_commit": "45bb7f3",
+ "tested_tree": "main @ 801eacd",
+ "tag_vs_tree_diff": "empty",
+ "pypi": {
+  "published": true,
+  "artifact": "xstate_statemachine-0.9.1-py3-none-any.whl",
+  "sha256": "d832d4d9a17b7b8003f61fa0714a8e57eaff316bcd5dd699d81d410362687162",
+  "modules_compared_against_tag": 42,
+  "modules_differing": 0,
+  "pep740_attestation": "verified OK"
+ },
+ "decision": "ADOPT with constraints (decision-table row 8)",
+ "posted": false,
+ "note": "ALL FILES IN THIS DIRECTORY ARE DRAFTS. NOTHING HAS BEEN POSTED.",
+ "comments": [
+  {
+   "file": "comments/239.md",
+   "issue": 239,
+   "disposition": "FIXED",
+   "title": "drain_pending() drains both lanes"
+  },
+  {
+   "file": "comments/240.md",
+   "issue": 240,
+   "disposition": "FIXED",
+   "title": "on_interpreter_start on restore"
+  },
+  {
+   "file": "comments/241.md",
+   "issue": 241,
+   "disposition": "FIXED",
+   "title": "malformed chain fields"
+  },
+  {
+   "file": "comments/242.md",
+   "issue": 242,
+   "disposition": "FIXED",
+   "title": "snapshots.md trust-boundary paragraph"
+  },
+  {
+   "file": "comments/243.md",
+   "issue": 243,
+   "disposition": "FIXED",
+   "title": "RestoredChainError MRO"
+  },
+  {
+   "file": "comments/244.md",
+   "issue": 244,
+   "disposition": "FIXED",
+   "title": "dropped_receipts / on_receipt_dropped"
+  },
+  {
+   "file": "comments/245.md",
+   "issue": 245,
+   "disposition": "FIXED",
+   "title": "SyncInterpreter kwargs"
+  },
+  {
+   "file": "comments/246.md",
+   "issue": 246,
+   "disposition": "FIXED",
+   "title": "production_characteristics --json"
+  },
+  {
+   "file": "comments/247.md",
+   "issue": 247,
+   "disposition": "FIXED",
+   "title": "PEP 740 attestations"
+  },
+  {
+   "file": "comments/248.md",
+   "issue": 248,
+   "disposition": "FIXED (new API has a gap, filed separately)",
+   "title": "events.re_mint()"
+  }
+ ],
+ "new_issues": [
+  {
+   "file": "new/R14-01-re-mint-type-src-override-retargets-completion.md",
+   "id": "R14-01",
+   "severity": "Medium",
+   "verdict": "CONFIRMED"
+  }
+ ],
+ "meta": "meta-26.md"
+}

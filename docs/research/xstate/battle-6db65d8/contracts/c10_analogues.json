@@ -1,0 +1,87 @@
+[
+ {
+  "check": "B11-analogue: concurrent hazards keep both regions legal",
+  "verdict": "PASS",
+  "note": "exactly one active leaf per region after 16 concurrent sends",
+  "evidence": {
+   "pre": [
+    "position_protection.sl.protected",
+    "position_protection.watchdog.scanning"
+   ],
+   "post": [
+    "position_protection.sl.protected",
+    "position_protection.watchdog.scanning"
+   ],
+   "sl_leaves": 1,
+   "wd_leaves": 1
+  }
+ },
+ {
+  "check": "B11-analogue: no WATCHDOG_MISS is lost under concurrency",
+  "verdict": "PASS",
+  "note": "8 concurrent misses -> 8 naked entries + 8 critical alerts (final leaf is protected because the machine re-heals)",
+  "evidence": {
+   "naked_entries": 8,
+   "critical_alerts": 8,
+   "sl": [
+    "position_protection.sl.protected"
+   ],
+   "deferred": 0
+  }
+ },
+ {
+  "check": "B11-analogue: snapshot at quiescence after a concurrent storm",
+  "verdict": "PASS",
+  "note": "no SnapshotMidStepError at rest",
+  "evidence": {
+   "snapshot": "OK"
+  }
+ },
+ {
+  "check": "B19-analogue: 20x flap leaves a single legal leaf",
+  "verdict": "PASS",
+  "note": "no torn configuration after rapid arm/disarm",
+  "evidence": {
+   "armed": [
+    "rule_instance.armed"
+   ],
+   "after_flap": [
+    "rule_instance.armed"
+   ]
+  }
+ },
+ {
+  "check": "B19-analogue: stale_lockout survives the flap",
+  "verdict": "PASS",
+  "note": "KILL_SWITCH after a flap still locks; 5 unelevated rearms do not escape",
+  "evidence": {
+   "killed": [
+    "rule_instance.kill_switched"
+   ],
+   "after_rearms": [
+    "rule_instance.kill_switched"
+   ]
+  }
+ },
+ {
+  "check": "B16-analogue: elevated rearm succeeds",
+  "verdict": "PASS",
+  "note": "elevated HUMAN_REARM is the one exit",
+  "evidence": {
+   "states": [
+    "rule_instance.armed"
+   ]
+  }
+ },
+ {
+  "check": "B16-analogue: elevation cleared -> rearm refused",
+  "verdict": "PASS",
+  "note": "after elevation drops, 3 rearms are all refused",
+  "evidence": {
+   "states": [
+    "rule_instance.kill_switched"
+   ],
+   "deferred": 3
+  }
+ }
+]

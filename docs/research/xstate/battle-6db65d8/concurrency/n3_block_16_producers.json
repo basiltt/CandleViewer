@@ -1,0 +1,38 @@
+{
+  "probe": "n3_block_16_producers",
+  "py": "3.13.7",
+  "v1_16_producers": {
+    "attempted": 3200,
+    "processed_hook": 3200,
+    "context_n": 3200,
+    "dropped_hook": 0,
+    "drop_reasons": [],
+    "refused_at_call_site": 0,
+    "call_error_kinds": [],
+    "queue_depth_at_end": 0,
+    "unaccounted_lost": 0,
+    "hook_vs_context_agree": true,
+    "pass": true
+  },
+  "v2_stop_drain_midflight": {
+    "attempted": 3200,
+    "processed_hook": 3200,
+    "context_n": 3200,
+    "dropped_hook": 0,
+    "drop_reasons": [],
+    "refused_at_call_site": 0,
+    "call_error_kinds": [],
+    "queue_depth_at_end": 0,
+    "unaccounted_lost": 0,
+    "hook_vs_context_agree": true,
+    "pass": true
+  },
+  "v3_empty_inbox_fire_and_forget": {
+    "sent_fire_and_forget": 500,
+    "processed": 500,
+    "context_n": 500,
+    "dropped": [],
+    "pass": true
+  },
+  "result": "PASS"
+}

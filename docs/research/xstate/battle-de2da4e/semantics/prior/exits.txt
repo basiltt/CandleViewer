@@ -1,0 +1,3 @@
+EXIT p_persistence=1
+EXIT c_concurrency=0
+EXIT s_semantics_sec=0

@@ -1,0 +1,163 @@
+{
+ "B11": {
+  "actions": [
+   "add_reason",
+   "bump_gap_count",
+   "cancel_linger",
+   "emit_gap_metric",
+   "emit_recording_metric",
+   "mark_stream_healthy",
+   "mark_stream_unhealthy",
+   "raise_degraded_alert",
+   "record_error",
+   "remove_reason",
+   "schedule_linger_deadline"
+  ],
+  "guards": [
+   "all_streams_healthy",
+   "position_open_for_symbol",
+   "reasons_remain"
+  ],
+  "services": [
+   "subscribe_streams",
+   "unsubscribe_and_flush"
+  ],
+  "delays": [],
+  "events": [
+   "GAP_DETECTED",
+   "LINGER_DUE",
+   "REASON_ADDED",
+   "REASON_REMOVED",
+   "RETRY",
+   "STREAM_HEALTHY",
+   "STREAM_UNHEALTHY"
+  ]
+ },
+ "B12": {
+  "actions": [
+   "defer",
+   "drain_deferred",
+   "record_coverage",
+   "record_error",
+   "reset_cursor_to_start",
+   "set_cursor",
+   "set_speed",
+   "slow_clock",
+   "start_clock",
+   "stop_clock"
+  ],
+  "guards": [
+   "loop_enabled"
+  ],
+  "services": [
+   "emit_one_step",
+   "seek_and_prime"
+  ],
+  "delays": [],
+  "events": [
+   "*",
+   "CANCEL",
+   "CONSUMER_SLOW",
+   "DESTROY",
+   "PAUSE",
+   "PLAY",
+   "PREPARE",
+   "RANGE_END",
+   "SEEK",
+   "SET_SPEED",
+   "SOURCE_ERROR",
+   "STEP"
+  ]
+ },
+ "B13": {
+  "actions": [
+   "arm_pong_deadline",
+   "bump_attempt",
+   "compute_jittered_backoff",
+   "defer",
+   "drain_deferred",
+   "emit_feed_degraded",
+   "emit_feed_healthy",
+   "notify_dependents_degraded",
+   "raise_conn_budget_alert",
+   "rearm_pong_deadline",
+   "record_auth_error",
+   "record_conn_error",
+   "record_pong_timeout",
+   "record_staleness",
+   "record_sub_error",
+   "record_subscribed",
+   "reset_backoff",
+   "schedule_backoff_deadline",
+   "schedule_budget_recheck",
+   "set_pending_topics",
+   "stamp_pong"
+  ],
+  "guards": [
+   "connection_budget_exhausted",
+   "is_private"
+  ],
+  "services": [
+   "close_socket",
+   "open_socket",
+   "subscribe_in_batches",
+   "ws_auth"
+  ],
+  "delays": [],
+  "events": [
+   "*",
+   "BACKOFF_DUE",
+   "BUDGET_RECHECK",
+   "CONNECT",
+   "PONG",
+   "PONG_DEADLINE",
+   "SHUTDOWN",
+   "SOCKET_CLOSED",
+   "TOPICS_CHANGED",
+   "TOPIC_STALE"
+  ]
+ },
+ "B14": {
+  "actions": [
+   "apply_delta",
+   "buffer_delta",
+   "bump_resync_count",
+   "clear_buffer",
+   "emit_book_desynced",
+   "emit_book_live",
+   "emit_resync_metric",
+   "install_snapshot",
+   "replay_buffered_deltas_after_seq",
+   "request_snapshot",
+   "stamp_desync"
+  ],
+  "guards": [],
+  "services": [],
+  "delays": [],
+  "events": [
+   "DELTA",
+   "SEQUENCE_GAP",
+   "SNAPSHOT",
+   "SNAPSHOT_TIMEOUT",
+   "SUBSCRIBE",
+   "UNSUBSCRIBE"
+  ]
+ },
+ "B15": {
+  "actions": [
+   "apply_liquidation_haircut",
+   "emit_margin_warning",
+   "write_liquidation_journal"
+  ],
+  "guards": [
+   "above_maintenance_margin",
+   "below_maintenance_margin",
+   "mark_crossed_liq_price"
+  ],
+  "services": [],
+  "delays": [],
+  "events": [
+   "MARK_UPDATE"
+  ]
+ }
+}

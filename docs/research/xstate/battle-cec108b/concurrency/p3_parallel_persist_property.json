@@ -1,0 +1,29 @@
+{
+  "probe": "p3_parallel_persist_property",
+  "py": "3.13.7",
+  "cases": 300,
+  "quiescent_points": 879,
+  "snapshot_raises": [],
+  "unstable": [],
+  "roundtrip_mismatch": [],
+  "not_byte_identical": [],
+  "region_violations": [],
+  "counts": {
+    "snapshot_raises": 0,
+    "unstable": 0,
+    "roundtrip_mismatch": 0,
+    "not_byte_identical": 0,
+    "region_violations": 0
+  },
+  "torn_cases": {
+    "T1_drop_one_region_leaf": "SnapshotCorruptError",
+    "T1b_configuration_only": "SnapshotCorruptError",
+    "T2_v1_torn_state_ids": "SnapshotCorruptError",
+    "T2b_v1_intact": "RESTORED status=running ids=['par7.r0.s1', 'par7.r1.s1', 'par7.r2.s0']",
+    "T3_error_without_error": "SnapshotCorruptError",
+    "T4_stopped": "RESTORED status=stopped ids=['par7.r0.s1', 'par7.r1.s1', 'par7.r2.s0']"
+  },
+  "property_pass": true,
+  "torn_pass": true,
+  "result": "PASS"
+}

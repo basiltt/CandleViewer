@@ -1,0 +1,132 @@
+{
+  "probe": "v3_persistence_chain_and_latch",
+  "py": "3.13.7",
+  "P1_chain_property": {
+    "cases": 300,
+    "failures": 0,
+    "sample": []
+  },
+  "P2_long_chain": {
+    "hops": 5,
+    "rows": [
+      {
+        "delay_ms": 1000,
+        "elapsed_ms": 250,
+        "kind": "def",
+        "hops": 5,
+        "first_records": 1,
+        "first_remaining": 750.0,
+        "remainings": [
+          750.0,
+          750.0,
+          750.0,
+          750.0,
+          750.0,
+          750.0
+        ],
+        "fired_early": false,
+        "fired_on_time": true,
+        "n": 1
+      },
+      {
+        "delay_ms": 1000,
+        "elapsed_ms": 250,
+        "kind": "async def",
+        "hops": 5,
+        "first_records": 1,
+        "first_remaining": 750.0,
+        "remainings": [
+          750.0,
+          750.0,
+          750.0,
+          750.0,
+          750.0,
+          750.0
+        ],
+        "fired_early": false,
+        "fired_on_time": true,
+        "n": 1
+      }
+    ]
+  },
+  "P3_chain_latch": [
+    {
+      "kind": "def",
+      "chain_trips": 1,
+      "latched_type": "RunawayChainError",
+      "latch_survives_benign_event": true,
+      "last_error_after_benign": "RunawayChainError",
+      "snapshot_keys": [
+        "actors",
+        "chain_trips",
+        "configuration",
+        "context",
+        "deferred",
+        "error",
+        "history",
+        "last_chain_error",
+        "machine_hash",
+        "machine_id",
+        "output",
+        "pending_events",
+        "scheduled_sends",
+        "state_ids",
+        "status",
+        "system",
+        "taken_at",
+        "value",
+        "version"
+      ],
+      "snapshot_carries_chain_trips": true,
+      "restored_chain_trips": 2,
+      "restored_latch": "RestoredError",
+      "clear_chain_error_clears_latch": true,
+      "clear_chain_error_keeps_count": true,
+      "note": "a restored interpreter is a NEW object; a reset count is expected. Recorded to show it is not silently non-zero."
+    },
+    {
+      "kind": "async def",
+      "chain_trips": 1,
+      "latched_type": "RunawayChainError",
+      "latch_survives_benign_event": true,
+      "last_error_after_benign": "RunawayChainError",
+      "snapshot_keys": [
+        "actors",
+        "chain_trips",
+        "configuration",
+        "context",
+        "deferred",
+        "error",
+        "history",
+        "last_chain_error",
+        "machine_hash",
+        "machine_id",
+        "output",
+        "pending_events",
+        "scheduled_sends",
+        "state_ids",
+        "status",
+        "system",
+        "taken_at",
+        "value",
+        "version"
+      ],
+      "snapshot_carries_chain_trips": true,
+      "restored_chain_trips": 2,
+      "restored_latch": "RestoredError",
+      "clear_chain_error_clears_latch": true,
+      "clear_chain_error_keeps_count": true,
+      "note": "a restored interpreter is a NEW object; a reset count is expected. Recorded to show it is not silently non-zero."
+    }
+  ],
+  "P4_catalogue_false_positives": {
+    "files": 129,
+    "built_clean_under_strict_config": 129,
+    "false_positive_key_rejections": 0,
+    "false_positive_sample": [],
+    "other_build_errors": 0,
+    "other_sample": []
+  },
+  "failures": [],
+  "verdict": "CLEAN"
+}

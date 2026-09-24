@@ -1,0 +1,136 @@
+[
+  {
+    "id": "G1",
+    "title": "fetch_data AND fetchData both registered (different fns)",
+    "expected": "InvalidConfigError",
+    "observed": "built",
+    "status": "FAIL"
+  },
+  {
+    "id": "G2",
+    "title": "both names bound to the SAME callable -> no ambiguity",
+    "expected": "built",
+    "observed": "built",
+    "status": "PASS"
+  },
+  {
+    "id": "G3",
+    "title": "only fetchData registered, config says fetch_data",
+    "expected": "camel",
+    "observed": "camel",
+    "status": "PASS"
+  },
+  {
+    "id": "G4",
+    "title": "only fetch_data registered, config says fetchData",
+    "expected": "snake",
+    "observed": "snake",
+    "status": "PASS"
+  },
+  {
+    "id": "G5",
+    "title": "exact name wins over an alias",
+    "expected": "EXACT",
+    "observed": "EXACT",
+    "status": "PASS"
+  },
+  {
+    "id": "G6",
+    "title": "acronyms / digits / non-identifier config names bind to snake_case",
+    "expected": {
+      "logHTTPStatus": "a",
+      "fetchUserV2": "b",
+      "fetch-data": "c",
+      "inline:m.a#entry[0]": "d"
+    },
+    "observed": {
+      "logHTTPStatus": "a",
+      "fetchUserV2": "b",
+      "fetch-data": "c",
+      "inline:m.a#entry[0]": "d"
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "G7",
+    "title": "an ACTION and a GUARD with the same normalized name do not collide",
+    "expected": {
+      "hit": "ACTION",
+      "guard_called": true
+    },
+    "observed": {
+      "hit": "ACTION",
+      "guard_called": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "G8",
+    "title": "ambiguity the machine does NOT reference is silent",
+    "expected": "built",
+    "observed": "built",
+    "status": "PASS"
+  },
+  {
+    "id": "G9",
+    "title": "three-way ambiguity",
+    "expected": "InvalidConfigError",
+    "observed": "built",
+    "status": "FAIL"
+  },
+  {
+    "id": "G10",
+    "title": "resolve_aliases MUTATES the shared logic registry (leaks across machines)",
+    "expected": "DOCUMENT",
+    "observed": {
+      "keys_after_first_build": [
+        "fetchData",
+        "fetch_data"
+      ],
+      "alias_leaked_into_registry": true,
+      "second_build": "built(no-ambiguity-raised)"
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "G11",
+    "title": "guards and services alias too",
+    "expected": {
+      "guard": true,
+      "service": true
+    },
+    "observed": {
+      "guard": true,
+      "service": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "H1",
+    "title": "machine 1 sets the policy explicitly, machine 2 does not: does m2 warn?",
+    "expected": "1",
+    "observed": "1",
+    "status": "PASS"
+  },
+  {
+    "id": "H2",
+    "title": "two DEFAULT machines -> exactly one warning per process",
+    "expected": "1",
+    "observed": "1",
+    "status": "PASS"
+  },
+  {
+    "id": "H3",
+    "title": "a default machine whose actions never fail: warns at all?",
+    "expected": "0",
+    "observed": "0",
+    "status": "PASS"
+  },
+  {
+    "id": "H4",
+    "title": "ALL machines set the policy explicitly -> no warning (no false alarm)",
+    "expected": "0",
+    "observed": "0",
+    "status": "PASS"
+  }
+]

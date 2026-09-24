@@ -1,0 +1,822 @@
+[
+  {
+    "id": "S-01",
+    "engine": "async",
+    "title": "Parallel regions: both regions take their own transition on one event",
+    "spec": "SCXML 3.13 selectTransitions: one transition per atomic state in the configuration; XState v5 fires in every region",
+    "expected": [
+      "p.A.a2",
+      "p.B.b2"
+    ],
+    "observed": [
+      "p.A.a2",
+      "p.B.b2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-01",
+    "engine": "sync",
+    "title": "Parallel regions: both regions take their own transition on one event",
+    "spec": "SCXML 3.13 selectTransitions: one transition per atomic state in the configuration; XState v5 fires in every region",
+    "expected": [
+      "p.A.a2",
+      "p.B.b2"
+    ],
+    "observed": [
+      "p.A.a2",
+      "p.B.b2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-02",
+    "engine": "async",
+    "title": "Ancestor preemption: child transition wins over ancestor on same event",
+    "spec": "SCXML 3.13: for each atomic state the transition selected is the one on the innermost state that has an enabled transition",
+    "expected": [
+      "m.A.a2"
+    ],
+    "observed": [
+      "m.A.a2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-02",
+    "engine": "sync",
+    "title": "Ancestor preemption: child transition wins over ancestor on same event",
+    "spec": "SCXML 3.13: for each atomic state the transition selected is the one on the innermost state that has an enabled transition",
+    "expected": [
+      "m.A.a2"
+    ],
+    "observed": [
+      "m.A.a2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-03",
+    "engine": "async",
+    "title": "Document order among two enabled transitions on the SAME state",
+    "spec": "SCXML 3.13: transitions of one state are considered in document order; the first enabled one is selected",
+    "expected": [
+      "m.first"
+    ],
+    "observed": [
+      "m.first"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-03",
+    "engine": "sync",
+    "title": "Document order among two enabled transitions on the SAME state",
+    "spec": "SCXML 3.13: transitions of one state are considered in document order; the first enabled one is selected",
+    "expected": [
+      "m.first"
+    ],
+    "observed": [
+      "m.first"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-04",
+    "engine": "async",
+    "title": "Guard fallthrough: first enabled branch in document order wins",
+    "spec": "SCXML 3.13 + XState v5 guarded transition arrays",
+    "expected": [
+      "m.second"
+    ],
+    "observed": [
+      "m.second"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-04",
+    "engine": "sync",
+    "title": "Guard fallthrough: first enabled branch in document order wins",
+    "spec": "SCXML 3.13 + XState v5 guarded transition arrays",
+    "expected": [
+      "m.second"
+    ],
+    "observed": [
+      "m.second"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-05",
+    "engine": "async",
+    "title": "Conflicting transitions in parallel regions targeting outside: document-order-first region wins, second is preempted",
+    "spec": "SCXML 3.13 removeConflictingTransitions: a transition whose exit set intersects an earlier selected transition's exit set is preempted; document order decides",
+    "expected": [
+      "m.X"
+    ],
+    "observed": [
+      "m.X"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-05",
+    "engine": "sync",
+    "title": "Conflicting transitions in parallel regions targeting outside: document-order-first region wins, second is preempted",
+    "spec": "SCXML 3.13 removeConflictingTransitions: a transition whose exit set intersects an earlier selected transition's exit set is preempted; document order decides",
+    "expected": [
+      "m.X"
+    ],
+    "observed": [
+      "m.X"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-06",
+    "engine": "async",
+    "title": "Conflicting transitions: exit actions run exactly once each",
+    "spec": "SCXML 3.13/3.9: a state is exited at most once per microstep",
+    "expected": {
+      "ids": [
+        "m.X"
+      ],
+      "log": [
+        "xa1",
+        "xA",
+        "xb1",
+        "xB",
+        "xp",
+        "eX"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.X"
+      ],
+      "log": [
+        "xb1",
+        "xa1",
+        "xB",
+        "xA",
+        "xp",
+        "eX"
+      ]
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "S-06",
+    "engine": "sync",
+    "title": "Conflicting transitions: exit actions run exactly once each",
+    "spec": "SCXML 3.13/3.9: a state is exited at most once per microstep",
+    "expected": {
+      "ids": [
+        "m.X"
+      ],
+      "log": [
+        "xa1",
+        "xA",
+        "xb1",
+        "xB",
+        "xp",
+        "eX"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.X"
+      ],
+      "log": [
+        "xb1",
+        "xa1",
+        "xB",
+        "xA",
+        "xp",
+        "eX"
+      ]
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "S-07",
+    "engine": "async",
+    "title": "LCCA: sibling-to-sibling transition exits/enters only up to the LCCA",
+    "spec": "SCXML 3.13 getTransitionDomain = LCCA(source, targets); states above the domain are NOT exited",
+    "expected": {
+      "ids": [
+        "m.P.b"
+      ],
+      "log": [
+        "xa",
+        "eb"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.b"
+      ],
+      "log": [
+        "xa",
+        "eb"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-07",
+    "engine": "sync",
+    "title": "LCCA: sibling-to-sibling transition exits/enters only up to the LCCA",
+    "spec": "SCXML 3.13 getTransitionDomain = LCCA(source, targets); states above the domain are NOT exited",
+    "expected": {
+      "ids": [
+        "m.P.b"
+      ],
+      "log": [
+        "xa",
+        "eb"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.b"
+      ],
+      "log": [
+        "xa",
+        "eb"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-08",
+    "engine": "async",
+    "title": "LCCA across parallel regions: cross-region target exits the whole parallel state and re-enters both regions",
+    "spec": "SCXML 3.13: LCCA of a state in region A and a state in region B is the parallel state's parent, so the parallel state is exited",
+    "expected": {
+      "ids": [
+        "m.p.A.a2",
+        "m.p.B.b1"
+      ],
+      "entered_B": true
+    },
+    "observed": {
+      "ids": [
+        "m.p.A.a2",
+        "m.p.B.b1"
+      ],
+      "entered_B": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-08",
+    "engine": "sync",
+    "title": "LCCA across parallel regions: cross-region target exits the whole parallel state and re-enters both regions",
+    "spec": "SCXML 3.13: LCCA of a state in region A and a state in region B is the parallel state's parent, so the parallel state is exited",
+    "expected": {
+      "ids": [
+        "m.p.A.a2",
+        "m.p.B.b1"
+      ],
+      "entered_B": true
+    },
+    "observed": {
+      "ids": [
+        "m.p.A.a2",
+        "m.p.B.b1"
+      ],
+      "entered_B": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-09",
+    "engine": "async",
+    "title": "Targetless transition: actions run, no exit/entry",
+    "spec": "SCXML 3.13 (targetless transitions are internal, take no state change); XState v5 actions-only transition",
+    "expected": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "act"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "act"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-09",
+    "engine": "sync",
+    "title": "Targetless transition: actions run, no exit/entry",
+    "spec": "SCXML 3.13 (targetless transitions are internal, take no state change); XState v5 actions-only transition",
+    "expected": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "act"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "act"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-10",
+    "engine": "async",
+    "title": "Self-transition default (reenter absent) is internal: no exit/entry",
+    "spec": "XState v5: a transition with target === source and reenter falsy is internal; SCXML type='internal'",
+    "expected": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "act"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "act"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-10",
+    "engine": "sync",
+    "title": "Self-transition default (reenter absent) is internal: no exit/entry",
+    "spec": "XState v5: a transition with target === source and reenter falsy is internal; SCXML type='internal'",
+    "expected": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "act"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "act"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-11",
+    "engine": "async",
+    "title": "Self-transition with reenter:true is external: exit then action then entry",
+    "spec": "XState v5 reenter:true; SCXML type='external' self-transition. Action order per SCXML 3.13: exit, transition actions, entry",
+    "expected": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "xs",
+        "act",
+        "es"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "xs",
+        "act",
+        "es"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-11",
+    "engine": "sync",
+    "title": "Self-transition with reenter:true is external: exit then action then entry",
+    "spec": "XState v5 reenter:true; SCXML type='external' self-transition. Action order per SCXML 3.13: exit, transition actions, entry",
+    "expected": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "xs",
+        "act",
+        "es"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "xs",
+        "act",
+        "es"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-12",
+    "engine": "async",
+    "title": "internal:false (v4 spelling) is equivalent to reenter:true",
+    "spec": "XState v4 internal:false == v5 reenter:true (library CHANGELOG models.py:539 documents the alias)",
+    "expected": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "xs",
+        "act",
+        "es"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "xs",
+        "act",
+        "es"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-12",
+    "engine": "sync",
+    "title": "internal:false (v4 spelling) is equivalent to reenter:true",
+    "spec": "XState v4 internal:false == v5 reenter:true (library CHANGELOG models.py:539 documents the alias)",
+    "expected": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "xs",
+        "act",
+        "es"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "xs",
+        "act",
+        "es"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-13",
+    "engine": "async",
+    "title": "Compound self-transition with reenter:true re-enters the initial child, not the previously active child",
+    "spec": "SCXML 3.13: external self-transition on a compound state exits it and re-enters via its initial state",
+    "expected": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "xb",
+        "xP",
+        "eP",
+        "ea"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "xb",
+        "xP",
+        "eP",
+        "ea"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-13",
+    "engine": "sync",
+    "title": "Compound self-transition with reenter:true re-enters the initial child, not the previously active child",
+    "spec": "SCXML 3.13: external self-transition on a compound state exits it and re-enters via its initial state",
+    "expected": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "xb",
+        "xP",
+        "eP",
+        "ea"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "xb",
+        "xP",
+        "eP",
+        "ea"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-14",
+    "engine": "async",
+    "title": "Transition to a descendant of the active state enters only the missing links (no re-entry of the ancestor)",
+    "spec": "SCXML 3.13: transition domain is the LCCA; ancestors already active are not exited",
+    "expected": {
+      "ids": [
+        "m.P.a.a2"
+      ],
+      "log": [
+        "xa1",
+        "ea2"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.a.a2"
+      ],
+      "log": [
+        "xa1",
+        "ea2"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-14",
+    "engine": "sync",
+    "title": "Transition to a descendant of the active state enters only the missing links (no re-entry of the ancestor)",
+    "spec": "SCXML 3.13: transition domain is the LCCA; ancestors already active are not exited",
+    "expected": {
+      "ids": [
+        "m.P.a.a2"
+      ],
+      "log": [
+        "xa1",
+        "ea2"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.a.a2"
+      ],
+      "log": [
+        "xa1",
+        "ea2"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-15",
+    "engine": "async",
+    "title": "Transition to a proper ancestor exits and re-enters the ancestor",
+    "spec": "SCXML 3.13: LCCA(source, ancestor-target) is the ancestor's parent, so the ancestor is exited and re-entered",
+    "expected": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "xa",
+        "xP",
+        "eP",
+        "ea"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "xa",
+        "xP",
+        "eP",
+        "ea"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-15",
+    "engine": "sync",
+    "title": "Transition to a proper ancestor exits and re-enters the ancestor",
+    "spec": "SCXML 3.13: LCCA(source, ancestor-target) is the ancestor's parent, so the ancestor is exited and re-entered",
+    "expected": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "xa",
+        "xP",
+        "eP",
+        "ea"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "xa",
+        "xP",
+        "eP",
+        "ea"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-16",
+    "engine": "async",
+    "title": "Exit order is inner-to-outer, entry order outer-to-inner",
+    "spec": "SCXML 3.9: exitStates in reverse document/depth order, enterStates in entry order (ancestors before descendants)",
+    "expected": [
+      "xa1",
+      "xA",
+      "eB",
+      "eb1"
+    ],
+    "observed": [
+      "xa1",
+      "xA",
+      "eB",
+      "eb1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-16",
+    "engine": "sync",
+    "title": "Exit order is inner-to-outer, entry order outer-to-inner",
+    "spec": "SCXML 3.9: exitStates in reverse document/depth order, enterStates in entry order (ancestors before descendants)",
+    "expected": [
+      "xa1",
+      "xA",
+      "eB",
+      "eb1"
+    ],
+    "observed": [
+      "xa1",
+      "xA",
+      "eB",
+      "eb1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-17",
+    "engine": "async",
+    "title": "Action order on a state change: exit actions, then transition actions, then entry actions",
+    "spec": "SCXML 3.13 microstep: exit set actions, transition actions, entry set actions, in that order",
+    "expected": [
+      "xA",
+      "trans",
+      "eB"
+    ],
+    "observed": [
+      "xA",
+      "trans",
+      "eB"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-17",
+    "engine": "sync",
+    "title": "Action order on a state change: exit actions, then transition actions, then entry actions",
+    "spec": "SCXML 3.13 microstep: exit set actions, transition actions, entry set actions, in that order",
+    "expected": [
+      "xA",
+      "trans",
+      "eB"
+    ],
+    "observed": [
+      "xA",
+      "trans",
+      "eB"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-18",
+    "engine": "async",
+    "title": "Unknown event causes no transition and no actions",
+    "spec": "SCXML 3.13: an event with no enabled transition leaves the configuration unchanged",
+    "expected": {
+      "ids": [
+        "m.A"
+      ],
+      "log": []
+    },
+    "observed": {
+      "ids": [
+        "m.A"
+      ],
+      "log": []
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-18",
+    "engine": "sync",
+    "title": "Unknown event causes no transition and no actions",
+    "spec": "SCXML 3.13: an event with no enabled transition leaves the configuration unchanged",
+    "expected": {
+      "ids": [
+        "m.A"
+      ],
+      "log": []
+    },
+    "observed": {
+      "ids": [
+        "m.A"
+      ],
+      "log": []
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-19",
+    "engine": "async",
+    "title": "Guard blocking the inner transition lets the ancestor transition fire",
+    "spec": "SCXML 3.13: only ENABLED transitions are candidates; a disabled inner transition does not shadow an enabled ancestor one",
+    "expected": [
+      "m.B"
+    ],
+    "observed": [
+      "m.B"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-19",
+    "engine": "sync",
+    "title": "Guard blocking the inner transition lets the ancestor transition fire",
+    "spec": "SCXML 3.13: only ENABLED transitions are candidates; a disabled inner transition does not shadow an enabled ancestor one",
+    "expected": [
+      "m.B"
+    ],
+    "observed": [
+      "m.B"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-20",
+    "engine": "async",
+    "title": "Transition actions see the event payload that triggered them",
+    "spec": "SCXML 3.13 / XState v5: actions receive the triggering event",
+    "expected": {
+      "n": 7
+    },
+    "observed": {
+      "n": 7
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-20",
+    "engine": "sync",
+    "title": "Transition actions see the event payload that triggered them",
+    "spec": "SCXML 3.13 / XState v5: actions receive the triggering event",
+    "expected": {
+      "n": 7
+    },
+    "observed": {
+      "n": 7
+    },
+    "status": "PASS"
+  }
+]

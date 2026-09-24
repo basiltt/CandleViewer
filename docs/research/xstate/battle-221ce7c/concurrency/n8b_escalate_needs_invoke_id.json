@@ -1,0 +1,56 @@
+{
+  "probe": "n8b_escalate_needs_invoke_id",
+  "py": "3.13.7",
+  "cases": [
+    {
+      "invoke_declares_id": true,
+      "failure_kind": "callable",
+      "states": [
+        "p.caught"
+      ],
+      "status": "running",
+      "last_error": "None",
+      "reached_onError": true
+    },
+    {
+      "invoke_declares_id": false,
+      "failure_kind": "callable",
+      "states": [
+        "p.caught"
+      ],
+      "status": "running",
+      "last_error": "None",
+      "reached_onError": true
+    },
+    {
+      "invoke_declares_id": true,
+      "failure_kind": "escalate",
+      "states": [
+        "p.caught"
+      ],
+      "status": "running",
+      "last_error": "None",
+      "reached_onError": true
+    },
+    {
+      "invoke_declares_id": false,
+      "failure_kind": "escalate",
+      "states": [
+        "p.caught"
+      ],
+      "status": "running",
+      "last_error": "None",
+      "reached_onError": true
+    }
+  ],
+  "matrix_reached_onError": {
+    "callable,id=True": true,
+    "callable,id=False": true,
+    "escalate,id=True": true,
+    "escalate,id=False": true
+  },
+  "control_callable_works_without_id": true,
+  "escalate_works_with_id": true,
+  "escalate_works_without_id": true,
+  "result": "PASS"
+}

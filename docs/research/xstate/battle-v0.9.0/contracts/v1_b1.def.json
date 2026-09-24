@@ -1,0 +1,62 @@
+{
+ "[def]V1.B1.happy_advances": {
+  "pass": true,
+  "note": "states=['order.lifecycle.validated', 'order.protection.not_required'] status=running"
+ },
+ "[def]V1.B1.happy_snapshot_ok": {
+  "pass": true,
+  "note": "t0:v=3:sched=0; t1:v=3:sched=0; t2:v=3:sched=0"
+ },
+ "[def]V1.B1.happy_chain_trips_zero": {
+  "pass": true,
+  "note": "chain_trips=0 lce=None"
+ },
+ "[def]V1.B1.happy_no_action_errors": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]V1.B1.happy_no_stranded": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]V1.B1.reject_arm_lands": {
+  "pass": true,
+  "note": "states=['order.lifecycle.rejected', 'order.protection.not_required'] actions=['persist_event', 'set_local_reject', 'persist_event', 'emit_terminal']"
+ },
+ "[def]V1.B1.reject_snapshot_ok": {
+  "pass": true,
+  "note": "t0:v=3:sched=0; t1:v=3:sched=0"
+ },
+ "[def]V1.B1.guard_raise_observed": {
+  "pass": true,
+  "note": "guard_errors=[\"RuntimeError('guard:passes_all_gates')\"] error=None states=['order.lifecycle.rejected', 'order.protection.not_required']"
+ },
+ "[def]V1.B1.guard_raise_not_fatal": {
+  "pass": true,
+  "note": "status='running' states=['order.lifecycle.rejected', 'order.protection.not_required']"
+ },
+ "[def]V1.B1.action_raise_observed": {
+  "pass": true,
+  "note": "action_errors=[\"stamp_validated:RuntimeError('boom:stamp_validated')\"] error=None"
+ },
+ "[def]V1.B1.action_raise_chain_clean": {
+  "pass": true,
+  "note": "chain_trips=0"
+ },
+ "[def]V1.B1.strict_refuses_unknown": {
+  "pass": true,
+  "note": "send='UnknownEventError(\"Event \\'NOT_A_REAL_EVENT\\' is not declared by machine \\'order\\'. Known events: AMEND, AMEND_REJECTED, CANCEL, EXEC, EXPIRE, FAULT, FIRST_FILL, RECON_FOUND_CANCELLED, RECON_FOUND_FILLED, RECON_FOUND_LIVE, RECON_FOUND_PARTIAL, RECON_MISS, SEND, SL_DEADLINE, SL_LOST, SL_OBSERVED, TRANSPORT_FAULT, TRIGGERED, VALIDATE, done.invoke.amend ....\")' invalid=[] dropped=[] unhandled=[]"
+ },
+ "[def]V1.B1.strict_survives_unknown": {
+  "pass": true,
+  "note": "status='running' states=['order.lifecycle.draft', 'order.protection.not_required']"
+ },
+ "[def]V1.B1.sync_parity_states": {
+  "pass": true,
+  "note": "async=['order.lifecycle.validated', 'order.protection.not_required'] sync=['order.lifecycle.validated', 'order.protection.not_required']"
+ },
+ "[def]V1.B1.sync_parity_chain_trips": {
+  "pass": true,
+  "note": "async=0 sync=0"
+ }
+}

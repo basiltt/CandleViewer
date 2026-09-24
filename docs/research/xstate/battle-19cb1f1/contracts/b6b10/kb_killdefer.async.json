@@ -1,0 +1,34 @@
+{
+ "[async]CD-KS/B6 as-catalogued: kill applied before service completes": {
+  "pass": true,
+  "note": "{\"label\": \"B6 as-catalogued\", \"style\": \"async\", \"inflight\": [\"twap.submitting_slice\"], \"final\": [\"twap.cancelled\"], \"service_hold_s\": 1.5, \"receipt_s\": 0.0, \"applied_s\": 1.454, \"receipt_deferred\": true, \"unhandled\": [[\"USER_CANCEL\", \"deferred\"]], \"dropped\": []}"
+ },
+ "[async]CD-KS/B6 as-catalogued: kill is never LOST": {
+  "pass": true,
+  "note": "{\"final\": [\"twap.cancelled\"], \"applied_s\": 1.454}"
+ },
+ "[async]CD-KS/B9 as-catalogued: kill applied before service completes": {
+  "pass": true,
+  "note": "{\"label\": \"B9 as-catalogued\", \"style\": \"async\", \"inflight\": [\"rule_instance.evaluating\"], \"final\": [\"rule_instance.kill_switched\"], \"service_hold_s\": 1.5, \"receipt_s\": 0.001, \"applied_s\": 1.466, \"receipt_deferred\": true, \"unhandled\": [[\"KILL_SWITCH\", \"deferred\"], [\"KILL_SWITCH\", \"deferred\"]], \"dropped\": []}"
+ },
+ "[async]CD-KS/B9 as-catalogued: kill is never LOST": {
+  "pass": true,
+  "note": "{\"final\": [\"rule_instance.kill_switched\"], \"applied_s\": 1.466}"
+ },
+ "[async]CD-KS/B6 + handler on invoking state: kill applied before service completes": {
+  "pass": true,
+  "note": "{\"label\": \"B6 + handler on invoking state\", \"style\": \"async\", \"inflight\": [\"twap.submitting_slice\"], \"final\": [\"twap.cancelled\"], \"service_hold_s\": 1.5, \"receipt_s\": 0.001, \"applied_s\": 0.001, \"receipt_deferred\": false, \"unhandled\": [], \"dropped\": []}"
+ },
+ "[async]CD-KS/B6 + handler on invoking state: kill is never LOST": {
+  "pass": true,
+  "note": "{\"final\": [\"twap.cancelled\"], \"applied_s\": 0.001}"
+ },
+ "[async]CD-KS/B9 + handler on invoking state: kill applied before service completes": {
+  "pass": true,
+  "note": "{\"label\": \"B9 + handler on invoking state\", \"style\": \"async\", \"inflight\": [\"rule_instance.evaluating\"], \"final\": [\"rule_instance.kill_switched\"], \"service_hold_s\": 1.5, \"receipt_s\": 0.001, \"applied_s\": 0.001, \"receipt_deferred\": false, \"unhandled\": [], \"dropped\": []}"
+ },
+ "[async]CD-KS/B9 + handler on invoking state: kill is never LOST": {
+  "pass": true,
+  "note": "{\"final\": [\"rule_instance.kill_switched\"], \"applied_s\": 0.001}"
+ }
+}

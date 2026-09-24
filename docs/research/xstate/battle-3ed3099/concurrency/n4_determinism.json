@@ -1,0 +1,99 @@
+{
+  "probe": "n4_determinism",
+  "py": "3.13.7",
+  "reps": 50,
+  "async_distinct_traces": 1,
+  "sync_distinct_traces": 1,
+  "cross_engine_identical": false,
+  "async_trace_sample": [
+    {
+      "n": 0,
+      "states": [
+        "det.idle"
+      ],
+      "status": "running"
+    },
+    {
+      "changed": true,
+      "err": null,
+      "n": 1,
+      "states": [
+        "det.done"
+      ],
+      "status": "running"
+    },
+    {
+      "changed": false,
+      "err": null,
+      "n": 1,
+      "states": [
+        "det.done"
+      ],
+      "status": "running"
+    },
+    {
+      "changed": true,
+      "err": null,
+      "n": 2,
+      "states": [
+        "det.done"
+      ],
+      "status": "running"
+    }
+  ],
+  "sync_trace_sample": [
+    {
+      "n": 0,
+      "states": [
+        "det.idle"
+      ],
+      "status": "running"
+    },
+    {
+      "changed": null,
+      "err": null,
+      "n": 1,
+      "states": [
+        "det.done"
+      ],
+      "status": "running"
+    },
+    {
+      "changed": null,
+      "err": null,
+      "n": 1,
+      "states": [
+        "det.done"
+      ],
+      "status": "running"
+    },
+    {
+      "changed": null,
+      "err": null,
+      "n": 2,
+      "states": [
+        "det.done"
+      ],
+      "status": "running"
+    }
+  ],
+  "sync_batch_vs_singles": {
+    "batch": {
+      "states": [
+        "det.done"
+      ],
+      "n": 8,
+      "status": "running"
+    },
+    "singles": {
+      "states": [
+        "det.done"
+      ],
+      "n": 8,
+      "status": "running"
+    },
+    "identical": true
+  },
+  "cross_engine_note": "cross-engine equality is reported, not asserted: the sync engine's Receipt surface differs by design",
+  "result": "PASS"
+}

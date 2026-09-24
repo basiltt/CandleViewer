@@ -1,0 +1,22 @@
+{
+ "[def]P1/guard-raise surfaces to caller or hook": {
+  "pass": true,
+  "note": "{\"raised_at_call_site\": false, \"receipt_repr\": \"None\", \"states\": [\"twap.armed\"], \"guard_errors\": [\"RuntimeError('guard:price_limit_breached')\"], \"errors\": [], \"transition_failed\": [], \"last_error\": \"None\", \"i_error\": \"None\", \"status\": \"running\", \"guard_calls\": [\"preflight_invalid\", \"preflight_invalid\", \"price_limit_breached\"]}"
+ },
+ "[def]P1/guard-raise is NOT a silent denial": {
+  "pass": true,
+  "note": "{\"states\": [\"twap.armed\"], \"svc\": [\"submit_child\"]}"
+ },
+ "[def]P2/USER_PAUSE HELD while invoke in flight": {
+  "pass": true,
+  "note": "{\"mid\": {\"states\": [\"twap.submitting_slice\"], \"svc\": [\"submit_child\"]}, \"during\": {\"states\": [\"twap.submitting_slice\"], \"deferred\": 0, \"unhandled\": [], \"transitions\": [\"->['twap.armed']\", \"___xstate_statemachine_init___->['twap.armed']\", \"SLICE_DUE->['twap.submitting_slice']\"]}}"
+ },
+ "[def]P2/USER_PAUSE applied after completion": {
+  "pass": true,
+  "note": "{\"states\": [\"twap.paused\"], \"deferred\": 0, \"transitions\": [\"->['twap.armed']\", \"___xstate_statemachine_init___->['twap.armed']\", \"SLICE_DUE->['twap.submitting_slice']\", \"done.invoke.slice->['twap.armed']\", \"USER_PAUSE->['twap.paused']\"], \"actions\": [\"precompute_all_slice_deadlines\", \"register_deadlines_with_scheduler\", \"compute_slice_qty_with_participation_cap\", \"apply_catch_up\", \"bump_slices_done\", \"record_child\"]}"
+ },
+ "[def]P2/deferred_count visible while held": {
+  "pass": false,
+  "note": "{\"deferred_during\": 0, \"deferred_after\": 0, \"unhandled\": []}"
+ }
+}

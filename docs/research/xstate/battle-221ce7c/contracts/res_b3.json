@@ -1,0 +1,86 @@
+{
+ "B3.happy.terminal": {
+  "pass": true,
+  "note": "['leg.closed']"
+ },
+ "B3.happy.entry_always": {
+  "pass": true,
+  "note": "['size_from_profile', 'submit_entry_order', 'arm_submit_timeout']"
+ },
+ "B3.happy.snapshot": {
+  "pass": true,
+  "note": "[]"
+ },
+ "B3.skip.first_wins": {
+  "pass": true,
+  "note": "['leg.skipped']"
+ },
+ "B3.preflight_fail.error": {
+  "pass": true,
+  "note": "['leg.error']"
+ },
+ "B3.resolving.live_to_open": {
+  "pass": true,
+  "note": "['leg.open']"
+ },
+ "B3.resolving.svc_once": {
+  "pass": true,
+  "note": "['lookup_by_link_id']"
+ },
+ "B3.resolving.onError_error": {
+  "pass": true,
+  "note": "['leg.error']"
+ },
+ "B3.unwind.flat_to_closed": {
+  "pass": true,
+  "note": "['leg.closed']"
+ },
+ "B3.unwind.chain_order": {
+  "pass": true,
+  "note": "['cancel_children_svc', 'reduce_only_close', 'poll_until_flat']"
+ },
+ "B3.unwind.snapshot": {
+  "pass": true,
+  "note": "[]"
+ },
+ "B3.unwind.retry_bounded": {
+  "pass": true,
+  "note": "reduce_only_close x3 states=['leg.error']"
+ },
+ "B3.unwind.retry_terminal": {
+  "pass": true,
+  "note": "['leg.error']"
+ },
+ "B3.unwind.naked_alert_path": {
+  "pass": true,
+  "note": "['bump_close_attempts', 'read_authoritative_position_qty', 'bump_close_attempts', 'mark_incomplete']"
+ },
+ "B3.unwind.naked_alert_fired": {
+  "pass": true,
+  "note": "['bump_close_attempts', 'mark_incomplete', 'raise_naked_position_alert']"
+ },
+ "B3.R6-03.terminates": {
+  "pass": true,
+  "note": "[{'ev': 'ORDER_OPEN', 'ok': True, 'sec': 0.00032989997998811305}, {'ev': 'UNWIND', 'ok': True, 'sec': 7.959999493323267e-05}]"
+ },
+ "B3.R6-03.bounded": {
+  "pass": true,
+  "note": "cancel_children_svc x19 states=['leg.unwinding.cancel_children'] status=running err=None"
+ },
+ "B3.defer.flat_before_close": {
+  "pass": true,
+  "note": "states=['leg.closed'] unhandled=[('FLAT', 'deferred')]"
+ },
+ "B3.parity.states": {
+  "pass": true,
+  "note": "async=['leg.closed'] sync=['leg.closed']"
+ },
+ "B3.parity.actions": {
+  "pass": true,
+  "note": "async=['size_from_profile', 'submit_entry_order', 'arm_submit_timeout', 'read_authoritative_position_qty', 'bump_close_attempts']\nsync=['size_from_profile', 'submit_entry_order', 'arm_submit_timeout', 'read_authoritative_position_qty', 'bump_close_attempts']"
+ },
+ "B3.parity.svc": {
+  "pass": true,
+  "note": "async=['cancel_children_svc', 'reduce_only_close', 'poll_until_flat'] sync=['cancel_children_svc', 'reduce_only_close', 'poll_until_flat']"
+ }
+}

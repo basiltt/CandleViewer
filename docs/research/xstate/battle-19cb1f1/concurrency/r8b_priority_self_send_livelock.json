@@ -1,0 +1,73 @@
+{
+  "probe": "r8b_priority_self_send_livelock",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "self_send": "plain",
+      "service_kind": "def",
+      "maxIterations": 25,
+      "watchdog_s": 8.0,
+      "start": "ok",
+      "laps": 27,
+      "trip_observable": true,
+      "last_error": "RunawayChainError(\"Machine 'r8b' exceeded 25 chained self-ge",
+      "drops": {
+        "chain_budget": 1
+      },
+      "stop": "ok",
+      "stop_seconds": 0.0,
+      "outcome": "bounded"
+    },
+    {
+      "self_send": "plain",
+      "service_kind": "async def",
+      "maxIterations": 25,
+      "watchdog_s": 8.0,
+      "start": "ok",
+      "laps": 27,
+      "trip_observable": true,
+      "last_error": "RunawayChainError(\"Machine 'r8b' exceeded 25 chained self-ge",
+      "drops": {
+        "chain_budget": 1
+      },
+      "stop": "ok",
+      "stop_seconds": 0.0,
+      "outcome": "bounded"
+    },
+    {
+      "self_send": "prio",
+      "service_kind": "def",
+      "maxIterations": 25,
+      "watchdog_s": 8.0,
+      "start": "ok",
+      "laps": 27,
+      "trip_observable": true,
+      "last_error": "RunawayChainError(\"Machine 'r8b' exceeded 25 chained self-ge",
+      "drops": {
+        "chain_budget": 1
+      },
+      "stop": "ok",
+      "stop_seconds": 0.0,
+      "outcome": "bounded"
+    },
+    {
+      "self_send": "prio",
+      "service_kind": "async def",
+      "maxIterations": 25,
+      "watchdog_s": 8.0,
+      "start": "ok",
+      "laps": 27,
+      "trip_observable": true,
+      "last_error": "RunawayChainError(\"Machine 'r8b' exceeded 25 chained self-ge",
+      "drops": {
+        "chain_budget": 1
+      },
+      "stop": "ok",
+      "stop_seconds": 0.0,
+      "outcome": "bounded"
+    }
+  ],
+  "livelocks": [],
+  "source": "interpreter.py:2342-2375 `_deliver_priority(engine_completion=False)` for every send(priority=True), vs :898-908 `_issued_from_own_action()` on the non-priority path",
+  "result": "PASS"
+}

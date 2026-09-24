@@ -1,0 +1,127 @@
+{
+  "probe": "t9_determinism_hashseed",
+  "py": "3.13.7",
+  "claim": "50x identical traces per cell, both engines, both kinds, stable across PYTHONHASHSEED",
+  "runs_per_cell": 50,
+  "cells": {
+    "async/always_invoke/def": {
+      "74bf6dd31bf09eb3": 50
+    },
+    "sync/always_invoke/def": {
+      "74bf6dd31bf09eb3": 50
+    },
+    "async/always_invoke/async def": {
+      "74bf6dd31bf09eb3": 50
+    },
+    "async/rollback_strands/def": {
+      "f2059afe8e2e8394": 50
+    },
+    "sync/rollback_strands/def": {
+      "f2059afe8e2e8394": 50
+    },
+    "async/rollback_strands/async def": {
+      "f2059afe8e2e8394": 50
+    },
+    "async/delayed_pingpong/def": {
+      "401071988e224115": 50
+    },
+    "sync/delayed_pingpong/def": {
+      "2fe7554b402265a5": 50
+    },
+    "async/delayed_pingpong/async def": {
+      "401071988e224115": 50
+    }
+  },
+  "hashseed_children": {
+    "0": {
+      "async/always_invoke/def": {
+        "74bf6dd31bf09eb3": 10
+      },
+      "sync/always_invoke/def": {
+        "74bf6dd31bf09eb3": 10
+      },
+      "async/always_invoke/async def": {
+        "74bf6dd31bf09eb3": 10
+      },
+      "async/rollback_strands/def": {
+        "f2059afe8e2e8394": 10
+      },
+      "sync/rollback_strands/def": {
+        "f2059afe8e2e8394": 10
+      },
+      "async/rollback_strands/async def": {
+        "f2059afe8e2e8394": 10
+      },
+      "async/delayed_pingpong/def": {
+        "401071988e224115": 10
+      },
+      "sync/delayed_pingpong/def": {
+        "2fe7554b402265a5": 10
+      },
+      "async/delayed_pingpong/async def": {
+        "401071988e224115": 10
+      }
+    },
+    "1": {
+      "async/always_invoke/def": {
+        "74bf6dd31bf09eb3": 10
+      },
+      "sync/always_invoke/def": {
+        "74bf6dd31bf09eb3": 10
+      },
+      "async/always_invoke/async def": {
+        "74bf6dd31bf09eb3": 10
+      },
+      "async/rollback_strands/def": {
+        "f2059afe8e2e8394": 10
+      },
+      "sync/rollback_strands/def": {
+        "f2059afe8e2e8394": 10
+      },
+      "async/rollback_strands/async def": {
+        "f2059afe8e2e8394": 10
+      },
+      "async/delayed_pingpong/def": {
+        "401071988e224115": 10
+      },
+      "sync/delayed_pingpong/def": {
+        "2fe7554b402265a5": 10
+      },
+      "async/delayed_pingpong/async def": {
+        "401071988e224115": 10
+      }
+    },
+    "12345": {
+      "async/always_invoke/def": {
+        "74bf6dd31bf09eb3": 10
+      },
+      "sync/always_invoke/def": {
+        "74bf6dd31bf09eb3": 10
+      },
+      "async/always_invoke/async def": {
+        "74bf6dd31bf09eb3": 10
+      },
+      "async/rollback_strands/def": {
+        "f2059afe8e2e8394": 10
+      },
+      "sync/rollback_strands/def": {
+        "f2059afe8e2e8394": 10
+      },
+      "async/rollback_strands/async def": {
+        "f2059afe8e2e8394": 10
+      },
+      "async/delayed_pingpong/def": {
+        "401071988e224115": 10
+      },
+      "sync/delayed_pingpong/def": {
+        "2fe7554b402265a5": 10
+      },
+      "async/delayed_pingpong/async def": {
+        "401071988e224115": 10
+      }
+    }
+  },
+  "violations": [],
+  "n_violations": 0,
+  "result": "PASS"
+}

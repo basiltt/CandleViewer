@@ -1,0 +1,248 @@
+{
+  "probe": "r8_livelock_fuzz_both_kinds_s2",
+  "py": "3.13.7",
+  "configs": 170,
+  "seed": 7002,
+  "settle_s": 0.05,
+  "watchdog_s": 3.0,
+  "by_shape_kind": {
+    "sendto_self_loop:def": {
+      "n": 36,
+      "trips": 36,
+      "timeouts": 0
+    },
+    "sendto_self_loop:async def": {
+      "n": 36,
+      "trips": 36,
+      "timeouts": 0
+    },
+    "always_cycle:def": {
+      "n": 43,
+      "trips": 43,
+      "timeouts": 0
+    },
+    "always_cycle:async def": {
+      "n": 43,
+      "trips": 43,
+      "timeouts": 0
+    },
+    "rollback_ondone:def": {
+      "n": 35,
+      "trips": 28,
+      "timeouts": 0
+    },
+    "rollback_ondone:async def": {
+      "n": 35,
+      "trips": 30,
+      "timeouts": 0
+    },
+    "nested_invoke_cycle:def": {
+      "n": 29,
+      "trips": 24,
+      "timeouts": 0
+    },
+    "nested_invoke_cycle:async def": {
+      "n": 29,
+      "trips": 25,
+      "timeouts": 0
+    },
+    "invoke_cycle:def": {
+      "n": 27,
+      "trips": 24,
+      "timeouts": 0
+    },
+    "invoke_cycle:async def": {
+      "n": 27,
+      "trips": 25,
+      "timeouts": 0
+    }
+  },
+  "timeouts": [],
+  "timeout_count": 0,
+  "trips_not_observable": [],
+  "unobservable_count": 0,
+  "lap_count_mismatches_vs_sync": [
+    {
+      "shape": "rollback_ondone",
+      "kind": "def",
+      "maxIterations": 50,
+      "async_laps": 9,
+      "sync_laps": 76,
+      "async_trip": false,
+      "sync_trip": true
+    },
+    {
+      "shape": "nested_invoke_cycle",
+      "kind": "def",
+      "maxIterations": 50,
+      "async_laps": 6,
+      "sync_laps": 51,
+      "async_trip": false,
+      "sync_trip": true
+    },
+    {
+      "shape": "rollback_ondone",
+      "kind": "def",
+      "maxIterations": 100,
+      "async_laps": 3,
+      "sync_laps": 151,
+      "async_trip": false,
+      "sync_trip": true
+    },
+    {
+      "shape": "nested_invoke_cycle",
+      "kind": "def",
+      "maxIterations": 100,
+      "async_laps": 0,
+      "sync_laps": 101,
+      "async_trip": false,
+      "sync_trip": true
+    },
+    {
+      "shape": "rollback_ondone",
+      "kind": "def",
+      "maxIterations": 50,
+      "async_laps": 0,
+      "sync_laps": 76,
+      "async_trip": false,
+      "sync_trip": true
+    },
+    {
+      "shape": "nested_invoke_cycle",
+      "kind": "def",
+      "maxIterations": 50,
+      "async_laps": 0,
+      "sync_laps": 51,
+      "async_trip": false,
+      "sync_trip": true
+    },
+    {
+      "shape": "rollback_ondone",
+      "kind": "def",
+      "maxIterations": 25,
+      "async_laps": 37,
+      "sync_laps": 40,
+      "async_trip": true,
+      "sync_trip": true
+    },
+    {
+      "shape": "rollback_ondone",
+      "kind": "def",
+      "maxIterations": 100,
+      "async_laps": 117,
+      "sync_laps": 151,
+      "async_trip": false,
+      "sync_trip": true
+    },
+    {
+      "shape": "rollback_ondone",
+      "kind": "def",
+      "maxIterations": 100,
+      "async_laps": 144,
+      "sync_laps": 151,
+      "async_trip": false,
+      "sync_trip": true
+    },
+    {
+      "shape": "nested_invoke_cycle",
+      "kind": "def",
+      "maxIterations": 25,
+      "async_laps": 25,
+      "sync_laps": 27,
+      "async_trip": true,
+      "sync_trip": true
+    },
+    {
+      "shape": "nested_invoke_cycle",
+      "kind": "def",
+      "maxIterations": 25,
+      "async_laps": 25,
+      "sync_laps": 27,
+      "async_trip": true,
+      "sync_trip": true
+    },
+    {
+      "shape": "invoke_cycle",
+      "kind": "def",
+      "maxIterations": 25,
+      "async_laps": 25,
+      "sync_laps": 27,
+      "async_trip": true,
+      "sync_trip": true
+    },
+    {
+      "shape": "rollback_ondone",
+      "kind": "def",
+      "maxIterations": 25,
+      "async_laps": 37,
+      "sync_laps": 40,
+      "async_trip": true,
+      "sync_trip": true
+    },
+    {
+      "shape": "nested_invoke_cycle",
+      "kind": "def",
+      "maxIterations": 25,
+      "async_laps": 25,
+      "sync_laps": 27,
+      "async_trip": true,
+      "sync_trip": true
+    },
+    {
+      "shape": "rollback_ondone",
+      "kind": "def",
+      "maxIterations": 25,
+      "async_laps": 37,
+      "sync_laps": 40,
+      "async_trip": true,
+      "sync_trip": true
+    },
+    {
+      "shape": "nested_invoke_cycle",
+      "kind": "def",
+      "maxIterations": 25,
+      "async_laps": 25,
+      "sync_laps": 27,
+      "async_trip": true,
+      "sync_trip": true
+    },
+    {
+      "shape": "invoke_cycle",
+      "kind": "def",
+      "maxIterations": 25,
+      "async_laps": 25,
+      "sync_laps": 27,
+      "async_trip": true,
+      "sync_trip": true
+    },
+    {
+      "shape": "rollback_ondone",
+      "kind": "def",
+      "maxIterations": 25,
+      "async_laps": 37,
+      "sync_laps": 40,
+      "async_trip": true,
+      "sync_trip": true
+    },
+    {
+      "shape": "invoke_cycle",
+      "kind": "def",
+      "maxIterations": 25,
+      "async_laps": 25,
+      "sync_laps": 27,
+      "async_trip": true,
+      "sync_trip": true
+    },
+    {
+      "shape": "rollback_ondone",
+      "kind": "def",
+      "maxIterations": 25,
+      "async_laps": 37,
+      "sync_laps": 40,
+      "async_trip": true,
+      "sync_trip": true
+    }
+  ],
+  "lap_mismatch_count": 20,
+  "result": "PASS"
+}

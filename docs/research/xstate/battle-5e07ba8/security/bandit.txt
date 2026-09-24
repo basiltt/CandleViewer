@@ -1,0 +1,86 @@
+Run started:2026-09-18 08:21:06.860834+00:00
+
+Test results:
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html
+   Location: src\xstate_statemachine\cli\__main__.py:1095:12
+1094	                actions, guards, services = extract_logic_names(conf)
+1095	            except Exception:
+1096	                pass
+1097	
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: src\xstate_statemachine\cli\postprocess.py:28:0
+27	import logging
+28	import subprocess
+29	import sys
+
+--------------------------------------------------
+>> Issue: [B603:subprocess_without_shell_equals_true] subprocess call - check for execution of untrusted input.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html
+   Location: src\xstate_statemachine\cli\postprocess.py:241:17
+240	    try:
+241	        result = subprocess.run(
+242	            [
+243	                sys.executable,
+244	                "-m",
+245	                "black",
+246	                "--quiet",
+247	                f"--line-length={line_length}",
+248	                "-",
+249	            ],
+250	            input=code,
+251	            capture_output=True,
+252	            text=True,
+253	            encoding="utf-8",
+254	            timeout=60,
+255	        )
+256	    except (OSError, subprocess.SubprocessError) as exc:
+
+--------------------------------------------------
+>> Issue: [B102:exec_used] Use of exec detected.
+   Severity: Medium   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b102_exec_used.html
+   Location: src\xstate_statemachine\cli\validation.py:222:8
+221	    try:
+222	        exec(compile(code, f"<{template}>", "exec"), module.__dict__)
+223	    except Exception as exc:  # noqa: BLE001 — reported, not swallowed
+
+--------------------------------------------------
+>> Issue: [B101:assert_used] Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html
+   Location: src\xstate_statemachine\interpreter.py:1672:8
+1671	        """
+1672	        assert self._wakeup is not None
+1673	        while True:
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 19254
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 4
+		Medium: 1
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 5
+Files skipped (0):

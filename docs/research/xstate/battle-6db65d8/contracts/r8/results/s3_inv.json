@@ -1,0 +1,4334 @@
+{
+  "b16_happy": {
+    "async": {
+      "ids": [
+        "session.auth.active",
+        "session.elevation.elevated"
+      ],
+      "ctx": {
+        "session_id": null,
+        "user_id": null,
+        "expires_at_us": 0,
+        "idle_expires_at_us": 0,
+        "refresh_expires_at_us": 0,
+        "elevated_until_us": null,
+        "mfa_satisfied": false,
+        "revoke_reason": null
+      },
+      "acts": [
+        "mark_mfa_satisfied",
+        "stamp_idle_deadline",
+        "audit_login",
+        "stamp_idle_deadline",
+        "stamp_idle_deadline",
+        "audit_login",
+        "stamp_elevated_until",
+        "audit_step_up",
+        "schedule_elevation_deadline",
+        "stamp_idle_deadline",
+        "stamp_idle_deadline",
+        "audit_login"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+        "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+        "REQUEST->['session.auth.active', 'session.elevation.normal']",
+        "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']",
+        "REQUEST->['session.auth.active', 'session.elevation.elevated']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "async_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "session.auth.active",
+        "session.elevation.elevated"
+      ]
+    },
+    "sync": {
+      "ids": [
+        "session.auth.active",
+        "session.elevation.elevated"
+      ],
+      "ctx": {
+        "session_id": null,
+        "user_id": null,
+        "expires_at_us": 0,
+        "idle_expires_at_us": 0,
+        "refresh_expires_at_us": 0,
+        "elevated_until_us": null,
+        "mfa_satisfied": false,
+        "revoke_reason": null
+      },
+      "acts": [
+        "mark_mfa_satisfied",
+        "stamp_idle_deadline",
+        "audit_login",
+        "stamp_idle_deadline",
+        "stamp_idle_deadline",
+        "audit_login",
+        "stamp_elevated_until",
+        "audit_step_up",
+        "schedule_elevation_deadline",
+        "stamp_idle_deadline",
+        "stamp_idle_deadline",
+        "audit_login"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+        "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+        "REQUEST->['session.auth.active', 'session.elevation.normal']",
+        "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']",
+        "REQUEST->['session.auth.active', 'session.elevation.elevated']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "session.auth.active",
+        "session.elevation.elevated"
+      ]
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b16_inv_a_REVOKE": {
+    "async": {
+      "ids": [
+        "session.auth.revoked",
+        "session.elevation.normal"
+      ],
+      "ctx": {
+        "session_id": null,
+        "user_id": null,
+        "expires_at_us": 0,
+        "idle_expires_at_us": 0,
+        "refresh_expires_at_us": 0,
+        "elevated_until_us": null,
+        "mfa_satisfied": false,
+        "revoke_reason": null
+      },
+      "acts": [
+        "mark_mfa_satisfied",
+        "stamp_idle_deadline",
+        "audit_login",
+        "stamp_elevated_until",
+        "audit_step_up",
+        "schedule_elevation_deadline",
+        "set_revoke_admin",
+        "audit_session_revoked",
+        "broadcast_revocation",
+        "clear_elevated"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+        "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+        "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']",
+        "REVOKE->['session.auth.revoked', 'session.elevation.elevated']",
+        "REVOKE->['session.auth.revoked', 'session.elevation.normal']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "session.auth.revoked",
+        "session.elevation.normal"
+      ],
+      "ctx": {
+        "session_id": null,
+        "user_id": null,
+        "expires_at_us": 0,
+        "idle_expires_at_us": 0,
+        "refresh_expires_at_us": 0,
+        "elevated_until_us": null,
+        "mfa_satisfied": false,
+        "revoke_reason": null
+      },
+      "acts": [
+        "mark_mfa_satisfied",
+        "stamp_idle_deadline",
+        "audit_login",
+        "stamp_elevated_until",
+        "audit_step_up",
+        "schedule_elevation_deadline",
+        "set_revoke_admin",
+        "audit_session_revoked",
+        "broadcast_revocation",
+        "clear_elevated"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+        "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+        "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']",
+        "REVOKE->['session.auth.revoked', 'session.elevation.elevated']",
+        "REVOKE->['session.auth.revoked', 'session.elevation.normal']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b16_inv_a_LOGOUT": {
+    "async": {
+      "ids": [
+        "session.auth.revoked",
+        "session.elevation.elevated"
+      ],
+      "ctx": {
+        "session_id": null,
+        "user_id": null,
+        "expires_at_us": 0,
+        "idle_expires_at_us": 0,
+        "refresh_expires_at_us": 0,
+        "elevated_until_us": null,
+        "mfa_satisfied": false,
+        "revoke_reason": null
+      },
+      "acts": [
+        "mark_mfa_satisfied",
+        "stamp_idle_deadline",
+        "audit_login",
+        "stamp_elevated_until",
+        "audit_step_up",
+        "schedule_elevation_deadline",
+        "set_revoke_logout",
+        "audit_session_revoked",
+        "broadcast_revocation"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+        "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+        "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']",
+        "LOGOUT->['session.auth.revoked', 'session.elevation.elevated']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "session.auth.revoked",
+        "session.elevation.elevated"
+      ],
+      "ctx": {
+        "session_id": null,
+        "user_id": null,
+        "expires_at_us": 0,
+        "idle_expires_at_us": 0,
+        "refresh_expires_at_us": 0,
+        "elevated_until_us": null,
+        "mfa_satisfied": false,
+        "revoke_reason": null
+      },
+      "acts": [
+        "mark_mfa_satisfied",
+        "stamp_idle_deadline",
+        "audit_login",
+        "stamp_elevated_until",
+        "audit_step_up",
+        "schedule_elevation_deadline",
+        "set_revoke_logout",
+        "audit_session_revoked",
+        "broadcast_revocation"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+        "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+        "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']",
+        "LOGOUT->['session.auth.revoked', 'session.elevation.elevated']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b16_inv_a_IDLE_DEADLINE": {
+    "async": {
+      "ids": [
+        "session.auth.revoked",
+        "session.elevation.elevated"
+      ],
+      "ctx": {
+        "session_id": null,
+        "user_id": null,
+        "expires_at_us": 0,
+        "idle_expires_at_us": 0,
+        "refresh_expires_at_us": 0,
+        "elevated_until_us": null,
+        "mfa_satisfied": false,
+        "revoke_reason": null
+      },
+      "acts": [
+        "mark_mfa_satisfied",
+        "stamp_idle_deadline",
+        "audit_login",
+        "stamp_elevated_until",
+        "audit_step_up",
+        "schedule_elevation_deadline",
+        "set_revoke_idle",
+        "audit_session_revoked",
+        "broadcast_revocation"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+        "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+        "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']",
+        "IDLE_DEADLINE->['session.auth.revoked', 'session.elevation.elevated']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "session.auth.revoked",
+        "session.elevation.elevated"
+      ],
+      "ctx": {
+        "session_id": null,
+        "user_id": null,
+        "expires_at_us": 0,
+        "idle_expires_at_us": 0,
+        "refresh_expires_at_us": 0,
+        "elevated_until_us": null,
+        "mfa_satisfied": false,
+        "revoke_reason": null
+      },
+      "acts": [
+        "mark_mfa_satisfied",
+        "stamp_idle_deadline",
+        "audit_login",
+        "stamp_elevated_until",
+        "audit_step_up",
+        "schedule_elevation_deadline",
+        "set_revoke_idle",
+        "audit_session_revoked",
+        "broadcast_revocation"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+        "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+        "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']",
+        "IDLE_DEADLINE->['session.auth.revoked', 'session.elevation.elevated']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b16_inv_a_ABSOLUTE_DEADLINE": {
+    "async": {
+      "ids": [
+        "session.auth.revoked",
+        "session.elevation.elevated"
+      ],
+      "ctx": {
+        "session_id": null,
+        "user_id": null,
+        "expires_at_us": 0,
+        "idle_expires_at_us": 0,
+        "refresh_expires_at_us": 0,
+        "elevated_until_us": null,
+        "mfa_satisfied": false,
+        "revoke_reason": null
+      },
+      "acts": [
+        "mark_mfa_satisfied",
+        "stamp_idle_deadline",
+        "audit_login",
+        "stamp_elevated_until",
+        "audit_step_up",
+        "schedule_elevation_deadline",
+        "set_revoke_expired",
+        "audit_session_revoked",
+        "broadcast_revocation"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+        "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+        "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']",
+        "ABSOLUTE_DEADLINE->['session.auth.revoked', 'session.elevation.elevated']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "session.auth.revoked",
+        "session.elevation.elevated"
+      ],
+      "ctx": {
+        "session_id": null,
+        "user_id": null,
+        "expires_at_us": 0,
+        "idle_expires_at_us": 0,
+        "refresh_expires_at_us": 0,
+        "elevated_until_us": null,
+        "mfa_satisfied": false,
+        "revoke_reason": null
+      },
+      "acts": [
+        "mark_mfa_satisfied",
+        "stamp_idle_deadline",
+        "audit_login",
+        "stamp_elevated_until",
+        "audit_step_up",
+        "schedule_elevation_deadline",
+        "set_revoke_expired",
+        "audit_session_revoked",
+        "broadcast_revocation"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+        "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+        "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']",
+        "ABSOLUTE_DEADLINE->['session.auth.revoked', 'session.elevation.elevated']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b16_inv_c": {
+    "async": {
+      "ids": [
+        "session.auth.active",
+        "session.elevation.elevated"
+      ],
+      "ctx": {
+        "session_id": null,
+        "user_id": null,
+        "expires_at_us": 0,
+        "idle_expires_at_us": 0,
+        "refresh_expires_at_us": 0,
+        "elevated_until_us": null,
+        "mfa_satisfied": false,
+        "revoke_reason": null
+      },
+      "acts": [
+        "mark_mfa_satisfied",
+        "stamp_idle_deadline",
+        "audit_login",
+        "audit_step_up_failed",
+        "stamp_elevated_until",
+        "audit_step_up",
+        "schedule_elevation_deadline",
+        "stamp_elevated_until",
+        "schedule_elevation_deadline"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+        "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+        "STEP_UP_FAILED->['session.auth.active', 'session.elevation.normal']",
+        "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']",
+        "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "session.auth.active",
+        "session.elevation.elevated"
+      ],
+      "ctx": {
+        "session_id": null,
+        "user_id": null,
+        "expires_at_us": 0,
+        "idle_expires_at_us": 0,
+        "refresh_expires_at_us": 0,
+        "elevated_until_us": null,
+        "mfa_satisfied": false,
+        "revoke_reason": null
+      },
+      "acts": [
+        "mark_mfa_satisfied",
+        "stamp_idle_deadline",
+        "audit_login",
+        "audit_step_up_failed",
+        "stamp_elevated_until",
+        "audit_step_up",
+        "schedule_elevation_deadline",
+        "stamp_elevated_until",
+        "schedule_elevation_deadline"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+        "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+        "STEP_UP_FAILED->['session.auth.active', 'session.elevation.normal']",
+        "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']",
+        "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b16_inv_d": {
+    "async": {
+      "ids": [
+        "session.auth.revoked",
+        "session.elevation.elevated"
+      ],
+      "ctx": {
+        "session_id": null,
+        "user_id": null,
+        "expires_at_us": 0,
+        "idle_expires_at_us": 0,
+        "refresh_expires_at_us": 0,
+        "elevated_until_us": null,
+        "mfa_satisfied": false,
+        "revoke_reason": null
+      },
+      "acts": [
+        "mark_mfa_satisfied",
+        "stamp_idle_deadline",
+        "audit_login",
+        "set_revoke_admin",
+        "audit_session_revoked",
+        "broadcast_revocation",
+        "stamp_elevated_until",
+        "audit_step_up",
+        "schedule_elevation_deadline"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 2,
+      "transitions": [
+        "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+        "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+        "REVOKE->['session.auth.revoked', 'session.elevation.normal']",
+        "STEP_UP_OK->['session.auth.revoked', 'session.elevation.elevated']"
+      ],
+      "unhandled": [
+        [
+          "MFA_OK",
+          "deferred"
+        ],
+        [
+          "REQUEST",
+          "deferred"
+        ],
+        [
+          "MFA_OK",
+          "deferred"
+        ],
+        [
+          "REQUEST",
+          "deferred"
+        ]
+      ],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": true,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": true,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "async_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "session.auth.revoked",
+        "session.elevation.elevated"
+      ]
+    },
+    "sync": {
+      "ids": [
+        "session.auth.revoked",
+        "session.elevation.elevated"
+      ],
+      "ctx": {
+        "session_id": null,
+        "user_id": null,
+        "expires_at_us": 0,
+        "idle_expires_at_us": 0,
+        "refresh_expires_at_us": 0,
+        "elevated_until_us": null,
+        "mfa_satisfied": false,
+        "revoke_reason": null
+      },
+      "acts": [
+        "mark_mfa_satisfied",
+        "stamp_idle_deadline",
+        "audit_login",
+        "set_revoke_admin",
+        "audit_session_revoked",
+        "broadcast_revocation",
+        "stamp_elevated_until",
+        "audit_step_up",
+        "schedule_elevation_deadline"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 2,
+      "transitions": [
+        "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+        "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+        "REVOKE->['session.auth.revoked', 'session.elevation.normal']",
+        "STEP_UP_OK->['session.auth.revoked', 'session.elevation.elevated']"
+      ],
+      "unhandled": [
+        [
+          "MFA_OK",
+          "deferred"
+        ],
+        [
+          "REQUEST",
+          "deferred"
+        ],
+        [
+          "MFA_OK",
+          "deferred"
+        ],
+        [
+          "REQUEST",
+          "deferred"
+        ]
+      ],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": true,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": true,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "session.auth.revoked",
+        "session.elevation.elevated"
+      ]
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b16_locked": {
+    "async": {
+      "ids": [
+        "session.auth.revoked",
+        "session.elevation.normal"
+      ],
+      "ctx": {
+        "session_id": null,
+        "user_id": null,
+        "expires_at_us": 0,
+        "idle_expires_at_us": 0,
+        "refresh_expires_at_us": 0,
+        "elevated_until_us": null,
+        "mfa_satisfied": false,
+        "revoke_reason": null
+      },
+      "acts": [
+        "set_revoke_locked",
+        "audit_session_revoked",
+        "broadcast_revocation"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+        "MFA_FAILED->['session.auth.revoked', 'session.elevation.normal']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "session.auth.revoked",
+        "session.elevation.normal"
+      ],
+      "ctx": {
+        "session_id": null,
+        "user_id": null,
+        "expires_at_us": 0,
+        "idle_expires_at_us": 0,
+        "refresh_expires_at_us": 0,
+        "elevated_until_us": null,
+        "mfa_satisfied": false,
+        "revoke_reason": null
+      },
+      "acts": [
+        "set_revoke_locked",
+        "audit_session_revoked",
+        "broadcast_revocation"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+        "MFA_FAILED->['session.auth.revoked', 'session.elevation.normal']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b17_happy": {
+    "async": {
+      "ids": [
+        "live_gate.eligible"
+      ],
+      "ctx": {
+        "evidence": {
+          "pentest_passed": false,
+          "key_audit_passed": false,
+          "env_separation_verified": false,
+          "runbooks_signed": false
+        },
+        "enabled_by": null,
+        "enabled_at_us": null,
+        "disable_reason": null,
+        "eligible_user_ids": []
+      },
+      "acts": [
+        "record_evidence",
+        "record_enable",
+        "audit_live_enabled",
+        "broadcast_live_enabled",
+        "enable_live_visual_language",
+        "record_disable",
+        "audit_live_disabled"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['live_gate.locked']",
+        "EVIDENCE_RECORDED->['live_gate.eligible']",
+        "ENABLE_REQUESTED->['live_gate.enabled']",
+        "DISABLE_REQUESTED->['live_gate.eligible']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "async_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "live_gate.eligible"
+      ]
+    },
+    "sync": {
+      "ids": [
+        "live_gate.eligible"
+      ],
+      "ctx": {
+        "evidence": {
+          "pentest_passed": false,
+          "key_audit_passed": false,
+          "env_separation_verified": false,
+          "runbooks_signed": false
+        },
+        "enabled_by": null,
+        "enabled_at_us": null,
+        "disable_reason": null,
+        "eligible_user_ids": []
+      },
+      "acts": [
+        "record_evidence",
+        "record_enable",
+        "audit_live_enabled",
+        "broadcast_live_enabled",
+        "enable_live_visual_language",
+        "record_disable",
+        "audit_live_disabled"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['live_gate.locked']",
+        "EVIDENCE_RECORDED->['live_gate.eligible']",
+        "ENABLE_REQUESTED->['live_gate.enabled']",
+        "DISABLE_REQUESTED->['live_gate.eligible']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "live_gate.eligible"
+      ]
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b17_denied": {
+    "async": {
+      "ids": [
+        "live_gate.eligible"
+      ],
+      "ctx": {
+        "evidence": {
+          "pentest_passed": false,
+          "key_audit_passed": false,
+          "env_separation_verified": false,
+          "runbooks_signed": false
+        },
+        "enabled_by": null,
+        "enabled_at_us": null,
+        "disable_reason": null,
+        "eligible_user_ids": []
+      },
+      "acts": [
+        "record_evidence",
+        "audit_enable_denied"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['live_gate.locked']",
+        "EVIDENCE_RECORDED->['live_gate.eligible']",
+        "ENABLE_REQUESTED->['live_gate.eligible']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": false,
+          "denied": true
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "live_gate.eligible"
+      ],
+      "ctx": {
+        "evidence": {
+          "pentest_passed": false,
+          "key_audit_passed": false,
+          "env_separation_verified": false,
+          "runbooks_signed": false
+        },
+        "enabled_by": null,
+        "enabled_at_us": null,
+        "disable_reason": null,
+        "eligible_user_ids": []
+      },
+      "acts": [
+        "record_evidence",
+        "audit_enable_denied"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['live_gate.locked']",
+        "EVIDENCE_RECORDED->['live_gate.eligible']",
+        "ENABLE_REQUESTED->['live_gate.eligible']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": false,
+          "denied": true
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b17_inv_c": {
+    "async": {
+      "ids": [
+        "live_gate.locked"
+      ],
+      "ctx": {
+        "evidence": {
+          "pentest_passed": false,
+          "key_audit_passed": false,
+          "env_separation_verified": false,
+          "runbooks_signed": false
+        },
+        "enabled_by": null,
+        "enabled_at_us": null,
+        "disable_reason": null,
+        "eligible_user_ids": []
+      },
+      "acts": [
+        "record_evidence",
+        "record_enable",
+        "audit_live_enabled",
+        "broadcast_live_enabled",
+        "enable_live_visual_language",
+        "clear_evidence_item",
+        "raise_critical_alert"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['live_gate.locked']",
+        "EVIDENCE_RECORDED->['live_gate.eligible']",
+        "ENABLE_REQUESTED->['live_gate.enabled']",
+        "EVIDENCE_INVALIDATED->['live_gate.locked']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "async_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "live_gate.locked"
+      ]
+    },
+    "sync": {
+      "ids": [
+        "live_gate.locked"
+      ],
+      "ctx": {
+        "evidence": {
+          "pentest_passed": false,
+          "key_audit_passed": false,
+          "env_separation_verified": false,
+          "runbooks_signed": false
+        },
+        "enabled_by": null,
+        "enabled_at_us": null,
+        "disable_reason": null,
+        "eligible_user_ids": []
+      },
+      "acts": [
+        "record_evidence",
+        "record_enable",
+        "audit_live_enabled",
+        "broadcast_live_enabled",
+        "enable_live_visual_language",
+        "clear_evidence_item",
+        "raise_critical_alert"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['live_gate.locked']",
+        "EVIDENCE_RECORDED->['live_gate.eligible']",
+        "ENABLE_REQUESTED->['live_gate.enabled']",
+        "EVIDENCE_INVALIDATED->['live_gate.locked']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "live_gate.locked"
+      ]
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b17_inv_d": {
+    "async": {
+      "ids": [
+        "live_gate.locked"
+      ],
+      "ctx": {
+        "evidence": {
+          "pentest_passed": false,
+          "key_audit_passed": false,
+          "env_separation_verified": false,
+          "runbooks_signed": false
+        },
+        "enabled_by": null,
+        "enabled_at_us": null,
+        "disable_reason": null,
+        "eligible_user_ids": []
+      },
+      "acts": [
+        "record_evidence",
+        "record_enable",
+        "audit_live_enabled",
+        "broadcast_live_enabled",
+        "enable_live_visual_language",
+        "record_disable",
+        "raise_critical_alert"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['live_gate.locked']",
+        "EVIDENCE_RECORDED->['live_gate.eligible']",
+        "ENABLE_REQUESTED->['live_gate.enabled']",
+        "EMERGENCY_DISABLE->['live_gate.locked']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "live_gate.locked"
+      ],
+      "ctx": {
+        "evidence": {
+          "pentest_passed": false,
+          "key_audit_passed": false,
+          "env_separation_verified": false,
+          "runbooks_signed": false
+        },
+        "enabled_by": null,
+        "enabled_at_us": null,
+        "disable_reason": null,
+        "eligible_user_ids": []
+      },
+      "acts": [
+        "record_evidence",
+        "record_enable",
+        "audit_live_enabled",
+        "broadcast_live_enabled",
+        "enable_live_visual_language",
+        "record_disable",
+        "raise_critical_alert"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['live_gate.locked']",
+        "EVIDENCE_RECORDED->['live_gate.eligible']",
+        "ENABLE_REQUESTED->['live_gate.enabled']",
+        "EMERGENCY_DISABLE->['live_gate.locked']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b17_rollback": {
+    "async": {
+      "ids": [
+        "live_gate.eligible"
+      ],
+      "ctx": {
+        "evidence": {
+          "pentest_passed": false,
+          "key_audit_passed": false,
+          "env_separation_verified": false,
+          "runbooks_signed": false
+        },
+        "enabled_by": null,
+        "enabled_at_us": null,
+        "disable_reason": null,
+        "eligible_user_ids": []
+      },
+      "acts": [
+        "record_evidence",
+        "record_enable",
+        "audit_live_enabled"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['live_gate.locked']",
+        "EVIDENCE_RECORDED->['live_gate.eligible']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "RuntimeError",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": "RuntimeError",
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "live_gate.eligible"
+      ],
+      "ctx": {
+        "evidence": {
+          "pentest_passed": false,
+          "key_audit_passed": false,
+          "env_separation_verified": false,
+          "runbooks_signed": false
+        },
+        "enabled_by": null,
+        "enabled_at_us": null,
+        "disable_reason": null,
+        "eligible_user_ids": []
+      },
+      "acts": [
+        "record_evidence",
+        "record_enable",
+        "audit_live_enabled"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['live_gate.locked']",
+        "EVIDENCE_RECORDED->['live_gate.eligible']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "RuntimeError",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": "RuntimeError",
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b17_stale_replay": {
+    "async": {
+      "ids": [
+        "live_gate.enabled"
+      ],
+      "ctx": {
+        "evidence": {
+          "pentest_passed": false,
+          "key_audit_passed": false,
+          "env_separation_verified": false,
+          "runbooks_signed": false
+        },
+        "enabled_by": null,
+        "enabled_at_us": null,
+        "disable_reason": null,
+        "eligible_user_ids": []
+      },
+      "acts": [
+        "record_evidence",
+        "record_enable",
+        "audit_live_enabled",
+        "broadcast_live_enabled",
+        "enable_live_visual_language"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['live_gate.locked']",
+        "EVIDENCE_RECORDED->['live_gate.eligible']",
+        "ENABLE_REQUESTED->['live_gate.enabled']"
+      ],
+      "unhandled": [
+        [
+          "ENABLE_REQUESTED",
+          "deferred"
+        ]
+      ],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": false,
+          "error": null,
+          "deferred": true,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "live_gate.enabled"
+      ],
+      "ctx": {
+        "evidence": {
+          "pentest_passed": false,
+          "key_audit_passed": false,
+          "env_separation_verified": false,
+          "runbooks_signed": false
+        },
+        "enabled_by": null,
+        "enabled_at_us": null,
+        "disable_reason": null,
+        "eligible_user_ids": []
+      },
+      "acts": [
+        "record_evidence",
+        "record_enable",
+        "audit_live_enabled",
+        "broadcast_live_enabled",
+        "enable_live_visual_language"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['live_gate.locked']",
+        "EVIDENCE_RECORDED->['live_gate.eligible']",
+        "ENABLE_REQUESTED->['live_gate.enabled']"
+      ],
+      "unhandled": [
+        [
+          "ENABLE_REQUESTED",
+          "deferred"
+        ]
+      ],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": false,
+          "error": null,
+          "deferred": true,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b18_happy": {
+    "async": {
+      "ids": [
+        "kill_switch.engaged"
+      ],
+      "ctx": {
+        "scope": "global",
+        "engaged_by": null,
+        "engaged_at_us": null,
+        "reason": null,
+        "cancel_working": false,
+        "flatten": false,
+        "accounts_flat": 0,
+        "accounts_total": 0
+      },
+      "acts": [
+        "record_engagement",
+        "audit_kill_switch",
+        "block_new_orders_immediately",
+        "cancel_entry_and_poll_drains",
+        "broadcast_kill_switch"
+      ],
+      "svc": [
+        "cancel_all_working_orders",
+        "flatten_all_positions"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['kill_switch.clear']",
+        "ENGAGE->['kill_switch.engaging']",
+        "->['kill_switch.cancelling']",
+        "done.invoke.cx->['kill_switch.flattening']",
+        "done.invoke.fl->['kill_switch.engaged']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "async_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "kill_switch.engaged"
+      ]
+    },
+    "sync": {
+      "ids": [
+        "kill_switch.engaged"
+      ],
+      "ctx": {
+        "scope": "global",
+        "engaged_by": null,
+        "engaged_at_us": null,
+        "reason": null,
+        "cancel_working": false,
+        "flatten": false,
+        "accounts_flat": 0,
+        "accounts_total": 0
+      },
+      "acts": [
+        "record_engagement",
+        "audit_kill_switch",
+        "block_new_orders_immediately",
+        "cancel_entry_and_poll_drains",
+        "broadcast_kill_switch"
+      ],
+      "svc": [
+        "cancel_all_working_orders",
+        "flatten_all_positions"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['kill_switch.clear']",
+        "ENGAGE->['kill_switch.engaging']",
+        "->['kill_switch.cancelling']",
+        "done.invoke.cx->['kill_switch.flattening']",
+        "done.invoke.fl->['kill_switch.engaged']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "kill_switch.engaged"
+      ]
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b18_incomplete": {
+    "async": {
+      "ids": [
+        "kill_switch.engaged_incomplete"
+      ],
+      "ctx": {
+        "scope": "global",
+        "engaged_by": null,
+        "engaged_at_us": null,
+        "reason": null,
+        "cancel_working": false,
+        "flatten": false,
+        "accounts_flat": 0,
+        "accounts_total": 0
+      },
+      "acts": [
+        "record_engagement",
+        "audit_kill_switch",
+        "block_new_orders_immediately",
+        "cancel_entry_and_poll_drains",
+        "broadcast_kill_switch",
+        "page_owner",
+        "emit_incomplete_metric"
+      ],
+      "svc": [
+        "cancel_all_working_orders",
+        "flatten_all_positions"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['kill_switch.clear']",
+        "ENGAGE->['kill_switch.engaging']",
+        "->['kill_switch.cancelling']",
+        "done.invoke.cx->['kill_switch.flattening']",
+        "done.invoke.fl->['kill_switch.engaged_incomplete']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "kill_switch.engaged_incomplete"
+      ],
+      "ctx": {
+        "scope": "global",
+        "engaged_by": null,
+        "engaged_at_us": null,
+        "reason": null,
+        "cancel_working": false,
+        "flatten": false,
+        "accounts_flat": 0,
+        "accounts_total": 0
+      },
+      "acts": [
+        "record_engagement",
+        "audit_kill_switch",
+        "block_new_orders_immediately",
+        "cancel_entry_and_poll_drains",
+        "broadcast_kill_switch",
+        "page_owner",
+        "emit_incomplete_metric"
+      ],
+      "svc": [
+        "cancel_all_working_orders",
+        "flatten_all_positions"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['kill_switch.clear']",
+        "ENGAGE->['kill_switch.engaging']",
+        "->['kill_switch.cancelling']",
+        "done.invoke.cx->['kill_switch.flattening']",
+        "done.invoke.fl->['kill_switch.engaged_incomplete']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b18_retry": {
+    "async": {
+      "ids": [
+        "kill_switch.engaged_incomplete"
+      ],
+      "ctx": {
+        "scope": "global",
+        "engaged_by": null,
+        "engaged_at_us": null,
+        "reason": null,
+        "cancel_working": false,
+        "flatten": false,
+        "accounts_flat": 0,
+        "accounts_total": 0
+      },
+      "acts": [
+        "record_engagement",
+        "audit_kill_switch",
+        "block_new_orders_immediately",
+        "cancel_entry_and_poll_drains",
+        "broadcast_kill_switch",
+        "page_owner",
+        "emit_incomplete_metric",
+        "page_owner",
+        "emit_incomplete_metric"
+      ],
+      "svc": [
+        "cancel_all_working_orders",
+        "flatten_all_positions",
+        "flatten_all_positions"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['kill_switch.clear']",
+        "ENGAGE->['kill_switch.engaging']",
+        "->['kill_switch.cancelling']",
+        "done.invoke.cx->['kill_switch.flattening']",
+        "done.invoke.fl->['kill_switch.engaged_incomplete']",
+        "RETRY_FLATTEN->['kill_switch.flattening']",
+        "done.invoke.fl->['kill_switch.engaged_incomplete']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "async_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "kill_switch.engaged_incomplete"
+      ]
+    },
+    "sync": {
+      "ids": [
+        "kill_switch.engaged_incomplete"
+      ],
+      "ctx": {
+        "scope": "global",
+        "engaged_by": null,
+        "engaged_at_us": null,
+        "reason": null,
+        "cancel_working": false,
+        "flatten": false,
+        "accounts_flat": 0,
+        "accounts_total": 0
+      },
+      "acts": [
+        "record_engagement",
+        "audit_kill_switch",
+        "block_new_orders_immediately",
+        "cancel_entry_and_poll_drains",
+        "broadcast_kill_switch",
+        "page_owner",
+        "emit_incomplete_metric",
+        "page_owner",
+        "emit_incomplete_metric"
+      ],
+      "svc": [
+        "cancel_all_working_orders",
+        "flatten_all_positions",
+        "flatten_all_positions"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['kill_switch.clear']",
+        "ENGAGE->['kill_switch.engaging']",
+        "->['kill_switch.cancelling']",
+        "done.invoke.cx->['kill_switch.flattening']",
+        "done.invoke.fl->['kill_switch.engaged_incomplete']",
+        "RETRY_FLATTEN->['kill_switch.flattening']",
+        "done.invoke.fl->['kill_switch.engaged_incomplete']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "kill_switch.engaged_incomplete"
+      ]
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b18_cancel_fail": {
+    "async": {
+      "ids": [
+        "kill_switch.engaged"
+      ],
+      "ctx": {
+        "scope": "global",
+        "engaged_by": null,
+        "engaged_at_us": null,
+        "reason": null,
+        "cancel_working": false,
+        "flatten": false,
+        "accounts_flat": 0,
+        "accounts_total": 0
+      },
+      "acts": [
+        "record_engagement",
+        "audit_kill_switch",
+        "block_new_orders_immediately",
+        "cancel_entry_and_poll_drains",
+        "broadcast_kill_switch",
+        "raise_critical_alert"
+      ],
+      "svc": [
+        "cancel_all_working_orders"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['kill_switch.clear']",
+        "ENGAGE->['kill_switch.engaging']",
+        "->['kill_switch.cancelling']",
+        "error.platform.cx->['kill_switch.engaged']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "kill_switch.engaged"
+      ],
+      "ctx": {
+        "scope": "global",
+        "engaged_by": null,
+        "engaged_at_us": null,
+        "reason": null,
+        "cancel_working": false,
+        "flatten": false,
+        "accounts_flat": 0,
+        "accounts_total": 0
+      },
+      "acts": [
+        "record_engagement",
+        "audit_kill_switch",
+        "block_new_orders_immediately",
+        "cancel_entry_and_poll_drains",
+        "broadcast_kill_switch",
+        "raise_critical_alert"
+      ],
+      "svc": [
+        "cancel_all_working_orders"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['kill_switch.clear']",
+        "ENGAGE->['kill_switch.engaging']",
+        "->['kill_switch.cancelling']",
+        "error.platform.cx->['kill_switch.engaged']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b18_flatten_fail": {
+    "async": {
+      "ids": [
+        "kill_switch.engaged_incomplete"
+      ],
+      "ctx": {
+        "scope": "global",
+        "engaged_by": null,
+        "engaged_at_us": null,
+        "reason": null,
+        "cancel_working": false,
+        "flatten": false,
+        "accounts_flat": 0,
+        "accounts_total": 0
+      },
+      "acts": [
+        "record_engagement",
+        "audit_kill_switch",
+        "block_new_orders_immediately",
+        "cancel_entry_and_poll_drains",
+        "broadcast_kill_switch",
+        "raise_critical_alert",
+        "page_owner",
+        "emit_incomplete_metric"
+      ],
+      "svc": [
+        "cancel_all_working_orders",
+        "flatten_all_positions"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['kill_switch.clear']",
+        "ENGAGE->['kill_switch.engaging']",
+        "->['kill_switch.cancelling']",
+        "done.invoke.cx->['kill_switch.flattening']",
+        "error.platform.fl->['kill_switch.engaged_incomplete']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "kill_switch.engaged_incomplete"
+      ],
+      "ctx": {
+        "scope": "global",
+        "engaged_by": null,
+        "engaged_at_us": null,
+        "reason": null,
+        "cancel_working": false,
+        "flatten": false,
+        "accounts_flat": 0,
+        "accounts_total": 0
+      },
+      "acts": [
+        "record_engagement",
+        "audit_kill_switch",
+        "block_new_orders_immediately",
+        "cancel_entry_and_poll_drains",
+        "broadcast_kill_switch",
+        "raise_critical_alert",
+        "page_owner",
+        "emit_incomplete_metric"
+      ],
+      "svc": [
+        "cancel_all_working_orders",
+        "flatten_all_positions"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['kill_switch.clear']",
+        "ENGAGE->['kill_switch.engaging']",
+        "->['kill_switch.cancelling']",
+        "done.invoke.cx->['kill_switch.flattening']",
+        "error.platform.fl->['kill_switch.engaged_incomplete']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b18_release_ok": {
+    "async": {
+      "ids": [
+        "kill_switch.clear"
+      ],
+      "ctx": {
+        "scope": "global",
+        "engaged_by": null,
+        "engaged_at_us": null,
+        "reason": null,
+        "cancel_working": false,
+        "flatten": false,
+        "accounts_flat": 0,
+        "accounts_total": 0
+      },
+      "acts": [
+        "record_engagement",
+        "audit_kill_switch",
+        "block_new_orders_immediately",
+        "cancel_entry_and_poll_drains",
+        "broadcast_kill_switch",
+        "audit_kill_switch_released"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['kill_switch.clear']",
+        "ENGAGE->['kill_switch.engaging']",
+        "->['kill_switch.engaged']",
+        "RELEASE->['kill_switch.clear']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "kill_switch.clear"
+      ],
+      "ctx": {
+        "scope": "global",
+        "engaged_by": null,
+        "engaged_at_us": null,
+        "reason": null,
+        "cancel_working": false,
+        "flatten": false,
+        "accounts_flat": 0,
+        "accounts_total": 0
+      },
+      "acts": [
+        "record_engagement",
+        "audit_kill_switch",
+        "block_new_orders_immediately",
+        "cancel_entry_and_poll_drains",
+        "broadcast_kill_switch",
+        "audit_kill_switch_released"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['kill_switch.clear']",
+        "ENGAGE->['kill_switch.engaging']",
+        "->['kill_switch.engaged']",
+        "RELEASE->['kill_switch.clear']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b18_release_denied": {
+    "async": {
+      "ids": [
+        "kill_switch.engaged"
+      ],
+      "ctx": {
+        "scope": "global",
+        "engaged_by": null,
+        "engaged_at_us": null,
+        "reason": null,
+        "cancel_working": false,
+        "flatten": false,
+        "accounts_flat": 0,
+        "accounts_total": 0
+      },
+      "acts": [
+        "record_engagement",
+        "audit_kill_switch",
+        "block_new_orders_immediately",
+        "cancel_entry_and_poll_drains",
+        "broadcast_kill_switch"
+      ],
+      "svc": [],
+      "status": "error",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['kill_switch.clear']",
+        "ENGAGE->['kill_switch.engaging']",
+        "->['kill_switch.engaged']"
+      ],
+      "unhandled": [
+        [
+          "RELEASE",
+          "errored"
+        ]
+      ],
+      "dropped": [],
+      "last_error": "UnhandledEventError",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": "UnhandledEventError",
+          "deferred": false,
+          "denied": true
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "kill_switch.engaged"
+      ],
+      "ctx": {
+        "scope": "global",
+        "engaged_by": null,
+        "engaged_at_us": null,
+        "reason": null,
+        "cancel_working": false,
+        "flatten": false,
+        "accounts_flat": 0,
+        "accounts_total": 0
+      },
+      "acts": [
+        "record_engagement",
+        "audit_kill_switch",
+        "block_new_orders_immediately",
+        "cancel_entry_and_poll_drains",
+        "broadcast_kill_switch"
+      ],
+      "svc": [],
+      "status": "error",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['kill_switch.clear']",
+        "ENGAGE->['kill_switch.engaging']",
+        "->['kill_switch.engaged']"
+      ],
+      "unhandled": [
+        [
+          "RELEASE",
+          "errored"
+        ]
+      ],
+      "dropped": [],
+      "last_error": "UnhandledEventError",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": "UnhandledEventError",
+          "deferred": false,
+          "denied": true
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b19_happy": {
+    "async": {
+      "ids": [
+        "reconciliation.idle"
+      ],
+      "ctx": {
+        "account_id": null,
+        "trigger": null,
+        "started_us": null,
+        "orders_checked": 0,
+        "divergences": [],
+        "remediations": [],
+        "consecutive_failures": 0,
+        "auto_remediate": true
+      },
+      "acts": [
+        "set_trigger_periodic",
+        "stamp_start",
+        "emit_recon_started",
+        "store_exchange_state",
+        "store_divergences",
+        "persist_report",
+        "emit_recon_metrics",
+        "reset_failures",
+        "broadcast_recon_complete"
+      ],
+      "svc": [
+        "fetch_exchange_state",
+        "diff_against_local"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['reconciliation.idle']",
+        "SWEEP_DUE->['reconciliation.fetching']",
+        "done.invoke.fetch->['reconciliation.diffing']",
+        "done.invoke.diff->['reconciliation.reporting']",
+        "->['reconciliation.idle']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "async_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "reconciliation.idle"
+      ]
+    },
+    "sync": {
+      "ids": [
+        "reconciliation.idle"
+      ],
+      "ctx": {
+        "account_id": null,
+        "trigger": null,
+        "started_us": null,
+        "orders_checked": 0,
+        "divergences": [],
+        "remediations": [],
+        "consecutive_failures": 0,
+        "auto_remediate": true
+      },
+      "acts": [
+        "set_trigger_periodic",
+        "stamp_start",
+        "emit_recon_started",
+        "store_exchange_state",
+        "store_divergences",
+        "persist_report",
+        "emit_recon_metrics",
+        "reset_failures",
+        "broadcast_recon_complete"
+      ],
+      "svc": [
+        "fetch_exchange_state",
+        "diff_against_local"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['reconciliation.idle']",
+        "SWEEP_DUE->['reconciliation.fetching']",
+        "done.invoke.fetch->['reconciliation.diffing']",
+        "done.invoke.diff->['reconciliation.reporting']",
+        "->['reconciliation.idle']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "reconciliation.idle"
+      ]
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b19_startup": {
+    "async": {
+      "ids": [
+        "reconciliation.idle"
+      ],
+      "ctx": {
+        "account_id": null,
+        "trigger": null,
+        "started_us": null,
+        "orders_checked": 0,
+        "divergences": [],
+        "remediations": [],
+        "consecutive_failures": 0,
+        "auto_remediate": true
+      },
+      "acts": [
+        "set_trigger_startup",
+        "stamp_start",
+        "emit_recon_started",
+        "store_exchange_state",
+        "store_divergences",
+        "persist_report",
+        "emit_recon_metrics",
+        "reset_failures",
+        "broadcast_recon_complete"
+      ],
+      "svc": [
+        "fetch_exchange_state",
+        "diff_against_local"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['reconciliation.idle']",
+        "STARTUP->['reconciliation.fetching']",
+        "done.invoke.fetch->['reconciliation.diffing']",
+        "done.invoke.diff->['reconciliation.reporting']",
+        "->['reconciliation.idle']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "reconciliation.idle"
+      ],
+      "ctx": {
+        "account_id": null,
+        "trigger": null,
+        "started_us": null,
+        "orders_checked": 0,
+        "divergences": [],
+        "remediations": [],
+        "consecutive_failures": 0,
+        "auto_remediate": true
+      },
+      "acts": [
+        "set_trigger_startup",
+        "stamp_start",
+        "emit_recon_started",
+        "store_exchange_state",
+        "store_divergences",
+        "persist_report",
+        "emit_recon_metrics",
+        "reset_failures",
+        "broadcast_recon_complete"
+      ],
+      "svc": [
+        "fetch_exchange_state",
+        "diff_against_local"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['reconciliation.idle']",
+        "STARTUP->['reconciliation.fetching']",
+        "done.invoke.fetch->['reconciliation.diffing']",
+        "done.invoke.diff->['reconciliation.reporting']",
+        "->['reconciliation.idle']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b19_unknown_order": {
+    "async": {
+      "ids": [
+        "reconciliation.idle"
+      ],
+      "ctx": {
+        "account_id": null,
+        "trigger": null,
+        "started_us": null,
+        "orders_checked": 0,
+        "divergences": [],
+        "remediations": [],
+        "consecutive_failures": 0,
+        "auto_remediate": true
+      },
+      "acts": [
+        "set_trigger_unknown",
+        "stamp_start",
+        "emit_recon_started",
+        "store_exchange_state",
+        "store_divergences",
+        "persist_report",
+        "emit_recon_metrics",
+        "reset_failures",
+        "broadcast_recon_complete"
+      ],
+      "svc": [
+        "fetch_exchange_state",
+        "diff_against_local"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['reconciliation.idle']",
+        "UNKNOWN_ORDER->['reconciliation.fetching']",
+        "done.invoke.fetch->['reconciliation.diffing']",
+        "done.invoke.diff->['reconciliation.reporting']",
+        "->['reconciliation.idle']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "reconciliation.idle"
+      ],
+      "ctx": {
+        "account_id": null,
+        "trigger": null,
+        "started_us": null,
+        "orders_checked": 0,
+        "divergences": [],
+        "remediations": [],
+        "consecutive_failures": 0,
+        "auto_remediate": true
+      },
+      "acts": [
+        "set_trigger_unknown",
+        "stamp_start",
+        "emit_recon_started",
+        "store_exchange_state",
+        "store_divergences",
+        "persist_report",
+        "emit_recon_metrics",
+        "reset_failures",
+        "broadcast_recon_complete"
+      ],
+      "svc": [
+        "fetch_exchange_state",
+        "diff_against_local"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['reconciliation.idle']",
+        "UNKNOWN_ORDER->['reconciliation.fetching']",
+        "done.invoke.fetch->['reconciliation.diffing']",
+        "done.invoke.diff->['reconciliation.reporting']",
+        "->['reconciliation.idle']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b19_fetch_fail": {
+    "async": {
+      "ids": [
+        "reconciliation.backing_off"
+      ],
+      "ctx": {
+        "account_id": null,
+        "trigger": null,
+        "started_us": null,
+        "orders_checked": 0,
+        "divergences": [],
+        "remediations": [],
+        "consecutive_failures": 0,
+        "auto_remediate": true
+      },
+      "acts": [
+        "set_trigger_periodic",
+        "stamp_start",
+        "emit_recon_started",
+        "bump_failures",
+        "schedule_retry_deadline"
+      ],
+      "svc": [
+        "fetch_exchange_state"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['reconciliation.idle']",
+        "SWEEP_DUE->['reconciliation.fetching']",
+        "error.platform.fetch->['reconciliation.backing_off']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "async_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "reconciliation.backing_off"
+      ]
+    },
+    "sync": {
+      "ids": [
+        "reconciliation.backing_off"
+      ],
+      "ctx": {
+        "account_id": null,
+        "trigger": null,
+        "started_us": null,
+        "orders_checked": 0,
+        "divergences": [],
+        "remediations": [],
+        "consecutive_failures": 0,
+        "auto_remediate": true
+      },
+      "acts": [
+        "set_trigger_periodic",
+        "stamp_start",
+        "emit_recon_started",
+        "bump_failures",
+        "schedule_retry_deadline"
+      ],
+      "svc": [
+        "fetch_exchange_state"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['reconciliation.idle']",
+        "SWEEP_DUE->['reconciliation.fetching']",
+        "error.platform.fetch->['reconciliation.backing_off']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "reconciliation.backing_off"
+      ]
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b19_stale": {
+    "async": {
+      "ids": [
+        "reconciliation.backing_off"
+      ],
+      "ctx": {
+        "account_id": null,
+        "trigger": null,
+        "started_us": null,
+        "orders_checked": 0,
+        "divergences": [],
+        "remediations": [],
+        "consecutive_failures": 0,
+        "auto_remediate": true
+      },
+      "acts": [
+        "set_trigger_periodic",
+        "stamp_start",
+        "emit_recon_started",
+        "bump_failures",
+        "schedule_retry_deadline"
+      ],
+      "svc": [
+        "fetch_exchange_state"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['reconciliation.idle']",
+        "SWEEP_DUE->['reconciliation.fetching']",
+        "error.platform.fetch->['reconciliation.backing_off']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "reconciliation.backing_off"
+      ],
+      "ctx": {
+        "account_id": null,
+        "trigger": null,
+        "started_us": null,
+        "orders_checked": 0,
+        "divergences": [],
+        "remediations": [],
+        "consecutive_failures": 0,
+        "auto_remediate": true
+      },
+      "acts": [
+        "set_trigger_periodic",
+        "stamp_start",
+        "emit_recon_started",
+        "bump_failures",
+        "schedule_retry_deadline"
+      ],
+      "svc": [
+        "fetch_exchange_state"
+      ],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['reconciliation.idle']",
+        "SWEEP_DUE->['reconciliation.fetching']",
+        "error.platform.fetch->['reconciliation.backing_off']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b19_stale_RECONNECTED": {
+    "async": {
+      "ids": [
+        "reconciliation.backing_off"
+      ],
+      "ctx": {
+        "account_id": null,
+        "trigger": null,
+        "started_us": null,
+        "orders_checked": 0,
+        "divergences": [],
+        "remediations": [],
+        "consecutive_failures": 0,
+        "auto_remediate": true
+      },
+      "acts": [
+        "set_trigger_periodic",
+        "stamp_start",
+        "emit_recon_started",
+        "bump_failures",
+        "schedule_retry_deadline"
+      ],
+      "svc": [
+        "fetch_exchange_state"
+      ],
+      "status": "running",
+      "deferred": 1,
+      "transitions": [
+        "___xstate_statemachine_init___->['reconciliation.idle']",
+        "SWEEP_DUE->['reconciliation.fetching']",
+        "error.platform.fetch->['reconciliation.backing_off']"
+      ],
+      "unhandled": [
+        [
+          "RECONNECTED",
+          "deferred"
+        ]
+      ],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": true,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "reconciliation.backing_off"
+      ],
+      "ctx": {
+        "account_id": null,
+        "trigger": null,
+        "started_us": null,
+        "orders_checked": 0,
+        "divergences": [],
+        "remediations": [],
+        "consecutive_failures": 0,
+        "auto_remediate": true
+      },
+      "acts": [
+        "set_trigger_periodic",
+        "stamp_start",
+        "emit_recon_started",
+        "bump_failures",
+        "schedule_retry_deadline"
+      ],
+      "svc": [
+        "fetch_exchange_state"
+      ],
+      "status": "running",
+      "deferred": 1,
+      "transitions": [
+        "___xstate_statemachine_init___->['reconciliation.idle']",
+        "SWEEP_DUE->['reconciliation.fetching']",
+        "error.platform.fetch->['reconciliation.backing_off']"
+      ],
+      "unhandled": [
+        [
+          "RECONNECTED",
+          "deferred"
+        ]
+      ],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": true,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b19_stale_OPERATOR_RESOLVED": {
+    "async": {
+      "ids": [
+        "reconciliation.backing_off"
+      ],
+      "ctx": {
+        "account_id": null,
+        "trigger": null,
+        "started_us": null,
+        "orders_checked": 0,
+        "divergences": [],
+        "remediations": [],
+        "consecutive_failures": 0,
+        "auto_remediate": true
+      },
+      "acts": [
+        "set_trigger_periodic",
+        "stamp_start",
+        "emit_recon_started",
+        "bump_failures",
+        "schedule_retry_deadline"
+      ],
+      "svc": [
+        "fetch_exchange_state"
+      ],
+      "status": "running",
+      "deferred": 1,
+      "transitions": [
+        "___xstate_statemachine_init___->['reconciliation.idle']",
+        "SWEEP_DUE->['reconciliation.fetching']",
+        "error.platform.fetch->['reconciliation.backing_off']"
+      ],
+      "unhandled": [
+        [
+          "OPERATOR_RESOLVED",
+          "deferred"
+        ]
+      ],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": true,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "reconciliation.backing_off"
+      ],
+      "ctx": {
+        "account_id": null,
+        "trigger": null,
+        "started_us": null,
+        "orders_checked": 0,
+        "divergences": [],
+        "remediations": [],
+        "consecutive_failures": 0,
+        "auto_remediate": true
+      },
+      "acts": [
+        "set_trigger_periodic",
+        "stamp_start",
+        "emit_recon_started",
+        "bump_failures",
+        "schedule_retry_deadline"
+      ],
+      "svc": [
+        "fetch_exchange_state"
+      ],
+      "status": "running",
+      "deferred": 1,
+      "transitions": [
+        "___xstate_statemachine_init___->['reconciliation.idle']",
+        "SWEEP_DUE->['reconciliation.fetching']",
+        "error.platform.fetch->['reconciliation.backing_off']"
+      ],
+      "unhandled": [
+        [
+          "OPERATOR_RESOLVED",
+          "deferred"
+        ]
+      ],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": true,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b19_stale_SWEEP_DUE": {
+    "async": {
+      "ids": [
+        "reconciliation.backing_off"
+      ],
+      "ctx": {
+        "account_id": null,
+        "trigger": null,
+        "started_us": null,
+        "orders_checked": 0,
+        "divergences": [],
+        "remediations": [],
+        "consecutive_failures": 0,
+        "auto_remediate": true
+      },
+      "acts": [
+        "set_trigger_periodic",
+        "stamp_start",
+        "emit_recon_started",
+        "bump_failures",
+        "schedule_retry_deadline"
+      ],
+      "svc": [
+        "fetch_exchange_state"
+      ],
+      "status": "running",
+      "deferred": 1,
+      "transitions": [
+        "___xstate_statemachine_init___->['reconciliation.idle']",
+        "SWEEP_DUE->['reconciliation.fetching']",
+        "error.platform.fetch->['reconciliation.backing_off']"
+      ],
+      "unhandled": [
+        [
+          "SWEEP_DUE",
+          "deferred"
+        ]
+      ],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": true,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "reconciliation.backing_off"
+      ],
+      "ctx": {
+        "account_id": null,
+        "trigger": null,
+        "started_us": null,
+        "orders_checked": 0,
+        "divergences": [],
+        "remediations": [],
+        "consecutive_failures": 0,
+        "auto_remediate": true
+      },
+      "acts": [
+        "set_trigger_periodic",
+        "stamp_start",
+        "emit_recon_started",
+        "bump_failures",
+        "schedule_retry_deadline"
+      ],
+      "svc": [
+        "fetch_exchange_state"
+      ],
+      "status": "running",
+      "deferred": 1,
+      "transitions": [
+        "___xstate_statemachine_init___->['reconciliation.idle']",
+        "SWEEP_DUE->['reconciliation.fetching']",
+        "error.platform.fetch->['reconciliation.backing_off']"
+      ],
+      "unhandled": [
+        [
+          "SWEEP_DUE",
+          "deferred"
+        ]
+      ],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": true,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b20_breach": {
+    "async": {
+      "ids": [
+        "risk_lockout.locked"
+      ],
+      "ctx": {
+        "account_id": null,
+        "scope": "account",
+        "realised_pnl_today": "0",
+        "max_daily_loss": "0",
+        "breach_reason": null,
+        "until_mode": "next_utc_day",
+        "until_us": null,
+        "cleared_by": null
+      },
+      "acts": [
+        "set_breach_daily_loss",
+        "halt_new_orders",
+        "compute_until",
+        "schedule_expiry_deadline",
+        "raise_lockout_alert",
+        "audit_lockout",
+        "broadcast_lockout"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['risk_lockout.clear']",
+        "PNL_UPDATE->['risk_lockout.locked']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "risk_lockout.locked"
+      ],
+      "ctx": {
+        "account_id": null,
+        "scope": "account",
+        "realised_pnl_today": "0",
+        "max_daily_loss": "0",
+        "breach_reason": null,
+        "until_mode": "next_utc_day",
+        "until_us": null,
+        "cleared_by": null
+      },
+      "acts": [
+        "set_breach_daily_loss",
+        "halt_new_orders",
+        "compute_until",
+        "schedule_expiry_deadline",
+        "raise_lockout_alert",
+        "audit_lockout",
+        "broadcast_lockout"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['risk_lockout.clear']",
+        "PNL_UPDATE->['risk_lockout.locked']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b20_manual": {
+    "async": {
+      "ids": [
+        "risk_lockout.locked"
+      ],
+      "ctx": {
+        "account_id": null,
+        "scope": "account",
+        "realised_pnl_today": "0",
+        "max_daily_loss": "0",
+        "breach_reason": null,
+        "until_mode": "next_utc_day",
+        "until_us": null,
+        "cleared_by": null
+      },
+      "acts": [
+        "set_breach_manual",
+        "halt_new_orders",
+        "compute_until",
+        "schedule_expiry_deadline",
+        "raise_lockout_alert",
+        "audit_lockout",
+        "broadcast_lockout"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['risk_lockout.clear']",
+        "MANUAL_LOCK->['risk_lockout.locked']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "async_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "risk_lockout.locked"
+      ]
+    },
+    "sync": {
+      "ids": [
+        "risk_lockout.locked"
+      ],
+      "ctx": {
+        "account_id": null,
+        "scope": "account",
+        "realised_pnl_today": "0",
+        "max_daily_loss": "0",
+        "breach_reason": null,
+        "until_mode": "next_utc_day",
+        "until_us": null,
+        "cleared_by": null
+      },
+      "acts": [
+        "set_breach_manual",
+        "halt_new_orders",
+        "compute_until",
+        "schedule_expiry_deadline",
+        "raise_lockout_alert",
+        "audit_lockout",
+        "broadcast_lockout"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['risk_lockout.clear']",
+        "MANUAL_LOCK->['risk_lockout.locked']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "risk_lockout.locked"
+      ]
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b20_expiry_time": {
+    "async": {
+      "ids": [
+        "risk_lockout.clear"
+      ],
+      "ctx": {
+        "account_id": null,
+        "scope": "account",
+        "realised_pnl_today": "0",
+        "max_daily_loss": "0",
+        "breach_reason": null,
+        "until_mode": "next_utc_day",
+        "until_us": null,
+        "cleared_by": null
+      },
+      "acts": [
+        "set_breach_manual",
+        "halt_new_orders",
+        "compute_until",
+        "schedule_expiry_deadline",
+        "raise_lockout_alert",
+        "audit_lockout",
+        "broadcast_lockout",
+        "resume_new_orders",
+        "reset_daily_counters_if_new_day"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['risk_lockout.clear']",
+        "MANUAL_LOCK->['risk_lockout.locked']",
+        "EXPIRY_DUE->['risk_lockout.clear']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "risk_lockout.clear"
+      ],
+      "ctx": {
+        "account_id": null,
+        "scope": "account",
+        "realised_pnl_today": "0",
+        "max_daily_loss": "0",
+        "breach_reason": null,
+        "until_mode": "next_utc_day",
+        "until_us": null,
+        "cleared_by": null
+      },
+      "acts": [
+        "set_breach_manual",
+        "halt_new_orders",
+        "compute_until",
+        "schedule_expiry_deadline",
+        "raise_lockout_alert",
+        "audit_lockout",
+        "broadcast_lockout",
+        "resume_new_orders",
+        "reset_daily_counters_if_new_day"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['risk_lockout.clear']",
+        "MANUAL_LOCK->['risk_lockout.locked']",
+        "EXPIRY_DUE->['risk_lockout.clear']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b20_expiry_manual": {
+    "async": {
+      "ids": [
+        "risk_lockout.locked"
+      ],
+      "ctx": {
+        "account_id": null,
+        "scope": "account",
+        "realised_pnl_today": "0",
+        "max_daily_loss": "0",
+        "breach_reason": null,
+        "until_mode": "next_utc_day",
+        "until_us": null,
+        "cleared_by": null
+      },
+      "acts": [
+        "set_breach_manual",
+        "halt_new_orders",
+        "compute_until",
+        "schedule_expiry_deadline",
+        "raise_lockout_alert",
+        "audit_lockout",
+        "broadcast_lockout",
+        "log_expiry_ignored_manual_mode"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['risk_lockout.clear']",
+        "MANUAL_LOCK->['risk_lockout.locked']",
+        "EXPIRY_DUE->['risk_lockout.locked']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": false,
+          "denied": true
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "risk_lockout.locked"
+      ],
+      "ctx": {
+        "account_id": null,
+        "scope": "account",
+        "realised_pnl_today": "0",
+        "max_daily_loss": "0",
+        "breach_reason": null,
+        "until_mode": "next_utc_day",
+        "until_us": null,
+        "cleared_by": null
+      },
+      "acts": [
+        "set_breach_manual",
+        "halt_new_orders",
+        "compute_until",
+        "schedule_expiry_deadline",
+        "raise_lockout_alert",
+        "audit_lockout",
+        "broadcast_lockout",
+        "log_expiry_ignored_manual_mode"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['risk_lockout.clear']",
+        "MANUAL_LOCK->['risk_lockout.locked']",
+        "EXPIRY_DUE->['risk_lockout.locked']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": false,
+          "denied": true
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b20_override_ok": {
+    "async": {
+      "ids": [
+        "risk_lockout.clear"
+      ],
+      "ctx": {
+        "account_id": null,
+        "scope": "account",
+        "realised_pnl_today": "0",
+        "max_daily_loss": "0",
+        "breach_reason": null,
+        "until_mode": "next_utc_day",
+        "until_us": null,
+        "cleared_by": null
+      },
+      "acts": [
+        "set_breach_manual",
+        "halt_new_orders",
+        "compute_until",
+        "schedule_expiry_deadline",
+        "raise_lockout_alert",
+        "audit_lockout",
+        "broadcast_lockout",
+        "resume_new_orders",
+        "audit_override"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['risk_lockout.clear']",
+        "MANUAL_LOCK->['risk_lockout.locked']",
+        "OVERRIDE_REQUESTED->['risk_lockout.clear']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "async_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "risk_lockout.clear"
+      ]
+    },
+    "sync": {
+      "ids": [
+        "risk_lockout.clear"
+      ],
+      "ctx": {
+        "account_id": null,
+        "scope": "account",
+        "realised_pnl_today": "0",
+        "max_daily_loss": "0",
+        "breach_reason": null,
+        "until_mode": "next_utc_day",
+        "until_us": null,
+        "cleared_by": null
+      },
+      "acts": [
+        "set_breach_manual",
+        "halt_new_orders",
+        "compute_until",
+        "schedule_expiry_deadline",
+        "raise_lockout_alert",
+        "audit_lockout",
+        "broadcast_lockout",
+        "resume_new_orders",
+        "audit_override"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['risk_lockout.clear']",
+        "MANUAL_LOCK->['risk_lockout.locked']",
+        "OVERRIDE_REQUESTED->['risk_lockout.clear']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync_snap": {
+      "midstep": [],
+      "raised": [],
+      "diffs": {},
+      "trace_eq": true,
+      "ids": [
+        "risk_lockout.clear"
+      ]
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b20_override_denied": {
+    "async": {
+      "ids": [
+        "risk_lockout.locked"
+      ],
+      "ctx": {
+        "account_id": null,
+        "scope": "account",
+        "realised_pnl_today": "0",
+        "max_daily_loss": "0",
+        "breach_reason": null,
+        "until_mode": "next_utc_day",
+        "until_us": null,
+        "cleared_by": null
+      },
+      "acts": [
+        "set_breach_manual",
+        "halt_new_orders",
+        "compute_until",
+        "schedule_expiry_deadline",
+        "raise_lockout_alert",
+        "audit_lockout",
+        "broadcast_lockout",
+        "audit_override_denied"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['risk_lockout.clear']",
+        "MANUAL_LOCK->['risk_lockout.locked']",
+        "OVERRIDE_REQUESTED->['risk_lockout.locked']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": false,
+          "denied": true
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "risk_lockout.locked"
+      ],
+      "ctx": {
+        "account_id": null,
+        "scope": "account",
+        "realised_pnl_today": "0",
+        "max_daily_loss": "0",
+        "breach_reason": null,
+        "until_mode": "next_utc_day",
+        "until_us": null,
+        "cleared_by": null
+      },
+      "acts": [
+        "set_breach_manual",
+        "halt_new_orders",
+        "compute_until",
+        "schedule_expiry_deadline",
+        "raise_lockout_alert",
+        "audit_lockout",
+        "broadcast_lockout",
+        "audit_override_denied"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['risk_lockout.clear']",
+        "MANUAL_LOCK->['risk_lockout.locked']",
+        "OVERRIDE_REQUESTED->['risk_lockout.locked']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "NoneType",
+      "receipts": [
+        {
+          "changed": true,
+          "error": null,
+          "deferred": false,
+          "denied": false
+        },
+        {
+          "changed": false,
+          "error": null,
+          "deferred": false,
+          "denied": true
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "b20_rollback": {
+    "async": {
+      "ids": [
+        "risk_lockout.clear"
+      ],
+      "ctx": {
+        "account_id": null,
+        "scope": "account",
+        "realised_pnl_today": "0",
+        "max_daily_loss": "0",
+        "breach_reason": null,
+        "until_mode": "next_utc_day",
+        "until_us": null,
+        "cleared_by": null
+      },
+      "acts": [
+        "set_breach_manual",
+        "halt_new_orders",
+        "compute_until",
+        "schedule_expiry_deadline",
+        "raise_lockout_alert",
+        "audit_lockout",
+        "broadcast_lockout"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['risk_lockout.clear']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "RuntimeError",
+      "receipts": [
+        {
+          "changed": false,
+          "error": "RuntimeError",
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "sync": {
+      "ids": [
+        "risk_lockout.clear"
+      ],
+      "ctx": {
+        "account_id": null,
+        "scope": "account",
+        "realised_pnl_today": "0",
+        "max_daily_loss": "0",
+        "breach_reason": null,
+        "until_mode": "next_utc_day",
+        "until_us": null,
+        "cleared_by": null
+      },
+      "acts": [
+        "set_breach_manual",
+        "halt_new_orders",
+        "compute_until",
+        "schedule_expiry_deadline",
+        "raise_lockout_alert",
+        "audit_lockout",
+        "broadcast_lockout"
+      ],
+      "svc": [],
+      "status": "running",
+      "deferred": 0,
+      "transitions": [
+        "___xstate_statemachine_init___->['risk_lockout.clear']"
+      ],
+      "unhandled": [],
+      "dropped": [],
+      "last_error": "RuntimeError",
+      "receipts": [
+        {
+          "changed": false,
+          "error": "RuntimeError",
+          "deferred": false,
+          "denied": false
+        }
+      ],
+      "raised": []
+    },
+    "kind_parity": {},
+    "acts_eq": true
+  },
+  "sync_engine": {
+    "B16": {
+      "ids": [
+        "session.auth.active",
+        "session.elevation.elevated"
+      ],
+      "ctx": {
+        "session_id": null,
+        "user_id": null,
+        "expires_at_us": 0,
+        "idle_expires_at_us": 0,
+        "refresh_expires_at_us": 0,
+        "elevated_until_us": null,
+        "mfa_satisfied": false,
+        "revoke_reason": null
+      },
+      "acts": [
+        "mark_mfa_satisfied",
+        "stamp_idle_deadline",
+        "audit_login",
+        "stamp_idle_deadline",
+        "stamp_idle_deadline",
+        "audit_login",
+        "stamp_elevated_until",
+        "audit_step_up",
+        "schedule_elevation_deadline"
+      ],
+      "svc": [],
+      "status": "running",
+      "last_error": "NoneType"
+    },
+    "B17": {
+      "ids": [
+        "live_gate.enabled"
+      ],
+      "ctx": {
+        "evidence": {
+          "pentest_passed": false,
+          "key_audit_passed": false,
+          "env_separation_verified": false,
+          "runbooks_signed": false
+        },
+        "enabled_by": null,
+        "enabled_at_us": null,
+        "disable_reason": null,
+        "eligible_user_ids": []
+      },
+      "acts": [
+        "record_evidence",
+        "record_enable",
+        "audit_live_enabled",
+        "broadcast_live_enabled",
+        "enable_live_visual_language"
+      ],
+      "svc": [],
+      "status": "running",
+      "last_error": "NoneType"
+    },
+    "B18": {
+      "ids": [
+        "kill_switch.engaged"
+      ],
+      "ctx": {
+        "scope": "global",
+        "engaged_by": null,
+        "engaged_at_us": null,
+        "reason": null,
+        "cancel_working": false,
+        "flatten": false,
+        "accounts_flat": 0,
+        "accounts_total": 0
+      },
+      "acts": [
+        "record_engagement",
+        "audit_kill_switch",
+        "block_new_orders_immediately",
+        "cancel_entry_and_poll_drains",
+        "broadcast_kill_switch"
+      ],
+      "svc": [
+        "cancel_all_working_orders",
+        "flatten_all_positions"
+      ],
+      "status": "running",
+      "last_error": "NoneType"
+    },
+    "B19": {
+      "ids": [
+        "reconciliation.idle"
+      ],
+      "ctx": {
+        "account_id": null,
+        "trigger": null,
+        "started_us": null,
+        "orders_checked": 0,
+        "divergences": [],
+        "remediations": [],
+        "consecutive_failures": 0,
+        "auto_remediate": true
+      },
+      "acts": [
+        "set_trigger_periodic",
+        "stamp_start",
+        "emit_recon_started",
+        "store_exchange_state",
+        "store_divergences",
+        "persist_report",
+        "emit_recon_metrics",
+        "reset_failures",
+        "broadcast_recon_complete"
+      ],
+      "svc": [
+        "fetch_exchange_state",
+        "diff_against_local"
+      ],
+      "status": "running",
+      "last_error": "NoneType"
+    },
+    "B20": {
+      "ids": [
+        "risk_lockout.locked"
+      ],
+      "ctx": {
+        "account_id": null,
+        "scope": "account",
+        "realised_pnl_today": "0",
+        "max_daily_loss": "0",
+        "breach_reason": null,
+        "until_mode": "next_utc_day",
+        "until_us": null,
+        "cleared_by": null
+      },
+      "acts": [
+        "set_breach_manual",
+        "halt_new_orders",
+        "compute_until",
+        "schedule_expiry_deadline",
+        "raise_lockout_alert",
+        "audit_lockout",
+        "broadcast_lockout"
+      ],
+      "svc": [],
+      "status": "running",
+      "last_error": "NoneType"
+    }
+  }
+}

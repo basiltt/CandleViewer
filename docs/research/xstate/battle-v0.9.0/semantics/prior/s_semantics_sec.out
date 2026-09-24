@@ -1,0 +1,6 @@
+[PASS ] S1  #216 config-key fuzzer: misspelled policy keys at TOP level (must WARN with a hint / rai
+[PASS ] S2  strict_config escape hatches: the `x-` prefix and a config-level strictConfig -- can a p
+[PASS ] S3  #212 rule matrix: raise(delay=) at 1 ms / 50 ms / zero / cancelled, against the `after` 
+[PASS ] S4  Determinism: 50 identical runs (transition trace + drops) on BOTH engines and BOTH kinds
+
+s_semantics_sec: 4/4 PASS

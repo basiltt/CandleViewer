@@ -1,0 +1,72 @@
+{
+  "probe": "u4_restore_trust_surface",
+  "py": "3.13.7",
+  "A_forged_sched_declared_event": {
+    "forged_type": "REAL",
+    "states": [
+      "u4a.moved"
+    ],
+    "n": 1,
+    "invalid": [],
+    "last_error": null
+  },
+  "A_forged_sched_undeclared_event": {
+    "forged_type": "NOT_IN_CHART",
+    "states": [
+      "u4a.idle"
+    ],
+    "n": 0,
+    "invalid": [],
+    "last_error": null
+  },
+  "B_forged_done_via_scheduled_sends": {
+    "case": "done",
+    "states": [
+      "u4b.done"
+    ],
+    "n": 1
+  },
+  "B_forged_after_via_scheduled_sends": {
+    "case": "after",
+    "states": [
+      "u4b.late"
+    ],
+    "n": 1
+  },
+  "C_minimum_version_mitigation": {
+    "min_version_3": "REFUSED: SnapshotVersionError",
+    "default": "ACCEPTED"
+  },
+  "D_lane_restore_ordering": {
+    "order": [
+      "HI",
+      "LOW"
+    ]
+  },
+  "E_on_invalid_event_restore": {
+    "invalid_count": 0,
+    "invalid": [],
+    "last_error": "Event 'NOPE2' is not declared by machine 'u4a'. Known events: REAL.",
+    "states": [
+      "u4a.idle"
+    ],
+    "n": 0,
+    "note": "plugins attached AFTER from_snapshot cannot observe restore-time refusals -- restore runs inside the classmethod, before any use() call is possible"
+  },
+  "F_216_config_key_surface": {
+    "top_level_warning": [],
+    "strict_config": "REFUSED: Machine 'f' has unknown config key(s) -- f: 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys are ignored by the parser, so a misspelled key silently does nothing (a policy reverts to its default; an action, transition or deadline never exists). Use the 'x-' prefix for custom metadata, or 'meta'.",
+    "x_prefix_accepted_under_strict_config": true,
+    "x_prefixed_policy_takes_effect": false,
+    "nested_under_strict_config": "REFUSED: Machine 'f2' has unknown config key(s) -- f2.a: 'entryy' (did you mean 'entry'?), 'onn' (did you mean 'on'?). Unknown keys are ignored by the parser, so a misspelled key silently does nothing (a policy reverts to its default; an action, transition or deadline never exists). Use the 'x-' prefix for custom metadata, or 'meta'.",
+    "nested_warnings": [],
+    "nested_policy_misspelling": "REFUSED: Machine 'f3' has unknown config key(s) -- f3.a: 'maxIterationss'. Unknown keys are ignored by the parser, so a misspelled key silently does nothing (a policy reverts to its default; an action, transition or deadline never exists). Use the 'x-' prefix for custom metadata, or 'meta'."
+  },
+  "violations": [
+    "A: a forged scheduled_sends record delivered an event",
+    "A2: strict is not applied to scheduled_sends on restore",
+    "B: forged scheduled_sends done record drove onDone",
+    "B: forged scheduled_sends after record fired a 60 s timer"
+  ],
+  "verdict": "DEFECT"
+}

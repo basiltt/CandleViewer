@@ -1,0 +1,53 @@
+[
+ {
+  "mode": "normal",
+  "attempts": 2,
+  "receipts": [
+   {
+    "changed": true,
+    "deferred": false,
+    "denied": false,
+    "ids": [
+     "position_protection.sl.verifying",
+     "position_protection.watchdog.idle"
+    ]
+   },
+   {
+    "changed": false,
+    "deferred": true,
+    "denied": false,
+    "ids": [
+     "position_protection.sl.verifying",
+     "position_protection.watchdog.idle"
+    ]
+   }
+  ],
+  "final": [
+   "position_protection.sl.flat",
+   "position_protection.watchdog.idle"
+  ],
+  "still_cycling": 0,
+  "deferred_count": 0
+ },
+ {
+  "mode": "priority",
+  "attempts": 1,
+  "receipts": [
+   {
+    "changed": true,
+    "deferred": false,
+    "denied": false,
+    "ids": [
+     "position_protection.sl.flat",
+     "position_protection.watchdog.idle"
+    ]
+   }
+  ],
+  "final": [
+   "position_protection.sl.flat",
+   "position_protection.watchdog.idle"
+  ],
+  "still_cycling": 0,
+  "deferred_count": 0
+ }
+]

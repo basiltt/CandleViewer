@@ -1,0 +1,142 @@
+{
+  "prio_midstep_async": {
+    "kind": "async",
+    "mid_step": true,
+    "n": 40,
+    "first_changed": true,
+    "results": {
+      "ok": 40
+    },
+    "dropped": [],
+    "n_dropped": 0,
+    "ids": [
+      "kill_switch.cancelling"
+    ],
+    "status": "error",
+    "last_error": "UnhandledEventError",
+    "svc_calls": 1
+  },
+  "prio_idle_async": {
+    "kind": "async",
+    "mid_step": false,
+    "n": 40,
+    "first_changed": true,
+    "results": {
+      "ok": 40
+    },
+    "dropped": [],
+    "n_dropped": 0,
+    "ids": [
+      "kill_switch.cancelling"
+    ],
+    "status": "error",
+    "last_error": "UnhandledEventError",
+    "svc_calls": 1
+  },
+  "shape_rollback_ondone_async": {
+    "kind": "async",
+    "name": "rollback+onDone",
+    "mi": 8,
+    "timed_out": false,
+    "laps_svc": 10,
+    "actions": 13,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "receipt": {
+      "changed": true,
+      "error": null
+    },
+    "last_error": "RunawayChainError",
+    "transitions": 4
+  },
+  "shape_always_invoke_async": {
+    "kind": "async",
+    "name": "always->invoked child",
+    "mi": 8,
+    "timed_out": false,
+    "laps_svc": 5,
+    "actions": 13,
+    "ids": [
+      "kill_switch.engaged_incomplete"
+    ],
+    "status": "running",
+    "receipt": {
+      "changed": true,
+      "error": null
+    },
+    "last_error": "RunawayChainError",
+    "transitions": 11
+  },
+  "prio_midstep_sync": {
+    "kind": "sync",
+    "mid_step": true,
+    "n": 40,
+    "first_changed": true,
+    "results": {
+      "ok": 40
+    },
+    "dropped": [],
+    "n_dropped": 0,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "error",
+    "last_error": "UnhandledEventError",
+    "svc_calls": 2
+  },
+  "prio_idle_sync": {
+    "kind": "sync",
+    "mid_step": false,
+    "n": 40,
+    "first_changed": true,
+    "results": {
+      "ok": 40
+    },
+    "dropped": [],
+    "n_dropped": 0,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "error",
+    "last_error": "UnhandledEventError",
+    "svc_calls": 2
+  },
+  "shape_rollback_ondone_sync": {
+    "kind": "sync",
+    "name": "rollback+onDone",
+    "mi": 8,
+    "timed_out": false,
+    "laps_svc": 10,
+    "actions": 13,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "receipt": {
+      "changed": true,
+      "error": null
+    },
+    "last_error": "RunawayChainError",
+    "transitions": 4
+  },
+  "shape_always_invoke_sync": {
+    "kind": "sync",
+    "name": "always->invoked child",
+    "mi": 8,
+    "timed_out": false,
+    "laps_svc": 5,
+    "actions": 13,
+    "ids": [
+      "kill_switch.engaged_incomplete"
+    ],
+    "status": "running",
+    "receipt": {
+      "changed": true,
+      "error": null
+    },
+    "last_error": "RunawayChainError",
+    "transitions": 11
+  }
+}

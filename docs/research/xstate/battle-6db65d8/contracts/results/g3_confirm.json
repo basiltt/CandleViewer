@@ -1,0 +1,85 @@
+[
+ {
+  "id": "CONF-1",
+  "inv": "OUR-B11",
+  "title": "degraded genuinely has no STREAM_UNHEALTHY handler (read the JSON)",
+  "detail": {
+   "ok": true,
+   "degraded_handles": [
+    "REASON_REMOVED",
+    "STREAM_HEALTHY"
+   ],
+   "recording_handles": [
+    "GAP_DETECTED",
+    "REASON_ADDED",
+    "REASON_REMOVED",
+    "STREAM_UNHEALTHY"
+   ],
+   "finding": "a 2nd stream failing while already degraded has no handler; under onUnhandled=defer it is parked"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "CONF-2",
+  "inv": "OUR-B11",
+  "title": "the parked event fires later and flaps recording<->degraded",
+  "detail": {
+   "ok": false,
+   "deferred_after_2nd_failure": 1,
+   "transitions": [
+    "STREAM_UNHEALTHY->['recording.degraded']",
+    "STREAM_HEALTHY->['recording.recording']",
+    "STREAM_UNHEALTHY->['recording.degraded']"
+   ],
+   "emit_recording_metric_count": 2,
+   "finding": "machine re-entered `recording` (emit_recording_metric fired a 2nd time) while a stream was still down, then immediately fell back to degraded"
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "CONF-3",
+  "inv": "OUR-B14",
+  "title": "B14 buffer bound is prose-only: no maxBuffer anywhere in the JSON",
+  "detail": {
+   "ok": true,
+   "bound_keywords_in_json": [],
+   "DELTA_in_snapshot_pending": {
+    "actions": [
+     "buffer_delta"
+    ]
+   },
+   "finding": "INV-B14-d requires a bounded buffer (C-2.18); the contract expresses no bound -- it is delegated entirely to the buffer_delta implementation"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "CONF-4",
+  "inv": "LIB",
+  "title": "onUnhandled=error: fatal stop is invisible to the caller (all 3 machines)",
+  "detail": {
+   "ok": true,
+   "per_machine": {
+    "B13": {
+     "onUnhandled": "error",
+     "receipt_error": "UnhandledEventError(\"Event 'CONNECT' is not handled in any active state ['ws_conn.live'] and the machine's onUnhandled policy is 'error'.\")",
+     "receipt_changed": false,
+     "receipt_deferred": false,
+     "status": "error",
+     "running": false,
+     "last_error": "UnhandledEventError(\"Event 'CONNECT' is not handled in any active state ['ws_conn.live'] and the machine's onUnhandled policy is 'error'.\")"
+    },
+    "B14": {
+     "onUnhandled": "error",
+     "receipt_error": "UnhandledEventError(\"Event 'SUBSCRIBE' is not handled in any active state ['book.live'] and the machine's onUnhandled policy is 'error'.\")",
+     "receipt_changed": false,
+     "receipt_deferred": false,
+     "status": "error",
+     "running": false,
+     "last_error": "UnhandledEventError(\"Event 'SUBSCRIBE' is not handled in any active state ['book.live'] and the machine's onUnhandled policy is 'error'.\")"
+    }
+   },
+   "finding": "every onUnhandled='error' machine can be killed by one stray event with no error visible to the sender"
+  },
+  "status": "PASS"
+ }
+]

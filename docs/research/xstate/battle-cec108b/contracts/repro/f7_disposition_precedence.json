@@ -1,0 +1,47 @@
+[
+ {
+  "onUnhandled": "defer",
+  "dispositions": [
+   [
+    "TIGHTEN_SL",
+    "deferred"
+   ]
+  ],
+  "receipt": {
+   "changed": false,
+   "deferred": true,
+   "denied": true
+  },
+  "call_raised": null
+ },
+ {
+  "onUnhandled": "ignore",
+  "dispositions": [
+   [
+    "TIGHTEN_SL",
+    "guard_denied"
+   ]
+  ],
+  "receipt": {
+   "changed": false,
+   "deferred": false,
+   "denied": true
+  },
+  "call_raised": null
+ },
+ {
+  "onUnhandled": "error",
+  "dispositions": [
+   [
+    "TIGHTEN_SL",
+    "errored"
+   ]
+  ],
+  "receipt": {
+   "changed": false,
+   "deferred": false,
+   "denied": true
+  },
+  "call_raised": null
+ }
+]

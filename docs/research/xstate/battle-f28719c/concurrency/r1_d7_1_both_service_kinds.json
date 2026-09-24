@@ -1,0 +1,163 @@
+{
+  "probe": "r1_d7_1_both_service_kinds",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "shape": "always_cycle",
+      "service_kind": "def",
+      "machines": 10,
+      "events_sent": 200,
+      "backlog_trace": [
+        0
+      ],
+      "final_backlog": 0,
+      "not_answering_in_5s": 0,
+      "tripped": 10,
+      "statuses": [
+        "stopped"
+      ],
+      "laps": 11210,
+      "stop": "ok"
+    },
+    {
+      "shape": "invoke_pingpong",
+      "service_kind": "def",
+      "machines": 10,
+      "events_sent": 4600,
+      "backlog_trace": [
+        208,
+        410,
+        602,
+        807,
+        1000,
+        1201,
+        1402,
+        1606,
+        1810,
+        1999,
+        2192,
+        2392
+      ],
+      "final_backlog": 4447,
+      "not_answering_in_5s": 10,
+      "tripped": 0,
+      "statuses": [
+        "stopped"
+      ],
+      "laps": 8679,
+      "stop": "ok"
+    },
+    {
+      "shape": "rollback_ondone",
+      "service_kind": "def",
+      "machines": 10,
+      "events_sent": 3800,
+      "backlog_trace": [
+        200,
+        410,
+        602,
+        800,
+        1002,
+        1200,
+        1400,
+        1600,
+        1793,
+        1999,
+        2190,
+        2390
+      ],
+      "final_backlog": 3759,
+      "not_answering_in_5s": 10,
+      "tripped": 0,
+      "statuses": [
+        "stopped"
+      ],
+      "laps": 2951,
+      "stop": "ok"
+    },
+    {
+      "shape": "always_cycle",
+      "service_kind": "async def",
+      "machines": 10,
+      "events_sent": 400,
+      "backlog_trace": [
+        42,
+        46
+      ],
+      "final_backlog": 0,
+      "not_answering_in_5s": 0,
+      "tripped": 10,
+      "statuses": [
+        "stopped"
+      ],
+      "laps": 21410,
+      "stop": "ok"
+    },
+    {
+      "shape": "invoke_pingpong",
+      "service_kind": "async def",
+      "machines": 10,
+      "events_sent": 4000,
+      "backlog_trace": [
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        45,
+        48,
+        10,
+        10,
+        0,
+        0
+      ],
+      "final_backlog": 0,
+      "not_answering_in_5s": 0,
+      "tripped": 0,
+      "statuses": [
+        "stopped"
+      ],
+      "laps": 560,
+      "stop": "ok"
+    },
+    {
+      "shape": "rollback_ondone",
+      "service_kind": "async def",
+      "machines": 10,
+      "events_sent": 1400,
+      "backlog_trace": [
+        49,
+        44,
+        4,
+        52,
+        43,
+        41,
+        51
+      ],
+      "final_backlog": 0,
+      "not_answering_in_5s": 0,
+      "tripped": 0,
+      "statuses": [
+        "stopped"
+      ],
+      "laps": 1510,
+      "stop": "ok"
+    }
+  ],
+  "wedged_rows": [
+    [
+      "invoke_pingpong",
+      "def",
+      10,
+      4447
+    ],
+    [
+      "rollback_ondone",
+      "def",
+      10,
+      3759
+    ]
+  ],
+  "result": "FAIL"
+}

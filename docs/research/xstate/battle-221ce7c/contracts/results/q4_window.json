@@ -1,0 +1,107 @@
+{
+  "window_0.2s": {
+    "trail": [
+      [
+        0.034,
+        25
+      ],
+      [
+        0.068,
+        55
+      ],
+      [
+        0.103,
+        85
+      ],
+      [
+        0.137,
+        115
+      ],
+      [
+        0.171,
+        145
+      ],
+      [
+        0.206,
+        174
+      ]
+    ],
+    "svc_total": 174,
+    "acts": 178,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RuntimeError"
+  },
+  "window_1.0s": {
+    "trail": [
+      [
+        0.168,
+        190
+      ],
+      [
+        0.335,
+        384
+      ],
+      [
+        0.502,
+        584
+      ],
+      [
+        0.669,
+        779
+      ],
+      [
+        0.836,
+        983
+      ],
+      [
+        1.003,
+        1190
+      ]
+    ],
+    "svc_total": 1190,
+    "acts": 1193,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RuntimeError"
+  },
+  "window_3.0s": {
+    "trail": [
+      [
+        0.501,
+        541
+      ],
+      [
+        1.001,
+        1136
+      ],
+      [
+        1.501,
+        1731
+      ],
+      [
+        2.002,
+        2330
+      ],
+      [
+        2.502,
+        2940
+      ],
+      [
+        3.003,
+        3547
+      ]
+    ],
+    "svc_total": 3547,
+    "acts": 3550,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RuntimeError"
+  }
+}

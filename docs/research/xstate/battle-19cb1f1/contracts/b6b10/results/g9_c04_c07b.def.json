@@ -1,0 +1,68 @@
+[
+ {
+  "check": "C-04/B16 elevation outlives LOGOUT",
+  "blocker_present": true,
+  "note": {
+   "before": true,
+   "after": {
+    "auth": "revoked",
+    "elevation": "elevated"
+   },
+   "elevated_until": 9999999
+  }
+ },
+ {
+  "check": "C-04/B16 elevation outlives IDLE_DEADLINE",
+  "blocker_present": true,
+  "note": {
+   "before": true,
+   "after": {
+    "auth": "revoked",
+    "elevation": "elevated"
+   },
+   "elevated_until": 9999999
+  }
+ },
+ {
+  "check": "C-04/B16 elevation outlives ABSOLUTE_DEADLINE",
+  "blocker_present": true,
+  "note": {
+   "before": true,
+   "after": {
+    "auth": "revoked",
+    "elevation": "elevated"
+   },
+   "elevated_until": 9999999
+  }
+ },
+ {
+  "check": "C-04/B16 elevation acquirable AFTER revocation",
+  "blocker_present": true,
+  "note": {
+   "value": {
+    "auth": "revoked",
+    "elevation": "elevated"
+   },
+   "elevated_until": 9999999
+  }
+ },
+ {
+  "check": "C-07b/B18 guard-denied RELEASE bricks the switch [async]",
+  "blocker_present": true,
+  "note": {
+   "engaged": "engaged",
+   "status_after": "error",
+   "err": "UnhandledEventError",
+   "value": "engaged"
+  }
+ },
+ {
+  "check": "C-07b/B18 guard-denied RELEASE bricks the switch [sync]",
+  "blocker_present": true,
+  "note": {
+   "status": "error",
+   "err": "UnhandledEventError",
+   "value": "engaged"
+  }
+ }
+]

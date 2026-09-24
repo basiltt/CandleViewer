@@ -1,0 +1,190 @@
+{
+  "round": 13,
+  "library": "xstate-statemachine",
+  "version": "0.9.0",
+  "tag": "v0.9.0",
+  "tag_commit": "91bd979",
+  "tested_tree": "main @ e3a1f22",
+  "tag_vs_tree_diff": ".github/workflows/publish.yml only (+14/-1); no library source differs",
+  "pypi": {
+    "published": true,
+    "artifact": "xstate_statemachine-0.9.0-py3-none-any.whl",
+    "sha256": "018505a1b5e7ef1d53c6a820aa680541e87bf2b5b7ad0069e13bae12256c7c0c",
+    "modules_compared_against_tag": 42,
+    "modules_differing": 0
+  },
+  "decision": "ADOPT with constraints (decision-table row 6)",
+  "posted": true,
+  "note": "ALL FILES IN THIS DIRECTORY ARE DRAFTS. NOTHING HAS BEEN POSTED.",
+  "comments": [
+    {
+      "file": "comments/225.md",
+      "issue": 225,
+      "disposition": "FIXED",
+      "title": "Self-send provenance keyed on task identity"
+    },
+    {
+      "file": "comments/226.md",
+      "issue": 226,
+      "disposition": "FIXED",
+      "title": "chain_trips / last_chain_error persisted in the v3 envelope"
+    },
+    {
+      "file": "comments/227.md",
+      "issue": 227,
+      "disposition": "FIXED",
+      "title": "Restored scheduled_sends routed through _admit_restored"
+    },
+    {
+      "file": "comments/228.md",
+      "issue": 228,
+      "disposition": "FIXED",
+      "title": "nested_invoke lap parity + mutation-tested meta-test"
+    },
+    {
+      "file": "comments/229.md",
+      "issue": 229,
+      "disposition": "FIXED",
+      "title": "Docs for the round-12 changes (2 residual doc asks)"
+    },
+    {
+      "file": "comments/230.md",
+      "issue": 230,
+      "disposition": "FIXED for on_invalid_event; lifecycle hook gap filed as R13-02",
+      "title": "from_snapshot(plugins=) registers hooks before admission"
+    },
+    {
+      "file": "comments/231.md",
+      "issue": 231,
+      "disposition": "FIXED (stricter than asked)",
+      "title": "Inline-dict invoke.src raises a named InvalidConfigError"
+    },
+    {
+      "file": "comments/232.md",
+      "issue": 232,
+      "disposition": "FIXED (5/5); -W error limitation noted",
+      "title": "RuntimeWarning for a dropped send(wait=True) receipt"
+    },
+    {
+      "file": "comments/233.md",
+      "issue": 233,
+      "disposition": "CONFIRMED FIXED; exposes R13-01",
+      "title": "Sync _enqueue_restored honours the priority lane"
+    },
+    {
+      "file": "comments/234.md",
+      "issue": 234,
+      "disposition": "CONFIRMED FIXED; PyPI caveat now closed",
+      "title": "0.9.0 release consistency"
+    },
+    {
+      "file": "comments/235.md",
+      "issue": 235,
+      "disposition": "CONFIRMED FIXED",
+      "title": "Deprecation shims + _replace() demotion"
+    }
+  ],
+  "new_issues": [
+    {
+      "file": "new/R13-01-drain-pending-drops-priority-lane.md",
+      "id": "R13-01",
+      "severity": "High",
+      "title": "Bug: `Interpreter.drain_pending()` silently discards the entire priority queue, and `stop()` then destroys it",
+      "labels": [
+        "bug",
+        "area/interpreter",
+        "persistence",
+        "events",
+        "severity/high"
+      ],
+      "repro_in_body": true,
+      "repro_verified_verbatim": true,
+      "repro_exit_code": 0
+    },
+    {
+      "file": "new/R13-02-on-interpreter-start-not-fired-on-restore.md",
+      "id": "R13-02",
+      "severity": "Medium",
+      "title": "Bug: `on_interpreter_start` never fires on a snapshot-restored interpreter - no working registration route, both engines",
+      "labels": [
+        "bug",
+        "area/interpreter",
+        "sync-interpreter",
+        "plugins",
+        "persistence",
+        "severity/medium"
+      ],
+      "repro_in_body": true,
+      "repro_verified_verbatim": true,
+      "repro_exit_code": 0
+    }
+  ],
+  "meta_comment": {
+    "file": "meta-26.md",
+    "number": 26
+  },
+  "not_filed": [
+    {
+      "id": "R13-06",
+      "reason": "documented from_snapshot trust boundary (#205); raised as one doc sentence on #229 instead"
+    },
+    {
+      "id": "R13-07",
+      "reason": "defensible design (JSON carries no type); raised as a doc-ordering ask on #226/#229"
+    },
+    {
+      "id": "R13-08",
+      "reason": "__del__ limitation is inherent; raised as an adoption note on #232"
+    },
+    {
+      "id": "R13-05",
+      "reason": "private _EngineDone import is not public API; accepted under the R12-03 framing"
+    },
+    {
+      "id": "R13-12",
+      "reason": "REFUTED and re-confirmed refuted - the trust boundary, not the v2 upcast, is load-bearing"
+    },
+    {
+      "id": "R13-13..R13-19",
+      "reason": "OUR catalogue defects - config-only, no library involvement"
+    },
+    {
+      "id": "R13-21",
+      "reason": "OUR harness error - def wrapper dropped coroutines; noted on #225 as a trap for others"
+    }
+  ],
+  "benchmarks": {
+    "BENCH-6": {
+      "tool": "upstream benchmarks/production_characteristics.py --quick, section 2",
+      "scenario": "after: 10 ms deadline, 500 busy machines, median lateness beyond deadline",
+      "bar_ms_p99": 100,
+      "runs_ms": [
+        54.3,
+        52.1,
+        52.3,
+        54.0,
+        52.9,
+        53.9,
+        52.9,
+        52.1,
+        55.8,
+        53.8
+      ],
+      "n": 10,
+      "min": 52.1,
+      "p50": 53.4,
+      "p99": 55.8,
+      "max": 55.8,
+      "verdict": "MET with ~44 ms headroom; every run under the bar",
+      "caveat": "single Windows dev host; re-measure on target hardware"
+    }
+  },
+  "suite": {
+    "passed": 3577,
+    "skipped": 13,
+    "warnings": 15,
+    "seconds": 597.15,
+    "coverage_pct": 92.86,
+    "coverage_bar_pct": 90
+  }
+}

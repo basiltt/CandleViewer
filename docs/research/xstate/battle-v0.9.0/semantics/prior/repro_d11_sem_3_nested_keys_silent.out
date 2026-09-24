@@ -1,0 +1,55 @@
+{
+ "correct/plain": {
+  "entry_fired": 2,
+  "state": [
+   "n.b"
+  ]
+ },
+ "typo_entryy/default/plain": {
+  "entry_fired": 1,
+  "state": [
+   "n.b"
+  ]
+ },
+ "typo_onn/default/plain": {
+  "entry_fired": 1,
+  "state": [
+   "n.a"
+  ]
+ },
+ "typo_entryy/strict_config/plain": {
+  "refused": "Machine 'n' has unknown config key(s) -- n.a: 'entryy' (did you mean 'entry'?). Unknown keys are ignored by the parser, "
+ },
+ "typo_onn/strict_config/plain": {
+  "refused": "Machine 'n' has unknown config key(s) -- n.a: 'onn' (did you mean 'on'?). Unknown keys are ignored by the parser, so a m"
+ },
+ "correct/async": {
+  "entry_fired": 2,
+  "state": [
+   "n.b"
+  ]
+ },
+ "typo_entryy/default/async": {
+  "entry_fired": 1,
+  "state": [
+   "n.b"
+  ]
+ },
+ "typo_onn/default/async": {
+  "entry_fired": 1,
+  "state": [
+   "n.a"
+  ]
+ },
+ "typo_entryy/strict_config/async": {
+  "refused": "Machine 'n' has unknown config key(s) -- n.a: 'entryy' (did you mean 'entry'?). Unknown keys are ignored by the parser, "
+ },
+ "typo_onn/strict_config/async": {
+  "refused": "Machine 'n' has unknown config key(s) -- n.a: 'onn' (did you mean 'on'?). Unknown keys are ignored by the parser, so a m"
+ },
+ "REPRODUCED": true,
+ "silently_broken_cells": [
+  "typo_onn/default/plain",
+  "typo_onn/default/async"
+ ]
+}

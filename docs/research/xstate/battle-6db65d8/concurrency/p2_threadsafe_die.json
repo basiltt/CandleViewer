@@ -1,0 +1,64 @@
+{
+  "probe": "p2_threadsafe_die",
+  "py": "3.13.7",
+  "v1_internal_forgery": {
+    "forged_internal_sends": 200,
+    "processed": 200,
+    "call_site_errors": [],
+    "status": "running",
+    "is_running": true,
+    "chain_budget_drops": [],
+    "user_event_is_system": false,
+    "wedged": false,
+    "note": "internal=True from a non-action thread routes to the unbounded internal queue and is charged to the chain budget",
+    "pass": true
+  },
+  "v2_raise_16_threads": {
+    "threads": 16,
+    "attempted": 4800,
+    "raised_on_calling_thread": 4398,
+    "returned_a_future": 402,
+    "failed_only_on_unread_future": 354,
+    "processed": 48,
+    "drop_hooks": 354,
+    "accounted": 5154,
+    "note": "#157 demands refusal at the CALL SITE; residual future-only failures are the documented concurrent-producer race",
+    "pass": true
+  },
+  "v3_die_double_cancel": {
+    "cases": [
+      {
+        "cancels": 1,
+        "status": "error",
+        "is_running": false,
+        "on_error_hook_count": 1,
+        "send_wait_true": "resolved: Receipt",
+        "ok": true
+      },
+      {
+        "cancels": 2,
+        "status": "error",
+        "is_running": false,
+        "on_error_hook_count": 1,
+        "send_wait_true": "resolved: Receipt",
+        "ok": true
+      },
+      {
+        "cancels": 3,
+        "status": "error",
+        "is_running": false,
+        "on_error_hook_count": 1,
+        "send_wait_true": "resolved: Receipt",
+        "ok": true
+      }
+    ],
+    "pass": true
+  },
+  "v4_500_cycles": {
+    "cycles": 500,
+    "thread_delta": 0,
+    "task_delta": 0,
+    "pass": true
+  },
+  "result": "PASS"
+}

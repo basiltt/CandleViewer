@@ -1,0 +1,110 @@
+{
+ "[async]B11/INV-a/degraded-roundtrip": {
+  "pass": true,
+  "note": "['recording.recording'] snap=True"
+ },
+ "[async]B11/INV-b/partial-heal-stays-degraded": {
+  "pass": true,
+  "note": "['recording.degraded']"
+ },
+ "[async]B11/INV-c/linger-rescue": {
+  "pass": true,
+  "note": "['recording.recording']"
+ },
+ "[async]B11/INV-d/linger-due-position-open": {
+  "pass": true,
+  "note": "['recording.recording']"
+ },
+ "[async]B11/INV-e/onError->error": {
+  "pass": true,
+  "note": "['recording.error']"
+ },
+ "[async]B11/INV-f/gap-internal": {
+  "pass": true,
+  "note": "['recording.recording']"
+ },
+ "[async]B12/INV-a/step-returns-paused": {
+  "pass": true,
+  "note": "['replay.paused']"
+ },
+ "[async]B12/INV-b/prime-error->error": {
+  "pass": true,
+  "note": "['replay.error']"
+ },
+ "[async]B12/INV-c/range-end->finished": {
+  "pass": true,
+  "note": "['replay.finished']"
+ },
+ "[async]B12/INV-d/destroy-final": {
+  "pass": true,
+  "note": "['replay.destroyed']"
+ },
+ "[async]B12/INV-e/cancel-lane-aware": {
+  "pass": true,
+  "note": "async lane -> ['replay.paused']"
+ },
+ "[async]B13/INV-a/no-budget->budget_blocked": {
+  "pass": true,
+  "note": "['ws_conn.budget_blocked']"
+ },
+ "[async]B13/INV-b/private-auths": {
+  "pass": true,
+  "note": "['ws_conn.live'] ['open_socket', 'ws_auth', 'subscribe_in_batches']"
+ },
+ "[async]B13/INV-c/dial-error->backing_off": {
+  "pass": true,
+  "note": "['ws_conn.backing_off']"
+ },
+ "[async]B13/INV-d/socket-closed->backing_off": {
+  "pass": true,
+  "note": "['ws_conn.backing_off']"
+ },
+ "[async]B13/INV-e/shutdown->closed-final": {
+  "pass": true,
+  "note": "['ws_conn.closed']"
+ },
+ "[async]B13/INV-f/live-pong-internal": {
+  "pass": true,
+  "note": "['ws_conn.live'] deferred=0"
+ },
+ "[async]B14/INV-a/gap->desynced->snapshot_pending": {
+  "pass": true,
+  "note": "['book.snapshot_pending'] snap=True"
+ },
+ "[async]B14/INV-b/snapshot-timeout-resync": {
+  "pass": true,
+  "note": "['book.snapshot_pending']"
+ },
+ "[async]B14/INV-c/unsubscribe": {
+  "pass": true,
+  "note": "['book.init']"
+ },
+ "[async]B15/INV-a/below-maintenance->margin_call": {
+  "pass": true,
+  "note": "['paper_account.margin_call']"
+ },
+ "[async]B15/INV-b/equity-gone->liquidated-final": {
+  "pass": true,
+  "note": "['paper_account.liquidated'] acts=['apply_liquidation_haircut', 'write_liquidation_journal']"
+ },
+ "[async]parity/B11/async==sync": {
+  "pass": true,
+  "note": "async=['recording.stopped'] sync=['recording.stopped'] ctx_eq=True"
+ },
+ "[async]parity/B12/async==sync": {
+  "pass": true,
+  "note": "async=['replay.paused'] sync=['replay.paused'] ctx_eq=True"
+ },
+ "[async]parity/B13/async==sync": {
+  "pass": true,
+  "note": "async=['ws_conn.backing_off'] sync=['ws_conn.backing_off'] ctx_eq=True"
+ },
+ "[async]parity/B14/async==sync": {
+  "pass": true,
+  "note": "async=['book.live'] sync=['book.live'] ctx_eq=True"
+ },
+ "[async]parity/B15/async==sync": {
+  "pass": true,
+  "note": "async=['paper_account.liquidated'] sync=['paper_account.liquidated'] ctx_eq=True"
+ }
+}

@@ -1,0 +1,161 @@
+[
+ {
+  "id": "A1",
+  "title": "task-identity matrix: which shapes are in-step (refused) vs ordinary external traffic (resolved)",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "action_direct": {
+     "shape": "action_direct",
+     "verdict": "INTERNAL(refused)",
+     "final": [
+      "a.b"
+     ]
+    },
+    "action_helper_same_task": {
+     "shape": "action_helper_same_task",
+     "verdict": "INTERNAL(refused)",
+     "final": [
+      "a.b"
+     ]
+    },
+    "action_spawned_task": {
+     "shape": "action_spawned_task",
+     "verdict": "EXTERNAL(resolved)",
+     "final": [
+      "a.b"
+     ]
+    },
+    "action_task_task": {
+     "shape": "action_task_task",
+     "verdict": "EXTERNAL(resolved)",
+     "final": [
+      "a.b"
+     ]
+    },
+    "def_service": {
+     "shape": "def_service",
+     "verdict": "ERR:WrongThreadError",
+     "final": [
+      "ds.d"
+     ]
+    },
+    "after_handler": {
+     "shape": "after_handler",
+     "verdict": "INTERNAL(refused)",
+     "final": [
+      "aa.b"
+     ]
+    },
+    "child_action_to_peer": {
+     "shape": "child_action_to_peer",
+     "verdict": "EXTERNAL(resolved)",
+     "peer_final": [
+      "p.b"
+     ],
+     "final": [
+      "a.a"
+     ]
+    }
+   },
+   "bad": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "A2",
+  "title": "#225: a worker spawned from an action OUTLIVING it is external -- machine advances with the loop idle (200x, both kinds)",
+  "detail": {
+   "ok": true,
+   "by_kind": {
+    "async": {
+     "advanced": 100,
+     "of": 100
+    },
+    "plain": {
+     "advanced": 100,
+     "of": 100
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "A3",
+  "title": "#225: ensure_future(send(wait=True)) hand-out resolves whether or not the spawning action awaits afterwards",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "action_yields_after=False": {
+     "result": "OK:Receipt",
+     "final": [
+      "a.b"
+     ]
+    },
+    "action_yields_after=True": {
+     "result": "OK:Receipt",
+     "final": [
+      "a.b"
+     ]
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "A4",
+  "title": "the genuine in-step await is STILL refused (both engines)",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "async_engine": "ReentrantWaitError",
+    "sync_engine": "ReentrantWaitError"
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "A5",
+  "title": "#232: a def action that DROPS its wait=True receipt warns; ensure_future/callback/result/await keep it silent",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "drop": {
+     "runtime_warnings": [
+      "RuntimeWarning: send('P', wait=True) on 'a' was called from inside an action and its receipt was never awaited (#232). A plain"
+     ],
+     "n": 1
+    },
+    "ensure_future": {
+     "runtime_warnings": [],
+     "n": 0
+    },
+    "add_done_callback": {
+     "runtime_warnings": [],
+     "n": 0
+    },
+    "await_it": {
+     "runtime_warnings": [],
+     "n": 0
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "A6",
+  "title": "#232 under -W error inside asyncio: where does the warning surface, and does it damage the machine?",
+  "detail": {
+   "ok": true,
+   "raised_to_caller": [],
+   "loop_exception_handler": [],
+   "final": [
+    "a.b"
+   ],
+   "status": "running",
+   "note": "machine must not be damaged by the warning",
+   "machine_intact": true
+  },
+  "status": "PASS"
+ }
+]

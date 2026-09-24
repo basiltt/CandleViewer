@@ -1,0 +1,57 @@
+[
+ {
+  "id": "E1",
+  "title": "chain_budget fires on the ASYNC-def lane, exactly once per dropped event, and every dropped event's receipt is FAILED not left hanging",
+  "intent": "#179 put the coroutine lane under the budget; its drops must be visible",
+  "detail": {
+   "ok": true,
+   "rows": [
+    {
+     "kind": "plain",
+     "chain_budget_hooks": 1,
+     "dropped_types": {
+      "done.invoke.c.b": 1
+     },
+     "last_error": "RunawayChainError"
+    },
+    {
+     "kind": "async",
+     "chain_budget_hooks": 1,
+     "dropped_types": {
+      "done.invoke.c.b": 1
+     },
+     "last_error": "RunawayChainError"
+    }
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "E2",
+  "title": "queue_full: every loop-side RAISE refusal is observable via on_event_dropped, and the call-site refusal raises QueueOverflowError",
+  "intent": "#157 / R7-14: refusals must not be silent on either side",
+  "detail": {
+   "ok": true,
+   "accepted": 400,
+   "refused_at_call_site": 0,
+   "queue_full_hooks": 396,
+   "total_observable_refusals": 396,
+   "note": "every refusal is observable on one side or the other"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "E4",
+  "title": "children_timeout emits exactly ONE warning per start() and start() still returns a running machine",
+  "intent": "#181 observability",
+  "detail": {
+   "ok": true,
+   "warnings_per_start": [
+    1,
+    1,
+    1
+   ]
+  },
+  "status": "PASS"
+ }
+]

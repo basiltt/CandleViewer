@@ -1,0 +1,42 @@
+{
+ "[def]F8.218.sync.handles_flat": {
+  "pass": true,
+  "note": "_timer_handles peak=1 final=1 beats=201"
+ },
+ "[def]F8.218.sync.beats_ran": {
+  "pass": true,
+  "note": "201/200 beats"
+ },
+ "[def]F8.218.async.handles_flat": {
+  "pass": true,
+  "note": "_timer_handles peak=1 final=1 beats=201"
+ },
+ "[def]F8.218.async.beats_ran": {
+  "pass": true,
+  "note": "201/200 beats"
+ },
+ "[def]F8.221.armed_survives_repersist": {
+  "pass": true,
+  "note": "armed=1 re-persisted=1"
+ },
+ "[def]F8.221.verbatim": {
+  "pass": true,
+  "note": "[{'kind': 'event', 'type': 'BEAT', 'payload': {}, 'remaining_ms': 10.0}] vs [{'kind': 'event', 'type': 'BEAT', 'payload': {}, 'remaining_ms': 10.0}]"
+ },
+ "[def]F8.222.trip_counted": {
+  "pass": true,
+  "note": "chain_trips=1 latch=True hook=1"
+ },
+ "[def]F8.222.hook_fired": {
+  "pass": true,
+  "note": "['RunawayChainError(\"Machine \\'ch\\' exceeded 5 chained self-gene']"
+ },
+ "[def]F8.222.sticky_after_benign": {
+  "pass": true,
+  "note": "trips=1 latch=True last_error=False"
+ },
+ "[def]F8.222.clear_works": {
+  "pass": true,
+  "note": "after clear: latch=None trips=1"
+ }
+}

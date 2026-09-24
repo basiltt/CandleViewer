@@ -1,0 +1,91 @@
+# docs/plan — Index
+
+Date: 2026-09-14 · Status: **planning phase complete, baseline for build**. This file is the map of every
+planning document in `docs/plan/`, with a one-line abstract and a recommended reading order per role. It
+does not restate content owned elsewhere (see `CONSTITUTION.md` C-16.5 for the single-source registry) —
+it only points.
+
+Precedence reminder: `CONSTITUTION.md` > `AGENTS.md` > everything below > tool defaults.
+
+## 1. Full document list (abstracts)
+
+| # | Doc | Abstract |
+|---|---|---|
+| 00 | `00-planning-brief.md` | Source of truth for the planning phase: product summary, locked decisions, team/cadence, SDLC non-negotiables, list of every planning deliverable. |
+| 01 | `01-sdlc-and-branching.md` | SDLC phases, ceremonies, branch/PR mechanics, merge queue, environment promotion, parallel-development rules, estimation guide. |
+| 02 | `02-definition-of-ready-done.md` | Per-Kind (Epic/Story/Task/Spike/Bug/Chore) Definition of Ready and Definition of Done checklists. |
+| 03 | `03-testing-strategy.md` | Test pyramid with numeric targets, fixture strategy, suite-by-suite detail (unit→E2E→perf/chaos), traceability matrix. |
+| 04 | `04-security-program.md` | Security objectives, assets, STRIDE threat model, SR-001…SR-120 requirements, RBAC matrix, audit log spec, kill switch, incident response, pen-test scope. |
+| 05 | `05-accessibility-standard.md` | WCAG 2.2 AA standard: keyboard-first rules, canvas/DOM-mirror accessibility architecture, live-region strategy, colour/contrast, acceptance-criteria template. |
+| 06 | `06-performance-and-load-standard.md` | Performance/load budgets (frame time, WS latency, order ack, memory, bundle size), measurement methodology, capacity plan. |
+| 07 | `07-release-and-prr.md` | Release train R0–R5, semver, changelog automation, release checklist, PRR checklist, Live-enablement gate, rollback, post-release monitoring. |
+| 10 | `10-personas.md` | Canonical actors (Owner, Manager, Viewer, Admin-hat, Rule-author mode) and their permissions — referenced by every downstream product doc. |
+| 11 | `11-user-stories.md` | Complete INVEST user-story catalogue with Gherkin acceptance criteria; source of truth for the backlog. |
+| 12 | `12-sitemap.md` | Information architecture / route map of the web app, incl. RBAC-gated admin routes. |
+| 13 | `13-user-flows.md` | Mermaid task flows referencing personas and routes, with safety invariants called out. |
+| 14 | `14-screens-catalogue.md` | Every screen: purpose, states, data, interactions, hotkeys, a11y notes, wireframe description. |
+| 15 | `15-component-catalogue.md` | Design-system atoms→organisms plus trading-specific and chart-engine-primitive components. |
+| 16 | `16-design-system-brief.md` | Tokens, theming, motion, density, a11y contract for the design system. |
+| 17 | `17-ux-diagrams.md` | Journey maps, service blueprint, IA overview, state diagrams, notification taxonomy, hotkey map. |
+| 20 | `20-architecture.md` | C4 L1–L3 architecture, deployment topology, failure modes, ADR index. |
+| 21 | `21-database-schema.md` | Postgres DDL, QuestDB tables, Parquet layouts, ERD, retention, migrations. |
+| 22 | `22-api-openapi.yaml` | REST contract (OpenAPI). Edited before any REST code per C-6.1/C-6.2. |
+| 23 | `23-ws-protocol.md` | WS topics, snapshot+delta model, binary framing; client-agnostic by design. |
+| 24 | `24-internal-schemas.md` | Domain events, rule IR, OMS state machine, trade-group model, per-account profile schema, exchange-adapter interface. |
+| 26 | `26-chart-engine-design.md` | Custom WebGL2 chart-engine architecture, layers, frame-budget breakdown, DOM-mirror sync API. |
+| 27 | `27-adrs/` | ADR-0001…ADR-0016: stack selection, custom chart engine, storage tiers, modular monolith, WS protocol/binary encoding, OMS state machine, rule IR, trade-group fan-out, secrets/key management, auth/RBAC, Electron vs Tauri, testing pyramid, CI pipeline, observability, recording policy, statechart contracts & gated runtime. |
+| 28 | `28-statechart-catalogue.md` | **Normative, runtime-agnostic behavioural contracts** for all twenty long-lived lifecycles (order, trade group + legs, four algos, native-SL protection, rule instance, alert, recorder, replay, connection, book health, paper liquidation, auth session, live gate, kill switch, reconciliation, risk lockout): XState-v5-compatible JSON plus derived state/event/guard/action/service tables and invariants — and the explicit list of hot paths that must **never** be statecharts. Generated from `machines/*.json`; never hand-edited. Executed exclusively by `xstate-statemachine==0.9.1` via `cv.statechart.factory` (ADR-0016 Accepted). |
+| 29 | `29-statechart-adoption-plan.md` | Adoption plan for `xstate-statemachine==0.9.1` as the sole statechart executor: pin/attestation, FINAL mandatory config, standing CV constraints, catalogue fixes (B16 C-04, B18 C-07b, B11, B8 High), rollout across sprints/backlog. |
+| 30 | `30-release-roadmap.md` | Release trains R0→R5, sprint calendar, epic register (E01–E50), critical path, descoping ladder. |
+| 32 | `32-risk-register.md` | Full risk register (RSK-001…RSK-050, 45 live entries), `Risk` field taxonomy R1–R15, gating table per train. |
+| 33 | `33-raci.md` | RACI for every governance, product, architecture, engineering, quality/security/a11y and release deliverable/ceremony. |
+
+Not yet created at this path: `31-sprint-plan.md` (per-sprint ticket detail — tracked separately as the
+board itself is the live source once Sprint 01 starts) and `docs/plan/backlog/*.json` (ticket tree —
+produced as a follow-on artifact, not part of this planning-doc set).
+
+## 2. Reading order by role
+
+### Developer (backend or frontend)
+1. `CONSTITUTION.md`, `AGENTS.md` (repo root)
+2. `00-planning-brief.md` → `docs/research/24-owner-decisions.md`
+3. `01-sdlc-and-branching.md`, `02-definition-of-ready-done.md`
+4. `20-architecture.md` (§4.4 statechart contracts + hot-path exclusion) → `21-database-schema.md` → `22-api-openapi.yaml` + `23-ws-protocol.md` + `24-internal-schemas.md` → `28-statechart-catalogue.md` (**required before any lifecycle ticket**)
+5. `26-chart-engine-design.md` (frontend/engine work only)
+6. `03-testing-strategy.md`, `04-security-program.md` (if touching a `security`-labelled path), `06-performance-and-load-standard.md`
+7. `14-screens-catalogue.md` + `15-component-catalogue.md` + `16-design-system-brief.md` (any UI ticket)
+8. `27-adrs/` for the specific decision behind the area being touched
+
+### Designer (product design / design system / UX research)
+1. `00-planning-brief.md`, `10-personas.md`
+2. `12-sitemap.md` → `13-user-flows.md` → `17-ux-diagrams.md`
+3. `14-screens-catalogue.md`, `15-component-catalogue.md`, `16-design-system-brief.md`
+4. `05-accessibility-standard.md` (§11 design-system requirements are binding on sign-off)
+5. `01-sdlc-and-branching.md` §3/§9 (design-ahead rule, ceremonies), `02-definition-of-ready-done.md` §3 (Story DoR design-ready checklist)
+
+### QA / SDET
+1. `00-planning-brief.md`, `02-definition-of-ready-done.md`
+2. `03-testing-strategy.md` (primary owned document)
+3. `11-user-stories.md` (acceptance criteria to trace)
+4. `05-accessibility-standard.md` §9–10, `06-performance-and-load-standard.md` §7–8
+5. `04-security-program.md` §11–14 (security review process, acceptance-criteria templates)
+6. `07-release-and-prr.md` (PRR/QA sign-off gates)
+
+### Security engineer / DevSecOps
+1. `CONSTITUTION.md` §12 (security constitution), `SECURITY.md`
+2. `04-security-program.md` (primary owned document)
+3. `20-architecture.md`, `21-database-schema.md`, `24-internal-schemas.md` (trust boundaries, secrets, OMS), `28-statechart-catalogue.md` §B8/B17/B18/B20 (native-SL, live gate, kill switch, risk lockout — and why none of them *enforces*)
+4. `01-sdlc-and-branching.md` §6/§7 (required checks), `03-testing-strategy.md` §11 (SAST/DAST/SCA gates)
+5. `07-release-and-prr.md` §6 (Live-enablement gate), `32-risk-register.md` (Security-category and R4/R5/R6 risks)
+
+### AI coding agent
+1. `AGENTS.md` §0 reading order (this is the authoritative agent on-ramp; follow it verbatim)
+2. `CONSTITUTION.md` in full before touching any file
+3. The assigned GitHub issue
+4. Whichever of the docs above are named on the ticket's `blocked_by`/references fields
+5. This README only to locate a doc by number/topic — never as a substitute for reading the doc itself
+
+## 3. Where the truth lives
+
+Do not duplicate content from another owned document into a new one. The sole-owner registry is
+maintained in `CONSTITUTION.md` §16.5 — consult it, not a copy, whenever two documents appear to disagree.

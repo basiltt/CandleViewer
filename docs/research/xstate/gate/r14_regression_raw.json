@@ -1,0 +1,3320 @@
+{
+ "issues/new-0.8.0/repro/N-01_send-wait-receipt-id-collision.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.43,
+  "tail": ""
+ },
+ "issues/new-0.8.0/repro/N-04_send-threadsafe-bypasses-strict.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.48,
+  "tail": ""
+ },
+ "issues/new-0.8.0/repro/N-03_sync-macrostep-budget-clears-queue.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.49,
+  "tail": ""
+ },
+ "issues/new-main/repro/a2_confirm_deferred_receipt.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.54,
+  "tail": ""
+ },
+ "issues/new-0.8.0/repro/N-02_sync-timer-unreachable-in-loop.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.68,
+  "tail": ""
+ },
+ "issues/new-0.8.0/repro/N-08_error-done-namespace-invisible.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.69,
+  "tail": ""
+ },
+ "issues/new-main/repro/f_clock_kwargs.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.4,
+  "tail": ""
+ },
+ "issues/new-main/repro/f_collide.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.37,
+  "tail": ""
+ },
+ "issues/new-main/repro/f_loader_dup.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.37,
+  "tail": "\n--STDERR--\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\new-main\\repro\\f_loader_dup.py\", line 8, in <module>\n    m=create_machine({\"id\":\"m\",\"initial\":\"a\",\"states\":{\"a\":{\"entry\":[\"FETCH_DATA\"]}}}, logic_modules=[\"dupmod\"])\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\factory.py\", line 264, in create_machine\n    machine.logic = LogicLoader.get_instance().discover_and_build_logic(\n                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^\n        config,\n        ^^^^^^^\n    ...<2 lines>...\n        machine=machine,\n        ^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\logic_loader.py\", line 452, in discover_and_build_logic\n    raise InvalidConfigError(\n    ...<5 lines>...\n    )\nxstate_statemachine.exceptions.InvalidConfigError: Action 'FETCH_DATA' is ambiguous: ['fetchData', 'fetch_data'] are all discovered and differ only by case or separators, but are DIFFERENT callables. Keep one, or register the exact name 'FETCH_DATA' explicitly.\n"
+ },
+ "issues/new-main/repro/f_loader_twoname.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.36,
+  "tail": ""
+ },
+ "issues/new-main/repro/f_pollute.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.3,
+  "tail": ""
+ },
+ "issues/new-main/repro/f_repeat.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.29,
+  "tail": ""
+ },
+ "issues/new-main/repro/f_parity.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.44,
+  "tail": ""
+ },
+ "issues/new-main/repro/f_mixed_clock.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.5,
+  "tail": ""
+ },
+ "issues/new-main/repro/f_chain.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.08,
+  "tail": ""
+ },
+ "issues/new-main/repro/f_shared_logic.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.34,
+  "tail": ""
+ },
+ "issues/new-main/repro/f_stately.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.34,
+  "tail": ""
+ },
+ "issues/new-main/repro/f_sticky_invoke.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.33,
+  "tail": ""
+ },
+ "issues/new-main/repro/f_sticky_timer.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.39,
+  "tail": ""
+ },
+ "issues/new-main/repro/g1b_alias_ambiguity_and_leak.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.32,
+  "tail": ""
+ },
+ "issues/new-main/repro/f_tripped_sticky.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.33,
+  "tail": ""
+ },
+ "issues/new-main/repro/f_sticky_async.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.33,
+  "tail": ""
+ },
+ "issues/post-19cb1f1/new/repro/R10-07_unknown_config_keys_accepted_silently.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.24,
+  "tail": "typo key                  built?   attr                      value seen    verdict\nspawnBlockingTimeoutMs    True     spawn_blocking_timeout_ms None          SILENT DOWNGRADE (ref=1234.0)\nactionErrorPolicyy        True     action_error_policy       continue      SILENT DOWNGRADE (ref=rollback)\nguardErrorPolicies        True     guard_error_policy        false         SILENT DOWNGRADE (ref=<InvalidConfigError>)\nmaxIteration              True     max_iterations            1000          SILENT DOWNGRADE (ref=42)\nonUnhandledEvent          True     on_unhandled              ignore        SILENT DOWNGRADE (ref=error)\nStrict                    True     strict                    False         SILENT DOWNGRADE (ref=True)\n\ncontrol: bad value for a known key -> refused with InvalidConfigError (correct)\n\nVERDICT: DEFECT PRESENT (6/6 keys silently dropped)\n\n--STDERR--\n"
+ },
+ "issues/post-19cb1f1/new/repro/R10-05_restore_bypasses_strict_and_drops_after.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.05,
+  "tail": ""
+ },
+ "issues/post-221ce7c/new/repro/R7-01_async_service_lane_uncharged.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.37,
+  "tail": ""
+ },
+ "issues/new-main/repro/c14_async_no_send_budget.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 3.39,
+  "tail": "machine.max_iterations = 1000\n\nSYNC : send() returned. steps = 1001\nASYNC: after 2.0 s of spinning, steps = 1001  status = running\nASYNC: after 3.0 s, steps = 1001  (still climbing: False)\nASYNC: queue_depth = 0\n\n--STDERR--\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\new-main\\repro\\c14_async_no_send_budget.py\", line 82, in <module>\n    asyncio.run(main())\n    ~~~~~~~~~~~^^^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 195, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\new-main\\repro\\c14_async_no_send_budget.py\", line 71, in main\n    assert n3 > n2, \"async chain terminated on its own\"\n           ^^^^^^^\nAssertionError: async chain terminated on its own\n"
+ },
+ "issues/post-221ce7c/new/repro/R7-05_async_start_never_sets_in_flight_flag.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.25,
+  "tail": ""
+ },
+ "issues/post-221ce7c/new/repro/R7-06_null_or_absent_machine_hash_disables_drift_check.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.24,
+  "tail": ""
+ },
+ "issues/post-221ce7c/new/repro/R7-07_root_snapshot_harvests_child_half_applied_context.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.3,
+  "tail": ""
+ },
+ "issues/post-19cb1f1/new/repro/R10-04_delayed_selfraise_lost_on_restore.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.85,
+  "tail": ""
+ },
+ "issues/post-19cb1f1/new/repro/R10-06_lap_parity_false_on_engine_work_charts.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.92,
+  "tail": ""
+ },
+ "issues/post-221ce7c/new/repro/R7-08_await_settled_for_snapshot_blocks_loop.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.32,
+  "tail": ""
+ },
+ "issues/post-221ce7c/new/repro/R7-09_configuration_outranks_state_ids.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.32,
+  "tail": ""
+ },
+ "issues/post-221ce7c/new/repro/R7-10_snapshot_from_on_action_execute_torn.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.34,
+  "tail": ""
+ },
+ "issues/post-221ce7c/new/repro/R7-11_sync_deferred_this_step_never_cleared.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.41,
+  "tail": ""
+ },
+ "issues/post-221ce7c/new/repro/R7-12_onunhandled_error_kill_invisible.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.32,
+  "tail": ""
+ },
+ "issues/post-221ce7c/new/repro/R7-03_start_hangs_on_slow_invoked_child.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.27,
+  "tail": ""
+ },
+ "issues/post-221ce7c/new/repro/R7-13_config_strict_and_wildcard.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.32,
+  "tail": ""
+ },
+ "issues/post-3ed3099/new/repro/R5-02_restore-accepts-leafless-configuration.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.33,
+  "tail": ""
+ },
+ "issues/post-3ed3099/new/repro/R5-03_from_snapshot_untyped_errors.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.33,
+  "tail": ""
+ },
+ "issues/post-3ed3099/new/repro/R5-01_parallel-tear-passes-midstep-guard.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.56,
+  "tail": ""
+ },
+ "issues/post-3ed3099/new/repro/R5-04_nested-invoke-ondone-ancestor-livelock.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.42,
+  "tail": ""
+ },
+ "issues/post-3ed3099/new/repro/R5-05_strict_targets_false_root_target.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.35,
+  "tail": "\n--STDERR--\n~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\post-3ed3099\\new\\repro\\R5-05_strict_targets_false_root_target.py\", line 82, in main\n    bad_sync = sync_case()\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\post-3ed3099\\new\\repro\\R5-05_strict_targets_false_root_target.py\", line 42, in sync_case\n    it = SyncInterpreter(mk()).start()\n                         ~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\post-3ed3099\\new\\repro\\R5-05_strict_targets_false_root_target.py\", line 36, in mk\n    return create_machine(\n        json.loads(json.dumps(CFG)), logic=MachineLogic(), strict_targets=False\n    )\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\factory.py\", line 302, in create_machine\n    validate_machine(machine, strict_targets=strict_targets)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\validation.py\", line 479, in validate_machine\n    raise RootTargetError(\n    ...<2 lines>...\n    )\nxstate_statemachine.exceptions.RootTargetError: Machine 'm' has transition(s) targeting the machine root:\n  m.a: on 'GO' -> target '#m' is the machine root; entering it empties the configuration. Target the root's initial child ('#m.a') or a specific state.\n"
+ },
+ "issues/post-3ed3099/new/repro/R5-07_plain_def_service_blocks_loop.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.42,
+  "tail": "  ticker iterations in the 50 ms BEFORE start(): 4\n  await start() blocked for               : 0.000 s\n  ticker iterations DURING start()        : 0\n\nOBSERVED: an 0.8 s plain-`def` service blocks `await start()` for 0.000 s and a live 10 ms ticker advances 0 times (expected ~80). The loop is occupied, so no timer, actor or inbound send is serviced for the duration.\nEXPECTED: the async engine never blocks its own event loop. A plain blocking callable belongs on `run_in_executor`, with its `done.invoke` delivered through the priority lane so #116's ordering guarantee is preserved without occupying the loop.\nRESULT: FAIL\n\n--STDERR--\n"
+ },
+ "issues/post-3ed3099/new/repro/R5-09_settle-budget-per-drain.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.3,
+  "tail": ""
+ },
+ "issues/post-3ed3099/new/repro/R5-11_receipt-noop-vs-guard-denied.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.25,
+  "tail": ""
+ },
+ "issues/post-3ed3099/new/repro/R5-12_action-error-policy-fail-persists-source-state.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.24,
+  "tail": ""
+ },
+ "issues/post-3ed3099/new/repro/R5-13_sync-restore-skips-clock-attach.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.25,
+  "tail": ""
+ },
+ "issues/post-3ed3099/new/repro/R5-06_cancel_before_first_turn_unpublished.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.31,
+  "tail": ""
+ },
+ "issues/post-3ed3099/new/repro/R5-10_guard-raise-cancels-fallback-candidate.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.91,
+  "tail": ""
+ },
+ "issues/post-3ed3099/new/repro/R5-14_spawn-prefix-hijacks-user-action.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.37,
+  "tail": ""
+ },
+ "issues/post-3ed3099/new/repro/R5-15_escalate-needs-invoke-id.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.34,
+  "tail": ""
+ },
+ "issues/post-3ed3099/new/repro/R5-18_error-hooks-invisible.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.37,
+  "tail": "OBSERVED:\n  send(42) raised            : InvalidEventError\n  hooks seen (InvalidEvent)   : ['on_interpreter_start', 'on_interpreter_stop', 'on_invalid_event', 'on_transition']\n  error-shaped hook fired     : False\n  mid-action snapshot raised  : SnapshotMidStepError\n  hooks seen (MidStep)        : ['on_action_execute', 'on_event_received', 'on_interpreter_start', 'on_interpreter_stop', 'on_snapshot_error', 'on_transition']\n  error-shaped hook fired     : True\nEXPECTED:\n  both raises are true errors, AND a dedicated plugin hook (e.g.\n  on_transition_failed / on_snapshot_error) fires so an audit log\n  built from hooks alone observes them\nRESULT: FAIL - error raised but invisible to every plugin hook\n\n--STDERR--\n"
+ },
+ "issues/post-3ed3099/new/repro/R5-17_non-str-event-type-via-restore.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.38,
+  "tail": "\n--STDERR--\n  ~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\post-3ed3099\\new\\repro\\R5-17_non-str-event-type-via-restore.py\", line 60, in main\n    restored = Interpreter.from_snapshot(json.dumps(blob), build(), clock=SimulatedClock())\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py\", line 1869, in from_snapshot\n    persistence.check_identity(\n    ~~~~~~~~~~~~~~~~~~~~~~~~~~^\n        snapshot,\n        ^^^^^^^^^\n    ...<4 lines>...\n        expected_hash=expected_machine_hash,  # #205\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\persistence.py\", line 419, in check_identity\n    raise SnapshotDriftError(\n    ...<6 lines>...\n    )\nxstate_statemachine.exceptions.SnapshotDriftError: snapshot declares version 1 but carries no 'machine_hash', so it cannot be checked against machine 'rp' (#185). The field was lost in transit; restore from an intact copy, or pass verify_machine_hash=False if the machine is known to be unchanged.\n"
+ },
+ "issues/post-3ed3099/new/repro/R5-16_send-threadsafe-no-backpressure.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 1.0,
+  "tail": "OBSERVED:\n  calls_returned_without_raising_on_calling_thread = 3200\n  raised_on_calling_thread                         = 0\n  QueueOverflowError_landed_on_unread_future        = 3100\nEXPECTED:\n  overflow under RAISE is signalled to the CALLING thread synchronously,\n  e.g. send_threadsafe raises QueueOverflowError before returning, or the\n  bound is checked before scheduling onto the loop\nRESULT: FAIL - no calling-thread backpressure signal\n\n--STDERR--\n"
+ },
+ "issues/post-3ed3099/new/repro/R5-19_redaction-gaps.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.39,
+  "tail": ""
+ },
+ "issues/post-3ed3099/new/repro/R5-20_dict-event-bypass.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.39,
+  "tail": "OBSERVED (non-dict hostile shapes):\n  None                 -> InvalidEventError OK\n  123                  -> InvalidEventError OK\n  1.5                  -> InvalidEventError OK\n  b'GO'                -> InvalidEventError OK\n  ['GO']               -> InvalidEventError OK\n  <object object at 0x000002BD3BD00AE0> -> InvalidEventError OK\n  True                 -> InvalidEventError OK\n  nan                  -> InvalidEventError OK\n  BAD_COUNT (non-dict): 0\n\nOBSERVED (dict-shaped event):\n  send({'type': 'GO'}) raised : None\n  transitioned to m.b           : True\nEXPECTED:\n  every hostile shape either raises InvalidEventError, or (for the\n  documented mapping form) the mapping's non-'type' keys are also\n  validated as a payload dict -- the sweep should not have a single\n  unvalidated input class\nRESULT: FAIL - dict-shaped event bypasses InvalidEventError beyond 'type'\n\n--STDERR--\n"
+ },
+ "issues/post-3ed3099/new/repro/R5-21_v1-provenance-laundering.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.4,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-01_torn-midstep-snapshot.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.56,
+  "tail": "\n--STDERR--\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\post-5e07ba8\\new\\repro\\R4-01_torn-midstep-snapshot.py\", line 85, in <module>\n    sys.exit(asyncio.run(main()))\n             ~~~~~~~~~~~^^^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 195, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\post-5e07ba8\\new\\repro\\R4-01_torn-midstep-snapshot.py\", line 45, in main\n    snap = live.get_persisted_snapshot()\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py\", line 1551, in get_persisted_snapshot\n    raise exc\nxstate_statemachine.exceptions.SnapshotMidStepError: Interpreter 't' is mid-macrostep: a transition's actions are still running and the configuration has no leaf. Snapshot it once the step settles (await send(..., wait=True), or from on_transition).\n"
+ },
+ "issues/post-5e07ba8/new/repro/R4-02_from_snapshot_no_validation.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.34,
+  "tail": "\n--STDERR--\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\post-5e07ba8\\new\\repro\\R4-02_from_snapshot_no_validation.py\", line 90, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\post-5e07ba8\\new\\repro\\R4-02_from_snapshot_no_validation.py\", line 44, in main\n    r = SyncInterpreter.from_snapshot(\n        json.dumps(s_empty, default=str), machine, verify_machine_hash=False\n    )\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py\", line 1882, in from_snapshot\n    persistence.check_shape(snapshot, version=version)  # #198\n    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\persistence.py\", line 220, in check_shape\n    fail(\"status is 'running' but the configuration is empty\")\n    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\persistence.py\", line 191, in fail\n    raise SnapshotCorruptError(f\"Snapshot is malformed: {msg}.\")\nxstate_statemachine.exceptions.SnapshotCorruptError: Snapshot is malformed: status is 'running' but the configuration is empty.\n"
+ },
+ "issues/post-5e07ba8/new/repro/R4-03_block_policy_fire_and_forget_drop.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.42,
+  "tail": ""
+ },
+ "issues/post-3ed3099/new/repro/R5-08_threadsafe-bypasses-self-send-gate.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 3.37,
+  "tail": "OBSERVED:\n  maxIterations                       : 20\n  direct  `await i.send()` executions  : 21\n  `send_threadsafe()` executions       : 60\n  threadsafe budgeted (<= 25)          : False\nEXPECTED:\n  both routes are self-generated work and are charged to the\n  chain budget; both counts <= ~25 (maxIterations + slack)\nRESULT: FAIL - send_threadsafe is not gated by maxIterations\n\n--STDERR--\n"
+ },
+ "issues/post-5e07ba8/new/repro/R4-04_sync-start-nonterminating.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.44,
+  "tail": ""
+ },
+ "issues/post-3ed3099/new/repro/_scratch_r5_10.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.35,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-08_detach_strips_provenance.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.8,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-10_after_timer_not_rearmed.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.6,
+  "tail": "REFERENCE  after 6 s : ['timeout_demo.expired'] fired = True\n  restart_services=False: dormant=False pending_invocations=[] clock.pending=0\n  RESTORED after 11 s: ['timeout_demo.waiting'] fired = False status=running\n  restart_services=True: dormant=False pending_invocations=[] clock.pending=1\n  RESTORED after 11 s: ['timeout_demo.expired'] fired = True status=done\nEXPECTED: both restores reach ['timeout_demo.expired'] with fired=True, matching the reference run.\nRESULT: FAIL (after timer lost across restore)\n\n--STDERR--\n"
+ },
+ "issues/post-5e07ba8/new/repro/R4-07_receipt-deferred-id-keyed-false-positives.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.91,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-12_always_root_target_empties_configuration.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.38,
+  "tail": "\n--STDERR--\n^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 195, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\post-5e07ba8\\new\\repro\\R4-12_always_root_target_empties_configuration.py\", line 39, in main\n    i = Interpreter(create_machine(ALWAYS_CFG, logic=MachineLogic()))\n                    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\factory.py\", line 302, in create_machine\n    validate_machine(machine, strict_targets=strict_targets)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\validation.py\", line 479, in validate_machine\n    raise RootTargetError(\n    ...<2 lines>...\n    )\nxstate_statemachine.exceptions.RootTargetError: Machine 'm' has transition(s) targeting the machine root:\n  m.a: always -> target '#m' is the machine root; entering it empties the configuration. Target the root's initial child ('#m.a') or a specific state.\n"
+ },
+ "issues/post-5e07ba8/new/repro/R4-11_priority_lane_not_persisted.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.46,
+  "tail": "\n--STDERR--\n\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\post-5e07ba8\\new\\repro\\R4-11_priority_lane_not_persisted.py\", line 96, in <module>\n    raise SystemExit(asyncio.run(main()))\n                     ~~~~~~~~~~~^^^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 195, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\post-5e07ba8\\new\\repro\\R4-11_priority_lane_not_persisted.py\", line 63, in main\n    blob = i.get_snapshot()\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py\", line 1183, in get_snapshot\n    snapshot = self.get_persisted_snapshot()\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py\", line 1551, in get_persisted_snapshot\n    raise exc\nxstate_statemachine.exceptions.SnapshotMidStepError: Interpreter 'lanes' is mid-macrostep: a transition's actions are still running and the configuration has no leaf. Snapshot it once the step settles (await send(..., wait=True), or from on_transition).\n"
+ },
+ "issues/post-5e07ba8/new/repro/R4-13_settling_budget_orphan_leaf.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.39,
+  "tail": "\n--STDERR--\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\post-5e07ba8\\new\\repro\\R4-13_settling_budget_orphan_leaf.py\", line 100, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\post-5e07ba8\\new\\repro\\R4-13_settling_budget_orphan_leaf.py\", line 64, in main\n    machine = create_machine(CFG, logic=MachineLogic(**LOGIC_KW))\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\factory.py\", line 302, in create_machine\n    validate_machine(machine, strict_targets=strict_targets)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\validation.py\", line 479, in validate_machine\n    raise RootTargetError(\n    ...<2 lines>...\n    )\nxstate_statemachine.exceptions.RootTargetError: Machine 'm' has transition(s) targeting the machine root:\n  m.b.a: always -> target '#m' is the machine root; entering it empties the configuration. Target the root's initial child ('#m.b') or a specific state.\n"
+ },
+ "issues/post-5e07ba8/new/repro/R4-14_untyped_event_type_errors.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.41,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-15_stop_abandons_events_silently.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.43,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-16_run_loop_death_status_not_normalized.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.53,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-18_simulatedclock_settler_leak.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.42,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-21_sync_async_invoke_timing_divergence.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.34,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-19_invoke_done_carries_child_context_not_output.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.79,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-20_escalate_unroutable.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.8,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-22_from_snapshot_no_clock_param.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.34,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-23_afterevent_lateness_lost.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.39,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-24_receipt_arity_break.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.42,
+  "tail": "len(Receipt)            : 5\n3-tuple unpack succeeds  : False\n  -> too many values to unpack (expected 3)\nequality vs 3-tuple      : False\n\nOBSERVED: 3-tuple unpacking of Receipt raises ValueError; equality against a 3-tuple is False\nEXPECTED: 0.8.0-shaped 3-tuple unpacking keeps working, or the CHANGELOG explicitly documents this as a breaking change\nRESULT: FAIL - defect present\n\n--STDERR--\n"
+ },
+ "issues/post-5e07ba8/new/repro/R4-26_ducktyped_logic_mutation.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.38,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-28_sync_send_stopped_silent.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.41,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-27_sync_tick_chained_deadlines.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.87,
+  "tail": "OBSERVED: sync (1 tick after 0.25s)=['order.ack_timeout']  async (0.25s settle)=['order.escalated']\nEXPECTED: sync == ['order.escalated'] == async; every due deadline drains in one tick()\nFAIL: sync tick() lags behind the fully-settled async state\n\n--STDERR--\n"
+ },
+ "issues/post-5e07ba8/new/repro/R4-29_sync_start_synthetic_init_hook.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.37,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-06_external-events-charged-to-chain-budget.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 4.26,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-30_deferred_replay_folds_receipt.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.34,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-31_logging_inspector_no_redaction.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.38,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-33_done_data_stringified.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.44,
+  "tail": "\n--STDERR--\n~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py\", line 1709, in _persist_pending_events\n    out.extend(\n    ~~~~~~~~~~^\n        self._persist_event_reporting(ev)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<2 lines>...\n        ]\n        ^\n    )\n    ^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py\", line 1710, in <genexpr>\n    self._persist_event_reporting(ev)\n    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py\", line 1331, in _persist_event_reporting\n    return persist_event(event, lane=lane)\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\events.py\", line 358, in persist_event\n    _assert_json_safe(rec, event)\n    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\events.py\", line 371, in _assert_json_safe\n    raise SnapshotSerializationError(event.type, exc) from exc\nxstate_statemachine.exceptions.SnapshotSerializationError: Pending event 'done.invoke.svc' carries data that is not JSON-serialisable (Object of type Decimal is not JSON serializable). Snapshots refuse to coerce values silently; make the data JSON-native or snapshot from a quiesced interpreter.\n"
+ },
+ "issues/post-5e07ba8/new/repro/R4-32_async_hook_not_awaited.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.54,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-25_async_completion_sparing_missing.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.93,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-34_statein_ambiguous_suffix.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.42,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-36_no_resolve_error_hook.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.45,
+  "tail": "OBSERVED:\n  receipt.error        = StateNotFoundError(\"Could not resolve target state 'does.not.exist' from state 'm_snf.a'.\")\n  last_transition_ok   = False\n  last_error           = StateNotFoundError(\"Could not resolve target state 'does.not.exist' from state 'm_snf.a'.\")\n  plugin hooks fired   = []\n\nEXPECTED: a dedicated hook (e.g. on_resolve_error) fires, mirroring on_action_error / on_guard_error\nRESULT: no dedicated resolve-error hook fired -- defect present\n\n--STDERR--\nC:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\post-5e07ba8\\new\\repro\\R4-36_no_resolve_error_hook.py:48: DeprecationWarning: Machine 'm_snf' has unresolvable transition targets:\n  m_snf.a: on 'GO' -> target 'does.not.exist' does not resolve\n  (strict_targets=False: these transitions will be silent no-ops at runtime. This escape hatch is removed in 1.0.)\n  machine = create_machine(cfg, logic=MachineLogic(), strict_targets=False)\n"
+ },
+ "issues/post-5e07ba8/new/repro/R4-37_restart_services_no_signal.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.53,
+  "tail": "OBSERVED (after from_snapshot(restart_services=True), before start()):\n  status                    = 'running'\n  has_dormant_invocations   = True\n\nEXPECTED: status should not read 'running' while dormant invocations have not yet been restarted -- the two signals should not contradict each other before start() runs\n\nAfter start(): has_dormant_invocations = False\n\nRESULT: contradictory pair observed before start() -- defect present\n\n--STDERR--\n"
+ },
+ "issues/post-5e07ba8/new/repro/R4-35_sendto_unresolved_silent.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.58,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-38_config_cycle_recursionerror.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.42,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-39_provenance_unexported.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.43,
+  "tail": ""
+ },
+ "issues/post-5e07ba8/new/repro/R4-40_provenance_deepcopy_pickle.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.45,
+  "tail": ""
+ },
+ "issues/post-6db65d8/new/repro/R8-01_external_priority_shed.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.76,
+  "tail": ""
+ },
+ "issues/post-6db65d8/new/repro/R8-01_priority_self_send_livelock.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 3.0,
+  "tail": ""
+ },
+ "issues/post-6db65d8/new/repro/R8-02_def_service_uncancellable_and_not_rolled_back.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 3.17,
+  "tail": "PASS  {'style': 'async', 'mid_service': ['m.busy'], 'after_cancel': ['m.cancelled'], 'final': ['m.cancelled'], 'cursor': 0}\nFAIL  {'style': 'def', 'mid_service': ['m.busy'], 'after_cancel': ['m.done'], 'final': ['m.done'], 'cursor': 4242}\n\nBUG: the `def` service was not cancelled; its onDone landed cursor=4242 in a state that had already been exited.\n\n--STDERR--\n"
+ },
+ "issues/post-6db65d8/new/repro/R8-07_send_wait_resolves_over_empty_configuration.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.69,
+  "tail": ""
+ },
+ "issues/post-6db65d8/new/repro/R8-08_configuration_state_ids_one_sided.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.33,
+  "tail": ""
+ },
+ "issues/post-6db65d8/new/repro/R8-09_on_interpreter_start_torn_snapshot.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.32,
+  "tail": ""
+ },
+ "issues/post-6db65d8/new/repro/R8-10_chain_owed_leak.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.56,
+  "tail": ""
+ },
+ "issues/post-6db65d8/new/repro/R8-11_service_kind_lap_parity.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 4.45,
+  "tail": "maxIterations=20; only diff between async-engine rows is `def` vs `async def`.\n\n=== invoke_pingpong\n  [invoke_pingpong sync ] tripped=True  laps=23  \n  [invoke_pingpong def  ] tripped=True  laps=23   after+1s=23    still=False\n  [invoke_pingpong async] tripped=False laps=1    after+1s=23    still=True \n\n=== rollback_ondone\n  [rollback_ondone sync ] tripped=True  laps=0   \n  [rollback_ondone def  ] tripped=True  laps=0    after+1s=0     still=False\n  [rollback_ondone async] tripped=False laps=0    after+1s=0     still=False\n\nFAILURES:\n  - invoke_pingpong: `def` trips, `async def` does not (#179)\n  - rollback_ondone: `def` trips, `async def` does not (#179)\nVERDICT: FAIL\n\n--STDERR--\nn cutting the self-generated tail.\nERROR:xstate_statemachine.base_interpreter:\ud83d\udd25 Action 'blow' raised while handling event 'done.invoke.k'; skipping remaining actions in this list.\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py\", line 3630, in _execute_actions\n    await self._run_user_action(impl, action_def, event)\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py\", line 2363, in _run_user_action\n    impl(self, self.context, event, action_def)\n    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\post-6db65d8\\new\\repro\\R8-11_service_kind_lap_parity.py\", line 56, in blow\n    raise RuntimeError(\"rollback\")\nRuntimeError: rollback\nWARNING:xstate_statemachine.base_interpreter:\ud83d\udca5 Transition on 'lv.a' failed; rolling back to the pre-transition configuration.\nERROR:xstate_statemachine.interpreter:\ud83d\uded1 Exceeded 20 chained self-raised events on 'lv'. This means an action raises the event that triggers it. Breaking the chain; externally queued events are unaffected.\nERROR:xstate_statemachine.base_interpreter:\ud83e\uddf7 Machine 'lv' rests in state 'lv.a' whose invocation 'k' was cut by the chain budget and will never complete (#207). Exit the state with an event, or raise 'maxIterations' if the cycle is expected to converge.\n"
+ },
+ "issues/post-6db65d8/new/repro/R8-04_always_ondone_reentry_settle_tripped.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 11.2,
+  "tail": ""
+ },
+ "issues/post-c78ce99/new/repro/R11-06_descent_gate_start_hang.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.23,
+  "tail": ""
+ },
+ "issues/post-c78ce99/new/repro/R11-07_nested_config_typos_silent.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.27,
+  "tail": "CONTROL -- a ROOT-level typo, which #216 handles correctly:\n  strict_config=True  -> built=False exc=InvalidConfigError\n  strict_config=False -> built=True warnings=0\n  root check live: True\n\nDEFECT -- the same class of typo one level down, INSIDE a state:\n  typo                  built   exc       warnings\n  entry -> entyr        False   InvalidConfigError0\n  exit -> exti          False   InvalidConfigError0\n  on -> onn             False   InvalidConfigError0\n  after -> afer         False   InvalidConfigError0\n  always -> alwyas      False   InvalidConfigError0\n  invoke -> invoek      False   InvalidConfigError0\n  onDone -> onDoen      False   InvalidConfigError0\n\n\n--STDERR--\nreturn self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\tasks.py\", line 507, in wait_for\n    return await fut\n           ^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\post-c78ce99\\new\\repro\\R11-07_nested_config_typos_silent.py\", line 120, in main\n    m = create_machine(\n        cfg, logic=MachineLogic(actions={\"mark\": mark}), strict_config=True\n    )\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\factory.py\", line 305, in create_machine\n    validate_top_level_keys(\n    ~~~~~~~~~~~~~~~~~~~~~~~^\n        config,\n        ^^^^^^^\n    ...<4 lines>...\n        ),\n        ^^\n    )\n    ^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\validation.py\", line 455, in validate_top_level_keys\n    raise InvalidConfigError(msg)\nxstate_statemachine.exceptions.InvalidConfigError: Machine 'typo' has unknown config key(s) -- typo.a: 'entyr' (did you mean 'entry'?), 'onn' (did you mean 'on'?). Unknown keys are ignored by the parser, so a misspelled key silently does nothing (a policy reverts to its default; an action, transition or deadline never exists). Use the 'x-' prefix for custom metadata, or 'meta'.\n"
+ },
+ "issues/post-c78ce99/new/repro/R11-08_repersist_without_start_drops_sends.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.11,
+  "tail": ""
+ },
+ "issues/post-c78ce99/new/repro/R11-09_chain_trip_erased_by_next_event.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 1.48,
+  "tail": "{\n  \"ASYNC-ENGINE / async def\": {\n    \"last_error_AT_TRIP\": \"RunawayChainError\",\n    \"interpreter.error\": \"NoneType\",\n    \"status\": \"running\",\n    \"last_error_AFTER_ONE_BENIGN_EVENT\": \"NoneType\",\n    \"last_transition_ok\": true\n  },\n  \"ASYNC-ENGINE / def\": {\n    \"last_error_AT_TRIP\": \"RunawayChainError\",\n    \"interpreter.error\": \"NoneType\",\n    \"status\": \"running\",\n    \"last_error_AFTER_ONE_BENIGN_EVENT\": \"NoneType\",\n    \"last_transition_ok\": true\n  },\n  \"SYNC-ENGINE / def\": {\n    \"last_error_AT_TRIP\": \"RunawayChainError\",\n    \"interpreter.error\": \"NoneType\",\n    \"status\": \"running\",\n    \"last_error_AFTER_ONE_BENIGN_EVENT\": \"NoneType\",\n    \"last_transition_ok\": true\n  }\n}\n\nlanes where ONE benign event erased the trip: ['ASYNC-ENGINE / async def', 'ASYNC-ENGINE / def', 'SYNC-ENGINE / def']\ninterpreter.error never set on any lane     : True\nREPRODUCED: True\n\n--STDERR--\n"
+ },
+ "issues/post-221ce7c/new/repro/R7-02_external_priority_charged_to_chain_budget.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 27.69,
+  "tail": ""
+ },
+ "issues/post-cec108b/new/repro/R6-01_async_always_invoke_livelock.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.39,
+  "tail": ""
+ },
+ "issues/post-6db65d8/new/repro/R8-03_children_timeout_def_noop.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 18.89,
+  "tail": ".2,\n      \"start_seconds\": 0.21,\n      \"bounded\": true,\n      \"overrun_factor\": 1.0,\n      \"warning_logged\": true\n    },\n    {\n      \"entry_kind\": \"async def\",\n      \"children\": 5,\n      \"child_entry_seconds\": 3.0,\n      \"children_timeout\": 0.2,\n      \"start_seconds\": 0.21,\n      \"bounded\": true,\n      \"overrun_factor\": 1.0,\n      \"warning_logged\": true\n    },\n    {\n      \"entry_kind\": \"def\",\n      \"children\": 1,\n      \"child_entry_seconds\": 3.0,\n      \"children_timeout\": 0.2,\n      \"start_seconds\": 3.0,\n      \"bounded\": false,\n      \"overrun_factor\": 15.0,\n      \"warning_logged\": true\n    },\n    {\n      \"entry_kind\": \"def\",\n      \"children\": 5,\n      \"child_entry_seconds\": 3.0,\n      \"children_timeout\": 0.2,\n      \"start_seconds\": 15.0,\n      \"bounded\": false,\n      \"overrun_factor\": 75.0,\n      \"warning_logged\": true\n    }\n  ],\n  \"unbounded\": [\n    {\n      \"entry_kind\": \"def\",\n      \"children\": 1,\n      \"child_entry_seconds\": 3.0,\n      \"children_timeout\": 0.2,\n      \"start_seconds\": 3.0,\n      \"bounded\": false,\n      \"overrun_factor\": 15.0,\n      \"warning_logged\": true\n    },\n    {\n      \"entry_kind\": \"def\",\n      \"children\": 5,\n      \"child_entry_seconds\": 3.0,\n      \"children_timeout\": 0.2,\n      \"start_seconds\": 15.0,\n      \"bounded\": false,\n      \"overrun_factor\": 75.0,\n      \"warning_logged\": true\n    }\n  ],\n  \"source\": \"interpreter.py:601 _await_actor_bringups(timeout=) -- wait_for cannot preempt a `def` entry action running on the loop thread\",\n  \"result\": \"FAIL\"\n}\n\n--STDERR--\nWARNING:xstate_statemachine.interpreter:\u23f3 Interpreter 'r6b': invoked child bring-up exceeded the 0.200s children_timeout (0.209s elapsed, 1 still starting). start() continues with the machine running. A plain-`def` entry action that blocks cannot be pre-empted on the event loop thread -- make it `async def`, or offload the blocking call (#181 / #194).\nWARNING:xstate_statemachine.interpreter:\u23f3 Interpreter 'r6b': invoked child bring-up exceeded the 0.200s children_timeout (0.214s elapsed, 5 still starting). start() continues with the machine running. A plain-`def` entry action that blocks cannot be pre-empted on the event loop thread -- make it `async def`, or offload the blocking call (#181 / #194).\nWARNING:xstate_statemachine.interpreter:\u23f3 Interpreter 'r6b': invoked child bring-up exceeded the 0.200s children_timeout (3.000s elapsed, 0 still starting). start() continues with the machine running. A plain-`def` entry action that blocks cannot be pre-empted on the event loop thread -- make it `async def`, or offload the blocking call (#181 / #194).\nWARNING:xstate_statemachine.interpreter:\u23f3 Interpreter 'r6b': invoked child bring-up exceeded the 0.200s children_timeout (15.003s elapsed, 0 still starting). start() continues with the machine running. A plain-`def` entry action that blocks cannot be pre-empted on the event loop thread -- make it `async def`, or offload the blocking call (#181 / #194).\n"
+ },
+ "issues/post-c78ce99/new/repro/R12-13_elevation_outlives_session.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 5.31,
+  "tail": ""
+ },
+ "issues/post-cec108b/new/repro/R6-06_entry_window_torn_snapshot.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.22,
+  "tail": ""
+ },
+ "issues/post-cec108b/new/repro/R6-10_denied_true_for_crashed_guard.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.23,
+  "tail": ""
+ },
+ "issues/post-cec108b/new/repro/R6-11_start_returns_before_children_ready.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.26,
+  "tail": "start() took 0.1 ms\nstate right after start() returned: ['parent.running'] (service body already ran: False)\nreached 'done' eventually: True (~15.5 ms after start() returned); final state=['parent.done']\nBUG CONFIRMED: await start() returned before the initial macrostep's inline service settled -- the machine was still in its pre-completion state when start() handed control back.\n\n--STDERR--\n"
+ },
+ "issues/post-cec108b/new/repro/R6-03_rollback_ondone_reinvoke_spin.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.8,
+  "tail": ""
+ },
+ "issues/post-cec108b/new/repro/R6-12_threadsafe_self_send_counter_leak.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.31,
+  "tail": "in-flight counter before=0 after stop()=1\n_raise_depth after stop()=0\nBUG CONFIRMED: the in-flight counter leaked past stop() with no compensating decrement -- nothing will ever bring it back to 0 for this interpreter, so the _raise_depth reset (interpreter.py ~1513) is permanently gated off.\n\n--STDERR--\n"
+ },
+ "issues/post-cec108b/new/repro/R6-14_after_lateness_unbounded_under_load.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.34,
+  "tail": "reached 'fired' after 91.8 ms (budget 50 ms)\nlateness=41.8 ms\nBUG CONFIRMED (regression class): 'after' lateness under a busy loop is far beyond the declared 50ms budget.\n\n--STDERR--\n"
+ },
+ "issues/post-cec108b/new/repro/R6-13_service_executor_hardcoded_pool.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.67,
+  "tail": "n=8 concurrent 0.2s plain services: peak_parallel=4 elapsed=0.42s\ninternal executor max_workers=4\nBUG CONFIRMED: the executor is hard-capped at 4 workers with no public knob, so 8 concurrent services ran in two waves of 4 (peak_parallel=4), roughly doubling elapsed time versus true concurrency.\n\n--STDERR--\n"
+ },
+ "issues/post-cec108b/new/repro/R6-15_stop_leaves_duplicate_receipts_unresolved.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.28,
+  "tail": "ce=8 resolved_stopped=0 other=0\ntrial 1: success_despite_stop_race=8 resolved_stopped=0 other=0\ntrial 2: success_despite_stop_race=8 resolved_stopped=0 other=0\ntrial 3: success_despite_stop_race=8 resolved_stopped=0 other=0\ntrial 4: success_despite_stop_race=8 resolved_stopped=0 other=0\ntrial 5: success_despite_stop_race=8 resolved_stopped=0 other=0\ntrial 6: success_despite_stop_race=8 resolved_stopped=0 other=0\ntrial 7: success_despite_stop_race=8 resolved_stopped=0 other=0\ntrial 8: success_despite_stop_race=8 resolved_stopped=0 other=0\ntrial 9: success_despite_stop_race=8 resolved_stopped=0 other=0\ntrial 10: success_despite_stop_race=8 resolved_stopped=0 other=0\ntrial 11: success_despite_stop_race=8 resolved_stopped=0 other=0\ntrial 12: success_despite_stop_race=8 resolved_stopped=0 other=0\ntrial 13: success_despite_stop_race=8 resolved_stopped=0 other=0\ntrial 14: success_despite_stop_race=8 resolved_stopped=0 other=0\ntrial 15: success_despite_stop_race=8 resolved_stopped=0 other=0\ntrial 16: success_despite_stop_race=8 resolved_stopped=0 other=0\ntrial 17: success_despite_stop_race=8 resolved_stopped=0 other=0\ntrial 18: success_despite_stop_race=8 resolved_stopped=0 other=0\ntrial 19: success_despite_stop_race=8 resolved_stopped=0 other=0\ntotal success-despite-stop-race receipts across 20 trials: 160\nBUG CONFIRMED: at least one duplicate-Event-instance receipt raced past stop() and resolved as an ordinary success Receipt instead of being resolved with InterpreterStoppedError.\n\n--STDERR--\n"
+ },
+ "issues/post-de2da4e/new/repro/DE-L2-repro.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.24,
+  "tail": ""
+ },
+ "issues/post-de2da4e/new/repro/DE-L3-repro.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.25,
+  "tail": ""
+ },
+ "issues/post-19cb1f1/new/repro/R10-03_delayed_selfsend_heartbeat_dies.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 36.42,
+  "tail": ""
+ },
+ "issues/post-de2da4e/new/repro/DE-L5-repro.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.28,
+  "tail": ""
+ },
+ "issues/post-de2da4e/new/repro/DE-L4-repro.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.28,
+  "tail": "last_error after restore: Event 'UNDECLARED' is not declared by machine 'm'. Known events: GO.\non_invalid_event fired during restore (spy.invalid): []\nhook unreachable during restore (spy empty, last_error set): True\n\nREPRODUCED: True\n\n--STDERR--\n"
+ },
+ "issues/post-de2da4e/new/repro/DE-L1-ensure-future-escape-hatch-refused.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.02,
+  "tail": ""
+ },
+ "issues/post-de2da4e/new/repro/DE-L7-repro.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.32,
+  "tail": ""
+ },
+ "issues/post-de2da4e/new/repro/P-1-chain-trip-latch-not-persisted.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.48,
+  "tail": ""
+ },
+ "issues/post-de2da4e/new/repro/P-2-strict-not-applied-to-restored-scheduled-sends.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.53,
+  "tail": ""
+ },
+ "issues/post-f28719c/new/repro/R9-05_snapshots_are_unauthenticated.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.44,
+  "tail": "1. consistent forgery -> ACCEPTED, leaves = ['m.b']\n2. version absent + hash removed -> ACCEPTED into DRIFTED machine, after JUMP = ['m.c']\n2. version=0 + hash removed -> ACCEPTED into DRIFTED machine, after JUMP = ['m.c']\n2. version=0 + hash=None -> ACCEPTED into DRIFTED machine, after JUMP = ['m.c']\n\nVERDICT: DOCUMENTED BEHAVIOUR STILL PRESENT\n\n--STDERR--\n"
+ },
+ "issues/post-cec108b/new/repro/R6-02_system_event_budget_exemption.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 8.41,
+  "tail": ""
+ },
+ "issues/post-f28719c/new/repro/R9-02_after_matched_on_public_class.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.83,
+  "tail": ""
+ },
+ "issues/post-f28719c/new/repro/R9-04_always_rollforward_def_invoke_submitted.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.36,
+  "tail": ""
+ },
+ "issues/post-f28719c/new/repro/R9-08_send_wait_resolves_over_empty_configuration.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.22,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-01_action-raise-commits-transition.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.3,
+  "tail": "DEFAULT  OBSERVED state: ['oms.b'] trace: ['first', 'explode', 'entry_b'] last_transition_ok: False failed: [['explode']]\nDEFAULT  EXPECTED state: ['oms.b'] trace: ['first', 'explode', 'entry_b'] last_transition_ok: False, failed: [['explode']]\nROLLBACK OBSERVED state: ['oms.a'] trace: [] last_transition_ok: False\nROLLBACK EXPECTED state: ['oms.a'], entry_b absent, last_transition_ok: False\nFAIL     OBSERVED status: stopped error: TransitionFailedError cause is RuntimeError: True\nFAIL     EXPECTED status: error, cause is RuntimeError: True\nRESULT: NOT-FIXED/PARTIAL\n\n--STDERR--\n"
+ },
+ "issues/verify-0.8.0/LC-02_always-self-target-deadlock.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.94,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-03_unhandled-events-discarded.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.32,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-05_raise-not-macrostep.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.77,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-06_overforgiving-target-resolution.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.47,
+  "tail": ""
+ },
+ "issues/post-f28719c/new/repro/R9-07_rollback_ondone_silent_wedge.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 4.16,
+  "tail": "error_type\": \"RunawayChainError\",\n  \"runaway_reported\": true,\n  \"configuration_2s_later\": [\n   \"r7.starting\"\n  ],\n  \"wedged_in_transient\": true\n },\n {\n  \"style\": \"def\",\n  \"maxIterations\": 50,\n  \"svc_invocations\": 52,\n  \"elapsed_s\": 0.494,\n  \"final_configuration\": [\n   \"r7.starting\"\n  ],\n  \"status\": \"running\",\n  \"last_error_type\": \"RunawayChainError\",\n  \"runaway_reported\": true,\n  \"configuration_2s_later\": [\n   \"r7.starting\"\n  ],\n  \"wedged_in_transient\": true\n },\n {\n  \"style\": \"async\",\n  \"maxIterations\": \"DEFAULT\",\n  \"svc_invocations\": 455,\n  \"elapsed_s\": 0.462,\n  \"final_configuration\": [\n   \"r7.starting\"\n  ],\n  \"status\": \"running\",\n  \"last_error_type\": \"RuntimeError\",\n  \"runaway_reported\": false,\n  \"configuration_2s_later\": [\n   \"r7.starting\"\n  ],\n  \"wedged_in_transient\": true\n },\n {\n  \"style\": \"async\",\n  \"maxIterations\": 10,\n  \"svc_invocations\": 12,\n  \"elapsed_s\": 0.475,\n  \"final_configuration\": [\n   \"r7.starting\"\n  ],\n  \"status\": \"running\",\n  \"last_error_type\": \"RunawayChainError\",\n  \"runaway_reported\": true,\n  \"configuration_2s_later\": [\n   \"r7.starting\"\n  ],\n  \"wedged_in_transient\": true\n },\n {\n  \"style\": \"async\",\n  \"maxIterations\": 50,\n  \"svc_invocations\": 52,\n  \"elapsed_s\": 0.484,\n  \"final_configuration\": [\n   \"r7.starting\"\n  ],\n  \"status\": \"running\",\n  \"last_error_type\": \"RunawayChainError\",\n  \"runaway_reported\": true,\n  \"configuration_2s_later\": [\n   \"r7.starting\"\n  ],\n  \"wedged_in_transient\": true\n }\n]\n\nVERDICT: SILENT WEDGE at default maxIterations ['def', 'async']\n\n--STDERR--\nil.\nERROR:xstate_statemachine.base_interpreter:\ud83d\udd25 Action 'boom' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py\", line 3630, in _execute_actions\n    await self._run_user_action(impl, action_def, event)\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py\", line 2363, in _run_user_action\n    impl(self, self.context, event, action_def)\n    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\post-f28719c\\new\\repro\\R9-07_rollback_ondone_silent_wedge.py\", line 60, in boom\n    raise RuntimeError(\"entry failed\")\nRuntimeError: entry failed\nWARNING:xstate_statemachine.base_interpreter:\ud83d\udca5 Transition on 'r7.starting' failed; rolling back to the pre-transition configuration.\nERROR:xstate_statemachine.interpreter:\ud83d\uded1 Exceeded 50 chained self-raised events on 'r7'. This means an action raises the event that triggers it. Breaking the chain; externally queued events are unaffected.\nERROR:xstate_statemachine.base_interpreter:\ud83e\uddf7 Machine 'r7' rests in state 'r7.starting' whose invocation 'sub' was cut by the chain budget and will never complete (#207). Exit the state with an event, or raise 'maxIterations' if the cycle is expected to converge.\n"
+ },
+ "issues/verify-0.8.0/LC-07_relative-dot-target-silent-noop.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.38,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-08_unknown-target-unvalidated.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.31,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-09_guard-exception-swallowed.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.51,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-12_spawn-blocking-async-engine.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 1.84,
+  "tail": "OBSERVED async spawn_worker           start_blocked_ms=     3 actors_after_spawn=1\nOBSERVED async spawn_blocking_worker  start_blocked_ms=   252 actors_after_spawn=0\nOBSERVED sync  spawn_worker           start_blocked_ms=   254 actors_after_spawn=0\nOBSERVED sync  spawn_blocking_worker  start_blocked_ms=   252 actors_after_spawn=0\nOBSERVED async distinguishes spawn_ vs spawn_blocking_: True (3 ms vs 252 ms)\nOBSERVED sync  distinguishes spawn_ vs spawn_blocking_: False (254 ms vs 252 ms)\nEXPECTED both engines agree: spawn_blocking_ blocks the parent until the child reaches a terminal state, on BOTH engines, by default (#41).\n\n--STDERR--\n"
+ },
+ "issues/verify-0.8.0/LC-16_sendto-invoke-id.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.75,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-21_no-snapshot-schema-version.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.24,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-22_from_snapshot_context_merge.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.37,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-19_restore-does-not-restart-invokes.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.99,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-24_pending_queue_inbox_durability.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.31,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-27_clock_injection_simulated.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.92,
+  "tail": ""
+ },
+ "issues/post-6db65d8/new/repro/R8-05_doneevent_forgery.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 30.5,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-29_invoke-input-static-ignored.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.42,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-28_actor-poll-two-tasks.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.56,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-34_no-strict-mode.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.32,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-32_terminal-machines-not-reaped.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.59,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-36_builtin_action_params_validated.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.31,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-37_arity_marker_precedence.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.29,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-39_perf_docs_present.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.13,
+  "tail": ""
+ },
+ "issues/post-f28719c/new/repro/R9-06_delayed_selfsend_unbounded.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 10.3,
+  "tail": "laps(exits)=640\nafter 10s: raise_depth=0 chain_tripped=False states=['m.a'] maxIterations=20\nVERDICT: UNBOUNDED (bug)\n\n--STDERR--\n"
+ },
+ "issues/verify-0.8.0/LC-41_backpressure.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.37,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-38_sync_interpreter_no_threads.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.76,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-42_send_receipt.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.45,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-43_cross_thread.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.84,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-45_hot-path-alloc-and-info-logging.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.94,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-47_target-str-mutation-shared-definition.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.54,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-48_no-error-observability-hooks.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.54,
+  "tail": "OBSERVED events: [('on_transition',), ('on_unhandled_event', 'TYPO_FILLED', 'ignored'), ('on_guard_error', 'may_cancel', 'RuntimeError'), ('on_guard_evaluated', 'may_cancel', False), ('on_unhandled_event', 'CANCEL', 'guard_denied'), ('on_transition_failed', [('book', 'RuntimeError')]), ('on_transition',)]\nOBSERVED on_unhandled_event fires once for TYPO_FILLED: True\nOBSERVED on_guard_error fires + guard still False: True\nOBSERVED on_transition_failed precedes on_transition with failed action info: False\nOBSERVED LoggingInspector implements new hooks: True\nEXPECTED all four checks True: unhandled event surfaced, guard error distinguishable, transition-failed ordering correct, inspector wired\nRESULT: FAIL\n\n--STDERR--\n"
+ },
+ "issues/verify-0.8.0/LC-49_no-hierarchical-state-value.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.44,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-53_production_characteristics.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.52,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-57_two_engines_unified.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 1.03,
+  "tail": "-12)  found in test_actors.py\nPASS  LC-58 NotSupportedError tests present  locations={'test_partial_wrapped_async_action_raises_not_supported': 'test_core_algorithm.py', 'test_async_call_object_raises_not_supported': 'test_core_algorithm.py', 'test_async_generator_action_raises_not_supported': 'test_core_algorithm.py'}\nFAIL  test_transition_target_str_is_not_mutated_by_resolution present  not found\nPASS  RestoredError in __all__ (LC-51)  len(__all__)=83\nPASS  no known LC-59 unreachable block reintroduced in models.py  (spot check only -- not an exhaustive AST scan)\nPASS  CI runs mypy on src/ (LC-61)  C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\.github\\workflows\\ci.yml\nINFO  sans-io core/algorithm.py module: ABSENT (C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\core\\algorithm.py); tests/test_core_algorithm.py: present. 0.8.0 unified the algorithm on BaseInterpreter (async coroutines driven synchronously via SyncInterpreter._drive()) rather than extracting a separate pure core/ module + ExecutionStrategy protocol as the issue's proposed fix sketched -- a different implementation of the same 'one algorithm, not two' acceptance criterion. Reported as PARTIAL below if this narrower architectural ask matters to CandleViewer; the user-visible acceptance criterion (no duplication, no shadowing, no renamed forks, LC-58 fixed) is fully met per the checks above.\n\nRESULT: FAIL - LC-57 not fully satisfied\n\n--STDERR--\n"
+ },
+ "issues/verify-main-19cb1f1/203_after_provenance_gate.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.29,
+  "tail": ""
+ },
+ "issues/verify-main-19cb1f1/205_snapshot_authenticity.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.39,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-44_pure_api.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 4.82,
+  "tail": ""
+ },
+ "issues/verify-main-19cb1f1/204_statesToInvoke.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.49,
+  "tail": ""
+ },
+ "issues/post-c78ce99/new/repro/R11-04_timer_handles_unbounded_leak.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 30.38,
+  "tail": ""
+ },
+ "issues/verify-main-19cb1f1/208_receipt_never_ok_over_empty_configuration.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.47,
+  "tail": ""
+ },
+ "issues/verify-main-19cb1f1/207_stranded_invocation_observable.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 5.15,
+  "tail": ""
+ },
+ "issues/verify-main-221ce7c/157_threadsafe_loopside_refusal.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.65,
+  "tail": ""
+ },
+ "issues/verify-main-221ce7c/166_always_invoke_livelock.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.26,
+  "tail": ""
+ },
+ "issues/verify-0.8.0/LC-26_after_timer_priority_lane.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 16.72,
+  "tail": "OBSERVED AfterEvent has scheduled_for/fired_at/lateness_ms = True\nEXPECTED True\nOBSERVED   10 ms timer, idle loop  lateness = 4.9 ms\nOBSERVED   10 ms timer, 100 busy loop lateness = 221.7 ms\nEXPECTED   10 ms timer, 100 busy loop lateness <= 50.0 ms\nOBSERVED  100 ms timer, idle loop  lateness = 9.0 ms\nOBSERVED  100 ms timer, 100 busy loop lateness = 142.4 ms\nEXPECTED  100 ms timer, 100 busy loop lateness <= 50.0 ms\nRESULT: FAIL\n\n--STDERR--\n"
+ },
+ "issues/verify-main-221ce7c/168_chain_budget_completion_exemption.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.36,
+  "tail": ""
+ },
+ "issues/verify-main-221ce7c/169_entry_exit_snapshot_refusal.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.26,
+  "tail": ""
+ },
+ "issues/post-f28719c/new/repro/R9-09_lap_parity_odd_limit_mismatch.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 25.18,
+  "tail": ""
+ },
+ "issues/verify-main-221ce7c/170_receipt_denied_crashed_guard.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.25,
+  "tail": ""
+ },
+ "issues/verify-main-221ce7c/171_start_awaits_bringups.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.36,
+  "tail": ""
+ },
+ "issues/verify-main-221ce7c/172_threadsafe_counter_leak.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.44,
+  "tail": ""
+ },
+ "issues/verify-main-221ce7c/167_rollback_reinvoke_spin.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 5.32,
+  "tail": ""
+ },
+ "issues/verify-main-19cb1f1/_RETIRED_206_delayed_selfsend_charged.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 9.02,
+  "tail": "== Criterion 1: delayed self-send cycle is bounded (trips RunawayChainError) ==\n  ticks=514 last_error=NoneType dropped_reasons=[]\nFAIL: 206-c1-runaway-error -- last_error is NoneType, expected RunawayChainError\nFAIL: 206-c1-dropped-reason -- no 'chain_budget' drop observed: []\nFAIL: 206-c1-unbounded -- ticks=514 suggests unbounded spin (>= 3x maxIterations)\n== Criterion 2: delayed vs zero-delay self-raise trip within close lap counts ==\n  immediate cycle ticks-at-trip=21, delayed cycle ticks-at-trip=514\nFAIL: 206-c2-parity -- lap counts diverge: immediate=21 delayed=514\n== Criterion 3: external delayed sends are NOT charged/shed (still unshielded) ==\n  30 external delayed sends -> chain tripped: False\n  ok: external delayed sends remain unshielded from the chain guard (#192 preserved)\n\nVERDICT: FAIL (4 criterion/a)\n  - 206-c1-runaway-error : last_error is NoneType, expected RunawayChainError\n  - 206-c1-dropped-reason : no 'chain_budget' drop observed: []\n  - 206-c1-unbounded : ticks=514 suggests unbounded spin (>= 3x maxIterations)\n  - 206-c2-parity : lap counts diverge: immediate=21 delayed=514\n\n--STDERR--\n"
+ },
+ "issues/verify-main-221ce7c/175_duplicate_event_stop_race.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.38,
+  "tail": ""
+ },
+ "issues/verify-main-221ce7c/173_service_pool_size.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.95,
+  "tail": ""
+ },
+ "issues/verify-main-221ce7c/174_after_lateness_documented_only.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.94,
+  "tail": ""
+ },
+ "issues/verify-main-3c527b0/79_provenance-system-events.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.66,
+  "tail": ""
+ },
+ "issues/verify-main-3c527b0/80_errorevent-distinct-from-doneevent.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.54,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/103_settle_budget.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.3,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/102_midstep_snapshot.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.82,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/104_block_eager_enqueue.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.4,
+  "tail": ""
+ },
+ "issues/verify-main-3c527b0/43_one-task-per-invoked-child.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.72,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/107_priority-lane-persisted.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.47,
+  "tail": "\n--STDERR--\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\verify-main-3ed3099\\107_priority-lane-persisted.py\", line 141, in <module>\n    raise SystemExit(asyncio.run(main()))\n                     ~~~~~~~~~~~^^^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 195, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\verify-main-3ed3099\\107_priority-lane-persisted.py\", line 80, in main\n    prio_types = [e.type for e in i._priority_queue]\n                  ^^^^^^\nAttributeError: 'tuple' object has no attribute 'type'\n"
+ },
+ "issues/verify-main-3ed3099/108_root-target-rejected-at-build.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.39,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/106_receipt-deferred-per-step-by-reference.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.9,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/110_snapshot_shape_validation.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.44,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/109_done-invoke-carries-output.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.81,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/112_settle_budget_observable.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.45,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/111_detach_preserves_provenance.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.85,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/113_invalid_event_typed.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.43,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/114_loop_death_reported.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.54,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/105_external-send-not-charged-to-chain-budget.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 2.61,
+  "tail": "[criterion 1/2] burst=999   applied=999   chain_budget_drops=0   -> OK\n[criterion 1/2] burst=1500  applied=1500  chain_budget_drops=0   -> OK\n[criterion 1/2] burst=3000  applied=2942  chain_budget_drops=0   -> FAIL\n[criterion 3] self-send loop n=21 -> OK\nFAILURES:\n - burst=3000: applied 2942 != 3000 (events lost)\n\n--STDERR--\n"
+ },
+ "issues/verify-main-3ed3099/116_sync_async_invoke_timing_parity.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.02,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/115_simulatedclock_settler_detach.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.04,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/117_from_snapshot_clock_param.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.06,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/119_receipt_arity_changelog_correction.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.75,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/118_afterevent_lateness_persistence.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.04,
+  "tail": ""
+ },
+ "issues/verify-main-19cb1f1/209_lap_parity_sweep_1_25.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 16.06,
+  "tail": ""
+ },
+ "issues/verify-main-19cb1f1/210_test_converges_not_flaky.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 17.94,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/125_deferred_replay_receipt.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.65,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/123_sync_send_stopped_fires_hook.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 3.44,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/124_sync_async_init_transition_hook_parity.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 3.46,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/126_logging_inspector_redaction.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.55,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/122_sync_tick_drains_chained_deadlines.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 4.02,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/127_plugin_failure_surface.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.59,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/129_stop_event_drops.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.63,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/131_decimal_fail_loudly.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.47,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/128_after_timer_rearm.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.93,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/132_statein_ambiguous.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.41,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/130_escalate_declared_id.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.89,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/134_on_resolve_error.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.43,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/120_async_trip_spares_completions.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 5.87,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/133_sendto_dropped.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.63,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/135_from_snapshot_status_docs.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.76,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/91_alias_ambiguity.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.52,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/136_config_cycle_typed_error.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.99,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/137_provenance_exports.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.05,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/138_provenance_deepcopy_pickle.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.04,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/99_sync_child_onerror.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.96,
+  "tail": ""
+ },
+ "issues/verify-main-5327ba6/LC-28_actor-poll-two-tasks.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.66,
+  "tail": ""
+ },
+ "issues/verify-main-5327ba6/LC-19_restore-does-not-restart-invokes.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.16,
+  "tail": ""
+ },
+ "issues/verify-main-5327ba6/LC-34_send-threadsafe-strict-and-static-raise.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.64,
+  "tail": ""
+ },
+ "issues/verify-main-5327ba6/LC-37_machinelogic-strict.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.47,
+  "tail": ""
+ },
+ "issues/verify-main-5327ba6/LC-07_relative-dot-target.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 1.44,
+  "tail": "c_exc_type=None async_state=['m3.A'] sync_exc_type=<class 'xstate_statemachine.exceptions.StateNotFoundError'> -- KNOWN RESIDUAL GAP if these disagree: async silently no-ops (state unchanged, no exception) while sync raises StateNotFoundError, the same disagreement the original issue's 'Corroborating observations' section reported, now confined to the documented strict_targets=False opt-out rather than the default.\n[PASS] A-warn-once-per-source-target-pair: 0 sibling-fallback DeprecationWarning(s) across 5 repeated GO sends on the same (source, target) pair\n[PASS] D-child-first-multi-segment-still-works: state=['deep.A.A2.A2a'] actions=['eA2a']\n--- original repro output ---\nOBSERVED: state=['m.A.A2'] actions=[Action(type='xA1'), Action(type='eA2')] raised=None\nEXPECTED: state=['m.A.A2'] actions=['xA1', 'eA2'] raised=None\nEXPECTED (acceptable alternative): create_machine() rejects '.A2'\nNOTE: the dot is resolved parent-relative, so '.A2' from source 'm.A' looks for 'm.A2' (a sibling), not the child 'm.A.A2'.\nRESULT: FAIL\n\n\n[FAIL] 5-original-repro-exits-0: exit=1\n\n=== SUMMARY ===\nPASS  1-child-first-resolution\nPASS  2-sibling-fallback-still-works-and-warns\nPASS  B-warning-names-hash-path-spelling\nPASS  C-warning-names-strictTargets\nPASS  3-unresolvable-dot-target-raises-at-build-time\nFAIL  4-async-and-sync-agree-on-unresolvable-target-under-strict_targets=False\nPASS  A-warn-once-per-source-target-pair\nPASS  D-child-first-multi-segment-still-works\nFAIL  5-original-repro-exits-0\n\n--STDERR--\n"
+ },
+ "issues/verify-main-5327ba6/LC-42_send_receipt.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.53,
+  "tail": ""
+ },
+ "issues/verify-main-5327ba6/LC-38_sync-interpreter-loop-clock-lane.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.87,
+  "tail": ""
+ },
+ "issues/verify-main-5327ba6/LC-01_action-error-policy.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 2.61,
+  "tail": "ault-reports-failed-actions: states=['oms.b'] trace=['first', 'explode', 'entry_b'] transition_failed=[(['explode'], ['RuntimeError'])] last_transition_ok=False\n[PASS] 5-old-style-plugin-still-loads: loaded fine\n[PASS] 6-entry-failure-during-start-honours-policy: status=stopped last_transition_ok=False\n[PASS] 7-last-transition-ok-false-after-failed-actions: pre=True post=False\n[PASS] A-rollback-withdraws-raised-events: interpreter has no public raise_event() helper to construct this scenario; skipping active repro, relying on CHANGELOG's documented claim (#27) instead\n[PASS] A2-sendto-cannot-be-undone-documented: CHANGELOG.md documents that sendTo cannot be rolled back\n[PASS] B-deprecation-warning-once-per-process: 0 actionErrorPolicy DeprecationWarning(s) across 5 machines/interpreters\n[PASS] C-rollback-idle-checkpoint-skip-throughput: idle no-action transitions: baseline=0.548s rollback=0.371s ratio(rollback/baseline)=1.4761 (expect ~0.98x post-fix; pre-fix was ~0.776x)\n\n=== SUMMARY ===\nPASS  1-invalid-policy-rejected\nPASS  2-rollback-does-not-commit-and-context-restored\nFAIL  3-fail-stops-with-retrievable-error\nPASS  4-continue-default-reports-failed-actions\nPASS  5-old-style-plugin-still-loads\nPASS  6-entry-failure-during-start-honours-policy\nPASS  7-last-transition-ok-false-after-failed-actions\nPASS  A-rollback-withdraws-raised-events\nPASS  A2-sendto-cannot-be-undone-documented\nPASS  B-deprecation-warning-once-per-process\nPASS  C-rollback-idle-checkpoint-skip-throughput\n\n--STDERR--\n"
+ },
+ "issues/verify-main-5327ba6/LC-52_error-platform-event.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.22,
+  "tail": ""
+ },
+ "issues/verify-main-5327ba6/N-1_send-wait-receipt-collision.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 1.07,
+  "tail": "OBSERVED control_fresh_2way              : resolved\nOBSERVED control_fresh_200way            : resolved\nOBSERVED control_same_object_sequential  : resolved\nOBSERVED subject_same_object_concurrent  : resolved\nEXPECTED every case                    : resolved\nRESULT: NOT REPRODUCED (fixed)\n\n[PASS] A: original repro exits 0: OBSERVED=0 EXPECTED=0\n[PASS] B: two concurrent sends of one Event instance both resolve: OBSERVED=('Receipt', 'Receipt') EXPECTED='(Receipt, Receipt)'\n[PASS] C: 200 concurrent sends of one reused instance all resolve: OBSERVED=200 EXPECTED=200\n[FAIL] D: stop() resolves every outstanding duplicate-instance receipt: OBSERVED=[\"Receipt(state_ids=frozenset({'rc.b'}), changed=True, error=None, deferred=False, denied=False)\", \"Receipt(state_ids=frozenset({'rc.a'}), changed=True, error=None, deferred=False, denied=False)\", \"Receipt(state_ids=frozenset({'rc.b'}), changed=True, error=None, deferred=False, denied=False)\", \"Receipt(state_ids=frozenset({'rc.a'}), changed=True, error=None, deferred=False, denied=False)\", \"Receipt(state_ids=frozenset({'rc.b'}), changed=True, error=None, deferred=False, denied=False)\"] EXPECTED='all settled, all report InterpreterStoppedError'\n\nSOME FAILED\n\n--STDERR--\n"
+ },
+ "issues/verify-main-5327ba6/N-2_sync-timer-clock-lane.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.51,
+  "tail": ""
+ },
+ "issues/verify-main-5327ba6/N-4_send-threadsafe-strict.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.21,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/31_relative-dot-target-engine-parity.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.51,
+  "tail": ""
+ },
+ "issues/verify-main-5327ba6/N-3_sync-macrostep-budget.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 2.06,
+  "tail": "OBSERVED events batched via send_events : 1501\nOBSERVED SyncInterpreter processed      : 1501  (queue_depth after: 0)\nOBSERVED Interpreter (async) processed  : 1501\nEXPECTED both engines processed         : 1501\nRESULT: NOT REPRODUCED (fixed)\n\n[PASS] A: original repro exits 0: OBSERVED=0 EXPECTED=0\n[PASS] B: send_events(['T']*5000) processes all 5000: OBSERVED=(5000, 0) EXPECTED=(5000, 0)\n[PASS] need: send_events(['T']*1501) processes all 1501: OBSERVED=(1501, 0) EXPECTED=(1501, 0)\n[PASS] need: 3000 independent one-deep raises all delivered: OBSERVED=(3000, 3000) EXPECTED=(3000, 3000)\n    (info) guard did trip and bound the loop: n=1001, status=running, but no exception was raised (raised=False)\n[FAIL] C: genuine runaway raise-loop trips the guard by RAISING: OBSERVED=(False, None, 1001, True) EXPECTED=(True, '<some exception>', '<< 1_000_000', True)\n[PASS] D: sync/async byte-identical action traces for 2000-event batch: OBSERVED=(2000, 2000, True) EXPECTED=(2000, 2000, True)\n[PASS] engine-parity test exists in tests/: OBSERVED=['tests\\\\test_core_algorithm.py', 'tests\\\\test_round10_findings.py', 'tests\\\\test_round11_findings.py', 'tests\\\\test_round3_findings.py', 'tests\\\\test_round4_findings.py', 'tests\\\\test_round5_findings.py', 'tests\\\\test_round6_findings.py', 'tests\\\\test_round7_findings.py', 'tests\\\\test_round8_findings.py', 'tests\\\\test_round9_findings.py', 'tests\\\\test_xstate_v5_parity.py'] EXPECTED='at least one match'\n\nSOME FAILED\n\n--STDERR--\n"
+ },
+ "issues/verify-main-5327ba6/N-8_error-done-namespace.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 1.66,
+  "tail": "ged)\n\n=== SUMMARY ===\nPASS: need_SYSTEM_EVENT_PREFIXES_importable -- events.SYSTEM_EVENT_PREFIXES = ('done.', 'error.', 'after.', 'xstate.', '___xstate')\nFAIL: need_warns_for_done_review_error_validation -- 0 UserWarning(s): \nPASS: need_no_warn_for_engine_shaped_keys -- reserved-namespace warnings for engine-shaped keys: 0\nPASS: literal_criterion_wildcard_matches_error_myapp_validation -- caught=['PLAIN', 'error.myapp.validation', 'done.review', 'my.namespaced']\nPASS: literal_criterion_wildcard_matches_done_review -- caught=['PLAIN', 'error.myapp.validation', 'done.review', 'my.namespaced']\nPASS: literal_criterion_onUnhandled_trips_for_done_review -- observed=stopped\nPASS: literal_criterion_onUnhandled_trips_for_error_validation -- observed=stopped\nPASS: literal_criterion_control_unknown_plain_still_trips -- observed=stopped\nPASS: literal_criterion_control_wildcard_plain_still_matches -- caught=['PLAIN', 'error.myapp.validation', 'done.review', 'my.namespaced']\nPASS: need_docs_mention_reserved_prefixes -- 2 doc file(s) mention it: ['api\\\\index.md', '_guide\\\\changelog.md']\nPASS: acceptance_tests_named_in_issue_present -- present: {'test_user_event_in_reserved_namespace_matches_wildcard': ['test_events.py'], 'test_user_event_in_reserved_namespace_trips_onunhandled_error': ['test_events.py'], 'test_engine_synthesised_events_remain_exempt': ['test_events.py']}\nPASS: original_repro_exit_0 -- exit code=0 (expected 0 only if runtime behaviour changed)\n\nOVERALL: SOME CRITERIA FAILED\n\n--STDERR--\nERROR:xstate_statemachine.base_interpreter:\ud83d\udea8 Machine 'ou2' entered the error state: UnhandledEventError(\"Event 'UNKNOWN_PLAIN' is not handled in any active state ['ou2.a'] and the machine's onUnhandled policy is 'error'.\")\nERROR:xstate_statemachine.base_interpreter:\ud83d\udea8 Machine 'ou2' entered the error state: UnhandledEventError(\"Event 'done.review' is not handled in any active state ['ou2.a'] and the machine's onUnhandled policy is 'error'.\")\nERROR:xstate_statemachine.base_interpreter:\ud83d\udea8 Machine 'ou2' entered the error state: UnhandledEventError(\"Event 'error.validation' is not handled in any active state ['ou2.a'] and the machine's onUnhandled policy is 'error'.\")\n"
+ },
+ "issues/verify-main-5e07ba8/77_sync-runaway-chain-budget.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.88,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/79_provenance-not-forgeable-and-snapshot-survives.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.6,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/84_receipt-deferred-and-replay-semantics.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.54,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/88_tripped_per_chain.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.59,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/89_clock_kwargs_not_consent.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.45,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/85_provenance_not_forgeable.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.81,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/86_87_snapshot_provenance_and_events.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.81,
+  "tail": "ed parity for engine event (unmatched both sides) live={'s.a'} restored={'s.a'}\n[PASS] #86/#87 AC2: snapshot schema carries a version field ['version', 'machine_id', 'machine_hash', 'taken_at', 'status', 'context', 'state_ids', 'value', 'configuration', 'output', 'error', 'chain_trips', 'last_chain_error', 'deferred', 'pending_events', 'scheduled_sends', 'history', 'actors', 'system']\n[PASS] #86/#87: pending_events records carry a 'kind' discriminator [{'kind': 'system', 'type': 'xstate.error.actor.kid', 'payload': {'error': 'x'}}]\n[PASS] #87 AC1/2: ErrorEvent+DoneEvent both present in persisted pending_events ['error', 'done']\n[FAIL] #87 AC1: restored machine reaches onError target ('bad') w\n[PASS] v1 record (no kind) for plain user type restores as non-system Event Event(type='USER_EVT', payload={'a': 1})\n[PASS] v1 record (no kind) for engine-shaped name restores as system Event(type='___xstate_statemachine_init___', payload={})\n[FAIL] v1 record (no kind) for error.platform.* name-derived as system (best effort) Event(type='error.platform.x', payload={})\n[PASS] every event class round-trips persist_event/restore_event \n[PASS] #84 spot-check: Receipt.deferred True for deferred event True\n[PASS] #84 spot-check: deferred event restored once (no duplication) in pending_events [Event(type='MAYBE_LATER', payload={})]\n\nRESULT: 2 FAILURE(S): [\"#87 AC1: restored machine reaches onError target ('bad')\", 'v1 record (no kind) for error.platform.* name-derived as system (best effort)']\n\n--STDERR--\nWARNING:xstate_statemachine.interpreter:\ud83d\udcec Interpreter 'm' stopping with 2 pending event(s) that will NOT be processed. Use stop(drain=True) to finish them, or read `pending_events` / `get_snapshot()` to persist them.\nWARNING:xstate_statemachine.interpreter:\ud83d\udcec Interpreter 'm' stopping with 1 pending event(s) that will NOT be processed. Use stop(drain=True) to finish them, or read `pending_events` / `get_snapshot()` to persist them.\n"
+ },
+ "issues/verify-main-5e07ba8/91_alias_shadow_warning.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.5,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/92_machine_owned_registry.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.51,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/93_logic_modules_ambiguity.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.51,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/94_runaway_completion_survives.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.75,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/96_resolve_event_spec_dict_payload.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.71,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/95_no_self_deprecation.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.91,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/98_strict_forged_shapes.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.5,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/97_escalate_error_event.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.8,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/99_sync_child_onerror.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.81,
+  "tail": ""
+ },
+ "issues/verify-main-5327ba6/LC-37_wrongthreaderror-message.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 6.6,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/r4_17b.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.41,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/r4_18_err.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.43,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/r4_18_real.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.45,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/r4_18_pub.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.8,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/90_async_self_send_budget.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 3.52,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/r4_21_refute.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.47,
+  "tail": ""
+ },
+ "issues/verify-main-3ed3099/121_ducktyped_logic_not_mutated.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 15.82,
+  "tail": ""
+ },
+ "issues/verify-main-6db65d8/168_chain_budget_completion_exemption.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.56,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/r4_21b.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.12,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/r4_17_refute.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.75,
+  "tail": ""
+ },
+ "issues/verify-main-6db65d8/175_duplicate_event_stop_race.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.54,
+  "tail": ""
+ },
+ "issues/verify-main-6db65d8/179_invoke_cycle_charged.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.5,
+  "tail": ""
+ },
+ "issues/verify-main-6db65d8/174_after_lateness_documented_only.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.15,
+  "tail": ""
+ },
+ "issues/verify-main-6db65d8/182_inflight_flag_start.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.32,
+  "tail": ""
+ },
+ "issues/verify-main-5e07ba8/r4_10_refute.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 3.63,
+  "tail": ""
+ },
+ "issues/verify-main-6db65d8/181_children_timeout.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.87,
+  "tail": ""
+ },
+ "issues/verify-main-6db65d8/185_null_or_absent_machine_hash_disables_drift_check.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.35,
+  "tail": ""
+ },
+ "issues/verify-main-6db65d8/183_root_snapshot_harvests_child_half_applied_context.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.71,
+  "tail": ""
+ },
+ "issues/verify-main-6db65d8/186_configuration_outranks_state_ids.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.43,
+  "tail": ""
+ },
+ "issues/verify-main-6db65d8/184_await_settled_for_snapshot_blocks_loop.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.83,
+  "tail": ""
+ },
+ "issues/verify-main-6db65d8/187_snapshot_from_on_action_execute.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.43,
+  "tail": ""
+ },
+ "issues/verify-main-6db65d8/189_onunhandled_error_receipt.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.48,
+  "tail": ""
+ },
+ "issues/verify-main-6db65d8/188_sync_deferred_this_step_cleared.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.62,
+  "tail": ""
+ },
+ "issues/verify-main-6db65d8/190_strict_and_wildcard.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.49,
+  "tail": ""
+ },
+ "issues/verify-main-c78ce99/214_restore_strict_upcast.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.13,
+  "tail": ""
+ },
+ "issues/verify-main-6db65d8/167_rollback_reinvoke_spin.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 5.69,
+  "tail": "t'} settled=False bounded=True chain_budget=True running=True\nInterpreter      async def PASS    calls@0.6s=1003 calls@1.0s=1003 status=running dropped={'chain_budget'} settled=True bounded=True chain_budget=True running=True\nSyncInterpreter  def       PASS    calls=1003 laps~0 status=running dropped={'chain_budget'} bounded=True chain_budget=True tripped=True running=True last_error=RunawayChainError(\"Machine 'spin' exceeded 1000 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'. The cut stranded invocation(s) ['s']: their state is still active with no service running, and no onDone/onError will arrive.\")\nSyncInterpreter  async def N/A     N/A: SyncInterpreter rejects async def services (NotSupportedError)\n[orig-repro stdout]\nsync  : 1003 service invocations, state=['spin.starting'] status=running\nasync : t=0.5s  service invocations=1003    state=['spin.starting']  status=running\nasync : t=1.0s  service invocations=1003    state=['spin.starting']  status=running\nasync : t=1.5s  service invocations=1003    state=['spin.starting']  status=running\nasync : t=2.0s  service invocations=1003    state=['spin.starting']  status=running\n        status=running  .error=None  last_transition_ok=False\n\nNOT reproduced.\n\n[orig-repro parsed] async invocation counts observed: [1003, 1003, 1003, 1003] bounded_and_settled=True\n\noriginal repro exit code: 0 (0=fixed)\n\nRESULT: FAIL\n\n--STDERR--\n"
+ },
+ "issues/verify-main-c78ce99/216_unknown_config_keys.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.22,
+  "tail": ""
+ },
+ "issues/verify-main-c78ce99/213_snapshot_v3.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.93,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/118_afterevent_lateness.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.26,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/125_deferred_replay_receipt.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.28,
+  "tail": ""
+ },
+ "issues/verify-main-6db65d8/180_external_priority_uncharged.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 5.16,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/134_on_resolve_error_hook.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.29,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/133_sendto_forwardto_unresolved.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.43,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/122_tick_contract_documented.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.81,
+  "tail": ""
+ },
+ "issues/verify-main-c78ce99/215_lap_parity_sweep.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.94,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/145_fail_policy_stops.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.32,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/144_invoke_cycle_terminates.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.49,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/146_hostile_fields_typed.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.37,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/147_root_target_regardless_of_strict_targets.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.4,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/142_configuration_legality.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.94,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/151_settle_budget_per_macrostep.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.44,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/152_guard-raise-fallback.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.54,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/153_guard-denied-distinguishable.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.34,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/154_sync-restore-clock-attach.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.33,
+  "tail": "\n--STDERR--\nrecent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\verify-main-cec108b\\154_sync-restore-clock-attach.py\", line 64, in <module>\n    sys.exit(main())\n             ~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\verify-main-cec108b\\154_sync-restore-clock-attach.py\", line 50, in main\n    r2 = SyncInterpreter.from_snapshot(json.dumps(blob), create_machine(cfg2), clock=clock2).start()\n         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py\", line 1869, in from_snapshot\n    persistence.check_identity(\n    ~~~~~~~~~~~~~~~~~~~~~~~~~~^\n        snapshot,\n        ^^^^^^^^^\n    ...<4 lines>...\n        expected_hash=expected_machine_hash,  # #205\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\persistence.py\", line 419, in check_identity\n    raise SnapshotDriftError(\n    ...<6 lines>...\n    )\nxstate_statemachine.exceptions.SnapshotDriftError: snapshot declares version 1 but carries no 'machine_hash', so it cannot be checked against machine 'q' (#185). The field was lost in transit; restore from an intact copy, or pass verify_machine_hash=False if the machine is known to be unchanged.\n"
+ },
+ "issues/verify-main-cec108b/149_plain_def_service_off_loop.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.23,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/155_spawn-prefix-precedence.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.35,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/156_escalate-no-invoke-id.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.45,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/158_non_str_event_type_restore.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.39,
+  "tail": "  [A] FAIL: wrong exception type SnapshotDriftError: snapshot declares version 2 but carries no 'machine_hash', so it cannot be checked against machine 'rp' (#185). The field was lost in transit; restore from an intact copy, or pass verify_machine_hash=False if the machine is known to be unchanged.\n  [B] PASS: restore_event() rejects non-str type directly\n  [C] FAIL: wrong exception type SnapshotDriftError: snapshot declares version 2 but carries no 'machine_hash', so it cannot be checked against machine 'rp' (#185). The field was lost in transit; restore from an intact copy, or pass verify_machine_hash=False if the machine is known to be unchanged.\n  [D] FAIL: wrong exception type SnapshotDriftError: snapshot declares version 2 but carries no 'machine_hash', so it cannot be checked against machine 'rp' (#185). The field was lost in transit; restore from an intact copy, or pass verify_machine_hash=False if the machine is known to be unchanged.\nOVERALL: FAIL\n\n--STDERR--\n"
+ },
+ "issues/verify-main-cec108b/159_error_hooks.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.38,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/160_redaction.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.38,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/161_dict_event_validation.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.34,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/162_v1_provenance_laundering.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.31,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/157_send_threadsafe_backpressure.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 1.34,
+  "tail": "  [A] single-thread flood raised QueueOverflowError at call site: False\n  [B] concurrent: raised_on_calling_thread=0, overflow_landed_on_unread_future=3100\nCRITERION A (single-thread sync raise): FAIL\nCRITERION B (concurrent, no silent-future-only overflow): FAIL\n\n--STDERR--\n"
+ },
+ "issues/verify-main-cec108b/probe_144_async.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.4,
+  "tail": ""
+ },
+ "issues/verify-main-de2da4e/218_timer_handle_leak.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.99,
+  "tail": ""
+ },
+ "issues/verify-main-de2da4e/219_reentrant_wait.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.41,
+  "tail": ""
+ },
+ "issues/verify-main-de2da4e/220_nested_typos.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.53,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/probe_144_async_count.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.35,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/repro_147_151.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.41,
+  "tail": ""
+ },
+ "issues/verify-main-de2da4e/221_parked_v3_sends.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.32,
+  "tail": ""
+ },
+ "issues/verify-main-de2da4e/repro_218.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.4,
+  "tail": ""
+ },
+ "issues/verify-main-de2da4e/222_chain_trip_sticky.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.8,
+  "tail": ""
+ },
+ "issues/verify-main-de2da4e/221_repersist_no_start_scheduled_sends.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.19,
+  "tail": ""
+ },
+ "issues/verify-main-f28719c/186_configuration_state_ids_agreement.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.3,
+  "tail": ""
+ },
+ "issues/verify-main-f28719c/192_priority_lane_provenance.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.95,
+  "tail": ""
+ },
+ "issues/verify-main-f28719c/193_def_service_rollback_unwind.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.57,
+  "tail": ""
+ },
+ "issues/verify-main-cec108b/150_send_threadsafe_budgeted.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 8.96,
+  "tail": "  direct route              : (21, 'RunawayChainError', False)\nCriterion: default send_threadsafe() from action-spawned thread (no internal=True)\n  threadsafe (default args) : (60, None, True)\n  [FAIL] send_threadsafe() with NO internal= flag from an action thread is budgeted by default (documented default should charge action-spawned self-sends)\nCriterion: send_threadsafe(internal=True) from action-spawned thread is budgeted\n  threadsafe (internal=True): (21, 'RunawayChainError', False)\n  [OK] internal=True is budgeted\n  [OK] internal=True trip is RunawayChainError\n  [OK] internal=True last_transition_ok is False\nCriterion: send_threadsafe via contextvars.copy_context().run is budgeted\n  threadsafe (ctx-inherit)  : (21, 'RunawayChainError', False)\n  [OK] ctx-inheriting thread is budgeted\nCriterion: a foreign thread with no action on its stack is NOT charged\n  [OK] foreign thread unaffected\n\nRESULT: FAIL (1 criteria failed)\n\n--STDERR--\n"
+ },
+ "issues/verify-main-f28719c/181_start_bounds_children_wait.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 3.83,
+  "tail": ""
+ },
+ "issues/verify-main-c78ce99/215_216_lap_parity_and_unknown_keys.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 15.98,
+  "tail": ""
+ },
+ "issues/verify-main-f28719c/197_empty_config_wait.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.82,
+  "tail": ""
+ },
+ "issues/verify-main-f28719c/198_configuration_state_ids_agreement.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.3,
+  "tail": ""
+ },
+ "issues/verify-main-f28719c/199_on_interpreter_start_window.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.3,
+  "tail": ""
+ },
+ "issues/verify-main-f28719c/201_lap_parity_stated_exactly.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.4,
+  "tail": "{\n  \"rows\": [\n    {\n      \"probe\": \"pingpong_sync\",\n      \"tripped\": true,\n      \"laps\": 23\n    },\n    {\n      \"probe\": \"pingpong_async_def\",\n      \"tripped\": true,\n      \"laps\": 23\n    },\n    {\n      \"probe\": \"pingpong_async_asyncdef\",\n      \"tripped\": true,\n      \"laps\": 23\n    },\n    {\n      \"probe\": \"rollback_sync\",\n      \"tripped\": false,\n      \"laps\": 0,\n      \"raised_runtimeerror\": false\n    },\n    {\n      \"probe\": \"rollback_async_def\",\n      \"tripped\": true,\n      \"laps\": 0\n    },\n    {\n      \"probe\": \"rollback_async_asyncdef\",\n      \"tripped\": true,\n      \"laps\": 0\n    }\n  ],\n  \"failures\": [\n    \"rollback: sync engine expected to stop early with RuntimeError, got {'tripped': False, 'laps': 0, 'raised_runtimeerror': False}\"\n  ]\n}\nVERDICT: FAIL\n\n--STDERR--\nthen cutting the self-generated tail.\nERROR:xstate_statemachine.base_interpreter:\ud83d\udd25 Action 'blow' raised while handling event 'done.invoke.k'; skipping remaining actions in this list.\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py\", line 3630, in _execute_actions\n    await self._run_user_action(impl, action_def, event)\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py\", line 2363, in _run_user_action\n    impl(self, self.context, event, action_def)\n    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\verify-main-f28719c\\201_lap_parity_stated_exactly.py\", line 61, in blow\n    raise RuntimeError(\"rollback\")\nRuntimeError: rollback\nWARNING:xstate_statemachine.base_interpreter:\ud83d\udca5 Transition on 'lv.a' failed; rolling back to the pre-transition configuration.\nERROR:xstate_statemachine.interpreter:\ud83d\uded1 Exceeded 20 chained self-raised events on 'lv'. This means an action raises the event that triggers it. Breaking the chain; externally queued events are unaffected.\nERROR:xstate_statemachine.base_interpreter:\ud83e\uddf7 Machine 'lv' rests in state 'lv.a' whose invocation 'k' was cut by the chain budget and will never complete (#207). Exit the state with an event, or raise 'maxIterations' if the cycle is expected to converge.\n"
+ },
+ "issues/verify-main-f28719c/196_always_vs_named_event.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.03,
+  "tail": ""
+ },
+ "issues/verify-v0.9.0/229_docs_check.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.09,
+  "tail": ""
+ },
+ "issues/verify-main-f28719c/194_children_timeout_per_child.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 3.46,
+  "tail": ""
+ },
+ "issues/verify-main-f28719c/200_chain_owed_ledger.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.33,
+  "tail": ""
+ },
+ "issues/verify-v0.9.0/225-228_matrix.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.86,
+  "tail": "PASS 225.lane_a.worker_send_not_refused\nPASS 225.lane_a.machine_advanced\nPASS 225.lane_b.no_yield_not_refused\nPASS 225.lane_b.with_yield_not_refused\nPASS 225.in_step_await_still_refused\nPASS 232.def_drop_receipt_warns\nPASS 232.def_handout_ensure_future_silent\nPASS 226.async.trips_recorded_live\nPASS 226.async.blob_has_chain_trips\nPASS 226.async.trips_survive_restore\nPASS 226.async.last_chain_error_is_restored_error\nPASS 227.sync.restore_not_aborted\nPASS 227.sync.refused_scheduled_send_not_armed\nPASS 227.sync.last_error_is_unknown_event\nPASS 227.sync.on_invalid_event_fired\nPASS 227.sync.never_reached_run_loop\nPASS 226.sync.trips_recorded_live\nPASS 226.sync.trips_survive_restore\nPASS 226.sync.last_chain_error_is_restored_error\nFAIL 228.repo_path_provided\n\nFAILED (1):\n - 228.repo_path_provided\n\n--STDERR--\n"
+ },
+ "issues/verify-v0.9.0/230_from_snapshot_plugins.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.3,
+  "tail": ""
+ },
+ "issues/verify-v0.9.0/231_invoke_src_named_error.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.37,
+  "tail": ""
+ },
+ "issues/verify-v0.9.0/232_runtime_warning_matrix.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.53,
+  "tail": ""
+ },
+ "issues/verify-v0.9.1/239_drain_pending.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.42,
+  "tail": ""
+ },
+ "issues/verify-v0.9.0/233_235_verify.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.54,
+  "tail": "233_order: ['B', 'A']\n233_pass: True\n234_version: 0.9.1\n234_dist_version: 0.9.1\n234_changelog_head: ['## Changelog', '', 'All notable changes to this project will be documented in this file.', '']\n234_pypi_note: NOT on PyPI as of this run (pip download 0.9.0 failed; latest is 0.8.0)\n235_public_export: False\n235_deprecation_warned: True\n235_original_is_system_event: True\n235_mutated_type: DoneEvent\n235_mutated_is_public_DoneEvent: True\n\nALL_PASS: False\n\n--STDERR--\n"
+ },
+ "issues/verify-v0.9.1/240_on_interpreter_start.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.46,
+  "tail": ""
+ },
+ "issues/verify-v0.9.1/241_snapshot_corrupt.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.47,
+  "tail": ""
+ },
+ "issues/verify-v0.9.1/243_restored_chain_error.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.47,
+  "tail": ""
+ },
+ "issues/verify-v0.9.1/244_dropped_receipts.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.52,
+  "tail": ""
+ },
+ "issues/verify-v0.9.1/245_sync_interpreter_kwargs.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.47,
+  "tail": ""
+ },
+ "issues/verify-v0.9.1/247_pep740_attestation.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.45,
+  "tail": ""
+ },
+ "issues/verify-v0.9.1/248_remint_gating.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.42,
+  "tail": ""
+ },
+ "probes/harness.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.36,
+  "tail": ""
+ },
+ "probes/main-19cb1f1/p1_after_provenance_migration.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.92,
+  "tail": ""
+ },
+ "probes/main-19cb1f1/p4_states_to_invoke_seams.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.3,
+  "tail": ""
+ },
+ "probes/main-19cb1f1/p5_receipt_illegal_configuration.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.45,
+  "tail": ""
+ },
+ "probes/main-19cb1f1/p6_seed_settle_standing.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.85,
+  "tail": ""
+ },
+ "probes/main-19cb1f1/p2_delayed_selfsend_heartbeat.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 6.12,
+  "tail": ""
+ },
+ "probes/main-19cb1f1/p7_send_provenance_and_stranded.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.41,
+  "tail": ""
+ },
+ "probes/main-221ce7c/p10_snapshot_refusal_and_child_wait.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.33,
+  "tail": ""
+ },
+ "probes/main-221ce7c/p1_priority_lane_charged.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.54,
+  "tail": ""
+ },
+ "issues/verify-v0.9.1/repro_243_246.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 14.27,
+  "tail": ""
+ },
+ "probes/main-221ce7c/p1c_control_nonpriority.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.4,
+  "tail": ""
+ },
+ "probes/main-19cb1f1/p3_delayed_selfsend_scope.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 15.9,
+  "tail": ""
+ },
+ "probes/main-221ce7c/p3_coroutine_invoke_cycle_unbounded.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.34,
+  "tail": ""
+ },
+ "probes/main-221ce7c/p2_start_awaits_child_bringup.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.23,
+  "tail": ""
+ },
+ "issues/verify-main-c78ce99/212_selfsend_timer.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 36.59,
+  "tail": ""
+ },
+ "probes/main-221ce7c/p6_slots_compat.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.26,
+  "tail": ""
+ },
+ "probes/main-221ce7c/p7_sync_per_step_list_leak.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.31,
+  "tail": ""
+ },
+ "probes/main-221ce7c/p8_stale_guard_denied_receipt.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.29,
+  "tail": ""
+ },
+ "probes/main-221ce7c/p5_threadsafe_counter_balance.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 6.82,
+  "tail": ""
+ },
+ "probes/main-221ce7c/p1b_priority_realistic_producer.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 14.88,
+  "tail": ""
+ },
+ "probes/main-3c527b0/g11_delivery_task_untracked.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.4,
+  "tail": ""
+ },
+ "probes/main-3c527b0/g10_stop_rollback_teardown.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.68,
+  "tail": ""
+ },
+ "probes/main-3c527b0/g13_resolve_event_spec_errorevent.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.25,
+  "tail": ""
+ },
+ "probes/main-221ce7c/p9_after_timer_charged_midstep.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 6.66,
+  "tail": ""
+ },
+ "probes/main-3c527b0/g14_strict_shape_residual.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.27,
+  "tail": ""
+ },
+ "probes/main-3c527b0/g13b_reachable.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.6,
+  "tail": ""
+ },
+ "probes/main-3c527b0/g16_sync_child_failure.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.27,
+  "tail": ""
+ },
+ "probes/main-3c527b0/g15_escalate_shape.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.59,
+  "tail": ""
+ },
+ "probes/main-3c527b0/g17_snapshot_drops_errorevent.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.31,
+  "tail": ""
+ },
+ "probes/main-3c527b0/g18_threadsafe_and_detach.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.3,
+  "tail": "\n--STDERR--\ny\", line 994, in run\n    self._target(*self._args, **self._kwargs)\n    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-3c527b0\\g18_threadsafe_and_detach.py\", line 17, in worker\n    for lbl, e in ((\"plain \", Event(\"NOPE\")), (\"forged\", Event(\"NOPE\", system=True))):\n                                                         ~~~~~^^^^^^^^^^^^^^^^^^^^^\nTypeError: Event.__init__() got an unexpected keyword argument 'system'\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-3c527b0\\g18_threadsafe_and_detach.py\", line 37, in <module>\n    asyncio.run(main())\n    ~~~~~~~~~~~^^^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 195, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-3c527b0\\g18_threadsafe_and_detach.py\", line 24, in main\n    print(\"a) send_threadsafe strict plain :\", res[\"plain \"])\n                                               ~~~^^^^^^^^^^\nKeyError: 'plain '\n"
+ },
+ "probes/main-3c527b0/g1_forge_system.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.27,
+  "tail": "is_system_event(Event('X'))              = False\n\n--STDERR--\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-3c527b0\\g1_forge_system.py\", line 9, in <module>\n    print(\"is_system_event(Event('X', system=True)) =\", ev.is_system_event(Event(\"X\", system=True)))\n                                                                           ~~~~~^^^^^^^^^^^^^^^^^^\nTypeError: Event.__init__() got an unexpected keyword argument 'system'\n"
+ },
+ "probes/main-3c527b0/g20_task_budget.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.95,
+  "tail": ""
+ },
+ "probes/main-3c527b0/g2_snapshot_provenance.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.26,
+  "tail": "\n--STDERR--\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-3c527b0\\g2_snapshot_provenance.py\", line 30, in <module>\n    asyncio.run(main())\n    ~~~~~~~~~~~^^^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 195, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-3c527b0\\g2_snapshot_provenance.py\", line 17, in main\n    it._put_inbox(Event(type=\"xstate.error.actor.child\", payload={\"error\": \"x\"}, system=True))\n                  ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: Event.__init__() got an unexpected keyword argument 'system'\n"
+ },
+ "probes/main-3c527b0/g3_restore_regression.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.26,
+  "tail": "\n--STDERR--\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-3c527b0\\g3_restore_regression.py\", line 45, in <module>\n    asyncio.run(main())\n    ~~~~~~~~~~~^^^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 195, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-3c527b0\\g3_restore_regression.py\", line 37, in main\n    esc = Event(type=\"xstate.error.actor.kid\", payload={\"error\": \"x\"}, system=True)\nTypeError: Event.__init__() got an unexpected keyword argument 'system'\n"
+ },
+ "probes/main-3c527b0/g19_child_fails_during_exit.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.34,
+  "tail": ""
+ },
+ "probes/main-3c527b0/g4_plugin_deprecation.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.48,
+  "tail": ""
+ },
+ "probes/main-3c527b0/g5_child_leak_cycles.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.85,
+  "tail": ""
+ },
+ "probes/main-3c527b0/g12_delivery_task_gc.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 5.01,
+  "tail": ""
+ },
+ "probes/main-221ce7c/p4_external_event_renews_budget.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 12.79,
+  "tail": ""
+ },
+ "probes/main-3c527b0/g7_ondone_happy.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.44,
+  "tail": ""
+ },
+ "probes/main-3c527b0/p1_strict_user_system.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.32,
+  "tail": ""
+ },
+ "probes/main-3c527b0/g9_sync_parity.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.32,
+  "tail": "A sync service failure -> state {'m.bad'} event seen: [('_EngineError', 'error.platform.svc', ValueError('sync boom'))]\n  is ErrorEvent: False\n\n--STDERR--\nERROR:xstate_statemachine.sync_interpreter:\ud83d\udc94 Sync service 'svc' failed: sync boom\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\sync_interpreter.py\", line 1812, in _invoke_service\n    result = service(self, self.context, invoke_event)\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-3c527b0\\g9_sync_parity.py\", line 10, in blow\n    def blow(i, c, e): raise ValueError(\"sync boom\")\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nValueError: sync boom\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-3c527b0\\g9_sync_parity.py\", line 28, in <module>\n    for lbl, e in ((\"plain \", Event(\"NOPE\")), (\"forged\", Event(\"NOPE\", system=True))):\n                                                         ~~~~~^^^^^^^^^^^^^^^^^^^^^\nTypeError: Event.__init__() got an unexpected keyword argument 'system'\n"
+ },
+ "probes/main-3c527b0/p3_m1_deep.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.44,
+  "tail": ""
+ },
+ "probes/main-3c527b0/g6_exit_race.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.98,
+  "tail": ""
+ },
+ "probes/main-3c527b0/g8_unhandled_child_failure.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.25,
+  "tail": ""
+ },
+ "probes/main-3c527b0/p2_actor_lifecycle.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.85,
+  "tail": ""
+ },
+ "probes/main-3ed3099/p4_clock_attach.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.26,
+  "tail": ""
+ },
+ "probes/main-5327ba6/_h.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.13,
+  "tail": ""
+ },
+ "probes/main-3ed3099/p3_followups.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.47,
+  "tail": ""
+ },
+ "probes/main-3ed3099/p1_midstep_snapshot.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.88,
+  "tail": ""
+ },
+ "probes/main-5327ba6/a2_confirm_deferred_receipt.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.45,
+  "tail": ""
+ },
+ "probes/main-5327ba6/b5_child_actor_rollback.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.62,
+  "tail": ""
+ },
+ "probes/main-5327ba6/a_receipts.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 1.22,
+  "tail": "[PASS ] A1 500 concurrent wait=True sends of ONE Event object\n[FAIL ] A2 wait=True on a DEFERRED event: resolve on defer or on replay?\n        expected: 'DOCUMENT'\n        observed: {'resolved_at_defer_time': True, 'deferred_count_at_defer': 1, 'resolved': True, 'changed': False, 'error': None, 'state': ['d.a']}\n[FAIL ] A3 wait=True on an event dropped by DROP_NEWEST\n        expected: 'DOCUMENT'\n        observed: {'n': 12, 'hung': 0, 'dropped_reported': 10, 'ok': 2}\n[FAIL ] A4 wait=True receipt when RAISE overflow refuses the send\n        expected: 'DOCUMENT'\n        observed: {'raised_at_call_site': 9, 'tasks': 3, 'hung': 0, 'outcomes': ['ok']}\n[PASS ] A5 reused Event as a template: payload never mutated by the engine\n[PASS ] A6 priority + wait=True on ONE reused Event object x200\n[FAIL ] A7 deferred event that is NEVER replayed: receipt at stop()\n        expected: 'DOCUMENT'\n        observed: {'pending_after_defer': False, 'resolved_at_stop': True, 'error': None}\n\na_receipts: 3/7 pass\n\n--STDERR--\n"
+ },
+ "probes/main-5327ba6/b_rollback_raise.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.79,
+  "tail": ""
+ },
+ "probes/main-5327ba6/c14_async_no_send_budget.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 3.33,
+  "tail": "machine.max_iterations = 1000\n\nSYNC : send() returned. steps = 1001\nASYNC: after 2.0 s of spinning, steps = 1001  status = running\nASYNC: after 3.0 s, steps = 1001  (still climbing: False)\nASYNC: queue_depth = 0\n\n--STDERR--\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-5327ba6\\c14_async_no_send_budget.py\", line 82, in <module>\n    asyncio.run(main())\n    ~~~~~~~~~~~^^^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 195, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-5327ba6\\c14_async_no_send_budget.py\", line 71, in main\n    assert n3 > n2, \"async chain terminated on its own\"\n           ^^^^^^^\nAssertionError: async chain terminated on its own\n"
+ },
+ "probes/main-3ed3099/p2_gate_and_inline.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 5.06,
+  "tail": ""
+ },
+ "probes/main-5327ba6/g1b_alias_ambiguity_and_leak.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.23,
+  "tail": ""
+ },
+ "probes/main-5327ba6/def_threads_dormant_namespaces.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 2.19,
+  "tail": "']}\n[PASS ] E3 pending_invocations agrees with has_dormant_invocations\n[FAIL ] F1 monkeypatching events.SYSTEM_EVENT_PREFIXES has no effect\n        expected: 'DOCUMENT'\n        observed: {'module_patched': True, 'base_interpreter_copy': False, 'unhandled_reported': [['cv.something', 'deferred']], 'deferred': 1}\n[FAIL ] F2 'done.' trailing-content variants: which are treated as system?\n        expected: 'DOCUMENT'\n        observed: {'done.review': 'deferred', 'done.': 'deferred', 'done': 'deferred', 'doneReview': 'deferred', 'done.invoke.x': 'deferred', 'donex': 'deferred', 'error.validation': 'deferred', 'errorx': 'deferred', 'after.5': 'deferred', 'afterx': 'deferred', 'xstate.foo': 'deferred', '___xstateY': 'deferred'}\n[FAIL ] F3 case variants of a reserved prefix\n        expected: 'DOCUMENT'\n        observed: {'DONE.review': 'deferred', 'Done.Review': 'deferred', 'ERROR.x': 'deferred', 'After.5': 'deferred', 'XSTATE.y': 'deferred'}\n[FAIL ] F5 build-time UserWarning for reserved `on` keys\n        expected: 'DOCUMENT'\n        observed: {'done.review': 'no-warning', 'error.validation': 'no-warning', 'done.invoke.job': 'no-warning', 'after.500': 'no-warning', 'xstate.init': 'no-warning', 'DONE.review': 'no-warning', 'done': 'no-warning'}\n[FAIL ] F6 'error.validation' as a user event: visible to '*'?\n        expected: 'DOCUMENT'\n        observed: {'matched_by_star': ['ordinary', 'error.validation', 'done.review'], 'status': 'running'}\n\ndef_threads_dormant_namespaces: 5/13 pass\n\n--STDERR--\n"
+ },
+ "probes/main-5e07ba8-final/v1_torn.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.4,
+  "tail": "\n--STDERR--\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-5e07ba8-final\\v1_torn.py\", line 20, in <module>\n    asyncio.run(main())\n    ~~~~~~~~~~~^^^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 195, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-5e07ba8-final\\v1_torn.py\", line 10, in main\n    snap=i.get_persisted_snapshot()\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py\", line 1551, in get_persisted_snapshot\n    raise exc\nxstate_statemachine.exceptions.SnapshotMidStepError: Interpreter 't' is mid-macrostep: a transition's actions are still running and the configuration has no leaf. Snapshot it once the step settles (await send(..., wait=True), or from on_transition).\n"
+ },
+ "probes/main-5e07ba8-final/v2_root_target.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.23,
+  "tail": "\n--STDERR--\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-5e07ba8-final\\v2_root_target.py\", line 4, in <module>\n    s=SyncInterpreter(create_machine(CFG,logic=MachineLogic()))\n                      ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\factory.py\", line 302, in create_machine\n    validate_machine(machine, strict_targets=strict_targets)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\validation.py\", line 479, in validate_machine\n    raise RootTargetError(\n    ...<2 lines>...\n    )\nxstate_statemachine.exceptions.RootTargetError: Machine 'm' has transition(s) targeting the machine root:\n  m.a: always -> target '#m' is the machine root; entering it empties the configuration. Target the root's initial child ('#m.a') or a specific state.\n"
+ },
+ "probes/main-5327ba6/c_sync_chain_budget.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 5.1,
+  "tail": "[PASS ] C1 sync: 1000-deep legitimate terminating chain\n[PASS ] C2 sync: 999-deep chain (control)\n[FAIL ] C2b sync: 1500-deep chain\n        expected: {'n': 1500}\n        observed: {'n': 1001}\n[PASS ] C3 sync: 3000 independent one-deep raises in one batch\n[PASS ] C4 sync: genuine infinite self-feed is broken; caller's queued T's survive\n[FAIL ] C5 sync: externals interleaved AFTER a 2000-deep chain in one batch\n        expected: {'n': 2000, 'ext': 100}\n        observed: {'n': 1001, 'ext': 100}\n[PASS ] C6 sync: 1001-deep chain (limit+1)\n[PASS ] C7 async engine: same 1000-deep legitimate chain\n[FAIL ] C8 async engine: 1500-deep legitimate chain\n        expected: {'n': 1500}\n        observed: {'n': 1001}\n\nc_sync_chain_budget: 6/9 pass\n\n--STDERR--\n"
+ },
+ "probes/main-5e07ba8-final/v3_child_output.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.66,
+  "tail": ""
+ },
+ "probes/main-5327ba6/gh_aliases_deprecation.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 3.04,
+  "tail": "[FAIL ] G1 fetch_data AND fetchData both registered (different fns)\n        expected: 'InvalidConfigError'\n        observed: 'built'\n[PASS ] G2 both names bound to the SAME callable -> no ambiguity\n[PASS ] G3 only fetchData registered, config says fetch_data\n[PASS ] G4 only fetch_data registered, config says fetchData\n[PASS ] G5 exact name wins over an alias\n[PASS ] G6 acronyms / digits / non-identifier config names bind to snake_case\n[PASS ] G7 an ACTION and a GUARD with the same normalized name do not collide\n[PASS ] G8 ambiguity the machine does NOT reference is silent\n[FAIL ] G9 three-way ambiguity\n        expected: 'InvalidConfigError'\n        observed: 'built'\n[FAIL ] G10 resolve_aliases MUTATES the shared logic registry (leaks across machines)\n        expected: 'DOCUMENT'\n        observed: {'keys_after_first_build': ['fetch_data'], 'alias_leaked_into_registry': False, 'second_build': 'built(no-ambiguity-raised)'}\n[PASS ] G11 guards and services alias too\n[PASS ] H1 machine 1 sets the policy explicitly, machine 2 does not: does m2 warn?\n[PASS ] H2 two DEFAULT machines -> exactly one warning per process\n[PASS ] H3 a default machine whose actions never fail: warns at all?\n[PASS ] H4 ALL machines set the policy explicitly -> no warning (no false alarm)\n\ngh_aliases_deprecation: 12/15 pass\n\n--STDERR--\nC:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\factory.py:279: UserWarning: Logic name 'fetchData' is registered exactly and also as ['fetch_data'], which differ only by case or separators but are DIFFERENT callables. The exact key 'fetchData' is used; remove the others or make them the same object.\n  _alias_logic_names(machine)\nC:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\factory.py:279: UserWarning: Logic name 'logHTTPStatus' is registered exactly and also as ['log_http_status'], which differ only by case or separators but are DIFFERENT callables. The exact key 'logHTTPStatus' is used; remove the others or make them the same object.\n  _alias_logic_names(machine)\nC:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\factory.py:279: UserWarning: Logic name 'fetchData' is registered exactly and also as ['FETCH-DATA', 'fetch_data'], which differ only by case or separators but are DIFFERENT callables. The exact key 'fetchData' is used; remove the others or make them the same object.\n  _alias_logic_names(machine)\n"
+ },
+ "probes/main-5e07ba8-final/v4_sync_hang.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.33,
+  "tail": ""
+ },
+ "probes/main-5e07ba8-final/v6_deferred.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.4,
+  "tail": ""
+ },
+ "probes/main-5e07ba8-final/v6b.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.41,
+  "tail": ""
+ },
+ "probes/main-5e07ba8-final/v7_priority.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.37,
+  "tail": "\n--STDERR--\n st=asyncio.ensure_future(i.start()) if asyncio.iscoroutine(i.start()) else None\nRuntimeWarning: Enable tracemalloc to get the object allocation traceback\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-5e07ba8-final\\v7_priority.py\", line 15, in <module>\n    asyncio.run(main())\n    ~~~~~~~~~~~^^^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 195, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-5e07ba8-final\\v7_priority.py\", line 10, in main\n    snap=i.get_persisted_snapshot(); d=snap if isinstance(snap,dict) else json.loads(snap)\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py\", line 1551, in get_persisted_snapshot\n    raise exc\nxstate_statemachine.exceptions.SnapshotMidStepError: Interpreter 'm' is mid-macrostep: a transition's actions are still running and the configuration has no leaf. Snapshot it once the step settles (await send(..., wait=True), or from on_transition).\n"
+ },
+ "probes/main-5e07ba8-final/v7b.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.35,
+  "tail": "\n--STDERR--\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-5e07ba8-final\\v7b.py\", line 17, in <module>\n    asyncio.run(main())\n    ~~~~~~~~~~~^^^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 195, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-5e07ba8-final\\v7b.py\", line 11, in main\n    snap=i.get_persisted_snapshot(); d=snap if isinstance(snap,dict) else json.loads(snap)\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py\", line 1551, in get_persisted_snapshot\n    raise exc\nxstate_statemachine.exceptions.SnapshotMidStepError: Interpreter 'm' is mid-macrostep: a transition's actions are still running and the configuration has no leaf. Snapshot it once the step settles (await send(..., wait=True), or from on_transition).\n"
+ },
+ "probes/main-5e07ba8/r10_hash_params.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.26,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r12_external_misroute.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.53,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r11_registry_mem.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 3.1,
+  "tail": ""
+ },
+ "probes/main-5e07ba8-final/v5_ext_budget.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 4.08,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r15_deferred_replay_receipt.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.57,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r16_fwdcompat.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.22,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r17_restore_pending.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.54,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r14_which_lost.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.86,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r18_restore_engine_event_delivery.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.86,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r1_provenance_copy.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.22,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r19_onunhandled_error_restore.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 1.18,
+  "tail": "onUnhandled=None     -> state {'m.failed'} status=running\nonUnhandled='error'  -> state {'m.failed'} status=running\nonUnhandled='defer'  -> state {'m.failed'} status=running\n\n--STDERR--\n\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-5e07ba8\\r19_onunhandled_error_restore.py\", line 20, in main\n    await case(ou)\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-5e07ba8\\r19_onunhandled_error_restore.py\", line 11, in case\n    i=Interpreter(create_machine(cfg(ou), logic=MachineLogic())); await i.start()\n                  ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src\\xstate_statemachine\\factory.py\", line 275, in create_machine\n    machine = MachineNode(config, owned_logic)\n  File \"C:\\Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src\\xstate_statemachine\\models.py\", line 1617, in __init__\n    self.on_unhandled: str = _validated_policy(\n                             ~~~~~~~~~~~~~~~~~^\n        config, \"onUnhandled\", UNHANDLED_EVENT_POLICIES, \"ignore\"\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src\\xstate_statemachine\\models.py\", line 117, in _validated_policy\n    raise InvalidConfigError(\n    ...<2 lines>...\n    )\nxstate_statemachine.exceptions.InvalidConfigError: Machine 'm': 'onUnhandled' must be one of ['ignore', 'defer', 'error'], got 'warn'.\n"
+ },
+ "probes/main-5e07ba8/r21_child_status.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.23,
+  "tail": ""
+ },
+ "probes/main-19cb1f1/r10_03_refute_after_vs_raise.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 39.54,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r22_ducktyped_mutation.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.24,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r23_machinelogic_subclass.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.27,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r20_sync_child_error.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.24,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r25_ab_external_loss.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.26,
+  "tail": "\n--STDERR--\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-5e07ba8\\r25_ab_external_loss.py\", line 2, in <module>\n    SRC = sys.argv[1]\n          ~~~~~~~~^^^\nIndexError: list index out of range\n"
+ },
+ "probes/main-5e07ba8/r24_docs_undocumented.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.7,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r28_fifo_violation.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.66,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r26_repeated_loss.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 4.35,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r13_external_loss.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 8.58,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r2_forge.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.24,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r29_threadsafe_reorder.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.92,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r31_async_completion_drop.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.74,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r30_backlog_jump.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.75,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r32_async_receipt_type.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.14,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r34_shadow_warn.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.25,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r33_dropped_receipt_type.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.23,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r37_after_lateness_loss.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.27,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r38_done_data_nonjson.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.26,
+  "tail": "\n--STDERR--\n13\\Lib\\json\\encoder.py\", line 200, in encode\n    chunks = self.iterencode(o, _one_shot=True)\n  File \"C:\\Python\\Python313\\Lib\\json\\encoder.py\", line 261, in iterencode\n    return _iterencode(o, 0)\n  File \"C:\\Python\\Python313\\Lib\\json\\encoder.py\", line 180, in default\n    raise TypeError(f'Object of type {o.__class__.__name__} '\n                    f'is not JSON serializable')\nTypeError: Object of type datetime is not JSON serializable\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-5e07ba8\\r38_done_data_nonjson.py\", line 9, in <module>\n    rec=persist_event(DoneEvent(type=\"done.invoke.f\", data=data, src=\"f\"))\n  File \"C:\\Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src\\xstate_statemachine\\events.py\", line 358, in persist_event\n    _assert_json_safe(rec, event)\n    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\n  File \"C:\\Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src\\xstate_statemachine\\events.py\", line 371, in _assert_json_safe\n    raise SnapshotSerializationError(event.type, exc) from exc\nxstate_statemachine.exceptions.SnapshotSerializationError: Pending event 'done.invoke.f' carries data that is not JSON-serialisable (Object of type datetime is not JSON serializable). Snapshots refuse to coerce values silently; make the data JSON-native or snapshot from a quiesced interpreter.\n"
+ },
+ "probes/main-5e07ba8/r36_sync_deferred_growth.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.96,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r39_snapshot_json_ab.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.31,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r35_deferred_growth.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.45,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r3_snapshot_v2.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.31,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r40_done_data_coercion.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.33,
+  "tail": "\n--STDERR--\n~~~~~~~~~^^\n  File \"C:\\Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src\\xstate_statemachine\\interpreter.py\", line 1709, in _persist_pending_events\n    out.extend(\n    ~~~~~~~~~~^\n        self._persist_event_reporting(ev)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<2 lines>...\n        ]\n        ^\n    )\n    ^\n  File \"C:\\Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src\\xstate_statemachine\\interpreter.py\", line 1710, in <genexpr>\n    self._persist_event_reporting(ev)\n    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^\n  File \"C:\\Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src\\xstate_statemachine\\base_interpreter.py\", line 1331, in _persist_event_reporting\n    return persist_event(event, lane=lane)\n  File \"C:\\Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src\\xstate_statemachine\\events.py\", line 358, in persist_event\n    _assert_json_safe(rec, event)\n    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\n  File \"C:\\Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src\\xstate_statemachine\\events.py\", line 371, in _assert_json_safe\n    raise SnapshotSerializationError(event.type, exc) from exc\nxstate_statemachine.exceptions.SnapshotSerializationError: Pending event 'done.invoke.svc' carries data that is not JSON-serialisable (Object of type Decimal is not JSON serializable). Snapshots refuse to coerce values silently; make the data JSON-native or snapshot from a quiesced interpreter.\n"
+ },
+ "probes/main-5e07ba8/r41_receipt_arity.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.35,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r42_statenotfound_parity.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.34,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r45_summary.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.13,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r43_detach_strips_provenance.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.56,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r46_v1_promotion.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.33,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r47_restore_launders_strict.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.33,
+  "tail": "live send 'after.party'  -> UnknownEventError (correct, #98)\n\n--STDERR--\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-5e07ba8\\r47_restore_launders_strict.py\", line 20, in <module>\n    print(\"restored from v1 record  -> system provenance:\", is_system_event(q[0]), \"type:\", type(q[0]).__name__)\n                                                                            ~^^^\nIndexError: list index out of range\n"
+ },
+ "probes/main-5e07ba8/r4_deferred_receipt.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.31,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r44_detach_ab.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.95,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r6_deferred_false_positive.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.32,
+  "tail": "\n--STDERR--\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-5e07ba8\\r6_deferred_false_positive.py\", line 9, in <module>\n    stale = set(i._deferred_this_step)\n  File \"<string>\", line 23, in __hash__\nTypeError: unhashable type: 'dict'\n"
+ },
+ "probes/main-5e07ba8/r5_deferred_idleak.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.54,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r8_selfsend_receipt_orphan.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.66,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r6b.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.99,
+  "tail": ""
+ },
+ "issues/verify-main-f28719c/195_provenance.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 61.53,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r9_runaway.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.0,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r7_async_send_reroute.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.58,
+  "tail": ""
+ },
+ "probes/main-5e07ba8/r27_default_limit_loss.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 12.66,
+  "tail": ""
+ },
+ "probes/main-6db65d8/m3_chain_owed_never_completing.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.49,
+  "tail": ""
+ },
+ "probes/main-6db65d8/m2_chain_owed_leak_baseexception.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.71,
+  "tail": ""
+ },
+ "probes/main-6db65d8/m5_children_timeout_aggregate.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.76,
+  "tail": ""
+ },
+ "probes/main-6db65d8/m6_hook_snapshot_refusal.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.23,
+  "tail": ""
+ },
+ "probes/main-6db65d8/m4_children_timeout_sendto.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.96,
+  "tail": ""
+ },
+ "probes/main-6db65d8/m7_child_midstep_wait.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.02,
+  "tail": ""
+ },
+ "probes/main-6db65d8/m8_persistence_185_186.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.24,
+  "tail": ""
+ },
+ "probes/main-6db65d8/m9_strict_wildcard.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.25,
+  "tail": ""
+ },
+ "probes/main-c78ce99/p3_214_v2_upcast_forge.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.98,
+  "tail": ""
+ },
+ "probes/main-c78ce99/p3b_214_hardening_knobs.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.66,
+  "tail": ""
+ },
+ "probes/main-6db65d8/m10_invoke_cycle_bounded.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 8.3,
+  "tail": ""
+ },
+ "probes/main-c78ce99/p4_213_snapshot_v3.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.99,
+  "tail": ""
+ },
+ "probes/main-c78ce99/p5_214_strict_lane.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.85,
+  "tail": ""
+ },
+ "probes/main-c78ce99/p6_215_descent_wait.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.07,
+  "tail": ""
+ },
+ "probes/main-c78ce99/p6b_215_start_stall_timing.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.44,
+  "tail": ""
+ },
+ "probes/main-c78ce99/p6c_215_gate_is_the_cause.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.27,
+  "tail": ""
+ },
+ "probes/main-c78ce99/p7_216_known_keys.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.28,
+  "tail": ""
+ },
+ "probes/main-6db65d8/m11_external_traffic_no_false_trip.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 9.95,
+  "tail": ""
+ },
+ "probes/main-c78ce99/p8_sync_parity_version.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.09,
+  "tail": ""
+ },
+ "probes/main-c78ce99/r11_02_equivalent_doors.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.4,
+  "tail": ""
+ },
+ "probes/main-c78ce99/p1_212_escape.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 7.29,
+  "tail": ""
+ },
+ "probes/main-c78ce99/r11_05_responsive.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.53,
+  "tail": ""
+ },
+ "probes/main-cec108b/p10_counter_leak.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.67,
+  "tail": ""
+ },
+ "probes/main-cec108b/p11b.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.35,
+  "tail": ""
+ },
+ "probes/main-cec108b/p11_parity.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.61,
+  "tail": ""
+ },
+ "probes/main-6db65d8/m1_priority_self_send_uncharged.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 12.77,
+  "tail": ""
+ },
+ "probes/main-cec108b/p13b.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.31,
+  "tail": ""
+ },
+ "probes/main-cec108b/p1_legality.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.3,
+  "tail": ""
+ },
+ "probes/main-cec108b/p2_fail_stop.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.31,
+  "tail": ""
+ },
+ "probes/main-cec108b/p13_budget.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 3.3,
+  "tail": ""
+ },
+ "probes/main-c78ce99/r11_05_after_parity.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 6.28,
+  "tail": ""
+ },
+ "probes/main-cec108b/p3_threadsafe.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.03,
+  "tail": ""
+ },
+ "probes/main-cec108b/p4_forge_internal.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.68,
+  "tail": ""
+ },
+ "probes/main-cec108b/p5_service_executor.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 3.66,
+  "tail": ""
+ },
+ "probes/main-cec108b/p7_sat.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.43,
+  "tail": ""
+ },
+ "probes/main-cec108b/p8_geom.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.37,
+  "tail": ""
+ },
+ "probes/main-cec108b/p9_misc.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.71,
+  "tail": ""
+ },
+ "probes/main-cec108b/p6_service_blocking.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 6.39,
+  "tail": ""
+ },
+ "probes/main-de2da4e/p3_unknown_keys.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.34,
+  "tail": ""
+ },
+ "probes/main-de2da4e/p4_parked_sends.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.37,
+  "tail": ""
+ },
+ "probes/main-de2da4e/p2_reentrant_wait.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.75,
+  "tail": ""
+ },
+ "probes/main-de2da4e/p1_handle_release.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 3.56,
+  "tail": ""
+ },
+ "probes/main-5327ba6/c2_raise_builtin_chain.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 49.23,
+  "tail": "[FAIL ] C9 sync + raise built-in: 1500-deep guarded chain\n        expected: {'n': 1500}\n        observed: {'n': 1001}\n[FAIL ] C10 async + raise built-in: 1500-deep guarded chain\n        expected: {'n': 1500}\n        observed: {'n': 1001}\n[FAIL ] C11 sync + raise built-in: 3000-deep guarded chain\n        expected: {'n': 3000}\n        observed: {'n': 1001}\n[FAIL ] C12 async + raise built-in: 3000-deep guarded chain\n        expected: {'n': 3000}\n        observed: {'n': 1001}\n[ERROR] C13 async: action-side i.send() self-chain is NOT budgeted at all (10000 deep)\n        expected: {'n': 10000}\n        observed: 'TimeoutError: '\n\nc2_raise_builtin_chain: 0/5 pass\n\n--STDERR--\n"
+ },
+ "probes/main-de2da4e/p5_chain_latch.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.71,
+  "tail": ""
+ },
+ "probes/main-de2da4e/p7_reentrant_false_positive.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.76,
+  "tail": ""
+ },
+ "probes/main-c78ce99/r11_collateral_unbounded.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 13.66,
+  "tail": ""
+ },
+ "probes/main-f28719c/p12_priority_provenance_roundtrip.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.34,
+  "tail": ""
+ },
+ "probes/main-f28719c/p14_always_named_event_drop.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.58,
+  "tail": ""
+ },
+ "probes/main-f28719c/p13_sync_child_reaping.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.86,
+  "tail": ""
+ },
+ "probes/main-f28719c/p16_start_hook_raises_flag_stuck.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.4,
+  "tail": ""
+ },
+ "probes/main-f28719c/p15_strict_refusal_coverage.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.64,
+  "tail": "forged event                       strict  async            sync\nDoneEvent(done.state.m.work)       False   TRANSITIONED     TRANSITIONED\nDoneEvent(done.state.m.work)       True    refused(strict)  refused(strict)\nAfterEvent(after.60000.m.work)     False   no effect        no effect\nAfterEvent(after.60000.m.work)     True    refused(strict)  refused(strict)\nDoneEvent(done.invoke.NOPE)        False   no effect        no effect\nDoneEvent(done.invoke.NOPE)        True    refused(strict)  refused(strict)\nErrorEvent(error.platform.NOPE)    False   no effect        no effect\nErrorEvent(error.platform.NOPE)    True    refused(strict)  refused(strict)\nVERDICT: A FORGED EVENT DROVE A TRANSITION (bug)\n\n--STDERR--\n"
+ },
+ "probes/main-f28719c/p1_forged_done_state.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.4,
+  "tail": "async: states=['m.finished'] forged_onDone_taken=True\nsync: states=['m.finished'] forged_onDone_taken=True\nVERDICT: FORGERY ACCEPTED (bug)\n\n--STDERR--\n"
+ },
+ "probes/main-f28719c/p2_forged_after.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.41,
+  "tail": ""
+ },
+ "probes/main-f28719c/p10_seed_pending_stale.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.8,
+  "tail": ""
+ },
+ "probes/main-f28719c/p4_always_unhandled_regression.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.42,
+  "tail": "async last_error=UnhandledEventError\nsync raised=None\nVERDICT: UNHANDLED NOW FIRES (behaviour change)\n\n--STDERR--\n"
+ },
+ "probes/main-de2da4e/p6_cross_interpreter_wait.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 3.46,
+  "tail": ""
+ },
+ "probes/main-f28719c/p6_v1_blob_from_0_8_0.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.42,
+  "tail": "A: v1 + both fields -> restored ['m.a']\nB: v1 + state_ids only -> REFUSED: Snapshot is malformed: version >= 1 snapshot of a running machine has no 'configuration' field -- the writer always records it, so the field was dropped.\nVERDICT: A ok; B now refused (compat narrowing)\n\n--STDERR--\n"
+ },
+ "probes/main-f28719c/p5_stale_completion_roundtrip.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.63,
+  "tail": "persisted record: {'kind': 'done', 'type': 'done.invoke.fetch', 'engine': True, 'data': {'value': 'STALE'}, 'src': 'fetch'}\nstates=['m.ready'] context.result={'value': 'STALE'} fetch_invocations=0\nVERDICT: STALE COMPLETION DROVE onDone (bug)\n\n--STDERR--\nC:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-f28719c\\p5_stale_completion_roundtrip.py:62: DeprecationWarning: `xstate_statemachine.events.engine_done` is internal and was renamed `_engine_done` (#235). It mints engine-trusted events and was never part of the public API; the unprefixed alias is removed in 1.0.\n  stale = engine_done(\"done.invoke.fetch\", {\"value\": \"STALE\"}, \"fetch\")\n"
+ },
+ "probes/main-f28719c/p7_engine_class_reachable.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.93,
+  "tail": ""
+ },
+ "probes/main-f28719c/p11_priority_send_parity.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 4.42,
+  "tail": ""
+ },
+ "probes/main-f28719c/p8_children_timeout_serial.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.56,
+  "tail": ""
+ },
+ "probes/main-f28719c/p9_def_service_step_ordering.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 1.98,
+  "tail": ""
+ },
+ "probes/v0.9.0/p1_nesting.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.39,
+  "tail": ""
+ },
+ "probes/p01_core_transitions.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 2.22,
+  "tail": ""
+ },
+ "probes/v0.9.0/p2_defservice_thread.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.39,
+  "tail": ""
+ },
+ "probes/v0.9.0/p3_warn_finaliser.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 0.43,
+  "tail": "\n--STDERR--\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\v0.9.0\\p3_warn_finaliser.py\", line 9, in <module>\n    MODE = sys.argv[1]\n           ~~~~~~~~^^^\nIndexError: list index out of range\n"
+ },
+ "probes/v0.9.0/p4_werror_del.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.75,
+  "tail": ""
+ },
+ "probes/v0.9.0/p5_chain_latch.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.58,
+  "tail": ""
+ },
+ "probes/v0.9.0/p6_admit_restored.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.54,
+  "tail": ""
+ },
+ "probes/v0.9.0/p7_sync_priority.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.41,
+  "tail": ""
+ },
+ "probes/v0.9.0/p8_drain_priority.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.4,
+  "tail": ""
+ },
+ "probes/v0.9.0/p8b_drain_live.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.66,
+  "tail": ""
+ },
+ "probes/v0.9.0/p9_misc.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 0.32,
+  "tail": ""
+ },
+ "probes/p02_invoke_timers_history.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 3.77,
+  "tail": ""
+ },
+ "probes/main-f28719c/p3_delayed_selfsend_unbounded.py": {
+  "status": "FAIL",
+  "rc": 1,
+  "seconds": 10.37,
+  "tail": "laps(exits)=642\nafter 10s: raise_depth=0 chain_tripped=False states=['m.a']\nVERDICT: UNBOUNDED (bug)\n\n--STDERR--\n"
+ },
+ "probes/p03_context_snapshot_determinism.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 7.91,
+  "tail": ""
+ },
+ "probes/main-cec108b/p12_growth.py": {
+  "status": "PASS",
+  "rc": 0,
+  "seconds": 34.15,
+  "tail": ""
+ }
+}

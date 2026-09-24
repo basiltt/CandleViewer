@@ -1,0 +1,235 @@
+[
+ {
+  "id": "B11-happy",
+  "inv": "happy",
+  "title": "idle -> starting -> recording via subscribe_streams",
+  "detail": {
+   "ok": true,
+   "states": [
+    [
+     "recording.idle"
+    ],
+    [
+     "recording.recording"
+    ]
+   ],
+   "svc": [
+    "subscribe_streams"
+   ],
+   "ctx_reasons": [
+    "chart"
+   ],
+   "entry_actions": [
+    "cancel_linger",
+    "emit_recording_metric"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B11-a-1",
+  "inv": "INV-B11-a",
+  "title": "last reason removed + position OPEN -> LINGER_DUE returns to recording",
+  "detail": {
+   "ok": true,
+   "lingering": [
+    "recording.lingering"
+   ],
+   "after_linger_due": [
+    "recording.recording"
+   ],
+   "svc": [
+    "subscribe_streams"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B11-a-2",
+  "inv": "INV-B11-a",
+  "title": "no reasons + position CLOSED -> stopping -> stopped",
+  "detail": {
+   "ok": true,
+   "final": [
+    "recording.stopped"
+   ],
+   "svc": [
+    "subscribe_streams",
+    "unsubscribe_and_flush"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B11-a-3",
+  "inv": "INV-B11-a",
+  "title": "two reasons: removing one keeps recording (reasons_remain)",
+  "detail": {
+   "ok": true,
+   "states": [
+    "recording.recording"
+   ],
+   "reasons": [
+    "position"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B11-b",
+  "inv": "INV-B11-b",
+  "title": "reason re-added during lingering -> recording, NO stream restart",
+  "detail": {
+   "ok": true,
+   "lingering": [
+    "recording.lingering"
+   ],
+   "after": [
+    "recording.recording"
+   ],
+   "subscribe_calls": [
+    1,
+    1
+   ],
+   "cancel_linger_count": 2
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B11-c",
+  "inv": "INV-B11-c",
+  "title": "every GAP_DETECTED counted + metricised, state unchanged",
+  "detail": {
+   "ok": true,
+   "gap_count": 5,
+   "metric_calls": 5,
+   "states": [
+    "recording.recording"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B11-d",
+  "inv": "INV-B11-d",
+  "title": "degraded on any unhealthy; exit only when ALL healthy",
+  "detail": {
+   "ok": true,
+   "after_first_unhealthy": [
+    "recording.degraded"
+   ],
+   "after_second_unhealthy": [
+    "recording.degraded"
+   ],
+   "after_first_healthy": [
+    "recording.degraded"
+   ],
+   "after_all_healthy": [
+    "recording.recording"
+   ],
+   "healthy_map": {
+    "trade": true,
+    "kline": true
+   },
+   "deferred": 0,
+   "unhandled": [
+    [
+     "STREAM_UNHEALTHY",
+     "deferred"
+    ]
+   ],
+   "alert_count": 2
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "OBS-async",
+  "inv": "R6-01-obs",
+  "title": "B11 rollback re-invoke trip: any observable channel? (async)",
+  "detail": {
+   "style": "async",
+   "maxIterations": null,
+   "svc_n": 153,
+   "elapsed_s": 0.186,
+   "states": [
+    "recording.starting"
+   ],
+   "status": "running",
+   "last_error": "RuntimeError",
+   "receipt_error": null,
+   "receipt_changed": true,
+   "receipt_denied": false,
+   "plugin_dropped": [],
+   "n_dropped": 0,
+   "warn_log": [
+    [
+     "ERROR",
+     "\ud83d\udd25 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in "
+    ],
+    [
+     "WARNING",
+     "\ud83d\udca5 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration."
+    ],
+    [
+     "ERROR",
+     "\ud83d\udd25 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in "
+    ],
+    [
+     "WARNING",
+     "\ud83d\udca5 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration."
+    ]
+   ],
+   "n_warn": 304,
+   "channels": [
+    "WARNING/ERROR log"
+   ],
+   "ok": true
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "OBS-def",
+  "inv": "R6-01-obs",
+  "title": "B11 rollback re-invoke trip: any observable channel? (def)",
+  "detail": {
+   "style": "def",
+   "maxIterations": null,
+   "svc_n": 119,
+   "elapsed_s": 0.19,
+   "states": [
+    "recording.starting"
+   ],
+   "status": "running",
+   "last_error": "RuntimeError",
+   "receipt_error": null,
+   "receipt_changed": true,
+   "receipt_denied": false,
+   "plugin_dropped": [],
+   "n_dropped": 0,
+   "warn_log": [
+    [
+     "ERROR",
+     "\ud83d\udd25 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in "
+    ],
+    [
+     "WARNING",
+     "\ud83d\udca5 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration."
+    ],
+    [
+     "ERROR",
+     "\ud83d\udd25 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in "
+    ],
+    [
+     "WARNING",
+     "\ud83d\udca5 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration."
+    ]
+   ],
+   "n_warn": 238,
+   "channels": [
+    "WARNING/ERROR log"
+   ],
+   "ok": true
+  },
+  "status": "PASS"
+ }
+]

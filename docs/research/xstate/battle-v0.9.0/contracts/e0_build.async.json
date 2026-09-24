@@ -1,0 +1,182 @@
+{
+ "[async]/B6/build-strictConfig": {
+  "pass": true,
+  "note": "id=twap"
+ },
+ "[async]/B6/policy": {
+  "pass": true,
+  "note": "rollback/defer/raise"
+ },
+ "[async]/B6/strict-targets": {
+  "pass": true,
+  "note": ""
+ },
+ "[async]/B6/strictConfig-in-json": {
+  "pass": true,
+  "note": "True"
+ },
+ "[async]/B6/start-config": {
+  "pass": true,
+  "note": "twap.armed"
+ },
+ "[async]/B6/chain_trips0": {
+  "pass": true,
+  "note": "trips=0"
+ },
+ "[async]/B6/220-state-key": {
+  "pass": true,
+  "note": "refused: InvalidConfigError(\"Machine 'twap' has unknown config key(s) -- twap.pending: 'entyr' (did you mean 'entry'?). Unknown keys are ignored by the parser, so a miss"
+ },
+ "[async]/B6/220-transition-key": {
+  "pass": true,
+  "note": "refused: InvalidConfigError(\"Machine 'twap' has unknown config key(s) -- twap.armed on['SLICE_DUE']: 'actionss' (did you mean 'actions'?). Unknown keys are ignored by th"
+ },
+ "[async]/B6/220-invoke-key": {
+  "pass": true,
+  "note": "refused: InvalidConfigError(\"Machine 'twap' has unknown config key(s) -- twap.submitting_slice invoke[slice]: 'srcc' (did you mean 'src'?). Unknown keys are ignored by t"
+ },
+ "[async]/B7/build-strictConfig": {
+  "pass": true,
+  "note": "id=chase"
+ },
+ "[async]/B7/policy": {
+  "pass": true,
+  "note": "rollback/defer/raise"
+ },
+ "[async]/B7/strict-targets": {
+  "pass": true,
+  "note": ""
+ },
+ "[async]/B7/strictConfig-in-json": {
+  "pass": true,
+  "note": "True"
+ },
+ "[async]/B7/start-config": {
+  "pass": true,
+  "note": "chase.working"
+ },
+ "[async]/B7/chain_trips0": {
+  "pass": true,
+  "note": "trips=0"
+ },
+ "[async]/B7/220-state-key": {
+  "pass": true,
+  "note": "refused: InvalidConfigError(\"Machine 'chase' has unknown config key(s) -- chase.working: 'entyr' (did you mean 'entry'?). Unknown keys are ignored by the parser, so a mi"
+ },
+ "[async]/B7/220-transition-key": {
+  "pass": true,
+  "note": "refused: InvalidConfigError(\"Machine 'chase' has unknown config key(s) -- chase.working on['BOOK_TARGET_MOVED']: 'actionss' (did you mean 'actions'?). Unknown keys are i"
+ },
+ "[async]/B7/220-invoke-key": {
+  "pass": true,
+  "note": "refused: InvalidConfigError(\"Machine 'chase' has unknown config key(s) -- chase.arming invoke[arm]: 'srcc' (did you mean 'src'?). Unknown keys are ignored by the parser,"
+ },
+ "[async]/B8/build-strictConfig": {
+  "pass": true,
+  "note": "id=position_protection"
+ },
+ "[async]/B8/policy": {
+  "pass": true,
+  "note": "fail/defer/raise"
+ },
+ "[async]/B8/strict-targets": {
+  "pass": true,
+  "note": ""
+ },
+ "[async]/B8/strictConfig-in-json": {
+  "pass": true,
+  "note": "True"
+ },
+ "[async]/B8/start-config": {
+  "pass": true,
+  "note": "position_protection.sl.flat,position_protection.watchdog.idle"
+ },
+ "[async]/B8/chain_trips0": {
+  "pass": true,
+  "note": "trips=0"
+ },
+ "[async]/B8/220-state-key": {
+  "pass": true,
+  "note": "refused: InvalidConfigError(\"Machine 'position_protection' has unknown config key(s) -- position_protection.sl.attaching: 'entyr' (did you mean 'entry'?). Unknown keys a"
+ },
+ "[async]/B8/220-transition-key": {
+  "pass": true,
+  "note": "refused: InvalidConfigError(\"Machine 'position_protection' has unknown config key(s) -- position_protection.sl.flat on['POSITION_OPENED']: 'actionss' (did you mean 'acti"
+ },
+ "[async]/B8/220-invoke-key": {
+  "pass": true,
+  "note": "refused: InvalidConfigError(\"Machine 'position_protection' has unknown config key(s) -- position_protection.sl.attaching invoke[att]: 'srcc' (did you mean 'src'?). Unkno"
+ },
+ "[async]/B9/build-strictConfig": {
+  "pass": true,
+  "note": "id=rule_instance"
+ },
+ "[async]/B9/policy": {
+  "pass": true,
+  "note": "rollback/defer/raise"
+ },
+ "[async]/B9/strict-targets": {
+  "pass": true,
+  "note": ""
+ },
+ "[async]/B9/strictConfig-in-json": {
+  "pass": true,
+  "note": "True"
+ },
+ "[async]/B9/start-config": {
+  "pass": true,
+  "note": "rule_instance.draft"
+ },
+ "[async]/B9/chain_trips0": {
+  "pass": true,
+  "note": "trips=0"
+ },
+ "[async]/B9/220-state-key": {
+  "pass": true,
+  "note": "refused: InvalidConfigError(\"Machine 'rule_instance' has unknown config key(s) -- rule_instance.simulating: 'entyr' (did you mean 'entry'?). Unknown keys are ignored by "
+ },
+ "[async]/B9/220-transition-key": {
+  "pass": true,
+  "note": "refused: InvalidConfigError(\"Machine 'rule_instance' has unknown config key(s) -- rule_instance.draft on['SAVE']: 'actionss' (did you mean 'actions'?). Unknown keys are "
+ },
+ "[async]/B9/220-invoke-key": {
+  "pass": true,
+  "note": "refused: InvalidConfigError(\"Machine 'rule_instance' has unknown config key(s) -- rule_instance.evaluating invoke[eval]: 'srcc' (did you mean 'src'?). Unknown keys are i"
+ },
+ "[async]/B10/build-strictConfig": {
+  "pass": true,
+  "note": "id=alert"
+ },
+ "[async]/B10/policy": {
+  "pass": true,
+  "note": "rollback/defer/raise"
+ },
+ "[async]/B10/strict-targets": {
+  "pass": true,
+  "note": ""
+ },
+ "[async]/B10/strictConfig-in-json": {
+  "pass": true,
+  "note": "True"
+ },
+ "[async]/B10/start-config": {
+  "pass": true,
+  "note": "alert.armed"
+ },
+ "[async]/B10/chain_trips0": {
+  "pass": true,
+  "note": "trips=0"
+ },
+ "[async]/B10/220-state-key": {
+  "pass": true,
+  "note": "refused: InvalidConfigError(\"Machine 'alert' has unknown config key(s) -- alert.suppressed: 'entyr' (did you mean 'entry'?). Unknown keys are ignored by the parser, so a"
+ },
+ "[async]/B10/220-transition-key": {
+  "pass": true,
+  "note": "refused: InvalidConfigError(\"Machine 'alert' has unknown config key(s) -- alert.armed on['CONDITION_MET']: 'actionss' (did you mean 'actions'?). Unknown keys are ignored"
+ },
+ "[async]/B10/220-invoke-key": {
+  "pass": true,
+  "note": "refused: InvalidConfigError(\"Machine 'alert' has unknown config key(s) -- alert.firing invoke[deliver]: 'srcc' (did you mean 'src'?). Unknown keys are ignored by the par"
+ }
+}

@@ -1,0 +1,66 @@
+{
+  "def": {
+    "kind": "def",
+    "svc": 7,
+    "acts": 6,
+    "completions_seen": 7,
+    "charged": 7,
+    "free": 0,
+    "sample": [
+      {
+        "type": "done.invoke.s",
+        "processing": true,
+        "raise_depth_before": 0
+      },
+      {
+        "type": "done.invoke.s",
+        "processing": true,
+        "raise_depth_before": 1
+      },
+      {
+        "type": "done.invoke.s",
+        "processing": true,
+        "raise_depth_before": 2
+      },
+      {
+        "type": "done.invoke.s",
+        "processing": true,
+        "raise_depth_before": 3
+      },
+      {
+        "type": "done.invoke.s",
+        "processing": true,
+        "raise_depth_before": 4
+      },
+      {
+        "type": "done.invoke.s",
+        "processing": true,
+        "raise_depth_before": 5
+      },
+      {
+        "type": "done.invoke.s",
+        "processing": true,
+        "raise_depth_before": 6
+      }
+    ],
+    "final_raise_depth": 0,
+    "last_error": "RunawayChainError",
+    "ids": [
+      "m.a"
+    ]
+  },
+  "async": {
+    "kind": "async",
+    "svc": 1155,
+    "acts": 1154,
+    "completions_seen": 0,
+    "charged": 0,
+    "free": 0,
+    "sample": [],
+    "final_raise_depth": 0,
+    "last_error": "RuntimeError",
+    "ids": [
+      "m.a"
+    ]
+  }
+}

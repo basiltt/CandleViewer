@@ -1,0 +1,246 @@
+{
+ "[def]audit/B11/no-unknown-keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]audit/B12/no-unknown-keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]audit/B13/no-unknown-keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]audit/B14/no-unknown-keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]audit/B15/no-unknown-keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]build/B11/strictConfig-in-config": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]build/B11/strict_config-kwarg": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]build/B11/policies": {
+  "pass": true,
+  "note": "aep='rollback' unh='defer' spawn=5000.0"
+ },
+ "[def]build/B12/strictConfig-in-config": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]build/B12/strict_config-kwarg": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]build/B12/policies": {
+  "pass": true,
+  "note": "aep='rollback' unh='defer' spawn=5000.0"
+ },
+ "[def]build/B13/strictConfig-in-config": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]build/B13/strict_config-kwarg": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]build/B13/policies": {
+  "pass": true,
+  "note": "aep='rollback' unh='error' spawn=5000.0"
+ },
+ "[def]build/B14/strictConfig-in-config": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]build/B14/strict_config-kwarg": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]build/B14/policies": {
+  "pass": true,
+  "note": "aep='rollback' unh='error' spawn=5000.0"
+ },
+ "[def]build/B15/strictConfig-in-config": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]build/B15/strict_config-kwarg": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]build/B15/policies": {
+  "pass": true,
+  "note": "aep='rollback' unh='defer' spawn=5000.0"
+ },
+ "[def]gate216/B11/actionErrorPolicyy": {
+  "pass": true,
+  "note": "Machine 'recording' has unknown top-level key(s) 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys "
+ },
+ "[def]gate216/B11/Strict": {
+  "pass": true,
+  "note": "Machine 'recording' has unknown top-level key(s) 'Strict' (did you mean 'strict'?). Unknown keys are ignored by the pars"
+ },
+ "[def]gate216/B11/onUnhandledEvent": {
+  "pass": true,
+  "note": "Machine 'recording' has unknown top-level key(s) 'onUnhandledEvent' (did you mean 'onUnhandled'?). Unknown keys are igno"
+ },
+ "[def]gate216/B11/x-and-meta-allowed": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]gate216/B12/actionErrorPolicyy": {
+  "pass": true,
+  "note": "Machine 'replay' has unknown top-level key(s) 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys are"
+ },
+ "[def]gate216/B12/Strict": {
+  "pass": true,
+  "note": "Machine 'replay' has unknown top-level key(s) 'Strict' (did you mean 'strict'?). Unknown keys are ignored by the parser,"
+ },
+ "[def]gate216/B12/onUnhandledEvent": {
+  "pass": true,
+  "note": "Machine 'replay' has unknown top-level key(s) 'onUnhandledEvent' (did you mean 'onUnhandled'?). Unknown keys are ignored"
+ },
+ "[def]gate216/B12/x-and-meta-allowed": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]gate216/B13/actionErrorPolicyy": {
+  "pass": true,
+  "note": "Machine 'ws_conn' has unknown top-level key(s) 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys ar"
+ },
+ "[def]gate216/B13/Strict": {
+  "pass": true,
+  "note": "Machine 'ws_conn' has unknown top-level key(s) 'Strict' (did you mean 'strict'?). Unknown keys are ignored by the parser"
+ },
+ "[def]gate216/B13/onUnhandledEvent": {
+  "pass": true,
+  "note": "Machine 'ws_conn' has unknown top-level key(s) 'onUnhandledEvent' (did you mean 'onUnhandled'?). Unknown keys are ignore"
+ },
+ "[def]gate216/B13/x-and-meta-allowed": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]gate216/B14/actionErrorPolicyy": {
+  "pass": true,
+  "note": "Machine 'book' has unknown top-level key(s) 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys are i"
+ },
+ "[def]gate216/B14/Strict": {
+  "pass": true,
+  "note": "Machine 'book' has unknown top-level key(s) 'Strict' (did you mean 'strict'?). Unknown keys are ignored by the parser, s"
+ },
+ "[def]gate216/B14/onUnhandledEvent": {
+  "pass": true,
+  "note": "Machine 'book' has unknown top-level key(s) 'onUnhandledEvent' (did you mean 'onUnhandled'?). Unknown keys are ignored b"
+ },
+ "[def]gate216/B14/x-and-meta-allowed": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]gate216/B15/actionErrorPolicyy": {
+  "pass": true,
+  "note": "Machine 'paper_account' has unknown top-level key(s) 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown k"
+ },
+ "[def]gate216/B15/Strict": {
+  "pass": true,
+  "note": "Machine 'paper_account' has unknown top-level key(s) 'Strict' (did you mean 'strict'?). Unknown keys are ignored by the "
+ },
+ "[def]gate216/B15/onUnhandledEvent": {
+  "pass": true,
+  "note": "Machine 'paper_account' has unknown top-level key(s) 'onUnhandledEvent' (did you mean 'onUnhandled'?). Unknown keys are "
+ },
+ "[def]gate216/B15/x-and-meta-allowed": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]meta/SNAPSHOT_VERSION==3": {
+  "pass": true,
+  "note": "3"
+ },
+ "[def]happy/B11/states": {
+  "pass": true,
+  "note": "got=['recording.stopped'] notes=['t0:v=3:sched=0', 't1:v=3:sched=0', 't2:v=3:sched=0']"
+ },
+ "[def]happy/B11/snapshot-v3-every-macrostep": {
+  "pass": true,
+  "note": "['t0:v=3:sched=0', 't1:v=3:sched=0']"
+ },
+ "[def]happy/B11/no-error": {
+  "pass": true,
+  "note": "None"
+ },
+ "[def]happy/B11/sync-parity": {
+  "pass": true,
+  "note": "sync=['recording.stopped']"
+ },
+ "[def]happy/B12/states": {
+  "pass": true,
+  "note": "got=['replay.destroyed'] notes=['t0:v=3:sched=0', 't1:v=3:sched=0', 't2:v=3:sched=0']"
+ },
+ "[def]happy/B12/snapshot-v3-every-macrostep": {
+  "pass": true,
+  "note": "['t0:v=3:sched=0', 't1:v=3:sched=0']"
+ },
+ "[def]happy/B12/no-error": {
+  "pass": true,
+  "note": "None"
+ },
+ "[def]happy/B12/sync-parity": {
+  "pass": true,
+  "note": "sync=['replay.destroyed']"
+ },
+ "[def]happy/B13/states": {
+  "pass": true,
+  "note": "got=['ws_conn.closed'] notes=['t0:v=3:sched=0', 't1:v=3:sched=0', 't2:v=3:sched=0']"
+ },
+ "[def]happy/B13/snapshot-v3-every-macrostep": {
+  "pass": true,
+  "note": "['t0:v=3:sched=0', 't1:v=3:sched=0']"
+ },
+ "[def]happy/B13/no-error": {
+  "pass": true,
+  "note": "None"
+ },
+ "[def]happy/B13/sync-parity": {
+  "pass": true,
+  "note": "sync=['ws_conn.closed']"
+ },
+ "[def]happy/B14/states": {
+  "pass": true,
+  "note": "got=['book.snapshot_pending'] notes=['t0:v=3:sched=0', 't1:v=3:sched=0', 't2:v=3:sched=0']"
+ },
+ "[def]happy/B14/snapshot-v3-every-macrostep": {
+  "pass": true,
+  "note": "['t0:v=3:sched=0', 't1:v=3:sched=0']"
+ },
+ "[def]happy/B14/no-error": {
+  "pass": true,
+  "note": "None"
+ },
+ "[def]happy/B14/sync-parity": {
+  "pass": true,
+  "note": "sync=['book.snapshot_pending']"
+ },
+ "[def]happy/B15/states": {
+  "pass": true,
+  "note": "got=['paper_account.liquidated'] notes=['t0:v=3:sched=0', 't1:v=3:sched=0']"
+ },
+ "[def]happy/B15/snapshot-v3-every-macrostep": {
+  "pass": true,
+  "note": "['t0:v=3:sched=0', 't1:v=3:sched=0']"
+ },
+ "[def]happy/B15/no-error": {
+  "pass": true,
+  "note": "None"
+ },
+ "[def]happy/B15/sync-parity": {
+  "pass": true,
+  "note": "sync=['paper_account.liquidated']"
+ }
+}

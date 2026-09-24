@@ -1,0 +1,177 @@
+{
+  "probe": "t1_after_provenance_forgery",
+  "py": "3.13.7",
+  "claim": "#203: only an engine-minted AfterEvent drives an `after`",
+  "rows": [
+    {
+      "engine": "async",
+      "vector": "V1_import_path",
+      "forged_class": "_EngineAfter",
+      "is_system_event": true,
+      "send": "ACCEPTED",
+      "state": [
+        "t1.late"
+      ],
+      "action_ran": 1
+    },
+    {
+      "engine": "sync",
+      "vector": "V1_import_path",
+      "forged_class": "_EngineAfter",
+      "is_system_event": true,
+      "send": "ACCEPTED",
+      "state": [
+        "t1.late"
+      ],
+      "action_ran": 1
+    },
+    {
+      "engine": "async",
+      "vector": "V2_type_of_held",
+      "forged_class": "_EngineAfter",
+      "is_system_event": true,
+      "send": "ACCEPTED",
+      "state": [
+        "t1.late"
+      ],
+      "action_ran": 1
+    },
+    {
+      "engine": "sync",
+      "vector": "V2_type_of_held",
+      "forged_class": "_EngineAfter",
+      "is_system_event": true,
+      "send": "ACCEPTED",
+      "state": [
+        "t1.late"
+      ],
+      "action_ran": 1
+    },
+    {
+      "engine": "async",
+      "vector": "V3_pickle",
+      "forged_class": "_EngineAfter",
+      "is_system_event": true,
+      "send": "ACCEPTED",
+      "state": [
+        "t1.late"
+      ],
+      "action_ran": 1
+    },
+    {
+      "engine": "sync",
+      "vector": "V3_pickle",
+      "forged_class": "_EngineAfter",
+      "is_system_event": true,
+      "send": "ACCEPTED",
+      "state": [
+        "t1.late"
+      ],
+      "action_ran": 1
+    },
+    {
+      "engine": "async",
+      "vector": "V4_snapshot_record",
+      "forged_class": "_EngineAfter",
+      "is_system_event": true,
+      "send": "ACCEPTED",
+      "state": [
+        "t1.late"
+      ],
+      "action_ran": 1
+    },
+    {
+      "engine": "sync",
+      "vector": "V4_snapshot_record",
+      "forged_class": "_EngineAfter",
+      "is_system_event": true,
+      "send": "ACCEPTED",
+      "state": [
+        "t1.late"
+      ],
+      "action_ran": 1
+    },
+    {
+      "engine": "async",
+      "vector": "CONTROL_public_class",
+      "forged_class": "AfterEvent",
+      "is_system_event": false,
+      "send": "refused:UnknownEventError",
+      "state": [
+        "t1.wait"
+      ],
+      "action_ran": 0
+    },
+    {
+      "engine": "sync",
+      "vector": "CONTROL_public_class",
+      "forged_class": "AfterEvent",
+      "is_system_event": false,
+      "send": "refused:UnknownEventError",
+      "state": [
+        "t1.wait"
+      ],
+      "action_ran": 0
+    }
+  ],
+  "violations": [
+    [
+      "async",
+      "V1_import_path",
+      [
+        "t1.late"
+      ]
+    ],
+    [
+      "sync",
+      "V1_import_path",
+      [
+        "t1.late"
+      ]
+    ],
+    [
+      "async",
+      "V2_type_of_held",
+      [
+        "t1.late"
+      ]
+    ],
+    [
+      "sync",
+      "V2_type_of_held",
+      [
+        "t1.late"
+      ]
+    ],
+    [
+      "async",
+      "V3_pickle",
+      [
+        "t1.late"
+      ]
+    ],
+    [
+      "sync",
+      "V3_pickle",
+      [
+        "t1.late"
+      ]
+    ],
+    [
+      "async",
+      "V4_snapshot_record",
+      [
+        "t1.late"
+      ]
+    ],
+    [
+      "sync",
+      "V4_snapshot_record",
+      [
+        "t1.late"
+      ]
+    ]
+  ],
+  "source": "events.py:579 `_EngineAfter` is a plain subclass; provenance == type identity, constructible by import path, type(held), pickle and events.py:414 restore_event('engine': true)",
+  "result": "FAIL"
+}

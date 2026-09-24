@@ -1,0 +1,207 @@
+[
+ {
+  "id": "P1",
+  "title": "Snapshot parked in an invoking state -> restore arms the service EXACTLY ONCE (#204), both kinds",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "plain": {
+     "armed_before_snapshot": 0,
+     "armed_after_restore": 0,
+     "state": [
+      "pk.run"
+     ],
+     "dormant": true,
+     "pending": [
+      [
+       "pk.run",
+       "s1"
+      ]
+     ]
+    },
+    "async": {
+     "armed_before_snapshot": 1,
+     "armed_after_restore": 0,
+     "state": [
+      "pk.run"
+     ],
+     "dormant": true,
+     "pending": [
+      [
+       "pk.run",
+       "s1"
+      ]
+     ]
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "P3",
+  "title": "Forged `after` pending record: only a genuinely engine-minted AfterEvent may fire a 60 s timer instantly (#203)",
+  "detail": {
+   "ok": true,
+   "forged_fired_60s_timer": [],
+   "engine_true_fires_by_contract": [
+    "strict/engine_true",
+    "onUnhandled/engine_true",
+    "plain/engine_true"
+   ],
+   "cells": {
+    "strict/engine_true": {
+     "restored_type": "_EngineAfter",
+     "is_system": true,
+     "state": [
+      "t.b"
+     ],
+     "err": null,
+     "fired": true
+    },
+    "strict/absent": {
+     "restored_type": "AfterEvent",
+     "is_system": false,
+     "state": [
+      "t.a"
+     ],
+     "err": "UnknownEventError",
+     "fired": false
+    },
+    "strict/string_true": {
+     "restored_type": "AfterEvent",
+     "is_system": false,
+     "state": [
+      "t.a"
+     ],
+     "err": "UnknownEventError",
+     "fired": false
+    },
+    "strict/engine_1": {
+     "restored_type": "AfterEvent",
+     "is_system": false,
+     "state": [
+      "t.a"
+     ],
+     "err": "UnknownEventError",
+     "fired": false
+    },
+    "onUnhandled/engine_true": {
+     "restored_type": "_EngineAfter",
+     "is_system": true,
+     "state": [
+      "t.b"
+     ],
+     "err": null,
+     "fired": true
+    },
+    "onUnhandled/absent": {
+     "restored_type": "AfterEvent",
+     "is_system": false,
+     "state": [
+      "t.a"
+     ],
+     "err": "UnhandledEventError",
+     "fired": false
+    },
+    "onUnhandled/string_true": {
+     "restored_type": "AfterEvent",
+     "is_system": false,
+     "state": [
+      "t.a"
+     ],
+     "err": "UnhandledEventError",
+     "fired": false
+    },
+    "onUnhandled/engine_1": {
+     "restored_type": "AfterEvent",
+     "is_system": false,
+     "state": [
+      "t.a"
+     ],
+     "err": "UnhandledEventError",
+     "fired": false
+    },
+    "plain/engine_true": {
+     "restored_type": "_EngineAfter",
+     "is_system": true,
+     "state": [
+      "t.b"
+     ],
+     "err": null,
+     "fired": true
+    },
+    "plain/absent": {
+     "restored_type": "AfterEvent",
+     "is_system": false,
+     "state": [
+      "t.a"
+     ],
+     "err": null,
+     "fired": false
+    },
+    "plain/string_true": {
+     "restored_type": "AfterEvent",
+     "is_system": false,
+     "state": [
+      "t.a"
+     ],
+     "err": null,
+     "fired": false
+    },
+    "plain/engine_1": {
+     "restored_type": "AfterEvent",
+     "is_system": false,
+     "state": [
+      "t.a"
+     ],
+     "err": null,
+     "fired": false
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "P4",
+  "title": "A `raise(delay=1ms)` self-ping-pong stays CHARGED across a snapshot/restore -- the cycle trips on the restored machine",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "plain": {
+     "live_laps": 14,
+     "live_bounded": true,
+     "live_tripped": true,
+     "snapshot": true,
+     "restored": {
+      "laps": 0,
+      "bounded": true,
+      "tripped": false
+     }
+    },
+    "async": {
+     "live_laps": 14,
+     "live_bounded": true,
+     "live_tripped": true,
+     "snapshot": true,
+     "restored": {
+      "laps": 0,
+      "bounded": true,
+      "tripped": false
+     }
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "P5",
+  "title": "Property: 300 random parallel+children+after+invoke machines snapshot at quiescence -> restore preserves configuration and arms each invoke at most once (both kinds)",
+  "detail": {
+   "ok": true,
+   "checked": 300,
+   "bad": [],
+   "n_bad": 0
+  },
+  "status": "PASS"
+ }
+]

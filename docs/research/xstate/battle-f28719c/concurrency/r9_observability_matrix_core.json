@@ -1,0 +1,56 @@
+{
+  "probe": "r9_observability_matrix_core",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "probe": "chain_budget(async lane)",
+      "kind": "def",
+      "reasons": {},
+      "last_error": "RunawayChainError(\"Machine 'r9c' exceeded 20 chained self-generated ev",
+      "laps": 21,
+      "observable": true
+    },
+    {
+      "probe": "child mid-step snapshot",
+      "kind": "def",
+      "disposition": "refused:SnapshotMidStepError",
+      "child_flag": false
+    },
+    {
+      "probe": "#189 onUnhandled error kill on sender receipt",
+      "kind": "def",
+      "async_send_outcome": "receipt",
+      "async_receipt_error": "UnhandledEventError",
+      "async_status_after": "error",
+      "error_on_senders_receipt": true,
+      "sync_outcome": "no raise",
+      "sync_status_after": "error"
+    },
+    {
+      "probe": "chain_budget(async lane)",
+      "kind": "async def",
+      "reasons": {},
+      "last_error": "RunawayChainError(\"Machine 'r9c' exceeded 20 chained self-generated ev",
+      "laps": 21,
+      "observable": true
+    },
+    {
+      "probe": "child mid-step snapshot",
+      "kind": "async def",
+      "disposition": "refused:SnapshotMidStepError",
+      "child_flag": false
+    },
+    {
+      "probe": "#189 onUnhandled error kill on sender receipt",
+      "kind": "async def",
+      "async_send_outcome": "receipt",
+      "async_receipt_error": "UnhandledEventError",
+      "async_status_after": "error",
+      "error_on_senders_receipt": true,
+      "sync_outcome": "no raise",
+      "sync_status_after": "error"
+    }
+  ],
+  "failures": [],
+  "result": "PASS"
+}

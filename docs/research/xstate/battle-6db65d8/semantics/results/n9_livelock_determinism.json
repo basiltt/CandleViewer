@@ -1,0 +1,22 @@
+[
+ {
+  "id": "C1",
+  "title": "500 cycle configs x (def, async def) x (sync, async engine), 30 s watchdog: all settle, every trip observable, lap counts equal",
+  "intent": "#179: boundedness must be a property of the machine, not of the spelling",
+  "detail": {
+   "ok": true,
+   "configs": 500,
+   "hangs": 0,
+   "silent_runaways": 0,
+   "unbounded_laps": 0,
+   "def_vs_asyncdef_lap_mismatch": 0,
+   "sync_vs_async_engine_lap_mismatch": 0,
+   "hang_examples": [],
+   "silent_examples": [],
+   "runaway_examples": [],
+   "lap_mismatch_examples": [],
+   "engine_mismatch_examples": []
+  },
+  "status": "PASS"
+ }
+]

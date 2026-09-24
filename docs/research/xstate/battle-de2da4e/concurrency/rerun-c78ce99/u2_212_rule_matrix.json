@@ -1,0 +1,187 @@
+{
+  "probe": "u2_212_rule_matrix",
+  "py": "3.13.7",
+  "limit": 8,
+  "run_s": 1.2,
+  "rows": [
+    {
+      "engine": "async",
+      "kind": "def",
+      "beats": 78,
+      "status": "running",
+      "errors": [],
+      "chain_drops": 0,
+      "wall": 1.215,
+      "case": "delay_1ms_pingpong",
+      "tripped": false
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "beats": 77,
+      "status": "running",
+      "errors": [],
+      "chain_drops": 0,
+      "wall": 1.216,
+      "case": "delay_1ms_pingpong",
+      "tripped": false
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "beats": 787,
+      "status": "running",
+      "errors": [],
+      "chain_drops": 0,
+      "wall": 1.201,
+      "case": "delay_1ms_pingpong",
+      "tripped": false
+    },
+    {
+      "engine": "async",
+      "kind": "def",
+      "beats": 76,
+      "status": "running",
+      "errors": [],
+      "chain_drops": 0,
+      "wall": 1.204,
+      "case": "delay_10ms_pingpong",
+      "tripped": false
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "beats": 77,
+      "status": "running",
+      "errors": [],
+      "chain_drops": 0,
+      "wall": 1.213,
+      "case": "delay_10ms_pingpong",
+      "tripped": false
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "beats": 104,
+      "status": "running",
+      "errors": [],
+      "chain_drops": 0,
+      "wall": 1.2,
+      "case": "delay_10ms_pingpong",
+      "tripped": false
+    },
+    {
+      "engine": "async",
+      "kind": "def",
+      "beats": 78,
+      "status": "running",
+      "errors": [],
+      "chain_drops": 0,
+      "wall": 1.214,
+      "case": "after_1ms_parity",
+      "tripped": false
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "beats": 77,
+      "status": "running",
+      "errors": [],
+      "chain_drops": 0,
+      "wall": 1.214,
+      "case": "after_1ms_parity",
+      "tripped": false
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "beats": 795,
+      "status": "running",
+      "errors": [],
+      "chain_drops": 0,
+      "wall": 1.201,
+      "case": "after_1ms_parity",
+      "tripped": false
+    },
+    {
+      "engine": "async",
+      "kind": "def",
+      "beats": 9,
+      "status": "running",
+      "errors": [
+        "last_error=RunawayChainError: Machine 'u2' exceeded 8 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'."
+      ],
+      "chain_drops": 1,
+      "wall": 1.216,
+      "case": "zero_delay_cycle",
+      "tripped": true
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "beats": 9,
+      "status": "running",
+      "errors": [
+        "last_error=RunawayChainError: Machine 'u2' exceeded 8 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'."
+      ],
+      "chain_drops": 1,
+      "wall": 1.203,
+      "case": "zero_delay_cycle",
+      "tripped": true
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "beats": 9,
+      "status": "running",
+      "errors": [
+        "last_error=RunawayChainError: Machine 'u2' exceeded 8 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'."
+      ],
+      "chain_drops": 1,
+      "wall": 1.202,
+      "case": "zero_delay_cycle",
+      "tripped": true
+    },
+    {
+      "engine": "async",
+      "kind": "def",
+      "beats": 314,
+      "status": "running",
+      "errors": [
+        "last_error=RunawayChainError: Machine 'u2' exceeded 8 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'."
+      ],
+      "chain_drops": 3465,
+      "wall": 1.214,
+      "case": "mixed_zero_plus_delay",
+      "tripped": true
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "beats": 382,
+      "status": "running",
+      "errors": [
+        "last_error=RunawayChainError: Machine 'u2' exceeded 8 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'."
+      ],
+      "chain_drops": 4213,
+      "wall": 1.202,
+      "case": "mixed_zero_plus_delay",
+      "tripped": true
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "beats": 1558,
+      "status": "running",
+      "errors": [
+        "last_error=RunawayChainError: Machine 'u2' exceeded 8 chained self-generated events in one macrostep and discarded 297 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'."
+      ],
+      "chain_drops": 17147,
+      "wall": 1.227,
+      "case": "mixed_zero_plus_delay",
+      "tripped": true
+    }
+  ],
+  "violations": [],
+  "verdict": "CLEAN"
+}

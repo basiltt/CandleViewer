@@ -1,0 +1,194 @@
+{
+ "[def]B16.happy": {
+  "pass": true,
+  "note": "['auth.active', 'elevation.elevated']"
+ },
+ "[def]B16.C04.catalogue_still_open(expected)": {
+  "pass": true,
+  "note": "elevated after ['LOGOUT', 'IDLE_DEADLINE', 'ABSOLUTE_DEADLINE']"
+ },
+ "[def]B16.C04.config_fix_closes": {
+  "pass": true,
+  "note": "bad=[]"
+ },
+ "[def]B16.shutdown.drain.both_lanes_priority_first": {
+  "pass": true,
+  "note": "drained=['REQUEST', 'STEP_UP_OK']"
+ },
+ "[def]B16.shutdown.restore.on_start_restored": {
+  "pass": true,
+  "note": "starts=1 restored=[True]"
+ },
+ "[def]B16.shutdown.restore.state_equal": {
+  "pass": true,
+  "note": "['auth.active', 'elevation.normal'] vs ['auth.active', 'elevation.normal']"
+ },
+ "[def]B16.shutdown.restore.drained_delivered_exactly_once": {
+  "pass": true,
+  "note": "pre=[] receipts=2/2 recv=['REQUEST', 'STEP_UP_OK']"
+ },
+ "[def]B16.shutdown.health": {
+  "pass": true,
+  "note": "chain=0 dropped=0/0"
+ },
+ "[def]B17.happy_enabled": {
+  "pass": true,
+  "note": "['enabled']"
+ },
+ "[def]B17.emergency_locks": {
+  "pass": true,
+  "note": "['locked']"
+ },
+ "[def]B17.inv.denied_stays_eligible": {
+  "pass": true,
+  "note": "['eligible']"
+ },
+ "[def]B17.shutdown.drain.both_lanes_priority_first": {
+  "pass": true,
+  "note": "drained=['EMERGENCY_DISABLE', 'EVIDENCE_RECORDED', 'ENABLE_REQUESTED']"
+ },
+ "[def]B17.shutdown.drain.wait_receipt_fails_stopped": {
+  "pass": true,
+  "note": "InterpreterStoppedError('drained: removed by drain_pending()')"
+ },
+ "[def]B17.shutdown.restore.on_start_restored": {
+  "pass": true,
+  "note": "starts=1 restored=[True]"
+ },
+ "[def]B17.shutdown.restore.state_equal": {
+  "pass": true,
+  "note": "['locked'] vs ['locked']"
+ },
+ "[def]B17.shutdown.restore.drained_delivered_exactly_once": {
+  "pass": true,
+  "note": "pre=[] receipts=3/3 recv=['EMERGENCY_DISABLE', 'EVIDENCE_RECORDED', 'EMERGENCY_DISABLE', 'ENABLE_REQUESTED', 'EMERGENCY_DISABLE']"
+ },
+ "[def]B17.shutdown.health": {
+  "pass": true,
+  "note": "chain=0 dropped=0/0"
+ },
+ "[def]B18.always_to_invoked_child_chain": {
+  "pass": true,
+  "note": "['engaged'] chain=0 receipt=Receipt"
+ },
+ "[def]B18.release_clear": {
+  "pass": true,
+  "note": "['clear']"
+ },
+ "[def]B18.C07b.catalogue_still_bricks(expected)": {
+  "pass": true,
+  "note": "status=error"
+ },
+ "[def]B18.C07b.config_fix_closes": {
+  "pass": true,
+  "note": "denied_ok=True final=['clear']"
+ },
+ "[def]B18.flatten_incomplete": {
+  "pass": true,
+  "note": "['engaged_incomplete']"
+ },
+ "[def]B18.shutdown.drain.both_lanes_priority_first": {
+  "pass": true,
+  "note": "drained=['RELEASE', 'RELEASE']"
+ },
+ "[def]B18.shutdown.drain.wait_receipt_fails_stopped": {
+  "pass": true,
+  "note": "InterpreterStoppedError('drained: removed by drain_pending()')"
+ },
+ "[def]B18.shutdown.restore.on_start_restored": {
+  "pass": true,
+  "note": "starts=1 restored=[True]"
+ },
+ "[def]B18.shutdown.restore.state_equal": {
+  "pass": true,
+  "note": "['engaged'] vs ['engaged']"
+ },
+ "[def]B18.shutdown.restore.drained_delivered_exactly_once": {
+  "pass": true,
+  "note": "pre=[] receipts=2/2 recv=['RELEASE', 'RELEASE']"
+ },
+ "[def]B18.shutdown.health": {
+  "pass": true,
+  "note": "chain=0 dropped=0/0"
+ },
+ "[def]B19.happy_roundtrip_idle": {
+  "pass": true,
+  "note": "['idle']"
+ },
+ "[def]B19.rollback_onDone_action_raises": {
+  "pass": true,
+  "note": "status=running ids=['fetching'] act_err=135"
+ },
+ "[def]B19.guard_raise_surfaces": {
+  "pass": true,
+  "note": "status=running guard_err=[\"RuntimeError('guard:divergences_found_and_auto_remediate')\"] ids=['idle']"
+ },
+ "[def]B19.shutdown.drain.both_lanes_priority_first": {
+  "pass": true,
+  "note": "drained=['STARTUP', 'SWEEP_DUE']"
+ },
+ "[def]B19.shutdown.restore.on_start_restored": {
+  "pass": true,
+  "note": "starts=1 restored=[True]"
+ },
+ "[def]B19.shutdown.restore.state_equal": {
+  "pass": true,
+  "note": "['idle'] vs ['idle']"
+ },
+ "[def]B19.shutdown.restore.drained_delivered_exactly_once": {
+  "pass": true,
+  "note": "pre=[] receipts=2/2 recv=['STARTUP', 'SWEEP_DUE']"
+ },
+ "[def]B19.shutdown.health": {
+  "pass": true,
+  "note": "chain=0 dropped=0/0"
+ },
+ "[def]B20.breach_locks": {
+  "pass": true,
+  "note": "['locked']"
+ },
+ "[def]B20.inv.denied_override_stays_locked": {
+  "pass": true,
+  "note": "['locked']"
+ },
+ "[def]B20.expiry_clears": {
+  "pass": true,
+  "note": "['clear']"
+ },
+ "[def]B20.shutdown.drain.both_lanes_priority_first": {
+  "pass": true,
+  "note": "drained=['EXPIRY_DUE', 'OVERRIDE_REQUESTED']"
+ },
+ "[def]B20.shutdown.drain.wait_receipt_fails_stopped": {
+  "pass": true,
+  "note": "InterpreterStoppedError('drained: removed by drain_pending()')"
+ },
+ "[def]B20.shutdown.restore.on_start_restored": {
+  "pass": true,
+  "note": "starts=1 restored=[True]"
+ },
+ "[def]B20.shutdown.restore.state_equal": {
+  "pass": true,
+  "note": "['locked'] vs ['locked']"
+ },
+ "[def]B20.shutdown.restore.drained_delivered_exactly_once": {
+  "pass": true,
+  "note": "pre=[] receipts=2/2 recv=['EXPIRY_DUE', 'OVERRIDE_REQUESTED']"
+ },
+ "[def]B20.shutdown.health": {
+  "pass": true,
+  "note": "chain=0 dropped=0/0"
+ },
+ "[def]B11.R1315.naive_guard_wedged(expected)": {
+  "pass": true,
+  "note": "['degraded']"
+ },
+ "[def]B11.R1315.event_aware_guard_recovers": {
+  "pass": true,
+  "note": "['recording']"
+ },
+ "[def]sync.max_queue_size_rejected": {
+  "pass": true,
+  "note": "ValueError"
+ }
+}

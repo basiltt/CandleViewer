@@ -1,0 +1,75 @@
+{
+  "probe": "r2c_def_service_blocks_loop",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "kind": "async def",
+      "pool": 1,
+      "start_seconds": 0.0,
+      "probe_answered_within_1s": true,
+      "probe_latency_s": 0.0,
+      "state_after_probe": [
+        "r2c.other"
+      ],
+      "stop": "ok"
+    },
+    {
+      "kind": "async def",
+      "pool": 4,
+      "start_seconds": 0.0,
+      "probe_answered_within_1s": true,
+      "probe_latency_s": 0.001,
+      "state_after_probe": [
+        "r2c.other"
+      ],
+      "stop": "ok"
+    },
+    {
+      "kind": "def",
+      "pool": 1,
+      "start_seconds": 0.0,
+      "probe_answered_within_1s": false,
+      "probe_latency_s": 1.016,
+      "state_after_probe": [
+        "r2c.hold"
+      ],
+      "stop": "ok"
+    },
+    {
+      "kind": "def",
+      "pool": 4,
+      "start_seconds": 0.0,
+      "probe_answered_within_1s": false,
+      "probe_latency_s": 1.016,
+      "state_after_probe": [
+        "r2c.hold"
+      ],
+      "stop": "ok"
+    }
+  ],
+  "blocked": [
+    {
+      "kind": "def",
+      "pool": 1,
+      "start_seconds": 0.0,
+      "probe_answered_within_1s": false,
+      "probe_latency_s": 1.016,
+      "state_after_probe": [
+        "r2c.hold"
+      ],
+      "stop": "ok"
+    },
+    {
+      "kind": "def",
+      "pool": 4,
+      "start_seconds": 0.0,
+      "probe_answered_within_1s": false,
+      "probe_latency_s": 1.016,
+      "state_after_probe": [
+        "r2c.hold"
+      ],
+      "stop": "ok"
+    }
+  ],
+  "result": "FAIL"
+}

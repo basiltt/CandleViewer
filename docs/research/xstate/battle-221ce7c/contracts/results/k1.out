@@ -1,0 +1,312 @@
+{
+ "b16_happy": {
+  "ids": [
+   "session.auth.active",
+   "session.elevation.elevated"
+  ],
+  "ctx": {
+   "session_id": null,
+   "user_id": null,
+   "expires_at_us": 0,
+   "idle_expires_at_us": 0,
+   "refresh_expires_at_us": 0,
+   "elevated_until_us": null,
+   "mfa_satisfied": false,
+   "revoke_reason": null
+  },
+  "acts": [
+   "mark_mfa_satisfied",
+   "stamp_idle_deadline",
+   "audit_login",
+   "stamp_idle_deadline",
+   "stamp_idle_deadline",
+   "audit_login",
+   "stamp_elevated_until",
+   "audit_step_up",
+   "schedule_elevation_deadline",
+   "stamp_idle_deadline",
+   "stamp_idle_deadline",
+   "audit_login"
+  ],
+  "status": "running",
+  "deferred": 0,
+  "transitions": [
+   "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+   "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+   "REQUEST->['session.auth.active', 'session.elevation.normal']",
+   "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']",
+   "REQUEST->['session.auth.active', 'session.elevation.elevated']"
+  ],
+  "receipts": [
+   {
+    "changed": true,
+    "error": null,
+    "deferred": false
+   },
+   {
+    "changed": false,
+    "error": null,
+    "deferred": false
+   },
+   {
+    "changed": true,
+    "error": null,
+    "deferred": false
+   },
+   {
+    "changed": false,
+    "error": null,
+    "deferred": false
+   }
+  ]
+ },
+ "b16_inv_a_REVOKE": {
+  "ids": [
+   "session.auth.revoked",
+   "session.elevation.normal"
+  ],
+  "ctx": {
+   "session_id": null,
+   "user_id": null,
+   "expires_at_us": 0,
+   "idle_expires_at_us": 0,
+   "refresh_expires_at_us": 0,
+   "elevated_until_us": null,
+   "mfa_satisfied": false,
+   "revoke_reason": null
+  },
+  "acts": [
+   "mark_mfa_satisfied",
+   "stamp_idle_deadline",
+   "audit_login",
+   "stamp_elevated_until",
+   "audit_step_up",
+   "schedule_elevation_deadline",
+   "set_revoke_admin",
+   "audit_session_revoked",
+   "broadcast_revocation",
+   "clear_elevated"
+  ],
+  "status": "running",
+  "deferred": 0,
+  "transitions": [
+   "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+   "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+   "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']",
+   "REVOKE->['session.auth.revoked', 'session.elevation.elevated']",
+   "REVOKE->['session.auth.revoked', 'session.elevation.normal']"
+  ],
+  "receipts": [
+   {
+    "changed": true,
+    "error": null,
+    "deferred": false
+   },
+   {
+    "changed": true,
+    "error": null,
+    "deferred": false
+   },
+   {
+    "changed": true,
+    "error": null,
+    "deferred": false
+   }
+  ]
+ },
+ "b16_inv_a_LOGOUT": {
+  "ids": [
+   "session.auth.revoked",
+   "session.elevation.elevated"
+  ],
+  "ctx": {
+   "session_id": null,
+   "user_id": null,
+   "expires_at_us": 0,
+   "idle_expires_at_us": 0,
+   "refresh_expires_at_us": 0,
+   "elevated_until_us": null,
+   "mfa_satisfied": false,
+   "revoke_reason": null
+  },
+  "acts": [
+   "mark_mfa_satisfied",
+   "stamp_idle_deadline",
+   "audit_login",
+   "stamp_elevated_until",
+   "audit_step_up",
+   "schedule_elevation_deadline",
+   "set_revoke_logout",
+   "audit_session_revoked",
+   "broadcast_revocation"
+  ],
+  "status": "running",
+  "deferred": 0,
+  "transitions": [
+   "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+   "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+   "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']",
+   "LOGOUT->['session.auth.revoked', 'session.elevation.elevated']"
+  ],
+  "receipts": [
+   {
+    "changed": true,
+    "error": null,
+    "deferred": false
+   },
+   {
+    "changed": true,
+    "error": null,
+    "deferred": false
+   },
+   {
+    "changed": true,
+    "error": null,
+    "deferred": false
+   }
+  ]
+ },
+ "b16_inv_a_IDLE_DEADLINE": {
+  "ids": [
+   "session.auth.revoked",
+   "session.elevation.elevated"
+  ],
+  "ctx": {
+   "session_id": null,
+   "user_id": null,
+   "expires_at_us": 0,
+   "idle_expires_at_us": 0,
+   "refresh_expires_at_us": 0,
+   "elevated_until_us": null,
+   "mfa_satisfied": false,
+   "revoke_reason": null
+  },
+  "acts": [
+   "mark_mfa_satisfied",
+   "stamp_idle_deadline",
+   "audit_login",
+   "stamp_elevated_until",
+   "audit_step_up",
+   "schedule_elevation_deadline",
+   "set_revoke_idle",
+   "audit_session_revoked",
+   "broadcast_revocation"
+  ],
+  "status": "running",
+  "deferred": 0,
+  "transitions": [
+   "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+   "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+   "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']",
+   "IDLE_DEADLINE->['session.auth.revoked', 'session.elevation.elevated']"
+  ],
+  "receipts": [
+   {
+    "changed": true,
+    "error": null,
+    "deferred": false
+   },
+   {
+    "changed": true,
+    "error": null,
+    "deferred": false
+   },
+   {
+    "changed": true,
+    "error": null,
+    "deferred": false
+   }
+  ]
+ },
+ "b16_inv_a_ABSOLUTE_DEADLINE": {
+  "ids": [
+   "session.auth.revoked",
+   "session.elevation.elevated"
+  ],
+  "ctx": {
+   "session_id": null,
+   "user_id": null,
+   "expires_at_us": 0,
+   "idle_expires_at_us": 0,
+   "refresh_expires_at_us": 0,
+   "elevated_until_us": null,
+   "mfa_satisfied": false,
+   "revoke_reason": null
+  },
+  "acts": [
+   "mark_mfa_satisfied",
+   "stamp_idle_deadline",
+   "audit_login",
+   "stamp_elevated_until",
+   "audit_step_up",
+   "schedule_elevation_deadline",
+   "set_revoke_expired",
+   "audit_session_revoked",
+   "broadcast_revocation"
+  ],
+  "status": "running",
+  "deferred": 0,
+  "transitions": [
+   "___xstate_statemachine_init___->['session.auth.pending_mfa', 'session.elevation.normal']",
+   "MFA_OK->['session.auth.active', 'session.elevation.normal']",
+   "STEP_UP_OK->['session.auth.active', 'session.elevation.elevated']",
+   "ABSOLUTE_DEADLINE->['session.auth.revoked', 'session.elevation.elevated']"
+  ],
+  "receipts": [
+   {
+    "changed": true,
+    "error": null,
+    "deferred": false
+   },
+   {
+    "changed": true,
+    "error": null,
+    "deferred": false
+   },
+   {
+    "changed": true,
+    "error": null,
+    "deferred": false
+   }
+  ]
+ },
+ "b16_inv_b": {
+  "REVOKE": [
+   "mark_mfa_satisfied",
+   "stamp_idle_deadline",
+   "audit_login",
+   "set_revoke_admin",
+   "audit_session_revoked",
+   "broadcast_revocation"
+  ],
+  "LOGOUT": [
+   "mark_mfa_satisfied",
+   "stamp_idle_deadline",
+   "audit_login",
+   "set_revoke_logout",
+   "audit_session_revoked",
+   "broadcast_revocation"
+  ],
+  "IDLE_DEADLINE": [
+   "mark_mfa_satisfied",
+   "stamp_idle_deadline",
+   "audit_login",
+   "set_revoke_idle",
+   "audit_session_revoked",
+   "broadcast_revocation"
+  ],
+  "ABSOLUTE_DEADLINE": [
+   "mark_mfa_satisfied",
+   "stamp_idle_deadline",
+   "audit_login",
+   "set_revoke_expired",
+   "audit_session_revoked",
+   "broadcast_revocation"
+  ]
+ },
+ "b16_inv_b_timeout": [
+  "set_revoke_timeout",
+  "audit_session_revoked",
+  "broadcast_revocation"
+ ],
+ "b16_inv_b_loc

@@ -1,0 +1,2792 @@
+[
+  {
+    "id": "S-01",
+    "engine": "async",
+    "title": "Parallel regions: both regions take their own transition on one event",
+    "spec": "SCXML 3.13 selectTransitions: one transition per atomic state in the configuration; XState v5 fires in every region",
+    "expected": [
+      "p.A.a2",
+      "p.B.b2"
+    ],
+    "observed": [
+      "p.A.a2",
+      "p.B.b2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-01",
+    "engine": "sync",
+    "title": "Parallel regions: both regions take their own transition on one event",
+    "spec": "SCXML 3.13 selectTransitions: one transition per atomic state in the configuration; XState v5 fires in every region",
+    "expected": [
+      "p.A.a2",
+      "p.B.b2"
+    ],
+    "observed": [
+      "p.A.a2",
+      "p.B.b2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-02",
+    "engine": "async",
+    "title": "Ancestor preemption: child transition wins over ancestor on same event",
+    "spec": "SCXML 3.13: for each atomic state the transition selected is the one on the innermost state that has an enabled transition",
+    "expected": [
+      "m.A.a2"
+    ],
+    "observed": [
+      "m.A.a2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-02",
+    "engine": "sync",
+    "title": "Ancestor preemption: child transition wins over ancestor on same event",
+    "spec": "SCXML 3.13: for each atomic state the transition selected is the one on the innermost state that has an enabled transition",
+    "expected": [
+      "m.A.a2"
+    ],
+    "observed": [
+      "m.A.a2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-03",
+    "engine": "async",
+    "title": "Document order among two enabled transitions on the SAME state",
+    "spec": "SCXML 3.13: transitions of one state are considered in document order; the first enabled one is selected",
+    "expected": [
+      "m.first"
+    ],
+    "observed": [
+      "m.first"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-03",
+    "engine": "sync",
+    "title": "Document order among two enabled transitions on the SAME state",
+    "spec": "SCXML 3.13: transitions of one state are considered in document order; the first enabled one is selected",
+    "expected": [
+      "m.first"
+    ],
+    "observed": [
+      "m.first"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-04",
+    "engine": "async",
+    "title": "Guard fallthrough: first enabled branch in document order wins",
+    "spec": "SCXML 3.13 + XState v5 guarded transition arrays",
+    "expected": [
+      "m.second"
+    ],
+    "observed": [
+      "m.second"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-04",
+    "engine": "sync",
+    "title": "Guard fallthrough: first enabled branch in document order wins",
+    "spec": "SCXML 3.13 + XState v5 guarded transition arrays",
+    "expected": [
+      "m.second"
+    ],
+    "observed": [
+      "m.second"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-05",
+    "engine": "async",
+    "title": "Conflicting transitions in parallel regions targeting outside: document-order-first region wins, second is preempted",
+    "spec": "SCXML 3.13 removeConflictingTransitions: a transition whose exit set intersects an earlier selected transition's exit set is preempted; document order decides",
+    "expected": [
+      "m.X"
+    ],
+    "observed": [
+      "m.X"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-05",
+    "engine": "sync",
+    "title": "Conflicting transitions in parallel regions targeting outside: document-order-first region wins, second is preempted",
+    "spec": "SCXML 3.13 removeConflictingTransitions: a transition whose exit set intersects an earlier selected transition's exit set is preempted; document order decides",
+    "expected": [
+      "m.X"
+    ],
+    "observed": [
+      "m.X"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-06",
+    "engine": "async",
+    "title": "Exit order across parallel regions is reverse document order (region-major), and each state is exited exactly once",
+    "spec": "SCXML 3.13 exitStates: statesToExit is sorted in exitOrder = REVERSE DOCUMENT ORDER. Document order here is p, A, a1, B, b1, so exit order is b1, B, a1, A, p (region-major, not depth-major)",
+    "expected": {
+      "ids": [
+        "m.X"
+      ],
+      "log": [
+        "xb1",
+        "xB",
+        "xa1",
+        "xA",
+        "xp",
+        "eX"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.X"
+      ],
+      "log": [
+        "xb1",
+        "xa1",
+        "xB",
+        "xA",
+        "xp",
+        "eX"
+      ]
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "S-06",
+    "engine": "sync",
+    "title": "Exit order across parallel regions is reverse document order (region-major), and each state is exited exactly once",
+    "spec": "SCXML 3.13 exitStates: statesToExit is sorted in exitOrder = REVERSE DOCUMENT ORDER. Document order here is p, A, a1, B, b1, so exit order is b1, B, a1, A, p (region-major, not depth-major)",
+    "expected": {
+      "ids": [
+        "m.X"
+      ],
+      "log": [
+        "xb1",
+        "xB",
+        "xa1",
+        "xA",
+        "xp",
+        "eX"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.X"
+      ],
+      "log": [
+        "xb1",
+        "xa1",
+        "xB",
+        "xA",
+        "xp",
+        "eX"
+      ]
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "S-07",
+    "engine": "async",
+    "title": "LCCA: sibling-to-sibling transition exits/enters only up to the LCCA",
+    "spec": "SCXML 3.13 getTransitionDomain = LCCA(source, targets); states above the domain are NOT exited",
+    "expected": {
+      "ids": [
+        "m.P.b"
+      ],
+      "log": [
+        "xa",
+        "eb"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.b"
+      ],
+      "log": [
+        "xa",
+        "eb"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-07",
+    "engine": "sync",
+    "title": "LCCA: sibling-to-sibling transition exits/enters only up to the LCCA",
+    "spec": "SCXML 3.13 getTransitionDomain = LCCA(source, targets); states above the domain are NOT exited",
+    "expected": {
+      "ids": [
+        "m.P.b"
+      ],
+      "log": [
+        "xa",
+        "eb"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.b"
+      ],
+      "log": [
+        "xa",
+        "eb"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-08",
+    "engine": "async",
+    "title": "LCCA across parallel regions: cross-region target exits the whole parallel state and re-enters both regions",
+    "spec": "SCXML 3.13: LCCA of a state in region A and a state in region B is the parallel state's parent, so the parallel state is exited",
+    "expected": {
+      "ids": [
+        "m.p.A.a2",
+        "m.p.B.b1"
+      ],
+      "entered_B": true
+    },
+    "observed": {
+      "ids": [
+        "m.p.A.a2",
+        "m.p.B.b1"
+      ],
+      "entered_B": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-08",
+    "engine": "sync",
+    "title": "LCCA across parallel regions: cross-region target exits the whole parallel state and re-enters both regions",
+    "spec": "SCXML 3.13: LCCA of a state in region A and a state in region B is the parallel state's parent, so the parallel state is exited",
+    "expected": {
+      "ids": [
+        "m.p.A.a2",
+        "m.p.B.b1"
+      ],
+      "entered_B": true
+    },
+    "observed": {
+      "ids": [
+        "m.p.A.a2",
+        "m.p.B.b1"
+      ],
+      "entered_B": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-09",
+    "engine": "async",
+    "title": "Targetless transition: actions run, no exit/entry",
+    "spec": "SCXML 3.13 (targetless transitions are internal, take no state change); XState v5 actions-only transition",
+    "expected": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "act"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "act"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-09",
+    "engine": "sync",
+    "title": "Targetless transition: actions run, no exit/entry",
+    "spec": "SCXML 3.13 (targetless transitions are internal, take no state change); XState v5 actions-only transition",
+    "expected": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "act"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "act"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-10",
+    "engine": "async",
+    "title": "Self-transition default (reenter absent) is internal: no exit/entry",
+    "spec": "XState v5: a transition with target === source and reenter falsy is internal; SCXML type='internal'",
+    "expected": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "act"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "act"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-10",
+    "engine": "sync",
+    "title": "Self-transition default (reenter absent) is internal: no exit/entry",
+    "spec": "XState v5: a transition with target === source and reenter falsy is internal; SCXML type='internal'",
+    "expected": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "act"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "act"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-11",
+    "engine": "async",
+    "title": "Self-transition with reenter:true is external: exit then action then entry",
+    "spec": "XState v5 reenter:true; SCXML type='external' self-transition. Action order per SCXML 3.13: exit, transition actions, entry",
+    "expected": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "xs",
+        "act",
+        "es"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "xs",
+        "act",
+        "es"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-11",
+    "engine": "sync",
+    "title": "Self-transition with reenter:true is external: exit then action then entry",
+    "spec": "XState v5 reenter:true; SCXML type='external' self-transition. Action order per SCXML 3.13: exit, transition actions, entry",
+    "expected": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "xs",
+        "act",
+        "es"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "xs",
+        "act",
+        "es"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-12",
+    "engine": "async",
+    "title": "internal:false (v4 spelling) is equivalent to reenter:true",
+    "spec": "XState v4 internal:false == v5 reenter:true (library CHANGELOG models.py:539 documents the alias)",
+    "expected": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "xs",
+        "act",
+        "es"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "xs",
+        "act",
+        "es"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-12",
+    "engine": "sync",
+    "title": "internal:false (v4 spelling) is equivalent to reenter:true",
+    "spec": "XState v4 internal:false == v5 reenter:true (library CHANGELOG models.py:539 documents the alias)",
+    "expected": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "xs",
+        "act",
+        "es"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.s"
+      ],
+      "log": [
+        "xs",
+        "act",
+        "es"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-13",
+    "engine": "async",
+    "title": "Compound self-transition with reenter:true re-enters the initial child, not the previously active child",
+    "spec": "SCXML 3.13: external self-transition on a compound state exits it and re-enters via its initial state",
+    "expected": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "xb",
+        "xP",
+        "eP",
+        "ea"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "xb",
+        "xP",
+        "eP",
+        "ea"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-13",
+    "engine": "sync",
+    "title": "Compound self-transition with reenter:true re-enters the initial child, not the previously active child",
+    "spec": "SCXML 3.13: external self-transition on a compound state exits it and re-enters via its initial state",
+    "expected": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "xb",
+        "xP",
+        "eP",
+        "ea"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "xb",
+        "xP",
+        "eP",
+        "ea"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-14",
+    "engine": "async",
+    "title": "Transition to a descendant of the active state enters only the missing links (no re-entry of the ancestor)",
+    "spec": "SCXML 3.13: transition domain is the LCCA; ancestors already active are not exited",
+    "expected": {
+      "ids": [
+        "m.P.a.a2"
+      ],
+      "log": [
+        "xa1",
+        "ea2"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.a.a2"
+      ],
+      "log": [
+        "xa1",
+        "ea2"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-14",
+    "engine": "sync",
+    "title": "Transition to a descendant of the active state enters only the missing links (no re-entry of the ancestor)",
+    "spec": "SCXML 3.13: transition domain is the LCCA; ancestors already active are not exited",
+    "expected": {
+      "ids": [
+        "m.P.a.a2"
+      ],
+      "log": [
+        "xa1",
+        "ea2"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.a.a2"
+      ],
+      "log": [
+        "xa1",
+        "ea2"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-15",
+    "engine": "async",
+    "title": "Transition to a proper ancestor exits and re-enters the ancestor",
+    "spec": "SCXML 3.13: LCCA(source, ancestor-target) is the ancestor's parent, so the ancestor is exited and re-entered",
+    "expected": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "xa",
+        "xP",
+        "eP",
+        "ea"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "xa",
+        "xP",
+        "eP",
+        "ea"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-15",
+    "engine": "sync",
+    "title": "Transition to a proper ancestor exits and re-enters the ancestor",
+    "spec": "SCXML 3.13: LCCA(source, ancestor-target) is the ancestor's parent, so the ancestor is exited and re-entered",
+    "expected": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "xa",
+        "xP",
+        "eP",
+        "ea"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "xa",
+        "xP",
+        "eP",
+        "ea"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-16",
+    "engine": "async",
+    "title": "Exit order is inner-to-outer, entry order outer-to-inner",
+    "spec": "SCXML 3.9: exitStates in reverse document/depth order, enterStates in entry order (ancestors before descendants)",
+    "expected": [
+      "xa1",
+      "xA",
+      "eB",
+      "eb1"
+    ],
+    "observed": [
+      "xa1",
+      "xA",
+      "eB",
+      "eb1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-16",
+    "engine": "sync",
+    "title": "Exit order is inner-to-outer, entry order outer-to-inner",
+    "spec": "SCXML 3.9: exitStates in reverse document/depth order, enterStates in entry order (ancestors before descendants)",
+    "expected": [
+      "xa1",
+      "xA",
+      "eB",
+      "eb1"
+    ],
+    "observed": [
+      "xa1",
+      "xA",
+      "eB",
+      "eb1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-17",
+    "engine": "async",
+    "title": "Action order on a state change: exit actions, then transition actions, then entry actions",
+    "spec": "SCXML 3.13 microstep: exit set actions, transition actions, entry set actions, in that order",
+    "expected": [
+      "xA",
+      "trans",
+      "eB"
+    ],
+    "observed": [
+      "xA",
+      "trans",
+      "eB"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-17",
+    "engine": "sync",
+    "title": "Action order on a state change: exit actions, then transition actions, then entry actions",
+    "spec": "SCXML 3.13 microstep: exit set actions, transition actions, entry set actions, in that order",
+    "expected": [
+      "xA",
+      "trans",
+      "eB"
+    ],
+    "observed": [
+      "xA",
+      "trans",
+      "eB"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-18",
+    "engine": "async",
+    "title": "Unknown event causes no transition and no actions",
+    "spec": "SCXML 3.13: an event with no enabled transition leaves the configuration unchanged",
+    "expected": {
+      "ids": [
+        "m.A"
+      ],
+      "log": []
+    },
+    "observed": {
+      "ids": [
+        "m.A"
+      ],
+      "log": []
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-18",
+    "engine": "sync",
+    "title": "Unknown event causes no transition and no actions",
+    "spec": "SCXML 3.13: an event with no enabled transition leaves the configuration unchanged",
+    "expected": {
+      "ids": [
+        "m.A"
+      ],
+      "log": []
+    },
+    "observed": {
+      "ids": [
+        "m.A"
+      ],
+      "log": []
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-19",
+    "engine": "async",
+    "title": "Guard blocking the inner transition lets the ancestor transition fire",
+    "spec": "SCXML 3.13: only ENABLED transitions are candidates; a disabled inner transition does not shadow an enabled ancestor one",
+    "expected": [
+      "m.B"
+    ],
+    "observed": [
+      "m.B"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-19",
+    "engine": "sync",
+    "title": "Guard blocking the inner transition lets the ancestor transition fire",
+    "spec": "SCXML 3.13: only ENABLED transitions are candidates; a disabled inner transition does not shadow an enabled ancestor one",
+    "expected": [
+      "m.B"
+    ],
+    "observed": [
+      "m.B"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "S-20",
+    "engine": "async",
+    "title": "Transition actions see the event payload that triggered them",
+    "spec": "SCXML 3.13 / XState v5: actions receive the triggering event",
+    "expected": {
+      "n": 7
+    },
+    "observed": {
+      "n": 7
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "S-20",
+    "engine": "sync",
+    "title": "Transition actions see the event payload that triggered them",
+    "spec": "SCXML 3.13 / XState v5: actions receive the triggering event",
+    "expected": {
+      "n": 7
+    },
+    "observed": {
+      "n": 7
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-01",
+    "engine": "async",
+    "title": "Eventless chain settles within one macrostep (a -> b -> c)",
+    "spec": "SCXML 3.13: after each microstep the engine re-evaluates eventless transitions until none is enabled; XState v5 `always`",
+    "expected": [
+      "m.c"
+    ],
+    "observed": [
+      "m.c"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-01",
+    "engine": "sync",
+    "title": "Eventless chain settles within one macrostep (a -> b -> c)",
+    "spec": "SCXML 3.13: after each microstep the engine re-evaluates eventless transitions until none is enabled; XState v5 `always`",
+    "expected": [
+      "m.c"
+    ],
+    "observed": [
+      "m.c"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-02",
+    "engine": "async",
+    "title": "Eventless guard re-evaluated after each microstep: assign in a transition unblocks the next always",
+    "spec": "SCXML 3.13: eventless transitions are re-selected after every microstep, so a datamodel change made in microstep N is visible in microstep N+1",
+    "expected": {
+      "ids": [
+        "m.done"
+      ],
+      "n": 3
+    },
+    "observed": {
+      "ids": [
+        "m.done"
+      ],
+      "n": 3
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-02",
+    "engine": "sync",
+    "title": "Eventless guard re-evaluated after each microstep: assign in a transition unblocks the next always",
+    "spec": "SCXML 3.13: eventless transitions are re-selected after every microstep, so a datamodel change made in microstep N is visible in microstep N+1",
+    "expected": {
+      "ids": [
+        "m.done"
+      ],
+      "n": 3
+    },
+    "observed": {
+      "ids": [
+        "m.done"
+      ],
+      "n": 3
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-03",
+    "engine": "async",
+    "title": "Eventless transition fires immediately after an event transition, in the same macrostep (caller never observes the transient state)",
+    "spec": "SCXML 3.13 macrostep = event microstep followed by eventless microsteps until stable",
+    "expected": [
+      "m.c"
+    ],
+    "observed": [
+      "m.c"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-03",
+    "engine": "sync",
+    "title": "Eventless transition fires immediately after an event transition, in the same macrostep (caller never observes the transient state)",
+    "spec": "SCXML 3.13 macrostep = event microstep followed by eventless microsteps until stable",
+    "expected": [
+      "m.c"
+    ],
+    "observed": [
+      "m.c"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-04",
+    "engine": "async",
+    "title": "Transient state entry/exit actions run even though it is never observable",
+    "spec": "SCXML 3.8/3.9: onentry and onexit run for every state entered, including states left in the same macrostep",
+    "expected": [
+      "eb",
+      "xb"
+    ],
+    "observed": [
+      "eb",
+      "xb"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-04",
+    "engine": "sync",
+    "title": "Transient state entry/exit actions run even though it is never observable",
+    "spec": "SCXML 3.8/3.9: onentry and onexit run for every state entered, including states left in the same macrostep",
+    "expected": [
+      "eb",
+      "xb"
+    ],
+    "observed": [
+      "eb",
+      "xb"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-05",
+    "engine": "async",
+    "title": "Eventless transition with a false guard does not fire; machine rests in the state",
+    "spec": "SCXML 3.13: an eventless transition whose cond is false is not enabled",
+    "expected": [
+      "m.b"
+    ],
+    "observed": [
+      "m.b"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-05",
+    "engine": "sync",
+    "title": "Eventless transition with a false guard does not fire; machine rests in the state",
+    "spec": "SCXML 3.13: an eventless transition whose cond is false is not enabled",
+    "expected": [
+      "m.b"
+    ],
+    "observed": [
+      "m.b"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-06",
+    "engine": "async",
+    "title": "after:0 fires as a delayed event, NOT as an eventless transition: it is a separate macrostep",
+    "spec": "XState v5: `after: {0: ...}` schedules a delayed event with delay 0; it is not `always`. It must still settle without external input.",
+    "expected": [
+      "m.b"
+    ],
+    "observed": [
+      "m.b"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-06",
+    "engine": "sync",
+    "title": "after:0 fires as a delayed event, NOT as an eventless transition: it is a separate macrostep",
+    "spec": "XState v5: `after: {0: ...}` schedules a delayed event with delay 0; it is not `always`. It must still settle without external input.",
+    "expected": [
+      "m.b"
+    ],
+    "observed": [
+      "m.b"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-07",
+    "engine": "async",
+    "title": "after:0 chain of three states settles",
+    "spec": "XState v5 after:0; SCXML <send delay='0'> is queued to the external queue and processed in a later macrostep",
+    "expected": [
+      "m.d"
+    ],
+    "observed": [
+      "m.d"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-07",
+    "engine": "sync",
+    "title": "after:0 chain of three states settles",
+    "spec": "XState v5 after:0; SCXML <send delay='0'> is queued to the external queue and processed in a later macrostep",
+    "expected": [
+      "m.d"
+    ],
+    "observed": [
+      "m.d"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-08",
+    "engine": "async",
+    "title": "Leaving a state cancels its pending `after` timer",
+    "spec": "SCXML 6.2.2 / XState v5: delayed sends owned by a state are cancelled when the state is exited",
+    "expected": [
+      "m.other"
+    ],
+    "observed": [
+      "m.other"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-08",
+    "engine": "sync",
+    "title": "Leaving a state cancels its pending `after` timer",
+    "spec": "SCXML 6.2.2 / XState v5: delayed sends owned by a state are cancelled when the state is exited",
+    "expected": [
+      "m.other"
+    ],
+    "observed": [
+      "m.other"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-09",
+    "engine": "async",
+    "title": "done.state.<compound> fires when the compound state reaches a final child, triggering onDone",
+    "spec": "SCXML 3.7: entering a <final> child generates done.state.<parent>",
+    "expected": [
+      "m.after"
+    ],
+    "observed": [
+      "m.after"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-09",
+    "engine": "sync",
+    "title": "done.state.<compound> fires when the compound state reaches a final child, triggering onDone",
+    "spec": "SCXML 3.7: entering a <final> child generates done.state.<parent>",
+    "expected": [
+      "m.after"
+    ],
+    "observed": [
+      "m.after"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-10",
+    "engine": "async",
+    "title": "done.state.<parallel> fires only when EVERY region is in a final state (not on the first)",
+    "spec": "SCXML 3.7: for a <parallel>, done.state is generated when all of its children are in final states",
+    "expected": {
+      "after_one": [
+        "m.P.A.fin",
+        "m.P.B.b1"
+      ],
+      "after_both": [
+        "m.after"
+      ]
+    },
+    "observed": {
+      "after_one": [
+        "m.P.A.fin",
+        "m.P.B.b1"
+      ],
+      "after_both": [
+        "m.after"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-10",
+    "engine": "sync",
+    "title": "done.state.<parallel> fires only when EVERY region is in a final state (not on the first)",
+    "spec": "SCXML 3.7: for a <parallel>, done.state is generated when all of its children are in final states",
+    "expected": {
+      "after_one": [
+        "m.P.A.fin",
+        "m.P.B.b1"
+      ],
+      "after_both": [
+        "m.after"
+      ]
+    },
+    "observed": {
+      "after_one": [
+        "m.P.A.fin",
+        "m.P.B.b1"
+      ],
+      "after_both": [
+        "m.after"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-11",
+    "engine": "async",
+    "title": "done.state payload carries the final state's `output`",
+    "spec": "SCXML 3.7 <donedata>; XState v5 final `output` becomes event.output/data on done.state.*",
+    "expected": {
+      "code": 42
+    },
+    "observed": {
+      "code": 42
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-11",
+    "engine": "sync",
+    "title": "done.state payload carries the final state's `output`",
+    "spec": "SCXML 3.7 <donedata>; XState v5 final `output` becomes event.output/data on done.state.*",
+    "expected": {
+      "code": 42
+    },
+    "observed": {
+      "code": 42
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-12",
+    "engine": "async",
+    "title": "Top-level final state completes the machine: status 'done' and machine output resolved",
+    "spec": "SCXML 3.7: entering a top-level final state terminates the session; XState v5 status 'done' with machine output",
+    "expected": {
+      "status": "done",
+      "output": {
+        "ok": true
+      }
+    },
+    "observed": {
+      "status": "done",
+      "output": {
+        "ok": true
+      }
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-12",
+    "engine": "sync",
+    "title": "Top-level final state completes the machine: status 'done' and machine output resolved",
+    "spec": "SCXML 3.7: entering a top-level final state terminates the session; XState v5 status 'done' with machine output",
+    "expected": {
+      "status": "done",
+      "output": {
+        "ok": true
+      }
+    },
+    "observed": {
+      "status": "done",
+      "output": {
+        "ok": true
+      }
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-13",
+    "engine": "async",
+    "title": "A final state's own `output` reaches machine output when the machine declares none",
+    "spec": "XState v5: without a machine-level output, the top-level final state's output is the machine output",
+    "expected": {
+      "v": 9
+    },
+    "observed": {
+      "v": 9
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-13",
+    "engine": "sync",
+    "title": "A final state's own `output` reaches machine output when the machine declares none",
+    "spec": "XState v5: without a machine-level output, the top-level final state's output is the machine output",
+    "expected": {
+      "v": 9
+    },
+    "observed": {
+      "v": 9
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-14",
+    "engine": "async",
+    "title": "A stopped/done machine accepts no further transitions",
+    "spec": "SCXML 3.7: after the session terminates no further events are processed",
+    "expected": {
+      "status": "done",
+      "ids_unchanged": true
+    },
+    "observed": {
+      "status": "done",
+      "ids_unchanged": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-14",
+    "engine": "sync",
+    "title": "A stopped/done machine accepts no further transitions",
+    "spec": "SCXML 3.7: after the session terminates no further events are processed",
+    "expected": {
+      "status": "done",
+      "ids_unchanged": true
+    },
+    "observed": {
+      "status": "done",
+      "ids_unchanged": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-15",
+    "engine": "async",
+    "title": "onDone on a parallel state does not fire when only one region has a final state at all",
+    "spec": "SCXML 3.7: all regions must be final; a region with no final state can never satisfy the condition",
+    "expected": [
+      "m.P.A.fin",
+      "m.P.B.b1"
+    ],
+    "observed": [
+      "m.P.A.fin",
+      "m.P.B.b1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-15",
+    "engine": "sync",
+    "title": "onDone on a parallel state does not fire when only one region has a final state at all",
+    "spec": "SCXML 3.7: all regions must be final; a region with no final state can never satisfy the condition",
+    "expected": [
+      "m.P.A.fin",
+      "m.P.B.b1"
+    ],
+    "observed": [
+      "m.P.A.fin",
+      "m.P.B.b1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-16",
+    "engine": "async",
+    "title": "Nested done: inner compound completes -> its final state is the outer's final -> outer done.state fires",
+    "spec": "SCXML 3.7 recursive done computation",
+    "expected": [
+      "m.end"
+    ],
+    "observed": [
+      "m.end"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-16",
+    "engine": "sync",
+    "title": "Nested done: inner compound completes -> its final state is the outer's final -> outer done.state fires",
+    "spec": "SCXML 3.7 recursive done computation",
+    "expected": [
+      "m.end"
+    ],
+    "observed": [
+      "m.end"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-17",
+    "engine": "async",
+    "title": "`always` on an ancestor is evaluated for the active leaf",
+    "spec": "SCXML 3.13: eventless transitions are selected by the same upward-walk rule as evented ones",
+    "expected": [
+      "m.out"
+    ],
+    "observed": [
+      "m.out"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-17",
+    "engine": "sync",
+    "title": "`always` on an ancestor is evaluated for the active leaf",
+    "spec": "SCXML 3.13: eventless transitions are selected by the same upward-walk rule as evented ones",
+    "expected": [
+      "m.out"
+    ],
+    "observed": [
+      "m.out"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-18",
+    "engine": "async",
+    "title": "Eventless self-loop without progress is bounded, not an infinite hang (engine must terminate)",
+    "spec": "SCXML 3.13 note: an unconditional eventless self-loop is a non-terminating macrostep; a production engine must bound it. Library documents maxIterations / RunawayChainError.",
+    "expected": {
+      "terminated": true
+    },
+    "observed": {
+      "terminated": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-18",
+    "engine": "sync",
+    "title": "Eventless self-loop without progress is bounded, not an infinite hang (engine must terminate)",
+    "spec": "SCXML 3.13 note: an unconditional eventless self-loop is a non-terminating macrostep; a production engine must bound it. Library documents maxIterations / RunawayChainError.",
+    "expected": {
+      "terminated": true
+    },
+    "observed": {
+      "terminated": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "H-01",
+    "engine": "async",
+    "title": "Shallow history restores the last active CHILD of its parent",
+    "spec": "SCXML 3.10: a shallow <history> restores the immediate children of its parent that were active when the parent was exited",
+    "expected": [
+      "m.P.b.b1"
+    ],
+    "observed": [
+      "m.P.b.b1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-01",
+    "engine": "sync",
+    "title": "Shallow history restores the last active CHILD of its parent",
+    "spec": "SCXML 3.10: a shallow <history> restores the immediate children of its parent that were active when the parent was exited",
+    "expected": [
+      "m.P.b.b1"
+    ],
+    "observed": [
+      "m.P.b.b1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-02",
+    "engine": "async",
+    "title": "Shallow history does NOT restore grandchildren: the restored child re-enters via its own `initial`",
+    "spec": "SCXML 3.10: shallow history records only the immediate children; deeper states use their default initial",
+    "expected": [
+      "m.P.a.a1"
+    ],
+    "observed": [
+      "m.P.a.a1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-02",
+    "engine": "sync",
+    "title": "Shallow history does NOT restore grandchildren: the restored child re-enters via its own `initial`",
+    "spec": "SCXML 3.10: shallow history records only the immediate children; deeper states use their default initial",
+    "expected": [
+      "m.P.a.a1"
+    ],
+    "observed": [
+      "m.P.a.a1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-03",
+    "engine": "async",
+    "title": "Deep history restores the full nested configuration",
+    "spec": "SCXML 3.10: a deep <history> restores all active descendants of its parent at the time of exit",
+    "expected": [
+      "m.P.a.a2"
+    ],
+    "observed": [
+      "m.P.a.a2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-03",
+    "engine": "sync",
+    "title": "Deep history restores the full nested configuration",
+    "spec": "SCXML 3.10: a deep <history> restores all active descendants of its parent at the time of exit",
+    "expected": [
+      "m.P.a.a2"
+    ],
+    "observed": [
+      "m.P.a.a2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-04",
+    "engine": "async",
+    "title": "History with nothing recorded falls back to its default target",
+    "spec": "SCXML 3.10: if the parent has never been exited, the history state's <transition> default target is taken",
+    "expected": [
+      "m.P.b.b1"
+    ],
+    "observed": [
+      "m.P.b.b1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-04",
+    "engine": "sync",
+    "title": "History with nothing recorded falls back to its default target",
+    "spec": "SCXML 3.10: if the parent has never been exited, the history state's <transition> default target is taken",
+    "expected": [
+      "m.P.b.b1"
+    ],
+    "observed": [
+      "m.P.b.b1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-05",
+    "engine": "async",
+    "title": "History with nothing recorded AND no default target uses the parent's `initial`",
+    "spec": "SCXML 3.10 requires a default transition; XState v5 falls back to the parent's initial state when none is given",
+    "expected": [
+      "m.P.a"
+    ],
+    "observed": [
+      "m.P.a"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-05",
+    "engine": "sync",
+    "title": "History with nothing recorded AND no default target uses the parent's `initial`",
+    "spec": "SCXML 3.10 requires a default transition; XState v5 falls back to the parent's initial state when none is given",
+    "expected": [
+      "m.P.a"
+    ],
+    "observed": [
+      "m.P.a"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-06",
+    "engine": "async",
+    "title": "Deep history across a PARALLEL state restores every region's leaf",
+    "spec": "SCXML 3.10: deep history on a parallel ancestor restores the full configuration, i.e. the active leaf of every region",
+    "expected": [
+      "m.P.R1.x2",
+      "m.P.R2.y2"
+    ],
+    "observed": [
+      "m.P.R1.x2",
+      "m.P.R2.y2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-06",
+    "engine": "sync",
+    "title": "Deep history across a PARALLEL state restores every region's leaf",
+    "spec": "SCXML 3.10: deep history on a parallel ancestor restores the full configuration, i.e. the active leaf of every region",
+    "expected": [
+      "m.P.R1.x2",
+      "m.P.R2.y2"
+    ],
+    "observed": [
+      "m.P.R1.x2",
+      "m.P.R2.y2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-07",
+    "engine": "async",
+    "title": "Shallow history on a parallel state restores all regions to their own initial leaves (regions are the immediate children)",
+    "spec": "SCXML 3.10: for a parallel parent the immediate children are the regions; all are re-entered, deeper states use defaults",
+    "expected": [
+      "m.P.R1.x1",
+      "m.P.R2.y1"
+    ],
+    "observed": [
+      "m.P.R1.x1",
+      "m.P.R2.y1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-07",
+    "engine": "sync",
+    "title": "Shallow history on a parallel state restores all regions to their own initial leaves (regions are the immediate children)",
+    "spec": "SCXML 3.10: for a parallel parent the immediate children are the regions; all are re-entered, deeper states use defaults",
+    "expected": [
+      "m.P.R1.x1",
+      "m.P.R2.y1"
+    ],
+    "observed": [
+      "m.P.R1.x1",
+      "m.P.R2.y1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-08",
+    "engine": "async",
+    "title": "Re-entering via history a SECOND time reflects the newer snapshot",
+    "spec": "SCXML 3.10: the history value is overwritten each time the parent is exited",
+    "expected": [
+      "m.P.a.a1"
+    ],
+    "observed": [
+      "m.P.a.a1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-08",
+    "engine": "sync",
+    "title": "Re-entering via history a SECOND time reflects the newer snapshot",
+    "spec": "SCXML 3.10: the history value is overwritten each time the parent is exited",
+    "expected": [
+      "m.P.a.a1"
+    ],
+    "observed": [
+      "m.P.a.a1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-09",
+    "engine": "async",
+    "title": "History state is never part of the active configuration",
+    "spec": "SCXML 3.10: <history> is a pseudo-state; it is never in the configuration",
+    "expected": {
+      "hist_active": false
+    },
+    "observed": {
+      "hist_active": false
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "H-09",
+    "engine": "sync",
+    "title": "History state is never part of the active configuration",
+    "spec": "SCXML 3.10: <history> is a pseudo-state; it is never in the configuration",
+    "expected": {
+      "hist_active": false
+    },
+    "observed": {
+      "hist_active": false
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "H-10",
+    "engine": "async",
+    "title": "stateIn guard is satisfied for an active leaf",
+    "spec": "SCXML 5.9.2 In(); XState v5 stateIn",
+    "expected": [
+      "m.p.A.a1",
+      "m.p.B.b2"
+    ],
+    "observed": [
+      "m.p.A.a1",
+      "m.p.B.b2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-10",
+    "engine": "sync",
+    "title": "stateIn guard is satisfied for an active leaf",
+    "spec": "SCXML 5.9.2 In(); XState v5 stateIn",
+    "expected": [
+      "m.p.A.a1",
+      "m.p.B.b2"
+    ],
+    "observed": [
+      "m.p.A.a1",
+      "m.p.B.b2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-11",
+    "engine": "async",
+    "title": "stateIn guard is NOT satisfied for an inactive sibling leaf",
+    "spec": "SCXML 5.9.2 In() is false when the named state is not in the configuration",
+    "expected": [
+      "m.p.A.a1",
+      "m.p.B.b1"
+    ],
+    "observed": [
+      "m.p.A.a1",
+      "m.p.B.b1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-11",
+    "engine": "sync",
+    "title": "stateIn guard is NOT satisfied for an inactive sibling leaf",
+    "spec": "SCXML 5.9.2 In() is false when the named state is not in the configuration",
+    "expected": [
+      "m.p.A.a1",
+      "m.p.B.b1"
+    ],
+    "observed": [
+      "m.p.A.a1",
+      "m.p.B.b1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-12",
+    "engine": "async",
+    "title": "stateIn is satisfied by an ANCESTOR of an active leaf",
+    "spec": "SCXML 5.9.2: In(s) is true when s is in the configuration, and the configuration contains all ancestors of active atomic states",
+    "expected": [
+      "m.p.A.a1",
+      "m.p.B.b2"
+    ],
+    "observed": [
+      "m.p.A.a1",
+      "m.p.B.b2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-12",
+    "engine": "sync",
+    "title": "stateIn is satisfied by an ANCESTOR of an active leaf",
+    "spec": "SCXML 5.9.2: In(s) is true when s is in the configuration, and the configuration contains all ancestors of active atomic states",
+    "expected": [
+      "m.p.A.a1",
+      "m.p.B.b2"
+    ],
+    "observed": [
+      "m.p.A.a1",
+      "m.p.B.b2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-13",
+    "engine": "async",
+    "title": "stateIn must NOT match a state whose id merely ends with the same trailing segments of a different branch",
+    "spec": "SCXML 5.9.2: In() compares state IDENTITY, not a name suffix. 'm.left.work' and 'm.right.work' are different states.",
+    "expected": {
+      "ids": [
+        "m.p.A.left.work",
+        "m.p.B.b1"
+      ],
+      "fired": false
+    },
+    "observed": {
+      "ids": [
+        "m.p.A.left.work",
+        "m.p.B.b1"
+      ],
+      "fired": false
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "H-13",
+    "engine": "sync",
+    "title": "stateIn must NOT match a state whose id merely ends with the same trailing segments of a different branch",
+    "spec": "SCXML 5.9.2: In() compares state IDENTITY, not a name suffix. 'm.left.work' and 'm.right.work' are different states.",
+    "expected": {
+      "ids": [
+        "m.p.A.left.work",
+        "m.p.B.b1"
+      ],
+      "fired": false
+    },
+    "observed": {
+      "ids": [
+        "m.p.A.left.work",
+        "m.p.B.b1"
+      ],
+      "fired": false
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "H-14",
+    "engine": "async",
+    "title": "Exact descriptor beats a partial descriptor on the same state",
+    "spec": "XState v5 event descriptors: an exact match takes precedence over 'prefix.*'",
+    "expected": [
+      "m.exact"
+    ],
+    "observed": [
+      "m.exact"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-14",
+    "engine": "sync",
+    "title": "Exact descriptor beats a partial descriptor on the same state",
+    "spec": "XState v5 event descriptors: an exact match takes precedence over 'prefix.*'",
+    "expected": [
+      "m.exact"
+    ],
+    "observed": [
+      "m.exact"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-15",
+    "engine": "async",
+    "title": "Longer partial descriptor beats a shorter one",
+    "spec": "XState v5: 'mouse.click.*' is more specific than 'mouse.*'",
+    "expected": [
+      "m.long"
+    ],
+    "observed": [
+      "m.long"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-15",
+    "engine": "sync",
+    "title": "Longer partial descriptor beats a shorter one",
+    "spec": "XState v5: 'mouse.click.*' is more specific than 'mouse.*'",
+    "expected": [
+      "m.long"
+    ],
+    "observed": [
+      "m.long"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-16",
+    "engine": "async",
+    "title": "Bare wildcard '*' is the last resort",
+    "spec": "XState v5: '*' matches anything and is lowest precedence",
+    "expected": [
+      "m.wild"
+    ],
+    "observed": [
+      "m.wild"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-16",
+    "engine": "sync",
+    "title": "Bare wildcard '*' is the last resort",
+    "spec": "XState v5: '*' matches anything and is lowest precedence",
+    "expected": [
+      "m.wild"
+    ],
+    "observed": [
+      "m.wild"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-17",
+    "engine": "async",
+    "title": "'mouse.*' matches the bare segment 'mouse' itself",
+    "spec": "XState v5: a partial descriptor 'a.*' matches 'a' and 'a.<rest>'",
+    "expected": [
+      "m.partial"
+    ],
+    "observed": [
+      "m.partial"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-17",
+    "engine": "sync",
+    "title": "'mouse.*' matches the bare segment 'mouse' itself",
+    "spec": "XState v5: a partial descriptor 'a.*' matches 'a' and 'a.<rest>'",
+    "expected": [
+      "m.partial"
+    ],
+    "observed": [
+      "m.partial"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-18",
+    "engine": "async",
+    "title": "'mouse.*' must NOT match 'mousedown' (segment boundary, not string prefix)",
+    "spec": "XState v5: partial descriptors match on DOT SEGMENTS",
+    "expected": [
+      "m.wild"
+    ],
+    "observed": [
+      "m.wild"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-18",
+    "engine": "sync",
+    "title": "'mouse.*' must NOT match 'mousedown' (segment boundary, not string prefix)",
+    "spec": "XState v5: partial descriptors match on DOT SEGMENTS",
+    "expected": [
+      "m.wild"
+    ],
+    "observed": [
+      "m.wild"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-19",
+    "engine": "async",
+    "title": "A deeper state's wildcard beats a shallower state's exact match (state depth outranks descriptor specificity)",
+    "spec": "SCXML 3.13: selection is by SOURCE STATE depth first; descriptor specificity only ranks candidates on the SAME state",
+    "expected": [
+      "m.P.viaWild"
+    ],
+    "observed": [
+      "m.P.viaWild"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-19",
+    "engine": "sync",
+    "title": "A deeper state's wildcard beats a shallower state's exact match (state depth outranks descriptor specificity)",
+    "spec": "SCXML 3.13: selection is by SOURCE STATE depth first; descriptor specificity only ranks candidates on the SAME state",
+    "expected": [
+      "m.P.viaWild"
+    ],
+    "observed": [
+      "m.P.viaWild"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-20",
+    "engine": "async",
+    "title": "A guarded exact descriptor that fails falls through to the wildcard on the same state",
+    "spec": "XState v5: descriptor candidates are tried in precedence order; a guard failure moves to the next candidate",
+    "expected": [
+      "m.wild"
+    ],
+    "observed": [
+      "m.wild"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-20",
+    "engine": "sync",
+    "title": "A guarded exact descriptor that fails falls through to the wildcard on the same state",
+    "spec": "XState v5: descriptor candidates are tried in precedence order; a guard failure moves to the next candidate",
+    "expected": [
+      "m.wild"
+    ],
+    "observed": [
+      "m.wild"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-01",
+    "engine": "async",
+    "title": "invoke src as a MACHINE: parent receives done.invoke.<id> when the child reaches a top-level final state",
+    "spec": "SCXML 6.4.4: when an invoked session reaches a final state the invoking session receives done.invoke.<invokeid>",
+    "expected": [
+      "m.ok"
+    ],
+    "observed": [
+      "m.ok"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-01",
+    "engine": "sync",
+    "title": "invoke src as a MACHINE: parent receives done.invoke.<id> when the child reaches a top-level final state",
+    "spec": "SCXML 6.4.4: when an invoked session reaches a final state the invoking session receives done.invoke.<invokeid>",
+    "expected": [
+      "m.ok"
+    ],
+    "observed": [
+      "m.ok"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-02",
+    "engine": "async",
+    "title": "invoke child machine `output` is delivered as done.invoke data",
+    "spec": "SCXML 6.4.4 / XState v5: the child's output becomes the done.invoke.<id> payload",
+    "expected": {
+      "code": 7
+    },
+    "observed": {
+      "code": 7
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A-02",
+    "engine": "sync",
+    "title": "invoke child machine `output` is delivered as done.invoke data",
+    "spec": "SCXML 6.4.4 / XState v5: the child's output becomes the done.invoke.<id> payload",
+    "expected": {
+      "code": 7
+    },
+    "observed": {
+      "code": 7
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A-03",
+    "engine": "async",
+    "title": "invoke `input` reaches a child machine via a `context` FACTORY, and is exposed as context['input'] when the child declares a plain dict",
+    "spec": "XState v5: `input` is resolved per spawn against {context, event}. This library deliberately does NOT let input overwrite declared context keys (base_interpreter.py:530, review F11 injection guard); the supported form is a context factory of {input}.",
+    "expected": {
+      "factory": 11,
+      "plain_dict": {
+        "seed": 0,
+        "input": {
+          "seed": 11
+        }
+      }
+    },
+    "observed": {
+      "factory": 11,
+      "plain_dict": {
+        "seed": 0,
+        "input": {
+          "seed": 11
+        }
+      }
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A-03",
+    "engine": "sync",
+    "title": "invoke `input` reaches a child machine via a `context` FACTORY, and is exposed as context['input'] when the child declares a plain dict",
+    "spec": "XState v5: `input` is resolved per spawn against {context, event}. This library deliberately does NOT let input overwrite declared context keys (base_interpreter.py:530, review F11 injection guard); the supported form is a context factory of {input}.",
+    "expected": {
+      "factory": 11,
+      "plain_dict": {
+        "seed": 0,
+        "input": {
+          "seed": 11
+        }
+      }
+    },
+    "observed": {
+      "factory": 11,
+      "plain_dict": {
+        "seed": 0,
+        "input": {
+          "seed": 11
+        }
+      }
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A-04",
+    "engine": "async",
+    "title": "A failing invoked CALLABLE produces an ErrorEvent routed to onError",
+    "spec": "SCXML 6.4: a failed invocation generates error.execution/error.platform; XState v5 onError. Library #80: ErrorEvent class.",
+    "expected": {
+      "state": [
+        "m.failed"
+      ],
+      "is_error_event": true,
+      "msg": "boom"
+    },
+    "observed": {
+      "state": [
+        "m.failed"
+      ],
+      "is_error_event": true,
+      "msg": "boom"
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A-04",
+    "engine": "sync",
+    "title": "A failing invoked CALLABLE produces an ErrorEvent routed to onError",
+    "spec": "SCXML 6.4: a failed invocation generates error.execution/error.platform; XState v5 onError. Library #80: ErrorEvent class.",
+    "expected": {
+      "state": [
+        "m.failed"
+      ],
+      "is_error_event": true,
+      "msg": "boom"
+    },
+    "observed": {
+      "state": [
+        "m.failed"
+      ],
+      "is_error_event": true,
+      "msg": "boom"
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A-05",
+    "engine": "async",
+    "title": "A failing invoked CHILD MACHINE reaches the parent's onError",
+    "spec": "SCXML 6.4 / XState v5: a child actor that errors notifies its parent via onError",
+    "expected": [
+      "m.failed"
+    ],
+    "observed": [
+      "m.failed"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-05",
+    "engine": "sync",
+    "title": "A failing invoked CHILD MACHINE reaches the parent's onError",
+    "spec": "SCXML 6.4 / XState v5: a child actor that errors notifies its parent via onError",
+    "expected": [
+      "m.failed"
+    ],
+    "observed": [
+      "m.failed"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-06",
+    "engine": "async",
+    "title": "onError chain: grandchild fails -> child escalates -> grandparent handles",
+    "spec": "SCXML 5.10 / 6.4: an error the invoked session escalates is delivered to the INVOKING session's error handler. XState v5: escalate() raises to the parent, where onError catches it.",
+    "expected": [
+      "m.caught"
+    ],
+    "observed": [
+      "m.caught"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-06",
+    "engine": "sync",
+    "title": "onError chain: grandchild fails -> child escalates -> grandparent handles",
+    "spec": "SCXML 5.10 / 6.4: an error the invoked session escalates is delivered to the INVOKING session's error handler. XState v5: escalate() raises to the parent, where onError catches it.",
+    "expected": [
+      "m.caught"
+    ],
+    "observed": [
+      "m.caught"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-07",
+    "engine": "async",
+    "title": "Exiting the invoking state cancels a still-running invocation (its onDone never fires)",
+    "spec": "SCXML 6.4.1: when the state containing <invoke> is exited the invoked session is cancelled",
+    "expected": [
+      "m.elsewhere"
+    ],
+    "observed": [
+      "m.elsewhere"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-08",
+    "engine": "async",
+    "title": "sendTo with delay+id is delivered to the addressed child actor after the delay",
+    "spec": "SCXML 6.2 <send target= delay= id=>; XState v5 sendTo(target, ev, {delay, id})",
+    "expected": [
+      "c.pinged"
+    ],
+    "observed": [
+      "c.pinged"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-09",
+    "engine": "async",
+    "title": "`cancel` with the MATCHING sendId prevents the delayed send",
+    "spec": "SCXML 6.3 <cancel sendid=>; XState v5 cancel(id)",
+    "expected": [
+      "c.idle"
+    ],
+    "observed": [
+      "c.idle"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-10",
+    "engine": "async",
+    "title": "`cancel` with a NON-matching sendId leaves the delayed send intact",
+    "spec": "SCXML 6.3: <cancel> affects only the send bearing that sendid",
+    "expected": [
+      "c.pinged"
+    ],
+    "observed": [
+      "c.pinged"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-11",
+    "engine": "async",
+    "title": "spawn in `entry` creates a child actor addressable by id",
+    "spec": "XState v5 spawnChild(src, {id}) in entry actions",
+    "expected": {
+      "spawned": true
+    },
+    "observed": {
+      "spawned": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A-12",
+    "engine": "async",
+    "title": "stopChild on exit stops the spawned actor",
+    "spec": "XState v5 stopChild(id); SCXML 6.4.1 cancel invoked session",
+    "expected": {
+      "stopped": true
+    },
+    "observed": {
+      "stopped": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A-13",
+    "engine": "async",
+    "title": "sendParent from an invoked child machine reaches the parent",
+    "spec": "SCXML 6.2 <send target='#_parent'>; XState v5 sendParent",
+    "expected": [
+      "m.notified"
+    ],
+    "observed": [
+      "m.notified"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-14",
+    "engine": "async",
+    "title": "done.invoke does NOT match a user's '*' wildcard handler",
+    "spec": "Library #79 / XState v5: engine-synthesised events match only an exact descriptor; '*' means 'any event I might receive'",
+    "expected": [
+      "m.viaDone"
+    ],
+    "observed": [
+      "m.viaDone"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-14",
+    "engine": "sync",
+    "title": "done.invoke does NOT match a user's '*' wildcard handler",
+    "spec": "Library #79 / XState v5: engine-synthesised events match only an exact descriptor; '*' means 'any event I might receive'",
+    "expected": [
+      "m.viaDone"
+    ],
+    "observed": [
+      "m.viaDone"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-15",
+    "engine": "async",
+    "title": "An unhandled invoked-service failure is surfaced, not swallowed",
+    "spec": "SCXML 5.10: an error the session does not handle must not be silently dropped. Real-money standard: a failed service with no onError must be observable.",
+    "expected": {
+      "observable": true
+    },
+    "observed": {
+      "observable": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A-15",
+    "engine": "sync",
+    "title": "An unhandled invoked-service failure is surfaced, not swallowed",
+    "spec": "SCXML 5.10: an error the session does not handle must not be silently dropped. Real-money standard: a failed service with no onError must be observable.",
+    "expected": {
+      "observable": true
+    },
+    "observed": {
+      "observable": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A-16",
+    "engine": "async",
+    "title": "Invocation starts AFTER the entry actions of its owning state",
+    "spec": "SCXML 6.4.1: <invoke> is executed after the onentry handlers of the state complete",
+    "expected": [
+      "entry",
+      "service"
+    ],
+    "observed": [
+      "entry",
+      "service"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-01",
+    "engine": "async",
+    "title": "Actions on one transition run in declaration order",
+    "spec": "SCXML 3.13: executable content runs in document order",
+    "expected": [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "observed": [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-01",
+    "engine": "sync",
+    "title": "Actions on one transition run in declaration order",
+    "spec": "SCXML 3.13: executable content runs in document order",
+    "expected": [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "observed": [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-02",
+    "engine": "async",
+    "title": "assign is applied in order among plain actions, and a later action observes the earlier assignment",
+    "spec": "SCXML 4.3 <assign> mutates the datamodel immediately; subsequent executable content sees the new value",
+    "expected": {
+      "log": [
+        "set1",
+        "read=1",
+        "set2",
+        "read=2"
+      ],
+      "n": 2
+    },
+    "observed": {
+      "log": [
+        "set1",
+        "read=1",
+        "set2",
+        "read=2"
+      ],
+      "n": 2
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-02",
+    "engine": "sync",
+    "title": "assign is applied in order among plain actions, and a later action observes the earlier assignment",
+    "spec": "SCXML 4.3 <assign> mutates the datamodel immediately; subsequent executable content sees the new value",
+    "expected": {
+      "log": [
+        "set1",
+        "read=1",
+        "set2",
+        "read=2"
+      ],
+      "n": 2
+    },
+    "observed": {
+      "log": [
+        "set1",
+        "read=1",
+        "set2",
+        "read=2"
+      ],
+      "n": 2
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-03",
+    "engine": "async",
+    "title": "An entry action observes a context change made by the transition's own actions",
+    "spec": "SCXML 3.13: exit, transition content, entry run in sequence against one datamodel",
+    "expected": [
+      "trans_set",
+      "entry_read=5"
+    ],
+    "observed": [
+      "trans_set",
+      "entry_read=5"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-03",
+    "engine": "sync",
+    "title": "An entry action observes a context change made by the transition's own actions",
+    "spec": "SCXML 3.13: exit, transition content, entry run in sequence against one datamodel",
+    "expected": [
+      "trans_set",
+      "entry_read=5"
+    ],
+    "observed": [
+      "trans_set",
+      "entry_read=5"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-04",
+    "engine": "async",
+    "title": "An exit action runs BEFORE the transition actions and its context change is visible to them",
+    "spec": "SCXML 3.13: the exit set's onexit content precedes the transition's",
+    "expected": [
+      "exit_set",
+      "trans_read=9"
+    ],
+    "observed": [
+      "exit_set",
+      "trans_read=9"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-04",
+    "engine": "sync",
+    "title": "An exit action runs BEFORE the transition actions and its context change is visible to them",
+    "spec": "SCXML 3.13: the exit set's onexit content precedes the transition's",
+    "expected": [
+      "exit_set",
+      "trans_read=9"
+    ],
+    "observed": [
+      "exit_set",
+      "trans_read=9"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-05",
+    "engine": "async",
+    "title": "A targetless transition's actions run with NO exit and NO entry, even when the state declares both",
+    "spec": "SCXML 3.13: a targetless transition performs no state change, so the exit/entry sets are empty",
+    "expected": [
+      "only_trans"
+    ],
+    "observed": [
+      "only_trans"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-05",
+    "engine": "sync",
+    "title": "A targetless transition's actions run with NO exit and NO entry, even when the state declares both",
+    "spec": "SCXML 3.13: a targetless transition performs no state change, so the exit/entry sets are empty",
+    "expected": [
+      "only_trans"
+    ],
+    "observed": [
+      "only_trans"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-06",
+    "engine": "async",
+    "title": "A targetless transition on an ANCESTOR does not exit the active descendant",
+    "spec": "SCXML 3.13: targetless transitions are internal regardless of the source state's depth",
+    "expected": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "anc"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "anc"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-06",
+    "engine": "sync",
+    "title": "A targetless transition on an ANCESTOR does not exit the active descendant",
+    "spec": "SCXML 3.13: targetless transitions are internal regardless of the source state's depth",
+    "expected": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "anc"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "anc"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-07",
+    "engine": "async",
+    "title": "Entry actions of nested states run outermost-first in a single entry pass",
+    "spec": "SCXML 3.9 enterStates: ancestors are entered before descendants",
+    "expected": [
+      "eP",
+      "ea",
+      "ea1"
+    ],
+    "observed": [
+      "eP",
+      "ea",
+      "ea1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-07",
+    "engine": "sync",
+    "title": "Entry actions of nested states run outermost-first in a single entry pass",
+    "spec": "SCXML 3.9 enterStates: ancestors are entered before descendants",
+    "expected": [
+      "eP",
+      "ea",
+      "ea1"
+    ],
+    "observed": [
+      "eP",
+      "ea",
+      "ea1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-08",
+    "engine": "async",
+    "title": "Across an eventless hop the ordering is: exit A, trans, entry B, exit B, always-trans, entry C",
+    "spec": "SCXML 3.13: each microstep runs its own complete exit/content/entry sequence; microsteps do not interleave",
+    "expected": [
+      "xA",
+      "t1",
+      "eB",
+      "xB",
+      "t2",
+      "eC"
+    ],
+    "observed": [
+      "xA",
+      "t1",
+      "eB",
+      "xB",
+      "t2",
+      "eC"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-08",
+    "engine": "sync",
+    "title": "Across an eventless hop the ordering is: exit A, trans, entry B, exit B, always-trans, entry C",
+    "spec": "SCXML 3.13: each microstep runs its own complete exit/content/entry sequence; microsteps do not interleave",
+    "expected": [
+      "xA",
+      "t1",
+      "eB",
+      "xB",
+      "t2",
+      "eC"
+    ],
+    "observed": [
+      "xA",
+      "t1",
+      "eB",
+      "xB",
+      "t2",
+      "eC"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-09",
+    "engine": "async",
+    "title": "In a parallel fan-out both regions' transition actions run, deepest-source-first and each exactly once",
+    "spec": "SCXML 3.13: every selected transition's content runs once per microstep",
+    "expected": {
+      "count_a": 1,
+      "count_b": 1
+    },
+    "observed": {
+      "count_a": 1,
+      "count_b": 1
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-09",
+    "engine": "sync",
+    "title": "In a parallel fan-out both regions' transition actions run, deepest-source-first and each exactly once",
+    "spec": "SCXML 3.13: every selected transition's content runs once per microstep",
+    "expected": {
+      "count_a": 1,
+      "count_b": 1
+    },
+    "observed": {
+      "count_a": 1,
+      "count_b": 1
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-10",
+    "engine": "async",
+    "title": "A transition declared on a shared ANCESTOR of two parallel regions fires exactly once, not once per region",
+    "spec": "SCXML 3.13 removeConflictingTransitions: the same transition selected by several atomic states is executed once",
+    "expected": {
+      "count": 1
+    },
+    "observed": {
+      "count": 1
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-10",
+    "engine": "sync",
+    "title": "A transition declared on a shared ANCESTOR of two parallel regions fires exactly once, not once per region",
+    "spec": "SCXML 3.13 removeConflictingTransitions: the same transition selected by several atomic states is executed once",
+    "expected": {
+      "count": 1
+    },
+    "observed": {
+      "count": 1
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-11",
+    "engine": "async",
+    "title": "A guard on a shared ancestor transition is evaluated but its SIDE EFFECTS are not multiplied by the region count",
+    "spec": "SCXML 5.9: guards are pure predicates. Library memoises per selection pass (base_interpreter.py:3671) so a shared ancestor's guard runs once.",
+    "expected": {
+      "evals": 1
+    },
+    "observed": {
+      "evals": 1
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-11",
+    "engine": "sync",
+    "title": "A guard on a shared ancestor transition is evaluated but its SIDE EFFECTS are not multiplied by the region count",
+    "spec": "SCXML 5.9: guards are pure predicates. Library memoises per selection pass (base_interpreter.py:3671) so a shared ancestor's guard runs once.",
+    "expected": {
+      "evals": 1
+    },
+    "observed": {
+      "evals": 1
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-12",
+    "engine": "async",
+    "title": "`raise` queues an INTERNAL event processed after the current microstep completes, not inline",
+    "spec": "SCXML 3.13 / 4.5 <raise>: the event goes on the internal queue and is taken in the NEXT microstep, after the current one finishes",
+    "expected": [
+      "t_before",
+      "eB",
+      "on_raised"
+    ],
+    "observed": [
+      "t_before",
+      "eB",
+      "on_raised"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-12",
+    "engine": "sync",
+    "title": "`raise` queues an INTERNAL event processed after the current microstep completes, not inline",
+    "spec": "SCXML 3.13 / 4.5 <raise>: the event goes on the internal queue and is taken in the NEXT microstep, after the current one finishes",
+    "expected": [
+      "t_before",
+      "eB",
+      "on_raised"
+    ],
+    "observed": [
+      "t_before",
+      "eB",
+      "on_raised"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-13",
+    "engine": "async",
+    "title": "Two `raise`d events are processed in the order they were raised",
+    "spec": "SCXML 3.13: the internal queue is FIFO",
+    "expected": [
+      "r1",
+      "r2"
+    ],
+    "observed": [
+      "r1",
+      "r2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-13",
+    "engine": "sync",
+    "title": "Two `raise`d events are processed in the order they were raised",
+    "spec": "SCXML 3.13: the internal queue is FIFO",
+    "expected": [
+      "r1",
+      "r2"
+    ],
+    "observed": [
+      "r1",
+      "r2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-14",
+    "engine": "async",
+    "title": "Internal (`raise`d) events are processed BEFORE an already-queued external event",
+    "spec": "SCXML 3.13: the internal queue is drained to exhaustion before the next external event is taken",
+    "expected": [
+      "internal",
+      "external"
+    ],
+    "observed": [
+      "internal",
+      "external"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-14",
+    "engine": "sync",
+    "title": "Internal (`raise`d) events are processed BEFORE an already-queued external event",
+    "spec": "SCXML 3.13: the internal queue is drained to exhaustion before the next external event is taken",
+    "expected": [
+      "internal",
+      "external"
+    ],
+    "observed": [
+      "internal",
+      "external"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-15",
+    "engine": "async",
+    "title": "Entry actions of a state run before its `always` transition is evaluated",
+    "spec": "SCXML 3.13: the microstep completes (entry content included) before eventless transitions are re-selected",
+    "expected": [
+      "eB",
+      "t"
+    ],
+    "observed": [
+      "eB",
+      "t"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-15",
+    "engine": "sync",
+    "title": "Entry actions of a state run before its `always` transition is evaluated",
+    "spec": "SCXML 3.13: the microstep completes (entry content included) before eventless transitions are re-selected",
+    "expected": [
+      "eB",
+      "t"
+    ],
+    "observed": [
+      "eB",
+      "t"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-16",
+    "engine": "async",
+    "title": "Machine `entry` on the root and the initial state's entry run outermost-first at start()",
+    "spec": "SCXML 3.2/3.9: the initial configuration is entered as an ordinary entry pass from the root down",
+    "expected": [
+      "root",
+      "first"
+    ],
+    "observed": [
+      "root",
+      "first"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-16",
+    "engine": "sync",
+    "title": "Machine `entry` on the root and the initial state's entry run outermost-first at start()",
+    "spec": "SCXML 3.2/3.9: the initial configuration is entered as an ordinary entry pass from the root down",
+    "expected": [
+      "root",
+      "first"
+    ],
+    "observed": [
+      "root",
+      "first"
+    ],
+    "status": "PASS"
+  }
+]

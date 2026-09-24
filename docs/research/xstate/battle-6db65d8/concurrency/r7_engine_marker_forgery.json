@@ -1,0 +1,74 @@
+{
+  "probe": "r7_engine_marker_forgery",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "service_kind": "def",
+      "F1_subclass_overrides_system_property": true,
+      "F1_engine_believes_is_system_event": false,
+      "F1b_arbitrary_provenance_accepted_as_system": false,
+      "F2_captured_a_genuine_DoneEvent": true,
+      "F2_genuine_is_system": true,
+      "F2_replace": "refused:TypeError",
+      "F2_copy_preserves": true,
+      "F2_deepcopy_preserves": true,
+      "F2_pickle_roundtrip_preserves": true,
+      "F3_internal_true_accepted_from_outside": true,
+      "F3_raise_depth_before_after": [
+        0,
+        1
+      ],
+      "F4_resend_captured_DoneEvent": "ACCEPTED",
+      "F4_still_system_on_resend": true,
+      "F5_marker_reachable_by_module_attribute": true,
+      "F5_forged_with_real_marker_is_system": true,
+      "F5_marker_pickle_resolves_to_same_object": true,
+      "F6_private_charged_lane_callable": true,
+      "secret_in_interpreter_repr": false,
+      "secret_in_interpreter_str": false,
+      "secret_in_snapshot": true,
+      "interpreter_has___dict__": true,
+      "private_budget_counter_writable_from_outside": true
+    },
+    {
+      "service_kind": "async def",
+      "F1_subclass_overrides_system_property": true,
+      "F1_engine_believes_is_system_event": false,
+      "F1b_arbitrary_provenance_accepted_as_system": false,
+      "F2_captured_a_genuine_DoneEvent": true,
+      "F2_genuine_is_system": true,
+      "F2_replace": "refused:TypeError",
+      "F2_copy_preserves": true,
+      "F2_deepcopy_preserves": true,
+      "F2_pickle_roundtrip_preserves": true,
+      "F3_internal_true_accepted_from_outside": true,
+      "F3_raise_depth_before_after": [
+        0,
+        1
+      ],
+      "F4_resend_captured_DoneEvent": "ACCEPTED",
+      "F4_still_system_on_resend": true,
+      "F5_marker_reachable_by_module_attribute": true,
+      "F5_forged_with_real_marker_is_system": true,
+      "F5_marker_pickle_resolves_to_same_object": true,
+      "F6_private_charged_lane_callable": true,
+      "secret_in_interpreter_repr": false,
+      "secret_in_interpreter_str": false,
+      "secret_in_snapshot": true,
+      "interpreter_has___dict__": true,
+      "private_budget_counter_writable_from_outside": true
+    }
+  ],
+  "successful_forgeries": [
+    [
+      "def",
+      "F5_forged_with_real_marker_is_system"
+    ],
+    [
+      "async def",
+      "F5_forged_with_real_marker_is_system"
+    ]
+  ],
+  "secret_leaks": [],
+  "result": "FAIL"
+}

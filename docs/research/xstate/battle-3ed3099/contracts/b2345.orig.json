@@ -1,0 +1,166 @@
+{
+ "B2/init": {
+  "pass": true,
+  "note": "['trade_group.draft']"
+ },
+ "B2/confirm-submitting": {
+  "pass": false,
+  "note": "['trade_group.draft']"
+ },
+ "B2/INV-B2-b-not-resolved-early": {
+  "pass": false,
+  "note": "after 1/2 legs: ['trade_group.draft'] open=0"
+ },
+ "B2/happy-open": {
+  "pass": false,
+  "note": "['trade_group.draft'] open=0 (raise_evaluate chain drove EVALUATE)"
+ },
+ "B2/INV-B2-b-sum-le-total": {
+  "pass": true,
+  "note": "{'legs_open': 0, 'legs_failed': 0, 'legs_skipped': 0, 'legs_total': 2}"
+ },
+ "B2/happy-closed": {
+  "pass": false,
+  "note": "['trade_group.draft']"
+ },
+ "B2/INV-B2-c-all-or-none-unwinds": {
+  "pass": false,
+  "note": "['trade_group.draft'] trace=['reserve_rate_budget']"
+ },
+ "B2/abort-on-first-partially-open": {
+  "pass": false,
+  "note": "['trade_group.draft'] (aborting.always resolved) stop_submitting=False"
+ },
+ "B2/quiesce-zero-open-failed": {
+  "pass": false,
+  "note": "['trade_group.draft'] quiesced=False"
+ },
+ "B2/INV-B2-a-status-pure-function": {
+  "pass": true,
+  "note": "guards evaluated: [] (stub reads context only; verified by construction - every guard impl above is a lambda over ctx)"
+ },
+ "B2/snapshot-never-midstep-at-quiescence": {
+  "pass": true,
+  "note": "refusals=[]"
+ },
+ "B2/snapshot-resume-state-parity": {
+  "pass": true,
+  "note": "ref=['trade_group.draft']"
+ },
+ "B2/snapshot-resume-action-trace-parity": {
+  "pass": true,
+  "note": "len(ref)=1 diffs=[]"
+ },
+ "b3_all-CRASH": {
+  "pass": false,
+  "note": "ActorSpawningError: Cannot spawn 'entry_order'. Source in `services` is not a valid MachineNode or a function that returns one."
+ },
+ "B4/init-arming-to-racing": {
+  "pass": true,
+  "note": "['oco.racing'] record_child_ids=True"
+ },
+ "B4/settle-to-completing": {
+  "pass": true,
+  "note": "['oco.completing'] filled_a=1"
+ },
+ "B4/INV-B4-b-completed-needs-children-terminal": {
+  "pass": true,
+  "note": "['oco.completed']"
+ },
+ "B4/INV-B4-d-fill-during-settlement-applied": {
+  "pass": false,
+  "note": "record_fill_b=0 deferred_at_send=0 receipt.deferred=False defer_action=1 ids=['oco.completing']"
+ },
+ "B4/INV-B4-a-both-fills-recorded": {
+  "pass": false,
+  "note": "filled_a=1 filled_b=0"
+ },
+ "B4/INV-B4-c-overshoot-reduce-only": {
+  "pass": true,
+  "note": "['oco.completing'] svc=['submit_both_legs', 'reduce_only_market_excess']"
+ },
+ "B4/settle-error-reconciles": {
+  "pass": true,
+  "note": "['oco.completing'] svc=['submit_both_legs', 'settle_other_leg', 'reconcile_children']"
+ },
+ "B4/settle-retry-bounded": {
+  "pass": true,
+  "note": "['oco.failed'] settle calls=3 failures=2"
+ },
+ "B4/snapshot-never-midstep-at-quiescence": {
+  "pass": true,
+  "note": "refusals=[]"
+ },
+ "B4/snapshot-resume-state-parity": {
+  "pass": true,
+  "note": "ref=['oco.completed']"
+ },
+ "B4/snapshot-resume-action-trace-parity": {
+  "pass": true,
+  "note": "len(ref)=3 diffs=[]"
+ },
+ "B5/init-to-working": {
+  "pass": true,
+  "note": "['iceberg.working'] slices_done=1"
+ },
+ "B5/INV-B5-b-single-live-child": {
+  "pass": true,
+  "note": "active_child_id=ch1"
+ },
+ "B5/slice-fill-waits-refill": {
+  "pass": true,
+  "note": "['iceberg.waiting_refill'] remaining=1"
+ },
+ "B5/refill-next-slice": {
+  "pass": true,
+  "note": "['iceberg.working'] slices_done=2"
+ },
+ "B5/INV-B5-a-remaining-not-negative": {
+  "pass": true,
+  "note": "['iceberg.completing'] remaining=0"
+ },
+ "B5/completes": {
+  "pass": true,
+  "note": "['iceberg.completed']"
+ },
+ "B5/INV-B5-e-cooldown-not-busyloop": {
+  "pass": true,
+  "note": "['iceberg.cooling_down'] rejects=0 slices_done=2 (post_only_rejects reset on cooldown entry)"
+ },
+ "B5/INV-B5-e-cooldown-is-quiescent": {
+  "pass": true,
+  "note": "slices_done stable at 2 while cooling"
+ },
+ "B5/cooldown-resumes": {
+  "pass": true,
+  "note": "slices_done 2 -> 4"
+ },
+ "B5/INV-B5-c-slices-bounded": {
+  "pass": true,
+  "note": "['iceberg.completing'] slices_done=2 max=2"
+ },
+ "B5/ws-disconnect-freezes": {
+  "pass": true,
+  "note": "['iceberg.paused']"
+ },
+ "B5/B13-resume-reconciles": {
+  "pass": true,
+  "note": "['iceberg.working'] svc=['submit_child', 'reconcile_children']"
+ },
+ "B5/child-event-during-submit-survives": {
+  "pass": false,
+  "note": "apply_fill=0 deferred_at_send=0 defer_action=1 ids=['iceberg.working']"
+ },
+ "B5/snapshot-never-midstep-at-quiescence": {
+  "pass": true,
+  "note": "refusals=[]"
+ },
+ "B5/snapshot-resume-state-parity": {
+  "pass": true,
+  "note": "ref=['iceberg.cancelled']"
+ },
+ "B5/snapshot-resume-action-trace-parity": {
+  "pass": true,
+  "note": "len(ref)=10 diffs=[]"
+ }
+}

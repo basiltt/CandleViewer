@@ -1,0 +1,41 @@
+{
+  "probe": "h1_free_threading",
+  "py": "3.13.7",
+  "build": "3.13.7 experimental free-threading build (tags/v3.13.7:bcee1c3, Aug 14 2025, 14:20:35) [MSC v.1944 64 bit (AMD64)]",
+  "Py_GIL_DISABLED": 1,
+  "gil_enabled_at_runtime": false,
+  "v1_smoke": {
+    "context_n": 100,
+    "receipt_changed": true,
+    "states": [
+      "ft.b"
+    ],
+    "status": "running"
+  },
+  "v3_threads": {
+    "threads": 32,
+    "per_thread": 1000,
+    "accepted": 32000,
+    "raised_unexpectedly": 0,
+    "strict_typos_rejected_on_calling_thread": 32,
+    "strict_typos_sent": 32,
+    "processed": 32000,
+    "per_thread_order_violations": 0,
+    "lost": 0,
+    "ingest_s": 8.152,
+    "ingest_rate_ev_s": 3925.6
+  },
+  "v4_racy_readers": {
+    "readers": 8,
+    "reads_total": 144,
+    "reader_exceptions": 58,
+    "reader_exception_sample": [
+      "RuntimeError: Set changed size during iteration",
+      "RuntimeError: deque mutated during iteration"
+    ],
+    "transitions_driven": 8479,
+    "final_states": [
+      "ft.b"
+    ]
+  }
+}

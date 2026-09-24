@@ -1,0 +1,56 @@
+[
+  {
+    "id": "C9",
+    "title": "sync + raise built-in: 1500-deep guarded chain",
+    "expected": {
+      "n": 1500
+    },
+    "observed": {
+      "n": 1001
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "C10",
+    "title": "async + raise built-in: 1500-deep guarded chain",
+    "expected": {
+      "n": 1500
+    },
+    "observed": {
+      "n": 1001
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "C11",
+    "title": "sync + raise built-in: 3000-deep guarded chain",
+    "expected": {
+      "n": 3000
+    },
+    "observed": {
+      "n": 1001
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "C12",
+    "title": "async + raise built-in: 3000-deep guarded chain",
+    "expected": {
+      "n": 3000
+    },
+    "observed": {
+      "n": 1001
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "C13",
+    "title": "async: action-side i.send() self-chain is NOT budgeted at all (10000 deep)",
+    "expected": {
+      "n": 10000
+    },
+    "observed": "TimeoutError: ",
+    "traceback": "\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-5327ba6\\_h.py\", line 64, in _aw\n    return await coro\n           ^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-5327ba6\\c2_raise_builtin_chain.py\", line 127, in c13\n    await asyncio.sleep(0.002)\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\tasks.py\", line 718, in sleep\n    return await future\n           ^^^^^^^^^^^^\nasyncio.exceptions.CancelledError\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\main-5327ba6\\_h.py\", line 44, in run\n    res = asyncio.run(asyncio.wait_for(_aw(res), timeout=30))\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 195, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\tasks.py\", line 506, in wait_for\n    async with timeouts.timeout(timeout):\n               ~~~~~~~~~~~~~~~~^^^^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\timeouts.py\", line 116, in __aexit__\n    raise TimeoutError from exc_val\nTimeoutError\n",
+    "status": "ERROR"
+  }
+]

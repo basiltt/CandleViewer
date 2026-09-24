@@ -1,0 +1,88 @@
+{
+ "seconds": 200.0,
+ "machines": 200,
+ "beats": 1104961,
+ "external_sent": 1095800,
+ "external_received": 1095800,
+ "external_dropped": 0,
+ "hook_dropped": 0,
+ "chain_trips": 0,
+ "handles_max_per_machine": 1,
+ "alive_at_end": 200,
+ "rss_mb": {
+  "start": 32.8,
+  "end": 38.2,
+  "delta": 5.3
+ },
+ "chaos_restores": {
+  "ok": 495,
+  "fail": 0,
+  "with_sched": 463,
+  "invalid_hook": 0
+ },
+ "runtime_warnings": {
+  "n": 0,
+  "sample": []
+ },
+ "samples": [
+  {
+   "t": 185.7,
+   "rss": 38.2,
+   "beats": 1027730,
+   "handles": 187,
+   "alive": 200
+  },
+  {
+   "t": 187.7,
+   "rss": 38.2,
+   "beats": 1039146,
+   "handles": 177,
+   "alive": 200
+  },
+  {
+   "t": 189.7,
+   "rss": 38.2,
+   "beats": 1050779,
+   "handles": 178,
+   "alive": 200
+  },
+  {
+   "t": 191.8,
+   "rss": 38.2,
+   "beats": 1059768,
+   "handles": 175,
+   "alive": 200
+  },
+  {
+   "t": 193.8,
+   "rss": 38.2,
+   "beats": 1070120,
+   "handles": 194,
+   "alive": 200
+  },
+  {
+   "t": 195.8,
+   "rss": 38.2,
+   "beats": 1080834,
+   "handles": 187,
+   "alive": 200
+  },
+  {
+   "t": 197.8,
+   "rss": 38.2,
+   "beats": 1092286,
+   "handles": 183,
+   "alive": 200
+  },
+  {
+   "t": 199.8,
+   "rss": 38.2,
+   "beats": 1103736,
+   "handles": 189,
+   "alive": 200
+  }
+ ],
+ "ok": true
+}
+
+k_soak: PASS

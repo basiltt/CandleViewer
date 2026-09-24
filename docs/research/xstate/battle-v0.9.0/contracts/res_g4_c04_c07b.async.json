@@ -1,0 +1,46 @@
+{
+ "[async]G4.C04.still_reproduces_on_0_9_0": {
+  "pass": true,
+  "note": "4/4 kill events break: stuck-elevated=['LOGOUT', 'IDLE_DEADLINE', 'ABSOLUTE_DEADLINE'] ; re-elevatable=['REVOKE']"
+ },
+ "[async]G4.C04.root_hoist_alone_leaves_REVOKE_broken": {
+  "pass": true,
+  "note": "REVOKE + STEP_UP_OK under root-hoist-only -> ['auth.revoked', 'elevation.elevated'] (re-elevated a dead session)"
+ },
+ "[async]G4.C04.fixed_builds_strictConfig": {
+  "pass": true,
+  "note": ""
+ },
+ "[async]G4.C04.corrected_fix_closes_all_4": {
+  "pass": true,
+  "note": "all 4 kill events drop elevation AND resist re-elevation"
+ },
+ "[async]G4.C07b.denied_release_is_fatal_on_0_9_0": {
+  "pass": true,
+  "note": "status after guard-denied RELEASE='error' err=UnhandledEventError(\"Event 'RELEASE' is not handled in any active state ['kill_switch.engaged'] and the machine's onUnha"
+ },
+ "[async]G4.C07b.bricked_authorised_release_dropped": {
+  "pass": true,
+  "note": "engaged=['kill_switch.engaged'] -> after authorised RELEASE=['kill_switch.engaged'] (bricked=True)"
+ },
+ "[async]G4.C07b.fixed_builds_strictConfig": {
+  "pass": true,
+  "note": ""
+ },
+ "[async]G4.C07b.fix_denied_not_fatal": {
+  "pass": true,
+  "note": "status='running' states=['kill_switch.engaged']"
+ },
+ "[async]G4.C07b.fix_unbricks": {
+  "pass": true,
+  "note": "engaged=['kill_switch.engaged'] -> final=['kill_switch.clear']"
+ },
+ "[async]G4.C07b.fix_audits_denial": {
+  "pass": true,
+  "note": "acts=['audit_kill_switch', 'block_new_orders_immediately', 'cancel_entry_and_poll_drains', 'broadcast_kill_switch', 'audit_release_denied', 'audit_kill_switch_released']"
+ },
+ "[async]G4.C07b.fix_chain_clean": {
+  "pass": true,
+  "note": "chain_trips=0"
+ }
+}

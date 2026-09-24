@@ -1,0 +1,140 @@
+{
+  "probe": "u1_v2_upcast_minting",
+  "py": "3.13.7",
+  "cells": [
+    {
+      "cell": "A_v3_unflagged",
+      "kind": "def",
+      "version": 3,
+      "states": [
+        "u1.work"
+      ],
+      "marks": [],
+      "n": 0
+    },
+    {
+      "cell": "B_v3_flagged",
+      "kind": "def",
+      "version": 3,
+      "states": [
+        "u1.done"
+      ],
+      "marks": [
+        {
+          "v": "FORGED"
+        }
+      ],
+      "n": 1
+    },
+    {
+      "cell": "C_v2_upcast_done",
+      "kind": "def",
+      "version": 2,
+      "states": [
+        "u1.done"
+      ],
+      "marks": [
+        {
+          "v": "FORGED"
+        }
+      ],
+      "n": 1
+    },
+    {
+      "cell": "D_v2_upcast_after",
+      "kind": "def",
+      "version": 2,
+      "states": [
+        "u1a.late"
+      ],
+      "marks": [
+        "after.60000.u1a.wait"
+      ],
+      "n": 1
+    },
+    {
+      "cell": "E_v2_upcast_error",
+      "kind": "def",
+      "version": 2,
+      "states": [
+        "u1.bad"
+      ],
+      "marks": [
+        "FORGED"
+      ],
+      "n": 1
+    },
+    {
+      "cell": "A_v3_unflagged",
+      "kind": "async def",
+      "version": 3,
+      "states": [
+        "u1.work"
+      ],
+      "marks": [],
+      "n": 0
+    },
+    {
+      "cell": "B_v3_flagged",
+      "kind": "async def",
+      "version": 3,
+      "states": [
+        "u1.done"
+      ],
+      "marks": [
+        {
+          "v": "FORGED"
+        }
+      ],
+      "n": 1
+    },
+    {
+      "cell": "C_v2_upcast_done",
+      "kind": "async def",
+      "version": 2,
+      "states": [
+        "u1.done"
+      ],
+      "marks": [
+        {
+          "v": "FORGED"
+        }
+      ],
+      "n": 1
+    },
+    {
+      "cell": "D_v2_upcast_after",
+      "kind": "async def",
+      "version": 2,
+      "states": [
+        "u1a.late"
+      ],
+      "marks": [
+        "after.60000.u1a.wait"
+      ],
+      "n": 1
+    },
+    {
+      "cell": "E_v2_upcast_error",
+      "kind": "async def",
+      "version": 2,
+      "states": [
+        "u1.bad"
+      ],
+      "marks": [
+        "FORGED"
+      ],
+      "n": 1
+    }
+  ],
+  "control_v3_unflagged_refused": true,
+  "forged_v2_records_that_drove_engine_machinery": [
+    "C_v2_upcast_done/def",
+    "D_v2_upcast_after/def",
+    "E_v2_upcast_error/def",
+    "C_v2_upcast_done/async def",
+    "D_v2_upcast_after/async def",
+    "E_v2_upcast_error/async def"
+  ],
+  "verdict": "DEFECT"
+}

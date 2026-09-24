@@ -1,0 +1,22 @@
+{
+ "[async]V8.#226.chain_trips_in_envelope": {
+  "pass": true,
+  "note": "keys=['actors', 'chain_trips', 'configuration', 'context', 'deferred', 'error', 'history', 'last_chain_error', 'machine_hash', 'machine_id', 'output', 'pending_events'] trips=0"
+ },
+ "[async]V8.#227.async.undeclared_refused_not_fatal": {
+  "pass": true,
+  "note": "invalid=[\"Event(type='NOT_A_DECLARED_EVENT', payload={})\"] last_error='UnknownEventError(\"Event \\'NOT_A_DECLARED_EVENT\\' is not declared by machine \\'kill_switch\\'. Known events: ENGAGE, RELEASE,' states=['kill_switch.engaged']"
+ },
+ "[async]V8.#227.sync.undeclared_refused_not_fatal": {
+  "pass": true,
+  "note": "invalid=[\"Event(type='NOT_A_DECLARED_EVENT', payload={})\"] last_error='UnknownEventError(\"Event \\'NOT_A_DECLARED_EVENT\\' is not declared by machine \\'kill_switch\\'. Known events: ENGAGE, RELEASE,' states=['kill_switch.engaged']"
+ },
+ "[async]V8.#233.async.priority_release_replays": {
+  "pass": true,
+  "note": "states=['kill_switch.clear'] trips=0"
+ },
+ "[async]V8.#233.sync.priority_release_replays": {
+  "pass": true,
+  "note": "states=['kill_switch.clear'] trips=0"
+ }
+}

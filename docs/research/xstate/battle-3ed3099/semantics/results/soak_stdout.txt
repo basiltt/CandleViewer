@@ -1,0 +1,3 @@
+[PASS ] N6-01      6-minute chaos soak: no lost order, never inert-while-running, bounded RSS
+
+n6_soak: 1/1 PASS

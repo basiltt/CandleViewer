@@ -1,0 +1,8 @@
+PASS [async]F9.C04.fixed_builds
+PASS [async]F9.C04.config_only_fix_closes_it  | all 4 revocation events drop elevation
+PASS [async]F9.C07b.fixed_builds
+PASS [async]F9.C07b.denied_not_fatal  | status after denied RELEASE='running' states=['kill_switch.engaged']
+PASS [async]F9.C07b.config_only_fix_unbricks  | engaged=['kill_switch.engaged'] -> final=['kill_switch.clear']
+PASS [async]F9.C07b.chain_clean  | chain_trips=0
+
+--- 6 checks, 0 FAIL: []

@@ -1,0 +1,18 @@
+C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-221ce7c\observability\rerun_prior.py:128: DeprecationWarning: Machine 'm_snf' has unresolvable transition targets:
+  m_snf.a: on 'GO' -> target 'does.not.exist' does not resolve
+  (strict_targets=False: these transitions will be silent no-ops at runtime. This escape hatch is removed in 1.0.)
+  machine = create_machine(cfg, logic=MachineLogic(), strict_targets=False)
+D1/D2 guardErrorPolicy=false: receipt(changed=False, error=None), last_transition_ok=True, last_error=None, on_guard_error fired=True
+D1/D2 guardErrorPolicy=true: receipt(changed=True, error=None), last_transition_ok=True, last_error=None, on_guard_error fired=True
+D1/D2 guardErrorPolicy=raise: receipt(changed=False, error=ValueError('guard-boom')), last_transition_ok=False, last_error=ValueError('guard-boom'), on_guard_error fired=True
+D3 deferred replay: r1(LATE, deferred)=True state_ids=['m_defer_replay.a'], r2(ARM) state_ids=['m_defer_replay.b'], final=['m_defer_replay.c']
+  -- interpretation: if r2.state_ids already reflects post-replay state 'c', the fold is unchanged; #125 promises replay is its own macrostep, i.e. a *separate* on_transition, which we can't see from Receipt shape alone (see hook order check below).
+D4: TypeError as before: TypeError("SyncInterpreter.__init__() got an unexpected keyword argument 'max_queue_size'")
+D5 StateNotFound: receipt.error=StateNotFoundError("Could not resolve target state 'does.not.exist' from state 'm_snf.a'."), last_error=StateNotFoundError("Could not resolve target state 'does.not.exist' from state 'm_snf.a'."), status=running, hooks=['on_transition', 'on_event_received', 'on_resolve_error']
+D6 .use() receipt(changed=True, error=None); .plugins= receipt(changed=True, error=None) -- identical (still refuted)
+D7: before .start() has_dormant_invocations=True, status=running
+    after  .start() has_dormant_invocations=False
+D8: pending_events before stop=5, status after stop=stopped; (no on_event_dropped hook exists for this path per prior finding -- re-checking with a plugin below)
+D8b: on_event_dropped fired 5 times for 5 abandoned events -- FIXED (signal now exists)
+D9: to_dict/to_json/config present=False (to_mermaid=True, to_plantuml=True)
+DONE

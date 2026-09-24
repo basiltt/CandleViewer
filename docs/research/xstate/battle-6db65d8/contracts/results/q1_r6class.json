@@ -1,0 +1,140 @@
+{
+  "b18_rollback_ondone_page_owner": {
+    "events": [
+      {
+        "ev": "ENGAGE",
+        "changed": true,
+        "error": null,
+        "svc_calls_delta": 80,
+        "ids": [
+          "kill_switch.flattening"
+        ],
+        "status": "running",
+        "last_error": "RuntimeError"
+      }
+    ],
+    "timeout": false,
+    "wall_s": 0.093,
+    "svc_calls_total": 80,
+    "acts_total": 83,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "running"
+  },
+  "b19_rollback_ondone_store_divergences": {
+    "events": [
+      {
+        "ev": "SWEEP_DUE",
+        "changed": true,
+        "error": null,
+        "svc_calls_delta": 120,
+        "ids": [
+          "reconciliation.diffing"
+        ],
+        "status": "running",
+        "last_error": "RuntimeError"
+      }
+    ],
+    "timeout": false,
+    "wall_s": 0.091,
+    "svc_calls_total": 120,
+    "acts_total": 122,
+    "ids": [
+      "reconciliation.diffing"
+    ],
+    "status": "running"
+  },
+  "b19_rollback_reporting_entry": {
+    "events": [
+      {
+        "ev": "SWEEP_DUE",
+        "changed": true,
+        "error": null,
+        "svc_calls_delta": 121,
+        "ids": [
+          "reconciliation.remediating"
+        ],
+        "status": "running",
+        "last_error": "RuntimeError"
+      }
+    ],
+    "timeout": false,
+    "wall_s": 0.091,
+    "svc_calls_total": 121,
+    "acts_total": 241,
+    "ids": [
+      "reconciliation.remediating"
+    ],
+    "status": "running"
+  },
+  "b18_rollback_engaging_entry": {
+    "events": [
+      {
+        "ev": "ENGAGE",
+        "changed": false,
+        "error": "RuntimeError",
+        "svc_calls_delta": 0,
+        "ids": [
+          "kill_switch.clear"
+        ],
+        "status": "running",
+        "last_error": "RuntimeError"
+      }
+    ],
+    "timeout": false,
+    "wall_s": 0.098,
+    "svc_calls_total": 0,
+    "acts_total": 3,
+    "ids": [
+      "kill_switch.clear"
+    ],
+    "status": "running"
+  },
+  "b18_control": {
+    "events": [
+      {
+        "ev": "ENGAGE",
+        "changed": true,
+        "error": null,
+        "svc_calls_delta": 2,
+        "ids": [
+          "kill_switch.engaged"
+        ],
+        "status": "running",
+        "last_error": null
+      }
+    ],
+    "timeout": false,
+    "wall_s": 0.098,
+    "svc_calls_total": 2,
+    "acts_total": 5,
+    "ids": [
+      "kill_switch.engaged"
+    ],
+    "status": "running"
+  },
+  "b19_control": {
+    "events": [
+      {
+        "ev": "SWEEP_DUE",
+        "changed": true,
+        "error": null,
+        "svc_calls_delta": 3,
+        "ids": [
+          "reconciliation.idle"
+        ],
+        "status": "running",
+        "last_error": null
+      }
+    ],
+    "timeout": false,
+    "wall_s": 0.097,
+    "svc_calls_total": 3,
+    "acts_total": 10,
+    "ids": [
+      "reconciliation.idle"
+    ],
+    "status": "running"
+  }
+}

@@ -1,0 +1,62 @@
+{
+ "[def]B1.snap.roundtrip_every_quiescence": {
+  "pass": true,
+  "note": "states=['order.lifecycle.partially_filled', 'order.protection.sl_present'] notes=[]"
+ },
+ "[def]B1.snap.null_hash_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ },
+ "[def]B1.snap.config_disagreement_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ },
+ "[def]B2.snap.roundtrip_every_quiescence": {
+  "pass": true,
+  "note": "states=['trade_group.submitting'] notes=[]"
+ },
+ "[def]B2.snap.null_hash_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ },
+ "[def]B2.snap.config_disagreement_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ },
+ "[def]B3.snap.roundtrip_every_quiescence": {
+  "pass": true,
+  "note": "states=['leg.closing'] notes=[]"
+ },
+ "[def]B3.snap.null_hash_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ },
+ "[def]B3.snap.config_disagreement_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ },
+ "[def]B4.snap.roundtrip_every_quiescence": {
+  "pass": true,
+  "note": "states=['oco.completing'] notes=[]"
+ },
+ "[def]B4.snap.null_hash_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ },
+ "[def]B4.snap.config_disagreement_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ },
+ "[def]B5.snap.roundtrip_every_quiescence": {
+  "pass": true,
+  "note": "states=['iceberg.working'] notes=[]"
+ },
+ "[def]B5.snap.null_hash_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ },
+ "[def]B5.snap.config_disagreement_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ }
+}

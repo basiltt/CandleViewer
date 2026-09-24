@@ -1,0 +1,65 @@
+{
+  "probe": "q5b_hashseed_sweep",
+  "py": "3.13.7",
+  "seeds": [
+    "0",
+    "1",
+    "7",
+    "12345",
+    "99991"
+  ],
+  "per_seed": {
+    "0": {
+      "async_laps": 100,
+      "async_trip": true,
+      "async_n": 8,
+      "sync_laps": 100,
+      "sync_trip": true,
+      "sync_n": 8,
+      "engines_same_trace": true,
+      "trace_len": 108
+    },
+    "1": {
+      "async_laps": 100,
+      "async_trip": true,
+      "async_n": 8,
+      "sync_laps": 100,
+      "sync_trip": true,
+      "sync_n": 8,
+      "engines_same_trace": true,
+      "trace_len": 108
+    },
+    "7": {
+      "async_laps": 100,
+      "async_trip": true,
+      "async_n": 8,
+      "sync_laps": 100,
+      "sync_trip": true,
+      "sync_n": 8,
+      "engines_same_trace": true,
+      "trace_len": 108
+    },
+    "12345": {
+      "async_laps": 100,
+      "async_trip": true,
+      "async_n": 8,
+      "sync_laps": 100,
+      "sync_trip": true,
+      "sync_n": 8,
+      "engines_same_trace": true,
+      "trace_len": 108
+    },
+    "99991": {
+      "async_laps": 100,
+      "async_trip": true,
+      "async_n": 8,
+      "sync_laps": 100,
+      "sync_trip": true,
+      "sync_n": 8,
+      "engines_same_trace": true,
+      "trace_len": 108
+    }
+  },
+  "distinct_outcomes": 1,
+  "result": "PASS"
+}

@@ -1,0 +1,42 @@
+{
+  "A/priority RELEASE pre-empts the chain": {
+    "pass": true,
+    "note": "{\"svc_at_press\": 3, \"svc_after\": 3, \"svc_later\": 3, \"states\": [\"kill_switch.clear\"], \"err\": null, \"shed\": [], \"dropped\": []}"
+  },
+  "A/no priority send shed as chain_budget": {
+    "pass": true,
+    "note": "[]"
+  },
+  "B/sync B18 async": {
+    "pass": true,
+    "note": "{\"exc\": \"NotSupportedError: Service 'cancel_all_working_orders' is async and not supported.\", \"svc\": []}"
+  },
+  "B/sync B18 def": {
+    "pass": true,
+    "note": "{\"states\": [\"kill_switch.engaged_incomplete\"], \"svc\": [\"cancel_all_working_orders\", \"flatten_all_positions\"], \"status\": \"running\", \"error\": null}"
+  },
+  "B/sync B19 async": {
+    "pass": true,
+    "note": "{\"exc\": \"NotSupportedError: Service 'fetch_exchange_state' is async and not supported.\", \"svc\": []}"
+  },
+  "B/sync B19 def": {
+    "pass": true,
+    "note": "{\"states\": [\"reconciliation.idle\"], \"svc\": [\"fetch_exchange_state\", \"diff_against_local\"], \"status\": \"running\", \"error\": null}"
+  },
+  "C/#195 forged DoneEvent cannot drive B18.onDone": {
+    "pass": true,
+    "note": "{\"parked\": [\"kill_switch.cancelling\"], \"forged\": \"refused\", \"err\": \"UnknownEventError: Event 'done.invoke.cx' is an engine-generated name and cannot be sent as user traffic to machine 'kill_switch'. Completions (`done.invoke.*`, `error.platform.*`\", \"after\": [\"kill_switch.cancelling\"], \"final\": [\"kill_switch.engaged_incomplete\"], \"svc\": [\"cancel_all_working_orders\", \"flatten_all_positions\"]}"
+  },
+  "D/honest round-trip restores the same configuration": {
+    "pass": true,
+    "note": "{\"honest\": [\"kill_switch.engaged_incomplete\"], \"tag\": \"honest\", \"restored\": [\"kill_switch.engaged_incomplete\"], \"refused\": false}"
+  },
+  "D/#198 forged configuration cannot relocate the kill switch": {
+    "pass": true,
+    "note": "{\"version\": 2, \"fields\": [\"configuration\", \"state_ids\"], \"f1\": {\"tag\": \"contradicted-configuration\", \"refused\": true, \"exc\": \"SnapshotCorruptError: Snapshot is malformed: 'state_ids' names ['kill_switch.engaged_incomplete'] which 'configuration' does not contain -- the two fields contrad\"}, \"f2\": {\"tag\": \"emptied-state_ids\", \"refused\": true, \"exc\": \"SnapshotCorruptError: Snapshot is malformed: version >= 1 snapshot of a running machine has an empty 'state_ids' while 'configuration' names ['kill_switch.clear']\"}}"
+  },
+  "D/both-fields-agreeing forgery IS accepted (documented limit)": {
+    "pass": true,
+    "note": "{\"honest\": [\"kill_switch.engaged_incomplete\"], \"f3\": {\"tag\": \"both-fields-agree-on-a-lie\", \"restored\": [\"kill_switch.clear\"], \"refused\": false}}"
+  }
+}

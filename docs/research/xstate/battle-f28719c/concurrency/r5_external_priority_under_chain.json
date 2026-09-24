@@ -1,0 +1,40 @@
+{
+  "probe": "r5_external_priority_under_chain",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "service_kind": "def",
+      "target_rate_per_s": 10000,
+      "seconds": 4.0,
+      "external_sent": 1786,
+      "external_applied": 16,
+      "achieved_rate_per_s": 446,
+      "callsite_errors": {},
+      "drops_by_reason": {
+        "stopped": {
+          "EXT": 1770
+        }
+      },
+      "external_dropped_as_chain_budget": 0,
+      "residual_queue_depth": 1770,
+      "cycle_laps": 3324,
+      "unaccounted": -1770
+    },
+    {
+      "service_kind": "async def",
+      "target_rate_per_s": 10000,
+      "seconds": 4.0,
+      "external_sent": 3858,
+      "external_applied": 3858,
+      "achieved_rate_per_s": 964,
+      "callsite_errors": {},
+      "drops_by_reason": {},
+      "external_dropped_as_chain_budget": 0,
+      "residual_queue_depth": 0,
+      "cycle_laps": 6319,
+      "unaccounted": 0
+    }
+  ],
+  "rows_shedding_external_as_chain_budget": [],
+  "result": "PASS"
+}

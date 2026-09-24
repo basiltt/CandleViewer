@@ -1,0 +1,467 @@
+{
+  "id": "order",
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "defer",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "type": "parallel",
+  "context": {
+    "order_id": null,
+    "order_link_id": null,
+    "account_id": null,
+    "symbol": null,
+    "side": null,
+    "qty": "0",
+    "filled_qty": "0",
+    "leaves_qty": "0",
+    "avg_price": null,
+    "seen_exec_ids": [],
+    "last_exchange_update": 0,
+    "recon_misses": 0,
+    "_fault": null,
+    "sl_deadline_us": null
+  },
+  "states": {
+    "lifecycle": {
+      "initial": "draft",
+      "states": {
+        "draft": {
+          "entry": [
+            "persist_event"
+          ],
+          "on": {
+            "VALIDATE": [
+              {
+                "target": "#order.lifecycle.validated",
+                "guard": "passes_all_gates",
+                "actions": [
+                  "stamp_validated"
+                ]
+              },
+              {
+                "target": "#order.lifecycle.rejected",
+                "actions": [
+                  "set_local_reject"
+                ]
+              }
+            ]
+          }
+        },
+        "validated": {
+          "entry": [
+            "persist_event",
+            "reserve_rate_token"
+          ],
+          "on": {
+            "SEND": {
+              "target": "#order.lifecycle.submitting"
+            }
+          }
+        },
+        "submitting": {
+          "entry": [
+            "persist_event"
+          ],
+          "invoke": {
+            "id": "place",
+            "src": "place_order",
+            "onDone": [
+              {
+                "target": "#order.lifecycle.submitted",
+                "guard": "ret_code_ok",
+                "actions": [
+                  "adopt_ack"
+                ]
+              },
+              {
+                "target": "#order.lifecycle.submitted",
+                "guard": "is_duplicate_link_id",
+                "actions": [
+                  "mark_needs_lookup"
+                ]
+              },
+              {
+                "target": "#order.lifecycle.rejected",
+                "actions": [
+                  "map_reject_code"
+                ]
+              }
+            ],
+            "onError": {
+              "target": "#order.lifecycle.unknown",
+              "actions": [
+                "record_transport_fault"
+              ]
+            }
+          }
+        },
+        "submitted": {
+          "entry": [
+            "persist_event"
+          ],
+          "on": {
+            "EXEC": [
+              {
+                "target": "#order.lifecycle.filled",
+                "guard": "exec_new_and_closes",
+                "actions": [
+                  "apply_fill"
+                ]
+              },
+              {
+                "target": "#order.lifecycle.partially_filled",
+                "guard": "exec_new_and_partial",
+                "actions": [
+                  "apply_fill"
+                ]
+              }
+            ],
+            "TRIGGERED": {
+              "target": "#order.lifecycle.triggered"
+            },
+            "CANCEL": {
+              "target": "#order.lifecycle.cancel_pending"
+            },
+            "AMEND": {
+              "target": "#order.lifecycle.amend_pending"
+            },
+            "EXPIRE": {
+              "target": "#order.lifecycle.expired"
+            },
+            "TRANSPORT_FAULT": {
+              "target": "#order.lifecycle.unknown"
+            },
+            "FAULT": {
+              "target": "#order.lifecycle.quarantined"
+            }
+          }
+        },
+        "triggered": {
+          "entry": [
+            "persist_event"
+          ],
+          "on": {
+            "EXEC": [
+              {
+                "target": "#order.lifecycle.filled",
+                "guard": "exec_new_and_closes",
+                "actions": [
+                  "apply_fill"
+                ]
+              },
+              {
+                "target": "#order.lifecycle.partially_filled",
+                "guard": "exec_new_and_partial",
+                "actions": [
+                  "apply_fill"
+                ]
+              }
+            ],
+            "CANCEL": {
+              "target": "#order.lifecycle.cancel_pending"
+            }
+          }
+        },
+        "partially_filled": {
+          "entry": [
+            "persist_event",
+            "notify_protection_region"
+          ],
+          "on": {
+            "EXEC": [
+              {
+                "target": "#order.lifecycle.filled",
+                "guard": "exec_new_and_closes",
+                "actions": [
+                  "apply_fill"
+                ]
+              },
+              {
+                "target": "#order.lifecycle.partially_filled",
+                "guard": "exec_new_and_partial",
+                "reenter": true,
+                "actions": [
+                  "apply_fill"
+                ]
+              }
+            ],
+            "CANCEL": {
+              "target": "#order.lifecycle.cancel_pending"
+            },
+            "AMEND": {
+              "target": "#order.lifecycle.amend_pending"
+            },
+            "FAULT": {
+              "target": "#order.lifecycle.quarantined"
+            }
+          }
+        },
+        "cancel_pending": {
+          "entry": [
+            "persist_event"
+          ],
+          "invoke": {
+            "id": "cancel",
+            "src": "cancel_order",
+            "onDone": {
+              "target": "#order.lifecycle.cancelled",
+              "actions": [
+                "adopt_cancel_ack"
+              ]
+            },
+            "onError": {
+              "target": "#order.lifecycle.unknown",
+              "actions": [
+                "record_transport_fault"
+              ]
+            }
+          },
+          "on": {
+            "EXEC": [
+              {
+                "target": "#order.lifecycle.filled",
+                "guard": "exec_new_and_closes",
+                "actions": [
+                  "apply_fill"
+                ]
+              },
+              {
+                "target": "#order.lifecycle.partially_filled",
+                "guard": "exec_new_and_partial",
+                "actions": [
+                  "apply_fill"
+                ]
+              }
+            ]
+          }
+        },
+        "amend_pending": {
+          "entry": [
+            "persist_event"
+          ],
+          "invoke": {
+            "id": "amend",
+            "src": "amend_order",
+            "onDone": [
+              {
+                "target": "#order.lifecycle.partially_filled",
+                "guard": "has_fills",
+                "actions": [
+                  "adopt_amend"
+                ]
+              },
+              {
+                "target": "#order.lifecycle.submitted",
+                "actions": [
+                  "adopt_amend"
+                ]
+              }
+            ],
+            "onError": {
+              "target": "#order.lifecycle.unknown",
+              "actions": [
+                "record_transport_fault"
+              ]
+            }
+          },
+          "on": {
+            "AMEND_REJECTED": [
+              {
+                "target": "#order.lifecycle.partially_filled",
+                "guard": "has_fills",
+                "actions": [
+                  "keep_prior_order_live",
+                  "notify_amend_rejected"
+                ]
+              },
+              {
+                "target": "#order.lifecycle.submitted",
+                "actions": [
+                  "keep_prior_order_live",
+                  "notify_amend_rejected"
+                ]
+              }
+            ]
+          }
+        },
+        "unknown": {
+          "entry": [
+            "persist_event",
+            "raise_unknown_alert",
+            "arm_recon_deadline"
+          ],
+          "on": {
+            "RECON_FOUND_LIVE": {
+              "target": "#order.lifecycle.submitted",
+              "actions": [
+                "adopt_recon"
+              ]
+            },
+            "RECON_FOUND_PARTIAL": {
+              "target": "#order.lifecycle.partially_filled",
+              "actions": [
+                "adopt_recon"
+              ]
+            },
+            "RECON_FOUND_FILLED": {
+              "target": "#order.lifecycle.filled",
+              "actions": [
+                "adopt_recon"
+              ]
+            },
+            "RECON_FOUND_CANCELLED": {
+              "target": "#order.lifecycle.cancelled",
+              "actions": [
+                "adopt_recon"
+              ]
+            },
+            "RECON_MISS": [
+              {
+                "target": "#order.lifecycle.rejected",
+                "guard": "second_consecutive_miss",
+                "actions": [
+                  "set_reject_unresolvable"
+                ]
+              },
+              {
+                "target": "#order.lifecycle.unknown",
+                "reenter": true,
+                "actions": [
+                  "bump_recon_misses"
+                ]
+              }
+            ]
+          }
+        },
+        "quarantined": {
+          "entry": [
+            "persist_event",
+            "raise_critical_alert",
+            "request_reconciliation"
+          ],
+          "tags": [
+            "untrusted"
+          ],
+          "on": {
+            "RECON_FOUND_LIVE": {
+              "target": "#order.lifecycle.submitted",
+              "actions": [
+                "adopt_recon"
+              ]
+            },
+            "RECON_FOUND_PARTIAL": {
+              "target": "#order.lifecycle.partially_filled",
+              "actions": [
+                "adopt_recon"
+              ]
+            },
+            "RECON_FOUND_FILLED": {
+              "target": "#order.lifecycle.filled",
+              "actions": [
+                "adopt_recon"
+              ]
+            }
+          }
+        },
+        "filled": {
+          "type": "final",
+          "entry": [
+            "persist_event",
+            "emit_terminal"
+          ],
+          "tags": [
+            "terminal"
+          ]
+        },
+        "cancelled": {
+          "type": "final",
+          "entry": [
+            "persist_event",
+            "emit_terminal"
+          ],
+          "tags": [
+            "terminal"
+          ]
+        },
+        "rejected": {
+          "type": "final",
+          "entry": [
+            "persist_event",
+            "emit_terminal"
+          ],
+          "tags": [
+            "terminal"
+          ]
+        },
+        "expired": {
+          "type": "final",
+          "entry": [
+            "persist_event",
+            "emit_terminal"
+          ],
+          "tags": [
+            "terminal"
+          ]
+        }
+      }
+    },
+    "protection": {
+      "initial": "not_required",
+      "states": {
+        "not_required": {
+          "on": {
+            "FIRST_FILL": {
+              "target": "#order.protection.sl_pending"
+            }
+          }
+        },
+        "sl_pending": {
+          "entry": [
+            "arm_sl_deadline"
+          ],
+          "invoke": {
+            "id": "attach_sl",
+            "src": "attach_native_sl",
+            "onDone": {
+              "target": "#order.protection.sl_present"
+            },
+            "onError": {
+              "target": "#order.protection.sl_missing"
+            }
+          },
+          "on": {
+            "SL_DEADLINE": {
+              "target": "#order.protection.sl_missing"
+            }
+          }
+        },
+        "sl_present": {
+          "tags": [
+            "protected"
+          ],
+          "on": {
+            "SL_LOST": {
+              "target": "#order.protection.sl_missing"
+            }
+          }
+        },
+        "sl_missing": {
+          "tags": [
+            "naked"
+          ],
+          "entry": [
+            "raise_naked_position_alert",
+            "request_fallback_sl"
+          ],
+          "on": {
+            "SL_OBSERVED": {
+              "target": "#order.protection.sl_present"
+            }
+          }
+        }
+      }
+    }
+  }
+}

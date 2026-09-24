@@ -1,0 +1,5 @@
+N-01-send-wait-receipt-id-collision.md	https://github.com/basiltt/xstate-statemachine/issues/75
+N-02-sync-timer-unreachable-in-loop.md	https://github.com/basiltt/xstate-statemachine/issues/76
+N-03-sync-macrostep-budget-clears-queue.md	https://github.com/basiltt/xstate-statemachine/issues/77
+N-04-send-threadsafe-bypasses-strict.md	https://github.com/basiltt/xstate-statemachine/issues/78
+N-08-error-done-namespace-invisible.md	https://github.com/basiltt/xstate-statemachine/issues/79

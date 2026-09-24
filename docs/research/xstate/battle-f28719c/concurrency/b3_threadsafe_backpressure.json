@@ -1,0 +1,45 @@
+{
+  "probe": "b3_threadsafe_backpressure",
+  "py": "3.13.7",
+  "v1_unbounded": {
+    "threads": 32,
+    "window_s": 2.0,
+    "accepted_by_send_threadsafe": 7815,
+    "processed_during_window": 7815,
+    "queue_depth_samples_every_100ms": [
+      6824
+    ],
+    "backlog_at_window_end": 6824,
+    "drain_after_producers_stopped_s": 0.602,
+    "monotonically_growing": true
+  },
+  "v2_bounded_raise": {
+    "policy": "raise",
+    "cap": 100,
+    "calls_returned_without_raising_on_calling_thread": 1244,
+    "raised_on_calling_thread": 5156,
+    "future_outcomes": {
+      "QueueOverflowError": 1128,
+      "ok": 116
+    },
+    "futures_unresolved": 0,
+    "processed": 116,
+    "on_event_dropped_hook_count": 1128,
+    "queue_depth": 0,
+    "note": "under RAISE the QueueOverflowError lands on a future the documented usage never reads; the producing thread sees nothing."
+  },
+  "v3_bounded_drop_newest": {
+    "policy": "drop_newest",
+    "cap": 100,
+    "calls_returned_without_raising_on_calling_thread": 4029,
+    "raised_on_calling_thread": 0,
+    "future_outcomes": {
+      "ok": 4029
+    },
+    "futures_unresolved": 0,
+    "processed": 388,
+    "on_event_dropped_hook_count": 3641,
+    "queue_depth": 0,
+    "note": "under RAISE the QueueOverflowError lands on a future the documented usage never reads; the producing thread sees nothing."
+  }
+}

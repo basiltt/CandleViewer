@@ -1,0 +1,168 @@
+{
+  "new_issues": [
+    {
+      "file": "new/DE-L1-ensure-future-escape-hatch-refused.md",
+      "id": "DE-L1",
+      "severity": "Medium",
+      "title": "Bug: ReentrantWaitError (#219) refuses the documented `ensure_future` escape hatch, because the guard rides an inheritable ContextVar",
+      "labels": [
+        "bug",
+        "area/interpreter",
+        "events",
+        "severity/medium"
+      ]
+    },
+    {
+      "file": "new/P-1-chain-trip-latch-not-persisted.md",
+      "id": "P-1",
+      "severity": "Medium",
+      "title": "Bug: the #222 chain-trip latch is not persisted, so restart-from-snapshot erases the evidence that work was discarded",
+      "labels": [
+        "bug",
+        "persistence",
+        "area/interpreter",
+        "sync-interpreter",
+        "severity/medium"
+      ]
+    },
+    {
+      "file": "new/P-2-strict-not-applied-to-restored-scheduled-sends.md",
+      "id": "P-2",
+      "severity": "Medium",
+      "title": "Bug: `strict` is not applied to restored `scheduled_sends` — `_rearm_restored_self_sends` bypasses `_admit_restored`",
+      "labels": [
+        "bug",
+        "persistence",
+        "validation",
+        "timers",
+        "events",
+        "severity/medium"
+      ]
+    },
+    {
+      "file": "new/DE-A12-inert-nested-invoke-pin.md",
+      "id": "DE-A12",
+      "severity": "Low",
+      "title": "Test: inert pin shapes in tests/test_round9_findings.py (nested_invoke never exits state a)",
+      "labels": [
+        "documentation",
+        "docs",
+        "area/interpreter",
+        "severity/low"
+      ]
+    },
+    {
+      "file": "new/DE-A13-production-characteristics-docs.md",
+      "id": "DE-A13",
+      "severity": "Low",
+      "title": "Docs: two production facts not yet written down — the ensure_future escape hatch's real precondition, and chain_trips' process-locality",
+      "labels": [
+        "documentation",
+        "docs",
+        "persistence",
+        "severity/low"
+      ]
+    },
+    {
+      "file": "new/DE-A14-from-snapshot-plugins.md",
+      "id": "DE-A14",
+      "severity": "Low",
+      "title": "Feature: from_snapshot(plugins=...) so a restore-time refusal can reach on_invalid_event / on_snapshot_error",
+      "labels": [
+        "enhancement",
+        "persistence",
+        "plugins",
+        "severity/low"
+      ]
+    },
+    {
+      "file": "new/DE-L2-inline-dict-invoke-src-opaque-typeerror.md",
+      "id": "DE-L2",
+      "severity": "Low",
+      "title": "Bug: an inline-dict `invoke.src` dies with `TypeError: unhashable type: 'dict'` from inside logic_loader, not a named InvalidConfigError",
+      "labels": [
+        "bug",
+        "validation",
+        "severity/low"
+      ]
+    },
+    {
+      "file": "new/DE-L3-def-action-send-wait-true-unawaited.md",
+      "id": "DE-L3",
+      "severity": "Low",
+      "title": "Bug: def action calling send(wait=True) receives the _Awaitable guard unawaited, silently",
+      "labels": [
+        "bug",
+        "severity/low",
+        "actors"
+      ]
+    },
+    {
+      "file": "new/DE-L5-priority-lane-not-honoured-sync-restore.md",
+      "id": "DE-L5",
+      "severity": "Low",
+      "title": "Bug: priority lane not honoured on sync-engine restore (SyncInterpreter._enqueue_restored ignores priority)",
+      "labels": [
+        "bug",
+        "severity/low",
+        "persistence",
+        "sync-interpreter"
+      ]
+    },
+    {
+      "file": "new/DE-A10-release-0.8.1-tag.md",
+      "id": "DE-A10",
+      "severity": "Info",
+      "title": "Release: bump __version__ and tag 0.8.1 at de2da4e",
+      "labels": [
+        "documentation",
+        "docs",
+        "severity/low"
+      ]
+    },
+    {
+      "file": "new/DE-L7-engine-mint-helpers-naming-and-replace-hardening.md",
+      "id": "DE-L7",
+      "severity": "Info",
+      "title": "Docs/Perf: engine_* mint helpers are unprefixed in a public module, and _replace retypes on private engine subclasses is undocumented hardening",
+      "labels": [
+        "documentation",
+        "docs",
+        "area/interpreter",
+        "events",
+        "severity/low"
+      ]
+    }
+  ],
+  "comments": [
+    {
+      "issue": 218,
+      "file": "comments/218.md",
+      "action": "comment"
+    },
+    {
+      "issue": 219,
+      "file": "comments/219.md",
+      "action": "comment"
+    },
+    {
+      "issue": 220,
+      "file": "comments/220.md",
+      "action": "comment"
+    },
+    {
+      "issue": 221,
+      "file": "comments/221.md",
+      "action": "comment"
+    },
+    {
+      "issue": 222,
+      "file": "comments/222.md",
+      "action": "comment"
+    }
+  ],
+  "meta": {
+    "issue": 26,
+    "file": "meta-26.md"
+  }
+}

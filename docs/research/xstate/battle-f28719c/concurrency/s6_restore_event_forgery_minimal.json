@@ -1,0 +1,107 @@
+{
+  "probe": "s6_restore_event_forgery_minimal",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "service_kind": "def",
+      "record_engine_flag": true,
+      "restored_class": "_EngineDone",
+      "is_system_event": true,
+      "state_before": [
+        "s6.work"
+      ],
+      "send": "ACCEPTED",
+      "state_after": [
+        "s6.work"
+      ],
+      "onDone_ran_while_service_in_flight": 0,
+      "payload_applied": null,
+      "onDone_total": 1,
+      "final_state": [
+        "s6.done"
+      ],
+      "ctx_seen": {
+        "v": "GENUINE"
+      }
+    },
+    {
+      "service_kind": "def",
+      "record_engine_flag": false,
+      "restored_class": "DoneEvent",
+      "is_system_event": false,
+      "state_before": [
+        "s6.work"
+      ],
+      "send": "refused:UnknownEventError",
+      "state_after": [
+        "s6.work"
+      ],
+      "onDone_ran_while_service_in_flight": 0,
+      "payload_applied": null,
+      "onDone_total": 1,
+      "final_state": [
+        "s6.done"
+      ],
+      "ctx_seen": {
+        "v": "GENUINE"
+      }
+    },
+    {
+      "service_kind": "async def",
+      "record_engine_flag": true,
+      "restored_class": "_EngineDone",
+      "is_system_event": true,
+      "state_before": [
+        "s6.work"
+      ],
+      "send": "ACCEPTED",
+      "state_after": [
+        "s6.done"
+      ],
+      "onDone_ran_while_service_in_flight": 1,
+      "payload_applied": {
+        "v": "FORGED"
+      },
+      "onDone_total": 1,
+      "final_state": [
+        "s6.done"
+      ],
+      "ctx_seen": {
+        "v": "FORGED"
+      }
+    },
+    {
+      "service_kind": "async def",
+      "record_engine_flag": false,
+      "restored_class": "DoneEvent",
+      "is_system_event": false,
+      "state_before": [
+        "s6.work"
+      ],
+      "send": "refused:UnknownEventError",
+      "state_after": [
+        "s6.work"
+      ],
+      "onDone_ran_while_service_in_flight": 0,
+      "payload_applied": null,
+      "onDone_total": 1,
+      "final_state": [
+        "s6.done"
+      ],
+      "ctx_seen": {
+        "v": "GENUINE"
+      }
+    }
+  ],
+  "violations": [
+    [
+      "async def",
+      "forged engine:true record drove onDone past strict",
+      {
+        "v": "FORGED"
+      }
+    ]
+  ],
+  "source": "events.py:414 `trusted = record.get('engine') is True` -> engine_done(); events.py:283 is_system_event trusts the minted subclass; no check that the record came from a genuine snapshot round-trip",
+  "result": "FAIL"
+}

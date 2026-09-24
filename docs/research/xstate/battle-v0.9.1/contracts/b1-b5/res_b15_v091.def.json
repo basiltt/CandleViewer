@@ -1,0 +1,362 @@
+{
+ "[def]version": {
+  "pass": true,
+  "note": "0.9.1"
+ },
+ "[def]B1.happy_reaches_end": {
+  "pass": true,
+  "note": "['order.lifecycle.filled', 'order.protection.sl_present']"
+ },
+ "[def]B1.happy_restore_every_step": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]B1.happy_boot_start_hook_false": {
+  "pass": true,
+  "note": "[False]"
+ },
+ "[def]B1.happy_chain_trips_0": {
+  "pass": true,
+  "note": "0"
+ },
+ "[def]B1.happy_dropped_receipts_0": {
+  "pass": true,
+  "note": "(0, [])"
+ },
+ "[def]B1.happy_no_errors_stranded": {
+  "pass": true,
+  "note": "([], [])"
+ },
+ "[def]B1.drain_covers_both_lanes": {
+  "pass": true,
+  "note": "(['FIRST_FILL', 'SEND', 'VALIDATE'], ['FIRST_FILL', 'SEND', 'VALIDATE'])"
+ },
+ "[def]B1.drain_wait_true_receipt_fails_not_hangs": {
+  "pass": true,
+  "note": "InterpreterStoppedError('drained: removed by drain_pending()')"
+ },
+ "[def]B1.persist_after_drain_has_no_pending": {
+  "pass": true,
+  "note": "0"
+ },
+ "[def]B1.stop_did_not_process_drained": {
+  "pass": true,
+  "note": "(['order.lifecycle.validated', 'order.protection.not_required'], ['order.lifecycle.validated', 'order.protection.not_required'])"
+ },
+ "[def]B1.restore_start_hook_true": {
+  "pass": true,
+  "note": "[True]"
+ },
+ "[def]B1.replay_each_drained_once": {
+  "pass": true,
+  "note": "(['FIRST_FILL', 'SEND'], ['FIRST_FILL', 'done.invoke.attach_sl', 'SEND', 'done.invoke.place'])"
+ },
+ "[def]B1.replay_reaches_end": {
+  "pass": true,
+  "note": "['order.lifecycle.filled', 'order.protection.sl_present']"
+ },
+ "[def]B1.replay_chain_trips_0_dropped_0": {
+  "pass": true,
+  "note": "(0, 0, 0)"
+ },
+ "[def]B2.happy_reaches_end": {
+  "pass": true,
+  "note": "['trade_group.closed']"
+ },
+ "[def]B2.happy_restore_every_step": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]B2.happy_boot_start_hook_false": {
+  "pass": true,
+  "note": "[False]"
+ },
+ "[def]B2.happy_chain_trips_0": {
+  "pass": true,
+  "note": "0"
+ },
+ "[def]B2.happy_dropped_receipts_0": {
+  "pass": true,
+  "note": "(0, [])"
+ },
+ "[def]B2.happy_no_errors_stranded": {
+  "pass": true,
+  "note": "([], [])"
+ },
+ "[def]B2.drain_covers_both_lanes": {
+  "pass": true,
+  "note": "(['CLOSE_GROUP', 'LEG_OPEN', 'CONFIRM'], ['CLOSE_GROUP', 'LEG_OPEN', 'CONFIRM'])"
+ },
+ "[def]B2.drain_wait_true_receipt_fails_not_hangs": {
+  "pass": true,
+  "note": "InterpreterStoppedError('drained: removed by drain_pending()')"
+ },
+ "[def]B2.persist_after_drain_has_no_pending": {
+  "pass": true,
+  "note": "0"
+ },
+ "[def]B2.stop_did_not_process_drained": {
+  "pass": true,
+  "note": "(['trade_group.submitting'], ['trade_group.submitting'])"
+ },
+ "[def]B2.restore_start_hook_true": {
+  "pass": true,
+  "note": "[True]"
+ },
+ "[def]B2.replay_each_drained_once": {
+  "pass": true,
+  "note": "(['CLOSE_GROUP', 'LEG_OPEN'], ['LEG_OPEN', 'EVALUATE', 'CLOSE_GROUP'])"
+ },
+ "[def]B2.replay_reaches_end": {
+  "pass": true,
+  "note": "['trade_group.closed']"
+ },
+ "[def]B2.replay_chain_trips_0_dropped_0": {
+  "pass": true,
+  "note": "(0, 0, 0)"
+ },
+ "[def]B3.happy_reaches_end": {
+  "pass": true,
+  "note": "['leg.closed']"
+ },
+ "[def]B3.happy_restore_every_step": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]B3.happy_boot_start_hook_false": {
+  "pass": true,
+  "note": "[False]"
+ },
+ "[def]B3.happy_chain_trips_0": {
+  "pass": true,
+  "note": "0"
+ },
+ "[def]B3.happy_dropped_receipts_0": {
+  "pass": true,
+  "note": "(0, [])"
+ },
+ "[def]B3.happy_no_errors_stranded": {
+  "pass": true,
+  "note": "([], [])"
+ },
+ "[def]B3.drain_covers_both_lanes": {
+  "pass": true,
+  "note": "(['EXEC', 'EXEC', 'ORDER_OPEN'], ['EXEC', 'EXEC', 'ORDER_OPEN'])"
+ },
+ "[def]B3.drain_wait_true_receipt_fails_not_hangs": {
+  "pass": true,
+  "note": "InterpreterStoppedError('drained: removed by drain_pending()')"
+ },
+ "[def]B3.persist_after_drain_has_no_pending": {
+  "pass": true,
+  "note": "0"
+ },
+ "[def]B3.stop_did_not_process_drained": {
+  "pass": true,
+  "note": "(['leg.open'], ['leg.open'])"
+ },
+ "[def]B3.restore_start_hook_true": {
+  "pass": true,
+  "note": "[True]"
+ },
+ "[def]B3.replay_each_drained_once": {
+  "pass": true,
+  "note": "(['EXEC', 'EXEC'], ['EXEC', 'EXEC'])"
+ },
+ "[def]B3.replay_reaches_end": {
+  "pass": true,
+  "note": "['leg.closed']"
+ },
+ "[def]B3.replay_chain_trips_0_dropped_0": {
+  "pass": true,
+  "note": "(0, 0, 0)"
+ },
+ "[def]B4.happy_reaches_end": {
+  "pass": true,
+  "note": "['oco.completed']"
+ },
+ "[def]B4.happy_restore_every_step": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]B4.happy_boot_start_hook_false": {
+  "pass": true,
+  "note": "[False]"
+ },
+ "[def]B4.happy_chain_trips_0": {
+  "pass": true,
+  "note": "0"
+ },
+ "[def]B4.happy_dropped_receipts_0": {
+  "pass": true,
+  "note": "(0, [])"
+ },
+ "[def]B4.happy_no_errors_stranded": {
+  "pass": true,
+  "note": "([], [])"
+ },
+ "[def]B4.drain_covers_both_lanes": {
+  "pass": true,
+  "note": "(['CHILDREN_TERMINAL', 'LEG_A_FILL'], ['CHILDREN_TERMINAL', 'LEG_A_FILL'])"
+ },
+ "[def]B4.drain_wait_true_receipt_fails_not_hangs": {
+  "pass": true,
+  "note": "InterpreterStoppedError('drained: removed by drain_pending()')"
+ },
+ "[def]B4.persist_after_drain_has_no_pending": {
+  "pass": true,
+  "note": "0"
+ },
+ "[def]B4.stop_did_not_process_drained": {
+  "pass": true,
+  "note": "(['oco.completing'], ['oco.completing'])"
+ },
+ "[def]B4.restore_start_hook_true": {
+  "pass": true,
+  "note": "[True]"
+ },
+ "[def]B4.replay_each_drained_once": {
+  "pass": true,
+  "note": "(['CHILDREN_TERMINAL'], ['CHILDREN_TERMINAL'])"
+ },
+ "[def]B4.replay_reaches_end": {
+  "pass": true,
+  "note": "['oco.completed']"
+ },
+ "[def]B4.replay_chain_trips_0_dropped_0": {
+  "pass": true,
+  "note": "(0, 0, 0)"
+ },
+ "[def]B5.happy_reaches_end": {
+  "pass": true,
+  "note": "['iceberg.completed']"
+ },
+ "[def]B5.happy_restore_every_step": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]B5.happy_boot_start_hook_false": {
+  "pass": true,
+  "note": "[False]"
+ },
+ "[def]B5.happy_chain_trips_0": {
+  "pass": true,
+  "note": "0"
+ },
+ "[def]B5.happy_dropped_receipts_0": {
+  "pass": true,
+  "note": "(0, [])"
+ },
+ "[def]B5.happy_no_errors_stranded": {
+  "pass": true,
+  "note": "([], [])"
+ },
+ "[def]B5.drain_covers_both_lanes": {
+  "pass": true,
+  "note": "(['CHILDREN_TERMINAL', 'CHILD_FILLED'], ['CHILDREN_TERMINAL', 'CHILD_FILLED'])"
+ },
+ "[def]B5.drain_wait_true_receipt_fails_not_hangs": {
+  "pass": true,
+  "note": "InterpreterStoppedError('drained: removed by drain_pending()')"
+ },
+ "[def]B5.persist_after_drain_has_no_pending": {
+  "pass": true,
+  "note": "0"
+ },
+ "[def]B5.stop_did_not_process_drained": {
+  "pass": true,
+  "note": "(['iceberg.completing'], ['iceberg.completing'])"
+ },
+ "[def]B5.restore_start_hook_true": {
+  "pass": true,
+  "note": "[True]"
+ },
+ "[def]B5.replay_each_drained_once": {
+  "pass": true,
+  "note": "(['CHILDREN_TERMINAL'], ['CHILDREN_TERMINAL'])"
+ },
+ "[def]B5.replay_reaches_end": {
+  "pass": true,
+  "note": "['iceberg.completed']"
+ },
+ "[def]B5.replay_chain_trips_0_dropped_0": {
+  "pass": true,
+  "note": "(0, 0, 0)"
+ },
+ "[def]B1.rollback_restores_draft": {
+  "pass": true,
+  "note": "(['order.lifecycle.draft', 'order.protection.not_required'], 'running', \"RuntimeError('boom:stamp_validated')\")"
+ },
+ "[def]B1.rollback_reported": {
+  "pass": true,
+  "note": "[\"act:stamp_validated:RuntimeError('boom:stamp_validated')\"]"
+ },
+ "[def]B5.always_to_invoked_child_runs": {
+  "pass": true,
+  "note": "(['submit_child'], ['iceberg.working'])"
+ },
+ "[def]B3.always_lands_submitting": {
+  "pass": true,
+  "note": "['leg.submitting']"
+ },
+ "[def]B1.invoke_onError_to_unknown": {
+  "pass": true,
+  "note": "(['order.lifecycle.unknown', 'order.protection.not_required'], [])"
+ },
+ "[def]B1.guard_raise_reported_not_fatal": {
+  "pass": true,
+  "note": "(\"RuntimeError('guard boom')\", [\"guard:RuntimeError('guard boom')\"], 'running')"
+ },
+ "[def]B1.defer_parks_then_replays": {
+  "pass": true,
+  "note": "(True, 1, ['order.lifecycle.submitted', 'order.protection.not_required'])"
+ },
+ "[def]B1.bounded_raise_inbox": {
+  "pass": true,
+  "note": "('QueueOverflowError(\"Interpreter \\'order\\' inbox is full (4/4); event refused. Shed load, slow the prod', 'running', 0)"
+ },
+ "[def]B1.send_priority_overtakes_backlog": {
+  "pass": true,
+  "note": "(1, ['order.lifecycle.validated', 'order.protection.not_required'])"
+ },
+ "[def]B1.sync_parity_end": {
+  "pass": true,
+  "note": "['order.lifecycle.filled', 'order.protection.sl_present']"
+ },
+ "[def]B1.sync_bounded_kw_is_ValueError": {
+  "pass": true,
+  "note": "None"
+ },
+ "[def]B2.sync_parity_end": {
+  "pass": true,
+  "note": "['trade_group.closed']"
+ },
+ "[def]B2.sync_bounded_kw_is_ValueError": {
+  "pass": true,
+  "note": "None"
+ },
+ "[def]B3.sync_parity_end": {
+  "pass": true,
+  "note": "['leg.closed']"
+ },
+ "[def]B3.sync_bounded_kw_is_ValueError": {
+  "pass": true,
+  "note": "None"
+ },
+ "[def]B4.sync_parity_end": {
+  "pass": true,
+  "note": "['oco.completed']"
+ },
+ "[def]B4.sync_bounded_kw_is_ValueError": {
+  "pass": true,
+  "note": "None"
+ },
+ "[def]B5.sync_parity_end": {
+  "pass": true,
+  "note": "['iceberg.completed']"
+ },
+ "[def]B5.sync_bounded_kw_is_ValueError": {
+  "pass": true,
+  "note": "None"
+ }
+}

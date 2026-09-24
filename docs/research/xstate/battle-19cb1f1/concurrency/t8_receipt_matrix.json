@@ -1,0 +1,218 @@
+{
+  "probe": "t8_receipt_matrix",
+  "py": "3.13.7",
+  "claim": "#208 receipts: never ok over illegal/empty, never error over legal",
+  "reps_per_cell": 40,
+  "cells": 12,
+  "tally": {
+    "R1_legal/def/ok=True": 40,
+    "R1_legal/async def/ok=True": 40,
+    "R2_undeclared_lenient/def/ok=True": 40,
+    "R2_undeclared_lenient/async def/ok=True": 40,
+    "R3_undeclared_strict/def/ok=False": 40,
+    "R3_undeclared_strict/async def/ok=False": 40,
+    "R4_action_raises/def/ok=False": 40,
+    "R4_action_raises/async def/ok=False": 40,
+    "R5_action_raises_rollback/def/ok=False": 40,
+    "R5_action_raises_rollback/async def/ok=False": 40,
+    "R6_chain_enters_runaway/def/ok=True": 40,
+    "R6_chain_enters_runaway/async def/ok=True": 40
+  },
+  "samples": {
+    "R1_legal/def": {
+      "case": "R1_legal",
+      "kind": "def",
+      "receipt_type": "Receipt",
+      "error": null,
+      "state_ids": [
+        "r.b"
+      ],
+      "changed": true,
+      "denied": false,
+      "ok": true,
+      "state": [
+        "r.b"
+      ],
+      "expect_ok": true,
+      "empty_configuration": false
+    },
+    "R1_legal/async def": {
+      "case": "R1_legal",
+      "kind": "async def",
+      "receipt_type": "Receipt",
+      "error": null,
+      "state_ids": [
+        "r.b"
+      ],
+      "changed": true,
+      "denied": false,
+      "ok": true,
+      "state": [
+        "r.b"
+      ],
+      "expect_ok": true,
+      "empty_configuration": false
+    },
+    "R2_undeclared_lenient/def": {
+      "case": "R2_undeclared_lenient",
+      "kind": "def",
+      "receipt_type": "Receipt",
+      "error": null,
+      "state_ids": [
+        "r.a"
+      ],
+      "changed": false,
+      "denied": false,
+      "ok": true,
+      "state": [
+        "r.a"
+      ],
+      "expect_ok": true,
+      "empty_configuration": false
+    },
+    "R2_undeclared_lenient/async def": {
+      "case": "R2_undeclared_lenient",
+      "kind": "async def",
+      "receipt_type": "Receipt",
+      "error": null,
+      "state_ids": [
+        "r.a"
+      ],
+      "changed": false,
+      "denied": false,
+      "ok": true,
+      "state": [
+        "r.a"
+      ],
+      "expect_ok": true,
+      "empty_configuration": false
+    },
+    "R3_undeclared_strict/def": {
+      "case": "R3_undeclared_strict",
+      "kind": "def",
+      "raised": "UnknownEventError",
+      "ok": false,
+      "state": [
+        "r.a"
+      ],
+      "expect_ok": false,
+      "empty_configuration": false
+    },
+    "R3_undeclared_strict/async def": {
+      "case": "R3_undeclared_strict",
+      "kind": "async def",
+      "raised": "UnknownEventError",
+      "ok": false,
+      "state": [
+        "r.a"
+      ],
+      "expect_ok": false,
+      "empty_configuration": false
+    },
+    "R4_action_raises/def": {
+      "case": "R4_action_raises",
+      "kind": "def",
+      "receipt_type": "Receipt",
+      "error": "RuntimeError",
+      "state_ids": [
+        "r.boom"
+      ],
+      "changed": true,
+      "denied": false,
+      "ok": false,
+      "state": [
+        "r.boom"
+      ],
+      "expect_ok": false,
+      "empty_configuration": false
+    },
+    "R4_action_raises/async def": {
+      "case": "R4_action_raises",
+      "kind": "async def",
+      "receipt_type": "Receipt",
+      "error": "RuntimeError",
+      "state_ids": [
+        "r.boom"
+      ],
+      "changed": true,
+      "denied": false,
+      "ok": false,
+      "state": [
+        "r.boom"
+      ],
+      "expect_ok": false,
+      "empty_configuration": false
+    },
+    "R5_action_raises_rollback/def": {
+      "case": "R5_action_raises_rollback",
+      "kind": "def",
+      "receipt_type": "Receipt",
+      "error": "RuntimeError",
+      "state_ids": [
+        "r.a"
+      ],
+      "changed": false,
+      "denied": false,
+      "ok": false,
+      "state": [
+        "r.a"
+      ],
+      "expect_ok": false,
+      "empty_configuration": false
+    },
+    "R5_action_raises_rollback/async def": {
+      "case": "R5_action_raises_rollback",
+      "kind": "async def",
+      "receipt_type": "Receipt",
+      "error": "RuntimeError",
+      "state_ids": [
+        "r.a"
+      ],
+      "changed": false,
+      "denied": false,
+      "ok": false,
+      "state": [
+        "r.a"
+      ],
+      "expect_ok": false,
+      "empty_configuration": false
+    },
+    "R6_chain_enters_runaway/def": {
+      "case": "R6_chain_enters_runaway",
+      "kind": "def",
+      "receipt_type": "Receipt",
+      "error": null,
+      "state_ids": [
+        "r.spin"
+      ],
+      "changed": true,
+      "denied": false,
+      "ok": true,
+      "state": [
+        "r.spin"
+      ],
+      "expect_ok": true,
+      "empty_configuration": false
+    },
+    "R6_chain_enters_runaway/async def": {
+      "case": "R6_chain_enters_runaway",
+      "kind": "async def",
+      "receipt_type": "Receipt",
+      "error": null,
+      "state_ids": [
+        "r.spin"
+      ],
+      "changed": true,
+      "denied": false,
+      "ok": true,
+      "state": [
+        "r.spin"
+      ],
+      "expect_ok": true,
+      "empty_configuration": false
+    }
+  },
+  "violations": [],
+  "n_violations": 0,
+  "result": "PASS"
+}

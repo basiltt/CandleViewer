@@ -1,0 +1,36 @@
+{
+  "probe": "q1c_engine_parity_amplification",
+  "py": "3.13.7",
+  "sync": {
+    "engine": "sync",
+    "laps_for_GO": 1000,
+    "laps_per_subsequent_POKE": [
+      1001,
+      1001,
+      1001,
+      1001,
+      1001
+    ],
+    "total_laps": 6005,
+    "wall_s": 0.6,
+    "trip_observed": true
+  },
+  "async": {
+    "engine": "async",
+    "laps_for_GO": 1000,
+    "laps_per_subsequent_POKE": [
+      1001,
+      1001,
+      1001,
+      1001,
+      1001
+    ],
+    "total_laps": 6005,
+    "wall_s": 0.524,
+    "trip_observed": true
+  },
+  "async_per_event_rebuys_full_budget": true,
+  "sync_per_event_rebuys_full_budget": true,
+  "engines_agree": true,
+  "result": "FAIL"
+}

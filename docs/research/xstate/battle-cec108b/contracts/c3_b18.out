@@ -1,0 +1,84 @@
+ERROR:xstate_statemachine.interpreter:💥 Service 'cancel_all_working_orders' (ID: 'cx') failed: cx down
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
+    await produced if inspect.isawaitable(produced) else produced
+    ^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
+    if isinstance(v, BaseException): raise v
+                                     ^^^^^^^
+RuntimeError: cx down
+ERROR:xstate_statemachine.interpreter:💥 Service 'flatten_all_positions' (ID: 'fl') failed: fl down
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
+    await produced if inspect.isawaitable(produced) else produced
+    ^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-cec108b\contracts\charness.py", line 99, in s
+    if isinstance(v, BaseException): raise v
+                                     ^^^^^^^
+RuntimeError: fl down
+ERROR:xstate_statemachine.base_interpreter:🚨 Machine 'kill_switch' entered the error state: UnhandledEventError("Event 'RELEASE' is not handled in any active state ['kill_switch.engaged'] and the machine's onUnhandled policy is 'error'.")
+ERROR:xstate_statemachine.base_interpreter:🚨 Machine 'kill_switch' entered the error state: UnhandledEventError("Event 'RELEASE' is not handled in any active state ['kill_switch.engaged_incomplete'] and the machine's onUnhandled policy is 'error'.")
+C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py:1418: RuntimeWarning: coroutine '_slow' was never awaited
+  event, from_inbox = await self._next_event()
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+C:\Python\Python313\Lib\asyncio\events.py:89: RuntimeWarning: coroutine '_slow' was never awaited
+  self._context.run(self._callback, *self._args)
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py:1418: RuntimeWarning: coroutine '_long' was never awaited
+  event, from_inbox = await self._next_event()
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+ERROR:xstate_statemachine.base_interpreter:🚨 Machine 'kill_switch' entered the error state: UnhandledEventError("Event 'RETRY_FLATTEN' is not handled in any active state ['kill_switch.clear'] and the machine's onUnhandled policy is 'error'.")
+ERROR:xstate_statemachine.base_interpreter:🚨 Machine 'kill_switch' entered the error state: UnhandledEventError("Event 'RELEASE' is not handled in any active state ['kill_switch.clear'] and the machine's onUnhandled policy is 'error'.")
+ERROR:xstate_statemachine.sync_interpreter:🚫 Service 'cancel_all_working_orders' is async and not supported by SyncInterpreter.
+ERROR:xstate_statemachine.base_interpreter:💥 Transition on 'kill_switch.engaging' failed; rolling back to the pre-transition configuration.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 2884, in _execute_transition
+    await self._enter_states(path_to_enter, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3448, in _enter_states
+    self._schedule_state_tasks(state)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 4655, in _schedule_state_tasks
+    self._schedule_state_invokes(state)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 4707, in _schedule_state_invokes
+    self._invoke_service(
+    ~~~~~~~~~~~~~~~~~~~~^
+        invocation, service_callable, owner_id=state.id
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\sync_interpreter.py", line 1549, in _invoke_service
+    raise NotSupportedError(
+        f"Service '{invocation.src}' is async and not supported."
+    )
+xstate_statemachine.exceptions.NotSupportedError: Service 'cancel_all_working_orders' is async and not supported.
+engage_only = {"ids": ["kill_switch.clear"], "ctx": {"scope": "global", "engaged_by": null, "engaged_at_us": null, "reason": null, "cancel_working": false, "flatten": false, "accounts_flat": 0, "accounts_total": 0}, "acts": ["record_engagement", "audit_kill_switch", "block_new_orders_immediately", "cancel_entry_and_poll_drains", "broadcast_kill_switch", "audit_kill_switch_released"], "status": "running", "deferred": 0, "transitions": ["___xstate_statemachine_init___->['kill_switch.clear']", "ENGAGE->['kill_switch.engaging']", "->['kill_switch.engaged']", "RELEASE->['kill_switch.clear']"], "receipts": [{"changed": true, "error": null, "deferred": false}, {"changed": true, "error": null, "deferred": false}]
+
+full_flat = {"ids": ["kill_switch.clear"], "ctx": {"scope": "global", "engaged_by": null, "engaged_at_us": null, "reason": null, "cancel_working": false, "flatten": false, "accounts_flat": 0, "accounts_total": 0}, "acts": ["record_engagement", "audit_kill_switch", "block_new_orders_immediately", "cancel_entry_and_poll_drains", "broadcast_kill_switch", "audit_kill_switch_released"], "status": "running", "deferred": 0, "transitions": ["___xstate_statemachine_init___->['kill_switch.clear']", "ENGAGE->['kill_switch.engaging']", "->['kill_switch.cancelling']", "done.invoke.cx->['kill_switch.flattening']", "done.invoke.fl->['kill_switch.engaged']", "RELEASE->['kill_switch.clear']"], "receipts": [{"changed": t
+
+incomplete = {"ids": ["kill_switch.engaged_incomplete"], "ctx": {"scope": "global", "engaged_by": null, "engaged_at_us": null, "reason": null, "cancel_working": false, "flatten": false, "accounts_flat": 0, "accounts_total": 0}, "acts": ["record_engagement", "audit_kill_switch", "block_new_orders_immediately", "cancel_entry_and_poll_drains", "broadcast_kill_switch", "page_owner", "emit_incomplete_metric"], "status": "running", "deferred": 0, "transitions": ["___xstate_statemachine_init___->['kill_switch.clear']", "ENGAGE->['kill_switch.engaging']", "->['kill_switch.cancelling']", "done.invoke.cx->['kill_switch.flattening']", "done.invoke.fl->['kill_switch.engaged_incomplete']"], "receipts": [{"changed": t
+
+incomplete_retry = {"ids": ["kill_switch.engaged_incomplete"], "ctx": {"scope": "global", "engaged_by": null, "engaged_at_us": null, "reason": null, "cancel_working": false, "flatten": false, "accounts_flat": 0, "accounts_total": 0}, "acts": ["record_engagement", "audit_kill_switch", "block_new_orders_immediately", "cancel_entry_and_poll_drains", "broadcast_kill_switch", "page_owner", "emit_incomplete_metric", "page_owner", "emit_incomplete_metric"], "status": "running", "deferred": 0, "transitions": ["___xstate_statemachine_init___->['kill_switch.clear']", "ENGAGE->['kill_switch.engaging']", "->['kill_switch.cancelling']", "done.invoke.cx->['kill_switch.flattening']", "done.invoke.fl->['kill_switch.engaged_in
+
+cancel_error = {"ids": ["kill_switch.engaged"], "ctx": {"scope": "global", "engaged_by": null, "engaged_at_us": null, "reason": null, "cancel_working": false, "flatten": false, "accounts_flat": 0, "accounts_total": 0}, "acts": ["record_engagement", "audit_kill_switch", "block_new_orders_immediately", "cancel_entry_and_poll_drains", "broadcast_kill_switch", "raise_critical_alert"], "status": "running", "deferred": 0, "transitions": ["___xstate_statemachine_init___->['kill_switch.clear']", "ENGAGE->['kill_switch.engaging']", "->['kill_switch.cancelling']", "error.platform.cx->['kill_switch.engaged']"], "receipts": [{"changed": true, "error": null, "deferred": false}]}
+
+flatten_error = {"ids": ["kill_switch.engaged_incomplete"], "ctx": {"scope": "global", "engaged_by": null, "engaged_at_us": null, "reason": null, "cancel_working": false, "flatten": false, "accounts_flat": 0, "accounts_total": 0}, "acts": ["record_engagement", "audit_kill_switch", "block_new_orders_immediately", "cancel_entry_and_poll_drains", "broadcast_kill_switch", "raise_critical_alert", "page_owner", "emit_incomplete_metric"], "status": "running", "deferred": 0, "transitions": ["___xstate_statemachine_init___->['kill_switch.clear']", "ENGAGE->['kill_switch.engaging']", "->['kill_switch.cancelling']", "done.invoke.cx->['kill_switch.flattening']", "error.platform.fl->['kill_switch.engaged_incomplete']"],
+
+release_denied = {"ids": ["kill_switch.engaged"], "ctx": {"scope": "global", "engaged_by": null, "engaged_at_us": null, "reason": null, "cancel_working": false, "flatten": false, "accounts_flat": 0, "accounts_total": 0}, "acts": ["record_engagement", "audit_kill_switch", "block_new_orders_immediately", "cancel_entry_and_poll_drains", "broadcast_kill_switch"], "status": "error", "deferred": 0, "transitions": ["___xstate_statemachine_init___->['kill_switch.clear']", "ENGAGE->['kill_switch.engaging']", "->['kill_switch.engaged']"], "receipts": [{"changed": true, "error": null, "deferred": false}, {"changed": false, "error": null, "deferred": false}]}
+
+release_incomplete_denied = {"ids": ["kill_switch.engaged_incomplete"], "ctx": {"scope": "global", "engaged_by": null, "engaged_at_us": null, "reason": null, "cancel_working": false, "flatten": false, "accounts_flat": 0, "accounts_total": 0}, "acts": ["record_engagement", "audit_kill_switch", "block_new_orders_immediately", "cancel_entry_and_poll_drains", "broadcast_kill_switch", "page_owner", "emit_incomplete_metric"], "status": "error", "deferred": 0, "transitions": ["___xstate_statemachine_init___->['kill_switch.clear']", "ENGAGE->['kill_switch.engaging']", "->['kill_switch.cancelling']", "done.invoke.cx->['kill_switch.flattening']", "done.invoke.fl->['kill_switch.engaged_incomplete']"], "receipts": [{"changed": tru
+
+inv_b18b = {"blocked_at_receipt": true, "ids_at_receipt": ["kill_switch.cancelling"], "trace": ["record_engagement", "audit_kill_switch", "block_new_orders_immediately", "cancel_entry_and_poll_drains", "broadcast_kill_switch"], "final_ids": ["kill_switch.engaged"]}
+
+priority = {"busy_ids": ["kill_switch.engaged"], "queue_depth": 20, "priority_latency_s": 0.0013, "changed": true, "error": null, "err": null, "ids_after": ["kill_switch.clear"], "status": "error", "final_ids": ["kill_switch.clear"], "unhandled": [["RETRY_FLATTEN", "errored"]], "dropped": [], "trace_tail": ["record_engagement", "audit_kill_switch", "block_new_orders_immediately", "cancel_entry_and_poll_drains", "broadcast_kill_switch", "audit_kill_switch_released"]}
+
+unhandled_error = {"changed": false, "error": null, "err": null, "status": "error", "ids": ["kill_switch.clear"], "unhandled": [["RELEASE", "errored"]]}
+
+snap_engage_only = {"midstep_errors": [], "diffs": {}, "plain_acts": ["record_engagement", "audit_kill_switch", "block_new_orders_immediately", "cancel_entry_and_poll_drains", "broadcast_kill_switch", "audit_kill_switch_released"], "snap_acts": ["record_engagement", "audit_kill_switch", "block_new_orders_immediately", "cancel_entry_and_poll_drains", "broadcast_kill_switch", "audit_kill_switch_released"], "plain_ids": ["kill_switch.clear"], "ids": ["kill_switch.clear"]}
+
+snap_full = {"midstep_errors": [], "diffs": {}, "plain_acts": ["record_engagement", "audit_kill_switch", "block_new_orders_immediately", "cancel_entry_and_poll_drains", "broadcast_kill_switch", "audit_kill_switch_released"], "snap_acts": ["record_engagement", "audit_kill_switch", "block_new_orders_immediately", "cancel_entry_and_poll_drains", "broadcast_kill_switch", "audit_kill_switch_released"], "plain_ids": ["kill_switch.clear"], "ids": ["kill_switch.clear"]}
+
+snap_incomplete = {"midstep_errors": [], "diffs": {}, "plain_acts": ["record_engagement", "audit_kill_switch", "block_new_orders_immediately", "cancel_entry_and_poll_drains", "broadcast_kill_switch", "page_owner", "emit_incomplete_metric", "page_owner", "emit_incomplete_metric"], "snap_acts": ["record_engagement", "audit_kill_switch", "block_new_orders_immediately", "cancel_entry_and_poll_drains", "broadcast_kill_switch", "page_owner", "emit_incomplete_metric", "page_owner", "emit_incomplete_metric"], "plain_ids": ["kill_switch.engaged_incomplete"], "ids": ["kill_switch.engaged_incomplete"]}
+
+sync_parity_full = {"error": "NotSupportedError: Service 'cancel_all_working_orders' is async and not supported."}
+

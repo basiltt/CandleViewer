@@ -1,0 +1,230 @@
+{
+ "[def]D1/B6 rollback: configuration returns to armed": {
+  "pass": true,
+  "note": {
+   "states": [
+    "twap.armed"
+   ],
+   "svc_calls": [],
+   "trace": [
+    "precompute_all_slice_deadlines",
+    "register_deadlines_with_scheduler",
+    "compute_slice_qty_with_participation_cap",
+    "apply_catch_up",
+    "bump_slices_done"
+   ],
+   "slices_done": 0
+  }
+ },
+ "[def]D1/B6 rollback: onDone action record_child never ran": {
+  "pass": true,
+  "note": {
+   "states": [
+    "twap.armed"
+   ],
+   "svc_calls": [],
+   "trace": [
+    "precompute_all_slice_deadlines",
+    "register_deadlines_with_scheduler",
+    "compute_slice_qty_with_participation_cap",
+    "apply_catch_up",
+    "bump_slices_done"
+   ],
+   "slices_done": 0
+  }
+ },
+ "[def]D1/B6 rollback: context not half-committed": {
+  "pass": true,
+  "note": {
+   "states": [
+    "twap.armed"
+   ],
+   "svc_calls": [],
+   "trace": [
+    "precompute_all_slice_deadlines",
+    "register_deadlines_with_scheduler",
+    "compute_slice_qty_with_participation_cap",
+    "apply_catch_up",
+    "bump_slices_done"
+   ],
+   "slices_done": 0
+  }
+ },
+ "[def]D1/B6 rollback: service never submitted": {
+  "pass": true,
+  "note": {
+   "states": [
+    "twap.armed"
+   ],
+   "svc_calls": [],
+   "trace": [
+    "precompute_all_slice_deadlines",
+    "register_deadlines_with_scheduler",
+    "compute_slice_qty_with_participation_cap",
+    "apply_catch_up",
+    "bump_slices_done"
+   ],
+   "slices_done": 0
+  }
+ },
+ "[def]D2/B6 always roll-forward: back in armed": {
+  "pass": true,
+  "note": {
+   "states": [
+    "twap.armed"
+   ],
+   "svc_calls": []
+  }
+ },
+ "[def]D2/B6 always roll-forward: submit_child NEVER called": {
+  "pass": true,
+  "note": {
+   "states": [
+    "twap.armed"
+   ],
+   "svc_calls": []
+  }
+ },
+ "[def]D2/B6 always roll-forward [SYNC]: submit_child NEVER called": {
+  "pass": true,
+  "note": {
+   "states": [
+    "twap.armed"
+   ],
+   "svc_calls": []
+  }
+ },
+ "[def]D3/B18[onUnhandled=error] all 40 external priority sends accepted": {
+  "pass": true,
+  "note": {
+   "onUnhandled": "error",
+   "states": [
+    "kill_switch.cancelling"
+   ],
+   "status": "error",
+   "sent_ok": 40,
+   "n_dropped": 21,
+   "n_charged": 0,
+   "dispositions": [
+    "errored"
+   ],
+   "svc_calls": [
+    "cancel_all_working_orders"
+   ],
+   "sec": 1.266
+  }
+ },
+ "[def]D3/B18[onUnhandled=error] 0 shed as chain_budget (#192 provenance)": {
+  "pass": true,
+  "note": {
+   "onUnhandled": "error",
+   "states": [
+    "kill_switch.cancelling"
+   ],
+   "status": "error",
+   "sent_ok": 40,
+   "n_dropped": 21,
+   "n_charged": 0,
+   "dispositions": [
+    "errored"
+   ],
+   "svc_calls": [
+    "cancel_all_working_orders"
+   ],
+   "sec": 1.266
+  }
+ },
+ "[def]D3/B18[onUnhandled=defer] all 40 external priority sends accepted": {
+  "pass": true,
+  "note": {
+   "onUnhandled": "defer",
+   "states": [
+    "kill_switch.clear"
+   ],
+   "status": "running",
+   "sent_ok": 40,
+   "n_dropped": 0,
+   "n_charged": 0,
+   "dispositions": [
+    "deferred"
+   ],
+   "svc_calls": [
+    "cancel_all_working_orders",
+    "flatten_all_positions"
+   ],
+   "sec": 1.279
+  }
+ },
+ "[def]D3/B18[onUnhandled=defer] 0 shed as chain_budget (#192 provenance)": {
+  "pass": true,
+  "note": {
+   "onUnhandled": "defer",
+   "states": [
+    "kill_switch.clear"
+   ],
+   "status": "running",
+   "sent_ok": 40,
+   "n_dropped": 0,
+   "n_charged": 0,
+   "dispositions": [
+    "deferred"
+   ],
+   "svc_calls": [
+    "cancel_all_working_orders",
+    "flatten_all_positions"
+   ],
+   "sec": 1.279
+  }
+ },
+ "[def]D3/B18 under `defer`: 0 dropped and chain completes": {
+  "pass": true,
+  "note": {
+   "onUnhandled": "defer",
+   "states": [
+    "kill_switch.clear"
+   ],
+   "status": "running",
+   "sent_ok": 40,
+   "n_dropped": 0,
+   "n_charged": 0,
+   "dispositions": [
+    "deferred"
+   ],
+   "svc_calls": [
+    "cancel_all_working_orders",
+    "flatten_all_positions"
+   ],
+   "sec": 1.279
+  }
+ },
+ "[def]D3/B18 under catalogued `error`: halt is policy, not the lane": {
+  "pass": true,
+  "note": {
+   "onUnhandled": "error",
+   "states": [
+    "kill_switch.cancelling"
+   ],
+   "status": "error",
+   "sent_ok": 40,
+   "n_dropped": 21,
+   "n_charged": 0,
+   "dispositions": [
+    "errored"
+   ],
+   "svc_calls": [
+    "cancel_all_working_orders"
+   ],
+   "sec": 1.266
+  }
+ },
+ "[def]D3/B18 kill preempts a 30-deep backlog": {
+  "pass": true,
+  "note": {
+   "states": [
+    "kill_switch.engaged"
+   ],
+   "latency_s": 0.0014,
+   "status": "running"
+  }
+ }
+}

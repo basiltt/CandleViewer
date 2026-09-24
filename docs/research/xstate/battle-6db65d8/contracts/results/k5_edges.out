@@ -1,0 +1,137 @@
+{
+ "b18_error_terminal": {
+  "status": "error",
+  "ids": [
+   "kill_switch.engaged"
+  ],
+  "denied": true,
+  "last_error": "NoneType",
+  "error_attr": "UnhandledEventError",
+  "next_event": {
+   "changed": false,
+   "error": "InterpreterStoppedError"
+  },
+  "snapshot": {
+   "persisted": true,
+   "status": "error"
+  }
+ },
+ "fail_policy_b17": {
+  "receipt": {
+   "changed": true,
+   "error": "RuntimeError"
+  },
+  "status": "stopped",
+  "ids": [],
+  "error": "TransitionFailedError",
+  "snapshot": {
+   "persisted": true,
+   "status": "stopped"
+  }
+ },
+ "b16_strict": "UnknownEventError: Event 'NOT_A_REAL_EVENT' is not declared by machine 'session'. Known events: ABSOLUTE_DEADLINE, ELEVATION_DEADLINE, IDLE",
+ "b16_elevate_after_revoke": {
+  "ids": [
+   "session.auth.revoked",
+   "session.elevation.elevated"
+  ],
+  "receipt": {
+   "changed": true,
+   "deferred": false
+  },
+  "acts": [
+   "mark_mfa_satisfied",
+   "stamp_idle_deadline",
+   "audit_login",
+   "set_revoke_admin",
+   "audit_session_revoked",
+   "broadcast_revocation",
+   "stamp_elevated_until",
+   "audit_step_up",
+   "schedule_elevation_deadline"
+  ],
+  "deferred_count": 0
+ },
+ "sync": {
+  "B16": {
+   "ids": [
+    "session.auth.revoked",
+    "session.elevation.elevated"
+   ],
+   "ctx": {
+    "session_id": null,
+    "user_id": null,
+    "expires_at_us": 0,
+    "idle_expires_at_us": 0,
+    "refresh_expires_at_us": 0,
+    "elevated_until_us": null,
+    "mfa_satisfied": false,
+    "revoke_reason": null
+   },
+   "acts": [
+    "mark_mfa_satisfied",
+    "stamp_idle_deadline",
+    "audit_login",
+    "stamp_elevated_until",
+    "audit_step_up",
+    "schedule_elevation_deadline",
+    "set_revoke_logout",
+    "audit_session_revoked",
+    "broadcast_revocation"
+   ],
+   "status": "running"
+  },
+  "B17": {
+   "ids": [
+    "live_gate.enabled"
+   ],
+   "ctx": {
+    "evidence": {
+     "pentest_passed": false,
+     "key_audit_passed": false,
+     "env_separation_verified": false,
+     "runbooks_signed": false
+    },
+    "enabled_by": null,
+    "enabled_at_us": null,
+    "disable_reason": null,
+    "eligible_user_ids": []
+   },
+   "acts": [
+    "record_evidence",
+    "record_enable",
+    "audit_live_enabled",
+    "broadcast_live_enabled",
+    "enable_live_visual_language"
+   ],
+   "status": "running"
+  },
+  "B20": {
+   "ids": [
+    "risk_lockout.clear"
+   ],
+   "ctx": {
+    "account_id": null,
+    "scope": "account",
+    "realised_pnl_today": "0",
+    "max_daily_loss": "0",
+    "breach_reason": null,
+    "until_mode": "next_utc_day",
+    "until_us": null,
+    "cleared_by": null
+   },
+   "acts": [
+    "set_breach_manual",
+    "halt_new_orders",
+    "compute_until",
+    "schedule_expiry_deadline",
+    "raise_lockout_alert",
+    "audit_lockout",
+    "broadcast_lockout",
+    "resume_new_orders",
+    "audit_override"
+   ],
+   "status": "running"
+  }
+ }
+}

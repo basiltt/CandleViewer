@@ -1,0 +1,55 @@
+{
+ "states": [
+  "iceberg.cooling_down"
+ ],
+ "status": "running",
+ "context": {
+  "algo_id": null,
+  "total_qty": "0",
+  "remaining_qty": "0",
+  "slices_done": 2,
+  "max_slices": 450,
+  "active_child_id": null,
+  "post_only_rejects": 0,
+  "next_refill_at_us": null,
+  "failure_count": 0
+ },
+ "deferred": 0,
+ "error": null,
+ "actions": [
+  "compute_slice_qty",
+  "bump_slices_done",
+  "bump_post_only_rejects",
+  "compute_slice_qty",
+  "bump_slices_done",
+  "bump_post_only_rejects",
+  "schedule_cooldown_deadline",
+  "reset_post_only_rejects"
+ ],
+ "transitions": [
+  "->['iceberg.submitting_slice']",
+  "___xstate_statemachine_init___->['iceberg.submitting_slice']",
+  "error.platform.slice->['iceberg.repricing']",
+  "->['iceberg.submitting_slice']",
+  "error.platform.slice->['iceberg.repricing']",
+  "->['iceberg.cooling_down']"
+ ],
+ "dropped": [],
+ "unhandled": [],
+ "action_errors": [],
+ "guard_errors": [],
+ "service_errors": [
+  "RuntimeError('post-only')",
+  "RuntimeError('post-only')"
+ ],
+ "svc_calls": [
+  "submit_child",
+  "submit_child"
+ ],
+ "stranded": [],
+ "last_error": null,
+ "dormant": false,
+ "sends": [],
+ "snapshot_ok": true,
+ "notes": []
+}

@@ -1,0 +1,17 @@
+{
+  "probe": "h2_reader_race_gil",
+  "py": "3.13.7",
+  "build": "3.13.7 (tags/v3.13.7:bcee1c3, Aug 14 2025, 14:15:11) [MSC v.1944 64 bit (AMD64)]",
+  "Py_GIL_DISABLED": 0,
+  "gil_enabled_at_runtime": true,
+  "v4_racy_readers": {
+    "readers": 8,
+    "reads_total": 1551908,
+    "reader_exceptions": 0,
+    "reader_exception_sample": [],
+    "transitions_driven": 3288,
+    "final_states": [
+      "ft.a"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+ "v3_unflagged/plain": {
+  "state": [
+   "t.a"
+  ],
+  "last_error": "UnknownEventError",
+  "MINTED": false
+ },
+ "v2_same_record/plain": {
+  "state": [
+   "t.margin_called"
+  ],
+  "last_error": null,
+  "MINTED": true
+ },
+ "v3_unflagged/async": {
+  "state": [
+   "t.a"
+  ],
+  "last_error": "UnknownEventError",
+  "MINTED": false
+ },
+ "v2_same_record/async": {
+  "state": [
+   "t.margin_called"
+  ],
+  "last_error": null,
+  "MINTED": true
+ },
+ "REPRODUCED": true,
+ "note": "the identical record is refused at v3 and trusted at v2; the attacker chooses the version field"
+}

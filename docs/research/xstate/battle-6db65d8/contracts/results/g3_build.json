@@ -1,0 +1,137 @@
+{
+ "B11": {
+  "id": "recording",
+  "policy": {
+   "actionErrorPolicy": "rollback",
+   "onUnhandled": "defer",
+   "guardErrorPolicy": "raise",
+   "strictTargets": true,
+   "strict": true,
+   "spawnBlockingTimeout": 5000
+  },
+  "no_logic": "ImplementationMissingError: Action 'add_reason' is defined in the machine but no implementation was found in the provided modules or providers.",
+  "empty_strict_logic": "OK",
+  "stub_logic": "OK",
+  "machine_attrs": {
+   "action_error_policy": "rollback",
+   "on_unhandled": "defer",
+   "guard_error_policy": "raise",
+   "strict_targets": true,
+   "strict": true
+  },
+  "policy_honoured": {
+   "onUnhandled": "defer",
+   "actionErrorPolicy": "rollback",
+   "guardErrorPolicy": "raise",
+   "spawnBlockingTimeout": "ABSENT"
+  }
+ },
+ "B12": {
+  "id": "replay",
+  "policy": {
+   "actionErrorPolicy": "rollback",
+   "onUnhandled": "defer",
+   "guardErrorPolicy": "raise",
+   "strictTargets": true,
+   "strict": true,
+   "spawnBlockingTimeout": 5000
+  },
+  "no_logic": "ImplementationMissingError: Action 'defer' is defined in the machine but no implementation was found in the provided modules or providers.",
+  "empty_strict_logic": "OK",
+  "stub_logic": "OK",
+  "machine_attrs": {
+   "action_error_policy": "rollback",
+   "on_unhandled": "defer",
+   "guard_error_policy": "raise",
+   "strict_targets": true,
+   "strict": true
+  },
+  "policy_honoured": {
+   "onUnhandled": "defer",
+   "actionErrorPolicy": "rollback",
+   "guardErrorPolicy": "raise",
+   "spawnBlockingTimeout": "ABSENT"
+  }
+ },
+ "B13": {
+  "id": "ws_conn",
+  "policy": {
+   "actionErrorPolicy": "rollback",
+   "onUnhandled": "error",
+   "guardErrorPolicy": "raise",
+   "strictTargets": true,
+   "strict": true,
+   "spawnBlockingTimeout": 5000
+  },
+  "no_logic": "ImplementationMissingError: Action 'schedule_backoff_deadline' is defined in the machine but no implementation was found in the provided modules or providers.",
+  "empty_strict_logic": "OK",
+  "stub_logic": "OK",
+  "machine_attrs": {
+   "action_error_policy": "rollback",
+   "on_unhandled": "error",
+   "guard_error_policy": "raise",
+   "strict_targets": true,
+   "strict": true
+  },
+  "policy_honoured": {
+   "onUnhandled": "error",
+   "actionErrorPolicy": "rollback",
+   "guardErrorPolicy": "raise",
+   "spawnBlockingTimeout": "ABSENT"
+  }
+ },
+ "B14": {
+  "id": "book",
+  "policy": {
+   "actionErrorPolicy": "rollback",
+   "onUnhandled": "error",
+   "guardErrorPolicy": "raise",
+   "strictTargets": true,
+   "strict": true,
+   "spawnBlockingTimeout": 5000
+  },
+  "no_logic": "ImplementationMissingError: Action 'replay_buffered_deltas_after_seq' is defined in the machine but no implementation was found in the provided modules or providers.",
+  "empty_strict_logic": "OK",
+  "stub_logic": "OK",
+  "machine_attrs": {
+   "action_error_policy": "rollback",
+   "on_unhandled": "error",
+   "guard_error_policy": "raise",
+   "strict_targets": true,
+   "strict": true
+  },
+  "policy_honoured": {
+   "onUnhandled": "error",
+   "actionErrorPolicy": "rollback",
+   "guardErrorPolicy": "raise",
+   "spawnBlockingTimeout": "ABSENT"
+  }
+ },
+ "B15": {
+  "id": "paper_account",
+  "policy": {
+   "actionErrorPolicy": "rollback",
+   "onUnhandled": "defer",
+   "guardErrorPolicy": "raise",
+   "strictTargets": true,
+   "strict": true,
+   "spawnBlockingTimeout": 5000
+  },
+  "no_logic": "ImplementationMissingError: Action 'apply_liquidation_haircut' is defined in the machine but no implementation was found in the provided modules or providers.",
+  "empty_strict_logic": "OK",
+  "stub_logic": "OK",
+  "machine_attrs": {
+   "action_error_policy": "rollback",
+   "on_unhandled": "defer",
+   "guard_error_policy": "raise",
+   "strict_targets": true,
+   "strict": true
+  },
+  "policy_honoured": {
+   "onUnhandled": "defer",
+   "actionErrorPolicy": "rollback",
+   "guardErrorPolicy": "raise",
+   "spawnBlockingTimeout": "ABSENT"
+  }
+ }
+}

@@ -1,0 +1,34 @@
+{
+ "[async]/218/B6 200-beat raise(delay=) heartbeat holds <=1 handle": {
+  "pass": true,
+  "note": "{\"peak_handles\": 1, \"beats\": 200, \"last_error\": \"None\", \"chain_trips\": 0}"
+ },
+ "[async]/218/B10 202-beat raise(delay=) heartbeat holds <=1 handle": {
+  "pass": true,
+  "note": "{\"peak_handles\": 1, \"beats\": 202, \"last_error\": \"None\", \"chain_trips\": 0}"
+ },
+ "[async]/219/B10 action awaiting own send(wait=True) -> ReentrantWaitError": {
+  "pass": true,
+  "note": "{\"r\": \"ReentrantWaitError\"}"
+ },
+ "[async]/219/catalogue audit: no action awaits its own send(wait=True)": {
+  "pass": true,
+  "note": "[] | stubs are pure; no contract action is specified as awaiting a receipt"
+ },
+ "[async]/221/B6 re-persist without start() keeps the armed pacer": {
+  "pass": true,
+  "note": "{\"orig\": [{\"kind\": \"event\", \"type\": \"SLICE_DUE\", \"payload\": {}, \"remaining_ms\": 4000.0, \"send_id\": \"pacer\"}], \"repersisted\": [{\"kind\": \"event\", \"type\": \"SLICE_DUE\", \"payload\": {}, \"remaining_ms\": 4000.0, \"send_id\": \"pacer\"}]}"
+ },
+ "[async]/222/B10 chain trip is sticky across a benign event": {
+  "pass": true,
+  "note": "{\"trips\": 1, \"latch\": \"RunawayChainError(\\\"Machine 'alert' exceeded 4 chained self-g\", \"last_error_now\": \"None\", \"hook_fired\": 1}"
+ },
+ "[async]/222/B10 on_chain_budget_exceeded fired once per trip": {
+  "pass": true,
+  "note": "{\"hook\": [[\"SPIN\", \"RunawayChainError(\\\"Machine 'alert' exceeded 4 chained self-generated events in o\"]], \"trips\": 1}"
+ },
+ "[async]/222/B10 clear_chain_error() clears the latch, count stays": {
+  "pass": true,
+  "note": "{\"latch\": \"None\", \"trips\": 1}"
+ }
+}

@@ -1,0 +1,97 @@
+{
+  "repro_async": {
+    "receipt": {
+      "changed": true,
+      "error": null,
+      "send_wall": 0.0
+    },
+    "svc_at_t": 1324,
+    "svc_at_2t": 2623,
+    "acts": 2622,
+    "ids": [
+      "m.a"
+    ],
+    "status": "running",
+    "engine": "async",
+    "last_error": "RuntimeError"
+  },
+  "repro_sync": {
+    "error": "NotSupportedError: Service 'svc' is async and not supported.",
+    "svc": 0,
+    "acts": 0,
+    "engine": "sync"
+  },
+  "abl_policy_fail": {
+    "receipt": {
+      "changed": true,
+      "error": null,
+      "send_wall": 0.0
+    },
+    "svc_at_t": 1,
+    "svc_at_2t": 1,
+    "acts": 1,
+    "ids": [],
+    "status": "stopped",
+    "engine": "async",
+    "last_error": "RuntimeError"
+  },
+  "abl_policy_continue": {
+    "receipt": {
+      "changed": true,
+      "error": null,
+      "send_wall": 0.0
+    },
+    "svc_at_t": 1,
+    "svc_at_2t": 1,
+    "acts": 1,
+    "ids": [
+      "m.c"
+    ],
+    "status": "running",
+    "engine": "async",
+    "last_error": "RuntimeError"
+  },
+  "abl_unguarded_ondone": {
+    "receipt": {
+      "changed": true,
+      "error": null,
+      "send_wall": 0.0
+    },
+    "svc_at_t": 1269,
+    "svc_at_2t": 2436,
+    "acts": 2435,
+    "ids": [
+      "m.a"
+    ],
+    "status": "running",
+    "engine": "async",
+    "last_error": "RuntimeError"
+  },
+  "abl_no_entry_raise": {
+    "receipt": {
+      "changed": true,
+      "error": null,
+      "send_wall": 0.0
+    },
+    "svc_at_t": 1,
+    "svc_at_2t": 1,
+    "acts": 1,
+    "ids": [
+      "m.c"
+    ],
+    "status": "running",
+    "engine": "async",
+    "last_error": null
+  },
+  "recovery_external_event": {
+    "svc_before_ext": 664,
+    "ext": {
+      "exc": "UnknownEventError"
+    },
+    "svc_after_ext": 633,
+    "status": "running",
+    "ids": [
+      "m.a"
+    ]
+  }
+}

@@ -1,0 +1,288 @@
+[gate] python              : 3.13.7
+[gate] xstate-statemachine : 0.9.1 (reported; NOT the identity)
+[gate] commit              : 801eacdeef5bda2ba24b75f537ae04cc3527747e
+[gate] build               : commit 801eacd -- NOT a recorded baseline (reports __version__ 0.9.1); triage every delta in writing
+[gate] root                : C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate
+
+[gate] --- verify (PRIMARY: mandated configuration) ---
+
+[gate] --- verifyM (PRIMARY: main@5327ba6 verification set) ---
+
+[gate] --- verifyM2 (PRIMARY: main@3c527b0 verification set) ---
+
+[gate] --- verifyM3 (PRIMARY: main@cec108b verification set, round 6) ---
+
+[gate] --- verifyM4 (PRIMARY: main@221ce7c verification set, round 7) ---
+
+[gate] --- verifyM5 (PRIMARY: main@6db65d8 verification set, round 8) ---
+
+[gate] --- verifyM6 (PRIMARY: main@f28719c verification set, round 9) ---
+
+[gate] --- verifyM7 (PRIMARY: main@19cb1f1 verification set, round 10) ---
+
+[gate] --- verifyM8 (PRIMARY: main@c78ce99 verification set, round 11) ---
+
+[gate] --- verifyM9 (PRIMARY: main@de2da4e verification set, round 12) ---
+
+[gate] --- OUR scripts retired or rewritten (superseded oracles) ---
+  RETIRED (round 11)   issues/verify-main-19cb1f1/_RETIRED_206_delayed_selfsend_charged.py
+                       SUPERSEDED-BY-#212. Asserts that a re-armed delayed self-send is charged per lap; #212 deliberately reverses that rule -- a raise(delay=) self-send is a TIMER. Excluded from all counts.
+  REWRITE (round 12)   issues/post-c78ce99/new/repro/R11-09_chain_trip_erased_by_next_event.py
+                       SUPERSEDED-BY-#222. Asserts last_error still names RunawayChainError after one benign event; it still reports REPRODUCED: True on all three lanes, and that is now BY DESIGN -- #222 documents last_error as the per-step read it always was and moves stickiness to chain_trips / last_chain_error / on_chain_budget_exceeded. Rewrite against the LATCH; do not count the current FAIL.
+  REWRITE (round 12)   issues/post-c78ce99/new/repro/R11-07_nested_config_typos_silent.py
+                       STALE REPRO, FIX CONFIRMED (#220). Builds {'states': {'a': {'entyr': ..., 'onn': ...}}} expecting SILENCE; de2da4e raises InvalidConfigError naming the path. It exits non-zero PRECISELY BECAUSE THE DEFECT IS GONE. Rewrite as a positive pin.
+
+[gate] --- repros (SECONDARY: library defaults, informational) ---
+
+[gate] --- probes ---
+
+[gate] benchmarks skipped (pass --with-bench to include)
+
+ID        KIND    STATUS    CHECK                                              DETAIL
+---------------------------------------------------------------------------------------------------------------------
+LC-01     verify  FAIL      action raise commits transition                    defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+LC-02     verify  PASS      always self target deadlock                        defect NOT reproduced -- fixed
+LC-03     verify  PASS      unhandled events discarded                         defect NOT reproduced -- fixed
+LC-05     verify  PASS      raise not macrostep                                defect NOT reproduced -- fixed
+LC-06     verify  PASS      overforgiving target resolution                    defect NOT reproduced -- fixed
+LC-07     verify  PASS      relative dot target silent noop                    defect NOT reproduced -- fixed
+LC-08     verify  PASS      unknown target unvalidated                         defect NOT reproduced -- fixed
+LC-09     verify  PASS      guard exception swallowed                          defect NOT reproduced -- fixed
+LC-12     verify  FAIL      spawn blocking async engine                        defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+LC-16     verify  PASS      sendto invoke id                                   defect NOT reproduced -- fixed
+LC-19     verify  PASS      restore does not restart invokes                   defect NOT reproduced -- fixed
+LC-21     verify  PASS      no snapshot schema version                         defect NOT reproduced -- fixed
+LC-22     verify  PASS      from_snapshot_context_merge                        defect NOT reproduced -- fixed
+LC-24     verify  PASS      pending_queue_inbox_durability                     defect NOT reproduced -- fixed
+LC-26     verify  FAIL      after_timer_priority_lane                          defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+LC-27     verify  PASS      clock_injection_simulated                          defect NOT reproduced -- fixed
+LC-28     verify  PASS      actor poll two tasks                               defect NOT reproduced -- fixed
+LC-29     verify  PASS      invoke input static ignored                        defect NOT reproduced -- fixed
+LC-32     verify  PASS      terminal machines not reaped                       defect NOT reproduced -- fixed
+LC-34     verify  PASS      no strict mode                                     defect NOT reproduced -- fixed
+LC-36     verify  PASS      builtin_action_params_validated                    defect NOT reproduced -- fixed
+LC-37     verify  PASS      arity_marker_precedence                            defect NOT reproduced -- fixed
+LC-38     verify  PASS      sync_interpreter_no_threads                        defect NOT reproduced -- fixed
+LC-39     verify  PASS      perf_docs_present                                  defect NOT reproduced -- fixed
+LC-41     verify  PASS      backpressure                                       defect NOT reproduced -- fixed
+LC-42     verify  PASS      send_receipt                                       defect NOT reproduced -- fixed
+LC-43     verify  PASS      cross_thread                                       defect NOT reproduced -- fixed
+LC-44     verify  PASS      pure_api                                           defect NOT reproduced -- fixed
+LC-45     verify  PASS      hot path alloc and info logging                    defect NOT reproduced -- fixed
+LC-47     verify  PASS      target str mutation shared definition              defect NOT reproduced -- fixed
+LC-48     verify  FAIL      no error observability hooks                       defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+LC-49     verify  PASS      no hierarchical state value                        defect NOT reproduced -- fixed
+LC-53     verify  PASS      production_characteristics                         defect NOT reproduced -- fixed
+LC-57     verify  FAIL      two_engines_unified                                defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+LC-01     verifyM  FAIL      action error policy                                defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+LC-07     verifyM  FAIL      relative dot target                                defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+LC-19     verifyM  PASS      restore does not restart invokes                   defect NOT reproduced -- fixed
+LC-28     verifyM  PASS      actor poll two tasks                               defect NOT reproduced -- fixed
+LC-34     verifyM  PASS      send threadsafe strict and static raise            defect NOT reproduced -- fixed
+LC-37     verifyM  PASS      machinelogic strict                                defect NOT reproduced -- fixed
+LC-37#2   verifyM  PASS      wrongthreaderror message                           defect NOT reproduced -- fixed
+LC-38     verifyM  PASS      sync interpreter loop clock lane                   defect NOT reproduced -- fixed
+LC-42     verifyM  PASS      send_receipt                                       defect NOT reproduced -- fixed
+LC-52     verifyM  PASS      error platform event                               defect NOT reproduced -- fixed
+N-1       verifyM  FAIL      send wait receipt collision                        defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+N-2       verifyM  PASS      sync timer clock lane                              defect NOT reproduced -- fixed
+N-3       verifyM  FAIL      sync macrostep budget                              defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+N-4       verifyM  PASS      send threadsafe strict                             defect NOT reproduced -- fixed
+N-8       verifyM  FAIL      error done namespace                               defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+43        verifyM2  PASS      one task per invoked child                         defect NOT reproduced -- fixed
+79        verifyM2  PASS      provenance system events                           defect NOT reproduced -- fixed
+80        verifyM2  PASS      errorevent distinct from doneevent                 defect NOT reproduced -- fixed
+118       verifyM3  PASS      afterevent_lateness                                defect NOT reproduced -- fixed
+122       verifyM3  PASS      tick_contract_documented                           defect NOT reproduced -- fixed
+125       verifyM3  PASS      deferred_replay_receipt                            defect NOT reproduced -- fixed
+133       verifyM3  PASS      sendto_forwardto_unresolved                        defect NOT reproduced -- fixed
+134       verifyM3  PASS      on_resolve_error_hook                              defect NOT reproduced -- fixed
+142       verifyM3  PASS      configuration_legality                             defect NOT reproduced -- fixed
+144       verifyM3  PASS      invoke_cycle_terminates                            defect NOT reproduced -- fixed
+145       verifyM3  PASS      fail_policy_stops                                  defect NOT reproduced -- fixed
+146       verifyM3  PASS      hostile_fields_typed                               defect NOT reproduced -- fixed
+147       verifyM3  PASS      root_target_regardless_of_strict_targets           defect NOT reproduced -- fixed
+149       verifyM3  PASS      plain_def_service_off_loop                         defect NOT reproduced -- fixed
+150       verifyM3  FAIL      send_threadsafe_budgeted                           defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+151       verifyM3  PASS      settle_budget_per_macrostep                        defect NOT reproduced -- fixed
+152       verifyM3  PASS      guard raise fallback                               defect NOT reproduced -- fixed
+153       verifyM3  PASS      guard denied distinguishable                       defect NOT reproduced -- fixed
+154       verifyM3  FAIL      sync restore clock attach                          defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+155       verifyM3  PASS      spawn prefix precedence                            defect NOT reproduced -- fixed
+156       verifyM3  PASS      escalate no invoke id                              defect NOT reproduced -- fixed
+157       verifyM3  FAIL      send_threadsafe_backpressure                       defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+158       verifyM3  FAIL      non_str_event_type_restore                         defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+159       verifyM3  PASS      error_hooks                                        defect NOT reproduced -- fixed
+160       verifyM3  PASS      redaction                                          defect NOT reproduced -- fixed
+161       verifyM3  PASS      dict_event_validation                              defect NOT reproduced -- fixed
+162       verifyM3  PASS      v1_provenance_laundering                           defect NOT reproduced -- fixed
+probe     verifyM3  PASS      144_async                                          defect NOT reproduced -- fixed
+probe#2   verifyM3  PASS      144_async_count                                    defect NOT reproduced -- fixed
+repro     verifyM3  PASS      147_151                                            defect NOT reproduced -- fixed
+157       verifyM4  PASS      threadsafe_loopside_refusal                        defect NOT reproduced -- fixed
+166       verifyM4  PASS      always_invoke_livelock                             defect NOT reproduced -- fixed
+167       verifyM4  FAIL      rollback_reinvoke_spin                             defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+168       verifyM4  PASS      chain_budget_completion_exemption                  defect NOT reproduced -- fixed
+169       verifyM4  PASS      entry_exit_snapshot_refusal                        defect NOT reproduced -- fixed
+170       verifyM4  PASS      receipt_denied_crashed_guard                       defect NOT reproduced -- fixed
+171       verifyM4  PASS      start_awaits_bringups                              defect NOT reproduced -- fixed
+172       verifyM4  PASS      threadsafe_counter_leak                            defect NOT reproduced -- fixed
+173       verifyM4  PASS      service_pool_size                                  defect NOT reproduced -- fixed
+174       verifyM4  PASS      after_lateness_documented_only                     defect NOT reproduced -- fixed
+175       verifyM4  PASS      duplicate_event_stop_race                          defect NOT reproduced -- fixed
+167       verifyM5  FAIL      rollback_reinvoke_spin                             defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+168       verifyM5  PASS      chain_budget_completion_exemption                  defect NOT reproduced -- fixed
+174       verifyM5  PASS      after_lateness_documented_only                     defect NOT reproduced -- fixed
+175       verifyM5  PASS      duplicate_event_stop_race                          defect NOT reproduced -- fixed
+179       verifyM5  PASS      invoke_cycle_charged                               defect NOT reproduced -- fixed
+180       verifyM5  PASS      external_priority_uncharged                        defect NOT reproduced -- fixed
+181       verifyM5  PASS      children_timeout                                   defect NOT reproduced -- fixed
+182       verifyM5  PASS      inflight_flag_start                                defect NOT reproduced -- fixed
+183       verifyM5  PASS      root_snapshot_harvests_child_half_applied_context  defect NOT reproduced -- fixed
+184       verifyM5  PASS      await_settled_for_snapshot_blocks_loop             defect NOT reproduced -- fixed
+185       verifyM5  PASS      null_or_absent_machine_hash_disables_drift_check   defect NOT reproduced -- fixed
+186       verifyM5  PASS      configuration_outranks_state_ids                   defect NOT reproduced -- fixed
+187       verifyM5  PASS      snapshot_from_on_action_execute                    defect NOT reproduced -- fixed
+188       verifyM5  PASS      sync_deferred_this_step_cleared                    defect NOT reproduced -- fixed
+189       verifyM5  PASS      onunhandled_error_receipt                          defect NOT reproduced -- fixed
+190       verifyM5  PASS      strict_and_wildcard                                defect NOT reproduced -- fixed
+181       verifyM6  PASS      start_bounds_children_wait                         defect NOT reproduced -- fixed
+186       verifyM6  PASS      configuration_state_ids_agreement                  defect NOT reproduced -- fixed
+192       verifyM6  PASS      priority_lane_provenance                           defect NOT reproduced -- fixed
+193       verifyM6  PASS      def_service_rollback_unwind                        defect NOT reproduced -- fixed
+194       verifyM6  PASS      children_timeout_per_child                         defect NOT reproduced -- fixed
+195       verifyM6  PASS      provenance                                         defect NOT reproduced -- fixed
+196       verifyM6  PASS      always_vs_named_event                              defect NOT reproduced -- fixed
+197       verifyM6  PASS      empty_config_wait                                  defect NOT reproduced -- fixed
+198       verifyM6  PASS      configuration_state_ids_agreement                  defect NOT reproduced -- fixed
+199       verifyM6  PASS      on_interpreter_start_window                        defect NOT reproduced -- fixed
+200       verifyM6  PASS      chain_owed_ledger                                  defect NOT reproduced -- fixed
+201       verifyM6  FAIL      lap_parity_stated_exactly                          defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+203       verifyM7  PASS      after_provenance_gate                              defect NOT reproduced -- fixed
+204       verifyM7  PASS      statesToInvoke                                     defect NOT reproduced -- fixed
+205       verifyM7  PASS      snapshot_authenticity                              defect NOT reproduced -- fixed
+207       verifyM7  PASS      stranded_invocation_observable                     defect NOT reproduced -- fixed
+208       verifyM7  PASS      receipt_never_ok_over_empty_configuration          defect NOT reproduced -- fixed
+209       verifyM7  PASS      lap_parity_sweep_1_25                              defect NOT reproduced -- fixed
+210       verifyM7  PASS      test_converges_not_flaky                           defect NOT reproduced -- fixed
+212       verifyM8  PASS      selfsend_timer                                     defect NOT reproduced -- fixed
+213       verifyM8  PASS      snapshot_v3                                        defect NOT reproduced -- fixed
+214       verifyM8  PASS      restore_strict_upcast                              defect NOT reproduced -- fixed
+215       verifyM8  PASS      216_lap_parity_and_unknown_keys                    defect NOT reproduced -- fixed
+215#2     verifyM8  PASS      lap_parity_sweep                                   defect NOT reproduced -- fixed
+216       verifyM8  PASS      unknown_config_keys                                defect NOT reproduced -- fixed
+218       verifyM9  PASS      timer_handle_leak                                  defect NOT reproduced -- fixed
+219       verifyM9  PASS      reentrant_wait                                     defect NOT reproduced -- fixed
+220       verifyM9  PASS      nested_typos                                       defect NOT reproduced -- fixed
+221       verifyM9  PASS      parked_v3_sends                                    defect NOT reproduced -- fixed
+221#2     verifyM9  PASS      repersist_no_start_scheduled_sends                 defect NOT reproduced -- fixed
+222       verifyM9  PASS      chain_trip_sticky                                  defect NOT reproduced -- fixed
+repro     verifyM9  PASS      218                                                defect NOT reproduced -- fixed
+225-228   verifyV090  FAIL      matrix                                             round-12 fix (#225-#235) NOT holding at tag v0.9.0 -- this is a real FAIL
+229       verifyV090  PASS      docs_check                                         defect NOT reproduced -- fixed
+230       verifyV090  PASS      from_snapshot_plugins                              defect NOT reproduced -- fixed
+231       verifyV090  PASS      invoke_src_named_error                             defect NOT reproduced -- fixed
+232       verifyV090  PASS      runtime_warning_matrix                             defect NOT reproduced -- fixed
+233       verifyV090  FAIL      235_verify                                         round-12 fix (#225-#235) NOT holding at tag v0.9.0 -- this is a real FAIL
+LC-01     repro   FAIL      action raise commits transition                    reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-02     repro   FAIL      always self target deadlock                        reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-03     repro   FAIL      unhandled events discarded                         reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-05     repro   PASS      raise not macrostep                                defect NOT reproduced -- fixed
+LC-06     repro   FAIL      overforgiving target resolution                    reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-07     repro   FAIL      relative dot target silent noop                    reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-08     repro   PASS      unknown target unvalidated                         defect NOT reproduced -- fixed
+LC-09     repro   FAIL      guard exception swallowed                          reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-12     repro   PASS      spawn blocking async engine                        defect NOT reproduced -- fixed
+LC-16     repro   PASS      sendto invoke id                                   defect NOT reproduced -- fixed
+LC-19     repro   FAIL      restore does not restart invokes                   reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-21     repro   PASS      no snapshot schema version                         defect NOT reproduced -- fixed
+LC-22     repro   FAIL      from_snapshot_context_wholesale                    reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-24     repro   FAIL      pending_queue_lost_on_crash                        reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-26     repro   FAIL      after_timer_starvation                             reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-27     repro   FAIL      no clock injection                                 reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-28     repro   FAIL      actor poll two tasks                               reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-29     repro   FAIL      invoke input static ignored                        reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-32     repro   PASS      terminal machines not reaped                       defect NOT reproduced -- fixed
+LC-34     repro   PASS      no strict mode                                     defect NOT reproduced -- fixed
+LC-36     repro   FAIL      builtin action params misspelled                   reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-37     repro   FAIL      arity misclassification                            reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-38     repro   PASS      sync interpreter timer threads                     defect NOT reproduced -- fixed
+LC-39     repro   FAIL      throughput global budget                           reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-41     repro   FAIL      unbounded queue no backpressure                    reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-42     repro   FAIL      send fire and forget no answer                     reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-43     repro   FAIL      cross thread send silently lost                    reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-44     repro   FAIL      pure api slower and skips actions                  reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-45     repro   PASS      hot path alloc and info logging                    defect NOT reproduced -- fixed
+LC-47     repro   PASS      target str mutation shared definition              defect NOT reproduced -- fixed
+LC-48     repro   PASS      no error observability hooks                       defect NOT reproduced -- fixed
+LC-49     repro   PASS      no hierarchical state value                        defect NOT reproduced -- fixed
+LC-53     repro   FAIL      undocumented production characteristics            reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro
+LC-57     repro   PASS      two engines duplicate core algorithm               defect NOT reproduced -- fixed
+PROBE-01  probe   FAIL      01_core_transitions                                16/20 PASS; still failing at baseline: A10,A18,A3,A6
+PROBE-02  probe   PASS      02_invoke_timers_history                           14/14 PASS
+PROBE-03  probe   FAIL      03_context_snapshot_determinism                    13/17 PASS; still failing at baseline: C15,C17,C6,C7
+
+==============================================================================
+  xstate-statemachine @ 801eacd  --  CandleViewer adoption gate
+  commit 801eacd -- NOT a recorded baseline (reports __version__ 0.9.1); triage every delta in writing
+==============================================================================
+  verify: 29/34 pass   (PRIMARY -- mandated config, blocking)
+  verifyM: 10/15 pass   (PRIMARY -- main@5327ba6 verification set, blocking)
+  verifyM2: 3/3 pass   (PRIMARY -- main@3c527b0 verification set, blocking)
+  verifyM3: 23/27 pass   (PRIMARY -- main@cec108b verification set (round 6), blocking)
+  verifyM4: 10/11 pass   (PRIMARY -- main@221ce7c verification set (round 7), blocking)
+  verifyM5: 15/16 pass   (PRIMARY -- main@6db65d8 verification set (round 8), blocking)
+  verifyM6: 11/12 pass   (PRIMARY -- main@f28719c verification set (round 9), blocking)
+  verifyM7: 7/7 pass   (PRIMARY -- main@19cb1f1 verification set (round 10), blocking)
+  verifyM8: 6/6 pass   (PRIMARY -- main@c78ce99 verification set (round 11), blocking)
+  verifyM9: 7/7 pass   (PRIMARY -- main@de2da4e verification set (round 12), blocking)
+  repro : 13/34 pass   (SECONDARY -- defaults, informational)
+  probe : 1/3 pass
+  totals: FAIL=42, PASS=139
+
+  verifyM: 3 FAIL(s) at the recorded 3c527b0 baseline (expected, already triaged as
+           'keep open' in 22-verify-main-verdict.md s.1): LC-07, N-3, N-8
+           REGRESSION -- outside the baseline, triage in writing: LC-01, N-1
+
+  verifyM3: 2 FAIL(s) expected at the recorded cec108b baseline (#157 NOT-FIXED as filed, reopened narrower --
+            triaged in 39-r6-final-readiness-verdict.md s.1): 150, 157
+            REGRESSION -- outside the baseline, triage in writing: 154, 158
+
+  verifyM4: 1 FAIL(s) expected at the recorded 221ce7c baseline (#167 PARTIAL -- bounded for plain `def`
+            services only; the coroutine half is R7-01, triaged in 44-r7-final-readiness-verdict.md s.1): 167
+
+  verifyM5: 0 FAIL(s) expected at the recorded 6db65d8 baseline (#174 DOCUMENTED-ONLY -- no code changed, so the
+            script still reports the documented behaviour; see 49-r8-final-readiness-verdict.md s.1): 
+            REGRESSION -- outside the baseline, triage in writing: 167
+
+  verifyM6: 0 FAIL(s) expected at the recorded f28719c baseline (#197 PARTIAL -- the library's own pinned test
+            passes but the original chart still yields a success-shaped receipt over an empty configuration; carried as R9-08, see 54-r9-final-readiness-verdict.md s.1): 
+            REGRESSION -- outside the baseline, triage in writing: 201
+
+  NOTE: 21 secondary repro(s) FAIL at library defaults. This is informational -- from 0.8.0
+        onward these are usually 'fixed but opt-in' or a stale repro. Triage each one in writing
+        (17-reeval-0.8.0-verdict.md s.0) before citing it.
+
+  VERDICT: 21 blocking check(s) not green -> NOT a clean gate.
+           Map each FAIL to its register row and apply the
+           decision table in 20-adoption-gate.md s.7:
+           Blocker FAIL -> DEFER; High FAIL -> ADOPT with constraints;
+           Medium/Low or bench-only FAIL -> ADOPT with constraints.
+             - LC-01     verify FAIL  defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+             - LC-12     verify FAIL  defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+             - LC-26     verify FAIL  defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+             - LC-48     verify FAIL  defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+             - LC-57     verify FAIL  defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+             - LC-01     verifyM FAIL  defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+             - LC-07     verifyM FAIL  defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+             - N-1       verifyM FAIL  defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+             - N-3       verifyM FAIL  defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+             - N-8       verifyM FAIL  defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+             - 150       verifyM3 FAIL  defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+             - 154       verifyM3 FAIL  defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL
+             ... and 9 more
+==============================================================================
+
+[gate] elapsed 368.0s
+[gate] wrote C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/research/xstate/gate/result-v0.9.1.json
+rc=1

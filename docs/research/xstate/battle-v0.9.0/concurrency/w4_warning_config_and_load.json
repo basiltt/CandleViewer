@@ -1,0 +1,350 @@
+{
+  "probe": "w4_warning_config_and_load",
+  "py": "3.13.7",
+  "machines": 200,
+  "handouts": 100,
+  "R1_232_runtimewarning": {
+    "shapes": [
+      {
+        "shape": "dropped_receipt",
+        "warnings": 1,
+        "mentions_232": true,
+        "sample": [
+          "send('GO', wait=True) on 'w4r1_dropped_receipt' was called from inside an action and its receipt was never awaited (#232). A plain `def` action cannot await, so it received this awaitable, not a Receipt. Send without wait=True, or hand the awaitable out (asyncio.ensure_future(...)) to be awaited elsewhere."
+        ]
+      },
+      {
+        "shape": "ensure_future_handout",
+        "warnings": 0,
+        "mentions_232": true,
+        "sample": []
+      },
+      {
+        "shape": "ensure_future_of_var",
+        "warnings": 0,
+        "mentions_232": true,
+        "sample": []
+      },
+      {
+        "shape": "plain_send_no_wait",
+        "warnings": 0,
+        "mentions_232": true,
+        "sample": []
+      }
+    ],
+    "note": "the warning is emitted from __del__, so it lands whenever the collector runs -- see R1b for what that means under -W error"
+  },
+  "R1b_under_W_error": {
+    "unraisable_seen": [
+      "RuntimeWarning: send('GO', wait=True) on 'w4r1b' was called from inside an action and its receipt was never awaited (#232). A plain `def` action cannot await, so it received this awaitable, not a Receipt. Send without wait=True, or hand the awaitable out (asyncio.ensure_future(...)) to be awaited elsewhere."
+    ],
+    "count": 1,
+    "surfaces_as": "sys.unraisablehook (NOT a raised exception at the call site)",
+    "note": "OBSERVATION, not a defect claim: __del__ cannot propagate. An adopter running -W error must install an unraisablehook (or a warnings capture) to see #232 in CI -- `-W error` alone will not fail the test."
+  },
+  "R2_231_invoke_src": [
+    {
+      "kind": "def",
+      "variants": 18,
+      "rows": [
+        {
+          "site": "top",
+          "src": "inline_machine_dict",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_d_top_inline_machine_dict.a' invoke 'svc': 'src' must be a service name (str), got dict. To invoke"
+        },
+        {
+          "site": "top",
+          "src": "empty_dict",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_d_top_empty_dict.a' invoke 'svc': 'src' must be a service name (str), got dict. To invoke a nested"
+        },
+        {
+          "site": "top",
+          "src": "list_src",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_d_top_list_src.a' invoke 'svc': 'src' must be a service name (str), got list. To invoke a nested m"
+        },
+        {
+          "site": "top",
+          "src": "int_src",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_d_top_int_src.a' invoke 'svc': 'src' must be a service name (str), got int. To invoke a nested mac"
+        },
+        {
+          "site": "top",
+          "src": "none_src",
+          "raised": "ImplementationMissingError",
+          "names_invoke_id": false,
+          "sample": "Service 'None' referenced by state 'w4r2_d_top_none_src_s.a' is not registered."
+        },
+        {
+          "site": "top",
+          "src": "nested_dict",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_d_top_nested_dict.a' invoke 'svc': 'src' must be a service name (str), got dict. To invoke a neste"
+        },
+        {
+          "site": "nested",
+          "src": "inline_machine_dict",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_d_nested_inline_machine_dict.a.a1' invoke 'svc': 'src' must be a service name (str), got dict. To "
+        },
+        {
+          "site": "nested",
+          "src": "empty_dict",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_d_nested_empty_dict.a.a1' invoke 'svc': 'src' must be a service name (str), got dict. To invoke a "
+        },
+        {
+          "site": "nested",
+          "src": "list_src",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_d_nested_list_src.a.a1' invoke 'svc': 'src' must be a service name (str), got list. To invoke a ne"
+        },
+        {
+          "site": "nested",
+          "src": "int_src",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_d_nested_int_src.a.a1' invoke 'svc': 'src' must be a service name (str), got int. To invoke a nest"
+        },
+        {
+          "site": "nested",
+          "src": "none_src",
+          "raised": "ImplementationMissingError",
+          "names_invoke_id": false,
+          "sample": "Service 'None' referenced by state 'w4r2_d_nested_none_src_s.a.a1' is not registered."
+        },
+        {
+          "site": "nested",
+          "src": "nested_dict",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_d_nested_nested_dict.a.a1' invoke 'svc': 'src' must be a service name (str), got dict. To invoke a"
+        },
+        {
+          "site": "parallel",
+          "src": "inline_machine_dict",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_d_parallel_inline_machine_dict.p.r1.s' invoke 'svc': 'src' must be a service name (str), got dict."
+        },
+        {
+          "site": "parallel",
+          "src": "empty_dict",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_d_parallel_empty_dict.p.r1.s' invoke 'svc': 'src' must be a service name (str), got dict. To invok"
+        },
+        {
+          "site": "parallel",
+          "src": "list_src",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_d_parallel_list_src.p.r1.s' invoke 'svc': 'src' must be a service name (str), got list. To invoke "
+        },
+        {
+          "site": "parallel",
+          "src": "int_src",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_d_parallel_int_src.p.r1.s' invoke 'svc': 'src' must be a service name (str), got int. To invoke a "
+        },
+        {
+          "site": "parallel",
+          "src": "none_src",
+          "raised": "ImplementationMissingError",
+          "names_invoke_id": false,
+          "sample": "Service 'None' referenced by state 'w4r2_d_parallel_none_src_s.p.r1.s' is not registered."
+        },
+        {
+          "site": "parallel",
+          "src": "nested_dict",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_d_parallel_nested_dict.p.r1.s' invoke 'svc': 'src' must be a service name (str), got dict. To invo"
+        }
+      ]
+    },
+    {
+      "kind": "async def",
+      "variants": 18,
+      "rows": [
+        {
+          "site": "top",
+          "src": "inline_machine_dict",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_a_top_inline_machine_dict.a' invoke 'svc': 'src' must be a service name (str), got dict. To invoke"
+        },
+        {
+          "site": "top",
+          "src": "empty_dict",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_a_top_empty_dict.a' invoke 'svc': 'src' must be a service name (str), got dict. To invoke a nested"
+        },
+        {
+          "site": "top",
+          "src": "list_src",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_a_top_list_src.a' invoke 'svc': 'src' must be a service name (str), got list. To invoke a nested m"
+        },
+        {
+          "site": "top",
+          "src": "int_src",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_a_top_int_src.a' invoke 'svc': 'src' must be a service name (str), got int. To invoke a nested mac"
+        },
+        {
+          "site": "top",
+          "src": "none_src",
+          "raised": "ImplementationMissingError",
+          "names_invoke_id": false,
+          "sample": "Service 'None' referenced by state 'w4r2_a_top_none_src_s.a' is not registered."
+        },
+        {
+          "site": "top",
+          "src": "nested_dict",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_a_top_nested_dict.a' invoke 'svc': 'src' must be a service name (str), got dict. To invoke a neste"
+        },
+        {
+          "site": "nested",
+          "src": "inline_machine_dict",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_a_nested_inline_machine_dict.a.a1' invoke 'svc': 'src' must be a service name (str), got dict. To "
+        },
+        {
+          "site": "nested",
+          "src": "empty_dict",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_a_nested_empty_dict.a.a1' invoke 'svc': 'src' must be a service name (str), got dict. To invoke a "
+        },
+        {
+          "site": "nested",
+          "src": "list_src",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_a_nested_list_src.a.a1' invoke 'svc': 'src' must be a service name (str), got list. To invoke a ne"
+        },
+        {
+          "site": "nested",
+          "src": "int_src",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_a_nested_int_src.a.a1' invoke 'svc': 'src' must be a service name (str), got int. To invoke a nest"
+        },
+        {
+          "site": "nested",
+          "src": "none_src",
+          "raised": "ImplementationMissingError",
+          "names_invoke_id": false,
+          "sample": "Service 'None' referenced by state 'w4r2_a_nested_none_src_s.a.a1' is not registered."
+        },
+        {
+          "site": "nested",
+          "src": "nested_dict",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_a_nested_nested_dict.a.a1' invoke 'svc': 'src' must be a service name (str), got dict. To invoke a"
+        },
+        {
+          "site": "parallel",
+          "src": "inline_machine_dict",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_a_parallel_inline_machine_dict.p.r1.s' invoke 'svc': 'src' must be a service name (str), got dict."
+        },
+        {
+          "site": "parallel",
+          "src": "empty_dict",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_a_parallel_empty_dict.p.r1.s' invoke 'svc': 'src' must be a service name (str), got dict. To invok"
+        },
+        {
+          "site": "parallel",
+          "src": "list_src",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_a_parallel_list_src.p.r1.s' invoke 'svc': 'src' must be a service name (str), got list. To invoke "
+        },
+        {
+          "site": "parallel",
+          "src": "int_src",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_a_parallel_int_src.p.r1.s' invoke 'svc': 'src' must be a service name (str), got int. To invoke a "
+        },
+        {
+          "site": "parallel",
+          "src": "none_src",
+          "raised": "ImplementationMissingError",
+          "names_invoke_id": false,
+          "sample": "Service 'None' referenced by state 'w4r2_a_parallel_none_src_s.p.r1.s' is not registered."
+        },
+        {
+          "site": "parallel",
+          "src": "nested_dict",
+          "raised": "InvalidConfigError",
+          "names_invoke_id": true,
+          "sample": "State 'w4r2_a_parallel_nested_dict.p.r1.s' invoke 'svc': 'src' must be a service name (str), got dict. To invo"
+        }
+      ]
+    }
+  ],
+  "R3_load_outliving_workers": [
+    {
+      "kind": "def",
+      "machines": 200,
+      "landed": 200,
+      "ticked": 200,
+      "stranded_pending": 0
+    },
+    {
+      "kind": "async def",
+      "machines": 200,
+      "landed": 200,
+      "ticked": 200,
+      "stranded_pending": 0
+    }
+  ],
+  "R4_concurrent_handouts": [
+    {
+      "kind": "def",
+      "handouts": 100,
+      "resolved": 100,
+      "refused": 0,
+      "hung": 0,
+      "other": 0,
+      "landed": 100
+    },
+    {
+      "kind": "async def",
+      "handouts": 100,
+      "resolved": 100,
+      "refused": 0,
+      "hung": 0,
+      "other": 0,
+      "landed": 100
+    }
+  ],
+  "failures": [],
+  "failure_count": 0,
+  "verdict": "CLEAN"
+}

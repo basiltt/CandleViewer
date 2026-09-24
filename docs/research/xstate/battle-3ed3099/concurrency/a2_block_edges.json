@@ -1,0 +1,94 @@
+{
+  "probe": "a2_block_edges",
+  "py": "3.13.7",
+  "v1_fire_and_forget": {
+    "raise": {
+      "processed": 10,
+      "context_n": 10,
+      "queue_depth": 0,
+      "warnings": []
+    },
+    "block": {
+      "processed": 10,
+      "context_n": 10,
+      "queue_depth": 0,
+      "warnings": []
+    },
+    "drop_newest": {
+      "processed": 10,
+      "context_n": 10,
+      "queue_depth": 0,
+      "warnings": []
+    }
+  },
+  "v2_stop_while_blocked": {
+    "processed": 1,
+    "dropped_hook": [
+      [
+        "PING",
+        "stopped"
+      ],
+      [
+        "PING",
+        "stopped"
+      ],
+      [
+        "PING",
+        "stopped"
+      ],
+      [
+        "PING",
+        "stopped"
+      ],
+      [
+        "PING",
+        "stopped"
+      ],
+      [
+        "PING",
+        "stopped"
+      ],
+      [
+        "PING",
+        "stopped"
+      ],
+      [
+        "PING",
+        "stopped"
+      ]
+    ],
+    "blocked_with_receipt": [
+      [
+        "receipt",
+        2,
+        false,
+        "InterpreterStoppedError(\"Interpreter 'counter' stopped before the event was processed.\")"
+      ],
+      [
+        "receipt",
+        0,
+        false,
+        "InterpreterStoppedError('dropped: interpreter stopped')"
+      ],
+      [
+        "receipt",
+        1,
+        false,
+        "InterpreterStoppedError('dropped: interpreter stopped')"
+      ]
+    ],
+    "status": "stopped",
+    "queue_depth": 0,
+    "note": "3 wait=True + 3 fire-and-forget producers were parked on a full inbox when stop() ran; count how many are reported anywhere."
+  },
+  "v3_block_self_send": {
+    "wedged": false,
+    "n": 3,
+    "status": "running"
+  },
+  "v4_block_producer_spin": {
+    "unblock_s": 3.6e-05,
+    "observer_turns_during_block": 1,
+    "impl": "interpreter.py:819 _enqueue_blocking spins on asyncio.sleep(0)"
+  }
+}

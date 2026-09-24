@@ -1,0 +1,8 @@
+PASS [async]B18.always_to_invoke.svc_armed  | ['cancel_all_working_orders', 'flatten_all_positions']
+PASS [async]B18.always_to_invoke.chain_to_flatten  | ['cancel_all_working_orders', 'flatten_all_positions']
+PASS [async]B18.always_to_invoke.no_error  | None
+PASS [async]B18.always_to_invoke.snapshot  | ['t0:v=3:sched=0', 't1:v=3:sched=0']
+PASS [async]B18.always_to_invoke.states  | ['kill_switch.engaged']
+  states=['kill_switch.engaged'] ctx_flat=0
+
+--- 5 checks, 0 FAIL: []

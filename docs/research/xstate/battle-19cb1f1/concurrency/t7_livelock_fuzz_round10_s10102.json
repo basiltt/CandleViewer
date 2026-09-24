@@ -1,0 +1,31 @@
+{
+  "probe": "t7_livelock_fuzz_round10_s10102",
+  "py": "3.13.7",
+  "n": 170,
+  "seed": 10102,
+  "watchdog_s": 3.0,
+  "settle_s": 0.12,
+  "shape_mix": {
+    "always_invoke_after": 30,
+    "after_loop": 31,
+    "invoke_cycle": 26,
+    "delayed_raise_pingpong": 28,
+    "always_cycle": 26,
+    "rollback_ondone": 29
+  },
+  "outcome_mix": {
+    "async/def/RunawayChainError": 139,
+    "async/async def/RunawayChainError": 139,
+    "sync/def/RunawayChainError": 111,
+    "sync/def/NoneType": 59,
+    "async/def/NoneType": 31,
+    "async/async def/NoneType": 31
+  },
+  "hangs": [],
+  "n_hangs": 0,
+  "unobservable_trips": [],
+  "n_unobservable": 0,
+  "lap_parity_gaps": [],
+  "n_parity_gaps": 0,
+  "result": "PASS"
+}

@@ -1,0 +1,97 @@
+[
+ {
+  "id": "P1",
+  "title": "restore_event provenance: 'engine': true -> engine-minted, absent -> public class (user traffic)",
+  "detail": {
+   "ok": true,
+   "flagged_engine": true,
+   "bare_engine": false,
+   "engine_string_truthy_accepted": false
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "P2",
+  "title": "Forged pending record with 'engine': true is NOT gated by strict; unflagged record IS gated by onUnhandled",
+  "detail": {
+   "ok": false,
+   "cells": {
+    "strict/bare_done": {
+     "status": "running",
+     "err": null,
+     "recv": [
+      "done.invoke.q"
+     ],
+     "drops": []
+    },
+    "strict/plain_undeclared": {
+     "status": "running",
+     "err": null,
+     "recv": [
+      "BOGUS"
+     ],
+     "drops": []
+    },
+    "onUnhandled/bare_done": {
+     "status": "error",
+     "err": "UnhandledEventError",
+     "recv": [
+      "done.invoke.q"
+     ],
+     "drops": []
+    },
+    "onUnhandled/plain_undeclared": {
+     "status": "error",
+     "err": "UnhandledEventError",
+     "recv": [
+      "BOGUS"
+     ],
+     "drops": []
+    }
+   },
+   "OBSERVED_strict_inert_on_restore": true,
+   "onUnhandled_honoured": true
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "P3",
+  "title": "v0/v1/v2 restore matrix: v0 state_ids-only OK; any v>=1 blob with a missing or EMPTIED configuration field is refused",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "v0 state_ids-only": "ACCEPTED",
+    "v1 state_ids-only": "SnapshotCorruptError",
+    "v1 both present": "ACCEPTED",
+    "v1 configuration EMPTIED": "SnapshotCorruptError",
+    "v1 state_ids EMPTIED": "SnapshotCorruptError",
+    "v2 state_ids EMPTIED": "SnapshotCorruptError",
+    "v2 configuration EMPTIED": "SnapshotCorruptError",
+    "v2 contradictory pair": "SnapshotCorruptError"
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "P4",
+  "title": "get_persisted_snapshot() from on_interpreter_start is inside the in-flight window and refused on BOTH engines (#199)",
+  "detail": {
+   "ok": true,
+   "runs": {
+    "async": [
+     [
+      "SnapshotMidStepError",
+      null
+     ]
+    ],
+    "sync": [
+     [
+      "SnapshotMidStepError",
+      null
+     ]
+    ]
+   }
+  },
+  "status": "PASS"
+ }
+]

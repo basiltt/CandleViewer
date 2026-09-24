@@ -1,0 +1,17 @@
+PASS 245.sync.max_queue_size  ValueError
+PASS 245.sync.max_queue_size+overflow_policy  ValueError
+PASS 245.sync.None_ok  
+PASS 240.sync.restore_hook  [True]
+PASS 241.chain_trips='NaN'  SnapshotCorruptError
+PASS 241.chain_trips=[1]  SnapshotCorruptError
+PASS 241.chain_trips={'x': 1}  SnapshotCorruptError
+PASS 241.chain_trips=True  SnapshotCorruptError
+PASS 241.chain_trips=-1  SnapshotCorruptError
+PASS 243.latch_isa_both  RestoredChainError('RunawayChainError: x')
+Exception ignored in: <function Interpreter._guard_reentrant_await.<locals>._PendingReceipt.__del__ at 0x00000229BE82F060>
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1217, in __del__
+    warnings.warn(
+RuntimeWarning: send('PING', wait=True) on 'm' was called from inside an action and its receipt was never awaited (#232). A plain `def` action cannot await, so it received this awaitable, not a Receipt. Send without wait=True, or hand the awaitable out (asyncio.ensure_future(...)) to be awaited elsewhere.
+PASS 244.dropped_receipts  dr=1 hook=['PING']
+--- 11 checks, 0 FAIL: []

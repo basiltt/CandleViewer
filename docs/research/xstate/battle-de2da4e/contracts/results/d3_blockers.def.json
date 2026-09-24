@@ -1,0 +1,58 @@
+{
+ "[def]D4/C-07b/onUnhandled-removed-from-B18": {
+  "pass": false,
+  "note": "B18 onUnhandled='error' (C-07b PRESENT)"
+ },
+ "[def]D4/C-04/B16-shape": {
+  "pass": true,
+  "note": "{\"states\": {\"auth\": [], \"elevation\": []}, \"elevated_like\": [\"elevation\"], \"LOGOUT_in_chart\": true, \"REVOKE_in_chart\": true}"
+ },
+ "[def]D4/C-04/elevated-handles-REVOKE": {
+  "pass": true,
+  "note": "elevation.elevated handles ['ELEVATION_DEADLINE', 'REVOKE', 'STEP_UP_OK']"
+ },
+ "[def]D4/C-04/elevated-handles-LOGOUT": {
+  "pass": false,
+  "note": "elevation.elevated handles ['ELEVATION_DEADLINE', 'REVOKE', 'STEP_UP_OK'] -- LOGOUT absent => elevation survives logout"
+ },
+ "[def]D4/C-04/elevation-cleared-by-REVOKE": {
+  "pass": true,
+  "note": "after MFA_OK,STEP_UP_OK,REVOKE -> ['session.auth.revoked', 'session.elevation.normal'] (clear_elevated=True)"
+ },
+ "[def]D4/C-04/elevation-cleared-by-LOGOUT": {
+  "pass": false,
+  "note": "after MFA_OK,STEP_UP_OK,LOGOUT -> ['session.auth.revoked', 'session.elevation.elevated'] (clear_elevated=False)"
+ },
+ "[def]D4/C-04/drive": {
+  "pass": true,
+  "note": "{\"REVOKE\": {\"states\": [\"session.auth.revoked\", \"session.elevation.normal\"], \"actions\": [\"schedule_elevation_deadline\", \"set_revoke_admin\", \"audit_session_revoked\", \"broadcast_revocation\", \"clear_elevated\"], \"still_elevated\": false}, \"LOGOUT\": {\"states\": [\"session.auth.revoked\", \"session.elevation.elevated\"], \"actions\": [\"audit_step_up\", \"schedule_elevation_deadline\", \"set_revoke_logout\", \"audit_session_revoked\", \"broadcast_revocation\"], \"still_elevated\": true}}"
+ },
+ "[def]D4/B18/external-priority-not-shed": {
+  "pass": true,
+  "note": "sent=60 applied=60 dropped=[] (chain_budget drops of EXT)"
+ },
+ "[def]D4/B18/all-60-applied": {
+  "pass": true,
+  "note": "applied=60 of 60"
+ },
+ "[def]D4/B18/kill-preempts": {
+  "pass": true,
+  "note": "states=['prio.dead'] chain_err=None"
+ },
+ "[def]D4/222/chain-trip-counted": {
+  "pass": true,
+  "note": "chain_trips=1"
+ },
+ "[def]D4/222/latch-survives-benign-traffic": {
+  "pass": true,
+  "note": "last_chain_error=RunawayChainError after 60 handled EXT + KILL; last_error=None"
+ },
+ "[def]D4/222/plugin-hook-fired": {
+  "pass": true,
+  "note": "on_chain_budget_exceeded fired 1 time(s), trips=1"
+ },
+ "[def]D4/222/clear-resets-latch-not-counter": {
+  "pass": true,
+  "note": "after clear_chain_error(): latch=None trips=1"
+ }
+}

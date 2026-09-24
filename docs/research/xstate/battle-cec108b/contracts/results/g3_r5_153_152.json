@@ -1,0 +1,105 @@
+[
+ {
+  "id": "R5-153a",
+  "inv": "#153",
+  "title": "B15 MARK_UPDATE with both guards false -> denied, not undeclared",
+  "detail": {
+   "receipt": "Receipt(state_ids=frozenset({'paper_account.active'}), changed=False, error=None, deferred=True, denied=True)",
+   "denied": true,
+   "error": "None",
+   "deferred": true,
+   "unhandled_hook": [
+    [
+     "MARK_UPDATE",
+     "deferred"
+    ]
+   ],
+   "states": [
+    "paper_account.active"
+   ],
+   "status": "running",
+   "ok": true,
+   "note": "declared-but-guard-denied is distinguishable from undeclared; under onUnhandled=defer it must NOT be parked"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "R5-153b",
+  "inv": "#153",
+  "title": "B15 truly undeclared event -> defer, denied False",
+  "status": "ERROR",
+  "detail": {
+   "exc": "UnknownEventError: Event 'NO_SUCH_EVENT' is not declared by machine 'paper_account'. Known events: MARK_UPDATE.",
+   "tb": "in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\battle-cec108b\\contracts\\g3_harness.py\", line 198, in _w\n    return await asyncio.wait_for(fn(), 45)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\asyncio\\tasks.py\", line 507, in wait_for\n    return await fut\n           ^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\battle-cec108b\\contracts\\r5_probes2.py\", line 53, in s_153b\n    r = await it.send(\"NO_SUCH_EVENT\", wait=True)\n              ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py\", line 738, in send\n    self._check_strict(event_obj)  # #51: at the call site, pre-queue\n    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py\", line 2001, in _check_strict\n    raise UnknownEventError(\n        event.type, self.machine.id, sorted(self.machine.known_events)\n    )\nxstate_statemachine.exceptions.UnknownEventError: Event 'NO_SUCH_EVENT' is not declared by machine 'paper_account'. Known events: MARK_UPDATE.\n"
+  }
+ },
+ {
+  "id": "R5-153c",
+  "inv": "#153",
+  "title": "B11 REASON_REMOVED: guard-denied vs fallback candidate",
+  "detail": {
+   "in_recording_receipt": "Receipt(state_ids=frozenset({'recording.degraded'}), changed=True, error=None, deferred=False, denied=False)",
+   "in_degraded_receipt": "Receipt(state_ids=frozenset({'recording.degraded'}), changed=False, error=None, deferred=True, denied=False)",
+   "degraded_denied": false,
+   "degraded_deferred": true,
+   "deferred_count": 1,
+   "states": [
+    "recording.degraded"
+   ],
+   "ok": true,
+   "note": "denied=False + deferred=True is the caller-visible signature of OUR-B11-01: the contract simply has no handler. #153 makes this detectable at the call site, which it was not at 3ed3099."
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "R5-152",
+  "inv": "#152",
+  "title": "B13 guard raise on invoke.onDone candidate -> fallback taken",
+  "detail": {
+   "states": [
+    "ws_conn.live"
+   ],
+   "status": "running",
+   "svc_calls": [
+    "open_socket",
+    "subscribe_in_batches"
+   ],
+   "guard_calls": [
+    "connection_budget_exhausted",
+    "is_private"
+   ],
+   "last_transition_ok": true,
+   "last_error": "None",
+   "transitions": [
+    "___xstate_statemachine_init___->['ws_conn.disconnected']",
+    "CONNECT->['ws_conn.connecting']",
+    "done.invoke.dial->['ws_conn.subscribing']",
+    "done.invoke.sub->['ws_conn.live']"
+   ],
+   "ok": true,
+   "note": "engine-driven (done.invoke) guard raise: exception recorded on last_error/last_transition_ok, completion NOT lost"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "R5-152b",
+  "inv": "#152",
+  "title": "B15 caller-driven guard raise -> delivered to the async receipt",
+  "detail": {
+   "raised_at_call_site": null,
+   "receipt": "Receipt(state_ids=frozenset({'paper_account.margin_call'}), changed=True, error=RuntimeError('guard:mark_crossed_liq_price'), deferred=False, denied=False)",
+   "receipt_error": "guard:mark_crossed_liq_price",
+   "states": [
+    "paper_account.margin_call"
+   ],
+   "status": "running",
+   "guard_calls": [
+    "mark_crossed_liq_price",
+    "below_maintenance_margin"
+   ],
+   "ok": true,
+   "note": "first candidate's guard raised; the SECOND candidate (below_maintenance_margin=True) is still evaluated per #152"
+  },
+  "status": "PASS"
+ }
+]

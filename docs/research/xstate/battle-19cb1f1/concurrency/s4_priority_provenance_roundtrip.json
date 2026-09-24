@@ -1,0 +1,88 @@
+{
+  "probe": "s4_priority_provenance_roundtrip",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "case": "action_issued_priority_charged",
+      "service_kind": "def",
+      "laps": 27,
+      "last_error": "RunawayChainError(\"Machine 's4' exceeded 25 chained self-generated eve",
+      "chain_budget_drops": {
+        "B": 1
+      },
+      "tripped": true,
+      "bounded": true,
+      "stop_seconds": 0.0
+    },
+    {
+      "case": "action_issued_priority_charged",
+      "service_kind": "async def",
+      "laps": 27,
+      "last_error": "RunawayChainError(\"Machine 's4' exceeded 25 chained self-generated eve",
+      "chain_budget_drops": {
+        "B": 1
+      },
+      "tripped": true,
+      "bounded": true,
+      "stop_seconds": 0.0
+    },
+    {
+      "case": "external_priority",
+      "service_kind": "def",
+      "restored": false,
+      "snapshot_version": null,
+      "external_sent": 3749,
+      "external_applied": 3749,
+      "callsite_errors": {},
+      "drops_by_reason": {
+        "chain_budget": {
+          "done.invoke.j": 1
+        }
+      },
+      "external_shed_as_chain_budget": 0,
+      "stop": "ok"
+    },
+    {
+      "case": "external_priority",
+      "service_kind": "def",
+      "restored": true,
+      "snapshot_version": 2,
+      "external_sent": 3644,
+      "external_applied": 3644,
+      "callsite_errors": {},
+      "drops_by_reason": {},
+      "external_shed_as_chain_budget": 0,
+      "stop": "ok"
+    },
+    {
+      "case": "external_priority",
+      "service_kind": "async def",
+      "restored": false,
+      "snapshot_version": null,
+      "external_sent": 3653,
+      "external_applied": 3653,
+      "callsite_errors": {},
+      "drops_by_reason": {},
+      "external_shed_as_chain_budget": 0,
+      "stop": "ok"
+    },
+    {
+      "case": "external_priority",
+      "service_kind": "async def",
+      "restored": true,
+      "snapshot_version": 2,
+      "external_sent": 3742,
+      "external_applied": 3742,
+      "callsite_errors": {},
+      "drops_by_reason": {
+        "stopped": {
+          "done.invoke.j2": 1
+        }
+      },
+      "external_shed_as_chain_budget": 0,
+      "stop": "ok"
+    }
+  ],
+  "violations": [],
+  "result": "PASS"
+}

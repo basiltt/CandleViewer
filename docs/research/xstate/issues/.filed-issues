@@ -1,0 +1,133 @@
+LC-00-META	00-META-candleviewer-adoption-readiness.md	https://github.com/basiltt/xstate-statemachine/issues/26
+LC-01	LC-01-action-raise-commits-transition.md	https://github.com/basiltt/xstate-statemachine/issues/27
+LC-03	LC-03-unhandled-events-discarded.md	https://github.com/basiltt/xstate-statemachine/issues/28
+LC-02	LC-02-always-self-target-deadlock.md	https://github.com/basiltt/xstate-statemachine/issues/29
+LC-08	LC-08-unknown-target-unvalidated.md	https://github.com/basiltt/xstate-statemachine/issues/30
+LC-07	LC-07-relative-dot-target-silent-noop.md	https://github.com/basiltt/xstate-statemachine/issues/31
+LC-36	LC-36-builtin-action-params-misspelled.md	https://github.com/basiltt/xstate-statemachine/issues/32
+LC-48	LC-48-no-error-observability-hooks.md	https://github.com/basiltt/xstate-statemachine/issues/33
+LC-06	LC-06-overforgiving-target-resolution.md	https://github.com/basiltt/xstate-statemachine/issues/34
+LC-09	LC-09-guard-exception-swallowed.md	https://github.com/basiltt/xstate-statemachine/issues/35
+LC-05	LC-05-raise-not-macrostep.md	https://github.com/basiltt/xstate-statemachine/issues/36
+LC-43	LC-43-cross-thread-send-silently-lost.md	https://github.com/basiltt/xstate-statemachine/issues/37
+LC-41	LC-41-unbounded-queue-no-backpressure.md	https://github.com/basiltt/xstate-statemachine/issues/38
+LC-42	LC-42-send-fire-and-forget-no-answer.md	https://github.com/basiltt/xstate-statemachine/issues/39
+LC-16	LC-16-sendto-invoke-id.md	https://github.com/basiltt/xstate-statemachine/issues/40
+LC-12	LC-12-spawn-blocking-async-engine.md	https://github.com/basiltt/xstate-statemachine/issues/41
+LC-29	LC-29-invoke-input-static-ignored.md	https://github.com/basiltt/xstate-statemachine/issues/42
+LC-28	LC-28-actor-poll-two-tasks.md	https://github.com/basiltt/xstate-statemachine/issues/43
+LC-19	LC-19-restore-does-not-restart-invokes.md	https://github.com/basiltt/xstate-statemachine/issues/44
+LC-21	LC-21-no-snapshot-schema-version.md	https://github.com/basiltt/xstate-statemachine/issues/45
+LC-22	LC-22-from-snapshot-context-wholesale.md	https://github.com/basiltt/xstate-statemachine/issues/46
+LC-24	LC-24-pending-queue-lost-on-crash.md	https://github.com/basiltt/xstate-statemachine/issues/47
+LC-26	LC-26-after-timer-starvation.md	https://github.com/basiltt/xstate-statemachine/issues/48
+LC-27	LC-27-no-clock-injection.md	https://github.com/basiltt/xstate-statemachine/issues/49
+LC-38	LC-38-sync-interpreter-timer-threads.md	https://github.com/basiltt/xstate-statemachine/issues/50
+LC-34	LC-34-no-strict-mode.md	https://github.com/basiltt/xstate-statemachine/issues/51
+LC-37	LC-37-arity-misclassification.md	https://github.com/basiltt/xstate-statemachine/issues/52
+LC-39	LC-39-throughput-global-budget.md	https://github.com/basiltt/xstate-statemachine/issues/53
+LC-44	LC-44-pure-api-slower-and-skips-actions.md	https://github.com/basiltt/xstate-statemachine/issues/54
+LC-45	LC-45-hot-path-alloc-and-info-logging.md	https://github.com/basiltt/xstate-statemachine/issues/55
+LC-53	LC-53-undocumented-production-characteristics.md	https://github.com/basiltt/xstate-statemachine/issues/56
+LC-32	LC-32-terminal-machines-not-reaped.md	https://github.com/basiltt/xstate-statemachine/issues/57
+LC-49	LC-49-no-hierarchical-state-value.md	https://github.com/basiltt/xstate-statemachine/issues/58
+LC-47	LC-47-target-str-mutation-shared-definition.md	https://github.com/basiltt/xstate-statemachine/issues/59
+LC-57	LC-57-two-engines-duplicate-core-algorithm.md	https://github.com/basiltt/xstate-statemachine/issues/60
+N-01-send-wait-receipt-id-collision.md	https://github.com/basiltt/xstate-statemachine/issues/75
+N-02-sync-timer-unreachable-in-loop.md	https://github.com/basiltt/xstate-statemachine/issues/76
+N-03-sync-macrostep-budget-clears-queue.md	https://github.com/basiltt/xstate-statemachine/issues/77
+N-04-send-threadsafe-bypasses-strict.md	https://github.com/basiltt/xstate-statemachine/issues/78
+N-08-error-done-namespace-invisible.md	https://github.com/basiltt/xstate-statemachine/issues/79
+followups-0.8.0 posted 2026-09-17 on #27 #28 #31 #44 #43 #51 #52 #50 #39 #37 #60; reopened #31 #37 #39 #43 #50 #51; verification comments on 23 closed issues; meta #26 updated
+LC-52	split-from-#60	https://github.com/basiltt/xstate-statemachine/issues/80
+reopened 2026-09-17: #27 #44 #52 (fix still required)
+--- 2026-09-18 post-3c527b0 (unreleased 0.8.1) ---
+new issues filed: #84 #85 #86 #87 #88 #89 #90 #91 #92 #93 #94 #95 #96 #97 #98 #99
+comments posted: #27 #31 #37 #39 #43 #44 #50 #51 #52 #60 #75 #76 #77 #78 #79 #80 (16 comments)
+reopened: #31 (criterion 4 unmet) #77 (criterion 6 unmet) #79 (criterion 8 unmet)
+meta #26 body replaced (full rewrite for this commit's re-verification)
+
+--- 2026-09-19 post-5e07ba8 (unreleased 0.8.1, round 4) ---
+new issues filed (37): #102(R4-01) #103(R4-04) #104(R4-03) #105(R4-06) #106(R4-07) #107(R4-11) #108(R4-12) #109(R4-19) #110(R4-02) #111(R4-08) #112(R4-13) #113(R4-14) #114(R4-16) #115(R4-18) #116(R4-21) #117(R4-22) #118(R4-23) #119(R4-24) #120(R4-25) #121(R4-26) #122(R4-27) #123(R4-28) #124(R4-29) #125(R4-30) #126(R4-31) #127(R4-32) #128(R4-10) #129(R4-15) #130(R4-20) #131(R4-33) #132(R4-34) #133(R4-35) #134(R4-36) #135(R4-37) #136(R4-38) #137(R4-39) #138(R4-40)
+comments posted: #31 #77 #79 #84 #85 #86 #87 #88 #89 #90 #91 #92 #93 #94 #95 #96 #97 #98 #99 (19 comments)
+reopened: #91 (criterion 3 unmet) #99 (async side unmet)
+meta #26 body replaced (full rewrite for this commit, all <R4-nn> placeholders substituted with real issue numbers)
+
+--- 2026-09-19 post-3ed3099 (unreleased 0.8.1, round 5) ---
+new issues filed (21): #142(R5-01) #143(R5-02) #144(R5-04) #145(R5-12) #146(R5-03) #147(R5-05) #148(R5-06) #149(R5-07) #150(R5-08) #151(R5-09) #152(R5-10) #153(R5-11) #154(R5-13) #155(R5-14) #156(R5-15) #157(R5-16) #158(R5-17) #159(R5-18) #160(R5-19) #161(R5-20) #162(R5-21)
+comments posted: #91 #99 #102 #103 #104 #105 #106 #107 #108 #109 #110 #111 #112 #113 #114 #115 #116 #117 #118 #119 #120 #121 #122 #123 #124 #125 #126 #127 #128 #129 #130 #131 #132 #133 #134 #135 #136 #137 #138 (39 comments)
+reopened: #118 (AfterEvent lateness telemetry reset on round-trip, criterion unmet) #122 (SyncInterpreter.tick() only delivers one due deadline per call, narrow) #125 (deferred replay folds into triggering Receipt on sync engine, narrow) #133 (forwardTo sibling branch still only logs, narrow) #134 (sync_interpreter.py never calls on_resolve_error, narrow)
+meta #26 body replaced (full rewrite for this commit, all <R5-nn> placeholders substituted with real issue numbers)
+
+--- 2026-09-20 post-cec108b (unreleased 0.8.1, round 6) ---
+new issues filed (10): #166(R6-01) #167(R6-03) #168(R6-02) #169(R6-06) #170(R6-10) #171(R6-11) #172(R6-12) #173(R6-13) #174(R6-14) #175(R6-15)
+comments posted: #118 #125 #133 #134 #142 #143 #145 #146 #147 #148 #149 #150 #151 #152 #153 #154 #155 #156 #158 #159 #160 #161 #162 #122 #144 #157
+reopened: #122 #157
+meta #26 body replaced
+
+--- 2026-09-20 post-221ce7c (unreleased 0.8.1, round 7) ---
+new issues filed (12): #179(R7-01) #180(R7-02) #181(R7-03) #182(R7-05) #183(R7-07) #184(R7-08) #185(R7-06) #186(R7-09) #187(R7-10) #188(R7-11) #189(R7-12) #190(R7-13)
+comments posted: #157 #166 #167 #168 #169 #170 #171 #172 #173 #122 #174 #175 (12 comments)
+reopened: #167 (narrow, async-only residual of R7-01) #168 (narrow, async-only residual of R7-01) #174 (documented-only, leave open) #175 (Case D not fixed)
+meta #26 body replaced (full rewrite for this commit, all <R7-nn> placeholders substituted with real issue numbers)
+
+--- 2026-09-21 post-6db65d8 (unreleased 0.8.1, round 8) ---
+new issues filed (10): #192(R8-01) #193(R8-02) #194(R8-03) #195(R8-05) #196(R8-04) #197(R8-07) #198(R8-08) #199(R8-09) #200(R8-10) #201(R8-11)
+comments posted: #167 #168 #174 #175 #179 #180 #181 #182 #183 #184 #185 #186 #187 #188 #189 #190 (16 comments)
+reopened: #181 (fixed for coroutine entry actions; no-op for plain def entry actions, narrow) #186 (fixed for contradiction; the rule is one-sided, narrow)
+meta #26 body appended (round 8 section, all R8-nn placeholders substituted with real issue numbers)
+round-8 bodies #195 #197–#201 rewritten with standalone repros
+
+--- round 9, 2026-09-22, commit f28719c (merge of PR #202, unreleased 0.8.1; __version__ still reports 0.8.0) ---
+new issues filed (8): #203(R9-02) #204(R9-04) #205(R9-05) #206(R9-06) #207(R9-07) #208(R9-08) #209(R9-09) #210(R9-T1)
+comments posted: #181 #186 #192 #193 #194 #195 #196 #197 #198 #199 #200 #201 (12 comments)
+closed: none by us this round (9 of the 12 commented issues were already closed upstream; #193 #195 #197 left open per disposition, kept open, not reopened)
+meta #26 body replaced (round 9 update; all R9-nn placeholders substituted with real issue numbers #203-#210)
+post-flight: all 8 new issues re-verified from a neutral cwd (C:/Users/basil) after re-fetching each issue body/comment and re-extracting the embedded python block; #205-#209 required a follow-up comment inlining the standalone repro as a fenced code block (the issue body referenced it as "attached" but gh issue create does not support file attachments via the API) -- comment posted and re-verified for each
+gh api issues?labels=candleviewer&state=all == 0 confirmed
+ADOPT decision posted (ADOPT WITH CONSTRAINTS, order path included; both remaining Highs #203/#204 contained by CV-C45/CV-C32/CV-C46)
+
+--- round 10, 2026-09-22, commit 19cb1f1 (merge of PR #211, unreleased 0.8.1; __version__ still reports 0.8.0) ---
+new issues filed (5): #212(R10-03) #213(R10-04) #214(R10-05) #215(R10-06) #216(R10-07)
+comments posted: #203 #204 #205 #206 #207 #208 #209 #210 (8 comments)
+closed: none by us this round (all 8 commented issues were already closed upstream from round 9's close actions)
+meta #26 body replaced (round 10 update; all <R10-nn> placeholders substituted with real issue numbers #212-#216)
+pre-flight: each new-issue file's first fenced python block under its repro heading extracted and run from cwd C:/Users/basil -> all 5 exit 1, no ImportError/ModuleNotFoundError
+post-flight: all 5 new issue bodies re-fetched via gh issue view --json body, exactly one fenced python block each, re-extracted and re-run from neutral cwd C:/Users/basil -> #212 exit 1, #213 exit 1, #214 exit 1, #215 exit 1, #216 exit 1 (all standalone, defect/claim-overstated present)
+gh api issues?labels=candleviewer&state=all == 0 confirmed
+row-8 ADOPT + tag recommendation posted (ADOPT WITH CONSTRAINTS, decision-table row 8; round-10 residuals R10-03..R10-07 filed as new issues #212-#216, none tag-blocking on their own; __version__ bump to 0.8.1 remains the one hard release-readiness blocker)
+
+--- round 11, 2026-09-22, commit c78ce99 (merge of PR #217, fix/0.8.1-round10; unreleased 0.8.1; __version__ still reports 0.8.0) ---
+new issues filed (5): #218(R11-04) #219(R11-06) #220(R11-07) #221(R11-08) #222(R11-09)
+comments posted: #212 #213 #214 #215 #216 (5 comments)
+closed: none by us this round (all 5 commented issues were already closed upstream from round 10's close actions)
+meta #26 body replaced (round 11 update; all <R11-nn> placeholders substituted with real issue numbers #218-#222)
+pre-flight: each new-issue file's first fenced python block under its repro heading (## Minimal reproduction or ## Repro) extracted and run from cwd C:/Users/basil -> all 5 exit 1, no ImportError/ModuleNotFoundError, no psutil
+post-flight: all 5 new issue bodies re-fetched via gh issue view --json body, >=10 markdown sections each (## Summary/Environment/Repro or Minimal reproduction/Observed/Why it matters or Expected/Suggested direction or Root cause/Impact/Proposed fix/Acceptance criteria/Related), exactly one repro block extracted from the Minimal reproduction/Repro section and re-run from neutral cwd C:/Users/basil -> #218 exit 1, #219 exit 1, #220 exit 1, #221 exit 1, #222 exit 1 (all standalone, defect present)
+gh api issues?labels=candleviewer&state=all == 0 confirmed
+row-6 ADOPT + fix-R11-04-then-tag recommendation posted (ADOPT WITH CONSTRAINTS, decision-table row 6, down one row from round 10's row 8; the single open High, R11-04 (#218, unbounded _timer_handles leak), is a resource defect the release itself created by fixing #206/#212, mechanically contained by CV-C47 (a lint written last round for a different finding); recommend fixing R11-04 first -- one line per engine, the after path's owner_id=state.id pattern already exists -- then bumping __version__ to match before tagging 0.8.1)
+
+--- round 12, 2026-09-23, commit de2da4e (merge of PR #223, fix/0.8.1-round11; unreleased 0.8.1; __version__ still reports 0.8.0) ---
+new issues filed (11): #225(DE-L1) #226(P-1) #227(P-2) #228(DE-A12) #229(DE-A13) #230(DE-A14) #231(DE-L2) #232(DE-L3) #233(DE-L5) #234(DE-A10) #235(DE-L7) -- filed Medium-severity first (#225 #226 #227), then Low (#228-#233), then Info/release (#234 #235), per manifest order
+comments posted: #218 #219 #220 #221 #222 (5 comments, all "Verified FIXED" with placeholder ids substituted for real issue numbers before posting: <DE-L1>->#225, <DE-L3>->#232, <DE-L2>->#231, <P-2>->#227, <P-1>->#226, <DE-A13>->#229)
+closed: none by us this round (this is the "make it perfect" list; nothing here is a reopen/close action)
+meta #26 body replaced (round 12 update; all <DE-nn>/<P-n> placeholders substituted with real issue numbers #225-#235; DE-A14 was not referenced in the meta body's checklist and needed no substitution there)
+labels created/force-updated on the repo: severity/blocker #b60205, severity/high #d93f0b, severity/medium #fbca04, severity/low #0e8a16, severity/info #8b949e, and area-style labels area/interpreter, sync-interpreter, actors, persistence, timers, validation, perf, docs, events, plugins, receipts, all #1d76db
+pre-flight: each new-issue file's repro script under repro/ extracted and run from cwd C:/Users/basil -> DE-L1 exit 1, P-1 exit 1, P-2 exit 1, DE-L2 exit 1, DE-L3 exit 1, DE-L5 exit 1, DE-A14 exit 1 (all standalone, defect present, no ImportError); DE-A12/DE-A13/DE-A10/DE-L7 are ask-shaped (no repro) except DE-L7 which has an illustrative-only repro (exit 0, no defect claimed -- Info-level hardening note, not a bug)
+first pass of issue bodies over-trimmed: mkbody helper cut everything from "## Verification" to end of file, which also dropped the trailing "## Related" section on files where Related follows Verification (9/11 files) -- caught in post-flight section-count check (#225 read 9 sections instead of >=10, #229 read 4), fixed by re-splicing "## Related" back in for all 11 issues via `gh issue edit`, re-verified
+post-flight: all 11 new issue bodies re-fetched via gh issue view --json body; section counts after the fix: #225-#227/#230-#235 = 10 sections each, #228 = 9, #229 = 5 (DE-A13 is a two-fact docs ask with a shorter Summary/Current state/Requested change/Acceptance criteria/Related shape -- content matches the source file, nothing missing); the first fenced python block under each "## Minimal reproduction" section re-extracted and re-run from neutral cwd C:/Users/basil -> #225 exit 1, #226 exit 1, #227 exit 1, #230 exit 1, #231 exit 1, #232 exit 1, #233 exit 1 (all standalone, defect present); #228/#229/#234/#235 have no repro block (test-quality/docs/release/info asks, as manifest specifies)
+gh api issues?labels=candleviewer&state=all == 0 confirmed
+"make it perfect" framing used throughout (library adopted; items sit between "adopt with constraints" and "nothing open"); no candleviewer mentions in any issue/comment/meta body
+
+--- round 13, 2026-09-23, tag v0.9.0 (91bd979) — first PyPI-published release; also present on main @ e3a1f22 ---
+new issues filed (10): #239(R13-01) #240(R13-02) #241(R13-03) #242(R13-04-R13-06) #243(R13-07) #244(R13-08) #245(R13-W3) #246(BENCH-01) #247(RELEASE-01) #248(S-7) -- filed High(#239) -> Medium(#240 #241 #242 #243) -> Low(#244 #245 #246 #247) -> Info(#248), per manifest order
+comments posted: #225 #226 #227 #228 #229 #230 #231 #232 #233 #234 #235 (11 comments, all "Verified FIXED"/disposition per manifest, no placeholders needed -- comment files referenced only already-resolved issue numbers)
+closed: none by us this round (all 11 commented issues are the round-12 "make it perfect" set; nothing here is a reopen/close action)
+meta #26 body replaced (round 13 update; added #239/#240 references in the "two new issues" section, appended a paragraph naming the other 8 tracking-only items #241-#248, updated the summary table's "New library defects filed" row to 10 (1 High, 4 Medium, 4 Low, 1 Info))
+labels created/force-updated on the repo: severity/high #d93f0b, severity/medium #fbca04, severity/low #0e8a16, severity/info #8b949e, and area-style labels area/interpreter, sync-interpreter, actors, persistence, timers, validation, perf, docs, events, plugins, receipts, all #1d76db (all already existed from round 12; force-updated to be safe)
+pre-flight: extracted the "## Reproduction"/"## Minimal reproduction" python block from R13-01 and R13-02 (the only two files with a repro embedded in the finished issue body) and ran both from cwd C:/Users/basil -> R13-01 exit 0 (illustrative, no defect-triggering exit-1 contract claimed in front-matter; manifest marks repro_verified_verbatim true, repro_exit_code 0), R13-02 exit 0 (same); R13-03/R13-08 use external battle-v0.9.0 repro scripts referenced by path, both run and confirmed present + exit as documented (chain_trips script exit 1 reproducing 4 raw leaks; runtimewarning script exit 0, illustrative); BENCH-01/RELEASE-01/S-7/R13-04-R13-06/R13-07/R13-W3 are docs/tracking asks with no repro_script or an illustrative-only inline snippet per manifest
+post-flight (first pass): all 10 new issue bodies re-fetched via gh issue view --json body; found 3 latent bugs in the source draft repro snippets that predated this round's editing and had never been executed end-to-end before posting: R13-07 (#243) called create_machine(..., max_iterations=5) (no such kwarg; maxIterations belongs in the machine config dict) and awaited the non-async Interpreter.from_snapshot(); R13-W3 (#245) and S-7 (#248) both called s.status.value / i.status.value on a plain str status attribute (no .value accessor exists on this library's status field)
+fixed inline: corrected all three snippets in new/R13-07-restorederror-type-hierarchy.md, new/R13-W3-sync-interpreter-no-queue-bound.md, new/S-7-replace-demotion-no-remint-path.md, re-ran each from neutral cwd C:/Users/basil (all now exit 0, illustrative, as the manifest specifies for these three docs-only items), and pushed corrected bodies to #243, #245, #248 via gh issue edit
+post-flight (second pass, after fixes): all 10 new issue bodies re-fetched again; section counts #239=6, #240=7, #241=10, #242=11, #243=10, #244=12, #245=10, #246=9, #247=9, #248=10 (all >=6, most >=9; shapes match their respective source-file structure, nothing missing); re-extracted and re-ran every embedded/referenced repro from neutral cwd C:/Users/basil once more -- #239 exit 0, #240 exit 0, #241 (external script) exit 1, #243 exit 0, #244 (external script) exit 0, #245 exit 0, #248 exit 0, all standalone, no ImportError, no candleviewer mentions
+gh api repos/basiltt/xstate-statemachine/issues?labels=candleviewer&state=all == 0 confirmed (both pre-flight and post-flight)
+"make it perfect" framing used throughout (v0.9.0 adopted and pinned; items sit between "adopt with constraints" and "nothing open"); one collegial sentence per Summary; design-constraint items (R13-04-R13-06, R13-07, R13-08, R13-W3, S-7) explicitly marked "not a defect — filed for tracking/docs so the trust boundary is written where a reader will find it"

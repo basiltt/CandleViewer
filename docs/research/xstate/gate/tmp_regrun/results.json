@@ -1,0 +1,1430 @@
+[
+ {
+  "script": "issues/verify-0.8.0/LC-01_action-raise-commits-transition.py",
+  "status": "FAIL",
+  "seconds": 0.21,
+  "tail": ", 'explode', 'entry_b'] last_transition_ok: False, failed: [['explode']]\nROLLBACK OBSERVED state: ['oms.a'] trace: [] last_transition_ok: False\nROLLBACK EXPECTED state: ['oms.a'], entry_b absent, last_transition_ok: False\nFAIL     OBSERVED status: stopped error: TransitionFailedError cause is RuntimeError: True\nFAIL     EXPECTED status: error, cause is RuntimeError: True\nRESULT: NOT-FIXED/PARTIAL\n"
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-02_always-self-target-deadlock.py",
+  "status": "PASS",
+  "seconds": 0.85,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-03_unhandled-events-discarded.py",
+  "status": "PASS",
+  "seconds": 0.26,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-05_raise-not-macrostep.py",
+  "status": "PASS",
+  "seconds": 0.7,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-06_overforgiving-target-resolution.py",
+  "status": "PASS",
+  "seconds": 0.43,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-07_relative-dot-target-silent-noop.py",
+  "status": "PASS",
+  "seconds": 0.35,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-08_unknown-target-unvalidated.py",
+  "status": "PASS",
+  "seconds": 0.3,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-09_guard-exception-swallowed.py",
+  "status": "PASS",
+  "seconds": 0.49,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-12_spawn-blocking-async-engine.py",
+  "status": "FAIL",
+  "seconds": 1.79,
+  "tail": "ors_after_spawn=0\nOBSERVED sync  spawn_blocking_worker  start_blocked_ms=   253 actors_after_spawn=0\nOBSERVED async distinguishes spawn_ vs spawn_blocking_: True (1 ms vs 257 ms)\nOBSERVED sync  distinguishes spawn_ vs spawn_blocking_: False (253 ms vs 253 ms)\nEXPECTED both engines agree: spawn_blocking_ blocks the parent until the child reaches a terminal state, on BOTH engines, by default (#41).\n"
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-16_sendto-invoke-id.py",
+  "status": "PASS",
+  "seconds": 1.82,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-19_restore-does-not-restart-invokes.py",
+  "status": "PASS",
+  "seconds": 0.95,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-21_no-snapshot-schema-version.py",
+  "status": "PASS",
+  "seconds": 0.22,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-22_from_snapshot_context_merge.py",
+  "status": "PASS",
+  "seconds": 0.34,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-24_pending_queue_inbox_durability.py",
+  "status": "PASS",
+  "seconds": 0.21,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-26_after_timer_priority_lane.py",
+  "status": "FAIL",
+  "seconds": 10.35,
+  "tail": "led_for/fired_at/lateness_ms = True\nEXPECTED True\nOBSERVED   10 ms timer, idle loop  lateness = 5.6 ms\nOBSERVED   10 ms timer, 100 busy loop lateness = 78.1 ms\nEXPECTED   10 ms timer, 100 busy loop lateness <= 50.0 ms\nOBSERVED  100 ms timer, idle loop  lateness = 12.7 ms\nOBSERVED  100 ms timer, 100 busy loop lateness = 76.5 ms\nEXPECTED  100 ms timer, 100 busy loop lateness <= 50.0 ms\nRESULT: FAIL\n"
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-27_clock_injection_simulated.py",
+  "status": "PASS",
+  "seconds": 0.86,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-28_actor-poll-two-tasks.py",
+  "status": "PASS",
+  "seconds": 0.5,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-29_invoke-input-static-ignored.py",
+  "status": "PASS",
+  "seconds": 0.36,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-32_terminal-machines-not-reaped.py",
+  "status": "PASS",
+  "seconds": 0.51,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-34_no-strict-mode.py",
+  "status": "PASS",
+  "seconds": 0.21,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-36_builtin_action_params_validated.py",
+  "status": "PASS",
+  "seconds": 0.21,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-37_arity_marker_precedence.py",
+  "status": "PASS",
+  "seconds": 0.21,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-38_sync_interpreter_no_threads.py",
+  "status": "PASS",
+  "seconds": 0.67,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-39_perf_docs_present.py",
+  "status": "PASS",
+  "seconds": 0.09,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-41_backpressure.py",
+  "status": "PASS",
+  "seconds": 0.23,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-42_send_receipt.py",
+  "status": "PASS",
+  "seconds": 0.25,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-43_cross_thread.py",
+  "status": "PASS",
+  "seconds": 0.49,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-44_pure_api.py",
+  "status": "PASS",
+  "seconds": 2.21,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-45_hot-path-alloc-and-info-logging.py",
+  "status": "PASS",
+  "seconds": 0.43,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-47_target-str-mutation-shared-definition.py",
+  "status": "PASS",
+  "seconds": 0.25,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-48_no-error-observability-hooks.py",
+  "status": "FAIL",
+  "seconds": 0.3,
+  "tail": "VED on_unhandled_event fires once for TYPO_FILLED: True\nOBSERVED on_guard_error fires + guard still False: True\nOBSERVED on_transition_failed precedes on_transition with failed action info: False\nOBSERVED LoggingInspector implements new hooks: True\nEXPECTED all four checks True: unhandled event surfaced, guard error distinguishable, transition-failed ordering correct, inspector wired\nRESULT: FAIL\n"
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-49_no-hierarchical-state-value.py",
+  "status": "PASS",
+  "seconds": 0.23,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-53_production_characteristics.py",
+  "status": "PASS",
+  "seconds": 0.24,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-0.8.0/LC-57_two_engines_unified.py",
+  "status": "FAIL",
+  "seconds": 0.51,
+  "tail": "y protocol as the issue's proposed fix sketched -- a different implementation of the same 'one algorithm, not two' acceptance criterion. Reported as PARTIAL below if this narrower architectural ask matters to CandleViewer; the user-visible acceptance criterion (no duplication, no shadowing, no renamed forks, LC-58 fixed) is fully met per the checks above.\n\nRESULT: FAIL - LC-57 not fully satisfied\n"
+ },
+ {
+  "script": "issues/verify-main-5327ba6/LC-01_action-error-policy.py",
+  "status": "FAIL",
+  "seconds": 1.34,
+  "tail": "il-stops-with-retrievable-error\nPASS  4-continue-default-reports-failed-actions\nPASS  5-old-style-plugin-still-loads\nPASS  6-entry-failure-during-start-honours-policy\nPASS  7-last-transition-ok-false-after-failed-actions\nPASS  A-rollback-withdraws-raised-events\nPASS  A2-sendto-cannot-be-undone-documented\nPASS  B-deprecation-warning-once-per-process\nFAIL  C-rollback-idle-checkpoint-skip-throughput\n"
+ },
+ {
+  "script": "issues/verify-main-5327ba6/LC-07_relative-dot-target.py",
+  "status": "FAIL",
+  "seconds": 0.94,
+  "tail": " 1-child-first-resolution\nPASS  2-sibling-fallback-still-works-and-warns\nPASS  B-warning-names-hash-path-spelling\nPASS  C-warning-names-strictTargets\nPASS  3-unresolvable-dot-target-raises-at-build-time\nFAIL  4-async-and-sync-agree-on-unresolvable-target-under-strict_targets=False\nPASS  A-warn-once-per-source-target-pair\nPASS  D-child-first-multi-segment-still-works\nFAIL  5-original-repro-exits-0\n"
+ },
+ {
+  "script": "issues/verify-main-5327ba6/LC-19_restore-does-not-restart-invokes.py",
+  "status": "PASS",
+  "seconds": 0.97,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5327ba6/LC-28_actor-poll-two-tasks.py",
+  "status": "PASS",
+  "seconds": 0.51,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5327ba6/LC-34_send-threadsafe-strict-and-static-raise.py",
+  "status": "PASS",
+  "seconds": 0.42,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5327ba6/LC-37_machinelogic-strict.py",
+  "status": "PASS",
+  "seconds": 0.24,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5327ba6/LC-37_wrongthreaderror-message.py",
+  "status": "PASS",
+  "seconds": 6.04,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5327ba6/LC-38_sync-interpreter-loop-clock-lane.py",
+  "status": "PASS",
+  "seconds": 0.58,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5327ba6/LC-42_send_receipt.py",
+  "status": "PASS",
+  "seconds": 0.24,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5327ba6/LC-52_error-platform-event.py",
+  "status": "PASS",
+  "seconds": 0.6,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5327ba6/N-1_send-wait-receipt-collision.py",
+  "status": "FAIL",
+  "seconds": 0.46,
+  "tail": ", deferred=False, denied=False)\", \"Receipt(state_ids=frozenset({'rc.b'}), changed=True, error=None, deferred=False, denied=False)\", \"Receipt(state_ids=frozenset({'rc.a'}), changed=True, error=None, deferred=False, denied=False)\", \"Receipt(state_ids=frozenset({'rc.b'}), changed=True, error=None, deferred=False, denied=False)\"] EXPECTED='all settled, all report InterpreterStoppedError'\n\nSOME FAILED\n"
+ },
+ {
+  "script": "issues/verify-main-5327ba6/N-2_sync-timer-clock-lane.py",
+  "status": "PASS",
+  "seconds": 0.94,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5327ba6/N-3_sync-macrostep-budget.py",
+  "status": "FAIL",
+  "seconds": 0.91,
+  "tail": "rue)\n[PASS] D: sync/async byte-identical action traces for 2000-event batch: OBSERVED=(2000, 2000, True) EXPECTED=(2000, 2000, True)\n[PASS] engine-parity test exists in tests/: OBSERVED=['tests\\\\test_core_algorithm.py', 'tests\\\\test_round3_findings.py', 'tests\\\\test_round4_findings.py', 'tests\\\\test_round5_findings.py', 'tests\\\\test_xstate_v5_parity.py'] EXPECTED='at least one match'\n\nSOME FAILED\n"
+ },
+ {
+  "script": "issues/verify-main-5327ba6/N-4_send-threadsafe-strict.py",
+  "status": "PASS",
+  "seconds": 0.69,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5327ba6/N-8_error-done-namespace.py",
+  "status": "FAIL",
+  "seconds": 1.04,
+  "tail": "tance_tests_named_in_issue_present -- present: {'test_user_event_in_reserved_namespace_matches_wildcard': ['test_events.py'], 'test_user_event_in_reserved_namespace_trips_onunhandled_error': ['test_events.py'], 'test_engine_synthesised_events_remain_exempt': ['test_events.py']}\nPASS: original_repro_exit_0 -- exit code=0 (expected 0 only if runtime behaviour changed)\n\nOVERALL: SOME CRITERIA FAILED\nne 'ou2' entered the error state: UnhandledEventError(\"Event 'done.review' is not handled in any active state ['ou2.a'] and the machine's onUnhandled policy is 'error'.\")\nERROR:xstate_statemachine.base_interpreter:\u00f0\u0178\u0161\u00a8 Machine 'ou2' entered the error state: UnhandledEventError(\"Event 'error.validation' is not handled in any active state ['ou2.a'] and the machine's onUnhandled policy is 'error'.\")\n"
+ },
+ {
+  "script": "issues/verify-main-3c527b0/43_one-task-per-invoked-child.py",
+  "status": "PASS",
+  "seconds": 1.65,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3c527b0/79_provenance-system-events.py",
+  "status": "PASS",
+  "seconds": 0.5,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3c527b0/80_errorevent-distinct-from-doneevent.py",
+  "status": "PASS",
+  "seconds": 0.42,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/31_relative-dot-target-engine-parity.py",
+  "status": "PASS",
+  "seconds": 0.33,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/77_sync-runaway-chain-budget.py",
+  "status": "PASS",
+  "seconds": 0.38,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/79_provenance-not-forgeable-and-snapshot-survives.py",
+  "status": "PASS",
+  "seconds": 0.38,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/84_receipt-deferred-and-replay-semantics.py",
+  "status": "PASS",
+  "seconds": 0.25,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/85_provenance_not_forgeable.py",
+  "status": "PASS",
+  "seconds": 0.53,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/86_87_snapshot_provenance_and_events.py",
+  "status": "FAIL",
+  "seconds": 0.56,
+  "tail": "='error.platform.x', payload={})\n[PASS] every event class round-trips persist_event/restore_event \n[PASS] #84 spot-check: Receipt.deferred True for deferred event True\n[PASS] #84 spot-check: deferred event restored once (no duplication) in pending_events [Event(type='MAYBE_LATER', payload={})]\n\nRESULT: 1 FAILURE(S): ['v1 record (no kind) for error.platform.* name-derived as system (best effort)']\n_events` / `get_snapshot()` to persist them.\nWARNING:xstate_statemachine.interpreter:\u00f0\u0178\u201c\u00ac Interpreter 'm' stopping with 1 pending event(s) that will NOT be processed. Use stop(drain=True) to finish them, or read `pending_events` / `get_snapshot()` to persist them.\n<sys>:0: RuntimeWarning: coroutine 'sleep' was never awaited\nRuntimeWarning: Enable tracemalloc to get the object allocation traceback\n"
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/88_tripped_per_chain.py",
+  "status": "PASS",
+  "seconds": 0.29,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/89_clock_kwargs_not_consent.py",
+  "status": "PASS",
+  "seconds": 0.22,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/90_async_self_send_budget.py",
+  "status": "PASS",
+  "seconds": 3.25,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/91_alias_shadow_warning.py",
+  "status": "PASS",
+  "seconds": 0.21,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/92_machine_owned_registry.py",
+  "status": "PASS",
+  "seconds": 0.22,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/93_logic_modules_ambiguity.py",
+  "status": "PASS",
+  "seconds": 0.22,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/94_runaway_completion_survives.py",
+  "status": "PASS",
+  "seconds": 0.5,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/95_no_self_deprecation.py",
+  "status": "PASS",
+  "seconds": 0.7,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/96_resolve_event_spec_dict_payload.py",
+  "status": "PASS",
+  "seconds": 0.44,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/97_escalate_error_event.py",
+  "status": "PASS",
+  "seconds": 0.53,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/98_strict_forged_shapes.py",
+  "status": "PASS",
+  "seconds": 0.24,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/99_sync_child_onerror.py",
+  "status": "PASS",
+  "seconds": 0.53,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/final/fv1_blockers_highs.py",
+  "status": "FAIL",
+  "seconds": 0.24,
+  "tail": "xstate-statemachine\\src\\xstate_statemachine\\validation.py\", line 287, in validate_machine\n    raise RootTargetError(\n    ...<2 lines>...\n    )\nxstate_statemachine.exceptions.RootTargetError: Machine 'm' has transition(s) targeting the machine root:\n  m.a: always -> target '#m' is the machine root; entering it empties the configuration. Target the root's initial child ('#m.a') or a specific state.\n"
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/final/fv2_r404_hang.py",
+  "status": "PASS",
+  "seconds": 0.27,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/final/fv3_r406_r407_r411.py",
+  "status": "PASS",
+  "seconds": 4.52,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/final/fv4_r407_falsepos.py",
+  "status": "PASS",
+  "seconds": 38.34,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/final/fv5_mediums.py",
+  "status": "PASS",
+  "seconds": 0.77,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/merge/m1_guard_absorb.py",
+  "status": "PASS",
+  "seconds": 0.21,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/merge/m2_sec_and_stopdrop.py",
+  "status": "PASS",
+  "seconds": 0.22,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/merge/m3_misc.py",
+  "status": "PASS",
+  "seconds": 0.31,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/r4merge/m1_obs_sec.py",
+  "status": "PASS",
+  "seconds": 0.26,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/r4merge/m2.py",
+  "status": "PASS",
+  "seconds": 0.29,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/r4merge/m3.py",
+  "status": "PASS",
+  "seconds": 0.41,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/r4merge/m4.py",
+  "status": "PASS",
+  "seconds": 0.36,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/r4merge/m5.py",
+  "status": "FAIL",
+  "seconds": 0.21,
+  "tail": "l = True, restart_services: bool = False, restart_timers: Optional[bool] = None, clock: Optional[xstate_statemachine.clock.Clock] = None) -> ~TInterpreter\nOBS3 LATE receipt: Receipt(state_ids=frozenset({'d.a'}), changed=False, error=None, deferred=True, denied=False)\nOBS3 ARM receipt: Receipt(state_ids=frozenset({'d.b'}), changed=True, error=None, deferred=False, denied=False) states now: {'d.c'}\n~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src\\xstate_statemachine\\validation.py\", line 316, in validate_machine\n    raise InvalidConfigError(message)\nxstate_statemachine.exceptions.InvalidConfigError: Machine 's' has unresolvable transition targets:\n  s.a: on 'GO' -> target 'nowhere' does not resolve\n"
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/r4merge/m6.py",
+  "status": "PASS",
+  "seconds": 0.21,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/r4merge/m7.py",
+  "status": "PASS",
+  "seconds": 0.37,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/r4_17b.py",
+  "status": "PASS",
+  "seconds": 0.25,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/r4_18_err.py",
+  "status": "PASS",
+  "seconds": 0.21,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/r4_18_pub.py",
+  "status": "PASS",
+  "seconds": 0.37,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/r4_18_real.py",
+  "status": "PASS",
+  "seconds": 0.22,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-5e07ba8/r4_21b.py",
+  "status": "PASS",
+  "seconds": 0.87,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/102_midstep_snapshot.py",
+  "status": "PASS",
+  "seconds": 0.69,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/103_settle_budget.py",
+  "status": "PASS",
+  "seconds": 0.23,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/104_block_eager_enqueue.py",
+  "status": "PASS",
+  "seconds": 0.36,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/105_external-send-not-charged-to-chain-budget.py",
+  "status": "PASS",
+  "seconds": 2.39,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/106_receipt-deferred-per-step-by-reference.py",
+  "status": "PASS",
+  "seconds": 0.49,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/107_priority-lane-persisted.py",
+  "status": "PASS",
+  "seconds": 0.37,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/108_root-target-rejected-at-build.py",
+  "status": "PASS",
+  "seconds": 0.21,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/109_done-invoke-carries-output.py",
+  "status": "PASS",
+  "seconds": 0.67,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/110_snapshot_shape_validation.py",
+  "status": "PASS",
+  "seconds": 0.21,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/111_detach_preserves_provenance.py",
+  "status": "PASS",
+  "seconds": 0.66,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/112_settle_budget_observable.py",
+  "status": "PASS",
+  "seconds": 0.24,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/113_invalid_event_typed.py",
+  "status": "PASS",
+  "seconds": 0.24,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/114_loop_death_reported.py",
+  "status": "PASS",
+  "seconds": 0.31,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/115_simulatedclock_settler_detach.py",
+  "status": "PASS",
+  "seconds": 0.54,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/116_sync_async_invoke_timing_parity.py",
+  "status": "PASS",
+  "seconds": 0.57,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/117_from_snapshot_clock_param.py",
+  "status": "PASS",
+  "seconds": 0.47,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/118_afterevent_lateness_persistence.py",
+  "status": "PASS",
+  "seconds": 0.46,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/119_receipt_arity_changelog_correction.py",
+  "status": "PASS",
+  "seconds": 0.33,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/120_async_trip_spares_completions.py",
+  "status": "PASS",
+  "seconds": 4.0,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/121_ducktyped_logic_not_mutated.py",
+  "status": "PASS",
+  "seconds": 7.5,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/122_sync_tick_drains_chained_deadlines.py",
+  "status": "PASS",
+  "seconds": 2.17,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/123_sync_send_stopped_fires_hook.py",
+  "status": "PASS",
+  "seconds": 1.58,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/124_sync_async_init_transition_hook_parity.py",
+  "status": "PASS",
+  "seconds": 1.57,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/125_deferred_replay_receipt.py",
+  "status": "PASS",
+  "seconds": 0.3,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/126_logging_inspector_redaction.py",
+  "status": "PASS",
+  "seconds": 0.24,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/127_plugin_failure_surface.py",
+  "status": "PASS",
+  "seconds": 0.22,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/128_after_timer_rearm.py",
+  "status": "PASS",
+  "seconds": 0.57,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/129_stop_event_drops.py",
+  "status": "PASS",
+  "seconds": 0.32,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/130_escalate_declared_id.py",
+  "status": "PASS",
+  "seconds": 0.63,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/131_decimal_fail_loudly.py",
+  "status": "PASS",
+  "seconds": 0.26,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/132_statein_ambiguous.py",
+  "status": "PASS",
+  "seconds": 0.21,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/133_sendto_dropped.py",
+  "status": "PASS",
+  "seconds": 0.47,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/134_on_resolve_error.py",
+  "status": "PASS",
+  "seconds": 0.23,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/135_from_snapshot_status_docs.py",
+  "status": "PASS",
+  "seconds": 0.4,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/136_config_cycle_typed_error.py",
+  "status": "PASS",
+  "seconds": 0.45,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/137_provenance_exports.py",
+  "status": "PASS",
+  "seconds": 0.45,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/138_provenance_deepcopy_pickle.py",
+  "status": "PASS",
+  "seconds": 0.48,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/91_alias_ambiguity.py",
+  "status": "PASS",
+  "seconds": 0.23,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-3ed3099/99_sync_child_onerror.py",
+  "status": "PASS",
+  "seconds": 0.7,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/118_afterevent_lateness.py",
+  "status": "PASS",
+  "seconds": 0.23,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/122_tick_contract_documented.py",
+  "status": "PASS",
+  "seconds": 0.77,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/125_deferred_replay_receipt.py",
+  "status": "PASS",
+  "seconds": 0.22,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/133_sendto_forwardto_unresolved.py",
+  "status": "PASS",
+  "seconds": 0.37,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/134_on_resolve_error_hook.py",
+  "status": "PASS",
+  "seconds": 0.22,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/142_configuration_legality.py",
+  "status": "PASS",
+  "seconds": 1.87,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/144_invoke_cycle_terminates.py",
+  "status": "PASS",
+  "seconds": 1.36,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/145_fail_policy_stops.py",
+  "status": "PASS",
+  "seconds": 1.19,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/146_hostile_fields_typed.py",
+  "status": "PASS",
+  "seconds": 1.24,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/147_root_target_regardless_of_strict_targets.py",
+  "status": "PASS",
+  "seconds": 0.23,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/149_plain_def_service_off_loop.py",
+  "status": "FAIL",
+  "seconds": 0.99,
+  "tail": "ng service takes onError\nCriterion 4: awaitable-returning plain-def service is awaited\n  [OK] returns_coro service takes onDone\nCriterion 5: executor released on stop()\n  [OK] service executor torn down\nCriterion 6: concurrent services run in parallel, not serialized\n    4 x 0.2s services elapsed: 0.223s (serial would be 0.800s)\n  [OK] N services run concurrently\n\nRESULT: FAIL (1 criteria failed)\noduced = await handoff\n               ^^^^^^^^^^^^^\n  File \"C:\\Python\\Python313\\Lib\\concurrent\\futures\\thread.py\", line 59, in run\n    result = self.fn(*self.args, **self.kwargs)\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\verify-main-cec108b\\149_plain_def_service_off_loop.py\", line 130, in raises\n    raise ValueError(\"nope\")\nValueError: nope\n"
+ },
+ {
+  "script": "issues/verify-main-cec108b/150_send_threadsafe_budgeted.py",
+  "status": "FAIL",
+  "seconds": 8.75,
+  "tail": "nal=True trip is RunawayChainError\n  [OK] internal=True last_transition_ok is False\nCriterion: send_threadsafe via contextvars.copy_context().run is budgeted\n  threadsafe (ctx-inherit)  : (21, 'RunawayChainError', False)\n  [OK] ctx-inheriting thread is budgeted\nCriterion: a foreign thread with no action on its stack is NOT charged\n  [OK] foreign thread unaffected\n\nRESULT: FAIL (1 criteria failed)\n"
+ },
+ {
+  "script": "issues/verify-main-cec108b/151_settle_budget_per_macrostep.py",
+  "status": "PASS",
+  "seconds": 0.26,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/152_guard-raise-fallback.py",
+  "status": "PASS",
+  "seconds": 0.35,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/153_guard-denied-distinguishable.py",
+  "status": "PASS",
+  "seconds": 0.22,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/154_sync-restore-clock-attach.py",
+  "status": "PASS",
+  "seconds": 0.23,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/155_spawn-prefix-precedence.py",
+  "status": "PASS",
+  "seconds": 0.23,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/156_escalate-no-invoke-id.py",
+  "status": "PASS",
+  "seconds": 0.28,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/157_send_threadsafe_backpressure.py",
+  "status": "FAIL",
+  "seconds": 1.1,
+  "tail": "  [A] single-thread flood raised QueueOverflowError at call site: False\n  [B] concurrent: raised_on_calling_thread=0, overflow_landed_on_unread_future=3100\nCRITERION A (single-thread sync raise): FAIL\nCRITERION B (concurrent, no silent-future-only overflow): FAIL\n"
+ },
+ {
+  "script": "issues/verify-main-cec108b/158_non_str_event_type_restore.py",
+  "status": "PASS",
+  "seconds": 0.26,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/159_error_hooks.py",
+  "status": "PASS",
+  "seconds": 0.26,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/160_redaction.py",
+  "status": "PASS",
+  "seconds": 0.26,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/161_dict_event_validation.py",
+  "status": "PASS",
+  "seconds": 0.24,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/162_v1_provenance_laundering.py",
+  "status": "PASS",
+  "seconds": 0.26,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/probe_144_async.py",
+  "status": "FAIL",
+  "seconds": 2.77,
+  "tail": "async start() returned; last_error= None\nafter wait: last_error= None\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\verify-main-cec108b\\probe_144_async.py\", line 41, in main\n    assert isinstance(i.last_error, RunawayChainError), \"no RunawayChainError recorded\"\n           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: no RunawayChainError recorded\n"
+ },
+ {
+  "script": "issues/verify-main-cec108b/probe_144_async_count.py",
+  "status": "PASS",
+  "seconds": 2.26,
+  "tail": ""
+ },
+ {
+  "script": "issues/verify-main-cec108b/repro_147_151.py",
+  "status": "PASS",
+  "seconds": 2.35,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-0.8.0/repro/N-01_send-wait-receipt-id-collision.py",
+  "status": "PASS",
+  "seconds": 0.22,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-0.8.0/repro/N-02_sync-timer-unreachable-in-loop.py",
+  "status": "PASS",
+  "seconds": 0.46,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-0.8.0/repro/N-03_sync-macrostep-budget-clears-queue.py",
+  "status": "PASS",
+  "seconds": 0.32,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-0.8.0/repro/N-04_send-threadsafe-bypasses-strict.py",
+  "status": "PASS",
+  "seconds": 0.31,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-0.8.0/repro/N-08_error-done-namespace-invisible.py",
+  "status": "PASS",
+  "seconds": 0.48,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-main/repro/a2_confirm_deferred_receipt.py",
+  "status": "PASS",
+  "seconds": 0.34,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-main/repro/c14_async_no_send_budget.py",
+  "status": "FAIL",
+  "seconds": 3.26,
+  "tail": "machine.max_iterations = 1000\n\nSYNC : send() returned. steps = 1001\nASYNC: after 2.0 s of spinning, steps = 1001  status = running\nASYNC: after 3.0 s, steps = 1001  (still climbing: False)\nASYNC: queue_depth = 0\nib\\asyncio\\base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\issues\\new-main\\repro\\c14_async_no_send_budget.py\", line 71, in main\n    assert n3 > n2, \"async chain terminated on its own\"\n           ^^^^^^^\nAssertionError: async chain terminated on its own\n"
+ },
+ {
+  "script": "issues/new-main/repro/f_chain.py",
+  "status": "PASS",
+  "seconds": 0.89,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-main/repro/f_clock_kwargs.py",
+  "status": "PASS",
+  "seconds": 0.31,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-main/repro/f_collide.py",
+  "status": "PASS",
+  "seconds": 0.29,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-main/repro/f_loader_dup.py",
+  "status": "FAIL",
+  "seconds": 0.3,
+  "tail": "e\\src\\xstate_statemachine\\logic_loader.py\", line 450, in discover_and_build_logic\n    raise InvalidConfigError(\n    ...<5 lines>...\n    )\nxstate_statemachine.exceptions.InvalidConfigError: Action 'FETCH_DATA' is ambiguous: ['fetchData', 'fetch_data'] are all discovered and differ only by case or separators, but are DIFFERENT callables. Keep one, or register the exact name 'FETCH_DATA' explicitly.\n"
+ },
+ {
+  "script": "issues/new-main/repro/f_loader_twoname.py",
+  "status": "PASS",
+  "seconds": 0.28,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-main/repro/f_mixed_clock.py",
+  "status": "PASS",
+  "seconds": 0.46,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-main/repro/f_parity.py",
+  "status": "PASS",
+  "seconds": 0.4,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-main/repro/f_pollute.py",
+  "status": "PASS",
+  "seconds": 0.28,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-main/repro/f_repeat.py",
+  "status": "PASS",
+  "seconds": 0.29,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-main/repro/f_shared_logic.py",
+  "status": "PASS",
+  "seconds": 0.29,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-main/repro/f_stately.py",
+  "status": "PASS",
+  "seconds": 0.28,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-main/repro/f_sticky_async.py",
+  "status": "PASS",
+  "seconds": 1.29,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-main/repro/f_sticky_invoke.py",
+  "status": "PASS",
+  "seconds": 0.28,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-main/repro/f_sticky_timer.py",
+  "status": "PASS",
+  "seconds": 0.33,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-main/repro/f_tripped_sticky.py",
+  "status": "PASS",
+  "seconds": 0.3,
+  "tail": ""
+ },
+ {
+  "script": "issues/new-main/repro/g1b_alias_ambiguity_and_leak.py",
+  "status": "PASS",
+  "seconds": 0.31,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-01_torn-midstep-snapshot.py",
+  "status": "FAIL",
+  "seconds": 0.46,
+  "tail": "\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py\", line 1310, in get_persisted_snapshot\n    raise exc\nxstate_statemachine.exceptions.SnapshotMidStepError: Interpreter 't' is mid-macrostep: a transition's actions are still running and the configuration has no leaf. Snapshot it once the step settles (await send(..., wait=True), or from on_transition).\n"
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-02_from_snapshot_no_validation.py",
+  "status": "FAIL",
+  "seconds": 0.28,
+  "tail": ")\n    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\persistence.py\", line 178, in fail\n    raise SnapshotCorruptError(f\"Snapshot is malformed: {msg}.\")\nxstate_statemachine.exceptions.SnapshotCorruptError: Snapshot is malformed: status is 'running' but the configuration is empty.\n"
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-03_block_policy_fire_and_forget_drop.py",
+  "status": "PASS",
+  "seconds": 0.4,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-04_sync-start-nonterminating.py",
+  "status": "PASS",
+  "seconds": 0.36,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-06_external-events-charged-to-chain-budget.py",
+  "status": "PASS",
+  "seconds": 4.16,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-07_receipt-deferred-id-keyed-false-positives.py",
+  "status": "PASS",
+  "seconds": 0.71,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-08_detach_strips_provenance.py",
+  "status": "PASS",
+  "seconds": 0.7,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-10_after_timer_not_rearmed.py",
+  "status": "FAIL",
+  "seconds": 0.58,
+  "tail": "tions=[] clock.pending=0\n  RESTORED after 11 s: ['timeout_demo.waiting'] fired = False status=running\n  restart_services=True: dormant=False pending_invocations=[] clock.pending=1\n  RESTORED after 11 s: ['timeout_demo.expired'] fired = True status=done\nEXPECTED: both restores reach ['timeout_demo.expired'] with fired=True, matching the reference run.\nRESULT: FAIL (after timer lost across restore)\n"
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-11_priority_lane_not_persisted.py",
+  "status": "FAIL",
+  "seconds": 0.45,
+  "tail": "OBSERVED: _priority_queue=[] pending_events=[]\nOBSERVED: snapshot pending_events=[] deferred=[]\nOBSERVED: restored after +60 s virtual time: states=['lanes.waiting'] fired=0\nEXPECTED: the fired AfterEvent appears in the snapshot, and the restored machine reaches ['lanes.expired'] with fired=1 (the uninterrupted reference run's outcome).\nRESULT: FAIL (fired AfterEvent lost across the snapshot)\n"
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-12_always_root_target_empties_configuration.py",
+  "status": "FAIL",
+  "seconds": 0.28,
+  "tail": "xstate-statemachine\\src\\xstate_statemachine\\validation.py\", line 287, in validate_machine\n    raise RootTargetError(\n    ...<2 lines>...\n    )\nxstate_statemachine.exceptions.RootTargetError: Machine 'm' has transition(s) targeting the machine root:\n  m.a: always -> target '#m' is the machine root; entering it empties the configuration. Target the root's initial child ('#m.a') or a specific state.\n"
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-13_settling_budget_orphan_leaf.py",
+  "status": "FAIL",
+  "seconds": 0.3,
+  "tail": "tate-statemachine\\src\\xstate_statemachine\\validation.py\", line 287, in validate_machine\n    raise RootTargetError(\n    ...<2 lines>...\n    )\nxstate_statemachine.exceptions.RootTargetError: Machine 'm' has transition(s) targeting the machine root:\n  m.b.a: always -> target '#m' is the machine root; entering it empties the configuration. Target the root's initial child ('#m.b') or a specific state.\n"
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-14_untyped_event_type_errors.py",
+  "status": "PASS",
+  "seconds": 0.3,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-15_stop_abandons_events_silently.py",
+  "status": "PASS",
+  "seconds": 0.31,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-16_run_loop_death_status_not_normalized.py",
+  "status": "PASS",
+  "seconds": 0.4,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-18_simulatedclock_settler_leak.py",
+  "status": "PASS",
+  "seconds": 0.31,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-19_invoke_done_carries_child_context_not_output.py",
+  "status": "PASS",
+  "seconds": 0.73,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-20_escalate_unroutable.py",
+  "status": "PASS",
+  "seconds": 0.72,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-21_sync_async_invoke_timing_divergence.py",
+  "status": "PASS",
+  "seconds": 0.3,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-22_from_snapshot_no_clock_param.py",
+  "status": "PASS",
+  "seconds": 0.31,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-23_afterevent_lateness_lost.py",
+  "status": "PASS",
+  "seconds": 0.3,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-24_receipt_arity_break.py",
+  "status": "FAIL",
+  "seconds": 0.4,
+  "tail": "len(Receipt)            : 5\n3-tuple unpack succeeds  : False\n  -> too many values to unpack (expected 3)\nequality vs 3-tuple      : False\n\nOBSERVED: 3-tuple unpacking of Receipt raises ValueError; equality against a 3-tuple is False\nEXPECTED: 0.8.0-shaped 3-tuple unpacking keeps working, or the CHANGELOG explicitly documents this as a breaking change\nRESULT: FAIL - defect present\n"
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-25_async_completion_sparing_missing.py",
+  "status": "PASS",
+  "seconds": 1.87,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-26_ducktyped_logic_mutation.py",
+  "status": "PASS",
+  "seconds": 0.28,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-27_sync_tick_chained_deadlines.py",
+  "status": "FAIL",
+  "seconds": 0.81,
+  "tail": "OBSERVED: sync (1 tick after 0.25s)=['order.ack_timeout']  async (0.25s settle)=['order.escalated']\nEXPECTED: sync == ['order.escalated'] == async; every due deadline drains in one tick()\nFAIL: sync tick() lags behind the fully-settled async state\n"
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-28_sync_send_stopped_silent.py",
+  "status": "PASS",
+  "seconds": 0.35,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-29_sync_start_synthetic_init_hook.py",
+  "status": "PASS",
+  "seconds": 0.36,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-30_deferred_replay_folds_receipt.py",
+  "status": "PASS",
+  "seconds": 0.29,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-31_logging_inspector_no_redaction.py",
+  "status": "PASS",
+  "seconds": 0.31,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-32_async_hook_not_awaited.py",
+  "status": "PASS",
+  "seconds": 0.42,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-33_done_data_stringified.py",
+  "status": "FAIL",
+  "seconds": 0.34,
+  "tail": "ents.py\", line 354, in _assert_json_safe\n    raise SnapshotSerializationError(event.type, exc) from exc\nxstate_statemachine.exceptions.SnapshotSerializationError: Pending event 'done.invoke.svc' carries data that is not JSON-serialisable (Object of type Decimal is not JSON serializable). Snapshots refuse to coerce values silently; make the data JSON-native or snapshot from a quiesced interpreter.\n"
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-34_statein_ambiguous_suffix.py",
+  "status": "PASS",
+  "seconds": 0.32,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-35_sendto_unresolved_silent.py",
+  "status": "PASS",
+  "seconds": 0.43,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-36_no_resolve_error_hook.py",
+  "status": "FAIL",
+  "seconds": 0.3,
+  "tail": "lve target state 'does.not.exist' from state 'm_snf.a'.\")\n  last_transition_ok   = False\n  last_error           = StateNotFoundError(\"Could not resolve target state 'does.not.exist' from state 'm_snf.a'.\")\n  plugin hooks fired   = []\n\nEXPECTED: a dedicated hook (e.g. on_resolve_error) fires, mirroring on_action_error / on_guard_error\nRESULT: no dedicated resolve-error hook fired -- defect present\n\\xstate\\issues\\post-5e07ba8\\new\\repro\\R4-36_no_resolve_error_hook.py:48: DeprecationWarning: Machine 'm_snf' has unresolvable transition targets:\n  m_snf.a: on 'GO' -> target 'does.not.exist' does not resolve\n  (strict_targets=False: these transitions will be silent no-ops at runtime. This escape hatch is removed in 1.0.)\n  machine = create_machine(cfg, logic=MachineLogic(), strict_targets=False)\n"
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-37_restart_services_no_signal.py",
+  "status": "FAIL",
+  "seconds": 0.39,
+  "tail": "art_services=True), before start()):\n  status                    = 'running'\n  has_dormant_invocations   = True\n\nEXPECTED: status should not read 'running' while dormant invocations have not yet been restarted -- the two signals should not contradict each other before start() runs\n\nAfter start(): has_dormant_invocations = False\n\nRESULT: contradictory pair observed before start() -- defect present\n"
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-38_config_cycle_recursionerror.py",
+  "status": "PASS",
+  "seconds": 0.29,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-39_provenance_unexported.py",
+  "status": "PASS",
+  "seconds": 0.35,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-5e07ba8/new/repro/R4-40_provenance_deepcopy_pickle.py",
+  "status": "PASS",
+  "seconds": 0.35,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-01_parallel-tear-passes-midstep-guard.py",
+  "status": "PASS",
+  "seconds": 0.55,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-02_restore-accepts-leafless-configuration.py",
+  "status": "PASS",
+  "seconds": 0.28,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-03_from_snapshot_untyped_errors.py",
+  "status": "PASS",
+  "seconds": 0.32,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-04_nested-invoke-ondone-ancestor-livelock.py",
+  "status": "PASS",
+  "seconds": 0.4,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-05_strict_targets_false_root_target.py",
+  "status": "FAIL",
+  "seconds": 0.36,
+  "tail": "state-statemachine\\src\\xstate_statemachine\\validation.py\", line 287, in validate_machine\n    raise RootTargetError(\n    ...<2 lines>...\n    )\nxstate_statemachine.exceptions.RootTargetError: Machine 'm' has transition(s) targeting the machine root:\n  m.a: on 'GO' -> target '#m' is the machine root; entering it empties the configuration. Target the root's initial child ('#m.a') or a specific state.\n"
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-06_cancel_before_first_turn_unpublished.py",
+  "status": "PASS",
+  "seconds": 1.27,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-07_plain_def_service_blocks_loop.py",
+  "status": "FAIL",
+  "seconds": 1.13,
+  "tail": "d a live 10 ms ticker advances 0 times (expected ~80). The loop is occupied, so no timer, actor or inbound send is serviced for the duration.\nEXPECTED: the async engine never blocks its own event loop. A plain blocking callable belongs on `run_in_executor`, with its `done.invoke` delivered through the priority lane so #116's ordering guarantee is preserved without occupying the loop.\nRESULT: FAIL\n"
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-08_threadsafe-bypasses-self-send-gate.py",
+  "status": "FAIL",
+  "seconds": 3.29,
+  "tail": "OBSERVED:\n  maxIterations                       : 20\n  direct  `await i.send()` executions  : 21\n  `send_threadsafe()` executions       : 60\n  threadsafe budgeted (<= 25)          : False\nEXPECTED:\n  both routes are self-generated work and are charged to the\n  chain budget; both counts <= ~25 (maxIterations + slack)\nRESULT: FAIL - send_threadsafe is not gated by maxIterations\n"
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-09_settle-budget-per-drain.py",
+  "status": "PASS",
+  "seconds": 0.31,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-10_guard-raise-cancels-fallback-candidate.py",
+  "status": "PASS",
+  "seconds": 0.92,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-11_receipt-noop-vs-guard-denied.py",
+  "status": "PASS",
+  "seconds": 0.3,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-12_action-error-policy-fail-persists-source-state.py",
+  "status": "PASS",
+  "seconds": 0.32,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-13_sync-restore-skips-clock-attach.py",
+  "status": "PASS",
+  "seconds": 0.38,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-14_spawn-prefix-hijacks-user-action.py",
+  "status": "PASS",
+  "seconds": 0.39,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-15_escalate-needs-invoke-id.py",
+  "status": "PASS",
+  "seconds": 0.34,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-16_send-threadsafe-no-backpressure.py",
+  "status": "FAIL",
+  "seconds": 1.06,
+  "tail": "on_calling_thread = 3200\n  raised_on_calling_thread                         = 0\n  QueueOverflowError_landed_on_unread_future        = 3100\nEXPECTED:\n  overflow under RAISE is signalled to the CALLING thread synchronously,\n  e.g. send_threadsafe raises QueueOverflowError before returning, or the\n  bound is checked before scheduling onto the loop\nRESULT: FAIL - no calling-thread backpressure signal\n"
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-17_non-str-event-type-via-restore.py",
+  "status": "FAIL",
+  "seconds": 0.32,
+  "tail": "^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\persistence.py\", line 178, in fail\n    raise SnapshotCorruptError(f\"Snapshot is malformed: {msg}.\")\nxstate_statemachine.exceptions.SnapshotCorruptError: Snapshot is malformed: 'pending_events' must be a list of event records whose 'type' is a non-empty string.\n"
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-18_error-hooks-invisible.py",
+  "status": "FAIL",
+  "seconds": 0.31,
+  "tail": "ion_execute', 'on_event_received', 'on_interpreter_start', 'on_interpreter_stop', 'on_snapshot_error', 'on_transition']\n  error-shaped hook fired     : True\nEXPECTED:\n  both raises are true errors, AND a dedicated plugin hook (e.g.\n  on_transition_failed / on_snapshot_error) fires so an audit log\n  built from hooks alone observes them\nRESULT: FAIL - error raised but invisible to every plugin hook\n"
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-19_redaction-gaps.py",
+  "status": "PASS",
+  "seconds": 0.33,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-20_dict-event-bypass.py",
+  "status": "FAIL",
+  "seconds": 0.31,
+  "tail": "aped event):\n  send({'type': 'GO'}) raised : None\n  transitioned to m.b           : True\nEXPECTED:\n  every hostile shape either raises InvalidEventError, or (for the\n  documented mapping form) the mapping's non-'type' keys are also\n  validated as a payload dict -- the sweep should not have a single\n  unvalidated input class\nRESULT: FAIL - dict-shaped event bypasses InvalidEventError beyond 'type'\n"
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/R5-21_v1-provenance-laundering.py",
+  "status": "PASS",
+  "seconds": 0.3,
+  "tail": ""
+ },
+ {
+  "script": "issues/post-3ed3099/new/repro/_scratch_r5_10.py",
+  "status": "PASS",
+  "seconds": 1.23,
+  "tail": ""
+ }
+]

@@ -1,0 +1,295 @@
+{
+  "probe": "v2_timer_handles_and_cancel_storm",
+  "py": "3.13.7",
+  "H1": [
+    {
+      "engine": "async",
+      "kind": "def",
+      "beats": 200,
+      "peak_handles": 1,
+      "end_handles": 1,
+      "samples": 199,
+      "max_sample": 1
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "beats": 200,
+      "peak_handles": 1,
+      "end_handles": 1,
+      "samples": 199,
+      "max_sample": 1
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "beats": 200,
+      "peak_handles": 1,
+      "end_handles": 1,
+      "samples": 348,
+      "max_sample": 1
+    }
+  ],
+  "H2": [
+    {
+      "kind": "def",
+      "rounds": 10,
+      "per_round": 50,
+      "peak_after_arm": [
+        [
+          50,
+          50
+        ],
+        [
+          50,
+          50
+        ],
+        [
+          50,
+          50
+        ],
+        [
+          50,
+          50
+        ],
+        [
+          50,
+          50
+        ],
+        [
+          50,
+          50
+        ],
+        [
+          50,
+          50
+        ],
+        [
+          50,
+          50
+        ],
+        [
+          50,
+          50
+        ],
+        [
+          50,
+          50
+        ]
+      ],
+      "after_cancel": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "errors": []
+    },
+    {
+      "kind": "async def",
+      "rounds": 10,
+      "per_round": 50,
+      "peak_after_arm": [
+        [
+          50,
+          50
+        ],
+        [
+          50,
+          50
+        ],
+        [
+          50,
+          50
+        ],
+        [
+          50,
+          50
+        ],
+        [
+          50,
+          50
+        ],
+        [
+          50,
+          50
+        ],
+        [
+          50,
+          50
+        ],
+        [
+          50,
+          50
+        ],
+        [
+          50,
+          50
+        ],
+        [
+          50,
+          50
+        ]
+      ],
+      "after_cancel": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "errors": []
+    }
+  ],
+  "H3": [
+    {
+      "kind": "def",
+      "rearms": 500,
+      "peak_handles": 1,
+      "armed_before_fire": 1,
+      "fires": 1,
+      "end_handles": 0,
+      "end_armed": 0,
+      "errors": []
+    },
+    {
+      "kind": "async def",
+      "rearms": 500,
+      "peak_handles": 1,
+      "armed_before_fire": 1,
+      "fires": 1,
+      "end_handles": 0,
+      "end_armed": 0,
+      "errors": []
+    }
+  ],
+  "H4": [
+    {
+      "kind": "def",
+      "fired": 1,
+      "handles_after_fire": 0,
+      "armed_after_fire": 0,
+      "cancel_error": null,
+      "handles_after_double_cancel": 0,
+      "armed_after_double_cancel": 0
+    },
+    {
+      "kind": "async def",
+      "fired": 1,
+      "handles_after_fire": 0,
+      "armed_after_fire": 0,
+      "cancel_error": null,
+      "handles_after_double_cancel": 0,
+      "armed_after_double_cancel": 0
+    }
+  ],
+  "H5": [
+    {
+      "kind": "def",
+      "machines": 200,
+      "run_s": 10.0,
+      "period_ms": 10,
+      "handles_first": 156,
+      "handles_max": 200,
+      "handles_min": 156,
+      "handles_end": 188,
+      "rss_mb_start": 30.2,
+      "rss_mb_max": 40.1,
+      "rss_mb_after_stop": 39.6,
+      "beats_min": 608,
+      "beats_max": 609,
+      "chain_trips": 0,
+      "samples": 39
+    },
+    {
+      "kind": "async def",
+      "machines": 200,
+      "run_s": 10.0,
+      "period_ms": 10,
+      "handles_first": 136,
+      "handles_max": 200,
+      "handles_min": 58,
+      "handles_end": 151,
+      "rss_mb_start": 39.6,
+      "rss_mb_max": 40.3,
+      "rss_mb_after_stop": 39.7,
+      "beats_min": 468,
+      "beats_max": 469,
+      "chain_trips": 0,
+      "samples": 38
+    }
+  ],
+  "failures": [],
+  "verdict": "CLEAN"
+}

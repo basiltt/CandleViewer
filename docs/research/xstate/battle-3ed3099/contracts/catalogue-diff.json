@@ -1,0 +1,41 @@
+{
+ "B1": [
+  "context: remove reserved key '_deferred'",
+  "order.lifecycle.draft: remove on['*'] = {\"actions\": [\"defer\"]}",
+  "order.lifecycle.validated: remove on['*'] = {\"actions\": [\"defer\"]}",
+  "order.lifecycle.validated: remove 'entry' action drain_deferred",
+  "order.lifecycle.submitting: remove on['*'] = {\"actions\": [\"defer\"]}",
+  "order.lifecycle.submitting: remove 'entry' action drain_deferred",
+  "order.lifecycle.submitted: remove 'entry' action drain_deferred",
+  "order.lifecycle.triggered: remove 'entry' action drain_deferred",
+  "order.lifecycle.partially_filled: remove 'entry' action drain_deferred",
+  "order.lifecycle.cancel_pending: remove on['*'] = {\"actions\": [\"defer\"]}",
+  "order.lifecycle.cancel_pending: remove 'entry' action drain_deferred",
+  "order.lifecycle.amend_pending: remove on['*'] = {\"actions\": [\"defer\"]}",
+  "order.lifecycle.amend_pending: remove 'entry' action drain_deferred",
+  "order.lifecycle.unknown: remove 'entry' action drain_deferred"
+ ],
+ "B2": [
+  "trade_group.draft on[CONFIRM]: rename action spawn_all_legs -> launch_all_legs (engine `spawn_` prefix claims the name)",
+  "trade_group.submitting: on[LEG_OPEN] action 'raise_evaluate' -> built-in {\"type\": \"raise\", \"params\": {\"event\": {\"type\": \"EVALUATE\"}}} (a named action cannot emit an event)",
+  "trade_group.submitting: on[LEG_FAILED] action 'raise_evaluate' -> built-in {\"type\": \"raise\", \"params\": {\"event\": {\"type\": \"EVALUATE\"}}} (a named action cannot emit an event)",
+  "trade_group.submitting: on[LEG_SKIPPED] action 'raise_evaluate' -> built-in {\"type\": \"raise\", \"params\": {\"event\": {\"type\": \"EVALUATE\"}}} (a named action cannot emit an event)",
+  "trade_group.submitting: on[QUIESCE_DEADLINE] action 'raise_evaluate' -> built-in {\"type\": \"raise\", \"params\": {\"event\": {\"type\": \"EVALUATE\"}}} (a named action cannot emit an event)"
+ ],
+ "B3": [
+  "leg.resolving: remove on['*'] = {\"actions\": [\"defer\"]}",
+  "leg.open: remove 'entry' action drain_deferred",
+  "leg.submitting: rename entry action spawn_entry_order -> submit_entry_order (engine `spawn_` prefix claims the name)"
+ ],
+ "B4": [
+  "oco.racing: remove on['*'] = {\"actions\": [\"defer\"]}",
+  "oco.settling_b: remove on['*'] = {\"actions\": [\"defer\"]}",
+  "oco.settling_b: remove 'entry' action drain_deferred",
+  "oco.settling_a: remove on['*'] = {\"actions\": [\"defer\"]}",
+  "oco.settling_a: remove 'entry' action drain_deferred"
+ ],
+ "B5": [
+  "iceberg.submitting_slice: remove on['*'] = {\"actions\": [\"defer\"]}",
+  "iceberg.working: remove 'entry' action drain_deferred"
+ ]
+}

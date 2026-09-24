@@ -1,0 +1,49 @@
+{
+ "initial": "a",
+ "states": {
+  "a": {
+   "type": "parallel",
+   "states": {
+    "a": {
+     "type": "parallel",
+     "always": {
+      "target": "#m.a.c.b.a",
+      "guard": "guard_false"
+     },
+     "states": {
+      "a": {
+       "initial": "a",
+       "states": {
+        "a": {
+         "invoke": {
+          "id": "inv_m_a_a_a_a",
+          "src": "svc_slow",
+          "onDone": "#m.a.a"
+         }
+        }
+       }
+      }
+     }
+    },
+    "c": {
+     "initial": "b",
+     "states": {
+      "b": {
+       "type": "parallel",
+       "states": {
+        "a": {
+         "initial": "a",
+         "states": {
+          "a": {}
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "id": "m",
+ "guardErrorPolicy": "true"
+}

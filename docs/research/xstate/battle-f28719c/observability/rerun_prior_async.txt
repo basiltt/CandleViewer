@@ -1,0 +1,2 @@
+M-async service_pool_size=1 stop-mid-service: status=stopped done_regions_at_stop~50/50 elapsed=0.23s last_error=None
+DONE

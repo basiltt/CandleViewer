@@ -1,0 +1,736 @@
+{
+  "min/async/maxIter=None": {
+    "style": "async",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 471,
+        "acts": 470
+      },
+      {
+        "t": 2.0,
+        "svc": 968,
+        "acts": 967
+      }
+    ],
+    "growing": true,
+    "states": [
+      "m.a"
+    ],
+    "status": "running",
+    "last_error": "RuntimeError('boom:boom')",
+    "declared_max_iterations": 1000,
+    "trace_head": [
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom"
+    ]
+  },
+  "min/async/maxIter=5": {
+    "style": "async",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 7,
+        "acts": 6
+      },
+      {
+        "t": 2.0,
+        "svc": 7,
+        "acts": 6
+      }
+    ],
+    "growing": false,
+    "states": [
+      "m.a"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError(\"Machine 'm' exceeded 5 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")",
+    "declared_max_iterations": 5,
+    "trace_head": [
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom"
+    ]
+  },
+  "min/async/maxIter=50": {
+    "style": "async",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 20,
+        "acts": 19
+      },
+      {
+        "t": 2.0,
+        "svc": 45,
+        "acts": 44
+      }
+    ],
+    "growing": true,
+    "states": [
+      "m.a"
+    ],
+    "status": "running",
+    "last_error": "RuntimeError('boom:boom')",
+    "declared_max_iterations": 50,
+    "trace_head": [
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom"
+    ]
+  },
+  "min/def/maxIter=None": {
+    "style": "def",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 13,
+        "acts": 13
+      },
+      {
+        "t": 2.0,
+        "svc": 30,
+        "acts": 30
+      }
+    ],
+    "growing": true,
+    "states": [
+      "m.a"
+    ],
+    "status": "running",
+    "last_error": "RuntimeError('boom:boom')",
+    "declared_max_iterations": 1000,
+    "trace_head": [
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom"
+    ]
+  },
+  "min/def/maxIter=5": {
+    "style": "def",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 7,
+        "acts": 6
+      },
+      {
+        "t": 2.0,
+        "svc": 7,
+        "acts": 6
+      }
+    ],
+    "growing": false,
+    "states": [
+      "m.a"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError(\"Machine 'm' exceeded 5 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")",
+    "declared_max_iterations": 5,
+    "trace_head": [
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom"
+    ]
+  },
+  "min/def/maxIter=50": {
+    "style": "def",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 52,
+        "acts": 51
+      },
+      {
+        "t": 2.0,
+        "svc": 52,
+        "acts": 51
+      }
+    ],
+    "growing": false,
+    "states": [
+      "m.a"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError(\"Machine 'm' exceeded 50 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")",
+    "declared_max_iterations": 50,
+    "trace_head": [
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom",
+      "boom"
+    ]
+  },
+  "min/ablate/continue": {
+    "style": "async",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 1,
+        "acts": 1
+      },
+      {
+        "t": 2.0,
+        "svc": 1,
+        "acts": 1
+      }
+    ],
+    "growing": false,
+    "states": [
+      "m.c"
+    ],
+    "status": "running",
+    "last_error": "RuntimeError('boom:boom')",
+    "declared_max_iterations": 1000,
+    "trace_head": [
+      "boom"
+    ]
+  },
+  "min/ablate/fail": {
+    "style": "async",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 1,
+        "acts": 1
+      },
+      {
+        "t": 2.0,
+        "svc": 1,
+        "acts": 1
+      }
+    ],
+    "growing": false,
+    "states": [],
+    "status": "stopped",
+    "last_error": "RuntimeError('boom:boom')",
+    "declared_max_iterations": 1000,
+    "trace_head": [
+      "boom"
+    ]
+  },
+  "min/ablate/no-raise": {
+    "style": "async",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 1,
+        "acts": 1
+      },
+      {
+        "t": 2.0,
+        "svc": 1,
+        "acts": 1
+      }
+    ],
+    "growing": false,
+    "states": [
+      "m.c"
+    ],
+    "status": "running",
+    "last_error": "None",
+    "declared_max_iterations": 1000,
+    "trace_head": [
+      "boom"
+    ]
+  },
+  "B18/async/maxIter=None": {
+    "style": "async",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 22,
+        "acts": 25
+      },
+      {
+        "t": 2.0,
+        "svc": 44,
+        "acts": 47
+      }
+    ],
+    "growing": true,
+    "states": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RuntimeError('boom:page_owner')",
+    "declared_max_iterations": 1000,
+    "trace_head": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "page_owner",
+      "page_owner",
+      "page_owner",
+      "page_owner",
+      "page_owner",
+      "page_owner",
+      "page_owner"
+    ]
+  },
+  "B18/async/maxIter=5": {
+    "style": "async",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 7,
+        "acts": 10
+      },
+      {
+        "t": 2.0,
+        "svc": 7,
+        "acts": 10
+      }
+    ],
+    "growing": false,
+    "states": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError(\"Machine 'kill_switch' exceeded 5 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")",
+    "declared_max_iterations": 5,
+    "trace_head": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "page_owner",
+      "page_owner",
+      "page_owner",
+      "page_owner",
+      "page_owner"
+    ]
+  },
+  "B18/def/maxIter=None": {
+    "style": "def",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 190,
+        "acts": 194
+      },
+      {
+        "t": 2.0,
+        "svc": 217,
+        "acts": 221
+      }
+    ],
+    "growing": true,
+    "states": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RuntimeError('boom:page_owner')",
+    "declared_max_iterations": 1000,
+    "trace_head": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "page_owner",
+      "page_owner",
+      "page_owner",
+      "page_owner",
+      "page_owner",
+      "page_owner",
+      "page_owner"
+    ]
+  },
+  "B18/def/maxIter=5": {
+    "style": "def",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 7,
+        "acts": 10
+      },
+      {
+        "t": 2.0,
+        "svc": 7,
+        "acts": 10
+      }
+    ],
+    "growing": false,
+    "states": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError(\"Machine 'kill_switch' exceeded 5 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")",
+    "declared_max_iterations": 5,
+    "trace_head": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "page_owner",
+      "page_owner",
+      "page_owner",
+      "page_owner",
+      "page_owner"
+    ]
+  },
+  "B18/control": {
+    "style": "async",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 2,
+        "acts": 7
+      },
+      {
+        "t": 2.0,
+        "svc": 2,
+        "acts": 7
+      }
+    ],
+    "growing": false,
+    "states": [
+      "kill_switch.engaged_incomplete"
+    ],
+    "status": "running",
+    "last_error": "None",
+    "declared_max_iterations": 1000,
+    "trace_head": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "page_owner",
+      "emit_incomplete_metric"
+    ]
+  },
+  "B18/rollback-pre-invoke": {
+    "style": "async",
+    "receipt": {
+      "changed": false,
+      "error": "RuntimeError('boom:block_new_orders_immediately')"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 0,
+        "acts": 3
+      },
+      {
+        "t": 2.0,
+        "svc": 0,
+        "acts": 3
+      }
+    ],
+    "growing": false,
+    "states": [
+      "kill_switch.clear"
+    ],
+    "status": "running",
+    "last_error": "RuntimeError('boom:block_new_orders_immediately')",
+    "declared_max_iterations": 1000,
+    "trace_head": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately"
+    ]
+  },
+  "B19/async/onDone-action": {
+    "style": "async",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 180,
+        "acts": 182
+      },
+      {
+        "t": 2.0,
+        "svc": 629,
+        "acts": 631
+      }
+    ],
+    "growing": true,
+    "states": [
+      "reconciliation.diffing"
+    ],
+    "status": "running",
+    "last_error": "RuntimeError('boom:store_divergences')",
+    "declared_max_iterations": 1000,
+    "trace_head": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "store_divergences",
+      "store_divergences",
+      "store_divergences",
+      "store_divergences",
+      "store_divergences",
+      "store_divergences",
+      "store_divergences"
+    ]
+  },
+  "B19/async/always-entry": {
+    "style": "async",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 703,
+        "acts": 1405
+      },
+      {
+        "t": 2.0,
+        "svc": 1002,
+        "acts": 2003
+      }
+    ],
+    "growing": true,
+    "states": [
+      "reconciliation.remediating"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError(\"Machine 'reconciliation' exceeded 1000 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")",
+    "declared_max_iterations": 1000,
+    "trace_head": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "store_remediations",
+      "persist_report",
+      "store_remediations",
+      "persist_report",
+      "store_remediations",
+      "persist_report",
+      "store_remediations"
+    ]
+  },
+  "B19/def/onDone-action": {
+    "style": "def",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 575,
+        "acts": 578
+      },
+      {
+        "t": 2.0,
+        "svc": 1002,
+        "acts": 1004
+      }
+    ],
+    "growing": true,
+    "states": [
+      "reconciliation.diffing"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError(\"Machine 'reconciliation' exceeded 1000 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")",
+    "declared_max_iterations": 1000,
+    "trace_head": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "store_divergences",
+      "store_divergences",
+      "store_divergences",
+      "store_divergences",
+      "store_divergences",
+      "store_divergences",
+      "store_divergences"
+    ]
+  },
+  "B19/def/always-entry": {
+    "style": "def",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 525,
+        "acts": 1051
+      },
+      {
+        "t": 2.0,
+        "svc": 976,
+        "acts": 1953
+      }
+    ],
+    "growing": true,
+    "states": [
+      "reconciliation.remediating"
+    ],
+    "status": "running",
+    "last_error": "RuntimeError('boom:persist_report')",
+    "declared_max_iterations": 1000,
+    "trace_head": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "store_remediations",
+      "persist_report",
+      "store_remediations",
+      "persist_report",
+      "store_remediations",
+      "persist_report",
+      "store_remediations"
+    ]
+  },
+  "B19/control": {
+    "style": "async",
+    "receipt": {
+      "changed": true,
+      "error": "None"
+    },
+    "samples": [
+      {
+        "t": 1.0,
+        "svc": 3,
+        "acts": 11
+      },
+      {
+        "t": 2.0,
+        "svc": 3,
+        "acts": 11
+      }
+    ],
+    "growing": false,
+    "states": [
+      "reconciliation.divergent"
+    ],
+    "status": "running",
+    "last_error": "None",
+    "declared_max_iterations": 1000,
+    "trace_head": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "store_remediations",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete",
+      "raise_divergence_alert"
+    ]
+  }
+}

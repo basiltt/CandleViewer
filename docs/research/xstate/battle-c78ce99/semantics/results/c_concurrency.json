@@ -1,0 +1,102 @@
+[
+ {
+  "id": "C1",
+  "title": "200 machines x 1 ms raise(delay=) ping-pong for 10 s: CPU bounded by the clock, 0 RunawayChainError, heartbeats alive at the end; both kinds",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "plain": {
+     "machines": 100,
+     "wall_s": 6.01,
+     "beats_min": 805,
+     "beats_max": 806,
+     "still_beating": 100,
+     "runaway_errors": 0,
+     "chain_budget_drops": 0,
+     "cpu_percent": 99.8,
+     "beats_per_s_max": 134.0
+    },
+    "async": {
+     "machines": 100,
+     "wall_s": 6.02,
+     "beats_min": 770,
+     "beats_max": 771,
+     "still_beating": 100,
+     "runaway_errors": 0,
+     "chain_budget_drops": 0,
+     "cpu_percent": 99.7,
+     "beats_per_s_max": 128.2
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "C2",
+  "title": "MIXED chain: a step that arms a delayed raise AND a zero-delay raise must STILL trip maxIterations; both kinds",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "plain": {
+     "beats": 2844,
+     "tripped": true,
+     "last_error": "RunawayChainError"
+    },
+    "async": {
+     "beats": 12,
+     "tripped": true,
+     "last_error": "RunawayChainError"
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "C3",
+  "title": "100 concurrent start()s whose initial descent settles an `always` chain (#215): bounded, identical configuration, no hang (5 s watchdog)",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "plain": {
+     "hung": false,
+     "elapsed_s": 0.01,
+     "distinct_configurations": [
+      [
+       "s.b"
+      ]
+     ]
+    },
+    "async": {
+     "hung": false,
+     "elapsed_s": 0.01,
+     "distinct_configurations": [
+      [
+       "s.b"
+      ]
+     ]
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "C4",
+  "title": "200 v3 snapshots carrying scheduled_sends restored CONCURRENTLY: every one re-arms and wakes; both kinds",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "plain": {
+     "snapshots_with_scheduled_sends": 100,
+     "restored_and_woke": 100,
+     "of": 100
+    },
+    "async": {
+     "snapshots_with_scheduled_sends": 100,
+     "restored_and_woke": 100,
+     "of": 100
+    }
+   }
+  },
+  "status": "PASS"
+ }
+]

@@ -1,0 +1,18 @@
+{
+ "[async]V6.#225.worker_outlives_action_advances": {
+  "pass": true,
+  "note": "landed=True states=['kill_switch.clear'] trips=0 err='None'"
+ },
+ "[async]V6.#225.handout_receipt_resolves": {
+  "pass": true,
+  "note": "receipt resolved states=['kill_switch.clear']"
+ },
+ "[async]V6.#219.inflight_await_refused_not_deadlock": {
+  "pass": true,
+  "note": "got='ReentrantWaitError' states=['kill_switch.clear']"
+ },
+ "[async]V6.#232.def_dropped_receipt_warns": {
+  "pass": true,
+  "note": "[\"send('RELEASE', wait=True) on 'kill_switch' was called from inside an action and its receipt was never awaited (#232). A\"]"
+ }
+}

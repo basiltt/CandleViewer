@@ -1,0 +1,51 @@
+{
+  "probe": "q5_determinism_sentinel",
+  "py": "3.13.7",
+  "D1_determinism_50x": {
+    "runs": 50,
+    "async_distinct_traces": 1,
+    "sync_distinct_traces": 1,
+    "async_distinct_lap_counts": [
+      100
+    ],
+    "sync_distinct_lap_counts": [
+      100
+    ],
+    "async_trip_values": [
+      true
+    ],
+    "sync_trip_values": [
+      true
+    ],
+    "async_context_n": [
+      8
+    ],
+    "sync_context_n": [
+      8
+    ],
+    "engines_same_trace": true,
+    "engines_same_lap_count": true,
+    "deterministic": true
+  },
+  "D2_sentinel_aliasing": {
+    "module_init_sentinel_id": 1934403759008,
+    "rows": [
+      {
+        "machine": "s1",
+        "event_type": "___xstate_statemachine_init___",
+        "event_id": 1934405920784,
+        "payload_seen": {}
+      },
+      {
+        "machine": "s2",
+        "event_type": "___xstate_statemachine_init___",
+        "event_id": 1934405920976,
+        "payload_seen": {}
+      }
+    ],
+    "same_event_object_across_machines": false,
+    "cross_talk_observed": false,
+    "ok": true
+  },
+  "result": "PASS"
+}

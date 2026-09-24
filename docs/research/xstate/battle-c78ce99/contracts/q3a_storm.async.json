@@ -1,0 +1,26 @@
+{
+ "[async]#207/B6 rollback+onDone storm is observable": {
+  "pass": true,
+  "note": "{\"plateau\": 0, \"limit\": 5, \"state\": [\"twap.armed\"], \"stranded\": [], \"dormant\": false, \"last_error\": \"RuntimeError('boom:bump_slices_done')\", \"laps\": [0, 0]}"
+ },
+ "[async]#207/B6 plateau == maxIterations+2 service calls": {
+  "pass": true,
+  "note": "{\"plateau\": 0, \"limit\": 5, \"tripped\": false, \"state\": [\"twap.armed\"]}"
+ },
+ "[async]#207/B7 rollback+onDone storm is observable": {
+  "pass": true,
+  "note": "{\"plateau\": 10, \"limit\": 7, \"state\": [\"chase.arming\"], \"stranded\": [[\"chase.arming\", \"arm\", \"RunawayChainError(\\\"Machine 'chase' exceeded 7 chained self-generated events in o\"]], \"dormant\": true, \"last_error\": \"RunawayChainError(\\\"Machine 'chase' exceeded 7 chained self-generated events in one macrostep and discarded 1 of them. An\", \"laps\": [10, 10]}"
+ },
+ "[async]#207/B7 plateau == maxIterations+2 service calls": {
+  "pass": false,
+  "note": "{\"plateau\": 10, \"limit\": 7, \"tripped\": true, \"state\": [\"chase.arming\"]}"
+ },
+ "[async]#207/B9 rollback+onDone storm is observable": {
+  "pass": true,
+  "note": "{\"plateau\": 0, \"limit\": 6, \"state\": [\"rule_instance.draft\"], \"stranded\": [], \"dormant\": false, \"last_error\": \"None\", \"laps\": [0, 0]}"
+ },
+ "[async]#207/B9 plateau == maxIterations+2 service calls": {
+  "pass": true,
+  "note": "{\"plateau\": 0, \"limit\": 6, \"tripped\": false, \"state\": [\"rule_instance.draft\"]}"
+ }
+}

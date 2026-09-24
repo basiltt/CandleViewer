@@ -1,0 +1,125 @@
+{
+  "a_reconnect": [
+    {
+      "case": "(a1) WS_DISCONNECT freeze -> RESUME via reconciling",
+      "frozen": [
+        "twap.paused"
+      ],
+      "after_resume": [
+        "twap.armed"
+      ],
+      "went_through_reconciling": true,
+      "rearmed_deadlines": true,
+      "calls": [
+        "A:precompute_all_slice_deadlines",
+        "A:register_deadlines_with_scheduler",
+        "G:preflight_invalid",
+        "G:preflight_invalid",
+        "G:on_disconnect_is_freeze",
+        "A:rearm_deadlines_from_context",
+        "S:reconcile_children"
+      ]
+    },
+    {
+      "case": "(a2) freeze policy OFF: WS_DISCONNECT is held, not applied",
+      "states": [
+        "twap.armed"
+      ],
+      "deferred": 1,
+      "unhandled": [
+        [
+          "WS_DISCONNECT",
+          "deferred"
+        ]
+      ]
+    }
+  ],
+  "b_divergence": [
+    {
+      "case": "(b1) reconciliation divergence -> terminal failed",
+      "states": [
+        "twap.failed"
+      ],
+      "is_terminal_failure": true
+    },
+    {
+      "case": "(b2) INV-B6-b: restore does not silently re-register deadlines",
+      "restored_states": [
+        "twap.armed"
+      ],
+      "register_ran_on_restore": false,
+      "rearm_ran_on_restore": false,
+      "has_dormant_timers": false,
+      "calls": []
+    }
+  ],
+  "c_sync_parity": [
+    {
+      "machine": "B6",
+      "script": [
+        "SLICE_DUE",
+        "SLICE_DUE",
+        "DURATION_END",
+        "CHILDREN_TERMINAL"
+      ],
+      "sync_states": [
+        "twap.completed"
+      ],
+      "sync_status": "done",
+      "sync_actions": [
+        "precompute_all_slice_deadlines",
+        "register_deadlines_with_scheduler",
+        "compute_slice_qty_with_participation_cap",
+        "apply_catch_up",
+        "bump_slices_done",
+        "record_child",
+        "compute_slice_qty_with_participation_cap",
+        "apply_catch_up",
+        "bump_slices_done",
+        "record_child"
+      ]
+    },
+    {
+      "machine": "B10",
+      "script": [
+        "CONDITION_MET",
+        "ACK",
+        "RESOLVE"
+      ],
+      "sync_states": [
+        "alert.resolved"
+      ],
+      "sync_status": "done",
+      "sync_actions": [
+        "persist_fired_row",
+        "stamp_storm_window"
+      ]
+    },
+    {
+      "machine": "B9",
+      "script": [
+        "SAVE",
+        "ARM_REQUESTED",
+        "TRIGGER",
+        "COOLDOWN_DUE"
+      ],
+      "sync_states": [
+        "rule_instance.armed"
+      ],
+      "sync_status": "running",
+      "sync_actions": [
+        "stamp_simulation_start",
+        "subscribe_triggers",
+        "emit_armed_audit",
+        "unsubscribe_triggers",
+        "assert_safety_limits",
+        "record_fire",
+        "reset_consecutive_errors",
+        "stamp_cooldown_deadline",
+        "drain_deferred",
+        "subscribe_triggers",
+        "emit_armed_audit"
+      ]
+    }
+  ]
+}

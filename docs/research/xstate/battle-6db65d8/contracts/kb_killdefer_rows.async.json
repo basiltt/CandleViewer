@@ -1,0 +1,80 @@
+[
+ {
+  "label": "B6 as-catalogued",
+  "style": "async",
+  "inflight": [
+   "twap.submitting_slice"
+  ],
+  "final": [
+   "twap.cancelled"
+  ],
+  "service_hold_s": 1.5,
+  "receipt_s": 0.0,
+  "applied_s": 1.461,
+  "receipt_deferred": true,
+  "unhandled": [
+   [
+    "USER_CANCEL",
+    "deferred"
+   ]
+  ],
+  "dropped": []
+ },
+ {
+  "label": "B9 as-catalogued",
+  "style": "async",
+  "inflight": [
+   "rule_instance.evaluating"
+  ],
+  "final": [
+   "rule_instance.kill_switched"
+  ],
+  "service_hold_s": 1.5,
+  "receipt_s": 0.0,
+  "applied_s": 1.472,
+  "receipt_deferred": true,
+  "unhandled": [
+   [
+    "KILL_SWITCH",
+    "deferred"
+   ],
+   [
+    "KILL_SWITCH",
+    "deferred"
+   ]
+  ],
+  "dropped": []
+ },
+ {
+  "label": "B6 + handler on invoking state",
+  "style": "async",
+  "inflight": [
+   "twap.submitting_slice"
+  ],
+  "final": [
+   "twap.cancelled"
+  ],
+  "service_hold_s": 1.5,
+  "receipt_s": 0.001,
+  "applied_s": 0.001,
+  "receipt_deferred": false,
+  "unhandled": [],
+  "dropped": []
+ },
+ {
+  "label": "B9 + handler on invoking state",
+  "style": "async",
+  "inflight": [
+   "rule_instance.evaluating"
+  ],
+  "final": [
+   "rule_instance.kill_switched"
+  ],
+  "service_hold_s": 1.5,
+  "receipt_s": 0.001,
+  "applied_s": 0.001,
+  "receipt_deferred": false,
+  "unhandled": [],
+  "dropped": []
+ }
+]

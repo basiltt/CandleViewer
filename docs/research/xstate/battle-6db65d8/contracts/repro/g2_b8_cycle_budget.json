@@ -1,0 +1,176 @@
+{
+ "B8_maxIter40": {
+  "maxIterations": 40,
+  "elapsed_s": 3.01,
+  "laps": 2295,
+  "tripped": false,
+  "last_error": null,
+  "dropped": [],
+  "raise_depth_samples": [
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ]
+  ],
+  "max_depth_seen": 0,
+  "states": [
+   "position_protection.sl.verifying",
+   "position_protection.watchdog.scanning"
+  ]
+ },
+ "B8_default": {
+  "maxIterations": null,
+  "elapsed_s": 3.02,
+  "laps": 2258,
+  "tripped": false,
+  "last_error": null,
+  "dropped": [],
+  "raise_depth_samples": [
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ],
+   [
+    0,
+    false,
+    0,
+    false
+   ]
+  ],
+  "max_depth_seen": 0,
+  "states": [
+   "position_protection.sl.naked",
+   "position_protection.watchdog.scanning"
+  ]
+ }
+}

@@ -1,0 +1,94 @@
+[
+ {
+  "horizon": 1.0,
+  "send_sec": 0.0001,
+  "states": [
+   "trade_group.unwinding"
+  ],
+  "status": "running",
+  "error": null,
+  "last_error": "RuntimeError('boom:mark_unwound')",
+  "invocations": 1114,
+  "action_errors": 1114,
+  "growth": [
+   [
+    0.25,
+    270
+   ],
+   [
+    0.5,
+    550
+   ],
+   [
+    0.75,
+    823
+   ],
+   [
+    1.0,
+    1114
+   ]
+  ]
+ },
+ {
+  "horizon": 3.0,
+  "send_sec": 0.0,
+  "states": [
+   "trade_group.unwinding"
+  ],
+  "status": "running",
+  "error": null,
+  "last_error": "RuntimeError('boom:mark_unwound')",
+  "invocations": 3220,
+  "action_errors": 3219,
+  "growth": [
+   [
+    0.25,
+    293
+   ],
+   [
+    0.5,
+    567
+   ],
+   [
+    0.75,
+    850
+   ],
+   [
+    1.0,
+    1169
+   ],
+   [
+    1.25,
+    1405
+   ],
+   [
+    1.5,
+    1639
+   ],
+   [
+    1.75,
+    1896
+   ],
+   [
+    2.01,
+    2142
+   ],
+   [
+    2.26,
+    2408
+   ],
+   [
+    2.51,
+    2684
+   ],
+   [
+    2.76,
+    2939
+   ],
+   [
+    3.01,
+    3220
+   ]
+  ]
+ }
+]

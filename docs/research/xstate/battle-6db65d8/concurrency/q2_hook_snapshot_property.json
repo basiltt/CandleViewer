@@ -1,0 +1,20 @@
+{
+  "probe": "q2_hook_snapshot_property",
+  "py": "3.13.7",
+  "machines": 300,
+  "blobs_restored_and_probed": 734,
+  "dispositions": {
+    "async:on_action_execute:refused": 1441,
+    "async:on_event_received:returned": 748,
+    "async:on_transition:refused": 708,
+    "async:on_transition:returned": 150,
+    "sync:on_action_execute:refused": 1187,
+    "sync:on_event_received:refused": 589,
+    "sync:on_transition:refused": 549,
+    "sync:on_transition:returned": 150
+  },
+  "raw_exceptions_from_hook_snapshot": [],
+  "torn_or_dead_blobs": [],
+  "torn_count": 0,
+  "result": "PASS"
+}

@@ -1,0 +1,123 @@
+=== A — actionErrorPolicy rollback/fail ===
+[PASS] A1       transition action raises          states={'t.a'} n=0 log=[]
+[PASS] A2       nested entry action raises        states={'e.a'} n=0 fails=[('e.a', 2)]
+[PASS] A3       exit action raises                states={'x.a'} n=0
+[PASS] A4       start() initial entry raises      status=error err=TransitionFailedError states={'s.a'}
+[PASS] A5       parallel region entry raises      states={'p.idle'} n=0
+[PASS] A6       target's after-timer cancelled    states={'tm.a'} ticks=0
+[PASS] A7       target's invoke cancelled         states={'iv.a'} svc_started=0 svc_finished=0
+[PASS] A8       source's after-timer re-armed     states={'ra.z'} ticks=1
+[PASS] A9       on_transition_failed once         on_transition_failed calls=[('t.a', 1)]
+[FAIL] A9b      continue-policy hook count        continue-policy hook calls=[('bo.a', 1), ('bo.a', 1)]
+[PASS] A10      last_transition_ok sequence       sequence=[True, False, True] states={'lt.c'}
+[PASS] A10b     last_transition_ok engine parity  async: False->True  sync: False->True (engines must agree)
+[FAIL] A11      queued `raise` rolled back        seen=['PING'] states={'rs.a'} (rollback should undo the raise)
+[PASS] A12      delivered `sendTo` rolled back    child hits=0 states={'st.a'} (rollback should undo sendTo)
+[PASS] A13      policy "fail" stops machine       status=error error=TransitionFailedError states={'t.a'} ctx_n=0
+[PASS] A14      targetless self-transition ctx    n=0 log=[]
+[PASS] A15      SYNC engine parity (A1)           states={'t.a'} n=0
+--- 15/17 pass
+=== A-follow — controls for the rollback findings ===
+[PASS] A11c     control: raise delivered normally   control (no failure): seen=['PING'] states={'rs.b'}
+[FAIL] A12c     control: sendTo delivered normally  control (no failure): child hits=0 states={'st.b'}
+[PASS] A16      escaped raise under policy=fail     policy="fail": seen=[] status=error states={'rs.a'}
+[PASS] A17      last_transition_ok not sticky       after failure=False; after an UNHANDLED event=True (flag is per-event, not sticky)
+[FAIL] A11s     sync: raise rolled back             sync engine: seen=['PING'] states={'rs.a'}
+--- 3/5 pass
+=== A12-redo — sendTo rollback with a surviving child ===
+[PASS] A12c2    control: sendTo reaches live child    hits=1 states={'st2.up.b'}
+[FAIL] A12r     rollback undoes the delivered sendTo  hits=1 states={'st2.up.a'} (expected 0 if the side effect is undone)
+--- 1/2 pass
+=== B — onUnhandled defer ===
+[PASS] B1       replay order ahead of live traffic  deferred_before_open=3 log=['A', 'B', 'C', 'LIVE'] (want A,B,C then LIVE)
+[PASS] B2       still-unhandled are re-deferred     after s1: log=['A'] held=1; after s2: log=['A', 'B'] held=0
+[PASS] B3       DEFER_MAX overflow behaviour        sent=1005 held=1000 dropped_reported=5 replayed=1000 DEFER_MAX=1000
+[PASS] B4       buffer survives snapshot/restore    held_before=3 held_after_restore=3 replayed=['A', 'B', 'C']
+[PASS] B5       LC-03 fill-during-submit e2e        held_during_invoke=1 log=['FILL'] states={'oms.working'}
+[PASS] B6       no replay spin on a dead-end move   held=1 states={'lp.s1'} elapsed=0.055s (no spin)
+[PASS] B7       sync/async replay-order parity      async=['A', 'B', 'C', 'LIVE'] sync=['A', 'B', 'C', 'LIVE']
+[PASS] B8       replay after an `after` timer move  held_before_timer=1 log=['A'] states={'af.open'}
+[PASS] B9       system events never deferred        held=0 system_events_reported=[]
+--- 9/9 pass
+=== C — bounded inbox & receipts ===
+[PASS] C1       RAISE overflow policy              accepted=5 before QueueOverflowError; depth_at_raise=5
+[PASS] C2       DROP_NEWEST policy + hook          dropped_hook=45 warnings=0 processed=5 status=running
+[PASS] C3       BLOCK backpressure, no loss        processed=20/20 producer_blocked_for=0.281s (backpressure works if >0.1s and n==20)
+[PASS] C4       BLOCK from an action: no deadlock  deadlocked=False echoes_processed=12/12 status=running
+[PASS] C5       priority exempt from the bound     error=None processed=30/30
+[PASS] C6       wait= awaits the full macrostep    ctx_at_receipt=99 receipt.changed=True state_ids={'w.b'}
+[PASS] C7       receipt.changed on unhandled       changed=False error=None state_ids={'w.a'}
+[PASS] C8       receipt.error under "continue"     policy=continue: error=RuntimeError changed=True states={'er.b'}
+[PASS] C9       receipt.error under "rollback"     policy=rollback: error=RuntimeError changed=False states={'er.a'}
+[PASS] C10      priority jumps a backlog           urgent landed at index 0 of 21: UBBBBBBBBBBB...
+[PASS] C11      wait= on a stopped interpreter     resolved to Receipt(state_ids=frozenset({'w.a'}), changed=False, error=InterpreterStoppedError("Interpreter 'w' is stopped; event 'GO' was dropped.")) (no hang)
+[PASS] C12      receipt reports the settled state  receipt.state_ids={'al.c'} (want the SETTLED state al.c)
+[PASS] C13      queue_depth respects the bound     peak queue_depth=5 with max_queue_size=5
+--- 13/13 pass
+=== D — resumable invocations after restore ===
+[PASS] D1       pending_invocations() lists it    pending_invocations=[('r.working', 'job', 'job')]
+[PASS] D2       restart_services=True re-runs it  service_calls_after_restore=1 results=['finished'] states={'r.done'}
+[PASS] D3       restarted invoke gets the input   original_input=[{'oid': 'static-oid'}] restored_input=[{'oid': 'static-oid'}]
+[PASS] D4       entry actions do NOT re-run       entry count before snapshot=1, after restore+restart=1 (entry must NOT re-run)
+[PASS] D5       default restore starts nothing    default restore: service_calls=0 states={'r.working'} pending_reported=1 (stuck-but-observable is the documented default)
+[PASS] D6       nested child-actor restore        inner service restarts after nested restore=1; parent pending=[]
+[PASS] D7       completed service not re-run      before={'r.done'} after={'r.done'} completed_service_reinvoked=0 (want 0)
+[PASS] D8       restore deep-copies the context   snapshot context order_id='OID-1' after mutating the restored interpreter's context (want unchanged 'OID-1')
+[FAIL] D8b      dict-form restore does not alias  dict form REJECTED: TypeError: the JSON object must be str, bytes or bytearray, not dict (callers must json.dumps() a dict back to a string first)
+--- 8/9 pass
+=== E — clock injection & timer lane ===
+[PASS] E1       SimulatedClock: 30s in ~0 wall      states={'lg.fired'} wall_clock=0.0002s for a 30s timer
+[PASS] E2       virtual-time determinism            run1=['n1', 'n2', 'n3']['mt.d'] run2=['n1', 'n2', 'n3']['mt.d']
+[PASS] E3       virtual-time timer ordering         order=['n1', 'n2', 'n3'] final={'mt.d'}
+[PASS] E4       no starvation under 2k-event burst  2000-event burst in 0.512s; timer lateness_ms=13.095099999191007; processed=2000; final={'bs.late'}
+[PASS] E5       AfterEvent lateness fields          AfterEvent fields={'scheduled_for': 14207.7262575, 'fired_at': 14207.7332012, 'lateness_ms': 6.943700000192621}
+[PASS] E8       children inherit the clock          child.clock is parent's=True child state={'kidm.f'} status=done wall=0.0654s for the child's 20s timer
+[PASS] E9       delayed sendTo under virtual time   states={'ds.b'} wall=0.0635s for a 15s delayed send
+[PASS] E6       sync engine: no thread per timer    threads before=1 after 25 sync machines with timers=1 (delta=0)
+[FAIL] E7       sync tick() delivers a deadline     before tick()={'sy.a'} after tick()={'sy.a'} (no send() used)
+--- 8/9 pass
+=== E7-redo — sync timers inside a running asyncio loop ===
+[PASS] E7a      control: outside any loop       off-loop thread: clock.pending=1 states_after_tick={'sy.b'}
+[FAIL] E7b      inside a loop, tick() fires     inside a loop: clock.pending=0 states_after_tick={'sy.a'} (pending==0 means the deadline went to loop.call_later, not the heap)
+[PASS] E7c      inside a loop, any other route  after 150ms of loop turns states={'sy.a'}; after tick()={'sy.b'}; queue_depth=0
+[PASS] E7d      sync child under async parent   sync machine driven from an async coroutine: states={'sy.b'} clock.pending=0
+--- 3/4 pass
+=== F/G — strict mode & cross-thread sends ===
+[PASS] F1       strict rejects unknown event       UnknownEventError: Event 'FILLL' is not declared by machine 's'. Known events: CANCEL, DEEP_ONLY, FILL. Did you mean 'FILL'?
+[PASS] F2       error carries a suggestion         message="Event 'FIL' is not declared by machine 's'. Known events: CANCEL, DEEP_ONLY, FILL. Did you mean 'FILL'?"
+[PASS] F3       wildcards are not rejected         rejections=[] handled=2/2
+[PASS] F4       ctor flag beats config key         ctor strict=False overrode config strict=True (no raise)
+[PASS] F5       event_schemas validate payload     valid payload -> accepted; invalid payload -> rejected: InvalidEventPayloadError
+[PASS] F6       no schema -> no validation         unschema'd event accepted with an arbitrary payload
+[FAIL] F7       internal raise: default policy     DEFAULT policy: status=running error=None; on_transition_failed saw=[['UnknownEventError']] (detected, but invisible on status/error unless a hook or actionErrorPolicy!=continue is configured)
+[PASS] F7b      internal raise: policy=fail        policy="fail": status=error error=TransitionFailedError
+[PASS] F9       system events exempt               states={'sysev.b'} status=done error=None
+[PASS] F10      strict is machine-wide             accepted (strict is machine-wide, not per active state)
+[PASS] G1       send() from a foreign thread       WrongThreadError (WrongThreadError); processed=0
+[PASS] G2       send_threadsafe under saturation   delivered=300/300; order_preserved=True
+[PASS] G3       send_threadsafe multi-thread FIFO  delivered=600/600; per-thread FIFO preserved=True
+[PASS] F8       sync engine strict parity          sync engine: UnknownEventError
+[PASS] G4       send_threadsafe after loop close   RuntimeError: Interpreter 'th' was bound to an event loop that has been closed; it can no longer accept events.
+--- 14/15 pass
+=== H — engine determinism parity ===
+[FAIL] H1       action/transition trace parity         async_len=36 sync_len=37; index 1: async=('A', 'mark', 'START') sync=('T', 'par', '___xstate_statemachine_init___', ('par', 'par.boot'))
+[PASS] H1b      trace parity minus the init hook       36 entries compared; identical
+[PASS] H2       per-event context parity               identical
+[PASS] H3       final configuration parity             async=['par.live.orders.idle', 'par.live.risk.ok'] sync=['par.live.orders.idle', 'par.live.risk.ok']
+[PASS] H4       async self-determinism                 identical
+[PASS] H5       parity with onUnhandled=defer          trace(minus init): identical; ctx: identical; final: async=['par.live.orders.idle', 'par.live.risk.ok'] sync=['par.live.orders.idle', 'par.live.risk.ok']
+[PASS] H6       parity with rollback + raising action  trace(minus init): identical; ctx: identical; final: async=['par.live.orders.idle', 'par.live.risk.ok'] sync=['par.live.orders.idle', 'par.live.risk.ok']
+[FAIL] H7       on_transition fires for start() entry  async emitted 0 init on_transition hook(s), sync emitted 1: [('T', 'par', '___xstate_statemachine_init___', ('par', 'par.boot'))]
+--- 6/8 pass
+=== I — deprecations & the 1.0 flips ===
+[PASS] I1       unset policy + raise -> warning      DeprecationWarnings=["Machine 'dp': an action raised and the transition was committed anyway because '"]
+[PASS] I2       warning is one-shot per machine      5 failing transitions produced 1 warning(s)
+[PASS] I3       explicit "continue" is silent        explicit 'continue' produced 0 warning(s)
+[FAIL] I4       clean machine warned about the flip  a machine whose actions never raise got 0 warning(s) -- it will still FLIP to rollback in 1.0 with no advance notice
+[PASS] I7       reserved wait/priority dict keys     reserved-key warnings=["Event 'FINE' payload uses reserved send() keyword(s) ['wait', 'priority']. They are kept i"]
+[FAIL] I8       warning stacklevel points at user    warning attributed to ['base_interpreter.py'] (should be user code, not library internals)
+[FAIL] I10      second interpreter, same machine     first interpreter warned 1x, a SECOND interpreter over the same machine object warned 0x (the one-shot flag lives on the machine)
+[PASS] I5       strict_targets=False warns           strict_targets=False warnings=["Machine 'bt' has unresolvable transition targets:\n  bt.a: on 'GO' -> target 'nowhere_at_al"]
+[PASS] I6       strict_targets default raises        InvalidConfigError: Machine 'bt' has unresolvable transition targets:
+[PASS] I9       sync engine emits the warning        sync engine warnings=1
+--- 7/10 pass

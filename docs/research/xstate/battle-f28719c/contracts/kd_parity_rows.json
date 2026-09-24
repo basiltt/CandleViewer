@@ -1,0 +1,195 @@
+{
+ "B6": {
+  "async": {
+   "states": [
+    "twap.completed"
+   ],
+   "actions": [
+    "precompute_all_slice_deadlines",
+    "register_deadlines_with_scheduler",
+    "compute_slice_qty_with_participation_cap",
+    "apply_catch_up",
+    "bump_slices_done",
+    "record_child",
+    "compute_slice_qty_with_participation_cap",
+    "apply_catch_up",
+    "bump_slices_done",
+    "record_child"
+   ],
+   "svc": [
+    "submit_child",
+    "submit_child"
+   ]
+  },
+  "sync": {
+   "states": [
+    "twap.completed"
+   ],
+   "actions": [
+    "precompute_all_slice_deadlines",
+    "register_deadlines_with_scheduler",
+    "compute_slice_qty_with_participation_cap",
+    "apply_catch_up",
+    "bump_slices_done",
+    "record_child",
+    "compute_slice_qty_with_participation_cap",
+    "apply_catch_up",
+    "bump_slices_done",
+    "record_child"
+   ],
+   "svc": [
+    "submit_child",
+    "submit_child"
+   ],
+   "exc": null
+  }
+ },
+ "B7": {
+  "async": {
+   "states": [
+    "chase.completed"
+   ],
+   "actions": [
+    "record_child",
+    "stamp_arm_price",
+    "drain_deferred",
+    "compute_target_excluding_own_size",
+    "bump_repricings",
+    "stamp_last_reprice",
+    "drain_deferred",
+    "apply_fill"
+   ],
+   "svc": [
+    "submit_initial_limit",
+    "amend_child_price"
+   ]
+  },
+  "sync": {
+   "states": [
+    "chase.completed"
+   ],
+   "actions": [
+    "record_child",
+    "stamp_arm_price",
+    "drain_deferred",
+    "compute_target_excluding_own_size",
+    "bump_repricings",
+    "stamp_last_reprice",
+    "drain_deferred",
+    "apply_fill"
+   ],
+   "svc": [
+    "submit_initial_limit",
+    "amend_child_price"
+   ],
+   "exc": null
+  }
+ },
+ "B8": {
+  "async": {
+   "states": [
+    "position_protection.sl.protected",
+    "position_protection.watchdog.scanning"
+   ],
+   "actions": [
+    "arm_sl_deadline",
+    "bump_attach_attempts",
+    "reset_miss_counter"
+   ],
+   "svc": [
+    "attach_native_sl",
+    "read_position_sl"
+   ]
+  },
+  "sync": {
+   "states": [
+    "position_protection.sl.protected",
+    "position_protection.watchdog.scanning"
+   ],
+   "actions": [
+    "arm_sl_deadline",
+    "bump_attach_attempts",
+    "reset_miss_counter"
+   ],
+   "svc": [
+    "attach_native_sl",
+    "read_position_sl"
+   ],
+   "exc": null
+  }
+ },
+ "B9": {
+  "async": {
+   "states": [
+    "rule_instance.armed"
+   ],
+   "actions": [
+    "stamp_simulation_start",
+    "subscribe_triggers",
+    "emit_armed_audit",
+    "unsubscribe_triggers",
+    "assert_safety_limits",
+    "record_fire",
+    "reset_consecutive_errors",
+    "stamp_cooldown_deadline",
+    "drain_deferred",
+    "subscribe_triggers",
+    "emit_armed_audit"
+   ],
+   "svc": [
+    "evaluate_condition_dag",
+    "dispatch_actions_in_order"
+   ]
+  },
+  "sync": {
+   "states": [
+    "rule_instance.armed"
+   ],
+   "actions": [
+    "stamp_simulation_start",
+    "subscribe_triggers",
+    "emit_armed_audit",
+    "unsubscribe_triggers",
+    "assert_safety_limits",
+    "record_fire",
+    "reset_consecutive_errors",
+    "stamp_cooldown_deadline",
+    "drain_deferred",
+    "subscribe_triggers",
+    "emit_armed_audit"
+   ],
+   "svc": [
+    "evaluate_condition_dag",
+    "dispatch_actions_in_order"
+   ],
+   "exc": null
+  }
+ },
+ "B10": {
+  "async": {
+   "states": [
+    "alert.resolved"
+   ],
+   "actions": [
+    "persist_fired_row",
+    "stamp_storm_window"
+   ],
+   "svc": [
+    "dispatch_to_channels"
+   ]
+  },
+  "sync": {
+   "states": [
+    "alert.resolved"
+   ],
+   "actions": [
+    "persist_fired_row",
+    "stamp_storm_window"
+   ],
+   "svc": [
+    "dispatch_to_channels"
+   ],
+   "exc": null
+  }
+ }
+}

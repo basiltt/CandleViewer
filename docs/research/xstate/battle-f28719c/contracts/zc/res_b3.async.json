@@ -1,0 +1,86 @@
+{
+ "[async]B3.happy.terminal": {
+  "pass": true,
+  "note": "['leg.closed']"
+ },
+ "[async]B3.happy.entry_always": {
+  "pass": true,
+  "note": "['size_from_profile', 'submit_entry_order', 'arm_submit_timeout']"
+ },
+ "[async]B3.happy.snapshot": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B3.skip.first_wins": {
+  "pass": true,
+  "note": "['leg.skipped']"
+ },
+ "[async]B3.preflight_fail.error": {
+  "pass": true,
+  "note": "['leg.error']"
+ },
+ "[async]B3.resolving.live_to_open": {
+  "pass": true,
+  "note": "['leg.open']"
+ },
+ "[async]B3.resolving.svc_once": {
+  "pass": true,
+  "note": "['lookup_by_link_id']"
+ },
+ "[async]B3.resolving.onError_error": {
+  "pass": true,
+  "note": "['leg.error']"
+ },
+ "[async]B3.unwind.flat_to_closed": {
+  "pass": true,
+  "note": "['leg.closed']"
+ },
+ "[async]B3.unwind.chain_order": {
+  "pass": true,
+  "note": "['cancel_children_svc', 'reduce_only_close', 'poll_until_flat']"
+ },
+ "[async]B3.unwind.snapshot": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B3.unwind.retry_bounded": {
+  "pass": true,
+  "note": "reduce_only_close x3 states=['leg.error']"
+ },
+ "[async]B3.unwind.retry_terminal": {
+  "pass": true,
+  "note": "['leg.error']"
+ },
+ "[async]B3.unwind.naked_alert_path": {
+  "pass": true,
+  "note": "['bump_close_attempts', 'read_authoritative_position_qty', 'bump_close_attempts', 'mark_incomplete']"
+ },
+ "[async]B3.unwind.naked_alert_fired": {
+  "pass": true,
+  "note": "['bump_close_attempts', 'mark_incomplete', 'raise_naked_position_alert']"
+ },
+ "[async]B3.R6-03.terminates": {
+  "pass": true,
+  "note": "[{'ev': 'ORDER_OPEN', 'ok': True, 'sec': 0.0006046000053174794}, {'ev': 'UNWIND', 'ok': True, 'sec': 0.0004885999951511621}]"
+ },
+ "[async]B3.R6-03.bounded": {
+  "pass": true,
+  "note": "cancel_children_svc x15 states=['leg.unwinding.cancel_children'] status=running err=None"
+ },
+ "[async]B3.defer.flat_before_close": {
+  "pass": true,
+  "note": "states=['leg.closed'] unhandled=[('FLAT', 'deferred')]"
+ },
+ "[async]B3.parity.states": {
+  "pass": true,
+  "note": "async=['leg.closed'] sync=['leg.closed']"
+ },
+ "[async]B3.parity.actions": {
+  "pass": true,
+  "note": "async=['size_from_profile', 'submit_entry_order', 'arm_submit_timeout', 'read_authoritative_position_qty', 'bump_close_attempts']\nsync=['size_from_profile', 'submit_entry_order', 'arm_submit_timeout', 'read_authoritative_position_qty', 'bump_close_attempts']"
+ },
+ "[async]B3.parity.svc": {
+  "pass": true,
+  "note": "async=['cancel_children_svc', 'reduce_only_close', 'poll_until_flat'] sync=['cancel_children_svc', 'reduce_only_close', 'poll_until_flat']"
+ }
+}

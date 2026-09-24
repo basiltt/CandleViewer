@@ -1,0 +1,81 @@
+{
+  "probe": "r3b_on_start_torn_minimal",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "engine": "async",
+      "kind": "def",
+      "disposition": "returned",
+      "status": "running",
+      "state_ids": [],
+      "configuration": [],
+      "healthy_state_ids": [
+        "r3b.a"
+      ],
+      "restore": "refused:AttributeError"
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "returned",
+      "status": "running",
+      "state_ids": [],
+      "configuration": [],
+      "healthy_state_ids": [
+        "r3b.a"
+      ],
+      "restore": "refused:AttributeError"
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "returned",
+      "status": "running",
+      "state_ids": [],
+      "configuration": [],
+      "healthy_state_ids": [
+        "r3b.b"
+      ],
+      "restore": "refused:AttributeError"
+    }
+  ],
+  "torn": [
+    {
+      "engine": "async",
+      "kind": "def",
+      "disposition": "returned",
+      "status": "running",
+      "state_ids": [],
+      "configuration": [],
+      "healthy_state_ids": [
+        "r3b.a"
+      ],
+      "restore": "refused:AttributeError"
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "returned",
+      "status": "running",
+      "state_ids": [],
+      "configuration": [],
+      "healthy_state_ids": [
+        "r3b.a"
+      ],
+      "restore": "refused:AttributeError"
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "returned",
+      "status": "running",
+      "state_ids": [],
+      "configuration": [],
+      "healthy_state_ids": [
+        "r3b.b"
+      ],
+      "restore": "refused:AttributeError"
+    }
+  ],
+  "result": "FAIL"
+}

@@ -1,0 +1,219 @@
+[
+ {
+  "id": "B12-happy",
+  "inv": "happy",
+  "title": "created->buffering->paused->playing->PAUSE->STEP->finished",
+  "detail": {
+   "ok": true,
+   "seq": [
+    [
+     "replay.created"
+    ],
+    [
+     "replay.paused"
+    ],
+    [
+     "replay.playing"
+    ],
+    [
+     "replay.paused"
+    ],
+    [
+     "replay.paused"
+    ],
+    [
+     "replay.finished"
+    ],
+    [
+     "replay.destroyed"
+    ]
+   ],
+   "expected": [
+    [
+     "replay.created"
+    ],
+    [
+     "replay.paused"
+    ],
+    [
+     "replay.playing"
+    ],
+    [
+     "replay.paused"
+    ],
+    [
+     "replay.paused"
+    ],
+    [
+     "replay.finished"
+    ],
+    [
+     "replay.destroyed"
+    ]
+   ],
+   "svc": [
+    "seek_and_prime",
+    "emit_one_step"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B12-b-1",
+  "inv": "INV-B12-b",
+  "title": "cursor monotonic during playback; SEEK is the only rewind",
+  "detail": {
+   "ok": true,
+   "cursors": [
+    500,
+    999,
+    200
+   ],
+   "final": [
+    "replay.paused"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B12-c",
+  "inv": "INV-B12-c",
+  "title": "CONSUMER_SLOW slows clock, drops nothing, stays playing",
+  "detail": {
+   "ok": true,
+   "speed": 0.125,
+   "dropped": [],
+   "states": [
+    "replay.playing"
+   ],
+   "slow_calls": 3
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B12-d",
+  "inv": "INV-B12-d",
+  "title": "coverage_gaps surfaced explicitly from seek_and_prime",
+  "detail": {
+   "ok": true,
+   "coverage_gaps": [
+    [
+     100,
+     150
+    ],
+    [
+     300,
+     320
+    ]
+   ],
+   "expected": [
+    [
+     100,
+     150
+    ],
+    [
+     300,
+     320
+    ]
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B12-loop",
+  "inv": "INV-B12-a",
+  "title": "RANGE_END with loop_enabled re-buffers and resets cursor",
+  "detail": {
+   "ok": true,
+   "final": [
+    "replay.paused"
+   ],
+   "seek_calls": [
+    1,
+    2
+   ],
+   "reset_called": true
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B12-e",
+  "inv": "INV-B12-e",
+  "title": "destroyed is final; further events rejected, not applied",
+  "detail": {
+   "ok": true,
+   "final": [
+    "replay.destroyed"
+   ],
+   "after_PLAY": {
+    "PLAY": "accepted, states=['replay.destroyed']"
+   },
+   "still_running": false,
+   "deferred": 0
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B12-cancel",
+  "inv": "INV-B12-a",
+  "title": "CANCEL during buffering -> paused; invoke result must not land later",
+  "detail": {
+   "ok": true,
+   "buffering": [
+    "replay.buffering"
+   ],
+   "after_cancel": [
+    "replay.paused"
+   ],
+   "after_service_would_have_finished": [
+    "replay.paused"
+   ],
+   "cursor": [
+    0,
+    0
+   ],
+   "note": "cursor 4242 here would mean a cancelled seek still mutated state"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "BLOCK-async",
+  "inv": "svc-lane",
+  "title": "a async service: does the loop stay live and is there a cancel window?",
+  "detail": {
+   "style": "async",
+   "service_duration_s": 0.6,
+   "send_wait_returned_after_s": 0.0,
+   "state_when_send_returned": [
+    "replay.buffering"
+   ],
+   "loop_ticks_during_service": 2,
+   "service_thread_is_loop_thread": true,
+   "cursor": 7,
+   "cancel_window_exists": true,
+   "loop_responsive": true,
+   "ok": true
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "BLOCK-def",
+  "inv": "svc-lane",
+  "title": "a def service: does the loop stay live and is there a cancel window?",
+  "detail": {
+   "style": "def",
+   "service_duration_s": 0.6,
+   "send_wait_returned_after_s": 0.607,
+   "state_when_send_returned": [
+    "replay.paused"
+   ],
+   "loop_ticks_during_service": 21,
+   "service_thread_is_loop_thread": false,
+   "cursor": 7,
+   "cancel_window_exists": false,
+   "loop_responsive": true,
+   "ok": false
+  },
+  "status": "FAIL"
+ }
+]

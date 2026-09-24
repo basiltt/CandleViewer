@@ -1,0 +1,156 @@
+{
+  "probe": "w1_task_identity_matrix",
+  "py": "3.13.7",
+  "cells": [
+    {
+      "cell": "M1_action_direct_send",
+      "kind": "async def",
+      "identity": [
+        "ReentrantWaitError"
+      ],
+      "expected_identity": "INTERNAL",
+      "states": [
+        "w1m1.done"
+      ],
+      "n": 1,
+      "advanced": true,
+      "ok": true
+    },
+    {
+      "cell": "M2_action_helper_awaited",
+      "kind": "async def",
+      "identity": [
+        "ReentrantWaitError"
+      ],
+      "expected_identity": "INTERNAL",
+      "states": [
+        "w1m2.done"
+      ],
+      "n": 1,
+      "advanced": true,
+      "ok": true
+    },
+    {
+      "cell": "M3_action_ensure_future",
+      "kind": "def",
+      "identity": [
+        "RESOLVED"
+      ],
+      "expected_identity": "EXTERNAL",
+      "states": [
+        "w1m3d.done"
+      ],
+      "n": 1,
+      "advanced": true,
+      "ok": true
+    },
+    {
+      "cell": "M3_action_ensure_future",
+      "kind": "async def",
+      "identity": [
+        "RESOLVED"
+      ],
+      "expected_identity": "EXTERNAL",
+      "states": [
+        "w1m3a.done"
+      ],
+      "n": 1,
+      "advanced": true,
+      "ok": true
+    },
+    {
+      "cell": "M4_action_task_task",
+      "kind": "async def",
+      "identity": [
+        "RESOLVED"
+      ],
+      "expected_identity": "EXTERNAL",
+      "states": [
+        "w1m4.done"
+      ],
+      "n": 1,
+      "advanced": true,
+      "ok": true
+    },
+    {
+      "cell": "M5_worker_outlives_action",
+      "kind": "async def",
+      "expected_identity": "EXTERNAL",
+      "states": [
+        "w1m5.done"
+      ],
+      "n": 1,
+      "advanced": true,
+      "ok": true
+    },
+    {
+      "cell": "M6_def_action_send",
+      "kind": "def",
+      "expected_identity": "EITHER (must not be lost)",
+      "states": [
+        "w1m6.done"
+      ],
+      "n": 1,
+      "advanced": true,
+      "ok": true
+    },
+    {
+      "cell": "M7_child_action_parent_send",
+      "kind": "def",
+      "identity": [
+        "PLAIN"
+      ],
+      "expected_identity": "EXTERNAL(parent)",
+      "parent_states": [
+        "w1m7p.done"
+      ],
+      "n": 1,
+      "advanced": true,
+      "ok": true
+    },
+    {
+      "cell": "M7_child_action_parent_send",
+      "kind": "async def",
+      "identity": [
+        "RESOLVED"
+      ],
+      "expected_identity": "EXTERNAL(parent)",
+      "parent_states": [
+        "w1m7p.done"
+      ],
+      "n": 1,
+      "advanced": true,
+      "ok": true
+    },
+    {
+      "cell": "M8_after_handler_send",
+      "kind": "async def",
+      "identity": [
+        "ReentrantWaitError"
+      ],
+      "expected_identity": "INTERNAL",
+      "states": [
+        "w1m8.done"
+      ],
+      "n": 1,
+      "advanced": true,
+      "ok": true
+    },
+    {
+      "cell": "M9_spawner_keeps_awaiting",
+      "kind": "async def",
+      "identity": [
+        "RESOLVED"
+      ],
+      "expected_identity": "EXTERNAL",
+      "states": [
+        "w1m9.done"
+      ],
+      "n": 1,
+      "advanced": true,
+      "ok": true
+    }
+  ],
+  "failures": [],
+  "verdict": "CLEAN"
+}

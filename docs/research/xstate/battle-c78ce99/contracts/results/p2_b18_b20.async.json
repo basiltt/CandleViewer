@@ -1,0 +1,110 @@
+{
+ "[async]B18/happy engage+release": {
+  "pass": true,
+  "note": "{\"st\": [\"kill_switch.clear\"], \"svc\": [\"cancel_all_working_orders\", \"flatten_all_positions\"], \"snap\": true, \"notes\": [\"t0:v3 scheduled_sends=0\", \"t1:v3 scheduled_sends=0\", \"t2:v3 scheduled_sends=0\"]}"
+ },
+ "[async]B18/always -> invoked child": {
+  "pass": true,
+  "note": "{\"st\": [\"kill_switch.engaged\"], \"svc\": [\"cancel_all_working_orders\", \"flatten_all_positions\"], \"tr\": [\"___xstate_statemachine_init___->['kill_switch.clear']\", \"ENGAGE->['kill_switch.engaging']\", \"->['kill_switch.cancelling']\", \"done.invoke.cx->['kill_switch.flattening']\", \"done.invoke.fl->['kill_switch.engaged']\"]}"
+ },
+ "[async]B18/always guard false -> engaged, no service": {
+  "pass": true,
+  "note": "{\"st\": [\"kill_switch.engaged\"], \"svc\": []}"
+ },
+ "[async]B18/INV-b block precedes outward effects": {
+  "pass": true,
+  "note": "[\"record_engagement\", \"audit_kill_switch\", \"block_new_orders_immediately\", \"cancel_entry_and_poll_drains\", \"broadcast_kill_switch\"]"
+ },
+ "[async]B18/INV-c incomplete flatten pages + is visible": {
+  "pass": true,
+  "note": "{\"st\": [\"kill_switch.engaged_incomplete\"], \"acts\": [\"broadcast_kill_switch\", \"page_owner\", \"emit_incomplete_metric\"]}"
+ },
+ "[async]B18/INV-c2 RETRY_FLATTEN re-invokes": {
+  "pass": true,
+  "note": "{\"st\": [\"kill_switch.engaged_incomplete\"], \"svc\": [\"cancel_all_working_orders\", \"flatten_all_positions\", \"flatten_all_positions\"]}"
+ },
+ "[async]B18/INV-d release denied stays blocked": {
+  "pass": true,
+  "note": "{\"st\": [\"kill_switch.engaged\"], \"unh\": [[\"RELEASE\", \"errored\"]], \"err\": \"UnhandledEventError(\\\"Event 'RELEASE' is not handled in any active state ['kill_switch.engaged'] and the machine's onUnhandled policy is 'error'.\\\")\", \"notes\": [\"t0:v3 scheduled_sends=0\", \"t1:v3 scheduled_sends=0\", \"t2:v3 scheduled_sends=0\", \"t3:v3 scheduled_sends=0\"]}"
+ },
+ "[async]B18/INV-e onError -> incomplete + alert": {
+  "pass": true,
+  "note": "{\"st\": [\"kill_switch.engaged_incomplete\"], \"acts\": [\"broadcast_kill_switch\", \"raise_critical_alert\", \"page_owner\", \"emit_incomplete_metric\"], \"svc_err\": [\"RuntimeError('venue down')\"]}"
+ },
+ "[async]B18/rollback+onDone bounded (CV-221-01)": {
+  "pass": true,
+  "note": "{\"svc_t1\": 7, \"svc_t2\": 7, \"st\": [\"kill_switch.flattening\"], \"last_error\": \"RunawayChainError(\\\"Machine 'kill_switch' exceeded 5 chained self-generated events in one macrostep and discarded 1 of th\"}"
+ },
+ "[async]B18/priority sends never shed as chain_budget": {
+  "pass": true,
+  "note": "{\"sent\": 12, \"dropped\": [[\"RELEASE\", \"not_running\"], [\"RELEASE\", \"not_running\"], [\"RELEASE\", \"not_running\"], [\"RELEASE\", \"not_running\"], [\"RELEASE\", \"not_running\"], [\"RELEASE\", \"not_running\"]], \"shed\": [], \"errs\": []}"
+ },
+ "[async]B18/priority lane accepted every kill press": {
+  "pass": true,
+  "note": "{\"sent\": 12, \"errs\": []}"
+ },
+ "[async]B19/happy sweep -> idle": {
+  "pass": true,
+  "note": "{\"st\": [\"reconciliation.idle\"], \"svc\": [\"fetch_exchange_state\", \"diff_against_local\"], \"snap\": true, \"notes\": [\"t0:v3 scheduled_sends=0\", \"t1:v3 scheduled_sends=0\"]}"
+ },
+ "[async]B19/INV-a auto-remediation path": {
+  "pass": true,
+  "note": "{\"st\": [\"reconciliation.idle\"], \"svc\": [\"fetch_exchange_state\", \"diff_against_local\", \"apply_remediations\"]}"
+ },
+ "[async]B19/always -> divergent + alert": {
+  "pass": true,
+  "note": "{\"st\": [\"reconciliation.divergent\"], \"tr\": [\"done.invoke.diff->['reconciliation.reporting']\", \"->['reconciliation.divergent']\"]}"
+ },
+ "[async]B19/onError -> backing_off -> retry": {
+  "pass": true,
+  "note": "{\"st\": [\"reconciliation.backing_off\"], \"svc\": [\"fetch_exchange_state\", \"fetch_exchange_state\"]}"
+ },
+ "[async]B19/INV-b failures exhausted -> stale_lockout": {
+  "pass": true,
+  "note": "{\"st\": [\"reconciliation.stale_lockout\"], \"acts\": [\"emit_recon_started\", \"lock_account_for_new_orders\", \"page_owner\"]}"
+ },
+ "[async]B19/INV-b2 operator can clear stale_lockout": {
+  "pass": false,
+  "note": "{\"st\": [\"reconciliation.stale_lockout\"], \"unh\": [[\"OPERATOR_RESOLVED\", \"deferred\"]], \"def\": 1}"
+ },
+ "[async]B19/CANCEL lands": {
+  "pass": true,
+  "note": "{\"st\": [\"reconciliation.idle\"], \"unh\": [[\"CANCEL\", \"deferred\"]]}"
+ },
+ "[async]B19/rollback+onDone bounded (CV-221-01)": {
+  "pass": true,
+  "note": "{\"svc_t1\": 27, \"svc_t2\": 27, \"st\": [\"reconciliation.diffing\"], \"last_error\": \"RunawayChainError(\\\"Machine 'reconciliation' exceeded 25 chained self-generated events in one macrostep and discarded 1 o\"}"
+ },
+ "[async]B20/happy stays clear": {
+  "pass": true,
+  "note": "{\"st\": [\"risk_lockout.clear\"], \"snap\": true}"
+ },
+ "[async]B20/INV-a breach -> locked, halt precedes broadcast": {
+  "pass": true,
+  "note": "{\"st\": [\"risk_lockout.locked\"], \"acts\": [\"set_breach_daily_loss\", \"halt_new_orders\", \"compute_until\", \"schedule_expiry_deadline\", \"raise_lockout_alert\", \"audit_lockout\", \"broadcast_lockout\"]}"
+ },
+ "[async]B20/INV-b warning band visible": {
+  "pass": true,
+  "note": "{\"st\": [\"risk_lockout.warning\"]}"
+ },
+ "[async]B20/INV-c manual mode ignores EXPIRY_DUE": {
+  "pass": true,
+  "note": "{\"st\": [\"risk_lockout.locked\"]}"
+ },
+ "[async]B20/INV-c time mode resumes": {
+  "pass": true,
+  "note": "{\"st\": [\"risk_lockout.clear\"]}"
+ },
+ "[async]B20/INV-d override denied + audited": {
+  "pass": true,
+  "note": "{\"st\": [\"risk_lockout.locked\"]}"
+ },
+ "[async]B20/rollback keeps trading halted-or-clear consistently": {
+  "pass": true,
+  "note": "{\"st\": [\"risk_lockout.clear\"], \"acts\": [\"set_breach_daily_loss\", \"halt_new_orders\", \"compute_until\", \"schedule_expiry_deadline\", \"raise_lockout_alert\"]}"
+ },
+ "[async]B20/sync parity": {
+  "pass": true,
+  "note": "{\"st\": [\"risk_lockout.locked\"], \"err\": null}"
+ }
+}

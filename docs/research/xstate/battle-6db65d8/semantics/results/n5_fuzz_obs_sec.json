@@ -1,0 +1,122 @@
+[
+ {
+  "id": "N5-01",
+  "title": "Config fuzzer: 120 random machines with invoke-onDone cycles and cross-region `always` never livelock (30 s watchdog)",
+  "intent": "#144/#151: a conservative cycle must end on the budget, not spin for ever",
+  "detail": {
+   "ok": true,
+   "machines": 120,
+   "settled": 120,
+   "hangs": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N5-02",
+  "title": "5000 snapshot mutations: every rejection is a typed XStateMachineError, never a bare TypeError/ValueError",
+  "intent": "#146/#143: `except XStateMachineError` around a restore must be sufficient",
+  "detail": {
+   "ok": true,
+   "mutations": 5000,
+   "outcomes": {
+    "SnapshotCorruptError": 2946,
+    "restored": 1029,
+    "SnapshotDriftError": 984,
+    "SnapshotVersionError": 41
+   },
+   "untyped_samples": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N5-03",
+  "title": "Event-type fuzz: every hostile event shape raises InvalidEventError (#161), never anything untyped",
+  "intent": "the send() door is the widest attack surface an OMS exposes",
+  "detail": {
+   "ok": true,
+   "typed_rejections": 19,
+   "accepted": [
+    "{'type': 'OK', 'payload': <object object"
+   ],
+   "problems": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N5-04",
+  "title": "Hook matrix: guard_denied / unresolved_target / chain_budget / on_plugin_error / on_resolve_error each fire EXACTLY once",
+  "intent": "an OMS reconciles from hooks; a double-fire double-books and a miss loses the order",
+  "detail": {
+   "ok": true,
+   "fire_counts": {
+    "guard_denied": 1,
+    "unresolved_target": 1,
+    "chain_budget": 1,
+    "on_plugin_error": 1,
+    "on_resolve_error": 1
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N5-05",
+  "title": "#160: get_snapshot()'s DEBUG log is redacted \u2014 no iban/pan/cvc/otp value reaches the log stream",
+  "intent": "a DEBUG-level log shipped to a vendor must not carry a PAN",
+  "detail": {
+   "ok": true,
+   "log_records": 25,
+   "leaked_fields": [],
+   "qty_still_logged": true
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N5-06",
+  "title": "Executor thread context leakage: a plain-def service sees no other machine's context and cannot mutate it in place",
+  "intent": "#149 shares one pool across services; a shared pool must not share state",
+  "detail": {
+   "ok": true,
+   "each_service_saw_its_own_context": true,
+   "owners_seen": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "worker_mutation_visible": [
+    "from-worker",
+    "from-worker",
+    "from-worker",
+    "from-worker",
+    "from-worker",
+    "from-worker",
+    "from-worker",
+    "from-worker"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N5-07",
+  "title": "Exported API surface: every new round-5 name is importable and every error derives from XStateMachineError",
+  "intent": "a typed contract the caller cannot import is not a contract",
+  "detail": {
+   "ok": true,
+   "missing_exports": [],
+   "errors_outside_hierarchy": [],
+   "error_classes": 22,
+   "receipt_fields": [
+    "changed",
+    "deferred",
+    "denied",
+    "error",
+    "state_ids"
+   ]
+  },
+  "status": "PASS"
+ }
+]

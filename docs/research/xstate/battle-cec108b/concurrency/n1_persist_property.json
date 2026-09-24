@@ -1,0 +1,14 @@
+{
+  "probe": "n1_persist_property",
+  "py": "3.13.7",
+  "events": 400,
+  "snapshots_ok": 400,
+  "midstep_at_quiescence": 0,
+  "serialization_errors": 0,
+  "roundtrip_mismatches": [],
+  "roundtrip_mismatch_count": 0,
+  "restored_event_errors": [],
+  "restored_event_error_count": 0,
+  "dormant_timers_observed": 17,
+  "result": "PASS"
+}

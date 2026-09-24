@@ -1,0 +1,133 @@
+[
+ {
+  "id": "R1",
+  "title": "ReentrantWaitError: an action awaiting send(wait=True) on its OWN interpreter must RAISE, not hang (both engines/kinds)",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "async_engine/async": {
+     "result": "ReentrantWaitError",
+     "msg": "Action on 'r' awaited send('P', wait=True) on its own interpreter. The receipt resolves only when the run loop processes"
+    },
+    "async_engine/plain": {
+     "result": "RETURNED",
+     "r": "<xstate_statemachine.interpreter.Interpreter._guard_reentran"
+    },
+    "sync_engine/plain": {
+     "result": "ReentrantWaitError",
+     "msg": "Action on 'r' awaited send('P', wait=True) on its own interpreter. The receipt resolves only when the run loop processes"
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "R4",
+  "title": "Same guard from inside an AFTER-fired handler's action (engine-minted event, not start descent)",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "after_handler/async": {
+     "result": "ReentrantWaitError",
+     "msg": "Action on 'ra' awaited send('P', wait=True) on its own interpreter. The receipt resolves only when the run loop processe"
+    },
+    "after_handler/plain": {
+     "result": "RETURNED",
+     "r": "<xstate_statemachine.interpreter.Interpreter._guard_reentran"
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "R2",
+  "title": "Escape hatch: ensure_future(send(wait=True)) issued inside an action and awaited AFTER the step must RESOLVE",
+  "detail": {
+   "ok": true,
+   "detail": {
+    "resolved": true,
+    "state": [
+     "r.b"
+    ],
+    "receipt": "Receipt"
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "R5",
+  "title": "100 CONCURRENT interpreters running the ensure_future pattern -- all resolve, none hangs, no cross-interpreter false trip",
+  "detail": {
+   "ok": true,
+   "n": 100,
+   "failures": [],
+   "distinct_states": 1,
+   "state": [
+    "b"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "R3",
+  "title": "child -> parent and parent -> child wait=True (a DIFFERENT interpreter) must still work -- guard keys on the owner only",
+  "detail": {
+   "ok": true,
+   "detail": {
+    "cross": "OK",
+    "peer_state": [
+     "peer.b"
+    ]
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "R6",
+  "title": "#222 latch: chain_trips monotonic; last_chain_error sticky across a benign event; clear_chain_error clears latch only; on_chain_budget_exceeded exactly once per trip",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "async": {
+     "trips_after_start": 1,
+     "latch_after_start": "RunawayChainError",
+     "hooks_after_start": 1,
+     "trips_after_benign": 1,
+     "latch_after_benign": "RunawayChainError",
+     "last_error_after_benign": "NoneType",
+     "trips_after_clear": 1,
+     "latch_after_clear": "NoneType",
+     "hooks_total": 1
+    },
+    "sync": {
+     "trips_after_start": 1,
+     "latch_after_start": "RunawayChainError",
+     "hooks_after_start": 1,
+     "trips_after_benign": 1,
+     "latch_after_benign": "RunawayChainError",
+     "last_error_after_benign": "NoneType",
+     "trips_after_clear": 1,
+     "latch_after_clear": "NoneType",
+     "hooks_total": 1
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "R7",
+  "title": "Latch/counter across a snapshot round-trip (probe: reported, counted only if it contradicts a documented promise)",
+  "detail": {
+   "ok": true,
+   "note": "informational -- no documented promise that the latch crosses a snapshot",
+   "trips_before": 1,
+   "trips_after_restore": 1,
+   "latch_after_restore": "RestoredError",
+   "snapshot_has_chain_keys": [
+    "chain_trips",
+    "last_chain_error"
+   ]
+  },
+  "status": "PASS"
+ }
+]

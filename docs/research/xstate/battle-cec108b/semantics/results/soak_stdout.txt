@@ -1,0 +1,17 @@
+{
+ "soak_seconds": 300.0,
+ "machines": 200,
+ "events": 4271000,
+ "snapshots": 2980,
+ "restores": 2980,
+ "orders": 3180,
+ "midstep_at_quiescence": 0,
+ "restore_drift": 0,
+ "inert_running": 0,
+ "typed_errors": 0,
+ "untyped_errors": 0,
+ "lost_fills": 0,
+ "rss_delta_mb": 27.22,
+ "untyped_samples": [],
+ "ok": true
+}

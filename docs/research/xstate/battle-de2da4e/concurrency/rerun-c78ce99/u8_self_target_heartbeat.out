@@ -1,0 +1,179 @@
+{
+  "probe": "u8_self_target_heartbeat",
+  "py": "3.13.7",
+  "period_ms": 25,
+  "run_s": 1.0,
+  "ideal_beats": 40.0,
+  "min_beats_required": 10,
+  "rows": [
+    {
+      "engine": "async",
+      "kind": "def",
+      "beats": 1,
+      "armed_records_at_end": 0,
+      "status": "running",
+      "states": [
+        "u8.beat"
+      ],
+      "last_error": null,
+      "case": "SELF_raise_delay"
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "beats": 1,
+      "armed_records_at_end": 0,
+      "status": "running",
+      "states": [
+        "u8.beat"
+      ],
+      "last_error": null,
+      "case": "SELF_raise_delay"
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "beats": 1,
+      "armed_records_at_end": 0,
+      "status": "running",
+      "states": [
+        "u8.beat"
+      ],
+      "last_error": null,
+      "case": "SELF_raise_delay"
+    },
+    {
+      "engine": "async",
+      "kind": "def",
+      "beats": 31,
+      "armed_records_at_end": 0,
+      "status": "running",
+      "states": [
+        "u8r.beat"
+      ],
+      "last_error": null,
+      "case": "SELF_raise_delay_reenter"
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "beats": 32,
+      "armed_records_at_end": 1,
+      "status": "running",
+      "states": [
+        "u8r.beat"
+      ],
+      "last_error": null,
+      "case": "SELF_raise_delay_reenter"
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "beats": 37,
+      "armed_records_at_end": 1,
+      "status": "running",
+      "states": [
+        "u8r.beat"
+      ],
+      "last_error": null,
+      "case": "SELF_raise_delay_reenter"
+    },
+    {
+      "engine": "async",
+      "kind": "def",
+      "beats": 32,
+      "armed_records_at_end": 1,
+      "status": "running",
+      "states": [
+        "u8h.beat"
+      ],
+      "last_error": null,
+      "case": "HOP_raise_delay"
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "beats": 32,
+      "armed_records_at_end": 1,
+      "status": "running",
+      "states": [
+        "u8h.beat"
+      ],
+      "last_error": null,
+      "case": "HOP_raise_delay"
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "beats": 38,
+      "armed_records_at_end": 1,
+      "status": "running",
+      "states": [
+        "u8h.beat"
+      ],
+      "last_error": null,
+      "case": "HOP_raise_delay"
+    },
+    {
+      "engine": "async",
+      "kind": "def",
+      "beats": 1,
+      "armed_records_at_end": 0,
+      "status": "running",
+      "states": [
+        "u8a.beat"
+      ],
+      "last_error": null,
+      "case": "AFTER_parity_reference"
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "beats": 1,
+      "armed_records_at_end": 0,
+      "status": "running",
+      "states": [
+        "u8a.beat"
+      ],
+      "last_error": null,
+      "case": "AFTER_parity_reference"
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "beats": 1,
+      "armed_records_at_end": 0,
+      "status": "running",
+      "states": [
+        "u8a.beat"
+      ],
+      "last_error": null,
+      "case": "AFTER_parity_reference"
+    }
+  ],
+  "beats_by_case": {
+    "SELF_raise_delay": {
+      "async/def": 1,
+      "async/async def": 1,
+      "sync/def": 1
+    },
+    "SELF_raise_delay_reenter": {
+      "async/def": 31,
+      "async/async def": 32,
+      "sync/def": 37
+    },
+    "HOP_raise_delay": {
+      "async/def": 32,
+      "async/async def": 32,
+      "sync/def": 38
+    },
+    "AFTER_parity_reference": {
+      "async/def": 1,
+      "async/async def": 1,
+      "sync/def": 1
+    }
+  },
+  "parity_note": "SELF and AFTER both beat once: a self-target transition without `reenter` is INTERNAL, the state is not exited, so neither entry-armed raise(delay=) nor the state's `after` re-arms. #212's parity claim holds exactly. Authors who want a heartbeat must use reenter: true or a two-state hop -- both run indefinitely here.",
+  "violations": [],
+  "verdict": "CLEAN"
+}

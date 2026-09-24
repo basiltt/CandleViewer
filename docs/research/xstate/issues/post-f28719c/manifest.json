@@ -1,0 +1,193 @@
+{
+  "round": 9,
+  "build": {
+    "repo": "xstate-statemachine",
+    "ref": "main",
+    "commit": "f28719c",
+    "pr": 202,
+    "branch": "fix/0.8.1-round8",
+    "declared_version_in_changelog": "0.8.1 (unreleased)",
+    "runtime___version__": "0.8.0",
+    "key_on": "commit",
+    "note": "__version__ still reports 0.8.0 on this tree. Never key a pin, CI assertion or gate baseline on the version string."
+  },
+  "posted": false,
+  "note": "DRAFT ONLY. Nothing in this directory has been posted. GitHub access was read-only throughout. We never reopen closed upstream issues; residuals are filed as new R9 issues instead.",
+  "new_issues": [
+    {
+      "file": "new/R9-02-after-matched-on-public-afterevent-class.md",
+      "r9": "R9-02",
+      "severity": "High",
+      "title": "after transitions are matched on the public AfterEvent class, so a forged snapshot record fires a 60-second timer instantly",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/interpreter",
+        "events",
+        "persistence"
+      ]
+    },
+    {
+      "file": "new/R9-04-always-rollforward-def-invoke-still-submitted.md",
+      "r9": "R9-04",
+      "severity": "High",
+      "title": "A def service armed by a transition an always rolls forward is still submitted",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/interpreter",
+        "actors",
+        "sync-interpreter",
+        "docs"
+      ]
+    },
+    {
+      "file": "new/R9-05-snapshots-are-unauthenticated.md",
+      "r9": "R9-05",
+      "severity": "Medium",
+      "title": "Snapshots are unauthenticated - filed as a docs/affordance ask, not a defect",
+      "labels": [
+        "documentation",
+        "enhancement",
+        "severity/medium",
+        "persistence"
+      ],
+      "repro": "new/repro/R9-05_snapshots_are_unauthenticated.py",
+      "repro_exit_on_defect": 1,
+      "verified": true
+    },
+    {
+      "file": "new/R9-06-delayed-self-send-cycle-can-never-be-shed.md",
+      "r9": "R9-06",
+      "severity": "Medium",
+      "title": "A delayed self-send cycle is charged to no budget and tagged external by #192, so it can never be shed",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/interpreter",
+        "events"
+      ],
+      "repro": "new/repro/R9-06_delayed_selfsend_unbounded.py",
+      "repro_exit_on_defect": 1,
+      "verified": true
+    },
+    {
+      "file": "new/R9-07-rollback-ondone-storm-wedges-without-runawaychainerror.md",
+      "r9": "R9-07",
+      "severity": "Medium",
+      "title": "rollback + invoke.onDone storm self-terminates early, silently, wedged in a transient state",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/interpreter",
+        "observability"
+      ],
+      "repro": "new/repro/R9-07_rollback_ondone_silent_wedge.py",
+      "repro_exit_on_defect": 1,
+      "verified": true
+    },
+    {
+      "file": "new/R9-08-send-wait-resolves-over-empty-configuration.md",
+      "r9": "R9-08",
+      "severity": "Medium",
+      "title": "await send(EV, wait=True) resolves with last_transition_ok=True over an empty configuration",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/interpreter",
+        "events"
+      ]
+    },
+    {
+      "file": "new/R9-09-lap-parity-claim-is-not-quite-true.md",
+      "r9": "R9-09",
+      "severity": "Medium",
+      "title": "#201's universal lap-parity claim is not quite true at odd maxIterations on the def lane",
+      "labels": [
+        "documentation",
+        "severity/medium",
+        "tests"
+      ],
+      "repro": "new/repro/R9-09_lap_parity_odd_limit_mismatch.py",
+      "repro_exit_on_defect": 1,
+      "verified": true
+    },
+    {
+      "file": "new/R9-T1-test-sleep-too-tight.md",
+      "r9": "R9-T1",
+      "severity": "Low",
+      "title": "tests/test_round6_findings.py::TestAsyncRollbackRearmCycleBounded::test_service_calls_bounded_by_max_iterations compares counts at 0.6s/0.3s; the def lane is still climbing at 0.6s and only converges around 1.0s, so the test fails intermittently on a normal host while the bound it checks is correct (both lanes plateau at maxIterations+2 when polled)",
+      "labels": [
+        "bug",
+        "severity/low",
+        "area/interpreter"
+      ]
+    }
+  ],
+  "comments": [
+    {
+      "issue": 181,
+      "file": "comments/181.md",
+      "action": "comment"
+    },
+    {
+      "issue": 186,
+      "file": "comments/186.md",
+      "action": "comment"
+    },
+    {
+      "issue": 192,
+      "file": "comments/192.md",
+      "action": "comment"
+    },
+    {
+      "issue": 193,
+      "file": "comments/193.md",
+      "action": "comment"
+    },
+    {
+      "issue": 194,
+      "file": "comments/194.md",
+      "action": "comment"
+    },
+    {
+      "issue": 195,
+      "file": "comments/195.md",
+      "action": "comment"
+    },
+    {
+      "issue": 196,
+      "file": "comments/196.md",
+      "action": "comment"
+    },
+    {
+      "issue": 197,
+      "file": "comments/197.md",
+      "action": "comment"
+    },
+    {
+      "issue": 198,
+      "file": "comments/198.md",
+      "action": "comment"
+    },
+    {
+      "issue": 199,
+      "file": "comments/199.md",
+      "action": "comment"
+    },
+    {
+      "issue": 200,
+      "file": "comments/200.md",
+      "action": "comment"
+    },
+    {
+      "issue": 201,
+      "file": "comments/201.md",
+      "action": "comment"
+    }
+  ],
+  "meta": {
+    "issue": 26,
+    "file": "meta-26.md"
+  }
+}

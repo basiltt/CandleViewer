@@ -1,0 +1,86 @@
+[
+  {
+    "id": "A1",
+    "title": "500 concurrent wait=True sends of ONE Event object",
+    "expected": {
+      "resolved": 500,
+      "hung": 0
+    },
+    "observed": {
+      "resolved": 500,
+      "hung": 0
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A2",
+    "title": "wait=True on a DEFERRED event: resolve on defer or on replay?",
+    "expected": "DOCUMENT",
+    "observed": {
+      "resolved_at_defer_time": true,
+      "deferred_count_at_defer": 1,
+      "resolved": true,
+      "changed": false,
+      "error": null,
+      "state": [
+        "d.a"
+      ]
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "A3",
+    "title": "wait=True on an event dropped by DROP_NEWEST",
+    "expected": "DOCUMENT",
+    "observed": {
+      "n": 12,
+      "hung": 0,
+      "dropped_reported": 10,
+      "ok": 2
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "A4",
+    "title": "wait=True receipt when RAISE overflow refuses the send",
+    "expected": "DOCUMENT",
+    "observed": {
+      "raised_at_call_site": 9,
+      "tasks": 3,
+      "hung": 0,
+      "outcomes": [
+        "ok"
+      ]
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "A5",
+    "title": "reused Event as a template: payload never mutated by the engine",
+    "expected": true,
+    "observed": true,
+    "status": "PASS"
+  },
+  {
+    "id": "A6",
+    "title": "priority + wait=True on ONE reused Event object x200",
+    "expected": {
+      "resolved": 200
+    },
+    "observed": {
+      "resolved": 200
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A7",
+    "title": "deferred event that is NEVER replayed: receipt at stop()",
+    "expected": "DOCUMENT",
+    "observed": {
+      "pending_after_defer": false,
+      "resolved_at_stop": true,
+      "error": null
+    },
+    "status": "FAIL"
+  }
+]

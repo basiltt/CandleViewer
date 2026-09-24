@@ -1,0 +1,101 @@
+{
+  "deferred_enable_autoreplay": {
+    "after_enable_while_locked": [
+      "live_gate.locked"
+    ],
+    "receipt": {
+      "changed": false,
+      "deferred": true
+    },
+    "deferred_count": 1,
+    "after_evidence": [
+      "live_gate.enabled"
+    ],
+    "acts": [
+      "record_evidence",
+      "record_enable",
+      "audit_live_enabled",
+      "broadcast_live_enabled",
+      "enable_live_visual_language"
+    ],
+    "transitions": [
+      "___xstate_statemachine_init___->['live_gate.locked']",
+      "EVIDENCE_RECORDED->['live_gate.eligible']",
+      "ENABLE_REQUESTED->['live_gate.enabled']"
+    ],
+    "evidence_receipt": {
+      "changed": true,
+      "deferred": false
+    }
+  },
+  "fail_record_enable": {
+    "ids": [
+      "live_gate.eligible"
+    ],
+    "status": "error",
+    "changed": false,
+    "error": "RuntimeError",
+    "err": "boom:record_enable",
+    "acts": [
+      "record_evidence",
+      "record_enable"
+    ],
+    "after": {
+      "changed": false,
+      "status": "error",
+      "ids": [
+        "live_gate.eligible"
+      ]
+    }
+  },
+  "fail_audit_live_enabled": {
+    "ids": [
+      "live_gate.eligible"
+    ],
+    "status": "error",
+    "changed": false,
+    "error": "RuntimeError",
+    "err": "boom:audit_live_enabled",
+    "acts": [
+      "record_evidence",
+      "record_enable",
+      "audit_live_enabled"
+    ],
+    "after": {
+      "changed": false,
+      "status": "error",
+      "ids": [
+        "live_gate.eligible"
+      ]
+    }
+  },
+  "fail_broadcast_live_enabled": {
+    "ids": [
+      "live_gate.eligible"
+    ],
+    "status": "error",
+    "changed": false,
+    "error": "RuntimeError",
+    "err": "boom:broadcast_live_enabled",
+    "acts": [
+      "record_evidence",
+      "record_enable",
+      "audit_live_enabled",
+      "broadcast_live_enabled"
+    ],
+    "after": {
+      "changed": false,
+      "status": "error",
+      "ids": [
+        "live_gate.eligible"
+      ]
+    }
+  },
+  "snapshot_after_fail": {
+    "ok": true,
+    "status": "error",
+    "state_ids": [
+      "live_gate.eligible"
+    ]
+  }
+}

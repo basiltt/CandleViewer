@@ -1,0 +1,51 @@
+PASS [def] B11.boot.start_hook  [False]
+PASS [def] B11.steady  ['recording.recording']
+PASS [def] B11.drain.waiter_failed  InterpreterStoppedError
+PASS [def] B11.drain.priority_first  [5, 6, 7, 0, 1, 2, 3, 4, 99]
+PASS [def] B11.drain.disjoint_complete  pre=[] drained=[5, 6, 7, 0, 1, 2, 3, 4, 99]
+PASS [def] B11.pre.chain0_drop0  ct=0 dr=0
+PASS [def] B11.restore.start_hook_restored  starts=1 [True]
+PASS [def] B11.restore.same_state  ['recording.recording']
+PASS [def] B11.replay.exactly_once  post=[5, 6, 7, 0, 1, 2, 3, 4, 99]
+PASS [def] B11.post.chain0_drop0_noerr  ct=0 dr=0 st=running err=[]
+PASS [def] B12.boot.start_hook  [False]
+PASS [def] B12.steady  ['replay.playing']
+PASS [def] B12.drain.waiter_failed  InterpreterStoppedError
+PASS [def] B12.drain.priority_first  [5, 6, 7, 0, 1, 2, 3, 4, 99]
+PASS [def] B12.drain.disjoint_complete  pre=[] drained=[5, 6, 7, 0, 1, 2, 3, 4, 99]
+PASS [def] B12.pre.chain0_drop0  ct=0 dr=0
+PASS [def] B12.restore.start_hook_restored  starts=1 [True]
+PASS [def] B12.restore.same_state  ['replay.playing']
+PASS [def] B12.replay.exactly_once  post=[5, 6, 7, 0, 1, 2, 3, 4, 99]
+PASS [def] B12.post.chain0_drop0_noerr  ct=0 dr=0 st=running err=[]
+PASS [def] B13.boot.start_hook  [False]
+PASS [def] B13.steady  ['ws_conn.live']
+PASS [def] B13.drain.waiter_failed  InterpreterStoppedError
+PASS [def] B13.drain.priority_first  [5, 6, 7, 0, 1, 2, 3, 4, 99]
+PASS [def] B13.drain.disjoint_complete  pre=[] drained=[5, 6, 7, 0, 1, 2, 3, 4, 99]
+PASS [def] B13.pre.chain0_drop0  ct=0 dr=0
+PASS [def] B13.restore.start_hook_restored  starts=1 [True]
+PASS [def] B13.restore.same_state  ['ws_conn.live']
+PASS [def] B13.replay.exactly_once  post=[5, 6, 7, 0, 1, 2, 3, 4, 99]
+PASS [def] B13.post.chain0_drop0_noerr  ct=0 dr=0 st=running err=[]
+PASS [def] B14.boot.start_hook  [False]
+PASS [def] B14.steady  ['book.live']
+PASS [def] B14.drain.waiter_failed  InterpreterStoppedError
+PASS [def] B14.drain.priority_first  [5, 6, 7, 0, 1, 2, 3, 4, 99]
+PASS [def] B14.drain.disjoint_complete  pre=[] drained=[5, 6, 7, 0, 1, 2, 3, 4, 99]
+PASS [def] B14.pre.chain0_drop0  ct=0 dr=0
+PASS [def] B14.restore.start_hook_restored  starts=1 [True]
+PASS [def] B14.restore.same_state  ['book.live']
+PASS [def] B14.replay.exactly_once  post=[5, 6, 7, 0, 1, 2, 3, 4, 99]
+PASS [def] B14.post.chain0_drop0_noerr  ct=0 dr=0 st=running err=[]
+PASS [def] B15.boot.start_hook  [False]
+PASS [def] B15.steady  ['paper_account.active']
+PASS [def] B15.drain.waiter_failed  InterpreterStoppedError
+PASS [def] B15.drain.priority_first  [5, 6, 7, 0, 1, 2, 3, 4, 99]
+PASS [def] B15.drain.disjoint_complete  pre=[] drained=[5, 6, 7, 0, 1, 2, 3, 4, 99]
+PASS [def] B15.pre.chain0_drop0  ct=0 dr=0
+PASS [def] B15.restore.start_hook_restored  starts=1 [True]
+PASS [def] B15.restore.same_state  ['paper_account.active']
+PASS [def] B15.replay.exactly_once  post=[5, 6, 7, 0, 1, 2, 3, 4, 99]
+PASS [def] B15.post.chain0_drop0_noerr  ct=0 dr=0 st=running err=[]
+--- 50 checks, 0 FAIL: []

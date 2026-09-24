@@ -1,0 +1,107 @@
+[
+ {
+  "id": "A1",
+  "title": "100 concurrent never-completing coroutine services then stop(): _chain_owed does not leak, tasks are cancelled, stop() is prompt",
+  "intent": "#179 debt counter leak / hang under cancellation",
+  "detail": {
+   "ok": true,
+   "services_started": 100,
+   "owed_mid_max": 1,
+   "owed_after_max": 0,
+   "owed_after_nonzero": 0,
+   "stop_seconds": 0.01,
+   "tasks_before_stop": 201,
+   "tasks_left_running": 0
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "A2",
+  "title": "External send(priority=True) x2000 DURING a self-generated invoke chain: ZERO dropped as chain_budget, for def AND async def services",
+  "intent": "#180 provenance-based charging must hold on the coroutine lane too",
+  "detail": {
+   "ok": false,
+   "runs": [
+    {
+     "kind": "plain",
+     "sent": 2000,
+     "accepted": 2000,
+     "refused_at_call": 0,
+     "actions_fired": 1974,
+     "chain_budget_drops": 27,
+     "other_drops": [],
+     "last_error": null
+    },
+    {
+     "kind": "async",
+     "sent": 2000,
+     "accepted": 2000,
+     "refused_at_call": 0,
+     "actions_fired": 2000,
+     "chain_budget_drops": 1,
+     "other_drops": [],
+     "last_error": "RunawayChainError"
+    }
+   ]
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "A3",
+  "title": "start(children_timeout=0.3) with 50 slow children: bounded wait, WARNING logged, machine running, children register afterwards",
+  "intent": "#181 children_timeout under fan-out",
+  "detail": {
+   "ok": true,
+   "start_seconds": 0.302,
+   "status_after_start": "running",
+   "actors_at_return": 50,
+   "actors_after_bringup": 50,
+   "warnings": [
+    "\u23f3 Interpreter 'par': 50 invoked child actor(s) still starting after 0.300s; start() returns with them in progress (#181)"
+   ],
+   "n_warnings": 1
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "A4",
+  "title": "Debt accounting: a genuine invoke cycle TRIPS and 30 independent one-deep completions do NOT, identically for def and async def",
+  "intent": "#179 _chain_owed must bound cycles without false-tripping honest traffic",
+  "detail": {
+   "ok": true,
+   "cycle_trips": true,
+   "cycle_bounded": true,
+   "one_deep_clean": true,
+   "lap_parity_def_vs_async": true,
+   "cycle": [
+    {
+     "kind": "plain",
+     "svc_calls": 22,
+     "last_error": "RunawayChainError",
+     "owed": 0
+    },
+    {
+     "kind": "async",
+     "svc_calls": 22,
+     "last_error": "RunawayChainError",
+     "owed": 0
+    }
+   ],
+   "one_deep": [
+    {
+     "kind": "plain",
+     "svc_calls": 30,
+     "last_error": null,
+     "owed": 0
+    },
+    {
+     "kind": "async",
+     "svc_calls": 30,
+     "last_error": null,
+     "owed": 0
+    }
+   ]
+  },
+  "status": "PASS"
+ }
+]

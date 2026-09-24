@@ -1,0 +1,68 @@
+[
+ {
+  "id": "R5-157",
+  "inv": "#157",
+  "title": "B11 bounded inbox RAISE: overflow raises at the send_threadsafe call site",
+  "detail": {
+   "results_tail": [
+    "ok",
+    "ok",
+    "ok",
+    "ok",
+    "ok",
+    "ok"
+   ],
+   "n_ok": 40,
+   "n_overflow": 0,
+   "other": [],
+   "status": "running",
+   "ok": false,
+   "note": "CV mandates a bounded inbox with RAISE on the order path; #157 says the raise must land on the CALLER, not a dropped future"
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "R5-142",
+  "inv": "#142/#143",
+  "title": "B13 hostile snapshot: emptied configuration is refused",
+  "detail": {
+   "clean_states": [
+    "ws_conn.live"
+   ],
+   "cases": {
+    "empty_configuration": "SnapshotCorruptError: Snapshot payload must be a JSON string, got dict.",
+    "non_leaf_only": "SnapshotCorruptError: Snapshot payload must be a JSON string, got dict.",
+    "status_not_str": "SnapshotCorruptError: Snapshot payload must be a JSON string, got dict.",
+    "error_status_no_error": "SnapshotCorruptError: Snapshot payload must be a JSON string, got dict.",
+    "version_wrong_type": "SnapshotCorruptError: Snapshot payload must be a JSON string, got dict.",
+    "deferred_wrong_type": "SnapshotCorruptError: Snapshot payload must be a JSON string, got dict."
+   },
+   "ok": true
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "R5-162",
+  "inv": "#162",
+  "title": "B11 restored pending user event keeps user provenance",
+  "detail": {
+   "states": [
+    "recording.recording"
+   ],
+   "deferred_count": 1,
+   "snapshot": "TAKEN",
+   "deferred_in_snapshot": [
+    {
+     "kind": "event",
+     "type": "STREAM_HEALTHY",
+     "payload": {
+      "s": "trade"
+     }
+    }
+   ],
+   "ok": true,
+   "note": "CV-C20 says snapshot only at quiescence (deferred_count==0); this records what happens if a caller ignores that"
+  },
+  "status": "PASS"
+ }
+]

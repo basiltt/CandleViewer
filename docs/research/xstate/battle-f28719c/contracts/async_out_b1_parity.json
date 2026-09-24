@@ -1,0 +1,142 @@
+{
+ "async": {
+  "states": [
+   "order.lifecycle.partially_filled",
+   "order.protection.sl_present"
+  ],
+  "status": "running",
+  "context": {
+   "order_id": null,
+   "order_link_id": null,
+   "account_id": null,
+   "symbol": null,
+   "side": null,
+   "qty": "0",
+   "filled_qty": "0",
+   "leaves_qty": "0",
+   "avg_price": null,
+   "seen_exec_ids": [],
+   "last_exchange_update": 0,
+   "recon_misses": 0,
+   "_fault": null,
+   "sl_deadline_us": null
+  },
+  "deferred": 0,
+  "error": null,
+  "actions": [
+   "persist_event",
+   "stamp_validated",
+   "persist_event",
+   "reserve_rate_token",
+   "persist_event",
+   "adopt_ack",
+   "persist_event",
+   "arm_sl_deadline",
+   "apply_fill",
+   "persist_event",
+   "notify_protection_region"
+  ],
+  "transitions": [
+   "___xstate_statemachine_init___->['order.lifecycle.draft', 'order.protection.not_required']",
+   "VALIDATE->['order.lifecycle.validated', 'order.protection.not_required']",
+   "SEND->['order.lifecycle.submitting', 'order.protection.not_required']",
+   "done.invoke.place->['order.lifecycle.submitted', 'order.protection.not_required']",
+   "FIRST_FILL->['order.lifecycle.submitted', 'order.protection.sl_pending']",
+   "done.invoke.attach_sl->['order.lifecycle.submitted', 'order.protection.sl_present']",
+   "EXEC->['order.lifecycle.partially_filled', 'order.protection.sl_present']"
+  ],
+  "dropped": [],
+  "unhandled": [],
+  "action_errors": [],
+  "guard_errors": [],
+  "service_errors": [],
+  "svc_calls": [
+   "place_order",
+   "attach_native_sl"
+  ],
+  "sends": [
+   {
+    "ev": "VALIDATE",
+    "ok": true,
+    "sec": 0.0004351999959908426
+   },
+   {
+    "ev": "SEND",
+    "ok": true,
+    "sec": 0.0003986000083386898
+   },
+   {
+    "ev": "FIRST_FILL",
+    "ok": true,
+    "sec": 0.0003493999829515815
+   },
+   {
+    "ev": "EXEC",
+    "ok": true,
+    "sec": 0.0003692000173032284
+   }
+  ],
+  "snapshot_ok": true,
+  "notes": []
+ },
+ "sync": {
+  "states": [
+   "order.lifecycle.partially_filled",
+   "order.protection.sl_present"
+  ],
+  "status": "running",
+  "context": {
+   "order_id": null,
+   "order_link_id": null,
+   "account_id": null,
+   "symbol": null,
+   "side": null,
+   "qty": "0",
+   "filled_qty": "0",
+   "leaves_qty": "0",
+   "avg_price": null,
+   "seen_exec_ids": [],
+   "last_exchange_update": 0,
+   "recon_misses": 0,
+   "_fault": null,
+   "sl_deadline_us": null
+  },
+  "deferred": 0,
+  "error": null,
+  "actions": [
+   "persist_event",
+   "stamp_validated",
+   "persist_event",
+   "reserve_rate_token",
+   "persist_event",
+   "adopt_ack",
+   "persist_event",
+   "arm_sl_deadline",
+   "apply_fill",
+   "persist_event",
+   "notify_protection_region"
+  ],
+  "svc_calls": [
+   "place_order",
+   "attach_native_sl"
+  ],
+  "sends": [
+   {
+    "ev": "VALIDATE",
+    "ok": true
+   },
+   {
+    "ev": "SEND",
+    "ok": true
+   },
+   {
+    "ev": "FIRST_FILL",
+    "ok": true
+   },
+   {
+    "ev": "EXEC",
+    "ok": true
+   }
+  ]
+ }
+}

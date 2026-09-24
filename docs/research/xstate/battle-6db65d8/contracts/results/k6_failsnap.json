@@ -1,0 +1,5 @@
+{
+  "persisted_status": "stopped",
+  "persisted_config": [],
+  "restored": "InvalidConfigError: Interpreter 'live_gate' has been stopped and cannot be restarted. Create a new interpreter, or restore one with `Interpreter.from_snapshot(...)`."
+}

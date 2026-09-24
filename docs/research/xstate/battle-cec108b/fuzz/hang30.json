@@ -1,0 +1,292 @@
+{
+ "initial": "a",
+ "on": {
+  "X": "#m.a.a.b.a"
+ },
+ "always": {
+  "target": "#m.a.a.b",
+  "guard": "guard_ctx"
+ },
+ "invoke": {
+  "id": "inv_m",
+  "src": "svc_ok"
+ },
+ "states": {
+  "a": {
+   "type": "parallel",
+   "on": {
+    "X": {
+     "target": "#m.a.c.b.c",
+     "actions": [
+      "act_a",
+      "act_b"
+     ],
+     "internal": true
+    }
+   },
+   "states": {
+    "a": {
+     "type": "parallel",
+     "entry": [
+      "act_c"
+     ],
+     "exit": "act_c",
+     "on": {
+      "GO": "#m.a.c.b.c"
+     },
+     "always": {
+      "target": "#m.a.c.b.a",
+      "guard": "guard_false"
+     },
+     "states": {
+      "a": {
+       "initial": "a",
+       "exit": "act_b",
+       "on": {
+        "DONE_IT": {
+         "target": "#m.a.a.a",
+         "guard": "guard_ctx"
+        },
+        "BACK": "#m.a.a.b.a"
+       },
+       "after": {
+        "delay_short": "#m.a.c.b"
+       },
+       "states": {
+        "a": {
+         "exit": "act_b",
+         "on": {
+          "NEXT": {
+           "target": "#m.a.b.a"
+          }
+         },
+         "after": {
+          "11": "#m.a"
+         },
+         "invoke": {
+          "id": "inv_m_a_a_a_a",
+          "src": "svc_slow",
+          "onDone": "#m.a.a"
+         }
+        }
+       }
+      },
+      "b": {
+       "initial": "a",
+       "entry": [
+        "act_a",
+        "act_b"
+       ],
+       "exit": "act_c",
+       "on": {
+        "BACK": {
+         "target": "#m.b.a",
+         "actions": [
+          "act_c",
+          "act_b"
+         ],
+         "internal": false
+        }
+       },
+       "states": {
+        "a": {
+         "on": {
+          "PONG": {
+           "target": "#m.b",
+           "guard": "guard_ctx"
+          },
+          "PING": {
+           "target": "#m.a.a.b.a",
+           "actions": [
+            "act_c",
+            "act_c"
+           ],
+           "guard": "guard_false",
+           "internal": false
+          },
+          "BACK": {
+           "target": "#m.a.a"
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "b": {
+     "initial": "a",
+     "entry": [
+      "act_c",
+      "act_a"
+     ],
+     "exit": "act_b",
+     "on": {
+      "DONE_IT": {
+       "target": "#m.a.c.b.b.a",
+       "guard": "guard_ctx",
+       "internal": false
+      },
+      "GO": "#m.a.c.b.b"
+     },
+     "states": {
+      "a": {
+       "on": {
+        "GO": "#m",
+        "PING": "#m.a.c.b.b"
+       }
+      }
+     }
+    },
+    "c": {
+     "initial": "a",
+     "exit": "act_c",
+     "on": {
+      "NEXT": {
+       "target": "#m.a.c.b.b",
+       "guard": "guard_ctx",
+       "internal": true
+      },
+      "PING": {
+       "target": "#m.b.a",
+       "guard": "guard_true"
+      },
+      "DONE_IT": {
+       "target": "#m.a.c.a",
+       "actions": [
+        "act_c",
+        "act_c"
+       ]
+      }
+     },
+     "states": {
+      "a": {
+       "entry": [
+        "act_b"
+       ],
+       "on": {
+        "PONG": {
+         "target": "#m.a.a.b",
+         "actions": [
+          "act_a"
+         ],
+         "internal": true
+        }
+       }
+      },
+      "b": {
+       "type": "parallel",
+       "entry": [
+        "act_c"
+       ],
+       "states": {
+        "a": {
+         "initial": "a",
+         "exit": "act_b",
+         "on": {
+          "DONE_IT": {
+           "target": "#m.a.a",
+           "guard": "guard_ctx"
+          },
+          "GO": "#m.b"
+         },
+         "states": {
+          "a": {
+           "entry": [
+            "act_b"
+           ],
+           "on": {
+            "X": {
+             "target": "#m.b.b",
+             "guard": "guard_false"
+            },
+            "PING": "#m.a.c.b.c"
+           }
+          }
+         }
+        },
+        "b": {
+         "initial": "a",
+         "entry": [
+          "act_b"
+         ],
+         "exit": "act_b",
+         "on": {
+          "BACK": "#m.a.c.b.a.a"
+         },
+         "states": {
+          "a": {
+           "entry": [
+            "act_c"
+           ],
+           "on": {
+            "PONG": "#m.a.a"
+           }
+          }
+         }
+        },
+        "c": {
+         "initial": "a",
+         "exit": "act_b",
+         "on": {
+          "BACK": {
+           "target": "#m.a.b",
+           "internal": false
+          },
+          "PING": {
+           "target": "#m.a.c.b.c",
+           "guard": "guard_ctx"
+          }
+         },
+         "states": {
+          "a": {
+           "on": {
+            "X": {
+             "target": "#m.a.b.a",
+             "actions": [
+              "act_c",
+              "act_c"
+             ]
+            }
+           }
+          }
+         }
+        }
+       }
+      },
+      "hist": {
+       "type": "history",
+       "history": "shallow"
+      }
+     }
+    }
+   }
+  },
+  "b": {
+   "initial": "a",
+   "entry": [
+    "act_a",
+    "act_b"
+   ],
+   "states": {
+    "a": {
+     "type": "final"
+    },
+    "b": {
+     "type": "final"
+    },
+    "hist": {
+     "type": "history",
+     "history": "shallow"
+    }
+   }
+  }
+ },
+ "id": "m",
+ "context": {
+  "n": 0,
+  "log": []
+ },
+ "actionErrorPolicy": "continue",
+ "guardErrorPolicy": "true",
+ "onUnhandled": "ignore"
+}

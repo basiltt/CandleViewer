@@ -1,0 +1,1181 @@
+FAIL [def]G1.B11.happy.lands_stopped  | states=['recording.degraded'] ctx={'symbol': None, 'reasons': [], 'streams': [], 'streams_healthy': {'trades': True}, 'gap_count_24h': 0, 'linger_until_us': None, 'error': None}
+PASS [def]G1.B11.happy.snapshot_ok
+PASS [def]G1.B11.happy.chain_trips_zero  | trips=0 lce=None
+PASS [def]G1.B11.happy.no_fatal  | status=running err=None
+FAIL [def]G1.B11.inv.gap_counted  | gap=0
+FAIL [def]G1.B11.inv.both_services_ran  | svc=['subscribe_streams']
+PASS [def]G1.B11.inv.degraded_alert_once  | acts=['add_reason', 'cancel_linger', 'emit_recording_metric', 'mark_stream_unhealthy', 'raise_degraded_alert', 'mark_stream_healthy', 'remove_reason']
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+ERROR:xstate_statemachine.base_interpreter:🔥 Action 'emit_recording_metric' raised while handling event 'done.invoke.sub'; skipping remaining actions in this list.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+    await self._run_user_action(impl, action_def, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+    impl(self, self.context, event, action_def)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 142, in f
+    raise RuntimeError("boom:" + n)
+RuntimeError: boom:emit_recording_metric
+WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'recording.starting' failed; rolling back to the pre-transition configuration.
+PASS [def]G1.B11.rollback.reported  | action_errors=["emit_recording_metric:RuntimeError('boom:emit_recording_metric')", "emit_recording_metric:RuntimeError('boom:emit_recording_metric')"] states=['recording.starting']
+PASS [def]G1.B11.rollback.context_intact  | ctx={'symbol': None, 'reasons': ['user'], 'streams': [], 'streams_healthy': {}, 'gap_count_24h': 0, 'linger_until_us': None, 'error': None}
+PASS [def]G1.B11.rollback.no_fatal  | status=running err=None
+ERROR:xstate_statemachine.interpreter:💥 Service 'subscribe_streams' (ID: 'sub') failed: no socket
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3347, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 165, in resolve
+    raise v
+RuntimeError: no socket
+PASS [def]G1.B11.onError.lands_error  | states=['recording.error']
+PASS [def]G1.B11.degraded.snapshot_ok
+ERROR:xstate_statemachine.base_interpreter:🔥 Guard 'reasons_remain' raised an exception while evaluating event 'REASON_REMOVED'; guardErrorPolicy='raise'.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 5401, in _is_guard_satisfied
+    self._call_with_optional_params(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        guard_callable, self.context, event, params
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 5550, in _call_with_optional_params
+    return fn(context, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 153, in g
+    raise RuntimeError("guard:" + n)
+RuntimeError: guard:reasons_remain
+ERROR:xstate_statemachine.interpreter:💥 Error processing event 'REASON_REMOVED' on 'recording'; the interpreter remains running. guard:reasons_remain
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2061, in _run_event_loop
+    await self._process_event_and_transient_transitions(event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2240, in _process_event_and_transient_transitions
+    await self._process_event(event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 2785, in _process_event
+    raise guard_error
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 5401, in _is_guard_satisfied
+    self._call_with_optional_params(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        guard_callable, self.context, event, params
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 5550, in _call_with_optional_params
+    return fn(context, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 153, in g
+    raise RuntimeError("guard:" + n)
+RuntimeError: guard:reasons_remain
+PASS [def]G1.B11.guard_raise.surfaced  | guard_errors=["RuntimeError('guard:reasons_remain')"] err=None states=['recording.lingering']
+PASS [def]G1.B12.happy.lands_finished  | states=['replay.finished']
+PASS [def]G1.B12.happy.snapshot_ok
+PASS [def]G1.B12.happy.chain_trips_zero  | trips=0
+PASS [def]G1.B12.inv.clock_paired  | start=2 stop=2
+PASS [def]G1.B12.inv.speed_applied  | speed=4.0
+PASS [def]G1.B12.inv.cursor_advanced  | cursor=2
+PASS [def]G1.B12.star.buffering_reached  | mid=['replay.buffering']
+PASS [def]G1.B12.star.deferred_then_drained  | deferred_while_buffering=0 after=['replay.paused'] drain=1
+PASS [def]G1.B12.star.no_drop  | dropped=[]
+PASS [def]G1.B12.final.destroyed  | states=['replay.destroyed'] status=done
+PASS [def]G1.B12.final.snapshot_ok
+
+--- 24 checks, 3 FAIL: ['[def]G1.B11.happy.lands_stopped', '[def]G1.B11.inv.gap_counted', '[def]G1.B11.inv.both_services_ran']
+PASS [def]G3.B13.happy.lands_closed  | states=['ws_conn.closed'] status=done
+PASS [def]G3.B13.happy.snapshot_ok
+PASS [def]G3.B13.happy.chain_trips_zero  | trips=0
+PASS [def]G3.B13.inv.public_skips_auth  | svc=['open_socket', 'subscribe_in_batches', 'open_socket', 'subscribe_in_batches', 'close_socket']
+PASS [def]G3.B13.inv.backoff_reset_per_live_entry  | reset=2 healthy=2
+PASS [def]G3.B13.inv.degraded_notified  | n=1
+PASS [def]G3.B13.private.auth_ran  | svc=['open_socket', 'ws_auth', 'subscribe_in_batches'] states=['ws_conn.live']
+PASS [def]G3.B13.private.reaches_live  | states=['ws_conn.live']
+PASS [def]G3.B13.budget.blocked_then_recheck  | states=['ws_conn.disconnected'] acts=['raise_conn_budget_alert', 'schedule_budget_recheck']
+PASS [def]G3.B13.budget.no_socket_opened  | svc=[]
+PASS [def]G3.B13.budget.snapshot_ok
+ERROR:xstate_statemachine.interpreter:💥 Service 'ws_auth' (ID: 'auth') failed: 401
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 3347, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 179, in s
+    return resolve(n, interp, ctx, evt)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b11b15\cv9.py", line 165, in resolve
+    raise v
+RuntimeError: 401
+PASS [def]G3.B13.auth_error.backs_off  | states=['ws_conn.backing_off'] acts=['bump_attempt', 'record_auth_error', 'compute_jittered_backoff', 'emit_feed_degraded', 'schedule_backoff_deadline', 'notify_dependents_degraded']
+PASS [def]G3.B13.auth_error.no_fatal  | status=running err=None
+PASS [def]G3.B13.star.subscribing_reached  | mid=['ws_conn.subscribing']
+PASS [def]G3.B13.star.deferred_not_fatal  | status_while_subscribing=running err=None
+PASS [def]G3.B13.star.drained_at_live  | after=['ws_conn.live'] drain=1 acts_tail=['record_subscribed', 'reset_backoff', 'drain_deferred', 'emit_feed_healthy', 'arm_pong_deadline']
+PASS [def]G3.B14.happy.live  | states=['book.live'] ctx={'symbol': None, 'last_seq': 12, 'snapshot_seq': 10, 'buffered_deltas': [11], 'resync_count': 0, 'desynced_since_us': None}
+PASS [def]G3.B14.happy.snapshot_ok
+PASS [def]G3.B14.inv.buffered_then_replayed  | acts=['clear_buffer', 'request_snapshot', 'buffer_delta', 'install_snapshot', 'replay_buffered_deltas_after_seq', 'emit_book_live', 'apply_delta'] last_seq=12
+PASS [def]G3.B14.happy.chain_trips_zero  | trips=0
+PASS [def]G3.B14.always.transient_to_snapshot_pending  | states=['book.snapshot_pending']
+PASS [def]G3.B14.always.resync_counted_once  | resync=1 acts=['clear_buffer', 'request_snapshot', 'install_snapshot', 'replay_buffered_deltas_after_seq', 'emit_book_live', 'stamp_desync', 'emit_book_desynced', 'bump_resync_count', 'emit_resync_metric', 'clear_buffer', 'request_snapshot']
+PASS [def]G3.B14.always.not_consumable_then_rerequest  | acts=['clear_buffer', 'request_snapshot', 'install_snapshot', 'replay_buffered_deltas_after_seq', 'emit_book_live', 'stamp_desync', 'emit_book_desynced', 'bump_resync_count', 'emit_resync_metric', 'clear_buffer', 'request_snapshot']
+PASS [def]G3.B14.always.chain_trips_zero  | trips=0 lce=None
+PASS [def]G3.B14.always.snapshot_ok
+PASS [def]G3.B14.reenter.entry_reran  | request_snapshot=2 acts=['clear_buffer', 'request_snapshot', 'bump_resync_count', 'clear_buffer', 'request_snapshot']
+PASS [def]G3.B14.reenter.counter_bumped  | resync=1
+PASS [def]G3.B15.liq.reaches_final  | states=['paper_account.liquidated'] status=done
+PASS [def]G3.B15.liq.journal_written  | acts=['apply_liquidation_haircut', 'write_liquidation_journal']
+PASS [def]G3.B15.liq.chain_trips_zero  | trips=0
+PASS [def]G3.B15.liq.snapshot_ok
+PASS [def]G3.B15.margin.warns_then_recovers  | mid=['paper_account.margin_call'] end=['paper_account.active'] warn=1
+PASS [def]G3.B15.margin.no_fatal  | status=running err=None
+PASS [def]G3.B13.sync_parity  | states=['ws_conn.closed'] want=['ws_conn.closed'] svc=['open_socket', 'subscribe_in_batches', 'open_socket', 'subscribe_in_batches', 'close_socket']
+PASS [def]G3.B13.sync_chain_trips_zero  | trips=0
+PASS [def]G3.B14.sync_parity  | states=['book.snapshot_pending'] want=['book.snapshot_pending'] svc=[]
+PASS [def]G3.B14.sync_chain_trips_zero  | trips=0
+PASS [def]G3.B15.sync_parity  | states=['paper_account.liquidated'] want=['paper_account.liquidated'] svc=[]
+PASS [def]G3.B15.sync_chain_trips_zero  | trips=0
+
+--- 63 checks, 3 FAIL: ['[def]G1.B11.happy.lands_stopped', '[def]G1.B11.inv.gap_counted', '[def]G1.B11.inv.both_services_ran']

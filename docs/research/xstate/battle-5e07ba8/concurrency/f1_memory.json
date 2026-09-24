@@ -1,0 +1,796 @@
+{
+  "probe": "f1_memory",
+  "py": "3.13.7",
+  "m1_plain": {
+    "machines": 100,
+    "events": 1000000,
+    "context_n_total": null,
+    "samples": [
+      {
+        "batch": 1,
+        "events_sent": 50000,
+        "traced_kib": 535.0,
+        "traced_peak_kib": 7943.2,
+        "rss_kib": 37500.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 2,
+        "events_sent": 100000,
+        "traced_kib": 540.6,
+        "traced_peak_kib": 7986.2,
+        "rss_kib": 38288.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 3,
+        "events_sent": 150000,
+        "traced_kib": 535.9,
+        "traced_peak_kib": 7986.6,
+        "rss_kib": 38420.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 4,
+        "events_sent": 200000,
+        "traced_kib": 536.3,
+        "traced_peak_kib": 7987.0,
+        "rss_kib": 39472.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 5,
+        "events_sent": 250000,
+        "traced_kib": 536.7,
+        "traced_peak_kib": 7987.4,
+        "rss_kib": 39748.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 6,
+        "events_sent": 300000,
+        "traced_kib": 537.1,
+        "traced_peak_kib": 7987.8,
+        "rss_kib": 39580.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 7,
+        "events_sent": 350000,
+        "traced_kib": 537.5,
+        "traced_peak_kib": 7988.2,
+        "rss_kib": 40084.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 8,
+        "events_sent": 400000,
+        "traced_kib": 537.9,
+        "traced_peak_kib": 7988.6,
+        "rss_kib": 40336.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 9,
+        "events_sent": 450000,
+        "traced_kib": 538.3,
+        "traced_peak_kib": 7989.0,
+        "rss_kib": 40344.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 10,
+        "events_sent": 500000,
+        "traced_kib": 538.7,
+        "traced_peak_kib": 7989.4,
+        "rss_kib": 37284.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 11,
+        "events_sent": 550000,
+        "traced_kib": 539.1,
+        "traced_peak_kib": 7989.8,
+        "rss_kib": 37348.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 12,
+        "events_sent": 600000,
+        "traced_kib": 539.5,
+        "traced_peak_kib": 7990.2,
+        "rss_kib": 37536.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 13,
+        "events_sent": 650000,
+        "traced_kib": 539.9,
+        "traced_peak_kib": 7990.6,
+        "rss_kib": 37964.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 14,
+        "events_sent": 700000,
+        "traced_kib": 540.3,
+        "traced_peak_kib": 7991.0,
+        "rss_kib": 37956.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 15,
+        "events_sent": 750000,
+        "traced_kib": 540.7,
+        "traced_peak_kib": 7991.4,
+        "rss_kib": 38044.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 16,
+        "events_sent": 800000,
+        "traced_kib": 541.1,
+        "traced_peak_kib": 7991.8,
+        "rss_kib": 38160.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 17,
+        "events_sent": 850000,
+        "traced_kib": 541.5,
+        "traced_peak_kib": 7992.2,
+        "rss_kib": 38636.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 18,
+        "events_sent": 900000,
+        "traced_kib": 542.0,
+        "traced_peak_kib": 7992.7,
+        "rss_kib": 38464.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 19,
+        "events_sent": 950000,
+        "traced_kib": 542.4,
+        "traced_peak_kib": 7993.0,
+        "rss_kib": 38680.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 20,
+        "events_sent": 1000000,
+        "traced_kib": 542.7,
+        "traced_peak_kib": 7993.4,
+        "rss_kib": 39692.0,
+        "gc_objects": 24635,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      }
+    ],
+    "traced_kib_first": 535.0,
+    "traced_kib_last": 542.7,
+    "traced_growth_kib": 7.7,
+    "traced_bytes_per_event": 0.0083,
+    "rss_growth_kib": 2192.0,
+    "gc_objects_growth": 0,
+    "asyncio_task_growth": 0,
+    "top_alloc_diff": [
+      {
+        "where": "C:\\Python\\Python313\\Lib\\asyncio\\queues.py:67",
+        "size_diff_kib": 412.5,
+        "count_diff": 800,
+        "line": "self._queue.append(item)"
+      },
+      {
+        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1699",
+        "size_diff_kib": 21.1,
+        "count_diff": 100,
+        "line": "await self._wakeup.wait()"
+      },
+      {
+        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1231",
+        "size_diff_kib": 21.1,
+        "count_diff": 100,
+        "line": "config_before = frozenset(self._active_state_nodes)"
+      },
+      {
+        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1171",
+        "size_diff_kib": 20.3,
+        "count_diff": 100,
+        "line": "event, from_inbox = await self._next_event()"
+      },
+      {
+        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1680",
+        "size_diff_kib": 19.5,
+        "count_diff": 100,
+        "line": "event = self._event_queue.get_nowait()"
+      },
+      {
+        "where": "C:\\Python\\Python313\\Lib\\asyncio\\base_events.py:459",
+        "size_diff_kib": 13.5,
+        "count_diff": 102,
+        "line": "return futures.Future(loop=self)"
+      },
+      {
+        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py:1613",
+        "size_diff_kib": 8.6,
+        "count_diff": 100,
+        "line": "return Event(type=event_or_type, payload=payload)"
+      },
+      {
+        "where": "C:\\Python\\Python313\\Lib\\asyncio\\events.py:89",
+        "size_diff_kib": 7.4,
+        "count_diff": 104,
+        "line": "self._context.run(self._callback, *self._args)"
+      }
+    ]
+  },
+  "m2_entry_exit": {
+    "machines": 100,
+    "events": 1000000,
+    "context_n_total": null,
+    "samples": [
+      {
+        "batch": 1,
+        "events_sent": 50000,
+        "traced_kib": 535.0,
+        "traced_peak_kib": 7948.7,
+        "rss_kib": 37116.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 2,
+        "events_sent": 100000,
+        "traced_kib": 535.5,
+        "traced_peak_kib": 7987.5,
+        "rss_kib": 36616.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 3,
+        "events_sent": 150000,
+        "traced_kib": 535.9,
+        "traced_peak_kib": 7987.9,
+        "rss_kib": 35672.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 4,
+        "events_sent": 200000,
+        "traced_kib": 536.2,
+        "traced_peak_kib": 7988.3,
+        "rss_kib": 35956.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 5,
+        "events_sent": 250000,
+        "traced_kib": 536.6,
+        "traced_peak_kib": 7988.7,
+        "rss_kib": 36564.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 6,
+        "events_sent": 300000,
+        "traced_kib": 537.1,
+        "traced_peak_kib": 7989.1,
+        "rss_kib": 37912.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 7,
+        "events_sent": 350000,
+        "traced_kib": 537.5,
+        "traced_peak_kib": 7989.5,
+        "rss_kib": 38188.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 8,
+        "events_sent": 400000,
+        "traced_kib": 537.9,
+        "traced_peak_kib": 7989.9,
+        "rss_kib": 37912.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 9,
+        "events_sent": 450000,
+        "traced_kib": 538.2,
+        "traced_peak_kib": 7990.3,
+        "rss_kib": 38488.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 10,
+        "events_sent": 500000,
+        "traced_kib": 538.7,
+        "traced_peak_kib": 7990.7,
+        "rss_kib": 38572.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 11,
+        "events_sent": 550000,
+        "traced_kib": 539.1,
+        "traced_peak_kib": 7991.1,
+        "rss_kib": 40080.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 12,
+        "events_sent": 600000,
+        "traced_kib": 539.5,
+        "traced_peak_kib": 7991.5,
+        "rss_kib": 41552.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 13,
+        "events_sent": 650000,
+        "traced_kib": 539.9,
+        "traced_peak_kib": 7991.9,
+        "rss_kib": 42908.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 14,
+        "events_sent": 700000,
+        "traced_kib": 540.3,
+        "traced_peak_kib": 7992.3,
+        "rss_kib": 42968.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 15,
+        "events_sent": 750000,
+        "traced_kib": 540.7,
+        "traced_peak_kib": 7992.7,
+        "rss_kib": 42976.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 16,
+        "events_sent": 800000,
+        "traced_kib": 541.1,
+        "traced_peak_kib": 7993.1,
+        "rss_kib": 42732.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 17,
+        "events_sent": 850000,
+        "traced_kib": 541.5,
+        "traced_peak_kib": 7993.5,
+        "rss_kib": 42944.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 18,
+        "events_sent": 900000,
+        "traced_kib": 541.9,
+        "traced_peak_kib": 7993.9,
+        "rss_kib": 43988.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 19,
+        "events_sent": 950000,
+        "traced_kib": 542.3,
+        "traced_peak_kib": 7994.3,
+        "rss_kib": 44824.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 20,
+        "events_sent": 1000000,
+        "traced_kib": 542.7,
+        "traced_peak_kib": 7994.7,
+        "rss_kib": 44452.0,
+        "gc_objects": 24665,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      }
+    ],
+    "traced_kib_first": 535.0,
+    "traced_kib_last": 542.7,
+    "traced_growth_kib": 7.7,
+    "traced_bytes_per_event": 0.0083,
+    "rss_growth_kib": 7336.0,
+    "gc_objects_growth": 0,
+    "asyncio_task_growth": 0,
+    "top_alloc_diff": [
+      {
+        "where": "C:\\Python\\Python313\\Lib\\asyncio\\queues.py:67",
+        "size_diff_kib": 412.5,
+        "count_diff": 800,
+        "line": "self._queue.append(item)"
+      },
+      {
+        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1699",
+        "size_diff_kib": 21.1,
+        "count_diff": 100,
+        "line": "await self._wakeup.wait()"
+      },
+      {
+        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1231",
+        "size_diff_kib": 21.1,
+        "count_diff": 100,
+        "line": "config_before = frozenset(self._active_state_nodes)"
+      },
+      {
+        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1171",
+        "size_diff_kib": 20.3,
+        "count_diff": 100,
+        "line": "event, from_inbox = await self._next_event()"
+      },
+      {
+        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1680",
+        "size_diff_kib": 19.5,
+        "count_diff": 100,
+        "line": "event = self._event_queue.get_nowait()"
+      },
+      {
+        "where": "C:\\Python\\Python313\\Lib\\asyncio\\base_events.py:459",
+        "size_diff_kib": 13.5,
+        "count_diff": 102,
+        "line": "return futures.Future(loop=self)"
+      },
+      {
+        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py:1613",
+        "size_diff_kib": 8.6,
+        "count_diff": 100,
+        "line": "return Event(type=event_or_type, payload=payload)"
+      },
+      {
+        "where": "C:\\Python\\Python313\\Lib\\asyncio\\events.py:89",
+        "size_diff_kib": 7.4,
+        "count_diff": 104,
+        "line": "self._context.run(self._callback, *self._args)"
+      }
+    ]
+  },
+  "m3_internal_raise": {
+    "machines": 100,
+    "events": 1000000,
+    "context_n_total": null,
+    "samples": [
+      {
+        "batch": 1,
+        "events_sent": 50000,
+        "traced_kib": 534.9,
+        "traced_peak_kib": 7946.3,
+        "rss_kib": 41064.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 2,
+        "events_sent": 100000,
+        "traced_kib": 540.5,
+        "traced_peak_kib": 7986.8,
+        "rss_kib": 40600.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 3,
+        "events_sent": 150000,
+        "traced_kib": 535.8,
+        "traced_peak_kib": 7987.2,
+        "rss_kib": 41724.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 4,
+        "events_sent": 200000,
+        "traced_kib": 536.2,
+        "traced_peak_kib": 7987.6,
+        "rss_kib": 41008.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 5,
+        "events_sent": 250000,
+        "traced_kib": 536.6,
+        "traced_peak_kib": 7988.0,
+        "rss_kib": 42508.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 6,
+        "events_sent": 300000,
+        "traced_kib": 542.1,
+        "traced_peak_kib": 7988.4,
+        "rss_kib": 42248.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 7,
+        "events_sent": 350000,
+        "traced_kib": 537.4,
+        "traced_peak_kib": 7988.8,
+        "rss_kib": 42628.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 8,
+        "events_sent": 400000,
+        "traced_kib": 537.8,
+        "traced_peak_kib": 7989.2,
+        "rss_kib": 36288.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 9,
+        "events_sent": 450000,
+        "traced_kib": 538.2,
+        "traced_peak_kib": 7989.6,
+        "rss_kib": 37244.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 10,
+        "events_sent": 500000,
+        "traced_kib": 538.7,
+        "traced_peak_kib": 7990.1,
+        "rss_kib": 36852.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 11,
+        "events_sent": 550000,
+        "traced_kib": 539.1,
+        "traced_peak_kib": 7990.5,
+        "rss_kib": 37428.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 12,
+        "events_sent": 600000,
+        "traced_kib": 539.5,
+        "traced_peak_kib": 7990.9,
+        "rss_kib": 37100.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 13,
+        "events_sent": 650000,
+        "traced_kib": 539.9,
+        "traced_peak_kib": 7991.3,
+        "rss_kib": 36956.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 14,
+        "events_sent": 700000,
+        "traced_kib": 540.3,
+        "traced_peak_kib": 7991.7,
+        "rss_kib": 36636.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 15,
+        "events_sent": 750000,
+        "traced_kib": 540.6,
+        "traced_peak_kib": 7992.1,
+        "rss_kib": 36900.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 16,
+        "events_sent": 800000,
+        "traced_kib": 541.0,
+        "traced_peak_kib": 7992.5,
+        "rss_kib": 36496.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 17,
+        "events_sent": 850000,
+        "traced_kib": 541.4,
+        "traced_peak_kib": 7992.9,
+        "rss_kib": 36736.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 18,
+        "events_sent": 900000,
+        "traced_kib": 541.9,
+        "traced_peak_kib": 7993.3,
+        "rss_kib": 29152.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 19,
+        "events_sent": 950000,
+        "traced_kib": 542.3,
+        "traced_peak_kib": 7993.7,
+        "rss_kib": 32284.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      },
+      {
+        "batch": 20,
+        "events_sent": 1000000,
+        "traced_kib": 542.7,
+        "traced_peak_kib": 7994.1,
+        "rss_kib": 31816.0,
+        "gc_objects": 24657,
+        "asyncio_tasks": 101,
+        "queue_depth_total": 0
+      }
+    ],
+    "traced_kib_first": 534.9,
+    "traced_kib_last": 542.7,
+    "traced_growth_kib": 7.8,
+    "traced_bytes_per_event": 0.0084,
+    "rss_growth_kib": -9248.0,
+    "gc_objects_growth": 0,
+    "asyncio_task_growth": 0,
+    "top_alloc_diff": [
+      {
+        "where": "C:\\Python\\Python313\\Lib\\asyncio\\queues.py:67",
+        "size_diff_kib": 412.5,
+        "count_diff": 800,
+        "line": "self._queue.append(item)"
+      },
+      {
+        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1699",
+        "size_diff_kib": 21.1,
+        "count_diff": 100,
+        "line": "await self._wakeup.wait()"
+      },
+      {
+        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1231",
+        "size_diff_kib": 21.1,
+        "count_diff": 100,
+        "line": "config_before = frozenset(self._active_state_nodes)"
+      },
+      {
+        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1171",
+        "size_diff_kib": 20.3,
+        "count_diff": 100,
+        "line": "event, from_inbox = await self._next_event()"
+      },
+      {
+        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1680",
+        "size_diff_kib": 19.5,
+        "count_diff": 100,
+        "line": "event = self._event_queue.get_nowait()"
+      },
+      {
+        "where": "C:\\Python\\Python313\\Lib\\asyncio\\base_events.py:459",
+        "size_diff_kib": 13.5,
+        "count_diff": 102,
+        "line": "return futures.Future(loop=self)"
+      },
+      {
+        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py:777",
+        "size_diff_kib": 8.6,
+        "count_diff": 100,
+        "line": "return Event(type=event)"
+      },
+      {
+        "where": "C:\\Python\\Python313\\Lib\\asyncio\\events.py:89",
+        "size_diff_kib": 7.4,
+        "count_diff": 104,
+        "line": "self._context.run(self._callback, *self._args)"
+      }
+    ]
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "probe": "t6_arming_window_snapshot",
+  "py": "3.13.7",
+  "claim": "#204 arming window: a snapshot taken before the settle arms the invoke restores and arms it exactly once",
+  "rows": [
+    {
+      "case": "W1_plain",
+      "kind": "def",
+      "live_state": [
+        "w.done"
+      ],
+      "live_submits": 1,
+      "static": {
+        "restart_services": false,
+        "state": [
+          "w.done"
+        ],
+        "dormant": false,
+        "pending": [],
+        "submits": 0
+      },
+      "restarted": {
+        "restart_services": true,
+        "state": [
+          "w.done"
+        ],
+        "dormant": false,
+        "pending": [],
+        "submits": 0
+      }
+    },
+    {
+      "case": "W2_chain_hook",
+      "kind": "def",
+      "live_state": [
+        "w.done"
+      ],
+      "live_submits": 1,
+      "hook_blobs": 1,
+      "hook_snapshot_errors": [
+        "SnapshotMidStepError",
+        "SnapshotMidStepError",
+        "SnapshotMidStepError"
+      ],
+      "restores": [
+        {
+          "restart_services": true,
+          "error": "SnapshotDriftError: machine 'w' structure changed since this snapshot was taken (95ce2d557baa3ccc != 94a30c287ae6466b). Migrate the snapshot, or pass verify_machine_hash=False if the change is known to be compatible.",
+          "submits": 0
+        }
+      ]
+    },
+    {
+      "case": "W3_x40",
+      "kind": "def",
+      "submit_histogram": {
+        "0": 40
+      }
+    },
+    {
+      "case": "W1_plain",
+      "kind": "async def",
+      "live_state": [
+        "w.work"
+      ],
+      "live_submits": 1,
+      "static": {
+        "restart_services": false,
+        "state": [
+          "w.work"
+        ],
+        "dormant": true,
+        "pending": [
+          "PendingInvocation(state_id='w.work', invoke_id='job', src='svc')"
+        ],
+        "submits": 0
+      },
+      "restarted": {
+        "restart_services": true,
+        "state": [
+          "w.done"
+        ],
+        "dormant": false,
+        "pending": [],
+        "submits": 1
+      }
+    },
+    {
+      "case": "W2_chain_hook",
+      "kind": "async def",
+      "live_state": [
+        "w.work"
+      ],
+      "live_submits": 1,
+      "hook_blobs": 1,
+      "hook_snapshot_errors": [
+        "SnapshotMidStepError",
+        "SnapshotMidStepError",
+        "SnapshotMidStepError"
+      ],
+      "restores": [
+        {
+          "restart_services": true,
+          "error": "SnapshotDriftError: machine 'w' structure changed since this snapshot was taken (95ce2d557baa3ccc != 94a30c287ae6466b). Migrate the snapshot, or pass verify_machine_hash=False if the change is known to be compatible.",
+          "submits": 0
+        }
+      ]
+    },
+    {
+      "case": "W3_x40",
+      "kind": "async def",
+      "submit_histogram": {
+        "1": 40
+      }
+    }
+  ],
+  "violations": [],
+  "result": "PASS"
+}

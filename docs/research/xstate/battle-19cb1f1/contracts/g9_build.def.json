@@ -1,0 +1,58 @@
+{
+ "[def]B11/build": {
+  "pass": true,
+  "note": "{\"action_error_policy\": \"rollback\", \"on_unhandled\": \"defer\", \"guard_error_policy\": \"raise\", \"strict_targets\": true, \"strict\": true, \"spawn_blocking_timeout_ms\": 5000.0}"
+ },
+ "[def]B12/build": {
+  "pass": true,
+  "note": "{\"action_error_policy\": \"rollback\", \"on_unhandled\": \"defer\", \"guard_error_policy\": \"raise\", \"strict_targets\": true, \"strict\": true, \"spawn_blocking_timeout_ms\": 5000.0}"
+ },
+ "[def]B13/build": {
+  "pass": true,
+  "note": "{\"action_error_policy\": \"rollback\", \"on_unhandled\": \"error\", \"guard_error_policy\": \"raise\", \"strict_targets\": true, \"strict\": true, \"spawn_blocking_timeout_ms\": 5000.0}"
+ },
+ "[def]B14/build": {
+  "pass": true,
+  "note": "{\"action_error_policy\": \"rollback\", \"on_unhandled\": \"error\", \"guard_error_policy\": \"raise\", \"strict_targets\": true, \"strict\": true, \"spawn_blocking_timeout_ms\": 5000.0}"
+ },
+ "[def]B15/build": {
+  "pass": true,
+  "note": "{\"action_error_policy\": \"rollback\", \"on_unhandled\": \"defer\", \"guard_error_policy\": \"raise\", \"strict_targets\": true, \"strict\": true, \"spawn_blocking_timeout_ms\": 5000.0}"
+ },
+ "[def]cfg/bad-value/onUnhandled": {
+  "pass": true,
+  "note": "InvalidConfigError"
+ },
+ "[def]cfg/bad-value/actionErrorPolicy": {
+  "pass": true,
+  "note": "InvalidConfigError"
+ },
+ "[def]cfg/bad-value/guardErrorPolicy": {
+  "pass": true,
+  "note": "InvalidConfigError"
+ },
+ "[def]cfg/unknown-key-diagnosed": {
+  "pass": false,
+  "note": "misspelled key accepted silently; effective=None (NEEDS-WRAPPER)"
+ },
+ "[def]B11/happy": {
+  "pass": true,
+  "note": "['recording.stopped'] snap=True svc=['subscribe_streams', 'unsubscribe_and_flush']"
+ },
+ "[def]B12/happy": {
+  "pass": true,
+  "note": "['replay.playing'] snap=True"
+ },
+ "[def]B13/happy": {
+  "pass": true,
+  "note": "['ws_conn.live'] snap=True svc=['open_socket', 'subscribe_in_batches']"
+ },
+ "[def]B14/happy": {
+  "pass": true,
+  "note": "['book.live'] snap=True"
+ },
+ "[def]B15/happy": {
+  "pass": true,
+  "note": "['paper_account.active'] snap=True"
+ }
+}

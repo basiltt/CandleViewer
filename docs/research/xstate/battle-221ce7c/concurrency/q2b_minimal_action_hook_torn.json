@@ -1,0 +1,62 @@
+{
+  "probe": "q2b_minimal_action_hook_torn",
+  "py": "3.13.7",
+  "async_rows": [
+    {
+      "action": "act",
+      "disposition": "RETURNED",
+      "status": "running",
+      "state_ids": []
+    },
+    {
+      "action": "act",
+      "disposition": "RETURNED",
+      "status": "running",
+      "state_ids": [
+        "ord.top.one.deep"
+      ]
+    },
+    {
+      "action": "act",
+      "disposition": "refused:SnapshotMidStepError"
+    },
+    {
+      "action": "act",
+      "disposition": "refused:SnapshotMidStepError"
+    },
+    {
+      "action": "act",
+      "disposition": "refused:SnapshotMidStepError"
+    }
+  ],
+  "sync_rows": [
+    {
+      "action": "act",
+      "disposition": "refused:SnapshotMidStepError"
+    },
+    {
+      "action": "act",
+      "disposition": "refused:SnapshotMidStepError"
+    },
+    {
+      "action": "act",
+      "disposition": "refused:SnapshotMidStepError"
+    },
+    {
+      "action": "act",
+      "disposition": "refused:SnapshotMidStepError"
+    },
+    {
+      "action": "act",
+      "disposition": "refused:SnapshotMidStepError"
+    }
+  ],
+  "async_torn_blobs": 1,
+  "sync_torn_blobs": 0,
+  "restored_from_torn_blob": {
+    "restore": "REFUSED",
+    "exc": "SnapshotCorruptError",
+    "msg": "Snapshot is malformed: status is 'running' but the configuration has no active leaf in every region (restored ['ord', 'ord.top', 'ord.top.one']). The 'configura"
+  },
+  "result": "FAIL"
+}

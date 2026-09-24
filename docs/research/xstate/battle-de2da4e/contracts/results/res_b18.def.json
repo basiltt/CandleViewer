@@ -1,0 +1,22 @@
+{
+ "[def]B18.always_to_invoke.svc_armed": {
+  "pass": true,
+  "note": "['cancel_all_working_orders', 'flatten_all_positions']"
+ },
+ "[def]B18.always_to_invoke.chain_to_flatten": {
+  "pass": true,
+  "note": "['cancel_all_working_orders', 'flatten_all_positions']"
+ },
+ "[def]B18.always_to_invoke.no_error": {
+  "pass": true,
+  "note": "None"
+ },
+ "[def]B18.always_to_invoke.snapshot": {
+  "pass": true,
+  "note": "['t0:v=3:sched=0', 't1:v=3:sched=0']"
+ },
+ "[def]B18.always_to_invoke.states": {
+  "pass": true,
+  "note": "['kill_switch.engaged']"
+ }
+}

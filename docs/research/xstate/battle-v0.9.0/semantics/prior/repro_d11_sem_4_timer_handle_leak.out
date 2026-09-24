@@ -1,0 +1,33 @@
+{
+ "after/plain": {
+  "beats": 618,
+  "timer_handles_retained": 1,
+  "armed_self_sends": 0,
+  "scheduled_sends": 0,
+  "retained_per_beat": 0.002
+ },
+ "raise_delay/plain": {
+  "beats": 618,
+  "timer_handles_retained": 1,
+  "armed_self_sends": 1,
+  "scheduled_sends": 0,
+  "retained_per_beat": 0.002
+ },
+ "after/async": {
+  "beats": 615,
+  "timer_handles_retained": 1,
+  "armed_self_sends": 0,
+  "scheduled_sends": 0,
+  "retained_per_beat": 0.002
+ },
+ "raise_delay/async": {
+  "beats": 613,
+  "timer_handles_retained": 1,
+  "armed_self_sends": 1,
+  "scheduled_sends": 0,
+  "retained_per_beat": 0.002
+ },
+ "REPRODUCED": false,
+ "leaking_cells": [],
+ "note": "`after` reclaims its handles on state exit; a delayed self-send is owned by the machine id and never reclaimed"
+}

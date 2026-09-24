@@ -1,0 +1,78 @@
+C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-3ed3099\observability\new_attacks.py:468: DeprecationWarning: Machine 'm_h1' has unresolvable transition targets:
+  m_h1.a: on 'GO' -> target 'does.not.exist' does not resolve
+  (strict_targets=False: these transitions will be silent no-ops at runtime. This escape hatch is removed in 1.0.)
+  machine = create_machine(cfg, logic=MachineLogic(), strict_targets=False)
+
+=== A. snapshot-at-every-quiescent-point property run (n=300, reduced from 2000) ===
+  300 quiescent snapshots: failures=0, unexpected SnapshotMidStepError=0
+
+=== B. restart_timers=True with SimulatedClock (#128) ===
+  has_dormant_timers before stop: False
+  restored (restart_timers=True), has_dormant_timers pre-start=True
+  post-start has_dormant_timers=False
+  after advancing 999 (of re-armed 1000): state=['m_timer.a'] (expect still 'a')
+  after advancing to 1001 total: state=['m_timer.a'] (expect 'b')
+
+=== C. #105 external-producer gate under concurrent create_task (8 producers x 20 sends, reduced) ===
+  status=running (expect 'running', not 'error' from a spurious chain trip), error=None
+
+=== C2. #105 gate under concurrent OS threads calling send_threadsafe (8 threads x 15 sends, reduced) ===
+  status=running, error=None
+
+=== D. #104 OverflowPolicy.BLOCK under 10 producers (reduced from 16), 5 sends each ===
+  sent=50, received (on_event_received count)=50 -- no loss
+
+=== E. #116 determinism: (GO,CANCEL)x10 script, both engines, 15 reps (reduced from 50) ===
+  distinct (sync,async) outcome pairs over 15 reps: {(('m_det.done',), ('m_det.done',))}
+  CONSISTENT; sync==async
+
+=== F1. #109 done.invoke carries child's declared output, not private context ===
+  captured on done.invoke: {'payload': {'result': 'ok'}, 'type': 'done.invoke.kid'} -- output only (no secret)
+
+=== F2. #108 transition targeting machine root rejected at build ===
+  rejected at build as expected: InvalidConfigError: Machine 'm_root' has unresolvable transition targets:
+  m_root.a: on 'GO' -> target 'm_root' is the machine root; entering it empties the configuration. Target the root's initial child ('#m_root.a') or a specific state.
+
+=== F3. #130 escalate from invoked child reaches parent onError ===
+  parent status=running, state=['parent130.handled'] (expect 'handled')
+
+=== G1. SnapshotCorruptError fuzz over 600 mutations (reduced from 5000) ===
+  outcomes over 600 mutations: {'SnapshotCorruptError': 85, 'SnapshotDriftError': 19, 'other_exc': 33, 'no_exc': 463}
+  sample of 'other_exc' (uncontained exception types leaking through malformed-snapshot path): ['TypeError("unhashable type: \'list\'")', 'AttributeError("\'str\' object has no attribute \'items\'")', 'AttributeError("\'str\' object has no attribute \'items\'")', 'AttributeError("\'str\' object has no attribute \'items\'")', 'TypeError("unhashable type: \'list\'")']
+
+=== G2. InvalidEventError over hostile event 'type' values ===
+  ('123', 'InvalidEventError (also TypeError=True)')
+  ('1.5', 'InvalidEventError (also TypeError=True)')
+  ('None', 'InvalidEventError (also TypeError=True)')
+  ('True', 'InvalidEventError (also TypeError=True)')
+  ('[]', 'InvalidEventError (also TypeError=True)')
+  ('{}', 'InvalidEventError (also TypeError=True)')
+  ("b'bytes'", 'InvalidEventError (also TypeError=True)')
+  ("('t',)", 'InvalidEventError (also TypeError=True)')
+  ('<object object at 0x000001CD6A', 'InvalidEventError (also TypeError=True)')
+
+=== H1. on_resolve_error fires for unresolvable transition target (#134, async engine) ===
+  on_resolve_error fired: 1 -- [('on_resolve_error', {'error': 'StateNotFoundError("Could not resolve target state \'does.not.exist\' from state \'m_h1.a\'.")', 'event_type': 'GO'})]; last_error=StateNotFoundError("Could not resolve target state 'does.not.exist' from state 'm_h1.a'.")
+
+=== H2. on_plugin_error fires for a raising hook AND for an async-def hook (#127) ===
+  on_plugin_error fired 4 times: [('on_plugin_error', {'failing_plugin': 'Raiser', 'hook': 'on_transition', 'error': "RuntimeError('raiser-boom')"}), ('on_plugin_error', {'failing_plugin': 'AsyncDefHook', 'hook': 'on_transition', 'error': 'TypeError("AsyncDefHook.on_transition is \'async def\'; plugin hooks are synchronous callbacks and are never awaited. Make it a plain \'def\' and schedule your own task inside it if you need async work.")'}), ('on_plugin_error', {'failing_plugin': 'Raiser', 'hook': 'on_transition', 'error': "RuntimeError('raiser-boom')"}), ('on_plugin_error', {'failing_plugin': 'AsyncDefHook', 'hook': 'on_transition', 'error': 'TypeError("AsyncDefHook.on_transition is \'async def\'; plugin hooks are synchronous callbacks and are never awaited. Make it a plain \'def\' and schedule your own task inside it if you need async work.")'})]
+  last_plugin_error=('AsyncDefHook', 'on_transition', TypeError("AsyncDefHook.on_transition is 'async def'; plugin hooks are synchronous callbacks and are never awaited. Make it a plain 'def' and schedule your own task inside it if you need async work."))
+
+=== H3. on_event_dropped(reason='unresolved_target') for sendTo with no live target (#133) ===
+  on_event_dropped: [('on_event_dropped', {'type': 'PING', 'reason': 'unresolved_target'})]; receipt marked? changed=True error=sendTo target 'ghost-not-a-real-actor' did not resolve to a live actor; 'PING' was not delivered.
+
+=== I1. LoggingInspector default redaction keys ===
+  DEFAULT_REDACT_KEYS = NOT EXPORTED at top level
+  redact() on sample: {'password': '***', 'api_key': '***', 'x-api-key': 'xyz', 'nested': {'token': '***'}, 'safe': 'ok'}
+
+=== I2. exported provenance API surface (#137) ===
+  is_system_event: exported=True
+  system_event: exported=True
+  DoneEvent: exported=True
+  AfterEvent: exported=True
+  ENGINE_EVENT_SHAPES: exported=True
+
+=== J. reduced soak (~15s, was specified as 12min) with chaos plugin + faulty guard ===
+  soak: 288700 sends in 15s, interpreter status=running (expect 'running'), uncontained exceptions surfaced to caller=0
+
+ALL DONE

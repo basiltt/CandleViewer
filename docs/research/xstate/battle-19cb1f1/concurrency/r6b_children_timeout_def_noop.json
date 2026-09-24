@@ -1,0 +1,70 @@
+{
+  "probe": "r6b_children_timeout_def_noop",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "entry_kind": "async def",
+      "children": 1,
+      "child_entry_seconds": 3.0,
+      "children_timeout": 0.2,
+      "start_seconds": 0.21,
+      "bounded": true,
+      "overrun_factor": 1.0,
+      "warning_logged": true
+    },
+    {
+      "entry_kind": "async def",
+      "children": 5,
+      "child_entry_seconds": 3.0,
+      "children_timeout": 0.2,
+      "start_seconds": 0.21,
+      "bounded": true,
+      "overrun_factor": 1.0,
+      "warning_logged": true
+    },
+    {
+      "entry_kind": "def",
+      "children": 1,
+      "child_entry_seconds": 3.0,
+      "children_timeout": 0.2,
+      "start_seconds": 3.0,
+      "bounded": false,
+      "overrun_factor": 15.0,
+      "warning_logged": true
+    },
+    {
+      "entry_kind": "def",
+      "children": 5,
+      "child_entry_seconds": 3.0,
+      "children_timeout": 0.2,
+      "start_seconds": 15.0,
+      "bounded": false,
+      "overrun_factor": 75.0,
+      "warning_logged": true
+    }
+  ],
+  "unbounded": [
+    {
+      "entry_kind": "def",
+      "children": 1,
+      "child_entry_seconds": 3.0,
+      "children_timeout": 0.2,
+      "start_seconds": 3.0,
+      "bounded": false,
+      "overrun_factor": 15.0,
+      "warning_logged": true
+    },
+    {
+      "entry_kind": "def",
+      "children": 5,
+      "child_entry_seconds": 3.0,
+      "children_timeout": 0.2,
+      "start_seconds": 15.0,
+      "bounded": false,
+      "overrun_factor": 75.0,
+      "warning_logged": true
+    }
+  ],
+  "source": "interpreter.py:601 _await_actor_bringups(timeout=) -- wait_for cannot preempt a `def` entry action running on the loop thread",
+  "result": "FAIL"
+}

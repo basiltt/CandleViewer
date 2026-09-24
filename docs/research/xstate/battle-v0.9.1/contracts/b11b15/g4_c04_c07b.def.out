@@ -1,0 +1,15 @@
+PASS [def]G4.C04.still_reproduces_on_0_9_0  | 4/4 kill events break: stuck-elevated=['LOGOUT', 'IDLE_DEADLINE', 'ABSOLUTE_DEADLINE'] ; re-elevatable=['REVOKE']
+PASS [def]G4.C04.root_hoist_alone_leaves_REVOKE_broken  | REVOKE + STEP_UP_OK under root-hoist-only -> ['auth.revoked', 'elevation.elevated'] (re-elevated a dead session)
+PASS [def]G4.C04.fixed_builds_strictConfig
+PASS [def]G4.C04.corrected_fix_closes_all_4  | all 4 kill events drop elevation AND resist re-elevation
+ERROR:xstate_statemachine.base_interpreter:🚨 Machine 'kill_switch' entered the error state: UnhandledEventError("Event 'RELEASE' is not handled in any active state ['kill_switch.engaged'] and the machine's onUnhandled policy is 'error'.")
+WARNING:xstate_statemachine.interpreter:⚠️ Interpreter 'kill_switch' is error; dropping event 'RELEASE'. Nothing drains the queue after shutdown, so queuing here would leak.
+PASS [def]G4.C07b.denied_release_is_fatal_on_0_9_0  | status after guard-denied RELEASE='error' err=UnhandledEventError("Event 'RELEASE' is not handled in any active state ['kill_switch.engaged'] and the machine's onUnha
+PASS [def]G4.C07b.bricked_authorised_release_dropped  | engaged=['kill_switch.engaged'] -> after authorised RELEASE=['kill_switch.engaged'] (bricked=True)
+PASS [def]G4.C07b.fixed_builds_strictConfig
+PASS [def]G4.C07b.fix_denied_not_fatal  | status='running' states=['kill_switch.engaged']
+PASS [def]G4.C07b.fix_unbricks  | engaged=['kill_switch.engaged'] -> final=['kill_switch.clear']
+PASS [def]G4.C07b.fix_audits_denial  | acts=['audit_kill_switch', 'block_new_orders_immediately', 'cancel_entry_and_poll_drains', 'broadcast_kill_switch', 'audit_release_denied', 'audit_kill_switch_released']
+PASS [def]G4.C07b.fix_chain_clean  | chain_trips=0
+
+--- 11 checks, 0 FAIL: []

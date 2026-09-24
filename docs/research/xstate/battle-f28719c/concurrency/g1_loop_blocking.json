@@ -1,0 +1,154 @@
+{
+  "probe": "g1_loop_blocking",
+  "py": "3.13.7",
+  "budget_ms": 5.0,
+  "scenarios": [
+    {
+      "scenario": "s0_idle_control",
+      "window_s": 3.0,
+      "events_processed": 0,
+      "throughput_ev_s": 0.0,
+      "tick_100ms": {
+        "ticks": 30,
+        "late_ms_p50": 0.389,
+        "late_ms_p95": 6.905,
+        "late_ms_max": 44.806,
+        "ticks_over_budget": 2
+      },
+      "loop_turn_gap_ms_p50": 0.1397,
+      "loop_turn_gap_ms_p999": 5.3468,
+      "loop_turn_gap_ms_max": 86.5166,
+      "slow_callback_log_hits": 0,
+      "slow_callback_sample": [],
+      "budget_ms": 5.0,
+      "producer_batch_per_loop_turn": 200,
+      "asyncio_debug_mode": false
+    },
+    {
+      "scenario": "s1_1_machine_saturated",
+      "window_s": 14.34,
+      "events_processed": 50000,
+      "throughput_ev_s": 3486.9,
+      "tick_100ms": {
+        "ticks": 143,
+        "late_ms_p50": 25.074,
+        "late_ms_p95": 109.673,
+        "late_ms_max": 174.535,
+        "ticks_over_budget": 116
+      },
+      "loop_turn_gap_ms_p50": 1.1467,
+      "loop_turn_gap_ms_p999": 101.7086,
+      "loop_turn_gap_ms_max": 172.3374,
+      "slow_callback_log_hits": 0,
+      "slow_callback_sample": [],
+      "budget_ms": 5.0,
+      "producer_batch_per_loop_turn": 200,
+      "asyncio_debug_mode": false
+    },
+    {
+      "scenario": "s2_100_machines_saturated",
+      "window_s": 3.024,
+      "events_processed": 44400,
+      "throughput_ev_s": 14680.9,
+      "tick_100ms": {
+        "ticks": 30,
+        "late_ms_p50": 20.722,
+        "late_ms_p95": 46.463,
+        "late_ms_max": 50.888,
+        "ticks_over_budget": 30
+      },
+      "loop_turn_gap_ms_p50": 11.9649,
+      "loop_turn_gap_ms_p999": 30.6284,
+      "loop_turn_gap_ms_max": 30.6284,
+      "slow_callback_log_hits": 0,
+      "slow_callback_sample": [],
+      "budget_ms": 5.0,
+      "producer_batch_per_loop_turn": 200,
+      "asyncio_debug_mode": false
+    },
+    {
+      "scenario": "s3_1000_machines_saturated",
+      "window_s": 3.141,
+      "events_processed": 1600,
+      "throughput_ev_s": 509.3,
+      "tick_100ms": {
+        "ticks": 9,
+        "late_ms_p50": 1525.093,
+        "late_ms_p95": 2341.659,
+        "late_ms_max": 2341.659,
+        "ticks_over_budget": 9
+      },
+      "loop_turn_gap_ms_p50": 349.1248,
+      "loop_turn_gap_ms_p999": 593.4631,
+      "loop_turn_gap_ms_max": 593.4631,
+      "slow_callback_log_hits": 0,
+      "slow_callback_sample": [],
+      "budget_ms": 5.0,
+      "producer_batch_per_loop_turn": 200,
+      "asyncio_debug_mode": false
+    },
+    {
+      "scenario": "s4_100_machines_plus_32_threads_paced",
+      "window_s": 3.796,
+      "events_processed": 7966,
+      "throughput_ev_s": 2098.4,
+      "tick_100ms": {
+        "ticks": 37,
+        "late_ms_p50": 12.202,
+        "late_ms_p95": 769.729,
+        "late_ms_max": 817.603,
+        "ticks_over_budget": 31
+      },
+      "loop_turn_gap_ms_p50": 3.2659,
+      "loop_turn_gap_ms_p999": 250.1126,
+      "loop_turn_gap_ms_max": 250.1126,
+      "slow_callback_log_hits": 0,
+      "slow_callback_sample": [],
+      "budget_ms": 5.0,
+      "producer_batch_per_loop_turn": 200,
+      "asyncio_debug_mode": false
+    },
+    {
+      "scenario": "s5_50k_backlog_drain",
+      "window_s": 11.025,
+      "events_processed": 50000,
+      "throughput_ev_s": 4535.0,
+      "tick_100ms": {
+        "ticks": 110,
+        "late_ms_p50": 32.523,
+        "late_ms_p95": 3635.588,
+        "late_ms_max": 4122.445,
+        "ticks_over_budget": 73
+      },
+      "loop_turn_gap_ms_p50": 1.2195,
+      "loop_turn_gap_ms_p999": 55.2272,
+      "loop_turn_gap_ms_max": 64.4311,
+      "slow_callback_log_hits": 0,
+      "slow_callback_sample": [],
+      "budget_ms": 5.0,
+      "producer_batch_per_loop_turn": 200,
+      "asyncio_debug_mode": false
+    },
+    {
+      "scenario": "s6_20ms_sync_action_control",
+      "window_s": 3.002,
+      "events_processed": 100,
+      "throughput_ev_s": 33.3,
+      "tick_100ms": {
+        "ticks": 30,
+        "late_ms_p50": 36.937,
+        "late_ms_p95": 164.454,
+        "late_ms_max": 190.057,
+        "ticks_over_budget": 29
+      },
+      "loop_turn_gap_ms_p50": 23.9555,
+      "loop_turn_gap_ms_p999": 129.708,
+      "loop_turn_gap_ms_max": 129.708,
+      "slow_callback_log_hits": 0,
+      "slow_callback_sample": [],
+      "budget_ms": 5.0,
+      "producer_batch_per_loop_turn": 200,
+      "asyncio_debug_mode": false
+    }
+  ]
+}

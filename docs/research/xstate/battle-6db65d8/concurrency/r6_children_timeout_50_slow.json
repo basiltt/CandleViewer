@@ -1,0 +1,104 @@
+{
+  "probe": "r6_children_timeout_50_slow",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "child_entry_kind": "def",
+      "children": 50,
+      "child_entry_seconds": 1.0,
+      "children_timeout": 0.2,
+      "start_returned": true,
+      "start_seconds": 50.038,
+      "start_bounded_by_timeout": false,
+      "status_after_start": "running",
+      "children_registered_at_start": 50,
+      "first_send_answered": true,
+      "first_send_seconds": 0.003,
+      "first_send_bounded": true,
+      "children_registered_later": 0,
+      "warning_logged": false,
+      "warning_sample": [],
+      "order": [
+        "cancel"
+      ],
+      "stop": "ok"
+    },
+    {
+      "child_entry_kind": "def",
+      "children": 50,
+      "child_entry_seconds": 1.0,
+      "children_timeout": null,
+      "start_returned": true,
+      "start_seconds": 50.051,
+      "start_bounded_by_timeout": false,
+      "status_after_start": "running",
+      "children_registered_at_start": 50,
+      "first_send_answered": true,
+      "first_send_seconds": 0.004,
+      "first_send_bounded": true,
+      "children_registered_later": 0,
+      "warning_logged": false,
+      "warning_sample": [],
+      "order": [
+        "cancel"
+      ],
+      "stop": "ok"
+    },
+    {
+      "child_entry_kind": "async def",
+      "children": 50,
+      "child_entry_seconds": 1.0,
+      "children_timeout": 0.2,
+      "start_returned": true,
+      "start_seconds": 0.213,
+      "start_bounded_by_timeout": true,
+      "status_after_start": "running",
+      "children_registered_at_start": 50,
+      "first_send_answered": true,
+      "first_send_seconds": 0.004,
+      "first_send_bounded": true,
+      "children_registered_later": 0,
+      "warning_logged": true,
+      "warning_sample": [
+        "\u23f3 Interpreter 'r6': 50 invoked child actor(s) still starting after 0.200s; start() returns with them in progress (#181)."
+      ],
+      "order": [
+        "cancel"
+      ],
+      "stop": "ok"
+    },
+    {
+      "child_entry_kind": "async def",
+      "children": 50,
+      "child_entry_seconds": 1.0,
+      "children_timeout": null,
+      "start_returned": true,
+      "start_seconds": 1.013,
+      "start_bounded_by_timeout": false,
+      "status_after_start": "running",
+      "children_registered_at_start": 50,
+      "first_send_answered": true,
+      "first_send_seconds": 0.002,
+      "first_send_bounded": true,
+      "children_registered_later": 0,
+      "warning_logged": false,
+      "warning_sample": [],
+      "order": [
+        "cancel"
+      ],
+      "stop": "ok"
+    }
+  ],
+  "failures": [
+    [
+      "def",
+      "start not bounded",
+      50.038
+    ],
+    [
+      "def",
+      "no WARNING on timeout"
+    ]
+  ],
+  "result": "FAIL"
+}

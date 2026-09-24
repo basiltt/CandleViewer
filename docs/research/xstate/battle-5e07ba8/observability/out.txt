@@ -1,0 +1,217 @@
+
+=== action raise / policy=continue ===
+    1 on_interpreter_start {}
+    2 on_transition {'source': []}
+    3 on_event_received {'type': 'GO'}
+    4 on_action_execute {'action': 'boom'}
+    5 on_action_error {'action': 'boom', 'error': "ValueError('boom')"}
+    6 on_transition_failed {'n': 1}
+    7 on_transition {'source': ['m_action_continue', 'm_action_continue.a']}
+  -- receipt: Receipt(state_ids=frozenset({'m_action_continue.b'}), changed=True, error=ValueError('boom'), deferred=False)
+  -- last_transition_ok: False
+  -- last_error: boom
+  -- status: running
+  -- logs: [('DEBUG', "⬅️  Exiting state: 'm_action_continue.a'."), ('ERROR', "🔥 Action 'boom' raised while handling event 'GO'; skipping remaining actions in this list."), ('DEBUG', "➡️  Entering state: 'm_action_continue.b'.")]
+  !! fired more than once: {'on_transition': 2}
+
+=== action raise / policy=rollback ===
+    1 on_interpreter_start {}
+    2 on_transition {'source': []}
+    3 on_event_received {'type': 'GO'}
+    4 on_action_execute {'action': 'boom'}
+    5 on_action_error {'action': 'boom', 'error': "ValueError('boom')"}
+    6 on_transition_failed {'n': 1}
+  -- receipt: Receipt(state_ids=frozenset({'m_action_rollback.a'}), changed=False, error=ValueError('boom'), deferred=False)
+  -- last_transition_ok: False
+  -- last_error: boom
+  -- status: running
+  -- logs: [('DEBUG', "⬅️  Exiting state: 'm_action_rollback.a'."), ('ERROR', "🔥 Action 'boom' raised while handling event 'GO'; skipping remaining actions in this list."), ('WARNING', "💥 Transition on 'm_action_rollback.a' failed; rolling back to the pre-transition configuration.")]
+
+=== action raise / policy=fail ===
+    1 on_interpreter_start {}
+    2 on_transition {'source': []}
+    3 on_event_received {'type': 'GO'}
+    4 on_action_execute {'action': 'boom'}
+    5 on_action_error {'action': 'boom', 'error': "ValueError('boom')"}
+    6 on_transition_failed {'n': 1}
+    7 on_error {'error': 'TransitionFailedError("Action \'boom\' raised during a transition from \'m_action_fail.a\'; the transition was rolled back and the machine stopped (actionErrorPolicy=\'fail\').")'}
+  -- receipt: Receipt(state_ids=frozenset({'m_action_fail.a'}), changed=False, error=ValueError('boom'), deferred=False)
+  -- last_transition_ok: False
+  -- last_error: boom
+  -- status: error
+  -- logs: [('DEBUG', "⬅️  Exiting state: 'm_action_fail.a'."), ('ERROR', "🔥 Action 'boom' raised while handling event 'GO'; skipping remaining actions in this list."), ('WARNING', "💥 Transition on 'm_action_fail.a' failed; rolling back to the pre-transition configuration."), ('ERROR', '🚨 Machine \'m_action_fail\' entered the error state: TransitionFailedError("Action \'boom\' raised during a transition from \'m_action_fail.a\'; the transition was rolled back and the machine stopped (actionErrorPolicy=\'fail\').")')]
+
+=== guard raise / policy=false ===
+    1 on_interpreter_start {}
+    2 on_transition {'source': []}
+    3 on_event_received {'type': 'GO'}
+    4 on_guard_error {'guard': 'bad_guard', 'error': "ValueError('guard-boom')"}
+    5 on_guard_evaluated {'guard': 'bad_guard', 'result': False}
+    6 on_unhandled_event {'type': 'GO', 'disposition': 'ignored'}
+  -- receipt: Receipt(state_ids=frozenset({'m_guard_false.a'}), changed=False, error=None, deferred=False)
+  -- last_transition_ok: True
+  -- last_error: None
+  -- status: running
+
+=== guard raise / policy=true ===
+    1 on_interpreter_start {}
+    2 on_transition {'source': []}
+    3 on_event_received {'type': 'GO'}
+    4 on_guard_error {'guard': 'bad_guard', 'error': "ValueError('guard-boom')"}
+    5 on_guard_evaluated {'guard': 'bad_guard', 'result': True}
+    6 on_transition {'source': ['m_guard_true', 'm_guard_true.a']}
+  -- receipt: Receipt(state_ids=frozenset({'m_guard_true.b'}), changed=True, error=None, deferred=False)
+  -- last_transition_ok: True
+  -- last_error: None
+  -- status: running
+  !! fired more than once: {'on_transition': 2}
+
+=== guard raise / policy=raise ===
+    1 on_interpreter_start {}
+    2 on_transition {'source': []}
+    3 on_event_received {'type': 'GO'}
+    4 on_guard_error {'guard': 'bad_guard', 'error': "ValueError('guard-boom')"}
+  -- receipt: Receipt(state_ids=frozenset({'m_guard_raise.a'}), changed=False, error=ValueError('guard-boom'), deferred=False)
+  -- last_transition_ok: False
+  -- last_error: guard-boom
+  -- status: running
+
+=== unhandled event / onUnhandled=ignore ===
+    1 on_interpreter_start {}
+    2 on_transition {'source': []}
+    3 on_event_received {'type': 'TYPO'}
+    4 on_unhandled_event {'type': 'TYPO', 'disposition': 'ignored'}
+  -- receipt: Receipt(state_ids=frozenset({'m_unhandled_ignore.a'}), changed=False, error=None, deferred=False)
+  -- send_raised: None
+  -- status: running
+  -- deferred_count: 0
+
+=== unhandled event / onUnhandled=defer ===
+    1 on_interpreter_start {}
+    2 on_transition {'source': []}
+    3 on_event_received {'type': 'TYPO'}
+    4 on_unhandled_event {'type': 'TYPO', 'disposition': 'deferred'}
+  -- receipt: Receipt(state_ids=frozenset({'m_unhandled_defer.a'}), changed=False, error=None, deferred=True)
+  -- send_raised: None
+  -- status: running
+  -- deferred_count: 1
+
+=== unhandled event / onUnhandled=error ===
+    1 on_interpreter_start {}
+    2 on_transition {'source': []}
+    3 on_event_received {'type': 'TYPO'}
+    4 on_unhandled_event {'type': 'TYPO', 'disposition': 'errored'}
+    5 on_error {'error': 'UnhandledEventError("Event \'TYPO\' is not handled in any active state [\'m_unhandled_error.a\'] and the machine\'s onUnhandled policy is \'error\'.")'}
+  -- receipt: Receipt(state_ids=frozenset({'m_unhandled_error.a'}), changed=False, error=None, deferred=False)
+  -- send_raised: None
+  -- status: error
+  -- deferred_count: 0
+
+=== deferred replay ===
+    1 on_interpreter_start {}
+    2 on_transition {'source': []}
+    3 on_event_received {'type': 'LATE'}
+    4 on_unhandled_event {'type': 'LATE', 'disposition': 'deferred'}
+    5 on_event_received {'type': 'ARM'}
+    6 on_transition {'source': ['m_defer_replay', 'm_defer_replay.a']}
+    7 on_event_received {'type': 'LATE'}
+    8 on_transition {'source': ['m_defer_replay', 'm_defer_replay.b']}
+  -- receipt_LATE_initial: Receipt(state_ids=frozenset({'m_defer_replay.a'}), changed=False, error=None, deferred=True)
+  -- receipt_ARM: Receipt(state_ids=frozenset({'m_defer_replay.c'}), changed=True, error=None, deferred=False)
+  -- final_state: {'m_defer_replay.c'}
+  -- deferred_count_after: 0
+  !! fired more than once: {'on_transition': 3, 'on_event_received': 3}
+
+=== inbox overflow (async engine) / policy=OverflowPolicy.DROP_NEWEST ===
+    1 on_interpreter_start {}
+    2 on_event_dropped {'type': 'X1', 'reason': 'queue_full'}
+    3 on_event_dropped {'type': 'X2', 'reason': 'queue_full'}
+    4 on_event_dropped {'type': 'X3', 'reason': 'queue_full'}
+    5 on_event_received {'type': 'X0'}
+    6 on_unhandled_event {'type': 'X0', 'disposition': 'ignored'}
+  -- results: [('queued', 0), ('queued', 1), ('queued', 2), ('queued', 3)]
+  -- queue_depth: 0
+  !! fired more than once: {'on_event_dropped': 3}
+
+=== inbox overflow (async engine) / policy=OverflowPolicy.RAISE ===
+    1 on_interpreter_start {}
+    2 on_event_received {'type': 'X0'}
+    3 on_unhandled_event {'type': 'X0', 'disposition': 'ignored'}
+  -- results: [('queued', 0), ('raised', 'QueueOverflowError("Interpreter \'m_overflow_async_RAISE\' inbox is full (1/1); event refused. Shed load, slow the producer, or raise max_queue_size.")'), ('raised', 'QueueOverflowError("Interpreter \'m_overflow_async_RAISE\' inbox is full (1/1); event refused. Shed load, slow the producer, or raise max_queue_size.")'), ('raised', 'QueueOverflowError("Interpreter \'m_overflow_async_RAISE\' inbox is full (1/1); event refused. Shed load, slow the producer, or raise max_queue_size.")')]
+  -- queue_depth: 0
+
+=== chain (runaway) budget trip ===
+    1 on_interpreter_start {}
+    2 on_transition {'source': []}
+    3 on_event_received {'type': 'LOOP'}
+    4 on_action_execute {'action': 'rechain'}C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-5e07ba8\observability\probe_matrix.py:394: DeprecationWarning: Machine 'm_snf' has unresolvable transition targets:
+  m_snf.a: on 'GO' -> target 'does.not.exist' does not resolve
+  (strict_targets=False: these transitions will be silent no-ops at runtime. This escape hatch is removed in 1.0.)
+  machine = create_machine(cfg, logic=MachineLogic(), strict_targets=False)
+
+    5 on_transition {'source': ['m_chain', 'm_chain.a']}
+    6 on_event_received {'type': 'LOOP'}
+    7 on_action_execute {'action': 'rechain'}
+    8 on_transition {'source': ['m_chain', 'm_chain.a']}
+    9 on_event_received {'type': 'LOOP'}
+   10 on_action_execute {'action': 'rechain'}
+   11 on_transition {'source': ['m_chain', 'm_chain.a']}
+   12 on_event_received {'type': 'LOOP'}
+   13 on_action_execute {'action': 'rechain'}
+   14 on_transition {'source': ['m_chain', 'm_chain.a']}
+   15 on_event_received {'type': 'LOOP'}
+   16 on_action_execute {'action': 'rechain'}
+   17 on_transition {'source': ['m_chain', 'm_chain.a']}
+   18 on_event_received {'type': 'LOOP'}
+   19 on_action_execute {'action': 'rechain'}
+   20 on_transition {'source': ['m_chain', 'm_chain.a']}
+   21 on_event_dropped {'type': 'LOOP', 'reason': 'chain_budget'}
+  -- receipt: Receipt(state_ids=frozenset({'m_chain.a'}), changed=False, error=RunawayChainError("Machine 'm_chain' exceeded 5 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'."), deferred=False)
+  -- last_transition_ok: False
+  -- last_error: Machine 'm_chain' exceeded 5 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.
+  -- status: running
+  !! fired more than once: {'on_transition': 7, 'on_event_received': 6, 'on_action_execute': 6}
+
+=== invoke error / onError_declared=True ===
+    1 on_interpreter_start {}
+    2 on_service_start {'id': 'svc'}
+    3 on_service_error {'id': 'svc', 'error': "RuntimeError('svc-fail')"}
+    4 on_event_received {'type': 'error.platform.svc'}
+    5 on_transition {'source': ['m_invoke_err_True', 'm_invoke_err_True.a']}
+  -- status: running
+  -- error: None
+
+=== invoke error / onError_declared=False ===
+    1 on_interpreter_start {}
+    2 on_service_start {'id': 'svc'}
+    3 on_service_error {'id': 'svc', 'error': "RuntimeError('svc-fail')"}
+    4 on_error {'error': "RuntimeError('svc-fail')"}
+  -- status: error
+  -- error: svc-fail
+
+=== child machine failure -> ErrorEvent -> onError (parity check #99) ===
+    1 on_interpreter_start {}
+    2 on_service_start {'id': 'kid'}
+    3 on_service_error {'id': 'kid', 'error': 'TransitionFailedError("Action \'blow\' raised during a transition from \'child\'; the transition was rolled back and the machine stopped (actionErrorPolicy=\'fail\').")'}
+    4 on_event_received {'type': 'error.platform.kid'}
+    5 on_transition {'source': ['parent_escalate', 'parent_escalate.p']}
+  -- status: running
+
+=== StateNotFound under strict_targets=False ===
+    1 on_interpreter_start {}
+    2 on_transition {'source': []}
+    3 on_event_received {'type': 'GO'}
+  -- receipt: Receipt(state_ids=frozenset({'m_snf.a'}), changed=False, error=StateNotFoundError("Could not resolve target state 'does.not.exist' from state 'm_snf.a'."), deferred=False)
+  -- last_transition_ok: False
+  -- last_error: Could not resolve target state 'does.not.exist' from state 'm_snf.a'.
+  -- status: running
+
+=== strict violation ===
+    1 on_interpreter_start {}
+    2 on_transition {'source': []}
+  -- send_result: UnknownEventError("Event 'KNOWN_TYPO' is not declared by machine 'm_strict'. Known events: KNOWN. Did you mean 'KNOWN'?")
+
+=== wrong thread ===
+  -- result: {'outcome': 'WrongThreadError("Interpreter \'m_thread\' is bound to the event loop on thread \'MainThread\'; send() was called from thread \'Thread-1 (other_thread)\'. send() must run on the interpreter\'s own loop thread. From another thread use send_threadsafe(). Note that asyncio.run_coroutine_threadsafe(interp.send(...), loop) is also rejected since 0.8.0, because this check runs before the coroutine is scheduled; replace it with send_threadsafe().")'}
+
+DONE

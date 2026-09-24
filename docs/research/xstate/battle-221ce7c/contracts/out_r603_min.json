@@ -1,0 +1,40 @@
+[
+ {
+  "engine": "async",
+  "send": "returned in 0.000s",
+  "states": [
+   "m.work"
+  ],
+  "status": "running",
+  "error": null,
+  "last_error": "RuntimeError('boom')",
+  "svc_at_send": 0,
+  "svc_after_1s": 1292,
+  "rate_per_s": 1292.0
+ },
+ {
+  "engine": "async",
+  "send": "returned in 0.000s",
+  "states": [
+   "m.work"
+  ],
+  "status": "running",
+  "error": null,
+  "last_error": "RuntimeError('boom')",
+  "svc_at_send": 0,
+  "svc_after_3s": 3996,
+  "rate_per_s": 1332.0
+ },
+ {
+  "engine": "sync",
+  "send": "returned in 0.002s",
+  "exc": null,
+  "states": [
+   "m.work"
+  ],
+  "status": "running",
+  "error": null,
+  "last_error": "RuntimeError('boom')",
+  "svc": 2
+ }
+]

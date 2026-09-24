@@ -1,0 +1,214 @@
+{
+  "default_async": {
+    "kind": "async",
+    "mi": null,
+    "trail": [
+      [
+        0.5,
+        1002
+      ],
+      [
+        1.0,
+        1002
+      ],
+      [
+        1.5,
+        1002
+      ],
+      [
+        2.0,
+        1002
+      ],
+      [
+        2.5,
+        1002
+      ],
+      [
+        3.0,
+        1002
+      ],
+      [
+        3.5,
+        1002
+      ],
+      [
+        4.1,
+        1002
+      ]
+    ],
+    "svc": 1002,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError",
+    "dropped": [
+      [
+        "done.invoke.fl",
+        "chain_budget"
+      ]
+    ],
+    "unhandled": [],
+    "post_release": {
+      "changed": false,
+      "error": "UnhandledEventError",
+      "denied": false
+    },
+    "post_status": "error",
+    "post_ids": [
+      "kill_switch.flattening"
+    ],
+    "svc_after_external": 0,
+    "snapshot": {
+      "ok": true,
+      "status": "error"
+    }
+  },
+  "mi50_async": {
+    "kind": "async",
+    "mi": 50,
+    "trail": [
+      [
+        0.5,
+        52
+      ],
+      [
+        1.0,
+        52
+      ]
+    ],
+    "svc": 52,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError",
+    "dropped": [
+      [
+        "done.invoke.fl",
+        "chain_budget"
+      ]
+    ],
+    "unhandled": [],
+    "post_release": {
+      "changed": false,
+      "error": "UnhandledEventError",
+      "denied": false
+    },
+    "post_status": "error",
+    "post_ids": [
+      "kill_switch.flattening"
+    ],
+    "svc_after_external": 0,
+    "snapshot": {
+      "ok": true,
+      "status": "error"
+    }
+  },
+  "default_sync": {
+    "kind": "sync",
+    "mi": null,
+    "trail": [
+      [
+        0.5,
+        906
+      ],
+      [
+        1.0,
+        1002
+      ],
+      [
+        1.5,
+        1002
+      ],
+      [
+        2.0,
+        1002
+      ],
+      [
+        2.5,
+        1002
+      ],
+      [
+        3.0,
+        1002
+      ],
+      [
+        3.5,
+        1002
+      ],
+      [
+        4.1,
+        1002
+      ]
+    ],
+    "svc": 1002,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError",
+    "dropped": [
+      [
+        "done.invoke.fl",
+        "chain_budget"
+      ]
+    ],
+    "unhandled": [],
+    "post_release": {
+      "changed": false,
+      "error": "UnhandledEventError",
+      "denied": false
+    },
+    "post_status": "error",
+    "post_ids": [
+      "kill_switch.flattening"
+    ],
+    "svc_after_external": 0,
+    "snapshot": {
+      "ok": true,
+      "status": "error"
+    }
+  },
+  "mi50_sync": {
+    "kind": "sync",
+    "mi": 50,
+    "trail": [
+      [
+        0.5,
+        52
+      ],
+      [
+        1.0,
+        52
+      ]
+    ],
+    "svc": 52,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError",
+    "dropped": [
+      [
+        "done.invoke.fl",
+        "chain_budget"
+      ]
+    ],
+    "unhandled": [],
+    "post_release": {
+      "changed": false,
+      "error": "UnhandledEventError",
+      "denied": false
+    },
+    "post_status": "error",
+    "post_ids": [
+      "kill_switch.flattening"
+    ],
+    "svc_after_external": 0,
+    "snapshot": {
+      "ok": true,
+      "status": "error"
+    }
+  }
+}

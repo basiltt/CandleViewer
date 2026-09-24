@@ -1,0 +1,36 @@
+{
+ "denied_receipt": {
+  "changed": false,
+  "deferred": true,
+  "denied": true,
+  "error": null,
+  "states": [
+   "position_protection.sl.protected",
+   "position_protection.watchdog.scanning"
+  ],
+  "deferred_count": 1
+ },
+ "guard_raise": {
+  "call_raised": "NO-RAISE",
+  "receipt": {
+   "changed": false,
+   "deferred": false,
+   "denied": true,
+   "error": "RuntimeError"
+  },
+  "status": "running",
+  "states": [
+   "position_protection.sl.protected",
+   "position_protection.watchdog.scanning"
+  ]
+ },
+ "livelock_budget": {
+  "returned": true,
+  "states": [
+   "position_protection.sl.verifying",
+   "position_protection.watchdog.scanning"
+  ],
+  "laps": 500,
+  "status": "running"
+ }
+}

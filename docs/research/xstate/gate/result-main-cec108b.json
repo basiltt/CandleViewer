@@ -1,0 +1,725 @@
+{
+  "library_version": "0.8.0",
+  "library_commit": "cec108b7c5b3fc984207f68754a22248a2c4c9b1",
+  "baseline_commit": "3c527b0d04c0d2d0ebb565af7e9e905f7178f620",
+  "matches_baseline": false,
+  "build": "commit cec108b -- NOT a recorded baseline (reports __version__ 0.8.0); triage every delta in writing",
+  "python": "3.13.7",
+  "generated": "2026-09-19T22:38:51",
+  "benchmarks_run": false,
+  "checks": [
+    {
+      "id": "LC-01",
+      "kind": "verify",
+      "label": "action raise commits transition",
+      "status": "FAIL",
+      "detail": "defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL",
+      "seconds": 0.24
+    },
+    {
+      "id": "LC-02",
+      "kind": "verify",
+      "label": "always self target deadlock",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.86
+    },
+    {
+      "id": "LC-03",
+      "kind": "verify",
+      "label": "unhandled events discarded",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.24
+    },
+    {
+      "id": "LC-05",
+      "kind": "verify",
+      "label": "raise not macrostep",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.69
+    },
+    {
+      "id": "LC-06",
+      "kind": "verify",
+      "label": "overforgiving target resolution",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.46
+    },
+    {
+      "id": "LC-07",
+      "kind": "verify",
+      "label": "relative dot target silent noop",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.35
+    },
+    {
+      "id": "LC-08",
+      "kind": "verify",
+      "label": "unknown target unvalidated",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.29
+    },
+    {
+      "id": "LC-09",
+      "kind": "verify",
+      "label": "guard exception swallowed",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.49
+    },
+    {
+      "id": "LC-12",
+      "kind": "verify",
+      "label": "spawn blocking async engine",
+      "status": "FAIL",
+      "detail": "defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL",
+      "seconds": 1.8
+    },
+    {
+      "id": "LC-16",
+      "kind": "verify",
+      "label": "sendto invoke id",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 1.77
+    },
+    {
+      "id": "LC-19",
+      "kind": "verify",
+      "label": "restore does not restart invokes",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.95
+    },
+    {
+      "id": "LC-21",
+      "kind": "verify",
+      "label": "no snapshot schema version",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.24
+    },
+    {
+      "id": "LC-22",
+      "kind": "verify",
+      "label": "from_snapshot_context_merge",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.37
+    },
+    {
+      "id": "LC-24",
+      "kind": "verify",
+      "label": "pending_queue_inbox_durability",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.29
+    },
+    {
+      "id": "LC-26",
+      "kind": "verify",
+      "label": "after_timer_priority_lane",
+      "status": "FAIL",
+      "detail": "defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL",
+      "seconds": 10.26
+    },
+    {
+      "id": "LC-27",
+      "kind": "verify",
+      "label": "clock_injection_simulated",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.87
+    },
+    {
+      "id": "LC-28",
+      "kind": "verify",
+      "label": "actor poll two tasks",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.5
+    },
+    {
+      "id": "LC-29",
+      "kind": "verify",
+      "label": "invoke input static ignored",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.41
+    },
+    {
+      "id": "LC-32",
+      "kind": "verify",
+      "label": "terminal machines not reaped",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.58
+    },
+    {
+      "id": "LC-34",
+      "kind": "verify",
+      "label": "no strict mode",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.23
+    },
+    {
+      "id": "LC-36",
+      "kind": "verify",
+      "label": "builtin_action_params_validated",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.23
+    },
+    {
+      "id": "LC-37",
+      "kind": "verify",
+      "label": "arity_marker_precedence",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.24
+    },
+    {
+      "id": "LC-38",
+      "kind": "verify",
+      "label": "sync_interpreter_no_threads",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.69
+    },
+    {
+      "id": "LC-39",
+      "kind": "verify",
+      "label": "perf_docs_present",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.11
+    },
+    {
+      "id": "LC-41",
+      "kind": "verify",
+      "label": "backpressure",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.25
+    },
+    {
+      "id": "LC-42",
+      "kind": "verify",
+      "label": "send_receipt",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.27
+    },
+    {
+      "id": "LC-43",
+      "kind": "verify",
+      "label": "cross_thread",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.51
+    },
+    {
+      "id": "LC-44",
+      "kind": "verify",
+      "label": "pure_api",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 2.64
+    },
+    {
+      "id": "LC-45",
+      "kind": "verify",
+      "label": "hot path alloc and info logging",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.49
+    },
+    {
+      "id": "LC-47",
+      "kind": "verify",
+      "label": "target str mutation shared definition",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.3
+    },
+    {
+      "id": "LC-48",
+      "kind": "verify",
+      "label": "no error observability hooks",
+      "status": "FAIL",
+      "detail": "defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL",
+      "seconds": 0.29
+    },
+    {
+      "id": "LC-49",
+      "kind": "verify",
+      "label": "no hierarchical state value",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.25
+    },
+    {
+      "id": "LC-53",
+      "kind": "verify",
+      "label": "production_characteristics",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.34
+    },
+    {
+      "id": "LC-57",
+      "kind": "verify",
+      "label": "two_engines_unified",
+      "status": "FAIL",
+      "detail": "defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL",
+      "seconds": 0.54
+    },
+    {
+      "id": "LC-01",
+      "kind": "verifyM",
+      "label": "action error policy",
+      "status": "FAIL",
+      "detail": "defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL",
+      "seconds": 1.49
+    },
+    {
+      "id": "LC-07",
+      "kind": "verifyM",
+      "label": "relative dot target",
+      "status": "FAIL",
+      "detail": "defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL",
+      "seconds": 0.96
+    },
+    {
+      "id": "LC-19",
+      "kind": "verifyM",
+      "label": "restore does not restart invokes",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.98
+    },
+    {
+      "id": "LC-28",
+      "kind": "verifyM",
+      "label": "actor poll two tasks",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.61
+    },
+    {
+      "id": "LC-34",
+      "kind": "verifyM",
+      "label": "send threadsafe strict and static raise",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.44
+    },
+    {
+      "id": "LC-37",
+      "kind": "verifyM",
+      "label": "machinelogic strict",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.24
+    },
+    {
+      "id": "LC-37#2",
+      "kind": "verifyM",
+      "label": "wrongthreaderror message",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 6.06
+    },
+    {
+      "id": "LC-38",
+      "kind": "verifyM",
+      "label": "sync interpreter loop clock lane",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.6
+    },
+    {
+      "id": "LC-42",
+      "kind": "verifyM",
+      "label": "send_receipt",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.26
+    },
+    {
+      "id": "LC-52",
+      "kind": "verifyM",
+      "label": "error platform event",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.67
+    },
+    {
+      "id": "N-1",
+      "kind": "verifyM",
+      "label": "send wait receipt collision",
+      "status": "FAIL",
+      "detail": "defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL",
+      "seconds": 0.5
+    },
+    {
+      "id": "N-2",
+      "kind": "verifyM",
+      "label": "sync timer clock lane",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.96
+    },
+    {
+      "id": "N-3",
+      "kind": "verifyM",
+      "label": "sync macrostep budget",
+      "status": "FAIL",
+      "detail": "defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL",
+      "seconds": 1.21
+    },
+    {
+      "id": "N-4",
+      "kind": "verifyM",
+      "label": "send threadsafe strict",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.78
+    },
+    {
+      "id": "N-8",
+      "kind": "verifyM",
+      "label": "error done namespace",
+      "status": "FAIL",
+      "detail": "defect still present UNDER THE MANDATED CONFIG -- this is a real FAIL",
+      "seconds": 1.08
+    },
+    {
+      "id": "43",
+      "kind": "verifyM2",
+      "label": "one task per invoked child",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 1.64
+    },
+    {
+      "id": "79",
+      "kind": "verifyM2",
+      "label": "provenance system events",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.51
+    },
+    {
+      "id": "80",
+      "kind": "verifyM2",
+      "label": "errorevent distinct from doneevent",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.44
+    },
+    {
+      "id": "LC-01",
+      "kind": "repro",
+      "label": "action raise commits transition",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.29
+    },
+    {
+      "id": "LC-02",
+      "kind": "repro",
+      "label": "always self target deadlock",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.24
+    },
+    {
+      "id": "LC-03",
+      "kind": "repro",
+      "label": "unhandled events discarded",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.56
+    },
+    {
+      "id": "LC-05",
+      "kind": "repro",
+      "label": "raise not macrostep",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.54
+    },
+    {
+      "id": "LC-06",
+      "kind": "repro",
+      "label": "overforgiving target resolution",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.24
+    },
+    {
+      "id": "LC-07",
+      "kind": "repro",
+      "label": "relative dot target silent noop",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.32
+    },
+    {
+      "id": "LC-08",
+      "kind": "repro",
+      "label": "unknown target unvalidated",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.23
+    },
+    {
+      "id": "LC-09",
+      "kind": "repro",
+      "label": "guard exception swallowed",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.38
+    },
+    {
+      "id": "LC-12",
+      "kind": "repro",
+      "label": "spawn blocking async engine",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 2.04
+    },
+    {
+      "id": "LC-16",
+      "kind": "repro",
+      "label": "sendto invoke id",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 1.39
+    },
+    {
+      "id": "LC-19",
+      "kind": "repro",
+      "label": "restore does not restart invokes",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.64
+    },
+    {
+      "id": "LC-21",
+      "kind": "repro",
+      "label": "no snapshot schema version",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.24
+    },
+    {
+      "id": "LC-22",
+      "kind": "repro",
+      "label": "from_snapshot_context_wholesale",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.23
+    },
+    {
+      "id": "LC-24",
+      "kind": "repro",
+      "label": "pending_queue_lost_on_crash",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.23
+    },
+    {
+      "id": "LC-26",
+      "kind": "repro",
+      "label": "after_timer_starvation",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 10.37
+    },
+    {
+      "id": "LC-27",
+      "kind": "repro",
+      "label": "no clock injection",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.25
+    },
+    {
+      "id": "LC-28",
+      "kind": "repro",
+      "label": "actor poll two tasks",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.22
+    },
+    {
+      "id": "LC-29",
+      "kind": "repro",
+      "label": "invoke input static ignored",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.28
+    },
+    {
+      "id": "LC-32",
+      "kind": "repro",
+      "label": "terminal machines not reaped",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.51
+    },
+    {
+      "id": "LC-34",
+      "kind": "repro",
+      "label": "no strict mode",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.35
+    },
+    {
+      "id": "LC-36",
+      "kind": "repro",
+      "label": "builtin action params misspelled",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.23
+    },
+    {
+      "id": "LC-37",
+      "kind": "repro",
+      "label": "arity misclassification",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.22
+    },
+    {
+      "id": "LC-38",
+      "kind": "repro",
+      "label": "sync interpreter timer threads",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 1.33
+    },
+    {
+      "id": "LC-39",
+      "kind": "repro",
+      "label": "throughput global budget",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 21.85
+    },
+    {
+      "id": "LC-41",
+      "kind": "repro",
+      "label": "unbounded queue no backpressure",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.34
+    },
+    {
+      "id": "LC-42",
+      "kind": "repro",
+      "label": "send fire and forget no answer",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.38
+    },
+    {
+      "id": "LC-43",
+      "kind": "repro",
+      "label": "cross thread send silently lost",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.74
+    },
+    {
+      "id": "LC-44",
+      "kind": "repro",
+      "label": "pure api slower and skips actions",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.34
+    },
+    {
+      "id": "LC-45",
+      "kind": "repro",
+      "label": "hot path alloc and info logging",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.85
+    },
+    {
+      "id": "LC-47",
+      "kind": "repro",
+      "label": "target str mutation shared definition",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.22
+    },
+    {
+      "id": "LC-48",
+      "kind": "repro",
+      "label": "no error observability hooks",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.3
+    },
+    {
+      "id": "LC-49",
+      "kind": "repro",
+      "label": "no hierarchical state value",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.21
+    },
+    {
+      "id": "LC-53",
+      "kind": "repro",
+      "label": "undocumented production characteristics",
+      "status": "FAIL",
+      "detail": "reproduces at DEFAULTS -- triage: unfixed / fixed-but-opt-in / stale repro",
+      "seconds": 0.09
+    },
+    {
+      "id": "LC-57",
+      "kind": "repro",
+      "label": "two engines duplicate core algorithm",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed",
+      "seconds": 0.23
+    },
+    {
+      "id": "PROBE-01",
+      "kind": "probe",
+      "label": "01_core_transitions",
+      "status": "FAIL",
+      "detail": "16/20 PASS; still failing at baseline: A10,A18,A3,A6",
+      "seconds": 2.05
+    },
+    {
+      "id": "PROBE-02",
+      "kind": "probe",
+      "label": "02_invoke_timers_history",
+      "status": "PASS",
+      "detail": "14/14 PASS",
+      "seconds": 3.78
+    },
+    {
+      "id": "PROBE-03",
+      "kind": "probe",
+      "label": "03_context_snapshot_determinism",
+      "status": "FAIL",
+      "detail": "13/17 PASS; still failing at baseline: C15,C17,C6,C7",
+      "seconds": 7.93
+    }
+  ],
+  "exit_code": 1
+}

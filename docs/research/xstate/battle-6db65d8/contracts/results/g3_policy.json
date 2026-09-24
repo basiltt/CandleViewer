@@ -1,0 +1,17 @@
+{
+ "P1_spawnBlockingTimeout_on_machine": [
+  "spawn_blocking_timeout_ms"
+ ],
+ "P1_value": "ABSENT",
+ "P2_typo_keys": "ACCEPTED SILENTLY on_unhandled=error",
+ "P3_bad_value": "InvalidConfigError: Machine 'ws_conn': 'onUnhandled' must be one of ['ignore', 'defer', 'error'], got 'deferr'.",
+ "P3b_bad_aep": "InvalidConfigError: Machine 'ws_conn': 'actionErrorPolicy' must be one of ['continue', 'rollback', 'fail'], got 'rolback'.",
+ "P3c_bad_gep": "InvalidConfigError: Machine 'ws_conn': 'guardErrorPolicy' must be one of ['false', 'true', 'raise'], got 'riase'.",
+ "P4_empty_strict_logic_runtime": {
+  "after_start": [
+   "ws_conn.disconnected"
+  ],
+  "send": "no error, states=['ws_conn.disconnected']",
+  "last_error": "ImplementationMissingError(\"Guard 'connection_budget_exhausted' not implemented.\")"
+ }
+}

@@ -1,0 +1,46 @@
+[
+ {
+  "service_kind": "async",
+  "idle_before_go_s": 0.0,
+  "laps": 20729,
+  "elapsed_s": 2.01,
+  "tripped": false,
+  "last_error": null,
+  "max_raise_depth": 0,
+  "dropped": []
+ },
+ {
+  "service_kind": "async",
+  "idle_before_go_s": 0.05,
+  "laps": 21506,
+  "elapsed_s": 2.01,
+  "tripped": false,
+  "last_error": null,
+  "max_raise_depth": 0,
+  "dropped": []
+ },
+ {
+  "service_kind": "plain_def",
+  "idle_before_go_s": 0.0,
+  "laps": 52,
+  "elapsed_s": 0.02,
+  "tripped": true,
+  "last_error": "RunawayChainError",
+  "max_raise_depth": 0,
+  "dropped": [
+   "chain_budget"
+  ]
+ },
+ {
+  "service_kind": "plain_def",
+  "idle_before_go_s": 0.05,
+  "laps": 52,
+  "elapsed_s": 0.03,
+  "tripped": true,
+  "last_error": "RunawayChainError",
+  "max_raise_depth": 0,
+  "dropped": [
+   "chain_budget"
+  ]
+ }
+]

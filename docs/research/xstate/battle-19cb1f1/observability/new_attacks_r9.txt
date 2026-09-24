@@ -1,0 +1,7 @@
+V1 enter+exit same macrostep (always roll-forward): final_state=['v1.skip'] svc_called=0 (expect: ['v1.skip'], svc_called=0)
+V3 hand-built public AfterEvent sent -> state=['v3.waiting'] (expect: still ['v3.waiting'], NOT ['v3.expired'] -- #203 fix)
+V4 raise(delay=1ms) self-ping-pong (async engine -- SyncInterpreter's timer-paced variant has user standing by design, does not trip): last_error=RunawayChainError("Machine 'v4' exceeded 15 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.") (expect: RunawayChainError -- delayed self-send charged as engine work, maxIterations=15 bounds it)
+V5 rollback/cut-onDone-storm stranded hook: last_error=RunawayChainError err.stranded=('sub',) plugin_hook_calls=[('v5.starting', 'sub')] error_log_named_state=True (expect: RunawayChainError with .stranded=('sub',), on_invocation_stranded fired once w/ ('spin.starting','sub'), ERROR log)
+V6 lap-parity sweep limits 1-15 (invoke.onDone loop, reduced from 1-25 per time budget): mismatches=[] (expect: [] -- all three lanes agree per #209)
+V7 snapshot attempt mid on_transition (invoke arming in-flight): result=ok(no error) (expect: refused with SnapshotMidStepError, never a torn/duplicated invocation)
+DONE

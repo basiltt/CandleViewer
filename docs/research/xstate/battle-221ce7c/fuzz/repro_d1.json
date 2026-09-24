@@ -1,0 +1,28 @@
+{
+ "id": "m",
+ "type": "parallel",
+ "states": {
+  "A": {
+   "initial": "a1",
+   "states": {
+    "a1": {
+     "invoke": {
+      "id": "inv",
+      "src": "svc_ok",
+      "onDone": "#m.A.a1"
+     }
+    }
+   }
+  },
+  "B": {
+   "initial": "b1",
+   "states": {
+    "b1": {
+     "always": {
+      "target": "#m.A.a1"
+     }
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,34 @@
+{
+ "[def]CD-KS/B6 as-catalogued: kill applied before service completes": {
+  "pass": true,
+  "note": "{\"label\": \"B6 as-catalogued\", \"style\": \"def\", \"inflight\": [\"twap.armed\"], \"final\": [\"twap.cancelled\"], \"service_hold_s\": 1.5, \"receipt_s\": 0.001, \"applied_s\": 0.001, \"receipt_deferred\": false, \"unhandled\": [], \"dropped\": []}"
+ },
+ "[def]CD-KS/B6 as-catalogued: kill is never LOST": {
+  "pass": true,
+  "note": "{\"final\": [\"twap.cancelled\"], \"applied_s\": 0.001}"
+ },
+ "[def]CD-KS/B9 as-catalogued: kill applied before service completes": {
+  "pass": true,
+  "note": "{\"label\": \"B9 as-catalogued\", \"style\": \"def\", \"inflight\": [\"rule_instance.cooling_down\"], \"final\": [\"rule_instance.kill_switched\"], \"service_hold_s\": 1.5, \"receipt_s\": 0.0, \"applied_s\": 0.0, \"receipt_deferred\": false, \"unhandled\": [], \"dropped\": []}"
+ },
+ "[def]CD-KS/B9 as-catalogued: kill is never LOST": {
+  "pass": true,
+  "note": "{\"final\": [\"rule_instance.kill_switched\"], \"applied_s\": 0.0}"
+ },
+ "[def]CD-KS/B6 + handler on invoking state: kill applied before service completes": {
+  "pass": true,
+  "note": "{\"label\": \"B6 + handler on invoking state\", \"style\": \"def\", \"inflight\": [\"twap.armed\"], \"final\": [\"twap.cancelled\"], \"service_hold_s\": 1.5, \"receipt_s\": 0.002, \"applied_s\": 0.002, \"receipt_deferred\": false, \"unhandled\": [], \"dropped\": []}"
+ },
+ "[def]CD-KS/B6 + handler on invoking state: kill is never LOST": {
+  "pass": true,
+  "note": "{\"final\": [\"twap.cancelled\"], \"applied_s\": 0.002}"
+ },
+ "[def]CD-KS/B9 + handler on invoking state: kill applied before service completes": {
+  "pass": true,
+  "note": "{\"label\": \"B9 + handler on invoking state\", \"style\": \"def\", \"inflight\": [\"rule_instance.cooling_down\"], \"final\": [\"rule_instance.kill_switched\"], \"service_hold_s\": 1.5, \"receipt_s\": 0.0, \"applied_s\": 0.0, \"receipt_deferred\": false, \"unhandled\": [], \"dropped\": []}"
+ },
+ "[def]CD-KS/B9 + handler on invoking state: kill is never LOST": {
+  "pass": true,
+  "note": "{\"final\": [\"rule_instance.kill_switched\"], \"applied_s\": 0.0}"
+ }
+}

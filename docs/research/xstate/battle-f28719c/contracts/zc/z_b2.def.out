@@ -1,0 +1,26 @@
+PASS [def]B2.happy.terminal  | ['trade_group.closed']
+PASS [def]B2.happy.snapshot  | []
+PASS [def]B2.happy.no_error  | None
+PASS [def]B2.happy.raise_chain_bounded  | [{'ev': 'CONFIRM', 'ok': True, 'sec': 0.001699599961284548}, {'ev': 'LEG_OPEN', 'ok': True, 'sec': 0.0007142000249586999}, {'ev': 'LEG_OPEN', 'ok': True, 'sec': 0.0019643999985419214}, {'ev': 'ALL_LEG
+PASS [def]B2.partial.quiesce  | ['trade_group.partially_open'] ctx={'legs_open': 1, 'legs_failed': 1, 'quiesced': True}
+PASS [def]B2.partial.snapshot  | []
+PASS [def]B2.allfail.failed  | ['trade_group.failed']
+PASS [def]B2.abort.always_resolves  | ['trade_group.failed']
+PASS [def]B2.abort.entry_ran
+PASS [def]B2.abort.some_open  | ['trade_group.partially_open']
+PASS [def]B2.unwind.onDone_terminal  | ['trade_group.failed']
+PASS [def]B2.unwind.svc_once  | ['unwind_machine']
+PASS [def]B2.unwind.mark_unwound  | ['count_failed', 'raise', 'persist_unwind_plan', 'mark_unwound']
+PASS [def]B2.R6-03.terminates  | sends=[{'ev': 'CONFIRM', 'ok': True, 'sec': 0.0005170999793335795}, {'ev': 'LEG_FAILED', 'ok': True, 'sec': 0.0015830000047571957}]
+PASS [def]B2.R6-03.bounded  | unwind_machine invocations=30
+PASS [def]B2.R6-03.observable  | err=None action_errors=29
+PASS [def]B2.unwind.onError_failed  | ['trade_group.failed']
+PASS [def]B2.unwind.onError_alert  | ['raise', 'persist_unwind_plan', 'mark_unwind_incomplete', 'raise_critical_alert']
+PASS [def]B2.defer.flushed_to_closed  | states=['trade_group.closed'] unhandled=[('ALL_LEGS_FLAT', 'deferred'), ('ALL_LEGS_FLAT', 'deferred'), ('EVALUATE', 'deferred')]
+PASS [def]B2.guard_raise.observable  | guard_errors=["RuntimeError('guard:all_non_skipped_open')"] err=None sends=[{'ev': 'LEG_OPEN', 'ok': True, 'sec': 0.007986299984622747}]
+PASS [def]B2.parity.states  | async=['trade_group.closed'] sync=['trade_group.closed']
+PASS [def]B2.parity.context
+PASS [def]B2.parity.actions  | async=['reserve_rate_budget', 'launch_all_legs', 'arm_quiesce_deadline', 'count_open', 'raise', 'count_open', 'raise']
+sync=['reserve_rate_budget', 'launch_all_legs', 'arm_quiesce_deadline', 'count_open', 'raise', 'count_open', 'raise']
+
+--- 23 checks, 0 FAIL: []

@@ -1,0 +1,61 @@
+ERROR:xstate_statemachine.base_interpreter:🚨 Machine 'kill_switch' entered the error state: UnhandledEventError("Event 'RELEASE' is not handled in any active state ['kill_switch.cancelling'] and the machine's onUnhandled policy is 'error'.")
+ERROR:xstate_statemachine.interpreter:💥 Service 'fetch_exchange_state' (ID: 'fetch') failed: net
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2405, in _invoke_service_task
+    await produced if inspect.isawaitable(produced) else produced
+    ^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-221ce7c\contracts\charness.py", line 99, in s
+    if isinstance(v, BaseException): raise v
+                                     ^^^^^^^
+RuntimeError: net
+ERROR:xstate_statemachine.interpreter:💥 Service 'fetch_exchange_state' (ID: 'fetch') failed: net
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2405, in _invoke_service_task
+    await produced if inspect.isawaitable(produced) else produced
+    ^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-221ce7c\contracts\charness.py", line 99, in s
+    if isinstance(v, BaseException): raise v
+                                     ^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2405, in _invoke_service_task
+    await produced if inspect.isawaitable(produced) else produced
+    ^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-221ce7c\contracts\charness.py", line 99, in s
+    if isinstance(v, BaseException): raise v
+                                     ^^^^^^^
+RuntimeError: net
+ERROR:xstate_statemachine.interpreter:💥 Service 'fetch_exchange_state' (ID: 'fetch') failed: net
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2405, in _invoke_service_task
+    await produced if inspect.isawaitable(produced) else produced
+    ^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-221ce7c\contracts\charness.py", line 99, in s
+    if isinstance(v, BaseException): raise v
+                                     ^^^^^^^
+RuntimeError: net
+ERROR:xstate_statemachine.interpreter:💥 Service 'fetch_exchange_state' (ID: 'fetch') failed: net
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2405, in _invoke_service_task
+    await produced if inspect.isawaitable(produced) else produced
+    ^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-221ce7c\contracts\charness.py", line 99, in s
+    if isinstance(v, BaseException): raise v
+                                     ^^^^^^^
+RuntimeError: net
+ERROR:xstate_statemachine.interpreter:💥 Service 'fetch_exchange_state' (ID: 'fetch') failed: net
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2405, in _invoke_service_task
+    await produced if inspect.isawaitable(produced) else produced
+    ^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-221ce7c\contracts\charness.py", line 99, in s
+    if isinstance(v, BaseException): raise v
+                                     ^^^^^^^
+RuntimeError: net
+ERROR:xstate_statemachine.interpreter:💥 Service 'fetch_exchange_state' (ID: 'fetch') failed: net
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2405, in _invoke_service_task
+    await produced if inspect.isawaitable(produced) else produced
+    ^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-221ce7c\contracts\charness.py", line 99, in s
+    if isinstance(v, BaseException): raise v
+                                     ^^^^^^^
+RuntimeError: net

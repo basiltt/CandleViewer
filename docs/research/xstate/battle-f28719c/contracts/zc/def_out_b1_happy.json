@@ -1,0 +1,97 @@
+{
+ "states": [
+  "order.lifecycle.partially_filled",
+  "order.protection.sl_missing"
+ ],
+ "status": "running",
+ "context": {
+  "order_id": null,
+  "order_link_id": null,
+  "account_id": null,
+  "symbol": null,
+  "side": null,
+  "qty": "0",
+  "filled_qty": "0",
+  "leaves_qty": "0",
+  "avg_price": null,
+  "seen_exec_ids": [],
+  "last_exchange_update": 0,
+  "recon_misses": 0,
+  "_fault": null,
+  "sl_deadline_us": null
+ },
+ "deferred": 0,
+ "error": null,
+ "actions": [
+  "persist_event",
+  "stamp_validated",
+  "persist_event",
+  "reserve_rate_token",
+  "persist_event",
+  "adopt_ack",
+  "persist_event",
+  "apply_fill",
+  "persist_event",
+  "notify_protection_region",
+  "arm_sl_deadline",
+  "apply_fill",
+  "persist_event",
+  "notify_protection_region",
+  "raise_naked_position_alert",
+  "request_fallback_sl"
+ ],
+ "transitions": [
+  "___xstate_statemachine_init___->['order.lifecycle.draft', 'order.protection.not_required']",
+  "VALIDATE->['order.lifecycle.validated', 'order.protection.not_required']",
+  "SEND->['order.lifecycle.submitting', 'order.protection.not_required']",
+  "done.invoke.place->['order.lifecycle.submitted', 'order.protection.not_required']",
+  "EXEC->['order.lifecycle.partially_filled', 'order.protection.not_required']",
+  "FIRST_FILL->['order.lifecycle.partially_filled', 'order.protection.sl_pending']",
+  "done.invoke.attach_sl->['order.lifecycle.partially_filled', 'order.protection.sl_present']",
+  "EXEC->['order.lifecycle.partially_filled', 'order.protection.sl_present']",
+  "SL_LOST->['order.lifecycle.partially_filled', 'order.protection.sl_missing']"
+ ],
+ "dropped": [],
+ "unhandled": [],
+ "action_errors": [],
+ "guard_errors": [],
+ "service_errors": [],
+ "svc_calls": [
+  "place_order",
+  "attach_native_sl"
+ ],
+ "sends": [
+  {
+   "ev": "VALIDATE",
+   "ok": true,
+   "sec": 0.017092800000682473
+  },
+  {
+   "ev": "SEND",
+   "ok": true,
+   "sec": 0.13866840000264347
+  },
+  {
+   "ev": "EXEC",
+   "ok": true,
+   "sec": 0.0005806999979540706
+  },
+  {
+   "ev": "FIRST_FILL",
+   "ok": true,
+   "sec": 0.0010732000228017569
+  },
+  {
+   "ev": "EXEC",
+   "ok": true,
+   "sec": 0.0006206000107340515
+  },
+  {
+   "ev": "SL_LOST",
+   "ok": true,
+   "sec": 0.00044469995191320777
+  }
+ ],
+ "snapshot_ok": true,
+ "notes": []
+}

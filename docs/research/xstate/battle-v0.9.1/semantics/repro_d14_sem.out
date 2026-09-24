@@ -1,0 +1,9 @@
+hand-built DoneEvent        -> raised UnknownEventError
+_replace demoted            -> raised UnknownEventError
+re_mint(data only, benign)  -> b
+re_mint(type->victim)       -> PAID
+SyncInterpreter {'max_queue_size': 5} -> ValueError
+SyncInterpreter {'overflow_policy': 'drop'} -> accepted
+SyncInterpreter {'overflow_policy': 'raise'} -> accepted
+(self, machine: xstate_statemachine.models.MachineNode[~TContext], input: Optional[Any] = None, clock: Optional[xstate_statemachine.clock.Clock] = None, strict: Optional[bool] = None, max_queue_size: Optional[int] = None, overflow_policy: Optional[Any] = None) -> None
+re_mint(AfterEvent, type->done.invoke.victim) -> b

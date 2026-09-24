@@ -1,0 +1,42 @@
+{
+ "[async]p4a/B20 after-expiry fires on the clock, not early": {
+  "pass": true,
+  "note": "{\"locked\": [\"risk_lockout.locked\"], \"t=4999\": [\"risk_lockout.locked\"], \"t=5001\": [\"risk_lockout.clear\"], \"resumed\": false}"
+ },
+ "[async]p4b/#212 raise(delay=) heartbeat is a timer, not a chain": {
+  "pass": true,
+  "note": "{\"limit\": 5, \"beats\": [21, 23, 25, 27, 29, 31], \"total\": 31, \"status\": \"running\", \"error\": null}"
+ },
+ "[async]p4b/#212 no RunawayChainError at maxIterations beats": {
+  "pass": true,
+  "note": "{\"error\": null}"
+ },
+ "[async]p4c/#213 v3 carries the armed raise(delay=) with remaining_ms": {
+  "pass": true,
+  "note": "{\"version\": 3, \"sched\": [{\"kind\": \"event\", \"type\": \"PING\", \"payload\": {}, \"remaining_ms\": 3000.0, \"send_id\": \"beat\"}]}"
+ },
+ "[async]p4c/#213 restore re-arms it at the REMAINING delay, not from zero": {
+  "pass": true,
+  "note": "{\"t0\": 0, \"t+2999\": 0, \"t+3001\": 2}"
+ },
+ "[async]p4c/#128 `after` is absent from v3 scheduled_sends (by design)": {
+  "pass": true,
+  "note": "{\"sched\": []}"
+ },
+ "[async]p4c/#128 default restore parks the `after` state forever": {
+  "pass": true,
+  "note": "{\"after_50s\": [\"risk_lockout.locked\"], \"has_dormant_timers\": true}"
+ },
+ "[async]p4c/#128 restart_timers=True re-arms it FROM ZERO (wrapper duty)": {
+  "pass": true,
+  "note": "{\"t+4000_remaining\": [\"risk_lockout.locked\"], \"t+5100_full\": [\"risk_lockout.clear\"]}"
+ },
+ "[async]p4d/#205+#214 v2 downgrade refused at minimum_version=3": {
+  "pass": true,
+  "note": "{\"refused\": \"SnapshotVersionError(\\\"Snapshot version 2 is below the caller's minimum_version=3. A payload this old carries no drift fingerprint; refuse it, or lower the floor if the source is trusted.\\\")\"}"
+ },
+ "[async]p4d/#214 forged restored event meets strict (refused, not run)": {
+  "pass": true,
+  "note": "{\"raised\": null, \"state\": [\"risk_lockout.locked\"], \"error\": null, \"invalid_hook\": [], \"dropped\": []}"
+ }
+}

@@ -1,0 +1,78 @@
+{
+  "probe": "w3_restore_lifecycle_hook",
+  "py": "3.13.7",
+  "claim": "#230: plugins= registered before restored events are admitted; 'same effect as .use() on the result'",
+  "holds_for": "on_invalid_event (verified exactly-once in w2/P2, 320 cases)",
+  "fails_for": "on_interpreter_start -- never fires on a restored interpreter, either engine, either route",
+  "site": "interpreter.py:582-624 resume branch returns before the plugin start-hook loop at interpreter.py:664; sync_interpreter.py:388 same shape",
+  "cells": [
+    {
+      "engine": "async",
+      "kind": "def",
+      "route": "plugins=",
+      "control_starts": 1,
+      "control_stops": 1,
+      "restored_starts": 1,
+      "restored_stops": 1,
+      "restored_machine_is_live": true,
+      "ok": true
+    },
+    {
+      "engine": "async",
+      "kind": "def",
+      "route": ".use()",
+      "control_starts": 1,
+      "control_stops": 1,
+      "restored_starts": 1,
+      "restored_stops": 1,
+      "restored_machine_is_live": true,
+      "ok": true
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "route": "plugins=",
+      "control_starts": 1,
+      "control_stops": 1,
+      "restored_starts": 1,
+      "restored_stops": 1,
+      "restored_machine_is_live": true,
+      "ok": true
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "route": ".use()",
+      "control_starts": 1,
+      "control_stops": 1,
+      "restored_starts": 1,
+      "restored_stops": 1,
+      "restored_machine_is_live": true,
+      "ok": true
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "route": "plugins=",
+      "control_starts": 1,
+      "control_stops": 1,
+      "restored_starts": 1,
+      "restored_stops": 1,
+      "restored_machine_is_live": true,
+      "ok": true
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "route": ".use()",
+      "control_starts": 1,
+      "control_stops": 1,
+      "restored_starts": 1,
+      "restored_stops": 1,
+      "restored_machine_is_live": true,
+      "ok": true
+    }
+  ],
+  "failures": [],
+  "verdict": "CLEAN"
+}

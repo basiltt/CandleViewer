@@ -1,0 +1,126 @@
+{
+ "[async]B11/build-strictConfig-clean": {
+  "pass": true,
+  "note": "0 warnings []"
+ },
+ "[async]B11/neg-root-key": {
+  "pass": true,
+  "note": "Machine 'recording' has unknown config key(s) -- recording: 'maxIteration' (did you mean 'maxIterations'?). Unknown keys are ignored by the parser, so a misspel"
+ },
+ "[async]B11/neg-nested-state-key": {
+  "pass": true,
+  "note": "Machine 'recording' has unknown config key(s) -- recording.degraded: 'entyr' (did you mean 'entry'?). Unknown keys are ignored by the parser, so a misspelled ke"
+ },
+ "[async]B11/neg-transition-key": {
+  "pass": true,
+  "note": "('idle', 'REASON_ADDED') | Machine 'recording' has unknown config key(s) -- recording.idle on['REASON_ADDED']: 'cnod' (did you mean 'cond'?). Unknown keys are ignored "
+ },
+ "[async]B11/neg-invoke-key": {
+  "pass": true,
+  "note": "starting | Machine 'recording' has unknown config key(s) -- recording.starting invoke[sub]: 'scr' (did you mean 'src'?). Unknown keys are ignored by th"
+ },
+ "[async]B11/metadata-accepted-everywhere": {
+  "pass": true,
+  "note": "0 warnings"
+ },
+ "[async]B12/build-strictConfig-clean": {
+  "pass": true,
+  "note": "0 warnings []"
+ },
+ "[async]B12/neg-root-key": {
+  "pass": true,
+  "note": "Machine 'replay' has unknown config key(s) -- replay: 'maxIteration' (did you mean 'maxIterations'?). Unknown keys are ignored by the parser, so a misspelled ke"
+ },
+ "[async]B12/neg-nested-state-key": {
+  "pass": true,
+  "note": "Machine 'replay' has unknown config key(s) -- replay.buffering: 'entyr' (did you mean 'entry'?). Unknown keys are ignored by the parser, so a misspelled key sil"
+ },
+ "[async]B12/neg-transition-key": {
+  "pass": true,
+  "note": "('created', 'PREPARE') | Machine 'replay' has unknown config key(s) -- replay.created on['PREPARE']: 'cnod' (did you mean 'cond'?). Unknown keys are ignored by the p"
+ },
+ "[async]B12/neg-invoke-key": {
+  "pass": true,
+  "note": "buffering | Machine 'replay' has unknown config key(s) -- replay.buffering invoke[seek]: 'scr' (did you mean 'src'?). Unknown keys are ignored by the pa"
+ },
+ "[async]B12/metadata-accepted-everywhere": {
+  "pass": true,
+  "note": "0 warnings"
+ },
+ "[async]B13/build-strictConfig-clean": {
+  "pass": true,
+  "note": "0 warnings []"
+ },
+ "[async]B13/neg-root-key": {
+  "pass": true,
+  "note": "Machine 'ws_conn' has unknown config key(s) -- ws_conn: 'maxIteration' (did you mean 'maxIterations'?). Unknown keys are ignored by the parser, so a misspelled "
+ },
+ "[async]B13/neg-nested-state-key": {
+  "pass": true,
+  "note": "Machine 'ws_conn' has unknown config key(s) -- ws_conn.authenticating: 'entyr' (did you mean 'entry'?). Unknown keys are ignored by the parser, so a misspelled "
+ },
+ "[async]B13/neg-transition-key": {
+  "pass": true,
+  "note": "('disconnected', 'CONNECT') | Machine 'ws_conn' has unknown config key(s) -- ws_conn.disconnected on['CONNECT']: 'cnod' (did you mean 'cond'?). Unknown keys are ignored b"
+ },
+ "[async]B13/neg-invoke-key": {
+  "pass": true,
+  "note": "connecting | Machine 'ws_conn' has unknown config key(s) -- ws_conn.connecting invoke[dial]: 'scr' (did you mean 'src'?). Unknown keys are ignored by the"
+ },
+ "[async]B13/metadata-accepted-everywhere": {
+  "pass": true,
+  "note": "0 warnings"
+ },
+ "[async]B14/build-strictConfig-clean": {
+  "pass": true,
+  "note": "0 warnings []"
+ },
+ "[async]B14/neg-root-key": {
+  "pass": true,
+  "note": "Machine 'book' has unknown config key(s) -- book: 'maxIteration' (did you mean 'maxIterations'?). Unknown keys are ignored by the parser, so a misspelled key si"
+ },
+ "[async]B14/neg-nested-state-key": {
+  "pass": true,
+  "note": "Machine 'book' has unknown config key(s) -- book.desynced: 'entyr' (did you mean 'entry'?). Unknown keys are ignored by the parser, so a misspelled key silently"
+ },
+ "[async]B14/neg-transition-key": {
+  "pass": true,
+  "note": "('init', 'SUBSCRIBE') | Machine 'book' has unknown config key(s) -- book.init on['SUBSCRIBE']: 'cnod' (did you mean 'cond'?). Unknown keys are ignored by the parser"
+ },
+ "[async]B14/neg-invoke-key": {
+  "pass": true,
+  "note": "chart has no invoke - n/a"
+ },
+ "[async]B14/metadata-accepted-everywhere": {
+  "pass": true,
+  "note": "0 warnings"
+ },
+ "[async]B15/build-strictConfig-clean": {
+  "pass": true,
+  "note": "0 warnings []"
+ },
+ "[async]B15/neg-root-key": {
+  "pass": true,
+  "note": "Machine 'paper_account' has unknown config key(s) -- paper_account: 'maxIteration' (did you mean 'maxIterations'?). Unknown keys are ignored by the parser, so a"
+ },
+ "[async]B15/neg-nested-state-key": {
+  "pass": true,
+  "note": "Machine 'paper_account' has unknown config key(s) -- paper_account.active: 'entyr' (did you mean 'entry'?). Unknown keys are ignored by the parser, so a misspel"
+ },
+ "[async]B15/neg-transition-key": {
+  "pass": true,
+  "note": "('active', 'MARK_UPDATE') | Machine 'paper_account' has unknown config key(s) -- paper_account.active on['MARK_UPDATE']: 'cnod' (did you mean 'cond'?). Unknown keys are"
+ },
+ "[async]B15/neg-invoke-key": {
+  "pass": true,
+  "note": "chart has no invoke - n/a"
+ },
+ "[async]B15/metadata-accepted-everywhere": {
+  "pass": true,
+  "note": "0 warnings"
+ },
+ "[async]219/no-catalogue-action-awaits-own-send": {
+  "pass": true,
+  "note": "no B11-B15 action is specified as an in-step wait-send; deadline actions (schedule_*/arm_*/rearm_*) are fire-and-forget timers. candidates=[]"
+ }
+}

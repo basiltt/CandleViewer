@@ -1,0 +1,54 @@
+{
+ "[async]218/heartbeat handles bounded": {
+  "pass": true,
+  "note": "{\"peak_handles\": 1, \"beats\": 200, \"status\": \"running\", \"error\": \"None\", \"chain_trips\": 0}"
+ },
+ "[async]218/heartbeat survives 200 beats (#212 live)": {
+  "pass": true,
+  "note": "{\"beats\": 200, \"status\": \"running\"}"
+ },
+ "[async]218/heartbeat does not trip the chain budget": {
+  "pass": true,
+  "note": "chain_trips=0 last=None"
+ },
+ "[async]219/self send(wait=True) inside an action raises, no hang": {
+  "pass": true,
+  "note": "{\"seen\": {\"r\": \"ReentrantWaitError\"}, \"sec\": 0.001, \"status\": \"error\", \"states\": [\"kill_switch.cancelling\"]}"
+ },
+ "[async]219/deferred receipt (ensure_future) still works": {
+  "pass": true,
+  "note": "{\"hatch\": \"resolved\", \"states\": [\"kill_switch.cancelling\"], \"status\": \"error\"}"
+ },
+ "[async]219/sync engine refuses the same shape (wait=True)": {
+  "pass": true,
+  "note": "{\"ran\": true, \"r\": \"ReentrantWaitError\", \"ff\": \"accepted\"}"
+ },
+ "[async]221/re-persist without start() keeps scheduled_sends": {
+  "pass": true,
+  "note": "{\"n_before\": 1, \"n_after\": 1, \"records\": [{\"kind\": \"event\", \"type\": \"EXPIRY_DUE\", \"payload\": {}, \"remaining_ms\": 3000.0, \"send_id\": \"expiry\"}]}"
+ },
+ "[async]221/compacted blob fires on the REMAINDER (3000ms), not from zero": {
+  "pass": true,
+  "note": "{\"at_2999\": [\"risk_lockout.locked\"], \"at_3001\": [\"risk_lockout.clear\"]}"
+ },
+ "[async]222/chain trip is latched and counted": {
+  "pass": true,
+  "note": "{\"trips\": 1, \"latch\": \"RunawayChainError(\\\"Machine 'kill_switch' exceeded 5 chained self-generated events in one macrostep a\", \"hook\": [[\"\", \"RunawayChainError(\\\"Machine 'kill_switch' exceeded 5 chained self-generated event\"]], \"states\": [\"kill_switch.flattening\"]}"
+ },
+ "[async]222/benign event does not erase the latch": {
+  "pass": true,
+  "note": "{\"trips_after\": 1, \"latch_after\": \"RunawayChainError(\\\"Machine 'kill_switch' exceeded 5 chained self-generated events in one macrostep a\", \"last_error\": \"UnhandledEventError(\\\"Event 'RELEASE' is not handled in any active state ['kill_switch.flattening'] a\"}"
+ },
+ "[async]222/hook fires once per trip": {
+  "pass": true,
+  "note": "{\"hook_n\": 1, \"trips\": 1}"
+ },
+ "[async]222/clear_chain_error clears the latch, keeps the count": {
+  "pass": true,
+  "note": "{\"latch\": \"None\", \"trips\": 1}"
+ },
+ "[async]222/chain_trips == 0 on every happy path": {
+  "pass": true,
+  "note": "{\"B16\": {\"trips\": 0, \"states\": [\"session.auth.active\", \"session.elevation.elevated\"], \"latch\": \"None\"}, \"B17\": {\"trips\": 0, \"states\": [\"live_gate.eligible\"], \"latch\": \"None\"}, \"B18\": {\"trips\": 0, \"states\": [\"kill_switch.clear\"], \"latch\": \"None\"}, \"B19\": {\"trips\": 0, \"states\": [\"reconciliation.idle\"], \"latch\": \"None\"}, \"B20\": {\"trips\": 0, \"states\": [\"risk_lockout.clear\"], \"latch\": \"None\"}}"
+ }
+}

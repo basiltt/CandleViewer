@@ -1,0 +1,38 @@
+[
+ {
+  "id": "R5-149a",
+  "inv": "#149",
+  "title": "B11 plain-def service does not block the loop (service_executor)",
+  "detail": {
+   "ok": true,
+   "loop_ticks_during_blocking_service": 30,
+   "state_while_blocking": [
+    "recording.recording"
+   ],
+   "final": [
+    "recording.recording"
+   ],
+   "verdict": "loop kept turning -> CV-C32 (all services async def) is no longer required for loop liveness"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "R5-149b",
+  "inv": "#149",
+  "title": "B11 plain-def service: event sent DURING it is still served",
+  "detail": {
+   "ok": true,
+   "send_latency_s": 0.0,
+   "receipt": "Receipt(state_ids=frozenset({'recording.recording'}), changed=True, error=None, deferred=False, denied=False)",
+   "reasons": [
+    "alerts",
+    "chart"
+   ],
+   "final": [
+    "recording.recording"
+   ],
+   "note": "latency < service duration => the entering macrostep awaits the executor without blocking the inbox"
+  },
+  "status": "PASS"
+ }
+]

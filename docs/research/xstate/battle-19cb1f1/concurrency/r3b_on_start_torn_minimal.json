@@ -1,0 +1,41 @@
+{
+  "probe": "r3b_on_start_torn_minimal",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "engine": "async",
+      "kind": "def",
+      "disposition": "refused",
+      "status": null,
+      "state_ids": null,
+      "configuration": null,
+      "healthy_state_ids": [
+        "r3b.a"
+      ]
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "refused",
+      "status": null,
+      "state_ids": null,
+      "configuration": null,
+      "healthy_state_ids": [
+        "r3b.a"
+      ]
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "refused",
+      "status": null,
+      "state_ids": null,
+      "configuration": null,
+      "healthy_state_ids": [
+        "r3b.b"
+      ]
+    }
+  ],
+  "torn": [],
+  "result": "PASS"
+}

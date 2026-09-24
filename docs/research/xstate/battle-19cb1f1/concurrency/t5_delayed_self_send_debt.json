@@ -1,0 +1,95 @@
+{
+  "probe": "t5_delayed_self_send_debt",
+  "py": "3.13.7",
+  "claim": "#206 a delayed self-send is engine work; the 1ms ping-pong trips at the same lap as the zero-delay one",
+  "limit": 12,
+  "rows": [
+    {
+      "kind": "def",
+      "delay_ms": null,
+      "laps": 13,
+      "last_error": "RunawayChainError",
+      "state": [
+        "p.b"
+      ],
+      "tripped": true,
+      "case": "P1_zero_delay"
+    },
+    {
+      "kind": "def",
+      "delay_ms": 1,
+      "laps": 20806,
+      "last_error": "NoneType",
+      "state": [
+        "p.a"
+      ],
+      "tripped": false,
+      "case": "P2_1ms_delay"
+    },
+    {
+      "kind": "async def",
+      "delay_ms": null,
+      "laps": 13,
+      "last_error": "RunawayChainError",
+      "state": [
+        "p.b"
+      ],
+      "tripped": true,
+      "case": "P1_zero_delay"
+    },
+    {
+      "kind": "async def",
+      "delay_ms": 1,
+      "laps": 19071,
+      "last_error": "NoneType",
+      "state": [
+        "p.b"
+      ],
+      "tripped": false,
+      "case": "P2_1ms_delay"
+    }
+  ],
+  "p3_100_machines": {
+    "def": {
+      "machines": 100,
+      "tripped": 0,
+      "lap_histogram": {
+        "293": 49,
+        "294": 51
+      }
+    },
+    "async def": {
+      "machines": 100,
+      "tripped": 0,
+      "lap_histogram": {
+        "289": 8,
+        "290": 92
+      }
+    }
+  },
+  "violations": [
+    [
+      "def",
+      "P2 1ms delayed self-send cycle did not trip",
+      20806,
+      "NoneType"
+    ],
+    [
+      "async def",
+      "P2 1ms delayed self-send cycle did not trip",
+      19071,
+      "NoneType"
+    ],
+    [
+      "def",
+      "P3 not every machine tripped",
+      0
+    ],
+    [
+      "async def",
+      "P3 not every machine tripped",
+      0
+    ]
+  ],
+  "result": "FAIL"
+}

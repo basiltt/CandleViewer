@@ -1,0 +1,71 @@
+{
+  "def": {
+    "kind": "def",
+    "svc": 7,
+    "acts": 6,
+    "lanes": {
+      "priority": 7
+    },
+    "lane_first8": [
+      "priority",
+      "priority",
+      "priority",
+      "priority",
+      "priority",
+      "priority",
+      "priority"
+    ],
+    "settle_iterations_samples": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "settle_iterations_max": 0,
+    "raise_depth": 0,
+    "last_error": "RunawayChainError"
+  },
+  "async": {
+    "kind": "async",
+    "svc": 879,
+    "acts": 879,
+    "lanes": {
+      "inbox_send": 60
+    },
+    "lane_first8": [
+      "inbox_send",
+      "inbox_send",
+      "inbox_send",
+      "inbox_send",
+      "inbox_send",
+      "inbox_send",
+      "inbox_send",
+      "inbox_send"
+    ],
+    "settle_iterations_samples": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "settle_iterations_max": 0,
+    "raise_depth": 0,
+    "last_error": "RuntimeError"
+  }
+}

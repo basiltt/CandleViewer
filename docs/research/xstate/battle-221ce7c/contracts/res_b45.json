@@ -1,0 +1,138 @@
+{
+ "B4.happy.completed": {
+  "pass": true,
+  "note": "['oco.completed']"
+ },
+ "B4.happy.arm_then_settle": {
+  "pass": true,
+  "note": "['submit_both_legs', 'settle_other_leg']"
+ },
+ "B4.happy.snapshot": {
+  "pass": true,
+  "note": "[]"
+ },
+ "B4.overshoot.completed": {
+  "pass": true,
+  "note": "['oco.completed']"
+ },
+ "B4.overshoot.alerts": {
+  "pass": true,
+  "note": "['record_child_ids', 'record_fill_b', 'raise_warning_alert', 'journal_double_fill']"
+ },
+ "B4.overshoot.flatten_called": {
+  "pass": true,
+  "note": "['submit_both_legs', 'reduce_only_market_excess']"
+ },
+ "B4.arm_fail.failed": {
+  "pass": true,
+  "note": "['oco.failed']"
+ },
+ "B4.arm_fail.map_error": {
+  "pass": true,
+  "note": "['map_error']"
+ },
+ "B4.settle.retry_bounded": {
+  "pass": true,
+  "note": "settle_other_leg x3 -> ['oco.failed']"
+ },
+ "B4.settle.retry_terminal": {
+  "pass": true,
+  "note": "['oco.failed']"
+ },
+ "B4.settle.alert": {
+  "pass": true,
+  "note": ""
+ },
+ "B4.reconcile.completed": {
+  "pass": true,
+  "note": "['oco.completed']"
+ },
+ "B4.R6-01.pingpong_terminates": {
+  "pass": true,
+  "note": "[{'ev': 'LEG_A_FILL', 'ok': True, 'sec': 0.00015539999003522098}]"
+ },
+ "B4.R6-01.pingpong_settles": {
+  "pass": true,
+  "note": "states=['oco.racing'] settle x1 status=running"
+ },
+ "B4.cancel.cancelled": {
+  "pass": true,
+  "note": "['oco.cancelled']"
+ },
+ "B4.parity.states": {
+  "pass": true,
+  "note": "async=['oco.completed'] sync=['oco.completed']"
+ },
+ "B4.parity.svc": {
+  "pass": true,
+  "note": "async=['submit_both_legs', 'settle_other_leg'] sync=['submit_both_legs', 'settle_other_leg']"
+ },
+ "B5.refill.loop_progresses": {
+  "pass": true,
+  "note": "states=['iceberg.waiting_refill'] slices=2"
+ },
+ "B5.refill.two_slices": {
+  "pass": true,
+  "note": "2"
+ },
+ "B5.refill.snapshot": {
+  "pass": true,
+  "note": "[]"
+ },
+ "B5.complete.completed": {
+  "pass": true,
+  "note": "['iceberg.completed']"
+ },
+ "B5.preflight.failed": {
+  "pass": true,
+  "note": "['iceberg.failed']"
+ },
+ "B5.preflight.no_submit": {
+  "pass": true,
+  "note": "[]"
+ },
+ "B5.R6-01.reprice_terminates": {
+  "pass": true,
+  "note": "states=['iceberg.cooling_down'] submit_child x2 status=running"
+ },
+ "B5.R6-01.reprice_bounded": {
+  "pass": true,
+  "note": "submit_child x2"
+ },
+ "B5.fail_ladder.terminal": {
+  "pass": true,
+  "note": "states=['iceberg.failed'] submit_child x4"
+ },
+ "B5.fail_ladder.bounded": {
+  "pass": true,
+  "note": "submit_child x4"
+ },
+ "B5.pause.resume_to_working": {
+  "pass": true,
+  "note": "['iceberg.working']"
+ },
+ "B5.pause.reconciled": {
+  "pass": true,
+  "note": "['submit_child', 'reconcile_children']"
+ },
+ "B5.disconnect.freeze_then_fail": {
+  "pass": true,
+  "note": "['iceberg.failed']"
+ },
+ "B5.flat.cancelled": {
+  "pass": true,
+  "note": "['iceberg.cancelled']"
+ },
+ "B5.R6-03.observed": {
+  "pass": true,
+  "note": "submit_child x117 states=['iceberg.submitting_slice'] status=running err=None action_errors=116"
+ },
+ "B5.parity.states": {
+  "pass": true,
+  "note": "async=['iceberg.working'] sync=['iceberg.working']"
+ },
+ "B5.parity.context": {
+  "pass": true,
+  "note": "async={'algo_id': None, 'total_qty': '0', 'remaining_qty': '0', 'slices_done': 2, 'max_slices': 450, 'active_child_id': None, 'post_only_rejects': 0, 'next_refill_at_us': None, 'failure_count': 0}\nsync={'algo_id': None, 'total_qty': '0', 'remaining_qty': '0', 'slices_done': 2, 'max_slices': 450, 'active_child_id': None, 'post_only_rejects': 0, 'next_refill_at_us': None, 'failure_count': 0}"
+ }
+}

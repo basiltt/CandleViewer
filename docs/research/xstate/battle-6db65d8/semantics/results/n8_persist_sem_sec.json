@@ -1,0 +1,253 @@
+[
+ {
+  "id": "B1",
+  "title": "Snapshot from every hook incl. INITIAL DESCENT and CHILD entry actions, both engines x both action kinds: refused-or-legal, never torn",
+  "intent": "#182 in-flight over start(), #183/#187 child + action hooks",
+  "detail": {
+   "ok": true,
+   "snapshots_taken": 15,
+   "runs": [
+    {
+     "engine": "async",
+     "kind": "plain",
+     "torn": [],
+     "refused": 3,
+     "legal": 2,
+     "untyped": []
+    },
+    {
+     "engine": "sync",
+     "kind": "plain",
+     "torn": [],
+     "refused": 4,
+     "legal": 1,
+     "untyped": []
+    },
+    {
+     "engine": "async",
+     "kind": "async",
+     "torn": [],
+     "refused": 3,
+     "legal": 2,
+     "untyped": []
+    }
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B2",
+  "title": "configuration/state_ids disagreement fuzz (400 mutations): every disagreeing pair is refused SnapshotCorruptError, never silently picked",
+  "intent": "#186 configuration must agree with state_ids",
+  "detail": {
+   "ok": true,
+   "disagreeing_blobs_tested": 265,
+   "silently_accepted": 0,
+   "examples": [],
+   "untyped_rejections": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B3",
+  "title": "machine_hash null / absent / wrong on v0, v1 and v2 blobs: a versioned payload without a usable hash is DRIFT, not a free pass",
+  "intent": "#185 bypass keyed on declared version",
+  "detail": {
+   "ok": true,
+   "silently_restored_unverified": [],
+   "untyped": [],
+   "matrix": [
+    {
+     "version": 0,
+     "hash": "null",
+     "result": "RESTORED"
+    },
+    {
+     "version": 0,
+     "hash": "absent",
+     "result": "RESTORED"
+    },
+    {
+     "version": 0,
+     "hash": "wrong",
+     "result": "SnapshotDriftError"
+    },
+    {
+     "version": 0,
+     "hash": "intact",
+     "result": "RESTORED"
+    },
+    {
+     "version": 1,
+     "hash": "null",
+     "result": "SnapshotDriftError"
+    },
+    {
+     "version": 1,
+     "hash": "absent",
+     "result": "SnapshotDriftError"
+    },
+    {
+     "version": 1,
+     "hash": "wrong",
+     "result": "SnapshotDriftError"
+    },
+    {
+     "version": 1,
+     "hash": "intact",
+     "result": "RESTORED"
+    },
+    {
+     "version": 2,
+     "hash": "null",
+     "result": "SnapshotDriftError"
+    },
+    {
+     "version": 2,
+     "hash": "absent",
+     "result": "SnapshotDriftError"
+    },
+    {
+     "version": 2,
+     "hash": "wrong",
+     "result": "SnapshotDriftError"
+    },
+    {
+     "version": 2,
+     "hash": "intact",
+     "result": "RESTORED"
+    }
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B4",
+  "title": "strict + wildcard matrix: a '*' handler must NOT make an undeclared event name legal (declared / undeclared / wildcard-only)",
+  "intent": "#190 is_known_event answers the DECLARATION question",
+  "detail": {
+   "ok": true,
+   "matrix": {
+    "wild_declared": {
+     "ok": null,
+     "error": null
+    },
+    "wild_undeclared": {
+     "raised": "UnknownEventError"
+    },
+    "nowild_declared": {
+     "ok": null,
+     "error": null
+    },
+    "nowild_undeclared": {
+     "raised": "UnknownEventError"
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B5",
+  "title": "Receipt matrix ok / denied / guard-crash / onUnhandled-error kill is injective and the KILL reaches the SENDER's receipt - both engines",
+  "intent": "#189: a success-shaped receipt must not go back to the killer's caller",
+  "detail": {
+   "ok": true,
+   "problems": [],
+   "matrix": {
+    "sync": {
+     "ok_case": {
+      "sig": [
+       false,
+       true,
+       false,
+       true
+      ],
+      "error": null
+     },
+     "denied": {
+      "sig": [
+       true,
+       false,
+       false,
+       false
+      ],
+      "error": "UnhandledEventError"
+     },
+     "guard_crash": {
+      "sig": [
+       false,
+       false,
+       false,
+       false
+      ],
+      "error": "RuntimeError"
+     },
+     "unhandled_kill": {
+      "sig": [
+       false,
+       false,
+       false,
+       false
+      ],
+      "error": "UnhandledEventError"
+     }
+    },
+    "async": {
+     "ok_case": {
+      "sig": [
+       false,
+       true,
+       false,
+       true
+      ],
+      "error": null
+     },
+     "denied": {
+      "sig": [
+       true,
+       false,
+       false,
+       false
+      ],
+      "error": "UnhandledEventError"
+     },
+     "guard_crash": {
+      "sig": [
+       false,
+       false,
+       false,
+       false
+      ],
+      "error": "RuntimeError"
+     },
+     "unhandled_kill": {
+      "sig": [
+       false,
+       false,
+       false,
+       false
+      ],
+      "error": "UnhandledEventError"
+     }
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B6",
+  "title": "Forge the ENGINE-COMPLETION marker from user code (Event subclass, dataclasses.replace, internal=True, sendTo of a captured DoneEvent)",
+  "intent": "#179/#180: provenance must not be attacker-settable",
+  "detail": {
+   "ok": true,
+   "findings": [],
+   "public_send_signature": "(event_or_type: Union[str, Dict[str, Any], xstate_statemachine.events.Event, xstate_statemachine.events.DoneEvent, xstate_statemachine.events.AfterEvent, xstate_statemachine.events.ErrorEvent], /, *, wait: bool = False, priority: bool = False, **payload: Any) -> 'Awaitable[Optional[Receipt]]'",
+   "send_threadsafe_signature": "(event_or_type: Union[str, Dict[str, Any], xstate_statemachine.events.Event, xstate_statemachine.events.DoneEvent, xstate_statemachine.events.AfterEvent, xstate_statemachine.events.ErrorEvent], internal: Optional[bool] = None, **payload: Any) -> 'concurrent.futures.Future[None]'",
+   "forged_completions_charged_as_chain_budget": 0,
+   "dataclasses_replace": "accepted",
+   "raise_depth_after_200_forgeries": 0,
+   "chain_owed_after": 0
+  },
+  "status": "PASS"
+ }
+]

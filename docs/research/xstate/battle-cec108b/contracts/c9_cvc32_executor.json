@@ -1,0 +1,51 @@
+{
+ "loop_stall": [
+  {
+   "service": "async def",
+   "executor": "default",
+   "heartbeat_ticks_during_service": 14,
+   "max_heartbeat_gap_s": 0.033,
+   "ping_receipt_latency_s": 0.001,
+   "ping_ran": 1,
+   "final": [
+    "x.ok"
+   ]
+  },
+  {
+   "service": "plain def",
+   "executor": "default",
+   "heartbeat_ticks_during_service": 15,
+   "max_heartbeat_gap_s": 0.033,
+   "ping_receipt_latency_s": 0.441,
+   "ping_ran": 0,
+   "final": [
+    "x.ok"
+   ]
+  },
+  {
+   "service": "plain def",
+   "executor": "custom",
+   "heartbeat_ticks_during_service": 16,
+   "max_heartbeat_gap_s": 0.034,
+   "ping_receipt_latency_s": 0.437,
+   "ping_ran": 0,
+   "final": [
+    "x.ok"
+   ]
+  }
+ ],
+ "ordering": [
+  {
+   "service": "async def",
+   "outcomes": [
+    "x.bad"
+   ]
+  },
+  {
+   "service": "plain def",
+   "outcomes": [
+    "x.ok"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,218 @@
+{
+ "B2/init": {
+  "pass": true,
+  "note": "['trade_group.draft']"
+ },
+ "B2/confirm-submitting": {
+  "pass": true,
+  "note": "['trade_group.submitting']"
+ },
+ "B2/INV-B2-b-not-resolved-early": {
+  "pass": true,
+  "note": "after 1/2 legs: ['trade_group.submitting'] open=1"
+ },
+ "B2/happy-open": {
+  "pass": true,
+  "note": "['trade_group.open'] open=2 (raise_evaluate chain drove EVALUATE)"
+ },
+ "B2/INV-B2-b-sum-le-total": {
+  "pass": true,
+  "note": "{'legs_open': 2, 'legs_failed': 0, 'legs_skipped': 0, 'legs_total': 2}"
+ },
+ "B2/happy-closed": {
+  "pass": true,
+  "note": "['trade_group.closed']"
+ },
+ "B2/INV-B2-c-all-or-none-unwinds": {
+  "pass": true,
+  "note": "['trade_group.failed'] trace=['arm_quiesce_deadline', 'count_open', 'count_failed', 'persist_unwind_plan', 'mark_unwound']"
+ },
+ "B2/abort-on-first-partially-open": {
+  "pass": true,
+  "note": "['trade_group.partially_open'] (aborting.always resolved) stop_submitting=True"
+ },
+ "B2/quiesce-zero-open-failed": {
+  "pass": true,
+  "note": "['trade_group.failed'] quiesced=True"
+ },
+ "B2/INV-B2-a-status-pure-function": {
+  "pass": true,
+  "note": "guards evaluated: ['all_non_skipped_open', 'policy_all_or_none_and_any_failed', 'quiesced_and_some_open', 'quiesced_and_zero_open'] (stub reads context only; verified by construction - every guard impl above is a lambda over ctx)"
+ },
+ "B2/snapshot-never-midstep-at-quiescence": {
+  "pass": true,
+  "note": "refusals=[]"
+ },
+ "B2/snapshot-resume-state-parity": {
+  "pass": true,
+  "note": "ref=['trade_group.closed']"
+ },
+ "B2/snapshot-resume-action-trace-parity": {
+  "pass": true,
+  "note": "len(ref)=5 diffs=[]"
+ },
+ "B3/init-always-chain": {
+  "pass": true,
+  "note": "['leg.submitting'] size_from_profile=1"
+ },
+ "B3/INV-B3-a-sized-once": {
+  "pass": true,
+  "note": "size_from_profile fired 1x"
+ },
+ "B3/first-exec-partially-filled": {
+  "pass": true,
+  "note": "['leg.partially_filled'] ladder=1"
+ },
+ "B3/exec-completes-leg": {
+  "pass": true,
+  "note": "['leg.filled'] filled_qty=2"
+ },
+ "B3/INV-B3-b-ladder-once": {
+  "pass": true,
+  "note": "place_tp_ladder_once fired 1x (only on open->partially_filled edge; a re-entry of `open` after restore WOULD fire it again - idempotency must live in the action, the machine does not provide it)"
+ },
+ "B3/INV-B3-d-verify-sl-runs": {
+  "pass": true,
+  "note": "svc=['cancel_children_svc', 'reduce_only_close', 'poll_until_flat', 'assert_native_sl'] ids=['leg.error']"
+ },
+ "B3/INV-B3-e-close-attempts-bounded": {
+  "pass": true,
+  "note": "['leg.error'] close_attempts=1 mark_incomplete=True naked_alert=True"
+ },
+ "B3/INV-B3-e-retry-terminates": {
+  "pass": true,
+  "note": "['leg.error'] attempts=3 (cap guard close_attempts<3)"
+ },
+ "B3/INV-B3-c-authoritative-read": {
+  "pass": true,
+  "note": "read_authoritative_position_qty 3x vs close_attempts 3"
+ },
+ "B3/resolving-by-lookup-not-resubmit": {
+  "pass": true,
+  "note": "['leg.open'] spawn_entry_order 0->0 lookup=1"
+ },
+ "B3/INV-5-exec-during-resolving-survives": {
+  "pass": true,
+  "note": "deferred_at_send=1 accumulate_fill=1 ids=['leg.partially_filled'] defer_action=0"
+ },
+ "B3/snapshot-never-midstep-at-quiescence": {
+  "pass": true,
+  "note": "refusals=[]"
+ },
+ "B3/snapshot-resume-state-parity": {
+  "pass": true,
+  "note": "ref=['leg.closing']"
+ },
+ "B3/snapshot-resume-action-trace-parity": {
+  "pass": true,
+  "note": "len(ref)=6 diffs=[]"
+ },
+ "B4/init-arming-to-racing": {
+  "pass": true,
+  "note": "['oco.racing'] record_child_ids=True"
+ },
+ "B4/settle-to-completing": {
+  "pass": true,
+  "note": "['oco.completing'] filled_a=1"
+ },
+ "B4/INV-B4-b-completed-needs-children-terminal": {
+  "pass": true,
+  "note": "['oco.completed']"
+ },
+ "B4/INV-B4-d-fill-during-settlement-applied": {
+  "pass": false,
+  "note": "record_fill_b=0 deferred_at_send=1 receipt.deferred=True defer_action=0 ids=['oco.completing']"
+ },
+ "B4/INV-B4-a-both-fills-recorded": {
+  "pass": false,
+  "note": "filled_a=1 filled_b=0"
+ },
+ "B4/INV-B4-c-overshoot-reduce-only": {
+  "pass": true,
+  "note": "['oco.completing'] svc=['submit_both_legs', 'reduce_only_market_excess']"
+ },
+ "B4/settle-error-reconciles": {
+  "pass": true,
+  "note": "['oco.completing'] svc=['submit_both_legs', 'settle_other_leg', 'reconcile_children']"
+ },
+ "B4/settle-retry-bounded": {
+  "pass": true,
+  "note": "['oco.failed'] settle calls=3 failures=2"
+ },
+ "B4/snapshot-never-midstep-at-quiescence": {
+  "pass": true,
+  "note": "refusals=[]"
+ },
+ "B4/snapshot-resume-state-parity": {
+  "pass": true,
+  "note": "ref=['oco.completed']"
+ },
+ "B4/snapshot-resume-action-trace-parity": {
+  "pass": true,
+  "note": "len(ref)=2 diffs=[]"
+ },
+ "B5/init-to-working": {
+  "pass": true,
+  "note": "['iceberg.working'] slices_done=1"
+ },
+ "B5/INV-B5-b-single-live-child": {
+  "pass": true,
+  "note": "active_child_id=ch1"
+ },
+ "B5/slice-fill-waits-refill": {
+  "pass": true,
+  "note": "['iceberg.waiting_refill'] remaining=1"
+ },
+ "B5/refill-next-slice": {
+  "pass": true,
+  "note": "['iceberg.working'] slices_done=2"
+ },
+ "B5/INV-B5-a-remaining-not-negative": {
+  "pass": true,
+  "note": "['iceberg.completing'] remaining=0"
+ },
+ "B5/completes": {
+  "pass": true,
+  "note": "['iceberg.completed']"
+ },
+ "B5/INV-B5-e-cooldown-not-busyloop": {
+  "pass": true,
+  "note": "['iceberg.cooling_down'] rejects=0 slices_done=2 (post_only_rejects reset on cooldown entry)"
+ },
+ "B5/INV-B5-e-cooldown-is-quiescent": {
+  "pass": true,
+  "note": "slices_done stable at 2 while cooling"
+ },
+ "B5/cooldown-resumes": {
+  "pass": true,
+  "note": "slices_done 2 -> 4"
+ },
+ "B5/INV-B5-c-slices-bounded": {
+  "pass": true,
+  "note": "['iceberg.completing'] slices_done=2 max=2"
+ },
+ "B5/ws-disconnect-freezes": {
+  "pass": true,
+  "note": "['iceberg.paused']"
+ },
+ "B5/B13-resume-reconciles": {
+  "pass": true,
+  "note": "['iceberg.working'] svc=['submit_child', 'reconcile_children']"
+ },
+ "B5/child-event-during-submit-survives": {
+  "pass": true,
+  "note": "apply_fill=1 deferred_at_send=1 defer_action=0 ids=['iceberg.working']"
+ },
+ "B5/snapshot-never-midstep-at-quiescence": {
+  "pass": true,
+  "note": "refusals=[]"
+ },
+ "B5/snapshot-resume-state-parity": {
+  "pass": true,
+  "note": "ref=['iceberg.cancelled']"
+ },
+ "B5/snapshot-resume-action-trace-parity": {
+  "pass": true,
+  "note": "len(ref)=8 diffs=[]"
+ }
+}

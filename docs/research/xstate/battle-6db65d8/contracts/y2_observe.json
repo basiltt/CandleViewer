@@ -1,0 +1,152 @@
+[
+ {
+  "style": "async",
+  "maxIterations": 20,
+  "limit_effective": 20,
+  "send_sec": 0.0,
+  "receipt": {
+   "ok": null,
+   "error": "None"
+  },
+  "svc_at_send": 0,
+  "svc_after": 22,
+  "svc_after2": 22,
+  "bounded": true,
+  "final_svc_calls": 22,
+  "states": [
+   "m.arm"
+  ],
+  "status": "running",
+  "interp_error": "None",
+  "last_error": "RunawayChainError(\"Machine 'm' exceeded 20 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")",
+  "plugin_on_error": [],
+  "n_on_error": 0,
+  "n_transition_failed": 21,
+  "n_action_error": 21
+ },
+ {
+  "style": "def",
+  "maxIterations": 20,
+  "limit_effective": 20,
+  "send_sec": 0.0,
+  "receipt": {
+   "ok": null,
+   "error": "None"
+  },
+  "svc_at_send": 0,
+  "svc_after": 22,
+  "svc_after2": 22,
+  "bounded": true,
+  "final_svc_calls": 22,
+  "states": [
+   "m.arm"
+  ],
+  "status": "running",
+  "interp_error": "None",
+  "last_error": "RunawayChainError(\"Machine 'm' exceeded 20 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")",
+  "plugin_on_error": [],
+  "n_on_error": 0,
+  "n_transition_failed": 21,
+  "n_action_error": 21
+ },
+ {
+  "style": "async",
+  "maxIterations": 100,
+  "limit_effective": 100,
+  "send_sec": 0.0,
+  "receipt": {
+   "ok": null,
+   "error": "None"
+  },
+  "svc_at_send": 0,
+  "svc_after": 102,
+  "svc_after2": 102,
+  "bounded": true,
+  "final_svc_calls": 102,
+  "states": [
+   "m.arm"
+  ],
+  "status": "running",
+  "interp_error": "None",
+  "last_error": "RunawayChainError(\"Machine 'm' exceeded 100 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")",
+  "plugin_on_error": [],
+  "n_on_error": 0,
+  "n_transition_failed": 101,
+  "n_action_error": 101
+ },
+ {
+  "style": "def",
+  "maxIterations": 100,
+  "limit_effective": 100,
+  "send_sec": 0.0,
+  "receipt": {
+   "ok": null,
+   "error": "None"
+  },
+  "svc_at_send": 0,
+  "svc_after": 102,
+  "svc_after2": 102,
+  "bounded": true,
+  "final_svc_calls": 102,
+  "states": [
+   "m.arm"
+  ],
+  "status": "running",
+  "interp_error": "None",
+  "last_error": "RunawayChainError(\"Machine 'm' exceeded 100 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")",
+  "plugin_on_error": [],
+  "n_on_error": 0,
+  "n_transition_failed": 101,
+  "n_action_error": 101
+ },
+ {
+  "style": "async",
+  "maxIterations": null,
+  "limit_effective": 1000,
+  "send_sec": 0.0,
+  "receipt": {
+   "ok": null,
+   "error": "None"
+  },
+  "svc_at_send": 0,
+  "svc_after": 1002,
+  "svc_after2": 1002,
+  "bounded": true,
+  "final_svc_calls": 1002,
+  "states": [
+   "m.arm"
+  ],
+  "status": "running",
+  "interp_error": "None",
+  "last_error": "RunawayChainError(\"Machine 'm' exceeded 1000 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")",
+  "plugin_on_error": [],
+  "n_on_error": 0,
+  "n_transition_failed": 1001,
+  "n_action_error": 1001
+ },
+ {
+  "style": "def",
+  "maxIterations": null,
+  "limit_effective": 1000,
+  "send_sec": 0.0,
+  "receipt": {
+   "ok": null,
+   "error": "None"
+  },
+  "svc_at_send": 0,
+  "svc_after": 1002,
+  "svc_after2": 1002,
+  "bounded": true,
+  "final_svc_calls": 1002,
+  "states": [
+   "m.arm"
+  ],
+  "status": "running",
+  "interp_error": "None",
+  "last_error": "RunawayChainError(\"Machine 'm' exceeded 1000 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")",
+  "plugin_on_error": [],
+  "n_on_error": 0,
+  "n_transition_failed": 1001,
+  "n_action_error": 1001
+ }
+]

@@ -1,0 +1,176 @@
+[
+ {
+  "id": "B14-happy",
+  "inv": "happy",
+  "title": "init->snapshot_pending->live; buffered deltas replayed after snapshot_seq",
+  "detail": {
+   "ok": true,
+   "pending": [
+    "book.snapshot_pending"
+   ],
+   "buffered": [
+    5,
+    6,
+    7
+   ],
+   "live": [
+    "book.live"
+   ],
+   "replayed": [
+    7
+   ],
+   "last_seq": 7
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B14-c",
+  "inv": "INV-B14-c",
+  "title": "SEQUENCE_GAP drops state and re-snapshots; no delta across a gap",
+  "detail": {
+   "ok": true,
+   "after_gap": [
+    "book.snapshot_pending"
+   ],
+   "resync_count": 1,
+   "desynced_since_us": 42,
+   "buffer_cleared": [],
+   "applied": [
+    2
+   ],
+   "transitions": [
+    "SNAPSHOT->['book.live']",
+    "DELTA->['book.live']",
+    "SEQUENCE_GAP->['book.desynced']",
+    "->['book.snapshot_pending']"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B14-d",
+  "inv": "INV-B14-d",
+  "title": "buffer is BOUNDED while awaiting a snapshot",
+  "detail": {
+   "ok": false,
+   "sent": 1000,
+   "buffered_len": 1000,
+   "dropped_by_engine": [],
+   "note": "buffer grew 1:1 with input -- INV-B14-d 'bounded' is NOT expressed anywhere in the B14 JSON; buffer_delta is an unbounded list append",
+   "states": [
+    "book.snapshot_pending"
+   ]
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "B14-timeout",
+  "inv": "INV-B14-e",
+  "title": "SNAPSHOT_TIMEOUT re-enters snapshot_pending and counts a resync",
+  "detail": {
+   "ok": true,
+   "states": [
+    "book.snapshot_pending"
+   ],
+   "resync": [
+    0,
+    1
+   ],
+   "buffer": [],
+   "request_snapshot_calls": 2
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B14-unh",
+  "inv": "onUnhandled=error",
+  "title": "DELTA arriving in `desynced` transient window",
+  "detail": {
+   "ok": false,
+   "running": false,
+   "status": "error",
+   "receipt": "Receipt(state_ids=frozenset({'book.snapshot_pending'}), changed=False, error=None, deferred=False)",
+   "last_error": "None",
+   "hook": [
+    [
+     "UNSUBSCRIBE",
+     "errored"
+    ]
+   ],
+   "states": [
+    "book.snapshot_pending"
+   ]
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "B15-happy",
+  "inv": "happy",
+  "title": "active -> margin_call -> back to active",
+  "detail": {
+   "ok": true,
+   "margin_call": [
+    "paper_account.margin_call"
+   ],
+   "recovered": [
+    "paper_account.active"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B15-b",
+  "inv": "INV-B15-b",
+  "title": "liquidated is terminal; a favourable mark cannot revive",
+  "detail": {
+   "ok": true,
+   "liquidated": [
+    "paper_account.liquidated"
+   ],
+   "after_favourable_mark": [
+    "paper_account.liquidated"
+   ],
+   "post": "accepted",
+   "receipt": "Receipt(state_ids=frozenset({'paper_account.liquidated'}), changed=False, error=InterpreterStoppedError(\"Interpreter 'paper_account' is done; event 'MARK_UPDATE' was dropped.\"), deferred=False)",
+   "running": false
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B15-c",
+  "inv": "INV-B15-c",
+  "title": "journal written before the terminal transition settles",
+  "detail": {
+   "ok": true,
+   "journal": [
+    "haircut",
+    "journal"
+   ],
+   "final": [
+    "paper_account.liquidated"
+   ],
+   "trace": [
+    "apply_liquidation_haircut",
+    "write_liquidation_journal"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B15-prio",
+  "inv": "INV-B15-a",
+  "title": "liquidation preempts a busy inbox via send_priority",
+  "detail": {
+   "ok": true,
+   "final": [
+    "paper_account.liquidated"
+   ],
+   "journal": [
+    "haircut",
+    "journal"
+   ],
+   "queue_depth": 0
+  },
+  "status": "PASS"
+ }
+]

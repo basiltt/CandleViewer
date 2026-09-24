@@ -1,0 +1,82 @@
+[
+ {
+  "style": "async",
+  "maxIterations": null,
+  "send": "ok=? err=None",
+  "svc_calls_at_send": 763,
+  "svc_calls_1s_later": 1002,
+  "still_spinning": true,
+  "states": [
+   "m.arm"
+  ],
+  "status": "running",
+  "last_error": "None",
+  "sec": 2.01
+ },
+ {
+  "style": "def",
+  "maxIterations": null,
+  "send": "ok=? err=None",
+  "svc_calls_at_send": 571,
+  "svc_calls_1s_later": 1002,
+  "still_spinning": true,
+  "states": [
+   "m.arm"
+  ],
+  "status": "running",
+  "last_error": "None",
+  "sec": 2.01
+ },
+ {
+  "style": "async",
+  "maxIterations": 20,
+  "send": "ok=? err=None",
+  "svc_calls_at_send": 22,
+  "svc_calls_1s_later": 22,
+  "still_spinning": false,
+  "states": [
+   "m.arm"
+  ],
+  "status": "running",
+  "last_error": "None",
+  "sec": 2.02
+ },
+ {
+  "style": "def",
+  "maxIterations": 20,
+  "send": "ok=? err=None",
+  "svc_calls_at_send": 22,
+  "svc_calls_1s_later": 22,
+  "still_spinning": false,
+  "states": [
+   "m.arm"
+  ],
+  "status": "running",
+  "last_error": "None",
+  "sec": 2.01
+ },
+ {
+  "engine": "sync",
+  "style": "def",
+  "maxIterations": null,
+  "svc_calls": 2,
+  "states": [
+   "m.arm"
+  ],
+  "status": "running",
+  "raised": null,
+  "last_error": "None"
+ },
+ {
+  "engine": "sync",
+  "style": "def",
+  "maxIterations": 20,
+  "svc_calls": 2,
+  "states": [
+   "m.arm"
+  ],
+  "status": "running",
+  "raised": null,
+  "last_error": "None"
+ }
+]

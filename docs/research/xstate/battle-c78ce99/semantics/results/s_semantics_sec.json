@@ -1,0 +1,139 @@
+[
+ {
+  "id": "S1",
+  "title": "#216 config-key fuzzer: misspelled policy keys at TOP level (must WARN with a hint / raise under strict_config) and at NESTED state level (document what happens)",
+  "detail": {
+   "ok": true,
+   "top_level": {
+    "warned": 17,
+    "with_hint": 17,
+    "silent": [],
+    "strict_config_did_not_raise": []
+   },
+   "nested_state_level": {
+    "caught": [
+     "actionErrorPolicyy",
+     "actionerrorpolicy",
+     "ActionErrorPolicy",
+     "action_error_policy",
+     "guardErrorPolicyy",
+     "onUnhandledEvent",
+     "onunhandled",
+     "maxIteration",
+     "maxIterations ",
+     "Strict",
+     "strictTarget",
+     "strict_targets",
+     "spawnBlockingTimeoutMs",
+     "strictConfigg",
+     "initialState",
+     "context ",
+     "statess"
+    ],
+    "SILENT": [],
+    "SILENT_even_under_strict_config": []
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "S2",
+  "title": "strict_config escape hatches: the `x-` prefix and a config-level strictConfig -- can a payload select its own level of checking?",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "x_prefix_accepted": true,
+    "x_prefix_is_inert": true,
+    "config_level_strictConfig_refuses": true,
+    "config_can_override_argument_to_OFF": false
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "S3",
+  "title": "#212 rule matrix: raise(delay=) at 1 ms / 50 ms / zero / cancelled, against the `after` rule it now mirrors; both kinds",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "after_1ms/plain": {
+     "beats": 65,
+     "still_beating": true,
+     "tripped": false
+    },
+    "raise_delay_1ms/plain": {
+     "beats": 65,
+     "still_beating": true,
+     "tripped": false
+    },
+    "raise_delay_50ms/plain": {
+     "beats": 17,
+     "still_beating": true,
+     "tripped": false
+    },
+    "raise_zero/plain": {
+     "beats": 12,
+     "still_beating": false,
+     "tripped": true
+    },
+    "raise_delay_cancelled/plain": {
+     "beats": 1,
+     "still_beating": false,
+     "tripped": false
+    },
+    "after_1ms/async": {
+     "beats": 66,
+     "still_beating": true,
+     "tripped": false
+    },
+    "raise_delay_1ms/async": {
+     "beats": 66,
+     "still_beating": true,
+     "tripped": false
+    },
+    "raise_delay_50ms/async": {
+     "beats": 16,
+     "still_beating": true,
+     "tripped": false
+    },
+    "raise_zero/async": {
+     "beats": 12,
+     "still_beating": false,
+     "tripped": true
+    },
+    "raise_delay_cancelled/async": {
+     "beats": 1,
+     "still_beating": false,
+     "tripped": false
+    }
+   },
+   "after_vs_raise_delay_beat_gap": {
+    "plain": 0,
+    "async": 0
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "S4",
+  "title": "Determinism: 50 identical runs (transition trace + drops) on BOTH engines and BOTH kinds, plus 50 scheduled_sends restore traces",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "async_engine/plain": {
+     "distinct_traces": 1
+    },
+    "async_engine/async": {
+     "distinct_traces": 1
+    },
+    "sync_engine/plain": {
+     "distinct_traces": 1
+    },
+    "restore_scheduled_sends": {
+     "distinct_traces": 1
+    }
+   }
+  },
+  "status": "PASS"
+ }
+]

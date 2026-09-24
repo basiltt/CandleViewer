@@ -1,0 +1,42 @@
+[
+ {
+  "style": "async",
+  "sent": 40,
+  "kills_applied": 40,
+  "all_applied": true,
+  "dropped": [
+   [
+    "done.invoke.w",
+    "chain_budget"
+   ]
+  ],
+  "n_dropped": 1,
+  "send_exceptions": [],
+  "n_send_exc": 0,
+  "states": [
+   "k.run"
+  ],
+  "status": "running",
+  "interp_error": "None"
+ },
+ {
+  "style": "def",
+  "sent": 40,
+  "kills_applied": 40,
+  "all_applied": true,
+  "dropped": [
+   [
+    "done.invoke.w",
+    "chain_budget"
+   ]
+  ],
+  "n_dropped": 1,
+  "send_exceptions": [],
+  "n_send_exc": 0,
+  "states": [
+   "k.run"
+  ],
+  "status": "running",
+  "interp_error": "None"
+ }
+]

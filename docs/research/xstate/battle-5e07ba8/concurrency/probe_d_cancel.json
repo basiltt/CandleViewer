@@ -1,0 +1,50 @@
+{
+  "probe": "d1_cancel_mid_transition",
+  "py": "3.13.7",
+  "v1_cancel_mid_action": {
+    "states_during": [],
+    "n_during": 0,
+    "half_during": 1,
+    "receipts_after_cancel": 1,
+    "action_completed_n": 2,
+    "half_total": 1,
+    "states_after": [
+      "cx.b"
+    ],
+    "next_event_receipt_changed": true,
+    "next_event_receipt_error": "None",
+    "status": "running",
+    "receipts_at_end": 0,
+    "last_transition_ok": true
+  },
+  "v2_rotating_phase": {
+    "trials": 200,
+    "violations": 0,
+    "sample": []
+  },
+  "v3_cancel_whole_batch": {
+    "processed": 51,
+    "context_n": 51,
+    "receipts_left": 0,
+    "follow_up_ok": true,
+    "status": "running",
+    "note": "50 FAST events were accepted; all 50 awaiters were cancelled."
+  },
+  "v4_receipt_leak": {
+    "cancelled_awaiters": 2000,
+    "receipts_map_size_after": 0,
+    "context_n": 2000,
+    "status": "running"
+  },
+  "v5_cancel_queued_behind_slow": {
+    "slow_receipt_changed": true,
+    "slow_receipt_error": "None",
+    "processed": 6,
+    "context_n": 6,
+    "receipts_left": 0,
+    "states": [
+      "cx.b"
+    ],
+    "status": "running"
+  }
+}

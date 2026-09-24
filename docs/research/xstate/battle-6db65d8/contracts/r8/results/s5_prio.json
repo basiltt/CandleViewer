@@ -1,0 +1,66 @@
+{
+  "async_prio": {
+    "kind": "async",
+    "priority": true,
+    "n": 50,
+    "results": {
+      "none": 50
+    },
+    "n_dropped": 0,
+    "dropped_reasons": [],
+    "svc_applied": 0,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "error",
+    "last_error": "UnhandledEventError"
+  },
+  "async_plain": {
+    "kind": "async",
+    "priority": false,
+    "n": 50,
+    "results": {
+      "none": 50
+    },
+    "n_dropped": 0,
+    "dropped_reasons": [],
+    "svc_applied": 0,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "error",
+    "last_error": "UnhandledEventError"
+  },
+  "sync_prio": {
+    "kind": "sync",
+    "priority": true,
+    "n": 50,
+    "results": {
+      "none": 50
+    },
+    "n_dropped": 0,
+    "dropped_reasons": [],
+    "svc_applied": 1,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "error",
+    "last_error": "UnhandledEventError"
+  },
+  "sync_plain": {
+    "kind": "sync",
+    "priority": false,
+    "n": 50,
+    "results": {
+      "none": 50
+    },
+    "n_dropped": 0,
+    "dropped_reasons": [],
+    "svc_applied": 50,
+    "ids": [
+      "kill_switch.engaged_incomplete"
+    ],
+    "status": "running",
+    "last_error": "NoneType"
+  }
+}

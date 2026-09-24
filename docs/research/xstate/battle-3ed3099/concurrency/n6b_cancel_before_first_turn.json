@@ -1,0 +1,58 @@
+{
+  "probe": "n6b_cancel_before_first_turn",
+  "py": "3.13.7",
+  "cancel_before_first_turn": [
+    {
+      "yield_before_cancel": false,
+      "status": "running",
+      "is_running": false,
+      "error": "None",
+      "send_wait_true": "HUNG (no receipt, no exception)",
+      "publishes_114": false
+    },
+    {
+      "yield_before_cancel": false,
+      "status": "running",
+      "is_running": false,
+      "error": "None",
+      "send_wait_true": "HUNG (no receipt, no exception)",
+      "publishes_114": false
+    },
+    {
+      "yield_before_cancel": false,
+      "status": "running",
+      "is_running": false,
+      "error": "None",
+      "send_wait_true": "HUNG (no receipt, no exception)",
+      "publishes_114": false
+    }
+  ],
+  "control_cancel_after_first_turn": [
+    {
+      "yield_before_cancel": true,
+      "status": "error",
+      "is_running": false,
+      "error": "RuntimeError(\"Interpreter 'c114' run loop was cancelled while running; the machine is no longer processing events.\")",
+      "send_wait_true": "resolved: error=InterpreterStoppedError(\"Interpreter 'c114' is error; event 'GO' was dropped.\")",
+      "publishes_114": true
+    },
+    {
+      "yield_before_cancel": true,
+      "status": "error",
+      "is_running": false,
+      "error": "RuntimeError(\"Interpreter 'c114' run loop was cancelled while running; the machine is no longer processing events.\")",
+      "send_wait_true": "resolved: error=InterpreterStoppedError(\"Interpreter 'c114' is error; event 'GO' was dropped.\")",
+      "publishes_114": true
+    },
+    {
+      "yield_before_cancel": true,
+      "status": "error",
+      "is_running": false,
+      "error": "RuntimeError(\"Interpreter 'c114' run loop was cancelled while running; the machine is no longer processing events.\")",
+      "send_wait_true": "resolved: error=InterpreterStoppedError(\"Interpreter 'c114' is error; event 'GO' was dropped.\")",
+      "publishes_114": true
+    }
+  ],
+  "deterministic": true,
+  "result": "FAIL"
+}

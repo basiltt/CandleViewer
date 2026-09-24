@@ -1,0 +1,70 @@
+{
+  "probe": "p1b_invoke_ordering",
+  "py": "3.13.7",
+  "q1_async_single_0ms": {
+    "service_sleep_s": 0.0,
+    "states_after_start": [
+      "ord.run"
+    ],
+    "seen_after_start": [],
+    "final_order": [
+      "race",
+      "done"
+    ],
+    "done_first": false
+  },
+  "q1_async_single_20ms": {
+    "service_sleep_s": 0.02,
+    "states_after_start": [
+      "ord.run"
+    ],
+    "seen_after_start": [],
+    "final_order": [
+      "race",
+      "done"
+    ],
+    "done_first": false
+  },
+  "q2_sweep_0ms": {
+    "service_sleep_s": 0.0,
+    "trials": 40,
+    "done_first": 0,
+    "race_first": 40
+  },
+  "q2_sweep_5ms": {
+    "service_sleep_s": 0.005,
+    "trials": 20,
+    "done_first": 0,
+    "race_first": 20
+  },
+  "q3_sync_0ms": {
+    "service_sleep_s": 0.0,
+    "states_after_start": [
+      "ord.ok"
+    ],
+    "seen_after_start": [
+      "done"
+    ],
+    "final_order": [
+      "done"
+    ],
+    "done_first": true
+  },
+  "q3_sync_20ms": {
+    "service_sleep_s": 0.02,
+    "states_after_start": [
+      "ord.ok"
+    ],
+    "seen_after_start": [
+      "done"
+    ],
+    "final_order": [
+      "done"
+    ],
+    "done_first": true
+  },
+  "async_completes_inside_start": false,
+  "sync_completes_inside_start": true,
+  "engines_agree_on_start_completion": false,
+  "result": "FAIL"
+}

@@ -1,0 +1,718 @@
+{
+ "[async]D4/limit=4 async laps == maxIterations+3": {
+  "pass": true,
+  "note": {
+   "expected": 6,
+   "laps": 6,
+   "err": "RunawayChainError",
+   "stranded_attr": [
+    "slice"
+   ],
+   "hook": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "dormant": true,
+   "pending": [
+    "slice"
+   ],
+   "value": "submitting_slice"
+  }
+ },
+ "[async]D4/limit=4 sync laps == maxIterations+3": {
+  "pass": true,
+  "note": {
+   "expected": 6,
+   "laps": 6,
+   "err": "RunawayChainError",
+   "stranded_attr": [
+    "slice"
+   ],
+   "hook": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "dormant": true,
+   "pending": [
+    "slice"
+   ],
+   "value": "submitting_slice"
+  }
+ },
+ "[async]D4/limit=4 lap parity async==sync (#209)": {
+  "pass": true,
+  "note": {
+   "async": 6,
+   "sync": 6
+  }
+ },
+ "[async]D4/limit=4 RunawayChainError both engines": {
+  "pass": true,
+  "note": {
+   "async": "RunawayChainError",
+   "sync": "RunawayChainError"
+  }
+ },
+ "[async]D5/limit=4 stranded names 'slice' both engines (#207)": {
+  "pass": true,
+  "note": {
+   "async": [
+    "slice"
+   ],
+   "sync": [
+    "slice"
+   ]
+  }
+ },
+ "[async]D5/limit=4 on_invocation_stranded fired both engines": {
+  "pass": true,
+  "note": {
+   "async": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "sync": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ]
+  }
+ },
+ "[async]D5/limit=4 has_dormant_invocations true, parked in submitting_slice": {
+  "pass": true,
+  "note": {
+   "async": [
+    true,
+    "submitting_slice"
+   ],
+   "sync": [
+    true,
+    "submitting_slice"
+   ]
+  }
+ },
+ "[async]D4/limit=5 async laps == maxIterations+3": {
+  "pass": true,
+  "note": {
+   "expected": 7,
+   "laps": 7,
+   "err": "RunawayChainError",
+   "stranded_attr": [
+    "slice"
+   ],
+   "hook": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "dormant": true,
+   "pending": [
+    "slice"
+   ],
+   "value": "submitting_slice"
+  }
+ },
+ "[async]D4/limit=5 sync laps == maxIterations+3": {
+  "pass": true,
+  "note": {
+   "expected": 7,
+   "laps": 7,
+   "err": "RunawayChainError",
+   "stranded_attr": [
+    "slice"
+   ],
+   "hook": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "dormant": true,
+   "pending": [
+    "slice"
+   ],
+   "value": "submitting_slice"
+  }
+ },
+ "[async]D4/limit=5 lap parity async==sync (#209)": {
+  "pass": true,
+  "note": {
+   "async": 7,
+   "sync": 7
+  }
+ },
+ "[async]D4/limit=5 RunawayChainError both engines": {
+  "pass": true,
+  "note": {
+   "async": "RunawayChainError",
+   "sync": "RunawayChainError"
+  }
+ },
+ "[async]D5/limit=5 stranded names 'slice' both engines (#207)": {
+  "pass": true,
+  "note": {
+   "async": [
+    "slice"
+   ],
+   "sync": [
+    "slice"
+   ]
+  }
+ },
+ "[async]D5/limit=5 on_invocation_stranded fired both engines": {
+  "pass": true,
+  "note": {
+   "async": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "sync": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ]
+  }
+ },
+ "[async]D5/limit=5 has_dormant_invocations true, parked in submitting_slice": {
+  "pass": true,
+  "note": {
+   "async": [
+    true,
+    "submitting_slice"
+   ],
+   "sync": [
+    true,
+    "submitting_slice"
+   ]
+  }
+ },
+ "[async]D4/limit=8 async laps == maxIterations+3": {
+  "pass": true,
+  "note": {
+   "expected": 10,
+   "laps": 10,
+   "err": "RunawayChainError",
+   "stranded_attr": [
+    "slice"
+   ],
+   "hook": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "dormant": true,
+   "pending": [
+    "slice"
+   ],
+   "value": "submitting_slice"
+  }
+ },
+ "[async]D4/limit=8 sync laps == maxIterations+3": {
+  "pass": true,
+  "note": {
+   "expected": 10,
+   "laps": 10,
+   "err": "RunawayChainError",
+   "stranded_attr": [
+    "slice"
+   ],
+   "hook": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "dormant": true,
+   "pending": [
+    "slice"
+   ],
+   "value": "submitting_slice"
+  }
+ },
+ "[async]D4/limit=8 lap parity async==sync (#209)": {
+  "pass": true,
+  "note": {
+   "async": 10,
+   "sync": 10
+  }
+ },
+ "[async]D4/limit=8 RunawayChainError both engines": {
+  "pass": true,
+  "note": {
+   "async": "RunawayChainError",
+   "sync": "RunawayChainError"
+  }
+ },
+ "[async]D5/limit=8 stranded names 'slice' both engines (#207)": {
+  "pass": true,
+  "note": {
+   "async": [
+    "slice"
+   ],
+   "sync": [
+    "slice"
+   ]
+  }
+ },
+ "[async]D5/limit=8 on_invocation_stranded fired both engines": {
+  "pass": true,
+  "note": {
+   "async": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "sync": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ]
+  }
+ },
+ "[async]D5/limit=8 has_dormant_invocations true, parked in submitting_slice": {
+  "pass": true,
+  "note": {
+   "async": [
+    true,
+    "submitting_slice"
+   ],
+   "sync": [
+    true,
+    "submitting_slice"
+   ]
+  }
+ },
+ "[async]D4/limit=12 async laps == maxIterations+3": {
+  "pass": true,
+  "note": {
+   "expected": 14,
+   "laps": 14,
+   "err": "RunawayChainError",
+   "stranded_attr": [
+    "slice"
+   ],
+   "hook": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "dormant": true,
+   "pending": [
+    "slice"
+   ],
+   "value": "submitting_slice"
+  }
+ },
+ "[async]D4/limit=12 sync laps == maxIterations+3": {
+  "pass": true,
+  "note": {
+   "expected": 14,
+   "laps": 14,
+   "err": "RunawayChainError",
+   "stranded_attr": [
+    "slice"
+   ],
+   "hook": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "dormant": true,
+   "pending": [
+    "slice"
+   ],
+   "value": "submitting_slice"
+  }
+ },
+ "[async]D4/limit=12 lap parity async==sync (#209)": {
+  "pass": true,
+  "note": {
+   "async": 14,
+   "sync": 14
+  }
+ },
+ "[async]D4/limit=12 RunawayChainError both engines": {
+  "pass": true,
+  "note": {
+   "async": "RunawayChainError",
+   "sync": "RunawayChainError"
+  }
+ },
+ "[async]D5/limit=12 stranded names 'slice' both engines (#207)": {
+  "pass": true,
+  "note": {
+   "async": [
+    "slice"
+   ],
+   "sync": [
+    "slice"
+   ]
+  }
+ },
+ "[async]D5/limit=12 on_invocation_stranded fired both engines": {
+  "pass": true,
+  "note": {
+   "async": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "sync": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ]
+  }
+ },
+ "[async]D5/limit=12 has_dormant_invocations true, parked in submitting_slice": {
+  "pass": true,
+  "note": {
+   "async": [
+    true,
+    "submitting_slice"
+   ],
+   "sync": [
+    true,
+    "submitting_slice"
+   ]
+  }
+ },
+ "[async]D6/limit=4 async laps == maxIterations+3 (#210 shape)": {
+  "pass": true,
+  "note": {
+   "expected": 7,
+   "laps": 7,
+   "err": "RunawayChainError",
+   "stranded_attr": [
+    "slice"
+   ],
+   "hook": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "dormant": true,
+   "pending": [
+    "slice"
+   ],
+   "value": "submitting_slice"
+  }
+ },
+ "[async]D6/limit=4 sync laps == maxIterations+3 (#210 shape)": {
+  "pass": true,
+  "note": {
+   "expected": 7,
+   "laps": 7,
+   "err": "RunawayChainError",
+   "stranded_attr": [
+    "slice"
+   ],
+   "hook": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "dormant": true,
+   "pending": [
+    "slice"
+   ],
+   "value": "submitting_slice"
+  }
+ },
+ "[async]D6/limit=4 three-lane lap parity (#209)": {
+  "pass": true,
+  "note": {
+   "async": 7,
+   "sync": 7
+  }
+ },
+ "[async]D6/limit=4 stranded + hook + dormant on both engines": {
+  "pass": true,
+  "note": {
+   "async": [
+    [
+     "slice"
+    ],
+    [
+     [
+      "twap.submitting_slice",
+      "slice"
+     ]
+    ],
+    true
+   ],
+   "sync": [
+    [
+     "slice"
+    ],
+    [
+     [
+      "twap.submitting_slice",
+      "slice"
+     ]
+    ],
+    true
+   ]
+  }
+ },
+ "[async]D6/limit=5 async laps == maxIterations+3 (#210 shape)": {
+  "pass": true,
+  "note": {
+   "expected": 8,
+   "laps": 8,
+   "err": "RunawayChainError",
+   "stranded_attr": [
+    "slice"
+   ],
+   "hook": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "dormant": true,
+   "pending": [
+    "slice"
+   ],
+   "value": "submitting_slice"
+  }
+ },
+ "[async]D6/limit=5 sync laps == maxIterations+3 (#210 shape)": {
+  "pass": true,
+  "note": {
+   "expected": 8,
+   "laps": 8,
+   "err": "RunawayChainError",
+   "stranded_attr": [
+    "slice"
+   ],
+   "hook": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "dormant": true,
+   "pending": [
+    "slice"
+   ],
+   "value": "submitting_slice"
+  }
+ },
+ "[async]D6/limit=5 three-lane lap parity (#209)": {
+  "pass": true,
+  "note": {
+   "async": 8,
+   "sync": 8
+  }
+ },
+ "[async]D6/limit=5 stranded + hook + dormant on both engines": {
+  "pass": true,
+  "note": {
+   "async": [
+    [
+     "slice"
+    ],
+    [
+     [
+      "twap.submitting_slice",
+      "slice"
+     ]
+    ],
+    true
+   ],
+   "sync": [
+    [
+     "slice"
+    ],
+    [
+     [
+      "twap.submitting_slice",
+      "slice"
+     ]
+    ],
+    true
+   ]
+  }
+ },
+ "[async]D6/limit=8 async laps == maxIterations+3 (#210 shape)": {
+  "pass": true,
+  "note": {
+   "expected": 11,
+   "laps": 11,
+   "err": "RunawayChainError",
+   "stranded_attr": [
+    "slice"
+   ],
+   "hook": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "dormant": true,
+   "pending": [
+    "slice"
+   ],
+   "value": "submitting_slice"
+  }
+ },
+ "[async]D6/limit=8 sync laps == maxIterations+3 (#210 shape)": {
+  "pass": true,
+  "note": {
+   "expected": 11,
+   "laps": 11,
+   "err": "RunawayChainError",
+   "stranded_attr": [
+    "slice"
+   ],
+   "hook": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "dormant": true,
+   "pending": [
+    "slice"
+   ],
+   "value": "submitting_slice"
+  }
+ },
+ "[async]D6/limit=8 three-lane lap parity (#209)": {
+  "pass": true,
+  "note": {
+   "async": 11,
+   "sync": 11
+  }
+ },
+ "[async]D6/limit=8 stranded + hook + dormant on both engines": {
+  "pass": true,
+  "note": {
+   "async": [
+    [
+     "slice"
+    ],
+    [
+     [
+      "twap.submitting_slice",
+      "slice"
+     ]
+    ],
+    true
+   ],
+   "sync": [
+    [
+     "slice"
+    ],
+    [
+     [
+      "twap.submitting_slice",
+      "slice"
+     ]
+    ],
+    true
+   ]
+  }
+ },
+ "[async]D6/limit=12 async laps == maxIterations+3 (#210 shape)": {
+  "pass": true,
+  "note": {
+   "expected": 15,
+   "laps": 15,
+   "err": "RunawayChainError",
+   "stranded_attr": [
+    "slice"
+   ],
+   "hook": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "dormant": true,
+   "pending": [
+    "slice"
+   ],
+   "value": "submitting_slice"
+  }
+ },
+ "[async]D6/limit=12 sync laps == maxIterations+3 (#210 shape)": {
+  "pass": true,
+  "note": {
+   "expected": 15,
+   "laps": 15,
+   "err": "RunawayChainError",
+   "stranded_attr": [
+    "slice"
+   ],
+   "hook": [
+    [
+     "twap.submitting_slice",
+     "slice"
+    ]
+   ],
+   "dormant": true,
+   "pending": [
+    "slice"
+   ],
+   "value": "submitting_slice"
+  }
+ },
+ "[async]D6/limit=12 three-lane lap parity (#209)": {
+  "pass": true,
+  "note": {
+   "async": 15,
+   "sync": 15
+  }
+ },
+ "[async]D6/limit=12 stranded + hook + dormant on both engines": {
+  "pass": true,
+  "note": {
+   "async": [
+    [
+     "slice"
+    ],
+    [
+     [
+      "twap.submitting_slice",
+      "slice"
+     ]
+    ],
+    true
+   ],
+   "sync": [
+    [
+     "slice"
+    ],
+    [
+     [
+      "twap.submitting_slice",
+      "slice"
+     ]
+    ],
+    true
+   ]
+  }
+ }
+}

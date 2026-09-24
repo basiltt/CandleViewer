@@ -1,0 +1,313 @@
+{
+  "probe": "q7_soak_round7_shapes",
+  "py": "3.13.7",
+  "REDUCED": "100 s instead of the requested 12 min (120 s per-script bound); n9_soak_chaos.py was re-run at 300 s and PASSED",
+  "machines": 200,
+  "shapes": [
+    "rollback_ondone",
+    "always_into_invoke",
+    "invoke_pingpong",
+    "plain"
+  ],
+  "wall_s": 100.0,
+  "events_sent": 213800,
+  "T1_cpu_seconds": 111.2,
+  "T1_cpu_per_wall_second": 1.11,
+  "T1_samples": [
+    {
+      "t": 0.1,
+      "cpu_s": 0.1,
+      "rss_mb": 42.6,
+      "tasks": 212
+    },
+    {
+      "t": 0.1,
+      "cpu_s": 0.2,
+      "rss_mb": 42.8,
+      "tasks": 209
+    },
+    {
+      "t": 0.2,
+      "cpu_s": 0.3,
+      "rss_mb": 42.9,
+      "tasks": 292
+    },
+    {
+      "t": 0.3,
+      "cpu_s": 0.4,
+      "rss_mb": 43.0,
+      "tasks": 209
+    },
+    {
+      "t": 0.4,
+      "cpu_s": 0.4,
+      "rss_mb": 43.1,
+      "tasks": 212
+    },
+    {
+      "t": 0.5,
+      "cpu_s": 0.6,
+      "rss_mb": 43.3,
+      "tasks": 299
+    },
+    {
+      "t": 0.6,
+      "cpu_s": 0.6,
+      "rss_mb": 43.4,
+      "tasks": 206
+    },
+    {
+      "t": 0.6,
+      "cpu_s": 0.7,
+      "rss_mb": 43.5,
+      "tasks": 211
+    },
+    {
+      "t": 0.7,
+      "cpu_s": 0.8,
+      "rss_mb": 43.7,
+      "tasks": 213
+    },
+    {
+      "t": 0.8,
+      "cpu_s": 0.9,
+      "rss_mb": 43.7,
+      "tasks": 216
+    },
+    {
+      "t": 0.9,
+      "cpu_s": 1.0,
+      "rss_mb": 43.7,
+      "tasks": 284
+    },
+    {
+      "t": 0.9,
+      "cpu_s": 1.1,
+      "rss_mb": 43.8,
+      "tasks": 216
+    },
+    {
+      "t": 1.0,
+      "cpu_s": 1.2,
+      "rss_mb": 43.8,
+      "tasks": 220
+    },
+    {
+      "t": 1.1,
+      "cpu_s": 1.3,
+      "rss_mb": 43.8,
+      "tasks": 278
+    },
+    {
+      "t": 1.2,
+      "cpu_s": 1.4,
+      "rss_mb": 43.8,
+      "tasks": 224
+    },
+    {
+      "t": 1.3,
+      "cpu_s": 1.5,
+      "rss_mb": 43.8,
+      "tasks": 281
+    },
+    {
+      "t": 1.4,
+      "cpu_s": 1.6,
+      "rss_mb": 43.8,
+      "tasks": 216
+    },
+    {
+      "t": 1.5,
+      "cpu_s": 1.7,
+      "rss_mb": 43.8,
+      "tasks": 286
+    },
+    {
+      "t": 1.5,
+      "cpu_s": 1.8,
+      "rss_mb": 43.8,
+      "tasks": 210
+    },
+    {
+      "t": 1.6,
+      "cpu_s": 1.8,
+      "rss_mb": 43.9,
+      "tasks": 213
+    },
+    {
+      "t": 1.7,
+      "cpu_s": 1.9,
+      "rss_mb": 43.9,
+      "tasks": 221
+    },
+    {
+      "t": 1.8,
+      "cpu_s": 2.0,
+      "rss_mb": 43.9,
+      "tasks": 284
+    },
+    {
+      "t": 1.9,
+      "cpu_s": 2.1,
+      "rss_mb": 43.9,
+      "tasks": 220
+    },
+    {
+      "t": 1.9,
+      "cpu_s": 2.2,
+      "rss_mb": 44.0,
+      "tasks": 226
+    },
+    {
+      "t": 2.0,
+      "cpu_s": 2.3,
+      "rss_mb": 44.2,
+      "tasks": 280
+    },
+    {
+      "t": 2.1,
+      "cpu_s": 2.4,
+      "rss_mb": 44.2,
+      "tasks": 215
+    },
+    {
+      "t": 2.2,
+      "cpu_s": 2.4,
+      "rss_mb": 44.3,
+      "tasks": 220
+    },
+    {
+      "t": 2.3,
+      "cpu_s": 2.5,
+      "rss_mb": 44.4,
+      "tasks": 279
+    },
+    {
+      "t": 2.4,
+      "cpu_s": 2.6,
+      "rss_mb": 44.4,
+      "tasks": 219
+    },
+    {
+      "t": 2.4,
+      "cpu_s": 2.7,
+      "rss_mb": 44.5,
+      "tasks": 223
+    },
+    {
+      "t": 2.5,
+      "cpu_s": 2.8,
+      "rss_mb": 44.7,
+      "tasks": 282
+    },
+    {
+      "t": 2.6,
+      "cpu_s": 2.8,
+      "rss_mb": 44.7,
+      "tasks": 214
+    },
+    {
+      "t": 2.7,
+      "cpu_s": 2.9,
+      "rss_mb": 44.9,
+      "tasks": 223
+    },
+    {
+      "t": 2.8,
+      "cpu_s": 3.1,
+      "rss_mb": 44.9,
+      "tasks": 288
+    },
+    {
+      "t": 2.8,
+      "cpu_s": 3.2,
+      "rss_mb": 44.9,
+      "tasks": 210
+    },
+    {
+      "t": 2.9,
+      "cpu_s": 3.3,
+      "rss_mb": 45.2,
+      "tasks": 218
+    },
+    {
+      "t": 3.0,
+      "cpu_s": 3.4,
+      "rss_mb": 45.2,
+      "tasks": 224
+    },
+    {
+      "t": 3.1,
+      "cpu_s": 3.5,
+      "rss_mb": 45.2,
+      "tasks": 290
+    },
+    {
+      "t": 3.2,
+      "cpu_s": 3.6,
+      "rss_mb": 45.3,
+      "tasks": 218
+    },
+    {
+      "t": 3.2,
+      "cpu_s": 3.7,
+      "rss_mb": 45.3,
+      "tasks": 228
+    }
+  ],
+  "T2_wedged_machines": [
+    {
+      "id": "s0",
+      "shape": "rollback_ondone"
+    },
+    {
+      "id": "s2",
+      "shape": "invoke_pingpong"
+    },
+    {
+      "id": "s4",
+      "shape": "rollback_ondone"
+    },
+    {
+      "id": "s6",
+      "shape": "invoke_pingpong"
+    },
+    {
+      "id": "s8",
+      "shape": "rollback_ondone"
+    },
+    {
+      "id": "s10",
+      "shape": "invoke_pingpong"
+    },
+    {
+      "id": "s12",
+      "shape": "rollback_ondone"
+    },
+    {
+      "id": "s14",
+      "shape": "invoke_pingpong"
+    },
+    {
+      "id": "s16",
+      "shape": "rollback_ondone"
+    },
+    {
+      "id": "s18",
+      "shape": "invoke_pingpong"
+    }
+  ],
+  "T2_wedged_count": 100,
+  "T3_snapshots_ok": 5433,
+  "T3_snapshots_refused": 5257,
+  "T3_snapshots_torn": [],
+  "T3_torn_count": 0,
+  "T4_task_delta_during_run": 224,
+  "T4_leftover_after_stop": 0,
+  "T4_stop": "ok",
+  "rss_mb_first_last": [
+    40.4,
+    61.1
+  ],
+  "result": "FAIL"
+}

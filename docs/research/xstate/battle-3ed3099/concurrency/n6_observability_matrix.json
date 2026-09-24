@@ -1,0 +1,113 @@
+{
+  "probe": "n6_observability_matrix",
+  "py": "3.13.7",
+  "v1_sync_hook_raises": {
+    "receipt_error": "None",
+    "hung": false,
+    "hooks": {
+      "on_plugin_error": [
+        "SyncRaiser.on_transition:RuntimeError",
+        "SyncRaiser.on_transition:RuntimeError"
+      ]
+    },
+    "status": "running",
+    "alive": true,
+    "last_error": "None",
+    "last_plugin_error": "('SyncRaiser', 'on_transition', RuntimeError('sync hook boom'))",
+    "pass": true
+  },
+  "v2_async_def_hook": {
+    "receipt_error": "None",
+    "hung": false,
+    "hooks": {
+      "on_plugin_error": [
+        "AsyncHook.on_transition:TypeError",
+        "AsyncHook.on_transition:TypeError"
+      ]
+    },
+    "status": "running",
+    "alive": true,
+    "last_error": "None",
+    "last_plugin_error": "('AsyncHook', 'on_transition', TypeError(\"AsyncHook.on_transition is 'async def'; plugin hooks are synchronous callbacks and are never awaited. Make it a plain 'def' and schedule your own task inside it if you need async work.\"))",
+    "pass": true
+  },
+  "v3_hook_raises_CancelledError": {
+    "receipt_error": "None",
+    "hung": false,
+    "hooks": {
+      "on_plugin_error": [
+        "CancelRaiser.on_transition:CancelledError",
+        "CancelRaiser.on_transition:CancelledError"
+      ]
+    },
+    "status": "running",
+    "alive": true,
+    "last_error": "None",
+    "last_plugin_error": "('CancelRaiser', 'on_transition', CancelledError('hook-made cancellation'))",
+    "pass": true
+  },
+  "v4_on_resolve_error": {
+    "receipt_error": "StateNotFoundError(\"Could not resolve target state 'nowhere_at_all' from state 'bt.a'.\")",
+    "hooks": {
+      "on_resolve_error": [
+        "StateNotFoundError:GO"
+      ]
+    },
+    "last_error": "StateNotFoundError(\"Could not resolve target state 'nowhere_at_all' from state 'bt.a'.\")",
+    "last_transition_ok": false,
+    "status": "running",
+    "pass": true
+  },
+  "v5_sendTo_unresolved_target": {
+    "receipt_error": "ActorSpawningError(\"sendTo target 'ghost_actor' did not resolve to a live actor; 'HELLO' was not delivered.\")",
+    "hooks": {
+      "on_event_dropped": [
+        "HELLO:unresolved_target"
+      ]
+    },
+    "status": "running",
+    "pass": true
+  },
+  "v6_guard_raises": {
+    "receipt_error": "None",
+    "hung": false,
+    "hooks": {
+      "on_guard_error": [
+        "boom:TypeError"
+      ]
+    },
+    "status": "running",
+    "alive": true,
+    "last_error": "None",
+    "last_plugin_error": "None",
+    "pass": true
+  },
+  "v7_action_raises": {
+    "receipt_error": "ValueError('action boom')",
+    "hung": false,
+    "hooks": {
+      "on_action_error": [
+        "boom:ValueError"
+      ]
+    },
+    "status": "running",
+    "alive": true,
+    "last_error": "ValueError('action boom')",
+    "last_plugin_error": "None",
+    "pass": true
+  },
+  "v8_external_run_loop_cancel": {
+    "hung": true,
+    "run_loop_task_found": true,
+    "status": "running",
+    "alive": false,
+    "hooks": {
+      "on_event_dropped": [
+        "GO:stopped"
+      ]
+    },
+    "last_error": "None",
+    "pass": false
+  },
+  "result": "FAIL"
+}

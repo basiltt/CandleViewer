@@ -1,0 +1,36 @@
+[
+ {
+  "id": "F1",
+  "title": "Livelock fuzz: 500 configs x {def, async def} x {sync, async} engines over always/invoke/after/raise/delayed-raise cycles -- no hang, every trip observable, lap parity",
+  "detail": {
+   "ok": true,
+   "runs": 1334,
+   "hangs": [],
+   "n_hangs": 0,
+   "unbounded": [],
+   "n_unbounded": 0,
+   "silent_runaways": [],
+   "n_silent": 0,
+   "def_vs_asyncdef_lap_mismatch": [],
+   "n_kind_mismatch": 0,
+   "async_vs_sync_engine_lap_mismatch": [],
+   "n_engine_mismatch": 0
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "F2",
+  "title": "Receipt fuzz (#208): 480 random send/guard/policy cells -- a receipt is never success-shaped over an illegal configuration, and never error-shaped over a clean legal step",
+  "detail": {
+   "ok": true,
+   "cells": 480,
+   "ok_over_illegal_configuration": [],
+   "n_ok_over_illegal": 0,
+   "error_over_legal_step": [],
+   "n_err_over_legal": 0,
+   "exceptions_from_send": [],
+   "n_exceptions": 0
+  },
+  "status": "PASS"
+ }
+]

@@ -1,0 +1,46 @@
+[
+ {
+  "cfg": "default Interpreter(m)",
+  "svc@0.8s": 888,
+  "svc@2.0s": 1003,
+  "bounded": false,
+  "status": "running",
+  "last_error": "RunawayChainError",
+  "drops": [
+   "chain_budget"
+  ]
+ },
+ {
+  "cfg": "clock=SimulatedClock()",
+  "svc@0.8s": 858,
+  "svc@2.0s": 1003,
+  "bounded": false,
+  "status": "running",
+  "last_error": "RunawayChainError",
+  "drops": [
+   "chain_budget"
+  ]
+ },
+ {
+  "cfg": "max_queue_size=64 + RAISE",
+  "svc@0.8s": 878,
+  "svc@2.0s": 1003,
+  "bounded": false,
+  "status": "running",
+  "last_error": "RunawayChainError",
+  "drops": [
+   "chain_budget"
+  ]
+ },
+ {
+  "cfg": "SimulatedClock + max_queue_size=64 + RAISE (track config)",
+  "svc@0.8s": 897,
+  "svc@2.0s": 1003,
+  "bounded": false,
+  "status": "running",
+  "last_error": "RunawayChainError",
+  "drops": [
+   "chain_budget"
+  ]
+ }
+]

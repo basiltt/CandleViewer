@@ -1,0 +1,48 @@
+{
+  "probe": "n8_semantics",
+  "py": "3.13.7",
+  "v116_inline_sync_service_parity": {
+    "script": "(GO, CANCEL) x 10",
+    "async": {
+      "ok": 10,
+      "cancel": 0
+    },
+    "sync": {
+      "ok": 10,
+      "cancel": 0
+    },
+    "pass": true
+  },
+  "v109_done_invoke_output": {
+    "done_invoke_data": "{'result': 'declared-output'}",
+    "leaks_private_context": false,
+    "carries_declared_output": true,
+    "pass": true
+  },
+  "v108_root_target_rejected": {
+    "outcome": "InvalidConfigError",
+    "msg": "Machine 'rt' has transition(s) targeting the machine root:\n  rt.a: on 'GO' -> target '#rt' is the machine root; entering it empties the configuration. Target th",
+    "pass": true
+  },
+  "v130_escalate_reaches_parent_onError": {
+    "child_plain_state": {
+      "states": [
+        "p130.failed"
+      ],
+      "captured_error": "RuntimeError('child says no')",
+      "status": "done",
+      "pass": true
+    },
+    "child_final_state": {
+      "states": [
+        "p130.failed"
+      ],
+      "captured_error": "RuntimeError('child says no')",
+      "status": "done",
+      "pass": true
+    },
+    "pass": true,
+    "note": "child_final_state is reported, not asserted: when the escalating state is ALSO final, onDone wins and the escalation is not delivered."
+  },
+  "result": "PASS"
+}

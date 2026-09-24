@@ -1,0 +1,50 @@
+{
+  "probe": "d2_empty_config_window",
+  "py": "3.13.7",
+  "v1_v3_surfaces": {
+    "states_before": [
+      "win.a"
+    ],
+    "in_window": {
+      "current_state_ids": [],
+      "active_state_ids_alias": [],
+      "status": "running",
+      "matches_a": false,
+      "matches_b": false,
+      "get_snapshot": "{\n  \"version\": 2,\n  \"machine_id\": \"win\",\n  \"machine_hash\": \"02e151e153414454\",\n  \"taken_at\": 1789720721.9464762,\n  \"status\": \"running\",\n  \"context\": {\n    \"n\": 0\n  },\n  \"state_ids\": [],\n  \"value\": {},",
+      "persisted_snapshot_state_ids": [],
+      "persisted_snapshot_status": "running"
+    },
+    "context_n_during_window_send": 0,
+    "context_n_after": 1,
+    "states_after": [
+      "win.b"
+    ],
+    "plugin_on_transition": []
+  },
+  "v2_window_10ms": {
+    "action_await_s": 0.01,
+    "window_observed_s": 0.0148,
+    "samples": 2,
+    "samples_with_empty_configuration": 2,
+    "states_after": [
+      "win.b"
+    ]
+  },
+  "v2_window_250ms": {
+    "action_await_s": 0.25,
+    "window_observed_s": 0.2521,
+    "samples": 17,
+    "samples_with_empty_configuration": 17,
+    "states_after": [
+      "win.b"
+    ]
+  },
+  "v5_sync_action_control": {
+    "sync_transitions": 200,
+    "empty_configuration_observations": 0,
+    "states_after": [
+      "sync.b"
+    ]
+  }
+}

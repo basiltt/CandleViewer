@@ -1,0 +1,421 @@
+{
+  "new_issues": [
+    {
+      "file": "new/R5-01-any-leaf-midstep-guard-misses-parallel-tear.md",
+      "r5": "R5-01",
+      "title": "Bug: `SnapshotMidStepError` is gated on an any-leaf test, so a parallel machine mid-transition in one region snapshots with that whole region missing and restores half-dead",
+      "labels": [
+        "bug",
+        "severity/blocker",
+        "area/persistence"
+      ]
+    },
+    {
+      "file": "new/R5-02-from-snapshot-no-configuration-legality-check.md",
+      "r5": "R5-02",
+      "title": "Bug: `from_snapshot()` performs no configuration-legality check — a truncated `configuration` restores as a `running` machine with zero active leaves and is permanently inert",
+      "labels": [
+        "bug",
+        "severity/blocker",
+        "area/persistence"
+      ]
+    },
+    {
+      "file": "new/R5-04-nested-invoke-ondone-ancestor-livelock.md",
+      "r5": "R5-04",
+      "title": "Bug: nested invokes whose `onDone` targets their common compound ancestor livelock `SyncInterpreter.start()`; no budget bounds it",
+      "labels": [
+        "bug",
+        "severity/blocker",
+        "area/sync-interpreter"
+      ]
+    },
+    {
+      "file": "new/R5-12-action-error-policy-fail-persists-source-state.md",
+      "r5": "R5-12",
+      "title": "Bug: `actionErrorPolicy: \"fail\"` leaves the configuration on the SOURCE state, bricks the interpreter, and persists the bricked state without complaint",
+      "labels": [
+        "bug",
+        "severity/blocker",
+        "area/interpreter"
+      ]
+    },
+    {
+      "file": "new/R5-03-from-snapshot-untyped-errors.md",
+      "r5": "R5-03",
+      "title": "Bug: `from_snapshot()` leaks raw `TypeError`/`AttributeError`/`ValueError` for hostile `version`/`status`/`history`/`actors`/`system`/`deferred` fields, escaping `except XStateMachineError`",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/persistence",
+        "area/validation"
+      ]
+    },
+    {
+      "file": "new/R5-05-strict-targets-false-root-target.md",
+      "r5": "R5-05",
+      "title": "Semantics: `strict_targets=False` reopens the #108 root-target hole verbatim — the configuration empties while `last_transition_ok=True` on both engines",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/validation",
+        "area/interpreter",
+        "area/sync-interpreter"
+      ]
+    },
+    {
+      "file": "new/R5-06-cancel-before-first-turn-unpublished.md",
+      "r5": "R5-06",
+      "title": "Bug: an external cancel landing before the run loop's first scheduling turn is never published — `status` stays `running`, `is_running` is False, and `send(wait=True)` hangs forever",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/interpreter",
+        "area/events"
+      ]
+    },
+    {
+      "file": "new/R5-07-plain-def-service-blocks-loop.md",
+      "r5": "R5-07",
+      "title": "Perf: #116 regression — a plain-`def` invoked service now runs inline on the async run loop, stalling every timer, actor and inbound send for its full duration",
+      "labels": [
+        "bug",
+        "severity/high",
+        "performance",
+        "area/interpreter",
+        "area/actors"
+      ]
+    },
+    {
+      "file": "new/R5-08-threadsafe-bypasses-self-send-gate.md",
+      "r5": "R5-08",
+      "title": "Bug: `send_threadsafe()` bypasses the #105 self-send gate, so an action that hands its own re-trigger to a worker thread is never charged to `maxIterations`",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/interpreter"
+      ]
+    },
+    {
+      "file": "new/R5-09-settle-budget-per-drain.md",
+      "r5": "R5-09",
+      "title": "Bug: The transient settle budget is reset per drain, not per macrostep, so one event's legitimate settle starves the next event in the same `send_events()` batch",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/sync-interpreter"
+      ]
+    },
+    {
+      "file": "new/R5-10-guard-raise-cancels-fallback-candidate.md",
+      "r5": "R5-10",
+      "title": "Semantics: `guardErrorPolicy: \"raise\"` cancels the remaining candidates in a transition array, so an unguarded fallback on an `invoke.onDone` is never taken and the completion is dropped",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/interpreter"
+      ]
+    },
+    {
+      "file": "new/R5-11-receipt-noop-vs-guard-denied.md",
+      "r5": "R5-11",
+      "title": "Enhancement: A guard-denied event and an event the state never declared are indistinguishable — identical receipt, status, `last_transition_ok` and `on_unhandled_event` disposition",
+      "labels": [
+        "enhancement",
+        "severity/high",
+        "area/receipts"
+      ]
+    },
+    {
+      "file": "new/R5-13-sync-restore-skips-clock-attach.md",
+      "r5": "R5-13",
+      "title": "Bug: `SyncInterpreter.start()`'s restore branch returns before `clock._attach()`, so `restart_timers=True` / `from_snapshot(clock=)` re-arm a deadline nothing will ever drain",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/timers"
+      ]
+    },
+    {
+      "file": "new/R5-14-spawn-prefix-hijacks-user-action.md",
+      "r5": "R5-14",
+      "title": "Bug: Any action named `spawn_*` is hijacked by the built-in spawn resolver before user logic is consulted",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/actors"
+      ]
+    },
+    {
+      "file": "new/R5-15-escalate-needs-invoke-id.md",
+      "r5": "R5-15",
+      "title": "Bug: escalate() only reaches the parent's onError when the invoke declares an explicit id",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/actors"
+      ]
+    },
+    {
+      "file": "new/R5-16-send-threadsafe-no-backpressure.md",
+      "r5": "R5-16",
+      "title": "Bug: send_threadsafe has no usable backpressure signal on the calling thread; overflow is evaluated after the call returns",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/interpreter"
+      ]
+    },
+    {
+      "file": "new/R5-17-non-str-event-type-via-restore.md",
+      "r5": "R5-17",
+      "title": "Bug: #113's non-str event-type guard is enforced on send() but not on the restore path",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/persistence"
+      ]
+    },
+    {
+      "file": "new/R5-18-error-hooks-invisible.md",
+      "r5": "R5-18",
+      "title": "Bug: InvalidEventError and SnapshotMidStepError raise correctly but emit to no plugin hook",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/plugins"
+      ]
+    },
+    {
+      "file": "new/R5-19-redaction-gaps.md",
+      "r5": "R5-19",
+      "title": "Bug: get_snapshot() logs unredacted context at DEBUG, and DEFAULT_REDACT_KEYS misses most financial/session PII",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/persistence"
+      ]
+    },
+    {
+      "file": "new/R5-20-dict-event-bypass.md",
+      "r5": "R5-20",
+      "title": "Semantics: dict-shaped event accepts arbitrary keys without InvalidEventError validation",
+      "labels": [
+        "enhancement",
+        "severity/medium",
+        "area/validation"
+      ]
+    },
+    {
+      "file": "new/R5-21-v1-provenance-laundering.md",
+      "r5": "R5-21",
+      "title": "Bug: v1 snapshot restore re-derives provenance from event name, laundering user events into system events",
+      "labels": [
+        "bug",
+        "severity/low",
+        "area/persistence"
+      ]
+    }
+  ],
+  "comments": [
+    {
+      "issue": 91,
+      "file": "comments/91.md",
+      "action": "comment"
+    },
+    {
+      "issue": 99,
+      "file": "comments/99.md",
+      "action": "comment"
+    },
+    {
+      "issue": 102,
+      "file": "comments/102.md",
+      "action": "comment"
+    },
+    {
+      "issue": 103,
+      "file": "comments/103.md",
+      "action": "comment"
+    },
+    {
+      "issue": 104,
+      "file": "comments/104.md",
+      "action": "comment"
+    },
+    {
+      "issue": 105,
+      "file": "comments/105.md",
+      "action": "comment"
+    },
+    {
+      "issue": 106,
+      "file": "comments/106.md",
+      "action": "comment"
+    },
+    {
+      "issue": 107,
+      "file": "comments/107.md",
+      "action": "comment"
+    },
+    {
+      "issue": 108,
+      "file": "comments/108.md",
+      "action": "comment"
+    },
+    {
+      "issue": 109,
+      "file": "comments/109.md",
+      "action": "comment"
+    },
+    {
+      "issue": 110,
+      "file": "comments/110.md",
+      "action": "comment"
+    },
+    {
+      "issue": 111,
+      "file": "comments/111.md",
+      "action": "comment"
+    },
+    {
+      "issue": 112,
+      "file": "comments/112.md",
+      "action": "comment"
+    },
+    {
+      "issue": 113,
+      "file": "comments/113.md",
+      "action": "comment"
+    },
+    {
+      "issue": 114,
+      "file": "comments/114.md",
+      "action": "comment"
+    },
+    {
+      "issue": 115,
+      "file": "comments/115.md",
+      "action": "comment"
+    },
+    {
+      "issue": 116,
+      "file": "comments/116.md",
+      "action": "comment"
+    },
+    {
+      "issue": 117,
+      "file": "comments/117.md",
+      "action": "comment"
+    },
+    {
+      "issue": 118,
+      "file": "comments/118.md",
+      "action": "comment+reopen"
+    },
+    {
+      "issue": 119,
+      "file": "comments/119.md",
+      "action": "comment"
+    },
+    {
+      "issue": 120,
+      "file": "comments/120.md",
+      "action": "comment"
+    },
+    {
+      "issue": 121,
+      "file": "comments/121.md",
+      "action": "comment"
+    },
+    {
+      "issue": 122,
+      "file": "comments/122.md",
+      "action": "comment+reopen"
+    },
+    {
+      "issue": 123,
+      "file": "comments/123.md",
+      "action": "comment"
+    },
+    {
+      "issue": 124,
+      "file": "comments/124.md",
+      "action": "comment"
+    },
+    {
+      "issue": 125,
+      "file": "comments/125.md",
+      "action": "comment+reopen"
+    },
+    {
+      "issue": 126,
+      "file": "comments/126.md",
+      "action": "comment"
+    },
+    {
+      "issue": 127,
+      "file": "comments/127.md",
+      "action": "comment"
+    },
+    {
+      "issue": 128,
+      "file": "comments/128.md",
+      "action": "comment"
+    },
+    {
+      "issue": 129,
+      "file": "comments/129.md",
+      "action": "comment"
+    },
+    {
+      "issue": 130,
+      "file": "comments/130.md",
+      "action": "comment"
+    },
+    {
+      "issue": 131,
+      "file": "comments/131.md",
+      "action": "comment"
+    },
+    {
+      "issue": 132,
+      "file": "comments/132.md",
+      "action": "comment"
+    },
+    {
+      "issue": 133,
+      "file": "comments/133.md",
+      "action": "comment+reopen"
+    },
+    {
+      "issue": 134,
+      "file": "comments/134.md",
+      "action": "comment+reopen"
+    },
+    {
+      "issue": 135,
+      "file": "comments/135.md",
+      "action": "comment"
+    },
+    {
+      "issue": 136,
+      "file": "comments/136.md",
+      "action": "comment"
+    },
+    {
+      "issue": 137,
+      "file": "comments/137.md",
+      "action": "comment"
+    },
+    {
+      "issue": 138,
+      "file": "comments/138.md",
+      "action": "comment"
+    }
+  ],
+  "meta": {
+    "issue": 26,
+    "file": "meta-26.md"
+  }
+}

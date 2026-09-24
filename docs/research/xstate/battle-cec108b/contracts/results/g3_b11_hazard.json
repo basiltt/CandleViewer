@@ -1,0 +1,211 @@
+[
+ {
+  "id": "B11-happy",
+  "inv": "happy",
+  "title": "idle -> starting -> recording via subscribe_streams",
+  "detail": {
+   "ok": true,
+   "states": [
+    [
+     "recording.idle"
+    ],
+    [
+     "recording.recording"
+    ]
+   ],
+   "svc": [
+    "subscribe_streams"
+   ],
+   "ctx_reasons": [
+    "chart"
+   ],
+   "entry_actions": [
+    "cancel_linger",
+    "emit_recording_metric"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B11-a-1",
+  "inv": "INV-B11-a",
+  "title": "last reason removed + position OPEN -> LINGER_DUE returns to recording",
+  "detail": {
+   "ok": true,
+   "lingering": [
+    "recording.lingering"
+   ],
+   "after_linger_due": [
+    "recording.recording"
+   ],
+   "svc": [
+    "subscribe_streams"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B11-a-2",
+  "inv": "INV-B11-a",
+  "title": "no reasons + position CLOSED -> stopping -> stopped",
+  "detail": {
+   "ok": true,
+   "final": [
+    "recording.stopped"
+   ],
+   "svc": [
+    "subscribe_streams",
+    "unsubscribe_and_flush"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B11-a-3",
+  "inv": "INV-B11-a",
+  "title": "two reasons: removing one keeps recording (reasons_remain)",
+  "detail": {
+   "ok": true,
+   "states": [
+    "recording.recording"
+   ],
+   "reasons": [
+    "position"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B11-b",
+  "inv": "INV-B11-b",
+  "title": "reason re-added during lingering -> recording, NO stream restart",
+  "detail": {
+   "ok": true,
+   "lingering": [
+    "recording.lingering"
+   ],
+   "after": [
+    "recording.recording"
+   ],
+   "subscribe_calls": [
+    1,
+    1
+   ],
+   "cancel_linger_count": 2
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B11-c",
+  "inv": "INV-B11-c",
+  "title": "every GAP_DETECTED counted + metricised, state unchanged",
+  "detail": {
+   "ok": true,
+   "gap_count": 5,
+   "metric_calls": 5,
+   "states": [
+    "recording.recording"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B11-d",
+  "inv": "INV-B11-d",
+  "title": "degraded on any unhealthy; exit only when ALL healthy",
+  "detail": {
+   "ok": true,
+   "after_first_unhealthy": [
+    "recording.degraded"
+   ],
+   "after_second_unhealthy": [
+    "recording.degraded"
+   ],
+   "after_first_healthy": [
+    "recording.degraded"
+   ],
+   "after_all_healthy": [
+    "recording.recording"
+   ],
+   "healthy_map": {
+    "trade": true,
+    "kline": true
+   },
+   "deferred": 0,
+   "unhandled": [
+    [
+     "STREAM_UNHEALTHY",
+     "deferred"
+    ]
+   ],
+   "alert_count": 2
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B11-d-hz1",
+  "inv": "INV-B11-d",
+  "title": "2nd unhealthy deferred; next STREAM_HEALTHY flaps via recording",
+  "detail": {
+   "ok": false,
+   "final_state": [
+    "recording.degraded"
+   ],
+   "emit_recording_metric": [
+    1,
+    2
+   ],
+   "flapped_through_recording": true,
+   "transitions": [
+    "done.invoke.sub->['recording.recording']",
+    "STREAM_UNHEALTHY->['recording.degraded']",
+    "STREAM_HEALTHY->['recording.recording']",
+    "STREAM_UNHEALTHY->['recording.degraded']"
+   ],
+   "healthy": {
+    "trade": true,
+    "kline": false
+   }
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "B11-d-hz2",
+  "inv": "INV-B11-d",
+  "title": "2nd unhealthy never recorded if no further event arrives",
+  "detail": {
+   "ok": false,
+   "kline_marked_unhealthy": true,
+   "healthy_map": {
+    "trade": false,
+    "kline": true
+   },
+   "deferred_still_held": 1,
+   "note": "deferred event is held indefinitely; context lags reality"
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "B11-d-hz3",
+  "inv": "INV-B11-d",
+  "title": "stale map lets a single STREAM_HEALTHY declare all-healthy",
+  "detail": {
+   "ok": true,
+   "final": [
+    "recording.degraded"
+   ],
+   "healthy": {
+    "trade": true,
+    "kline": false
+   },
+   "transitions": [
+    "REASON_ADDED->['recording.starting']",
+    "done.invoke.sub->['recording.recording']",
+    "STREAM_UNHEALTHY->['recording.degraded']",
+    "STREAM_HEALTHY->['recording.recording']",
+    "STREAM_UNHEALTHY->['recording.degraded']"
+   ]
+  },
+  "status": "PASS"
+ }
+]

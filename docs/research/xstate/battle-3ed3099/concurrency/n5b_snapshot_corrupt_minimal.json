@@ -1,0 +1,96 @@
+{
+  "probe": "n5b_snapshot_corrupt_minimal",
+  "py": "3.13.7",
+  "good_snapshot_keys": [
+    "actors",
+    "configuration",
+    "context",
+    "deferred",
+    "error",
+    "history",
+    "machine_hash",
+    "machine_id",
+    "output",
+    "pending_events",
+    "state_ids",
+    "status",
+    "system",
+    "taken_at",
+    "value",
+    "version"
+  ],
+  "raw_exception_cases": [
+    {
+      "key": "actors",
+      "value": 7,
+      "outcome": "RAW AttributeError",
+      "msg": "'int' object has no attribute 'items'"
+    },
+    {
+      "key": "actors",
+      "value": "junk",
+      "outcome": "RAW AttributeError",
+      "msg": "'str' object has no attribute 'items'"
+    },
+    {
+      "key": "deferred",
+      "value": null,
+      "outcome": "RAW TypeError",
+      "msg": "'NoneType' object is not iterable"
+    },
+    {
+      "key": "history",
+      "value": 7,
+      "outcome": "RAW AttributeError",
+      "msg": "'int' object has no attribute 'items'"
+    },
+    {
+      "key": "history",
+      "value": "junk",
+      "outcome": "RAW AttributeError",
+      "msg": "'str' object has no attribute 'items'"
+    },
+    {
+      "key": "status",
+      "value": [],
+      "outcome": "RAW TypeError",
+      "msg": "unhashable type: 'list'"
+    },
+    {
+      "key": "status",
+      "value": {},
+      "outcome": "RAW TypeError",
+      "msg": "unhashable type: 'dict'"
+    },
+    {
+      "key": "system",
+      "value": 7,
+      "outcome": "RAW AttributeError",
+      "msg": "'int' object has no attribute 'items'"
+    }
+  ],
+  "raw_exception_case_count": 13,
+  "raw_on_delete": [],
+  "silent_empty_config": [
+    {
+      "outcome": "RESTORED",
+      "state_ids": [],
+      "status": "running",
+      "context": {
+        "n": 1
+      }
+    }
+  ],
+  "r2_driven_live": {
+    "mutation": "del snapshot['configuration'][1] (drop the leaf)",
+    "after_start_state_ids": [],
+    "status": "running",
+    "is_running": true,
+    "GO_receipt_changed": false,
+    "GO_receipt_error": "None",
+    "context": {
+      "n": 1
+    }
+  },
+  "result": "FAIL"
+}

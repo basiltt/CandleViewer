@@ -1,0 +1,36 @@
+{
+  "probe": "p1_service_executor",
+  "py": "3.13.7",
+  "v1_200_concurrent": {
+    "interpreters": 200,
+    "completed": 200,
+    "distinct_service_threads": 200,
+    "ran_off_loop_thread": true,
+    "done_before_queued_RACE": 200,
+    "heartbeat_ticks_during": 3,
+    "wall_s": 0.527,
+    "pass": false
+  },
+  "v2_stop_mid_service": {
+    "stop_s": 0.001,
+    "stop_error": null,
+    "status": "stopped",
+    "is_running": false,
+    "hung": false,
+    "pass": true
+  },
+  "v3_executor_ownership": {
+    "caller_executor_still_usable": true,
+    "owned_executor_released_on_stop": true,
+    "owned_was_created": true,
+    "pass": true
+  },
+  "v4_thread_leak": {
+    "cycles": 200,
+    "threads_baseline": 2,
+    "threads_after": 1,
+    "delta": -1,
+    "pass": true
+  },
+  "result": "FAIL"
+}

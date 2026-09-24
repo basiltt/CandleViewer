@@ -1,0 +1,62 @@
+{
+ "[async]V1.B16.build_strictConfig": {
+  "pass": true,
+  "note": "acts=18 guards=1 svcs=0 delays=0"
+ },
+ "[async]V1.B16.async_start_snap": {
+  "pass": true,
+  "note": "['session.auth.pending_mfa', 'session.elevation.normal'] running | ['t0:v=3:sched=0']"
+ },
+ "[async]V1.B16.sync_start_snap": {
+  "pass": true,
+  "note": "['session.auth.pending_mfa', 'session.elevation.normal'] running | []"
+ },
+ "[async]V1.B17.build_strictConfig": {
+  "pass": true,
+  "note": "acts=10 guards=3 svcs=0 delays=0"
+ },
+ "[async]V1.B17.async_start_snap": {
+  "pass": true,
+  "note": "['live_gate.locked'] running | ['t0:v=3:sched=0']"
+ },
+ "[async]V1.B17.sync_start_snap": {
+  "pass": true,
+  "note": "['live_gate.locked'] running | []"
+ },
+ "[async]V1.B18.build_strictConfig": {
+  "pass": true,
+  "note": "acts=9 guards=5 svcs=2 delays=0"
+ },
+ "[async]V1.B18.async_start_snap": {
+  "pass": true,
+  "note": "['kill_switch.clear'] running | ['t0:v=3:sched=0']"
+ },
+ "[async]V1.B18.sync_start_snap": {
+  "pass": true,
+  "note": "['kill_switch.clear'] running | []"
+ },
+ "[async]V1.B19.build_strictConfig": {
+  "pass": true,
+  "note": "acts=20 guards=3 svcs=3 delays=0"
+ },
+ "[async]V1.B19.async_start_snap": {
+  "pass": true,
+  "note": "['reconciliation.idle'] running | ['t0:v=3:sched=0']"
+ },
+ "[async]V1.B19.sync_start_snap": {
+  "pass": true,
+  "note": "['reconciliation.idle'] running | []"
+ },
+ "[async]V1.B20.build_strictConfig": {
+  "pass": true,
+  "note": "acts=16 guards=5 svcs=0 delays=0"
+ },
+ "[async]V1.B20.async_start_snap": {
+  "pass": true,
+  "note": "['risk_lockout.clear'] running | ['t0:v=3:sched=0']"
+ },
+ "[async]V1.B20.sync_start_snap": {
+  "pass": true,
+  "note": "['risk_lockout.clear'] running | []"
+ }
+}

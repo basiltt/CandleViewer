@@ -1,0 +1,46 @@
+{
+ "[async]F0.build.B1": {
+  "pass": true,
+  "note": "root=order acts=25 guards=7 svcs=4 warn=0"
+ },
+ "[async]F0.build.B2": {
+  "pass": true,
+  "note": "root=trade_group acts=14 guards=7 svcs=1 warn=0"
+ },
+ "[async]F0.build.B3": {
+  "pass": true,
+  "note": "root=leg acts=11 guards=7 svcs=5 warn=0"
+ },
+ "[async]F0.build.B4": {
+  "pass": true,
+  "note": "root=oco acts=8 guards=6 svcs=5 warn=0"
+ },
+ "[async]F0.build.B5": {
+  "pass": true,
+  "note": "root=iceberg acts=9 guards=8 svcs=3 warn=0"
+ },
+ "[async]F0.build.B16": {
+  "pass": true,
+  "note": "root=session acts=18 guards=1 svcs=0 warn=0"
+ },
+ "[async]F0.build.B17": {
+  "pass": true,
+  "note": "root=live_gate acts=10 guards=3 svcs=0 warn=0"
+ },
+ "[async]F0.build.B18": {
+  "pass": true,
+  "note": "root=kill_switch acts=9 guards=5 svcs=2 warn=0"
+ },
+ "[async]F0.build.B19": {
+  "pass": true,
+  "note": "root=reconciliation acts=20 guards=3 svcs=3 warn=0"
+ },
+ "[async]F0.build.B20": {
+  "pass": true,
+  "note": "root=risk_lockout acts=16 guards=5 svcs=0 warn=0"
+ },
+ "[async]F0.220.nested-typo-rejected": {
+  "pass": true,
+  "note": "InvalidConfigError(\"Machine 'm' has unknown config key(s) -- m.a: 'entyr' (did you mean 'entry'?), 'onn' (did you mean 'on'?). Unknown keys are ignored by the parser, so a misspelled key silently does"
+ }
+}

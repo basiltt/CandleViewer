@@ -1,0 +1,156 @@
+[
+ {
+  "id": "N3-01",
+  "title": "#152: guardErrorPolicy \"raise\" cancels ONLY its own candidate \u2014 the unguarded fallback on invoke.onDone is taken",
+  "intent": "a throwing guard must not swallow a service completion",
+  "detail": {
+   "ok": true,
+   "async": {
+    "ids": [
+     "g.fallback"
+    ],
+    "last_error": "RuntimeError"
+   },
+   "sync": {
+    "ids": [
+     "g.fallback"
+    ],
+    "last_error": "RuntimeError"
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N3-02",
+  "title": "#153: Receipt matrix \u2014 denied (guard refused) vs deferred vs unhandled (undeclared) are distinguishable",
+  "intent": "an OMS must tell 'rejected by a rule' from 'nobody listened'",
+  "detail": {
+   "ok": true,
+   "rows": {
+    "DENIED": {
+     "denied": true,
+     "deferred": true,
+     "changed": false,
+     "state_ids": [
+      "r.a"
+     ]
+    },
+    "UNDECLARED": {
+     "denied": false,
+     "deferred": true,
+     "changed": false,
+     "state_ids": [
+      "r.a"
+     ]
+    },
+    "OK": {
+     "denied": false,
+     "deferred": false,
+     "changed": true,
+     "state_ids": [
+      "r.b"
+     ]
+    }
+   },
+   "hook_reasons": [
+    [
+     "DENIED",
+     "deferred"
+    ],
+    [
+     "UNDECLARED",
+     "deferred"
+    ],
+    [
+     "DENIED",
+     "deferred"
+    ],
+    [
+     "UNDECLARED",
+     "deferred"
+    ]
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N3-03",
+  "title": "#147: a root target is a non-downgradable RootTargetError under strict_targets=False too",
+  "intent": "the #108 hole must not reopen through the lenient flag",
+  "detail": {
+   "ok": true,
+   "strict_true": "RootTargetError",
+   "strict_false": "RootTargetError",
+   "default": "RootTargetError"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N3-04",
+  "title": "#145: a child stopped by actionErrorPolicy \"fail\" fails its parent's invoke (onError) on BOTH engines",
+  "intent": "a bricked child must surface to the supervisor, not hang the parent in `work`",
+  "detail": {
+   "ok": true,
+   "async": [
+    "sup.failed"
+   ],
+   "sync": [
+    "sup.failed"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N3-05",
+  "title": "#156: `escalate` from an ANONYMOUS invoke (no explicit id) reaches the parent's onError",
+  "intent": "the invoke id must come from what the parent knows the child by, not from the actor-id string",
+  "detail": {
+   "ok": true,
+   "async": [
+    "sup.caught"
+   ],
+   "sync": [
+    "sup.caught"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N3-06",
+  "title": "#155: a USER action named `spawn_order` wins over the built-in spawn prefix",
+  "intent": "a built-in must not claim a name out of the user's namespace",
+  "detail": {
+   "ok": true,
+   "user_action_ran": true,
+   "calls": [
+    "user"
+   ],
+   "actors_spawned": [],
+   "last_error": null
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N3-07",
+  "title": "#151: the always-settle budget is PER MACROSTEP \u2014 send_events([A,B]) matches send(A); send(B)",
+  "intent": "two independent events in one batch must not share one allowance",
+  "detail": {
+   "ok": true,
+   "sequential": {
+    "hops": 10,
+    "ids": [
+     "s.a"
+    ],
+    "err": null
+   },
+   "batched": {
+    "hops": 10,
+    "ids": [
+     "s.a"
+    ],
+    "err": null
+   }
+  },
+  "status": "PASS"
+ }
+]

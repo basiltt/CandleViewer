@@ -1,0 +1,48 @@
+[
+ {
+  "case": "#168 invoke ping-pong",
+  "service": "plain def",
+  "send": "ok",
+  "laps@1s": 52,
+  "laps@3s": 52,
+  "still_growing": false,
+  "status": "running",
+  "last_error": "RunawayChainError",
+  "drops": [
+   "chain_budget"
+  ]
+ },
+ {
+  "case": "#168 invoke ping-pong",
+  "service": "async def",
+  "send": "ok",
+  "laps@1s": 10880,
+  "laps@3s": 32046,
+  "still_growing": true,
+  "status": "running",
+  "last_error": "NoneType",
+  "drops": []
+ },
+ {
+  "case": "#166 always-into-invoked-child",
+  "service": "plain def",
+  "send": "ok",
+  "laps@1s": 51,
+  "laps@3s": 51,
+  "still_growing": false,
+  "status": "running",
+  "last_error": "RunawayChainError",
+  "drops": []
+ },
+ {
+  "case": "#166 always-into-invoked-child",
+  "service": "async def",
+  "send": "ok",
+  "laps@1s": 285,
+  "laps@3s": 877,
+  "still_growing": true,
+  "status": "running",
+  "last_error": "NoneType",
+  "drops": []
+ }
+]

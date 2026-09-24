@@ -1,0 +1,30 @@
+[
+ {
+  "id": "N6-01",
+  "title": "6-minute chaos soak: no lost order, never inert-while-running, bounded RSS",
+  "intent": "an OMS runs for weeks; a leak or a silently inert actor only shows up under time",
+  "detail": {
+   "ok": true,
+   "elapsed_s": 360.0,
+   "violations": [],
+   "stats": {
+    "events": 3382000,
+    "snapshots": 337754,
+    "restores": 84436,
+    "hostile": 1096873,
+    "midstep": 0
+   },
+   "context": {
+    "submitted": 973687,
+    "filled": 680897,
+    "rejected": 292789
+   },
+   "outstanding": 1,
+   "status": "running",
+   "rss_mb_start": 30.1,
+   "rss_mb_end": 31.8,
+   "rss_growth_mb": 1.7
+  },
+  "status": "PASS"
+ }
+]

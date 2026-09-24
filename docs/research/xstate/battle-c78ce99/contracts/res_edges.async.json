@@ -1,0 +1,38 @@
+{
+ "[async]C-04/elevation SURVIVES LOGOUT (our-contract blocker)": {
+  "pass": true,
+  "note": "{\"before\": [\"session.auth.active\", \"session.elevation.elevated\"], \"after\": [\"session.auth.revoked\", \"session.elevation.elevated\"], \"elevated_until_us\": null}"
+ },
+ "[async]C-04/no LOGOUT handler on elevation.elevated": {
+  "pass": true,
+  "note": "[\"ELEVATION_DEADLINE\", \"REVOKE\", \"STEP_UP_OK\"]"
+ },
+ "[async]B18.priority/chain completed, nothing dropped": {
+  "pass": true,
+  "note": "{\"states\": [\"kill_switch.engaged\"], \"dropped\": [], \"err\": \"None\", \"svc\": [\"cancel_all_working_orders\", \"flatten_all_positions\"]}"
+ },
+ "[async]B18.priority/both kill services ran in order": {
+  "pass": true,
+  "note": "[\"cancel_all_working_orders\", \"flatten_all_positions\"]"
+ },
+ "[async]B18.priority/authorised RELEASE lands (C-07b not triggered)": {
+  "pass": true,
+  "note": "{\"states\": [\"kill_switch.clear\"], \"status\": \"running\"}"
+ },
+ "[async]#214/our B1 snapshot is v3": {
+  "pass": true,
+  "note": "3"
+ },
+ "[async]#214/restored unknown USER event refused under strict": {
+  "pass": true,
+  "note": "{\"invalid\": [], \"last_error\": \"UnknownEventError(\\\"Event 'NOT_IN_CHART' is not declared by machine 'order'. Known events: AMEND, AMEND_REJECTED, CANCEL, EXEC, EXPIRE, FAULT\", \"states\": [\"order.lifecycle.validated\", \"order.protection.not_required\"]}"
+ },
+ "[async]#214/machine still usable after the refusal": {
+  "pass": true,
+  "note": "{\"status\": \"running\", \"states\": [\"order.lifecycle.validated\", \"order.protection.not_required\"]}"
+ },
+ "[async]#214/v2 refused at minimum_version=3": {
+  "pass": true,
+  "note": "SnapshotVersionError(\"Snapshot version 2 is below the caller's minimum_version=3. A payload this old carries no drift fingerprint; refuse it, or lower the floor"
+ }
+}

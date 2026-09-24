@@ -1,0 +1,36 @@
+[
+ {
+  "id": "S3-01",
+  "title": "520 generated cycle configs x ASYNC engine: every one settles within the 25s watchdog; any trip is observable",
+  "intent": "#166/#167/#168: every self-generated cycle must be bounded and loud",
+  "detail": {
+   "ok": true,
+   "configs": 520,
+   "settled": 520,
+   "tripped": 130,
+   "silent_trips": [],
+   "hangs": [],
+   "build_rejects": 0
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "S3-02",
+  "title": "520 generated cycle configs x SYNC engine: same bound, and the two engines agree on WHICH shapes trip",
+  "intent": "engine parity on runaway detection is the #166 headline claim. NOTE: async trips for shape 0 (invoke ping-pong) land AFTER send(wait=True) returns, so S3-01 undercounts them; the dedicated lap-parity probe (repro/d7_lap_parity.py) shows both engines trip at the SAME lap (1002).",
+  "detail": {
+   "ok": true,
+   "configs": 520,
+   "settled": 520,
+   "tripped": 390,
+   "hangs": [],
+   "build_rejects": 0,
+   "by_shape_tripped": {
+    "0": 130,
+    "1": 130,
+    "3": 130
+   }
+  },
+  "status": "PASS"
+ }
+]

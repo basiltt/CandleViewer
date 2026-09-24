@@ -1,0 +1,60 @@
+name: Epic
+description: High-level tracking issue spanning multiple tasks
+title: "[Epic]: "
+labels: ["type/epic"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for a high-level epic that will be broken down into smaller issues.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: High-level summary of the epic and its goals.
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation / Context
+      description: Why is this epic needed? What value does it deliver?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What is in scope and out of scope for this epic?
+    validations:
+      required: false
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Sub-tasks / Checklist
+      description: List the child issues or tasks that make up this epic.
+      placeholder: |
+        - [ ] Task 1
+        - [ ] Task 2
+    validations:
+      required: false
+  - type: dropdown
+    id: milestone
+    attributes:
+      label: Target Milestone
+      options:
+        - M0 Foundation
+        - M1 Core Charting Engine
+        - M2 Data Feeds & Indicators
+        - M3 Drawing Tools & Alerts
+        - M4 Backtesting & Scripting
+        - M5 Collaboration, Layouts & Polish
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Links to designs, ADRs, or related discussions.
+    validations:
+      required: false

@@ -1,0 +1,85 @@
+[
+ {
+  "id": "R5-142b",
+  "inv": "#142/#143",
+  "title": "B13 hostile snapshot (CORRECT json-string form)",
+  "detail": {
+   "snapshot_keys": [
+    "actors",
+    "configuration",
+    "context",
+    "deferred",
+    "error",
+    "history",
+    "machine_hash",
+    "machine_id",
+    "output",
+    "pending_events",
+    "state_ids",
+    "status",
+    "system",
+    "taken_at",
+    "value",
+    "version"
+   ],
+   "cfg_key": "state_ids",
+   "clean": [
+    "ws_conn.live"
+   ],
+   "cases": {
+    "unmodified_control": "ACCEPTED state=['ws_conn.live'] status=running",
+    "empty_configuration": "ACCEPTED state=['ws_conn.live'] status=running",
+    "non_leaf_only": "ACCEPTED state=['ws_conn.live'] status=running",
+    "status_not_str": "SnapshotCorruptError: Snapshot is malformed: unknown status 42; expected one of ['done', 'error', 'running', 'st",
+    "error_status_no_error": "SnapshotCorruptError: Snapshot is malformed: status is 'error' but no 'error' message is recorded.",
+    "version_wrong_type": "SnapshotCorruptError: Snapshot is malformed: 'version' is dict, expected an integer.",
+    "deferred_wrong_type": "SnapshotCorruptError: Snapshot is malformed: 'deferred' must be a list of event records whose 'type' is a non-em",
+    "history_wrong_type": "SnapshotCorruptError: Snapshot is malformed: 'history' is int, expected an object.",
+    "actors_wrong_type": "SnapshotCorruptError: Snapshot is malformed: 'actors' is str, expected an object.",
+    "pending_type_not_str": "SnapshotCorruptError: Snapshot is malformed: 'deferred' must be a list of event records whose 'type' is a non-em"
+   },
+   "accepted_hostile": {
+    "empty_configuration": "ACCEPTED state=['ws_conn.live'] status=running",
+    "non_leaf_only": "ACCEPTED state=['ws_conn.live'] status=running"
+   },
+   "ok": false
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "R5-157b",
+  "inv": "#157",
+  "title": "B11 bounded inbox RAISE: overflow at send_threadsafe (loop genuinely busy)",
+  "detail": {
+   "n_ok": 200,
+   "n_overflow": 0,
+   "other": [],
+   "tail": [
+    "ok",
+    "ok",
+    "ok",
+    "ok"
+   ],
+   "status": "running",
+   "ok": false,
+   "note": "raise must land on the calling thread, not on an unread future; n_ok<200 with n_overflow>0 is the #157 fix working"
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "R5-157c",
+  "inv": "#157",
+  "title": "B12/B15 order-path inbox: RAISE surfaces on the async send() too",
+  "detail": {
+   "n_ok": 3,
+   "n_overflow": 47,
+   "other": [],
+   "status": "running",
+   "states": [
+    "paper_account.active"
+   ],
+   "ok": true
+  },
+  "status": "PASS"
+ }
+]

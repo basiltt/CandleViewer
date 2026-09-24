@@ -1,0 +1,189 @@
+{
+ "b18_release_while_cancelling": {
+  "ids_mid": [
+   "kill_switch.cancelling"
+  ],
+  "ids_after": [
+   "kill_switch.cancelling"
+  ],
+  "status": "error",
+  "raised": null,
+  "receipt": {
+   "changed": false,
+   "denied": false,
+   "deferred": false,
+   "error": null
+  },
+  "unhandled": [
+   [
+    "RELEASE",
+    "errored"
+   ]
+  ],
+  "dropped": []
+ },
+ "b19_unknown_during_sweep": {
+  "ids": [
+   "reconciliation.fetching"
+  ],
+  "deferred": 1,
+  "receipt": {
+   "changed": false,
+   "denied": false,
+   "deferred": true,
+   "error": null
+  },
+  "unhandled": [
+   [
+    "UNKNOWN_ORDER",
+    "deferred"
+   ],
+   [
+    "UNKNOWN_ORDER",
+    "deferred"
+   ]
+  ],
+  "dropped": [],
+  "ids_after_release": [
+   "reconciliation.idle"
+  ],
+  "deferred_after": 0,
+  "acts_after": [
+   "set_trigger_periodic",
+   "stamp_start",
+   "emit_recon_started",
+   "store_exchange_state",
+   "store_divergences",
+   "persist_report",
+   "emit_recon_metrics",
+   "reset_failures",
+   "broadcast_recon_complete",
+   "set_trigger_unknown",
+   "stamp_start",
+   "emit_recon_started",
+   "store_exchange_state",
+   "store_divergences",
+   "persist_report",
+   "emit_recon_metrics",
+   "reset_failures",
+   "broadcast_recon_complete"
+  ],
+  "ids_mid": [
+   "reconciliation.fetching"
+  ]
+ },
+ "b19_cancel_during_sweep": {
+  "ids": [
+   "reconciliation.idle"
+  ],
+  "receipt": {
+   "changed": true,
+   "denied": false,
+   "deferred": false,
+   "error": null
+  },
+  "deferred": 0
+ },
+ "b19_stale_RECONNECTED": {
+  "ids": [
+   "reconciliation.stale_lockout"
+  ],
+  "acts": [
+   "set_trigger_periodic",
+   "stamp_start",
+   "emit_recon_started",
+   "lock_account_for_new_orders",
+   "page_owner",
+   "reset_failures",
+   "stamp_start",
+   "emit_recon_started",
+   "lock_account_for_new_orders",
+   "page_owner"
+  ],
+  "deferred": 0,
+  "receipts": [
+   {
+    "changed": true,
+    "error": null,
+    "deferred": false
+   },
+   {
+    "changed": true,
+    "error": null,
+    "deferred": false
+   }
+  ]
+ },
+ "b19_stale_OPERATOR_RESOLVED": {
+  "ids": [
+   "reconciliation.stale_lockout"
+  ],
+  "acts": [
+   "set_trigger_periodic",
+   "stamp_start",
+   "emit_recon_started",
+   "lock_account_for_new_orders",
+   "page_owner"
+  ],
+  "deferred": 1,
+  "receipts": [
+   {
+    "changed": true,
+    "error": null,
+    "deferred": false
+   },
+   {
+    "changed": false,
+    "error": null,
+    "deferred": true
+   }
+  ]
+ },
+ "b19_stale_SWEEP_DUE": {
+  "ids": [
+   "reconciliation.stale_lockout"
+  ],
+  "acts": [
+   "set_trigger_periodic",
+   "stamp_start",
+   "emit_recon_started",
+   "lock_account_for_new_orders",
+   "page_owner"
+  ],
+  "deferred": 1,
+  "receipts": [
+   {
+    "changed": true,
+    "error": null,
+    "deferred": false
+   },
+   {
+    "changed": false,
+    "error": null,
+    "deferred": true
+   }
+  ]
+ },
+ "b19_stale_entry": {
+  "ids": [
+   "reconciliation.stale_lockout"
+  ],
+  "acts": [
+   "set_trigger_periodic",
+   "stamp_start",
+   "emit_recon_started",
+   "lock_account_for_new_orders",
+   "page_owner"
+  ]
+ },
+ "cvc32_plain_def_service": {
+  "ran": true,
+  "ids": [
+   "kill_switch.engaged"
+  ],
+  "status": "running",
+  "loop_ticks_during_blocking_service": 7,
+  "service_wall_s": 0.251,
+  "has_service_executor_param": true
+ }
+}

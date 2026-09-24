@@ -1,0 +1,30 @@
+{
+ "[async]D5/219/sync/reentrant-wait-refused": {
+  "pass": true,
+  "note": "raised=None action_errors=['rearm_pong_deadline:ReentrantWaitError(\"Action on \\'ws_conn\\' awaited send(\\'PONG\\', wait=True) on its own interpreter. The receipt resolves only when the run loop processes the event, and the loop cannot advance until this action returns -- that is a deadlock. Send without wait=True from inside an action (the event runs after the current step), or await the receipt from outside.\")']"
+ },
+ "[async]D5/219/sync/parity-with-async": {
+  "pass": true,
+  "note": "states=['ws_conn.live'] status=running"
+ },
+ "[async]D5/219/async/reentrant-wait-refused": {
+  "pass": true,
+  "note": "hung=None action_errors=['rearm_pong_deadline:ReentrantWaitError(\"Action on \\'ws_conn\\' awaited send(\\'PONG\\', wait=True) on its own interpreter. The receipt resolves only when the run loop processes the event, and the loop cannot advance until this action returns -- that is a deadlock. Send without wait=True from inside an action (the event runs after the current step), or await the receipt from outside.\")']"
+ },
+ "[async]D5/219/async/rollback-keeps-chart-live": {
+  "pass": true,
+  "note": "states=['ws_conn.live'] status=running (actionErrorPolicy=rollback)"
+ },
+ "[async]D5/219/async/no-chain-trip-from-refusal": {
+  "pass": true,
+  "note": "chain_trips=0"
+ },
+ "[async]D5/219/async/deferred-receipt-still-works": {
+  "pass": true,
+  "note": "PONG returned in 0.001s, receipt future=True resolved=True"
+ },
+ "[async]D5/219/async/good-shape-stays-live": {
+  "pass": true,
+  "note": "deferred SOCKET_CLOSED receipt resolved -> ['ws_conn.backing_off']"
+ }
+}

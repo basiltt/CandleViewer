@@ -1,0 +1,25 @@
+[
+  {
+    "id": "B5",
+    "title": "parent rollback leaves a child actor's self-raised event intact",
+    "expected": {
+      "child_seen": [
+        "CHILD_SELF"
+      ],
+      "parent_state": [
+        "parent.idle"
+      ],
+      "parent_seen": []
+    },
+    "observed": {
+      "child_seen": [
+        "CHILD_SELF"
+      ],
+      "parent_state": [
+        "parent.idle"
+      ],
+      "parent_seen": []
+    },
+    "status": "PASS"
+  }
+]

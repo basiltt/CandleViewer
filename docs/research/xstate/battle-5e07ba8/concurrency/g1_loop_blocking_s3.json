@@ -1,0 +1,27 @@
+{
+  "probe": "g1_loop_blocking_s3",
+  "py": "3.13.7",
+  "budget_ms": 5.0,
+  "scenarios": [
+    {
+      "scenario": "s3_1000_machines_saturated",
+      "window_s": 3.016,
+      "events_processed": 45200,
+      "throughput_ev_s": 14984.4,
+      "tick_100ms": {
+        "ticks": 30,
+        "late_ms_p50": 20.155,
+        "late_ms_p95": 31.929,
+        "late_ms_max": 68.052,
+        "ticks_over_budget": 30
+      },
+      "loop_turn_gap_ms_p50": 13.4954,
+      "loop_turn_gap_ms_p999": 55.4209,
+      "loop_turn_gap_ms_max": 55.4209,
+      "slow_callback_log_hits": 0,
+      "slow_callback_sample": [],
+      "budget_ms": 5.0,
+      "asyncio_debug_mode": false
+    }
+  ]
+}

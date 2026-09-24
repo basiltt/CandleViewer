@@ -1,0 +1,102 @@
+{
+ "[async]B1.cfg.no_unknown_top_keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B1.build.strict_config_true": {
+  "pass": true,
+  "note": "built with strict_config=True"
+ },
+ "[async]B1.build.no_warning": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B1.build.strictConfig_key": {
+  "pass": true,
+  "note": "config-level strictConfig ok"
+ },
+ "[async]B1.build.typo_refused": {
+  "pass": true,
+  "note": "InvalidConfigError(\"Machine 'order' has unknown top-level key(s) 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys are ignored by the parse"
+ },
+ "[async]B2.cfg.no_unknown_top_keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B2.build.strict_config_true": {
+  "pass": true,
+  "note": "built with strict_config=True"
+ },
+ "[async]B2.build.no_warning": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B2.build.strictConfig_key": {
+  "pass": true,
+  "note": "config-level strictConfig ok"
+ },
+ "[async]B2.build.typo_refused": {
+  "pass": true,
+  "note": "InvalidConfigError(\"Machine 'trade_group' has unknown top-level key(s) 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys are ignored by the"
+ },
+ "[async]B3.cfg.no_unknown_top_keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B3.build.strict_config_true": {
+  "pass": true,
+  "note": "built with strict_config=True"
+ },
+ "[async]B3.build.no_warning": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B3.build.strictConfig_key": {
+  "pass": true,
+  "note": "config-level strictConfig ok"
+ },
+ "[async]B3.build.typo_refused": {
+  "pass": true,
+  "note": "InvalidConfigError(\"Machine 'leg' has unknown top-level key(s) 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys are ignored by the parser,"
+ },
+ "[async]B4.cfg.no_unknown_top_keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B4.build.strict_config_true": {
+  "pass": true,
+  "note": "built with strict_config=True"
+ },
+ "[async]B4.build.no_warning": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B4.build.strictConfig_key": {
+  "pass": true,
+  "note": "config-level strictConfig ok"
+ },
+ "[async]B4.build.typo_refused": {
+  "pass": true,
+  "note": "InvalidConfigError(\"Machine 'oco' has unknown top-level key(s) 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys are ignored by the parser,"
+ },
+ "[async]B5.cfg.no_unknown_top_keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B5.build.strict_config_true": {
+  "pass": true,
+  "note": "built with strict_config=True"
+ },
+ "[async]B5.build.no_warning": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B5.build.strictConfig_key": {
+  "pass": true,
+  "note": "config-level strictConfig ok"
+ },
+ "[async]B5.build.typo_refused": {
+  "pass": true,
+  "note": "InvalidConfigError(\"Machine 'iceberg' has unknown top-level key(s) 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys are ignored by the par"
+ }
+}

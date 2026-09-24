@@ -1,0 +1,22 @@
+{
+ "[def]K1/priority kill switch applied, nothing dropped": {
+  "pass": true,
+  "note": "{\"states\": [\"twap.cancelled\"], \"latency_s\": 0.001, \"dropped\": [], \"receipt_err\": \"None\"}"
+ },
+ "[def]K1/kill-switch latency <= service duration + slack": {
+  "pass": true,
+  "note": "latency=0.001s  service_hold=1.0s  style=def"
+ },
+ "[def]K2/200 external priority sends: 0 dropped, 0 charged (#180)": {
+  "pass": true,
+  "note": "{\"ok\": 200, \"n\": 200, \"dropped\": [], \"errs\": [], \"states\": [\"alert.armed\"]}"
+ },
+ "[def]K3/KILL_SWITCH reaches kill_switched during in-flight eval": {
+  "pass": true,
+  "note": "{\"inflight\": [\"rule_instance.cooling_down\"], \"after\": [\"rule_instance.kill_switched\"], \"latency_s\": 0.001, \"timeout\": false, \"unh\": []}"
+ },
+ "[def]K3/kill-switch latency floor recorded": {
+  "pass": true,
+  "note": "style=def latency=0.001s service_hold=1.0s"
+ }
+}

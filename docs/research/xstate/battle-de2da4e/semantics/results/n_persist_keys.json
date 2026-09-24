@@ -1,0 +1,200 @@
+[
+ {
+  "id": "N1",
+  "title": "#221: parked scheduled_sends survive an N-hop restore->persist chain with NO start(), then fire EXACTLY once at the right remaining delay (>=300 property cases)",
+  "detail": {
+   "ok": true,
+   "checked": 300,
+   "n_bad": 0,
+   "bad": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N2",
+  "title": "#220 recursive key check: a typo injected at EVERY nesting level must be CAUGHT (warn by default, raise under strict_config) and the finding must NAME THE PATH",
+  "detail": {
+   "ok": true,
+   "missed": [],
+   "no_hint": [
+    "on_transition"
+   ],
+   "cells": {
+    "root": {
+     "typo": "maxIterationss",
+     "warned": true,
+     "refused": true,
+     "hint": true,
+     "path_named": true,
+     "warn_excerpt": "\u26a0\ufe0f Machine 'm' has unknown config key(s) -- m: 'maxIterationss' (did you mean 'maxIterations'?). Unknown keys are ignored by the parser, so a misspell",
+     "raise_excerpt": "Machine 'm' has unknown config key(s) -- m: 'maxIterationss' (did you mean 'maxIterations'?). Unknown keys are ignored by the parser, so a misspelled "
+    },
+    "state": {
+     "typo": "entryy",
+     "warned": true,
+     "refused": true,
+     "hint": true,
+     "path_named": true,
+     "warn_excerpt": "\u26a0\ufe0f Machine 'm' has unknown config key(s) -- m.r1: 'entryy' (did you mean 'entry'?). Unknown keys are ignored by the parser, so a misspelled key silent",
+     "raise_excerpt": "Machine 'm' has unknown config key(s) -- m.r1: 'entryy' (did you mean 'entry'?). Unknown keys are ignored by the parser, so a misspelled key silently "
+    },
+    "nested_state": {
+     "typo": "exitt",
+     "warned": true,
+     "refused": true,
+     "hint": true,
+     "path_named": true,
+     "warn_excerpt": "\u26a0\ufe0f Machine 'm' has unknown config key(s) -- m.r1.y: 'exitt' (did you mean 'exit'?). Unknown keys are ignored by the parser, so a misspelled key silent",
+     "raise_excerpt": "Machine 'm' has unknown config key(s) -- m.r1.y: 'exitt' (did you mean 'exit'?). Unknown keys are ignored by the parser, so a misspelled key silently "
+    },
+    "parallel_region": {
+     "typo": "invokee",
+     "warned": true,
+     "refused": true,
+     "hint": true,
+     "path_named": true,
+     "warn_excerpt": "\u26a0\ufe0f Machine 'm' has unknown config key(s) -- m.r2.pa: 'invokee' (did you mean 'invoke'?). Unknown keys are ignored by the parser, so a misspelled key s",
+     "raise_excerpt": "Machine 'm' has unknown config key(s) -- m.r2.pa: 'invokee' (did you mean 'invoke'?). Unknown keys are ignored by the parser, so a misspelled key sile"
+    },
+    "on_transition": {
+     "typo": "tpye",
+     "warned": true,
+     "refused": true,
+     "hint": false,
+     "path_named": true,
+     "warn_excerpt": "\u26a0\ufe0f Machine 'm' has unknown config key(s) -- m.r1.y on['GO']: 'tpye'. Unknown keys are ignored by the parser, so a misspelled key silently does nothing",
+     "raise_excerpt": "Machine 'm' has unknown config key(s) -- m.r1.y on['GO']: 'tpye'. Unknown keys are ignored by the parser, so a misspelled key silently does nothing (a"
+    },
+    "always_transition": {
+     "typo": "guardd",
+     "warned": true,
+     "refused": true,
+     "hint": true,
+     "path_named": true,
+     "warn_excerpt": "\u26a0\ufe0f Machine 'm' has unknown config key(s) -- m.r1.y always: 'guardd' (did you mean 'guard'?). Unknown keys are ignored by the parser, so a misspelled k",
+     "raise_excerpt": "Machine 'm' has unknown config key(s) -- m.r1.y always: 'guardd' (did you mean 'guard'?). Unknown keys are ignored by the parser, so a misspelled key "
+    },
+    "after_transition": {
+     "typo": "actionss",
+     "warned": true,
+     "refused": true,
+     "hint": true,
+     "path_named": true,
+     "warn_excerpt": "\u26a0\ufe0f Machine 'm' has unknown config key(s) -- m.r1.y after[100]: 'actionss' (did you mean 'actions'?). Unknown keys are ignored by the parser, so a miss",
+     "raise_excerpt": "Machine 'm' has unknown config key(s) -- m.r1.y after[100]: 'actionss' (did you mean 'actions'?). Unknown keys are ignored by the parser, so a misspel"
+    },
+    "onDone_transition": {
+     "typo": "targett",
+     "warned": true,
+     "refused": true,
+     "hint": true,
+     "path_named": true,
+     "warn_excerpt": "\u26a0\ufe0f Machine 'm' has unknown config key(s) -- m.r1 onDone: 'targett' (did you mean 'target'?). Unknown keys are ignored by the parser, so a misspelled k",
+     "raise_excerpt": "Machine 'm' has unknown config key(s) -- m.r1 onDone: 'targett' (did you mean 'target'?). Unknown keys are ignored by the parser, so a misspelled key "
+    },
+    "invoke": {
+     "typo": "srcc",
+     "warned": true,
+     "refused": true,
+     "hint": true,
+     "path_named": true,
+     "warn_excerpt": "\u26a0\ufe0f Machine 'm' has unknown config key(s) -- m.r1.y invoke[q]: 'srcc' (did you mean 'src'?). Unknown keys are ignored by the parser, so a misspelled ke",
+     "raise_excerpt": "Machine 'm' has unknown config key(s) -- m.r1.y invoke[q]: 'srcc' (did you mean 'src'?). Unknown keys are ignored by the parser, so a misspelled key s"
+    },
+    "invoke_onDone": {
+     "typo": "reenterr",
+     "warned": true,
+     "refused": true,
+     "hint": true,
+     "path_named": true,
+     "warn_excerpt": "\u26a0\ufe0f Machine 'm' has unknown config key(s) -- m.r1.y invoke[q] onDone: 'reenterr' (did you mean 'reenter'?). Unknown keys are ignored by the parser, so ",
+     "raise_excerpt": "Machine 'm' has unknown config key(s) -- m.r1.y invoke[q] onDone: 'reenterr' (did you mean 'reenter'?). Unknown keys are ignored by the parser, so a m"
+    },
+    "invoke_onError": {
+     "typo": "condd",
+     "warned": true,
+     "refused": true,
+     "hint": true,
+     "path_named": true,
+     "warn_excerpt": "\u26a0\ufe0f Machine 'm' has unknown config key(s) -- m.r1.y invoke[q] onError: 'condd' (did you mean 'cond'?). Unknown keys are ignored by the parser, so a mis",
+     "raise_excerpt": "Machine 'm' has unknown config key(s) -- m.r1.y invoke[q] onError: 'condd' (did you mean 'cond'?). Unknown keys are ignored by the parser, so a misspe"
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N3",
+  "title": "No false positives: valid charts built from the FULL key grammar at every level must give ZERO rejections and ZERO unknown-key warnings under strict_config=True",
+  "detail": {
+   "ok": true,
+   "n": 200,
+   "n_rejected": 0,
+   "n_warned": 0,
+   "rejected": [],
+   "warned": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N4",
+  "title": "Recursive key check over EVERY catalogue .machine.json in the prior contract sets -- valid charts, expect 0 rejections",
+  "detail": {
+   "ok": true,
+   "n_files": 54,
+   "n_rejected": 0,
+   "n_warned": 0,
+   "rejected": [],
+   "warned": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N5",
+  "title": "strict_config bypass: `x-` smuggling of a POLICY key at any level (must be accepted AND inert), and KEY CASE variants (must not be silently honoured as the real key)",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "x_prefix": {
+     "raised": null,
+     "warned": false,
+     "max_iterations_effective": 30,
+     "inert": true
+    },
+    "case_variants": {
+     "MaxIterations": {
+      "warned": true,
+      "refused": true,
+      "hint_to_real": true
+     },
+     "Entry": {
+      "warned": true,
+      "refused": true,
+      "hint_to_real": true
+     },
+     "ON": {
+      "warned": true,
+      "refused": true,
+      "hint_to_real": true
+     },
+     "Strict": {
+      "warned": true,
+      "refused": true,
+      "hint_to_real": true
+     },
+     "Invoke": {
+      "warned": true,
+      "refused": true,
+      "hint_to_real": true
+     },
+     "AFTER": {
+      "warned": true,
+      "refused": true,
+      "hint_to_real": false
+     }
+    }
+   }
+  },
+  "status": "PASS"
+ }
+]

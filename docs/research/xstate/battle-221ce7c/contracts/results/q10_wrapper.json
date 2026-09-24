@@ -1,0 +1,54 @@
+{
+  "async_svc_default": {
+    "service_kind": "async",
+    "maxIterations": null,
+    "svc_at_t": 1260,
+    "svc_at_2t": 2548,
+    "still_growing": true,
+    "acts": 2551,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RuntimeError"
+  },
+  "def_svc_default": {
+    "service_kind": "def",
+    "maxIterations": null,
+    "svc_at_t": 1002,
+    "svc_at_2t": 1002,
+    "still_growing": false,
+    "acts": 1005,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "def_svc_mi5": {
+    "service_kind": "def",
+    "maxIterations": 5,
+    "svc_at_t": 7,
+    "svc_at_2t": 7,
+    "still_growing": false,
+    "acts": 10,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "async_svc_mi5": {
+    "service_kind": "async",
+    "maxIterations": 5,
+    "svc_at_t": 1228,
+    "svc_at_2t": 2536,
+    "still_growing": true,
+    "acts": 2539,
+    "ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RuntimeError"
+  }
+}

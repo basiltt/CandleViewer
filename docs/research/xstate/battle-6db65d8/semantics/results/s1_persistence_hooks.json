@@ -1,0 +1,40 @@
+[
+ {
+  "id": "S1-01",
+  "title": "Snapshot from EVERY plugin hook (transition/action/guard/event) on a nested+parallel machine is refused-or-legal, never torn - both engines",
+  "intent": "#169 refuses on _step_in_flight at root; the hook surface is the whole attack surface, not just entry actions",
+  "detail": {
+   "ok": true,
+   "torn": [],
+   "untyped": [],
+   "by_where": {
+    "sync:on_transition:ACCEPTED": 1,
+    "sync:on_event_received:REFUSED": 4,
+    "sync:on_action_execute:REFUSED": 6,
+    "sync:on_transition:REFUSED": 4,
+    "sync:on_guard_evaluated:REFUSED": 1,
+    "async:on_transition:ACCEPTED": 1,
+    "async:on_event_received:ACCEPTED": 4,
+    "async:on_action_execute:REFUSED": 6,
+    "async:on_transition:REFUSED": 4,
+    "async:on_guard_evaluated:REFUSED": 1
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "S1-02",
+  "title": "Property, 300 random nested/parallel machines x both engines: no hook snapshot is ever TORN and no rejection is untyped",
+  "intent": "the refusal must hold across shapes, not just the one repro machine",
+  "detail": {
+   "ok": true,
+   "machines": 300,
+   "snapshots": 19945,
+   "accepted": 1925,
+   "refused": 18020,
+   "torn": [],
+   "untyped": []
+  },
+  "status": "PASS"
+ }
+]

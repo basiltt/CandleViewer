@@ -1,0 +1,11 @@
+PASS [def]/218/B6 201-beat raise(delay=) heartbeat holds <=1 handle  | {"peak_handles": 1, "beats": 201, "last_error": "None", "chain_trips": 0}
+PASS [def]/218/B10 201-beat raise(delay=) heartbeat holds <=1 handle  | {"peak_handles": 1, "beats": 201, "last_error": "None", "chain_trips": 0}
+PASS [def]/219/B10 action awaiting own send(wait=True) -> ReentrantWaitError  | {"r": "ReentrantWaitError"}
+PASS [def]/219/catalogue audit: no action awaits its own send(wait=True)  | [] | stubs are pure; no contract action is specified as awaiting a receipt
+PASS [def]/221/B6 re-persist without start() keeps the armed pacer  | {"orig": [{"kind": "event", "type": "SLICE_DUE", "payload": {}, "remaining_ms": 4000.0, "send_id": "pacer"}], "repersisted": [{"kind": "event", "type": "SLICE_DUE", "payload": {}, "remaining_ms": 4000.0, "send_id": "pacer"}]}
+ERROR:xstate_statemachine.interpreter:🛑 Exceeded 4 chained self-raised events on 'alert'. This means an action raises the event that triggers it. Breaking the chain; externally queued events are unaffected.
+PASS [def]/222/B10 chain trip is sticky across a benign event  | {"trips": 1, "latch": "RunawayChainError(\"Machine 'alert' exceeded 4 chained self-g", "last_error_now": "None", "hook_fired": 1}
+PASS [def]/222/B10 on_chain_budget_exceeded fired once per trip  | {"hook": [["SPIN", "RunawayChainError(\"Machine 'alert' exceeded 4 chained self-generated events in o"]], "trips": 1}
+PASS [def]/222/B10 clear_chain_error() clears the latch, count stays  | {"latch": "None", "trips": 1}
+
+--- 8 checks, 0 FAIL: []

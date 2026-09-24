@@ -1,0 +1,54 @@
+{
+ "[def]D4/218/sync/heartbeat-runs-200-beats": {
+  "pass": true,
+  "note": "beats=200 of 200"
+ },
+ "[def]D4/218/sync/handles-flat": {
+  "pass": true,
+  "note": "peak live handles=1 over 200 beats, final=1"
+ },
+ "[def]D4/218/sync/no-chain-trip": {
+  "pass": true,
+  "note": "chain_trips=0"
+ },
+ "[def]D4/218/sync/cancel-releases-handle": {
+  "pass": true,
+  "note": "after STOP -> ['hb.done'], handles=0"
+ },
+ "[def]D4/218/async/heartbeat-runs-200-beats": {
+  "pass": true,
+  "note": "beats=200 of 200 (maxIterations=5; #212: a delay is a timer)"
+ },
+ "[def]D4/218/async/handles-flat": {
+  "pass": true,
+  "note": "peak live handles=1 over 200 beats, final=1"
+ },
+ "[def]D4/218/async/no-chain-trip": {
+  "pass": true,
+  "note": "chain_trips=0 last_chain_error=None"
+ },
+ "[def]D4/218/async/cancel-releases-handle": {
+  "pass": true,
+  "note": "after STOP -> ['hb.done'], handles=0"
+ },
+ "[def]D4/221/v3-records-armed-deadline": {
+  "pass": true,
+  "note": "v=3 scheduled_sends=[{\"kind\": \"event\", \"type\": \"LINGER_DUE\", \"payload\": {}, \"remaining_ms\": 20000.0}]"
+ },
+ "[def]D4/221/repersist-without-start-keeps-deadline": {
+  "pass": true,
+  "note": "before=[{\"kind\": \"event\", \"type\": \"LINGER_DUE\", \"payload\": {}, \"remaining_ms\": 20000.0}] after=[{\"kind\": \"event\", \"type\": \"LINGER_DUE\", \"payload\": {}, \"remaining_ms\": 20000.0}]"
+ },
+ "[def]D4/221/two-hop-compaction-keeps-deadline": {
+  "pass": true,
+  "note": "hop2=[{\"kind\": \"event\", \"type\": \"LINGER_DUE\", \"payload\": {}, \"remaining_ms\": 20000.0}]"
+ },
+ "[def]D4/221/remaining-delay-honoured": {
+  "pass": true,
+  "note": "at +19s=['linger.lingering'], at +21s=['linger.stopping'] (20 000 ms remained of 30 000)"
+ },
+ "[def]D4/221/no-duplicate-after-fire": {
+  "pass": true,
+  "note": "post-fire scheduled_sends=[]"
+ }
+}

@@ -1,0 +1,309 @@
+[
+ {
+  "id": "PAR-B11",
+  "inv": "parity",
+  "title": "async vs sync engine, identical script",
+  "detail": {
+   "ok": true,
+   "states_match": true,
+   "context_match": true,
+   "actions_match": true,
+   "async_final": [
+    "recording.stopped"
+   ],
+   "sync_final": [
+    "recording.stopped"
+   ],
+   "async_seq": [
+    [
+     "recording.idle"
+    ],
+    [
+     "recording.recording"
+    ],
+    [
+     "recording.recording"
+    ],
+    [
+     "recording.degraded"
+    ],
+    [
+     "recording.recording"
+    ],
+    [
+     "recording.lingering"
+    ],
+    [
+     "recording.stopped"
+    ]
+   ],
+   "sync_seq": [
+    [
+     "recording.idle"
+    ],
+    [
+     "recording.recording"
+    ],
+    [
+     "recording.recording"
+    ],
+    [
+     "recording.degraded"
+    ],
+    [
+     "recording.recording"
+    ],
+    [
+     "recording.lingering"
+    ],
+    [
+     "recording.stopped"
+    ]
+   ],
+   "action_diff": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "PAR-B12",
+  "inv": "parity",
+  "title": "async vs sync engine, identical script",
+  "detail": {
+   "ok": true,
+   "states_match": true,
+   "context_match": true,
+   "actions_match": true,
+   "async_final": [
+    "replay.finished"
+   ],
+   "sync_final": [
+    "replay.finished"
+   ],
+   "async_seq": [
+    [
+     "replay.created"
+    ],
+    [
+     "replay.paused"
+    ],
+    [
+     "replay.playing"
+    ],
+    [
+     "replay.playing"
+    ],
+    [
+     "replay.paused"
+    ],
+    [
+     "replay.paused"
+    ],
+    [
+     "replay.playing"
+    ],
+    [
+     "replay.finished"
+    ]
+   ],
+   "sync_seq": [
+    [
+     "replay.created"
+    ],
+    [
+     "replay.paused"
+    ],
+    [
+     "replay.playing"
+    ],
+    [
+     "replay.playing"
+    ],
+    [
+     "replay.paused"
+    ],
+    [
+     "replay.paused"
+    ],
+    [
+     "replay.playing"
+    ],
+    [
+     "replay.finished"
+    ]
+   ],
+   "action_diff": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "PAR-B13",
+  "inv": "parity",
+  "title": "async vs sync engine, identical script",
+  "detail": {
+   "ok": true,
+   "states_match": true,
+   "context_match": true,
+   "actions_match": true,
+   "async_final": [
+    "ws_conn.closed"
+   ],
+   "sync_final": [
+    "ws_conn.closed"
+   ],
+   "async_seq": [
+    [
+     "ws_conn.disconnected"
+    ],
+    [
+     "ws_conn.live"
+    ],
+    [
+     "ws_conn.live"
+    ],
+    [
+     "ws_conn.live"
+    ],
+    [
+     "ws_conn.backing_off"
+    ],
+    [
+     "ws_conn.live"
+    ],
+    [
+     "ws_conn.closed"
+    ]
+   ],
+   "sync_seq": [
+    [
+     "ws_conn.disconnected"
+    ],
+    [
+     "ws_conn.live"
+    ],
+    [
+     "ws_conn.live"
+    ],
+    [
+     "ws_conn.live"
+    ],
+    [
+     "ws_conn.backing_off"
+    ],
+    [
+     "ws_conn.live"
+    ],
+    [
+     "ws_conn.closed"
+    ]
+   ],
+   "action_diff": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "PAR-B14",
+  "inv": "parity",
+  "title": "async vs sync engine, identical script",
+  "detail": {
+   "ok": true,
+   "states_match": true,
+   "context_match": true,
+   "actions_match": true,
+   "async_final": [
+    "book.live"
+   ],
+   "sync_final": [
+    "book.live"
+   ],
+   "async_seq": [
+    [
+     "book.init"
+    ],
+    [
+     "book.snapshot_pending"
+    ],
+    [
+     "book.snapshot_pending"
+    ],
+    [
+     "book.live"
+    ],
+    [
+     "book.live"
+    ],
+    [
+     "book.snapshot_pending"
+    ],
+    [
+     "book.live"
+    ]
+   ],
+   "sync_seq": [
+    [
+     "book.init"
+    ],
+    [
+     "book.snapshot_pending"
+    ],
+    [
+     "book.snapshot_pending"
+    ],
+    [
+     "book.live"
+    ],
+    [
+     "book.live"
+    ],
+    [
+     "book.snapshot_pending"
+    ],
+    [
+     "book.live"
+    ]
+   ],
+   "action_diff": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "PAR-B15",
+  "inv": "parity",
+  "title": "async vs sync engine, identical script",
+  "detail": {
+   "ok": true,
+   "states_match": true,
+   "context_match": true,
+   "actions_match": true,
+   "async_final": [
+    "paper_account.margin_call"
+   ],
+   "sync_final": [
+    "paper_account.margin_call"
+   ],
+   "async_seq": [
+    [
+     "paper_account.active"
+    ],
+    [
+     "paper_account.margin_call"
+    ],
+    [
+     "paper_account.margin_call"
+    ]
+   ],
+   "sync_seq": [
+    [
+     "paper_account.active"
+    ],
+    [
+     "paper_account.margin_call"
+    ],
+    [
+     "paper_account.margin_call"
+    ]
+   ],
+   "action_diff": []
+  },
+  "status": "PASS"
+ }
+]

@@ -1,0 +1,176 @@
+[
+  {
+    "id": "D1",
+    "title": "send_threadsafe: payload schema violation raises on the thread",
+    "expected": {
+      "err": "InvalidEventPayloadError",
+      "n": 0
+    },
+    "observed": {
+      "err": "InvalidEventPayloadError",
+      "n": 0
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "D2",
+    "title": "send_threadsafe: unknown event from thread while loop saturated",
+    "expected": {
+      "err": "UnknownEventError",
+      "n": 0
+    },
+    "observed": {
+      "err": "UnknownEventError",
+      "n": 0
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "D3",
+    "title": "send_threadsafe before start(): which error wins?",
+    "expected": "DOCUMENT",
+    "observed": {
+      "err": "RuntimeError"
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "D4",
+    "title": "send_threadsafe on a STOPPED interpreter, unknown event",
+    "expected": "DOCUMENT",
+    "observed": {
+      "unknown": "UnknownEventError",
+      "known": "NO-RAISE"
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "D5",
+    "title": "10 threads x 200 sends, half invalid: zero invalid delivered",
+    "expected": {
+      "rejected": 1000,
+      "n": 1000
+    },
+    "observed": {
+      "rejected": 1000,
+      "n": 1000
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "E1",
+    "title": "dormant across snapshot -> restore -> restart_services -> snapshot -> restore",
+    "expected": {
+      "live": false,
+      "restored_static": true,
+      "restored_restarted": false,
+      "resnapshot_restored_static": true
+    },
+    "observed": {
+      "live": false,
+      "restored_static": true,
+      "restored_restarted": false,
+      "resnapshot_restored_static": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "E2",
+    "title": "snapshot taken from a RESTARTED restore, then restored statically again",
+    "expected": "DOCUMENT",
+    "observed": {
+      "dormant_after_restart": false,
+      "dormant_after_restore_of_restarted_snapshot": true,
+      "pending": [
+        "job"
+      ]
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "E3",
+    "title": "pending_invocations agrees with has_dormant_invocations",
+    "expected": true,
+    "observed": true,
+    "status": "PASS"
+  },
+  {
+    "id": "F1",
+    "title": "monkeypatching events.SYSTEM_EVENT_PREFIXES has no effect",
+    "expected": "DOCUMENT",
+    "observed": {
+      "module_patched": true,
+      "base_interpreter_copy": false,
+      "unhandled_reported": [
+        [
+          "cv.something",
+          "deferred"
+        ]
+      ],
+      "deferred": 1
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "F2",
+    "title": "'done.' trailing-content variants: which are treated as system?",
+    "expected": "DOCUMENT",
+    "observed": {
+      "done.review": "deferred",
+      "done.": "deferred",
+      "done": "deferred",
+      "doneReview": "deferred",
+      "done.invoke.x": "deferred",
+      "donex": "deferred",
+      "error.validation": "deferred",
+      "errorx": "deferred",
+      "after.5": "deferred",
+      "afterx": "deferred",
+      "xstate.foo": "deferred",
+      "___xstateY": "deferred"
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "F3",
+    "title": "case variants of a reserved prefix",
+    "expected": "DOCUMENT",
+    "observed": {
+      "DONE.review": "deferred",
+      "Done.Review": "deferred",
+      "ERROR.x": "deferred",
+      "After.5": "deferred",
+      "XSTATE.y": "deferred"
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "F5",
+    "title": "build-time UserWarning for reserved `on` keys",
+    "expected": "DOCUMENT",
+    "observed": {
+      "done.review": "no-warning",
+      "error.validation": "no-warning",
+      "done.invoke.job": "no-warning",
+      "after.500": "no-warning",
+      "xstate.init": "no-warning",
+      "DONE.review": "no-warning",
+      "done": "no-warning"
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "F6",
+    "title": "'error.validation' as a user event: visible to '*'?",
+    "expected": "DOCUMENT",
+    "observed": {
+      "matched_by_star": [
+        "ordinary",
+        "error.validation",
+        "done.review"
+      ],
+      "status": "running"
+    },
+    "status": "FAIL"
+  }
+]

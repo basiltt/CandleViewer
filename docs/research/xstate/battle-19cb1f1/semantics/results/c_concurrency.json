@@ -1,0 +1,142 @@
+[
+ {
+  "id": "C1",
+  "title": "100 machines x `raise(delay=1ms)` self-ping-pong: EVERY machine trips and all trip at the SAME lap, both kinds",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "plain": {
+     "distinct_laps": [
+      12
+     ],
+     "tripped": 100,
+     "bounded": true
+    },
+    "async": {
+     "distinct_laps": [
+      12
+     ],
+     "tripped": 100,
+     "bounded": true
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "C2",
+  "title": "200 concurrent rollback+onDone storms: on_invocation_stranded fires EXACTLY ONCE with correct ids; err.stranded agrees",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "plain": {
+     "hook_count_distribution": [
+      1
+     ],
+     "machines_with_exactly_one": 200,
+     "wrong_ids": 0,
+     "err_stranded_agrees": 200,
+     "dormant_without_hook": 0
+    },
+    "async": {
+     "hook_count_distribution": [
+      1
+     ],
+     "machines_with_exactly_one": 200,
+     "wrong_ids": 0,
+     "err_stranded_agrees": 200,
+     "dormant_without_hook": 0
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "C3",
+  "title": "5,000 EXTERNAL delayed sends during a live self-generated delayed chain: ZERO external dropped, both kinds",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "plain": {
+     "sent": 5000,
+     "issue_rate_per_s": 29551,
+     "actions_fired": 5000,
+     "EXTERNAL_dropped": 0,
+     "drop_reasons": [],
+     "self_chain_laps": 12,
+     "self_shed": 1
+    },
+    "async": {
+     "sent": 5000,
+     "issue_rate_per_s": 30336,
+     "actions_fired": 5000,
+     "EXTERNAL_dropped": 0,
+     "drop_reasons": [],
+     "self_chain_laps": 12,
+     "self_shed": 1
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "C4",
+  "title": "Ordering: on_event_dropped(chain_budget) for the cut completion precedes on_invocation_stranded for that invoke, both kinds and both engines",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "async_engine/plain": {
+     "tail": [
+      [
+       "drop",
+       "done.invoke.sb",
+       "chain_budget"
+      ],
+      [
+       "stranded",
+       "r.b",
+       "sb"
+      ]
+     ],
+     "stranded_reported": true,
+     "drop_precedes_stranded": true
+    },
+    "async_engine/async": {
+     "tail": [
+      [
+       "drop",
+       "done.invoke.sb",
+       "chain_budget"
+      ],
+      [
+       "stranded",
+       "r.b",
+       "sb"
+      ]
+     ],
+     "stranded_reported": true,
+     "drop_precedes_stranded": true
+    },
+    "sync_engine/plain": {
+     "tail": [
+      [
+       "drop",
+       "done.invoke.sb",
+       "chain_budget"
+      ],
+      [
+       "stranded",
+       "r.b",
+       "sb"
+      ]
+     ],
+     "raised": null,
+     "stranded_reported": true,
+     "drop_precedes_stranded": true,
+     "dormant": true
+    }
+   }
+  },
+  "status": "PASS"
+ }
+]

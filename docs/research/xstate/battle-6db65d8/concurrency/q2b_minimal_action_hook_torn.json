@@ -1,0 +1,52 @@
+{
+  "probe": "q2b_minimal_action_hook_torn",
+  "py": "3.13.7",
+  "async_rows": [
+    {
+      "action": "act",
+      "disposition": "refused:SnapshotMidStepError"
+    },
+    {
+      "action": "act",
+      "disposition": "refused:SnapshotMidStepError"
+    },
+    {
+      "action": "act",
+      "disposition": "refused:SnapshotMidStepError"
+    },
+    {
+      "action": "act",
+      "disposition": "refused:SnapshotMidStepError"
+    },
+    {
+      "action": "act",
+      "disposition": "refused:SnapshotMidStepError"
+    }
+  ],
+  "sync_rows": [
+    {
+      "action": "act",
+      "disposition": "refused:SnapshotMidStepError"
+    },
+    {
+      "action": "act",
+      "disposition": "refused:SnapshotMidStepError"
+    },
+    {
+      "action": "act",
+      "disposition": "refused:SnapshotMidStepError"
+    },
+    {
+      "action": "act",
+      "disposition": "refused:SnapshotMidStepError"
+    },
+    {
+      "action": "act",
+      "disposition": "refused:SnapshotMidStepError"
+    }
+  ],
+  "async_torn_blobs": 0,
+  "sync_torn_blobs": 0,
+  "restored_from_torn_blob": null,
+  "result": "PASS"
+}

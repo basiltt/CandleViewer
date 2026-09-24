@@ -1,0 +1,24 @@
+{
+ "seconds": 100.9,
+ "machines": 200,
+ "external_sent": 196400,
+ "external_actions_fired": 196400,
+ "EXTERNAL_dropped": 0,
+ "drop_reasons": {},
+ "heartbeats_total": 168386,
+ "heartbeats_still_alive": 200,
+ "of": 200,
+ "runaway_errors": 0,
+ "cpu_percent": 97.5,
+ "rss_growth_mb": 11.14,
+ "chaos": {
+  "snaps": 240,
+  "with_sends": 137,
+  "restored_ok": 240,
+  "errors": 0,
+  "error_kinds": {}
+ },
+ "ok": true
+}
+
+k_soak: PASS

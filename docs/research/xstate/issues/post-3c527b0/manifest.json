@@ -1,0 +1,245 @@
+{
+  "comments": [
+    {
+      "issue": 27,
+      "file": "27.md",
+      "action": "comment"
+    },
+    {
+      "issue": 31,
+      "file": "31.md",
+      "action": "comment+reopen"
+    },
+    {
+      "issue": 37,
+      "file": "37.md",
+      "action": "comment"
+    },
+    {
+      "issue": 39,
+      "file": "39.md",
+      "action": "comment"
+    },
+    {
+      "issue": 43,
+      "file": "43.md",
+      "action": "comment"
+    },
+    {
+      "issue": 44,
+      "file": "44.md",
+      "action": "comment"
+    },
+    {
+      "issue": 50,
+      "file": "50.md",
+      "action": "comment"
+    },
+    {
+      "issue": 51,
+      "file": "51.md",
+      "action": "comment"
+    },
+    {
+      "issue": 52,
+      "file": "52.md",
+      "action": "comment"
+    },
+    {
+      "issue": 60,
+      "file": "60.md",
+      "action": "comment"
+    },
+    {
+      "issue": 75,
+      "file": "75.md",
+      "action": "comment"
+    },
+    {
+      "issue": 76,
+      "file": "76.md",
+      "action": "comment"
+    },
+    {
+      "issue": 77,
+      "file": "77.md",
+      "action": "comment+reopen"
+    },
+    {
+      "issue": 78,
+      "file": "78.md",
+      "action": "comment"
+    },
+    {
+      "issue": 79,
+      "file": "79.md",
+      "action": "comment+reopen"
+    },
+    {
+      "issue": 80,
+      "file": "80.md",
+      "action": "comment"
+    }
+  ],
+  "new_issues": [
+    {
+      "file": "1.md",
+      "title": "`send(event, wait=True)` resolves with `changed=False, error=None` for an event held by `onUnhandled: \"defer\"`",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/interpreter"
+      ]
+    },
+    {
+      "file": "2.md",
+      "title": "`Event(system=True)` is user-settable and bypasses `strict`, `onUnhandled` and the `\"*\"` matcher on both engines",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/events",
+        "area/validation"
+      ]
+    },
+    {
+      "file": "3.md",
+      "title": "Event provenance does not survive a snapshot: restored engine events become user traffic and fail a machine configured `onUnhandled: \"error\"`",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/persistence",
+        "area/events"
+      ]
+    },
+    {
+      "file": "4.md",
+      "title": "A pending `ErrorEvent` / `DoneEvent` is silently dropped by `get_persisted_snapshot()` — an accepted invoke failure vanishes with no record",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/persistence",
+        "area/actors"
+      ]
+    },
+    {
+      "file": "5.md",
+      "title": "The sync `maxIterations` `tripped` flag is scoped to the drain, not the chain — one runaway starves every later unrelated event in the same batch (#77)",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/sync-interpreter"
+      ]
+    },
+    {
+      "file": "6.md",
+      "title": "The `sync=` compatibility shim treats a `**kwargs` clock as consent and feeds it an unexpected keyword (#76)",
+      "labels": [
+        "bug",
+        "severity/high",
+        "area/clock"
+      ]
+    },
+    {
+      "file": "7.md",
+      "title": "`max_iterations` does not bound an action-side `send()` on the async engine; the #77 parity claim covers the `raise` built-in only",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/interpreter",
+        "documentation"
+      ]
+    },
+    {
+      "file": "8.md",
+      "title": "The alias-ambiguity guard does not fire for its own documented example (`fetchData` required, `fetch_data` + `fetchData` registered)",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/machine-logic",
+        "documentation"
+      ]
+    },
+    {
+      "file": "9.md",
+      "title": "`resolve_aliases` mutates the caller's `MachineLogic` registry, suppressing the ambiguity guard for later machines and retroactively rebinding earlier ones",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/machine-logic"
+      ]
+    },
+    {
+      "file": "10.md",
+      "title": "The `logic_modules` normalised index uses `setdefault`, so duplicate snake/camel implementations resolve by module iteration order with no error",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/logic-loader"
+      ]
+    },
+    {
+      "file": "11.md",
+      "title": "A `done.invoke` from a sync service is classed as self-generated; after a trip the completion is dropped and the machine parks in the invoking state (#77)",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/sync-interpreter"
+      ]
+    },
+    {
+      "file": "12.md",
+      "title": "The library trips its own `ErrorEvent.data` `DeprecationWarning` from `plugins.py` and `base_interpreter.py`, breaking `-W error::DeprecationWarning` CI",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/events",
+        "area/plugins"
+      ]
+    },
+    {
+      "file": "13.md",
+      "title": "`_resolve_event_spec` builds an `Event` whose `payload` is the exception object, not a dict — `event.payload.get(...)` raises `AttributeError`",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/events",
+        "area/interpreter"
+      ]
+    },
+    {
+      "file": "14.md",
+      "title": "`escalate` is the one failure path not converted to `ErrorEvent`; handlers written to the documented `event.error` pattern get `AttributeError`",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/events",
+        "area/actors",
+        "documentation"
+      ]
+    },
+    {
+      "file": "15.md",
+      "title": "Strict mode still exempts by name: `done.invoke.NEVER_INVOKED`, `after.party`, `xstate.whatever` and `___xstate_forged` all pass undeclared",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/validation",
+        "area/events"
+      ]
+    },
+    {
+      "file": "16.md",
+      "title": "`SyncInterpreter` never delivers `onError` for a failed invoked child machine; the parent parks in the invoking state",
+      "labels": [
+        "bug",
+        "severity/medium",
+        "area/sync-interpreter",
+        "area/actors"
+      ]
+    }
+  ],
+  "meta": {
+    "issue": 26,
+    "file": "meta-26.md"
+  }
+}

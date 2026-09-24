@@ -1,0 +1,184 @@
+{
+  "probe": "q6_semantics_security",
+  "py": "3.13.7",
+  "S1_matrix_async": {
+    "DENIED": {
+      "changed": false,
+      "denied": true,
+      "error": null,
+      "deferred": true,
+      "hook_unhandled": [
+        [
+          "DENIED",
+          "deferred"
+        ]
+      ],
+      "hook_guard_error": [],
+      "hook_dropped": []
+    },
+    "CRASH": {
+      "changed": false,
+      "denied": false,
+      "error": "RuntimeError",
+      "deferred": false,
+      "hook_unhandled": [],
+      "hook_guard_error": [
+        [
+          "CRASH",
+          "RuntimeError"
+        ]
+      ],
+      "hook_dropped": []
+    },
+    "UNKNOWN_EVENT": {
+      "changed": false,
+      "denied": false,
+      "error": null,
+      "deferred": true,
+      "hook_unhandled": [
+        [
+          "UNKNOWN_EVENT",
+          "deferred"
+        ]
+      ],
+      "hook_guard_error": [],
+      "hook_dropped": []
+    },
+    "OK": {
+      "changed": true,
+      "denied": false,
+      "error": null,
+      "deferred": false,
+      "hook_unhandled": [],
+      "hook_guard_error": [],
+      "hook_dropped": []
+    }
+  },
+  "S1_matrix_sync": {
+    "DENIED": {
+      "raised": null,
+      "hook_unhandled": [
+        [
+          "DENIED",
+          "deferred"
+        ]
+      ],
+      "hook_guard_error": [],
+      "hook_dropped": []
+    },
+    "CRASH": {
+      "raised": "RuntimeError",
+      "hook_unhandled": [],
+      "hook_guard_error": [
+        [
+          "CRASH",
+          "RuntimeError"
+        ]
+      ],
+      "hook_dropped": []
+    },
+    "UNKNOWN_EVENT": {
+      "raised": null,
+      "hook_unhandled": [
+        [
+          "UNKNOWN_EVENT",
+          "deferred"
+        ]
+      ],
+      "hook_guard_error": [],
+      "hook_dropped": []
+    },
+    "OK": {
+      "raised": null,
+      "hook_unhandled": [],
+      "hook_guard_error": [],
+      "hook_dropped": []
+    }
+  },
+  "S1_signatures_async": {
+    "DENIED": [
+      false,
+      true,
+      null
+    ],
+    "CRASH": [
+      false,
+      false,
+      "RuntimeError"
+    ],
+    "UNKNOWN_EVENT": [
+      false,
+      false,
+      null
+    ],
+    "OK": [
+      true,
+      false,
+      null
+    ]
+  },
+  "S1_signatures_sync": {
+    "DENIED": [
+      null,
+      null,
+      null
+    ],
+    "CRASH": [
+      null,
+      null,
+      null
+    ],
+    "UNKNOWN_EVENT": [
+      null,
+      null,
+      null
+    ],
+    "OK": [
+      null,
+      null,
+      null
+    ]
+  },
+  "S1_four_way_discriminable_async": true,
+  "S1_four_way_discriminable_sync": false,
+  "S2_start_ordering": {
+    "trials": 20,
+    "async_orderings": {
+      "done,cancel": 20
+    },
+    "sync_orderings": {
+      "done,cancel": 20
+    },
+    "engines_agree": true,
+    "async_deterministic": true,
+    "sync_deterministic": true
+  },
+  "S4_security_surface": {
+    "arbitrary_attribute_accepted": true,
+    "has___dict__": true,
+    "_raise_depth": {
+      "present": true,
+      "writable_externally": true
+    },
+    "_chain_tripped": {
+      "present": true,
+      "writable_externally": true
+    },
+    "_settle_iterations": {
+      "present": true,
+      "writable_externally": true
+    },
+    "_threadsafe_self_sends_in_flight": {
+      "present": true,
+      "writable_externally": true
+    },
+    "secret_in_repr": false
+  },
+  "S4b_internal_forgery": {
+    "raise_depth_after": 100,
+    "inflight_after": 0,
+    "status": "running",
+    "ok": false
+  },
+  "result": "FAIL"
+}

@@ -1,0 +1,294 @@
+[
+  {
+    "id": "A1",
+    "title": "Exit/entry order across nested compound -> parallel target",
+    "expected": [
+      "xA1",
+      "xA",
+      "eB",
+      "eP",
+      "ep1",
+      "eQ",
+      "eq1"
+    ],
+    "observed": [
+      "xA1",
+      "xA",
+      "eB",
+      "eP",
+      "ep1",
+      "eQ",
+      "eq1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A2",
+    "title": "Transition action ordering: exit -> transition action -> entry",
+    "expected": [
+      "xA",
+      "tAct",
+      "eB"
+    ],
+    "observed": [
+      "xA",
+      "tAct",
+      "eB"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A3",
+    "title": "Self-transition with an explicit target but no `reenter` is treated as INTERNAL (XState v5 would re-enter: exit+action+entry)",
+    "expected": [
+      "xA",
+      "tAct",
+      "eA"
+    ],
+    "observed": [
+      "tAct"
+    ],
+    "status": "FAIL"
+  },
+  {
+    "id": "A4",
+    "title": "Internal self-transition (no target) does NOT re-run entry/exit",
+    "expected": [
+      "tAct"
+    ],
+    "observed": [
+      "tAct"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A5",
+    "title": "Relative '.child' target syntax resolves and re-enters the child",
+    "expected": [
+      "xA1",
+      "eA1"
+    ],
+    "observed": [
+      "xA1",
+      "eA1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A6",
+    "title": "Guarded fallthrough: correct branch chosen, but are later guards still evaluated (side-effect leakage)?",
+    "expected": {
+      "state": [
+        "m.second"
+      ],
+      "calls": [
+        "g1",
+        "g2"
+      ]
+    },
+    "observed": {
+      "state": [
+        "m.second"
+      ],
+      "calls": [
+        "g1",
+        "g2",
+        "g3"
+      ]
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "A7",
+    "title": "All guards false -> no transition, state unchanged, no error",
+    "expected": {
+      "state": [
+        "m.start"
+      ],
+      "running": true
+    },
+    "observed": {
+      "state": [
+        "m.start"
+      ],
+      "running": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A8",
+    "title": "Eventless 'always' chain with guards settles to terminal state",
+    "expected": [
+      "m.done"
+    ],
+    "observed": [
+      "m.done"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A9",
+    "title": "Infinite 'always' loop (A<->B unguarded): bounded, interpreter survives",
+    "expected": {
+      "terminated": true,
+      "alive_after": true
+    },
+    "observed": {
+      "terminated": true,
+      "alive_after": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A10",
+    "title": "'always' whose fallback targets its OWN state: should loop until the guard flips",
+    "expected": {
+      "state": [
+        "m.done"
+      ],
+      "n": 5
+    },
+    "observed": "InvalidConfigError: Machine 'm' has non-progressing 'always' transitions:\n  m.loop: always self-target can never make progress -- the transition does not re-enter the state, so 'entry' will not re-run. Add \"reenter\": true, route via an intermediate state, or give the transition actions that mutate context.",
+    "traceback": "s\\p01_core_transitions.py\", line 384, in a10\n    i = await boot(cfg, logic)\n        ^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\p01_core_transitions.py\", line 41, in boot\n    return await Interpreter(create_machine(cfg, logic=logic)).start()\n                             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\factory.py\", line 302, in create_machine\n    validate_machine(machine, strict_targets=strict_targets)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\validation.py\", line 497, in validate_machine\n    raise InvalidConfigError(\n    ...<2 lines>...\n    )\nxstate_statemachine.exceptions.InvalidConfigError: Machine 'm' has non-progressing 'always' transitions:\n  m.loop: always self-target can never make progress -- the transition does not re-enter the state, so 'entry' will not re-run. Add \"reenter\": true, route via an intermediate state, or give the transition actions that mutate context.\n",
+    "status": "ERROR"
+  },
+  {
+    "id": "A11",
+    "title": "Wildcard '*' event handler catches unmatched events",
+    "expected": [
+      "m.caught"
+    ],
+    "observed": [
+      "m.caught"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A12",
+    "title": "Explicit handler beats wildcard for a matching event",
+    "expected": [
+      "m.known"
+    ],
+    "observed": [
+      "m.known"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A13",
+    "title": "Partial wildcard 'order.*' prefix matching",
+    "expected": [
+      "m.matched"
+    ],
+    "observed": [
+      "m.matched"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A14",
+    "title": "Unknown event with no handler is silently ignored (no raise, still running)",
+    "expected": {
+      "state": [
+        "m.s"
+      ],
+      "running": true,
+      "raised": null
+    },
+    "observed": {
+      "state": [
+        "m.s"
+      ],
+      "running": true,
+      "raised": null
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A15",
+    "title": "Parallel region: event handled independently in each region",
+    "expected": [
+      "m.P.A.a2",
+      "m.P.B.b2"
+    ],
+    "observed": [
+      "m.P.A.a2",
+      "m.P.B.b2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A16",
+    "title": "Child transition takes precedence over conflicting ancestor handler",
+    "expected": [
+      "m.A.child_target"
+    ],
+    "observed": [
+      "m.A.child_target"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A17",
+    "title": "Self-transition WITH reenter:True does re-run exit+entry (the workaround)",
+    "expected": [
+      "xA",
+      "tAct",
+      "eA"
+    ],
+    "observed": [
+      "xA",
+      "tAct",
+      "eA"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A18",
+    "title": "A '.child' relative target that does NOT exist is silently ignored (no error, no transition)",
+    "expected": {
+      "state": [
+        "m.A.A1"
+      ],
+      "running": true,
+      "raised": null
+    },
+    "observed": "InvalidConfigError: Machine 'm' has unresolvable transition targets:\n  m.A: on 'GO' -> target '.does_not_exist' does not resolve",
+    "traceback": "\\probes\\harness.py\", line 54, in _run_one\n    res = await res\n          ^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\p01_core_transitions.py\", line 600, in a18\n    i = await boot(cfg, MachineLogic())\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\CandleViewer\\docs\\research\\xstate\\probes\\p01_core_transitions.py\", line 41, in boot\n    return await Interpreter(create_machine(cfg, logic=logic)).start()\n                             ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\factory.py\", line 302, in create_machine\n    validate_machine(machine, strict_targets=strict_targets)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\validation.py\", line 508, in validate_machine\n    raise InvalidConfigError(message)\nxstate_statemachine.exceptions.InvalidConfigError: Machine 'm' has unresolvable transition targets:\n  m.A: on 'GO' -> target '.does_not_exist' does not resolve\n",
+    "status": "ERROR"
+  },
+  {
+    "id": "A19",
+    "title": "'always' ping-pong between two DISTINCT states with a flipping guard does converge (contrast with A10)",
+    "expected": {
+      "state": [
+        "m.done"
+      ],
+      "n": 5
+    },
+    "observed": {
+      "state": [
+        "m.done"
+      ],
+      "n": 5
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A20",
+    "title": "A guard that RAISES is swallowed and treated as False (silent)",
+    "expected": {
+      "state": [
+        "m.fallback"
+      ],
+      "raised": null
+    },
+    "observed": {
+      "state": [
+        "m.fallback"
+      ],
+      "raised": null
+    },
+    "status": "PASS"
+  }
+]

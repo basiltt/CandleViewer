@@ -1,0 +1,108 @@
+{
+  "probe": "s5_snapshot_engine_forgery",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "case": "baseline_shape",
+      "service_kind": "def",
+      "version": 3,
+      "has_configuration": true,
+      "has_state_ids": true,
+      "status": "running"
+    },
+    {
+      "case": "A_forged_engine_true",
+      "service_kind": "def",
+      "version": 3,
+      "restore": "ACCEPTED",
+      "state": [
+        "s5.idle"
+      ],
+      "onDone_ran": 0,
+      "onDone_payload": [],
+      "last_error": "None"
+    },
+    {
+      "case": "B_forged_no_flag",
+      "service_kind": "def",
+      "version": 3,
+      "restore": "ACCEPTED",
+      "state": [
+        "s5.idle"
+      ],
+      "onDone_ran": 0,
+      "onDone_payload": [],
+      "last_error": "UnknownEventError(\"Event 'done.invoke.fill' is an engine-generated nam"
+    },
+    {
+      "case": "C_v1_state_ids_only",
+      "service_kind": "def",
+      "version": 1,
+      "restore": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "D_v2_state_ids_emptied",
+      "service_kind": "def",
+      "version": 3,
+      "restore": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "E_v2_configuration_emptied",
+      "service_kind": "def",
+      "version": 3,
+      "restore": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "baseline_shape",
+      "service_kind": "async def",
+      "version": 3,
+      "has_configuration": true,
+      "has_state_ids": true,
+      "status": "running"
+    },
+    {
+      "case": "A_forged_engine_true",
+      "service_kind": "async def",
+      "version": 3,
+      "restore": "ACCEPTED",
+      "state": [
+        "s5.idle"
+      ],
+      "onDone_ran": 0,
+      "onDone_payload": [],
+      "last_error": "None"
+    },
+    {
+      "case": "B_forged_no_flag",
+      "service_kind": "async def",
+      "version": 3,
+      "restore": "ACCEPTED",
+      "state": [
+        "s5.idle"
+      ],
+      "onDone_ran": 0,
+      "onDone_payload": [],
+      "last_error": "UnknownEventError(\"Event 'done.invoke.fill' is an engine-generated nam"
+    },
+    {
+      "case": "C_v1_state_ids_only",
+      "service_kind": "async def",
+      "version": 1,
+      "restore": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "D_v2_state_ids_emptied",
+      "service_kind": "async def",
+      "version": 3,
+      "restore": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "E_v2_configuration_emptied",
+      "service_kind": "async def",
+      "version": 3,
+      "restore": "refused:SnapshotCorruptError"
+    }
+  ],
+  "violations": [],
+  "result": "PASS"
+}

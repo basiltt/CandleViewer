@@ -1,0 +1,60 @@
+{
+ "after1/plain": {
+  "beats": 72,
+  "beats_later": 115,
+  "still_beating": true,
+  "chain_budget_drops": 0,
+  "last_error": null
+ },
+ "raise_delay1/plain": {
+  "beats": 84,
+  "beats_later": 116,
+  "still_beating": true,
+  "chain_budget_drops": 0,
+  "last_error": null
+ },
+ "raise_delay50/plain": {
+  "beats": 17,
+  "beats_later": 25,
+  "still_beating": true,
+  "chain_budget_drops": 0,
+  "last_error": null
+ },
+ "raise_delay0/plain": {
+  "beats": 12,
+  "beats_later": 12,
+  "still_beating": false,
+  "chain_budget_drops": 1,
+  "last_error": "RunawayChainError"
+ },
+ "after1/async": {
+  "beats": 71,
+  "beats_later": 104,
+  "still_beating": true,
+  "chain_budget_drops": 0,
+  "last_error": null
+ },
+ "raise_delay1/async": {
+  "beats": 67,
+  "beats_later": 100,
+  "still_beating": true,
+  "chain_budget_drops": 0,
+  "last_error": null
+ },
+ "raise_delay50/async": {
+  "beats": 17,
+  "beats_later": 26,
+  "still_beating": true,
+  "chain_budget_drops": 0,
+  "last_error": null
+ },
+ "raise_delay0/async": {
+  "beats": 12,
+  "beats_later": 12,
+  "still_beating": false,
+  "chain_budget_drops": 1,
+  "last_error": "RunawayChainError"
+ },
+ "VIOLATIONS": [],
+ "REPRODUCED": false
+}

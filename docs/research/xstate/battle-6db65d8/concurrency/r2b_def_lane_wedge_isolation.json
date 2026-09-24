@@ -1,0 +1,62 @@
+{
+  "probe": "r2b_def_lane_wedge_isolation",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "kind": "async def",
+      "pool": 1,
+      "state_after_LEAVE": [
+        "r2b.idle"
+      ],
+      "owed": 0,
+      "trivial_event_ok": true,
+      "cycle_wedged": false,
+      "laps": 50,
+      "tripped": true,
+      "last_error": "RunawayChainError(\"Machine 'r2b' exceeded 50 chained self-generated events in on",
+      "stop": "ok"
+    },
+    {
+      "kind": "async def",
+      "pool": 8,
+      "state_after_LEAVE": [
+        "r2b.idle"
+      ],
+      "owed": 0,
+      "trivial_event_ok": true,
+      "cycle_wedged": false,
+      "laps": 50,
+      "tripped": true,
+      "last_error": "RunawayChainError(\"Machine 'r2b' exceeded 50 chained self-generated events in on",
+      "stop": "ok"
+    },
+    {
+      "kind": "def",
+      "pool": 1,
+      "state_after_LEAVE": [
+        "r2b.hold"
+      ],
+      "owed": 0,
+      "trivial_event_ok": false,
+      "cycle_wedged": true,
+      "laps": 0,
+      "tripped": false,
+      "last_error": "None",
+      "stop": "ok"
+    },
+    {
+      "kind": "def",
+      "pool": 8,
+      "state_after_LEAVE": [
+        "r2b.hold"
+      ],
+      "owed": 0,
+      "trivial_event_ok": false,
+      "cycle_wedged": true,
+      "laps": 0,
+      "tripped": false,
+      "last_error": "None",
+      "stop": "ok"
+    }
+  ]
+}

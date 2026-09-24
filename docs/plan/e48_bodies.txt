@@ -1,0 +1,2230 @@
+##### E48
+## Context
+
+CandleViewer reaches GA at the end of Sprint 26 (`docs/plan/30-release-roadmap.md` §9.5, tag `v1.1.0`, 2027-09-24). Everything else in R5 makes the *system* good enough to ship; this epic makes the system **operable and comprehensible by someone who did not build it** — which `docs/plan/30-release-roadmap.md` §9.1 goal 4 states as an explicit R5 goal and §9.3 exit criteria 5 and 6 turn into hard gates:
+
+- exit criterion 5: "All runbooks rehearsed at least once; DR playbook executed with measured RTO/RPO recorded";
+- exit criterion 6: "Documentation complete: user guide, ops runbooks, API/WS reference, ADR index, onboarding guide";
+- §9.4 Docs quality gate: "Every runbook rehearsed and dated; docs reviewed by someone who did not write them".
+
+The PRR checklist (`docs/plan/07-release-and-prr.md` §5.2, §5.3, §5.6) already *requires* runbooks for WS disconnect/reconnect storms, exchange outage, rate-limit breach, OMS stuck-order reconciliation, fan-out partial failure, Postgres failover, QuestDB/Parquet corruption recovery, feature-flag emergency kill and full-system rollback, plus a restore drill measured against the RPO/RTO table in §5.3. Those runbooks are *named* there but not written; E45 automated the drills (`E45-T09`, `E45-T10`) and wrote the resilience subset (`E45-T11`). E48 completes the set, indexes it, and — critically — **rehearses** every entry so that "the runbook exists" and "the runbook works" are not confused.
+
+The second half of this epic is the user-facing documentation the plan has been deferring: a persona-shaped user guide (P1 Owner/trader, P2 Account Manager, P3 Viewer, P4 Admin from `docs/plan/10-personas.md`), an in-app help surface that already has a designed home at **SCR-119 Help & about** (`docs/plan/14-screens-catalogue.md` §SCR-119) and is traced to **US-SET-009** and **US-OBS-007** in `docs/plan/18-traceability-matrix.md`, and a published API/WS reference generated from the contracts (`docs/plan/22-api-openapi.yaml`, `docs/plan/23-ws-protocol.md`) rather than hand-written and therefore rotting.
+
+The dependency graph in `docs/plan/30-release-roadmap.md` §11.1 has `E46 --> E48`: performance hardening lands the final numbers that the docs must quote, so E48 sits at S25–S26, the last two sprints, after the rest of R5 has stopped changing behaviour.
+
+## Scope / Deliverables
+
+- **Docs toolchain decision and site** (E48-K01, E48-T02): a published, searchable documentation site built in CI from the repo, including an **API/WS reference generated from `docs/plan/22-api-openapi.yaml` and `docs/plan/23-ws-protocol.md`** so it can never drift from the contract.
+- **Architecture and ADR reconciliation** (E48-T01): `docs/plan/20-architecture.md`, `docs/plan/21-database-schema.md`, `docs/plan/24-internal-schemas.md`, `docs/plan/26-chart-engine-design.md` and `docs/plan/27-adrs/` brought into agreement with the system as built; the ADR index in `27-adrs/README.md` and `20-architecture.md` §16 reconciled; ADR-0011 (Electron vs Tauri, still `proposed`) resolved or formally superseded.
+- **Operations runbook set** (E48-T03) covering every runbook named in `docs/plan/07-release-and-prr.md` §5.2 plus the failure register F1–F18 in `docs/plan/20-architecture.md` §11.1, each with a trigger, a detection signal, numbered steps, a verification step and a rollback step.
+- **Disaster-recovery playbook with measured RTO/RPO** (E48-T04) executed against the §5.3 targets (Postgres RPO ≤15 min / RTO ≤2 h; QuestDB hot tier RPO ≤24 h / RTO ≤4 h; Parquet cold tier RPO 0 / RTO ≤4 h) and the `20-architecture.md` §11.2 objectives (backend RTO ≤90 s, relational RPO ≤5 min).
+- **Engineer onboarding guide** (E48-T05): zero-to-running-system in a day, mapped onto the monorepo layout in `docs/plan/20-architecture.md` §5.
+- **GA checklist execution and release artefacts** (E48-T06, E48-T07): the `07-release-and-prr.md` §4 release checklist and §5 PRR checklist run for `v1.1.0`, with evidence collected mechanically rather than screenshotted by hand; `CHANGELOG.md` finalised and fed into the in-app **CMP-096 WhatsNewPanel**.
+- **User guide per persona and its in-app surfacing** (E48-S01): US-SET-009, US-OBS-007 on **SCR-119**, with **CMP-051 Accordion**, **CMP-086 SettingsNav/SettingsLayout**, **CMP-096 WhatsNewPanel**, **CMP-207 BuildFooter**, **CMP-036 KeyValueRow**, **CMP-021 Link**, **CMP-001 Button**, backed by `GET /system/build`.
+- **In-app help content surfaces** (E48-S02): keyboard cheatsheet driven by the live hotkey map (`GET /me/keymap`, `GET /settings/hotkeys`), order-flow glossary, and the link into the detector methodology drawer **SCR-058** (`GET /detectors/methodology`), plus guided-tour restart into SCR-016/SCR-017 onboarding.
+- **Design** (E48-D01 hi-fi + handoff in Sprint 23, E48-D02 design-QA and a11y review in Sprint 26).
+- **QA** (E48-Q01 documentation-accuracy test plan and exploratory charter; E48-Q02 runbook-rehearsal verification, GA regression evidence and epic QA sign-off).
+- **Security** (E48-X01 STRIDE for the documentation/diagnostics surface; E48-X02 security review, leakage abuse cases and secret-scanning rules over published docs and support bundles).
+
+## Out of scope
+
+- Writing the resilience runbooks for reconciliation, chaos and dead-man's-switch — owned by **E45-T11**; E48 indexes, rehearses and quality-gates them but does not re-author them.
+- Fixing defects found while rehearsing — those are filed as Bugs against **E49** (defect burn-down), not absorbed silently here.
+- Accessibility remediation of screens other than SCR-119 — owned by **E47**.
+- Performance numbers themselves — owned by **E46**; E48 quotes E46's published figures and fails its own docs build if the quoted figure has no source artefact.
+- Android, a separate admin app, additional exchanges — permanently out of scope (`docs/plan/00-planning-brief.md`).
+- A public/marketing website or external developer portal: the documentation site is private and Tailscale-reachable only.
+
+## Acceptance criteria
+
+```gherkin
+Scenario: Every required document exists and is reachable from one index
+  Given the R5 exit criterion 6 list (user guide, ops runbooks, API/WS reference, ADR index, onboarding guide)
+  When the docs site is built in CI and the docs-completeness checker runs
+  Then every listed artefact is present, non-empty and linked from the docs landing page
+  And a deliberately removed runbook makes the checker exit non-zero naming the missing artefact
+
+Scenario: Every runbook has been rehearsed and dated
+  Given the runbook index at docs/runbooks/index.md
+  When the rehearsal checker runs at the GA gate
+  Then every runbook entry carries a rehearsal date, a rehearser and an outcome
+  And any runbook whose rehearsal date is absent or older than the current release train fails the check
+
+Scenario: The API reference cannot drift from the contract
+  Given docs/plan/22-api-openapi.yaml is edited to add an operation
+  When the docs build runs without regenerating the reference
+  Then CI fails with a stale-reference error naming the operation
+  And regenerating the reference makes the build pass
+
+Scenario: The DR playbook is executed and measured, not merely written
+  Given the disaster-recovery playbook and a scratch environment
+  When the drill is executed end to end
+  Then measured RTO and RPO per system are recorded and compared against 07-release-and-prr.md §5.3 targets
+  And a measurement exceeding a target is recorded as a P1 finding in docs/plan/32-risk-register.md with a remediation ticket, and blocks PRR sign-off
+
+Scenario: Documentation is reviewed by someone who did not write it
+  Given a PR touching docs/ or docs/plan/
+  When it is opened
+  Then CODEOWNERS routing requires an approval from a reviewer who is not a commit author on that PR
+  And a self-approved documentation PR cannot be enqueued in the merge queue
+
+Scenario: Published documentation leaks no secrets (failure path)
+  Given the generated docs site and every example payload it contains
+  When the secret-scanning and redaction rules run over the built output
+  Then no API key, token, session cookie, internal hostname or real account identifier is present
+  And seeding a fixture key pattern into an example makes the scan fail the build
+```
+
+## Technical notes / design
+
+**Documentation lives in the repo, is built by CI, and is verified mechanically.** Three layers, mirroring the governance approach established in E01:
+
+1. **Authored prose** under `docs/` (`docs/guide/`, `docs/runbooks/`, `docs/onboarding/`) — Markdown, reviewed like code.
+2. **Generated reference** — the REST reference rendered from `docs/plan/22-api-openapi.yaml`; the WS topic/frame reference rendered from `docs/plan/23-ws-protocol.md` and the bundled `ws-schemas.json`; the DB reference rendered from `docs/plan/21-database-schema.md`. Regeneration is a `make docs` target; CI runs `make docs && git diff --exit-code`, exactly the staleness pattern already used for `packages/protocol` (`docs/plan/20-architecture.md` §5).
+3. **Checkers** (`scripts/check-docs-*.py`) with stable error codes: `DOC-001` missing required artefact, `DOC-002` stale generated reference, `DOC-003` unrehearsed or stale-rehearsal runbook, `DOC-004` broken internal link, `DOC-005` quoted figure with no source artefact, `DOC-006` secret/PII pattern in published output, `DOC-007` orphan document (not linked from any index).
+
+**In-app help is content-driven, not hard-coded.** SCR-119 renders sections from a versioned content bundle shipped with the web app so the app remains fully usable offline (SCR-119 performance note: "No network calls except an explicit update check; the page is fully available offline"). The only live calls are `GET /system/build` (version/commit/environment, RBAC `permissions: []`, scope `self`) and `GET /detectors/methodology` for the SCR-058 drawer. The keyboard cheatsheet is rendered from the **active** hotkey profile (`GET /me/keymap`) so it always matches the user's remapping rather than a stale screenshot.
+
+**Runbook format** (enforced by front-matter schema, checked by `DOC-003`): `id`, `title`, `failure_ids` (F1–F18 from `20-architecture.md` §11.1), `trigger`, `detection` (the metric/alert from `20-architecture.md` §12), `severity`, `steps` (numbered, each with expected observable result), `verification`, `rollback`, `owner`, `rehearsals: [{date, rehearser, outcome, duration_minutes, notes}]`.
+
+**GA evidence pack** is assembled by a script into `artifacts/ga/v1.1.0/` from CI artefacts (coverage reports, perf budget results from E46, a11y conformance report from E47, chaos catalogue results from E45, scan outputs from E43) rather than transcribed; the PRR ceremony reviews the pack, it does not build it.
+
+## Test plan
+
+- **Unit** — each `scripts/check-docs-*.py` checker: clean tree exits 0; one seeded violation per `DOC-00n` code exits non-zero with that code; malformed front-matter produces a clear message, not a traceback. Target ≥85% line coverage on `scripts/` (Python gate, `docs/plan/03-testing-strategy.md` §15).
+- **Contract** — the generated REST/WS reference is diffed against the contract in CI (`make docs && git diff --exit-code`); a synthetic contract change must break the build.
+- **Integration** — docs site builds from a clean checkout in a container with no network; all internal links resolve; search index builds.
+- **E2E (Playwright, web + Electron)** — SCR-119 renders version/commit/environment, the cheatsheet reflects a remapped hotkey, the methodology link opens SCR-058, the diagnostics-copy control copies a redacted payload, the What's-New panel shows the `v1.1.0` entry.
+- **Manual/QA** — runbook rehearsals (E48-Q02) executed against staging (demo) by an engineer who did not write the runbook, timed and recorded.
+- **Perf** — SCR-119 mount ≤150 ms and route transition ≤200 ms per `docs/plan/14-screens-catalogue.md` §0.5 item 7.
+- **a11y** — axe-core clean on SCR-119; manual NVDA/VoiceOver pass per `docs/plan/05-accessibility-standard.md` §8.2.
+- **Security** — `DOC-006` secret scan over built output; support-bundle redaction assertions (US-OBS-007 scenario 2).
+
+## Security notes
+
+Data classification: the documentation set is **internal/confidential** — it describes the trust boundaries (`docs/plan/20-architecture.md` §2.2), the key-vault design (`27-adrs/ADR-0009`) and the incident runbooks, so it is an attacker's shortcut if exposed. Primary STRIDE concerns (detailed in E48-X01): **I**nformation disclosure via generated examples containing real identifiers, via the support bundle (US-OBS-007), or via publishing the docs site outside the Tailscale boundary; **T**ampering with a runbook to induce a destructive operation during an incident; **E**levation via a runbook instructing an over-privileged shortcut ("just run as superuser") that becomes normalised. Controls: docs site bound to the private network only (same rule as the metrics endpoint in US-OBS-001), `DOC-006` secret scanning in the docs build, CODEOWNERS protection on `docs/runbooks/**` so an incident procedure cannot be changed without review, and an explicit rule that no runbook step may disable an audit or a safety control without naming the compensating control. `security` review label required on this epic.
+
+## Accessibility notes
+
+SCR-119 is a static content page: headings in order, a version table as a real `<table>`, links with meaningful text, the licence list in a scrollable region with an accessible name, the copy-diagnostics button announcing exactly what it copies. The keyboard cheatsheet must itself be operable and readable by a screen reader — a cheatsheet that only exists as an image would be a Level A failure. Accordion sections follow the WAI-ARIA Accordion pattern (`docs/plan/15-component-catalogue.md` CMP-051). WCAG 2.2 AA, verified by axe-core plus a manual pass (`docs/plan/05-accessibility-standard.md`).
+
+## Performance notes
+
+Docs site build ≤3 min in CI. SCR-119: panel mount ≤150 ms, route transition ≤200 ms, zero network calls on first paint beyond `GET /system/build` (`docs/plan/06-performance-and-load-standard.md`; `14-screens-catalogue.md` §0.5). Support-bundle generation must be bounded and must not stall the event loop (US-OBS-007 NFR: capped size, truncation stated).
+
+## Observability
+
+- Analytics events already specified for SCR-119: `help.about_viewed`, `help.diagnostics_copied`, `help.update_check_requested`.
+- New: `docs.checker_failed{code}` emitted by CI so documentation rot is visible as a trend rather than a surprise at the gate; `runbook.rehearsal_recorded{runbook_id,outcome}`; `ga.evidence_pack_built{version}`.
+- Audit: support-bundle generation is audited (US-OBS-007 NFR) via the existing `audit_log` table; runbook edits are captured by normal git history plus CODEOWNERS.
+
+## Definition of Done
+
+- [ ] All child tickets Done or explicitly descoped with a recorded disposition.
+- [ ] R5 exit criteria 5 and 6 (`docs/plan/30-release-roadmap.md` §9.3) evidenced: every runbook rehearsed and dated; the six documentation artefacts complete and linked.
+- [ ] §9.4 Docs gate satisfied: every doc reviewed by a non-author.
+- [ ] DR playbook executed with measured RTO/RPO recorded and compared to `07-release-and-prr.md` §5.3 targets; failures logged to `docs/plan/32-risk-register.md` with remediation tickets.
+- [ ] Docs checkers `DOC-001`..`DOC-007` are required CI checks.
+- [ ] a11y: axe-core green on SCR-119 + manual screen-reader pass signed off.
+- [ ] security: STRIDE finalised, findings triaged, Security engineer sign-off.
+- [ ] QA sign-off recorded (E48-Q02) including the rehearsal log.
+- [ ] Design sign-off on SCR-119 (E48-D01) and design-QA pass (E48-D02).
+- [ ] GA evidence pack assembled; PRR + GA checklist executed; demoed to Owner; `v1.1.0` tagged.
+- [ ] Retro note filed.
+
+## Dependencies
+
+- **E46** — the roadmap graph edge `E46 --> E48`; performance figures quoted in the docs must be final.
+- **E45** — restore/rollback drill automation (`E45-T09`, `E45-T10`) and the resilience runbooks (`E45-T11`) that this epic indexes and rehearses.
+- **E44**, **E43** — live-enablement gate and security-hardening outcomes documented in the ops and GA material.
+- **E42** — admin screens (SCR-140..SCR-148) the ops runbooks instruct operators to use.
+- **E47** — the accessibility conformance report is one of the GA evidence-pack inputs, and SCR-119's a11y baseline comes from it.
+- Interfaces relied on: `GET /system/build`, `GET /detectors/methodology`, `GET /me/keymap`, `GET /settings/hotkeys`, `GET /admin/health`, `GET /admin/backups`, `POST /admin/backups/{backupId}/restore`.
+
+## Branch
+
+`feat/docs-ga-readiness-*` (per child ticket, e.g. `feat/docs-ga-readiness-runbooks`). PR size guidance: ≤400 LOC of prose-equivalent diff per PR; split long documents by chapter so reviewers actually read them.
+
+## References
+
+- `docs/plan/30-release-roadmap.md` §9 (R5 scope, exit criteria, quality gates, key dates), §11.1 (dependency graph)
+- `docs/plan/07-release-and-prr.md` §4 release checklist, §5 PRR, §5.2 runbooks, §5.3 backups/restore + RPO/RTO targets, §5.6 rollback rehearsal, §6 Live-enablement gate re-run for R5
+- `docs/plan/20-architecture.md` §5 monorepo layout, §11 failure register, §11.2 recovery objectives, §12 observability, §16 ADR index
+- `docs/plan/14-screens-catalogue.md` SCR-119, SCR-058, SCR-016, SCR-017; `docs/plan/15-component-catalogue.md` CMP-001/021/036/051/086/096/207
+- `docs/plan/18-traceability-matrix.md` rows US-SET-009, US-OBS-007, SCR-119
+- `docs/plan/11-user-stories.md` §27 SET, §28 OBS
+- `docs/plan/03-testing-strategy.md`, `04-security-program.md`, `05-accessibility-standard.md`, `06-performance-and-load-standard.md`, `02-definition-of-ready-done.md`
+- `docs/plan/27-adrs/README.md`
+
+## Children — dependency graph
+
+```mermaid
+graph TD
+    K01[E48-K01 Spike: docs toolchain] --> T02[E48-T02 Generated API/WS reference site]
+    T01[E48-T01 Architecture + ADR reconciliation] --> T02
+    T02 --> T05[E48-T05 Engineer onboarding guide]
+    T03[E48-T03 Operations runbook set] --> T04[E48-T04 DR playbook + measured RTO/RPO]
+    T03 --> Q02[E48-Q02 Rehearsal verification + QA sign-off]
+    T04 --> Q02
+    T02 --> T06[E48-T06 GA checklist + evidence pack]
+    T05 --> T06
+    T07[E48-T07 Changelog + release notes] --> T06
+    D01[E48-D01 Design SCR-119 help + user guide IA] --> S01[E48-S01 Persona user guide on SCR-119]
+    S01 --> S02[E48-S02 Cheatsheet, glossary, methodology, tour restart]
+    S01 --> T07
+    S02 --> D02[E48-D02 Design QA + a11y review]
+    S02 --> Q01[E48-Q01 Docs accuracy test plan + charter]
+    Q01 --> Q02
+    X01[E48-X01 STRIDE threat model] --> X02[E48-X02 Security review + leakage abuse cases]
+    X01 --> T02
+    X02 --> T06
+    Q02 --> GA([GA gate v1.1.0])
+    T06 --> GA
+    D02 --> GA
+```
+
+
+##### E48-K01
+## Context
+
+R5 exit criterion 6 (`docs/plan/30-release-roadmap.md` §9.3) requires a published user guide, ops runbooks, API/WS reference, ADR index and onboarding guide. §9.4 adds that docs must be reviewed by a non-author. Both imply a *built, linked, searchable* documentation set rather than a pile of Markdown files, and the API/WS reference must be **generated** from `docs/plan/22-api-openapi.yaml` and `docs/plan/23-ws-protocol.md` so it cannot drift (the same staleness discipline already applied to `packages/protocol` in `docs/plan/20-architecture.md` §5).
+
+Choosing the toolchain is a one-off decision with long consequences (search, versioning, offline availability, CI cost, who can edit). It is deliberately timeboxed and decided by ADR before E48-T02 starts building on it.
+
+## Scope / Deliverables
+
+- A 2-day timeboxed comparison of at least three candidates for the prose site: **MkDocs Material**, **Docusaurus**, and **a minimal Vite/Astro static build reusing `packages/ui` tokens**; plus at least two candidates for the REST reference renderer (**Redocly CLI** — already in the toolchain as the OpenAPI linter per `docs/plan/03-testing-strategy.md` §5.0 — and **Scalar/Elements**), and a decision for rendering the WS protocol reference from `docs/plan/23-ws-protocol.md` + the bundled `ws-schemas.json`.
+- A comparison table scoring: build time on CI, offline/air-gapped build (no network at build time), search quality, Markdown-authoring ergonomics for non-frontend engineers, theming cost to match the product's dark theme, versioning support, mermaid support (the plan docs are mermaid-heavy), link-checking hooks, maintenance burden, and licence.
+- A throwaway prototype building the existing `docs/plan/*.md` set plus a generated REST reference, measured end to end.
+- **ADR-0016 (or next free number) `docs-toolchain`** in `docs/plan/27-adrs/`, added to `27-adrs/README.md` and `docs/plan/20-architecture.md` §16 in the same PR (ADR house rules, `27-adrs/README.md` §"Writing a new ADR").
+
+## Out of scope
+
+- Building the production site (E48-T02).
+- Authoring any content.
+- A public-facing/marketing site — the docs site is private, Tailscale-reachable only.
+
+## Acceptance criteria
+
+```gherkin
+Scenario: The question is answered with evidence
+  Given the timebox has elapsed
+  Then a comparison table with measured CI build times and a prototype link exists for every candidate
+  And the chosen option is stated with the decision drivers that selected it
+
+Scenario: Offline build is proven, not assumed
+  Given the prototype build is run in a container with networking disabled
+  Then the chosen toolchain completes the build successfully
+  And any candidate that cannot is eliminated on that basis alone and this is recorded
+
+Scenario: Mermaid and OpenAPI rendering are both proven
+  Given docs/plan/20-architecture.md (mermaid C4 diagrams) and docs/plan/22-api-openapi.yaml
+  When the prototype builds
+  Then every mermaid diagram renders and every operation in the OpenAPI file appears in the reference
+  And an operation added to the YAML but not regenerated is detectable by a staleness check
+
+Scenario: Decision is recorded even if it is "defer"
+  Given the spike concludes
+  Then an ADR exists in docs/plan/27-adrs/ with status decided or proposed-with-deadline
+  And follow-up tickets are filed against whichever path was chosen
+```
+
+## Technical notes / design
+
+Decision criteria are pre-committed so the result is not argued after the fact:
+
+- **Hard requirement**: builds with no network access (CI runners for this repo are already network-restricted for tests, `docs/plan/03-testing-strategy.md` §11.4 network-allowlist lint); renders mermaid; total docs build ≤3 min.
+- **Hard requirement**: the REST reference is generated from the single OpenAPI source; no second copy of endpoint documentation exists anywhere (the C-16.5 single-source-of-truth rule applied to docs).
+- **Tiebreaker**: authoring ergonomics for backend engineers writing runbooks at 2 a.m. — plain Markdown with front-matter beats anything requiring JSX.
+
+Prototype lives on `spike/docs-toolchain`, explicitly throwaway unless the ADR says otherwise. Expected output of the staleness check is the `make docs && git diff --exit-code` pattern, error code `DOC-002`.
+
+## Test plan
+
+- Prototype build executed three times per candidate; median CI wall-clock recorded.
+- Offline build executed in `docker run --network=none`.
+- Link-check run over the prototype output; count of false positives recorded (a noisy link checker is a real maintenance cost).
+- No production tests; this spike ships no production code.
+
+## Security notes
+
+The chosen toolchain becomes a build-time dependency of a repo that holds trading-system source: evaluate supply-chain surface (transitive dependency count, maintenance status, whether it executes arbitrary plugins from config) per `docs/plan/04-security-program.md` §6.13. Any candidate requiring a network fetch at build time is rejected on both determinism and supply-chain grounds. Record the SCA result for the chosen tool.
+
+## Accessibility notes
+
+The docs site is a UI surface the team uses: the chosen theme must give ≥4.5:1 text contrast, keyboard-navigable search, and real heading structure — checked in the prototype with axe-core on one representative page. Any candidate failing this is documented as failing, not silently accepted.
+
+## Performance notes
+
+Build ≤3 min on CI; the built site's first contentful paint on a docs page ≤1 s on the reference hardware (`docs/plan/06-performance-and-load-standard.md` §3.1) — it is read during incidents, so it must not be slow.
+
+## Observability
+
+None in production. The spike records build-time measurements as ticket artefacts.
+
+## Definition of Done
+
+- [ ] Comparison table with measured numbers attached to the ticket.
+- [ ] Prototype branch linked; marked throwaway or promoted explicitly.
+- [ ] ADR written in `docs/plan/27-adrs/`, indexed in `27-adrs/README.md` and `20-architecture.md` §16.
+- [ ] Follow-up scope for E48-T02 confirmed or adjusted.
+- [ ] Findings presented at Sprint Review.
+- [ ] `docs/plan/32-risk-register.md` updated if a new risk surfaced.
+
+## Dependencies
+
+None blocking; informed by the existing Redocly usage in the `contracts` CI gate (`docs/plan/03-testing-strategy.md` §5.0).
+
+## Branch
+
+`spike/docs-toolchain`. PR: ADR only; prototype not merged.
+
+## References
+
+- `docs/plan/30-release-roadmap.md` §9.3, §9.4
+- `docs/plan/20-architecture.md` §5, §16
+- `docs/plan/22-api-openapi.yaml`, `docs/plan/23-ws-protocol.md`
+- `docs/plan/03-testing-strategy.md` §5.0
+- `docs/plan/27-adrs/README.md`
+
+
+##### E48-T01
+## Context
+
+`docs/plan/02-definition-of-ready-done.md` §2.2 requires, at Epic close, that "relevant `docs/plan/2x-*` architecture/schema docs and `docs/plan/1x-*` product docs reflect final shipped behavior (not the original proposal) if they diverged during implementation". Across 48 epics and 26 sprints that reconciliation will have been done unevenly. R5 exit criterion 6 (`docs/plan/30-release-roadmap.md` §9.3) requires a complete and correct ADR index, and §9.4's Docs gate requires review by a non-author.
+
+This task is the single sweep that makes the architecture set trustworthy at GA: `docs/plan/20-architecture.md` (C4 L1–L3, module register, failure register F1–F18, observability §12, ADR index §16), `docs/plan/21-database-schema.md` (Postgres DDL, QuestDB tables, retention, migrations), `docs/plan/24-internal-schemas.md` (domain events, rule IR, OMS state machine, trade-group model, exchange-adapter interface), `docs/plan/26-chart-engine-design.md`, and every record in `docs/plan/27-adrs/`.
+
+One record is explicitly unfinished: **ADR-0011 Electron vs Tauri** is still `proposed` with a decision deadline of "end of Sprint 03" (`docs/plan/27-adrs/README.md`). Shipping GA with a `proposed` ADR whose deadline passed 23 sprints earlier is exactly the drift this task exists to eliminate.
+
+## Scope / Deliverables
+
+- **Drift audit** of `docs/plan/20-architecture.md`, `21-database-schema.md`, `24-internal-schemas.md`, `26-chart-engine-design.md` against the shipped code (`services/api/candleviewer/**`, `packages/chart-engine/**`, `services/api/candleviewer/migrations/**`), producing a written delta list before any edits, so the size of the divergence is itself recorded.
+- **Corrections applied** to those documents, each as a separate reviewable PR per document.
+- **Postgres schema reconciliation**: the DDL in `21-database-schema.md` regenerated/diffed against the actual Alembic head for every table (`users`, `roles`, `permissions`, `role_permissions`, `user_roles`, `user_account_access`, `sessions`, `mfa_methods`, `exchange_accounts`, `api_keys`, `account_profiles`, `trade_groups`, `trade_group_legs`, `orders`, `order_events`, `executions`, `positions`, `wallet_balances`, `instruments`, `rules`, `rule_versions`, `rule_runs`, `rule_events`, `alerts`, `alert_deliveries`, `recorded_symbols`, `recording_sessions`, `recording_gaps`, `retention_policies`, `replay_sessions`, `journal_trades`, `journal_tags`, `workspaces`, `layouts`, `layout_panes`, `chart_templates`, `drawings`, `indicator_presets`, `hotkey_profiles`, `settings`, `feature_flags`, `feature_flag_overrides`, `audit_log`, `audit_checkpoints`, `system_events`, `backups`, `outbox`) and the QuestDB tables (`trades`, `orderbook_deltas`, `orderbook_snapshots`, `tickers`, `klines`, `liquidations`, `open_interest`, `funding_rates`, `bars_time`, `footprint_cells`, `profiles`, `orderflow_metrics`, `heatmap_cells`, `engine_metrics`).
+- **Failure register refresh**: `20-architecture.md` §11.1 F1–F18 updated with the behaviour actually implemented and verified by E45's chaos catalogue; §11.2 recovery objectives updated with measured, not aspirational, numbers (feeding E48-T04).
+- **ADR sweep**: every ADR-0001..0015 re-read; each marked `decided` (unchanged), amended with a dated amendment section, or superseded by a new record. **ADR-0011 resolved** to `decided` (Electron, per the locked decision in `docs/plan/00-planning-brief.md`) or superseded with the actual outcome of the E06/E10 spike. Every ADR written during R1–R5 by other epics (E44-T06, E45-T11, E46-T11 each write an "ADR-0016") **de-conflicted into unique sequential numbers** and indexed.
+- **ADR index reconciled** in both `docs/plan/27-adrs/README.md` and `docs/plan/20-architecture.md` §16 — the two must agree exactly, checked by a script (`DOC-001` class).
+- `scripts/check-adr-index.py` enforcing: every file in `27-adrs/` appears in both indexes with matching status; no duplicate ADR numbers; no `proposed` ADR whose stated deadline has passed.
+
+## Out of scope
+
+- Changing system behaviour to match a document — if the document was right and the code is wrong, that is a Bug filed against E49, not a doc edit.
+- Product docs `10-*`..`18-*` other than where an architecture change invalidated them (screen/component catalogue corrections belong to E49's design-QA sweep).
+- Writing new ADRs for decisions made inside other R5 epics — those epics own their own records; this task only de-conflicts numbering and indexing.
+
+## Acceptance criteria
+
+```gherkin
+Scenario: The ADR index is internally consistent
+  Given every file in docs/plan/27-adrs/ matching ADR-*.md
+  When scripts/check-adr-index.py runs
+  Then each record appears in 27-adrs/README.md and in 20-architecture.md §16 with identical status
+  And adding an ADR file without indexing it makes the script exit non-zero
+
+Scenario: No ADR is left proposed past its deadline
+  Given ADR-0011 has status proposed with deadline "end of Sprint 03"
+  When the check runs during Sprint 25
+  Then it fails until ADR-0011 is decided or superseded
+  And after resolution the check passes and the outcome names the shell actually shipped
+
+Scenario: Documented schema matches the migrated database
+  Given a scratch database migrated to the Alembic head
+  When the schema comparison runs against docs/plan/21-database-schema.md
+  Then every table, column, type, nullability and enum matches
+  And a column present in the database but absent from the document fails the comparison naming the table and column
+
+Scenario: Divergence is recorded, not silently fixed
+  Given the drift audit finds a difference between a document and the code
+  Then the delta list records the difference, its direction, and the decision taken (document corrected / bug filed)
+  And a difference resolved as "bug filed" has a real E49 ticket key recorded against it
+```
+
+## Technical notes / design
+
+The database comparison reuses the mechanism already mandated by the `contracts` CI gate: `docs/plan/03-testing-strategy.md` §5.0 requires "all `x-db-enum` schemas match the migrated database". This task extends that from enums to full table shape, using SQLAlchemy reflection against a migrated scratch Postgres and comparing to the parsed DDL blocks in `21-database-schema.md`. QuestDB tables are compared via `SHOW COLUMNS`.
+
+Checker error codes introduced here (registered in the shared `DOC-` table used by E48-T02): `DOC-001` missing/unindexed artefact, `DOC-008` ADR index mismatch, `DOC-009` schema/document divergence.
+
+ADR renumbering rule: `27-adrs/README.md` forbids editing a `decided` record's outcome in place. Where two R5 epics both wrote "ADR-0016", the earlier-merged record keeps 0016 and the later is renumbered at file level with a redirect note; both indexes are updated in the same PR (README rule 4).
+
+The drift audit is captured as `docs/plan/reconciliation/2027-09-ga-drift.md` — a dated artefact, because "how far did the docs drift over 26 sprints" is a process input for the retro, not just a chore.
+
+## Test plan
+
+- **Unit** — `scripts/check-adr-index.py`: clean tree exits 0; unindexed ADR, duplicate number, status mismatch, and expired `proposed` deadline each exit non-zero with the right code. Coverage ≥85%.
+- **Integration** — schema comparison run against a scratch Postgres migrated to head in CI; a deliberately dropped column must fail it.
+- **Contract** — the existing `contracts` job must remain green after any `x-db-enum` correction.
+- **Review** — each corrected document reviewed by an engineer who did not work on the corresponding subsystem (the §9.4 non-author rule applied at the subsystem level, which is stricter and cheap here).
+- Fixtures: scratch database from `packages/fixtures` bootstrap; no live Bybit calls.
+
+## Security notes
+
+The architecture documents describe trust boundaries (`20-architecture.md` §2.2), the key vault (`ADR-0009`) and the auth model (`ADR-0010`). Corrections must not add operational secrets, real hostnames or real account identifiers; the `DOC-006` secret scan from E48-T02 runs over these files too. Classification: internal/confidential. If the drift audit reveals that a shipped control is weaker than the documented one (e.g. an RBAC scope widened during implementation), that is a **security finding**, raised to E48-X02 and the Security engineer immediately, not a documentation edit.
+
+## Accessibility notes
+
+N/A — no UI surface. (Mermaid diagrams gain or retain a text summary sentence beneath them so the architecture set is readable without rendering, which is a docs-quality rule, not a WCAG obligation here.)
+
+## Performance notes
+
+The schema comparison adds ≤60 s to CI. No runtime impact.
+
+## Observability
+
+`docs.checker_failed{code="DOC-008"|"DOC-009"}` emitted by CI so index/schema drift is trended rather than rediscovered each release.
+
+## Definition of Done
+
+- [ ] Drift audit artefact `docs/plan/reconciliation/2027-09-ga-drift.md` merged.
+- [ ] All four architecture/schema documents corrected; each PR approved by a non-author.
+- [ ] ADR sweep complete; ADR-0011 resolved; numbering de-conflicted; both indexes agree.
+- [ ] `scripts/check-adr-index.py` and the schema comparison are required CI checks.
+- [ ] Coverage ≥85% on the new scripts.
+- [ ] Any code/document divergence resolved as a bug has an E49 ticket linked.
+- [ ] Demo: before/after drift summary shown at Sprint Review.
+- [ ] PR(s) merged via merge queue.
+
+## Dependencies
+
+- **E46**, **E45**, **E44** must have landed their behaviour changes and their own ADRs, or the reconciliation reconciles against a moving target.
+
+## Branch
+
+`chore/docs-ga-readiness-arch-reconcile`. Split into one PR per document plus one for the scripts; ≤400 LOC each.
+
+## References
+
+- `docs/plan/02-definition-of-ready-done.md` §2.2
+- `docs/plan/20-architecture.md` §5, §11, §12, §16
+- `docs/plan/21-database-schema.md`, `24-internal-schemas.md`, `26-chart-engine-design.md`
+- `docs/plan/27-adrs/README.md` (ADR house rules), `ADR-0011-electron-vs-tauri.md`
+- `docs/plan/03-testing-strategy.md` §5.0
+- `docs/plan/30-release-roadmap.md` §9.3, §9.4
+
+
+##### E48-T02
+## Context
+
+R5 exit criterion 6 (`docs/plan/30-release-roadmap.md` §9.3) names "API/WS reference published from the contract". The word *from* is the requirement: a hand-written endpoint reference is guaranteed to rot across 26 sprints, and `docs/plan/22-api-openapi.yaml` (≈180 operations) plus `docs/plan/23-ws-protocol.md` are already the single source of truth enforced by the `contracts` CI gate (`docs/plan/03-testing-strategy.md` §5.0) and by the generated `packages/protocol` (`docs/plan/20-architecture.md` §5: "CI fails if the generated output is stale — `make gen && git diff --exit-code`").
+
+This task builds the site chosen in E48-K01, wires the same staleness discipline to documentation, and adds the checker family (`DOC-001`..`DOC-007`) that turns "docs complete" from a human judgement at the GA gate into a required CI check.
+
+## Scope / Deliverables
+
+- **Docs site** built by `make docs` from the repo, published to the private (Tailscale-reachable) host alongside Grafana; landing page indexing the six R5-required artefacts: user guide, ops runbooks, API reference, WS reference, ADR index, onboarding guide.
+- **Generated REST reference** from `docs/plan/22-api-openapi.yaml` covering every operation, grouped by tag, showing each operation's `x-rbac` block (permissions + scope) — the RBAC surface is the thing an operator most needs and it is already machine-readable.
+- **Generated WS reference** from `docs/plan/23-ws-protocol.md` and the bundled `ws-schemas.json`: subprotocols (`cv.v1.msgpack`, `cv.v1.json`), envelope shape, every topic, snapshot+delta semantics, sequence/resync rules, close codes.
+- **Generated database reference** from `docs/plan/21-database-schema.md` (Postgres tables + QuestDB tables + retention).
+- **Error registry page** rendered from the shared REST/WS error registry that the `contracts` gate already reconciles.
+- **Checker suite** `scripts/check-docs-*.py` with stable codes: `DOC-001` missing required artefact, `DOC-002` stale generated reference, `DOC-003` unrehearsed/stale runbook (consumed by E48-T03), `DOC-004` broken internal link, `DOC-005` quoted performance/a11y figure with no source artefact, `DOC-006` secret/PII pattern in built output, `DOC-007` orphan document.
+- **CI job `docs`** running `make docs && git diff --exit-code` plus all checkers, added to the required-checks list and therefore to `CONSTITUTION.md` §9 (the single source of truth for required check names, per the C-16.5 rule established in E01).
+- **Non-author review enforcement**: `.github/CODEOWNERS` entries for `docs/**` and `docs/runbooks/**`, plus a `pr-metadata` rule rejecting a documentation PR whose only approver is a commit author on it (§9.4 Docs gate).
+
+## Out of scope
+
+- Authoring prose (E48-T03, T05, S01, S02).
+- Publishing outside the private network — explicitly forbidden (see Security notes).
+- Versioned/multi-release docs: GA ships one version; multi-version support is a follow-up if R6 happens.
+- Translating docs; the product is English-only in v1.
+
+## Acceptance criteria
+
+```gherkin
+Scenario: The reference cannot drift from the contract
+  Given docs/plan/22-api-openapi.yaml gains a new operation
+  When the docs CI job runs without regenerating the reference
+  Then the job fails with DOC-002 naming the operation
+  And running make docs and committing the result makes the job pass
+
+Scenario: Every required GA artefact is present
+  Given the R5 exit-criterion-6 artefact list
+  When scripts/check-docs-complete.py runs
+  Then all six artefacts are present, non-empty and linked from the landing page
+  And deleting the onboarding guide makes it exit non-zero with DOC-001
+
+Scenario: The site builds with no network access
+  Given a clean checkout in a container with networking disabled
+  When make docs runs
+  Then the build succeeds and every mermaid diagram renders
+  And the build completes in under 3 minutes
+
+Scenario: Broken links and orphan pages are caught
+  Given a document linking to a moved file and a document linked from nowhere
+  When the checkers run
+  Then DOC-004 names the broken link with its source file and line
+  And DOC-007 names the orphan document
+
+Scenario: A self-approved documentation PR cannot merge (failure path)
+  Given a PR touching docs/runbooks/ approved only by one of its own commit authors
+  When merge-queue enqueue is attempted
+  Then the pr-metadata check fails citing the non-author review rule
+  And approval from a non-author allows enqueue
+```
+
+## Technical notes / design
+
+`make docs` performs, in order: (1) regenerate REST/WS/DB reference into `docs/generated/` (never hand-edited; a header comment says so and `DOC-002` enforces it); (2) build the site into `dist/docs/`; (3) run the checker suite over the *built output*, not the sources, so anything the build injects is scanned too.
+
+`DOC-005` ("quoted figure with no source artefact") works from an explicit convention: any numeric budget or conformance claim in prose must be written as `{{figure:perf.ws_to_pixel_p95}}` resolved at build time from the machine-readable artefacts E46 publishes (`06-performance-and-load-standard.md` budgets + E46's CI budget results) and E47's conformance report. A hard-coded number where a token is required fails the build. This is the mechanism that prevents the GA docs quoting a stale 250 ms after E46 changed it.
+
+`DOC-006` reuses the repo's existing secrets-scanning configuration (`docs/plan/04-security-program.md`) with an additional allow-list of documentation-safe placeholders (`BYBIT_KEY_PLACEHOLDER`, the UUID pattern `00000000-0000-4000-8000-0000000000nn` already used throughout the OpenAPI examples) so the scan is strict without being unusable.
+
+Hosting: the site is served by the same reverse proxy as Grafana inside the compose stack (`infra/compose/`), bound to the private interface; there is no public listener. This mirrors the US-OBS-001 NFR ("metrics endpoint bound to the private network only").
+
+## Test plan
+
+- **Unit** — one test per `DOC-00n` code: clean case exits 0, seeded violation exits non-zero with the exact code and a useful message; malformed inputs produce messages, not tracebacks. Coverage ≥85% on `scripts/`.
+- **Contract** — a synthetic operation added to a copy of the OpenAPI file must appear in the regenerated reference and must trip `DOC-002` if not regenerated; a synthetic WS topic likewise.
+- **Integration** — full `make docs` in `docker run --network=none`; build time asserted ≤3 min; mermaid render count asserted equal to the source diagram count.
+- **E2E** — site smoke test: landing page lists six artefacts; search returns a result for "rate limit"; the REST reference page for `POST /orders` shows its `x-rbac` block.
+- **Security** — `DOC-006` seeded-secret test must fail the build.
+- **a11y** — axe-core on the landing page, one prose page and one reference page.
+- Fixtures: copies of the plan documents under `tests/fixtures/docs/`; no live network.
+
+## Security notes
+
+Threats (feeding and fed by E48-X01): **I**nformation disclosure if the site is ever bound to a public interface — mitigated by a startup assertion that the docs listener address is in the private range and a CI check on the compose file; **I** via examples containing real keys/hosts — mitigated by `DOC-006`; **T**ampering with build tooling to inject content — mitigated by pinned tool versions and SCA on the docs toolchain (`04-security-program.md` §6.13); **E** via a docs workflow with over-broad `GITHUB_TOKEN` permissions — job-level `permissions:` declared explicitly, read-only except for the publish step. Classification: internal/confidential. Requires `security` review label (E48-X02).
+
+## Accessibility notes
+
+The docs site is a UI surface used during incidents. Required: real heading hierarchy, skip link, keyboard-operable search and navigation, ≥4.5:1 text contrast in the shipped theme, visible focus, and code blocks that are selectable and screen-reader readable. axe-core runs over three representative pages in CI (`docs/plan/05-accessibility-standard.md` §9).
+
+## Performance notes
+
+`make docs` ≤3 min on CI; docs page FCP ≤1 s on reference hardware (`docs/plan/06-performance-and-load-standard.md` §3.1); the site must be fully usable with JavaScript disabled for prose pages (an incident runbook that needs a working bundler is not a runbook).
+
+## Observability
+
+`docs.build_duration_seconds`, `docs.checker_failed{code}`, `docs.pages_total` exported from CI into the existing Prometheus push path so documentation health is a trend on the same Grafana estate (`docs/plan/20-architecture.md` §12.4).
+
+## Definition of Done
+
+- [ ] `make docs` builds the site offline in ≤3 min; output committed under `docs/generated/` and staleness-gated.
+- [ ] REST, WS and DB references generated; error registry page rendered.
+- [ ] `DOC-001`..`DOC-007` implemented, unit-tested, ≥85% coverage.
+- [ ] `docs` CI job required; check name added to `CONSTITUTION.md` §9.
+- [ ] CODEOWNERS + non-author review rule enforced and demonstrated failing then passing.
+- [ ] axe-core green on three representative pages.
+- [ ] Security review comment from E48-X02 present; secrets scan clean.
+- [ ] Docs for the docs: a short "how to add a page" section in the onboarding guide (E48-T05).
+- [ ] Demo at Sprint Review; PR merged via merge queue.
+
+## Dependencies
+
+- **E48-K01** — toolchain decision and ADR.
+- **E48-T01** — the architecture/ADR set must be correct before it is published.
+- **E48-X01** — threat model informs the network-binding and token-scope controls built here.
+
+## Branch
+
+`feat/docs-ga-readiness-site`. PRs: (1) generation pipeline + `make docs`; (2) checker suite; (3) CI wiring + CODEOWNERS. ≤400 LOC each.
+
+## References
+
+- `docs/plan/30-release-roadmap.md` §9.3 exit criterion 6, §9.4 Docs gate
+- `docs/plan/22-api-openapi.yaml`, `docs/plan/23-ws-protocol.md`, `docs/plan/21-database-schema.md`
+- `docs/plan/03-testing-strategy.md` §5.0 contracts gate, §11.4
+- `docs/plan/20-architecture.md` §5, §12.4
+- `docs/plan/04-security-program.md` §6.13
+- `docs/plan/05-accessibility-standard.md` §9, `06-performance-and-load-standard.md` §3.1
+
+
+##### E48-T03
+## Context
+
+`docs/plan/07-release-and-prr.md` §5.2 lists the runbooks a PRR requires and it is not optional: "Runbook exists for: WS disconnect/reconnect storm, exchange outage/5xx, rate-limit breach handling, OMS stuck-order reconciliation, fan-out partial-failure recovery, database failover (Postgres), QuestDB/Parquet recovery from corruption, feature-flag emergency kill, full-system rollback." R5 adds a harder gate (`docs/plan/30-release-roadmap.md` §9.4): "Every runbook rehearsed and dated."
+
+`docs/plan/20-architecture.md` §11.1 gives the authoritative failure register F1–F18 with detection signal, immediate behaviour, recovery and residual risk for each — that register is the skeleton of this runbook set, and every runbook must name the F-ids it covers so the two cannot silently diverge. E45-T11 already wrote the resilience subset (reconciliation, chaos, dead-man's-switch); this task writes everything else and makes the whole set uniform, indexed and machine-checkable.
+
+## Scope / Deliverables
+
+Runbooks under `docs/runbooks/`, one file each, front-matter-schema conformant, indexed in `docs/runbooks/index.md`:
+
+- `RB-01 ws-disconnect-storm` — F1, F3, F11. Detection: pong deadline, topic staleness, `SLOW` connection marking, drain time >2 s, close code 1013. Uses SCR-144 Admin incident/connectivity log and SCR-143 Admin system health.
+- `RB-02 book-desync` — F2. Force resubscribe, fresh snapshot, buffered delta replay; verifying the hole is marked in the UI and recorded in `recording_gaps`.
+- `RB-03 exchange-outage-5xx` — F3. Degraded execution, rules suspended, REST-confirm on submit, reconciliation on recovery.
+- `RB-04 rate-limit-breach` — F4, error code `10018`. Token-bucket backoff, shedding non-critical calls, per-UID budget inspection via SCR-147 Admin exchange connectivity & rate limits, relation to trade-group `PARTIAL` state.
+- `RB-05 clock-drift` — F5, error `10002`. ClockGuard, chrony resync, unblocking order entry.
+- `RB-06 oms-stuck-order` — F6. `Unknown` state, the explicit no-blind-retry rule, reconciler resolution by `orderLinkId` within two passes, manual escalation path.
+- `RB-07 fanout-partial-failure` — F14. Per-leg result inspection in `trade_group_legs`, confirming every filled leg carries its native SL (the safety invariant, `27-adrs/ADR-0008`), retry vs reduce-only rollback decision tree.
+- `RB-08 postgres-failover-and-restore` — F8. Bounded on-disk WAL buffering of journal/audit writes, failover, restore, post-restore audit-chain verification via `POST /admin/audit/verify`.
+- `RB-09 questdb-parquet-recovery` — F9. Recorder WAL spill, the 1 GB spill ceiling and priority shedding, cold-tier reconstruction.
+- `RB-10 disk-full` — F10. Auto-record pause at 90%, hard stop at 95%, retention run/purge via `POST /admin/recorder/purge` and compaction via `POST /admin/recorder/compact`, SCR-140/SCR-141/SCR-142.
+- `RB-11 feature-flag-emergency-kill` — the flag kill path via SCR-145 and `PATCH /admin/feature-flags/{flagKey}`, and its relationship to the trading kill-switch `POST /trading/kill-switch` (they are different controls and the runbook must say so unambiguously).
+- `RB-12 kill-switch-and-flatten` — the `07-release-and-prr.md` §6 distinction: the kill-switch stops new risk-taking, it does not close positions; the separate documented "flatten all" procedure (`POST /positions/close-all`) is invoked deliberately and is audited.
+- `RB-13 full-system-rollback` — the §7 rollback flowchart operationalised: flag flip first, kill-switch before rollback for live order flow, previous-tag redeploy, migration compatibility check, verification, comms, incident note.
+- `RB-14 key-compromise` — F12. Owner FREEZE, revoke and rotate (`POST /exchange-accounts/{accountId}/keys/{keyId}/rotate`), re-verify withdrawal-OFF and IP allowlist, the 48-hour new-key restriction.
+- `RB-15 gpu-renderer-crash` — F15. Renderer restart, `degraded-2d` mode expectations, what the user sees.
+- `RB-16 instrument-filter-drift` — F16. Refresh via `POST /instruments/refresh`, reject-code interpretation.
+- `RB-17 maintenance-mode` — planned maintenance using SCR-148, including the pre-check that no position is open unprotected.
+- `RB-18 on-call-and-escalation` — rotation, who is paged, how, backup contact (§5.2 third bullet), alert-to-runbook routing table mapping every alert rule in `20-architecture.md` §12.5 to exactly one runbook.
+
+Plus: `docs/runbooks/index.md` with the alert→runbook routing table and rehearsal ledger; the front-matter JSON schema; `scripts/check-runbooks.py` implementing `DOC-003`.
+
+## Out of scope
+
+- Reconciliation, chaos-drill and dead-man's-switch runbooks — authored by **E45-T11**; this task adopts them into the index and the schema, and rehearses them (E48-Q02).
+- The disaster-recovery playbook and its measured drill — **E48-T04**.
+- Automating any of these procedures — runbooks describe human procedures; automation candidates identified while writing are filed as follow-up Tasks, not built here.
+- Incident post-mortem templates beyond the existing incident-note rule in `07-release-and-prr.md` §7 rule 4.
+
+## Acceptance criteria
+
+```gherkin
+Scenario: Every PRR-required runbook exists and conforms
+  Given the nine runbooks named in 07-release-and-prr.md §5.2
+  When scripts/check-runbooks.py runs
+  Then each exists with schema-valid front-matter including trigger, detection, steps, verification, rollback and owner
+  And a runbook missing its verification section fails with DOC-003 naming the file
+
+Scenario: Every failure mode is covered exactly once
+  Given the failure register F1-F18 in 20-architecture.md §11.1
+  When the coverage check runs
+  Then every F-id appears in at least one runbook's failure_ids front-matter
+  And an F-id covered by no runbook fails the check naming the F-id
+
+Scenario: Every alert routes to a runbook
+  Given the alert rules in 20-architecture.md §12.5
+  When the routing table in docs/runbooks/index.md is validated
+  Then every alert rule maps to exactly one runbook id
+  And an alert with no mapping, or a mapping to a non-existent runbook, fails the check
+
+Scenario: A runbook step never silently weakens a safety control (failure path)
+  Given a runbook step that disables auditing, the native-SL invariant, or the environment guard
+  When the safety-clause linter runs
+  Then the build fails unless the step names an explicit compensating control and an owner approval
+  And the linter's keyword list is itself version-controlled and reviewed by the Security engineer
+
+Scenario: The rehearsal ledger is honest
+  Given a runbook with no rehearsal entry
+  When the GA gate check runs
+  Then it fails with DOC-003 stating the runbook has never been rehearsed
+  And a rehearsal entry older than the current release train also fails
+```
+
+## Technical notes / design
+
+**Front-matter schema** (`docs/runbooks/schema/runbook.schema.json`):
+
+```yaml
+id: RB-07
+title: Fan-out partial failure recovery
+failure_ids: [F14]
+trigger: "Trade group reports state PARTIAL, or the fanout_partial_failure alert fires"
+detection: "metric oms_fanout_leg_failures_total > 0; alert: fan-out partial failure"
+severity: P0
+prerequisites: ["admin re-auth token <=15 min old (SCR-149)", "read access to SCR-135 audit log"]
+steps:
+  - do: "Open SCR-078 trade-group detail for the group id in the alert"
+    expect: "Per-leg status is listed for every account in the group"
+  - do: "For each filled leg confirm a native stop-loss exists via GET /positions"
+    expect: "Every filled leg has a non-null stop price; any leg without one is an immediate P0"
+verification: "Group state is RESOLVED or CANCELLED; no filled leg is without a native SL; audit entries exist for every remediation action"
+rollback: "Reduce-only close of filled legs via POST /positions/{positionId}/close; never a market reverse"
+owner: "OMS lead"
+rehearsals: []
+```
+
+**Writing rules** enforced by review, not just taste: every step has an observable expected result (a step you cannot verify is not a step); every destructive action states what it cannot be undone from; every procedure names the screen (`SCR-nnn`) or endpoint used, because at 2 a.m. "check the admin panel" is not an instruction; no step requires reading source code.
+
+**The safety-clause linter** scans for a keyword set (`disable audit`, `skip reconciliation`, `bypass`, `--force`, `sudo`, `withdrawal`, `drop table`) and requires an adjacent `compensating-control:` annotation. Deliberately noisy-by-default; the allow-list is reviewed by the Security engineer (E48-X02).
+
+## Test plan
+
+- **Unit** — `scripts/check-runbooks.py`: schema validation, F-id coverage, alert routing completeness, safety-clause linter, rehearsal-ledger freshness. One seeded failure per rule. Coverage ≥85%.
+- **Integration** — the F-id coverage check parses `20-architecture.md` §11.1 directly, so adding F19 to the register must fail the check until a runbook covers it.
+- **Manual (this is the real test)** — each runbook dry-read by an engineer from a different subsystem, who must be able to follow it without asking the author a question; blocking questions become edits. This is the §9.4 non-author rule applied at authoring time; the *executed* rehearsals are E48-Q02.
+- Fixtures: staging (demo) environment with recorded Bybit fixtures for fault injection (reusing E45's chaos harness).
+
+## Security notes
+
+Runbooks are the highest-leverage tampering target in the documentation set: a modified incident procedure executes with an operator's full privileges during the exact window when scrutiny is lowest. Controls: `.github/CODEOWNERS` gives `docs/runbooks/**` to DevSecOps + Security engineer (two-key review); the safety-clause linter; an explicit prohibition on embedding credentials, key material or bearer tokens in any step (`DOC-006` scans these files); every runbook that touches keys (RB-14) or trading (RB-07, RB-12, RB-13) references the audit expectations so that following the runbook leaves a trail. Data classification: internal/confidential — the set describes exactly how to degrade the system. STRIDE detail in E48-X01; review required (E48-X02).
+
+## Accessibility notes
+
+N/A as a product surface, but the runbook pages must render with JavaScript disabled and be readable in a terminal browser — incidents happen when the pretty stack is the thing that is broken (enforced by the E48-T02 site requirement).
+
+## Performance notes
+
+N/A for runtime. Operational target: an on-call engineer reaches the correct runbook from an alert in ≤60 s via the routing table — measured during the E48-Q02 rehearsals and recorded.
+
+## Observability
+
+- `runbook.rehearsal_recorded{runbook_id,outcome}` emitted when the ledger is updated.
+- The alert→runbook routing table is exported into the Alertmanager annotation `runbook_url` so every firing alert links its runbook directly (`docs/plan/20-architecture.md` §12.5); a firing alert without a `runbook_url` annotation is itself a check failure.
+
+## Definition of Done
+
+- [ ] RB-01..RB-18 authored, schema-valid, indexed.
+- [ ] F1–F18 coverage complete; alert routing complete; `runbook_url` annotations wired.
+- [ ] `scripts/check-runbooks.py` (`DOC-003`) required in CI, ≥85% coverage.
+- [ ] Safety-clause linter allow-list reviewed by the Security engineer.
+- [ ] Every runbook dry-read by a non-author; blocking questions resolved.
+- [ ] E45-authored resilience runbooks adopted into the schema and index.
+- [ ] Rehearsals scheduled into E48-Q02 (execution is that ticket's DoD, not this one's).
+- [ ] Demo: walk one runbook end to end at Sprint Review.
+- [ ] PR(s) merged via merge queue.
+
+## Dependencies
+
+- **E45** — chaos harness, restore/rollback automation and the resilience runbooks this set adopts.
+- **E44** — environment separation and live gating that RB-12/RB-13 depend on.
+- **E42** — the admin screens (SCR-135, SCR-140..SCR-148) every procedure instructs the operator to use.
+
+## Branch
+
+`feat/docs-ga-readiness-runbooks`. One PR per 3–4 runbooks plus one for the schema/checker; ≤400 LOC each.
+
+## References
+
+- `docs/plan/07-release-and-prr.md` §5.2, §6, §7, §8
+- `docs/plan/20-architecture.md` §11.1 F1–F18, §11.2, §12.5
+- `docs/plan/14-screens-catalogue.md` SCR-135, SCR-140..SCR-149
+- `docs/plan/22-api-openapi.yaml` `/admin/feature-flags/{flagKey}`, `/trading/kill-switch`, `/positions/close-all`, `/admin/recorder/purge`, `/admin/recorder/compact`, `/admin/audit/verify`, `/instruments/refresh`, `/exchange-accounts/{accountId}/keys/{keyId}/rotate`
+- `docs/plan/21-database-schema.md` `trade_group_legs`, `recording_gaps`, `audit_log`, `system_events`
+- `docs/plan/27-adrs/ADR-0008-trade-group-fanout.md`
+- `docs/plan/30-release-roadmap.md` §9.4
+
+
+##### E48-T04
+## Context
+
+R5 exit criterion 5 (`docs/plan/30-release-roadmap.md` §9.3) is explicit: "All runbooks rehearsed at least once; **DR playbook executed with measured RTO/RPO recorded**." The targets are not ours to invent — `docs/plan/07-release-and-prr.md` §5.3 fixes them per system and states the consequence of missing them: "A drill run that exceeds either the RPO or RTO figure above for the system under test is a **fail**: it blocks PRR sign-off (§5) and must be logged as a P1 finding in `32-risk-register.md` with a remediation Task ticket, not merely noted and waved through."
+
+| System | RPO | RTO |
+|---|---|---|
+| Postgres (accounts, RBAC, rules, orders/journal metadata) | ≤15 min | ≤2 h to a booting, queryable instance in a scratch environment |
+| QuestDB hot tier (recent OHLC/tick) | ≤24 h (reconstructible from Parquet + re-ingestion) | ≤4 h to reconstruct the most-recently-traded symbol's hot tier |
+| Parquet/DuckDB cold tier | 0 (immutable, append-only, redundantly stored) | ≤4 h to restore one symbol's full history from the off-box copy |
+
+`docs/plan/20-architecture.md` §11.2 adds the service-level objectives: backend RTO ≤90 s from restart to fully reconciled trading; relational RPO ≤5 min via continuous archiving; recording RPO best-effort with gaps recorded explicitly in a coverage table rather than interpolated. E45-T10 automated the Postgres and Parquet restore drills; this task turns those primitives into an end-to-end, whole-system playbook, **executes it**, and records the measurements against the table above.
+
+## Scope / Deliverables
+
+- `docs/runbooks/DR-playbook.md` — a whole-system recovery procedure covering, in dependency order: restore Postgres from backup + WAL to a target point in time; verify the audit chain (`POST /admin/audit/verify`) and key vault integrity; reconstruct the QuestDB hot tier for the most-recently-traded symbol from the Parquet cold tier; restore cold-tier access from the off-box copy; bring the API up; run the OMS self-check and full reconciliation (E45-T01) before any rule is re-armed; confirm every open position still carries its native exchange-side SL; re-enable trading only after the gate.
+- **Scenario matrix** in the playbook, each with its own step path and its own measured drill: (a) Postgres data loss, (b) QuestDB corruption, (c) cold-tier host loss, (d) whole-box loss / rebuild from bare metal onto a scratch host, (e) accidental destructive operation (e.g. an erroneous `POST /admin/recorder/purge`).
+- **Executed drill** of scenarios (a), (b), (c) and (d) in a scratch environment, timed with a documented measurement method (clock starts at "decision to recover", stops at "verified service objective met" — the definition is written down so successive drills are comparable).
+- **Measurement record** `docs/runbooks/dr-drills/2027-09-<date>.md` with per-system measured RPO and RTO, the pass/fail verdict against each §5.3 target, what went wrong, and elapsed time per phase.
+- **Findings handling**: any target exceeded logged as a **P1** entry in `docs/plan/32-risk-register.md` with an owner and a remediation Task; the PRR sign-off note references the drill record.
+- **Backup verification evidence**: confirmation that the automated schedule is actually running and consistent with the ≤15-minute Postgres RPO (full-backup cadence + WAL archive interval), that the cold tier is redundantly stored off-box, and that the 30-day retention + pin-to-keep policy is enforced by an automated job — via `GET /admin/backups`, `POST /admin/backups/{backupId}/verify` and the `backups` table.
+- **Rollback rehearsal linkage**: §5.6 requires the rollback procedure executed in staging at least once; the DR playbook references RB-13 and the drill record cites E45-T09's automated rehearsal report rather than duplicating it.
+
+## Out of scope
+
+- Building new backup tooling — `infra/scripts/backup`/`restore` exist from E03/E07 and E45-T10; this task exercises and documents them, and files Bugs (E49) for gaps.
+- Multi-region or hot-standby architecture — out of scope for a single-owner self-hosted deployment; if the drill shows the RTO cannot be met without it, that is a recorded risk decision, not scope creep here.
+- Bybit-side recovery (exchange state is authoritative and is reconciled, not restored).
+
+## Acceptance criteria
+
+```gherkin
+Scenario: Postgres restore meets its targets
+  Given a scratch environment and the current backup set
+  When the Postgres restore path of the DR playbook is executed
+  Then the app boots against the restored instance and answers GET /health/ready
+  And measured data loss is <=15 minutes and measured time-to-restore is <=2 hours
+  And both figures are recorded with the measurement method in the drill record
+
+Scenario: A missed target is treated as a failure, not a note (failure path)
+  Given a drill in which QuestDB hot-tier reconstruction takes 5 hours against a 4-hour RTO
+  When the drill record is written
+  Then the verdict for that system is recorded as FAIL
+  And a P1 entry exists in docs/plan/32-risk-register.md with an owner and a linked remediation Task
+  And PRR sign-off is blocked until the finding is resolved or explicitly Owner-accepted in writing
+
+Scenario: Recovery never resumes trading before reconciliation
+  Given the system is restored and the API is up
+  When the playbook is followed
+  Then rules remain disarmed and order entry remains blocked until the OMS self-check and full reconciliation complete
+  And an attempt to arm a rule before reconciliation completes is refused by the system, not merely discouraged by the document
+
+Scenario: Cold-tier immutability is proven, not assumed
+  Given the Parquet cold tier has RPO 0
+  When the cold-tier restore drill runs for one symbol
+  Then the restored history is byte-identical to the pre-incident manifest checksums
+  And any mismatch is a P0 finding
+
+Scenario: Backups are verified, not merely scheduled
+  Given the automated backup schedule
+  When GET /admin/backups is inspected and POST /admin/backups/{backupId}/verify is run on the newest full backup
+  Then the backup verifies successfully and its checksum and encryption status are recorded
+  And a backup that fails verification raises an alert and fails this acceptance criterion
+```
+
+## Technical notes / design
+
+**Measurement definitions, written down once so drills are comparable.** RTO clock starts at the recorded "decision to recover" timestamp and stops when the system-specific service objective is verified (Postgres: `GET /health/ready` returns ready against the restored instance *and* a canonical query over `orders` returns the expected row count; QuestDB: the most-recently-traded symbol's bars for the last session are queryable and match golden checksums; cold tier: one symbol's full history is listable and checksum-matching). RPO is measured as the delta between the last committed transaction in the restored system and the last committed transaction before the simulated incident, taken from the WAL position and the `audit_log` sequence.
+
+**Scenario (d) — whole-box rebuild** is the one that actually validates the onboarding guide (E48-T05) and the compose stack: the drill is performed from a bare scratch host using only `infra/compose/`, `infra/scripts/bootstrap`, the backup artefacts and the documentation. Anything the operator has to know that is not written down is a documentation defect, recorded as such.
+
+**Safety**: drills run against a scratch environment with **demo** credentials only; the playbook carries a prominent precondition that a DR drill is never performed against `live` (the environment guard in E44 rejects cross-environment operations structurally, and the drill asserts that guard rather than trusting it).
+
+**Order of operations invariant**: restore → verify integrity (audit chain, key vault) → reconcile → *then* re-enable. `docs/plan/20-architecture.md` §11.1 F7 states positions remain protected by the native exchange SL throughout; the playbook's verification step proves this per open position rather than assuming it.
+
+## Test plan
+
+- **Drill execution** (the primary test) for scenarios (a)–(d), each timed and recorded; scenario (e) desk-checked.
+- **Integration** — the automated Postgres/Parquet restore drills from E45-T10 are re-run in CI and their reports are attached as drill evidence; the playbook's assertions are encoded where automatable so future drills are cheaper.
+- **Chaos** — the drill is run once with a deliberately corrupt backup artefact to prove the verification step catches it before the operator builds on a bad restore.
+- **Negative** — an attempt to run the drill with `environment=live` must be refused by the environment guard; asserted.
+- Fixtures: recorded Bybit fixtures for post-restore re-ingestion; golden checksums from `packages/fixtures/golden`.
+- Coverage: any new automation script ≥85%.
+
+## Security notes
+
+The DR playbook grants, by construction, the most privileged operations in the system: restoring databases, handling backup artefacts and touching the key vault. Threats: **I**nformation disclosure via a restored copy left in a scratch environment with real data (mitigation: drills use demo-environment data; any scratch environment is destroyed at drill end and this is a checklist step with a recorded confirmation); **T**ampering with backup artefacts (mitigation: backups are encrypted and checksummed — `backups` table carries `checksum_sha256`, `encrypted`, `verified_at` — and the playbook verifies before restoring, never after); **E**levation via long-lived restore credentials (mitigation: restore uses a scoped, time-boxed credential, not the application's runtime credentials); **R**epudiation (mitigation: post-restore audit-chain verification via `POST /admin/audit/verify`, and the drill records who performed it). Classification: restricted — the drill record names hostnames and timings, so it lives in the private docs site only. Security engineer review required (E48-X02).
+
+## Accessibility notes
+
+N/A — no UI surface. The playbook must be readable without JavaScript (see E48-T02).
+
+## Performance notes
+
+The targets *are* the performance budget: Postgres RPO ≤15 min / RTO ≤2 h; QuestDB RPO ≤24 h / RTO ≤4 h; cold tier RPO 0 / RTO ≤4 h (`07-release-and-prr.md` §5.3); backend restart-to-reconciled RTO ≤90 s (`20-architecture.md` §11.2). Each measured, each recorded, each pass/fail.
+
+## Observability
+
+- `dr.drill_executed{scenario,verdict}` and `dr.restore_duration_seconds{system}` recorded from the drill harness.
+- `backup.verify_failed{backup_id}` alert confirmed to fire during the corrupt-backup test (it is only an alert if it actually fires).
+- Drill outcomes surfaced on SCR-146 Admin backups & restore and SCR-143 Admin system health (E45-S02 already surfaces drill outcomes; this task supplies the DR drill's data shape).
+
+## Definition of Done
+
+- [ ] `docs/runbooks/DR-playbook.md` merged, schema-conformant, indexed, reviewed by a non-author.
+- [ ] Scenarios (a)–(d) executed in a scratch environment; drill record merged with per-system measured RPO/RTO and explicit pass/fail verdicts against §5.3.
+- [ ] Every missed target logged as a P1 in `docs/plan/32-risk-register.md` with owner and remediation Task.
+- [ ] Backup schedule, off-box redundancy and retention automation verified with evidence.
+- [ ] Corrupt-backup negative test executed; verification step proven to catch it.
+- [ ] Scratch environment destruction confirmed and recorded.
+- [ ] Security engineer review comment present.
+- [ ] Drill result referenced from the PRR sign-off note (E48-T06).
+- [ ] Demo: drill timeline walked through at Sprint Review.
+
+## Dependencies
+
+- **E48-T03** — the runbook schema, index and RB-08/RB-09/RB-13 which the playbook composes.
+- **E45** — automated restore drills (E45-T10), rollback rehearsal (E45-T09) and the reconciliation core (E45-T01) the playbook's re-enable gate depends on.
+
+## Branch
+
+`feat/docs-ga-readiness-dr-playbook`. Two PRs: playbook, then drill record + risk-register entries.
+
+## References
+
+- `docs/plan/07-release-and-prr.md` §5.3 (RPO/RTO targets and fail rule), §5.6
+- `docs/plan/30-release-roadmap.md` §9.3 exit criterion 5
+- `docs/plan/20-architecture.md` §11.1 F7/F8/F9/F10, §11.2
+- `docs/plan/21-database-schema.md` `backups`, `audit_log`, `audit_checkpoints`, `recording_gaps`
+- `docs/plan/22-api-openapi.yaml` `/admin/backups`, `/admin/backups/{backupId}/verify`, `/admin/backups/{backupId}/restore`, `/admin/audit/verify`, `/health/ready`
+- `docs/plan/14-screens-catalogue.md` SCR-143, SCR-146
+- `docs/plan/32-risk-register.md`
+
+
+##### E48-T05
+## Context
+
+R5 goal 4 (`docs/plan/30-release-roadmap.md` §9.1) is "Leave behind documentation and runbooks good enough that the system is operable by someone who did not build it", and exit criterion 6 names an "onboarding guide for a future engineer" as a required artefact. `docs/plan/32-risk-register.md` carries **R10 Key-person** as a standing risk taxonomy value; this guide is its principal mitigation. The project is a single-owner system built by a team that will disperse — if a future engineer cannot get from `git clone` to a running stack and a passing test suite in a day, the system is effectively unmaintainable regardless of how good the code is.
+
+The monorepo layout, tooling and composition root are already specified in `docs/plan/20-architecture.md` §5 (pnpm + Turborepo for JS, `uv` + Hatch for Python, a single `Makefile` front-end with `make dev`, `make test`, `make gen`, `make up`), §6 (composition root, supervisor, degraded-mode matrix) and §7.3 (environment parity for developers). This task turns that specification into a followable path and — the part that makes it real — **executes it on a clean machine and fixes whatever is missing**.
+
+## Scope / Deliverables
+
+`docs/onboarding/` with:
+
+- **`00-first-day.md`** — prerequisites (WSL Ubuntu, Docker, Node/pnpm, Python 3.12+/`uv`), clone, `make up`, `make dev`, first successful chart render against recorded fixtures, `make test`. Every command shown with its expected output, and the expected wall-clock for each step so a slow step is recognisable as wrong.
+- **`01-the-shape-of-the-system.md`** — a guided tour of `docs/plan/20-architecture.md` §2 containers and §3 backend modules (ingestion, book, bars, orderflow, oms, rules, paper, recorder, replay, auth, admin, api/ws gateway), and of the frontend split (`apps/web`, `apps/desktop`, `packages/chart-engine`, `packages/ui`, `packages/protocol`, `packages/fixtures`) — written as "where do I put a change", not as prose restating the architecture doc.
+- **`02-making-a-change.md`** — the end-to-end loop for a representative change: branch naming (`docs/plan/01-sdlc-and-branching.md`), interface-first rule for anything crossing an area boundary, `make gen` for `packages/protocol`, writing the test at the right pyramid layer (`docs/plan/03-testing-strategy.md` §2), the required checks, the PR template, 2 approvals incl. a code owner, the merge queue.
+- **`03-debugging.md`** — how to read a correlation id across API → OMS → adapter → WS (US-OBS-003), where the logs and dashboards are, the diagnostics overlay (SCR-046), the support bundle (US-OBS-007, SCR-119), and how to replay a recorded session to reproduce an order-flow bug.
+- **`04-conventions-and-gotchas.md`** — the non-obvious invariants a newcomer will otherwise violate: every fanned-out order carries a native exchange-side SL (`27-adrs/ADR-0008`); demo has no WS order entry, REST only (`07-release-and-prr.md` §4.1); `(estimated)` labelling is mandatory for heuristic values (`14-screens-catalogue.md` §0.5 item 2); no test may touch live Bybit; generated directories are never hand-edited; `docs/plan/` is the source of truth, not a historical record.
+- **`05-glossary.md`** — the engineering-side glossary (footprint, delta, CVD, POC/VA, imbalance, iceberg, book desync, fan-out, trade group, rule IR, arming) cross-linked with the user-facing glossary in E48-S02 so the two never disagree.
+- **A clean-machine validation run**: the guide followed literally, start to finish, on a freshly provisioned machine by an engineer who has not worked on the relevant setup, with every deviation recorded and fixed.
+
+## Out of scope
+
+- Teaching trading concepts beyond the glossary — the user guide (E48-S01) covers the trader's mental model.
+- Per-module deep-dives — those belong in module docstrings and `docs/plan/20-architecture.md` §3.
+- Video content.
+- Hiring/HR onboarding.
+
+## Acceptance criteria
+
+```gherkin
+Scenario: Clone to running stack in one working day
+  Given a freshly provisioned machine with only the documented prerequisites
+  When an engineer follows docs/onboarding/00-first-day.md literally
+  Then the stack starts, the web app renders a chart from recorded fixtures, and make test passes
+  And the total elapsed time is under 8 hours including troubleshooting
+
+Scenario: Every command in the guide actually works
+  Given every fenced shell command in docs/onboarding/
+  When the command-extraction check runs them in a container built from the documented prerequisites
+  Then each exits successfully
+  And a command that has drifted from the Makefile fails the check naming the file and line
+
+Scenario: Deviations are fixed, not annotated (failure path)
+  Given the clean-machine run hits an undocumented required step
+  Then the guide is edited to include it and the run is repeated from that point
+  And the deviation is recorded in the validation log with its cause
+
+Scenario: The guide contains no secret and no personal environment detail
+  Given the onboarding guide
+  When the DOC-006 secret scan runs
+  Then no token, key, personal path or internal hostname is present
+  And placeholder values are used with a stated way to obtain the real one
+```
+
+## Technical notes / design
+
+The guide is validated mechanically where possible: every fenced ```bash block carries either `# verify` (the checker runs it in a container built from the documented prerequisites and asserts exit 0) or `# illustrative` (excluded, and the checker fails on any block with neither marker, so exclusion is a deliberate act). This is the cheapest available defence against a guide that silently rots, and it reuses the `DOC-` checker harness from E48-T02.
+
+Time expectations are stated per step (`make up` ≈ 4 min first run; `make test` ≈ 12 min) because an unstated expectation makes every slow step look like a failure to a newcomer.
+
+The guide links into, rather than restates, `docs/plan/*` — the C-16.5 single-source-of-truth rule. Where it must restate (the gotchas list), the restatement is marked with the authoritative source so a reader can check it.
+
+## Test plan
+
+- **Unit** — the fenced-command extractor and marker checker: block with `# verify` runs, block with neither marker fails, block with `# illustrative` is skipped. Coverage ≥85%.
+- **Integration** — `# verify` blocks executed in CI nightly in a prerequisites container; failures raise `DOC-004`-class alerts.
+- **Manual** — the clean-machine validation run (the acceptance test that actually matters), performed by a non-author, timed, logged.
+- **Link check** — all cross-references into `docs/plan/` resolve (`DOC-004`).
+- Fixtures: recorded Bybit fixtures only; no live network.
+
+## Security notes
+
+Onboarding material is a classic source of leaked credentials (a working `.env` pasted "to save time"). Controls: `DOC-006` scanning; `infra/compose/.env.example` is the only environment file referenced and it contains placeholders; the guide states explicitly how a new engineer *requests* credentials (through the owner, scoped, never shared over chat) rather than showing any. It also states the Tailscale-only access rule and the demo-vs-live discipline, so a newcomer's first instinct is the safe one. Classification: internal. Reviewed under E48-X02.
+
+## Accessibility notes
+
+N/A as a product surface; the docs-site a11y requirements from E48-T02 apply.
+
+## Performance notes
+
+Stated step-time expectations must match reality on the reference hardware (`docs/plan/06-performance-and-load-standard.md` §3.1); if `make test` exceeds its stated time by >50% the figure is corrected or a Bug is filed.
+
+## Observability
+
+`docs.onboarding_verify_failed{file,line}` from the nightly command-verification job.
+
+## Definition of Done
+
+- [ ] All six onboarding documents merged and linked from the docs landing page.
+- [ ] Clean-machine validation run completed by a non-author in <8 hours; validation log merged.
+- [ ] All `# verify` blocks green in CI; marker checker required.
+- [ ] Glossary cross-linked with the user-facing glossary (E48-S02) and verified consistent.
+- [ ] `DOC-006` scan clean.
+- [ ] Reviewed by a non-author (§9.4 Docs gate).
+- [ ] Demo: the validation run's timeline presented at Sprint Review.
+- [ ] PR merged via merge queue.
+
+## Dependencies
+
+- **E48-T01** — the architecture set must be accurate before the guide points at it.
+- **E48-T02** — the docs site, checker harness and non-author review rule.
+
+## Branch
+
+`feat/docs-ga-readiness-onboarding`. One PR for the guide, one for the command-verification checker.
+
+## References
+
+- `docs/plan/30-release-roadmap.md` §9.1 goal 4, §9.3 exit criterion 6
+- `docs/plan/20-architecture.md` §2, §3, §5, §6, §7.3
+- `docs/plan/01-sdlc-and-branching.md`, `03-testing-strategy.md` §2
+- `docs/plan/27-adrs/ADR-0008-trade-group-fanout.md`, `ADR-0004-modular-monolith.md`
+- `docs/plan/11-user-stories.md` US-OBS-003, US-OBS-007
+- `docs/plan/14-screens-catalogue.md` SCR-046, SCR-119
+
+
+##### E48-T06
+## Context
+
+GA is a gate, not a date: `docs/plan/30-release-roadmap.md` §9.3 exit criterion 8 is "Final PRR re-run passes; GA declared; `v1.1.0` tagged", and `docs/plan/07-release-and-prr.md` §1 adds a rule specific to this release — for R5 the **full four-item Live-enablement gate is re-run in full, all four items, no subset** (pen-test, key-permission audit, kill-switch test, plus the standard PRR), "because R5 is defined as touching resilience/chaos/failover and security-debt burn-down — areas that directly affect the fan-out safety invariant and key handling".
+
+That is a lot of evidence, produced by many epics (E43 scans and pen-test remediation, E44 live gating and key audit, E45 chaos and drills, E46 performance budgets, E47 accessibility conformance, E49 defect burn-down). Historically this is where releases go wrong: evidence is screenshotted by hand the night before, the PRR reviews a narrative rather than artefacts, and a missing item is discovered after the tag. This task makes the evidence pack a **built artefact** and runs the checklists against it.
+
+## Scope / Deliverables
+
+- **`scripts/build-ga-evidence.py`** assembling `artifacts/ga/v1.1.0/` from CI artefacts and APIs, with a manifest listing every item, its source, its produced-at timestamp and its SHA-256:
+  - test pyramid results: unit, contract, integration (recorded Bybit fixtures), E2E web + Electron, including the **`@demo-rest-only` order-flow subset green against staging (demo)** with the assertion that no WS order-entry frames were sent (`07-release-and-prr.md` §4.1 — a release cannot proceed if this job is skipped or failing);
+  - coverage reports proving ≥85% backend/engine and ≥80% frontend with no regression;
+  - performance budget results from E46 including the 72-hour soak (§9.3 exit criterion 1);
+  - accessibility conformance report from E47 (§9.3 exit criterion 2);
+  - chaos catalogue results from E45 (§9.4 Chaos gate: full catalogue re-run green on the GA candidate);
+  - security sweep: SAST/SCA/secrets/DAST/container scans, current SBOM, no unpatched Critical/High dependency, accepted-risk register current (§9.4 Security gate);
+  - DR drill record and rollback rehearsal report (E48-T04, E45-T09);
+  - runbook rehearsal ledger (E48-Q02);
+  - defect state: zero open P0/P1, open P2 ≤10 with owners and target sprints, P3 triaged (§9.3 exit criterion 3);
+  - accepted-risk review record: every acceptance in `docs/plan/32-risk-register.md` has a current owner, expiry date and review record (§9.3 exit criterion 4);
+  - live-usage evidence: ≥2 consecutive weeks across all managers with no P0 incident and no unresolved reconciliation discrepancy (§9.3 exit criterion 7).
+- **`scripts/check-ga-gate.py`** evaluating every §9.3 exit criterion and §9.4 quality gate against the manifest and exiting non-zero with the failing criterion named — so "are we ready" is answered by a command, not a meeting.
+- **Executed release checklist** (`07-release-and-prr.md` §4.1–§4.4): pre-cut checks, `release/1.1.0` branch cut, staging (demo) deploy, soak, Owner demo and recorded acceptance, PRR gate, tag `v1.1.0`, GitHub Release with generated changelog, prod deploy, feature-flag defaults set, rollback readiness reconfirmed, post-release monitoring window opened, `main` forward-ported.
+- **Executed PRR checklist** (§5.1–§5.6) with sign-offs recorded from Architect, DevSecOps, Security engineer and QA lead, plus the **full four-item Live-enablement gate re-run** (§6) with the Owner's written authorisation.
+- **PRR record** `docs/releases/v1.1.0-prr.md` — the go/no-go decision, attendees, per-item verdicts, and the explicit statement (required by §1) of which Live-enablement-gate case applied and why.
+
+## Out of scope
+
+- Producing the underlying evidence — owned by E43/E44/E45/E46/E47/E49; this task collects, checks and presents it, and blocks on anything missing rather than manufacturing it.
+- Fixing gate failures — each failure becomes a ticket in its owning epic.
+- Post-GA hypercare execution (§8) beyond opening the monitoring window and naming the on-call engineer on the release ticket.
+
+## Acceptance criteria
+
+```gherkin
+Scenario: The gate is evaluated by a command, not by opinion
+  Given the assembled evidence manifest for v1.1.0
+  When scripts/check-ga-gate.py runs
+  Then every §9.3 exit criterion and §9.4 quality gate is evaluated and reported pass or fail
+  And a single failing criterion makes the script exit non-zero naming that criterion
+
+Scenario: Missing evidence blocks the tag (failure path)
+  Given the accessibility conformance report is absent from the manifest
+  When the gate check runs
+  Then it fails naming the missing artefact and its owning epic
+  And the release tagging job refuses to run while the gate check is failing
+
+Scenario: The demo-REST-only E2E rule is enforced
+  Given the order-flow E2E subset tagged @demo-rest-only
+  When the release checklist pre-cut step runs
+  Then the subset is green against staging (demo) and asserts that no WS order-entry frames were sent
+  And a skipped or failing @demo-rest-only job blocks the release regardless of other results
+
+Scenario: The R5 Live-enablement gate is re-run in full
+  Given 07-release-and-prr.md §1 requires all four items for R5 with no subset
+  When the PRR is held
+  Then pen-test, key-permission audit, kill-switch test and the standard PRR are each recorded with a verdict
+  And the PRR record states explicitly which gate case applied and why
+  And the Owner's written authorisation is present before the prod cut
+
+Scenario: Evidence is tamper-evident
+  Given the evidence manifest with SHA-256 per artefact
+  When an artefact is modified after assembly
+  Then re-running the manifest verification fails naming the artefact
+  And the PRR cannot be signed off against an unverifiable manifest
+```
+
+## Technical notes / design
+
+The evidence pack is assembled from machine sources only: GitHub Actions artefacts by workflow run id, `GET /admin/health`, `GET /admin/security/summary`, `GET /admin/capacity`, `GET /admin/incidents`, `GET /admin/backups`, the project board API for defect counts, and `docs/plan/32-risk-register.md` parsed for acceptance expiry. Manual items that genuinely cannot be automated — the key-permission audit performed in the Bybit console (§6 requires manual verification "not just trusted from app config"), the pen-test summary, the Owner's written authorisation — are represented as signed attestation files with a named human, a date and a scope statement, and the gate check verifies their presence, recency and signer role. The distinction between "measured" and "attested" is explicit in the manifest so nobody later mistakes one for the other.
+
+Gate check error codes: `GA-001` missing artefact, `GA-002` artefact failed its own threshold, `GA-003` stale artefact (produced before the release candidate commit), `GA-004` missing or expired attestation, `GA-005` manifest digest mismatch, `GA-006` open P0/P1 defect, `GA-007` expired accepted risk.
+
+`GA-003` matters: an evidence artefact produced against an earlier commit is not evidence about the candidate. Every artefact records the commit SHA it was produced from, and anything older than the release-candidate SHA fails unless explicitly annotated as commit-independent (e.g. the pen-test, which is scoped to a deployed build and carries its own build identifier).
+
+## Test plan
+
+- **Unit** — `build-ga-evidence.py` and `check-ga-gate.py`: each `GA-00n` code has a seeded failing case and a passing case; manifest digest verification tested against a tampered artefact. Coverage ≥85%.
+- **Integration** — a dry run against the Sprint 25 build produces a complete manifest and a gate report with known failures, proving the machinery before the real gate.
+- **E2E** — the release automation path is rehearsed on staging (tag a pre-release, generate the GitHub Release body from `CHANGELOG.md`, deploy, roll back) per §5.6.
+- **Negative** — tagging is attempted with a failing gate check and must be refused by the workflow, not merely warned.
+- Coverage target ≥85% on `scripts/`.
+
+## Security notes
+
+The evidence pack aggregates the system's complete security posture: scan outputs, SBOM, accepted risks, pen-test summary and key-audit attestation. It is the single most valuable document an attacker could obtain. Controls: the pack is stored in the private artefact store, never attached to a public release; the published GitHub Release body contains only the changelog with security fixes described generally and **without exploit detail** (`07-release-and-prr.md` §3); the pen-test report itself is referenced by identifier, not embedded; attestation files are signed and the signer role is checked. Threat coverage in E48-X01; review by the Security engineer is a hard prerequisite (`blocked_by` E48-X02). Classification: restricted.
+
+## Accessibility notes
+
+The gate consumes E47's conformance report; this task does not itself ship UI. The published release notes rendered in the in-app **CMP-096 WhatsNewPanel** (E48-T07) must meet AA — verified there.
+
+## Performance notes
+
+Evidence assembly ≤5 min. The gate consumes E46's budget results including the 72-hour soak showing flat memory and no frame-budget regression (§9.3 exit criterion 1); it does not re-measure them.
+
+## Observability
+
+- `ga.evidence_pack_built{version,artefact_count}`, `ga.gate_check{criterion,verdict}` so the gate's state is a dashboard during the final sprint rather than a last-day surprise.
+- Post-release monitoring window opened per §8 with the named on-call engineer recorded on the release ticket; hypercare dashboards confirmed live before the window opens.
+
+## Definition of Done
+
+- [ ] `build-ga-evidence.py` and `check-ga-gate.py` merged, tested, ≥85% coverage; gate check required before the tag job.
+- [ ] Evidence pack for `v1.1.0` assembled, manifest digest-verified.
+- [ ] Every §9.3 exit criterion and §9.4 gate evaluated; all pass or carry Owner-accepted written exceptions.
+- [ ] Release checklist §4.1–§4.4 executed and recorded.
+- [ ] PRR §5.1–§5.6 executed; sign-offs from Architect, DevSecOps, Security, QA lead recorded.
+- [ ] Live-enablement gate §6 re-run in full, all four items, with Owner written authorisation; PRR record states the applicable case explicitly.
+- [ ] `v1.1.0` tagged; GitHub Release published; prod deployed; flags at intended defaults; rollback readiness reconfirmed; monitoring window opened; `main` forward-ported.
+- [ ] `docs/releases/v1.1.0-prr.md` merged and reviewed by a non-author.
+- [ ] Owner acceptance recorded at the GA demo.
+
+## Dependencies
+
+- **E48-T02** (docs site + checkers), **E48-T04** (DR drill record), **E48-T05** (onboarding guide artefact), **E48-T07** (changelog/release notes), **E48-X02** (security review).
+- **E46** performance budgets + soak, **E47** conformance report, **E49** defect burn-down state; **E43**/**E44**/**E45** supply pen-test, key-audit, kill-switch and chaos evidence.
+
+## Branch
+
+`feat/docs-ga-readiness-ga-gate`. PRs: (1) evidence builder; (2) gate checker + CI wiring; (3) PRR record.
+
+## References
+
+- `docs/plan/07-release-and-prr.md` §1 (R5 gate-trigger rule), §3, §4, §5, §6, §7, §8
+- `docs/plan/30-release-roadmap.md` §9.3, §9.4, §9.5
+- `docs/plan/03-testing-strategy.md` §2, §15
+- `docs/plan/06-performance-and-load-standard.md`, `05-accessibility-standard.md`, `04-security-program.md`
+- `docs/plan/32-risk-register.md`
+- `docs/plan/22-api-openapi.yaml` `/admin/health`, `/admin/security/summary`, `/admin/capacity`, `/admin/incidents`, `/admin/backups`
+
+
+##### E48-T07
+## Context
+
+`docs/plan/07-release-and-prr.md` §3 defines changelog automation: every PR carries a Conventional-Commits-parseable title or an explicit `Changelog:` footer; CI appends to an **Unreleased** section of `CHANGELOG.md` grouped by Features / Fixes / Performance / Security / Breaking Changes; at train cut the Unreleased section is finalised under the new version heading and a GitHub Release is drafted from it. §3 also carries a hard editorial rule: security fixes are described **generally, without exploit detail**.
+
+The product already has the surface to show this to its users: **CMP-096 WhatsNewPanel** ("release-notes drawer surfaced after an update (ties to `07-release-and-prr.md` changelog)", `docs/plan/15-component-catalogue.md`), used by **SCR-119 Help & about** and **SCR-157 Version mismatch / update available** (`docs/plan/18-traceability-matrix.md`). At GA this is the only channel that tells the Owner and managers what changed in the software they are trading with, so it needs to be accurate, complete and honest about breaking changes.
+
+## Scope / Deliverables
+
+- **Changelog audit and finalisation**: sweep the Unreleased section for accuracy against the actual R5 scope; correct or add entries for work whose commit messages did not read well as changelog lines; finalise under the `1.1.0` heading with the release date 2027-09-24; confirm the semver reasoning is recorded (§2: `1.1.0` is MINOR over the `1.0.0` Live-enablement release).
+- **Release-notes content bundle**: `apps/web/src/content/release-notes/1.1.0.json` (and the historical entries) shaped for `CMP-096 WhatsNewPanel`'s `entries: {version, date, items}[]` prop, generated from `CHANGELOG.md` by a build step so the two cannot disagree — with a `DOC-002`-style staleness check.
+- **Surfacing**: the panel opens automatically once after an update (SCR-157 path) and is always reachable from SCR-119; a "what changed since the version I last ran" view keyed to the previously seen version rather than only the newest entry.
+- **Security-fix redaction rule enforced mechanically**: entries under `Security` are checked against a linter that rejects CVE exploit detail, stack traces, file paths and attack steps, per §3.
+- **Breaking-change prominence**: any `Breaking Changes` entry renders first, visually distinct, and cannot be collapsed away by default.
+- **GitHub Release body** generated from the finalised `1.1.0` section by the existing automation (verified, not hand-pasted).
+
+## Out of scope
+
+- The SCR-119 page itself — E48-S01.
+- The update-check mechanism and SCR-157's states — owned by E10 (app shell / Electron updater); this task supplies the content and the panel's population.
+- Marketing copy or a public blog.
+- Per-user notification of release notes — the panel is pull/announce-on-update, not a notification channel.
+
+## Acceptance criteria
+
+```gherkin
+Scenario: The in-app panel matches the changelog exactly
+  Given CHANGELOG.md has a finalised 1.1.0 section
+  When the release-notes bundle is generated and the staleness check runs
+  Then every entry in the changelog section appears in the bundle with the same grouping
+  And editing CHANGELOG.md without regenerating fails the check
+
+Scenario: A returning user sees everything they missed
+  Given a user whose last seen version was 1.0.2 and the current version is 1.1.0
+  When the app starts after the update
+  Then the What's New panel opens once showing the entries for every version after 1.0.2
+  And dismissing it records the seen version so it does not reopen
+
+Scenario: Breaking changes cannot be missed
+  Given the 1.1.0 section contains a Breaking Changes entry
+  When the panel renders
+  Then that entry appears first with a distinct visual treatment and is expanded by default
+  And it is announced by a screen reader before the other groups
+
+Scenario: Security entries carry no exploit detail (failure path)
+  Given a Security entry containing a reproduction step or a vulnerable file path
+  When the redaction linter runs in CI
+  Then the build fails naming the entry and the offending pattern
+  And a generalised rewrite passes
+
+Scenario: The panel works offline
+  Given the app is running with no network
+  When the What's New panel is opened from SCR-119
+  Then the bundled release notes render fully with no network request
+```
+
+## Technical notes / design
+
+The bundle is generated, not authored: `scripts/gen-release-notes.py` parses `CHANGELOG.md` (Keep-a-Changelog-shaped sections the existing automation already produces) into the `WhatsNewPanel` entry shape and writes it into the web app's content directory; `make docs`/`make gen` includes it and CI runs the `git diff --exit-code` staleness pattern. Shipping it as a bundled asset rather than an API response satisfies the SCR-119 requirement that the page is "fully available offline".
+
+"Last seen version" is stored in user preferences (`GET`/`PATCH /me/preferences`) rather than local storage, so it follows the user across the browser build and the Electron shell — a user who reads the notes in one should not be shown them again in the other.
+
+The redaction linter's pattern set (CVE identifiers with detail, `poc`, `exploit`, stack-trace shapes, absolute source paths, endpoint+payload pairs) is version-controlled and reviewed by the Security engineer under E48-X02, mirroring the runbook safety-clause linter in E48-T03.
+
+Ordering within a version: Breaking Changes, Security, Features, Performance, Fixes — risk-first, not feature-first, because the audience is a trader deciding whether anything in this build changes how their money behaves.
+
+## Test plan
+
+- **Unit** — changelog parser: well-formed section, missing group, empty group, malformed heading; redaction linter with one seeded violation per pattern; version-comparison logic for "everything since last seen" including pre-release and equal-version cases. Coverage ≥80% (frontend) / ≥85% (script).
+- **Contract** — generated bundle validates against the `WhatsNewPanel` props schema.
+- **Integration** — staleness check trips on an unregenerated changelog edit.
+- **E2E (Playwright, web + Electron)** — update simulation from 1.0.2 to 1.1.0 opens the panel once, shows the aggregated entries, dismissal persists across a reload and across shells; offline render verified with the network disabled.
+- **a11y** — axe-core on the panel; manual screen-reader pass confirming the Breaking Changes group is announced first.
+- Fixtures: synthetic `CHANGELOG.md` variants under `tests/fixtures/changelog/`.
+
+## Security notes
+
+The changelog is the project's only outward-facing artefact, so it is the likeliest place to leak vulnerability detail. Controls: the redaction linter; the §3 rule that full detail stays in the Security engineer's internal finding tracker; a review gate requiring Security approval on any PR that touches the `Security` group of `CHANGELOG.md` (CODEOWNERS). Threat: an attacker reading release notes to fingerprint which weakness was just fixed and target unpatched installs — mitigated by generality of description and by the fact that deployment is single-tenant and private-network-only. Classification: the changelog is internal-shared; the evidence behind it is restricted.
+
+## Accessibility notes
+
+`CMP-096 WhatsNewPanel` is a CMP-046 Drawer composition: focus moves into the drawer on open, is trapped while open, returns to the trigger on close, `Escape` closes. Headings per version and per group give a navigable structure. The Breaking Changes group is announced first and is not conveyed by colour alone (`docs/plan/05-accessibility-standard.md` §4). Text contrast ≥4.5:1; the panel respects `prefers-reduced-motion` for its open transition (§7). axe-core green required.
+
+## Performance notes
+
+The bundle is loaded lazily on panel open, not at app boot; bundle size ≤100 KB gzipped for the full history; panel open-to-render ≤150 ms, consistent with the panel-mount budget (`docs/plan/14-screens-catalogue.md` §0.5 item 7).
+
+## Observability
+
+Reuses the SCR-119 analytics keys plus `whatsnew.panel_opened{version,trigger}` and `whatsnew.dismissed{version}`; no personal data in labels (US-OBS-001 labelling rule).
+
+## Definition of Done
+
+- [ ] `CHANGELOG.md` `1.1.0` section finalised, accurate, semver reasoning recorded.
+- [ ] Release-notes bundle generated and staleness-gated; panel renders offline.
+- [ ] Aggregated "since last seen version" behaviour implemented and persisted via `/me/preferences`.
+- [ ] Breaking-change prominence implemented and verified with a screen reader.
+- [ ] Redaction linter merged, pattern set reviewed by the Security engineer, required in CI.
+- [ ] GitHub Release body verified as generated from the changelog, not hand-written.
+- [ ] axe-core green; E2E green in web and Electron; coverage gates met.
+- [ ] design-QA check against the SCR-119/SCR-157 spec (covered by E48-D02).
+- [ ] Demo at Sprint Review; PR merged via merge queue.
+
+## Dependencies
+
+- **E48-S01** — SCR-119 must exist as the panel's permanent home.
+- Relies on `CMP-096`, `CMP-046`, `GET`/`PATCH /me/preferences`, `GET /system/build`, and the SCR-157 update-available path from the app shell.
+
+## Branch
+
+`feat/docs-ga-readiness-release-notes`. Two PRs: generator + linter; panel wiring + E2E.
+
+## References
+
+- `docs/plan/07-release-and-prr.md` §2 semver, §3 changelog automation
+- `docs/plan/15-component-catalogue.md` CMP-096, CMP-046
+- `docs/plan/14-screens-catalogue.md` SCR-119, SCR-157, §0.5
+- `docs/plan/18-traceability-matrix.md` CMP-096 row
+- `docs/plan/05-accessibility-standard.md` §4, §7
+- `docs/plan/22-api-openapi.yaml` `/me/preferences`, `/system/build`
+
+
+##### E48-D01
+## Context
+
+**SCR-119 Help & about** (`docs/plan/14-screens-catalogue.md` §SCR-119) is specified but has never been designed in hi-fi: it is the home for version/build information, the changelog link, the keyboard cheatsheet, the order-flow glossary, the detector-methodology entry point (**SCR-058**), the guided-tour restart, the diagnostics-bundle export and the licence/attribution list. E48 makes it the front door of the GA documentation set, which is more content and more structure than the original sketch anticipated.
+
+The design-ahead rule (`docs/plan/00-planning-brief.md`; `docs/plan/02-definition-of-ready-done.md` §3.1) requires design Done ≥2 sprints before the consuming frontend story. E48-S01 and E48-S02 are built in Sprint 25/26, so this ticket lands in **Sprint 23**. `docs/plan/30-release-roadmap.md` §1.2 notes that after D-S18 the design org is in design-QA and defect-support mode with reserved R5 polish capacity — this is one of the few net-new R5 design items and is funded from that reserve.
+
+The user guide itself is persona-shaped (`docs/plan/10-personas.md`: P1 Owner/discretionary order-flow trader, P2 Account Manager, P3 Viewer/analyst, P4 Admin, plus the M1 Rule-author mode). Deciding how a manager finds "how do I place a bracket" without wading through admin material is an information-architecture problem, not a writing problem, so it is designed before it is written.
+
+## Scope / Deliverables
+
+- **UX research (light, 1 day)**: three sessions — Owner (P1/P4 hats) and two proxy managers — on how help is actually reached during trading: what they look for, whether they would ever leave the chart to read a guide, and what they currently do when they do not know what a value means. Written up as 6–10 findings that justify the IA. This is new interaction territory (the app has had no help surface until now), hence the `ux-research` label.
+- **Information architecture** for the guide: the section tree per persona, the entry points from the app (SCR-119, the `(estimated)` chip → SCR-058, the empty-state CTAs, the onboarding checklist), and the rule for what lives in-app versus on the docs site — with the offline constraint respected (SCR-119: "fully available offline").
+- **Wireframes → hi-fi (Figma)** of **SCR-119** using **CMP-086 SettingsNav/SettingsLayout** (it sits under `/settings/*`), **CMP-051 Accordion** for grouped sections, **CMP-036 KeyValueRow** for the version table, **CMP-021 Link**, **CMP-001 Button**, **CMP-096 WhatsNewPanel**, **CMP-207 BuildFooter**.
+- **States**: loaded; update-check idle / checking / up-to-date / update-available / check-failed; diagnostics-bundle idle / generating / generated / failed-due-to-secret-detected (US-OBS-007 scenario 2 — the failure is loud by design and needs a designed treatment) / truncated-due-to-size; offline; browser build where shell-only items are hidden with an explanation rather than shown disabled (US-SET-009 scenario 2).
+- **The keyboard cheatsheet layout** — it renders the *active* hotkey profile, so it must handle a remapped, a conflicting and a very long binding list (`docs/plan/05-accessibility-standard.md` §3.2 default map, §3.3 conflict rules).
+- **The glossary pattern** — term, one-sentence plain-language definition, "why it matters here", link to the screen where it appears; plus the inline term-reference treatment.
+- **Design-system contribution**: a `DefinitionList` molecule for glossary/cheatsheet pairs (or an explicit decision that CMP-036 KeyValueRow covers it), a `DocSection` pattern, and tokens for long-form prose (measure, line height, heading rhythm) which the design system does not currently carry — the product has had no long-form text surface before.
+- **Motion**: accordion expand/collapse, drawer entry for the methodology link and the What's New panel, all respecting `prefers-reduced-motion` (`docs/plan/05-accessibility-standard.md` §7).
+- **Accessibility review** before handoff: heading order, the version table as a real table, the licence list as a named scrollable region, the copy-diagnostics button's accessible name stating exactly what it copies, focus order through the accordion.
+- **Engineering handoff**: annotated Figma with tokens, spacing, states, empty/error copy, and the SCR-119 design sign-off acceptance checklist from the screens catalogue answered item by item.
+
+## Out of scope
+
+- Writing the guide or glossary content (E48-S01, E48-S02).
+- Redesigning the settings shell (CMP-086 exists from E05/E10).
+- SCR-016/SCR-017 onboarding wizard visuals — existing designs; this ticket only defines the restart entry point into them.
+- SCR-058 detector-methodology drawer — already designed; this ticket defines the link-in treatment only.
+
+## Acceptance criteria
+
+```gherkin
+Scenario: Every catalogue sign-off item is answered
+  Given the SCR-119 design sign-off acceptance checklist in docs/plan/14-screens-catalogue.md
+  When the hi-fi is reviewed
+  Then app version, engine version, backend version, build hash and Bybit API version are all shown
+  And the copy-diagnostics control, the cheatsheet/accessibility-statement/methodology links, the four update-check result states and the third-party licence list are all specified
+
+Scenario: The browser build hides shell-only settings with an explanation
+  Given US-SET-009 scenario 2
+  When the design is reviewed for the plain-browser build
+  Then shell-only items are absent with an explanatory line, not rendered disabled
+  And the explanation copy is specified, not left to engineering
+
+Scenario: The cheatsheet survives a remapped and conflicting hotkey set
+  Given a hotkey profile with a remapped binding and a conflict flagged per 05-accessibility-standard.md §3.3
+  When the cheatsheet layout is reviewed
+  Then the remapped binding is shown in place of the default and the conflict has a designed treatment
+  And the layout holds at the maximum documented binding count without horizontal scrolling
+
+Scenario: Accessibility review passes before handoff (failure path)
+  Given the hi-fi is submitted for handoff
+  When the accessibility reviewer checks heading order, contrast, focus order and non-colour-only signalling
+  Then any failure blocks handoff until corrected
+  And the correction is recorded on the ticket rather than fixed silently in Figma
+
+Scenario: Design is signed off at least two sprints before the consuming story
+  Given E48-S01 is scheduled in Sprint 25
+  Then this ticket reaches Status Done no later than the end of Sprint 23
+  And the CDO or design lead sign-off comment is present
+```
+
+## Technical notes / design
+
+Constraints the design must honour, all pre-existing:
+
+- **Offline-first.** SCR-119 makes no network call except the explicit update check; the guide, cheatsheet, glossary and licences are bundled content. A design that assumes fetched content is wrong.
+- **RBAC.** SCR-119 is available to every authenticated role; nothing on it may leak admin-only data. Build info comes from `GET /system/build` (`x-rbac: { permissions: [], scope: self }`) and exposes "no infrastructure detail beyond version and commit".
+- **Density.** The app has a compact density mode; long-form prose needs its own measure token set rather than inheriting the trading-surface density (`docs/plan/16-design-system-brief.md`).
+- **The diagnostics bundle is a security-relevant control** — the design states what is included, what is redacted, and that generation fails loudly if a secret pattern is detected (US-OBS-007), because a vague "Export diagnostics" button invites a user to send a bundle somewhere it should not go.
+
+Deliverables live in the Figma project `CandleViewer / R5 / Help & Docs`, linked from the ticket, with the components published to the design-system library where they are new.
+
+## Test plan
+
+- **Design QA against spec** is E48-D02 (post-build); this ticket is tested by review: CDO/design-lead sign-off, accessibility-reviewer sign-off, and an engineering feasibility review with the frontend lead who will build E48-S01.
+- **Research validity**: findings are attributed to sessions, not asserted; contradicting findings are recorded rather than averaged away.
+- **Prototype walkthrough**: a clickable prototype covering the update-check and diagnostics-bundle state machines is walked through with QA so the state list is complete before build.
+
+## Security notes
+
+The diagnostics-bundle flow is the security-sensitive part: the design must make it obvious what the bundle contains, that it is stored locally and never uploaded automatically (US-OBS-007 NFR), and that generation is audited. The copy-diagnostics control on SCR-119 must state its scope in its accessible name. No design may surface build/infrastructure detail beyond what `GET /system/build` returns. Reviewed under E48-X01/E48-X02.
+
+## Accessibility notes
+
+This is the screen where the product explains itself, so it must be exemplary: correct heading hierarchy, real table semantics for the version table, accessible names on all links ("read the accessibility statement", not "click here"), the licence region named and keyboard-scrollable, accordion per the WAI-ARIA pattern (CMP-051), visible focus everywhere, ≥4.5:1 text and ≥3:1 non-text contrast, reduced-motion variants for every transition. The accessibility statement itself is linked from here (E47 publishes it). Standard: WCAG 2.2 AA (`docs/plan/05-accessibility-standard.md`).
+
+## Performance notes
+
+Design must fit a ≤150 ms panel mount and ≤200 ms route transition (`docs/plan/14-screens-catalogue.md` §0.5 item 7): no large hero imagery, no blocking font load for a screen that must work offline, licence list virtualised or collapsed by default if it exceeds a screen height.
+
+## Observability
+
+Design specifies the trigger points for the already-defined analytics keys `help.about_viewed`, `help.diagnostics_copied`, `help.update_check_requested`, plus `whatsnew.panel_opened` for the panel entry point.
+
+## Definition of Done
+
+- [ ] Research findings written up and linked.
+- [ ] IA, wireframes and hi-fi complete for SCR-119 in all listed states.
+- [ ] Cheatsheet and glossary patterns specified including remapped/conflicting/overflow cases.
+- [ ] New design-system contributions published to the library with Storybook-ready specs, or an explicit decision recorded that existing components suffice.
+- [ ] Motion specs with reduced-motion variants.
+- [ ] Accessibility review passed and recorded.
+- [ ] Every item of the SCR-119 catalogue sign-off checklist answered.
+- [ ] Engineering handoff session held with the E48-S01 implementer; open questions closed.
+- [ ] CDO / design-lead sign-off comment present; Status Done by end of Sprint 23.
+
+## Dependencies
+
+- **E42** — admin screens establish the settings/admin visual conventions this page sits beside.
+- **E10** — app shell, `/settings/*` routing and CMP-086 exist.
+- Consumed by **E48-S01** and **E48-S02** (Sprint 25/26), satisfying the ≥2-sprint design-ahead rule.
+
+## Branch
+
+`design/docs-ga-readiness-help` (design artefacts + catalogue updates). No production code.
+
+## References
+
+- `docs/plan/14-screens-catalogue.md` SCR-119 (incl. its design sign-off acceptance checklist), SCR-058, SCR-016, SCR-017, SCR-157, §0.5
+- `docs/plan/15-component-catalogue.md` CMP-001, CMP-021, CMP-036, CMP-046, CMP-051, CMP-086, CMP-096, CMP-207
+- `docs/plan/18-traceability-matrix.md` SCR-119 row
+- `docs/plan/11-user-stories.md` US-SET-009, US-OBS-007
+- `docs/plan/10-personas.md`, `docs/plan/16-design-system-brief.md`
+- `docs/plan/05-accessibility-standard.md` §3.2, §3.3, §7
+
+
+##### E48-S01
+## Context
+
+R5 exit criterion 6 (`docs/plan/30-release-roadmap.md` §9.3) requires a user guide, and §9.2 scopes it as an "Owner/manager user guide per persona". `docs/plan/10-personas.md` defines P1 Owner/discretionary order-flow trader, P2 Account Manager, P3 Viewer/analyst, P4 Admin (owner hat) and the M1 Rule-author mode, with an authoritative permission matrix in §7 — so "per persona" has a concrete meaning: each guide covers only what that role can actually do, and the permission matrix is the contract that keeps it honest.
+
+The guide needs a front door inside the app. **SCR-119 Help & about** is that door, traced in `docs/plan/18-traceability-matrix.md` to **US-SET-009** (Electron shell preferences — version/build/shell information) and **US-OBS-007** (Support bundle). US-OBS-007 is a *Should* story that has not been implemented anywhere else in the plan, and its natural home is exactly here: "generate a diagnostic bundle … logs, metrics snapshots, configuration with secrets removed, health results and recent errors", with the hard requirement that "the bundle is scanned for secret patterns before being written, and generation fails loudly if any are found".
+
+## Scope / Deliverables
+
+**User stories covered: US-OBS-007 (Should), US-SET-009 (Should, the version/build/shell-information portion surfaced on SCR-119).**
+
+- **Guide content** under `docs/guide/`, published to the docs site (E48-T02) and bundled into the app for offline reading:
+  - `p1-trader.md` — reading the chart and order-flow surfaces, the `(estimated)` rule, placing an order via the ticket and via chart/DOM, brackets and the native-SL guarantee, scaled and emulated orders, positions management, replay, journal.
+  - `p2-manager.md` — the same trading loop within the constraints a manager actually has (allowed symbols, risk caps, per-account profile, what a lockout means and who lifts it), plus what a trade group does to their account when the Owner fans out.
+  - `p3-viewer.md` — read-only analysis: charts, order-flow, journal review, why controls are disabled with a reason rather than hidden.
+  - `p4-admin.md` — users and roles, accounts and API keys (including the withdrawal-OFF and IP-allowlist invariants and the 48-hour new-key restriction), per-account profiles, recorder and retention, feature flags, audit log, health, backups.
+  - `m1-rule-author.md` — the rule engine in both editors, arming semantics, versions and activation, simulation before arming, cooldowns and the auto-disarm behaviour.
+  - Each guide opens with "what this role can and cannot do", generated from the `docs/plan/10-personas.md` §7 permission matrix so it cannot contradict the implementation.
+- **SCR-119 built** per the E48-D01 hi-fi: version table (app, engine, backend, build hash, Bybit API version, environment) from `GET /system/build`; changelog/What's-New entry point (populated by E48-T07); links to the guide sections, the accessibility statement (E47) and the detector methodology; third-party licence list; update-check control with its four result states (US-SET-009 shell path, hidden with an explanation in the plain-browser build).
+- **US-OBS-007 support bundle**: a time-window picker, generation with logs, metrics snapshots, redacted configuration, health results and recent errors; pre-write secret scan that **fails loudly** if any pattern matches; size cap with an explicit truncation statement that preserves the most recent data; local-only storage with no automatic upload; generation audited.
+- Components: **CMP-086**, **CMP-051**, **CMP-036**, **CMP-021**, **CMP-001**, **CMP-096**, **CMP-207**, plus the new long-form prose pattern from E48-D01.
+
+## Out of scope
+
+- The keyboard cheatsheet, glossary, methodology drawer link and guided-tour restart — **E48-S02** (split to keep this story ≤8 points).
+- The release-notes content pipeline — **E48-T07**.
+- The Electron updater mechanism itself — E10; this story consumes its state.
+- Shell preference *controls* (launch-on-login, window bounds, GPU flags) — those live on SCR-118/SCR-116 per the settings catalogue; only the version/build/shell-information surface of US-SET-009 is in scope here.
+- Screen-reader scripts for chart surfaces — E47.
+
+## Acceptance criteria
+
+```gherkin
+Scenario: Build information is complete and role-safe
+  Given any authenticated user on SCR-119
+  When the page loads
+  Then app version, engine version, backend version, build hash, Bybit API version and environment are shown from GET /system/build
+  And no infrastructure detail beyond version and commit is exposed, for any role
+
+Scenario: A support bundle is generated for a time window
+  Given the owner selects a 2-hour window
+  When a support bundle is generated
+  Then it contains logs, metrics snapshots, configuration with secrets removed, health results and recent errors
+  And it is written only to the local machine and the generation is recorded in the audit log
+
+Scenario: Bundle generation fails loudly on a detected secret (failure path)
+  Given a configuration value matching a secret pattern survives redaction
+  When the pre-write scan runs
+  Then generation fails with an explicit error naming the category of the detected pattern, not its value
+  And no partial bundle file is left on disk
+
+Scenario: An oversized window is capped and says so
+  Given a 30-day window that exceeds the size cap
+  When the bundle is generated
+  Then the bundle is capped, the truncation is stated in the bundle and in the UI, and the most recent data is preserved
+  And the stated truncation names the window actually captured
+
+Scenario: Shell-only items are hidden with an explanation in the browser build
+  Given the app runs in a plain browser rather than the Electron shell
+  When SCR-119 renders
+  Then shell-only items are absent with an explanation rather than shown disabled
+
+Scenario: The guide matches what the role can actually do
+  Given the permission matrix in docs/plan/10-personas.md §7
+  When the guide's role-capability section is generated and checked
+  Then it matches the matrix exactly
+  And a divergence between the matrix and the implemented RBAC scopes fails the check and is raised as a bug, not papered over in prose
+
+Scenario: The page is fully usable offline
+  Given no network connectivity
+  When SCR-119 is opened
+  Then all guide content, the licence list and the version table render from bundled data and the last known build info
+  And the update check reports "check failed" rather than blocking the page
+```
+
+## Technical notes / design
+
+**Guide content is bundled, not fetched** (SCR-119 performance note). Markdown is compiled at build time into the app bundle, lazily loaded per section so the page mount stays within budget. The docs site (E48-T02) renders the same source files, so there is exactly one copy.
+
+**Role-capability generation**: `scripts/gen-role-capabilities.py` reads the §7 permission matrix and the `x-rbac` blocks in `docs/plan/22-api-openapi.yaml`, emits the per-persona capability table, and fails (`DOC-005` class) when the two disagree — which makes a documentation check into an RBAC regression test, cheaply.
+
+**Support-bundle pipeline** (backend, `services/api/candleviewer/observability/`): collect → redact (serialiser allow-list, the same mechanism US-OBS-003 mandates for logs) → scan (secret patterns, fail-closed) → size-cap (newest-first, truncation manifest) → write locally → audit. Fail-closed is the design: any scanner error aborts generation. Errors: `BUNDLE-001` secret detected, `BUNDLE-002` window invalid, `BUNDLE-003` size cap exceeded before the minimum useful window, `BUNDLE-004` collection partial (named subsystem unavailable — the bundle still generates and says which part is missing, because a partial bundle during an incident beats none).
+
+**Audit**: bundle generation writes an `audit_log` entry `{actor, role, action: "support_bundle.generated", target: window, ts}` per `docs/plan/14-screens-catalogue.md` §0.5 item 8.
+
+## Test plan
+
+- **Unit** (frontend ≥80%): version-table rendering from `GET /system/build`; update-check state machine across idle/checking/up-to-date/available/failed; browser-vs-shell conditional rendering; offline rendering; licence-list virtualisation.
+- **Unit** (backend ≥85%): redaction allow-list; secret-scan positives and negatives including near-miss patterns; size-cap newest-first truncation; partial-collection handling; audit emission.
+- **Contract** — `GET /system/build` response consumed per the OpenAPI schema; support-bundle endpoint (if exposed) covered by schemathesis.
+- **Integration** — bundle generated against a running stack with a seeded secret in configuration; generation must fail and leave no file.
+- **E2E (Playwright, web + Electron)** — SCR-119 loads offline; bundle generated for a window and downloaded; shell-only items hidden in the browser build; guide navigation reaches every persona section.
+- **a11y** — axe-core on SCR-119; manual NVDA + VoiceOver pass per `docs/plan/05-accessibility-standard.md` §8.2.
+- **Perf** — panel mount ≤150 ms, route transition ≤200 ms, no network call on first paint beyond `GET /system/build`.
+- Fixtures: seeded-secret configuration fixture; recorded log/metric snapshots under `packages/fixtures`.
+
+## Security notes
+
+This story ships the single most dangerous convenience feature in the product: a button that packages the system's state into a file a user can send anywhere. Threats (`docs/plan/04-security-program.md`): **I**nformation disclosure of API keys, session tokens, correlation-identifiable account data or internal hostnames via the bundle; **I** via the licence/version surface fingerprinting the deployment; **T**ampering with the redaction allow-list; **R**epudiation of who generated a bundle. Controls: allow-list redaction (deny-by-default, not pattern-blacklist), a mandatory pre-write scan that fails closed, local-only storage with no automatic upload (US-OBS-007 NFR), audited generation, and a CI test asserting that a seeded secret aborts generation. Data classification: the bundle is **restricted** even after redaction; the UI says so. Requires `security` review (E48-X02) and a manual abuse-case check (attempt to obtain another user's data in a bundle as a manager).
+
+## Accessibility notes
+
+Per E48-D01 and `docs/plan/14-screens-catalogue.md` SCR-119: static content with a correct heading hierarchy, the version table as a real `<table>` with headers, the copy-diagnostics button stating exactly what it copies in its accessible name, the licence text in a named scrollable region, accordion sections following the WAI-ARIA pattern, full keyboard operation, visible focus, ≥4.5:1 contrast, reduced-motion respected. The long-form guide must be navigable by heading with a screen reader — this is the screen a user with a disability is most likely to reach first. axe-core green + manual pass required.
+
+## Performance notes
+
+Panel mount ≤150 ms; route transition ≤200 ms (`docs/plan/14-screens-catalogue.md` §0.5 item 7). Guide sections lazily loaded; total added bundle ≤250 KB gzipped. Support-bundle generation runs off the request path and must not block the event loop; progress is reported and the operation is cancellable.
+
+## Observability
+
+`help.about_viewed`, `help.diagnostics_copied`, `help.update_check_requested` (analytics, already specified for SCR-119); new: `support_bundle.generated{outcome,window_seconds,size_bytes}` metric and the `support_bundle.generated` audit event; `support_bundle.secret_detected` raises an alert, because a detected secret means redaction has a gap.
+
+## Definition of Done
+
+- [ ] All Gherkin scenarios pass via automated tests, each referencing its scenario.
+- [ ] Coverage: frontend ≥80%, backend ≥85%, no package regression.
+- [ ] Guide content for P1, P2, P3, P4 and M1 merged, reviewed by a non-author, published to the docs site and bundled offline.
+- [ ] Role-capability generation matches the permission matrix and the `x-rbac` blocks; check required in CI.
+- [ ] US-OBS-007 and the US-SET-009 information surface demonstrably satisfied.
+- [ ] a11y: axe-core green + manual screen-reader pass recorded.
+- [ ] perf: mount/transition budgets measured and recorded.
+- [ ] security: Security engineer review comment; seeded-secret abort test green; abuse-case check performed.
+- [ ] design-qa: built screen compared against the E48-D01 spec (formally in E48-D02); discrepancies fixed or filed.
+- [ ] QA sign-off per the E48-Q01 test plan.
+- [ ] `docs/plan/14-screens-catalogue.md` SCR-119 updated if the design changed during implementation.
+- [ ] Feature flag recorded: `help_center` (default on in all environments; the support bundle behind `support_bundle` default on for owner, off for viewer).
+- [ ] Demoed at Sprint Review; PRs merged via merge queue.
+
+## Dependencies
+
+- **E48-D01** — design signed off (Sprint 23), satisfying the design-ahead rule.
+- **E48-T02** — docs site and checker harness; the guide is published there from the same source.
+- Interfaces: `GET /system/build`, `audit_log` table, the logging/metrics collectors from E04.
+
+## Branch
+
+`feat/docs-ga-readiness-help-screen`. PRs: (1) guide content + role-capability generator; (2) SCR-119 UI; (3) support-bundle backend + redaction/scan; (4) E2E + a11y. ≤400 LOC each.
+
+## References
+
+- `docs/plan/11-user-stories.md` US-OBS-007, US-SET-009; `docs/plan/11-user-stories.md` §27 SET, §28 OBS
+- `docs/plan/14-screens-catalogue.md` SCR-119, §0.5
+- `docs/plan/15-component-catalogue.md` CMP-001, CMP-021, CMP-036, CMP-051, CMP-086, CMP-096, CMP-207
+- `docs/plan/18-traceability-matrix.md` US-SET-009, US-OBS-007, SCR-119 rows
+- `docs/plan/10-personas.md` §7 permission matrix
+- `docs/plan/22-api-openapi.yaml` `/system/build`; `docs/plan/21-database-schema.md` `audit_log`
+- `docs/plan/04-security-program.md`, `05-accessibility-standard.md`, `06-performance-and-load-standard.md`
+
+
+##### E48-S02
+## Context
+
+**SCR-119 Help & about** is specified to carry, beyond version information, "a keyboard cheatsheet, glossary of order-flow terms, detector methodology (SCR-058), the guided tour restart" (`docs/plan/14-screens-catalogue.md` §SCR-119). E48-S01 built the page and the guide; this story adds the four content surfaces that make it useful in the middle of a trading session rather than only on the first day.
+
+Two of them have hard correctness requirements that make them more than content:
+
+- The **cheatsheet must reflect the user's active hotkey profile**, not a static list. The app ships a default map (`docs/plan/05-accessibility-standard.md` §3.2) and a hotkey editor (**SCR-113**, `POST /settings/hotkeys`, `GET /me/keymap`); a cheatsheet that shows defaults to a user who has remapped is worse than no cheatsheet, and §3.3 defines conflict-resolution rules that the sheet must surface.
+- The **`(estimated)` methodology** link is a product-integrity obligation, not a nicety: `docs/plan/14-screens-catalogue.md` §0.5 item 2 mandates that any heuristic value renders an `(estimated)` chip linking the methodology drawer **SCR-058**, which states plainly that Bybit provides no L3/MBO feed and these are proxies, not ground truth. The glossary and help surface must reinforce that boundary, and `docs/plan/30-release-roadmap.md` lists **R9 Advice boundary** as a standing risk.
+
+## Scope / Deliverables
+
+- **Keyboard cheatsheet** on SCR-119, rendered from the active hotkey profile (`GET /me/keymap`, `GET /settings/hotkeys`), grouped by context (global, chart, DOM, order ticket, rules, replay) per `docs/plan/05-accessibility-standard.md` §3.2; shows remapped bindings in place of defaults; flags conflicts per §3.3; printable/copyable; deep-links to **SCR-113** to change a binding.
+- **Order-flow glossary** — the terms a user meets on the trading surfaces: footprint, delta, cumulative delta (CVD), imbalance, POC, value area, LVN/single print, TPO, DOM, liquidity heatmap, speed of tape, big trade, iceberg *(estimated)*, stop run *(estimated)*, market regime *(estimated)*, open interest, funding, basis, liquidation, trade group, fan-out, native SL, arming, paper/demo/live. Each entry: plain-language definition, "why it matters here", where it appears (screen id), and — for heuristic terms — the mandatory `(estimated)` chip (**CMP-227 EstimatedBadge**) linking **SCR-058**.
+- **Inline term references**: glossary terms referenced from the guide and from the in-app tooltips resolve to the same entries, so there is one definition of "delta" in the product.
+- **Detector methodology entry point** from SCR-119 into **SCR-058** (`GET /detectors/methodology`), alongside the existing entry from every `(estimated)` chip.
+- **Guided tour restart** — re-entry into the onboarding experience (**SCR-016** owner first-run wizard / **SCR-017** invited-user onboarding, re-openable from Help per `docs/plan/12-sitemap.md` R-008), correctly role-aware, and non-destructive (restarting the tour must not reset settings, workspaces or the onboarding checklist's completed real-world steps such as key creation).
+- **Accessibility statement link** into the conformance report published by E47.
+
+## Out of scope
+
+- The hotkey editor itself (SCR-113) — existing from E10/E42 settings work; this story links to it.
+- SCR-058's content and the detector heuristics — owned by E25.
+- The onboarding wizard's own screens — owned by E09/E42; this story only adds a safe restart entry point.
+- Localisation of glossary terms.
+
+## Acceptance criteria
+
+```gherkin
+Scenario: The cheatsheet shows the user's own bindings
+  Given the user has remapped the order-ticket submit hotkey in SCR-113
+  When the cheatsheet is opened on SCR-119
+  Then the remapped binding is shown for that action and the default is not
+  And changing the active hotkey profile updates the cheatsheet without a reload
+
+Scenario: A hotkey conflict is visible where the user will look for it
+  Given two actions bound to the same key combination per 05-accessibility-standard.md §3.3
+  When the cheatsheet renders
+  Then both entries are flagged as conflicting with the resolution rule stated
+  And a link to SCR-113 offers to resolve it
+
+Scenario: Heuristic terms carry the estimated boundary
+  Given the glossary entries for iceberg, stop run and market regime
+  When they render
+  Then each shows the (estimated) chip and links to SCR-058
+  And the entry text states that Bybit provides no L3/MBO feed and the value is a proxy, not ground truth
+
+Scenario: Restarting the tour destroys nothing (failure path)
+  Given a user with configured workspaces, settings and a completed API-key setup step
+  When the guided tour is restarted from Help
+  Then the tour replays and no workspace, setting or completed real-world onboarding step is reset
+  And the user can exit the tour at any point back to the screen they came from
+
+Scenario: Cheatsheet and glossary are keyboard and screen-reader operable
+  Given a keyboard-only user with a screen reader
+  When the cheatsheet and glossary are navigated
+  Then every entry is reachable and announced with its term, definition and estimated status where applicable
+  And no information is conveyed by colour alone
+
+Scenario: Both surfaces work offline
+  Given no network connectivity
+  When the cheatsheet and glossary are opened
+  Then the glossary renders from bundled content and the cheatsheet renders from the locally cached active keymap
+  And the methodology link states that the drawer requires connectivity rather than failing silently
+```
+
+## Technical notes / design
+
+The cheatsheet is a projection of the keymap, not a document: it reads the same store the hotkey system uses at runtime (`GET /me/keymap`, cached locally for offline), so it cannot disagree with the behaviour. A build-time check asserts that every action in the default map (`05-accessibility-standard.md` §3.2) has a cheatsheet label — a newly added hotkey with no label fails CI, which is what keeps the sheet complete over time (`DOC-001` class).
+
+The glossary is a single source consumed three ways: the SCR-119 list, the guide's inline term references, and tooltips on the trading surfaces. It lives as structured data (`term`, `plain`, `why_here`, `screens: [SCR-nnn]`, `estimated: bool`, `methodology_anchor`) so the `(estimated)` obligation can be enforced by a check rather than remembered: any term flagged `estimated` without a `methodology_anchor` fails the build, and any term appearing in the detectors' output vocabulary but absent from the glossary is reported.
+
+Tour restart is implemented as a replay of the onboarding *presentation* layer only; the underlying checklist state (`GET /onboarding/checklist`) is read, never reset, and the restart is audited so an unexpected tour appearance is explicable.
+
+## Test plan
+
+- **Unit** (frontend ≥80%): cheatsheet projection from a keymap fixture including remapped, conflicting, unbound and overflow cases; glossary rendering including estimated entries; term-reference resolution including an unknown term; tour-restart guard asserting no state mutation.
+- **Contract** — `GET /me/keymap`, `GET /settings/hotkeys`, `GET /detectors/methodology`, `GET /onboarding/checklist` consumed per their OpenAPI schemas.
+- **Integration** — glossary completeness check against the detector output vocabulary; cheatsheet label completeness against the default hotkey map.
+- **E2E (Playwright, web + Electron)** — remap a hotkey and see the cheatsheet update; open the methodology drawer from a glossary entry; restart the tour and assert workspaces/settings/checklist are unchanged; offline rendering.
+- **a11y** — axe-core on both surfaces; manual screen-reader pass confirming `(estimated)` status is announced, not merely coloured.
+- **Perf** — cheatsheet and glossary open ≤150 ms; no layout thrash on a 200-entry glossary.
+- Fixtures: keymap fixtures (default, remapped, conflicting) under `packages/fixtures`.
+
+## Security notes
+
+Low direct threat surface, with two real cases. **I**nformation disclosure: the cheatsheet must not list actions the user's role cannot perform (that would enumerate the privileged surface for a viewer) — entries are filtered by the user's scopes, same as the controls themselves. **T**ampering/misleading content: the `(estimated)` boundary is a risk control (R9 Advice boundary in `docs/plan/32-risk-register.md`), so removing or weakening an estimated chip is treated as a security-adjacent defect and the completeness check is a required CI gate. Tour restart is audited to prevent it being used as a social-engineering vector ("the app asked me to re-enter my key"). Classification: internal. Reviewed under E48-X02.
+
+## Accessibility notes
+
+The cheatsheet is an accessibility feature in its own right (`docs/plan/05-accessibility-standard.md` §3 keyboard-first operation) and must be exemplary: bindings expressed as text, not images; `<kbd>` semantics; grouped under real headings; conflicts announced, not just coloured (§4 colour-independence). Glossary entries expose the `(estimated)` status as text to assistive technology (CMP-227 EstimatedBadge). Full keyboard operation, visible focus, ≥4.5:1 contrast, reduced motion respected on the drawer transitions. axe-core green plus a manual pass required.
+
+## Performance notes
+
+Open-to-render ≤150 ms for both surfaces; glossary content lazily loaded and ≤80 KB gzipped; cheatsheet derives from an in-memory store with no network call (`docs/plan/06-performance-and-load-standard.md`; `14-screens-catalogue.md` §0.5 item 7).
+
+## Observability
+
+`help.cheatsheet_opened`, `help.glossary_term_opened{term}` (bounded cardinality — term ids only, from a fixed vocabulary), `help.tour_restarted`, plus the existing `regime.explain_opened`-style routing when SCR-058 is opened from a glossary entry. Tour restart emits an audit event.
+
+## Definition of Done
+
+- [ ] All Gherkin scenarios pass with automated tests referencing them.
+- [ ] Cheatsheet reflects the active profile, flags conflicts, and links to SCR-113.
+- [ ] Glossary complete against the detector vocabulary; every heuristic term carries the `(estimated)` chip and methodology link; completeness checks required in CI.
+- [ ] Tour restart proven non-destructive and audited.
+- [ ] Accessibility statement linked.
+- [ ] Coverage ≥80% frontend; a11y axe-core green + manual pass; perf budgets measured.
+- [ ] Security review comment (E48-X02); role-filtered cheatsheet verified for a viewer account.
+- [ ] design-qa pass (E48-D02).
+- [ ] QA sign-off per E48-Q01.
+- [ ] Feature flag recorded: `help_center` (shared with E48-S01, default on).
+- [ ] Demoed at Sprint Review; PRs merged via merge queue.
+
+## Dependencies
+
+- **E48-S01** — SCR-119 and the bundled-content pipeline.
+- Interfaces: `GET /me/keymap`, `GET /settings/hotkeys`, `GET /detectors/methodology`, `GET /onboarding/checklist`; screens SCR-058, SCR-113, SCR-016, SCR-017; component CMP-227.
+
+## Branch
+
+`feat/docs-ga-readiness-help-content`. PRs: (1) cheatsheet + completeness check; (2) glossary data + surfaces; (3) methodology link + tour restart + E2E.
+
+## References
+
+- `docs/plan/14-screens-catalogue.md` SCR-119, SCR-058, SCR-113, SCR-016, SCR-017, §0.5 items 2 and 7
+- `docs/plan/05-accessibility-standard.md` §3.2 default hotkey map, §3.3 conflict rules, §4
+- `docs/plan/15-component-catalogue.md` CMP-227 EstimatedBadge, CMP-046 Drawer, CMP-051 Accordion
+- `docs/plan/12-sitemap.md` R-008 (tour re-openable from Help & about)
+- `docs/plan/22-api-openapi.yaml` `/me/keymap`, `/settings/hotkeys`, `/detectors/methodology`, `/onboarding/checklist`
+- `docs/plan/32-risk-register.md` R9 Advice boundary
+
+
+##### E48-D02
+## Context
+
+`docs/plan/02-definition-of-ready-done.md` §3.2 makes `design-qa` default-on for net-new UI stories: "built screen compared against design spec (spacing/tokens/type/color/states) by a designer or design-system-trained reviewer; discrepancies either fixed or filed as follow-up Bug". SCR-119 and its content surfaces are net-new UI shipped in the last two sprints before GA, and they introduce the product's first long-form prose patterns — exactly the kind of surface where token drift and ad-hoc spacing creep in under deadline pressure.
+
+`docs/plan/30-release-roadmap.md` §9.2 also scopes E49 as a design-QA sweep over every screen; this ticket is the E48-owned pass over E48's own surfaces so that E49's sweep does not inherit fresh debt in its final sprint.
+
+## Scope / Deliverables
+
+- **Design-QA pass** against the E48-D01 hi-fi over: SCR-119 in every state (loaded, update-check idle/checking/up-to-date/available/failed, diagnostics idle/generating/generated/failed-secret/truncated, offline, browser-vs-shell), the guide reading surface, the cheatsheet (default, remapped, conflicting, overflow), the glossary (including `(estimated)` entries), and the What's New panel (including a Breaking Changes entry) — checking tokens, spacing, type scale, colour, density behaviour, empty/loading/error states and copy.
+- **Accessibility review** complementing the automated gates: manual keyboard-only traversal, NVDA and VoiceOver passes per `docs/plan/05-accessibility-standard.md` §8.2, focus order and focus-visibility, heading hierarchy, table semantics, announcement order for Breaking Changes and `(estimated)` status, reduced-motion behaviour, and contrast spot-checks in both themes and the colour-blind-safe palettes.
+- **Copy review** of every string on these surfaces — the help surface is where unclear copy does the most damage; error and empty-state copy checked against the product voice in `docs/plan/16-design-system-brief.md`.
+- **Findings log** with severity per `docs/plan/03-testing-strategy.md` §11.3 (any WCAG 2.2 AA violation is P2 minimum), each finding either fixed within E48 or filed as a Bug against **E49** with `priority/*` set.
+- **Design sign-off** comment recording that the shipped surfaces match the spec or that every deviation is accepted with a reason.
+- **Catalogue reconciliation**: `docs/plan/14-screens-catalogue.md` SCR-119 and `docs/plan/15-component-catalogue.md` entries updated where the built solution diverged from the original specification — the `02-definition-of-ready-done.md` §3.2 docs rule.
+
+## Out of scope
+
+- Fixing non-trivial findings — those are tickets, not this pass; only same-day token/spacing corrections are applied here.
+- Auditing screens outside E48's surfaces — E47 (conformance) and E49 (sweep).
+- Re-running automated axe-core checks as the primary evidence — those gate the stories themselves; this pass is the manual complement.
+
+## Acceptance criteria
+
+```gherkin
+Scenario: Every specified state is reviewed, not just the happy one
+  Given the state list from E48-D01
+  When the design-QA pass runs
+  Then every state is exercised in the built app and recorded with a verdict
+  And a state that cannot be reached in the build is itself recorded as a finding
+
+Scenario: Discrepancies are tracked, never absorbed silently
+  Given a spacing or token discrepancy against the hi-fi
+  When it is found
+  Then it is either fixed within this sprint or filed as a Bug against E49 with a priority label
+  And the findings log records which disposition was taken and why
+
+Scenario: Manual accessibility passes are performed with real assistive technology
+  Given NVDA on Windows and VoiceOver on macOS
+  When the cheatsheet, glossary, version table and What's New panel are traversed
+  Then every element is announced with correct role, name and state
+  And any WCAG 2.2 AA violation is logged at P2 minimum per 03-testing-strategy.md §11.3
+
+Scenario: Breaking changes and estimated status survive to assistive technology
+  Given a What's New entry in the Breaking Changes group and a glossary entry flagged (estimated)
+  When each is read by a screen reader
+  Then the breaking status and the estimated status are announced as text, not implied by colour or position alone
+
+Scenario: The catalogue reflects what shipped (failure path)
+  Given the built SCR-119 diverges from its screens-catalogue entry
+  When the pass completes
+  Then the catalogue entry is updated in the same sprint
+  And leaving a known divergence undocumented blocks this ticket's Done
+```
+
+## Technical notes / design
+
+The pass uses a checklist derived mechanically from the E48-D01 spec (states × surfaces) so coverage is provable rather than impressionistic; the checklist is committed with the findings log at `docs/plan/design-qa/e48-2027-09.md`.
+
+Contrast spot-checks use the design-system token values rather than screenshots — sampled pixels lie about anti-aliased text; the token audit is the authority, with screenshots as supporting evidence (the same principle E47 applies to the conformance report).
+
+Density is checked in both comfortable and compact modes (US-SET-004: "paddings and font sizes scale per the design tokens while target sizes stay at least 24 px"), because long-form prose is the surface most likely to break a density system.
+
+## Test plan
+
+- Checklist-driven manual execution across web and Electron builds, both themes, both densities, and at least one colour-blind-safe palette.
+- Keyboard-only traversal recorded (screen capture) for the cheatsheet and the diagnostics flow.
+- NVDA + VoiceOver transcripts attached for the four surfaces named in the acceptance criteria.
+- Findings triaged with QA in the same session so severity is agreed, not negotiated later.
+
+## Security notes
+
+One security-relevant design check: the diagnostics-bundle flow must communicate, in the built UI, what the bundle contains and that it stays local (US-OBS-007 NFR). If the shipped copy is vaguer than the spec, that is a finding raised to the Security engineer as well as to design, because the user's mental model is the control here. Otherwise N/A.
+
+## Accessibility notes
+
+This ticket *is* the manual accessibility pass for E48's surfaces, feeding E47's conformance evidence: WCAG 2.2 AA, `docs/plan/05-accessibility-standard.md` §8.2 protocol, findings at P2 minimum, results attached to the E47 conformance report so the report covers these late-landing screens.
+
+## Performance notes
+
+Perceived-performance check only: no visible layout shift on content load, skeletons match final layout, and the ≤150 ms mount / ≤200 ms transition budgets hold on the reference hardware with the full glossary and licence list present.
+
+## Observability
+
+Findings logged with stable ids in the design-QA log; any finding filed as a Bug carries its E49 ticket key so the two records reconcile.
+
+## Definition of Done
+
+- [ ] Checklist executed across all surfaces, states, themes, densities and both shells.
+- [ ] Manual NVDA and VoiceOver passes performed with transcripts attached.
+- [ ] Findings log merged; every finding fixed or filed against E49 with a priority.
+- [ ] Screens/component catalogue entries reconciled with what shipped.
+- [ ] Results contributed to E47's conformance report.
+- [ ] Design sign-off comment posted by the designer or design-system-trained reviewer.
+- [ ] No unresolved P0/P1 finding remains against E48's surfaces at GA.
+
+## Dependencies
+
+- **E48-S02** (and transitively S01) — the surfaces must be built.
+- **E48-T07** — the What's New panel content must be populated to review it.
+- Feeds **E47** (conformance report) and **E49** (defect burn-down).
+
+## Branch
+
+`design/docs-ga-readiness-design-qa` (findings log + catalogue updates). Fixes land on the relevant `feat/` branches.
+
+## References
+
+- `docs/plan/02-definition-of-ready-done.md` §3.2 design-qa rule
+- `docs/plan/03-testing-strategy.md` §11.3 severity, §12 accessibility protocol
+- `docs/plan/05-accessibility-standard.md` §8.2
+- `docs/plan/14-screens-catalogue.md` SCR-119, SCR-157; `docs/plan/15-component-catalogue.md` CMP-096, CMP-227
+- `docs/plan/16-design-system-brief.md`
+- `docs/plan/30-release-roadmap.md` §9.2
+
+
+##### E48-Q01
+## Context
+
+`docs/plan/02-definition-of-ready-done.md` §3.1 requires a test plan authored or reviewed by QA **before development starts** for every Story, and `docs/plan/03-testing-strategy.md` §11.1 requires it to live inline with the ticket. E48 ships two UI stories (S01, S02) plus a set of documentation artefacts whose correctness is a GA exit criterion — and documentation has a failure mode automated tests do not catch: it can be complete, well-formatted, link-valid and *wrong*.
+
+This ticket produces the black-box test plan for the E48 story group, the exploratory charter that probes the parts a checklist cannot, and the E2E additions that keep the help surfaces honest after GA.
+
+## Scope / Deliverables
+
+- **Black-box test plan** `docs/qa/test-plans/e48-docs-ga.md` covering:
+  - **E48-S01**: SCR-119 in all states; build information completeness and role-safety across owner/manager/viewer; support-bundle generation happy path, secret-detected abort, oversized-window truncation, partial-collection; browser-vs-Electron differences; offline behaviour; per-persona guide navigation and role-capability accuracy against `docs/plan/10-personas.md` §7.
+  - **E48-S02**: cheatsheet against default, remapped, conflicting and overflow keymaps; role-filtered cheatsheet for a viewer; glossary completeness and `(estimated)` chips; methodology drawer entry; non-destructive tour restart verified by capturing workspace/settings/checklist state before and after.
+  - **E48-T07**: changelog↔panel parity; "since last seen version" aggregation including the equal-version and downgrade cases; Breaking Changes prominence; security-entry redaction.
+  - **Documentation accuracy** (the distinctive part): a sampled verification protocol in which a tester follows 20 randomly selected procedural passages from the guide and the runbook set *literally* against staging (demo) and records whether the stated outcome occurs. Documentation that cannot survive literal execution is defective regardless of how it reads.
+- **Exploratory charters** (60–120 min each, `docs/plan/03-testing-strategy.md` §11.2 format — mission, areas, oracles, debrief):
+  - *"A new manager's first hour"* — reach the answer to five realistic questions ("how do I set a stop", "why is this value estimated", "why can't I trade this symbol", "what does PARTIAL mean", "where do I see my risk cap") using only the app and the guide; oracle: any question that takes >3 minutes or ends outside the product is a finding.
+  - *"The incident tourist"* — from a firing alert, reach the correct runbook and the first actionable step; oracle: >60 s to the right runbook, or an ambiguous first step, is a finding.
+  - *"Documentation vs reality"* — hunt for statements in the guide, runbooks and architecture docs that the built system contradicts; oracle: any contradiction is at least P2.
+- **E2E suite additions** (Playwright, web + Electron) for the help surfaces, tagged so they run in the standard suite and in the pre-cut release checklist.
+- **a11y audit protocol** for SCR-119 and its content surfaces per `docs/plan/05-accessibility-standard.md` §8.2, feeding E48-D02 and E47.
+- **Regression pack** entries added to the standing pack so help/docs surfaces are covered in future trains.
+
+## Out of scope
+
+- Executing the runbook rehearsals and GA regression — **E48-Q02**.
+- Perf and load testing of the docs site beyond the stated build/FCP budgets — E46 owns performance methodology.
+- Security abuse cases — **E48-X02** (this plan links to them rather than duplicating).
+
+## Acceptance criteria
+
+```gherkin
+Scenario: Every Gherkin scenario in the epic's stories has a test-plan step
+  Given the acceptance criteria of E48-S01, E48-S02 and E48-T07
+  When the test plan is reviewed for coverage
+  Then each scenario maps to at least one explicit black-box verification step with data setup and expected result
+  And an unmapped scenario blocks the plan's approval
+
+Scenario: Documentation is verified by literal execution, not by reading
+  Given 20 sampled procedural passages from the guide and runbooks
+  When a tester follows each literally against staging (demo)
+  Then each stated outcome occurs, or a finding is raised naming the passage and the divergence
+  And findings are severity-rated per 03-testing-strategy.md §11.3
+
+Scenario: The test plan exists before development starts
+  Given E48-S01 is scheduled in Sprint 25
+  Then this test plan is approved before E48-S01 leaves Ready
+  And the DoR test-readiness item on E48-S01 references this plan
+
+Scenario: E2E additions fail when the surfaces regress (failure path)
+  Given the cheatsheet is changed to render the default keymap instead of the active profile
+  When the E2E suite runs
+  Then the remapped-binding spec fails
+  And the failure message names the expected binding and the one rendered
+
+Scenario: The a11y protocol produces evidence, not an assertion
+  Given the a11y audit protocol is executed
+  Then axe-core results and NVDA/VoiceOver transcripts are attached per surface
+  And any WCAG 2.2 AA violation is logged at P2 minimum
+```
+
+## Technical notes / design
+
+The sampled-execution protocol is deliberately random and re-drawn each run so authors cannot optimise for a known subset; the sample is drawn with a seed recorded in the plan so a run is reproducible. Sample size 20 is a pragmatic floor — it is enough to detect a systematically wrong document, not enough to prove every passage, and the plan says so explicitly rather than implying stronger assurance than it gives.
+
+Test data: a manager account with a restricted symbol set and a risk cap, a viewer account, and an owner account, all on staging (demo); keymap fixtures (default/remapped/conflicting); a configuration fixture with a seeded secret for the bundle-abort case; `CHANGELOG.md` fixtures for the version-aggregation cases.
+
+E2E specs live in `apps/web/e2e/help/` and `apps/desktop/e2e/help/`; order-entry is not involved, so the `@demo-rest-only` constraint does not apply to this suite, but the suite must still avoid live Bybit calls (`docs/plan/03-testing-strategy.md` §11.4 network-allowlist lint).
+
+## Test plan
+
+(This ticket's deliverable *is* a test plan; its own verification is review-based.)
+- Plan reviewed by the QA lead and by the E48-S01/S02 implementers for feasibility and data availability.
+- Coverage matrix from story scenarios → plan steps generated and checked for completeness.
+- The E2E additions are themselves verified by mutation: each new spec is confirmed to fail against a deliberately broken build before being accepted.
+
+## Security notes
+
+The plan exercises the support bundle, which produces restricted artefacts: test bundles are generated on staging (demo) with synthetic data only, are inspected within the test environment, and are deleted at charter end with deletion recorded. Testers must not attach a generated bundle to a ticket. Abuse cases proper are E48-X02; this plan notes the handling rules so QA does not create the exposure the feature is designed to avoid.
+
+## Accessibility notes
+
+The a11y audit protocol is part of this deliverable: per-surface axe-core runs, keyboard-only traversal, NVDA + VoiceOver scripts including the announcement-order checks for Breaking Changes and `(estimated)` status, contrast verification via tokens, reduced-motion verification. Results feed E48-D02 and E47's conformance report. Standard: WCAG 2.2 AA.
+
+## Performance notes
+
+The plan records the ≤150 ms mount and ≤200 ms transition budgets for SCR-119 as verification steps with the measurement method, so QA measures rather than judges.
+
+## Observability
+
+Plan execution results recorded in the QA sign-off note; findings carry stable ids reconciling with E48-D02's design-QA log and with E49 bug tickets.
+
+## Definition of Done
+
+- [ ] Test plan merged at `docs/qa/test-plans/e48-docs-ga.md`, approved by the QA lead, referenced from E48-S01/S02/T07.
+- [ ] Coverage matrix shows every story scenario mapped.
+- [ ] Three exploratory charters written with mission, areas, oracles and debrief template.
+- [ ] E2E additions merged, green, and mutation-verified.
+- [ ] a11y audit protocol documented and scheduled.
+- [ ] Regression-pack entries added.
+- [ ] Test data and fixtures available in staging (demo) before E48-S01 leaves Ready.
+
+## Dependencies
+
+- **E48-T02** — the docs site and checkers define what "documentation is complete" means mechanically, which this plan complements with accuracy.
+- **E48-D01** — the state list the plan enumerates comes from the design spec.
+
+## Branch
+
+`chore/docs-ga-readiness-qa-plan` for the plan; `test/docs-ga-readiness-e2e` for the specs.
+
+## References
+
+- `docs/plan/03-testing-strategy.md` §7 E2E, §11.1 test plans, §11.2 charters, §11.3 severity, §12 a11y protocol
+- `docs/plan/02-definition-of-ready-done.md` §3.1, §3.2
+- `docs/plan/05-accessibility-standard.md` §8.2
+- `docs/plan/10-personas.md` §7
+- `docs/plan/14-screens-catalogue.md` SCR-119, SCR-113, SCR-058
+
+
+##### E48-Q02
+## Context
+
+`docs/plan/30-release-roadmap.md` §9.4 states the R5 Docs quality gate as: "Every runbook rehearsed and dated; docs reviewed by someone who did not write them", and §9.3 exit criterion 5 requires "All runbooks rehearsed at least once". A rehearsal is not a read-through: it is an engineer executing the procedure against staging (demo) with the fault actually injected, timed, with the outcome recorded — which is the only way to discover that step 4 references a screen that moved, or that the alert does not link the runbook, or that the procedure assumes knowledge only its author has.
+
+This is the largest single QA item in E48 and it is deliberately scheduled in Sprint 26 against the GA candidate, because a rehearsal against a build that later changes proves nothing about the build that ships.
+
+## Scope / Deliverables
+
+- **Rehearsal of every runbook** in `docs/runbooks/` — RB-01..RB-18 from E48-T03, the DR playbook scenarios from E48-T04, and the resilience runbooks authored by E45-T11 — each executed against staging (demo) by an engineer who **did not author it**, using E45's chaos harness to inject the corresponding fault where injectable (WS disconnect, sequence gap, exchange 5xx, `10018` rate limit, clock drift, lost ack, partial fan-out, Postgres down, QuestDB down, disk pressure, renderer crash, instrument drift).
+- **Rehearsal ledger** updated per runbook with `{date, rehearser, outcome, duration_minutes, notes}` — the data `DOC-003` checks at the GA gate.
+- **Time-to-runbook measurement**: from alert firing to the rehearser having the correct runbook open, target ≤60 s (E48-T03's operational target), measured per alert.
+- **Findings**: every step that was wrong, ambiguous, out of date, or required undocumented knowledge is a finding; fixed within Sprint 26 (documentation fixes are cheap) or, if it reveals a product defect, filed as a Bug against **E49** with severity per `docs/plan/03-testing-strategy.md` §11.3.
+- **Execution of the E48-Q01 test plan** across E48-S01, E48-S02 and E48-T07, with pass/fail recorded per scenario.
+- **Execution of the three exploratory charters** with debrief notes attached to the epic.
+- **Sampled documentation-accuracy run** (20 seeded-random procedural passages executed literally) with results recorded.
+- **a11y audit execution** for SCR-119, cheatsheet, glossary and What's New panel: axe-core results plus manual NVDA and VoiceOver passes, transcripts attached, results contributed to E47's conformance report.
+- **Regression pack** for help/docs surfaces added to the standing pack and confirmed green on the GA candidate.
+- **Epic-level QA sign-off** (`docs/plan/02-definition-of-ready-done.md` §2.2: "an Epic-level regression/exploratory pass executed and recorded, not just child-ticket QA") posted as the sign-off comment with pass/fail per scenario.
+
+## Out of scope
+
+- Fixing product defects found during rehearsal — filed to E49; only documentation corrections are made here.
+- Re-running E46's performance soak or E45's full chaos catalogue as standalone exercises — those are their epics' deliverables; this ticket consumes their results and uses the harness for fault injection.
+- Pen-test and key-permission audit — E43/E44, collected by E48-T06.
+
+## Acceptance criteria
+
+```gherkin
+Scenario: Every runbook is rehearsed by a non-author and dated
+  Given the runbook index at docs/runbooks/index.md
+  When the rehearsal programme completes
+  Then every runbook has a ledger entry with a date, a rehearser who is not its author, an outcome and a duration
+  And scripts/check-runbooks.py DOC-003 passes at the GA gate
+
+Scenario: A runbook that cannot be followed is a defect, not a footnote (failure path)
+  Given a rehearser cannot complete a step without asking the author a question
+  When the rehearsal is recorded
+  Then the outcome is FAILED and a finding is raised against the runbook
+  And the runbook is corrected and re-rehearsed before the gate, with both attempts kept in the ledger
+
+Scenario: Alerts route to runbooks fast enough to matter
+  Given each alert rule from 20-architecture.md §12.5 is fired synthetically
+  When the rehearser responds
+  Then the correct runbook is open within 60 seconds in every case
+  And any alert missing a runbook_url annotation is a finding
+
+Scenario: The DR drill result is recorded against its targets
+  Given the DR playbook rehearsal
+  When measurements are taken
+  Then measured RPO and RTO per system are compared to the 07-release-and-prr.md §5.3 targets with an explicit pass or fail
+  And a fail produces a P1 entry in docs/plan/32-risk-register.md with an owner and remediation ticket
+
+Scenario: Epic-level QA sign-off is evidence-backed
+  Given the sign-off comment
+  Then it records pass or fail per test-plan scenario, the three charter debriefs, the rehearsal ledger state and the a11y results
+  And a sign-off asserting completion without those artefacts is rejected by the reviewer
+
+Scenario: Accessibility findings are severity-correct
+  Given a WCAG 2.2 AA violation found during the manual pass
+  When it is logged
+  Then its severity is P2 or higher per 03-testing-strategy.md §11.3
+  And it is either fixed before GA or carries a written Owner acceptance recorded in the conformance report
+```
+
+## Technical notes / design
+
+**Rehearsal method**, fixed so results are comparable: the rehearser is given only the alert (or the scenario statement), not the runbook link, and must find it themselves — that is what measures the routing table. The author observes silently and may not intervene; every question the rehearser wants to ask is written down instead of answered, and each becomes a finding. Duration is wall-clock from alert to verified recovery.
+
+**Injection** uses E45's chaos harness so the fault is real rather than simulated in prose. Faults that cannot be injected safely on staging (key compromise RB-14, whole-box loss) are rehearsed as structured tabletop exercises with the same ledger fields and an outcome of `tabletop`, explicitly distinguished from `executed` in the ledger so the gate check can require a minimum number of executed rehearsals rather than accepting an all-tabletop set.
+
+**Environment**: staging (demo) only. `docs/plan/02-definition-of-ready-done.md` §8 — demos and drills never run against prod (live), the sole documented exception being the live-enablement PRR walkthrough, which is E48-T06's business, not this ticket's.
+
+Scheduling: rehearsals are spread across Sprint 26 week 1 so findings have a week to be fixed and re-rehearsed before the 2027-09-24 gate; the GA regression window (`q11` in the roadmap Gantt, 2027-09-06 → 2027-09-24) is the surrounding container.
+
+## Test plan
+
+This ticket is test execution; its own quality bar:
+- Every rehearsal produces a ledger entry — an unrecorded rehearsal did not happen.
+- Every finding carries a disposition (fixed / filed to E49 / accepted with reason).
+- The mutation check from E48-Q01 is re-run on the GA candidate to confirm the E2E specs still fail on a broken build (a suite that cannot fail proves nothing).
+- Charter debriefs follow the §11.2 format.
+
+## Security notes
+
+Rehearsals exercise the most privileged procedures in the system (key rotation RB-14, restore RB-08, kill-switch RB-12, rollback RB-13). Rules: demo credentials only; any real key material encountered is treated as an incident, not a test artefact; support bundles and restore copies created during rehearsal are deleted at the end of each session with deletion recorded; RB-14 is rehearsed as a tabletop because executing a real key-compromise response would revoke keys the team needs. Findings with a security implication are routed to the Security engineer via E48-X02 rather than filed as ordinary documentation defects. Classification of the ledger and findings log: internal/confidential.
+
+## Accessibility notes
+
+This ticket executes the manual accessibility passes for E48's surfaces (`docs/plan/05-accessibility-standard.md` §8.2): NVDA on Windows and VoiceOver on macOS across SCR-119, the cheatsheet, the glossary and the What's New panel; keyboard-only traversal of the diagnostics-bundle flow; reduced-motion verification; contrast verification via tokens in both themes and a colour-blind-safe palette. Transcripts are attached and contributed to E47's conformance report; violations logged at P2 minimum.
+
+## Performance notes
+
+Measured here: time-to-runbook ≤60 s per alert; DR measurements against the §5.3 RPO/RTO targets; SCR-119 mount ≤150 ms and route transition ≤200 ms verified on the GA candidate on reference hardware.
+
+## Observability
+
+- `runbook.rehearsal_recorded{runbook_id,outcome}` emitted per rehearsal.
+- Synthetic alert firings confirmed to reach the on-call channel (this doubles as the PRR §5.1 "a synthetic alert is fired and confirmed to reach the on-call channel" item, and the evidence is contributed to E48-T06's pack).
+- Any alert found without a `runbook_url` annotation raises a finding and a fix.
+
+## Definition of Done
+
+- [ ] Every runbook and DR scenario rehearsed by a non-author; ledger complete with dates, rehearsers, outcomes and durations; `executed` vs `tabletop` distinguished.
+- [ ] `DOC-003` passes at the GA gate.
+- [ ] Time-to-runbook measured per alert; all ≤60 s or a finding filed.
+- [ ] E48-Q01 test plan executed with pass/fail per scenario; three charters executed with debriefs.
+- [ ] Sampled documentation-accuracy run completed and recorded.
+- [ ] a11y audit executed; transcripts attached; results in E47's conformance report; violations fixed or Owner-accepted.
+- [ ] Regression pack green on the GA candidate.
+- [ ] All findings dispositioned; product defects filed against E49 with priorities.
+- [ ] Epic-level QA sign-off comment posted with the evidence enumerated.
+
+## Dependencies
+
+- **E48-Q01** — the plan and charters being executed.
+- **E48-T03**, **E48-T04** — the runbooks and DR playbook being rehearsed.
+- **E48-S02** (and S01) — the surfaces being tested.
+- **E45** — the chaos harness used for fault injection; **E47** — receives the a11y evidence; **E49** — receives the defects.
+
+## Branch
+
+`test/docs-ga-readiness-rehearsals` (ledger, findings log, charter debriefs). Documentation fixes land on `feat/docs-ga-readiness-*` branches.
+
+## References
+
+- `docs/plan/30-release-roadmap.md` §9.3 exit criterion 5, §9.4 Docs gate
+- `docs/plan/07-release-and-prr.md` §5.1 synthetic alert, §5.2 runbooks, §5.3 RPO/RTO
+- `docs/plan/03-testing-strategy.md` §9 chaos, §11.2 charters, §11.3 severity, §12 a11y
+- `docs/plan/02-definition-of-ready-done.md` §2.2, §8
+- `docs/plan/20-architecture.md` §11.1 F1–F18, §12.5 alerts
+- `docs/plan/05-accessibility-standard.md` §8.2
+- `docs/plan/32-risk-register.md`
+
+
+##### E48-X01
+## Context
+
+`docs/plan/02-definition-of-ready-done.md` §2.1 requires a STRIDE threat-model kickoff for any epic touching auth, keys, OMS, fan-out or money movement, and `docs/plan/04-security-program.md` mandates a STRIDE model per epic. E48 does not build trading functionality, which makes it easy to assume it is low-risk — and that assumption is wrong in three specific ways:
+
+1. The **support bundle** (US-OBS-007) packages logs, configuration, metrics and health results into a file a user can move anywhere. It is an exfiltration primitive with a friendly button.
+2. The **runbook set** is an instruction channel executed by privileged operators during incidents, when scrutiny is at its lowest. A tampered runbook is a remote-code-execution-by-social-engineering path that no scanner detects.
+3. The **GA evidence pack** aggregates the system's complete security posture — scan results, SBOM, accepted risks, pen-test summary, key-audit attestation — into one place.
+
+Plus the documentation set itself describes trust boundaries (`docs/plan/20-architecture.md` §2.2), the key vault (`27-adrs/ADR-0009`) and the auth model (`ADR-0010`).
+
+## Scope / Deliverables
+
+- **STRIDE model** at `docs/plan/security/threat-models/e48-docs-ga.md` over these assets and flows:
+  - the published docs site (build pipeline, hosting, network binding, generated examples);
+  - the runbook set and its CODEOWNERS/review path;
+  - the support-bundle pipeline (collect → redact → scan → cap → write → audit);
+  - `GET /system/build` and the in-app help content bundle;
+  - the DR playbook, backup artefacts and the scratch environments drills create;
+  - the GA evidence pack and its attestation files;
+  - the release notes / changelog publication path.
+- **Per-element STRIDE enumeration** with at least: **S** — forged attestation in the evidence pack; a support bundle attributed to the wrong actor. **T** — tampered runbook step; modified backup artefact restored without verification; injected content in the docs build. **R** — untracked bundle generation or drill execution. **I** — secret in a generated example; unredacted value in a bundle; docs site bound to a public interface; deployment fingerprinting via version/licence data; exploit detail in a changelog Security entry; restored real data left in a scratch environment. **D** — unbounded bundle generation exhausting disk or CPU; docs build blocking CI. **E** — over-scoped `GITHUB_TOKEN` in the docs publish workflow; a runbook normalising a privileged shortcut; long-lived restore credentials.
+- **Control mapping**: every threat mapped to a control that is implemented in a named E48 ticket (or explicitly accepted with an owner and expiry per `docs/plan/32-risk-register.md` conventions). Threats with no mapped control are not allowed to be silently dropped.
+- **Abuse-case list** handed to E48-X02 for verification.
+- **Data-classification statement** per artefact: docs site internal/confidential; runbooks internal/confidential; support bundle restricted; evidence pack restricted; changelog internal-shared; drill records restricted.
+- **Risk-register entries** for any residual risk, with owner and expiry.
+
+## Out of scope
+
+- Verifying the controls — **E48-X02**.
+- Threat models for functionality owned by other epics (OMS, keys, RBAC) — referenced, not redone.
+- The pen-test itself (E43).
+
+## Acceptance criteria
+
+```gherkin
+Scenario: Every asset is enumerated across all six STRIDE categories
+  Given the asset and flow list in scope
+  When the model is reviewed by the Security engineer
+  Then each asset has an explicit entry or a stated not-applicable reason for every STRIDE category
+  And a silently omitted category blocks approval
+
+Scenario: Every threat maps to a control or an accepted risk
+  Given the enumerated threats
+  When the control mapping is checked
+  Then each threat names an implementing ticket key or a risk-register entry with an owner and an expiry date
+  And an unmapped threat blocks approval
+
+Scenario: The support bundle is modelled as an exfiltration primitive
+  Given the support-bundle pipeline
+  Then the model states explicitly that redaction is allow-list (deny-by-default) rather than blacklist
+  And that the pre-write scan fails closed
+  And that a scanner error aborts generation rather than emitting an unscanned bundle
+
+Scenario: The docs site cannot be modelled as publicly reachable
+  Given the hosting design
+  Then the model records the private-network binding as a control with a verification method
+  And a design that exposes the site publicly is recorded as an unacceptable risk, not a trade-off
+
+Scenario: Abuse cases are concrete enough to execute (failure path)
+  Given the abuse-case list handed to E48-X02
+  Then each case names the actor, the entry point, the attempted action and the expected refusal
+  And a vaguely stated case is rejected and rewritten before the model is approved
+```
+
+## Technical notes / design
+
+Method: data-flow diagram first (actors: owner, manager, viewer, on-call engineer, CI, attacker-with-network-access, attacker-with-a-manager-account), trust boundaries drawn from `docs/plan/20-architecture.md` §2.2, then STRIDE per element. The model explicitly considers the **insider-with-manager-role** case, because the support bundle and the docs site are available to more roles than the admin surfaces are.
+
+The model also records the **non-obvious asymmetry** that documentation controls are review-time, not runtime: a tampered runbook is caught by CODEOWNERS review or not at all, so the review requirement must be structural (two-key on `docs/runbooks/**`) rather than cultural.
+
+Output format follows the existing threat models in `docs/plan/security/threat-models/` (established by E01-X01 and subsequent epics) so the PRR §5.5 cross-epic review can read the set as a whole.
+
+## Test plan
+
+- Model reviewed by the Security engineer and the Architect; approval recorded.
+- Control mapping cross-checked against the actual ticket bodies (E48-T02, T03, T04, T06, S01) so a claimed control exists in scope somewhere.
+- Abuse cases dry-read for executability by the engineer who will run them in E48-X02.
+
+## Security notes
+
+This ticket *is* the security analysis. Its own handling rule: the model names weaknesses and is therefore **restricted** — it lives in the private repo and the private docs site, is never included in the support bundle (an explicit exclusion rule the bundle's collector must implement), and is excluded from the published GA evidence pack's shareable subset.
+
+## Accessibility notes
+
+N/A — no UI surface.
+
+## Performance notes
+
+N/A. One denial-of-service threat is in scope (unbounded bundle generation); its control is the size cap and off-request-path execution specified in E48-S01.
+
+## Observability
+
+Specifies the security-relevant telemetry E48 must emit: `support_bundle.generated` audit event, `support_bundle.secret_detected` alert, `dr.drill_executed`, `ga.evidence_pack_built`, and an alert on any change to `docs/runbooks/**` merged without two approvals (a detection control for the tampering threat).
+
+## Definition of Done
+
+- [ ] Model merged at `docs/plan/security/threat-models/e48-docs-ga.md`.
+- [ ] All assets × six STRIDE categories enumerated with no silent omissions.
+- [ ] Every threat mapped to an implementing ticket or an owned, expiring accepted risk.
+- [ ] Abuse-case list handed to E48-X02 and confirmed executable.
+- [ ] Data classifications recorded per artefact.
+- [ ] Risk-register entries filed for residual risks.
+- [ ] Security engineer and Architect approval recorded.
+- [ ] Findings presented at the security review.
+
+## Dependencies
+
+None blocking. Informs E48-T02, T03, T04, T06 and S01; verified by E48-X02.
+
+## Branch
+
+`chore/docs-ga-readiness-threat-model`.
+
+## References
+
+- `docs/plan/04-security-program.md` (STRIDE per epic, supply chain §6.13, CI secrets §6.14)
+- `docs/plan/02-definition-of-ready-done.md` §2.1, §8
+- `docs/plan/20-architecture.md` §2.2 trust boundaries, §13.4 data-flow classification
+- `docs/plan/27-adrs/ADR-0009-secrets-and-key-management.md`, `ADR-0010-auth-and-rbac.md`
+- `docs/plan/11-user-stories.md` US-OBS-003, US-OBS-007
+- `docs/plan/07-release-and-prr.md` §3, §5.5, §6
+- `docs/plan/32-risk-register.md`
+
+
+##### E48-X02
+## Context
+
+E48-X01 enumerates the threats; this ticket proves the controls exist and work. `docs/plan/02-definition-of-ready-done.md` §3.2 requires, for anything `security`-labelled, that "SAST/SCA/secrets-scan clean or findings triaged with accepted-risk sign-off; Security engineer review comment present; for anything touching keys/withdrawal/RBAC, a manual abuse-case check performed". E48 ships a support bundle that touches configuration (and therefore, if redaction fails, keys), a docs site that describes the system's internals, and an evidence pack that aggregates its security posture — all of which need verification rather than assertion before the GA gate.
+
+`docs/plan/07-release-and-prr.md` §5.5 also requires that "STRIDE threat models for all Epics in this train's scope reviewed as a set (not just individually at Epic-close) for cross-Epic interaction risks" — E48's model is one of the inputs to that review, and its findings must be closed before the PRR.
+
+## Scope / Deliverables
+
+- **Executed abuse cases** from the E48-X01 list, each with actor, entry point, attempted action and observed result:
+  1. *Manager generates a support bundle and finds another user's data* — expected: bundle is scoped to data the actor may see; any cross-tenant leakage is a P0.
+  2. *Seeded secret survives redaction* — a configuration value matching a key pattern is planted; expected: pre-write scan aborts generation, no partial file on disk, alert raised.
+  3. *Scanner failure* — the secret scanner is made to error; expected: fail-closed, generation aborts (a fail-open here would be the whole vulnerability).
+  4. *Viewer enumerates privileged actions via the cheatsheet* — expected: cheatsheet is filtered by scope and does not list actions the role cannot perform.
+  5. *Docs site reached from outside the Tailscale boundary* — expected: no listener on a public interface; verified by scanning the host's bound addresses, not by reading config.
+  6. *Runbook tampering* — a PR modifying a `docs/runbooks/**` step to disable auditing; expected: safety-clause linter fails the build **and** CODEOWNERS requires two-key review; both controls verified independently.
+  7. *Backup artefact tampering* — a corrupted/modified backup offered to the restore path; expected: checksum/encryption verification rejects it before restore, per E48-T04.
+  8. *Forged attestation in the GA evidence pack* — an attestation file with an unrecognised signer; expected: `GA-004` rejects it.
+  9. *Exploit detail in a changelog Security entry* — expected: redaction linter fails the build.
+  10. *Docs publish workflow token abuse* — inspect the workflow's `permissions:` for write scope beyond the publish step; expected: least privilege, no `pull_request_target` with untrusted checkout.
+- **SAST/DAST/secret-scanning rule additions**: Semgrep rules for (a) any code path that writes a support bundle without invoking the scanner, (b) any logging/serialisation path bypassing the redaction allow-list, (c) hard-coded credentials in `docs/**`; a ZAP baseline profile for the docs site host confirming no unintended exposure; the `DOC-006` pattern set extended with anything the abuse cases reveal.
+- **SCA review** of the documentation toolchain chosen in E48-K01 (dependency count, maintenance status, plugin execution model, known CVEs) per `docs/plan/04-security-program.md` §6.13.
+- **Permission/key checks**: confirm `GET /system/build` exposes no infrastructure detail beyond version and commit for every role; confirm the docs/publish workflows' token scopes; confirm the drill's restore credential is scoped and time-boxed.
+- **Security review comment** on each E48 security-relevant ticket (T02, T03, T04, T06, S01, S02, T07) and the epic.
+- **Findings triage**: each finding fixed, or accepted with an Owner-signed entry in `docs/plan/32-risk-register.md` carrying an owner and an expiry date (R5 exit criterion 4 requires every acceptance to be current).
+
+## Out of scope
+
+- The pen-test itself and its remediation — E43; this ticket supplies the docs-surface scope note to the pen-test brief.
+- Re-reviewing other epics' controls.
+- Building the controls — they are built in T02/T03/T04/S01; this ticket verifies them.
+
+## Acceptance criteria
+
+```gherkin
+Scenario: Every abuse case is executed with a recorded result
+  Given the ten abuse cases
+  When the security review runs
+  Then each has an executed result recorded as refused-as-expected or a finding
+  And an unexecuted case blocks this ticket's Done
+
+Scenario: The bundle scanner fails closed
+  Given the secret scanner is forced to raise an error mid-generation
+  When a support bundle is requested
+  Then generation aborts with an explicit error, no file is written, and an alert is raised
+  And a fail-open result is a P0 finding blocking GA
+
+Scenario: Runbook tampering is caught by two independent controls
+  Given a PR disabling an audit control inside a runbook step
+  When CI and review run
+  Then the safety-clause linter fails the build
+  And CODEOWNERS independently requires Security and DevSecOps approval
+  And disabling either control alone still leaves the other blocking
+
+Scenario: The docs site is not reachable from outside the private boundary
+  Given the deployed docs host
+  When its bound addresses are enumerated and a ZAP baseline scan is run from outside the Tailscale network
+  Then no listener is reachable
+  And a configuration change that would expose it fails a CI check on the compose file
+
+Scenario: Findings are closed or owned (failure path)
+  Given a Medium finding that is not fixed before GA
+  Then an entry exists in docs/plan/32-risk-register.md with an owner, an expiry date and Owner sign-off
+  And a finding with neither a fix nor a signed acceptance blocks the PRR security gate
+```
+
+## Technical notes / design
+
+Verification is preferred over inspection wherever possible: bound addresses are enumerated on the host rather than read from config; CODEOWNERS enforcement is proven by attempting a merge, not by reading the file; the scanner's fail-closed behaviour is proven by fault injection, not by code reading. This mirrors the §6 key-permission audit principle that permissions are "manually verified in the Bybit account settings (not just trusted from app config)".
+
+New Semgrep rules live in `.semgrep/docs-security.yml` and join the existing SAST job; each rule ships with a passing and a failing fixture so the rule itself is tested (a security rule with no failing test is decoration).
+
+The ZAP baseline profile for the docs host is added to the existing DAST cadence (`s06` in the roadmap's security track) rather than run once, so exposure is re-checked after GA.
+
+## Test plan
+
+- Abuse cases executed on staging (demo) with synthetic data; each result recorded with evidence (log excerpt, screenshot, command output).
+- Semgrep rules unit-tested with `semgrep --test` fixtures.
+- ZAP baseline run from outside the Tailscale boundary and from inside, results compared.
+- SCA run over the docs toolchain; results attached.
+- Re-verification after any fix; no finding closes on a promise.
+
+## Security notes
+
+This ticket handles restricted artefacts (threat model, findings, scan outputs). Handling: findings are recorded in the private repo and the Security engineer's tracker; the changelog describes any resulting fix generally, without exploit detail (`docs/plan/07-release-and-prr.md` §3); test bundles and scan outputs produced during the review are deleted at the end with deletion recorded. The review's summary — not its detail — is what enters the GA evidence pack.
+
+## Accessibility notes
+
+N/A — no UI surface. One a11y-adjacent check: the scope-filtered cheatsheet must not reveal privileged actions, and the filtering must not be implemented by visually hiding entries that remain in the accessibility tree (which would defeat both the security and the a11y intent).
+
+## Performance notes
+
+Added CI cost ≤2 min for the new Semgrep rules; the ZAP baseline runs on the existing DAST cadence, not per-PR.
+
+## Observability
+
+- `security.docs_scan_failed{rule}` from the new SAST rules.
+- Alert on any merge to `docs/runbooks/**` lacking two approvals (the detection control for the tampering threat).
+- `support_bundle.secret_detected` alert verified to fire during abuse case 2.
+
+## Definition of Done
+
+- [ ] All ten abuse cases executed with recorded results and evidence.
+- [ ] Semgrep rules merged with passing/failing fixtures; SAST job green.
+- [ ] ZAP baseline profile added; external unreachability verified.
+- [ ] SCA review of the docs toolchain complete; no unpatched Critical/High.
+- [ ] `GET /system/build` role-safety verified for owner, manager and viewer.
+- [ ] Workflow token scopes verified least-privilege; no `pull_request_target` with untrusted checkout.
+- [ ] Security review comments posted on E48-T02, T03, T04, T06, S01, S02, T07 and the epic.
+- [ ] Every finding fixed or accepted with owner and expiry in `docs/plan/32-risk-register.md`.
+- [ ] Summary contributed to the GA evidence pack (E48-T06) and to the PRR §5.5 cross-epic model review.
+
+## Dependencies
+
+- **E48-X01** — supplies the abuse cases and control map.
+- **E48-S01** — the support bundle must exist to attack it.
+- **E48-T03**, **E48-T04** — runbooks and the DR/backup path must exist to verify their controls.
+- Feeds **E48-T06** (evidence pack) and the R5 PRR security gate.
+
+## Branch
+
+`chore/docs-ga-readiness-security-review` (rules, profiles, findings log).
+
+## References
+
+- `docs/plan/04-security-program.md` §6.13 supply chain, §6.14 CI secrets
+- `docs/plan/02-definition-of-ready-done.md` §3.2, §8 security sign-off rule
+- `docs/plan/07-release-and-prr.md` §3, §5.5, §6
+- `docs/plan/30-release-roadmap.md` §9.3 exit criterion 4, §9.4 Security gate
+- `docs/plan/11-user-stories.md` US-OBS-007, US-OBS-003
+- `docs/plan/22-api-openapi.yaml` `/system/build`
+- `docs/plan/32-risk-register.md`
+
+

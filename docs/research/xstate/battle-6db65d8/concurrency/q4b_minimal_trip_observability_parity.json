@@ -1,0 +1,75 @@
+{
+  "probe": "q4b_minimal_trip_observability_parity",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "shape": "rollback",
+      "maxIterations": 50,
+      "async_laps": 51,
+      "async_trip_observable": true,
+      "async_last_error": "RunawayChainError(\"Machine 'q4b' exceeded 50 chained self-generated events in one macrostep and discarded 0 of",
+      "sync_laps": 51,
+      "sync_trip_observable": true,
+      "sync_last_error": "RunawayChainError(\"Machine 'q4b' exceeded 50 chained self-generated events in one macrostep and discarded 0 of",
+      "parity": true
+    },
+    {
+      "shape": "rollback",
+      "maxIterations": 200,
+      "async_laps": 201,
+      "async_trip_observable": true,
+      "async_last_error": "RunawayChainError(\"Machine 'q4b' exceeded 200 chained self-generated events in one macrostep and discarded 0 o",
+      "sync_laps": 201,
+      "sync_trip_observable": true,
+      "sync_last_error": "RunawayChainError(\"Machine 'q4b' exceeded 200 chained self-generated events in one macrostep and discarded 0 o",
+      "parity": true
+    },
+    {
+      "shape": "rollback",
+      "maxIterations": 1000,
+      "async_laps": 1001,
+      "async_trip_observable": true,
+      "async_last_error": "RunawayChainError(\"Machine 'q4b' exceeded 1000 chained self-generated events in one macrostep and discarded 0 ",
+      "sync_laps": 1001,
+      "sync_trip_observable": true,
+      "sync_last_error": "RunawayChainError(\"Machine 'q4b' exceeded 1000 chained self-generated events in one macrostep and discarded 0 ",
+      "parity": true
+    },
+    {
+      "shape": "invoke_cycle",
+      "maxIterations": 50,
+      "async_laps": 51,
+      "async_trip_observable": true,
+      "async_last_error": "RunawayChainError(\"Machine 'q4b' exceeded 50 chained self-generated events in one macrostep and discarded 0 of",
+      "sync_laps": 51,
+      "sync_trip_observable": true,
+      "sync_last_error": "RunawayChainError(\"Machine 'q4b' exceeded 50 chained self-generated events in one macrostep and discarded 0 of",
+      "parity": true
+    },
+    {
+      "shape": "invoke_cycle",
+      "maxIterations": 200,
+      "async_laps": 201,
+      "async_trip_observable": true,
+      "async_last_error": "RunawayChainError(\"Machine 'q4b' exceeded 200 chained self-generated events in one macrostep and discarded 0 o",
+      "sync_laps": 201,
+      "sync_trip_observable": true,
+      "sync_last_error": "RunawayChainError(\"Machine 'q4b' exceeded 200 chained self-generated events in one macrostep and discarded 0 o",
+      "parity": true
+    },
+    {
+      "shape": "invoke_cycle",
+      "maxIterations": 1000,
+      "async_laps": 1001,
+      "async_trip_observable": true,
+      "async_last_error": "RunawayChainError(\"Machine 'q4b' exceeded 1000 chained self-generated events in one macrostep and discarded 0 ",
+      "sync_laps": 1001,
+      "sync_trip_observable": true,
+      "sync_last_error": "RunawayChainError(\"Machine 'q4b' exceeded 1000 chained self-generated events in one macrostep and discarded 0 ",
+      "parity": true
+    }
+  ],
+  "parity_violations": [],
+  "violation_count": 0,
+  "result": "PASS"
+}

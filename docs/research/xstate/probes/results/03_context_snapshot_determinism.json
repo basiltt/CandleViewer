@@ -1,0 +1,273 @@
+[
+  {
+    "id": "C1",
+    "title": "Action mutating context in place: does the mutation leak into an EARLIER snapshot?",
+    "expected": {
+      "snap_before": {
+        "n": 0
+      },
+      "snap_after": {
+        "n": 1
+      },
+      "leaked": false
+    },
+    "observed": {
+      "snap_before": {
+        "n": 0
+      },
+      "snap_after": {
+        "n": 1
+      },
+      "leaked": false
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "C2",
+    "title": "Nested mutable context: deep mutation must not retro-edit a prior snapshot",
+    "expected": {
+      "before": {
+        "orders": []
+      },
+      "after": {
+        "orders": [
+          "o1"
+        ]
+      }
+    },
+    "observed": {
+      "before": {
+        "orders": []
+      },
+      "after": {
+        "orders": [
+          "o1"
+        ]
+      }
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "C3",
+    "title": "Two interpreters of the SAME machine object do not share context",
+    "expected": {
+      "a": {
+        "n": 1
+      },
+      "b": {
+        "n": 0
+      }
+    },
+    "observed": {
+      "a": {
+        "n": 1
+      },
+      "b": {
+        "n": 0
+      }
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "C4",
+    "title": "Snapshot round-trip restores state ids and context exactly",
+    "expected": {
+      "ids": [
+        "m.b"
+      ],
+      "ctx": {
+        "n": 3
+      }
+    },
+    "observed": {
+      "ids": [
+        "m.b"
+      ],
+      "ctx": {
+        "n": 3
+      }
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "C5",
+    "title": "Restored interpreter can be started and still processes events",
+    "expected": {
+      "ids": [
+        "m.c"
+      ],
+      "running": true
+    },
+    "observed": {
+      "ids": [
+        "m.c"
+      ],
+      "running": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "C6",
+    "title": "Restoring a snapshot taken mid-'after' RESUMES the delayed transition",
+    "expected": {
+      "fired": true
+    },
+    "observed": {
+      "fired": false
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "C7",
+    "title": "Restoring a snapshot taken mid-'invoke' RE-RUNS the invoked service",
+    "expected": {
+      "calls": 1
+    },
+    "observed": {
+      "calls": 0
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "C8",
+    "title": "DETERMINISM: identical event sequence over 5 runs yields identical state+context+action trace",
+    "expected": {
+      "unique_results": 1
+    },
+    "observed": {
+      "unique_results": 1
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "C9",
+    "title": "DETERMINISM with parallel regions: repeated identical runs agree",
+    "expected": {
+      "unique_results": 1
+    },
+    "observed": {
+      "unique_results": 1
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "C10",
+    "title": "raise: a raised event is processed before the next external event",
+    "expected": [
+      "entry",
+      "RAISED",
+      "EXTERNAL"
+    ],
+    "observed": [
+      "entry",
+      "RAISED",
+      "EXTERNAL"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "C11",
+    "title": "Event payload is exposed on event.payload and arbitrary shapes survive",
+    "expected": {
+      "payload": {
+        "price": 1.5,
+        "tags": [
+          "a"
+        ],
+        "nested": {
+          "k": 1
+        }
+      }
+    },
+    "observed": {
+      "payload": {
+        "price": 1.5,
+        "tags": [
+          "a"
+        ],
+        "nested": {
+          "k": 1
+        }
+      }
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "C12",
+    "title": "No event payload VALIDATION: a wrong-typed payload is accepted silently",
+    "expected": {
+      "raised": null,
+      "payload": {
+        "qty": "not-a-number"
+      }
+    },
+    "observed": {
+      "raised": null,
+      "payload": {
+        "qty": "not-a-number"
+      }
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "C13",
+    "title": "An action raising an exception: does it kill the interpreter or get swallowed?",
+    "expected": {
+      "running": true,
+      "later_event_handled": true
+    },
+    "observed": {
+      "running": true,
+      "later_event_handled": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "C14",
+    "title": "Unknown action name in config raises at create_machine time (fail loud)",
+    "expected": "ImplementationMissingError",
+    "observed": "ImplementationMissingError",
+    "status": "PASS"
+  },
+  {
+    "id": "C15",
+    "title": "Unknown target state name in config: fails loud at create or at transition?",
+    "expected": "raised-at-some-point",
+    "observed": "create_machine:InvalidConfigError",
+    "status": "FAIL"
+  },
+  {
+    "id": "C16",
+    "title": "sendTo addressing: invoke `id` / `systemId` must be usable as the target name",
+    "expected": {
+      "by_service_key": "PONG",
+      "by_invoke_id": "PONG",
+      "by_system_id": "PONG"
+    },
+    "observed": {
+      "by_service_key": "PONG",
+      "by_invoke_id": "PONG",
+      "by_system_id": "PONG"
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "C17",
+    "title": "Events arriving while the machine is in a transient/invoking state are SILENTLY DROPPED (no queue, no deferral, no error)",
+    "expected": {
+      "unique": 1,
+      "filled": 30,
+      "final": [
+        "oms.filled"
+      ]
+    },
+    "observed": {
+      "unique": 1,
+      "filled": 0,
+      "final": [
+        "oms.live"
+      ]
+    },
+    "status": "FAIL"
+  }
+]

@@ -1,0 +1,189 @@
+{
+  "id": "ws_conn",
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "error",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "initial": "disconnected",
+  "context": {
+    "env": null,
+    "kind": "public",
+    "account_id": null,
+    "attempt": 0,
+    "backoff_ms": 500,
+    "max_backoff_ms": 30000,
+    "conn_budget_remaining": 500,
+    "last_pong_us": 0,
+    "pending_topics": [],
+    "subscribed_topics": []
+  },
+  "states": {
+    "disconnected": {
+      "on": {
+        "CONNECT": [
+          {
+            "target": "#ws_conn.budget_blocked",
+            "guard": "connection_budget_exhausted"
+          },
+          {
+            "target": "#ws_conn.connecting"
+          }
+        ]
+      }
+    },
+    "budget_blocked": {
+      "tags": [
+        "degraded"
+      ],
+      "entry": [
+        "raise_conn_budget_alert",
+        "schedule_budget_recheck"
+      ],
+      "on": {
+        "BUDGET_RECHECK": {
+          "target": "#ws_conn.disconnected"
+        }
+      }
+    },
+    "connecting": {
+      "entry": [
+        "bump_attempt"
+      ],
+      "invoke": {
+        "id": "dial",
+        "src": "open_socket",
+        "onDone": [
+          {
+            "target": "#ws_conn.authenticating",
+            "guard": "is_private"
+          },
+          {
+            "target": "#ws_conn.subscribing"
+          }
+        ],
+        "onError": {
+          "target": "#ws_conn.backing_off",
+          "actions": [
+            "record_conn_error"
+          ]
+        }
+      }
+    },
+    "authenticating": {
+      "invoke": {
+        "id": "auth",
+        "src": "ws_auth",
+        "onDone": {
+          "target": "#ws_conn.subscribing"
+        },
+        "onError": {
+          "target": "#ws_conn.backing_off",
+          "actions": [
+            "record_auth_error"
+          ]
+        }
+      }
+    },
+    "subscribing": {
+      "invoke": {
+        "id": "sub",
+        "src": "subscribe_in_batches",
+        "onDone": {
+          "target": "#ws_conn.live",
+          "actions": [
+            "record_subscribed"
+          ]
+        },
+        "onError": {
+          "target": "#ws_conn.backing_off",
+          "actions": [
+            "record_sub_error"
+          ]
+        }
+      },
+      "on": {
+        "*": {
+          "actions": [
+            "defer"
+          ]
+        }
+      }
+    },
+    "live": {
+      "entry": [
+        "reset_backoff",
+        "drain_deferred",
+        "emit_feed_healthy",
+        "arm_pong_deadline"
+      ],
+      "on": {
+        "PONG": {
+          "actions": [
+            "stamp_pong",
+            "rearm_pong_deadline"
+          ]
+        },
+        "PONG_DEADLINE": {
+          "target": "#ws_conn.backing_off",
+          "actions": [
+            "record_pong_timeout"
+          ]
+        },
+        "SOCKET_CLOSED": {
+          "target": "#ws_conn.backing_off"
+        },
+        "TOPIC_STALE": {
+          "target": "#ws_conn.backing_off",
+          "actions": [
+            "record_staleness"
+          ]
+        },
+        "TOPICS_CHANGED": {
+          "target": "#ws_conn.subscribing",
+          "actions": [
+            "set_pending_topics"
+          ]
+        },
+        "SHUTDOWN": {
+          "target": "#ws_conn.closing"
+        }
+      }
+    },
+    "backing_off": {
+      "entry": [
+        "compute_jittered_backoff",
+        "emit_feed_degraded",
+        "schedule_backoff_deadline",
+        "notify_dependents_degraded"
+      ],
+      "on": {
+        "BACKOFF_DUE": {
+          "target": "#ws_conn.connecting"
+        },
+        "SHUTDOWN": {
+          "target": "#ws_conn.closing"
+        }
+      }
+    },
+    "closing": {
+      "invoke": {
+        "id": "cl",
+        "src": "close_socket",
+        "onDone": {
+          "target": "#ws_conn.closed"
+        },
+        "onError": {
+          "target": "#ws_conn.closed"
+        }
+      }
+    },
+    "closed": {
+      "type": "final",
+      "tags": [
+        "terminal"
+      ]
+    }
+  }
+}

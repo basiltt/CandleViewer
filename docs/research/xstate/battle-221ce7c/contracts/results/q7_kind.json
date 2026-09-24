@@ -1,0 +1,54 @@
+{
+  "def_mi5": {
+    "kind": "def",
+    "maxIterations": 5,
+    "svc_at_1s": 7,
+    "svc_at_2s": 7,
+    "grew_after_1s": false,
+    "acts": 6,
+    "status": "running",
+    "ids": [
+      "m.a"
+    ],
+    "last_error": "RunawayChainError"
+  },
+  "def_mi50": {
+    "kind": "def",
+    "maxIterations": 50,
+    "svc_at_1s": 52,
+    "svc_at_2s": 52,
+    "grew_after_1s": false,
+    "acts": 51,
+    "status": "running",
+    "ids": [
+      "m.a"
+    ],
+    "last_error": "RunawayChainError"
+  },
+  "async_mi5": {
+    "kind": "async",
+    "maxIterations": 5,
+    "svc_at_1s": 1462,
+    "svc_at_2s": 2900,
+    "grew_after_1s": true,
+    "acts": 2899,
+    "status": "running",
+    "ids": [
+      "m.a"
+    ],
+    "last_error": "RuntimeError"
+  },
+  "async_mi50": {
+    "kind": "async",
+    "maxIterations": 50,
+    "svc_at_1s": 1469,
+    "svc_at_2s": 2908,
+    "grew_after_1s": true,
+    "acts": 2907,
+    "status": "running",
+    "ids": [
+      "m.a"
+    ],
+    "last_error": "RuntimeError"
+  }
+}

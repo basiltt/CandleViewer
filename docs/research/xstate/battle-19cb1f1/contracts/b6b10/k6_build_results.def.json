@@ -1,0 +1,82 @@
+{
+ "[def]B6/build": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]B6/policy": {
+  "pass": true,
+  "note": "{\"got\": {\"action_error_policy\": \"rollback\", \"on_unhandled\": \"defer\", \"guard_error_policy\": \"raise\"}, \"exp\": {\"action_error_policy\": \"rollback\", \"on_unhandled\": \"defer\", \"guard_error_policy\": \"raise\"}}"
+ },
+ "[def]B6/strictTargets": {
+  "pass": true,
+  "note": "{'action_error_policy': 'rollback', 'on_unhandled': 'defer', 'guard_error_policy': 'raise', 'strict_targets': True, 'spawn_blocking_timeout': '<missing>'}"
+ },
+ "[def]B7/build": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]B7/policy": {
+  "pass": true,
+  "note": "{\"got\": {\"action_error_policy\": \"rollback\", \"on_unhandled\": \"defer\", \"guard_error_policy\": \"raise\"}, \"exp\": {\"action_error_policy\": \"rollback\", \"on_unhandled\": \"defer\", \"guard_error_policy\": \"raise\"}}"
+ },
+ "[def]B7/strictTargets": {
+  "pass": true,
+  "note": "{'action_error_policy': 'rollback', 'on_unhandled': 'defer', 'guard_error_policy': 'raise', 'strict_targets': True, 'spawn_blocking_timeout': '<missing>'}"
+ },
+ "[def]B8/build": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]B8/policy": {
+  "pass": true,
+  "note": "{\"got\": {\"action_error_policy\": \"fail\", \"on_unhandled\": \"defer\", \"guard_error_policy\": \"raise\"}, \"exp\": {\"action_error_policy\": \"fail\", \"on_unhandled\": \"defer\", \"guard_error_policy\": \"raise\"}}"
+ },
+ "[def]B8/strictTargets": {
+  "pass": true,
+  "note": "{'action_error_policy': 'fail', 'on_unhandled': 'defer', 'guard_error_policy': 'raise', 'strict_targets': True, 'spawn_blocking_timeout': '<missing>'}"
+ },
+ "[def]B9/build": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]B9/policy": {
+  "pass": true,
+  "note": "{\"got\": {\"action_error_policy\": \"rollback\", \"on_unhandled\": \"defer\", \"guard_error_policy\": \"raise\"}, \"exp\": {\"action_error_policy\": \"rollback\", \"on_unhandled\": \"defer\", \"guard_error_policy\": \"raise\"}}"
+ },
+ "[def]B9/strictTargets": {
+  "pass": true,
+  "note": "{'action_error_policy': 'rollback', 'on_unhandled': 'defer', 'guard_error_policy': 'raise', 'strict_targets': True, 'spawn_blocking_timeout': '<missing>'}"
+ },
+ "[def]B10/build": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]B10/policy": {
+  "pass": true,
+  "note": "{\"got\": {\"action_error_policy\": \"rollback\", \"on_unhandled\": \"defer\", \"guard_error_policy\": \"raise\"}, \"exp\": {\"action_error_policy\": \"rollback\", \"on_unhandled\": \"defer\", \"guard_error_policy\": \"raise\"}}"
+ },
+ "[def]B10/strictTargets": {
+  "pass": true,
+  "note": "{'action_error_policy': 'rollback', 'on_unhandled': 'defer', 'guard_error_policy': 'raise', 'strict_targets': True, 'spawn_blocking_timeout': '<missing>'}"
+ },
+ "[def]B6/start-parity(def vs async svc)": {
+  "pass": true,
+  "note": "{\"async\": {\"states\": [\"twap.armed\"], \"svc_calls\": [], \"status\": \"running\"}, \"def\": {\"states\": [\"twap.armed\"], \"svc_calls\": [], \"status\": \"running\"}}"
+ },
+ "[def]B7/start-parity(def vs async svc)": {
+  "pass": true,
+  "note": "{\"async\": {\"states\": [\"chase.working\"], \"svc_calls\": [\"submit_initial_limit\"], \"status\": \"running\"}, \"def\": {\"states\": [\"chase.working\"], \"svc_calls\": [\"submit_initial_limit\"], \"status\": \"running\"}}"
+ },
+ "[def]B8/start-parity(def vs async svc)": {
+  "pass": true,
+  "note": "{\"async\": {\"states\": [\"position_protection.sl.flat\", \"position_protection.watchdog.idle\"], \"svc_calls\": [], \"status\": \"running\"}, \"def\": {\"states\": [\"position_protection.sl.flat\", \"position_protection.watchdog.idle\"], \"svc_calls\": [], \"status\": \"running\"}}"
+ },
+ "[def]B9/start-parity(def vs async svc)": {
+  "pass": true,
+  "note": "{\"async\": {\"states\": [\"rule_instance.draft\"], \"svc_calls\": [], \"status\": \"running\"}, \"def\": {\"states\": [\"rule_instance.draft\"], \"svc_calls\": [], \"status\": \"running\"}}"
+ },
+ "[def]B10/start-parity(def vs async svc)": {
+  "pass": true,
+  "note": "{\"async\": {\"states\": [\"alert.armed\"], \"svc_calls\": [], \"status\": \"running\"}, \"def\": {\"states\": [\"alert.armed\"], \"svc_calls\": [], \"status\": \"running\"}}"
+ }
+}

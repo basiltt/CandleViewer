@@ -1,0 +1,16 @@
+{
+ "plain": {
+  "last_error": "UnknownEventError",
+  "event_dropped": true,
+  "on_invalid_event_calls": 0,
+  "from_snapshot_has_plugins_kwarg": true
+ },
+ "async": {
+  "last_error": "UnknownEventError",
+  "event_dropped": true,
+  "on_invalid_event_calls": 0,
+  "from_snapshot_has_plugins_kwarg": true
+ },
+ "REPRODUCED": true,
+ "note": "last_error is set and the event is dropped, but the on_invalid_event half of #214's promise fires 0 times"
+}

@@ -1,0 +1,82 @@
+{
+ "[def]B6/parity: configuration": {
+  "pass": true,
+  "note": "{\"async\": [\"twap.completed\"], \"sync\": [\"twap.completed\"]}"
+ },
+ "[def]B6/parity: ACTION trace": {
+  "pass": true,
+  "note": "{\"async\": [\"precompute_all_slice_deadlines\", \"register_deadlines_with_scheduler\", \"compute_slice_qty_with_participation_cap\", \"apply_catch_up\", \"bump_slices_done\", \"record_child\", \"compute_slice_qty_with_participation_cap\", \"apply_catch_up\", \"bump_slices_done\", \"record_child\"], \"sync\": [\"precompute_all_slice_deadlines\", \"register_deadlines_with_scheduler\", \"compute_slice_qty_with_participation_cap\", \"apply_catch_up\", \"bump_slices_done\", \"record_child\", \"compute_slice_qty_with_participation_cap\", \"apply_catch_up\", \"bump_slices_done\", \"record_child\"]}"
+ },
+ "[def]B6/parity: SERVICE-CALL trace": {
+  "pass": true,
+  "note": "{\"async\": [\"submit_child\", \"submit_child\"], \"sync\": [\"submit_child\", \"submit_child\"]}"
+ },
+ "[def]B6/snapshot v3 round-trip clean at every quiescence": {
+  "pass": true,
+  "note": "[\"t0:v=3:sched=0\", \"t0:snap_chain_trips=0\", \"t0:restore_plugin_started=1 invalid=0\", \"t1:v=3:sched=0\", \"t1:snap_chain_trips=0\", \"t1:restore_plugin_started=1 invalid=0\", \"t2:v=3:sched=0\", \"t2:snap_chain_trips=0\", \"t2:restore_plugin_started=1 invalid=0\", \"t3:v=3:sched=0\", \"t3:snap_chain_trips=0\", \"t3:"
+ },
+ "[def]B7/parity: configuration": {
+  "pass": true,
+  "note": "{\"async\": [\"chase.working\"], \"sync\": [\"chase.working\"]}"
+ },
+ "[def]B7/parity: ACTION trace": {
+  "pass": true,
+  "note": "{\"async\": [\"record_child\", \"stamp_arm_price\", \"drain_deferred\"], \"sync\": [\"record_child\", \"stamp_arm_price\", \"drain_deferred\"]}"
+ },
+ "[def]B7/parity: SERVICE-CALL trace": {
+  "pass": true,
+  "note": "{\"async\": [\"submit_initial_limit\"], \"sync\": [\"submit_initial_limit\"]}"
+ },
+ "[def]B7/snapshot v3 round-trip clean at every quiescence": {
+  "pass": true,
+  "note": "[\"t0:v=3:sched=0\", \"t0:snap_chain_trips=0\", \"t0:restore_plugin_started=1 invalid=0\", \"t1:v=3:sched=0\", \"t1:snap_chain_trips=0\", \"t1:restore_plugin_started=1 invalid=0\", \"t2:v=3:sched=0\", \"t2:snap_chain_trips=0\", \"t2:restore_plugin_started=1 invalid=0\"]"
+ },
+ "[def]B8/parity: configuration": {
+  "pass": true,
+  "note": "{\"async\": [\"position_protection.sl.protected\", \"position_protection.watchdog.scanning\"], \"sync\": [\"position_protection.sl.protected\", \"position_protection.watchdog.scanning\"]}"
+ },
+ "[def]B8/parity: ACTION trace": {
+  "pass": true,
+  "note": "{\"async\": [\"arm_sl_deadline\", \"bump_attach_attempts\"], \"sync\": [\"arm_sl_deadline\", \"bump_attach_attempts\"]}"
+ },
+ "[def]B8/parity: SERVICE-CALL trace": {
+  "pass": true,
+  "note": "{\"async\": [\"attach_native_sl\", \"read_position_sl\"], \"sync\": [\"attach_native_sl\", \"read_position_sl\"]}"
+ },
+ "[def]B8/snapshot v3 round-trip clean at every quiescence": {
+  "pass": true,
+  "note": "[\"t0:v=3:sched=0\", \"t0:snap_chain_trips=0\", \"t0:restore_plugin_started=1 invalid=0\", \"t1:v=3:sched=0\", \"t1:snap_chain_trips=0\", \"t1:restore_plugin_started=1 invalid=0\"]"
+ },
+ "[def]B9/parity: configuration": {
+  "pass": true,
+  "note": "{\"async\": [\"rule_instance.cooling_down\"], \"sync\": [\"rule_instance.cooling_down\"]}"
+ },
+ "[def]B9/parity: ACTION trace": {
+  "pass": true,
+  "note": "{\"async\": [\"stamp_simulation_start\", \"subscribe_triggers\", \"emit_armed_audit\", \"unsubscribe_triggers\", \"assert_safety_limits\", \"record_fire\", \"reset_consecutive_errors\", \"stamp_cooldown_deadline\"], \"sync\": [\"stamp_simulation_start\", \"subscribe_triggers\", \"emit_armed_audit\", \"unsubscribe_triggers\", \"assert_safety_limits\", \"record_fire\", \"reset_consecutive_errors\", \"stamp_cooldown_deadline\"]}"
+ },
+ "[def]B9/parity: SERVICE-CALL trace": {
+  "pass": true,
+  "note": "{\"async\": [\"evaluate_condition_dag\", \"dispatch_actions_in_order\"], \"sync\": [\"evaluate_condition_dag\", \"dispatch_actions_in_order\"]}"
+ },
+ "[def]B9/snapshot v3 round-trip clean at every quiescence": {
+  "pass": true,
+  "note": "[\"t0:v=3:sched=0\", \"t0:snap_chain_trips=0\", \"t0:restore_plugin_started=1 invalid=0\", \"t1:v=3:sched=0\", \"t1:snap_chain_trips=0\", \"t1:restore_plugin_started=1 invalid=0\", \"t2:v=3:sched=0\", \"t2:snap_chain_trips=0\", \"t2:restore_plugin_started=1 invalid=0\", \"t3:v=3:sched=0\", \"t3:snap_chain_trips=0\", \"t3:"
+ },
+ "[def]B10/parity: configuration": {
+  "pass": true,
+  "note": "{\"async\": [\"alert.resolved\"], \"sync\": [\"alert.resolved\"]}"
+ },
+ "[def]B10/parity: ACTION trace": {
+  "pass": true,
+  "note": "{\"async\": [\"persist_fired_row\", \"stamp_storm_window\"], \"sync\": [\"persist_fired_row\", \"stamp_storm_window\"]}"
+ },
+ "[def]B10/parity: SERVICE-CALL trace": {
+  "pass": true,
+  "note": "{\"async\": [\"dispatch_to_channels\"], \"sync\": [\"dispatch_to_channels\"]}"
+ },
+ "[def]B10/snapshot v3 round-trip clean at every quiescence": {
+  "pass": true,
+  "note": "[\"t0:v=3:sched=0\", \"t0:snap_chain_trips=0\", \"t0:restore_plugin_started=1 invalid=0\", \"t1:v=3:sched=0\", \"t1:snap_chain_trips=0\", \"t1:restore_plugin_started=1 invalid=0\", \"t2:v=3:sched=0\", \"t2:snap_chain_trips=0\", \"t2:restore_plugin_started=1 invalid=0\"]"
+ }
+}

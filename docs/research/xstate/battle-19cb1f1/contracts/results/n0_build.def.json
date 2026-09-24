@@ -1,0 +1,22 @@
+{
+ "[def]build/B16": {
+  "pass": true,
+  "note": "acts=18 guards=1 svcs=0 delays=[]"
+ },
+ "[def]build/B17": {
+  "pass": true,
+  "note": "acts=10 guards=3 svcs=0 delays=[]"
+ },
+ "[def]build/B18": {
+  "pass": true,
+  "note": "acts=9 guards=5 svcs=2 delays=[]"
+ },
+ "[def]build/B19": {
+  "pass": true,
+  "note": "acts=20 guards=3 svcs=3 delays=[]"
+ },
+ "[def]build/B20": {
+  "pass": true,
+  "note": "acts=16 guards=5 svcs=0 delays=[]"
+ }
+}

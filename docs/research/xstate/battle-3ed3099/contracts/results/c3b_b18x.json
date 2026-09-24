@@ -1,0 +1,61 @@
+{
+  "busy_priority": {
+    "busy_ids": [
+      "kill_switch.cancelling"
+    ],
+    "queue_depth": 20,
+    "marks_at_flood": [
+      "cx_start"
+    ],
+    "priority_latency_s": 0.0007,
+    "changed": false,
+    "error": null,
+    "ids_after": [
+      "kill_switch.cancelling"
+    ],
+    "status": "error",
+    "final_ids": [
+      "kill_switch.cancelling"
+    ],
+    "marks": [
+      "cx_start"
+    ],
+    "unhandled": [
+      [
+        "RELEASE",
+        "errored"
+      ]
+    ],
+    "status_end": "error"
+  },
+  "denied_release": {
+    "before": {
+      "ids": [
+        "kill_switch.engaged"
+      ],
+      "status": "running"
+    },
+    "after": {
+      "ids": [
+        "kill_switch.engaged"
+      ],
+      "status": "error",
+      "receipt_changed": false,
+      "receipt_error": null,
+      "receipt_deferred": false,
+      "last_error": "NoneType",
+      "last_error_str": "None",
+      "unhandled": [
+        [
+          "RELEASE",
+          "errored"
+        ]
+      ],
+      "subsequent_send": {
+        "changed": false,
+        "status": "error"
+      },
+      "snapshot_ok": true
+    }
+  }
+}

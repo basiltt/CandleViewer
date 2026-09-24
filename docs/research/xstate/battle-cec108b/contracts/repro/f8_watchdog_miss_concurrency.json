@@ -1,0 +1,38 @@
+[
+ {
+  "heal_guard_exchange_reports_sl": true,
+  "misses_sent": 8,
+  "naked_entries": 8,
+  "critical_alerts": 8,
+  "final": [
+   "position_protection.sl.protected",
+   "position_protection.watchdog.scanning"
+  ],
+  "deferred": 0,
+  "status": "running"
+ },
+ {
+  "heal_guard_exchange_reports_sl": false,
+  "misses_sent": 8,
+  "naked_entries": 499,
+  "critical_alerts": 499,
+  "final": [
+   "position_protection.sl.naked",
+   "position_protection.watchdog.scanning"
+  ],
+  "deferred": 8,
+  "status": "running"
+ },
+ {
+  "heal_guard_exchange_reports_sl": true,
+  "misses_sent": 1,
+  "naked_entries": 1,
+  "critical_alerts": 1,
+  "final": [
+   "position_protection.sl.protected",
+   "position_protection.watchdog.scanning"
+  ],
+  "deferred": 0,
+  "status": "running"
+ }
+]

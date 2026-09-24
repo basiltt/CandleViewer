@@ -1,0 +1,18 @@
+{
+ "svc_after_GO": 2,
+ "svc_after_each_NUDGE": [
+  2,
+  2,
+  2,
+  2,
+  2,
+  2,
+  2
+ ],
+ "total_svc_calls": 2,
+ "states": [
+  "m.arm"
+ ],
+ "status": "running",
+ "last_error": "None"
+}

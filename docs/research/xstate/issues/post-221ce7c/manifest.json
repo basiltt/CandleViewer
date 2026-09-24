@@ -1,0 +1,249 @@
+{
+ "round": 7,
+ "commit": "221ce7c",
+ "version_reported": "0.8.0",
+ "date": "2026-09-20",
+ "posted": true,
+ "note": "POSTED 2026-09-20 to basiltt/xstate-statemachine. New issues #179-#190; comments on #122,#157,#166-#175; reopened #167,#168,#174,#175; meta #26 updated.",
+ "decision": "DEFER (order path) / GO (non-order paths under constraints)",
+ "verdict_doc": "docs/research/xstate/44-r7-final-readiness-verdict.md",
+ "register": "docs/research/xstate/43-r7-findings-register.md",
+ "counts": {
+  "issues_verified": 12,
+  "fixed": 7,
+  "partial": 2,
+  "documented_only": 2,
+  "not_fixed": 1,
+  "regressions_in_gate": 0,
+  "regressions_introduced_by_this_rounds_fixes": 3,
+  "new_defects": {
+   "Blocker": 2,
+   "High": 4,
+   "Medium": 6,
+   "Low": 8,
+   "total": 20
+  },
+  "refutation_moves": {
+   "down": 3,
+   "up": 0,
+   "refuted_outright": 1
+  },
+  "new_issue_drafts": 12,
+  "comment_drafts": 12
+ },
+ "meta": {
+  "issue": 26,
+  "file": "meta-26.md"
+ },
+ "comments": [
+  {
+   "issue": 157,
+   "file": "comments/157.md",
+   "action": "comment",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 166,
+   "file": "comments/166.md",
+   "action": "comment",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 169,
+   "file": "comments/169.md",
+   "action": "comment",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 170,
+   "file": "comments/170.md",
+   "action": "comment",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 171,
+   "file": "comments/171.md",
+   "action": "comment",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 172,
+   "file": "comments/172.md",
+   "action": "comment",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 173,
+   "file": "comments/173.md",
+   "action": "comment",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 167,
+   "file": "comments/167.md",
+   "action": "comment+reopen",
+   "disposition": "PARTIAL"
+  },
+  {
+   "issue": 168,
+   "file": "comments/168.md",
+   "action": "comment+reopen",
+   "disposition": "PARTIAL"
+  },
+  {
+   "issue": 122,
+   "file": "comments/122.md",
+   "action": "comment",
+   "disposition": "CORRECT-AS-DESIGNED (our reopen withdrawn)"
+  },
+  {
+   "issue": 174,
+   "file": "comments/174.md",
+   "action": "comment",
+   "disposition": "DOCUMENTED-ONLY, leave open"
+  },
+  {
+   "issue": 175,
+   "file": "comments/175.md",
+   "action": "comment+reopen",
+   "disposition": "NOT-FIXED (Case D)"
+  }
+ ],
+ "new_issues": [
+  {
+   "id": "R7-01",
+   "r7": "R7-01",
+   "severity": "Blocker",
+   "file": "new/R7-01-async-service-completion-uncharged-lane.md",
+   "title": "Bug: an `async def` invoked service's completion is published on the public inbox lane, so every self-generated invoke cycle is unbounded",
+   "labels": ["bug", "severity/blocker", "area/interpreter"],
+   "repro": "new/repro/R7-01_async_service_lane_uncharged.py"
+  },
+  {
+   "id": "R7-02",
+   "r7": "R7-02",
+   "severity": "Blocker",
+   "file": "new/R7-02-external-priority-send-charged-to-chain-budget.md",
+   "title": "Bug: an EXTERNAL `send(..., priority=True)` is charged to the chain budget",
+   "labels": ["bug", "severity/blocker", "area/interpreter"],
+   "repro": "new/repro/R7-02_external_priority_charged_to_chain_budget.py"
+  },
+  {
+   "id": "R7-03",
+   "r7": "R7-03",
+   "severity": "High",
+   "file": "new/R7-03-start-hangs-on-slow-invoked-child.md",
+   "title": "Bug: `await start()` hangs unboundedly on a slow invoked child",
+   "labels": ["bug", "severity/high", "area/interpreter", "actors"],
+   "repro": null
+  },
+  {
+   "id": "R7-05",
+   "r7": "R7-05",
+   "severity": "High",
+   "file": "new/R7-05-async-start-never-sets-in-flight-flag.md",
+   "title": "Bug: async `start()` never sets the in-flight flag",
+   "labels": ["bug", "severity/high", "area/interpreter", "persistence"],
+   "repro": null
+  },
+  {
+   "id": "R7-07",
+   "r7": "R7-07",
+   "severity": "High",
+   "file": "new/R7-07-root-snapshot-harvests-child-half-applied-context.md",
+   "title": "Bug: a root `get_persisted_snapshot()` harvests a child actor's half-applied context",
+   "labels": ["bug", "severity/high", "persistence", "actors"],
+   "repro": null
+  },
+  {
+   "id": "R7-08",
+   "r7": "R7-08",
+   "severity": "High",
+   "file": "new/R7-08-await-settled-for-snapshot-blocks-event-loop.md",
+   "title": "Bug: `_await_settled_for_snapshot` spins `time.sleep` on the event-loop thread",
+   "labels": ["bug", "severity/high", "persistence", "area/interpreter"],
+   "repro": null
+  },
+  {
+   "id": "R7-06",
+   "r7": "R7-06",
+   "severity": "Medium",
+   "file": "new/R7-06-null-or-absent-machine-hash-disables-drift-check.md",
+   "title": "Bug: `machine_hash` set to `None` or removed silently disables `from_snapshot()` drift verification",
+   "labels": ["bug", "severity/medium", "persistence"],
+   "repro": null
+  },
+  {
+   "id": "R7-09",
+   "r7": "R7-09",
+   "severity": "Medium",
+   "file": "new/R7-09-configuration-key-outranks-state-ids.md",
+   "title": "Bug: a contradictory `configuration` key outranks `state_ids` on restore",
+   "labels": ["bug", "severity/medium", "persistence"],
+   "repro": null
+  },
+  {
+   "id": "R7-10",
+   "r7": "R7-10",
+   "severity": "Medium",
+   "file": "new/R7-10-snapshot-from-on-action-execute-torn-on-async.md",
+   "title": "Bug: `get_persisted_snapshot()` from `on_action_execute` returns a torn blob on async",
+   "labels": ["bug", "severity/medium", "persistence", "plugins"],
+   "repro": null
+  },
+  {
+   "id": "R7-11",
+   "r7": "R7-11",
+   "severity": "Medium",
+   "file": "new/R7-11-sync-deferred-this-step-never-cleared.md",
+   "title": "Bug: `SyncInterpreter._deferred_this_step` is never cleared on the `wait=False` path",
+   "labels": ["bug", "severity/medium", "sync-interpreter"],
+   "repro": null
+  },
+  {
+   "id": "R7-12",
+   "r7": "R7-12",
+   "severity": "Medium",
+   "file": "new/R7-12-onunhandled-error-kill-invisible-to-sender.md",
+   "title": "Bug: the `onUnhandled: \"error\"` fatal kill is invisible to the sender",
+   "labels": ["bug", "severity/medium", "area/interpreter"],
+   "repro": null
+  },
+  {
+   "id": "R7-13",
+   "r7": "R7-13",
+   "severity": "Medium",
+   "file": "new/R7-13-config-strict-does-not-gate-event-names.md",
+   "title": "Bug: config-level `strict: true` does not gate event names",
+   "labels": ["bug", "severity/medium", "area/interpreter"],
+   "repro": null
+  }
+ ],
+ "not_filed_separately": {
+  "lows": [
+   "R7-04 residual",
+   "R7-14",
+   "R7-15",
+   "R7-16",
+   "R7-17",
+   "R7-18",
+   "R7-19",
+   "R7-20"
+  ],
+  "rationale": "Eight Low items ride along in meta-26.md rather than becoming eight issues; several are documentation or export fixes, and the R7-04 entry is a correction to a finding WE got wrong (the budget-renewal causal claim was refuted by our own follow-up evidence; only a narrower, already-documented residual survives).",
+  "design_constraints": [
+   "DC-1 SyncInterpreter takes neither max_queue_size nor overflow_policy",
+   "DC-2 service_executor/service_pool_size do not remove the need for async def services",
+   "DC-3 onUnhandled:defer outranks the guard_denied disposition",
+   "DC-4 R7-01 has no configuration that also satisfies #174",
+   "DC-5 send_threadsafe(internal=True) is an honesty-based trust boundary"
+  ],
+  "our_own_defects": "C-04, C-07b (both Blockers on any runtime), CD-03, C-06, C-07, CV-B4-01, OUR-B11-01, OUR-B14-01/02, OUR-B15-01 are OUR catalogue JSON, not the library's, and are not filed upstream."
+ },
+ "house_rules_observed": [
+  "Build identified by commit (221ce7c), never by __version__ (still 0.8.0).",
+  "Every claim reproduced in a fresh process against a clean venv before it was written.",
+  "No adopting-project name appears in any postable text.",
+  "Both Blocker repros are standalone, library-only, and exit 1 on the defect."
+ ]
+}

@@ -1,0 +1,58 @@
+{
+ "[async]#207/B7 (native shape): chain cut is observable (stranded hook + dormant)": {
+  "pass": true,
+  "note": "{\"plateau\": 10, \"limit\": 7, \"state\": [\"chase.arming\"], \"stranded\": [[\"chase.arming\", \"arm\", \"RunawayChainError(\\\"Machine 'chase' exceeded 7 chained self-generated events in o\"]], \"dormant\": true, \"last_error\": \"RunawayChainError(\\\"Machine 'chase' exceeded 7 chained self-generated events in one macrostep and discarded 1 of them. An action ra\", \"laps\": [10, 10]}"
+ },
+ "[async]#207/B7 (native shape): plateau is maxIterations+2/+3 (deterministic)": {
+  "pass": true,
+  "note": "{\"plateau\": 10, \"limit\": 7, \"over\": 3, \"state\": [\"chase.arming\"], \"tripped\": true}"
+ },
+ "[async]#207/B6 (overlay): chain cut is observable (stranded hook + dormant)": {
+  "pass": true,
+  "note": "{\"plateau\": 7, \"limit\": 5, \"state\": [\"twap.submitting_slice\"], \"stranded\": [[\"twap.submitting_slice\", \"slice\", \"RunawayChainError(\\\"Machine 'twap' exceeded 5 chained self-generated events in on\"]], \"dormant\": true, \"last_error\": \"RunawayChainError(\\\"Machine 'twap' exceeded 5 chained self-generated events in one macrostep and discarded 1 of them. An action rai\", \"laps\": [7, 7]}"
+ },
+ "[async]#207/B6 (overlay): plateau is maxIterations+2/+3 (deterministic)": {
+  "pass": true,
+  "note": "{\"plateau\": 7, \"limit\": 5, \"over\": 2, \"state\": [\"twap.submitting_slice\"], \"tripped\": true}"
+ },
+ "[async]#207/B9 (overlay): chain cut is observable (stranded hook + dormant)": {
+  "pass": true,
+  "note": "{\"plateau\": 8, \"limit\": 6, \"state\": [\"rule_instance.acting\"], \"stranded\": [[\"rule_instance.acting\", \"act\", \"RunawayChainError(\\\"Machine 'rule_instance' exceeded 6 chained self-generated eve\"]], \"dormant\": true, \"last_error\": \"RunawayChainError(\\\"Machine 'rule_instance' exceeded 6 chained self-generated events in one macrostep and discarded 1 of them. An a\", \"laps\": [8, 8]}"
+ },
+ "[async]#207/B9 (overlay): plateau is maxIterations+2/+3 (deterministic)": {
+  "pass": true,
+  "note": "{\"plateau\": 8, \"limit\": 6, \"over\": 2, \"state\": [\"rule_instance.acting\"], \"tripped\": true}"
+ },
+ "[async]#207/B10 (overlay): chain cut is observable (stranded hook + dormant)": {
+  "pass": true,
+  "note": "{\"plateau\": 6, \"limit\": 4, \"state\": [\"alert.firing\"], \"stranded\": [[\"alert.firing\", \"deliver\", \"RunawayChainError(\\\"Machine 'alert' exceeded 4 chained self-generated events in o\"]], \"dormant\": true, \"last_error\": \"RunawayChainError(\\\"Machine 'alert' exceeded 4 chained self-generated events in one macrostep and discarded 1 of them. An action ra\", \"laps\": [6, 6]}"
+ },
+ "[async]#207/B10 (overlay): plateau is maxIterations+2/+3 (deterministic)": {
+  "pass": true,
+  "note": "{\"plateau\": 6, \"limit\": 4, \"over\": 2, \"state\": [\"alert.firing\"], \"tripped\": true}"
+ },
+ "[async]#204/B6.submitting_slice: invoke never arms on same-macrostep exit": {
+  "pass": true,
+  "note": "{\"st\": [\"twap.armed\"], \"svc\": []}"
+ },
+ "[async]#204/B6.submitting_slice [SYNC] same": {
+  "pass": true,
+  "note": "{\"st\": [\"twap.armed\"], \"svc\": []}"
+ },
+ "[async]#204/B9.evaluating: invoke never arms on same-macrostep exit": {
+  "pass": true,
+  "note": "{\"st\": [\"rule_instance.armed\"], \"svc\": []}"
+ },
+ "[async]#204/B9.evaluating [SYNC] same": {
+  "pass": true,
+  "note": "{\"st\": [\"rule_instance.armed\"], \"svc\": []}"
+ },
+ "[async]#204/B10.firing: invoke never arms on same-macrostep exit": {
+  "pass": true,
+  "note": "{\"st\": [\"alert.armed\"], \"svc\": []}"
+ },
+ "[async]#204/B10.firing [SYNC] same": {
+  "pass": true,
+  "note": "{\"st\": [\"alert.armed\"], \"svc\": []}"
+ }
+}

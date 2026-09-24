@@ -1,0 +1,45 @@
+{
+  "probe": "u5_concurrency_load",
+  "py": "3.13.7",
+  "L1_pingpong_200x10s": {
+    "machines": 200,
+    "period_ms": 1,
+    "run_s": 10.0,
+    "wall_s": 10.09,
+    "cpu_s": 9.94,
+    "cpu_over_wall": 0.98,
+    "cores": 8,
+    "chain_trips": 0,
+    "beats_min": 172,
+    "beats_max": 173,
+    "beats_mean": 172.0,
+    "clock_ideal_beats": 10000.0,
+    "last_errors": [],
+    "n_last_errors": 0
+  },
+  "L2_descent_100_starts": {
+    "starts": 100,
+    "wall_s": 0.04,
+    "watchdog_s": 25.0,
+    "timed_out": false,
+    "distinct_configurations": [
+      [
+        "u5d.s2"
+      ]
+    ],
+    "distinct_n": [
+      2
+    ]
+  },
+  "L3_restore_200_v3": {
+    "restores": 200,
+    "blobs_with_armed_record": 200,
+    "fired": 200,
+    "wall_s": 0.64,
+    "n_values": [
+      1
+    ]
+  },
+  "failing_cells": [],
+  "verdict": "CLEAN"
+}

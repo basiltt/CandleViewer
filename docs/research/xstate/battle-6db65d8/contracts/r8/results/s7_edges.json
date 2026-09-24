@@ -1,0 +1,88 @@
+{
+  "state_ids_async": {
+    "kind": "async",
+    "snapshot_taken_at": [
+      "kill_switch.engaged_incomplete"
+    ],
+    "blob_configuration": [
+      "kill_switch",
+      "kill_switch.engaged_incomplete"
+    ],
+    "blob_state_ids": [
+      "kill_switch.engaged_incomplete"
+    ],
+    "baseline": {
+      "accepted": true,
+      "restored_ids": [
+        "kill_switch.engaged_incomplete"
+      ],
+      "matches_original": true,
+      "status": "running"
+    },
+    "state_ids_emptied": {
+      "accepted": true,
+      "restored_ids": [
+        "kill_switch.engaged_incomplete"
+      ],
+      "matches_original": true,
+      "status": "running"
+    },
+    "state_ids_absent": {
+      "accepted": false,
+      "error": "SnapshotCorruptError: Snapshot is malformed: missing required key 'state_ids'."
+    },
+    "state_ids_rewritten": {
+      "accepted": false,
+      "error": "SnapshotCorruptError: Snapshot is malformed: 'state_ids' names ['kill_switch.clear'] which 'configuration' does not contain -- the two fields "
+    }
+  },
+  "initial_descent_async": {
+    "result": "SnapshotMidStepError",
+    "child": false,
+    "fired": true,
+    "kind": "async"
+  },
+  "state_ids_sync": {
+    "kind": "sync",
+    "snapshot_taken_at": [
+      "kill_switch.engaged_incomplete"
+    ],
+    "blob_configuration": [
+      "kill_switch",
+      "kill_switch.engaged_incomplete"
+    ],
+    "blob_state_ids": [
+      "kill_switch.engaged_incomplete"
+    ],
+    "baseline": {
+      "accepted": true,
+      "restored_ids": [
+        "kill_switch.engaged_incomplete"
+      ],
+      "matches_original": true,
+      "status": "running"
+    },
+    "state_ids_emptied": {
+      "accepted": true,
+      "restored_ids": [
+        "kill_switch.engaged_incomplete"
+      ],
+      "matches_original": true,
+      "status": "running"
+    },
+    "state_ids_absent": {
+      "accepted": false,
+      "error": "SnapshotCorruptError: Snapshot is malformed: missing required key 'state_ids'."
+    },
+    "state_ids_rewritten": {
+      "accepted": false,
+      "error": "SnapshotCorruptError: Snapshot is malformed: 'state_ids' names ['kill_switch.clear'] which 'configuration' does not contain -- the two fields "
+    }
+  },
+  "initial_descent_sync": {
+    "result": "SnapshotMidStepError",
+    "child": false,
+    "fired": true,
+    "kind": "sync"
+  }
+}

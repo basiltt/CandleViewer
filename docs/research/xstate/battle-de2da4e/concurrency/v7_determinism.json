@@ -1,0 +1,28 @@
+{
+  "probe": "v7_determinism",
+  "py": "3.13.7",
+  "runs_per_cell": 50,
+  "cells": {
+    "async/def/restore=False": [
+      "34d5437bffa02ca8"
+    ],
+    "async/def/restore=True": [
+      "1ea49a447d27c38e"
+    ],
+    "async/async def/restore=False": [
+      "34d5437bffa02ca8"
+    ],
+    "async/async def/restore=True": [
+      "1ea49a447d27c38e"
+    ],
+    "sync/def/restore=False": [
+      "3607f450f071c566"
+    ],
+    "sync/def/restore=True": [
+      "f2c08c9641b977b3"
+    ]
+  },
+  "wall_s": 12.7,
+  "failures": [],
+  "verdict": "CLEAN"
+}

@@ -1,0 +1,235 @@
+[
+ {
+  "id": "T1",
+  "title": "Determinism: 50 identical runs x {sync, async} x {def, async def} -- trace, drops, chain_trips and latch identical",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "async/plain": {
+     "distinct": 1,
+     "runs": 50,
+     "chain_trips": 1,
+     "latch": "RunawayChainError",
+     "n_events": 10,
+     "sample": [
+      [
+       "T",
+       [
+        "d",
+        "d.a"
+       ]
+      ],
+      [
+       "T",
+       [
+        "d",
+        "d.b"
+       ]
+      ],
+      [
+       "T",
+       [
+        "d",
+        "d.a"
+       ]
+      ],
+      [
+       "T",
+       [
+        "d",
+        "d.b"
+       ]
+      ],
+      [
+       "T",
+       [
+        "d",
+        "d.a"
+       ]
+      ],
+      [
+       "T",
+       [
+        "d",
+        "d.b"
+       ]
+      ]
+     ]
+    },
+    "async/async": {
+     "distinct": 1,
+     "runs": 50,
+     "chain_trips": 1,
+     "latch": "RunawayChainError",
+     "n_events": 10,
+     "sample": [
+      [
+       "T",
+       [
+        "d",
+        "d.a"
+       ]
+      ],
+      [
+       "T",
+       [
+        "d",
+        "d.b"
+       ]
+      ],
+      [
+       "T",
+       [
+        "d",
+        "d.a"
+       ]
+      ],
+      [
+       "T",
+       [
+        "d",
+        "d.b"
+       ]
+      ],
+      [
+       "T",
+       [
+        "d",
+        "d.a"
+       ]
+      ],
+      [
+       "T",
+       [
+        "d",
+        "d.b"
+       ]
+      ]
+     ]
+    },
+    "sync/plain": {
+     "distinct": 1,
+     "runs": 50,
+     "chain_trips": 1,
+     "latch": "RunawayChainError",
+     "n_events": 10,
+     "sample": [
+      [
+       "T",
+       [
+        "d",
+        "d.b"
+       ]
+      ],
+      [
+       "T",
+       [
+        "d",
+        "d.a"
+       ]
+      ],
+      [
+       "T",
+       [
+        "d",
+        "d.b"
+       ]
+      ],
+      [
+       "T",
+       [
+        "d",
+        "d.a"
+       ]
+      ],
+      [
+       "T",
+       [
+        "d",
+        "d.b"
+       ]
+      ],
+      [
+       "T",
+       [
+        "d",
+        "d.a"
+       ]
+      ]
+     ]
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "T2",
+  "title": "on_event_dropped / on_chain_budget_exceeded ordering: stable over 50 runs, and the two hooks for ONE trip are adjacent (drop then report), on both engines",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "async/async": {
+     "distinct": 1,
+     "kinds": [
+      "T",
+      "T",
+      "T",
+      "T",
+      "T",
+      "T",
+      "T",
+      "D",
+      "C",
+      "T"
+     ],
+     "n_chain_hooks": 1,
+     "drop_precedes_each_trip": true,
+     "drop_reasons": [
+      "chain_budget"
+     ]
+    },
+    "async/plain": {
+     "distinct": 1,
+     "kinds": [
+      "T",
+      "T",
+      "T",
+      "T",
+      "T",
+      "T",
+      "T",
+      "D",
+      "C",
+      "T"
+     ],
+     "n_chain_hooks": 1,
+     "drop_precedes_each_trip": true,
+     "drop_reasons": [
+      "chain_budget"
+     ]
+    },
+    "sync/plain": {
+     "distinct": 1,
+     "kinds": [
+      "T",
+      "T",
+      "T",
+      "T",
+      "T",
+      "T",
+      "D",
+      "C",
+      "T",
+      "T"
+     ],
+     "n_chain_hooks": 1,
+     "drop_precedes_each_trip": true,
+     "drop_reasons": [
+      "chain_budget"
+     ]
+    }
+   }
+  },
+  "status": "PASS"
+ }
+]

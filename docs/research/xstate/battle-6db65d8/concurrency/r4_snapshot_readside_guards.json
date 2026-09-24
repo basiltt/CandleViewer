@@ -1,0 +1,828 @@
+{
+  "probe": "r4_snapshot_readside_guards",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "mutation": "config_emptied",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'configuration' is empty while 'state_ids' names ['r4.top.A.a1', 'r"
+    },
+    {
+      "mutation": "config_emptied",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'configuration' is empty while 'state_ids' names ['r4.top.A.a1', 'r"
+    },
+    {
+      "mutation": "config_dropped",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "config_dropped",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "config_rewritten_other_leaf",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'state_ids' names ['r4.top.A.a1'] which 'configuration' does not co"
+    },
+    {
+      "mutation": "config_rewritten_other_leaf",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'state_ids' names ['r4.top.A.a1'] which 'configuration' does not co"
+    },
+    {
+      "mutation": "config_superset",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "config_superset",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "config_subset_one_region",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'state_ids' names ['r4.top.A.a1', 'r4.top.B.b1'] which 'configurati"
+    },
+    {
+      "mutation": "config_subset_one_region",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'state_ids' names ['r4.top.A.a1', 'r4.top.B.b1'] which 'configurati"
+    },
+    {
+      "mutation": "state_ids_emptied",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "state_ids_emptied",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "state_ids_rewritten",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "state_ids_rewritten",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "both_emptied",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: status is 'running' but the configuration is empty."
+    },
+    {
+      "mutation": "both_emptied",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: status is 'running' but the configuration is empty."
+    },
+    {
+      "mutation": "config_bogus_id",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'state_ids' names ['r4.top.A.a1', 'r4.top.B.b1'] which 'configurati"
+    },
+    {
+      "mutation": "config_bogus_id",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'state_ids' names ['r4.top.A.a1', 'r4.top.B.b1'] which 'configurati"
+    },
+    {
+      "mutation": "v2_hash_null",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "snapshot declares version 2 but carries no 'machine_hash', so it cannot be checked against"
+    },
+    {
+      "mutation": "v2_hash_null",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "snapshot declares version 2 but carries no 'machine_hash', so it cannot be checked against"
+    },
+    {
+      "mutation": "v2_hash_absent",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "snapshot declares version 2 but carries no 'machine_hash', so it cannot be checked against"
+    },
+    {
+      "mutation": "v2_hash_absent",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "snapshot declares version 2 but carries no 'machine_hash', so it cannot be checked against"
+    },
+    {
+      "mutation": "v2_hash_empty_str",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "machine 'r4' structure changed since this snapshot was taken ( != 3fd935e174c66252). Migra"
+    },
+    {
+      "mutation": "v2_hash_empty_str",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "machine 'r4' structure changed since this snapshot was taken ( != 3fd935e174c66252). Migra"
+    },
+    {
+      "mutation": "v2_hash_wrong",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "machine 'r4' structure changed since this snapshot was taken (deaddeaddeaddead != 3fd935e1"
+    },
+    {
+      "mutation": "v2_hash_wrong",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "machine 'r4' structure changed since this snapshot was taken (deaddeaddeaddead != 3fd935e1"
+    },
+    {
+      "mutation": "v1_hash_null",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "snapshot declares version 1 but carries no 'machine_hash', so it cannot be checked against"
+    },
+    {
+      "mutation": "v1_hash_null",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "snapshot declares version 1 but carries no 'machine_hash', so it cannot be checked against"
+    },
+    {
+      "mutation": "v1_hash_absent",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "snapshot declares version 1 but carries no 'machine_hash', so it cannot be checked against"
+    },
+    {
+      "mutation": "v1_hash_absent",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "snapshot declares version 1 but carries no 'machine_hash', so it cannot be checked against"
+    },
+    {
+      "mutation": "v0_no_version_no_hash",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "v0_no_version_no_hash",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "version_null_hash_null",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'version' is NoneType, expected an integer."
+    },
+    {
+      "mutation": "version_null_hash_null",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'version' is NoneType, expected an integer."
+    },
+    {
+      "mutation": "config_emptied",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'configuration' is empty while 'state_ids' names ['r4.top.A.a1', 'r"
+    },
+    {
+      "mutation": "config_emptied",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'configuration' is empty while 'state_ids' names ['r4.top.A.a1', 'r"
+    },
+    {
+      "mutation": "config_dropped",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "config_dropped",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "config_rewritten_other_leaf",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'state_ids' names ['r4.top.A.a1'] which 'configuration' does not co"
+    },
+    {
+      "mutation": "config_rewritten_other_leaf",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'state_ids' names ['r4.top.A.a1'] which 'configuration' does not co"
+    },
+    {
+      "mutation": "config_superset",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "config_superset",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "config_subset_one_region",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'state_ids' names ['r4.top.A.a1', 'r4.top.B.b1'] which 'configurati"
+    },
+    {
+      "mutation": "config_subset_one_region",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'state_ids' names ['r4.top.A.a1', 'r4.top.B.b1'] which 'configurati"
+    },
+    {
+      "mutation": "state_ids_emptied",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "state_ids_emptied",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "state_ids_rewritten",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "state_ids_rewritten",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "both_emptied",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: status is 'running' but the configuration is empty."
+    },
+    {
+      "mutation": "both_emptied",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: status is 'running' but the configuration is empty."
+    },
+    {
+      "mutation": "config_bogus_id",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'state_ids' names ['r4.top.A.a1', 'r4.top.B.b1'] which 'configurati"
+    },
+    {
+      "mutation": "config_bogus_id",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'state_ids' names ['r4.top.A.a1', 'r4.top.B.b1'] which 'configurati"
+    },
+    {
+      "mutation": "v2_hash_null",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "snapshot declares version 2 but carries no 'machine_hash', so it cannot be checked against"
+    },
+    {
+      "mutation": "v2_hash_null",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "snapshot declares version 2 but carries no 'machine_hash', so it cannot be checked against"
+    },
+    {
+      "mutation": "v2_hash_absent",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "snapshot declares version 2 but carries no 'machine_hash', so it cannot be checked against"
+    },
+    {
+      "mutation": "v2_hash_absent",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "snapshot declares version 2 but carries no 'machine_hash', so it cannot be checked against"
+    },
+    {
+      "mutation": "v2_hash_empty_str",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "machine 'r4' structure changed since this snapshot was taken ( != 3fd935e174c66252). Migra"
+    },
+    {
+      "mutation": "v2_hash_empty_str",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "machine 'r4' structure changed since this snapshot was taken ( != 3fd935e174c66252). Migra"
+    },
+    {
+      "mutation": "v2_hash_wrong",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "machine 'r4' structure changed since this snapshot was taken (deaddeaddeaddead != 3fd935e1"
+    },
+    {
+      "mutation": "v2_hash_wrong",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "machine 'r4' structure changed since this snapshot was taken (deaddeaddeaddead != 3fd935e1"
+    },
+    {
+      "mutation": "v1_hash_null",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "snapshot declares version 1 but carries no 'machine_hash', so it cannot be checked against"
+    },
+    {
+      "mutation": "v1_hash_null",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "snapshot declares version 1 but carries no 'machine_hash', so it cannot be checked against"
+    },
+    {
+      "mutation": "v1_hash_absent",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "snapshot declares version 1 but carries no 'machine_hash', so it cannot be checked against"
+    },
+    {
+      "mutation": "v1_hash_absent",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "refused:SnapshotDriftError",
+      "msg": "snapshot declares version 1 but carries no 'machine_hash', so it cannot be checked against"
+    },
+    {
+      "mutation": "v0_no_version_no_hash",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "v0_no_version_no_hash",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "version_null_hash_null",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'version' is NoneType, expected an integer."
+    },
+    {
+      "mutation": "version_null_hash_null",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "refused:SnapshotCorruptError",
+      "msg": "Snapshot is malformed: 'version' is NoneType, expected an integer."
+    }
+  ],
+  "accepted_but_should_refuse": [
+    {
+      "mutation": "config_dropped",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "config_dropped",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "state_ids_emptied",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "state_ids_emptied",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "state_ids_rewritten",
+      "engine": "async",
+      "kind": "def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "state_ids_rewritten",
+      "engine": "sync",
+      "kind": "def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "config_dropped",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "config_dropped",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "state_ids_emptied",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "state_ids_emptied",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "state_ids_rewritten",
+      "engine": "async",
+      "kind": "async def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    },
+    {
+      "mutation": "state_ids_rewritten",
+      "engine": "sync",
+      "kind": "async def",
+      "disposition": "ACCEPTED",
+      "status": "running",
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ]
+    }
+  ],
+  "fuzz_trials": 400,
+  "fuzz_accepted_disagreements": [
+    {
+      "configuration": [
+        "r4.top.B.b1",
+        "r4.top.A.a1",
+        "r4.top"
+      ],
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ],
+      "disposition": "ACCEPTED",
+      "status": "running"
+    },
+    {
+      "configuration": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ],
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ],
+      "disposition": "ACCEPTED",
+      "status": "running"
+    },
+    {
+      "configuration": [
+        "r4.top",
+        "r4.top.B.b1",
+        "r4.top.A.a1"
+      ],
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ],
+      "disposition": "ACCEPTED",
+      "status": "running"
+    },
+    {
+      "configuration": [
+        "r4.top.B.b1",
+        "r4.top.A.a2"
+      ],
+      "state_ids": [
+        "r4.top.A.a2",
+        "r4.top.B.b1"
+      ],
+      "disposition": "ACCEPTED",
+      "status": "running"
+    },
+    {
+      "configuration": [
+        "r4.top.B.b1",
+        "r4.top.A.a1",
+        "r4.top"
+      ],
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ],
+      "disposition": "ACCEPTED",
+      "status": "running"
+    },
+    {
+      "configuration": [
+        "r4.top",
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ],
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ],
+      "disposition": "ACCEPTED",
+      "status": "running"
+    },
+    {
+      "configuration": [
+        "r4.top.A.a2",
+        "r4.top",
+        "r4.top.B.b2"
+      ],
+      "state_ids": [
+        "r4.top.A.a2",
+        "r4.top.B.b2"
+      ],
+      "disposition": "ACCEPTED",
+      "status": "running"
+    },
+    {
+      "configuration": [
+        "r4.top.B.b2",
+        "r4.top",
+        "r4.top.A.a1"
+      ],
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b2"
+      ],
+      "disposition": "ACCEPTED",
+      "status": "running"
+    },
+    {
+      "configuration": [
+        "r4.top.A.a1",
+        "r4.top.B.b1",
+        "r4.top"
+      ],
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b1"
+      ],
+      "disposition": "ACCEPTED",
+      "status": "running"
+    },
+    {
+      "configuration": [
+        "r4.top.A.a1",
+        "r4.top.B.b2"
+      ],
+      "state_ids": [
+        "r4.top.A.a1",
+        "r4.top.B.b2"
+      ],
+      "disposition": "ACCEPTED",
+      "status": "running"
+    }
+  ],
+  "fuzz_accepted_count": 17,
+  "result": "FAIL"
+}

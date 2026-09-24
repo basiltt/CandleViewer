@@ -1,0 +1,20 @@
+ERROR:xstate_statemachine.interpreter:🛑 Exceeded 15 chained self-raised events on 'm_inflight'. This means an action raises the event that triggers it. Breaking the chain; externally queued events are unaffected.
+=== I: queue_full loop-side refusal observability ===
+I queue_full loop-side: caller_side_raises=0 future_side_errors=638 on_event_dropped(queue_full) fired=638 total_refusals=638 elapsed=0.65s (exactly-once check: hook_count<=total_refusals? True)
+=== J: entry-window snapshot refusal (sync) ===
+J entry-window root refusal: snap_ok=None snap_err=SnapshotMidStepError("Interpreter 'm_entry_snap' is mid-macrostep: a transition's actions are still running and the configuration has no leaf. Snapshot it once the step settles (await send(..., wait=True), or from on_transition).")
+=== J': entry-window snapshot refusal (async) ===
+J' entry-window root refusal (async): snap_ok=None snap_err=SnapshotMidStepError("Interpreter 'm_entry_snap_a' is mid-macrostep: a transition's actions are still running and the configuration has no leaf. Snapshot it once the step settles (await send(..., wait=True), or from on_transition).")
+=== K: chain-budget observability (sync) ===
+K sync chain-budget: status=running last_error=RunawayChainError("Machine 'm_chain_sync' exceeded 25 chained self-generated events in one macrostep and discarded 0 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.") n=25
+=== K': chain-budget observability (async) ===
+K' async chain-budget: status=running last_error=RunawayChainError("Machine 'm_chain_async' exceeded 25 chained self-generated events in one macrostep and discarded 0 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.") n=25
+=== L: external senders vs chain budget (async) ===
+L external-senders-vs-chain-budget: status=running last_error=RunawayChainError("Machine 'm_ext_chain' exceeded 30 chained self-generated events in one macrostep and discarded 0 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.") n=8640 (expect: tripped RunawayChainError despite 16 concurrent external PING senders -- external sends must not reset the self-generated 'always' chain's budget)
+=== M: service_pool_size=1, 50 services, stop() mid-service ===
+M service_pool_size=1 stop-mid-service: status=stopped completed_before_stop=3/50 elapsed=0.09s last_error=None (no hang, no crash expected)
+=== N: start() ordering (#171) ===
+N start()-ordering: status_after_start=running children_attr_present=False cancel_receipt_changed=True final_state=['m_start_order.cancelled']
+=== O: done-callback in-flight balance (#172) ===
+O done-callback in-flight balance: status=running last_error=RunawayChainError("Machine 'm_inflight' exceeded 15 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.") n=16 in_flight_counter=0 (expect settles back to 0 and/or chain trips cleanly with no leaked accounting)
+DONE

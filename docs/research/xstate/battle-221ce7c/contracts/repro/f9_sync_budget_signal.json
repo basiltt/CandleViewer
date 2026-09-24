@@ -1,0 +1,31 @@
+{
+ "laps": 500,
+ "receipt": {
+  "changed": true,
+  "deferred": false,
+  "denied": false,
+  "error": "RunawayChainError",
+  "error_msg": "Machine 'position_protection' exceeded 1000 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the "
+ },
+ "status": "running",
+ "last_transition_ok": false,
+ "last_error": "RunawayChainError(\"Machine 'position_protection' exceeded 1000 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends",
+ "interp_error": "None",
+ "states": [
+  "position_protection.sl.verifying",
+  "position_protection.watchdog.scanning"
+ ],
+ "dropped": [
+  [
+   "done.invoke.ver",
+   "chain_budget"
+  ]
+ ],
+ "critical_alerts": 500,
+ "leaves_sl": 1,
+ "leaves_watchdog": 1,
+ "after_POSITION_FLAT": [
+  "position_protection.sl.verifying",
+  "position_protection.watchdog.idle"
+ ]
+}

@@ -1,0 +1,98 @@
+[
+ {
+  "id": "C1",
+  "title": "External priority producer >=10k/s during a self-generated chain: ZERO external shed, both service kinds",
+  "detail": {
+   "ok": true,
+   "runs": [
+    {
+     "kind": "plain",
+     "sent": 10000,
+     "actions_fired": 10000,
+     "rate_per_s": 17383,
+     "EXTERNAL_shed_as_chain_budget": 0,
+     "self_generated_shed_ok": 1,
+     "other_drops": []
+    },
+    {
+     "kind": "async",
+     "sent": 10000,
+     "actions_fired": 10000,
+     "rate_per_s": 10734,
+     "EXTERNAL_shed_as_chain_budget": 0,
+     "self_generated_shed_ok": 1,
+     "other_drops": []
+    }
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "C2",
+  "title": "An action-issued send(priority=True) is CHARGED and trips the chain budget (#192), both service kinds",
+  "detail": {
+   "ok": true,
+   "runs": {
+    "plain": {
+     "laps": 17,
+     "tripped": true,
+     "last_error": "RunawayChainError",
+     "bounded": true
+    },
+    "async": {
+     "laps": 17,
+     "tripped": true,
+     "last_error": "RunawayChainError",
+     "bounded": true
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "C3",
+  "title": "children_timeout with 50 def + 50 async children: bound is per child (not N*D) and a WARNING always fires on overrun",
+  "detail": {
+   "ok": true,
+   "plain_is_documented_nonpreemptible": true,
+   "runs": {
+    "plain": {
+     "children": 50,
+     "per_child_delay": 0.25,
+     "bound": 0.5,
+     "start_seconds": 12.531,
+     "aggregate_bound_would_be": 12.5,
+     "within_per_child_scale": false,
+     "status": "running",
+     "warnings": 1
+    },
+    "async": {
+     "children": 50,
+     "per_child_delay": 0.25,
+     "bound": 0.5,
+     "start_seconds": 0.26,
+     "aggregate_bound_would_be": 12.5,
+     "within_per_child_scale": true,
+     "status": "running",
+     "warnings": 0
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "C4",
+  "title": "200 concurrent def-service arm-then-rollback: the callable is never submitted (#193 handoff inside the engine task)",
+  "detail": {
+   "ok": true,
+   "interpreters": 200,
+   "service_callable_submitted": 0,
+   "distinct_states": [
+    [
+     "rb.idle"
+    ]
+   ]
+  },
+  "status": "PASS"
+ }
+]

@@ -1,0 +1,8 @@
+ERROR:xstate_statemachine.interpreter:💥 Service 'reconcile_children' (ID: 'rec') failed: svc-fail:reconcile_children
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2216, in _invoke_service_task
+    await produced if inspect.isawaitable(produced) else produced
+    ^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-cec108b\contracts\cvlib.py", line 160, in fn
+    raise RuntimeError("svc-fail:" + n)
+RuntimeError: svc-fail:reconcile_children

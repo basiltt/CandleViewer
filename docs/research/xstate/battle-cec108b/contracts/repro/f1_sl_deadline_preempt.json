@@ -1,0 +1,50 @@
+{
+ "gate_never_released": {
+  "mid": [
+   "p.attaching"
+  ],
+  "receipt": {
+   "changed": true,
+   "deferred": false,
+   "denied": false,
+   "error": null
+  },
+  "after_deadline": [
+   "p.naked"
+  ],
+  "final": [
+   "p.naked"
+  ],
+  "trace": [
+   "mark_attaching",
+   "svc:attach:start",
+   "mark_naked"
+  ],
+  "status": "running",
+  "deferred_count": 0
+ },
+ "gate_released_after": {
+  "mid": [
+   "p.attaching"
+  ],
+  "receipt": {
+   "changed": true,
+   "deferred": false,
+   "denied": false,
+   "error": null
+  },
+  "after_deadline": [
+   "p.naked"
+  ],
+  "final": [
+   "p.naked"
+  ],
+  "trace": [
+   "mark_attaching",
+   "svc:attach:start",
+   "mark_naked"
+  ],
+  "status": "running",
+  "deferred_count": 0
+ }
+}

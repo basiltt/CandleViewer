@@ -1,0 +1,342 @@
+{
+ "[async]version": {
+  "pass": true,
+  "note": "0.9.1"
+ },
+ "[async]B1.happy_reaches_end": {
+  "pass": true,
+  "note": "['order.lifecycle.filled', 'order.protection.sl_present']"
+ },
+ "[async]B1.happy_restore_every_step": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B1.happy_boot_start_hook_false": {
+  "pass": true,
+  "note": "[False]"
+ },
+ "[async]B1.happy_chain_trips_0": {
+  "pass": true,
+  "note": "0"
+ },
+ "[async]B1.happy_dropped_receipts_0": {
+  "pass": true,
+  "note": "(0, [])"
+ },
+ "[async]B1.happy_no_errors_stranded": {
+  "pass": true,
+  "note": "([], [])"
+ },
+ "[async]B1.drain_covers_both_lanes": {
+  "pass": true,
+  "note": "(['FIRST_FILL', 'SEND', 'VALIDATE'], ['FIRST_FILL', 'SEND', 'VALIDATE'])"
+ },
+ "[async]B1.drain_wait_true_receipt_fails_not_hangs": {
+  "pass": true,
+  "note": "InterpreterStoppedError('drained: removed by drain_pending()')"
+ },
+ "[async]B1.persist_after_drain_has_no_pending": {
+  "pass": true,
+  "note": "0"
+ },
+ "[async]B1.stop_did_not_process_drained": {
+  "pass": true,
+  "note": "(['order.lifecycle.validated', 'order.protection.not_required'], ['order.lifecycle.validated', 'order.protection.not_required'])"
+ },
+ "[async]B1.restore_start_hook_true": {
+  "pass": true,
+  "note": "[True]"
+ },
+ "[async]B1.replay_each_drained_once": {
+  "pass": true,
+  "note": "(['FIRST_FILL', 'SEND'], ['FIRST_FILL', 'done.invoke.attach_sl', 'SEND', 'done.invoke.place'])"
+ },
+ "[async]B1.replay_reaches_end": {
+  "pass": true,
+  "note": "['order.lifecycle.filled', 'order.protection.sl_present']"
+ },
+ "[async]B1.replay_chain_trips_0_dropped_0": {
+  "pass": true,
+  "note": "(0, 0, 0)"
+ },
+ "[async]B2.happy_reaches_end": {
+  "pass": true,
+  "note": "['trade_group.closed']"
+ },
+ "[async]B2.happy_restore_every_step": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B2.happy_boot_start_hook_false": {
+  "pass": true,
+  "note": "[False]"
+ },
+ "[async]B2.happy_chain_trips_0": {
+  "pass": true,
+  "note": "0"
+ },
+ "[async]B2.happy_dropped_receipts_0": {
+  "pass": true,
+  "note": "(0, [])"
+ },
+ "[async]B2.happy_no_errors_stranded": {
+  "pass": true,
+  "note": "([], [])"
+ },
+ "[async]B2.drain_covers_both_lanes": {
+  "pass": true,
+  "note": "(['CLOSE_GROUP', 'LEG_OPEN', 'CONFIRM'], ['CLOSE_GROUP', 'LEG_OPEN', 'CONFIRM'])"
+ },
+ "[async]B2.drain_wait_true_receipt_fails_not_hangs": {
+  "pass": true,
+  "note": "InterpreterStoppedError('drained: removed by drain_pending()')"
+ },
+ "[async]B2.persist_after_drain_has_no_pending": {
+  "pass": true,
+  "note": "0"
+ },
+ "[async]B2.stop_did_not_process_drained": {
+  "pass": true,
+  "note": "(['trade_group.submitting'], ['trade_group.submitting'])"
+ },
+ "[async]B2.restore_start_hook_true": {
+  "pass": true,
+  "note": "[True]"
+ },
+ "[async]B2.replay_each_drained_once": {
+  "pass": true,
+  "note": "(['CLOSE_GROUP', 'LEG_OPEN'], ['LEG_OPEN', 'EVALUATE', 'CLOSE_GROUP'])"
+ },
+ "[async]B2.replay_reaches_end": {
+  "pass": true,
+  "note": "['trade_group.closed']"
+ },
+ "[async]B2.replay_chain_trips_0_dropped_0": {
+  "pass": true,
+  "note": "(0, 0, 0)"
+ },
+ "[async]B3.happy_reaches_end": {
+  "pass": true,
+  "note": "['leg.closed']"
+ },
+ "[async]B3.happy_restore_every_step": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B3.happy_boot_start_hook_false": {
+  "pass": true,
+  "note": "[False]"
+ },
+ "[async]B3.happy_chain_trips_0": {
+  "pass": true,
+  "note": "0"
+ },
+ "[async]B3.happy_dropped_receipts_0": {
+  "pass": true,
+  "note": "(0, [])"
+ },
+ "[async]B3.happy_no_errors_stranded": {
+  "pass": true,
+  "note": "([], [])"
+ },
+ "[async]B3.drain_covers_both_lanes": {
+  "pass": true,
+  "note": "(['EXEC', 'EXEC', 'ORDER_OPEN'], ['EXEC', 'EXEC', 'ORDER_OPEN'])"
+ },
+ "[async]B3.drain_wait_true_receipt_fails_not_hangs": {
+  "pass": true,
+  "note": "InterpreterStoppedError('drained: removed by drain_pending()')"
+ },
+ "[async]B3.persist_after_drain_has_no_pending": {
+  "pass": true,
+  "note": "0"
+ },
+ "[async]B3.stop_did_not_process_drained": {
+  "pass": true,
+  "note": "(['leg.open'], ['leg.open'])"
+ },
+ "[async]B3.restore_start_hook_true": {
+  "pass": true,
+  "note": "[True]"
+ },
+ "[async]B3.replay_each_drained_once": {
+  "pass": true,
+  "note": "(['EXEC', 'EXEC'], ['EXEC', 'EXEC'])"
+ },
+ "[async]B3.replay_reaches_end": {
+  "pass": true,
+  "note": "['leg.closed']"
+ },
+ "[async]B3.replay_chain_trips_0_dropped_0": {
+  "pass": true,
+  "note": "(0, 0, 0)"
+ },
+ "[async]B4.happy_reaches_end": {
+  "pass": true,
+  "note": "['oco.completed']"
+ },
+ "[async]B4.happy_restore_every_step": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B4.happy_boot_start_hook_false": {
+  "pass": true,
+  "note": "[False]"
+ },
+ "[async]B4.happy_chain_trips_0": {
+  "pass": true,
+  "note": "0"
+ },
+ "[async]B4.happy_dropped_receipts_0": {
+  "pass": true,
+  "note": "(0, [])"
+ },
+ "[async]B4.happy_no_errors_stranded": {
+  "pass": true,
+  "note": "([], [])"
+ },
+ "[async]B4.drain_covers_both_lanes": {
+  "pass": true,
+  "note": "(['CHILDREN_TERMINAL', 'LEG_A_FILL'], ['CHILDREN_TERMINAL', 'LEG_A_FILL'])"
+ },
+ "[async]B4.drain_wait_true_receipt_fails_not_hangs": {
+  "pass": true,
+  "note": "InterpreterStoppedError('drained: removed by drain_pending()')"
+ },
+ "[async]B4.persist_after_drain_has_no_pending": {
+  "pass": true,
+  "note": "0"
+ },
+ "[async]B4.stop_did_not_process_drained": {
+  "pass": true,
+  "note": "(['oco.completing'], ['oco.completing'])"
+ },
+ "[async]B4.restore_start_hook_true": {
+  "pass": true,
+  "note": "[True]"
+ },
+ "[async]B4.replay_each_drained_once": {
+  "pass": true,
+  "note": "(['CHILDREN_TERMINAL'], ['CHILDREN_TERMINAL'])"
+ },
+ "[async]B4.replay_reaches_end": {
+  "pass": true,
+  "note": "['oco.completed']"
+ },
+ "[async]B4.replay_chain_trips_0_dropped_0": {
+  "pass": true,
+  "note": "(0, 0, 0)"
+ },
+ "[async]B5.happy_reaches_end": {
+  "pass": true,
+  "note": "['iceberg.completed']"
+ },
+ "[async]B5.happy_restore_every_step": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B5.happy_boot_start_hook_false": {
+  "pass": true,
+  "note": "[False]"
+ },
+ "[async]B5.happy_chain_trips_0": {
+  "pass": true,
+  "note": "0"
+ },
+ "[async]B5.happy_dropped_receipts_0": {
+  "pass": true,
+  "note": "(0, [])"
+ },
+ "[async]B5.happy_no_errors_stranded": {
+  "pass": true,
+  "note": "([], [])"
+ },
+ "[async]B5.drain_covers_both_lanes": {
+  "pass": true,
+  "note": "(['CHILDREN_TERMINAL', 'CHILD_FILLED'], ['CHILDREN_TERMINAL', 'CHILD_FILLED'])"
+ },
+ "[async]B5.drain_wait_true_receipt_fails_not_hangs": {
+  "pass": true,
+  "note": "InterpreterStoppedError('drained: removed by drain_pending()')"
+ },
+ "[async]B5.persist_after_drain_has_no_pending": {
+  "pass": true,
+  "note": "0"
+ },
+ "[async]B5.stop_did_not_process_drained": {
+  "pass": true,
+  "note": "(['iceberg.completing'], ['iceberg.completing'])"
+ },
+ "[async]B5.restore_start_hook_true": {
+  "pass": true,
+  "note": "[True]"
+ },
+ "[async]B5.replay_each_drained_once": {
+  "pass": true,
+  "note": "(['CHILDREN_TERMINAL'], ['CHILDREN_TERMINAL'])"
+ },
+ "[async]B5.replay_reaches_end": {
+  "pass": true,
+  "note": "['iceberg.completed']"
+ },
+ "[async]B5.replay_chain_trips_0_dropped_0": {
+  "pass": true,
+  "note": "(0, 0, 0)"
+ },
+ "[async]B1.rollback_restores_draft": {
+  "pass": true,
+  "note": "(['order.lifecycle.draft', 'order.protection.not_required'], 'running', \"RuntimeError('boom:stamp_validated')\")"
+ },
+ "[async]B1.rollback_reported": {
+  "pass": true,
+  "note": "[\"act:stamp_validated:RuntimeError('boom:stamp_validated')\"]"
+ },
+ "[async]B5.always_to_invoked_child_runs": {
+  "pass": true,
+  "note": "(['submit_child'], ['iceberg.working'])"
+ },
+ "[async]B3.always_lands_submitting": {
+  "pass": true,
+  "note": "['leg.submitting']"
+ },
+ "[async]B1.invoke_onError_to_unknown": {
+  "pass": true,
+  "note": "(['order.lifecycle.unknown', 'order.protection.not_required'], [])"
+ },
+ "[async]B1.guard_raise_reported_not_fatal": {
+  "pass": true,
+  "note": "(\"RuntimeError('guard boom')\", [\"guard:RuntimeError('guard boom')\"], 'running')"
+ },
+ "[async]B1.defer_parks_then_replays": {
+  "pass": true,
+  "note": "(True, 1, ['order.lifecycle.submitted', 'order.protection.not_required'])"
+ },
+ "[async]B1.bounded_raise_inbox": {
+  "pass": true,
+  "note": "('QueueOverflowError(\"Interpreter \\'order\\' inbox is full (4/4); event refused. Shed load, slow the prod', 'running', 0)"
+ },
+ "[async]B1.send_priority_overtakes_backlog": {
+  "pass": true,
+  "note": "(1, ['order.lifecycle.validated', 'order.protection.not_required'])"
+ },
+ "[async]B1.sync_bounded_kw_is_ValueError": {
+  "pass": true,
+  "note": "None"
+ },
+ "[async]B2.sync_bounded_kw_is_ValueError": {
+  "pass": true,
+  "note": "None"
+ },
+ "[async]B3.sync_bounded_kw_is_ValueError": {
+  "pass": true,
+  "note": "None"
+ },
+ "[async]B4.sync_bounded_kw_is_ValueError": {
+  "pass": true,
+  "note": "None"
+ },
+ "[async]B5.sync_bounded_kw_is_ValueError": {
+  "pass": true,
+  "note": "None"
+ }
+}

@@ -1,0 +1,47 @@
+PASS [async]/B6/build-strictConfig  | id=twap
+PASS [async]/B6/policy  | rollback/defer/raise
+PASS [async]/B6/strict-targets
+PASS [async]/B6/strictConfig-in-json  | True
+PASS [async]/B6/start-config  | twap.armed
+PASS [async]/B6/chain_trips0  | trips=0
+PASS [async]/B6/220-state-key  | refused: InvalidConfigError("Machine 'twap' has unknown config key(s) -- twap.pending: 'entyr' (did you mean 'entry'?). Unknown keys are ignored by the parser, so a miss
+PASS [async]/B6/220-transition-key  | refused: InvalidConfigError("Machine 'twap' has unknown config key(s) -- twap.armed on['SLICE_DUE']: 'actionss' (did you mean 'actions'?). Unknown keys are ignored by th
+PASS [async]/B6/220-invoke-key  | refused: InvalidConfigError("Machine 'twap' has unknown config key(s) -- twap.submitting_slice invoke[slice]: 'srcc' (did you mean 'src'?). Unknown keys are ignored by t
+PASS [async]/B7/build-strictConfig  | id=chase
+PASS [async]/B7/policy  | rollback/defer/raise
+PASS [async]/B7/strict-targets
+PASS [async]/B7/strictConfig-in-json  | True
+PASS [async]/B7/start-config  | chase.working
+PASS [async]/B7/chain_trips0  | trips=0
+PASS [async]/B7/220-state-key  | refused: InvalidConfigError("Machine 'chase' has unknown config key(s) -- chase.working: 'entyr' (did you mean 'entry'?). Unknown keys are ignored by the parser, so a mi
+PASS [async]/B7/220-transition-key  | refused: InvalidConfigError("Machine 'chase' has unknown config key(s) -- chase.working on['BOOK_TARGET_MOVED']: 'actionss' (did you mean 'actions'?). Unknown keys are i
+PASS [async]/B7/220-invoke-key  | refused: InvalidConfigError("Machine 'chase' has unknown config key(s) -- chase.arming invoke[arm]: 'srcc' (did you mean 'src'?). Unknown keys are ignored by the parser,
+PASS [async]/B8/build-strictConfig  | id=position_protection
+PASS [async]/B8/policy  | fail/defer/raise
+PASS [async]/B8/strict-targets
+PASS [async]/B8/strictConfig-in-json  | True
+PASS [async]/B8/start-config  | position_protection.sl.flat,position_protection.watchdog.idle
+PASS [async]/B8/chain_trips0  | trips=0
+PASS [async]/B8/220-state-key  | refused: InvalidConfigError("Machine 'position_protection' has unknown config key(s) -- position_protection.sl.attaching: 'entyr' (did you mean 'entry'?). Unknown keys a
+PASS [async]/B8/220-transition-key  | refused: InvalidConfigError("Machine 'position_protection' has unknown config key(s) -- position_protection.sl.flat on['POSITION_OPENED']: 'actionss' (did you mean 'acti
+PASS [async]/B8/220-invoke-key  | refused: InvalidConfigError("Machine 'position_protection' has unknown config key(s) -- position_protection.sl.attaching invoke[att]: 'srcc' (did you mean 'src'?). Unkno
+PASS [async]/B9/build-strictConfig  | id=rule_instance
+PASS [async]/B9/policy  | rollback/defer/raise
+PASS [async]/B9/strict-targets
+PASS [async]/B9/strictConfig-in-json  | True
+PASS [async]/B9/start-config  | rule_instance.draft
+PASS [async]/B9/chain_trips0  | trips=0
+PASS [async]/B9/220-state-key  | refused: InvalidConfigError("Machine 'rule_instance' has unknown config key(s) -- rule_instance.simulating: 'entyr' (did you mean 'entry'?). Unknown keys are ignored by 
+PASS [async]/B9/220-transition-key  | refused: InvalidConfigError("Machine 'rule_instance' has unknown config key(s) -- rule_instance.draft on['SAVE']: 'actionss' (did you mean 'actions'?). Unknown keys are 
+PASS [async]/B9/220-invoke-key  | refused: InvalidConfigError("Machine 'rule_instance' has unknown config key(s) -- rule_instance.evaluating invoke[eval]: 'srcc' (did you mean 'src'?). Unknown keys are i
+PASS [async]/B10/build-strictConfig  | id=alert
+PASS [async]/B10/policy  | rollback/defer/raise
+PASS [async]/B10/strict-targets
+PASS [async]/B10/strictConfig-in-json  | True
+PASS [async]/B10/start-config  | alert.armed
+PASS [async]/B10/chain_trips0  | trips=0
+PASS [async]/B10/220-state-key  | refused: InvalidConfigError("Machine 'alert' has unknown config key(s) -- alert.suppressed: 'entyr' (did you mean 'entry'?). Unknown keys are ignored by the parser, so a
+PASS [async]/B10/220-transition-key  | refused: InvalidConfigError("Machine 'alert' has unknown config key(s) -- alert.armed on['CONDITION_MET']: 'actionss' (did you mean 'actions'?). Unknown keys are ignored
+PASS [async]/B10/220-invoke-key  | refused: InvalidConfigError("Machine 'alert' has unknown config key(s) -- alert.firing invoke[deliver]: 'srcc' (did you mean 'src'?). Unknown keys are ignored by the par
+
+--- 45 checks, 0 FAIL: []

@@ -1,0 +1,283 @@
+"""N6 — SOAK: order-like machines incl. parallel regions + executor services
++ chaos snapshot/restore, snapshots taken ONLY at quiescence.
+
+Reduced run: SOAK_SECONDS (default 300) instead of the brief's 720 — see the
+reductions table in semantics.md. Everything else is at the stated size.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import os
+import random
+import time
+from typing import Any, Dict, List
+
+from xstate_statemachine import (
+    Interpreter,
+    MachineLogic,
+    SnapshotMidStepError,
+    XStateMachineError,
+    create_machine,
+)
+
+SOAK_SECONDS = float(os.environ.get("SOAK_SECONDS", "720"))
+EXT_PER_SWEEP = int(os.environ.get("SOAK_EXT", "20"))
+N_MACHINES = int(os.environ.get("SOAK_MACHINES", "200"))
+
+ORDER = {
+    "id": "ord",
+    "type": "parallel",
+    "context": {"filled": 0, "seq": 0},
+    "states": {
+        "life": {
+            "initial": "new",
+            "states": {
+                "new": {"on": {"SUBMIT": "working"}},
+                "working": {
+                    "invoke": {"src": "price", "onDone": {"target": "live", "actions": ["fill"]}}
+                },
+                "live": {"on": {"FILL": {"actions": ["fill"]}, "CANCEL": "done"}},
+                "done": {"type": "final"},
+            },
+        },
+        "risk": {
+            "initial": "ok",
+            "states": {
+                "ok": {"on": {"BREACH": "halted"}},
+                "halted": {"on": {"CLEAR": "ok"}},
+            },
+        },
+    },
+}
+
+
+def _logic() -> MachineLogic:
+    async def price(i_, ctx, e):  # noqa: ANN001  #179 lane: ASYNC DEF service
+        await asyncio.sleep(0)
+        return {"px": 101.5}
+
+    def fill(i_, ctx, e, am):  # noqa: ANN001
+        ctx["filled"] = ctx.get("filled", 0) + 1
+
+    return MachineLogic(actions={"fill": fill}, services={"price": price})
+
+
+# 🔁 round-7 shapes: rollback+onDone (#167) and always-into-invoke (#166)
+ROLLBACK = {
+    "id": "rb", "initial": "idle", "actionErrorPolicy": "rollback",
+    "context": {"filled": 0, "seq": 0},
+    "states": {
+        "idle": {"on": {"SUBMIT": "work", "FILL": {"actions": ["fill"]}}},
+        "work": {
+            "invoke": {"src": "price",
+                       "onDone": {"target": "idle", "actions": ["fill", "boom"]}},
+            "on": {"CANCEL": "idle"},
+        },
+    },
+}
+ALWAYS_INVOKE = {
+    "id": "ai", "initial": "idle",
+    "context": {"filled": 0, "seq": 0},
+    "states": {
+        "idle": {"on": {"SUBMIT": "gate", "FILL": {"actions": ["fill"]}}},
+        "gate": {"always": {"target": "work", "cond": "go"}},
+        "work": {"invoke": {"src": "price",
+                            "onDone": {"target": "idle", "actions": ["fill"]}},
+                 "on": {"CANCEL": "idle"}},
+    },
+}
+
+_SHAPES = (ORDER, ROLLBACK, ALWAYS_INVOKE)
+
+
+def _logic7() -> MachineLogic:
+    base = _logic()
+
+    def boom(i_, ctx, e, am):  # noqa: ANN001
+        if ctx.get("filled", 0) % 5 == 0:
+            raise RuntimeError("rollback me")
+
+    base.actions["boom"] = boom
+    base.guards["go"] = lambda c, e: True
+    return base
+
+
+_mk_n = {"i": 0}
+
+
+class DropSpy:
+    """Counts every on_event_dropped reason across the whole soak."""
+
+    instances: List["DropSpy"] = []
+
+    def __init__(self) -> None:
+        from collections import Counter
+
+        self.reasons = Counter()
+        DropSpy.instances.append(self)
+
+    # PluginBase duck-typing: only the hook we need.
+    def on_event_dropped(self, i, e, reason):  # noqa: ANN001
+        self.reasons[(reason, getattr(e, "type", "?"))] += 1
+
+    def __getattr__(self, name):  # noqa: ANN001
+        def _noop(*a, **k):  # noqa: ANN002, ANN003
+            return None
+
+        return _noop
+
+
+def _mk(shape: int = -1):
+    """shape >= 0 rebuilds the SAME shape (needed to restore a snapshot)."""
+    if shape < 0:
+        shape = _mk_n["i"] % len(_SHAPES)
+        _mk_n["i"] += 1
+    return create_machine(_SHAPES[shape % len(_SHAPES)], logic=_logic7())
+
+
+async def main() -> None:
+    rng = random.Random(9001)
+    stats: Dict[str, int] = {
+        "events": 0, "snapshots": 0, "restores": 0, "orders": 0,
+        "midstep_at_quiescence": 0, "restore_drift": 0, "inert_running": 0,
+        "typed_errors": 0, "untyped_errors": 0, "lost_fills": 0, "ext_sent": 0, "ext_applied": 0, "ext_dropped": 0,
+    }
+    samples: List[str] = []
+    try:
+        import psutil  # type: ignore
+
+        proc = psutil.Process()
+        rss0 = proc.memory_info().rss
+        proc.cpu_percent(None)
+    except Exception:  # noqa: BLE001
+        proc, rss0 = None, 0
+
+    shape_of = {k: k % len(_SHAPES) for k in range(N_MACHINES)}
+    machines = [
+        await Interpreter(_mk(shape_of[k])).use(DropSpy()).start()
+        for k in range(N_MACHINES)
+    ]
+    stats["orders"] = N_MACHINES
+    t_end = time.monotonic() + SOAK_SECONDS
+    last_chaos = time.monotonic()
+    EVENTS = ["SUBMIT", "FILL", "CANCEL", "BREACH", "CLEAR", "NOPE"]
+
+    while time.monotonic() < t_end:
+        for i in machines:
+            ev = rng.choice(EVENTS)
+            try:
+                await i.send(ev, wait=True)
+                stats["events"] += 1
+            except XStateMachineError:
+                stats["typed_errors"] += 1
+            except Exception as exc:  # noqa: BLE001
+                stats["untyped_errors"] += 1
+                if len(samples) < 5:
+                    samples.append(f"send {ev}: {type(exc).__name__}: {exc}")
+
+        # 📣 EXTERNAL priority producer: these are issued by a caller, never
+        #    by the machine, so #180 says NONE of them may ever be charged to
+        #    the chain budget. Any `chain_budget` drop of "FILL" is silent
+        #    external data loss on the order path.
+        for i in machines:
+            for _ in range(EXT_PER_SWEEP):
+                try:
+                    await i.send("FILL", priority=True)
+                    stats["ext_sent"] += 1
+                except XStateMachineError:
+                    stats["typed_errors"] += 1
+                except Exception as exc:  # noqa: BLE001
+                    stats["untyped_errors"] += 1
+                    if len(samples) < 5:
+                        samples.append(f"ext FILL: {type(exc).__name__}: {exc}")
+
+        # 🌀 chaos every ~2 s: snapshot at quiescence, restore, compare
+        if time.monotonic() - last_chaos >= 2.0:
+            last_chaos = time.monotonic()
+            for idx in rng.sample(range(len(machines)), k=max(1, len(machines) // 10)):
+                src = machines[idx]
+                try:
+                    blob = src.get_persisted_snapshot()  # quiescent: no step open
+                    stats["snapshots"] += 1
+                except SnapshotMidStepError:
+                    stats["midstep_at_quiescence"] += 1
+                    continue
+                except Exception as exc:  # noqa: BLE001
+                    stats["untyped_errors"] += 1
+                    if len(samples) < 5:
+                        samples.append(f"snapshot: {type(exc).__name__}: {exc}")
+                    continue
+                before_ids = sorted(src.current_state_ids)
+                before_fill = src.context.get("filled")
+                try:
+                    r = await Interpreter.from_snapshot(
+                        json.dumps(blob), _mk(shape_of[idx])
+                    ).start()
+                    stats["restores"] += 1
+                except Exception as exc:  # noqa: BLE001
+                    stats["untyped_errors"] += 1
+                    if len(samples) < 5:
+                        samples.append(f"restore: {type(exc).__name__}: {exc}")
+                    continue
+                if sorted(r.current_state_ids) != before_ids:
+                    stats["restore_drift"] += 1
+                if r.status == "running" and not r.current_state_ids:
+                    stats["inert_running"] += 1
+                if r.context.get("filled") != before_fill:
+                    stats["lost_fills"] += 1
+                await src.stop()
+                machines[idx] = r
+                stats["orders"] += 1
+
+    for i in machines:
+        await i.stop()
+    rss1 = proc.memory_info().rss if proc else 0
+    cpu_pct = proc.cpu_percent(None) if proc else 0.0
+    from collections import Counter
+
+    all_drops: Counter = Counter()
+    for sp in DropSpy.instances:
+        all_drops.update(sp.reasons)
+    # External traffic == anything the PRODUCER issued. Only "FILL" is sent
+    # externally with priority=True in this soak.
+    ext_chain_dropped = sum(
+        n for (reason, etype), n in all_drops.items()
+        if reason == "chain_budget" and etype == "FILL"
+    )
+    stats["ext_dropped"] = ext_chain_dropped
+    out = {
+        "soak_seconds": SOAK_SECONDS,
+        "machines": N_MACHINES,
+        "service_kind": "async def (#179 coroutine lane)",
+        **stats,
+        "drops_by_reason": {f"{r}:{t}": n for (r, t), n in all_drops.most_common(12)},
+        "external_dropped_as_chain_budget": ext_chain_dropped,
+        "rss_delta_mb": round((rss1 - rss0) / 1e6, 2),
+        "cpu_percent_avg": round(cpu_pct, 1),
+        "shapes": ["ORDER(parallel)", "ROLLBACK+onDone", "ALWAYS->invoke"],
+        "untyped_samples": samples,
+        "ok": (
+            stats["untyped_errors"] == 0
+            and stats["midstep_at_quiescence"] == 0
+            and stats["restore_drift"] == 0
+            and stats["inert_running"] == 0
+            and stats["lost_fills"] == 0
+            and ext_chain_dropped == 0
+        ),
+    }
+    here = os.path.dirname(os.path.abspath(__file__))
+    os.makedirs(os.path.join(here, "results"), exist_ok=True)
+    with open(
+        os.path.join(here, "results", "nc_soak_async.json"), "w", encoding="utf-8"
+    ) as fh:
+        json.dump(out, fh, indent=1, default=str)
+    print(json.dumps(out, indent=1, default=str))
+
+
+if __name__ == "__main__":
+    import logging
+
+    logging.disable(logging.CRITICAL)
+    asyncio.run(main())

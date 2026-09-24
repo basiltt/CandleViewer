@@ -1,0 +1,54 @@
+{
+  "sync_mi_None": {
+    "engine": "sync",
+    "declared_mi": 1000,
+    "ids": [
+      "m.a"
+    ],
+    "status": "running",
+    "wall": 0.005,
+    "svc": 2,
+    "acts": 1
+  },
+  "async_mi_None": {
+    "engine": "async",
+    "declared_mi": 1000,
+    "receipt": {
+      "changed": true,
+      "error": null
+    },
+    "svc_per_s": 1002,
+    "acts": 1001,
+    "ids": [
+      "m.a"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "sync_mi_5": {
+    "engine": "sync",
+    "declared_mi": 5,
+    "ids": [
+      "m.a"
+    ],
+    "status": "running",
+    "wall": 0.001,
+    "svc": 2,
+    "acts": 1
+  },
+  "async_mi_5": {
+    "engine": "async",
+    "declared_mi": 5,
+    "receipt": {
+      "changed": true,
+      "error": null
+    },
+    "svc_per_s": 7,
+    "acts": 6,
+    "ids": [
+      "m.a"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  }
+}

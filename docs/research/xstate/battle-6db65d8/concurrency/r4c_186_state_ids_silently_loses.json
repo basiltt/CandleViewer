@@ -1,0 +1,350 @@
+{
+  "probe": "r4c_186_state_ids_silently_loses",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "case": "state_ids emptied (configuration wins)",
+      "engine": "async",
+      "kind": "def",
+      "blob_state_ids": [],
+      "blob_configuration": [
+        "r4c",
+        "r4c.top",
+        "r4c.top.A",
+        "r4c.top.A.a2",
+        "r4c.top.B",
+        "r4c.top.B.b2"
+      ],
+      "truth": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "disposition": "ACCEPTED",
+      "restored_to": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ]
+    },
+    {
+      "case": "state_ids emptied (configuration wins)",
+      "engine": "sync",
+      "kind": "def",
+      "blob_state_ids": [],
+      "blob_configuration": [
+        "r4c",
+        "r4c.top",
+        "r4c.top.A",
+        "r4c.top.A.a2",
+        "r4c.top.B",
+        "r4c.top.B.b2"
+      ],
+      "truth": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "disposition": "ACCEPTED",
+      "restored_to": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ]
+    },
+    {
+      "case": "state_ids rewritten to a different leaf",
+      "engine": "async",
+      "kind": "def",
+      "blob_state_ids": [
+        "r4c.top.A.a1",
+        "r4c.top.B.b1"
+      ],
+      "blob_configuration": [
+        "r4c",
+        "r4c.top",
+        "r4c.top.A",
+        "r4c.top.A.a2",
+        "r4c.top.B",
+        "r4c.top.B.b2"
+      ],
+      "truth": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "disposition": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "state_ids rewritten to a different leaf",
+      "engine": "sync",
+      "kind": "def",
+      "blob_state_ids": [
+        "r4c.top.A.a1",
+        "r4c.top.B.b1"
+      ],
+      "blob_configuration": [
+        "r4c",
+        "r4c.top",
+        "r4c.top.A",
+        "r4c.top.A.a2",
+        "r4c.top.B",
+        "r4c.top.B.b2"
+      ],
+      "truth": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "disposition": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "state_ids rewritten to garbage",
+      "engine": "async",
+      "kind": "def",
+      "blob_state_ids": [
+        "r4c.NOT_A_STATE"
+      ],
+      "blob_configuration": [
+        "r4c",
+        "r4c.top",
+        "r4c.top.A",
+        "r4c.top.A.a2",
+        "r4c.top.B",
+        "r4c.top.B.b2"
+      ],
+      "truth": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "disposition": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "state_ids rewritten to garbage",
+      "engine": "sync",
+      "kind": "def",
+      "blob_state_ids": [
+        "r4c.NOT_A_STATE"
+      ],
+      "blob_configuration": [
+        "r4c",
+        "r4c.top",
+        "r4c.top.A",
+        "r4c.top.A.a2",
+        "r4c.top.B",
+        "r4c.top.B.b2"
+      ],
+      "truth": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "disposition": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "configuration dropped (state_ids wins)",
+      "engine": "async",
+      "kind": "def",
+      "blob_state_ids": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "blob_configuration": null,
+      "truth": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "disposition": "ACCEPTED",
+      "restored_to": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ]
+    },
+    {
+      "case": "configuration dropped (state_ids wins)",
+      "engine": "sync",
+      "kind": "def",
+      "blob_state_ids": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "blob_configuration": null,
+      "truth": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "disposition": "ACCEPTED",
+      "restored_to": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ]
+    },
+    {
+      "case": "state_ids emptied (configuration wins)",
+      "engine": "async",
+      "kind": "async def",
+      "blob_state_ids": [],
+      "blob_configuration": [
+        "r4c",
+        "r4c.top",
+        "r4c.top.A",
+        "r4c.top.A.a2",
+        "r4c.top.B",
+        "r4c.top.B.b2"
+      ],
+      "truth": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "disposition": "ACCEPTED",
+      "restored_to": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ]
+    },
+    {
+      "case": "state_ids emptied (configuration wins)",
+      "engine": "sync",
+      "kind": "async def",
+      "blob_state_ids": [],
+      "blob_configuration": [
+        "r4c",
+        "r4c.top",
+        "r4c.top.A",
+        "r4c.top.A.a2",
+        "r4c.top.B",
+        "r4c.top.B.b2"
+      ],
+      "truth": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "disposition": "ACCEPTED",
+      "restored_to": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ]
+    },
+    {
+      "case": "state_ids rewritten to a different leaf",
+      "engine": "async",
+      "kind": "async def",
+      "blob_state_ids": [
+        "r4c.top.A.a1",
+        "r4c.top.B.b1"
+      ],
+      "blob_configuration": [
+        "r4c",
+        "r4c.top",
+        "r4c.top.A",
+        "r4c.top.A.a2",
+        "r4c.top.B",
+        "r4c.top.B.b2"
+      ],
+      "truth": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "disposition": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "state_ids rewritten to a different leaf",
+      "engine": "sync",
+      "kind": "async def",
+      "blob_state_ids": [
+        "r4c.top.A.a1",
+        "r4c.top.B.b1"
+      ],
+      "blob_configuration": [
+        "r4c",
+        "r4c.top",
+        "r4c.top.A",
+        "r4c.top.A.a2",
+        "r4c.top.B",
+        "r4c.top.B.b2"
+      ],
+      "truth": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "disposition": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "state_ids rewritten to garbage",
+      "engine": "async",
+      "kind": "async def",
+      "blob_state_ids": [
+        "r4c.NOT_A_STATE"
+      ],
+      "blob_configuration": [
+        "r4c",
+        "r4c.top",
+        "r4c.top.A",
+        "r4c.top.A.a2",
+        "r4c.top.B",
+        "r4c.top.B.b2"
+      ],
+      "truth": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "disposition": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "state_ids rewritten to garbage",
+      "engine": "sync",
+      "kind": "async def",
+      "blob_state_ids": [
+        "r4c.NOT_A_STATE"
+      ],
+      "blob_configuration": [
+        "r4c",
+        "r4c.top",
+        "r4c.top.A",
+        "r4c.top.A.a2",
+        "r4c.top.B",
+        "r4c.top.B.b2"
+      ],
+      "truth": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "disposition": "refused:SnapshotCorruptError"
+    },
+    {
+      "case": "configuration dropped (state_ids wins)",
+      "engine": "async",
+      "kind": "async def",
+      "blob_state_ids": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "blob_configuration": null,
+      "truth": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "disposition": "ACCEPTED",
+      "restored_to": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ]
+    },
+    {
+      "case": "configuration dropped (state_ids wins)",
+      "engine": "sync",
+      "kind": "async def",
+      "blob_state_ids": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "blob_configuration": null,
+      "truth": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ],
+      "disposition": "ACCEPTED",
+      "restored_to": [
+        "r4c.top.A.a2",
+        "r4c.top.B.b2"
+      ]
+    }
+  ],
+  "accepted_contradictions": 8,
+  "accepted_and_reader_would_be_misled": [],
+  "source": "base_interpreter.py:1722 `configuration or state_ids` (fields never compared)",
+  "result": "FAIL"
+}

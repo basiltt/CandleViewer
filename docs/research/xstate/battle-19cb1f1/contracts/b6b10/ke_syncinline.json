@@ -1,0 +1,24 @@
+[
+ {
+  "case": "A",
+  "engine": "sync",
+  "states": [
+   "m.armed"
+  ],
+  "context": {
+   "n": 1
+  },
+  "service_calls": []
+ },
+ {
+  "case": "B",
+  "engine": "sync",
+  "states": [
+   "m.armed"
+  ],
+  "context": {
+   "n": 0
+  },
+  "service_calls": []
+ }
+]

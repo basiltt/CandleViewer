@@ -1,0 +1,135 @@
+{
+  "probe": "s1_engine_marker_persistence",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "service_kind": "def",
+      "strict": false,
+      "forged_plain_is_system": false,
+      "forged_flagged_is_system": true,
+      "forged_plain_class": "DoneEvent",
+      "forged_flagged_class": "_EngineDone",
+      "send_plain": "ACCEPTED",
+      "state_after_plain": [
+        "s1.work"
+      ],
+      "moved_plain": false,
+      "send_flagged": "ACCEPTED",
+      "state_after_flagged": [
+        "s1.work"
+      ],
+      "moved_flagged": false,
+      "onDone_fired_early": 0,
+      "final_state": [
+        "s1.done"
+      ],
+      "onDone_total": 1,
+      "ctx_n": 1
+    },
+    {
+      "service_kind": "def",
+      "strict": true,
+      "forged_plain_is_system": false,
+      "forged_flagged_is_system": true,
+      "forged_plain_class": "DoneEvent",
+      "forged_flagged_class": "_EngineDone",
+      "send_plain": "refused:UnknownEventError",
+      "state_after_plain": [
+        "s1.work"
+      ],
+      "moved_plain": false,
+      "send_flagged": "ACCEPTED",
+      "state_after_flagged": [
+        "s1.work"
+      ],
+      "moved_flagged": false,
+      "onDone_fired_early": 0,
+      "final_state": [
+        "s1.done"
+      ],
+      "onDone_total": 1,
+      "ctx_n": 1
+    },
+    {
+      "service_kind": "async def",
+      "strict": false,
+      "forged_plain_is_system": false,
+      "forged_flagged_is_system": true,
+      "forged_plain_class": "DoneEvent",
+      "forged_flagged_class": "_EngineDone",
+      "send_plain": "ACCEPTED",
+      "state_after_plain": [
+        "s1.work"
+      ],
+      "moved_plain": false,
+      "send_flagged": "ACCEPTED",
+      "state_after_flagged": [
+        "s1.done"
+      ],
+      "moved_flagged": true,
+      "onDone_fired_early": 1,
+      "final_state": [
+        "s1.done"
+      ],
+      "onDone_total": 1,
+      "ctx_n": 1
+    },
+    {
+      "service_kind": "async def",
+      "strict": true,
+      "forged_plain_is_system": false,
+      "forged_flagged_is_system": true,
+      "forged_plain_class": "DoneEvent",
+      "forged_flagged_class": "_EngineDone",
+      "send_plain": "refused:UnknownEventError",
+      "state_after_plain": [
+        "s1.work"
+      ],
+      "moved_plain": false,
+      "send_flagged": "ACCEPTED",
+      "state_after_flagged": [
+        "s1.done"
+      ],
+      "moved_flagged": true,
+      "onDone_fired_early": 1,
+      "final_state": [
+        "s1.done"
+      ],
+      "onDone_total": 1,
+      "ctx_n": 1
+    }
+  ],
+  "roundtrip": [
+    {
+      "case": "genuine_engine",
+      "record_has_engine_flag": true,
+      "original_is_system": true,
+      "restored_is_system": true,
+      "restored_class": "_EngineDone",
+      "provenance_preserved": true
+    },
+    {
+      "case": "hand_built",
+      "record_has_engine_flag": null,
+      "original_is_system": false,
+      "restored_is_system": false,
+      "restored_class": "DoneEvent",
+      "provenance_preserved": true
+    },
+    {
+      "case": "copy_pickle_replace",
+      "copy_is_system": true,
+      "deepcopy_is_system": true,
+      "pickle_is_system": true,
+      "replace": "refused:TypeError",
+      "subclass_is_private": "_EngineDone"
+    }
+  ],
+  "violations": [
+    [
+      "async def",
+      "forged completion drove onDone under strict"
+    ]
+  ],
+  "result": "FAIL"
+}

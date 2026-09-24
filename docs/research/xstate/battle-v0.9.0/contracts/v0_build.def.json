@@ -1,0 +1,102 @@
+{
+ "[def]V0.B1.build": {
+  "pass": true,
+  "note": "acts=25 guards=7 svcs=4 delays=0"
+ },
+ "[def]V0.B1.start": {
+  "pass": true,
+  "note": "states=['order.lifecycle.draft', 'order.protection.not_required'] status=running"
+ },
+ "[def]V0.B1.snapshot_v3_plugins": {
+  "pass": true,
+  "note": "t0:v=3:sched=0"
+ },
+ "[def]V0.B1.chain_trips_zero": {
+  "pass": true,
+  "note": "chain_trips=0 lce=None"
+ },
+ "[def]V0.B1.sync_start_restore": {
+  "pass": true,
+  "note": "states=['order.lifecycle.draft', 'order.protection.not_required'] "
+ },
+ "[def]V0.B2.build": {
+  "pass": true,
+  "note": "acts=14 guards=7 svcs=1 delays=0"
+ },
+ "[def]V0.B2.start": {
+  "pass": true,
+  "note": "states=['trade_group.draft'] status=running"
+ },
+ "[def]V0.B2.snapshot_v3_plugins": {
+  "pass": true,
+  "note": "t0:v=3:sched=0"
+ },
+ "[def]V0.B2.chain_trips_zero": {
+  "pass": true,
+  "note": "chain_trips=0 lce=None"
+ },
+ "[def]V0.B2.sync_start_restore": {
+  "pass": true,
+  "note": "states=['trade_group.draft'] "
+ },
+ "[def]V0.B3.build": {
+  "pass": true,
+  "note": "acts=11 guards=7 svcs=5 delays=0"
+ },
+ "[def]V0.B3.start": {
+  "pass": false,
+  "note": "states=['leg.error'] status=done"
+ },
+ "[def]V0.B3.snapshot_v3_plugins": {
+  "pass": true,
+  "note": "t0:v=3:sched=0"
+ },
+ "[def]V0.B3.chain_trips_zero": {
+  "pass": true,
+  "note": "chain_trips=0 lce=None"
+ },
+ "[def]V0.B3.sync_start_restore": {
+  "pass": false,
+  "note": "states=['leg.error'] "
+ },
+ "[def]V0.B4.build": {
+  "pass": true,
+  "note": "acts=8 guards=6 svcs=5 delays=0"
+ },
+ "[def]V0.B4.start": {
+  "pass": true,
+  "note": "states=['oco.racing'] status=running"
+ },
+ "[def]V0.B4.snapshot_v3_plugins": {
+  "pass": true,
+  "note": "t0:v=3:sched=0"
+ },
+ "[def]V0.B4.chain_trips_zero": {
+  "pass": true,
+  "note": "chain_trips=0 lce=None"
+ },
+ "[def]V0.B4.sync_start_restore": {
+  "pass": true,
+  "note": "states=['oco.racing'] "
+ },
+ "[def]V0.B5.build": {
+  "pass": true,
+  "note": "acts=9 guards=8 svcs=3 delays=0"
+ },
+ "[def]V0.B5.start": {
+  "pass": true,
+  "note": "states=['iceberg.working'] status=running"
+ },
+ "[def]V0.B5.snapshot_v3_plugins": {
+  "pass": true,
+  "note": "t0:v=3:sched=0"
+ },
+ "[def]V0.B5.chain_trips_zero": {
+  "pass": true,
+  "note": "chain_trips=0 lce=None"
+ },
+ "[def]V0.B5.sync_start_restore": {
+  "pass": true,
+  "note": "states=['iceberg.working'] "
+ }
+}

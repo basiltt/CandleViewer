@@ -1,0 +1,82 @@
+{
+  "b18_snap_in_entry_async": {
+    "result": "SnapshotMidStepError",
+    "child_flag": false,
+    "fired": true,
+    "kind": "async"
+  },
+  "b19_snap_initial_descent_async": {
+    "fired": false,
+    "kind": "async"
+  },
+  "b18_blob_async": {
+    "fields": [
+      "actors",
+      "configuration",
+      "context",
+      "deferred",
+      "error",
+      "history",
+      "machine_hash",
+      "machine_id",
+      "output",
+      "pending_events",
+      "state_ids",
+      "status",
+      "system",
+      "taken_at",
+      "value",
+      "version"
+    ],
+    "version": 2,
+    "has_hash": true,
+    "baseline": "ACCEPTED",
+    "hash_null": "SnapshotDriftError: snapshot declares version 2 but carries no 'machine_hash', so it cannot be checked against machine 'kill_switc",
+    "hash_absent": "SnapshotDriftError: snapshot declares version 2 but carries no 'machine_hash', so it cannot be checked against machine 'kill_switc",
+    "hash_wrong": "SnapshotDriftError: machine 'kill_switch' structure changed since this snapshot was taken (deadbeef != ce69bbd50f18955f). Migrate ",
+    "config_emptied": "SnapshotCorruptError: Snapshot is malformed: 'configuration' is empty while 'state_ids' names ['kill_switch.clear'] -- the two field",
+    "config_rewritten": "SnapshotCorruptError: Snapshot is malformed: 'state_ids' names ['kill_switch.clear'] which 'configuration' does not contain -- the t",
+    "state_ids_emptied": "ACCEPTED",
+    "kind": "async"
+  },
+  "b18_snap_in_entry_sync": {
+    "result": "SnapshotMidStepError",
+    "child_flag": false,
+    "fired": true,
+    "kind": "sync"
+  },
+  "b19_snap_initial_descent_sync": {
+    "fired": false,
+    "kind": "sync"
+  },
+  "b18_blob_sync": {
+    "fields": [
+      "actors",
+      "configuration",
+      "context",
+      "deferred",
+      "error",
+      "history",
+      "machine_hash",
+      "machine_id",
+      "output",
+      "pending_events",
+      "state_ids",
+      "status",
+      "system",
+      "taken_at",
+      "value",
+      "version"
+    ],
+    "version": 2,
+    "has_hash": true,
+    "baseline": "ACCEPTED",
+    "hash_null": "SnapshotDriftError: snapshot declares version 2 but carries no 'machine_hash', so it cannot be checked against machine 'kill_switc",
+    "hash_absent": "SnapshotDriftError: snapshot declares version 2 but carries no 'machine_hash', so it cannot be checked against machine 'kill_switc",
+    "hash_wrong": "SnapshotDriftError: machine 'kill_switch' structure changed since this snapshot was taken (deadbeef != ce69bbd50f18955f). Migrate ",
+    "config_emptied": "SnapshotCorruptError: Snapshot is malformed: 'configuration' is empty while 'state_ids' names ['kill_switch.clear'] -- the two field",
+    "config_rewritten": "SnapshotCorruptError: Snapshot is malformed: 'state_ids' names ['kill_switch.clear'] which 'configuration' does not contain -- the t",
+    "state_ids_emptied": "ACCEPTED",
+    "kind": "sync"
+  }
+}

@@ -1,0 +1,23 @@
+{
+ "soak_seconds": 720.0,
+ "machines": 200,
+ "events": 186000,
+ "snapshots": 5512,
+ "restores": 5512,
+ "orders": 5712,
+ "midstep_at_quiescence": 68,
+ "restore_drift": 0,
+ "inert_running": 0,
+ "typed_errors": 0,
+ "untyped_errors": 0,
+ "lost_fills": 0,
+ "rss_delta_mb": 8.09,
+ "cpu_percent_avg": 117.0,
+ "shapes": [
+  "ORDER(parallel)",
+  "ROLLBACK+onDone",
+  "ALWAYS->invoke"
+ ],
+ "untyped_samples": [],
+ "ok": false
+}

@@ -1,0 +1,191 @@
+[
+ {
+  "id": "P1",
+  "title": ">=300 random machines with an ARMED raise(delay=) self-send, snapshot mid-flight on a SimulatedClock -> restore honours the REMAINING delay exactly",
+  "detail": {
+   "ok": true,
+   "checked": 300,
+   "n_bad": 0,
+   "bad": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "P3",
+  "title": "THE question: a FORGED v2-shaped record declaring \"version\": 2 is upcast as ENGINE-MINTED -- can it drive an `after` / `onDone` it never earned?",
+  "detail": {
+   "ok": false,
+   "minted_illegitimately": [
+    "after_v2/plain",
+    "after_v2/async"
+   ],
+   "all_minted": [
+    "after_v2/plain",
+    "after_v2/async",
+    "after_v3_flagged/plain",
+    "after_v3_flagged/async"
+   ],
+   "cells": {
+    "after_v2/plain": {
+     "state": [
+      "t.fired_after"
+     ],
+     "invalid": [],
+     "drops": [],
+     "last_error": null
+    },
+    "after_v2/async": {
+     "state": [
+      "t.fired_after"
+     ],
+     "invalid": [],
+     "drops": [],
+     "last_error": null
+    },
+    "done_v2/plain": {
+     "state": [
+      "t.a"
+     ],
+     "invalid": [],
+     "drops": [],
+     "last_error": null
+    },
+    "done_v2/async": {
+     "state": [
+      "t.a"
+     ],
+     "invalid": [],
+     "drops": [],
+     "last_error": null
+    },
+    "error_v2/plain": {
+     "state": [
+      "t.a"
+     ],
+     "invalid": [],
+     "drops": [],
+     "last_error": null
+    },
+    "error_v2/async": {
+     "state": [
+      "t.a"
+     ],
+     "invalid": [],
+     "drops": [],
+     "last_error": null
+    },
+    "after_v3_unflagged/plain": {
+     "state": [
+      "t.a"
+     ],
+     "invalid": [],
+     "drops": [],
+     "last_error": "UnknownEventError"
+    },
+    "after_v3_unflagged/async": {
+     "state": [
+      "t.a"
+     ],
+     "invalid": [],
+     "drops": [],
+     "last_error": "UnknownEventError"
+    },
+    "done_v3_unflagged/plain": {
+     "state": [
+      "t.a"
+     ],
+     "invalid": [],
+     "drops": [],
+     "last_error": "UnknownEventError"
+    },
+    "done_v3_unflagged/async": {
+     "state": [
+      "t.a"
+     ],
+     "invalid": [],
+     "drops": [],
+     "last_error": "UnknownEventError"
+    },
+    "after_v3_flagged/plain": {
+     "state": [
+      "t.fired_after"
+     ],
+     "invalid": [],
+     "drops": [],
+     "last_error": null
+    },
+    "after_v3_flagged/async": {
+     "state": [
+      "t.fired_after"
+     ],
+     "invalid": [],
+     "drops": [],
+     "last_error": null
+    },
+    "user_v2/plain": {
+     "state": [
+      "t.a"
+     ],
+     "invalid": [],
+     "drops": [],
+     "last_error": "UnknownEventError"
+    },
+    "user_v2/async": {
+     "state": [
+      "t.a"
+     ],
+     "invalid": [],
+     "drops": [],
+     "last_error": "UnknownEventError"
+    }
+   }
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "P4",
+  "title": "#214: a restored USER event passes the same `strict` check a send() does -- refusal reported via on_invalid_event / last_error, event dropped; both kinds",
+  "detail": {
+   "ok": false,
+   "cells": {
+    "undeclared/plain": {
+     "state": [
+      "L.a"
+     ],
+     "invalid_hook": [],
+     "last_error": "UnknownEventError",
+     "seen": []
+    },
+    "declared/plain": {
+     "state": [
+      "L.b"
+     ],
+     "invalid_hook": [],
+     "last_error": null,
+     "seen": [
+      "X"
+     ]
+    },
+    "undeclared/async": {
+     "state": [
+      "L.a"
+     ],
+     "invalid_hook": [],
+     "last_error": "UnknownEventError",
+     "seen": []
+    },
+    "declared/async": {
+     "state": [
+      "L.b"
+     ],
+     "invalid_hook": [],
+     "last_error": null,
+     "seen": [
+      "X"
+     ]
+    }
+   }
+  },
+  "status": "FAIL"
+ }
+]

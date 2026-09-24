@@ -1,0 +1,185 @@
+{
+  "B16": {
+    "id": "session",
+    "policy": {
+      "actionErrorPolicy": "rollback",
+      "onUnhandled": "defer",
+      "guardErrorPolicy": "raise",
+      "strictTargets": true,
+      "strict": true,
+      "spawnBlockingTimeout": 5000
+    },
+    "n": {
+      "actions": 18,
+      "guards": 1,
+      "services": 0,
+      "delays": 0,
+      "events": 11
+    },
+    "services": [],
+    "events": [
+      "ABSOLUTE_DEADLINE",
+      "ELEVATION_DEADLINE",
+      "IDLE_DEADLINE",
+      "LOGOUT",
+      "MFA_FAILED",
+      "MFA_OK",
+      "MFA_TIMEOUT",
+      "REQUEST",
+      "REVOKE",
+      "STEP_UP_FAILED",
+      "STEP_UP_OK"
+    ],
+    "build_async": "OK",
+    "machine_policy": {
+      "action_error_policy": "rollback",
+      "guard_error_policy": "raise",
+      "on_unhandled": "defer"
+    },
+    "build_sync": "OK",
+    "build_bare": "OK"
+  },
+  "B17": {
+    "id": "live_gate",
+    "policy": {
+      "actionErrorPolicy": "rollback",
+      "onUnhandled": "defer",
+      "guardErrorPolicy": "raise",
+      "strictTargets": true,
+      "strict": true,
+      "spawnBlockingTimeout": 5000
+    },
+    "n": {
+      "actions": 10,
+      "guards": 3,
+      "services": 0,
+      "delays": 0,
+      "events": 5
+    },
+    "services": [],
+    "events": [
+      "DISABLE_REQUESTED",
+      "EMERGENCY_DISABLE",
+      "ENABLE_REQUESTED",
+      "EVIDENCE_INVALIDATED",
+      "EVIDENCE_RECORDED"
+    ],
+    "build_async": "OK",
+    "machine_policy": {
+      "action_error_policy": "rollback",
+      "guard_error_policy": "raise",
+      "on_unhandled": "defer"
+    },
+    "build_sync": "OK",
+    "build_bare": "OK"
+  },
+  "B18": {
+    "id": "kill_switch",
+    "policy": {
+      "actionErrorPolicy": "rollback",
+      "onUnhandled": "error",
+      "guardErrorPolicy": "raise",
+      "strictTargets": true,
+      "strict": true,
+      "spawnBlockingTimeout": 5000
+    },
+    "n": {
+      "actions": 9,
+      "guards": 5,
+      "services": 2,
+      "delays": 0,
+      "events": 3
+    },
+    "services": [
+      "cancel_all_working_orders",
+      "flatten_all_positions"
+    ],
+    "events": [
+      "ENGAGE",
+      "RELEASE",
+      "RETRY_FLATTEN"
+    ],
+    "build_async": "OK",
+    "machine_policy": {
+      "action_error_policy": "rollback",
+      "guard_error_policy": "raise",
+      "on_unhandled": "error"
+    },
+    "build_sync": "OK",
+    "build_bare": "OK"
+  },
+  "B19": {
+    "id": "reconciliation",
+    "policy": {
+      "actionErrorPolicy": "rollback",
+      "onUnhandled": "defer",
+      "guardErrorPolicy": "raise",
+      "strictTargets": true,
+      "strict": true,
+      "spawnBlockingTimeout": 5000
+    },
+    "n": {
+      "actions": 20,
+      "guards": 3,
+      "services": 3,
+      "delays": 0,
+      "events": 7
+    },
+    "services": [
+      "apply_remediations",
+      "diff_against_local",
+      "fetch_exchange_state"
+    ],
+    "events": [
+      "CANCEL",
+      "OPERATOR_RESOLVED",
+      "RECONNECTED",
+      "RETRY_DUE",
+      "STARTUP",
+      "SWEEP_DUE",
+      "UNKNOWN_ORDER"
+    ],
+    "build_async": "OK",
+    "machine_policy": {
+      "action_error_policy": "rollback",
+      "guard_error_policy": "raise",
+      "on_unhandled": "defer"
+    },
+    "build_sync": "OK",
+    "build_bare": "OK"
+  },
+  "B20": {
+    "id": "risk_lockout",
+    "policy": {
+      "actionErrorPolicy": "rollback",
+      "onUnhandled": "defer",
+      "guardErrorPolicy": "raise",
+      "strictTargets": true,
+      "strict": true,
+      "spawnBlockingTimeout": 5000
+    },
+    "n": {
+      "actions": 16,
+      "guards": 5,
+      "services": 0,
+      "delays": 0,
+      "events": 5
+    },
+    "services": [],
+    "events": [
+      "CAP_BREACH",
+      "EXPIRY_DUE",
+      "MANUAL_LOCK",
+      "OVERRIDE_REQUESTED",
+      "PNL_UPDATE"
+    ],
+    "build_async": "OK",
+    "machine_policy": {
+      "action_error_policy": "rollback",
+      "guard_error_policy": "raise",
+      "on_unhandled": "defer"
+    },
+    "build_sync": "OK",
+    "build_bare": "OK"
+  }
+}

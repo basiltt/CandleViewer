@@ -1,0 +1,54 @@
+{
+  "defer_growth": {
+    "deferred_count": 300,
+    "cap": null,
+    "ids": [
+      "session.auth.revoked",
+      "session.elevation.normal"
+    ],
+    "status": "running",
+    "unhandled_sample": [
+      [
+        "REQUEST",
+        "deferred"
+      ],
+      [
+        "REQUEST",
+        "deferred"
+      ],
+      [
+        "REQUEST",
+        "deferred"
+      ]
+    ],
+    "dropped_sample": []
+  },
+  "step_up_after_revoke": {
+    "ids": [
+      "session.auth.revoked",
+      "session.elevation.elevated"
+    ],
+    "receipt": {
+      "changed": true,
+      "deferred": false
+    },
+    "acts_tail": [
+      "broadcast_revocation",
+      "stamp_elevated_until",
+      "audit_step_up",
+      "schedule_elevation_deadline"
+    ]
+  },
+  "guard_raise": {
+    "ids": [
+      "session.auth.pending_mfa",
+      "session.elevation.normal"
+    ],
+    "changed": false,
+    "error": "RuntimeError",
+    "err_msg": "guard:mfa_attempts_exhausted",
+    "status": "running",
+    "acts": []
+  },
+  "strict": "UnknownEventError: Event 'NOT_A_REAL_EVENT' is not declared by machine 'session'. Known events: ABSOLUTE_DEADLINE, ELEVATION_DEADLINE, IDLE_DEADLINE, LOGOUT, MFA_FAILED, MFA_OK, M"
+}

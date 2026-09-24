@@ -1,0 +1,155 @@
+{
+  "round": 10,
+  "build": {
+    "repo": "xstate-statemachine",
+    "ref": "main",
+    "commit": "19cb1f1",
+    "pr": 211,
+    "merge_commit": "4dbf86e",
+    "declared_version_in_changelog": "0.8.1 (unreleased)",
+    "runtime___version__": "0.8.0",
+    "key_on": "commit",
+    "note": "__version__ still reports 0.8.0 on this tree. Never key a pin, CI assertion or gate baseline on the version string."
+  },
+  "posted": true,
+  "note": "POSTED 2026-09-22. New issues #212-#216 filed, 8 comments posted (#203-#210), meta #26 replaced. GitHub access used gh CLI with authorised write access. We never reopen closed upstream issues; residuals were filed as new R10 issues instead. Every new-issue body embeds a STANDALONE repro (stdlib + xstate_statemachine only) that was executed from neutral cwd C:/Users/basil against this commit both pre-flight (from the draft file) and post-flight (re-fetched from the live issue body).",
+  "r10_to_issue": {
+    "R10-03": 212,
+    "R10-04": 213,
+    "R10-05": 214,
+    "R10-06": 215,
+    "R10-07": 216
+  },
+  "decision": {
+    "gate": "ADOPT WITH CONSTRAINTS",
+    "decision_table_row": 8,
+    "prior_round_row": 6,
+    "counts": {
+      "blocker": 0,
+      "high": 0,
+      "medium": 5,
+      "low": 7,
+      "refuted_outright": 1
+    },
+    "suite": {
+      "passed": 3505,
+      "skipped": 13,
+      "failed": 0,
+      "seconds": 566.57,
+      "coverage_pct": 92.78
+    }
+  },
+  "new_issues": [
+    {
+      "file": "new/R10-03-delayed-selfsend-heartbeat-dies-at-maxiterations.md",
+      "r10": "R10-03",
+      "severity": "Medium",
+      "title": "#206's chain charge is time-blind, so a raise(delay=) self-paced heartbeat dies at maxIterations beats",
+      "repro": "new/repro/R10-03_delayed_selfsend_heartbeat_dies.py",
+      "repro_exit_code": 1,
+      "labels": ["bug", "severity/medium", "area/interpreter", "timers", "docs"]
+    },
+    {
+      "file": "new/R10-04-armed-delayed-selfraise-lost-on-restore.md",
+      "r10": "R10-04",
+      "severity": "Medium",
+      "title": "An armed-but-unfired delayed self-raise has no snapshot representation and is silently lost on restore",
+      "repro": "new/repro/R10-04_delayed_selfraise_lost_on_restore.py",
+      "repro_exit_code": 1,
+      "labels": ["bug", "severity/medium", "area/interpreter", "persistence", "timers"]
+    },
+    {
+      "file": "new/R10-05-restore-bypasses-strict-and-silently-drops-after.md",
+      "r10": "R10-05",
+      "severity": "Medium",
+      "title": "The restore path bypasses strict, and #203 now silently drops a pre-0.8.1 persisted after deadline",
+      "repro": "new/repro/R10-05_restore_bypasses_strict_and_drops_after.py",
+      "repro_exit_code": 1,
+      "labels": ["bug", "severity/medium", "area/interpreter", "persistence", "events", "migration"]
+    },
+    {
+      "file": "new/R10-06-lap-parity-claim-false-on-engine-work-charts.md",
+      "r10": "R10-06",
+      "severity": "Medium",
+      "title": "#209's all-three-lanes-agree claim is false on engine-work-only charts; the gap grows with the limit",
+      "repro": "new/repro/R10-06_lap_parity_false_on_engine_work_charts.py",
+      "repro_exit_code": 1,
+      "labels": ["documentation", "severity/medium", "area/interpreter", "sync-interpreter"]
+    },
+    {
+      "file": "new/R10-07-unknown-top-level-config-keys-accepted-silently.md",
+      "r10": "R10-07",
+      "severity": "Medium",
+      "title": "Unknown top-level config keys accepted silently; a misspelled safety policy downgrades to its default",
+      "repro": "new/repro/R10-07_unknown_config_keys_accepted_silently.py",
+      "repro_exit_code": 1,
+      "labels": ["bug", "severity/medium", "area/validation", "dx"],
+      "carry_forward_from": ["6db65d8", "f28719c"]
+    }
+  ],
+  "comments": [
+    { "issue": 203, "file": "comments/203.md", "action": "comment" },
+    { "issue": 204, "file": "comments/204.md", "action": "comment" },
+    { "issue": 205, "file": "comments/205.md", "action": "comment" },
+    { "issue": 206, "file": "comments/206.md", "action": "comment" },
+    { "issue": 207, "file": "comments/207.md", "action": "comment" },
+    { "issue": 208, "file": "comments/208.md", "action": "comment" },
+    { "issue": 209, "file": "comments/209.md", "action": "comment" },
+    { "issue": 210, "file": "comments/210.md", "action": "comment" }
+  ],
+  "refuted": [
+    {
+      "file": "refuted/R10-02-refuted.md",
+      "r10": "R10-02",
+      "filed_as": "High",
+      "final": "REFUTED (residual Info: validator has no self-target-restart warning)",
+      "reason": "A self-targeting onDone is an INTERNAL transition by contract; XState v5 makes internal the default with reenter:true as the opt-in, documented three times. With reenter:true every lane re-arms to maxIterations+2 and the #207 stranded hook fires."
+    },
+    {
+      "r10": "R10-01",
+      "filed_as": "Blocker",
+      "final": "Low (hardening)",
+      "reason": "All seven vectors reproduce, but they partition into in-process Python (strictly weaker than the premise) and blob-write (which already suffices with no event forgery at all). The external name/shape boundary #195/#203 target holds in every probe. NOT filed as a vulnerability; hardening asks folded into the #203 and #205 comments."
+    },
+    {
+      "r10": "R10-C1",
+      "filed_as": "Blocker",
+      "final": "REFUTED as a library defect; retained as OUR catalogue Blocker C-04",
+      "reason": "Our chart omits the revocation events from the elevation region; REVOKE, listed in both regions, clears correctly. Corrected chart passes on both engines and both spellings."
+    },
+    {
+      "r10": "R10-C2",
+      "filed_as": "Blocker",
+      "final": "REFUTED as a library defect; retained as OUR catalogue Blocker C-07b",
+      "reason": "onUnhandled:\"error\" is documented opt-in policy and a guard-denied event is an unhandled event (#170). SCXML 3.13 and XState v5 agree the engine is right. Fixable in our config alone."
+    },
+    {
+      "r10": "R10-C4",
+      "filed_as": "High",
+      "final": "REFUTED (residual Low, our constraint CV-C4x)",
+      "reason": "Contract-modelling error: the kill event is declared only on sibling states. Ancestor handler 0.001s vs sibling-only 1.458s. XState v5/SCXML would drop the event outright; defer loses less."
+    }
+  ],
+  "downgraded": [
+    { "r10": "R10-03", "from": "High", "to": "Medium" },
+    { "r10": "R10-C3", "from": "High", "to": "Medium", "note": "OUR-CONTRACT-DEFECT; stale_lockout IS escapable via RECONNECTED, so the High premise fails" }
+  ],
+  "release_readiness": {
+    "would_pin_a_tag_cut_at_this_commit": true,
+    "blocking_before_tag": [
+      "Bump __version__ to 0.8.1 (still reports 0.8.0); add a release test asserting __version__ == tag"
+    ],
+    "same_release_preferred": [
+      "Fix the +2 / +3 plateau contradiction in CHANGELOG [Unreleased] (both are correct for their own shapes)",
+      "Narrow or fix the #209 lap-parity claim (R10-06)",
+      "Name #206 as a behaviour break for raise(delay=) periodic work (R10-03)"
+    ],
+    "test_hygiene": [
+      "The #209 nested_invoke pin is inert in both the verify script and tests/test_round9_findings.py: it never exits state 'a', fires exactly 2 calls at every limit 1-25, and never trips RunawayChainError"
+    ]
+  },
+  "meta": {
+    "issue": 26,
+    "file": "meta-26.md"
+  }
+}

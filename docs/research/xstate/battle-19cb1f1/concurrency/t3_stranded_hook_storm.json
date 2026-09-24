@@ -1,0 +1,153 @@
+{
+  "probe": "t3_stranded_hook_storm",
+  "py": "3.13.7",
+  "claim": "#207 stranded invocation observable exactly-once, ids correct, dormant agrees",
+  "limit": 8,
+  "machines_per_kind": 50,
+  "summary": {
+    "def": {
+      "machines": 50,
+      "n_stranded_histogram": {
+        "0": 50
+      },
+      "ids_seen": {},
+      "dormant_histogram": {
+        "True": 50
+      },
+      "states": {
+        "t3.work": 50
+      }
+    },
+    "async def": {
+      "machines": 50,
+      "n_stranded_histogram": {
+        "0": 50
+      },
+      "ids_seen": {},
+      "dormant_histogram": {
+        "True": 50
+      },
+      "states": {
+        "t3.work": 50
+      }
+    }
+  },
+  "runaway_payload": {
+    "def": {
+      "stranded_attr": [
+        "spin"
+      ],
+      "in_message": true
+    },
+    "async def": {
+      "stranded_attr": [
+        "spin"
+      ],
+      "in_message": true
+    }
+  },
+  "violations": [
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ],
+    [
+      "def",
+      "stranded hook not exactly once",
+      0
+    ]
+  ],
+  "n_violations": 100,
+  "result": "FAIL"
+}

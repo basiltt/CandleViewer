@@ -1,0 +1,34 @@
+{
+ "[def]V0c.live_VALIDATE_moves": {
+  "pass": true,
+  "note": "['order.lifecycle.draft', 'order.protection.not_required'] -> ['order.lifecycle.validated', 'order.protection.not_required']  transitions=2 actions=4"
+ },
+ "[def]V0c.restored_at_same_state": {
+  "pass": true,
+  "note": "restored=['order.lifecycle.draft', 'order.protection.not_required'] live_t0=['order.lifecycle.draft', 'order.protection.not_required']"
+ },
+ "[def]V0c.restored_VALIDATE_moves": {
+  "pass": true,
+  "note": "['order.lifecycle.draft', 'order.protection.not_required'] -> ['order.lifecycle.validated', 'order.protection.not_required']"
+ },
+ "[def]V0c.restored_plugin_gets_on_transition": {
+  "pass": true,
+  "note": "transitions=[\"VALIDATE->['order.lifecycle.validated', 'order.protection.not_required']\"]"
+ },
+ "[def]V0c.restored_plugin_gets_on_action_execute": {
+  "pass": true,
+  "note": "actions=['stamp_validated', 'persist_event', 'reserve_rate_token']"
+ },
+ "[def]V0c.restored_plugin_parity_with_live": {
+  "pass": false,
+  "note": "restored tr=1 ac=3 | live tr=2 ac=4"
+ },
+ "[def]V0c.restored_missing_only_on_interpreter_start": {
+  "pass": true,
+  "note": "started=0 transitions=1"
+ },
+ "[def]V0c.restored_stop_fires_on_interpreter_stop": {
+  "pass": true,
+  "note": "stopped=1"
+ }
+}

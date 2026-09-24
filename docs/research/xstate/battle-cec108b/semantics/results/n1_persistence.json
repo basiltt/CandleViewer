@@ -1,0 +1,110 @@
+[
+ {
+  "id": "N1-01",
+  "title": "300 random PARALLEL machines: snapshot at EVERY quiescent point never raises and round-trips byte-identical",
+  "intent": "#142/#143 legality must not reject a legal parallel configuration, nor accept a torn one",
+  "detail": {
+   "ok": true,
+   "cases": 300,
+   "snapshots": 3600,
+   "fails": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N1-02",
+  "title": "Snapshot from inside an ENTRY action is refused (SnapshotMidStepError) on both engines",
+  "intent": "D5-semantics-1: the entry-action window has a legal leaf but a half-applied context",
+  "detail": {
+   "ok": false,
+   "sync": {
+    "r": "ACCEPTED",
+    "ctx": {
+     "filled": 0
+    }
+   },
+   "async": {
+    "r": "ACCEPTED",
+    "ctx": {
+     "filled": 0
+    }
+   }
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "N1-03",
+  "title": "history + parallel: deep history inside a parallel region restores to the remembered leaf",
+  "intent": "history is a snapshot slot; parallel regions multiply the ways it can tear",
+  "detail": {
+   "ok": true,
+   "before": [
+    "hp.a.busy.b2",
+    "hp.b.y"
+   ],
+   "hist_at_busy": {
+    "hp.a": [
+     "hp.a.busy",
+     "hp.a.busy.b1"
+    ]
+   },
+   "after_restore": [
+    "hp.a.idle",
+    "hp.b.y"
+   ],
+   "hist_restored": {
+    "hp.a": [
+     "hp.a.busy",
+     "hp.a.busy.b2"
+    ]
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N1-04",
+  "title": "v1 upcast with a TORN configuration is refused, not silently upcast",
+  "intent": "#143 read-side legality must apply to the v1 migration path too",
+  "detail": {
+   "ok": true,
+   "v2_torn": "SnapshotCorruptError: Snapshot is malformed: status is 'running' but the configuration has n",
+   "v1_torn": "SnapshotCorruptError: Snapshot is malformed: status is 'running' but the configuration has n"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N1-05",
+  "title": "\"fail\"-stopped machine: snapshot is stopped-typed and its restore is not a live zombie",
+  "intent": "#145: status stopped + configuration cleared must persist coherently",
+  "detail": {
+   "ok": true,
+   "live_status": "stopped",
+   "live_ids": [],
+   "error": "TransitionFailedError",
+   "snapshot": {
+    "status": "stopped",
+    "config": []
+   },
+   "restored": {
+    "refused": "InvalidConfigError: Interpreter 'f' has been stopped and cannot be restarted. Cr"
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N1-06",
+  "title": "actors + deferred buffer: a snapshot with live child + deferred events round-trips legally",
+  "intent": "#162/#146: deferred records and actor blobs are typed and re-checked per record",
+  "detail": {
+   "ok": true,
+   "round_trip": true,
+   "restore_error": null,
+   "actors_in_blob": [
+    "par:kid"
+   ],
+   "deferred_len": 1,
+   "hostile_deferred": "SnapshotCorruptError"
+  },
+  "status": "PASS"
+ }
+]

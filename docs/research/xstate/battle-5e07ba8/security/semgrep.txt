@@ -1,0 +1,41 @@
+               
+               
+┌─────────────┐
+│ Scan Status │
+└─────────────┘
+  Scanning 43 files tracked by git with 346 Code rules:
+                                                                                                                        
+  Language      Rules   Files          Origin      Rules                                                                
+ ─────────────────────────────        ───────────────────                                                               
+  <multilang>       2      43          Community     346                                                                
+  python          198      42                                                                                           
+                                                                                                                        
+                
+                
+┌──────────────┐
+│ Scan Summary │
+└──────────────┘
+✅ Scan completed successfully.
+ • Findings: 1 (1 blocking)
+ • Rules run: 200
+ • Targets scanned: 43
+ • Parsed lines: ~100.0%
+ • Scan was limited to files tracked by git
+ • For a detailed list of skipped files and lines, run semgrep with the --verbose flag
+Ran 200 rules on 43 files: 1 finding.
+                  
+                  
+┌────────────────┐
+│ 1 Code Finding │
+└────────────────┘
+                                             
+    src\xstate_statemachine\cli\validation.py
+    ❯❱ python.lang.security.audit.exec-detected.exec-detected
+          ❰❰ Blocking ❱❱
+          Detected the use of exec(). exec() can be dangerous if used to evaluate dynamic content. If this 
+          content can be input from outside the program, this may be a code injection vulnerability. Ensure
+          evaluated content is not definable by external sources.                                          
+          Details: https://sg.run/ndRX                                                                     
+                                                                                                           
+          222┆ exec(compile(code, f"<{template}>", "exec"), module.__dict__)
+

@@ -1,0 +1,194 @@
+# CODEOWNERS — CandleViewer
+#
+# Normative ownership map (see CONSTITUTION.md §8 and §10).
+# Rules:
+#   * Every PR needs 2 approvals, at least 1 from a CODEOWNER of a touched path (C-10.1).
+#   * Later matching rules win, so ordering below is general -> specific.
+#   * A directory without an owner is a defect: add it in the PR that creates the directory (C-8.1).
+#   * @basiltt is the owner of last resort and the sole approver of Constitution amendments (C-8.3, C-16.1).
+#
+# Teams (GitHub team placeholders under the @CandleViewer org):
+#   @CandleViewer/architecture   - architect, protocol & ADR stewardship
+#   @CandleViewer/backend        - Python monolith engineers
+#   @CandleViewer/frontend       - React web app engineers
+#   @CandleViewer/chart-engine   - custom WebGL engine engineers
+#   @CandleViewer/design-system  - design-system / tokens / components
+#   @CandleViewer/design         - UX research, product design, motion, accessibility design
+#   @CandleViewer/qa             - QA / SDET
+#   @CandleViewer/security       - security engineering
+#   @CandleViewer/devsecops      - CI/CD, infrastructure, observability
+
+# ---------------------------------------------------------------------------
+# Default owner for anything not matched below
+# ---------------------------------------------------------------------------
+*                                       @basiltt @CandleViewer/architecture
+
+# ---------------------------------------------------------------------------
+# Governance documents (amendment process applies)
+# ---------------------------------------------------------------------------
+/CONSTITUTION.md                        @basiltt @CandleViewer/architecture @CandleViewer/security
+/AGENTS.md                              @basiltt @CandleViewer/architecture
+/CLAUDE.md                              @basiltt @CandleViewer/architecture
+/SECURITY.md                            @basiltt @CandleViewer/security
+/CONTRIBUTING.md                        @basiltt @CandleViewer/architecture
+/CODE_OF_CONDUCT.md                     @basiltt
+/LICENSE                                @basiltt
+/README.md                              @basiltt @CandleViewer/architecture
+/CHANGELOG.md                           @CandleViewer/devsecops @CandleViewer/architecture
+
+# ---------------------------------------------------------------------------
+# Repo tooling, CI/CD, infrastructure
+# ---------------------------------------------------------------------------
+/.github/                               @CandleViewer/devsecops @CandleViewer/architecture
+/.github/workflows/                     @CandleViewer/devsecops @CandleViewer/security
+/.github/CODEOWNERS                     @basiltt @CandleViewer/architecture
+/.github/PULL_REQUEST_TEMPLATE.md       @CandleViewer/architecture @CandleViewer/qa
+/.github/ISSUE_TEMPLATE/                @CandleViewer/architecture @CandleViewer/qa
+/infra/                                 @CandleViewer/devsecops @CandleViewer/security
+/docker-compose*.yml                    @CandleViewer/devsecops @CandleViewer/security
+/Dockerfile*                            @CandleViewer/devsecops @CandleViewer/security
+/.gitignore                             @CandleViewer/devsecops
+/.gitattributes                         @CandleViewer/devsecops
+/package.json                           @CandleViewer/devsecops @CandleViewer/frontend
+/pnpm-lock.yaml                         @CandleViewer/devsecops @CandleViewer/security
+/pnpm-workspace.yaml                    @CandleViewer/devsecops @CandleViewer/architecture
+/turbo.json                             @CandleViewer/devsecops @CandleViewer/frontend
+/tsconfig.base.json                     @CandleViewer/frontend @CandleViewer/architecture
+/eslint.config.mjs                      @CandleViewer/frontend @CandleViewer/devsecops
+/.prettierrc.json                       @CandleViewer/frontend
+/commitlint.config.*                    @CandleViewer/devsecops
+
+# ---------------------------------------------------------------------------
+# Frontend applications
+# ---------------------------------------------------------------------------
+/apps/                                  @CandleViewer/frontend
+/apps/web/                              @CandleViewer/frontend
+/apps/web/src/features/admin/           @CandleViewer/frontend @CandleViewer/security
+/apps/web/src/features/risk/            @CandleViewer/frontend @CandleViewer/security
+/apps/web/src/features/ticket/          @CandleViewer/frontend @CandleViewer/security
+/apps/web/src/transport/                @CandleViewer/frontend @CandleViewer/architecture
+/apps/desktop/                          @CandleViewer/frontend @CandleViewer/devsecops
+/apps/desktop/src/main/                 @CandleViewer/devsecops @CandleViewer/security
+/apps/desktop/src/preload/              @CandleViewer/security @CandleViewer/frontend
+
+# ---------------------------------------------------------------------------
+# Shared packages
+# ---------------------------------------------------------------------------
+/packages/                              @CandleViewer/frontend @CandleViewer/architecture
+/packages/chart-engine/                 @CandleViewer/chart-engine
+/packages/chart-engine/bench/           @CandleViewer/chart-engine @CandleViewer/qa
+/packages/chart-engine/package.json     @CandleViewer/chart-engine @CandleViewer/architecture
+/packages/ui/                           @CandleViewer/design-system @CandleViewer/frontend
+/packages/ui/src/tokens/                @CandleViewer/design-system @CandleViewer/design
+/packages/protocol/                     @CandleViewer/architecture @CandleViewer/backend
+/packages/config/                       @CandleViewer/devsecops @CandleViewer/frontend
+
+# ---------------------------------------------------------------------------
+# Backend monolith
+# ---------------------------------------------------------------------------
+/services/                              @CandleViewer/backend
+/services/api/                          @CandleViewer/backend
+/services/api/config/                   @CandleViewer/backend @CandleViewer/devsecops
+/services/api/secrets/                  @CandleViewer/security
+/services/api/auth/                     @CandleViewer/security
+/services/api/audit/                    @CandleViewer/security
+/services/api/admin/                    @CandleViewer/backend @CandleViewer/security
+/services/api/exchange/                 @CandleViewer/backend @CandleViewer/security
+/services/api/exchange/base/            @CandleViewer/architecture @CandleViewer/backend
+/services/api/exchange/bybit/           @CandleViewer/backend @CandleViewer/security
+/services/api/oms/                      @CandleViewer/backend @CandleViewer/security
+/services/api/risk/                     @CandleViewer/backend @CandleViewer/security
+/services/api/rules/                    @CandleViewer/backend @CandleViewer/security
+/services/api/paper/                    @CandleViewer/backend
+/services/api/accounts/                 @CandleViewer/backend @CandleViewer/security
+/services/api/bus/                      @CandleViewer/backend @CandleViewer/architecture
+/services/api/ingestion/                @CandleViewer/backend
+/services/api/book/                     @CandleViewer/backend
+/services/api/bars/                     @CandleViewer/backend
+/services/api/orderflow/                @CandleViewer/backend
+/services/api/recorder/                 @CandleViewer/backend @CandleViewer/devsecops
+/services/api/replay/                   @CandleViewer/backend
+/services/api/journal/                  @CandleViewer/backend
+/services/api/alerts/                   @CandleViewer/backend
+/services/api/observability/            @CandleViewer/devsecops @CandleViewer/backend
+/services/api/http/                     @CandleViewer/backend @CandleViewer/architecture
+/services/api/ws/                       @CandleViewer/backend @CandleViewer/architecture
+/services/api/storage/                  @CandleViewer/backend @CandleViewer/architecture
+/services/api/storage/migrations/       @CandleViewer/backend @CandleViewer/architecture @CandleViewer/security
+/services/api/storage/schemas/          @CandleViewer/backend @CandleViewer/architecture
+/services/api/pyproject.toml            @CandleViewer/backend @CandleViewer/devsecops @CandleViewer/security
+
+# ---------------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------------
+/tests/                                 @CandleViewer/qa
+/tests/e2e/                             @CandleViewer/qa @CandleViewer/frontend
+/tests/load/                            @CandleViewer/qa @CandleViewer/devsecops
+/tests/chaos/                           @CandleViewer/qa @CandleViewer/backend
+/tests/fixtures/                        @CandleViewer/qa @CandleViewer/backend @CandleViewer/security
+
+# ---------------------------------------------------------------------------
+# Documentation
+# ---------------------------------------------------------------------------
+/docs/                                  @CandleViewer/architecture
+/docs/plan/                             @CandleViewer/architecture
+/docs/plan/00-planning-brief.md         @basiltt @CandleViewer/architecture
+/docs/plan/01-sdlc-and-branching.md     @CandleViewer/architecture @CandleViewer/devsecops
+/docs/plan/02-definition-of-ready-done.md @CandleViewer/architecture @CandleViewer/qa
+/docs/plan/03-testing-strategy.md       @CandleViewer/qa @CandleViewer/architecture
+/docs/plan/04-security-program.md       @CandleViewer/security
+/docs/plan/05-accessibility-standard.md @CandleViewer/design @CandleViewer/qa
+/docs/plan/06-performance-and-load-standard.md @CandleViewer/qa @CandleViewer/chart-engine
+/docs/plan/07-release-and-prr.md        @CandleViewer/devsecops @basiltt
+/docs/plan/10-personas.md               @CandleViewer/design
+/docs/plan/11-user-stories.md           @CandleViewer/design @CandleViewer/architecture
+/docs/plan/12-sitemap.md                @CandleViewer/design
+/docs/plan/13-user-flows.md             @CandleViewer/design
+/docs/plan/14-screens-catalogue.md      @CandleViewer/design
+/docs/plan/15-component-catalogue.md    @CandleViewer/design-system
+/docs/plan/16-design-system-brief.md    @CandleViewer/design-system @CandleViewer/design
+/docs/plan/17-ux-diagrams.md            @CandleViewer/design
+/docs/plan/20-architecture.md           @CandleViewer/architecture
+/docs/plan/21-database-schema.md        @CandleViewer/architecture @CandleViewer/backend
+/docs/plan/22-api-openapi.yaml          @CandleViewer/architecture @CandleViewer/backend
+/docs/plan/23-ws-protocol.md            @CandleViewer/architecture @CandleViewer/backend
+/docs/plan/24-internal-schemas.md       @CandleViewer/architecture @CandleViewer/backend
+/docs/plan/26-chart-engine-design.md    @CandleViewer/chart-engine @CandleViewer/architecture
+/docs/plan/27-adrs/                     @CandleViewer/architecture
+/docs/plan/30-release-roadmap.md        @basiltt @CandleViewer/architecture
+/docs/plan/31-sprint-plan.md            @basiltt @CandleViewer/architecture
+/docs/plan/32-risk-register.md          @CandleViewer/architecture @CandleViewer/security
+/docs/plan/33-raci.md                   @basiltt
+/docs/plan/backlog/                      @CandleViewer/architecture @CandleViewer/qa
+
+# --- Backlog: schema vs content ------------------------------------------------
+# The backlog is two different kinds of artefact under one directory, with two
+# different owners. GitHub applies the LAST matching rule, so the more specific
+# schema/tooling rules are listed after the directory rule above.
+#
+#   * SCHEMA + TOOLING (architecture-owned): the shape of a ticket, the enum of
+#     statuses/labels/epic keys, the validator and its fixtures. Changing these
+#     changes every ticket in the repo and every agent that parses one, so
+#     @CandleViewer/architecture is the required approver. QA review is welcome
+#     but not blocking.
+#   * CONTENT (QA-owned): the individual ticket .json files — acceptance criteria,
+#     black-box test plans, DoR/DoD evidence. @CandleViewer/qa is the required
+#     approver because DoR/DoD self-sufficiency (C-11.1) is a QA judgement;
+#     architecture review is welcome but not blocking.
+#
+# A PR that touches BOTH the schema and ticket content needs both owners, which
+# is intentional — split it (C-4.6) unless the content change is a mechanical
+# migration required by the schema change, in which case label it `shared-package`
+# and get both approvals.
+/docs/plan/backlog/schema/               @CandleViewer/architecture
+/docs/plan/backlog/*.schema.json         @CandleViewer/architecture
+/docs/plan/backlog/README.md             @CandleViewer/architecture @CandleViewer/qa
+/docs/plan/backlog/_index.json           @CandleViewer/architecture
+/docs/plan/backlog/epics.json            @CandleViewer/architecture @basiltt
+/docs/plan/backlog/labels.json           @CandleViewer/architecture @CandleViewer/devsecops
+/docs/plan/backlog/tickets/              @CandleViewer/qa @CandleViewer/architecture
+/scripts/validate-backlog.*              @CandleViewer/architecture
+# -------------------------------------------------------------------------------
+/docs/adr/                              @CandleViewer/architecture
+/docs/research/                         @basiltt
+/docs/incidents/                        @CandleViewer/security @basiltt

@@ -1,0 +1,305 @@
+{
+  "library_version": "0.8.0",
+  "python": "3.13.7",
+  "generated": "2026-09-17T15:25:45",
+  "benchmarks_run": false,
+  "checks": [
+    {
+      "id": "LC-01",
+      "kind": "repro",
+      "label": "action raise commits transition",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.28
+    },
+    {
+      "id": "LC-02",
+      "kind": "repro",
+      "label": "always self target deadlock",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.23
+    },
+    {
+      "id": "LC-03",
+      "kind": "repro",
+      "label": "unhandled events discarded",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.52
+    },
+    {
+      "id": "LC-05",
+      "kind": "repro",
+      "label": "raise not macrostep",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed upstream",
+      "seconds": 0.52
+    },
+    {
+      "id": "LC-06",
+      "kind": "repro",
+      "label": "overforgiving target resolution",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.21
+    },
+    {
+      "id": "LC-07",
+      "kind": "repro",
+      "label": "relative dot target silent noop",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.27
+    },
+    {
+      "id": "LC-08",
+      "kind": "repro",
+      "label": "unknown target unvalidated",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed upstream",
+      "seconds": 0.22
+    },
+    {
+      "id": "LC-09",
+      "kind": "repro",
+      "label": "guard exception swallowed",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.33
+    },
+    {
+      "id": "LC-12",
+      "kind": "repro",
+      "label": "spawn blocking async engine",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 1.83
+    },
+    {
+      "id": "LC-16",
+      "kind": "repro",
+      "label": "sendto invoke id",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed upstream",
+      "seconds": 1.35
+    },
+    {
+      "id": "LC-19",
+      "kind": "repro",
+      "label": "restore does not restart invokes",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.63
+    },
+    {
+      "id": "LC-21",
+      "kind": "repro",
+      "label": "no snapshot schema version",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed upstream",
+      "seconds": 0.21
+    },
+    {
+      "id": "LC-22",
+      "kind": "repro",
+      "label": "from_snapshot_context_wholesale",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.21
+    },
+    {
+      "id": "LC-24",
+      "kind": "repro",
+      "label": "pending_queue_lost_on_crash",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.2
+    },
+    {
+      "id": "LC-26",
+      "kind": "repro",
+      "label": "after_timer_starvation",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed upstream",
+      "seconds": 5.77
+    },
+    {
+      "id": "LC-27",
+      "kind": "repro",
+      "label": "no clock injection",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.84
+    },
+    {
+      "id": "LC-28",
+      "kind": "repro",
+      "label": "actor poll two tasks",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.21
+    },
+    {
+      "id": "LC-29",
+      "kind": "repro",
+      "label": "invoke input static ignored",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.28
+    },
+    {
+      "id": "LC-32",
+      "kind": "repro",
+      "label": "terminal machines not reaped",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed upstream",
+      "seconds": 0.48
+    },
+    {
+      "id": "LC-34",
+      "kind": "repro",
+      "label": "no strict mode",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed upstream",
+      "seconds": 0.35
+    },
+    {
+      "id": "LC-36",
+      "kind": "repro",
+      "label": "builtin action params misspelled",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.22
+    },
+    {
+      "id": "LC-37",
+      "kind": "repro",
+      "label": "arity misclassification",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.2
+    },
+    {
+      "id": "LC-38",
+      "kind": "repro",
+      "label": "sync interpreter timer threads",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed upstream",
+      "seconds": 1.31
+    },
+    {
+      "id": "LC-39",
+      "kind": "repro",
+      "label": "throughput global budget",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 16.26
+    },
+    {
+      "id": "LC-41",
+      "kind": "repro",
+      "label": "unbounded queue no backpressure",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.3
+    },
+    {
+      "id": "LC-42",
+      "kind": "repro",
+      "label": "send fire and forget no answer",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.42
+    },
+    {
+      "id": "LC-43",
+      "kind": "repro",
+      "label": "cross thread send silently lost",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.74
+    },
+    {
+      "id": "LC-44",
+      "kind": "repro",
+      "label": "pure api slower and skips actions",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.31
+    },
+    {
+      "id": "LC-45",
+      "kind": "repro",
+      "label": "hot path alloc and info logging",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed upstream",
+      "seconds": 0.77
+    },
+    {
+      "id": "LC-47",
+      "kind": "repro",
+      "label": "target str mutation shared definition",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed upstream",
+      "seconds": 0.21
+    },
+    {
+      "id": "LC-48",
+      "kind": "repro",
+      "label": "no error observability hooks",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed upstream",
+      "seconds": 0.28
+    },
+    {
+      "id": "LC-49",
+      "kind": "repro",
+      "label": "no hierarchical state value",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed upstream",
+      "seconds": 0.21
+    },
+    {
+      "id": "LC-53",
+      "kind": "repro",
+      "label": "undocumented production characteristics",
+      "status": "FAIL",
+      "detail": "defect reproduced (expected on 0.7.0)",
+      "seconds": 0.08
+    },
+    {
+      "id": "LC-57",
+      "kind": "repro",
+      "label": "two engines duplicate core algorithm",
+      "status": "PASS",
+      "detail": "defect NOT reproduced -- fixed upstream",
+      "seconds": 0.21
+    },
+    {
+      "id": "PROBE-01",
+      "kind": "probe",
+      "label": "01_core_transitions",
+      "status": "FAIL",
+      "detail": "16/20 PASS; REGRESSED: A18",
+      "seconds": 2.08
+    },
+    {
+      "id": "PROBE-02",
+      "kind": "probe",
+      "label": "02_invoke_timers_history",
+      "status": "PASS",
+      "detail": "14/14 PASS",
+      "seconds": 3.7
+    },
+    {
+      "id": "PROBE-03",
+      "kind": "probe",
+      "label": "03_context_snapshot_determinism",
+      "status": "IMPROVED",
+      "detail": "13/17 PASS; newly passing: C10,C16",
+      "seconds": 7.86
+    }
+  ],
+  "exit_code": 1
+}

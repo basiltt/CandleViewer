@@ -1,0 +1,76 @@
+{
+ "states": [
+  "trade_group.closed"
+ ],
+ "status": "done",
+ "context": {
+  "group_id": null,
+  "policy": "best_effort",
+  "leg_ids": [],
+  "legs_open": 2,
+  "legs_failed": 0,
+  "legs_skipped": 0,
+  "legs_total": 2,
+  "quiesce_deadline_us": null,
+  "unwind_id": null,
+  "quiesced": false
+ },
+ "deferred": 0,
+ "error": null,
+ "actions": [
+  "reserve_rate_budget",
+  "launch_all_legs",
+  "arm_quiesce_deadline",
+  "count_open",
+  "raise",
+  "count_open",
+  "raise"
+ ],
+ "transitions": [
+  "___xstate_statemachine_init___->['trade_group.draft']",
+  "CONFIRM->['trade_group.submitting']",
+  "LEG_OPEN->['trade_group.submitting']",
+  "LEG_OPEN->['trade_group.submitting']",
+  "EVALUATE->['trade_group.open']",
+  "ALL_LEGS_FLAT->['trade_group.closed']"
+ ],
+ "dropped": [],
+ "unhandled": [
+  [
+   "EVALUATE",
+   "deferred"
+  ],
+  [
+   "EVALUATE",
+   "deferred"
+  ]
+ ],
+ "action_errors": [],
+ "guard_errors": [],
+ "service_errors": [],
+ "svc_calls": [],
+ "sends": [
+  {
+   "ev": "CONFIRM",
+   "ok": true,
+   "sec": 0.0012645999668166041
+  },
+  {
+   "ev": "LEG_OPEN",
+   "ok": true,
+   "sec": 6.639998173341155e-05
+  },
+  {
+   "ev": "LEG_OPEN",
+   "ok": true,
+   "sec": 0.00015680002979934216
+  },
+  {
+   "ev": "ALL_LEGS_FLAT",
+   "ok": true,
+   "sec": 6.399996345862746e-05
+  }
+ ],
+ "snapshot_ok": true,
+ "notes": []
+}

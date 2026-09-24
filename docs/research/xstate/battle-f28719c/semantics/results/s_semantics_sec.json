@@ -1,0 +1,57 @@
+[
+ {
+  "id": "S1",
+  "title": "SCXML 3.13: a spinning DEEPER `always` never consumes a SHALLOWER named event; same trip lap on both engines",
+  "detail": {
+   "ok": true,
+   "engines_agree_on_trip_lap": true,
+   "runs": {
+    "async": {
+     "named_fired": 1,
+     "always_laps": 16,
+     "err": "RunawayChainError"
+    },
+    "sync": {
+     "named_fired": 1,
+     "always_laps": 16,
+     "err": "RunawayChainError"
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "S2",
+  "title": "Engine-provenance forgery sweep: only the engine may mint a system event -- incl. `_replace` on a RECEIVED completion",
+  "detail": {
+   "ok": false,
+   "surfaces": {
+    "public_DoneEvent": false,
+    "deepcopy_of_genuine(legit)": true,
+    "pickle_of_genuine(legit)": true,
+    "_replace_retype": true,
+    "private_import_path": true,
+    "type_of_held_instance": true,
+    "Event_plus_ENGINE_MARK": true
+   },
+   "FORGEABLE_SURFACES": [
+    "_replace_retype",
+    "private_import_path",
+    "type_of_held_instance",
+    "Event_plus_ENGINE_MARK"
+   ],
+   "end_to_end_state": [
+    "oms.settled"
+   ],
+   "end_to_end_booked_while_fill_outstanding": [
+    [
+     "done.invoke.fill",
+     {
+      "qty": 999999
+     }
+    ]
+   ]
+  },
+  "status": "FAIL"
+ }
+]

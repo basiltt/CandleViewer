@@ -1,0 +1,26 @@
+{
+ "[def]V3.C04.fixed_builds": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]V3.C04.config_only_fix_closes_it": {
+  "pass": true,
+  "note": "all 4 revocation events drop elevation"
+ },
+ "[def]V3.C07b.fixed_builds": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]V3.C07b.denied_not_fatal": {
+  "pass": true,
+  "note": "status after denied RELEASE='running' states=['kill_switch.engaged']"
+ },
+ "[def]V3.C07b.config_only_fix_unbricks": {
+  "pass": true,
+  "note": "engaged=['kill_switch.engaged'] -> final=['kill_switch.clear']"
+ },
+ "[def]V3.C07b.chain_clean": {
+  "pass": true,
+  "note": "chain_trips=0"
+ }
+}

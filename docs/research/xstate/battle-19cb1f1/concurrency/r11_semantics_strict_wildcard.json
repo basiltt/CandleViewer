@@ -1,0 +1,194 @@
+{
+  "probe": "r11_semantics_strict_wildcard",
+  "py": "3.13.7",
+  "receipt_matrix": [
+    {
+      "engine": "async",
+      "kind": "def",
+      "signatures": {
+        "OK": "changed=True,denied=False,error=NoneType",
+        "DENIED": "changed=False,denied=True,error=NoneType",
+        "CRASH": "changed=False,denied=False,error=RuntimeError",
+        "UNKNOWN_EVENT": "changed=False,denied=False,error=NoneType",
+        "ERROR_KILL": "changed=False,denied=False,error=UnhandledEventError"
+      },
+      "distinct": 5,
+      "cells": 5
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "signatures": {
+        "OK": "changed=True,denied=False,error=NoneType",
+        "DENIED": "changed=False,denied=True,error=NoneType",
+        "CRASH": "changed=False,denied=False,error=RuntimeError",
+        "UNKNOWN_EVENT": "changed=False,denied=False,error=NoneType",
+        "ERROR_KILL": "changed=False,denied=False,error=UnhandledEventError"
+      },
+      "distinct": 5,
+      "cells": 5
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "signatures": {
+        "OK": "None(sync)",
+        "DENIED": "None(sync)",
+        "CRASH": "raised:RuntimeError",
+        "UNKNOWN_EVENT": "None(sync)",
+        "ERROR_KILL": "None(sync)"
+      },
+      "distinct": 2,
+      "cells": 5
+    }
+  ],
+  "strict_wildcard_matrix": [
+    {
+      "variant": "declared",
+      "event": "KNOWN",
+      "engine": "async",
+      "kind": "def",
+      "outcome": "changed=True,denied=False,error=NoneType",
+      "strict_should_refuse": false
+    },
+    {
+      "variant": "declared",
+      "event": "KNOWN",
+      "engine": "sync",
+      "kind": "def",
+      "outcome": "None(sync)",
+      "strict_should_refuse": false
+    },
+    {
+      "variant": "declared",
+      "event": "UNDECLARED",
+      "engine": "async",
+      "kind": "def",
+      "outcome": "raised:UnknownEventError",
+      "strict_should_refuse": true
+    },
+    {
+      "variant": "declared",
+      "event": "UNDECLARED",
+      "engine": "sync",
+      "kind": "def",
+      "outcome": "raised:UnknownEventError",
+      "strict_should_refuse": true
+    },
+    {
+      "variant": "wildcard_only",
+      "event": "KNOWN",
+      "engine": "async",
+      "kind": "def",
+      "outcome": "raised:UnknownEventError",
+      "strict_should_refuse": false
+    },
+    {
+      "variant": "wildcard_only",
+      "event": "KNOWN",
+      "engine": "sync",
+      "kind": "def",
+      "outcome": "raised:UnknownEventError",
+      "strict_should_refuse": false
+    },
+    {
+      "variant": "wildcard_only",
+      "event": "UNDECLARED",
+      "engine": "async",
+      "kind": "def",
+      "outcome": "raised:UnknownEventError",
+      "strict_should_refuse": true
+    },
+    {
+      "variant": "wildcard_only",
+      "event": "UNDECLARED",
+      "engine": "sync",
+      "kind": "def",
+      "outcome": "raised:UnknownEventError",
+      "strict_should_refuse": true
+    },
+    {
+      "variant": "declared_plus_wildcard",
+      "event": "KNOWN",
+      "engine": "async",
+      "kind": "def",
+      "outcome": "changed=True,denied=False,error=NoneType",
+      "strict_should_refuse": false
+    },
+    {
+      "variant": "declared_plus_wildcard",
+      "event": "KNOWN",
+      "engine": "sync",
+      "kind": "def",
+      "outcome": "None(sync)",
+      "strict_should_refuse": false
+    },
+    {
+      "variant": "declared_plus_wildcard",
+      "event": "UNDECLARED",
+      "engine": "async",
+      "kind": "def",
+      "outcome": "raised:UnknownEventError",
+      "strict_should_refuse": true
+    },
+    {
+      "variant": "declared_plus_wildcard",
+      "event": "UNDECLARED",
+      "engine": "sync",
+      "kind": "def",
+      "outcome": "raised:UnknownEventError",
+      "strict_should_refuse": true
+    },
+    {
+      "variant": "declared",
+      "event": "KNOWN",
+      "engine": "async",
+      "kind": "async def",
+      "outcome": "changed=True,denied=False,error=NoneType",
+      "strict_should_refuse": false
+    },
+    {
+      "variant": "declared",
+      "event": "UNDECLARED",
+      "engine": "async",
+      "kind": "async def",
+      "outcome": "raised:UnknownEventError",
+      "strict_should_refuse": true
+    },
+    {
+      "variant": "wildcard_only",
+      "event": "KNOWN",
+      "engine": "async",
+      "kind": "async def",
+      "outcome": "raised:UnknownEventError",
+      "strict_should_refuse": false
+    },
+    {
+      "variant": "wildcard_only",
+      "event": "UNDECLARED",
+      "engine": "async",
+      "kind": "async def",
+      "outcome": "raised:UnknownEventError",
+      "strict_should_refuse": true
+    },
+    {
+      "variant": "declared_plus_wildcard",
+      "event": "KNOWN",
+      "engine": "async",
+      "kind": "async def",
+      "outcome": "changed=True,denied=False,error=NoneType",
+      "strict_should_refuse": false
+    },
+    {
+      "variant": "declared_plus_wildcard",
+      "event": "UNDECLARED",
+      "engine": "async",
+      "kind": "async def",
+      "outcome": "raised:UnknownEventError",
+      "strict_should_refuse": true
+    }
+  ],
+  "receipt_failures": [],
+  "wildcard_defeats_strict": [],
+  "result": "PASS"
+}

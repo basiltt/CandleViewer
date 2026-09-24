@@ -1,0 +1,126 @@
+[
+ {
+  "check": "R6-03/B6 rollback on entry of invoking submitting_slice",
+  "verdict": "PASS",
+  "evidence": {
+   "machine": "B6",
+   "before": [
+    "twap.armed"
+   ],
+   "after": [
+    "twap.armed"
+   ],
+   "rolled_back": true,
+   "elapsed_s": 0.41,
+   "service_invocations": [],
+   "pending_invocations": [],
+   "status": "running",
+   "receipt": {
+    "changed": false,
+    "denied": true,
+    "error": "RuntimeError"
+   },
+   "last_transition_ok": false,
+   "last_error": "RuntimeError",
+   "dropped": []
+  }
+ },
+ {
+  "check": "R6-03/B9 rollback on entry of invoking acting",
+  "verdict": "PASS",
+  "evidence": {
+   "machine": "B9",
+   "before": [
+    "rule_instance.armed"
+   ],
+   "after": [
+    "rule_instance.armed"
+   ],
+   "rolled_back": true,
+   "elapsed_s": 0.4,
+   "service_invocations": [
+    "S:evaluate_condition_dag"
+   ],
+   "pending_invocations": [],
+   "status": "running",
+   "receipt": {
+    "changed": true,
+    "denied": false,
+    "error": null
+   },
+   "last_transition_ok": true,
+   "last_error": null,
+   "dropped": []
+  }
+ },
+ {
+  "check": "R6-01/B6 always out of invoking submitting_slice (roll-forward)",
+  "verdict": "PASS",
+  "evidence": {
+   "machine": "B6",
+   "hung_send_wait": false,
+   "elapsed_s": 0.3,
+   "states": [
+    "twap.armed"
+   ],
+   "service_invocations": 0,
+   "service_names": [],
+   "status": "running",
+   "last_transition_ok": true,
+   "last_error": null,
+   "dropped": [],
+   "receipt": {
+    "changed": true,
+    "denied": false
+   }
+  }
+ },
+ {
+  "check": "R6-01/B9 evaluating -> acting invoke chain settles",
+  "verdict": "PASS",
+  "evidence": {
+   "machine": "B9",
+   "hung_send_wait": false,
+   "elapsed_s": 0.31,
+   "states": [
+    "rule_instance.simulating"
+   ],
+   "service_invocations": 0,
+   "service_names": [],
+   "status": "running",
+   "last_transition_ok": true,
+   "last_error": null,
+   "dropped": [],
+   "receipt": {
+    "changed": true,
+    "denied": false
+   }
+  }
+ },
+ {
+  "check": "R6-01/B8 attach ladder settles into protected",
+  "verdict": "PASS",
+  "evidence": {
+   "machine": "B8",
+   "hung_send_wait": false,
+   "elapsed_s": 0.3,
+   "states": [
+    "position_protection.sl.protected",
+    "position_protection.watchdog.scanning"
+   ],
+   "service_invocations": 2,
+   "service_names": [
+    "S:attach_native_sl",
+    "S:read_position_sl"
+   ],
+   "status": "running",
+   "last_transition_ok": true,
+   "last_error": null,
+   "dropped": [],
+   "receipt": {
+    "changed": true,
+    "denied": false
+   }
+  }
+ }
+]

@@ -1,0 +1,37 @@
+PASS [async]B4.happy.completed  | ['oco.completed']
+PASS [async]B4.happy.arm_then_settle  | ['submit_both_legs', 'settle_other_leg']
+PASS [async]B4.happy.snapshot  | []
+PASS [async]B4.overshoot.completed  | ['oco.completed']
+PASS [async]B4.overshoot.alerts  | ['record_child_ids', 'record_fill_b', 'raise_warning_alert', 'journal_double_fill']
+PASS [async]B4.overshoot.flatten_called  | ['submit_both_legs', 'reduce_only_market_excess']
+PASS [async]B4.arm_fail.failed  | ['oco.failed']
+PASS [async]B4.arm_fail.map_error  | ['map_error']
+PASS [async]B4.settle.retry_bounded  | settle_other_leg x3 -> ['oco.failed']
+PASS [async]B4.settle.retry_terminal  | ['oco.failed']
+PASS [async]B4.settle.alert
+PASS [async]B4.reconcile.completed  | ['oco.completed']
+PASS [async]B4.R6-01.pingpong_terminates  | [{'ev': 'LEG_A_FILL', 'ok': True, 'sec': 0.000588800001423806}]
+PASS [async]B4.R6-01.pingpong_settles  | states=['oco.racing'] settle x1 status=running
+PASS [async]B4.cancel.cancelled  | ['oco.cancelled']
+PASS [async]B4.parity.states  | async=['oco.completed'] sync=['oco.completed']
+PASS [async]B4.parity.svc  | async=['submit_both_legs', 'settle_other_leg'] sync=['submit_both_legs', 'settle_other_leg']
+PASS [async]B5.refill.loop_progresses  | states=['iceberg.waiting_refill'] slices=2
+PASS [async]B5.refill.two_slices  | 2
+PASS [async]B5.refill.snapshot  | []
+PASS [async]B5.complete.completed  | ['iceberg.completed']
+PASS [async]B5.preflight.failed  | ['iceberg.failed']
+PASS [async]B5.preflight.no_submit  | []
+PASS [async]B5.R6-01.reprice_terminates  | states=['iceberg.cooling_down'] submit_child x2 status=running
+PASS [async]B5.R6-01.reprice_bounded  | submit_child x2
+PASS [async]B5.fail_ladder.terminal  | states=['iceberg.failed'] submit_child x4
+PASS [async]B5.fail_ladder.bounded  | submit_child x4
+PASS [async]B5.pause.resume_to_working  | ['iceberg.working']
+PASS [async]B5.pause.reconciled  | ['submit_child', 'reconcile_children']
+PASS [async]B5.disconnect.freeze_then_fail  | ['iceberg.failed']
+PASS [async]B5.flat.cancelled  | ['iceberg.cancelled']
+PASS [async]B5.R6-03.observed  | submit_child x71 states=['iceberg.submitting_slice'] status=running err=None action_errors=70
+PASS [async]B5.parity.states  | async=['iceberg.working'] sync=['iceberg.working']
+PASS [async]B5.parity.context  | async={'algo_id': None, 'total_qty': '0', 'remaining_qty': '0', 'slices_done': 2, 'max_slices': 450, 'active_child_id': None, 'post_only_rejects': 0, 'next_refill_at_us': None, 'failure_count': 0}
+sync={'algo_id': None, 'total_qty': '0', 'remaining_qty': '0', 'slices_done': 2, 'max_slices': 450, 'active_child_id': None, 'post_only_rejects': 0, 'next_refill_at_us': None, 'failure_count': 0}
+
+--- 34 checks, 0 FAIL: []

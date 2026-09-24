@@ -1,0 +1,113 @@
+{
+ "B6": {
+  "build": "OK",
+  "policy": {
+   "actionErrorPolicy": "rollback",
+   "onUnhandled": "defer",
+   "guardErrorPolicy": "raise",
+   "strictTargets": true,
+   "spawnBlockingTimeout": "<missing>"
+  },
+  "strict_logic": true,
+  "counts": {
+   "actions": 11,
+   "guards": 7,
+   "services": 4,
+   "events": 9
+  },
+  "known_star": false,
+  "start_ids": [
+   "twap.armed"
+  ],
+  "status": "running"
+ },
+ "B7": {
+  "build": "OK",
+  "policy": {
+   "actionErrorPolicy": "rollback",
+   "onUnhandled": "defer",
+   "guardErrorPolicy": "raise",
+   "strictTargets": true,
+   "spawnBlockingTimeout": "<missing>"
+  },
+  "strict_logic": true,
+  "counts": {
+   "actions": 10,
+   "guards": 8,
+   "services": 4,
+   "events": 10
+  },
+  "known_star": false,
+  "start_ids": [
+   "chase.working"
+  ],
+  "status": "running"
+ },
+ "B8": {
+  "build": "OK",
+  "policy": {
+   "actionErrorPolicy": "fail",
+   "onUnhandled": "defer",
+   "guardErrorPolicy": "raise",
+   "strictTargets": true,
+   "spawnBlockingTimeout": "<missing>"
+  },
+  "strict_logic": true,
+  "counts": {
+   "actions": 10,
+   "guards": 5,
+   "services": 4,
+   "events": 8
+  },
+  "known_star": false,
+  "start_ids": [
+   "position_protection.sl.flat",
+   "position_protection.watchdog.idle"
+  ],
+  "status": "running"
+ },
+ "B9": {
+  "build": "OK",
+  "policy": {
+   "actionErrorPolicy": "rollback",
+   "onUnhandled": "defer",
+   "guardErrorPolicy": "raise",
+   "strictTargets": true,
+   "spawnBlockingTimeout": "<missing>"
+  },
+  "strict_logic": true,
+  "counts": {
+   "actions": 27,
+   "guards": 9,
+   "services": 2,
+   "events": 15
+  },
+  "known_star": false,
+  "start_ids": [
+   "rule_instance.draft"
+  ],
+  "status": "running"
+ },
+ "B10": {
+  "build": "OK",
+  "policy": {
+   "actionErrorPolicy": "rollback",
+   "onUnhandled": "defer",
+   "guardErrorPolicy": "raise",
+   "strictTargets": true,
+   "spawnBlockingTimeout": "<missing>"
+  },
+  "strict_logic": true,
+  "counts": {
+   "actions": 7,
+   "guards": 3,
+   "services": 1,
+   "events": 7
+  },
+  "known_star": false,
+  "start_ids": [
+   "alert.armed"
+  ],
+  "status": "running"
+ }
+}

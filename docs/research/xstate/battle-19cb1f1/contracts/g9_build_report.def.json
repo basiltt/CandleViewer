@@ -1,0 +1,102 @@
+{
+ "B11": {
+  "id": "recording",
+  "policy": {
+   "actionErrorPolicy": "rollback",
+   "onUnhandled": "defer",
+   "guardErrorPolicy": "raise",
+   "strictTargets": true,
+   "strict": true,
+   "spawnBlockingTimeout": 5000
+  },
+  "stub_logic": "OK",
+  "attrs": {
+   "action_error_policy": "rollback",
+   "on_unhandled": "defer",
+   "guard_error_policy": "raise",
+   "strict_targets": true,
+   "strict": true,
+   "spawn_blocking_timeout_ms": 5000.0
+  }
+ },
+ "B12": {
+  "id": "replay",
+  "policy": {
+   "actionErrorPolicy": "rollback",
+   "onUnhandled": "defer",
+   "guardErrorPolicy": "raise",
+   "strictTargets": true,
+   "strict": true,
+   "spawnBlockingTimeout": 5000
+  },
+  "stub_logic": "OK",
+  "attrs": {
+   "action_error_policy": "rollback",
+   "on_unhandled": "defer",
+   "guard_error_policy": "raise",
+   "strict_targets": true,
+   "strict": true,
+   "spawn_blocking_timeout_ms": 5000.0
+  }
+ },
+ "B13": {
+  "id": "ws_conn",
+  "policy": {
+   "actionErrorPolicy": "rollback",
+   "onUnhandled": "error",
+   "guardErrorPolicy": "raise",
+   "strictTargets": true,
+   "strict": true,
+   "spawnBlockingTimeout": 5000
+  },
+  "stub_logic": "OK",
+  "attrs": {
+   "action_error_policy": "rollback",
+   "on_unhandled": "error",
+   "guard_error_policy": "raise",
+   "strict_targets": true,
+   "strict": true,
+   "spawn_blocking_timeout_ms": 5000.0
+  }
+ },
+ "B14": {
+  "id": "book",
+  "policy": {
+   "actionErrorPolicy": "rollback",
+   "onUnhandled": "error",
+   "guardErrorPolicy": "raise",
+   "strictTargets": true,
+   "strict": true,
+   "spawnBlockingTimeout": 5000
+  },
+  "stub_logic": "OK",
+  "attrs": {
+   "action_error_policy": "rollback",
+   "on_unhandled": "error",
+   "guard_error_policy": "raise",
+   "strict_targets": true,
+   "strict": true,
+   "spawn_blocking_timeout_ms": 5000.0
+  }
+ },
+ "B15": {
+  "id": "paper_account",
+  "policy": {
+   "actionErrorPolicy": "rollback",
+   "onUnhandled": "defer",
+   "guardErrorPolicy": "raise",
+   "strictTargets": true,
+   "strict": true,
+   "spawnBlockingTimeout": 5000
+  },
+  "stub_logic": "OK",
+  "attrs": {
+   "action_error_policy": "rollback",
+   "on_unhandled": "defer",
+   "guard_error_policy": "raise",
+   "strict_targets": true,
+   "strict": true,
+   "spawn_blocking_timeout_ms": 5000.0
+  }
+ }
+}

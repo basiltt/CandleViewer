@@ -1,0 +1,38 @@
+{
+ "[def]V0b.live_use_fires_start": {
+  "pass": true,
+  "note": "live .use() started=1"
+ },
+ "[def]V0b.plugins_kwarg_registers": {
+  "pass": true,
+  "note": "j.plugins=['CvHooks']"
+ },
+ "[def]V0b.restored_start_fires_on_interpreter_start": {
+  "pass": false,
+  "note": "started=0 (plugins= path)"
+ },
+ "[def]V0b.plugins_kwarg_gets_runtime_hooks": {
+  "pass": false,
+  "note": "actions=0 transitions=0"
+ },
+ "[def]V0b.control_use_after_restore_fires_start": {
+  "pass": false,
+  "note": "started=0 (.use() path)"
+ },
+ "[def]V0b.sync_plugins_kwarg_registers": {
+  "pass": true,
+  "note": "j.plugins=['CvHooks']"
+ },
+ "[def]V0b.sync_restored_start_fires_on_interpreter_start": {
+  "pass": false,
+  "note": "started=0"
+ },
+ "[def]V0b.B3.initial_not_terminal": {
+  "pass": false,
+  "note": "states=['leg.error'] status=done trans=[\"->['leg.error']\", \"___xstate_statemachine_init___->['leg.error']\"] acts=['size_from_profile'] guards=['should_skip', 'passes_preflight', 'should_skip', 'passes_preflight']"
+ },
+ "[def]V0b.B3.guards_true_not_terminal": {
+  "pass": false,
+  "note": "states=['leg.skipped'] status=done trans=[\"->['leg.skipped']\", \"___xstate_statemachine_init___->['leg.skipped']\"]"
+ }
+}

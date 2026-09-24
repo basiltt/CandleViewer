@@ -1,0 +1,64 @@
+{
+ "denial_steps": [
+  {
+   "n": 0,
+   "denied": true,
+   "deferred": true,
+   "deferred_count": 1
+  },
+  {
+   "n": 1,
+   "denied": true,
+   "deferred": true,
+   "deferred_count": 2
+  },
+  {
+   "n": 2,
+   "denied": true,
+   "deferred": true,
+   "deferred_count": 3
+  }
+ ],
+ "deferred_after_denials": 3,
+ "amends_before_flip": 0,
+ "amends_after_replay": 3,
+ "states": [
+  "position_protection.sl.protected",
+  "position_protection.watchdog.scanning"
+ ],
+ "deferred_count_final": 0,
+ "unhandled": [
+  [
+   "TIGHTEN_SL",
+   "deferred"
+  ],
+  [
+   "TIGHTEN_SL",
+   "deferred"
+  ],
+  [
+   "TIGHTEN_SL",
+   "deferred"
+  ],
+  [
+   "TIGHTEN_SL",
+   "deferred"
+  ],
+  [
+   "TIGHTEN_SL",
+   "deferred"
+  ],
+  [
+   "TIGHTEN_SL",
+   "deferred"
+  ],
+  [
+   "TIGHTEN_SL",
+   "deferred"
+  ],
+  [
+   "TIGHTEN_SL",
+   "deferred"
+  ]
+ ]
+}

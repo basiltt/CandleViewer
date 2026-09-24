@@ -1,0 +1,35 @@
+[
+ {
+  "case": "guard returns False (true denial)",
+  "changed": false,
+  "deferred": true,
+  "denied": true,
+  "error": null,
+  "states": [
+   "position_protection.sl.protected",
+   "position_protection.watchdog.scanning"
+  ]
+ },
+ {
+  "case": "guard RAISES (not a denial)",
+  "changed": false,
+  "deferred": false,
+  "denied": false,
+  "error": "RuntimeError",
+  "states": [
+   "position_protection.sl.protected",
+   "position_protection.watchdog.scanning"
+  ]
+ },
+ {
+  "case": "no handler declared: send POSITION_FLAT-in-flat style",
+  "changed": true,
+  "deferred": false,
+  "denied": false,
+  "error": null,
+  "states": [
+   "position_protection.sl.protected",
+   "position_protection.watchdog.scanning"
+  ]
+ }
+]

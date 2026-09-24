@@ -1,0 +1,133 @@
+{
+  "id": "risk_lockout",
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "defer",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "initial": "clear",
+  "context": {
+    "account_id": null,
+    "scope": "account",
+    "realised_pnl_today": "0",
+    "max_daily_loss": "0",
+    "breach_reason": null,
+    "until_mode": "next_utc_day",
+    "until_us": null,
+    "cleared_by": null
+  },
+  "states": {
+    "clear": {
+      "tags": [
+        "trading_allowed"
+      ],
+      "on": {
+        "PNL_UPDATE": [
+          {
+            "target": "#risk_lockout.locked",
+            "guard": "breaches_daily_loss_cap",
+            "actions": [
+              "set_breach_daily_loss"
+            ]
+          },
+          {
+            "target": "#risk_lockout.warning",
+            "guard": "within_warning_band"
+          },
+          {
+            "actions": [
+              "update_pnl"
+            ]
+          }
+        ],
+        "CAP_BREACH": {
+          "target": "#risk_lockout.locked",
+          "actions": [
+            "set_breach_from_event"
+          ]
+        },
+        "MANUAL_LOCK": {
+          "target": "#risk_lockout.locked",
+          "actions": [
+            "set_breach_manual"
+          ]
+        }
+      }
+    },
+    "warning": {
+      "tags": [
+        "trading_allowed",
+        "warning"
+      ],
+      "entry": [
+        "emit_risk_warning"
+      ],
+      "on": {
+        "PNL_UPDATE": [
+          {
+            "target": "#risk_lockout.locked",
+            "guard": "breaches_daily_loss_cap",
+            "actions": [
+              "set_breach_daily_loss"
+            ]
+          },
+          {
+            "target": "#risk_lockout.clear",
+            "guard": "outside_warning_band"
+          },
+          {
+            "actions": [
+              "update_pnl"
+            ]
+          }
+        ]
+      }
+    },
+    "locked": {
+      "tags": [
+        "trading_blocked"
+      ],
+      "entry": [
+        "halt_new_orders",
+        "compute_until",
+        "schedule_expiry_deadline",
+        "raise_lockout_alert",
+        "audit_lockout",
+        "broadcast_lockout"
+      ],
+      "on": {
+        "EXPIRY_DUE": [
+          {
+            "target": "#risk_lockout.clear",
+            "guard": "until_mode_is_time_based",
+            "actions": [
+              "resume_new_orders",
+              "reset_daily_counters_if_new_day"
+            ]
+          },
+          {
+            "actions": [
+              "log_expiry_ignored_manual_mode"
+            ]
+          }
+        ],
+        "OVERRIDE_REQUESTED": [
+          {
+            "target": "#risk_lockout.clear",
+            "guard": "owner_and_elevated_and_override_permitted",
+            "actions": [
+              "resume_new_orders",
+              "audit_override"
+            ]
+          },
+          {
+            "actions": [
+              "audit_override_denied"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

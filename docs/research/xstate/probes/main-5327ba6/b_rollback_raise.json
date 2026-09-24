@@ -1,0 +1,107 @@
+[
+  {
+    "id": "B1",
+    "title": "raise in entry of parallel region A, region B entry fails -> raise withdrawn",
+    "expected": {
+      "seen": [],
+      "state": [
+        "p.idle"
+      ]
+    },
+    "observed": {
+      "seen": [],
+      "state": [
+        "p.idle"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "B2",
+    "title": "raise from an EARLIER transition survives a LATER transition's rollback",
+    "expected": {
+      "seen": [
+        "EARLY"
+      ],
+      "ok": true
+    },
+    "observed": {
+      "seen": [
+        "EARLY"
+      ],
+      "ok": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "B3",
+    "title": "raise in EXIT action, transition action then fails",
+    "expected": {
+      "seen": [],
+      "state": [
+        "x.a"
+      ]
+    },
+    "observed": {
+      "seen": [],
+      "state": [
+        "x.a"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "B4",
+    "title": "two raises then a failing action: both withdrawn",
+    "expected": {
+      "seen": [],
+      "state": [
+        "y.a"
+      ]
+    },
+    "observed": {
+      "seen": [],
+      "state": [
+        "y.a"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "B6",
+    "title": "targetless self-transition: raise then fail -> withdrawn",
+    "expected": {
+      "seen": [],
+      "n": 0
+    },
+    "observed": {
+      "seen": [],
+      "n": 0
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "B7",
+    "title": "500 rollbacks each withdrawing a raise: no false runaway trip",
+    "expected": {
+      "delivered": 500
+    },
+    "observed": {
+      "delivered": 500
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "B8",
+    "title": "'fail' policy withdraws the raise too",
+    "expected": {
+      "seen": [],
+      "status": "stopped"
+    },
+    "observed": {
+      "seen": [],
+      "status": "error"
+    },
+    "status": "FAIL"
+  }
+]

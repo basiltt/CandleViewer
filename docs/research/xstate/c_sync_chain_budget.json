@@ -1,0 +1,105 @@
+[
+  {
+    "id": "C1",
+    "title": "sync: 1000-deep legitimate terminating chain",
+    "expected": {
+      "n": 1000
+    },
+    "observed": {
+      "n": 1000
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "C2",
+    "title": "sync: 999-deep chain (control)",
+    "expected": {
+      "n": 999
+    },
+    "observed": {
+      "n": 999
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "C2b",
+    "title": "sync: 1500-deep chain",
+    "expected": {
+      "n": 1500
+    },
+    "observed": {
+      "n": 1001
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "C3",
+    "title": "sync: 3000 independent one-deep raises in one batch",
+    "expected": {
+      "n": 3000
+    },
+    "observed": {
+      "n": 3000
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "C4",
+    "title": "sync: genuine infinite self-feed is broken; caller's queued T's survive",
+    "expected": {
+      "looped": true,
+      "ext": 50
+    },
+    "observed": {
+      "looped": true,
+      "ext": 50
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "C5",
+    "title": "sync: externals interleaved AFTER a 2000-deep chain in one batch",
+    "expected": {
+      "n": 2000,
+      "ext": 100
+    },
+    "observed": {
+      "n": 1001,
+      "ext": 100
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "C6",
+    "title": "sync: 1001-deep chain (limit+1)",
+    "expected": {
+      "n": 1001
+    },
+    "observed": {
+      "n": 1001
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "C7",
+    "title": "async engine: same 1000-deep legitimate chain",
+    "expected": {
+      "n": 1000
+    },
+    "observed": {
+      "n": 1000
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "C8",
+    "title": "async engine: 1500-deep legitimate chain",
+    "expected": {
+      "n": 1500
+    },
+    "observed": {
+      "n": 1001
+    },
+    "status": "FAIL"
+  }
+]

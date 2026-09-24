@@ -1,0 +1,352 @@
+[
+  {
+    "id": "A-01",
+    "engine": "async",
+    "title": "invoke src as a MACHINE: parent receives done.invoke.<id> when the child reaches a top-level final state",
+    "spec": "SCXML 6.4.4: when an invoked session reaches a final state the invoking session receives done.invoke.<invokeid>",
+    "expected": [
+      "m.ok"
+    ],
+    "observed": [
+      "m.ok"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-01",
+    "engine": "sync",
+    "title": "invoke src as a MACHINE: parent receives done.invoke.<id> when the child reaches a top-level final state",
+    "spec": "SCXML 6.4.4: when an invoked session reaches a final state the invoking session receives done.invoke.<invokeid>",
+    "expected": [
+      "m.ok"
+    ],
+    "observed": [
+      "m.ok"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-02",
+    "engine": "async",
+    "title": "invoke child machine `output` is delivered as done.invoke data",
+    "spec": "SCXML 6.4.4 / XState v5: the child's output becomes the done.invoke.<id> payload",
+    "expected": {
+      "code": 7
+    },
+    "observed": {},
+    "status": "FAIL"
+  },
+  {
+    "id": "A-02",
+    "engine": "sync",
+    "title": "invoke child machine `output` is delivered as done.invoke data",
+    "spec": "SCXML 6.4.4 / XState v5: the child's output becomes the done.invoke.<id> payload",
+    "expected": {
+      "code": 7
+    },
+    "observed": {},
+    "status": "FAIL"
+  },
+  {
+    "id": "A-03",
+    "engine": "async",
+    "title": "invoke `input` reaches a child machine via a `context` FACTORY, and is exposed as context['input'] when the child declares a plain dict",
+    "spec": "XState v5: `input` is resolved per spawn against {context, event}. This library deliberately does NOT let input overwrite declared context keys (base_interpreter.py:530, review F11 injection guard); the supported form is a context factory of {input}.",
+    "expected": {
+      "factory": 11,
+      "plain_dict": {
+        "seed": 0,
+        "input": {
+          "seed": 11
+        }
+      }
+    },
+    "observed": {
+      "factory": 11,
+      "plain_dict": {
+        "seed": 0,
+        "input": {
+          "seed": 11
+        }
+      }
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A-03",
+    "engine": "sync",
+    "title": "invoke `input` reaches a child machine via a `context` FACTORY, and is exposed as context['input'] when the child declares a plain dict",
+    "spec": "XState v5: `input` is resolved per spawn against {context, event}. This library deliberately does NOT let input overwrite declared context keys (base_interpreter.py:530, review F11 injection guard); the supported form is a context factory of {input}.",
+    "expected": {
+      "factory": 11,
+      "plain_dict": {
+        "seed": 0,
+        "input": {
+          "seed": 11
+        }
+      }
+    },
+    "observed": {
+      "factory": 11,
+      "plain_dict": {
+        "seed": 0,
+        "input": {
+          "seed": 11
+        }
+      }
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A-04",
+    "engine": "async",
+    "title": "A failing invoked CALLABLE produces an ErrorEvent routed to onError",
+    "spec": "SCXML 6.4: a failed invocation generates error.execution/error.platform; XState v5 onError. Library #80: ErrorEvent class.",
+    "expected": {
+      "state": [
+        "m.failed"
+      ],
+      "is_error_event": true,
+      "msg": "boom"
+    },
+    "observed": {
+      "state": [
+        "m.failed"
+      ],
+      "is_error_event": true,
+      "msg": "boom"
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A-04",
+    "engine": "sync",
+    "title": "A failing invoked CALLABLE produces an ErrorEvent routed to onError",
+    "spec": "SCXML 6.4: a failed invocation generates error.execution/error.platform; XState v5 onError. Library #80: ErrorEvent class.",
+    "expected": {
+      "state": [
+        "m.failed"
+      ],
+      "is_error_event": true,
+      "msg": "boom"
+    },
+    "observed": {
+      "state": [
+        "m.failed"
+      ],
+      "is_error_event": true,
+      "msg": "boom"
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A-05",
+    "engine": "async",
+    "title": "A failing invoked CHILD MACHINE reaches the parent's onError",
+    "spec": "SCXML 6.4 / XState v5: a child actor that errors notifies its parent via onError",
+    "expected": [
+      "m.failed"
+    ],
+    "observed": [
+      "m.failed"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-05",
+    "engine": "sync",
+    "title": "A failing invoked CHILD MACHINE reaches the parent's onError",
+    "spec": "SCXML 6.4 / XState v5: a child actor that errors notifies its parent via onError",
+    "expected": [
+      "m.failed"
+    ],
+    "observed": [
+      "m.failed"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-06",
+    "engine": "async",
+    "title": "onError chain: grandchild fails -> child escalates -> grandparent handles",
+    "spec": "SCXML 5.10 / 6.4: an error the invoked session escalates is delivered to the INVOKING session's error handler. XState v5: escalate() raises to the parent, where onError catches it.",
+    "expected": [
+      "m.caught"
+    ],
+    "observed": [
+      "m.run"
+    ],
+    "status": "FAIL"
+  },
+  {
+    "id": "A-06",
+    "engine": "sync",
+    "title": "onError chain: grandchild fails -> child escalates -> grandparent handles",
+    "spec": "SCXML 5.10 / 6.4: an error the invoked session escalates is delivered to the INVOKING session's error handler. XState v5: escalate() raises to the parent, where onError catches it.",
+    "expected": [
+      "m.caught"
+    ],
+    "observed": [
+      "m.run"
+    ],
+    "status": "FAIL"
+  },
+  {
+    "id": "A-07",
+    "engine": "async",
+    "title": "Exiting the invoking state cancels a still-running invocation (its onDone never fires)",
+    "spec": "SCXML 6.4.1: when the state containing <invoke> is exited the invoked session is cancelled",
+    "expected": [
+      "m.elsewhere"
+    ],
+    "observed": [
+      "m.elsewhere"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-08",
+    "engine": "async",
+    "title": "sendTo with delay+id is delivered to the addressed child actor after the delay",
+    "spec": "SCXML 6.2 <send target= delay= id=>; XState v5 sendTo(target, ev, {delay, id})",
+    "expected": [
+      "c.pinged"
+    ],
+    "observed": [
+      "c.pinged"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-09",
+    "engine": "async",
+    "title": "`cancel` with the MATCHING sendId prevents the delayed send",
+    "spec": "SCXML 6.3 <cancel sendid=>; XState v5 cancel(id)",
+    "expected": [
+      "c.idle"
+    ],
+    "observed": [
+      "c.idle"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-10",
+    "engine": "async",
+    "title": "`cancel` with a NON-matching sendId leaves the delayed send intact",
+    "spec": "SCXML 6.3: <cancel> affects only the send bearing that sendid",
+    "expected": [
+      "c.pinged"
+    ],
+    "observed": [
+      "c.pinged"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-11",
+    "engine": "async",
+    "title": "spawn in `entry` creates a child actor addressable by id",
+    "spec": "XState v5 spawnChild(src, {id}) in entry actions",
+    "expected": {
+      "spawned": true
+    },
+    "observed": {
+      "spawned": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A-12",
+    "engine": "async",
+    "title": "stopChild on exit stops the spawned actor",
+    "spec": "XState v5 stopChild(id); SCXML 6.4.1 cancel invoked session",
+    "expected": {
+      "stopped": true
+    },
+    "observed": {
+      "stopped": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A-13",
+    "engine": "async",
+    "title": "sendParent from an invoked child machine reaches the parent",
+    "spec": "SCXML 6.2 <send target='#_parent'>; XState v5 sendParent",
+    "expected": [
+      "m.notified"
+    ],
+    "observed": [
+      "m.notified"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-14",
+    "engine": "async",
+    "title": "done.invoke does NOT match a user's '*' wildcard handler",
+    "spec": "Library #79 / XState v5: engine-synthesised events match only an exact descriptor; '*' means 'any event I might receive'",
+    "expected": [
+      "m.viaDone"
+    ],
+    "observed": [
+      "m.viaDone"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-14",
+    "engine": "sync",
+    "title": "done.invoke does NOT match a user's '*' wildcard handler",
+    "spec": "Library #79 / XState v5: engine-synthesised events match only an exact descriptor; '*' means 'any event I might receive'",
+    "expected": [
+      "m.viaDone"
+    ],
+    "observed": [
+      "m.viaDone"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "A-15",
+    "engine": "async",
+    "title": "An unhandled invoked-service failure is surfaced, not swallowed",
+    "spec": "SCXML 5.10: an error the session does not handle must not be silently dropped. Real-money standard: a failed service with no onError must be observable.",
+    "expected": {
+      "observable": true
+    },
+    "observed": {
+      "observable": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A-15",
+    "engine": "sync",
+    "title": "An unhandled invoked-service failure is surfaced, not swallowed",
+    "spec": "SCXML 5.10: an error the session does not handle must not be silently dropped. Real-money standard: a failed service with no onError must be observable.",
+    "expected": {
+      "observable": true
+    },
+    "observed": {
+      "observable": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "A-16",
+    "engine": "async",
+    "title": "Invocation starts AFTER the entry actions of its owning state",
+    "spec": "SCXML 6.4.1: <invoke> is executed after the onentry handlers of the state complete",
+    "expected": [
+      "entry",
+      "service"
+    ],
+    "observed": [
+      "entry",
+      "service"
+    ],
+    "status": "PASS"
+  }
+]

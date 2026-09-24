@@ -1,0 +1,255 @@
+{
+  "id": "oco",
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "defer",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "initial": "arming",
+  "context": {
+    "algo_id": null,
+    "mode": "reduce_other",
+    "leg_a_id": null,
+    "leg_b_id": null,
+    "filled_a": "0",
+    "filled_b": "0",
+    "settle_failures": 0,
+    "excess_qty": "0"
+  },
+  "states": {
+    "arming": {
+      "invoke": {
+        "id": "arm",
+        "src": "submit_both_legs",
+        "onDone": {
+          "target": "#oco.racing",
+          "actions": [
+            "record_child_ids"
+          ]
+        },
+        "onError": {
+          "target": "#oco.failed",
+          "actions": [
+            "map_error"
+          ]
+        }
+      }
+    },
+    "racing": {
+      "on": {
+        "LEG_A_FILL": [
+          {
+            "target": "#oco.overshoot",
+            "guard": "position_overshoots",
+            "actions": [
+              "record_fill_a"
+            ]
+          },
+          {
+            "target": "#oco.settling_b",
+            "actions": [
+              "record_fill_a"
+            ]
+          }
+        ],
+        "LEG_B_FILL": [
+          {
+            "target": "#oco.overshoot",
+            "guard": "position_overshoots",
+            "actions": [
+              "record_fill_b"
+            ]
+          },
+          {
+            "target": "#oco.settling_a",
+            "actions": [
+              "record_fill_b"
+            ]
+          }
+        ],
+        "POSITION_FLAT": {
+          "target": "#oco.cancelling_all",
+          "guard": "cancel_on_position_flat"
+        },
+        "USER_CANCEL": {
+          "target": "#oco.cancelling_all"
+        },
+        "*": {
+          "actions": [
+            "defer"
+          ]
+        }
+      }
+    },
+    "settling_b": {
+      "entry": [
+        "drain_deferred"
+      ],
+      "invoke": {
+        "id": "settle_b",
+        "src": "settle_other_leg",
+        "onDone": [
+          {
+            "target": "#oco.completing",
+            "guard": "other_leg_terminal"
+          },
+          {
+            "target": "#oco.racing",
+            "guard": "partial_settle_remaining",
+            "reenter": true
+          }
+        ],
+        "onError": [
+          {
+            "target": "#oco.reconciling",
+            "guard": "error_is_order_gone"
+          },
+          {
+            "target": "#oco.settling_b",
+            "reenter": true,
+            "guard": "settle_retries_left",
+            "actions": [
+              "bump_settle_failures"
+            ]
+          },
+          {
+            "target": "#oco.failed",
+            "actions": [
+              "raise_critical_alert"
+            ]
+          }
+        ]
+      },
+      "on": {
+        "*": {
+          "actions": [
+            "defer"
+          ]
+        }
+      }
+    },
+    "settling_a": {
+      "entry": [
+        "drain_deferred"
+      ],
+      "invoke": {
+        "id": "settle_a",
+        "src": "settle_other_leg",
+        "onDone": [
+          {
+            "target": "#oco.completing",
+            "guard": "other_leg_terminal"
+          },
+          {
+            "target": "#oco.racing",
+            "guard": "partial_settle_remaining",
+            "reenter": true
+          }
+        ],
+        "onError": [
+          {
+            "target": "#oco.reconciling",
+            "guard": "error_is_order_gone"
+          },
+          {
+            "target": "#oco.settling_a",
+            "reenter": true,
+            "guard": "settle_retries_left",
+            "actions": [
+              "bump_settle_failures"
+            ]
+          },
+          {
+            "target": "#oco.failed",
+            "actions": [
+              "raise_critical_alert"
+            ]
+          }
+        ]
+      },
+      "on": {
+        "*": {
+          "actions": [
+            "defer"
+          ]
+        }
+      }
+    },
+    "overshoot": {
+      "entry": [
+        "raise_warning_alert",
+        "journal_double_fill"
+      ],
+      "invoke": {
+        "id": "flatten_excess",
+        "src": "reduce_only_market_excess",
+        "onDone": {
+          "target": "#oco.completing"
+        },
+        "onError": {
+          "target": "#oco.failed",
+          "actions": [
+            "raise_critical_alert"
+          ]
+        }
+      }
+    },
+    "reconciling": {
+      "invoke": {
+        "id": "rec",
+        "src": "reconcile_children",
+        "onDone": {
+          "target": "#oco.completing"
+        },
+        "onError": {
+          "target": "#oco.failed",
+          "actions": [
+            "raise_critical_alert"
+          ]
+        }
+      }
+    },
+    "cancelling_all": {
+      "invoke": {
+        "id": "ca",
+        "src": "cancel_all_children",
+        "onDone": {
+          "target": "#oco.cancelled"
+        },
+        "onError": {
+          "target": "#oco.failed",
+          "actions": [
+            "raise_critical_alert"
+          ]
+        }
+      }
+    },
+    "completing": {
+      "on": {
+        "CHILDREN_TERMINAL": {
+          "target": "#oco.completed"
+        }
+      }
+    },
+    "completed": {
+      "type": "final",
+      "tags": [
+        "terminal"
+      ]
+    },
+    "cancelled": {
+      "type": "final",
+      "tags": [
+        "terminal"
+      ]
+    },
+    "failed": {
+      "type": "final",
+      "tags": [
+        "terminal",
+        "failure"
+      ]
+    }
+  }
+}

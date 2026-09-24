@@ -1,0 +1,186 @@
+{
+  "probe": "t4_self_target_ondone_never_rearms",
+  "py": "3.13.7",
+  "claim": "SCXML 3.12: an onDone with a target exits and re-enters its source, so SELF and HOP are the same loop",
+  "limit": 20,
+  "rows": [
+    {
+      "engine": "async",
+      "shape": "SELF",
+      "kind": "def",
+      "entries": 1,
+      "submits": 1,
+      "state": [
+        "m.work"
+      ],
+      "dormant": true,
+      "last_error": "NoneType",
+      "hook_stranded": []
+    },
+    {
+      "engine": "sync",
+      "shape": "SELF",
+      "kind": "def",
+      "entries": 1,
+      "submits": 1,
+      "state": [
+        "m.work"
+      ],
+      "dormant": true,
+      "last_error": "NoneType",
+      "hook_stranded": []
+    },
+    {
+      "engine": "async",
+      "shape": "SELF",
+      "kind": "async def",
+      "entries": 1,
+      "submits": 1,
+      "state": [
+        "m.work"
+      ],
+      "dormant": true,
+      "last_error": "NoneType",
+      "hook_stranded": []
+    },
+    {
+      "engine": "sync",
+      "shape": "SELF",
+      "kind": "async def",
+      "error": "NotSupportedError"
+    },
+    {
+      "engine": "async",
+      "shape": "HOP",
+      "kind": "def",
+      "entries": 11,
+      "submits": 11,
+      "state": [
+        "m.hop"
+      ],
+      "dormant": false,
+      "last_error": "RunawayChainError",
+      "hook_stranded": []
+    },
+    {
+      "engine": "sync",
+      "shape": "HOP",
+      "kind": "def",
+      "entries": 11,
+      "submits": 11,
+      "state": [
+        "m.hop"
+      ],
+      "dormant": false,
+      "last_error": "RunawayChainError",
+      "hook_stranded": []
+    },
+    {
+      "engine": "async",
+      "shape": "HOP",
+      "kind": "async def",
+      "entries": 11,
+      "submits": 11,
+      "state": [
+        "m.hop"
+      ],
+      "dormant": false,
+      "last_error": "RunawayChainError",
+      "hook_stranded": []
+    },
+    {
+      "engine": "sync",
+      "shape": "HOP",
+      "kind": "async def",
+      "error": "NotSupportedError"
+    },
+    {
+      "engine": "async",
+      "shape": "CLEAN_control",
+      "kind": "def",
+      "entries": 1,
+      "submits": 1,
+      "state": [
+        "m.rest"
+      ],
+      "dormant": false,
+      "last_error": "NoneType",
+      "hook_stranded": []
+    },
+    {
+      "engine": "sync",
+      "shape": "CLEAN_control",
+      "kind": "def",
+      "entries": 1,
+      "submits": 1,
+      "state": [
+        "m.rest"
+      ],
+      "dormant": false,
+      "last_error": "NoneType",
+      "hook_stranded": []
+    },
+    {
+      "engine": "async",
+      "shape": "CLEAN_control",
+      "kind": "async def",
+      "entries": 1,
+      "submits": 1,
+      "state": [
+        "m.rest"
+      ],
+      "dormant": false,
+      "last_error": "NoneType",
+      "hook_stranded": []
+    },
+    {
+      "engine": "sync",
+      "shape": "CLEAN_control",
+      "kind": "async def",
+      "error": "NotSupportedError"
+    }
+  ],
+  "violations": [
+    [
+      "async",
+      "def",
+      "self-target onDone never re-armed the invoke",
+      1,
+      1
+    ],
+    [
+      "async",
+      "def",
+      "parked dormant with no stranded hook and no last_error",
+      "NoneType"
+    ],
+    [
+      "sync",
+      "def",
+      "self-target onDone never re-armed the invoke",
+      1,
+      1
+    ],
+    [
+      "sync",
+      "def",
+      "parked dormant with no stranded hook and no last_error",
+      "NoneType"
+    ],
+    [
+      "async",
+      "async def",
+      "self-target onDone never re-armed the invoke",
+      1,
+      1
+    ],
+    [
+      "async",
+      "async def",
+      "parked dormant with no stranded hook and no last_error",
+      "NoneType"
+    ]
+  ],
+  "source": "base_interpreter.py:4952 `_states_to_invoke.append` is reached only from state ENTRY; a self-targeting transition that never exits the state therefore never re-records it, and _arm_pending_invokes (4958) has nothing to arm",
+  "result": "FAIL"
+}

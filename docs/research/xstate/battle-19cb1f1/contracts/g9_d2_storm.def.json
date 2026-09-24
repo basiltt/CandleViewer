@@ -1,0 +1,66 @@
+{
+ "[def]D2/B11/async-engine/trips": {
+  "pass": true,
+  "note": "err=RunawayChainError laps=14 states=['recording.starting']"
+ },
+ "[def]D2/B11/async-engine/plateau=lim+2": {
+  "pass": true,
+  "note": "laps=14 expected=14"
+ },
+ "[def]D2/B11/async-engine/stranded-hook": {
+  "pass": true,
+  "note": "[[\"recording.starting\", \"sub\", \"RunawayChainError(\\\"Machine 'recording' exceeded 12 chained self-generated events\"]]"
+ },
+ "[def]D2/B11/async-engine/err.stranded": {
+  "pass": true,
+  "note": "('sub',)"
+ },
+ "[def]D2/B11/sync-engine/trips": {
+  "pass": true,
+  "note": "err=RunawayChainError laps=14 states=['recording.starting']"
+ },
+ "[def]D2/B11/sync-engine/plateau=lim+2": {
+  "pass": true,
+  "note": "laps=14 expected=14"
+ },
+ "[def]D2/B11/lap-parity": {
+  "pass": true,
+  "note": "async=14 sync=14"
+ },
+ "[def]D2/B11/raw": {
+  "pass": true,
+  "note": "{\"async\": {\"laps\": 14, \"states\": [\"recording.starting\"], \"error\": \"RunawayChainError(\\\"Machine 'recording' exceeded 12 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'. The cut stranded invocation(s) ['sub']: their state is still active with no service running, and no onDone/onError will arrive.\\\")\", \"errtype\": \"RunawayChainError\", \"i_dot_error\": null, \"stranded_hook\": [[\"recording.starting\", \"sub\", \"RunawayChainError(\\\"Machine 'recording' exceeded 12 chained self-generated events\"]], \"runaway_stranded\": [\"sub\"], \"hook_errors\": [], \"dormant\": true, \"pending\": [[\"recording.starting\", \"sub\", \"subscribe_streams\"]]}, \"sync\": {\"laps\": 14, \"states\": [\"recording.starting\"], \"error\": \"RunawayChainError(\\\"Machine 'recording' exceeded 12 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'. The cut stranded invocation(s) ['sub']: their state is still active with no service running, and no onDone/onError will arrive.\\\")\", \"errtype\": \"RunawayChainError\", \"i_dot_error\": null, \"stranded_hook\": [[\"recording.starting\", \"sub\", \"RunawayChainError(\\\"Machine 'recording' exceeded 12 chained self-generated events\"]], \"runaway_stranded\": [\"sub\"]}}"
+ },
+ "[def]D2/B13/async-engine/trips": {
+  "pass": true,
+  "note": "err=RunawayChainError laps=14 states=['ws_conn.subscribing']"
+ },
+ "[def]D2/B13/async-engine/plateau=lim+2": {
+  "pass": true,
+  "note": "laps=14 expected=14"
+ },
+ "[def]D2/B13/async-engine/stranded-hook": {
+  "pass": true,
+  "note": "[[\"ws_conn.subscribing\", \"sub\", \"RunawayChainError(\\\"Machine 'ws_conn' exceeded 12 chained self-generated events i\"]]"
+ },
+ "[def]D2/B13/async-engine/err.stranded": {
+  "pass": true,
+  "note": "('sub',)"
+ },
+ "[def]D2/B13/sync-engine/trips": {
+  "pass": true,
+  "note": "err=RunawayChainError laps=14 states=['ws_conn.subscribing']"
+ },
+ "[def]D2/B13/sync-engine/plateau=lim+2": {
+  "pass": true,
+  "note": "laps=14 expected=14"
+ },
+ "[def]D2/B13/lap-parity": {
+  "pass": true,
+  "note": "async=14 sync=14"
+ },
+ "[def]D2/B13/raw": {
+  "pass": true,
+  "note": "{\"async\": {\"laps\": 14, \"states\": [\"ws_conn.subscribing\"], \"error\": \"RunawayChainError(\\\"Machine 'ws_conn' exceeded 12 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'. The cut stranded invocation(s) ['sub']: their state is still active with no service running, and no onDone/onError will arrive.\\\")\", \"errtype\": \"RunawayChainError\", \"i_dot_error\": null, \"stranded_hook\": [[\"ws_conn.subscribing\", \"sub\", \"RunawayChainError(\\\"Machine 'ws_conn' exceeded 12 chained self-generated events i\"]], \"runaway_stranded\": [\"sub\"], \"hook_errors\": [], \"dormant\": true, \"pending\": [[\"ws_conn.subscribing\", \"sub\", \"subscribe_in_batches\"]]}, \"sync\": {\"laps\": 14, \"states\": [\"ws_conn.subscribing\"], \"error\": \"RunawayChainError(\\\"Machine 'ws_conn' exceeded 12 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'. The cut stranded invocation(s) ['sub']: their state is still active with no service running, and no onDone/onError will arrive.\\\")\", \"errtype\": \"RunawayChainError\", \"i_dot_error\": null, \"stranded_hook\": [[\"ws_conn.subscribing\", \"sub\", \"RunawayChainError(\\\"Machine 'ws_conn' exceeded 12 chained self-generated events i\"]], \"runaway_stranded\": [\"sub\"]}}"
+ }
+}

@@ -1,0 +1,64 @@
+{
+ "N1_sync": {
+  "before": "b",
+  "user_handbuilt": {
+   "value": "b"
+  },
+  "is_system": true,
+  "after_re_mint": "b"
+ },
+ "N1_async": {
+  "after_re_mint": "PAID"
+ },
+ "N1_after_type": {
+  "cls": "_EngineAfter",
+  "type": "done.invoke.victim",
+  "system": true
+ },
+ "N2": {
+  "cases": 300,
+  "bad": 0,
+  "sample": []
+ },
+ "N3_sync": {
+  "flags_ok": true,
+  "starts_ok": true
+ },
+ "N3_async": {
+  "n": 100,
+  "exactly_once_resume": true,
+  "bad": []
+ },
+ "N4": {
+  "n": 1000,
+  "count": 1000,
+  "hook": 1000,
+  "k": 1000,
+  "ok": true
+ },
+ "N5": {
+  "isinstance": {
+   "RunawayChainError": true,
+   "RestoredError": true,
+   "XStateMachineError": true
+  },
+  "sync_kwargs": {
+   "max_queue_size=None": "accepted",
+   "overflow_policy=None": "accepted",
+   "max_queue_size=5": "ValueError",
+   "overflow_policy=drop": "accepted"
+  }
+ },
+ "N6": {
+  "outcomes": {
+   "SnapshotCorruptError": 538,
+   "ok": 62
+  },
+  "untyped": 0
+ },
+ "N7": {
+  "rounds": 20,
+  "bad": [],
+  "receipts_settled": true
+ }
+}

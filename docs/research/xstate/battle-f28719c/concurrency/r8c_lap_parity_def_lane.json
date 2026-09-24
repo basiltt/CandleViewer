@@ -1,0 +1,530 @@
+{
+  "probe": "r8c_lap_parity_def_lane",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "shape": "always_cycle",
+      "maxIterations": 25,
+      "service_kind": "def",
+      "async_laps": [
+        25
+      ],
+      "sync_laps": [
+        25
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": true,
+      "delta": 0,
+      "deterministic": true
+    },
+    {
+      "shape": "always_cycle",
+      "maxIterations": 25,
+      "service_kind": "async def",
+      "async_laps": [
+        25
+      ],
+      "sync_laps": [
+        25
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": true,
+      "delta": 0,
+      "deterministic": true
+    },
+    {
+      "shape": "always_cycle",
+      "maxIterations": 50,
+      "service_kind": "def",
+      "async_laps": [
+        50
+      ],
+      "sync_laps": [
+        50
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": true,
+      "delta": 0,
+      "deterministic": true
+    },
+    {
+      "shape": "always_cycle",
+      "maxIterations": 50,
+      "service_kind": "async def",
+      "async_laps": [
+        50
+      ],
+      "sync_laps": [
+        50
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": true,
+      "delta": 0,
+      "deterministic": true
+    },
+    {
+      "shape": "invoke_cycle",
+      "maxIterations": 25,
+      "service_kind": "def",
+      "async_laps": [
+        25
+      ],
+      "sync_laps": [
+        27
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": false,
+      "delta": -2,
+      "deterministic": true
+    },
+    {
+      "shape": "invoke_cycle",
+      "maxIterations": 25,
+      "service_kind": "async def",
+      "async_laps": [
+        25
+      ],
+      "sync_laps": [
+        27
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": false,
+      "delta": -2,
+      "deterministic": true
+    },
+    {
+      "shape": "invoke_cycle",
+      "maxIterations": 50,
+      "service_kind": "def",
+      "async_laps": [
+        51
+      ],
+      "sync_laps": [
+        51
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": true,
+      "delta": 0,
+      "deterministic": true
+    },
+    {
+      "shape": "invoke_cycle",
+      "maxIterations": 50,
+      "service_kind": "async def",
+      "async_laps": [
+        51
+      ],
+      "sync_laps": [
+        51
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": true,
+      "delta": 0,
+      "deterministic": true
+    },
+    {
+      "shape": "nested_invoke_cycle",
+      "maxIterations": 25,
+      "service_kind": "def",
+      "async_laps": [
+        25
+      ],
+      "sync_laps": [
+        27
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": false,
+      "delta": -2,
+      "deterministic": true
+    },
+    {
+      "shape": "nested_invoke_cycle",
+      "maxIterations": 25,
+      "service_kind": "async def",
+      "async_laps": [
+        25
+      ],
+      "sync_laps": [
+        27
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": false,
+      "delta": -2,
+      "deterministic": true
+    },
+    {
+      "shape": "nested_invoke_cycle",
+      "maxIterations": 50,
+      "service_kind": "def",
+      "async_laps": [
+        51
+      ],
+      "sync_laps": [
+        51
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": true,
+      "delta": 0,
+      "deterministic": true
+    },
+    {
+      "shape": "nested_invoke_cycle",
+      "maxIterations": 50,
+      "service_kind": "async def",
+      "async_laps": [
+        51
+      ],
+      "sync_laps": [
+        51
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": true,
+      "delta": 0,
+      "deterministic": true
+    },
+    {
+      "shape": "rollback_ondone",
+      "maxIterations": 25,
+      "service_kind": "def",
+      "async_laps": [
+        37
+      ],
+      "sync_laps": [
+        40
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": false,
+      "delta": -3,
+      "deterministic": true
+    },
+    {
+      "shape": "rollback_ondone",
+      "maxIterations": 25,
+      "service_kind": "async def",
+      "async_laps": [
+        37
+      ],
+      "sync_laps": [
+        40
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": false,
+      "delta": -3,
+      "deterministic": true
+    },
+    {
+      "shape": "rollback_ondone",
+      "maxIterations": 50,
+      "service_kind": "def",
+      "async_laps": [
+        76
+      ],
+      "sync_laps": [
+        76
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": true,
+      "delta": 0,
+      "deterministic": true
+    },
+    {
+      "shape": "rollback_ondone",
+      "maxIterations": 50,
+      "service_kind": "async def",
+      "async_laps": [
+        76
+      ],
+      "sync_laps": [
+        76
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": true,
+      "delta": 0,
+      "deterministic": true
+    },
+    {
+      "shape": "sendto_self_loop",
+      "maxIterations": 25,
+      "service_kind": "def",
+      "async_laps": [
+        27
+      ],
+      "sync_laps": [
+        27
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": true,
+      "delta": 0,
+      "deterministic": true
+    },
+    {
+      "shape": "sendto_self_loop",
+      "maxIterations": 25,
+      "service_kind": "async def",
+      "async_laps": [
+        27
+      ],
+      "sync_laps": [
+        27
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": true,
+      "delta": 0,
+      "deterministic": true
+    },
+    {
+      "shape": "sendto_self_loop",
+      "maxIterations": 50,
+      "service_kind": "def",
+      "async_laps": [
+        52
+      ],
+      "sync_laps": [
+        52
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": true,
+      "delta": 0,
+      "deterministic": true
+    },
+    {
+      "shape": "sendto_self_loop",
+      "maxIterations": 50,
+      "service_kind": "async def",
+      "async_laps": [
+        52
+      ],
+      "sync_laps": [
+        52
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": true,
+      "delta": 0,
+      "deterministic": true
+    }
+  ],
+  "parity_violations": [
+    {
+      "shape": "invoke_cycle",
+      "maxIterations": 25,
+      "service_kind": "def",
+      "async_laps": [
+        25
+      ],
+      "sync_laps": [
+        27
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": false,
+      "delta": -2,
+      "deterministic": true
+    },
+    {
+      "shape": "invoke_cycle",
+      "maxIterations": 25,
+      "service_kind": "async def",
+      "async_laps": [
+        25
+      ],
+      "sync_laps": [
+        27
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": false,
+      "delta": -2,
+      "deterministic": true
+    },
+    {
+      "shape": "nested_invoke_cycle",
+      "maxIterations": 25,
+      "service_kind": "def",
+      "async_laps": [
+        25
+      ],
+      "sync_laps": [
+        27
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": false,
+      "delta": -2,
+      "deterministic": true
+    },
+    {
+      "shape": "nested_invoke_cycle",
+      "maxIterations": 25,
+      "service_kind": "async def",
+      "async_laps": [
+        25
+      ],
+      "sync_laps": [
+        27
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": false,
+      "delta": -2,
+      "deterministic": true
+    },
+    {
+      "shape": "rollback_ondone",
+      "maxIterations": 25,
+      "service_kind": "def",
+      "async_laps": [
+        37
+      ],
+      "sync_laps": [
+        40
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": false,
+      "delta": -3,
+      "deterministic": true
+    },
+    {
+      "shape": "rollback_ondone",
+      "maxIterations": 25,
+      "service_kind": "async def",
+      "async_laps": [
+        37
+      ],
+      "sync_laps": [
+        40
+      ],
+      "async_trip": [
+        true
+      ],
+      "sync_trip": [
+        true
+      ],
+      "laps_equal": false,
+      "delta": -3,
+      "deterministic": true
+    }
+  ],
+  "claim": "CHANGELOG #179: both service kinds trip at the same lap count as the sync engine",
+  "result": "FAIL"
+}

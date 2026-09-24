@@ -1,0 +1,114 @@
+{
+ "[async]V2.B2.happy_runs": {
+  "pass": true,
+  "note": "states=['trade_group.draft'] status=running"
+ },
+ "[async]V2.B2.happy_snapshot_ok": {
+  "pass": true,
+  "note": "t0:v=3:sched=0; t1:v=3:sched=0; t2:v=3:sched=0"
+ },
+ "[async]V2.B2.happy_chain_trips_zero": {
+  "pass": true,
+  "note": "chain_trips=0 lce=None"
+ },
+ "[async]V2.B2.happy_no_stranded": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]V2.B2.happy_no_service_errors": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]V2.B2.happy_sync_parity": {
+  "pass": true,
+  "note": "async=['trade_group.draft'] sync=['trade_group.draft']"
+ },
+ "[async]V2.B3.preflight_ok_runs": {
+  "pass": true,
+  "note": "states=['leg.submitting'] status=running"
+ },
+ "[async]V2.B3.preflight_ok_snapshot_ok": {
+  "pass": true,
+  "note": "t0:v=3:sched=0"
+ },
+ "[async]V2.B3.preflight_ok_chain_trips_zero": {
+  "pass": true,
+  "note": "chain_trips=0 lce=None"
+ },
+ "[async]V2.B3.preflight_ok_no_stranded": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]V2.B3.preflight_ok_no_service_errors": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]V2.B3.preflight_ok_sync_parity": {
+  "pass": true,
+  "note": "async=['leg.submitting'] sync=['leg.submitting']"
+ },
+ "[async]V2.B4.race_a_runs": {
+  "pass": true,
+  "note": "states=['oco.racing'] status=running"
+ },
+ "[async]V2.B4.race_a_snapshot_ok": {
+  "pass": true,
+  "note": "t0:v=3:sched=0; t1:v=3:sched=0"
+ },
+ "[async]V2.B4.race_a_chain_trips_zero": {
+  "pass": true,
+  "note": "chain_trips=0 lce=None"
+ },
+ "[async]V2.B4.race_a_no_stranded": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]V2.B4.race_a_no_service_errors": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]V2.B4.race_a_sync_parity": {
+  "pass": true,
+  "note": "async=['oco.racing'] sync=['oco.racing']"
+ },
+ "[async]V2.B5.slice_runs": {
+  "pass": true,
+  "note": "states=['iceberg.working'] status=running"
+ },
+ "[async]V2.B5.slice_snapshot_ok": {
+  "pass": true,
+  "note": "t0:v=3:sched=0; t1:v=3:sched=0"
+ },
+ "[async]V2.B5.slice_chain_trips_zero": {
+  "pass": true,
+  "note": "chain_trips=0 lce=None"
+ },
+ "[async]V2.B5.slice_no_stranded": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]V2.B5.slice_no_service_errors": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]V2.B5.slice_sync_parity": {
+  "pass": true,
+  "note": "async=['iceberg.working'] sync=['iceberg.working']"
+ },
+ "[async]V2.225.spawned_worker_send_admitted": {
+  "pass": true,
+  "note": "worker_send='ok' states=['order.lifecycle.rejected', 'order.protection.not_required']"
+ },
+ "[async]V2.225.spawned_worker_no_chain_trip": {
+  "pass": true,
+  "note": "chain_trips=0"
+ },
+ "[async]V2.225.wait_true_handout_not_refused": {
+  "pass": true,
+  "note": "handed=True"
+ },
+ "[async]V2.225.wait_true_handout_resolves": {
+  "pass": true,
+  "note": "receipt awaited ok"
+ }
+}

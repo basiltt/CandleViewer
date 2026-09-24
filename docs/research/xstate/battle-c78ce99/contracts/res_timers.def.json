@@ -1,0 +1,62 @@
+{
+ "[def]T.B1.sl.armed_waiting": {
+  "pass": true,
+  "note": "['order.lifecycle.submitted', 'order.protection.sl_pending']"
+ },
+ "[def]T.B1.sl.snapshot_v3": {
+  "pass": true,
+  "note": "3"
+ },
+ "[def]T.B1.sl.deadline_fires": {
+  "pass": true,
+  "note": "['order.lifecycle.submitted', 'order.protection.sl_missing']"
+ },
+ "[def]T.B1.sl.naked_alert": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]T.212.cycle_started": {
+  "pass": true,
+  "note": "['iceberg.working']"
+ },
+ "[def]T.212.heartbeat_survives_40_beats": {
+  "pass": true,
+  "note": "beats=40 laps=21 status=running err=None states=['iceberg.working']"
+ },
+ "[def]T.212.cycle_actually_lapped": {
+  "pass": true,
+  "note": "submit_child x21"
+ },
+ "[def]T.212.no_runaway_error": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]T.213.parked_in_submitting": {
+  "pass": true,
+  "note": "['leg.submitting']"
+ },
+ "[def]T.213.scheduled_sends_present": {
+  "pass": true,
+  "note": "[{\"kind\": \"event\", \"type\": \"SUBMIT_TIMEOUT\", \"payload\": {}, \"remaining_ms\": 4000.0, \"send_id\": \"submit_timeout\"}]"
+ },
+ "[def]T.213.remaining_delay_recorded": {
+  "pass": true,
+  "note": "4000.0"
+ },
+ "[def]T.213.has_send_id": {
+  "pass": true,
+  "note": "submit_timeout"
+ },
+ "[def]T.213.restored_state": {
+  "pass": true,
+  "note": "['leg.submitting']"
+ },
+ "[def]T.213.not_early": {
+  "pass": true,
+  "note": "['leg.submitting']"
+ },
+ "[def]T.213.rearmed_and_fires": {
+  "pass": true,
+  "note": "states=['leg.rejected'] svc=['lookup_by_link_id']"
+ }
+}

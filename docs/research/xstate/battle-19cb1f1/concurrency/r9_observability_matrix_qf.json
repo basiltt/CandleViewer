@@ -1,0 +1,26 @@
+{
+  "probe": "r9_observability_matrix_qf",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "probe": "queue_full",
+      "kind": "def",
+      "callsite_refusals": 350555,
+      "loopside_refusals": 1128,
+      "total_refusals": 351683,
+      "queue_full_hooks": 1128,
+      "loopside_hooked_exactly_once": true,
+      "callsite_hooked": false,
+      "reasons": {
+        "queue_full": 1128
+      }
+    }
+  ],
+  "failures": [
+    [
+      "queue_full",
+      "call-site refusals fire NO hook"
+    ]
+  ],
+  "result": "FAIL"
+}

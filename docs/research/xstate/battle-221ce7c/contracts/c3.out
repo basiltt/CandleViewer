@@ -1,0 +1,629 @@
+[
+  {
+    "machine": "B6",
+    "script": [
+      "SLICE_DUE",
+      "SLICE_DUE",
+      "USER_PAUSE",
+      "RESUME",
+      "DURATION_END",
+      "CHILDREN_TERMINAL"
+    ],
+    "reference": {
+      "states": [
+        "twap.completed"
+      ],
+      "status": "done",
+      "actions": [
+        "precompute_all_slice_deadlines",
+        "register_deadlines_with_scheduler",
+        "compute_slice_qty_with_participation_cap",
+        "apply_catch_up",
+        "bump_slices_done",
+        "record_child",
+        "compute_slice_qty_with_participation_cap",
+        "apply_catch_up",
+        "bump_slices_done",
+        "record_child",
+        "rearm_deadlines_from_context"
+      ]
+    },
+    "crashpoints": [
+      {
+        "k": 0,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "twap.completed"
+        ],
+        "resumed_status": "done"
+      },
+      {
+        "k": 1,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "twap.completed"
+        ],
+        "resumed_status": "done"
+      },
+      {
+        "k": 2,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "twap.completed"
+        ],
+        "resumed_status": "done"
+      },
+      {
+        "k": 3,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "twap.completed"
+        ],
+        "resumed_status": "done"
+      },
+      {
+        "k": 4,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "twap.completed"
+        ],
+        "resumed_status": "done"
+      },
+      {
+        "k": 5,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "twap.completed"
+        ],
+        "resumed_status": "done"
+      },
+      {
+        "k": 6,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "twap.completed"
+        ],
+        "resumed_status": "done"
+      }
+    ]
+  },
+  {
+    "machine": "B7",
+    "script": [
+      "BOOK_TARGET_MOVED",
+      "CHILD_PARTIAL",
+      "USER_PAUSE",
+      "RESUME",
+      "CHILD_FILLED",
+      "CHILDREN_TERMINAL"
+    ],
+    "reference": {
+      "states": [
+        "chase.completed"
+      ],
+      "status": "done",
+      "actions": [
+        "record_child",
+        "stamp_arm_price",
+        "drain_deferred",
+        "compute_target_excluding_own_size",
+        "bump_repricings",
+        "stamp_last_reprice",
+        "drain_deferred",
+        "apply_fill",
+        "drain_deferred",
+        "apply_fill"
+      ]
+    },
+    "crashpoints": [
+      {
+        "k": 0,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "chase.completed"
+        ],
+        "resumed_status": "done"
+      },
+      {
+        "k": 1,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "chase.completed"
+        ],
+        "resumed_status": "done"
+      },
+      {
+        "k": 2,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "chase.completed"
+        ],
+        "resumed_status": "done"
+      },
+      {
+        "k": 3,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "chase.completed"
+        ],
+        "resumed_status": "done"
+      },
+      {
+        "k": 4,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "chase.completed"
+        ],
+        "resumed_status": "done"
+      },
+      {
+        "k": 5,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "chase.completed"
+        ],
+        "resumed_status": "done"
+      },
+      {
+        "k": 6,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "chase.completed"
+        ],
+        "resumed_status": "done"
+      }
+    ]
+  },
+  {
+    "machine": "B8",
+    "script": [
+      "POSITION_OPENED",
+      "SCAN_DUE",
+      "TIGHTEN_SL",
+      "SCAN_DUE",
+      "POSITION_FLAT"
+    ],
+    "reference": {
+      "states": [
+        "position_protection.sl.flat",
+        "position_protection.watchdog.idle"
+      ],
+      "status": "running",
+      "actions": [
+        "arm_sl_deadline",
+        "bump_attach_attempts",
+        "reset_miss_counter",
+        "reset_miss_counter"
+      ]
+    },
+    "crashpoints": [
+      {
+        "k": 0,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "position_protection.sl.flat",
+          "position_protection.watchdog.idle"
+        ],
+        "resumed_status": "running"
+      },
+      {
+        "k": 1,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "position_protection.sl.flat",
+          "position_protection.watchdog.idle"
+        ],
+        "resumed_status": "running"
+      },
+      {
+        "k": 2,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "position_protection.sl.flat",
+          "position_protection.watchdog.idle"
+        ],
+        "resumed_status": "running"
+      },
+      {
+        "k": 3,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "position_protection.sl.flat",
+          "position_protection.watchdog.idle"
+        ],
+        "resumed_status": "running"
+      },
+      {
+        "k": 4,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "position_protection.sl.flat",
+          "position_protection.watchdog.idle"
+        ],
+        "resumed_status": "running"
+      },
+      {
+        "k": 5,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "position_protection.sl.flat",
+          "position_protection.watchdog.idle"
+        ],
+        "resumed_status": "running"
+      }
+    ]
+  },
+  {
+    "machine": "B9",
+    "script": [
+      "SAVE",
+      "ARM_REQUESTED",
+      "TRIGGER",
+      "COOLDOWN_DUE",
+      "TRIGGER",
+      "COOLDOWN_DUE"
+    ],
+    "reference": {
+      "states": [
+        "rule_instance.armed"
+      ],
+      "status": "running",
+      "actions": [
+        "stamp_simulation_start",
+        "subscribe_triggers",
+        "emit_armed_audit",
+        "unsubscribe_triggers",
+        "assert_safety_limits",
+        "record_fire",
+        "reset_consecutive_errors",
+        "stamp_cooldown_deadline",
+        "drain_deferred",
+        "subscribe_triggers",
+        "emit_armed_audit",
+        "unsubscribe_triggers",
+        "assert_safety_limits",
+        "record_fire",
+        "reset_consecutive_errors",
+        "stamp_cooldown_deadline",
+        "drain_deferred",
+        "subscribe_triggers",
+        "emit_armed_audit"
+      ]
+    },
+    "crashpoints": [
+      {
+        "k": 0,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "rule_instance.armed"
+        ],
+        "resumed_status": "running"
+      },
+      {
+        "k": 1,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "rule_instance.armed"
+        ],
+        "resumed_status": "running"
+      },
+      {
+        "k": 2,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "rule_instance.armed"
+        ],
+        "resumed_status": "running"
+      },
+      {
+        "k": 3,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "rule_instance.armed"
+        ],
+        "resumed_status": "running"
+      },
+      {
+        "k": 4,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "rule_instance.armed"
+        ],
+        "resumed_status": "running"
+      },
+      {
+        "k": 5,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "rule_instance.armed"
+        ],
+        "resumed_status": "running"
+      },
+      {
+        "k": 6,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "rule_instance.armed"
+        ],
+        "resumed_status": "running"
+      }
+    ]
+  },
+  {
+    "machine": "B10",
+    "script": [
+      "CONDITION_MET",
+      "ACK",
+      "RESOLVE"
+    ],
+    "reference": {
+      "states": [
+        "alert.resolved"
+      ],
+      "status": "done",
+      "actions": [
+        "persist_fired_row",
+        "stamp_storm_window"
+      ]
+    },
+    "crashpoints": [
+      {
+        "k": 0,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "alert.resolved"
+        ],
+        "resumed_status": "done"
+      },
+      {
+        "k": 1,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "alert.resolved"
+        ],
+        "resumed_status": "done"
+      },
+      {
+        "k": 2,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "alert.resolved"
+        ],
+        "resumed_status": "done"
+      },
+      {
+        "k": 3,
+        "quiescent": {
+          "queue_depth": 0,
+          "deferred_count": 0
+        },
+        "snapshot": "OK",
+        "has_dormant_timers": false,
+        "pending_invocations": [],
+        "verdict": "MATCH",
+        "resumed_states": [
+          "alert.resolved"
+        ],
+        "resumed_status": "done"
+      }
+    ]
+  }
+]
+
+=== SUMMARY ===
+B6 {'MATCH': 7}
+B7 {'MATCH': 7}
+B8 {'MATCH': 6}
+B9 {'MATCH': 7}
+B10 {'MATCH': 4}
+SnapshotMidStepError at a quiescent point: NONE

@@ -1,0 +1,147 @@
+{
+  "probe": "v1_reentrant_wait_matrix",
+  "py": "3.13.7",
+  "watchdog_s": 20.0,
+  "rows": [
+    {
+      "cell": "A_self_await",
+      "kind": "def",
+      "seen": "N/A_sync_action_cannot_await",
+      "ok": true
+    },
+    {
+      "cell": "C_ensure_future",
+      "kind": "def",
+      "seen": [
+        "HANDED_OUT"
+      ],
+      "outcome": "RESOLVED",
+      "n": 1,
+      "hung": false,
+      "ok": true
+    },
+    {
+      "cell": "D_child_to_parent",
+      "kind": "def",
+      "seen": "N/A_sync_action_cannot_await",
+      "ok": true
+    },
+    {
+      "cell": "E_parent_to_child",
+      "kind": "def",
+      "seen": "N/A_sync_action_cannot_await",
+      "ok": true
+    },
+    {
+      "cell": "F_after_handler",
+      "kind": "def",
+      "seen": "N/A_sync_action_cannot_await",
+      "ok": true
+    },
+    {
+      "cell": "H_external_wait",
+      "kind": "def",
+      "outcome": "RESOLVED",
+      "n": 1,
+      "ok": true
+    },
+    {
+      "cell": "I_concurrent_100",
+      "kind": "def",
+      "resolved": 100,
+      "issues": [],
+      "other_exceptions": [],
+      "n_values": [
+        1
+      ],
+      "hung": false,
+      "ok": true
+    },
+    {
+      "cell": "A_self_await",
+      "kind": "async def",
+      "seen": [
+        "ReentrantWaitError"
+      ],
+      "hung": false,
+      "ok": true
+    },
+    {
+      "cell": "C_ensure_future",
+      "kind": "async def",
+      "seen": [
+        "HANDED_OUT"
+      ],
+      "outcome": "RESOLVED",
+      "n": 1,
+      "hung": false,
+      "ok": true
+    },
+    {
+      "cell": "D_child_to_parent",
+      "kind": "async def",
+      "seen": [
+        "RESOLVED"
+      ],
+      "peer_state": [
+        "D_child_to_parentc.done"
+      ],
+      "hung": false,
+      "ok": true
+    },
+    {
+      "cell": "E_parent_to_child",
+      "kind": "async def",
+      "seen": [
+        "RESOLVED"
+      ],
+      "peer_state": [
+        "E_parent_to_childc.done"
+      ],
+      "hung": false,
+      "ok": true
+    },
+    {
+      "cell": "F_after_handler",
+      "kind": "async def",
+      "seen": [
+        "ReentrantWaitError"
+      ],
+      "states": [
+        "v1f.done"
+      ],
+      "hung": false,
+      "ok": true
+    },
+    {
+      "cell": "H_external_wait",
+      "kind": "async def",
+      "outcome": "RESOLVED",
+      "n": 1,
+      "ok": true
+    },
+    {
+      "cell": "I_concurrent_100",
+      "kind": "async def",
+      "resolved": 100,
+      "issues": [],
+      "other_exceptions": [],
+      "n_values": [
+        1
+      ],
+      "hung": false,
+      "ok": true
+    },
+    {
+      "cell": "B_sync_self",
+      "kind": "def",
+      "seen": [
+        "ReentrantWaitError"
+      ],
+      "hung": false,
+      "ok": true
+    }
+  ],
+  "failures": [],
+  "verdict": "CLEAN"
+}

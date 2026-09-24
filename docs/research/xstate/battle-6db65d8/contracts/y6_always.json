@@ -1,0 +1,86 @@
+[
+ {
+  "engine": "async",
+  "style": "async",
+  "cool_at": 5,
+  "svc_calls": 5,
+  "bounded": true,
+  "entries": 5,
+  "states": [
+   "ice.cool"
+  ],
+  "status": "done",
+  "interp_error": "None",
+  "last_error": "None"
+ },
+ {
+  "engine": "async",
+  "style": "def",
+  "cool_at": 5,
+  "svc_calls": 5,
+  "bounded": true,
+  "entries": 5,
+  "states": [
+   "ice.cool"
+  ],
+  "status": "done",
+  "interp_error": "None",
+  "last_error": "None"
+ },
+ {
+  "engine": "sync",
+  "style": "def",
+  "cool_at": 5,
+  "svc_calls": 5,
+  "entries": 5,
+  "states": [
+   "ice.cool"
+  ],
+  "status": "done",
+  "raised": null,
+  "interp_error": "None",
+  "last_error": "None"
+ },
+ {
+  "engine": "async",
+  "style": "async",
+  "cool_at": 1000000000,
+  "svc_calls": 15,
+  "bounded": true,
+  "entries": 15,
+  "states": [
+   "ice.reprice"
+  ],
+  "status": "running",
+  "interp_error": "None",
+  "last_error": "RunawayChainError(\"Machine 'ice' exceeded 30 chained self-generated events in one macrostep and discarded 0 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")"
+ },
+ {
+  "engine": "async",
+  "style": "def",
+  "cool_at": 1000000000,
+  "svc_calls": 15,
+  "bounded": true,
+  "entries": 15,
+  "states": [
+   "ice.reprice"
+  ],
+  "status": "running",
+  "interp_error": "None",
+  "last_error": "RunawayChainError(\"Machine 'ice' exceeded 30 chained self-generated events in one macrostep and discarded 0 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")"
+ },
+ {
+  "engine": "sync",
+  "style": "def",
+  "cool_at": 1000000000,
+  "svc_calls": 16,
+  "entries": 16,
+  "states": [
+   "ice.reprice"
+  ],
+  "status": "running",
+  "raised": null,
+  "interp_error": "None",
+  "last_error": "RunawayChainError(\"Machine 'ice' exceeded 30 chained self-generated events in one macrostep and discarded 0 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.\")"
+ }
+]

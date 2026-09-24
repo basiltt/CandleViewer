@@ -1,0 +1,56 @@
+[
+ {
+  "variant": "base",
+  "laps": 26103,
+  "elapsed_s": 2.51,
+  "tripped": false,
+  "last_error": null,
+  "max_raise_depth": 0,
+  "dropped": []
+ },
+ {
+  "variant": "parallel",
+  "laps": 23681,
+  "elapsed_s": 2.51,
+  "tripped": false,
+  "last_error": null,
+  "max_raise_depth": 0,
+  "dropped": []
+ },
+ {
+  "variant": "simclock",
+  "laps": 25272,
+  "elapsed_s": 2.51,
+  "tripped": false,
+  "last_error": null,
+  "max_raise_depth": 0,
+  "dropped": []
+ },
+ {
+  "variant": "entryactions",
+  "laps": 24410,
+  "elapsed_s": 2.51,
+  "tripped": false,
+  "last_error": null,
+  "max_raise_depth": 0,
+  "dropped": []
+ },
+ {
+  "variant": "policies",
+  "laps": 24771,
+  "elapsed_s": 2.51,
+  "tripped": false,
+  "last_error": null,
+  "max_raise_depth": 0,
+  "dropped": []
+ },
+ {
+  "variant": "par+sim(B8 shape)",
+  "laps": 21485,
+  "elapsed_s": 2.51,
+  "tripped": false,
+  "last_error": null,
+  "max_raise_depth": 0,
+  "dropped": []
+ }
+]

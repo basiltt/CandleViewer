@@ -1,0 +1,173 @@
+{
+  "id": "replay",
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "defer",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "initial": "created",
+  "context": {
+    "session_id": null,
+    "symbols": [],
+    "range_start": 0,
+    "range_end": 0,
+    "cursor": 0,
+    "speed": 1.0,
+    "loop": false,
+    "paper_account_id": null,
+    "error": null,
+    "coverage_gaps": []
+  },
+  "states": {
+    "created": {
+      "on": {
+        "PREPARE": {
+          "target": "#replay.buffering"
+        },
+        "DESTROY": {
+          "target": "#replay.destroyed"
+        }
+      }
+    },
+    "buffering": {
+      "invoke": {
+        "id": "seek",
+        "src": "seek_and_prime",
+        "onDone": {
+          "target": "#replay.paused",
+          "actions": [
+            "set_cursor",
+            "record_coverage"
+          ]
+        },
+        "onError": {
+          "target": "#replay.error",
+          "actions": [
+            "record_error"
+          ]
+        }
+      },
+      "on": {
+        "CANCEL": {
+          "target": "#replay.paused"
+        },
+        "*": {
+          "actions": [
+            "defer"
+          ]
+        }
+      }
+    },
+    "paused": {
+      "entry": [
+        "drain_deferred"
+      ],
+      "on": {
+        "PLAY": {
+          "target": "#replay.playing"
+        },
+        "STEP": {
+          "target": "#replay.stepping"
+        },
+        "SEEK": {
+          "target": "#replay.buffering"
+        },
+        "DESTROY": {
+          "target": "#replay.destroyed"
+        }
+      }
+    },
+    "playing": {
+      "entry": [
+        "start_clock"
+      ],
+      "exit": [
+        "stop_clock"
+      ],
+      "on": {
+        "PAUSE": {
+          "target": "#replay.paused"
+        },
+        "SEEK": {
+          "target": "#replay.buffering"
+        },
+        "SET_SPEED": {
+          "actions": [
+            "set_speed"
+          ]
+        },
+        "CONSUMER_SLOW": {
+          "actions": [
+            "slow_clock"
+          ]
+        },
+        "RANGE_END": [
+          {
+            "target": "#replay.buffering",
+            "guard": "loop_enabled",
+            "actions": [
+              "reset_cursor_to_start"
+            ]
+          },
+          {
+            "target": "#replay.finished"
+          }
+        ],
+        "SOURCE_ERROR": {
+          "target": "#replay.error",
+          "actions": [
+            "record_error"
+          ]
+        }
+      }
+    },
+    "stepping": {
+      "invoke": {
+        "id": "step",
+        "src": "emit_one_step",
+        "onDone": {
+          "target": "#replay.paused",
+          "actions": [
+            "set_cursor"
+          ]
+        },
+        "onError": {
+          "target": "#replay.error",
+          "actions": [
+            "record_error"
+          ]
+        }
+      }
+    },
+    "finished": {
+      "on": {
+        "SEEK": {
+          "target": "#replay.buffering"
+        },
+        "DESTROY": {
+          "target": "#replay.destroyed"
+        }
+      }
+    },
+    "error": {
+      "tags": [
+        "error"
+      ],
+      "on": {
+        "SEEK": {
+          "target": "#replay.buffering"
+        },
+        "DESTROY": {
+          "target": "#replay.destroyed"
+        }
+      }
+    },
+    "destroyed": {
+      "type": "final",
+      "tags": [
+        "terminal"
+      ]
+    }
+  }
+}

@@ -1,0 +1,142 @@
+{
+ "[def]B6/#216 no unknown top-level keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]B6/build strict_config=True": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]B6/policy read-back": {
+  "pass": true,
+  "note": "('rollback', 'defer', 'raise')"
+ },
+ "[def]B6/strict+strictTargets": {
+  "pass": true,
+  "note": "strict=True targets=True"
+ },
+ "[def]B6/#216 typo refused via config strictConfig": {
+  "pass": true,
+  "note": "InvalidConfigError"
+ },
+ "[def]B6/start config": {
+  "pass": true,
+  "note": "['twap.armed'] | status=running"
+ },
+ "[def]B6/start-ids": {
+  "pass": true,
+  "note": "['twap.armed']"
+ },
+ "[def]B7/#216 no unknown top-level keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]B7/build strict_config=True": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]B7/policy read-back": {
+  "pass": true,
+  "note": "('rollback', 'defer', 'raise')"
+ },
+ "[def]B7/strict+strictTargets": {
+  "pass": true,
+  "note": "strict=True targets=True"
+ },
+ "[def]B7/#216 typo refused via config strictConfig": {
+  "pass": true,
+  "note": "InvalidConfigError"
+ },
+ "[def]B7/start config": {
+  "pass": true,
+  "note": "['chase.working'] | status=running"
+ },
+ "[def]B7/start-ids": {
+  "pass": true,
+  "note": "['chase.working']"
+ },
+ "[def]B8/#216 no unknown top-level keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]B8/build strict_config=True": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]B8/policy read-back": {
+  "pass": true,
+  "note": "('fail', 'defer', 'raise')"
+ },
+ "[def]B8/strict+strictTargets": {
+  "pass": true,
+  "note": "strict=True targets=True"
+ },
+ "[def]B8/#216 typo refused via config strictConfig": {
+  "pass": true,
+  "note": "InvalidConfigError"
+ },
+ "[def]B8/start config": {
+  "pass": true,
+  "note": "['position_protection.sl.flat', 'position_protection.watchdog.idle'] | status=running"
+ },
+ "[def]B8/start-ids": {
+  "pass": true,
+  "note": "['position_protection.sl.flat', 'position_protection.watchdog.idle']"
+ },
+ "[def]B9/#216 no unknown top-level keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]B9/build strict_config=True": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]B9/policy read-back": {
+  "pass": true,
+  "note": "('rollback', 'defer', 'raise')"
+ },
+ "[def]B9/strict+strictTargets": {
+  "pass": true,
+  "note": "strict=True targets=True"
+ },
+ "[def]B9/#216 typo refused via config strictConfig": {
+  "pass": true,
+  "note": "InvalidConfigError"
+ },
+ "[def]B9/start config": {
+  "pass": true,
+  "note": "['rule_instance.draft'] | status=running"
+ },
+ "[def]B9/start-ids": {
+  "pass": true,
+  "note": "['rule_instance.draft']"
+ },
+ "[def]B10/#216 no unknown top-level keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]B10/build strict_config=True": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]B10/policy read-back": {
+  "pass": true,
+  "note": "('rollback', 'defer', 'raise')"
+ },
+ "[def]B10/strict+strictTargets": {
+  "pass": true,
+  "note": "strict=True targets=True"
+ },
+ "[def]B10/#216 typo refused via config strictConfig": {
+  "pass": true,
+  "note": "InvalidConfigError"
+ },
+ "[def]B10/start config": {
+  "pass": true,
+  "note": "['alert.armed'] | status=running"
+ },
+ "[def]B10/start-ids": {
+  "pass": true,
+  "note": "['alert.armed']"
+ }
+}

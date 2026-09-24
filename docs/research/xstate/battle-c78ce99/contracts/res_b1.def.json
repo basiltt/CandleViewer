@@ -1,0 +1,138 @@
+{
+ "[def]B1.happy.parallel_leaves": {
+  "pass": true,
+  "note": "['order.lifecycle.partially_filled', 'order.protection.sl_missing']"
+ },
+ "[def]B1.happy.lifecycle": {
+  "pass": true,
+  "note": "['order.lifecycle.partially_filled', 'order.protection.sl_missing']"
+ },
+ "[def]B1.happy.protection_naked": {
+  "pass": true,
+  "note": "['order.lifecycle.partially_filled', 'order.protection.sl_missing']"
+ },
+ "[def]B1.happy.naked_alert": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]B1.happy.snapshot": {
+  "pass": true,
+  "note": "['t0:v=3:sched=0', 't1:v=3:sched=0', 't2:v=3:sched=0', 't3:v=3:sched=0', 't4:v=3:sched=0', 't5:v=3:sched=0', 't6:v=3:sched=0']"
+ },
+ "[def]B1.happy.no_error": {
+  "pass": true,
+  "note": "None"
+ },
+ "[def]B1.filled.terminal": {
+  "pass": true,
+  "note": "['order.lifecycle.filled', 'order.protection.sl_present']"
+ },
+ "[def]B1.filled.emit_terminal": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]B1.filled.two_regions": {
+  "pass": true,
+  "note": "['order.lifecycle.filled', 'order.protection.sl_present']"
+ },
+ "[def]B1.filled.snapshot": {
+  "pass": true,
+  "note": "['t0:v=3:sched=0', 't1:v=3:sched=0', 't2:v=3:sched=0', 't3:v=3:sched=0', 't4:v=3:sched=0']"
+ },
+ "[def]B1.reject.local": {
+  "pass": true,
+  "note": "['order.lifecycle.rejected', 'order.protection.not_required']"
+ },
+ "[def]B1.reject.set_local": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]B1.unknown.entered": {
+  "pass": true,
+  "note": "['order.lifecycle.unknown', 'order.protection.not_required']"
+ },
+ "[def]B1.unknown.alert": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]B1.unknown.fault_recorded": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]B1.recon.second_miss_rejects": {
+  "pass": true,
+  "note": "states=['order.lifecycle.rejected', 'order.protection.not_required'] misses=1"
+ },
+ "[def]B1.recon.reenter_bumped": {
+  "pass": true,
+  "note": "1"
+ },
+ "[def]B1.recon.snapshot": {
+  "pass": true,
+  "note": "['t0:v=3:sched=0', 't1:v=3:sched=0', 't2:v=3:sched=0', 't3:v=3:sched=0', 't4:v=3:sched=0']"
+ },
+ "[def]B1.dup.needs_lookup": {
+  "pass": true,
+  "note": "['order.lifecycle.submitted', 'order.protection.not_required']"
+ },
+ "[def]B1.quarantine.recovers": {
+  "pass": true,
+  "note": "['order.lifecycle.submitted', 'order.protection.not_required']"
+ },
+ "[def]B1.quarantine.critical_alert": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]B1.sl.onError_naked": {
+  "pass": true,
+  "note": "['order.lifecycle.submitted', 'order.protection.sl_missing']"
+ },
+ "[def]B1.sl.fallback_requested": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]B1.cancel.cancelled": {
+  "pass": true,
+  "note": "['order.lifecycle.cancelled', 'order.protection.not_required']"
+ },
+ "[def]B1.cancel.ack_adopted": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]B1.amend.observed": {
+  "pass": true,
+  "note": "states=['order.lifecycle.unknown', 'order.protection.not_required'] actions_tail=['persist_event', 'raise_unknown_alert', 'arm_recon_deadline']"
+ },
+ "[def]B1.R6-03.terminates": {
+  "pass": true,
+  "note": "[{'ev': 'VALIDATE', 'ok': True, 'sec': 0.00036980000004405156}, {'ev': 'SEND', 'ok': True, 'sec': 0.010491699998965487}]"
+ },
+ "[def]B1.R6-03.duplicate_orders_placed": {
+  "pass": true,
+  "note": "place_order x96 states=['order.lifecycle.submitting', 'order.protection.not_required'] status=running error=None action_errors=96"
+ },
+ "[def]B1.defer.exec_replayed": {
+  "pass": true,
+  "note": "states=['order.lifecycle.partially_filled', 'order.protection.not_required'] unhandled=[('EXEC', 'deferred'), ('EXEC', 'deferred')]"
+ },
+ "[def]B1.guard_raise.observable": {
+  "pass": true,
+  "note": "[\"RuntimeError('guard:ret_code_ok')\"]"
+ },
+ "[def]B1.parity.states": {
+  "pass": true,
+  "note": "async=['order.lifecycle.partially_filled', 'order.protection.sl_present'] sync=['order.lifecycle.partially_filled', 'order.protection.sl_present']"
+ },
+ "[def]B1.parity.context": {
+  "pass": true,
+  "note": "async={'order_id': None, 'order_link_id': None, 'account_id': None, 'symbol': None, 'side': None, 'qty': '0', 'filled_qty': '0', 'leaves_qty': '0', 'avg_price': None, 'seen_exec_ids': [], 'last_exchange_update': 0, 'recon_misses': 0, '_fault': None, 'sl_deadline_us': None}\nsync={'order_id': None, 'order_link_id': None, 'account_id': None, 'symbol': None, 'side': None, 'qty': '0', 'filled_qty': '0', 'leaves_qty': '0', 'avg_price': None, 'seen_exec_ids': [], 'last_exchange_update': 0, 'recon_misses': 0, '_fault': None, 'sl_deadline_us': None}"
+ },
+ "[def]B1.parity.actions": {
+  "pass": true,
+  "note": "async=['persist_event', 'stamp_validated', 'persist_event', 'reserve_rate_token', 'persist_event', 'adopt_ack', 'persist_event', 'arm_sl_deadline', 'apply_fill', 'persist_event', 'notify_protection_region']\nsync=['persist_event', 'stamp_validated', 'persist_event', 'reserve_rate_token', 'persist_event', 'adopt_ack', 'persist_event', 'arm_sl_deadline', 'apply_fill', 'persist_event', 'notify_protection_region']"
+ },
+ "[def]B1.parity.svc": {
+  "pass": true,
+  "note": "async=['place_order', 'attach_native_sl'] sync=['place_order', 'attach_native_sl']"
+ }
+}

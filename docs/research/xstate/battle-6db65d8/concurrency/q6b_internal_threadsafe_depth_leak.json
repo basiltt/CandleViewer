@@ -1,0 +1,27 @@
+{
+  "probe": "q6b_internal_threadsafe_depth_leak",
+  "py": "3.13.7",
+  "external_baseline": {
+    "burst_pairs": 50,
+    "internal": false,
+    "queue_depth_at_measure": 0,
+    "inflight_at_quiescence": 0,
+    "raise_depth_at_quiescence": 0,
+    "raise_depth_after_external_event": 0,
+    "laps_available_to_a_real_cycle": 200,
+    "maxIterations": 200
+  },
+  "internal_true": {
+    "burst_pairs": 50,
+    "internal": true,
+    "queue_depth_at_measure": 0,
+    "inflight_at_quiescence": 0,
+    "raise_depth_at_quiescence": 100,
+    "raise_depth_after_external_event": 0,
+    "laps_available_to_a_real_cycle": 200,
+    "maxIterations": 200
+  },
+  "depth_not_reset_at_quiescence": true,
+  "real_cycle_budget_starved": false,
+  "result": "FAIL"
+}

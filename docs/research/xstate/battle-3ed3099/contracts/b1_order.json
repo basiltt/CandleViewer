@@ -1,0 +1,99 @@
+{
+ "B1/init": {
+  "pass": true,
+  "note": "['order.lifecycle.draft', 'order.protection.not_required']"
+ },
+ "B1/happy-submitted": {
+  "pass": true,
+  "note": "['order.lifecycle.submitted', 'order.protection.not_required']"
+ },
+ "B1/happy-filled": {
+  "pass": true,
+  "note": "['order.lifecycle.filled', 'order.protection.not_required']"
+ },
+ "B1/INV-2-terminal-sticky": {
+  "pass": true,
+  "note": "['order.lifecycle.filled', 'order.protection.not_required'] -> ['order.lifecycle.filled', 'order.protection.not_required']; unhandled=[('CANCEL', 'deferred')]"
+ },
+ "B1/INV-5-exec-held-by-runtime": {
+  "pass": false,
+  "note": "deferred_count=0, inline '*' defer action fired 1x, receipt deferred=False changed=False"
+ },
+ "_b1_receipt_defer": {
+  "deferred": false,
+  "changed": false,
+  "error": "None"
+ },
+ "B1/INV-5-exec-applied-after-ack": {
+  "pass": false,
+  "note": "ids=['order.lifecycle.submitted', 'order.protection.not_required'] apply_fill=False tail=['persist_event', 'drain_deferred', 'defer', 'adopt_ack', 'persist_event', 'drain_deferred']"
+ },
+ "B1/reject-path": {
+  "pass": true,
+  "note": "['order.lifecycle.rejected', 'order.protection.not_required'] trace=['drain_deferred', 'map_reject_code', 'persist_event', 'emit_terminal']"
+ },
+ "B1/rollback-no-halfcommit": {
+  "pass": true,
+  "note": "['order.lifecycle.draft', 'order.protection.not_required'] -> ['order.lifecycle.draft', 'order.protection.not_required']; receipt.error=RuntimeError('boom:stamp_validated')"
+ },
+ "B1/B8-sl-attach-failure-is-naked": {
+  "pass": true,
+  "note": "['order.lifecycle.draft', 'order.protection.sl_missing']"
+ },
+ "B1/INV-B1-f-sl-present-only-from-read": {
+  "pass": true,
+  "note": "['order.lifecycle.draft', 'order.protection.sl_present']"
+ },
+ "B1/B8-structural-gate-present": {
+  "pass": false,
+  "note": "no stateIn/in guard anywhere in B1 JSON: the lifecycle region can reach partially_filled/filled while protection is sl_missing - the B8 invariant is observable but not enforced by this machine"
+ },
+ "B1/INV-B1-c-amend-rejected-keeps-order-live": {
+  "pass": true,
+  "note": "['order.lifecycle.partially_filled', 'order.protection.not_required'] (deferred=0)"
+ },
+ "B1/INV-B1-d-fill-beats-cancel": {
+  "pass": true,
+  "note": "['order.lifecycle.filled', 'order.protection.not_required'] deferred=0"
+ },
+ "B1/INV-2-late-cancel-ack-cannot-revive": {
+  "pass": true,
+  "note": "after cancel_order resolved: ['order.lifecycle.filled', 'order.protection.not_required']"
+ },
+ "B1/B13-transport-fault-to-unknown": {
+  "pass": true,
+  "note": "['order.lifecycle.unknown', 'order.protection.not_required'] record_transport_fault=True"
+ },
+ "B1/INV-B1-e-unknown-never-resubmits": {
+  "pass": true,
+  "note": "place_order 1->1 ids=['order.lifecycle.unknown', 'order.protection.not_required'] misses=1"
+ },
+ "B1/B19-second-miss-unresolvable": {
+  "pass": true,
+  "note": "['order.lifecycle.rejected', 'order.protection.not_required'] misses=1"
+ },
+ "B1/B19-recon-divergence-partial": {
+  "pass": true,
+  "note": "['order.lifecycle.partially_filled', 'order.protection.not_required']"
+ },
+ "B1/B18-priority-accepted-on-full-inbox": {
+  "pass": true,
+  "note": "overflow raises=8, send_priority err=''"
+ },
+ "B1/B18-priority-preempts-backlog": {
+  "pass": false,
+  "note": "ids after drain=['order.lifecycle.submitted', 'order.protection.not_required'] dropped=[]"
+ },
+ "B1/snapshot-never-midstep-at-quiescence": {
+  "pass": true,
+  "note": "refusals at k=[]"
+ },
+ "B1/snapshot-resume-state-parity": {
+  "pass": true,
+  "note": "ref=['order.lifecycle.cancelled', 'order.protection.sl_present']"
+ },
+ "B1/snapshot-resume-action-trace-parity": {
+  "pass": true,
+  "note": "len(ref_trace)=21 diffs=[]"
+ }
+}

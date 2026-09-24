@@ -1,0 +1,218 @@
+[
+  {
+    "id": "B1",
+    "title": "invoke success -> done.invoke.<id> carries service return value in event.data",
+    "expected": {
+      "state": [
+        "m.ok"
+      ],
+      "data": {
+        "filled": 42
+      }
+    },
+    "observed": {
+      "state": [
+        "m.ok"
+      ],
+      "data": {
+        "filled": 42
+      }
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "B2",
+    "title": "invoke failure -> error.platform.<id> handled by onError, data is the exception",
+    "expected": {
+      "state": [
+        "m.failed"
+      ],
+      "err": "boom",
+      "type": "RuntimeError"
+    },
+    "observed": {
+      "state": [
+        "m.failed"
+      ],
+      "err": "boom",
+      "type": "RuntimeError"
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "B3",
+    "title": "invoke failure with NO onError: interpreter must enter status 'error' rather than silently idling as 'running'",
+    "expected": {
+      "status": "error",
+      "is_running": false
+    },
+    "observed": {
+      "status": "error",
+      "is_running": false
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "B4",
+    "title": "invoke is cancelled mid-await when its state is exited by an external event",
+    "expected": {
+      "cancelled": true,
+      "completed": false,
+      "state": [
+        "m.b"
+      ]
+    },
+    "observed": {
+      "cancelled": true,
+      "completed": false,
+      "state": [
+        "m.b"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "B5",
+    "title": "Cancelled invoke does NOT deliver a late done.invoke event after exit",
+    "expected": {
+      "late_done": false
+    },
+    "observed": {
+      "late_done": false
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "B6",
+    "title": "onDone of a compound state fires when its child reaches a final state",
+    "expected": [
+      "m.after"
+    ],
+    "observed": [
+      "m.after"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "B7",
+    "title": "Parallel onDone fires only when ALL regions reach final",
+    "expected": {
+      "after_one": [
+        "m.P.A.af",
+        "m.P.B.b1"
+      ],
+      "after_both": [
+        "m.after"
+      ]
+    },
+    "observed": {
+      "after_one": [
+        "m.P.A.af",
+        "m.P.B.b1"
+      ],
+      "after_both": [
+        "m.after"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "B8",
+    "title": "final state 'output' is surfaced on the done.state event data",
+    "expected": {
+      "state": [
+        "m.after"
+      ],
+      "data": {
+        "code": 7
+      }
+    },
+    "observed": {
+      "state": [
+        "m.after"
+      ],
+      "data": {
+        "code": 7
+      }
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "B9",
+    "title": "after (delayed) transition fires on time",
+    "expected": [
+      "m.late"
+    ],
+    "observed": [
+      "m.late"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "B10",
+    "title": "after timer is cancelled when the state is exited before it fires",
+    "expected": {
+      "state": [
+        "m.other"
+      ],
+      "fired": false
+    },
+    "observed": {
+      "state": [
+        "m.other"
+      ],
+      "fired": false
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "B11",
+    "title": "after timer restarts (not resumes) on re-entry to the same state",
+    "expected": {
+      "state": [
+        "m.wait"
+      ],
+      "fired": false
+    },
+    "observed": {
+      "state": [
+        "m.wait"
+      ],
+      "fired": false
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "B12",
+    "title": "Shallow history restores the immediate child (A1) and then A1's own INITIAL descendant, discarding the deep leaf 'y'",
+    "expected": [
+      "m.A.A1.x"
+    ],
+    "observed": [
+      "m.A.A1.x"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "B13",
+    "title": "Deep history restores the full nested leaf",
+    "expected": [
+      "m.A.A1.y"
+    ],
+    "observed": [
+      "m.A.A1.y"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "B14",
+    "title": "History with no prior visit falls back to the parent's initial state",
+    "expected": [
+      "m.A.A1.x"
+    ],
+    "observed": [
+      "m.A.A1.x"
+    ],
+    "status": "PASS"
+  }
+]

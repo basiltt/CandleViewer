@@ -1,0 +1,82 @@
+{
+ "[def]keys/B16 no unknown top-level key": {
+  "pass": true,
+  "note": "unknown=[]; keys=['actionErrorPolicy', 'context', 'guardErrorPolicy', 'id', 'onUnhandled', 'spawnBlockingTimeout', 'states', 'strict', 'strictTargets', 'type']"
+ },
+ "[def]build/B16 strict_config=True": {
+  "pass": true,
+  "note": "acts=18 guards=1 svcs=0"
+ },
+ "[def]build/B16 config strictConfig:true": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]build/B16 typo refused": {
+  "pass": true,
+  "note": "InvalidConfigError(\"Machine 'session' has unknown top-level key(s) 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys are ignored by the parser, so a misspelled"
+ },
+ "[def]keys/B17 no unknown top-level key": {
+  "pass": true,
+  "note": "unknown=[]; keys=['actionErrorPolicy', 'context', 'guardErrorPolicy', 'id', 'initial', 'onUnhandled', 'spawnBlockingTimeout', 'states', 'strict', 'strictTargets']"
+ },
+ "[def]build/B17 strict_config=True": {
+  "pass": true,
+  "note": "acts=10 guards=3 svcs=0"
+ },
+ "[def]build/B17 config strictConfig:true": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]build/B17 typo refused": {
+  "pass": true,
+  "note": "InvalidConfigError(\"Machine 'live_gate' has unknown top-level key(s) 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys are ignored by the parser, so a misspell"
+ },
+ "[def]keys/B18 no unknown top-level key": {
+  "pass": true,
+  "note": "unknown=[]; keys=['actionErrorPolicy', 'context', 'guardErrorPolicy', 'id', 'initial', 'onUnhandled', 'spawnBlockingTimeout', 'states', 'strict', 'strictTargets']"
+ },
+ "[def]build/B18 strict_config=True": {
+  "pass": true,
+  "note": "acts=9 guards=5 svcs=2"
+ },
+ "[def]build/B18 config strictConfig:true": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]build/B18 typo refused": {
+  "pass": true,
+  "note": "InvalidConfigError(\"Machine 'kill_switch' has unknown top-level key(s) 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys are ignored by the parser, so a misspe"
+ },
+ "[def]keys/B19 no unknown top-level key": {
+  "pass": true,
+  "note": "unknown=[]; keys=['actionErrorPolicy', 'context', 'guardErrorPolicy', 'id', 'initial', 'onUnhandled', 'spawnBlockingTimeout', 'states', 'strict', 'strictTargets']"
+ },
+ "[def]build/B19 strict_config=True": {
+  "pass": true,
+  "note": "acts=20 guards=3 svcs=3"
+ },
+ "[def]build/B19 config strictConfig:true": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]build/B19 typo refused": {
+  "pass": true,
+  "note": "InvalidConfigError(\"Machine 'reconciliation' has unknown top-level key(s) 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys are ignored by the parser, so a mis"
+ },
+ "[def]keys/B20 no unknown top-level key": {
+  "pass": true,
+  "note": "unknown=[]; keys=['actionErrorPolicy', 'context', 'guardErrorPolicy', 'id', 'initial', 'onUnhandled', 'spawnBlockingTimeout', 'states', 'strict', 'strictTargets']"
+ },
+ "[def]build/B20 strict_config=True": {
+  "pass": true,
+  "note": "acts=16 guards=5 svcs=0"
+ },
+ "[def]build/B20 config strictConfig:true": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]build/B20 typo refused": {
+  "pass": true,
+  "note": "InvalidConfigError(\"Machine 'risk_lockout' has unknown top-level key(s) 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys are ignored by the parser, so a missp"
+ }
+}

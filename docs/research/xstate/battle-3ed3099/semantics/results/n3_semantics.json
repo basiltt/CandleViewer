@@ -1,0 +1,135 @@
+[
+ {
+  "id": "N3-01",
+  "title": "#116: identical (GO,CANCEL)x10 script gives the same ok/cancel split on BOTH engines",
+  "intent": "the exact #116 shape: async gave cancel=10 where sync gave ok=10",
+  "detail": {
+   "ok": true,
+   "async": {
+    "ok": 10,
+    "cancel": 0
+   },
+   "sync": {
+    "ok": 10,
+    "cancel": 0
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N3-02",
+  "title": "#116: send_events([GO, X]) agrees with send(GO); send(X) on both engines",
+  "intent": "batched and sequential delivery must not differ in where a completion lands",
+  "detail": {
+   "ok": true,
+   "sync_batched": {
+    "ok": 1,
+    "cancel": 0
+   },
+   "sync_seq": {
+    "ok": 1,
+    "cancel": 0
+   },
+   "async_batched": {
+    "ok": 1,
+    "cancel": 0
+   },
+   "async_seq": {
+    "ok": 1,
+    "cancel": 0
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N3-03",
+  "title": "#109: done.invoke carries the child's declared `output`, not its private context",
+  "intent": "an OMS child's computed result must reach the parent; context leakage is wrong too",
+  "detail": {
+   "ok": true,
+   "done_data": {
+    "code": 7
+   },
+   "context_leaked": false,
+   "ids": [
+    "m.ok"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N3-04",
+  "title": "#108: a transition targeting the machine ROOT is rejected at build",
+  "intent": "a root target silently emptied the configuration; it must not build",
+  "detail": {
+   "ok": true,
+   "result": "RootTargetError",
+   "msg": "Machine 'm' has transition(s) targeting the machine root:\n  m.a: on 'E' -> target 'm' is the machine root; entering it empties the configuration. Target the roo"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N3-05",
+  "title": "#130: `escalate` from an invoked child reaches the parent's onError",
+  "intent": "the documented supervision primitive; silent loss is the worst failure mode",
+  "detail": {
+   "ok": true,
+   "ids": [
+    "m.caught"
+   ],
+   "onError_data": [
+    "BOOM"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N3-06",
+  "title": "#132: an ambiguous bare `stateIn` name is rejected at first use",
+  "intent": "silently picking one branch of an ambiguous guard is a wrong-branch order decision",
+  "detail": {
+   "ok": true,
+   "result": "InvalidConfigError",
+   "msg": "'stateIn' guard 'work' is ambiguous: it names ['m.A.left.work', 'm.A.right.work']. Use a fully qualified id."
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N3-07",
+  "title": "#113: a non-str event `type` raises InvalidEventError (also a TypeError)",
+  "intent": "a malformed event must not escape the hierarchy as a bare TypeError",
+  "detail": {
+   "ok": true,
+   "int": "InvalidEventError+TypeError",
+   "none": "InvalidEventError+TypeError",
+   "list": "InvalidEventError+TypeError",
+   "bytes": "InvalidEventError+TypeError"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N3-08",
+  "title": "#136: a self-referential config dict raises InvalidConfigError, not RecursionError",
+  "intent": "a cyclic config must fail as a typed config error",
+  "detail": {
+   "ok": true,
+   "result": "InvalidConfigError",
+   "msg": "State 'm.a.a' is defined by a config dict that is already one of its own ancestors (an aliased cycle). Each state must have its own config object; copy the temp"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N3-09",
+  "title": "#133: a sendTo with no live target is observable on the receipt AND a hook",
+  "intent": "both actor-messaging failure paths were silent; a dark supervision tree reads green",
+  "detail": {
+   "ok": true,
+   "receipt_error": "None",
+   "last_transition_ok": false,
+   "dropped_reasons": [
+    "unresolved_target"
+   ]
+  },
+  "status": "PASS"
+ }
+]

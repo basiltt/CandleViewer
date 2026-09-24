@@ -1,0 +1,254 @@
+{
+ "[def]G1.B11.happy.lands_stopped": {
+  "pass": false,
+  "note": "states=['recording.degraded'] ctx={'symbol': None, 'reasons': [], 'streams': [], 'streams_healthy': {'trades': True}, 'gap_count_24h': 0, 'linger_until_us': None, 'error': None}"
+ },
+ "[def]G1.B11.happy.snapshot_ok": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]G1.B11.happy.chain_trips_zero": {
+  "pass": true,
+  "note": "trips=0 lce=None"
+ },
+ "[def]G1.B11.happy.no_fatal": {
+  "pass": true,
+  "note": "status=running err=None"
+ },
+ "[def]G1.B11.inv.gap_counted": {
+  "pass": false,
+  "note": "gap=0"
+ },
+ "[def]G1.B11.inv.both_services_ran": {
+  "pass": false,
+  "note": "svc=['subscribe_streams']"
+ },
+ "[def]G1.B11.inv.degraded_alert_once": {
+  "pass": true,
+  "note": "acts=['add_reason', 'cancel_linger', 'emit_recording_metric', 'mark_stream_unhealthy', 'raise_degraded_alert', 'mark_stream_healthy', 'remove_reason']"
+ },
+ "[def]G1.B11.rollback.reported": {
+  "pass": true,
+  "note": "action_errors=[\"emit_recording_metric:RuntimeError('boom:emit_recording_metric')\", \"emit_recording_metric:RuntimeError('boom:emit_recording_metric')\"] states=['recording.starting']"
+ },
+ "[def]G1.B11.rollback.context_intact": {
+  "pass": true,
+  "note": "ctx={'symbol': None, 'reasons': ['user'], 'streams': [], 'streams_healthy': {}, 'gap_count_24h': 0, 'linger_until_us': None, 'error': None}"
+ },
+ "[def]G1.B11.rollback.no_fatal": {
+  "pass": true,
+  "note": "status=running err=None"
+ },
+ "[def]G1.B11.onError.lands_error": {
+  "pass": true,
+  "note": "states=['recording.error']"
+ },
+ "[def]G1.B11.degraded.snapshot_ok": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]G1.B11.guard_raise.surfaced": {
+  "pass": true,
+  "note": "guard_errors=[\"RuntimeError('guard:reasons_remain')\"] err=None states=['recording.lingering']"
+ },
+ "[def]G1.B12.happy.lands_finished": {
+  "pass": true,
+  "note": "states=['replay.finished']"
+ },
+ "[def]G1.B12.happy.snapshot_ok": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]G1.B12.happy.chain_trips_zero": {
+  "pass": true,
+  "note": "trips=0"
+ },
+ "[def]G1.B12.inv.clock_paired": {
+  "pass": true,
+  "note": "start=2 stop=2"
+ },
+ "[def]G1.B12.inv.speed_applied": {
+  "pass": true,
+  "note": "speed=4.0"
+ },
+ "[def]G1.B12.inv.cursor_advanced": {
+  "pass": true,
+  "note": "cursor=2"
+ },
+ "[def]G1.B12.star.buffering_reached": {
+  "pass": true,
+  "note": "mid=['replay.buffering']"
+ },
+ "[def]G1.B12.star.deferred_then_drained": {
+  "pass": true,
+  "note": "deferred_while_buffering=0 after=['replay.paused'] drain=1"
+ },
+ "[def]G1.B12.star.no_drop": {
+  "pass": true,
+  "note": "dropped=[]"
+ },
+ "[def]G1.B12.final.destroyed": {
+  "pass": true,
+  "note": "states=['replay.destroyed'] status=done"
+ },
+ "[def]G1.B12.final.snapshot_ok": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]G3.B13.happy.lands_closed": {
+  "pass": true,
+  "note": "states=['ws_conn.closed'] status=done"
+ },
+ "[def]G3.B13.happy.snapshot_ok": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]G3.B13.happy.chain_trips_zero": {
+  "pass": true,
+  "note": "trips=0"
+ },
+ "[def]G3.B13.inv.public_skips_auth": {
+  "pass": true,
+  "note": "svc=['open_socket', 'subscribe_in_batches', 'open_socket', 'subscribe_in_batches', 'close_socket']"
+ },
+ "[def]G3.B13.inv.backoff_reset_per_live_entry": {
+  "pass": true,
+  "note": "reset=2 healthy=2"
+ },
+ "[def]G3.B13.inv.degraded_notified": {
+  "pass": true,
+  "note": "n=1"
+ },
+ "[def]G3.B13.private.auth_ran": {
+  "pass": true,
+  "note": "svc=['open_socket', 'ws_auth', 'subscribe_in_batches'] states=['ws_conn.live']"
+ },
+ "[def]G3.B13.private.reaches_live": {
+  "pass": true,
+  "note": "states=['ws_conn.live']"
+ },
+ "[def]G3.B13.budget.blocked_then_recheck": {
+  "pass": true,
+  "note": "states=['ws_conn.disconnected'] acts=['raise_conn_budget_alert', 'schedule_budget_recheck']"
+ },
+ "[def]G3.B13.budget.no_socket_opened": {
+  "pass": true,
+  "note": "svc=[]"
+ },
+ "[def]G3.B13.budget.snapshot_ok": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]G3.B13.auth_error.backs_off": {
+  "pass": true,
+  "note": "states=['ws_conn.backing_off'] acts=['bump_attempt', 'record_auth_error', 'compute_jittered_backoff', 'emit_feed_degraded', 'schedule_backoff_deadline', 'notify_dependents_degraded']"
+ },
+ "[def]G3.B13.auth_error.no_fatal": {
+  "pass": true,
+  "note": "status=running err=None"
+ },
+ "[def]G3.B13.star.subscribing_reached": {
+  "pass": true,
+  "note": "mid=['ws_conn.subscribing']"
+ },
+ "[def]G3.B13.star.deferred_not_fatal": {
+  "pass": true,
+  "note": "status_while_subscribing=running err=None"
+ },
+ "[def]G3.B13.star.drained_at_live": {
+  "pass": true,
+  "note": "after=['ws_conn.live'] drain=1 acts_tail=['record_subscribed', 'reset_backoff', 'drain_deferred', 'emit_feed_healthy', 'arm_pong_deadline']"
+ },
+ "[def]G3.B14.happy.live": {
+  "pass": true,
+  "note": "states=['book.live'] ctx={'symbol': None, 'last_seq': 12, 'snapshot_seq': 10, 'buffered_deltas': [11], 'resync_count': 0, 'desynced_since_us': None}"
+ },
+ "[def]G3.B14.happy.snapshot_ok": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]G3.B14.inv.buffered_then_replayed": {
+  "pass": true,
+  "note": "acts=['clear_buffer', 'request_snapshot', 'buffer_delta', 'install_snapshot', 'replay_buffered_deltas_after_seq', 'emit_book_live', 'apply_delta'] last_seq=12"
+ },
+ "[def]G3.B14.happy.chain_trips_zero": {
+  "pass": true,
+  "note": "trips=0"
+ },
+ "[def]G3.B14.always.transient_to_snapshot_pending": {
+  "pass": true,
+  "note": "states=['book.snapshot_pending']"
+ },
+ "[def]G3.B14.always.resync_counted_once": {
+  "pass": true,
+  "note": "resync=1 acts=['clear_buffer', 'request_snapshot', 'install_snapshot', 'replay_buffered_deltas_after_seq', 'emit_book_live', 'stamp_desync', 'emit_book_desynced', 'bump_resync_count', 'emit_resync_metric', 'clear_buffer', 'request_snapshot']"
+ },
+ "[def]G3.B14.always.not_consumable_then_rerequest": {
+  "pass": true,
+  "note": "acts=['clear_buffer', 'request_snapshot', 'install_snapshot', 'replay_buffered_deltas_after_seq', 'emit_book_live', 'stamp_desync', 'emit_book_desynced', 'bump_resync_count', 'emit_resync_metric', 'clear_buffer', 'request_snapshot']"
+ },
+ "[def]G3.B14.always.chain_trips_zero": {
+  "pass": true,
+  "note": "trips=0 lce=None"
+ },
+ "[def]G3.B14.always.snapshot_ok": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]G3.B14.reenter.entry_reran": {
+  "pass": true,
+  "note": "request_snapshot=2 acts=['clear_buffer', 'request_snapshot', 'bump_resync_count', 'clear_buffer', 'request_snapshot']"
+ },
+ "[def]G3.B14.reenter.counter_bumped": {
+  "pass": true,
+  "note": "resync=1"
+ },
+ "[def]G3.B15.liq.reaches_final": {
+  "pass": true,
+  "note": "states=['paper_account.liquidated'] status=done"
+ },
+ "[def]G3.B15.liq.journal_written": {
+  "pass": true,
+  "note": "acts=['apply_liquidation_haircut', 'write_liquidation_journal']"
+ },
+ "[def]G3.B15.liq.chain_trips_zero": {
+  "pass": true,
+  "note": "trips=0"
+ },
+ "[def]G3.B15.liq.snapshot_ok": {
+  "pass": true,
+  "note": ""
+ },
+ "[def]G3.B15.margin.warns_then_recovers": {
+  "pass": true,
+  "note": "mid=['paper_account.margin_call'] end=['paper_account.active'] warn=1"
+ },
+ "[def]G3.B15.margin.no_fatal": {
+  "pass": true,
+  "note": "status=running err=None"
+ },
+ "[def]G3.B13.sync_parity": {
+  "pass": true,
+  "note": "states=['ws_conn.closed'] want=['ws_conn.closed'] svc=['open_socket', 'subscribe_in_batches', 'open_socket', 'subscribe_in_batches', 'close_socket']"
+ },
+ "[def]G3.B13.sync_chain_trips_zero": {
+  "pass": true,
+  "note": "trips=0"
+ },
+ "[def]G3.B14.sync_parity": {
+  "pass": true,
+  "note": "states=['book.snapshot_pending'] want=['book.snapshot_pending'] svc=[]"
+ },
+ "[def]G3.B14.sync_chain_trips_zero": {
+  "pass": true,
+  "note": "trips=0"
+ },
+ "[def]G3.B15.sync_parity": {
+  "pass": true,
+  "note": "states=['paper_account.liquidated'] want=['paper_account.liquidated'] svc=[]"
+ },
+ "[def]G3.B15.sync_chain_trips_zero": {
+  "pass": true,
+  "note": "trips=0"
+ }
+}

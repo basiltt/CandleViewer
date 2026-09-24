@@ -1,0 +1,36 @@
+{
+  "probe": "n5_fuzz_snapshot_events",
+  "py": "3.13.7",
+  "a_snapshot_mutations": {
+    "mutations": 5000,
+    "named_exception": 3296,
+    "restored_without_error": 1704,
+    "restored_with_EMPTY_configuration": 0,
+    "empty_config_branches": [],
+    "raw_unnamed_exceptions": {},
+    "pass": true
+  },
+  "b_hostile_event_types": {
+    "cases": {
+      "int": "InvalidEventError (TypeError=True)",
+      "none": "InvalidEventError (TypeError=True)",
+      "bytes": "InvalidEventError (TypeError=True)",
+      "float": "InvalidEventError (TypeError=True)",
+      "list": "InvalidEventError (TypeError=True)",
+      "dict_no_type": "InvalidEventError (TypeError=True)",
+      "dict_type_int": "InvalidEventError (TypeError=True)",
+      "dict_type_none": "InvalidEventError (TypeError=True)",
+      "class": "InvalidEventError (TypeError=True)",
+      "instance_str_raises": "InvalidEventError (TypeError=True)",
+      "bool": "InvalidEventError (TypeError=True)",
+      "tuple": "InvalidEventError (TypeError=True)",
+      "str_subclass_liar": "accepted: receipt error=None",
+      "empty_str": "accepted: receipt error=None"
+    },
+    "unnamed_or_accepted": [
+      "empty_str"
+    ],
+    "pass": false
+  },
+  "result": "FAIL"
+}

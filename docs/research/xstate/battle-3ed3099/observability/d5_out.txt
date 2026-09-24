@@ -1,0 +1,3 @@
+settlers attached to restored clock (expect 1): 0
+state after increment(1001) with NO other call (expect 'm_timer.b', BUG if still 'a'): {'m_timer.a'}
+state after a manual .tick() (workaround): {'m_timer.b'}

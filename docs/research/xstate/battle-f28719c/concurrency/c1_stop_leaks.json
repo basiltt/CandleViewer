@@ -1,0 +1,74 @@
+{
+  "probe": "c1_stop_leaks",
+  "py": "3.13.7",
+  "v1_stop_with_sends": {
+    "cycles": 1000,
+    "tasks_baseline": 1,
+    "tasks_after": 1,
+    "task_delta": 0,
+    "runtime_warnings": [],
+    "runtime_warning_count": 0,
+    "task_destroyed_pending": 0,
+    "loop_exception_messages": []
+  },
+  "v2_stop_drain_with_sends": {
+    "cycles": 1000,
+    "tasks_baseline": 1,
+    "tasks_after": 1,
+    "task_delta": 0,
+    "runtime_warnings": [],
+    "runtime_warning_count": 0,
+    "task_destroyed_pending": 0,
+    "loop_exception_messages": []
+  },
+  "v3_stop_during_invoke": {
+    "cycles": 1000,
+    "tasks_baseline": 1,
+    "tasks_after": 1,
+    "task_delta": 0,
+    "runtime_warnings": [],
+    "runtime_warning_count": 0,
+    "task_destroyed_pending": 0,
+    "loop_exception_messages": []
+  },
+  "v4_stop_with_armed_after": {
+    "cycles": 1000,
+    "tasks_baseline": 1,
+    "tasks_after": 1,
+    "task_delta": 0,
+    "runtime_warnings": [],
+    "runtime_warning_count": 0,
+    "task_destroyed_pending": 0,
+    "loop_exception_messages": []
+  },
+  "v5_stop_with_child_actor": {
+    "cycles": 1000,
+    "tasks_baseline": 1,
+    "tasks_after": 1,
+    "task_delta": 0,
+    "runtime_warnings": [],
+    "runtime_warning_count": 0,
+    "task_destroyed_pending": 0,
+    "loop_exception_messages": []
+  },
+  "v6_concurrent_double_stop": {
+    "cycles": 1000,
+    "tasks_baseline": 1,
+    "tasks_after": 1,
+    "task_delta": 0,
+    "runtime_warnings": [],
+    "runtime_warning_count": 0,
+    "task_destroyed_pending": 0,
+    "loop_exception_messages": []
+  },
+  "v7_stop_racing_producers_at_rotating_phase": {
+    "cycles": 1000,
+    "tasks_baseline": 1,
+    "tasks_after": 1,
+    "task_delta": 0,
+    "runtime_warnings": [],
+    "runtime_warning_count": 0,
+    "task_destroyed_pending": 0,
+    "loop_exception_messages": []
+  }
+}

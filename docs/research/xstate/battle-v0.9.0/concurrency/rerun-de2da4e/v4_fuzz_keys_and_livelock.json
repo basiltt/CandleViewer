@@ -1,0 +1,207 @@
+{
+  "probe": "v4_fuzz_keys_and_livelock",
+  "py": "3.13.7",
+  "F1_nesting_fuzz": {
+    "sites": 12,
+    "total_trials": 300,
+    "per_site": {
+      "root": {
+        "trials": 25,
+        "caught": 25,
+        "path_named": 25,
+        "warned_only": 0,
+        "missed": 0
+      },
+      "state": {
+        "trials": 25,
+        "caught": 25,
+        "path_named": 25,
+        "warned_only": 0,
+        "missed": 0
+      },
+      "deep_state": {
+        "trials": 25,
+        "caught": 25,
+        "path_named": 25,
+        "warned_only": 0,
+        "missed": 0
+      },
+      "parallel_region": {
+        "trials": 25,
+        "caught": 25,
+        "path_named": 25,
+        "warned_only": 0,
+        "missed": 0
+      },
+      "parallel_child": {
+        "trials": 25,
+        "caught": 25,
+        "path_named": 25,
+        "warned_only": 0,
+        "missed": 0
+      },
+      "on_transition": {
+        "trials": 25,
+        "caught": 25,
+        "path_named": 25,
+        "warned_only": 0,
+        "missed": 0
+      },
+      "after_transition": {
+        "trials": 25,
+        "caught": 25,
+        "path_named": 25,
+        "warned_only": 0,
+        "missed": 0
+      },
+      "always_transition": {
+        "trials": 25,
+        "caught": 25,
+        "path_named": 25,
+        "warned_only": 0,
+        "missed": 0
+      },
+      "onDone_transition": {
+        "trials": 25,
+        "caught": 25,
+        "path_named": 25,
+        "warned_only": 0,
+        "missed": 0
+      },
+      "invoke": {
+        "trials": 25,
+        "caught": 25,
+        "path_named": 25,
+        "warned_only": 0,
+        "missed": 0
+      },
+      "invoke_onDone": {
+        "trials": 25,
+        "caught": 25,
+        "path_named": 25,
+        "warned_only": 0,
+        "missed": 0
+      },
+      "invoke_onError": {
+        "trials": 25,
+        "caught": 25,
+        "path_named": 25,
+        "warned_only": 0,
+        "missed": 0
+      }
+    },
+    "missed_sample": [],
+    "unpathed_sample": []
+  },
+  "F2_valid_grammar_false_positives": {
+    "trials": 120,
+    "accepted": 120,
+    "key_check_false_positives": 0,
+    "false_positive_sample": [],
+    "other_build_errors": 0,
+    "other_sample": []
+  },
+  "S1_strict_config_bypass": {
+    "variants": [
+      {
+        "key": "x-strict",
+        "why": "x- prefix smuggling a policy key",
+        "strict_config_outcome": "ACCEPTED",
+        "smuggled_policy_took_effect": false,
+        "msg": ""
+      },
+      {
+        "key": "x-maxIterations",
+        "why": "x- prefix smuggling maxIterations",
+        "strict_config_outcome": "ACCEPTED",
+        "smuggled_policy_took_effect": false,
+        "msg": ""
+      },
+      {
+        "key": "Strict",
+        "why": "case variant: capitalised",
+        "strict_config_outcome": "REFUSED",
+        "smuggled_policy_took_effect": null,
+        "msg": "Machine 's1' has unknown config key(s) -- s1: 'Strict' (did you mean 'strict'?). Unknown keys are ignored by the parser, so a misspelled key silently does nothi"
+      },
+      {
+        "key": "STRICT",
+        "why": "case variant: upper",
+        "strict_config_outcome": "REFUSED",
+        "smuggled_policy_took_effect": null,
+        "msg": "Machine 's1' has unknown config key(s) -- s1: 'STRICT'. Unknown keys are ignored by the parser, so a misspelled key silently does nothing (a policy reverts to i"
+      },
+      {
+        "key": "strictconfig",
+        "why": "case variant: lowercased strictConfig",
+        "strict_config_outcome": "REFUSED",
+        "smuggled_policy_took_effect": null,
+        "msg": "Machine 's1' has unknown config key(s) -- s1: 'strictconfig' (did you mean 'strictConfig'?). Unknown keys are ignored by the parser, so a misspelled key silentl"
+      },
+      {
+        "key": "strict ",
+        "why": "trailing whitespace",
+        "strict_config_outcome": "REFUSED",
+        "smuggled_policy_took_effect": null,
+        "msg": "Machine 's1' has unknown config key(s) -- s1: 'strict ' (did you mean 'strict'?). Unknown keys are ignored by the parser, so a misspelled key silently does noth"
+      },
+      {
+        "key": " strict",
+        "why": "leading whitespace",
+        "strict_config_outcome": "REFUSED",
+        "smuggled_policy_took_effect": null,
+        "msg": "Machine 's1' has unknown config key(s) -- s1: ' strict' (did you mean 'strict'?). Unknown keys are ignored by the parser, so a misspelled key silently does noth"
+      },
+      {
+        "key": "str\u0131ct",
+        "why": "unicode look-alike (dotless i)",
+        "strict_config_outcome": "REFUSED",
+        "smuggled_policy_took_effect": null,
+        "msg": "Machine 's1' has unknown config key(s) -- s1: 'str\u0131ct' (did you mean 'strict'?). Unknown keys are ignored by the parser, so a misspelled key silently does nothi"
+      },
+      {
+        "key": "\u0455trict",
+        "why": "unicode look-alike (cyrillic es)",
+        "strict_config_outcome": "REFUSED",
+        "smuggled_policy_took_effect": null,
+        "msg": "Machine 's1' has unknown config key(s) -- s1: '\u0455trict' (did you mean 'strict'?). Unknown keys are ignored by the parser, so a misspelled key silently does nothi"
+      },
+      {
+        "key": "meta",
+        "why": "policy nested under the accepted meta key",
+        "strict_config_outcome": "ACCEPTED",
+        "smuggled_policy_took_effect": false,
+        "msg": ""
+      }
+    ],
+    "control_real_strict_took_effect": true
+  },
+  "F3_livelock_fuzz": {
+    "shards": [
+      {
+        "seed": 70251,
+        "shapes": 90,
+        "cells": 270,
+        "must_trip_cells": 78,
+        "periodic_cells": 192,
+        "hangs": 0,
+        "violations": 0,
+        "violation_sample": []
+      },
+      {
+        "seed": 70252,
+        "shapes": 90,
+        "cells": 270,
+        "must_trip_cells": 84,
+        "periodic_cells": 186,
+        "hangs": 0,
+        "violations": 0,
+        "violation_sample": []
+      }
+    ],
+    "total_cells": 540,
+    "total_violations": 0
+  },
+  "failures": [],
+  "verdict": "CLEAN"
+}

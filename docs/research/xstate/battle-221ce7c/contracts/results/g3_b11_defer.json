@@ -1,0 +1,106 @@
+[
+ {
+  "sent": "REASON_ADDED",
+  "payload": {
+   "reason": "chart"
+  },
+  "states": [
+   "recording.recording"
+  ],
+  "deferred": 0,
+  "healthy": {},
+  "unhandled": [],
+  "alerts": 0
+ },
+ {
+  "sent": "STREAM_UNHEALTHY",
+  "payload": {
+   "s": "trade"
+  },
+  "states": [
+   "recording.degraded"
+  ],
+  "deferred": 0,
+  "healthy": {
+   "trade": false,
+   "kline": true
+  },
+  "unhandled": [],
+  "alerts": 1
+ },
+ {
+  "sent": "STREAM_UNHEALTHY",
+  "payload": {
+   "s": "kline"
+  },
+  "states": [
+   "recording.degraded"
+  ],
+  "deferred": 1,
+  "healthy": {
+   "trade": false,
+   "kline": true
+  },
+  "unhandled": [
+   [
+    "STREAM_UNHEALTHY",
+    "deferred"
+   ]
+  ],
+  "alerts": 1
+ },
+ {
+  "sent": "STREAM_HEALTHY",
+  "payload": {
+   "s": "trade"
+  },
+  "states": [
+   "recording.degraded"
+  ],
+  "deferred": 0,
+  "healthy": {
+   "trade": true,
+   "kline": false
+  },
+  "unhandled": [
+   [
+    "STREAM_UNHEALTHY",
+    "deferred"
+   ]
+  ],
+  "alerts": 2
+ },
+ {
+  "sent": "STREAM_HEALTHY",
+  "payload": {
+   "s": "kline"
+  },
+  "states": [
+   "recording.recording"
+  ],
+  "deferred": 0,
+  "healthy": {
+   "trade": true,
+   "kline": true
+  },
+  "unhandled": [
+   [
+    "STREAM_UNHEALTHY",
+    "deferred"
+   ]
+  ],
+  "alerts": 2
+ },
+ {
+  "sent": "(settle)",
+  "states": [
+   "recording.recording"
+  ],
+  "deferred": 0,
+  "alerts": 2,
+  "healthy": {
+   "trade": true,
+   "kline": true
+  }
+ }
+]

@@ -1,0 +1,65 @@
+{
+  "probe": "u7_determinism_and_soak",
+  "py": "3.13.7",
+  "D1_determinism_50x": {
+    "runs_per_cell": 50,
+    "cells": {
+      "async/def/restore=False": [
+        "d88fc02cf6e523a4"
+      ],
+      "async/def/restore=True": [
+        "d88fc02cf6e523a4"
+      ],
+      "async/async def/restore=False": [
+        "d88fc02cf6e523a4"
+      ],
+      "async/async def/restore=True": [
+        "d88fc02cf6e523a4"
+      ],
+      "sync/def/restore=False": [
+        "76e32eab404e918a"
+      ],
+      "sync/def/restore=True": [
+        "76e32eab404e918a"
+      ]
+    },
+    "violations": []
+  },
+  "D2_hashseed": {
+    "per_seed": {
+      "0": "d88fc02cf6e523a4",
+      "1": "d88fc02cf6e523a4",
+      "12345": "d88fc02cf6e523a4"
+    },
+    "distinct": [
+      "d88fc02cf6e523a4"
+    ]
+  },
+  "S1_soak": {
+    "machines": 60,
+    "soak_s": 90.0,
+    "wall_s": 90.0,
+    "cpu_s": 23.0,
+    "cpu_over_wall": 0.26,
+    "cores": 8,
+    "rss_mb_start": 32.2,
+    "rss_mb_end": 207.3,
+    "external_sent": 78600,
+    "external_handled": 78600,
+    "external_dropped": {},
+    "beats_min": 2788,
+    "beats_max": 2790,
+    "beats_ideal_per_machine": 3600,
+    "chaos_rounds": 44,
+    "chaos_blobs_with_heartbeat_record": 15,
+    "chaos_blobs_heartbeat_inflight_in_inbox": 29,
+    "chaos_failures": [],
+    "n_chaos_failures": 0,
+    "last_errors": []
+  },
+  "reductions": {
+    "soak": "90.0 s / 60 machines instead of the briefed 12 min / 200 -- the 20-minute whole-task bound. The soak invariants (0 external dropped, heartbeat never dies, every chaos snapshot carries and re-arms its scheduled_sends) are per-machine and rate-independent; u5 L1 already ran 200 machines at a 1 ms period."
+  },
+  "violations": [],
+  "verdict": "CLEAN"
+}

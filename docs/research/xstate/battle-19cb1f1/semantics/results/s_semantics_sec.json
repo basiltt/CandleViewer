@@ -1,0 +1,384 @@
+[
+ {
+  "id": "S1",
+  "title": "SCXML 6.1 statesToInvoke matrix: a state entered AND exited in one macrostep NEVER submits its service -- always / rollback / parallel-sibling-final / history, both engines, both kinds",
+  "detail": {
+   "ok": true,
+   "service_submitted_despite_same_step_exit": [],
+   "cells": {
+    "always/plain": {
+     "async_engine": {
+      "submitted": 0,
+      "state": [
+       "m.z"
+      ]
+     },
+     "sync_engine": {
+      "submitted": 0,
+      "state": [
+       "m.z"
+      ]
+     }
+    },
+    "always/async": {
+     "async_engine": {
+      "submitted": 0,
+      "state": [
+       "m.z"
+      ]
+     },
+     "sync_engine": {
+      "submitted": 0,
+      "state": [
+       "m.z"
+      ]
+     }
+    },
+    "rollback/plain": {
+     "async_engine": {
+      "submitted": 0,
+      "state": [
+       "m.a"
+      ]
+     },
+     "sync_engine": {
+      "submitted": 0,
+      "state": [
+       "m.a"
+      ]
+     }
+    },
+    "rollback/async": {
+     "async_engine": {
+      "submitted": 0,
+      "state": [
+       "m.a"
+      ]
+     },
+     "sync_engine": {
+      "submitted": 0,
+      "state": [
+       "m.a"
+      ]
+     }
+    },
+    "parallel_final/plain": {
+     "async_engine": {
+      "submitted": 0,
+      "state": [
+       "m.z"
+      ]
+     },
+     "sync_engine": {
+      "submitted": 0,
+      "state": [
+       "m.z"
+      ]
+     }
+    },
+    "parallel_final/async": {
+     "async_engine": {
+      "submitted": 0,
+      "state": [
+       "m.z"
+      ]
+     },
+     "sync_engine": {
+      "submitted": 0,
+      "state": [
+       "m.z"
+      ]
+     }
+    },
+    "history/plain": {
+     "async_engine": {
+      "submitted": 0,
+      "state": []
+     },
+     "sync_engine": {
+      "submitted": 0,
+      "state": []
+     }
+    },
+    "history/async": {
+     "async_engine": {
+      "submitted": 0,
+      "state": []
+     },
+     "sync_engine": {
+      "submitted": 0,
+      "state": []
+     }
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "S2",
+  "title": "after-provenance matrix (#203): only a genuinely engine-minted-in-this-process AfterEvent fires a 60 s timer -- public class / import path / type(held) / _replace / pickle / deepcopy / snapshot flag",
+  "detail": {
+   "ok": false,
+   "cold_surfaces_that_fired_60s_timer": [
+    "private_import_path"
+   ],
+   "warm_or_trusted_surfaces_that_fired": [
+    "type_of_held_instance",
+    "replace_of_genuine",
+    "pickle_roundtrip_of_genuine",
+    "deepcopy_of_genuine",
+    "restore_engine_true"
+   ],
+   "is_system_event": {
+    "public_AfterEvent": false,
+    "private_import_path": true,
+    "type_of_held_instance": true,
+    "replace_of_genuine": true,
+    "pickle_roundtrip_of_genuine": true,
+    "deepcopy_of_genuine": true,
+    "restore_engine_true": true,
+    "restore_no_flag": false
+   },
+   "fired": {
+    "public_AfterEvent": "refused:UnknownEventError",
+    "private_import_path": true,
+    "type_of_held_instance": true,
+    "replace_of_genuine": true,
+    "pickle_roundtrip_of_genuine": true,
+    "deepcopy_of_genuine": true,
+    "restore_engine_true": true,
+    "restore_no_flag": "refused:UnknownEventError"
+   }
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "S3",
+  "title": "50x identical traces (transitions + drops + stranded) on both engines and both kinds; plus a PYTHONHASHSEED sweep",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "async_engine/plain": {
+     "distinct_traces": 1,
+     "sample": [
+      [
+       "drop",
+       "done.invoke.sb",
+       "chain_budget"
+      ],
+      [
+       "stranded",
+       "r.b",
+       "sb"
+      ]
+     ]
+    },
+    "async_engine/async": {
+     "distinct_traces": 1,
+     "sample": [
+      [
+       "drop",
+       "done.invoke.sb",
+       "chain_budget"
+      ],
+      [
+       "stranded",
+       "r.b",
+       "sb"
+      ]
+     ]
+    },
+    "sync_engine/plain": {
+     "distinct_traces": 1,
+     "sample": [
+      [
+       "drop",
+       "done.invoke.sb",
+       "chain_budget"
+      ],
+      [
+       "stranded",
+       "r.b",
+       "sb"
+      ]
+     ]
+    },
+    "hashseed_sweep": {
+     "seeds": [
+      "0",
+      "1",
+      "12345",
+      "99999"
+     ],
+     "distinct_traces": 1
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "S4",
+  "title": "Receipt 6-way matrix: clean / no-handler / guard-denied / action-raised / stopped / STRANDED-by-chain-cut, both kinds",
+  "detail": {
+   "ok": true,
+   "violations": [],
+   "cells": {
+    "clean/plain": {
+     "state_ids": [
+      "q.b"
+     ],
+     "changed": true,
+     "error": null,
+     "deferred": false,
+     "denied": false,
+     "stranded_hook": [],
+     "dormant": false,
+     "last_error": null,
+     "err_stranded": []
+    },
+    "no_handler/plain": {
+     "state_ids": [
+      "q.a"
+     ],
+     "changed": false,
+     "error": null,
+     "deferred": false,
+     "denied": false,
+     "stranded_hook": [],
+     "dormant": false,
+     "last_error": null,
+     "err_stranded": []
+    },
+    "guard_denied/plain": {
+     "state_ids": [
+      "q.a"
+     ],
+     "changed": false,
+     "error": null,
+     "deferred": false,
+     "denied": true,
+     "stranded_hook": [],
+     "dormant": false,
+     "last_error": null,
+     "err_stranded": []
+    },
+    "action_raised/plain": {
+     "state_ids": [
+      "q.b"
+     ],
+     "changed": true,
+     "error": "RuntimeError",
+     "deferred": false,
+     "denied": false,
+     "stranded_hook": [],
+     "dormant": false,
+     "last_error": "RuntimeError",
+     "err_stranded": []
+    },
+    "stranded/plain": {
+     "state_ids": [
+      "q.inv"
+     ],
+     "changed": true,
+     "error": null,
+     "deferred": false,
+     "denied": false,
+     "stranded_hook": [
+      [
+       "stranded",
+       "q.inv2",
+       "si2"
+      ]
+     ],
+     "dormant": true,
+     "last_error": "RunawayChainError",
+     "err_stranded": [
+      "si2"
+     ]
+    },
+    "stopped/plain": {
+     "error": "InterpreterStoppedError",
+     "changed": false
+    },
+    "clean/async": {
+     "state_ids": [
+      "q.b"
+     ],
+     "changed": true,
+     "error": null,
+     "deferred": false,
+     "denied": false,
+     "stranded_hook": [],
+     "dormant": false,
+     "last_error": null,
+     "err_stranded": []
+    },
+    "no_handler/async": {
+     "state_ids": [
+      "q.a"
+     ],
+     "changed": false,
+     "error": null,
+     "deferred": false,
+     "denied": false,
+     "stranded_hook": [],
+     "dormant": false,
+     "last_error": null,
+     "err_stranded": []
+    },
+    "guard_denied/async": {
+     "state_ids": [
+      "q.a"
+     ],
+     "changed": false,
+     "error": null,
+     "deferred": false,
+     "denied": true,
+     "stranded_hook": [],
+     "dormant": false,
+     "last_error": null,
+     "err_stranded": []
+    },
+    "action_raised/async": {
+     "state_ids": [
+      "q.b"
+     ],
+     "changed": true,
+     "error": "RuntimeError",
+     "deferred": false,
+     "denied": false,
+     "stranded_hook": [],
+     "dormant": false,
+     "last_error": "RuntimeError",
+     "err_stranded": []
+    },
+    "stranded/async": {
+     "state_ids": [
+      "q.inv"
+     ],
+     "changed": true,
+     "error": null,
+     "deferred": false,
+     "denied": false,
+     "stranded_hook": [
+      [
+       "stranded",
+       "q.inv2",
+       "si2"
+      ]
+     ],
+     "dormant": true,
+     "last_error": "RunawayChainError",
+     "err_stranded": [
+      "si2"
+     ]
+    },
+    "stopped/async": {
+     "error": "InterpreterStoppedError",
+     "changed": false
+    }
+   }
+  },
+  "status": "PASS"
+ }
+]

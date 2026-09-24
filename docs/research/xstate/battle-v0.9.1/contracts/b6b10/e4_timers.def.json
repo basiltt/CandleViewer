@@ -1,0 +1,86 @@
+{
+ "[def]T1/B6+after: starts in armed": {
+  "pass": true,
+  "note": [
+   "twap.armed"
+  ]
+ },
+ "[def]T1/B6+after: the pacer fires repeatedly (>=4 slices), no runaway": {
+  "pass": true,
+  "note": {
+   "submit_child": 6,
+   "state": [
+    "twap.armed"
+   ],
+   "last_error": "None"
+  }
+ },
+ "[def]T2/#212 1ms raise(delay=) ping-pong runs >> maxIterations(8) beats": {
+  "pass": true,
+  "note": {
+   "beats": 77,
+   "maxIterations": 8,
+   "last_error": "None",
+   "state": [
+    "alert.poll_up"
+   ]
+  }
+ },
+ "[def]T3/#213 v3 snapshot has scheduled_sends": {
+  "pass": true,
+  "note": "[{'kind': 'event', 'type': 'PACE', 'payload': {}, 'remaining_ms': 4000.0, 'send_id': 'pacer'}]"
+ },
+ "[def]T3/#213 the armed PACE send is recorded with its REMAINING delay": {
+  "pass": true,
+  "note": "[{\"kind\": \"event\", \"type\": \"PACE\", \"payload\": {}, \"remaining_ms\": 4000.0, \"send_id\": \"pacer\"}]"
+ },
+ "[def]T3/snapshot layout version == 3": {
+  "pass": true,
+  "note": "3"
+ },
+ "[def]T3/restore lands in the same configuration": {
+  "pass": true,
+  "note": {
+   "before": [
+    "twap.armed"
+   ],
+   "after": [
+    "twap.armed"
+   ]
+  }
+ },
+ "[def]T3/#213 the restored delayed send FIRES (slice submitted only after the remaining delay elapsed)": {
+  "pass": true,
+  "note": {
+   "early": [
+    "twap.armed"
+   ],
+   "early_svc": [],
+   "late": [
+    "twap.armed"
+   ],
+   "svc": [
+    "submit_child"
+   ]
+  }
+ },
+ "[def]T3/[SYNC] scheduled_sends carries the armed send": {
+  "pass": true,
+  "note": "[{\"kind\": \"event\", \"type\": \"PACE\", \"payload\": {}, \"remaining_ms\": 4000.0, \"send_id\": \"pacer\"}]"
+ },
+ "[def]T3/[SYNC] restored delayed send fires": {
+  "pass": true,
+  "note": {
+   "before": [
+    "twap.armed"
+   ],
+   "early_svc": [],
+   "after": [
+    "twap.armed"
+   ],
+   "svc": [
+    "submit_child"
+   ]
+  }
+ }
+}

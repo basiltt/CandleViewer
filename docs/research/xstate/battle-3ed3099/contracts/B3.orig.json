@@ -1,0 +1,284 @@
+{
+  "id": "leg",
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "defer",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "initial": "pending",
+  "context": {
+    "leg_id": null,
+    "account_id": null,
+    "profile_snapshot": null,
+    "sized_qty": "0",
+    "filled_qty": "0",
+    "entry_order_id": null,
+    "tp_order_ids": [],
+    "skip_reason": null,
+    "error_code": null,
+    "close_attempts": 0,
+    "qty_drift": "0"
+  },
+  "states": {
+    "pending": {
+      "entry": [
+        "size_from_profile"
+      ],
+      "always": [
+        {
+          "target": "#leg.skipped",
+          "guard": "should_skip"
+        },
+        {
+          "target": "#leg.submitting",
+          "guard": "passes_preflight"
+        },
+        {
+          "target": "#leg.error"
+        }
+      ]
+    },
+    "submitting": {
+      "entry": [
+        "spawn_entry_order",
+        "arm_submit_timeout"
+      ],
+      "on": {
+        "ORDER_OPEN": {
+          "target": "#leg.open"
+        },
+        "ORDER_REJECTED": {
+          "target": "#leg.rejected",
+          "actions": [
+            "map_error"
+          ]
+        },
+        "ORDER_UNKNOWN": {
+          "target": "#leg.resolving"
+        },
+        "SUBMIT_TIMEOUT": {
+          "target": "#leg.resolving"
+        }
+      }
+    },
+    "resolving": {
+      "invoke": {
+        "id": "lookup",
+        "src": "lookup_by_link_id",
+        "onDone": [
+          {
+            "target": "#leg.open",
+            "guard": "lookup_says_live"
+          },
+          {
+            "target": "#leg.filled",
+            "guard": "lookup_says_filled"
+          },
+          {
+            "target": "#leg.rejected",
+            "actions": [
+              "map_error"
+            ]
+          }
+        ],
+        "onError": {
+          "target": "#leg.error",
+          "actions": [
+            "map_error"
+          ]
+        }
+      },
+      "on": {
+        "*": {
+          "actions": [
+            "defer"
+          ]
+        }
+      }
+    },
+    "open": {
+      "entry": [
+        "drain_deferred"
+      ],
+      "on": {
+        "EXEC": {
+          "target": "#leg.partially_filled",
+          "actions": [
+            "accumulate_fill",
+            "place_tp_ladder_once"
+          ]
+        },
+        "UNWIND": {
+          "target": "#leg.unwinding"
+        },
+        "CLOSE": {
+          "target": "#leg.closing"
+        }
+      }
+    },
+    "partially_filled": {
+      "on": {
+        "EXEC": [
+          {
+            "target": "#leg.filled",
+            "guard": "fully_filled",
+            "actions": [
+              "accumulate_fill"
+            ]
+          },
+          {
+            "target": "#leg.partially_filled",
+            "reenter": true,
+            "actions": [
+              "accumulate_fill"
+            ]
+          }
+        ],
+        "UNWIND": {
+          "target": "#leg.unwinding"
+        },
+        "CLOSE": {
+          "target": "#leg.closing"
+        }
+      }
+    },
+    "filled": {
+      "on": {
+        "UNWIND": {
+          "target": "#leg.unwinding"
+        },
+        "CLOSE": {
+          "target": "#leg.closing"
+        }
+      }
+    },
+    "unwinding": {
+      "initial": "cancel_children",
+      "states": {
+        "cancel_children": {
+          "invoke": {
+            "id": "cx",
+            "src": "cancel_children_svc",
+            "onDone": {
+              "target": "#leg.unwinding.close_position"
+            },
+            "onError": {
+              "target": "#leg.unwinding.close_position",
+              "actions": [
+                "note_cancel_failure"
+              ]
+            }
+          }
+        },
+        "close_position": {
+          "entry": [
+            "read_authoritative_position_qty",
+            "bump_close_attempts"
+          ],
+          "invoke": {
+            "id": "cl",
+            "src": "reduce_only_close",
+            "onDone": {
+              "target": "#leg.unwinding.verify_flat"
+            },
+            "onError": [
+              {
+                "target": "#leg.unwinding.close_position",
+                "reenter": true,
+                "guard": "close_attempts_left"
+              },
+              {
+                "target": "#leg.unwinding.verify_sl",
+                "actions": [
+                  "mark_incomplete"
+                ]
+              }
+            ]
+          }
+        },
+        "verify_flat": {
+          "invoke": {
+            "id": "vf",
+            "src": "poll_until_flat",
+            "onDone": [
+              {
+                "target": "#leg.closed",
+                "guard": "is_flat"
+              },
+              {
+                "target": "#leg.unwinding.close_position",
+                "reenter": true,
+                "guard": "close_attempts_left"
+              },
+              {
+                "target": "#leg.unwinding.verify_sl",
+                "actions": [
+                  "mark_incomplete"
+                ]
+              }
+            ],
+            "onError": {
+              "target": "#leg.unwinding.verify_sl",
+              "actions": [
+                "mark_incomplete"
+              ]
+            }
+          }
+        },
+        "verify_sl": {
+          "invoke": {
+            "id": "vs",
+            "src": "assert_native_sl",
+            "onDone": {
+              "target": "#leg.error"
+            },
+            "onError": {
+              "target": "#leg.error",
+              "actions": [
+                "raise_naked_position_alert"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "closing": {
+      "on": {
+        "FLAT": {
+          "target": "#leg.closed"
+        },
+        "CLOSE_FAILED": {
+          "target": "#leg.error"
+        }
+      }
+    },
+    "skipped": {
+      "type": "final",
+      "tags": [
+        "terminal",
+        "skip"
+      ]
+    },
+    "rejected": {
+      "type": "final",
+      "tags": [
+        "terminal",
+        "failure"
+      ]
+    },
+    "closed": {
+      "type": "final",
+      "tags": [
+        "terminal"
+      ]
+    },
+    "error": {
+      "type": "final",
+      "tags": [
+        "terminal",
+        "failure"
+      ]
+    }
+  }
+}

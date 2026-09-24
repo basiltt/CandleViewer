@@ -1,0 +1,74 @@
+{
+ "[async]D6a/B11/armed-not-fired-before-period": {
+  "pass": true,
+  "note": "states=['recording.lingering'] fires=[]"
+ },
+ "[async]D6a/B11/fires-at-period": {
+  "pass": true,
+  "note": "states=['recording.stopped'] fires=[\"LINGER_DUE->['recording.stopping']\"]"
+ },
+ "[async]D6a/B13/armed-not-fired-before-period": {
+  "pass": true,
+  "note": "states=['ws_conn.backing_off'] fires=[]"
+ },
+ "[async]D6a/B13/fires-at-period": {
+  "pass": true,
+  "note": "states=['ws_conn.live'] fires=[\"BACKOFF_DUE->['ws_conn.connecting']\"]"
+ },
+ "[async]D6b/B13/reconnect-loop/period=1ms/no-runaway": {
+  "pass": true,
+  "note": "limit=5 ticks=40 fires=40 err=None last=None states=['ws_conn.backing_off']"
+ },
+ "[async]D6b/B13/reconnect-loop/period=1ms/kept-cycling": {
+  "pass": true,
+  "note": "fired 40 times under maxIterations=5"
+ },
+ "[async]D6b/B13/reconnect-loop/period=50ms/no-runaway": {
+  "pass": true,
+  "note": "limit=5 ticks=40 fires=40 err=None last=None states=['ws_conn.backing_off']"
+ },
+ "[async]D6b/B13/reconnect-loop/period=50ms/kept-cycling": {
+  "pass": true,
+  "note": "fired 40 times under maxIterations=5"
+ },
+ "[async]D6c/B11/v3-layout": {
+  "pass": true,
+  "note": "version=3"
+ },
+ "[async]D6c/B11/armed-send-persisted": {
+  "pass": true,
+  "note": "scheduled_sends=[{\"kind\": \"event\", \"type\": \"LINGER_DUE\", \"payload\": {}, \"remaining_ms\": 20000.0, \"send_id\": \"cv-LINGER_DUE\"}]"
+ },
+ "[async]D6c/B11/remaining-delay-not-full-period": {
+  "pass": true,
+  "note": "remaining=20000.0 (armed 30000, 10000 elapsed -> expect ~20000)"
+ },
+ "[async]D6c/B11/restore-rearms-with-remaining": {
+  "pass": true,
+  "note": "restored=['recording.lingering'] @+19s=['recording.lingering'] @+21s=['recording.stopped'] fires=1"
+ },
+ "[async]D6c/B13/v3-layout": {
+  "pass": true,
+  "note": "version=3"
+ },
+ "[async]D6c/B13/armed-send-persisted": {
+  "pass": true,
+  "note": "scheduled_sends=[{\"kind\": \"event\", \"type\": \"BACKOFF_DUE\", \"payload\": {}, \"remaining_ms\": 20000.0, \"send_id\": \"cv-BACKOFF_DUE\"}]"
+ },
+ "[async]D6c/B13/remaining-delay-not-full-period": {
+  "pass": true,
+  "note": "remaining=20000.0 (armed 30000, 10000 elapsed -> expect ~20000)"
+ },
+ "[async]D6c/B13/restore-rearms-with-remaining": {
+  "pass": true,
+  "note": "restored=['ws_conn.backing_off'] @+19s=['ws_conn.backing_off'] @+21s=['ws_conn.live'] fires=1"
+ },
+ "[async]D6d/B11/sync/armed-send-persisted": {
+  "pass": true,
+  "note": "v=3 sched=[{\"kind\": \"event\", \"type\": \"LINGER_DUE\", \"payload\": {}, \"remaining_ms\": 30000.0, \"send_id\": \"cv-LINGER_DUE\"}]"
+ },
+ "[async]D6d/B11/sync/fires-at-period": {
+  "pass": true,
+  "note": "fires=1 states=['recording.stopped']"
+ }
+}

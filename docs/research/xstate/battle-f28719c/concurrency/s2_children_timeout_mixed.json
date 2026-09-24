@@ -1,0 +1,68 @@
+{
+  "probe": "s2_children_timeout_mixed",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "n_def": 0,
+      "n_async": 50,
+      "child_entry_seconds": 1.0,
+      "children_timeout": 0.3,
+      "start_seconds": 0.31,
+      "start_error": null,
+      "first_send_seconds": 0.0,
+      "warning_logged": true,
+      "warnings": [
+        "\u23f3 Interpreter 's2p': invoked child bring-up exceeded the 0.300s children_timeout (0.308s elapsed, 50 still starting). start() continues with the machine running. A plain-`def` entry action that blocks cannot be pre-empted on the event loop thread -- make it `async def`, or offload the blocking call (#181 / #194)."
+      ],
+      "entered_at_start": 0,
+      "per_child_bound_respected": true,
+      "aggregate_scaling": 0.31,
+      "stop": "ok"
+    },
+    {
+      "n_def": 50,
+      "n_async": 0,
+      "child_entry_seconds": 1.0,
+      "children_timeout": 0.3,
+      "start_seconds": 51.217,
+      "start_error": null,
+      "first_send_seconds": 0.001,
+      "warning_logged": true,
+      "warnings": [
+        "\u23f3 Interpreter 's2p': invoked child bring-up exceeded the 0.300s children_timeout (51.212s elapsed, 0 still starting). start() continues with the machine running. A plain-`def` entry action that blocks cannot be pre-empted on the event loop thread -- make it `async def`, or offload the blocking call (#181 / #194)."
+      ],
+      "entered_at_start": 50,
+      "per_child_bound_respected": false,
+      "aggregate_scaling": 51.22,
+      "stop": "ok"
+    },
+    {
+      "n_def": 50,
+      "n_async": 50,
+      "child_entry_seconds": 1.0,
+      "children_timeout": 0.3,
+      "start_seconds": 50.676,
+      "start_error": null,
+      "first_send_seconds": 0.0,
+      "warning_logged": true,
+      "warnings": [
+        "\u23f3 Interpreter 's2p': invoked child bring-up exceeded the 0.300s children_timeout (50.672s elapsed, 50 still starting). start() continues with the machine running. A plain-`def` entry action that blocks cannot be pre-empted on the event loop thread -- make it `async def`, or offload the blocking call (#181 / #194)."
+      ],
+      "entered_at_start": 50,
+      "per_child_bound_respected": false,
+      "aggregate_scaling": 50.68,
+      "stop": "ok"
+    }
+  ],
+  "violations": [
+    [
+      "def50",
+      "N*D scaling: 51.22x entry"
+    ],
+    [
+      "def50",
+      "N*D scaling: 50.68x entry"
+    ]
+  ],
+  "result": "FAIL"
+}

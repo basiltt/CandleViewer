@@ -1,0 +1,19 @@
+{
+  "probe": "t10_property_parallel_children",
+  "py": "3.13.7",
+  "claim": "300 random machines incl. parallel + children + after: no hang, no empty config, dormant/pending agree, snapshot round-trips",
+  "n": 300,
+  "seed": 30303,
+  "watchdog_s": 2.5,
+  "shape_mix": {
+    "nested": 94,
+    "parallel": 111,
+    "flat": 95
+  },
+  "notes": {
+    "snapshot/ok": 600
+  },
+  "violations": [],
+  "n_violations": 0,
+  "result": "PASS"
+}

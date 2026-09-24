@@ -1,0 +1,188 @@
+[
+ {
+  "id": "B1",
+  "title": "#226: chain_trips monotonic across N restarts, RestoredError message intact, clear clears only the latch, legacy upcast",
+  "detail": {
+   "ok": false,
+   "first_trips": 1,
+   "first_msg": "Machine 'ch' exceeded 6 chained self-generated events in one macrostep and discarded 1 of ",
+   "snapshot_keys": {
+    "chain_trips": 1,
+    "last_chain_error": "Machine 'ch' exceeded 6 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'."
+   },
+   "hops": [
+    {
+     "hop": 0,
+     "trips": 1,
+     "latch_type": "RestoredChainError",
+     "latch_msg": "Machine 'ch' exceeded 6 chained self-generated events in one macrostep and discarded 1 of "
+    },
+    {
+     "hop": 1,
+     "trips": 1,
+     "latch_type": "RestoredChainError",
+     "latch_msg": "Machine 'ch' exceeded 6 chained self-generated events in one macrostep and discarded 1 of "
+    },
+    {
+     "hop": 2,
+     "trips": 1,
+     "latch_type": "RestoredChainError",
+     "latch_msg": "Machine 'ch' exceeded 6 chained self-generated events in one macrostep and discarded 1 of "
+    },
+    {
+     "hop": 3,
+     "trips": 1,
+     "latch_type": "RestoredChainError",
+     "latch_msg": "Machine 'ch' exceeded 6 chained self-generated events in one macrostep and discarded 1 of "
+    },
+    {
+     "hop": 4,
+     "trips": 1,
+     "latch_type": "RestoredChainError",
+     "latch_msg": "Machine 'ch' exceeded 6 chained self-generated events in one macrostep and discarded 1 of "
+    }
+   ],
+   "monotonic": true,
+   "msg_stable": true,
+   "restored_type_is_RestoredError": false,
+   "after_clear": {
+    "latch": "None",
+    "trips": 1
+   },
+   "legacy_upcast": {
+    "trips": 0,
+    "latch": "None"
+   },
+   "trips_after_new_trip": 2
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "B2",
+  "title": "#227 property (300 cases): strict refusal on BOTH restore lanes leaves a consistent machine; armed count is right",
+  "detail": {
+   "ok": true,
+   "cases": 300,
+   "stats": {
+    "refused": 438,
+    "armed": 205,
+    "cases": 300
+   },
+   "bad_n": 0,
+   "bad": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B3",
+  "title": "#230: from_snapshot(plugins=) gets every restore-time hook EXACTLY once (and .use() after restore gets zero)",
+  "detail": {
+   "ok": true,
+   "plugins_kwarg": {
+    "at_restore": [
+     "UnknownEventError:NOPE"
+    ],
+    "after_start": [
+     "UnknownEventError:NOPE",
+     "UnknownEventError:GHOST"
+    ]
+   },
+   "late_use": {
+    "at_restore": [],
+    "after_start": [
+     "UnknownEventError:GHOST"
+    ]
+   },
+   "exactly_once": {
+    "restore_lane": 1,
+    "both_lanes": 2
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B4",
+  "title": "#233: a lane:'priority' record restores at the HEAD of the sync engine's queue -- same order the async engine gives",
+  "detail": {
+   "ok": true,
+   "async_order": [
+    "Z",
+    "X",
+    "Y"
+   ],
+   "sync_order": [
+    "Z",
+    "X",
+    "Y"
+   ],
+   "expected": [
+    "Z",
+    "X",
+    "Y"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B5",
+  "title": "trust boundary: forged chain_trips / last_chain_error in a v3 blob, and strict bypass via the scheduled_sends lane",
+  "detail": {
+   "ok": true,
+   "forged_latch": {
+    "trips": 999999,
+    "latch_type": "RestoredChainError",
+    "latch_msg": "TOTALLY FORGED"
+   },
+   "forged_does_not_break_flow": {
+    "status": "running",
+    "final": [
+     "ch.b"
+    ]
+   },
+   "strict_bypass_attempts": {
+    "plain_undeclared": {
+     "refused": true,
+     "invalid": [
+      "UnknownEventError:NOPE"
+     ],
+     "transitions": [],
+     "final": [
+      "st.a"
+     ]
+    },
+    "engine_flagged": {
+     "refused": true,
+     "invalid": [
+      "UnknownEventError:NOPE"
+     ],
+     "transitions": [],
+     "final": [
+      "st.a"
+     ]
+    },
+    "done_shape": {
+     "refused": true,
+     "invalid": [
+      "UnknownEventError:done.invoke.ghost"
+     ],
+     "transitions": [],
+     "final": [
+      "st.a"
+     ]
+    },
+    "v2_upcast": {
+     "refused": true,
+     "invalid": [
+      "UnknownEventError:NOPE"
+     ],
+     "transitions": [],
+     "final": [
+      "st.a"
+     ]
+    }
+   },
+   "note": "a party with full blob control is inside the documented trust boundary (from_snapshot docstring #205); filed only if a non-blob-controlling party can cross it"
+  },
+  "status": "PASS"
+ }
+]

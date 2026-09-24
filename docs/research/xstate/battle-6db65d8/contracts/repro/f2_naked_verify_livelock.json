@@ -1,0 +1,25 @@
+{
+ "elapsed_s": 8.05,
+ "laps_naked_to_verifying": 4027,
+ "laps_per_sec": 500.2,
+ "raise_critical_alert_count": 4027,
+ "status": "running",
+ "interpreter_error": "None",
+ "last_transition_ok": true,
+ "last_error": "None",
+ "dropped": [],
+ "states": [
+  "position_protection.sl.naked",
+  "position_protection.watchdog.scanning"
+ ],
+ "after_POSITION_FLAT": [
+  "position_protection.sl.naked",
+  "position_protection.watchdog.idle"
+ ],
+ "flat_receipt": {
+  "changed": true,
+  "deferred": false,
+  "denied": false,
+  "error": null
+ }
+}

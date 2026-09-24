@@ -1,0 +1,57 @@
+[
+  {
+    "id": "C9",
+    "title": "sync + raise built-in: 1500-deep guarded chain",
+    "expected": {
+      "n": 1500
+    },
+    "observed": {
+      "n": 1001
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "C10",
+    "title": "async + raise built-in: 1500-deep guarded chain",
+    "expected": {
+      "n": 1500
+    },
+    "observed": {
+      "n": 1001
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "C11",
+    "title": "sync + raise built-in: 3000-deep guarded chain",
+    "expected": {
+      "n": 3000
+    },
+    "observed": {
+      "n": 1001
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "C12",
+    "title": "async + raise built-in: 3000-deep guarded chain",
+    "expected": {
+      "n": 3000
+    },
+    "observed": {
+      "n": 1001
+    },
+    "status": "FAIL"
+  },
+  {
+    "id": "C13",
+    "title": "async: action-side i.send() self-chain is NOT budgeted at all (10000 deep)",
+    "expected": {
+      "n": 10000
+    },
+    "observed": {
+      "n": 10000
+    },
+    "status": "PASS"
+  }
+]

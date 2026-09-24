@@ -1,0 +1,313 @@
+{
+ "round": 6,
+ "commit": "cec108b",
+ "version_reported": "0.8.0",
+ "date": "2026-09-20",
+ "posted": false,
+ "note": "DRAFTS ONLY. Nothing in this directory has been posted. No GitHub writes.",
+ "decision": "DEFER (order path) / GO (non-order paths under constraints)",
+ "verdict_doc": "docs/research/xstate/39-r6-final-readiness-verdict.md",
+ "register": "docs/research/xstate/38-r6-findings-register.md",
+ "counts": {
+  "issues_verified": 26,
+  "closed": 24,
+  "partial": 1,
+  "not_fixed": 1,
+  "regressions_confirmed": 3,
+  "new_defects": {
+   "Blocker": 2,
+   "High": 2,
+   "Medium": 7,
+   "Low": 9,
+   "total": 20
+  },
+  "new_issue_drafts": 10,
+  "comment_drafts": 26
+ },
+ "meta": "meta-26.md",
+ "comments": [
+  {
+   "issue": 118,
+   "file": "comments/118.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 125,
+   "file": "comments/125.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 133,
+   "file": "comments/133.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 134,
+   "file": "comments/134.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 142,
+   "file": "comments/142.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 143,
+   "file": "comments/143.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 145,
+   "file": "comments/145.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 146,
+   "file": "comments/146.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 147,
+   "file": "comments/147.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 148,
+   "file": "comments/148.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 149,
+   "file": "comments/149.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 150,
+   "file": "comments/150.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 151,
+   "file": "comments/151.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 152,
+   "file": "comments/152.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 153,
+   "file": "comments/153.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 154,
+   "file": "comments/154.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 155,
+   "file": "comments/155.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 156,
+   "file": "comments/156.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 158,
+   "file": "comments/158.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 159,
+   "file": "comments/159.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 160,
+   "file": "comments/160.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 161,
+   "file": "comments/161.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 162,
+   "file": "comments/162.md",
+   "action": "comment+close",
+   "disposition": "FIXED"
+  },
+  {
+   "issue": 122,
+   "file": "comments/122.md",
+   "action": "comment+reopen",
+   "disposition": "PARTIAL"
+  },
+  {
+   "issue": 144,
+   "file": "comments/144.md",
+   "action": "comment",
+   "disposition": "FIXED as filed (sync), with an adjacent gap on the other engine"
+  },
+  {
+   "issue": 157,
+   "file": "comments/157.md",
+   "action": "comment+reopen",
+   "disposition": "NOT FIXED as filed"
+  }
+ ],
+ "new_issues": [
+  {
+   "file": "new/R6-01-async-always-invoke-livelock.md",
+   "r6": "R6-01",
+   "severity": "Blocker",
+   "title": "Bug: `await Interpreter.send(EV, wait=True)` never resolves and the event loop burns a core when an `always` descends into a child with a completed `invoke` (#144's chain-budget fix landed on `SyncInterpreter` only)",
+   "labels": [
+    "bug",
+    "severity/blocker",
+    "area/interpreter",
+    "area/async"
+   ]
+  },
+  {
+   "file": "new/R6-03-rollback-ondone-reinvoke-spin.md",
+   "r6": "R6-03",
+   "severity": "Blocker",
+   "title": "Bug: `actionErrorPolicy: \"rollback\"` + `invoke.onDone` re-arms the invoke for ever — ~1400 service invocations/sec, unbounded, with `status=\"running\"` and `error is None` (async only)",
+   "labels": [
+    "bug",
+    "severity/blocker",
+    "area/interpreter",
+    "area/async",
+    "area/error-policy"
+   ]
+  },
+  {
+   "file": "new/R6-02-async-chain-budget-system-event-exemption.md",
+   "r6": "R6-02",
+   "severity": "High",
+   "title": "Bug: the async chain budget exempts every system event (`interpreter.py:1427`), so an invoke cycle runs unbounded and silent on `Interpreter` while `SyncInterpreter` raises `RunawayChainError`",
+   "labels": [
+    "bug",
+    "severity/high",
+    "area/interpreter",
+    "area/async",
+    "area/engine-parity"
+   ]
+  },
+  {
+   "file": "new/R6-06-entry-action-window-torn-snapshot.md",
+   "r6": "R6-06",
+   "severity": "High",
+   "title": "Bug: `get_persisted_snapshot()` called from inside an entry (or exit) action is ACCEPTED and persists a torn state",
+   "labels": [
+    "bug",
+    "severity/high",
+    "area/persistence",
+    "area/snapshots"
+   ]
+  },
+  {
+   "file": "new/R6-10-denied-true-for-crashed-guard.md",
+   "r6": "R6-10",
+   "title": "Bug: `Receipt.denied` is `True` for a guard that *crashed* under `guardErrorPolicy: \"raise\"`, mislabelling a third case into the bucket #153 exists to separate",
+   "labels": [
+    "bug",
+    "severity/medium"
+   ],
+   "severity": "Medium"
+  },
+  {
+   "file": "new/R6-11-start-returns-before-children-ready.md",
+   "r6": "R6-11",
+   "title": "Bug: `await Interpreter.start()` returns before the initial entry set's `invoke` children are registered and before an initial plain-`def` service completes; `SyncInterpreter.start()` does both",
+   "labels": [
+    "bug",
+    "severity/medium"
+   ],
+   "severity": "Medium"
+  },
+  {
+   "file": "new/R6-12-threadsafe-self-send-counter-leak.md",
+   "r6": "R6-12",
+   "title": "Bug: `_threadsafe_self_sends_in_flight` is incremented on the calling thread and decremented inside `_deliver`, so it leaks permanently if `_deliver` never runs — and it gates the `_raise_depth` reset",
+   "labels": [
+    "bug",
+    "severity/medium"
+   ],
+   "severity": "Medium"
+  },
+  {
+   "file": "new/R6-13-service-executor-hardcoded-pool.md",
+   "r6": "R6-13",
+   "title": "Feature/bug: `_get_service_executor()` hard-codes `ThreadPoolExecutor(max_workers=4)` with no public `service_pool_size=`, so >4 concurrent plain-`def` services serialise in waves",
+   "labels": [
+    "bug",
+    "severity/medium"
+   ],
+   "severity": "Medium"
+  },
+  {
+   "file": "new/R6-14-after-lateness-unbounded-under-load.md",
+   "r6": "R6-14",
+   "title": "Regression: `after` timer lateness is 88-92 ms against a 50 ms budget under a busy loop — the per-macrostep settle budget bounds iterations but not lateness",
+   "labels": [
+    "bug",
+    "severity/medium"
+   ],
+   "severity": "Medium"
+  },
+  {
+   "file": "new/R6-15-stop-leaves-duplicate-receipts-unresolved.md",
+   "r6": "R6-15",
+   "title": "Regression: `stop()` does not resolve every outstanding duplicate-`Event`-instance receipt with `InterpreterStoppedError` — some racing events settle as ordinary success receipts",
+   "labels": [
+    "bug",
+    "severity/medium"
+   ],
+   "severity": "Medium"
+  }
+ ],
+ "not_filed_as_issues": {
+  "rationale": "Low-severity items are carried as a single consolidated ride-along in meta-26.md rather than nine separate issues; R6-05 is delivered as the narrowed reopen on #157, where the correction to our own original claim belongs.",
+  "as_ride_along_or_comment": [
+   "R6-04",
+   "R6-05 (filed as the #157 reopen comment instead)",
+   "R6-07",
+   "R6-08",
+   "R6-09",
+   "R6-16",
+   "R6-17",
+   "R6-18",
+   "R6-19",
+   "R6-20"
+  ]
+ }
+}

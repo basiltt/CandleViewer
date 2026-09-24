@@ -1,0 +1,100 @@
+[
+ {
+  "id": "R5-RB1",
+  "inv": "rollback",
+  "title": "B11 rollback + raising entry: does the onDone retry loop terminate?",
+  "detail": {
+   "emit_attempts_over_2s": [
+    315,
+    648,
+    974,
+    1309,
+    1635,
+    1975,
+    2303,
+    2640
+   ],
+   "states": [
+    "recording.starting"
+   ],
+   "status": "running",
+   "svc_calls": 2641,
+   "still_growing": true,
+   "queue_depth": 1,
+   "deferred": 0,
+   "transitions": [
+    "___xstate_statemachine_init___->['recording.idle']",
+    "REASON_ADDED->['recording.starting']"
+   ],
+   "ok": false,
+   "note": "if still_growing, a single failing entry action under the MANDATED rollback policy is a hot spin, not a contained failure"
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "R5-RB2",
+  "inv": "rollback",
+  "title": "B15 rollback + raising entry on an `always` target",
+  "detail": {
+   "journal_attempts": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "states": [
+    "paper_account.active"
+   ],
+   "status": "running",
+   "still_growing": false,
+   "last_error": "boom:write_liquidation_journal",
+   "ok": true
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "R5-RB3",
+  "inv": "rollback",
+  "title": "B14 rollback + raising entry on `desynced` (always -> snapshot_pending)",
+  "detail": {
+   "attempts": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "states": [
+    "book.live"
+   ],
+   "status": "running",
+   "still_growing": false,
+   "ok": true
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "R5-RB4",
+  "inv": "rollback",
+  "title": "B11 rollback spin: is it bounded by RunawayChainError?",
+  "detail": {
+   "actions_in_1s": 2615,
+   "actions_total": 3936,
+   "second_event": "OK in 0.00s Receipt(state_ids=frozenset({'recording.starting'}), changed=True, error=None, deferred=False, denied=False)",
+   "reasons": [
+    "alerts",
+    "chart"
+   ],
+   "status": "running",
+   "states": [
+    "recording.starting"
+   ],
+   "interp_error": "None",
+   "ok": false
+  },
+  "status": "FAIL"
+ }
+]

@@ -1,0 +1,262 @@
+{
+  "min/async/2": {
+    "style": "async",
+    "maxIterations": 2,
+    "declared": 2,
+    "plateau_svc": 4,
+    "sec": 0.69,
+    "settled": true,
+    "states": [
+      "m.a"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "min/async/5": {
+    "style": "async",
+    "maxIterations": 5,
+    "declared": 5,
+    "plateau_svc": 7,
+    "sec": 0.68,
+    "settled": true,
+    "states": [
+      "m.a"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "min/async/25": {
+    "style": "async",
+    "maxIterations": 25,
+    "declared": 25,
+    "plateau_svc": 27,
+    "sec": 0.7,
+    "settled": true,
+    "states": [
+      "m.a"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "min/async/100": {
+    "style": "async",
+    "maxIterations": 100,
+    "declared": 100,
+    "plateau_svc": 102,
+    "sec": 0.84,
+    "settled": true,
+    "states": [
+      "m.a"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "min/def/2": {
+    "style": "def",
+    "maxIterations": 2,
+    "declared": 2,
+    "plateau_svc": 4,
+    "sec": 0.7,
+    "settled": true,
+    "states": [
+      "m.a"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "min/def/5": {
+    "style": "def",
+    "maxIterations": 5,
+    "declared": 5,
+    "plateau_svc": 7,
+    "sec": 0.7,
+    "settled": true,
+    "states": [
+      "m.a"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "min/def/25": {
+    "style": "def",
+    "maxIterations": 25,
+    "declared": 25,
+    "plateau_svc": 27,
+    "sec": 0.68,
+    "settled": true,
+    "states": [
+      "m.a"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "min/def/100": {
+    "style": "def",
+    "maxIterations": 100,
+    "declared": 100,
+    "plateau_svc": 102,
+    "sec": 0.79,
+    "settled": true,
+    "states": [
+      "m.a"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "B18/async/2": {
+    "style": "async",
+    "maxIterations": 2,
+    "declared": 2,
+    "plateau_svc": 4,
+    "sec": 0.69,
+    "settled": true,
+    "states": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "B18/async/5": {
+    "style": "async",
+    "maxIterations": 5,
+    "declared": 5,
+    "plateau_svc": 7,
+    "sec": 0.7,
+    "settled": true,
+    "states": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "B18/async/25": {
+    "style": "async",
+    "maxIterations": 25,
+    "declared": 25,
+    "plateau_svc": 27,
+    "sec": 0.73,
+    "settled": true,
+    "states": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "B18/async/100": {
+    "style": "async",
+    "maxIterations": 100,
+    "declared": 100,
+    "plateau_svc": 102,
+    "sec": 0.89,
+    "settled": true,
+    "states": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "B18/def/2": {
+    "style": "def",
+    "maxIterations": 2,
+    "declared": 2,
+    "plateau_svc": 4,
+    "sec": 0.69,
+    "settled": true,
+    "states": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "B18/def/5": {
+    "style": "def",
+    "maxIterations": 5,
+    "declared": 5,
+    "plateau_svc": 7,
+    "sec": 0.7,
+    "settled": true,
+    "states": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "B18/def/25": {
+    "style": "def",
+    "maxIterations": 25,
+    "declared": 25,
+    "plateau_svc": 27,
+    "sec": 0.73,
+    "settled": true,
+    "states": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "B18/def/100": {
+    "style": "def",
+    "maxIterations": 100,
+    "declared": 100,
+    "plateau_svc": 102,
+    "sec": 0.9,
+    "settled": true,
+    "states": [
+      "kill_switch.flattening"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "B19/async/5": {
+    "style": "async",
+    "maxIterations": 5,
+    "declared": 5,
+    "plateau_svc": 7,
+    "sec": 0.69,
+    "settled": true,
+    "states": [
+      "reconciliation.diffing"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "B19/async/25": {
+    "style": "async",
+    "maxIterations": 25,
+    "declared": 25,
+    "plateau_svc": 27,
+    "sec": 0.7,
+    "settled": true,
+    "states": [
+      "reconciliation.diffing"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "B19/def/5": {
+    "style": "def",
+    "maxIterations": 5,
+    "declared": 5,
+    "plateau_svc": 7,
+    "sec": 0.69,
+    "settled": true,
+    "states": [
+      "reconciliation.diffing"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  },
+  "B19/def/25": {
+    "style": "def",
+    "maxIterations": 25,
+    "declared": 25,
+    "plateau_svc": 27,
+    "sec": 0.75,
+    "settled": true,
+    "states": [
+      "reconciliation.diffing"
+    ],
+    "status": "running",
+    "last_error": "RunawayChainError"
+  }
+}

@@ -1,0 +1,341 @@
+{
+  "probe": "e1_plugin_hook_raises",
+  "py": "3.13.7",
+  "on_interpreter_start": {
+    "hook": "on_interpreter_start",
+    "raised_to_caller": null,
+    "trigger_receipt": [
+      true,
+      "None"
+    ],
+    "states_after": [
+      "pl.b"
+    ],
+    "exactly_one_leaf": true,
+    "status_after": "running",
+    "context_n": 1,
+    "last_transition_ok": true,
+    "last_error": "None",
+    "next_event_receipt": [
+      true,
+      "None"
+    ],
+    "next_event_exception": null,
+    "second_plugin_still_called": {
+      "on_event_received": 2,
+      "on_guard_evaluated": 1,
+      "on_action_execute": 1,
+      "on_transition": 2
+    },
+    "exploder_hooks_seen": [
+      "on_action_execute",
+      "on_event_received",
+      "on_guard_evaluated",
+      "on_interpreter_start",
+      "on_transition"
+    ]
+  },
+  "on_event_received": {
+    "hook": "on_event_received",
+    "raised_to_caller": null,
+    "trigger_receipt": [
+      true,
+      "None"
+    ],
+    "states_after": [
+      "pl.b"
+    ],
+    "exactly_one_leaf": true,
+    "status_after": "running",
+    "context_n": 1,
+    "last_transition_ok": true,
+    "last_error": "None",
+    "next_event_receipt": [
+      true,
+      "None"
+    ],
+    "next_event_exception": null,
+    "second_plugin_still_called": {
+      "on_event_received": 2,
+      "on_guard_evaluated": 1,
+      "on_action_execute": 1,
+      "on_transition": 2
+    },
+    "exploder_hooks_seen": [
+      "on_action_execute",
+      "on_event_received",
+      "on_guard_evaluated",
+      "on_interpreter_start",
+      "on_transition"
+    ]
+  },
+  "on_transition": {
+    "hook": "on_transition",
+    "raised_to_caller": null,
+    "trigger_receipt": [
+      true,
+      "None"
+    ],
+    "states_after": [
+      "pl.b"
+    ],
+    "exactly_one_leaf": true,
+    "status_after": "running",
+    "context_n": 1,
+    "last_transition_ok": true,
+    "last_error": "None",
+    "next_event_receipt": [
+      true,
+      "None"
+    ],
+    "next_event_exception": null,
+    "second_plugin_still_called": {
+      "on_event_received": 2,
+      "on_guard_evaluated": 1,
+      "on_action_execute": 1,
+      "on_transition": 2
+    },
+    "exploder_hooks_seen": [
+      "on_action_execute",
+      "on_event_received",
+      "on_guard_evaluated",
+      "on_interpreter_start",
+      "on_transition"
+    ]
+  },
+  "on_action_execute": {
+    "hook": "on_action_execute",
+    "raised_to_caller": null,
+    "trigger_receipt": [
+      true,
+      "None"
+    ],
+    "states_after": [
+      "pl.b"
+    ],
+    "exactly_one_leaf": true,
+    "status_after": "running",
+    "context_n": 1,
+    "last_transition_ok": true,
+    "last_error": "None",
+    "next_event_receipt": [
+      true,
+      "None"
+    ],
+    "next_event_exception": null,
+    "second_plugin_still_called": {
+      "on_event_received": 2,
+      "on_guard_evaluated": 1,
+      "on_action_execute": 1,
+      "on_transition": 2
+    },
+    "exploder_hooks_seen": [
+      "on_action_execute",
+      "on_event_received",
+      "on_guard_evaluated",
+      "on_interpreter_start",
+      "on_transition"
+    ]
+  },
+  "on_guard_evaluated": {
+    "hook": "on_guard_evaluated",
+    "raised_to_caller": null,
+    "trigger_receipt": [
+      true,
+      "None"
+    ],
+    "states_after": [
+      "pl.b"
+    ],
+    "exactly_one_leaf": true,
+    "status_after": "running",
+    "context_n": 1,
+    "last_transition_ok": true,
+    "last_error": "None",
+    "next_event_receipt": [
+      true,
+      "None"
+    ],
+    "next_event_exception": null,
+    "second_plugin_still_called": {
+      "on_event_received": 2,
+      "on_guard_evaluated": 1,
+      "on_action_execute": 1,
+      "on_transition": 2
+    },
+    "exploder_hooks_seen": [
+      "on_action_execute",
+      "on_event_received",
+      "on_guard_evaluated",
+      "on_interpreter_start",
+      "on_transition"
+    ]
+  },
+  "on_guard_error": {
+    "hook": "on_guard_error",
+    "raised_to_caller": null,
+    "trigger_receipt": [
+      false,
+      "ValueError('guard blew up')"
+    ],
+    "states_after": [
+      "pl.a"
+    ],
+    "exactly_one_leaf": true,
+    "status_after": "running",
+    "context_n": 1,
+    "last_transition_ok": true,
+    "last_error": "None",
+    "next_event_receipt": [
+      true,
+      "None"
+    ],
+    "next_event_exception": null,
+    "second_plugin_still_called": {
+      "on_event_received": 2,
+      "on_guard_evaluated": 1,
+      "on_action_execute": 1,
+      "on_transition": 1
+    },
+    "exploder_hooks_seen": [
+      "on_action_execute",
+      "on_event_received",
+      "on_guard_error",
+      "on_guard_evaluated",
+      "on_interpreter_start",
+      "on_transition"
+    ]
+  },
+  "on_unhandled_event": {
+    "hook": "on_unhandled_event",
+    "raised_to_caller": null,
+    "trigger_receipt": [
+      false,
+      "None"
+    ],
+    "states_after": [
+      "pl.a"
+    ],
+    "exactly_one_leaf": true,
+    "status_after": "running",
+    "context_n": 1,
+    "last_transition_ok": true,
+    "last_error": "None",
+    "next_event_receipt": [
+      true,
+      "None"
+    ],
+    "next_event_exception": null,
+    "second_plugin_still_called": {
+      "on_event_received": 2,
+      "on_unhandled_event": 1,
+      "on_guard_evaluated": 1,
+      "on_action_execute": 1,
+      "on_transition": 1
+    },
+    "exploder_hooks_seen": [
+      "on_action_execute",
+      "on_event_received",
+      "on_guard_evaluated",
+      "on_interpreter_start",
+      "on_transition",
+      "on_unhandled_event"
+    ]
+  },
+  "on_event_dropped": {
+    "hook": "on_event_dropped",
+    "raised_to_caller": null,
+    "trigger_receipt": null,
+    "states_after": [
+      "pl.b"
+    ],
+    "exactly_one_leaf": true,
+    "status_after": "running",
+    "context_n": 1,
+    "last_transition_ok": true,
+    "last_error": "None",
+    "next_event_receipt": [
+      true,
+      "None"
+    ],
+    "next_event_exception": null,
+    "second_plugin_still_called": {
+      "on_event_dropped": 4,
+      "on_event_received": 2,
+      "on_guard_evaluated": 1,
+      "on_action_execute": 1,
+      "on_transition": 2
+    },
+    "exploder_hooks_seen": [
+      "on_action_execute",
+      "on_event_dropped",
+      "on_event_received",
+      "on_guard_evaluated",
+      "on_interpreter_start",
+      "on_transition"
+    ]
+  },
+  "on_done": {
+    "hook": "on_done",
+    "raised_to_caller": null,
+    "trigger_receipt": [
+      true,
+      "None"
+    ],
+    "states_after": [
+      "pl.done_"
+    ],
+    "exactly_one_leaf": true,
+    "status_after": "done",
+    "context_n": 0,
+    "last_transition_ok": true,
+    "last_error": "None",
+    "next_event_receipt": null,
+    "next_event_exception": null,
+    "second_plugin_still_called": {
+      "on_event_received": 1,
+      "on_done": 1,
+      "on_transition": 1
+    },
+    "exploder_hooks_seen": [
+      "on_done",
+      "on_event_received",
+      "on_interpreter_start",
+      "on_transition"
+    ]
+  },
+  "on_interpreter_stop": {
+    "hook": "on_interpreter_stop",
+    "raised_to_caller": null,
+    "trigger_receipt": [
+      true,
+      "None"
+    ],
+    "states_after": [
+      "pl.b"
+    ],
+    "exactly_one_leaf": true,
+    "status_after": "running",
+    "context_n": 1,
+    "last_transition_ok": true,
+    "last_error": "None",
+    "next_event_receipt": [
+      true,
+      "None"
+    ],
+    "next_event_exception": null,
+    "second_plugin_still_called": {
+      "on_event_received": 2,
+      "on_guard_evaluated": 1,
+      "on_action_execute": 1,
+      "on_transition": 2
+    },
+    "exploder_hooks_seen": [
+      "on_action_execute",
+      "on_event_received",
+      "on_guard_evaluated",
+      "on_interpreter_start",
+      "on_transition"
+    ]
+  }
+}

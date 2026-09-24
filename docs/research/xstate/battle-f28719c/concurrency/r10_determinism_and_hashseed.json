@@ -1,0 +1,33 @@
+{
+  "probe": "r10_determinism_and_hashseed",
+  "py": "3.13.7",
+  "runs_per_cell": 50,
+  "distinct_traces_per_cell": {
+    "async:def": 4,
+    "sync:def": 1,
+    "async:async def": 4,
+    "sync:async def": 1
+  },
+  "nondeterministic_cells": [
+    "async:def",
+    "async:async def"
+  ],
+  "engine_parity_def": {
+    "async_laps": 14,
+    "sync_laps": 31,
+    "async_trip": false,
+    "sync_trip": true,
+    "laps_equal": false,
+    "trip_equal": false
+  },
+  "hashseeds": [
+    "0",
+    "1",
+    "7",
+    "12345",
+    "99991"
+  ],
+  "distinct_outcomes_across_seeds": 1,
+  "sample_trace": "{\"laps\": 14, \"n\": 14, \"trace\": [[\"?\", [\"r10\", \"r10.a\"]], [\"?\", [\"r10\", \"r10.b\"]], [\"?\", [\"r10\", \"r10.a\"]], [\"?\", [\"r10\", \"r10.b\"]], [\"?\", [\"r10\", \"r10.a\"]], [\"?\", [\"r10\", \"r10.b\"]], [\"?\", [\"r10\", \"r10.a\"]], [\"?\", [\"r10\", \"r10.b\"]], [\"?\", [\"r10\", \"r10.a\"]], [\"?\", [\"r10\", \"r10.b\"]], [\"?\", [\"r10\", \"r10",
+  "result": "FAIL"
+}

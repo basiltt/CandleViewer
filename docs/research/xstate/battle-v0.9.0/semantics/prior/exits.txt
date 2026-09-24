@@ -1,0 +1,15 @@
+f_fuzz exit=124
+p_persistence exit=1
+c_concurrency exit=0
+s_semantics_sec exit=0
+r_reentrant_latch exit=0
+n_persist_keys exit=0
+w_handles_cancel exit=0
+t_determinism exit=0
+repro_d11_sem_1_v2_upcast_mints_after exit=1
+repro_d11_sem_212_heartbeat exit=0
+repro_d11_sem_2_restore_invalid_hook exit=1
+repro_d11_sem_3_nested_keys_silent exit=1
+repro_d11_sem_4_timer_handle_leak exit=0
+DONE
+f_fuzz(120) exit=0

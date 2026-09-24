@@ -1,0 +1,49 @@
+{
+ "states": [
+  "oco.racing"
+ ],
+ "status": "running",
+ "context": {
+  "algo_id": null,
+  "mode": "reduce_other",
+  "leg_a_id": null,
+  "leg_b_id": null,
+  "filled_a": "0",
+  "filled_b": "0",
+  "settle_failures": 0,
+  "excess_qty": "0"
+ },
+ "deferred": 0,
+ "error": null,
+ "actions": [
+  "record_child_ids",
+  "record_fill_a"
+ ],
+ "transitions": [
+  "___xstate_statemachine_init___->['oco.arming']",
+  "done.invoke.arm->['oco.racing']",
+  "LEG_A_FILL->['oco.settling_b']",
+  "done.invoke.settle_b->['oco.racing']"
+ ],
+ "dropped": [],
+ "unhandled": [],
+ "action_errors": [],
+ "guard_errors": [],
+ "service_errors": [],
+ "svc_calls": [
+  "submit_both_legs",
+  "settle_other_leg"
+ ],
+ "stranded": [],
+ "last_error": null,
+ "dormant": false,
+ "sends": [
+  {
+   "ev": "LEG_A_FILL",
+   "ok": true,
+   "sec": 0.00042949999988195486
+  }
+ ],
+ "snapshot_ok": true,
+ "notes": []
+}

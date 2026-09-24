@@ -1,0 +1,101 @@
+[
+ {
+  "id": "W1",
+  "title": "200 raise(delay=) heartbeat machines x 10 s: retained timer handles FLAT (#218) and RSS flat -- both action kinds",
+  "detail": {
+   "ok": true,
+   "machines": 200,
+   "beats": 71988,
+   "beats_per_machine": 359,
+   "handles_end": 180,
+   "handles_max_per_machine": 1,
+   "alive": 200,
+   "rss_delta_mb": 0.0,
+   "samples": [
+    {
+     "t": 1,
+     "beats": 13110,
+     "handles": 184,
+     "rss_delta_mb": 0.0
+    },
+    {
+     "t": 2,
+     "beats": 25618,
+     "handles": 189,
+     "rss_delta_mb": 0.0
+    },
+    {
+     "t": 3,
+     "beats": 37807,
+     "handles": 197,
+     "rss_delta_mb": 0.0
+    },
+    {
+     "t": 4,
+     "beats": 48523,
+     "handles": 159,
+     "rss_delta_mb": 0.0
+    },
+    {
+     "t": 5,
+     "beats": 58957,
+     "handles": 200,
+     "rss_delta_mb": 0.0
+    },
+    {
+     "t": 6,
+     "beats": 71988,
+     "handles": 180,
+     "rss_delta_mb": 0.0
+    }
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "W2",
+  "title": "Cancel storm: 3000 arm/cancel cycles on one send id -- no double-release, no handle growth, both engines",
+  "detail": {
+   "ok": true,
+   "cycles": 3000,
+   "cells": {
+    "async": {
+     "handles": 0,
+     "err": null,
+     "state": [
+      "cz.a"
+     ],
+     "armed": 0,
+     "scheduled": 0
+    },
+    "sync": {
+     "handles": 0,
+     "err": null,
+     "state": [
+      "cz.a"
+     ],
+     "armed": 0,
+     "scheduled": 0
+    }
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "W3",
+  "title": "Fire-vs-cancel race: cancel a 1 ms send at its due instant, 500 rounds -- no exception, no double-fire, no handle leak",
+  "detail": {
+   "ok": true,
+   "rounds": 500,
+   "detail": {
+    "hits": 499,
+    "handles": 0,
+    "err": null,
+    "armed": 0,
+    "last_error": "NoneType",
+    "chain_trips": 0
+   }
+  },
+  "status": "PASS"
+ }
+]

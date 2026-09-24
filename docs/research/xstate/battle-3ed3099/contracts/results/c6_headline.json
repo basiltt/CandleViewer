@@ -1,0 +1,148 @@
+{
+  "x1_star_shadows_defer": {
+    "fetching": {
+      "state": "reconciliation.fetching",
+      "receipt": {
+        "changed": false,
+        "deferred": false
+      },
+      "deferred_count": 0,
+      "unhandled_hook": [],
+      "trace": [
+        "set_trigger_periodic",
+        "stamp_start",
+        "emit_recon_started",
+        "defer"
+      ],
+      "transitions": [
+        "___xstate_statemachine_init___->['reconciliation.idle']",
+        "SWEEP_DUE->['reconciliation.fetching']",
+        "*->['reconciliation.fetching']"
+      ],
+      "after_sweep_ids": [
+        "reconciliation.idle"
+      ],
+      "after_sweep_trace": [
+        "set_trigger_periodic",
+        "stamp_start",
+        "emit_recon_started",
+        "defer",
+        "store_exchange_state",
+        "store_divergences",
+        "persist_report",
+        "emit_recon_metrics",
+        "drain_deferred",
+        "reset_failures",
+        "broadcast_recon_complete"
+      ],
+      "unknown_order_replayed": false
+    },
+    "backing_off_state": [
+      "reconciliation.backing_off"
+    ],
+    "backing_off": {
+      "receipt": {
+        "changed": false,
+        "deferred": true
+      },
+      "deferred_count": 1,
+      "unhandled_hook": [
+        [
+          "UNKNOWN_ORDER",
+          "deferred"
+        ]
+      ],
+      "trace": [
+        "set_trigger_periodic",
+        "stamp_start",
+        "emit_recon_started",
+        "bump_failures",
+        "schedule_retry_deadline"
+      ],
+      "after_retry_ids": [
+        "reconciliation.backing_off"
+      ],
+      "after_retry_trace": [
+        "set_trigger_periodic",
+        "stamp_start",
+        "emit_recon_started",
+        "bump_failures",
+        "schedule_retry_deadline",
+        "stamp_start",
+        "emit_recon_started",
+        "defer",
+        "bump_failures",
+        "schedule_retry_deadline"
+      ],
+      "unknown_order_replayed": false
+    }
+  },
+  "x2_fail_leaves_source_state": {
+    "B20": {
+      "raising_action": "broadcast_lockout",
+      "intended_target": "risk_lockout.locked",
+      "ids_after": [
+        "risk_lockout.clear"
+      ],
+      "expected_source": "risk_lockout.clear",
+      "left_on_source": true,
+      "status": "error",
+      "tags": [],
+      "receipt_changed": false,
+      "receipt_error": "RuntimeError",
+      "side_effects_that_ran": [
+        "set_breach_manual",
+        "halt_new_orders",
+        "compute_until",
+        "schedule_expiry_deadline",
+        "raise_lockout_alert",
+        "audit_lockout",
+        "broadcast_lockout"
+      ],
+      "snapshot_refused": false,
+      "snapshot_status": "error",
+      "snapshot_state_ids": [
+        "risk_lockout.clear"
+      ],
+      "subsequent_event": {
+        "changed": false,
+        "ids": [
+          "risk_lockout.clear"
+        ],
+        "status": "error"
+      }
+    },
+    "B17": {
+      "raising_action": "enable_live_visual_language",
+      "intended_target": "live_gate.enabled",
+      "ids_after": [
+        "live_gate.eligible"
+      ],
+      "expected_source": "live_gate.eligible",
+      "left_on_source": true,
+      "status": "error",
+      "tags": [],
+      "receipt_changed": false,
+      "receipt_error": "RuntimeError",
+      "side_effects_that_ran": [
+        "record_evidence",
+        "record_enable",
+        "audit_live_enabled",
+        "broadcast_live_enabled",
+        "enable_live_visual_language"
+      ],
+      "snapshot_refused": false,
+      "snapshot_status": "error",
+      "snapshot_state_ids": [
+        "live_gate.eligible"
+      ],
+      "subsequent_event": {
+        "changed": false,
+        "ids": [
+          "live_gate.eligible"
+        ],
+        "status": "error"
+      }
+    }
+  }
+}

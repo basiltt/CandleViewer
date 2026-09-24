@@ -1,0 +1,26 @@
+{
+ "[async]V4.232.dropped_receipt_warns": {
+  "pass": true,
+  "note": "RuntimeWarnings=[\"send('SEND', wait=True) on 'order' was called from inside an action and its receipt was never awaited (#232). A plain `def` action cannot await, so it received this awaitable, not a Receipt. Send without wait=True, or hand the awaitable out (asyncio.ensure_future(...)) to be awaited elsewhere.\"]"
+ },
+ "[async]V4.232.handout_silent": {
+  "pass": true,
+  "note": "RuntimeWarnings=[]"
+ },
+ "[async]V4.233.sync_restore_matches_async": {
+  "pass": true,
+  "note": "async=['kill_switch.engaged'] sync=['kill_switch.engaged'] lanes=[]"
+ },
+ "[async]V4.233.sync_restore_chain_clean": {
+  "pass": true,
+  "note": "chain_trips=0"
+ },
+ "[async]V4.inbox.raise_is_loud_not_silent": {
+  "pass": true,
+  "note": "sent=4 refused=36 dropped=[]"
+ },
+ "[async]V4.inbox.survives_burst": {
+  "pass": true,
+  "note": "status='running' states=['order.lifecycle.draft', 'order.protection.not_required']"
+ }
+}

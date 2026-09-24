@@ -1,0 +1,28 @@
+{
+  "probe": "g1_loop_blocking_s6",
+  "py": "3.13.7",
+  "budget_ms": 5.0,
+  "scenarios": [
+    {
+      "scenario": "s6_20ms_sync_action_control",
+      "window_s": 2.011,
+      "events_processed": 98,
+      "throughput_ev_s": 48.7,
+      "tick_100ms": {
+        "ticks": 20,
+        "late_ms_p50": 28.667,
+        "late_ms_p95": 39.46,
+        "late_ms_max": 39.46,
+        "ticks_over_budget": 20
+      },
+      "loop_turn_gap_ms_p50": 20.5219,
+      "loop_turn_gap_ms_p999": 20.8076,
+      "loop_turn_gap_ms_max": 20.8076,
+      "slow_callback_log_hits": 0,
+      "slow_callback_sample": [],
+      "budget_ms": 5.0,
+      "producer_batch_per_loop_turn": 200,
+      "asyncio_debug_mode": false
+    }
+  ]
+}

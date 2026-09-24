@@ -1,0 +1,142 @@
+{
+  "None": {
+    "declared_max_iterations": 1000,
+    "svc_calls": [
+      134,
+      175,
+      188,
+      176,
+      187
+    ],
+    "svc_min": 134,
+    "svc_max": 188,
+    "svc_mean": 172,
+    "acts": [
+      137,
+      178,
+      191,
+      179,
+      190
+    ],
+    "last_error": [
+      "RuntimeError"
+    ],
+    "ids": [
+      [
+        "kill_switch.flattening"
+      ]
+    ]
+  },
+  "2": {
+    "declared_max_iterations": 2,
+    "svc_calls": [
+      193,
+      165,
+      187,
+      194,
+      176
+    ],
+    "svc_min": 165,
+    "svc_max": 194,
+    "svc_mean": 183,
+    "acts": [
+      196,
+      168,
+      190,
+      197,
+      179
+    ],
+    "last_error": [
+      "RuntimeError"
+    ],
+    "ids": [
+      [
+        "kill_switch.flattening"
+      ]
+    ]
+  },
+  "5": {
+    "declared_max_iterations": 5,
+    "svc_calls": [
+      183,
+      178,
+      188,
+      153,
+      184
+    ],
+    "svc_min": 153,
+    "svc_max": 188,
+    "svc_mean": 177.2,
+    "acts": [
+      186,
+      181,
+      191,
+      156,
+      187
+    ],
+    "last_error": [
+      "RuntimeError"
+    ],
+    "ids": [
+      [
+        "kill_switch.flattening"
+      ]
+    ]
+  },
+  "25": {
+    "declared_max_iterations": 25,
+    "svc_calls": [
+      187,
+      189,
+      161,
+      187,
+      192
+    ],
+    "svc_min": 161,
+    "svc_max": 192,
+    "svc_mean": 183.2,
+    "acts": [
+      191,
+      192,
+      164,
+      190,
+      195
+    ],
+    "last_error": [
+      "RuntimeError"
+    ],
+    "ids": [
+      [
+        "kill_switch.flattening"
+      ]
+    ]
+  },
+  "100": {
+    "declared_max_iterations": 100,
+    "svc_calls": [
+      181,
+      169,
+      156,
+      138,
+      167
+    ],
+    "svc_min": 138,
+    "svc_max": 181,
+    "svc_mean": 162.2,
+    "acts": [
+      184,
+      172,
+      159,
+      142,
+      170
+    ],
+    "last_error": [
+      "RuntimeError"
+    ],
+    "ids": [
+      [
+        "kill_switch.flattening"
+      ]
+    ]
+  }
+}

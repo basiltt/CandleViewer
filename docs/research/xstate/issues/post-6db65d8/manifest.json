@@ -1,0 +1,96 @@
+{
+ "new_issues": [
+  {
+   "file": "new/R8-01-priority-lane-charges-by-provenance-sheds-by-position.md",
+   "r8": "R8-01",
+   "severity": "Blocker",
+   "title": "Priority lane charges by provenance, sheds by position",
+   "labels": ["bug", "severity/blocker", "area/interpreter", "events"]
+  },
+  {
+   "file": "new/R8-02-def-service-uncancellable-and-not-unwound-by-rollback.md",
+   "r8": "R8-02",
+   "severity": "High",
+   "title": "A def service is uncancellable and is not unwound by rollback",
+   "labels": ["bug", "severity/high", "area/interpreter", "actors"]
+  },
+  {
+   "file": "new/R8-03-children-timeout-noop-against-def-entry-action.md",
+   "r8": "R8-03",
+   "severity": "High",
+   "title": "start(children_timeout=) is a no-op against a plain-def child entry action",
+   "labels": ["bug", "severity/high", "area/interpreter", "actors", "timers"]
+  },
+  {
+   "file": "new/R8-04-always-ondone-reentry-settle-tripped-silently.md",
+   "r8": "R8-04",
+   "severity": "Medium",
+   "title": "always -> invoking child -> onDone re-entry starves the inbox silently",
+   "labels": ["bug", "severity/medium", "area/interpreter", "sync-interpreter"]
+  },
+  {
+   "file": "new/R8-05-doneevent-afterevent-forgeable-and-exempt-from-strict.md",
+   "r8": "R8-05",
+   "severity": "High",
+   "title": "DoneEvent/AfterEvent carry no provenance marker and are exempt from strict",
+   "labels": ["bug", "severity/high", "area/interpreter", "validation", "events"]
+  },
+  {
+   "file": "new/R8-07-send-wait-resolves-over-empty-configuration.md",
+   "r8": "R8-07",
+   "severity": "Medium",
+   "title": "send(wait=True) can resolve success-shaped over an empty configuration",
+   "labels": ["bug", "severity/medium", "area/interpreter", "events"]
+  },
+  {
+   "file": "new/R8-08-configuration-state-ids-agreement-is-one-sided.md",
+   "r8": "R8-08",
+   "severity": "Medium",
+   "title": "configuration/state_ids agreement rule is one-sided",
+   "labels": ["bug", "severity/medium", "persistence", "validation"]
+  },
+  {
+   "file": "new/R8-09-on-interpreter-start-returns-torn-snapshot.md",
+   "r8": "R8-09",
+   "severity": "Medium",
+   "title": "get_persisted_snapshot() from on_interpreter_start returns a torn snapshot",
+   "labels": ["bug", "severity/medium", "persistence", "area/interpreter"]
+  },
+  {
+   "file": "new/R8-10-chain-owed-leaks-on-baseexception-and-is-settled-by-a-bare-counter.md",
+   "r8": "R8-10",
+   "severity": "Medium",
+   "title": "_chain_owed leaks on BaseException and is settled by a bare counter",
+   "labels": ["bug", "severity/medium", "area/interpreter", "actors"]
+  },
+  {
+   "file": "new/R8-11-service-kind-lap-parity-claim-is-false.md",
+   "r8": "R8-11",
+   "severity": "Medium",
+   "title": "Service-kind lap-parity claim (#179) is false for invoke ping-pong and rollback+onDone",
+   "labels": ["bug", "severity/medium", "area/interpreter", "actors", "documentation"]
+  }
+ ],
+ "comments": [
+  { "issue": 167, "file": "comments/167.md", "action": "comment" },
+  { "issue": 168, "file": "comments/168.md", "action": "comment" },
+  { "issue": 174, "file": "comments/174.md", "action": "comment" },
+  { "issue": 175, "file": "comments/175.md", "action": "comment" },
+  { "issue": 179, "file": "comments/179.md", "action": "comment" },
+  { "issue": 180, "file": "comments/180.md", "action": "comment" },
+  { "issue": 181, "file": "comments/181.md", "action": "comment+reopen" },
+  { "issue": 182, "file": "comments/182.md", "action": "comment" },
+  { "issue": 183, "file": "comments/183.md", "action": "comment" },
+  { "issue": 184, "file": "comments/184.md", "action": "comment" },
+  { "issue": 185, "file": "comments/185.md", "action": "comment" },
+  { "issue": 186, "file": "comments/186.md", "action": "comment+reopen" },
+  { "issue": 187, "file": "comments/187.md", "action": "comment" },
+  { "issue": 188, "file": "comments/188.md", "action": "comment" },
+  { "issue": 189, "file": "comments/189.md", "action": "comment" },
+  { "issue": 190, "file": "comments/190.md", "action": "comment" }
+ ],
+ "meta": {
+  "issue": 26,
+  "file": "meta-26.md"
+ }
+}

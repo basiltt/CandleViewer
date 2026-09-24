@@ -1,0 +1,36 @@
+{
+  "probe": "u6_fuzz_livelock_and_configkeys",
+  "py": "3.13.7",
+  "F1_shard_a": {
+    "seed": 20251,
+    "shapes": 90,
+    "cells": 270,
+    "must_trip_cells": 93,
+    "periodic_cells": 177,
+    "hangs": 0,
+    "violations": 0,
+    "violation_sample": []
+  },
+  "F1_shard_b": {
+    "seed": 20252,
+    "shapes": 90,
+    "cells": 270,
+    "must_trip_cells": 60,
+    "periodic_cells": 210,
+    "hangs": 0,
+    "violations": 0,
+    "violation_sample": []
+  },
+  "F1_total_cells": 540,
+  "F1_total_violations": 0,
+  "F2_config_key_fuzz": {
+    "trials": 120,
+    "top_level_caught": 120,
+    "top_level_missed": [],
+    "nested_caught": 120,
+    "nested_missed_count": 0,
+    "nested_missed_sample": [],
+    "note": "#216 validates TOP-LEVEL keys only. KNOWN_MACHINE_KEYS contains behavioural state-level keys (entry/exit/on/after/always/invoke/onDone/type/initial/states); a misspelling of any of them INSIDE a state is dropped silently even under strict_config=True."
+  },
+  "verdict": "CLEAN"
+}

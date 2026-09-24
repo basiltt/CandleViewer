@@ -1,0 +1,141 @@
+[
+ {
+  "id": "S4-01",
+  "title": "#170: the 4-way matrix denied / crashed-guard / unhandled / ok is fully discriminated by (denied, error is None, deferred, changed) - both engines",
+  "intent": "an OMS must tell 'rule refused' from 'rule broke' from 'nobody listened'",
+  "detail": {
+   "ok": true,
+   "rows": {
+    "sync:DENY": {
+     "denied": true,
+     "error": null,
+     "deferred": false,
+     "changed": false
+    },
+    "sync:CRASH": {
+     "denied": false,
+     "error": "RuntimeError",
+     "deferred": false,
+     "changed": false
+    },
+    "sync:NOPE": {
+     "denied": false,
+     "error": null,
+     "deferred": false,
+     "changed": false
+    },
+    "sync:OK": {
+     "denied": false,
+     "error": null,
+     "deferred": false,
+     "changed": true
+    },
+    "async:DENY": {
+     "denied": true,
+     "error": null,
+     "deferred": false,
+     "changed": false
+    },
+    "async:CRASH": {
+     "denied": false,
+     "error": "RuntimeError",
+     "deferred": false,
+     "changed": false
+    },
+    "async:NOPE": {
+     "denied": false,
+     "error": null,
+     "deferred": false,
+     "changed": false
+    },
+    "async:OK": {
+     "denied": false,
+     "error": null,
+     "deferred": false,
+     "changed": true
+    }
+   },
+   "distinct_sync_rows": 4
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "S4-02",
+  "title": "#171/#116: start(); send(CANCEL) yields the IDENTICAL trace on both engines 20x, and actors declared by the initial config are registered the instant `await start()` returns",
+  "intent": "'the machine is up' must mean the same thing on both engines",
+  "detail": {
+   "ok": true,
+   "sync_traces": [
+    "[\"done\", \"cancel\"]"
+   ],
+   "async_traces": [
+    "[\"done\", \"cancel\"]"
+   ],
+   "actors_at_start_return_sample": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "S4-03",
+  "title": "50x: the runaway TRIP POINT (lap count at the budget) is identical on every run and identical between the two engines",
+  "intent": "a nondeterministic trip point is a nondeterministic audit trail",
+  "detail": {
+   "ok": true,
+   "sync_lap_counts": [
+    1001
+   ],
+   "async_lap_counts": [
+    1001
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "S4-04",
+  "title": "#165/#176 perf PRs: two machines built from the SAME config dict share no mutable state - no cross-talk in context, history, actors or the shared init/exit sentinels",
+  "intent": "__slots__ + shared sentinels is exactly the change that aliases state",
+  "detail": {
+   "ok": true,
+   "i1_action_count": 16,
+   "i2_action_count": 1,
+   "i1_states": [
+    "sn.a"
+   ],
+   "i2_states": [
+    "sn.a"
+   ],
+   "aliased_context": false,
+   "aliased_list": false,
+   "aliased_history": false,
+   "config_dict_unmutated": true
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "S4-05",
+  "title": "#165/#176 __slots__: every declared slot is a real slot (no per-instance dict entry) and every documented public attribute still reads. NOTE: `__dict__` is deliberately retained (base_interpreter.py:464 comment), so ad-hoc attributes are ACCEPTED by design - recorded, not a defect.",
+  "intent": "__slots__ must not have dropped a public attribute while optimising",
+  "detail": {
+   "missing": [],
+   "adhoc_attrs_accepted_BY_DESIGN": [
+    "sync",
+    "async"
+   ],
+   "ok": true
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "S4-06",
+  "title": "#169: a snapshot taken at the ROOT while a CHILD actor is mid-entry either waits for the child to settle or refuses - it never records the child's half-applied context",
+  "intent": "the bounded-wait child path is exactly where the legality conjunction still lives; it must not leak a torn child blob",
+  "detail": {
+   "ok": true,
+   "child_registered": true,
+   "root_snapshots_accepted": 0,
+   "root_snapshots_refused": 2,
+   "torn_child_blobs": []
+  },
+  "status": "PASS"
+ }
+]

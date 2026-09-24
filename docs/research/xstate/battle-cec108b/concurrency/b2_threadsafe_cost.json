@@ -1,0 +1,30 @@
+{
+  "probe": "b2_threadsafe_cost",
+  "py": "3.13.7",
+  "v1_send_threadsafe": {
+    "threads": 32,
+    "events": 40000,
+    "ingest_s": 4.878,
+    "ingest_rate_ev_s": 8200.2,
+    "us_per_event": 121.95,
+    "tail_to_drain_s": 0.0,
+    "processed": 40000
+  },
+  "v2_call_soon_threadsafe_floor": {
+    "ingest_s": 0.674,
+    "ingest_rate_ev_s": 59304.4,
+    "us_per_event": 16.86
+  },
+  "v3_run_coroutine_threadsafe_floor": {
+    "events": 20000,
+    "ingest_s": 1.068,
+    "ingest_rate_ev_s": 18726.5,
+    "us_per_event": 53.4
+  },
+  "v4_in_loop_send_reference": {
+    "events": 40000,
+    "enqueue_s": 0.278,
+    "enqueue_rate_ev_s": 143761.7,
+    "end_to_end_rate_ev_s": 34013.9
+  }
+}

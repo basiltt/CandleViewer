@@ -1,0 +1,97 @@
+{
+  "probe": "p4_semantics_observability",
+  "py": "3.13.7",
+  "v1_guard_raise_fallback": {
+    "states": [
+      "g152.fallback"
+    ],
+    "fallback_taken": true,
+    "last_transition_ok": false,
+    "last_error": "RuntimeError('guard exploded')",
+    "guard_error_hooks": [
+      [
+        "guard_error",
+        null,
+        null
+      ]
+    ],
+    "pass": true
+  },
+  "v2_denied_matrix": {
+    "DENIED": {
+      "changed": false,
+      "denied": true,
+      "deferred": false,
+      "error": "None",
+      "unhandled_reasons": [
+        "guard_denied"
+      ],
+      "unhandled_hook_count": 1
+    },
+    "UNDECLARED": {
+      "changed": false,
+      "denied": false,
+      "deferred": false,
+      "error": "None",
+      "unhandled_reasons": [
+        "ignored"
+      ],
+      "unhandled_hook_count": 1
+    },
+    "pass": true
+  },
+  "v3_root_target": {
+    "strictTargets=True": "RootTargetError: Machine 'rt' has transition(s) targeting the machine root:\n ",
+    "strictTargets=False": "RootTargetError: Machine 'rt' has transition(s) targeting the machine root:\n ",
+    "pass": true
+  },
+  "v4_fail_async": {
+    "solo_child": {
+      "status": "stopped",
+      "config_cleared": true,
+      "error": "TransitionFailedError(\"Action 'explode' raised during a transition fro"
+    },
+    "parent": {
+      "states": [
+        "par.caught"
+      ],
+      "err": "TransitionFailedError(\"Action 'explode' raised during a transition fro"
+    },
+    "pass": true
+  },
+  "v4_fail_sync": {
+    "status": "stopped",
+    "config_cleared": true,
+    "error": "TransitionFailedError(\"Action 'explode' raised during a transition fro",
+    "pass": true
+  },
+  "v5_hook_matrix": {
+    "unresolved_target": {
+      "hooks": [
+        [
+          "dropped",
+          "Q",
+          "unresolved_target"
+        ]
+      ],
+      "count": 1
+    },
+    "chain_budget": {
+      "hooks": [
+        [
+          "dropped",
+          "SELF",
+          "chain_budget"
+        ]
+      ],
+      "count": 1,
+      "last_error": "RunawayChainError(\"Machine 'h159' exceeded 5 chained self-generated ev"
+    },
+    "on_invalid_event": {
+      "outcome": "InvalidEventError",
+      "count": 1
+    },
+    "pass": true
+  },
+  "result": "PASS"
+}

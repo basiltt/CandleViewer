@@ -1,0 +1,11 @@
+R12-02 equivalence probe, cwd= C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\refute
+   A v2 forged after-record           [async] fired=1 states=['vict.expired'] status=done
+   A v2 forged after-record           [sync] fired=1 states=['vict.expired'] status=done
+   B v3 verbatim state write          [async] fired=1 states=['vict.expired'] status=running
+   B v3 verbatim state write          [sync] fired=1 states=['vict.expired'] status=running
+   C v3 forged after (control)        [async] fired=0 states=['vict.waiting'] status=running
+   C v3 forged after (control)        [sync] fired=0 states=['vict.waiting'] status=running
+   A' v2 forged + min_version=3       [async] REFUSED SnapshotVersionError: Snapshot version 2 is below the caller's minimum_version=3. A payload 
+   A' v2 forged + min_version=3       [sync] REFUSED SnapshotVersionError: Snapshot version 2 is below the caller's minimum_version=3. A payload 
+   B' v3 verbatim + min_version=3     [async] fired=1 states=['vict.expired'] status=running
+   B' v3 verbatim + min_version=3     [sync] fired=1 states=['vict.expired'] status=running

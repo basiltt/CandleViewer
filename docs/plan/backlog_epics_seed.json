@@ -1,0 +1,443 @@
+[
+{
+"id": "E01",
+"title": "Governance & repo constitution",
+"train": "R0",
+"area": "area/docs",
+"modules": "\u00e2\u20ac\u201d",
+"domains": "\u00e2\u20ac\u201d",
+"pts": 21
+},
+{
+"id": "E02",
+"title": "Monorepo scaffold & toolchain",
+"train": "R0",
+"area": "area/backend-platform, area/frontend-platform",
+"modules": "M1",
+"domains": "\u00e2\u20ac\u201d",
+"pts": 42
+},
+{
+"id": "E03",
+"title": "CI/CD pipeline & environments",
+"train": "R0",
+"area": "area/infra-devops",
+"modules": "\u00e2\u20ac\u201d",
+"domains": "\u00e2\u20ac\u201d",
+"pts": 42
+},
+{
+"id": "E04",
+"title": "Observability baseline",
+"train": "R0",
+"area": "area/infra-devops",
+"modules": "M24",
+"domains": "OBS",
+"pts": 26
+},
+{
+"id": "E05",
+"title": "Design system v0 (tokens, primitives, Storybook)",
+"train": "R0",
+"area": "area/design-system",
+"modules": "\u00e2\u20ac\u201d",
+"domains": "SET",
+"pts": 34
+},
+{
+"id": "E06",
+"title": "Chart-engine spike & ADR (WebGL, Electron vs Tauri)",
+"train": "R0",
+"area": "area/chart-engine",
+"modules": "\u00e2\u20ac\u201d",
+"domains": "CHART",
+"pts": 21
+},
+{
+"id": "E07",
+"title": "Storage spike & data-tier wiring (QuestDB/Parquet/Postgres)",
+"train": "R0",
+"area": "area/backend-platform",
+"modules": "M10",
+"domains": "\u00e2\u20ac\u201d",
+"pts": 26
+},
+{
+"id": "E08",
+"title": "Bybit adapter & ingestion skeleton",
+"train": "R0",
+"area": "area/ingestion",
+"modules": "M3, M4, M5, M6",
+"domains": "MKT",
+"pts": 42
+},
+{
+"id": "E09",
+"title": "Auth, sessions, 2FA & RBAC",
+"train": "R0",
+"area": "area/auth-rbac",
+"modules": "M18, M19",
+"domains": "ONB",
+"pts": 34
+},
+{
+"id": "E10",
+"title": "App shell, routing & Electron wrapper",
+"train": "R0",
+"area": "area/electron-shell",
+"modules": "\u00e2\u20ac\u201d",
+"domains": "SET",
+"pts": 34
+},
+{
+"id": "E11",
+"title": "Chart engine core (scene, axes, interaction, LOD)",
+"train": "R1",
+"area": "area/chart-engine",
+"modules": "\u00e2\u20ac\u201d",
+"domains": "CHART",
+"pts": 89
+},
+{
+"id": "E12",
+"title": "Bar builders & series rendering (time/tick/volume/range/renko)",
+"train": "R1",
+"area": "area/chart-engine, area/ingestion",
+"modules": "M7, M8",
+"domains": "CHART, MKT",
+"pts": 63
+},
+{
+"id": "E13",
+"title": "Indicators framework & v1 indicator set",
+"train": "R1",
+"area": "area/charting-ui",
+"modules": "M9",
+"domains": "IND",
+"pts": 47
+},
+{
+"id": "E14",
+"title": "Drawing tools",
+"train": "R1",
+"area": "area/charting-ui",
+"modules": "\u00e2\u20ac\u201d",
+"domains": "DRAW",
+"pts": 47
+},
+{
+"id": "E15",
+"title": "Layouts & workspaces",
+"train": "R1",
+"area": "area/charting-ui",
+"modules": "M10",
+"domains": "LAY",
+"pts": 34
+},
+{
+"id": "E16",
+"title": "Recorder, retention & disk budget",
+"train": "R1",
+"area": "area/recorder-replay",
+"modules": "M10, M11",
+"domains": "REC",
+"pts": 47
+},
+{
+"id": "E17",
+"title": "Market-data WS protocol & binary framing",
+"train": "R1",
+"area": "area/backend-platform",
+"modules": "M23",
+"domains": "MKT",
+"pts": 34
+},
+{
+"id": "E18",
+"title": "Footprint",
+"train": "R2",
+"area": "area/order-flow",
+"modules": "M9",
+"domains": "FP",
+"pts": 55
+},
+{
+"id": "E19",
+"title": "Volume / delta / TPO profiles",
+"train": "R2",
+"area": "area/order-flow",
+"modules": "M9",
+"domains": "VP",
+"pts": 34
+},
+{
+"id": "E20",
+"title": "Deep-Stats rows",
+"train": "R2",
+"area": "area/order-flow",
+"modules": "M9",
+"domains": "DS",
+"pts": 26
+},
+{
+"id": "E21",
+"title": "DOM ladder & liquidity heatmap",
+"train": "R2",
+"area": "area/order-flow, area/chart-engine",
+"modules": "M7, M9",
+"domains": "DOM",
+"pts": 55
+},
+{
+"id": "E22",
+"title": "Big trades & bubbles",
+"train": "R2",
+"area": "area/order-flow",
+"modules": "M9",
+"domains": "BIG",
+"pts": 21
+},
+{
+"id": "E23",
+"title": "CVD & delta panes",
+"train": "R2",
+"area": "area/order-flow",
+"modules": "M9",
+"domains": "CVD",
+"pts": 26
+},
+{
+"id": "E24",
+"title": "Derivatives metrics (OI, funding, liquidations, basis)",
+"train": "R2",
+"area": "area/order-flow",
+"modules": "M4, M9",
+"domains": "DERIV",
+"pts": 34
+},
+{
+"id": "E25",
+"title": "Detectors: tape speed, imbalance, regime, iceberg/stop-run *(estimated)*",
+"train": "R2",
+"area": "area/order-flow",
+"modules": "M9",
+"domains": "DET",
+"pts": 34
+},
+{
+"id": "E26",
+"title": "Replay engine & scrubbing",
+"train": "R2",
+"area": "area/recorder-replay",
+"modules": "M12",
+"domains": "RPL",
+"pts": 42
+},
+{
+"id": "E27",
+"title": "Accounts, sub-accounts & API-key vault",
+"train": "R3",
+"area": "area/accounts-admin",
+"modules": "M2, M13",
+"domains": "ACCT",
+"pts": 34
+},
+{
+"id": "E28",
+"title": "Per-account profiles & trade groups",
+"train": "R3",
+"area": "area/accounts-admin",
+"modules": "M13",
+"domains": "PROF",
+"pts": 26
+},
+{
+"id": "E29",
+"title": "OMS core & order state machine",
+"train": "R3",
+"area": "area/oms-execution",
+"modules": "M14",
+"domains": "ORD, POS",
+"pts": 42
+},
+{
+"id": "E30",
+"title": "Order ticket UI",
+"train": "R3",
+"area": "area/oms-execution",
+"modules": "M23",
+"domains": "ORD",
+"pts": 34
+},
+{
+"id": "E31",
+"title": "Chart & DOM trading interactions",
+"train": "R3",
+"area": "area/oms-execution, area/charting-ui",
+"modules": "M14",
+"domains": "ORD",
+"pts": 26
+},
+{
+"id": "E32",
+"title": "Brackets, scaled orders & native SL invariant",
+"train": "R3",
+"area": "area/oms-execution",
+"modules": "M14, M17",
+"domains": "ALGO",
+"pts": 34
+},
+{
+"id": "E33",
+"title": "Emulated algos (OCO, iceberg, TWAP, chase)",
+"train": "R3",
+"area": "area/oms-execution",
+"modules": "M14",
+"domains": "ALGO",
+"pts": 34
+},
+{
+"id": "E34",
+"title": "Trade-group fan-out & rate-limit governor",
+"train": "R3",
+"area": "area/oms-execution",
+"modules": "M4, M13, M14",
+"domains": "PROF, ORD",
+"pts": 34
+},
+{
+"id": "E35",
+"title": "Rule engine IR, compiler & runtime",
+"train": "R3",
+"area": "area/rule-engine",
+"modules": "M15",
+"domains": "RULE",
+"pts": 42
+},
+{
+"id": "E36",
+"title": "Rule form editor",
+"train": "R3",
+"area": "area/rule-engine",
+"modules": "\u00e2\u20ac\u201d",
+"domains": "RULE",
+"pts": 21
+},
+{
+"id": "E37",
+"title": "Rule node-graph editor",
+"train": "R3",
+"area": "area/rule-engine",
+"modules": "\u00e2\u20ac\u201d",
+"domains": "RULE",
+"pts": 26
+},
+{
+"id": "E38",
+"title": "Paper trading & demo/live parity",
+"train": "R3",
+"area": "area/paper-trading",
+"modules": "M16",
+"domains": "PAPER",
+"pts": 26
+},
+{
+"id": "E39",
+"title": "Risk caps, lockouts & kill-switch",
+"train": "R3",
+"area": "area/oms-execution",
+"modules": "M17",
+"domains": "POS, ADMIN",
+"pts": 26
+},
+{
+"id": "E40",
+"title": "Alerts & notifications",
+"train": "R3",
+"area": "area/rule-engine",
+"modules": "M22",
+"domains": "ALRT",
+"pts": 21
+},
+{
+"id": "E41",
+"title": "Journal & analytics",
+"train": "R3",
+"area": "area/journal-analytics",
+"modules": "M20",
+"domains": "JRN",
+"pts": 26
+},
+{
+"id": "E42",
+"title": "Admin screens (users, roles, audit, health, flags)",
+"train": "R3",
+"area": "area/accounts-admin",
+"modules": "M19, M21",
+"domains": "ADMIN",
+"pts": 34
+},
+{
+"id": "E43",
+"title": "Security hardening & pen-test remediation",
+"train": "R4",
+"area": "area/auth-rbac",
+"modules": "M2, M18, M19",
+"domains": "ADMIN",
+"pts": 55
+},
+{
+"id": "E44",
+"title": "Live-enablement gating & environment separation",
+"train": "R4",
+"area": "area/oms-execution",
+"modules": "M1, M14, M17",
+"domains": "PAPER, ADMIN",
+"pts": 42
+},
+{
+"id": "E45",
+"title": "Reconciliation, chaos & failover resilience",
+"train": "R4",
+"area": "area/backend-platform",
+"modules": "M4, M14",
+"domains": "OBS",
+"pts": 47
+},
+{
+"id": "E46",
+"title": "Performance hardening & budget enforcement",
+"train": "R5",
+"area": "area/chart-engine, area/backend-platform",
+"modules": "all",
+"domains": "CHART, OBS",
+"pts": 55
+},
+{
+"id": "E47",
+"title": "Accessibility conformance (WCAG 2.2 AA)",
+"train": "R5",
+"area": "area/design-system",
+"modules": "\u00e2\u20ac\u201d",
+"domains": "SET",
+"pts": 42
+},
+{
+"id": "E48",
+"title": "Documentation, runbooks & GA readiness",
+"train": "R5",
+"area": "area/docs",
+"modules": "\u00e2\u20ac\u201d",
+"domains": "\u00e2\u20ac\u201d",
+"pts": 34
+},
+{
+"id": "E49",
+"title": "Defect burn-down & design-QA sweep",
+"train": "R5",
+"area": "cross",
+"modules": "all",
+"domains": "all",
+"pts": 55
+}
+]

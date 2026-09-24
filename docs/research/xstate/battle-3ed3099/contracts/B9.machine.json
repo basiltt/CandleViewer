@@ -1,0 +1,298 @@
+{
+  "id": "rule_instance",
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "defer",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "initial": "draft",
+  "context": {
+    "rule_id": null,
+    "version": 0,
+    "scope_key": null,
+    "consecutive_errors": 0,
+    "kill_switch_at": 5,
+    "fires_this_hour": 0,
+    "fires_today": 0,
+    "simulation_fires": 0,
+    "simulation_started_us": null,
+    "cooldown_until_us": null,
+    "once_satisfied": false,
+    "last_skip_reason": null
+  },
+  "states": {
+    "draft": {
+      "on": {
+        "SAVE": {
+          "target": "#rule_instance.simulating"
+        }
+      }
+    },
+    "simulating": {
+      "entry": [
+        "stamp_simulation_start"
+      ],
+      "on": {
+        "TRIGGER": {
+          "actions": [
+            "evaluate_and_record_simulated"
+          ]
+        },
+        "SIM_FIRE": {
+          "actions": [
+            "bump_simulation_fires"
+          ]
+        },
+        "ARM_REQUESTED": [
+          {
+            "target": "#rule_instance.armed",
+            "guard": "promotion_gate_satisfied_and_permitted"
+          },
+          {
+            "actions": [
+              "reject_promotion_with_reason"
+            ]
+          }
+        ],
+        "EDIT": {
+          "target": "#rule_instance.simulating",
+          "reenter": true,
+          "actions": [
+            "reset_simulation_counters"
+          ]
+        }
+      }
+    },
+    "armed": {
+      "entry": [
+        "subscribe_triggers",
+        "emit_armed_audit"
+      ],
+      "exit": [
+        "unsubscribe_triggers"
+      ],
+      "on": {
+        "TRIGGER": [
+          {
+            "actions": [
+              "record_skip_debounced"
+            ],
+            "guard": "debounce_blocked"
+          },
+          {
+            "actions": [
+              "record_skip_stale_data"
+            ],
+            "guard": "data_stale"
+          },
+          {
+            "actions": [
+              "record_skip_limit"
+            ],
+            "guard": "limits_blocked"
+          },
+          {
+            "target": "#rule_instance.evaluating"
+          }
+        ],
+        "FEED_DEGRADED": {
+          "target": "#rule_instance.paused_degraded"
+        },
+        "KILL_SWITCH": {
+          "target": "#rule_instance.kill_switched"
+        },
+        "DISARM": {
+          "target": "#rule_instance.disarmed"
+        },
+        "EDIT": {
+          "target": "#rule_instance.simulating",
+          "actions": [
+            "reset_simulation_counters"
+          ]
+        }
+      }
+    },
+    "evaluating": {
+      "invoke": {
+        "id": "eval",
+        "src": "evaluate_condition_dag",
+        "onDone": [
+          {
+            "target": "#rule_instance.pending_confirmation",
+            "guard": "condition_true_and_requires_confirmation"
+          },
+          {
+            "target": "#rule_instance.acting",
+            "guard": "condition_true"
+          },
+          {
+            "target": "#rule_instance.armed",
+            "actions": [
+              "log_no_op_with_values"
+            ]
+          }
+        ],
+        "onError": [
+          {
+            "target": "#rule_instance.kill_switched",
+            "guard": "error_budget_exhausted"
+          },
+          {
+            "target": "#rule_instance.armed",
+            "actions": [
+              "bump_consecutive_errors"
+            ]
+          }
+        ]
+      },
+      "on": {
+        "*": {
+          "actions": [
+            "defer"
+          ]
+        }
+      }
+    },
+    "pending_confirmation": {
+      "entry": [
+        "queue_for_human_confirmation",
+        "arm_confirmation_ttl"
+      ],
+      "on": {
+        "CONFIRMED": {
+          "target": "#rule_instance.acting"
+        },
+        "CONFIRM_TIMEOUT": {
+          "target": "#rule_instance.armed",
+          "actions": [
+            "record_skip_unconfirmed"
+          ]
+        },
+        "REJECTED": {
+          "target": "#rule_instance.armed",
+          "actions": [
+            "record_skip_rejected"
+          ]
+        }
+      }
+    },
+    "acting": {
+      "entry": [
+        "assert_safety_limits"
+      ],
+      "invoke": {
+        "id": "act",
+        "src": "dispatch_actions_in_order",
+        "onDone": {
+          "target": "#rule_instance.cooling_down",
+          "actions": [
+            "record_fire",
+            "reset_consecutive_errors"
+          ]
+        },
+        "onError": [
+          {
+            "target": "#rule_instance.kill_switched",
+            "guard": "error_budget_exhausted",
+            "actions": [
+              "raise_critical_alert"
+            ]
+          },
+          {
+            "target": "#rule_instance.cooling_down",
+            "actions": [
+              "record_partial_fire",
+              "bump_consecutive_errors",
+              "raise_partial_alert"
+            ]
+          }
+        ]
+      },
+      "on": {
+        "*": {
+          "actions": [
+            "defer"
+          ]
+        }
+      }
+    },
+    "cooling_down": {
+      "entry": [
+        "stamp_cooldown_deadline"
+      ],
+      "always": [
+        {
+          "target": "#rule_instance.spent",
+          "guard": "once_satisfied"
+        }
+      ],
+      "on": {
+        "COOLDOWN_DUE": {
+          "target": "#rule_instance.armed",
+          "actions": [
+            "drain_deferred"
+          ]
+        },
+        "KILL_SWITCH": {
+          "target": "#rule_instance.kill_switched"
+        },
+        "DISARM": {
+          "target": "#rule_instance.disarmed"
+        }
+      }
+    },
+    "paused_degraded": {
+      "entry": [
+        "emit_rules_paused_notice"
+      ],
+      "on": {
+        "FEED_HEALTHY": {
+          "target": "#rule_instance.armed"
+        },
+        "KILL_SWITCH": {
+          "target": "#rule_instance.kill_switched"
+        },
+        "DISARM": {
+          "target": "#rule_instance.disarmed"
+        }
+      }
+    },
+    "kill_switched": {
+      "tags": [
+        "needs_human_rearm"
+      ],
+      "entry": [
+        "raise_critical_alert",
+        "emit_kill_switch_audit"
+      ],
+      "on": {
+        "HUMAN_REARM": {
+          "target": "#rule_instance.armed",
+          "guard": "rearm_permitted_and_elevated",
+          "actions": [
+            "reset_consecutive_errors"
+          ]
+        }
+      }
+    },
+    "spent": {
+      "tags": [
+        "once_satisfied"
+      ],
+      "on": {
+        "RESET_ONCE": {
+          "target": "#rule_instance.armed"
+        }
+      }
+    },
+    "disarmed": {
+      "on": {
+        "ARM_REQUESTED": {
+          "target": "#rule_instance.armed",
+          "guard": "promotion_gate_satisfied_and_permitted"
+        }
+      }
+    }
+  }
+}

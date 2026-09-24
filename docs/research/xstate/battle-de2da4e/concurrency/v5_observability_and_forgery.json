@@ -1,0 +1,225 @@
+{
+  "probe": "v5_observability_and_forgery",
+  "py": "3.13.7",
+  "O1_exactly_once": [
+    {
+      "kind": "def",
+      "kicks": 3,
+      "chain_trips": 3,
+      "hook_calls": 3,
+      "dropped": 3,
+      "progression": [
+        {
+          "chain_trips": 1,
+          "hook_calls": 1,
+          "dropped": 1
+        },
+        {
+          "chain_trips": 2,
+          "hook_calls": 2,
+          "dropped": 2
+        },
+        {
+          "chain_trips": 3,
+          "hook_calls": 3,
+          "dropped": 3
+        }
+      ],
+      "order_head": [
+        "dropped",
+        "hook:RunawayChainError",
+        "dropped",
+        "hook:RunawayChainError",
+        "dropped",
+        "hook:RunawayChainError"
+      ]
+    },
+    {
+      "kind": "async def",
+      "kicks": 3,
+      "chain_trips": 3,
+      "hook_calls": 3,
+      "dropped": 3,
+      "progression": [
+        {
+          "chain_trips": 1,
+          "hook_calls": 1,
+          "dropped": 1
+        },
+        {
+          "chain_trips": 2,
+          "hook_calls": 2,
+          "dropped": 2
+        },
+        {
+          "chain_trips": 3,
+          "hook_calls": 3,
+          "dropped": 3
+        }
+      ],
+      "order_head": [
+        "dropped",
+        "hook:RunawayChainError",
+        "dropped",
+        "hook:RunawayChainError",
+        "dropped",
+        "hook:RunawayChainError"
+      ]
+    }
+  ],
+  "O2_clear_idempotent": [
+    {
+      "kind": "def",
+      "trips_first": 1,
+      "latched_first": true,
+      "cleared_once": true,
+      "cleared_twice": true,
+      "count_kept_after_clear": true,
+      "trips_after_second_kick": 2,
+      "relatched": true,
+      "second_clear_error": null
+    },
+    {
+      "kind": "async def",
+      "trips_first": 1,
+      "latched_first": true,
+      "cleared_once": true,
+      "cleared_twice": true,
+      "count_kept_after_clear": true,
+      "trips_after_second_kick": 2,
+      "relatched": true,
+      "second_clear_error": null
+    }
+  ],
+  "O3_sync_parity": [
+    {
+      "engine": "sync",
+      "kind": "def",
+      "chain_trips": 1,
+      "hook_calls": 1,
+      "dropped": 1,
+      "latched": true,
+      "cleared": true,
+      "count_kept": true,
+      "order_head": [
+        "dropped",
+        "hook:RunawayChainError"
+      ]
+    },
+    {
+      "engine": "sync",
+      "kind": "async def",
+      "unsupported": true
+    }
+  ],
+  "O4_last_error_divergence": [
+    {
+      "kind": "def",
+      "last_error_after_trip": "RunawayChainError",
+      "last_chain_error_after_trip": "RunawayChainError",
+      "last_error_after_benign": null,
+      "last_chain_error_after_benign": "RunawayChainError",
+      "chain_trips": 1
+    },
+    {
+      "kind": "async def",
+      "last_error_after_trip": "RunawayChainError",
+      "last_chain_error_after_trip": "RunawayChainError",
+      "last_error_after_benign": null,
+      "last_chain_error_after_benign": "RunawayChainError",
+      "chain_trips": 1
+    }
+  ],
+  "X1_forgery": [
+    {
+      "kind": "def",
+      "vectors": [
+        {
+          "vector": "negative_remaining_ms",
+          "states": [
+            "v5xa.idle"
+          ],
+          "n": 0,
+          "note": "a negative remaining must be clamped, not produce a hang or a negative-delay schedule"
+        },
+        {
+          "vector": "221_reemit_laundering",
+          "hop2_record": {
+            "type": "REAL",
+            "payload": {
+              "v": "FORGED"
+            },
+            "remaining_ms": 1000.0,
+            "send_id": "f"
+          },
+          "keys_added_by_reemit": [],
+          "keys_removed_by_reemit": [],
+          "verbatim": true,
+          "note": "#221 says the parked record is re-emitted VERBATIM. If hop 2 stamped provenance the forger did not write, that would be a NEW minting channel; verbatim means the forgery is neither laundered nor upgraded -- it stays exactly the D11-concurrency-1 surface, not wider."
+        },
+        {
+          "vector": "forged_lane_plus_engine_flag",
+          "states": [
+            "v5xc.moved"
+          ],
+          "n": 1,
+          "note": "recorded against the KNOWN-OPEN D11-concurrency-1; filed only if it does something D11-1 does not"
+        },
+        {
+          "vector": "forged_chain_trips",
+          "live_trips_before_snapshot": 1,
+          "snapshot_has_chain_trips_key": true,
+          "restored_chain_trips": 0,
+          "restored_latch": null,
+          "note": "chain_trips is NOT part of the snapshot layout, so a forged key is inert -- the counter is per-interpreter."
+        }
+      ]
+    },
+    {
+      "kind": "async def",
+      "vectors": [
+        {
+          "vector": "negative_remaining_ms",
+          "states": [
+            "v5xa.idle"
+          ],
+          "n": 0,
+          "note": "a negative remaining must be clamped, not produce a hang or a negative-delay schedule"
+        },
+        {
+          "vector": "221_reemit_laundering",
+          "hop2_record": {
+            "type": "REAL",
+            "payload": {
+              "v": "FORGED"
+            },
+            "remaining_ms": 1000.0,
+            "send_id": "f"
+          },
+          "keys_added_by_reemit": [],
+          "keys_removed_by_reemit": [],
+          "verbatim": true,
+          "note": "#221 says the parked record is re-emitted VERBATIM. If hop 2 stamped provenance the forger did not write, that would be a NEW minting channel; verbatim means the forgery is neither laundered nor upgraded -- it stays exactly the D11-concurrency-1 surface, not wider."
+        },
+        {
+          "vector": "forged_lane_plus_engine_flag",
+          "states": [
+            "v5xc.moved"
+          ],
+          "n": 1,
+          "note": "recorded against the KNOWN-OPEN D11-concurrency-1; filed only if it does something D11-1 does not"
+        },
+        {
+          "vector": "forged_chain_trips",
+          "live_trips_before_snapshot": 1,
+          "snapshot_has_chain_trips_key": true,
+          "restored_chain_trips": 0,
+          "restored_latch": null,
+          "note": "chain_trips is NOT part of the snapshot layout, so a forged key is inert -- the counter is per-interpreter."
+        }
+      ]
+    }
+  ],
+  "failures": [],
+  "verdict": "CLEAN"
+}

@@ -1,0 +1,194 @@
+{
+  "probe": "t2_states_to_invoke_matrix",
+  "py": "3.13.7",
+  "claim": "#204 SCXML 6.1: entered+exited in one macrostep never submits; still-active submits exactly once",
+  "rows": [
+    {
+      "engine": "async",
+      "shape": "M1_roll_forward",
+      "kind": "def",
+      "expect": 0,
+      "state": [
+        "t2.past"
+      ],
+      "submitted": 0
+    },
+    {
+      "engine": "sync",
+      "shape": "M1_roll_forward",
+      "kind": "def",
+      "expect": 0,
+      "state": [
+        "t2.past"
+      ],
+      "submitted": 0
+    },
+    {
+      "engine": "async",
+      "shape": "M1_roll_forward",
+      "kind": "async def",
+      "expect": 0,
+      "state": [
+        "t2.past"
+      ],
+      "submitted": 0
+    },
+    {
+      "engine": "sync",
+      "shape": "M1_roll_forward",
+      "kind": "async def",
+      "expect": 0,
+      "state": [
+        "t2.past"
+      ],
+      "submitted": 0
+    },
+    {
+      "engine": "async",
+      "shape": "M2_stay",
+      "kind": "def",
+      "expect": 1,
+      "state": [
+        "t2.settled"
+      ],
+      "submitted": 1
+    },
+    {
+      "engine": "sync",
+      "shape": "M2_stay",
+      "kind": "def",
+      "expect": 1,
+      "state": [
+        "t2.settled"
+      ],
+      "submitted": 1
+    },
+    {
+      "engine": "async",
+      "shape": "M2_stay",
+      "kind": "async def",
+      "expect": 1,
+      "state": [
+        "t2.settled"
+      ],
+      "submitted": 1
+    },
+    {
+      "engine": "sync",
+      "shape": "M2_stay",
+      "kind": "async def",
+      "expect": 1,
+      "error": "NotSupportedError: Service 'svc' is async and not supported.",
+      "submitted": 0
+    },
+    {
+      "engine": "async",
+      "shape": "M3_parallel_sibling_final",
+      "kind": "def",
+      "expect": 1,
+      "state": [
+        "t2.settled"
+      ],
+      "submitted": 1
+    },
+    {
+      "engine": "sync",
+      "shape": "M3_parallel_sibling_final",
+      "kind": "def",
+      "expect": 1,
+      "state": [
+        "t2.settled"
+      ],
+      "submitted": 1
+    },
+    {
+      "engine": "async",
+      "shape": "M3_parallel_sibling_final",
+      "kind": "async def",
+      "expect": 1,
+      "state": [
+        "t2.settled"
+      ],
+      "submitted": 1
+    },
+    {
+      "engine": "sync",
+      "shape": "M3_parallel_sibling_final",
+      "kind": "async def",
+      "expect": 1,
+      "error": "NotSupportedError: Service 'svc' is async and not supported.",
+      "submitted": 0
+    },
+    {
+      "engine": "async",
+      "shape": "M4_rollback",
+      "kind": "def",
+      "expect": 0,
+      "state": [
+        "t2.idle"
+      ],
+      "submitted": 0
+    },
+    {
+      "engine": "sync",
+      "shape": "M4_rollback",
+      "kind": "def",
+      "expect": 0,
+      "state": [
+        "t2.idle"
+      ],
+      "submitted": 0
+    },
+    {
+      "engine": "async",
+      "shape": "M4_rollback",
+      "kind": "async def",
+      "expect": 0,
+      "state": [
+        "t2.idle"
+      ],
+      "submitted": 0
+    },
+    {
+      "engine": "sync",
+      "shape": "M4_rollback",
+      "kind": "async def",
+      "expect": 0,
+      "state": [
+        "t2.idle"
+      ],
+      "submitted": 0
+    }
+  ],
+  "violations": [
+    [
+      "sync",
+      "M2_stay",
+      "async def",
+      0,
+      1
+    ],
+    [
+      "sync",
+      "M3_parallel_sibling_final",
+      "async def",
+      0,
+      1
+    ]
+  ],
+  "engine_parity_gaps": [
+    [
+      "M2_stay",
+      "async def",
+      1,
+      0
+    ],
+    [
+      "M3_parallel_sibling_final",
+      "async def",
+      1,
+      0
+    ]
+  ],
+  "result": "FAIL"
+}

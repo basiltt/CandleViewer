@@ -1,0 +1,534 @@
+[
+  {
+    "id": "O-01",
+    "engine": "async",
+    "title": "Actions on one transition run in declaration order",
+    "spec": "SCXML 3.13: executable content runs in document order",
+    "expected": [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "observed": [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-01",
+    "engine": "sync",
+    "title": "Actions on one transition run in declaration order",
+    "spec": "SCXML 3.13: executable content runs in document order",
+    "expected": [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "observed": [
+      "a1",
+      "a2",
+      "a3"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-02",
+    "engine": "async",
+    "title": "assign is applied in order among plain actions, and a later action observes the earlier assignment",
+    "spec": "SCXML 4.3 <assign> mutates the datamodel immediately; subsequent executable content sees the new value",
+    "expected": {
+      "log": [
+        "set1",
+        "read=1",
+        "set2",
+        "read=2"
+      ],
+      "n": 2
+    },
+    "observed": {
+      "log": [
+        "set1",
+        "read=1",
+        "set2",
+        "read=2"
+      ],
+      "n": 2
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-02",
+    "engine": "sync",
+    "title": "assign is applied in order among plain actions, and a later action observes the earlier assignment",
+    "spec": "SCXML 4.3 <assign> mutates the datamodel immediately; subsequent executable content sees the new value",
+    "expected": {
+      "log": [
+        "set1",
+        "read=1",
+        "set2",
+        "read=2"
+      ],
+      "n": 2
+    },
+    "observed": {
+      "log": [
+        "set1",
+        "read=1",
+        "set2",
+        "read=2"
+      ],
+      "n": 2
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-03",
+    "engine": "async",
+    "title": "An entry action observes a context change made by the transition's own actions",
+    "spec": "SCXML 3.13: exit, transition content, entry run in sequence against one datamodel",
+    "expected": [
+      "trans_set",
+      "entry_read=5"
+    ],
+    "observed": [
+      "trans_set",
+      "entry_read=5"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-03",
+    "engine": "sync",
+    "title": "An entry action observes a context change made by the transition's own actions",
+    "spec": "SCXML 3.13: exit, transition content, entry run in sequence against one datamodel",
+    "expected": [
+      "trans_set",
+      "entry_read=5"
+    ],
+    "observed": [
+      "trans_set",
+      "entry_read=5"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-04",
+    "engine": "async",
+    "title": "An exit action runs BEFORE the transition actions and its context change is visible to them",
+    "spec": "SCXML 3.13: the exit set's onexit content precedes the transition's",
+    "expected": [
+      "exit_set",
+      "trans_read=9"
+    ],
+    "observed": [
+      "exit_set",
+      "trans_read=9"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-04",
+    "engine": "sync",
+    "title": "An exit action runs BEFORE the transition actions and its context change is visible to them",
+    "spec": "SCXML 3.13: the exit set's onexit content precedes the transition's",
+    "expected": [
+      "exit_set",
+      "trans_read=9"
+    ],
+    "observed": [
+      "exit_set",
+      "trans_read=9"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-05",
+    "engine": "async",
+    "title": "A targetless transition's actions run with NO exit and NO entry, even when the state declares both",
+    "spec": "SCXML 3.13: a targetless transition performs no state change, so the exit/entry sets are empty",
+    "expected": [
+      "only_trans"
+    ],
+    "observed": [
+      "only_trans"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-05",
+    "engine": "sync",
+    "title": "A targetless transition's actions run with NO exit and NO entry, even when the state declares both",
+    "spec": "SCXML 3.13: a targetless transition performs no state change, so the exit/entry sets are empty",
+    "expected": [
+      "only_trans"
+    ],
+    "observed": [
+      "only_trans"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-06",
+    "engine": "async",
+    "title": "A targetless transition on an ANCESTOR does not exit the active descendant",
+    "spec": "SCXML 3.13: targetless transitions are internal regardless of the source state's depth",
+    "expected": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "anc"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "anc"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-06",
+    "engine": "sync",
+    "title": "A targetless transition on an ANCESTOR does not exit the active descendant",
+    "spec": "SCXML 3.13: targetless transitions are internal regardless of the source state's depth",
+    "expected": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "anc"
+      ]
+    },
+    "observed": {
+      "ids": [
+        "m.P.a"
+      ],
+      "log": [
+        "anc"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-07",
+    "engine": "async",
+    "title": "Entry actions of nested states run outermost-first in a single entry pass",
+    "spec": "SCXML 3.9 enterStates: ancestors are entered before descendants",
+    "expected": [
+      "eP",
+      "ea",
+      "ea1"
+    ],
+    "observed": [
+      "eP",
+      "ea",
+      "ea1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-07",
+    "engine": "sync",
+    "title": "Entry actions of nested states run outermost-first in a single entry pass",
+    "spec": "SCXML 3.9 enterStates: ancestors are entered before descendants",
+    "expected": [
+      "eP",
+      "ea",
+      "ea1"
+    ],
+    "observed": [
+      "eP",
+      "ea",
+      "ea1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-08",
+    "engine": "async",
+    "title": "Across an eventless hop the ordering is: exit A, trans, entry B, exit B, always-trans, entry C",
+    "spec": "SCXML 3.13: each microstep runs its own complete exit/content/entry sequence; microsteps do not interleave",
+    "expected": [
+      "xA",
+      "t1",
+      "eB",
+      "xB",
+      "t2",
+      "eC"
+    ],
+    "observed": [
+      "xA",
+      "t1",
+      "eB",
+      "xB",
+      "t2",
+      "eC"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-08",
+    "engine": "sync",
+    "title": "Across an eventless hop the ordering is: exit A, trans, entry B, exit B, always-trans, entry C",
+    "spec": "SCXML 3.13: each microstep runs its own complete exit/content/entry sequence; microsteps do not interleave",
+    "expected": [
+      "xA",
+      "t1",
+      "eB",
+      "xB",
+      "t2",
+      "eC"
+    ],
+    "observed": [
+      "xA",
+      "t1",
+      "eB",
+      "xB",
+      "t2",
+      "eC"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-09",
+    "engine": "async",
+    "title": "In a parallel fan-out both regions' transition actions run, deepest-source-first and each exactly once",
+    "spec": "SCXML 3.13: every selected transition's content runs once per microstep",
+    "expected": {
+      "count_a": 1,
+      "count_b": 1
+    },
+    "observed": {
+      "count_a": 1,
+      "count_b": 1
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-09",
+    "engine": "sync",
+    "title": "In a parallel fan-out both regions' transition actions run, deepest-source-first and each exactly once",
+    "spec": "SCXML 3.13: every selected transition's content runs once per microstep",
+    "expected": {
+      "count_a": 1,
+      "count_b": 1
+    },
+    "observed": {
+      "count_a": 1,
+      "count_b": 1
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-10",
+    "engine": "async",
+    "title": "A transition declared on a shared ANCESTOR of two parallel regions fires exactly once, not once per region",
+    "spec": "SCXML 3.13 removeConflictingTransitions: the same transition selected by several atomic states is executed once",
+    "expected": {
+      "count": 1
+    },
+    "observed": {
+      "count": 1
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-10",
+    "engine": "sync",
+    "title": "A transition declared on a shared ANCESTOR of two parallel regions fires exactly once, not once per region",
+    "spec": "SCXML 3.13 removeConflictingTransitions: the same transition selected by several atomic states is executed once",
+    "expected": {
+      "count": 1
+    },
+    "observed": {
+      "count": 1
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-11",
+    "engine": "async",
+    "title": "A guard on a shared ancestor transition is evaluated but its SIDE EFFECTS are not multiplied by the region count",
+    "spec": "SCXML 5.9: guards are pure predicates. Library memoises per selection pass (base_interpreter.py:3671) so a shared ancestor's guard runs once.",
+    "expected": {
+      "evals": 1
+    },
+    "observed": {
+      "evals": 1
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-11",
+    "engine": "sync",
+    "title": "A guard on a shared ancestor transition is evaluated but its SIDE EFFECTS are not multiplied by the region count",
+    "spec": "SCXML 5.9: guards are pure predicates. Library memoises per selection pass (base_interpreter.py:3671) so a shared ancestor's guard runs once.",
+    "expected": {
+      "evals": 1
+    },
+    "observed": {
+      "evals": 1
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "O-12",
+    "engine": "async",
+    "title": "`raise` queues an INTERNAL event processed after the current microstep completes, not inline",
+    "spec": "SCXML 3.13 / 4.5 <raise>: the event goes on the internal queue and is taken in the NEXT microstep, after the current one finishes",
+    "expected": [
+      "t_before",
+      "eB",
+      "on_raised"
+    ],
+    "observed": [
+      "t_before",
+      "eB",
+      "on_raised"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-12",
+    "engine": "sync",
+    "title": "`raise` queues an INTERNAL event processed after the current microstep completes, not inline",
+    "spec": "SCXML 3.13 / 4.5 <raise>: the event goes on the internal queue and is taken in the NEXT microstep, after the current one finishes",
+    "expected": [
+      "t_before",
+      "eB",
+      "on_raised"
+    ],
+    "observed": [
+      "t_before",
+      "eB",
+      "on_raised"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-13",
+    "engine": "async",
+    "title": "Two `raise`d events are processed in the order they were raised",
+    "spec": "SCXML 3.13: the internal queue is FIFO",
+    "expected": [
+      "r1",
+      "r2"
+    ],
+    "observed": [
+      "r1",
+      "r2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-13",
+    "engine": "sync",
+    "title": "Two `raise`d events are processed in the order they were raised",
+    "spec": "SCXML 3.13: the internal queue is FIFO",
+    "expected": [
+      "r1",
+      "r2"
+    ],
+    "observed": [
+      "r1",
+      "r2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-14",
+    "engine": "async",
+    "title": "Internal (`raise`d) events are processed BEFORE an already-queued external event",
+    "spec": "SCXML 3.13: the internal queue is drained to exhaustion before the next external event is taken",
+    "expected": [
+      "internal",
+      "external"
+    ],
+    "observed": [
+      "internal",
+      "external"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-14",
+    "engine": "sync",
+    "title": "Internal (`raise`d) events are processed BEFORE an already-queued external event",
+    "spec": "SCXML 3.13: the internal queue is drained to exhaustion before the next external event is taken",
+    "expected": [
+      "internal",
+      "external"
+    ],
+    "observed": [
+      "internal",
+      "external"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-15",
+    "engine": "async",
+    "title": "Entry actions of a state run before its `always` transition is evaluated",
+    "spec": "SCXML 3.13: the microstep completes (entry content included) before eventless transitions are re-selected",
+    "expected": [
+      "eB",
+      "t"
+    ],
+    "observed": [
+      "eB",
+      "t"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-15",
+    "engine": "sync",
+    "title": "Entry actions of a state run before its `always` transition is evaluated",
+    "spec": "SCXML 3.13: the microstep completes (entry content included) before eventless transitions are re-selected",
+    "expected": [
+      "eB",
+      "t"
+    ],
+    "observed": [
+      "eB",
+      "t"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-16",
+    "engine": "async",
+    "title": "Machine `entry` on the root and the initial state's entry run outermost-first at start()",
+    "spec": "SCXML 3.2/3.9: the initial configuration is entered as an ordinary entry pass from the root down",
+    "expected": [
+      "root",
+      "first"
+    ],
+    "observed": [
+      "root",
+      "first"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "O-16",
+    "engine": "sync",
+    "title": "Machine `entry` on the root and the initial state's entry run outermost-first at start()",
+    "spec": "SCXML 3.2/3.9: the initial configuration is entered as an ordinary entry pass from the root down",
+    "expected": [
+      "root",
+      "first"
+    ],
+    "observed": [
+      "root",
+      "first"
+    ],
+    "status": "PASS"
+  }
+]

@@ -1,0 +1,268 @@
+{
+ "B6": {
+  "async": {
+   "built": true,
+   "id": "twap",
+   "policy": {
+    "action_error_policy": "rollback",
+    "on_unhandled": "defer",
+    "guard_error_policy": "raise",
+    "strict_targets": true,
+    "spawn_blocking_timeout": "<missing>"
+   },
+   "counts": {
+    "actions": 11,
+    "guards": 7,
+    "services": 4,
+    "events": 9
+   }
+  },
+  "def": {
+   "built": true,
+   "id": "twap",
+   "policy": {
+    "action_error_policy": "rollback",
+    "on_unhandled": "defer",
+    "guard_error_policy": "raise",
+    "strict_targets": true,
+    "spawn_blocking_timeout": "<missing>"
+   },
+   "counts": {
+    "actions": 11,
+    "guards": 7,
+    "services": 4,
+    "events": 9
+   }
+  },
+  "start": {
+   "async": {
+    "states": [
+     "twap.armed"
+    ],
+    "svc_calls": [],
+    "status": "running"
+   },
+   "def": {
+    "states": [
+     "twap.armed"
+    ],
+    "svc_calls": [],
+    "status": "running"
+   }
+  }
+ },
+ "B7": {
+  "async": {
+   "built": true,
+   "id": "chase",
+   "policy": {
+    "action_error_policy": "rollback",
+    "on_unhandled": "defer",
+    "guard_error_policy": "raise",
+    "strict_targets": true,
+    "spawn_blocking_timeout": "<missing>"
+   },
+   "counts": {
+    "actions": 10,
+    "guards": 8,
+    "services": 4,
+    "events": 10
+   }
+  },
+  "def": {
+   "built": true,
+   "id": "chase",
+   "policy": {
+    "action_error_policy": "rollback",
+    "on_unhandled": "defer",
+    "guard_error_policy": "raise",
+    "strict_targets": true,
+    "spawn_blocking_timeout": "<missing>"
+   },
+   "counts": {
+    "actions": 10,
+    "guards": 8,
+    "services": 4,
+    "events": 10
+   }
+  },
+  "start": {
+   "async": {
+    "states": [
+     "chase.working"
+    ],
+    "svc_calls": [
+     "submit_initial_limit"
+    ],
+    "status": "running"
+   },
+   "def": {
+    "states": [
+     "chase.working"
+    ],
+    "svc_calls": [
+     "submit_initial_limit"
+    ],
+    "status": "running"
+   }
+  }
+ },
+ "B8": {
+  "async": {
+   "built": true,
+   "id": "position_protection",
+   "policy": {
+    "action_error_policy": "fail",
+    "on_unhandled": "defer",
+    "guard_error_policy": "raise",
+    "strict_targets": true,
+    "spawn_blocking_timeout": "<missing>"
+   },
+   "counts": {
+    "actions": 10,
+    "guards": 5,
+    "services": 4,
+    "events": 8
+   }
+  },
+  "def": {
+   "built": true,
+   "id": "position_protection",
+   "policy": {
+    "action_error_policy": "fail",
+    "on_unhandled": "defer",
+    "guard_error_policy": "raise",
+    "strict_targets": true,
+    "spawn_blocking_timeout": "<missing>"
+   },
+   "counts": {
+    "actions": 10,
+    "guards": 5,
+    "services": 4,
+    "events": 8
+   }
+  },
+  "start": {
+   "async": {
+    "states": [
+     "position_protection.sl.flat",
+     "position_protection.watchdog.idle"
+    ],
+    "svc_calls": [],
+    "status": "running"
+   },
+   "def": {
+    "states": [
+     "position_protection.sl.flat",
+     "position_protection.watchdog.idle"
+    ],
+    "svc_calls": [],
+    "status": "running"
+   }
+  }
+ },
+ "B9": {
+  "async": {
+   "built": true,
+   "id": "rule_instance",
+   "policy": {
+    "action_error_policy": "rollback",
+    "on_unhandled": "defer",
+    "guard_error_policy": "raise",
+    "strict_targets": true,
+    "spawn_blocking_timeout": "<missing>"
+   },
+   "counts": {
+    "actions": 27,
+    "guards": 9,
+    "services": 2,
+    "events": 15
+   }
+  },
+  "def": {
+   "built": true,
+   "id": "rule_instance",
+   "policy": {
+    "action_error_policy": "rollback",
+    "on_unhandled": "defer",
+    "guard_error_policy": "raise",
+    "strict_targets": true,
+    "spawn_blocking_timeout": "<missing>"
+   },
+   "counts": {
+    "actions": 27,
+    "guards": 9,
+    "services": 2,
+    "events": 15
+   }
+  },
+  "start": {
+   "async": {
+    "states": [
+     "rule_instance.draft"
+    ],
+    "svc_calls": [],
+    "status": "running"
+   },
+   "def": {
+    "states": [
+     "rule_instance.draft"
+    ],
+    "svc_calls": [],
+    "status": "running"
+   }
+  }
+ },
+ "B10": {
+  "async": {
+   "built": true,
+   "id": "alert",
+   "policy": {
+    "action_error_policy": "rollback",
+    "on_unhandled": "defer",
+    "guard_error_policy": "raise",
+    "strict_targets": true,
+    "spawn_blocking_timeout": "<missing>"
+   },
+   "counts": {
+    "actions": 7,
+    "guards": 3,
+    "services": 1,
+    "events": 7
+   }
+  },
+  "def": {
+   "built": true,
+   "id": "alert",
+   "policy": {
+    "action_error_policy": "rollback",
+    "on_unhandled": "defer",
+    "guard_error_policy": "raise",
+    "strict_targets": true,
+    "spawn_blocking_timeout": "<missing>"
+   },
+   "counts": {
+    "actions": 7,
+    "guards": 3,
+    "services": 1,
+    "events": 7
+   }
+  },
+  "start": {
+   "async": {
+    "states": [
+     "alert.armed"
+    ],
+    "svc_calls": [],
+    "status": "running"
+   },
+   "def": {
+    "states": [
+     "alert.armed"
+    ],
+    "svc_calls": [],
+    "status": "running"
+   }
+  }
+ }
+}

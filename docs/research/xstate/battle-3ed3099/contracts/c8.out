@@ -1,0 +1,175 @@
+{
+  "diffs": {
+    "B6": {
+      "removed": [
+        "twap.submitting_slice.on['*'] = {\"actions\": [\"defer\"]}"
+      ],
+      "diff": [
+        "--- B6.machine.json (catalogue)",
+        "+++ B6.fixed.machine.json (E50-T09 applied)",
+        "@@ -106,11 +106,4 @@",
+        "           }",
+        "         ]",
+        "-      },",
+        "-      \"on\": {",
+        "-        \"*\": {",
+        "-          \"actions\": [",
+        "-            \"defer\"",
+        "-          ]",
+        "-        }",
+        "       }",
+        "     },"
+      ]
+    },
+    "B7": {
+      "removed": [
+        "chase.repricing.on['*'] = {\"actions\": [\"defer\"]}"
+      ],
+      "diff": [
+        "--- B7.machine.json (catalogue)",
+        "+++ B7.fixed.machine.json (E50-T09 applied)",
+        "@@ -117,11 +117,4 @@",
+        "           }",
+        "         ]",
+        "-      },",
+        "-      \"on\": {",
+        "-        \"*\": {",
+        "-          \"actions\": [",
+        "-            \"defer\"",
+        "-          ]",
+        "-        }",
+        "       }",
+        "     },"
+      ]
+    },
+    "B8": {
+      "removed": [
+        "position_protection.sl.amending.on['*'] = {\"actions\": [\"defer\"]}"
+      ],
+      "diff": [
+        "--- B8.machine.json (catalogue)",
+        "+++ B8.fixed.machine.json (E50-T09 applied)",
+        "@@ -106,11 +106,4 @@",
+        "               \"target\": \"#position_protection.sl.verifying\"",
+        "             }",
+        "-          },",
+        "-          \"on\": {",
+        "-            \"*\": {",
+        "-              \"actions\": [",
+        "-                \"defer\"",
+        "-              ]",
+        "-            }",
+        "           }",
+        "         },"
+      ]
+    },
+    "B9": {
+      "removed": [
+        "rule_instance.evaluating.on['*'] = {\"actions\": [\"defer\"]}",
+        "rule_instance.acting.on['*'] = {\"actions\": [\"defer\"]}"
+      ],
+      "diff": [
+        "--- B9.machine.json (catalogue)",
+        "+++ B9.fixed.machine.json (E50-T09 applied)",
+        "@@ -146,11 +146,4 @@",
+        "           }",
+        "         ]",
+        "-      },",
+        "-      \"on\": {",
+        "-        \"*\": {",
+        "-          \"actions\": [",
+        "-            \"defer\"",
+        "-          ]",
+        "-        }",
+        "       }",
+        "     },",
+        "@@ -209,11 +202,4 @@",
+        "           }",
+        "         ]",
+        "-      },",
+        "-      \"on\": {",
+        "-        \"*\": {",
+        "-          \"actions\": [",
+        "-            \"defer\"",
+        "-          ]",
+        "-        }",
+        "       }",
+        "     },"
+      ]
+    },
+    "B10": {
+      "removed": [],
+      "diff": []
+    }
+  },
+  "before": [
+    {
+      "label": "B6 as-catalogued",
+      "known_events_has_star": true,
+      "strict_rejects_typo": false
+    },
+    {
+      "label": "B7 as-catalogued",
+      "known_events_has_star": true,
+      "strict_rejects_typo": false
+    },
+    {
+      "label": "B8 as-catalogued",
+      "known_events_has_star": true,
+      "strict_rejects_typo": false
+    },
+    {
+      "label": "B9 as-catalogued",
+      "known_events_has_star": true,
+      "strict_rejects_typo": false
+    },
+    {
+      "label": "B10 as-catalogued",
+      "known_events_has_star": false,
+      "strict_rejects_typo": true
+    }
+  ],
+  "after": [
+    {
+      "label": "B6 fixed",
+      "known_events_has_star": false,
+      "strict_rejects_typo": true
+    },
+    {
+      "label": "B7 fixed",
+      "known_events_has_star": false,
+      "strict_rejects_typo": true
+    },
+    {
+      "label": "B8 fixed",
+      "known_events_has_star": false,
+      "strict_rejects_typo": true
+    },
+    {
+      "label": "B9 fixed",
+      "known_events_has_star": false,
+      "strict_rejects_typo": true
+    },
+    {
+      "label": "B10 fixed",
+      "known_events_has_star": false,
+      "strict_rejects_typo": true
+    }
+  ],
+  "b6_defer_before": {
+    "label": "as-catalogued",
+    "deferred_at_hold": 0,
+    "final": [
+      "twap.armed"
+    ],
+    "event_survived": false
+  },
+  "b6_defer_after": {
+    "label": "fixed",
+    "deferred_at_hold": 1,
+    "final": [
+      "twap.paused"
+    ],
+    "event_survived": true
+  }
+}

@@ -1,0 +1,777 @@
+{
+  "probe": "q4_livelock_fuzz",
+  "py": "3.13.7",
+  "configs": 500,
+  "watchdog_s": 4.0,
+  "REDUCED": "watchdog 6 s (brief says 30 s); every livelock observed here hangs indefinitely, and the 120 s per-script bound does not fit 500 x 30 s",
+  "by_shape": {
+    "rollback": {
+      "n": 117,
+      "async": {
+        "settled": 117
+      },
+      "sync": {
+        "settled": 117
+      },
+      "trip_async": 34,
+      "trip_sync": 117
+    },
+    "sendto": {
+      "n": 127,
+      "async": {
+        "settled": 127
+      },
+      "sync": {
+        "raised": 127
+      },
+      "trip_async": 0,
+      "trip_sync": 0
+    },
+    "always_cycle": {
+      "n": 118,
+      "async": {
+        "settled": 118
+      },
+      "sync": {
+        "settled": 118
+      },
+      "trip_async": 118,
+      "trip_sync": 118
+    },
+    "invoke_cycle": {
+      "n": 138,
+      "async": {
+        "settled": 138
+      },
+      "sync": {
+        "settled": 63,
+        "raised": 75
+      },
+      "trip_async": 39,
+      "trip_sync": 63
+    }
+  },
+  "L1_livelocks": [],
+  "L1_livelock_count": 0,
+  "L3_engine_trip_disagreements": [
+    {
+      "cfg": {
+        "id": "f8",
+        "initial": "ver",
+        "context": {
+          "n": 0
+        },
+        "shape": "rollback",
+        "maxIterations": 1000,
+        "states": {
+          "ver": {
+            "invoke": {
+              "src": "boom",
+              "onDone": {
+                "target": "back",
+                "actions": [
+                  "act_boom"
+                ]
+              },
+              "onError": {
+                "target": "back",
+                "actions": [
+                  "act"
+                ]
+              }
+            }
+          },
+          "back": {
+            "always": {
+              "target": "ver",
+              "actions": [
+                "act"
+              ]
+            }
+          }
+        }
+      },
+      "async": {
+        "outcome": "settled",
+        "trip": false,
+        "trip_at_start": false,
+        "receipt_error": "None"
+      },
+      "sync": {
+        "outcome": "settled",
+        "trip": true,
+        "trip_at_start": true,
+        "receipt_error": null
+      }
+    },
+    {
+      "cfg": {
+        "id": "f12",
+        "initial": "ver",
+        "context": {
+          "n": 0
+        },
+        "shape": "rollback",
+        "maxIterations": 1000,
+        "states": {
+          "ver": {
+            "invoke": {
+              "src": "boom",
+              "onDone": {
+                "target": "back",
+                "actions": [
+                  "act_boom"
+                ]
+              },
+              "onError": {
+                "target": "back",
+                "actions": [
+                  "act"
+                ]
+              }
+            }
+          },
+          "back": {
+            "always": {
+              "target": "ver",
+              "actions": [
+                "act"
+              ]
+            }
+          }
+        }
+      },
+      "async": {
+        "outcome": "settled",
+        "trip": false,
+        "trip_at_start": false,
+        "receipt_error": "None"
+      },
+      "sync": {
+        "outcome": "settled",
+        "trip": true,
+        "trip_at_start": true,
+        "receipt_error": null
+      }
+    },
+    {
+      "cfg": {
+        "id": "f13",
+        "initial": "ver",
+        "context": {
+          "n": 0
+        },
+        "shape": "rollback",
+        "maxIterations": 1000,
+        "states": {
+          "ver": {
+            "invoke": {
+              "src": "ok",
+              "onDone": {
+                "target": "back",
+                "actions": [
+                  "act_boom"
+                ]
+              },
+              "onError": {
+                "target": "back",
+                "actions": [
+                  "act"
+                ]
+              }
+            }
+          },
+          "back": {
+            "always": {
+              "target": "ver",
+              "actions": [
+                "act"
+              ]
+            }
+          }
+        }
+      },
+      "async": {
+        "outcome": "settled",
+        "trip": false,
+        "trip_at_start": false,
+        "receipt_error": "None"
+      },
+      "sync": {
+        "outcome": "settled",
+        "trip": true,
+        "trip_at_start": true,
+        "receipt_error": null
+      }
+    },
+    {
+      "cfg": {
+        "id": "f25",
+        "initial": "ver",
+        "context": {
+          "n": 0
+        },
+        "shape": "rollback",
+        "maxIterations": 200,
+        "states": {
+          "ver": {
+            "invoke": {
+              "src": "boom",
+              "onDone": {
+                "target": "back",
+                "actions": [
+                  "act_boom"
+                ]
+              },
+              "onError": {
+                "target": "back",
+                "actions": [
+                  "act"
+                ]
+              }
+            }
+          },
+          "back": {
+            "always": {
+              "target": "ver",
+              "actions": [
+                "act"
+              ]
+            }
+          }
+        }
+      },
+      "async": {
+        "outcome": "settled",
+        "trip": false,
+        "trip_at_start": false,
+        "receipt_error": "None"
+      },
+      "sync": {
+        "outcome": "settled",
+        "trip": true,
+        "trip_at_start": true,
+        "receipt_error": null
+      }
+    },
+    {
+      "cfg": {
+        "id": "f29",
+        "initial": "ver",
+        "context": {
+          "n": 0
+        },
+        "shape": "rollback",
+        "maxIterations": 200,
+        "states": {
+          "ver": {
+            "invoke": {
+              "src": "ok",
+              "onDone": {
+                "target": "back",
+                "actions": [
+                  "act_boom"
+                ]
+              },
+              "onError": {
+                "target": "back",
+                "actions": [
+                  "act"
+                ]
+              }
+            }
+          },
+          "back": {
+            "always": {
+              "target": "ver",
+              "actions": [
+                "act"
+              ]
+            }
+          }
+        }
+      },
+      "async": {
+        "outcome": "settled",
+        "trip": false,
+        "trip_at_start": false,
+        "receipt_error": "None"
+      },
+      "sync": {
+        "outcome": "settled",
+        "trip": true,
+        "trip_at_start": true,
+        "receipt_error": null
+      }
+    },
+    {
+      "cfg": {
+        "id": "f34",
+        "initial": "ver",
+        "context": {
+          "n": 0
+        },
+        "shape": "rollback",
+        "maxIterations": 200,
+        "states": {
+          "ver": {
+            "invoke": {
+              "src": "boom",
+              "onDone": {
+                "target": "back",
+                "actions": [
+                  "act_boom"
+                ]
+              },
+              "onError": {
+                "target": "back",
+                "actions": [
+                  "act"
+                ]
+              }
+            }
+          },
+          "back": {
+            "always": {
+              "target": "ver",
+              "actions": [
+                "act"
+              ]
+            }
+          }
+        }
+      },
+      "async": {
+        "outcome": "settled",
+        "trip": false,
+        "trip_at_start": false,
+        "receipt_error": "None"
+      },
+      "sync": {
+        "outcome": "settled",
+        "trip": true,
+        "trip_at_start": true,
+        "receipt_error": null
+      }
+    },
+    {
+      "cfg": {
+        "id": "f36",
+        "initial": "ver",
+        "context": {
+          "n": 0
+        },
+        "shape": "rollback",
+        "maxIterations": 200,
+        "states": {
+          "ver": {
+            "invoke": {
+              "src": "ok",
+              "onDone": {
+                "target": "back",
+                "actions": [
+                  "act_boom"
+                ]
+              },
+              "onError": {
+                "target": "back",
+                "actions": [
+                  "act"
+                ]
+              }
+            }
+          },
+          "back": {
+            "always": {
+              "target": "ver",
+              "actions": [
+                "act"
+              ]
+            }
+          }
+        }
+      },
+      "async": {
+        "outcome": "settled",
+        "trip": false,
+        "trip_at_start": false,
+        "receipt_error": "None"
+      },
+      "sync": {
+        "outcome": "settled",
+        "trip": true,
+        "trip_at_start": true,
+        "receipt_error": null
+      }
+    },
+    {
+      "cfg": {
+        "id": "f40",
+        "initial": "ver",
+        "context": {
+          "n": 0
+        },
+        "shape": "rollback",
+        "maxIterations": 200,
+        "states": {
+          "ver": {
+            "invoke": {
+              "src": "boom",
+              "onDone": {
+                "target": "back",
+                "actions": [
+                  "act_boom"
+                ]
+              },
+              "onError": {
+                "target": "back",
+                "actions": [
+                  "act"
+                ]
+              }
+            }
+          },
+          "back": {
+            "always": {
+              "target": "ver",
+              "actions": [
+                "act"
+              ]
+            }
+          }
+        }
+      },
+      "async": {
+        "outcome": "settled",
+        "trip": false,
+        "trip_at_start": false,
+        "receipt_error": "None"
+      },
+      "sync": {
+        "outcome": "settled",
+        "trip": true,
+        "trip_at_start": true,
+        "receipt_error": null
+      }
+    },
+    {
+      "cfg": {
+        "id": "f41",
+        "initial": "ver",
+        "context": {
+          "n": 0
+        },
+        "shape": "rollback",
+        "maxIterations": 1000,
+        "states": {
+          "ver": {
+            "invoke": {
+              "src": "ok",
+              "onDone": {
+                "target": "back",
+                "actions": [
+                  "act_boom"
+                ]
+              },
+              "onError": {
+                "target": "back",
+                "actions": [
+                  "act"
+                ]
+              }
+            }
+          },
+          "back": {
+            "always": {
+              "target": "ver",
+              "actions": [
+                "act"
+              ]
+            }
+          }
+        }
+      },
+      "async": {
+        "outcome": "settled",
+        "trip": false,
+        "trip_at_start": false,
+        "receipt_error": "None"
+      },
+      "sync": {
+        "outcome": "settled",
+        "trip": true,
+        "trip_at_start": true,
+        "receipt_error": null
+      }
+    },
+    {
+      "cfg": {
+        "id": "f49",
+        "initial": "ver",
+        "context": {
+          "n": 0
+        },
+        "shape": "rollback",
+        "maxIterations": 1000,
+        "states": {
+          "ver": {
+            "invoke": {
+              "src": "ok",
+              "onDone": {
+                "target": "back",
+                "actions": [
+                  "act_boom"
+                ]
+              },
+              "onError": {
+                "target": "back",
+                "actions": [
+                  "act"
+                ]
+              }
+            }
+          },
+          "back": {
+            "always": {
+              "target": "ver",
+              "actions": [
+                "act"
+              ]
+            }
+          }
+        }
+      },
+      "async": {
+        "outcome": "settled",
+        "trip": false,
+        "trip_at_start": false,
+        "receipt_error": "None"
+      },
+      "sync": {
+        "outcome": "settled",
+        "trip": true,
+        "trip_at_start": true,
+        "receipt_error": null
+      }
+    }
+  ],
+  "L3_disagreement_count": 20,
+  "L2_cycle_settled_with_no_observable_trip": [
+    {
+      "cfg": {
+        "id": "f8",
+        "initial": "ver",
+        "context": {
+          "n": 0
+        },
+        "shape": "rollback",
+        "maxIterations": 1000,
+        "states": {
+          "ver": {
+            "invoke": {
+              "src": "boom",
+              "onDone": {
+                "target": "back",
+                "actions": [
+                  "act_boom"
+                ]
+              },
+              "onError": {
+                "target": "back",
+                "actions": [
+                  "act"
+                ]
+              }
+            }
+          },
+          "back": {
+            "always": {
+              "target": "ver",
+              "actions": [
+                "act"
+              ]
+            }
+          }
+        }
+      },
+      "async": {
+        "outcome": "settled",
+        "trip": false,
+        "trip_at_start": false,
+        "receipt_error": "None"
+      }
+    },
+    {
+      "cfg": {
+        "id": "f10",
+        "initial": "ver",
+        "context": {
+          "n": 0
+        },
+        "shape": "invoke_cycle",
+        "maxIterations": 50,
+        "states": {
+          "ver": {
+            "invoke": {
+              "src": "aok",
+              "onDone": {
+                "target": "arm",
+                "actions": [
+                  "act"
+                ]
+              },
+              "onError": {
+                "target": "arm"
+              }
+            }
+          },
+          "arm": {
+            "always": {
+              "target": "ver",
+              "actions": [
+                "act"
+              ]
+            }
+          }
+        }
+      },
+      "async": {
+        "outcome": "settled",
+        "trip": false,
+        "trip_at_start": false,
+        "receipt_error": "None"
+      }
+    },
+    {
+      "cfg": {
+        "id": "f12",
+        "initial": "ver",
+        "context": {
+          "n": 0
+        },
+        "shape": "rollback",
+        "maxIterations": 1000,
+        "states": {
+          "ver": {
+            "invoke": {
+              "src": "boom",
+              "onDone": {
+                "target": "back",
+                "actions": [
+                  "act_boom"
+                ]
+              },
+              "onError": {
+                "target": "back",
+                "actions": [
+                  "act"
+                ]
+              }
+            }
+          },
+          "back": {
+            "always": {
+              "target": "ver",
+              "actions": [
+                "act"
+              ]
+            }
+          }
+        }
+      },
+      "async": {
+        "outcome": "settled",
+        "trip": false,
+        "trip_at_start": false,
+        "receipt_error": "None"
+      }
+    },
+    {
+      "cfg": {
+        "id": "f13",
+        "initial": "ver",
+        "context": {
+          "n": 0
+        },
+        "shape": "rollback",
+        "maxIterations": 1000,
+        "states": {
+          "ver": {
+            "invoke": {
+              "src": "ok",
+              "onDone": {
+                "target": "back",
+                "actions": [
+                  "act_boom"
+                ]
+              },
+              "onError": {
+                "target": "back",
+                "actions": [
+                  "act"
+                ]
+              }
+            }
+          },
+          "back": {
+            "always": {
+              "target": "ver",
+              "actions": [
+                "act"
+              ]
+            }
+          }
+        }
+      },
+      "async": {
+        "outcome": "settled",
+        "trip": false,
+        "trip_at_start": false,
+        "receipt_error": "None"
+      }
+    },
+    {
+      "cfg": {
+        "id": "f22",
+        "initial": "ver",
+        "context": {
+          "n": 0
+        },
+        "shape": "invoke_cycle",
+        "maxIterations": 1000,
+        "states": {
+          "ver": {
+            "invoke": {
+              "src": "aok",
+              "onDone": {
+                "target": "arm",
+                "actions": [
+                  "act"
+                ]
+              },
+              "onError": {
+                "target": "arm"
+              }
+            }
+          },
+          "arm": {
+            "always": {
+              "target": "ver",
+              "actions": [
+                "act"
+              ]
+            }
+          }
+        }
+      },
+      "async": {
+        "outcome": "settled",
+        "trip": false,
+        "trip_at_start": false,
+        "receipt_error": "None"
+      }
+    }
+  ],
+  "L2_count": 20,
+  "result": "FAIL"
+}

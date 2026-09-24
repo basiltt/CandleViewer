@@ -1,0 +1,20 @@
+C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py:2333: RuntimeWarning: send('P', wait=True) on 'r' was called from inside an action and its receipt was never awaited (#232). A plain `def` action cannot await, so it received this awaitable, not a Receipt. Send without wait=True, or hand the awaitable out (asyncio.ensure_future(...)) to be awaited elsewhere.
+  impl(self, self.context, event, action_def)
+[PASS ] R1  ReentrantWaitError: an action awaiting send(wait=True) on its OWN interpreter must R
+C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py:2333: RuntimeWarning: send('P', wait=True) on 'ra' was called from inside an action and its receipt was never awaited (#232). A plain `def` action cannot await, so it received this awaitable, not a Receipt. Send without wait=True, or hand the awaitable out (asyncio.ensure_future(...)) to be awaited elsewhere.
+  impl(self, self.context, event, action_def)
+        -> {"ok": true, "cells": {"async_engine/async": {"result": "ReentrantWaitError", "msg": "Action on 'r' awaited send('P', wait=True) on its own interpreter. The receipt resolves only when the run loop processes"}, "async_engine/plain": {"result": "RETURNED", "r": "<xstate_statemachine.interpreter.Interpreter._guard_reentran"}, "sync_engine/plain": {"result": "ReentrantWaitError", "msg": "Action on 'r' awaited send('P', wait=True) on its own interpreter. The receipt resolves only when the run loop processes"}}}
+[PASS ] R4  Same guard from inside an AFTER-fired handler's action (engine-minted event, not sta
+        -> {"ok": true, "cells": {"after_handler/async": {"result": "ReentrantWaitError", "msg": "Action on 'ra' awaited send('P', wait=True) on its own interpreter. The receipt resolves only when the run loop processe"}, "after_handler/plain": {"result": "RETURNED", "r": "<xstate_statemachine.interpreter.Interpreter._guard_reentran"}}}
+[PASS ] R2  Escape hatch: ensure_future(send(wait=True)) issued inside an action and awaited AFT
+        -> {"ok": true, "detail": {"resolved": true, "state": ["r.b"], "receipt": "Receipt"}}
+[PASS ] R5  100 CONCURRENT interpreters running the ensure_future pattern -- all resolve, none h
+        -> {"ok": true, "n": 100, "failures": [], "distinct_states": 1, "state": ["b"]}
+[PASS ] R3  child -> parent and parent -> child wait=True (a DIFFERENT interpreter) must still w
+        -> {"ok": true, "detail": {"cross": "OK", "peer_state": ["peer.b"]}}
+[PASS ] R6  #222 latch: chain_trips monotonic; last_chain_error sticky across a benign event; cl
+        -> {"ok": true, "cells": {"async": {"trips_after_start": 1, "latch_after_start": "RunawayChainError", "hooks_after_start": 1, "trips_after_benign": 1, "latch_after_benign": "RunawayChainError", "last_error_after_benign": "NoneType", "trips_after_clear": 1, "latch_after_clear": "NoneType", "hooks_total": 1}, "sync": {"trips_after_start": 1, "latch_after_start": "RunawayChainError", "hooks_after_start": 1, "trips_after_benign": 1, "latch_after_benign": "RunawayChainError", "last_error_after_benign": "NoneType", "trips_after_clear": 1, "latch_after_clear": "NoneType", "hooks_total": 1}}}
+[PASS ] R7  Latch/counter across a snapshot round-trip (probe: reported, counted only if it cont
+        -> {"ok": true, "note": "informational -- no documented promise that the latch crosses a snapshot", "trips_before": 1, "trips_after_restore": 1, "latch_after_restore": "RestoredError", "snapshot_has_chain_keys": ["chain_trips", "last_chain_error"]}
+
+r_reentrant_latch: 7/7 PASS

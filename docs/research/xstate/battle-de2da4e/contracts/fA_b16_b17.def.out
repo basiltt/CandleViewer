@@ -1,0 +1,16 @@
+PASS [def]B16/happy  | {"st": ["session.auth.active", "session.elevation.elevated"], "snap": true, "notes": ["t0:v=3:sched=0", "t1:v=3:sched=0", "t2:v=3:sched=0", "t3:v=3:sched=0", "t4:v=3:sched=0"]}
+FAIL [def]B16/INV-a elevation dies with session  | still elevated after: ['LOGOUT', 'IDLE_DEADLINE', 'ABSOLUTE_DEADLINE']  ({"REVOKE": ["auth.revoked", "elevation.normal"], "LOGOUT": ["auth.revoked", "elevation.elevated"], "IDLE_DEADLINE": ["auth.revoked", "elevation.elevated"], "ABSOLUTE_DEADLINE": ["auth.revoked", "elevation.elevated"]})
+PASS [def]B16/INV-b reason+broadcast on 6 paths  | {"REVOKE": [true, true], "LOGOUT": [true, true], "IDLE_DEADLINE": [true, true], "ABSOLUTE_DEADLINE": [true, true], "MFA_TIMEOUT": [true, true], "MFA_LOCKED": [true, true]}
+FAIL [def]B16/INV-c every step-up audited  | audit_step_up=1 for 2 STEP_UP_OK; acts=['mark_mfa_satisfied', 'stamp_idle_deadline', 'audit_login', 'audit_step_up_failed', 'stamp_elevated_until', 'audit_step_up', 'schedule_elevation_deadline', 'stamp_elevated_until', 'schedule_elevation_deadline']
+FAIL [def]B16/INV-d revoked terminal, no post-revoke elevation  | {"st": ["session.auth.revoked", "session.elevation.elevated"], "unh": [["MFA_OK", "deferred"], ["REQUEST", "deferred"], ["MFA_OK", "deferred"], ["REQUEST", "deferred"]]}
+PASS [def]B16/rollback on entry raise  | {"st": ["session.auth.pending_mfa", "session.elevation.normal"], "err": ["audit_login:RuntimeError('boom:audit_login')"]}
+PASS [def]B16/sync parity  | {"st": ["session.auth.active", "session.elevation.elevated"], "err": null}
+PASS [def]B17/happy  | {"st": ["live_gate.eligible"], "snap": true, "notes": ["t0:v=3:sched=0", "t1:v=3:sched=0", "t2:v=3:sched=0", "t3:v=3:sched=0"]}
+PASS [def]B17/INV-a no enable without evidence  | {"st": ["live_gate.locked"], "unh": [["ENABLE_REQUESTED", "deferred"]], "def": 1}
+PASS [def]B17/INV-b denial audited, stays eligible  | {"st": ["live_gate.eligible"], "acts": ["record_evidence", "audit_enable_denied"]}
+PASS [def]B17/INV-c invalidation -> locked + alert  | {"st": ["live_gate.locked"], "acts": ["broadcast_live_enabled", "enable_live_visual_language", "clear_evidence_item", "raise_critical_alert"]}
+PASS [def]B17/INV-d emergency disable unguarded  | {"st": ["live_gate.locked"]}
+PASS [def]B17/INV-e rollback keeps gate shut  | {"st": ["live_gate.eligible"], "acts": ["record_evidence", "record_enable", "audit_live_enabled"]}
+PASS [def]B17/sync parity  | {"st": ["live_gate.enabled"], "err": null}
+
+--- 14 checks, 3 FAIL: ['[def]B16/INV-a elevation dies with session', '[def]B16/INV-c every step-up audited', '[def]B16/INV-d revoked terminal, no post-revoke elevation']

@@ -1,0 +1,65 @@
+{
+  "probe": "r2_chain_owed_never_completing",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "service_kind": "async def",
+      "machines": 100,
+      "start_ok": true,
+      "start_seconds": 0.01,
+      "chain_owed_while_armed": [
+        1
+      ],
+      "chain_owed_after_state_exit": [
+        0
+      ],
+      "chain_owed_after_stop": [
+        0
+      ],
+      "cycle_after_exit_wedged": false,
+      "cycle_laps": 50,
+      "cycle_tripped_observably": true,
+      "stop": "ok",
+      "stop_seconds": 0.0,
+      "leftover_tasks": 0,
+      "statuses": [
+        "stopped"
+      ]
+    },
+    {
+      "service_kind": "def",
+      "machines": 100,
+      "start_ok": true,
+      "start_seconds": 0.03,
+      "chain_owed_while_armed": [
+        0
+      ],
+      "chain_owed_after_state_exit": [
+        0
+      ],
+      "chain_owed_after_stop": [
+        0
+      ],
+      "cycle_after_exit_wedged": true,
+      "cycle_laps": 0,
+      "cycle_tripped_observably": false,
+      "stop": "ok",
+      "stop_seconds": 0.02,
+      "leftover_tasks": 0,
+      "statuses": [
+        "stopped"
+      ]
+    }
+  ],
+  "failures": [
+    [
+      "def",
+      "cycle wedged after exit"
+    ],
+    [
+      "def",
+      "cycle trip not observable"
+    ]
+  ],
+  "result": "FAIL"
+}

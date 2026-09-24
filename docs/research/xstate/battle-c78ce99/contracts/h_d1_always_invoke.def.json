@@ -1,0 +1,34 @@
+{
+ "[def]D1/rollforward/async-engine/async": {
+  "pass": true,
+  "note": "submissions=0 states=['fwd.moved']"
+ },
+ "[def]D1/rollforward/sync-engine/async": {
+  "pass": true,
+  "note": "submissions=0 states=['fwd.moved']"
+ },
+ "[def]D1/rollback/async-engine/async": {
+  "pass": true,
+  "note": "submissions=0 states=['bak.idle']"
+ },
+ "[def]D1/rollback/sync-engine/async": {
+  "pass": true,
+  "note": "submissions=0 states=['bak.idle']"
+ },
+ "[def]D1/rollforward/async-engine/def": {
+  "pass": true,
+  "note": "submissions=0 states=['fwd.moved']"
+ },
+ "[def]D1/rollforward/sync-engine/def": {
+  "pass": true,
+  "note": "submissions=0 states=['fwd.moved']"
+ },
+ "[def]D1/rollback/async-engine/def": {
+  "pass": true,
+  "note": "submissions=0 states=['bak.idle']"
+ },
+ "[def]D1/rollback/sync-engine/def": {
+  "pass": true,
+  "note": "submissions=0 states=['bak.idle']"
+ }
+}

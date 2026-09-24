@@ -1,0 +1,24 @@
+[
+ {
+  "case": "A",
+  "style": "def",
+  "states": [
+   "m.armed"
+  ],
+  "context": {
+   "n": 1
+  },
+  "service_calls": []
+ },
+ {
+  "case": "B",
+  "style": "def",
+  "states": [
+   "m.armed"
+  ],
+  "context": {
+   "n": 0
+  },
+  "service_calls": []
+ }
+]

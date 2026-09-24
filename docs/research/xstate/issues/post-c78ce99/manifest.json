@@ -1,0 +1,227 @@
+{
+  "round": 11,
+  "build": {
+    "repo": "xstate-statemachine",
+    "ref": "main",
+    "commit": "c78ce99",
+    "pr": 217,
+    "source_branch": "fix/0.8.1-round10",
+    "declared_version_in_changelog": "0.8.1 (unreleased)",
+    "runtime___version__": "0.8.0",
+    "key_on": "commit",
+    "note": "__version__ still reports 0.8.0 on this tree. Never key a pin, CI assertion or gate baseline on the version string. Eleventh consecutive round in which the version string is wrong."
+  },
+  "posted": false,
+  "note": "NOT POSTED. Drafts only. Round-10 fixes #212-#216 verified. Every new-issue body embeds a STANDALONE repro (stdlib + xstate_statemachine only, all helpers inlined) that was executed from neutral cwd C:/Users/basil against this commit BOTH pre-flight (from the repro/ file) and post-flight (re-extracted from the issue-body fenced block). All five post-flight extractions exit 1 on this build. We never reopen closed upstream issues; residuals are filed as new R11 issues or raised as notes on the relevant thread.",
+  "environment": {
+    "python": "CPython 3.13.7",
+    "os": "Windows 11 Pro 10.0.26200",
+    "venv": "_ref/xstate-statemachine/.venv-main",
+    "env": "PYTHONIOENCODING=utf-8 PYTHONUTF8=1",
+    "neutral_cwd": "C:/Users/basil",
+    "standard": "Financial-OMS: reproduce before you count; every service/action check runs BOTH def and async def; every repro STANDALONE; poll to convergence before calling anything a hang or a plateau."
+  },
+  "semantic_reversals_honoured": [
+    "#212 SUPERSEDES #206: a raise(delay=) self-send is a timer. Arming ends the step's chain; firing is a clock event; a 1 ms self ping-pong is a legal periodic process, NOT a runaway.",
+    "#213 introduces SNAPSHOT LAYOUT v3 with scheduled_sends (remaining delay + id, re-armed on start()); #214 applies strict on restore, upcasts v2 done/error/after as engine-minted, and records carry lane."
+  ],
+  "decision": {
+    "gate": "ADOPT WITH CONSTRAINTS",
+    "decision_table_row": 6,
+    "prior_round_row": 8,
+    "direction": "REGRESSED one row",
+    "reason": "R11-04 (unbounded _timer_handles leak) keeps the High row non-empty. Row 8 requires all Blocker AND High closed. Contained by CV-C47, a lint written in round 10 for a different finding, which is the difference between row 6 (ADOPT) and row 7 (DEFER).",
+    "counts": {
+      "blocker": 0,
+      "high": 1,
+      "medium": 4,
+      "low": 5,
+      "refuted_outright": 3,
+      "downgraded_to_low": 1
+    },
+    "issues_verified": {
+      "fixed": 5,
+      "partial": 0,
+      "not_fixed": 0,
+      "regressed_on_one_axis": 0
+    },
+    "regressions": {
+      "true": 0,
+      "superseded_by_212_our_tests": 1,
+      "superseded_by_v3": 0,
+      "library_new_at_this_commit": 2
+    },
+    "gate_run": {
+      "exit_code": 0,
+      "checks": 163,
+      "pass": 124,
+      "fail": 39,
+      "prior_pass": 117,
+      "prior_fail": 38
+    },
+    "sweep": {
+      "scripts": 527,
+      "pass": 444,
+      "fail": 83,
+      "timeout": 0,
+      "seconds": 182,
+      "note": "Every delta re-confirmed SERIALLY x5. Four parallel-sweep false FAILs (107, 154, 158, 167) pass 5/5 serially and are recorded as harness error R11-H-1."
+    },
+    "suite": {
+      "completed": false,
+      "consecutive_rounds_incomplete": 3,
+      "reached_pct": 4,
+      "collected": 3535,
+      "failures_observed": 0,
+      "carried_measurement": {
+        "commit": "19cb1f1",
+        "passed": 3505,
+        "skipped": 13,
+        "failed": 0,
+        "seconds": 566.57,
+        "coverage_pct": 92.78
+      },
+      "supporting_at_this_commit": {
+        "test_round10_findings": "15/15",
+        "round8_9_10_combined_both_hashseeds": "65/65"
+      }
+    },
+    "benches": {
+      "thresholds_met": "5/7",
+      "BENCH_2": "MISSED by ~5x",
+      "BENCH_6": "UNMEASURED FOR FOUR ROUNDS",
+      "bench_c_timers": "not attempted (time budget) - third consecutive round",
+      "bench_e_actors": "not attempted"
+    }
+  },
+  "round_questions": {
+    "did_212_reopen_a_bounded_cycle_class": {
+      "answer": "NO",
+      "evidence": [
+        "Purpose-built collateral-unboundedness probe found no previously-bounded shape that became unbounded, watchdogs on both def and async def lanes.",
+        "R11-05, the one finding that claimed otherwise, is REFUTED on an `after:` control that behaves identically at the same delays on every prior commit.",
+        "Exactly one stable PASS->FAIL delta across 163 gate checks and 527 sweep scripts, and it is our own test encoding the #206 rule #212 deliberately reverses."
+      ],
+      "caveat": "#212 opened no SEMANTIC hole but made a pre-existing RESOURCE defect unbounded: R11-04, +455 MB / 24 s at 200 machines, strictly linear, no plateau."
+    },
+    "did_v3_or_v2_upcast_reopen_the_195_203_forgery_boundary": {
+      "answer": "NO",
+      "evidence": [
+        "R11-01 (filed Blocker) REFUTED: an attacker who can edit `version` can equally edit `state_ids` and land in the target state directly. from_snapshot is a documented trusted-input boundary (#205); machine_hash is a fingerprint, not a MAC. from_snapshot(minimum_version=3) raises SnapshotVersionError on the forged blob.",
+        "R11-03 (filed High) REFUTED: control V1, the only vector reachable from the documented public API, is correctly refused with UnknownEventError. V2 needs non-exported modules; V3/V4 need an already-held genuine engine event; V5 needs blob-write, which reaches the target state with no event at all.",
+        "R11-02 (filed High) DOWNGRADED to Low: equivalent-doors probe shows forging `configuration` alone reaches the same state with no event."
+      ],
+      "pattern": "Third consecutive round in which a Blocker filed against engine-event provenance was refuted by our own control probe. Adopted as a TRIAGE PRECONDITION: any finding whose threat model requires blob-write must first be tested against 'what does the same writer achieve with state_ids/context alone?'"
+    }
+  },
+  "comments": [
+    { "file": "comments/212.md", "issue": 212, "action": "comment", "disposition": "FIXED as specified - the semantic reversal is exact, not approximate" },
+    { "file": "comments/213.md", "issue": 213, "action": "comment", "disposition": "FIXED as specified - round-trip exact 600/600; one second-hop gap filed separately (R11-08)" },
+    { "file": "comments/214.md", "issue": 214, "action": "comment", "disposition": "FIXED for pending_events; three scope residuals raised; includes our self-refutation of the Blocker we filed against the v2 upcast" },
+    { "file": "comments/215.md", "issue": 215, "action": "comment", "disposition": "FIXED as specified; one new hang shape filed separately (R11-06); +2/+3 changelog contradiction settled" },
+    { "file": "comments/216.md", "issue": 216, "action": "comment", "disposition": "FIXED - flawless at the level it checks; scope gap filed separately (R11-07)" }
+  ],
+  "new_issues": [
+    {
+      "file": "new/R11-04-timer-handles-unbounded-leak.md",
+      "r11": "R11-04",
+      "severity": "High",
+      "title": "`_timer_handles` grows by one retained entry per `raise(delay=)` beat and is never pruned - an unbounded leak on the heartbeat shape #212 just made legal",
+      "repro": "new/repro/R11-04_timer_handles_unbounded_leak.py",
+      "repro_exit_code": 1,
+      "repro_postflight_exit_code": 1,
+      "engines": ["async", "sync"],
+      "action_kinds": ["def", "async def"],
+      "labels": ["bug", "severity/high", "area/interpreter", "timers", "memory"],
+      "source": ["interpreter.py:2354", "interpreter.py:2557", "sync_interpreter.py:1198", "sync_interpreter.py:1488"],
+      "fix_size": "one line per engine"
+    },
+    {
+      "file": "new/R11-06-descent-gate-start-hang.md",
+      "r11": "R11-06",
+      "severity": "Medium",
+      "title": "#215's `_descent_done` gate: an entry action that awaits its own receipt hangs `start()` forever, silently",
+      "repro": "new/repro/R11-06_descent_gate_start_hang.py",
+      "repro_exit_code": 1,
+      "repro_postflight_exit_code": 1,
+      "engines": ["async"],
+      "action_kinds": ["async def"],
+      "labels": ["bug", "severity/medium", "area/interpreter", "liveness", "regression"],
+      "regression_introduced_by": 215
+    },
+    {
+      "file": "new/R11-07-nested-config-keys-unvalidated.md",
+      "r11": "R11-07",
+      "severity": "Medium",
+      "title": "#216 validates the root config only: a misspelled key inside a state is silently dropped, with no raise and no warning, even under `strict_config=True`",
+      "repro": "new/repro/R11-07_nested_config_typos_silent.py",
+      "repro_exit_code": 1,
+      "repro_postflight_exit_code": 1,
+      "labels": ["bug", "severity/medium", "area/validation", "config", "dx"],
+      "source": ["validation.py:313-357", "validation.py:279-311", "factory.py:307-310", "models.py:1544-1601"]
+    },
+    {
+      "file": "new/R11-08-repersist-without-start-drops-sends.md",
+      "r11": "R11-08",
+      "severity": "Medium",
+      "title": "Restore then re-persist without `start()` silently drops every armed delayed self-send - #213's own failure mode, one hop later",
+      "repro": "new/repro/R11-08_repersist_without_start_drops_sends.py",
+      "repro_exit_code": 1,
+      "repro_postflight_exit_code": 1,
+      "action_kinds": ["def", "async def"],
+      "labels": ["bug", "severity/medium", "area/interpreter", "persistence", "timers"],
+      "new_in": 213
+    },
+    {
+      "file": "new/R11-09-chain-trip-erased-by-next-event.md",
+      "r11": "R11-09",
+      "severity": "Medium",
+      "title": "A `RunawayChainError` chain trip reaches only `last_error`, and the next benign event erases it - a permanently inert machine reports healthy",
+      "repro": "new/repro/R11-09_chain_trip_erased_by_next_event.py",
+      "repro_exit_code": 1,
+      "repro_postflight_exit_code": 1,
+      "engines": ["async", "sync"],
+      "action_kinds": ["def", "async def"],
+      "labels": ["bug", "severity/medium", "area/observability", "error-handling"],
+      "source": ["base_interpreter.py:4165-4174"]
+    }
+  ],
+  "raised_as_notes_not_issues": [
+    { "r11": "R11-01", "severity": "Low", "on_thread": 214, "note": "snapshot guide should recommend minimum_version=3, not 1, now that v3 carries provenance" },
+    { "r11": "R11-02", "severity": "Low", "on_thread": 214, "note": "scheduled_sends does not get the strict check pending_events does; a chart upgrade that undeclares an event yields silent delivery. Fix: route _rearm_restored_self_sends through _admit_restored" },
+    { "r11": "R11-10", "severity": "Low", "on_thread": 214, "note": "on_invalid_event is structurally unreachable on the restore path; from_snapshot takes no plugins=. The library's own pin registers the plugin after the restore and asserts only on last_error" },
+    { "r11": "R11-11", "severity": "Low", "on_thread": 213, "note": "structure_hash omits raise(delay=) delays although it covers after delays; delay 60000 -> 100 leaves the hash byte-identical" },
+    { "r11": "R11-12", "severity": "Low", "on_thread": 214, "note": "lane is persisted but unenforceable on the sync engine (no priority queue by construction)" },
+    { "r11": "R11-DC-1", "severity": "doc", "on_thread": 215, "note": "the #210 changelog sentence conflates two plateaus: descent-seeded is maxIterations+3, externally kicked is exactly +2. Swept limits {3,5,7,9}" },
+    { "r11": "R11-W-3", "severity": "Low", "on_thread": 213, "note": "SimulatedClock fires neither after nor restored scheduled_sends, so callers cannot unit-test restored deadlines under virtual time" }
+  ],
+  "refuted": [
+    { "file": "refuted/R11-01-v2-upcast-forge.md", "r11": "R11-01", "filed_as": "Blocker", "verdict": "REFUTED", "final_severity": "Low (doc nit only)" },
+    { "file": "refuted/R11-02-scheduled-sends-restore-door.md", "r11": "R11-02", "filed_as": "High", "verdict": "DOWNGRADED", "final_severity": "Low" },
+    { "file": "refuted/R11-03-after-provenance-forgery.md", "r11": "R11-03", "filed_as": "High", "verdict": "REFUTED", "final_severity": "None" },
+    { "file": "refuted/R11-05-maxiterations-escape.md", "r11": "R11-05", "filed_as": "High", "verdict": "REFUTED", "final_severity": "none" }
+  ],
+  "confirmed": [
+    { "file": "../../64-r11-04-refutation.md", "r11": "R11-04", "filed_as": "High", "verdict": "CONFIRMED", "final_severity": "High", "note": "Every refutation avenue failed: no correct usage bounds it, not documented, XState v5 and SCXML disagree with the behaviour, not a duplicate, not a measurement artefact, no trust boundary involved." }
+  ],
+  "meta": { "file": "meta-26.md", "issue": 26, "action": "replace header" },
+  "our_contract_defects_not_upstream": [
+    { "id": "C-04", "severity": "Blocker", "rounds_open": 6, "fix": "config-only: hoist LOGOUT/IDLE_DEADLINE/ABSOLUTE_DEADLINE onto the B16 root", "blocks": "B16 on the order path" },
+    { "id": "C-07b", "severity": "Blocker", "rounds_open": 6, "fix": "config-only: ordered unguarded RELEASE fall-through on B18 engaged", "blocks": "B18 on the order path" }
+  ],
+  "upstream_priority_order": ["R11-04", "R11-06", "R11-07", "R11-08", "R11-02", "R11-09", "R11-10", "R11-11", "R11-12", "minimum_version doc floor", "#210 +2/+3 doc contradiction"],
+  "gate_script_changes": {
+    "added": ["issues/verify-main-c78ce99"],
+    "retired": ["issues/verify-main-19cb1f1/206_delayed_selfsend_charged.py"],
+    "retire_reason": "SUPERSEDED-BY-#212: it encodes the #206 rule that #212 deliberately reverses. The single stable PASS->FAIL delta of the round. Left in place it becomes a permanent, meaningless blocking FAIL."
+  },
+  "artefacts": {
+    "verdict": "docs/research/xstate/64-r11-final-readiness-verdict.md",
+    "register": "docs/research/xstate/63-r11-findings-register.md",
+    "refutation": "docs/research/xstate/64-r11-04-refutation.md",
+    "regression": "docs/research/xstate/60-r11-regression.md",
+    "suite_bench": "docs/research/xstate/61-r11-suite-bench.md",
+    "diff_review": "docs/research/xstate/62-r11-diff-review.md",
+    "battle": "docs/research/xstate/battle-c78ce99/"
+  }
+}

@@ -1,0 +1,28 @@
+PASS [async]/225/worker-send-advances  | states=['alert.acknowledged']
+PASS [async]/225/worker-receipt-resolved  | awaited=Receipt(state_ids=frozenset({'alert.acknowledged'}), changed=True, error=None, deferred=False, denied=False)
+PASS [async]/225/no-chain-trip  | trips=0
+PASS [async]/225/handout-not-refused  | states=['alert.acknowledged']
+PASS [async]/225/handout-receipt-ok  | exc=None
+PASS [async]/225/in-step-refused  | exc=ReentrantWaitError("Action on 'alert' awaited send('ACK', wait=True) on its own interpreter. The receipt resolves only when the run loop processes the event, and the loop cannot advance until this action returns -- that is a deadlock. Send without wait=True from inside an action (the event runs after the current step), or await the receipt from outside.")
+PASS [async]/232/dropped-receipt-warns  | n=1 send('ACK', wait=True) on 'alert' was called from inside an action and its receipt was nev
+PASS [async]/232/handout-silent  | n=0 
+PASS [async]/226/persisted-fields  | trips=3 err='cv-synthetic-budget-trip'
+PASS [async]/226/count-restored  | trips=3
+PASS [async]/226/restored-error-type  | RestoredChainError('cv-synthetic-budget-trip')
+PASS [async]/226/restored-error-message  | cv-synthetic-budget-trip
+PASS [async]/226/clear-keeps-count  | trips=3 err=None
+PASS [async]/226/happy-path-zero-all5  | bad=[]
+WARNING:xstate_statemachine.base_interpreter:🚫 Restored event 'CV_NOT_DECLARED_ANYWHERE' refused by strict mode / event schema on 'alert' and dropped (#214, #227): Event 'CV_NOT_DECLARED_ANYWHERE' is not declared by machine 'alert'. Known events: ACK, CONDITION_MET, DISABLE, ENABLE, RESOLVE, RETRY_DUE, SUPPRESSION_EXPIRED, done.invoke.deliver, error.platform.deliver.
+WARNING:xstate_statemachine.base_interpreter:🚫 Restored event 'CV_NOT_DECLARED_ANYWHERE' refused by strict mode / event schema on 'alert' and dropped (#214, #227): Event 'CV_NOT_DECLARED_ANYWHERE' is not declared by machine 'alert'. Known events: ACK, CONDITION_MET, DISABLE, ENABLE, RESOLVE, RETRY_DUE, SUPPRESSION_EXPIRED, done.invoke.deliver, error.platform.deliver.
+PASS [async]/227/both-lanes-refused  | on_invalid_event n=2 ["Event(type='CV_NOT_DECLARED_ANYWHERE', payload={})", "Event(type='CV_NOT_DECLARED_ANYWHERE', payload={})"]
+PASS [async]/230/plugin-saw-restore-refusal  | plugins= registered before admission
+PASS [async]/227/machine-not-derailed  | states=['alert.armed']
+PASS [async]/227/no-chain-trip  | trips=0
+PASS [async]/227/declared-rearms-and-fires  | states=['alert.disabled'] invalid=0
+PASS [async]/233/sync-priority-head  | queue=[] final=['alert.disabled']
+PASS [async]/231/inline-src-named  | State 'alert.firing' invoke 'deliver': 'src' must be a service name (str), got dict. To invoke a nested machine, build it with create_machine(...) and
+PASS [async]/235/old-name-deprecated  | n=1
+PASS [async]/235/engine-minted-is-system  | _EngineDone(type='done.invoke.deliver', data={'ok': True}, src='deliver')
+PASS [async]/235/replace-demotes  | type=done.invoke.deliver cls=DoneEvent
+
+--- 24 checks, 0 FAIL: []

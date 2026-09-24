@@ -1,0 +1,117 @@
+[
+ {
+  "id": "N2-01",
+  "title": "#149: 200 concurrent plain-def services run OFF the loop \u2014 the loop keeps turning while they block",
+  "intent": "the #116 ordering fix must not cost loop liveness",
+  "detail": {
+   "ok": false,
+   "services_completed": 200,
+   "expected": 200,
+   "ran_off_loop": false,
+   "heartbeats_under_load": 2,
+   "idle_rate_hz": 62.6,
+   "loaded_rate_hz": 0.0,
+   "loop_stayed_lively": false,
+   "elapsed_s": 55.19
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "N2-02",
+  "title": "#149: stop() while a plain-def service is mid-flight returns promptly and leaks no thread",
+  "intent": "an owned executor must be torn down, not left holding a blocked worker for ever",
+  "detail": {
+   "ok": true,
+   "stop_seconds": 0.003,
+   "timed_out": false,
+   "threads_before": 1,
+   "threads_after": 1
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N2-03",
+  "title": "#150: send_threadsafe(internal=True) FORGERY from a plain thread cannot outrun maxIterations",
+  "intent": "a caller claiming engine provenance must not get an unbounded free pass",
+  "detail": {
+   "ok": true,
+   "delivered": 0,
+   "expected_if_uncharged": 800,
+   "charged_to_budget": true,
+   "drop_reasons": [
+    "chain_budget"
+   ],
+   "observable": true,
+   "status": "running",
+   "last_error": "RunawayChainError",
+   "call_site_errors": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N2-04",
+  "title": "#157: OverflowPolicy.RAISE surfaces QueueOverflowError at the send_threadsafe() CALL SITE under 16 threads",
+  "intent": "a fire-and-forget caller never reads a future; the error must reach the caller's own stack",
+  "detail": {
+   "ok": true,
+   "raised_at_call_site": 171,
+   "kinds": [
+    "QueueOverflowError"
+   ],
+   "accepted": 469
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N2-05",
+  "title": "#148: _die is idempotent under DOUBLE cancel \u2014 death is published and send(wait=True) never hangs",
+  "intent": "a cancel landing before the loop's first turn must still publish death",
+  "detail": {
+   "ok": true,
+   "pre_first_turn": {
+    "status": "error",
+    "is_running": false,
+    "send": "returned",
+    "error": "RuntimeError"
+   },
+   "after_turn": {
+    "status": "error",
+    "is_running": false,
+    "send": "returned",
+    "error": "RuntimeError"
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N2-06",
+  "title": "500 start/stop cycles with an executor service leak no threads and no asyncio tasks",
+  "intent": "an owned ThreadPoolExecutor per interpreter is a leak vector under churn",
+  "detail": {
+   "ok": true,
+   "threads": [
+    1,
+    1
+   ],
+   "tasks": [
+    1,
+    1
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N2-07",
+  "title": "A shared, CALLER-OWNED service_executor is used and NOT shut down by interpreter.stop()",
+  "intent": "ownership: an injected executor belongs to the caller across many interpreters",
+  "detail": {
+   "ok": false,
+   "ran_on_injected_executor": false,
+   "executor_alive_after_stop": true,
+   "threads_seen": [
+    "MainThread"
+   ]
+  },
+  "status": "FAIL"
+ }
+]

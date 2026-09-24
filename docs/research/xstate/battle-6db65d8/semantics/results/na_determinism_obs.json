@@ -1,0 +1,42 @@
+[
+ {
+  "id": "D1",
+  "title": "50x per lane: the trace (incl. the TRIP LAP COUNT) is byte-identical within each lane, and the def / async-def lanes agree",
+  "intent": "determinism of the #179 charged lane",
+  "detail": {
+   "ok": true,
+   "nondeterministic_lanes": {},
+   "trip_laps": {
+    "async-engine/plain": 22,
+    "async-engine/async": 22,
+    "sync-engine/plain": 22
+   },
+   "def_vs_asyncdef_agree": true,
+   "sync_vs_async_engine_agree": true,
+   "distinct_traces_per_lane": {
+    "async-engine/plain": 1,
+    "async-engine/async": 1,
+    "sync-engine/plain": 1
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "D2",
+  "title": "Hash-seed sweep: 5 PYTHONHASHSEED values in fresh subprocesses yield one identical lap/trip trace over 12 cycle configs x both kinds",
+  "intent": "no dict/set-ordering dependence in the charged lane",
+  "detail": {
+   "ok": true,
+   "distinct_outputs": 1,
+   "sample": "g0/plain:22:RunawayChainError|g0/async:22:RunawayChainError|g1/plain:0:RunawayChainError|g1/async:0:RunawayChainError|g2/plain:22:RunawayChainError|g2/async:22:RunawayChainError|g3/plain:1:None|g3/async:1:None|g4/plain:1:None|g4/async:1:None|g5/plain:12:RunawayChainError|g5/async:12:RunawayChainErro",
+   "per_seed_len": {
+    "0": 605,
+    "1": 605,
+    "42": 605,
+    "12345": 605,
+    "99991": 605
+   }
+  },
+  "status": "PASS"
+ }
+]

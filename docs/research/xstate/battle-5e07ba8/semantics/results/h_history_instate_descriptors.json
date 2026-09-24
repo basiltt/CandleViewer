@@ -1,0 +1,558 @@
+[
+  {
+    "id": "H-01",
+    "engine": "async",
+    "title": "Shallow history restores the last active CHILD of its parent",
+    "spec": "SCXML 3.10: a shallow <history> restores the immediate children of its parent that were active when the parent was exited",
+    "expected": [
+      "m.P.b.b1"
+    ],
+    "observed": [
+      "m.P.b.b1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-01",
+    "engine": "sync",
+    "title": "Shallow history restores the last active CHILD of its parent",
+    "spec": "SCXML 3.10: a shallow <history> restores the immediate children of its parent that were active when the parent was exited",
+    "expected": [
+      "m.P.b.b1"
+    ],
+    "observed": [
+      "m.P.b.b1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-02",
+    "engine": "async",
+    "title": "Shallow history does NOT restore grandchildren: the restored child re-enters via its own `initial`",
+    "spec": "SCXML 3.10: shallow history records only the immediate children; deeper states use their default initial",
+    "expected": [
+      "m.P.a.a1"
+    ],
+    "observed": [
+      "m.P.a.a1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-02",
+    "engine": "sync",
+    "title": "Shallow history does NOT restore grandchildren: the restored child re-enters via its own `initial`",
+    "spec": "SCXML 3.10: shallow history records only the immediate children; deeper states use their default initial",
+    "expected": [
+      "m.P.a.a1"
+    ],
+    "observed": [
+      "m.P.a.a1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-03",
+    "engine": "async",
+    "title": "Deep history restores the full nested configuration",
+    "spec": "SCXML 3.10: a deep <history> restores all active descendants of its parent at the time of exit",
+    "expected": [
+      "m.P.a.a2"
+    ],
+    "observed": [
+      "m.P.a.a2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-03",
+    "engine": "sync",
+    "title": "Deep history restores the full nested configuration",
+    "spec": "SCXML 3.10: a deep <history> restores all active descendants of its parent at the time of exit",
+    "expected": [
+      "m.P.a.a2"
+    ],
+    "observed": [
+      "m.P.a.a2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-04",
+    "engine": "async",
+    "title": "History with nothing recorded falls back to its default target",
+    "spec": "SCXML 3.10: if the parent has never been exited, the history state's <transition> default target is taken",
+    "expected": [
+      "m.P.b.b1"
+    ],
+    "observed": [
+      "m.P.b.b1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-04",
+    "engine": "sync",
+    "title": "History with nothing recorded falls back to its default target",
+    "spec": "SCXML 3.10: if the parent has never been exited, the history state's <transition> default target is taken",
+    "expected": [
+      "m.P.b.b1"
+    ],
+    "observed": [
+      "m.P.b.b1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-05",
+    "engine": "async",
+    "title": "History with nothing recorded AND no default target uses the parent's `initial`",
+    "spec": "SCXML 3.10 requires a default transition; XState v5 falls back to the parent's initial state when none is given",
+    "expected": [
+      "m.P.a"
+    ],
+    "observed": [
+      "m.P.a"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-05",
+    "engine": "sync",
+    "title": "History with nothing recorded AND no default target uses the parent's `initial`",
+    "spec": "SCXML 3.10 requires a default transition; XState v5 falls back to the parent's initial state when none is given",
+    "expected": [
+      "m.P.a"
+    ],
+    "observed": [
+      "m.P.a"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-06",
+    "engine": "async",
+    "title": "Deep history across a PARALLEL state restores every region's leaf",
+    "spec": "SCXML 3.10: deep history on a parallel ancestor restores the full configuration, i.e. the active leaf of every region",
+    "expected": [
+      "m.P.R1.x2",
+      "m.P.R2.y2"
+    ],
+    "observed": [
+      "m.P.R1.x2",
+      "m.P.R2.y2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-06",
+    "engine": "sync",
+    "title": "Deep history across a PARALLEL state restores every region's leaf",
+    "spec": "SCXML 3.10: deep history on a parallel ancestor restores the full configuration, i.e. the active leaf of every region",
+    "expected": [
+      "m.P.R1.x2",
+      "m.P.R2.y2"
+    ],
+    "observed": [
+      "m.P.R1.x2",
+      "m.P.R2.y2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-07",
+    "engine": "async",
+    "title": "Shallow history on a parallel state restores all regions to their own initial leaves (regions are the immediate children)",
+    "spec": "SCXML 3.10: for a parallel parent the immediate children are the regions; all are re-entered, deeper states use defaults",
+    "expected": [
+      "m.P.R1.x1",
+      "m.P.R2.y1"
+    ],
+    "observed": [
+      "m.P.R1.x1",
+      "m.P.R2.y1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-07",
+    "engine": "sync",
+    "title": "Shallow history on a parallel state restores all regions to their own initial leaves (regions are the immediate children)",
+    "spec": "SCXML 3.10: for a parallel parent the immediate children are the regions; all are re-entered, deeper states use defaults",
+    "expected": [
+      "m.P.R1.x1",
+      "m.P.R2.y1"
+    ],
+    "observed": [
+      "m.P.R1.x1",
+      "m.P.R2.y1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-08",
+    "engine": "async",
+    "title": "Re-entering via history a SECOND time reflects the newer snapshot",
+    "spec": "SCXML 3.10: the history value is overwritten each time the parent is exited",
+    "expected": [
+      "m.P.a.a1"
+    ],
+    "observed": [
+      "m.P.a.a1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-08",
+    "engine": "sync",
+    "title": "Re-entering via history a SECOND time reflects the newer snapshot",
+    "spec": "SCXML 3.10: the history value is overwritten each time the parent is exited",
+    "expected": [
+      "m.P.a.a1"
+    ],
+    "observed": [
+      "m.P.a.a1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-09",
+    "engine": "async",
+    "title": "History state is never part of the active configuration",
+    "spec": "SCXML 3.10: <history> is a pseudo-state; it is never in the configuration",
+    "expected": {
+      "hist_active": false
+    },
+    "observed": {
+      "hist_active": false
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "H-09",
+    "engine": "sync",
+    "title": "History state is never part of the active configuration",
+    "spec": "SCXML 3.10: <history> is a pseudo-state; it is never in the configuration",
+    "expected": {
+      "hist_active": false
+    },
+    "observed": {
+      "hist_active": false
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "H-10",
+    "engine": "async",
+    "title": "stateIn guard is satisfied for an active leaf",
+    "spec": "SCXML 5.9.2 In(); XState v5 stateIn",
+    "expected": [
+      "m.p.A.a1",
+      "m.p.B.b2"
+    ],
+    "observed": [
+      "m.p.A.a1",
+      "m.p.B.b2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-10",
+    "engine": "sync",
+    "title": "stateIn guard is satisfied for an active leaf",
+    "spec": "SCXML 5.9.2 In(); XState v5 stateIn",
+    "expected": [
+      "m.p.A.a1",
+      "m.p.B.b2"
+    ],
+    "observed": [
+      "m.p.A.a1",
+      "m.p.B.b2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-11",
+    "engine": "async",
+    "title": "stateIn guard is NOT satisfied for an inactive sibling leaf",
+    "spec": "SCXML 5.9.2 In() is false when the named state is not in the configuration",
+    "expected": [
+      "m.p.A.a1",
+      "m.p.B.b1"
+    ],
+    "observed": [
+      "m.p.A.a1",
+      "m.p.B.b1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-11",
+    "engine": "sync",
+    "title": "stateIn guard is NOT satisfied for an inactive sibling leaf",
+    "spec": "SCXML 5.9.2 In() is false when the named state is not in the configuration",
+    "expected": [
+      "m.p.A.a1",
+      "m.p.B.b1"
+    ],
+    "observed": [
+      "m.p.A.a1",
+      "m.p.B.b1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-12",
+    "engine": "async",
+    "title": "stateIn is satisfied by an ANCESTOR of an active leaf",
+    "spec": "SCXML 5.9.2: In(s) is true when s is in the configuration, and the configuration contains all ancestors of active atomic states",
+    "expected": [
+      "m.p.A.a1",
+      "m.p.B.b2"
+    ],
+    "observed": [
+      "m.p.A.a1",
+      "m.p.B.b2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-12",
+    "engine": "sync",
+    "title": "stateIn is satisfied by an ANCESTOR of an active leaf",
+    "spec": "SCXML 5.9.2: In(s) is true when s is in the configuration, and the configuration contains all ancestors of active atomic states",
+    "expected": [
+      "m.p.A.a1",
+      "m.p.B.b2"
+    ],
+    "observed": [
+      "m.p.A.a1",
+      "m.p.B.b2"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-13",
+    "engine": "async",
+    "title": "stateIn must NOT match a state whose id merely ends with the same trailing segments of a different branch",
+    "spec": "SCXML 5.9.2: In() compares state IDENTITY, not a name suffix. 'm.left.work' and 'm.right.work' are different states.",
+    "expected": {
+      "ids": [
+        "m.p.A.left.work",
+        "m.p.B.b1"
+      ],
+      "fired": false
+    },
+    "observed": {
+      "ids": [
+        "m.p.A.left.work",
+        "m.p.B.b1"
+      ],
+      "fired": false
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "H-13",
+    "engine": "sync",
+    "title": "stateIn must NOT match a state whose id merely ends with the same trailing segments of a different branch",
+    "spec": "SCXML 5.9.2: In() compares state IDENTITY, not a name suffix. 'm.left.work' and 'm.right.work' are different states.",
+    "expected": {
+      "ids": [
+        "m.p.A.left.work",
+        "m.p.B.b1"
+      ],
+      "fired": false
+    },
+    "observed": {
+      "ids": [
+        "m.p.A.left.work",
+        "m.p.B.b1"
+      ],
+      "fired": false
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "H-14",
+    "engine": "async",
+    "title": "Exact descriptor beats a partial descriptor on the same state",
+    "spec": "XState v5 event descriptors: an exact match takes precedence over 'prefix.*'",
+    "expected": [
+      "m.exact"
+    ],
+    "observed": [
+      "m.exact"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-14",
+    "engine": "sync",
+    "title": "Exact descriptor beats a partial descriptor on the same state",
+    "spec": "XState v5 event descriptors: an exact match takes precedence over 'prefix.*'",
+    "expected": [
+      "m.exact"
+    ],
+    "observed": [
+      "m.exact"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-15",
+    "engine": "async",
+    "title": "Longer partial descriptor beats a shorter one",
+    "spec": "XState v5: 'mouse.click.*' is more specific than 'mouse.*'",
+    "expected": [
+      "m.long"
+    ],
+    "observed": [
+      "m.long"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-15",
+    "engine": "sync",
+    "title": "Longer partial descriptor beats a shorter one",
+    "spec": "XState v5: 'mouse.click.*' is more specific than 'mouse.*'",
+    "expected": [
+      "m.long"
+    ],
+    "observed": [
+      "m.long"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-16",
+    "engine": "async",
+    "title": "Bare wildcard '*' is the last resort",
+    "spec": "XState v5: '*' matches anything and is lowest precedence",
+    "expected": [
+      "m.wild"
+    ],
+    "observed": [
+      "m.wild"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-16",
+    "engine": "sync",
+    "title": "Bare wildcard '*' is the last resort",
+    "spec": "XState v5: '*' matches anything and is lowest precedence",
+    "expected": [
+      "m.wild"
+    ],
+    "observed": [
+      "m.wild"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-17",
+    "engine": "async",
+    "title": "'mouse.*' matches the bare segment 'mouse' itself",
+    "spec": "XState v5: a partial descriptor 'a.*' matches 'a' and 'a.<rest>'",
+    "expected": [
+      "m.partial"
+    ],
+    "observed": [
+      "m.partial"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-17",
+    "engine": "sync",
+    "title": "'mouse.*' matches the bare segment 'mouse' itself",
+    "spec": "XState v5: a partial descriptor 'a.*' matches 'a' and 'a.<rest>'",
+    "expected": [
+      "m.partial"
+    ],
+    "observed": [
+      "m.partial"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-18",
+    "engine": "async",
+    "title": "'mouse.*' must NOT match 'mousedown' (segment boundary, not string prefix)",
+    "spec": "XState v5: partial descriptors match on DOT SEGMENTS",
+    "expected": [
+      "m.wild"
+    ],
+    "observed": [
+      "m.wild"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-18",
+    "engine": "sync",
+    "title": "'mouse.*' must NOT match 'mousedown' (segment boundary, not string prefix)",
+    "spec": "XState v5: partial descriptors match on DOT SEGMENTS",
+    "expected": [
+      "m.wild"
+    ],
+    "observed": [
+      "m.wild"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-19",
+    "engine": "async",
+    "title": "A deeper state's wildcard beats a shallower state's exact match (state depth outranks descriptor specificity)",
+    "spec": "SCXML 3.13: selection is by SOURCE STATE depth first; descriptor specificity only ranks candidates on the SAME state",
+    "expected": [
+      "m.P.viaWild"
+    ],
+    "observed": [
+      "m.P.viaWild"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-19",
+    "engine": "sync",
+    "title": "A deeper state's wildcard beats a shallower state's exact match (state depth outranks descriptor specificity)",
+    "spec": "SCXML 3.13: selection is by SOURCE STATE depth first; descriptor specificity only ranks candidates on the SAME state",
+    "expected": [
+      "m.P.viaWild"
+    ],
+    "observed": [
+      "m.P.viaWild"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-20",
+    "engine": "async",
+    "title": "A guarded exact descriptor that fails falls through to the wildcard on the same state",
+    "spec": "XState v5: descriptor candidates are tried in precedence order; a guard failure moves to the next candidate",
+    "expected": [
+      "m.wild"
+    ],
+    "observed": [
+      "m.wild"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "H-20",
+    "engine": "sync",
+    "title": "A guarded exact descriptor that fails falls through to the wildcard on the same state",
+    "spec": "XState v5: descriptor candidates are tried in precedence order; a guard failure moves to the next candidate",
+    "expected": [
+      "m.wild"
+    ],
+    "observed": [
+      "m.wild"
+    ],
+    "status": "PASS"
+  }
+]

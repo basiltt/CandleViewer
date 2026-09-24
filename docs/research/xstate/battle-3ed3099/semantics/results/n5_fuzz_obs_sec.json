@@ -1,0 +1,139 @@
+[
+ {
+  "id": "N5-01",
+  "title": "5000 structured snapshot mutations: every outcome is typed or a faithful restore",
+  "intent": "#110: a corrupted blob must never crash untyped nor silently restore a wrong machine",
+  "detail": {
+   "ok": true,
+   "mutations": 5000,
+   "outcomes": {
+    "accepted-legal": 2577,
+    "typed:SnapshotCorruptError": 2004,
+    "typed:SnapshotDriftError": 330,
+    "typed:SnapshotVersionError": 15,
+    "typed:StateNotFoundError": 74
+   },
+   "untyped_sample": [],
+   "illegal_sample": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N5-02",
+  "title": "Hostile event types all raise InvalidEventError (#113), never escape untyped",
+  "intent": "a malformed gateway message must fail inside the library's own hierarchy",
+  "detail": {
+   "ok": true,
+   "cases": 10,
+   "bad": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N5-03",
+  "title": "on_plugin_error fires for an async-def hook on the sync engine (#127)",
+  "intent": "a hook that silently never runs is an observability hole in an audit trail",
+  "detail": {
+   "ok": true,
+   "seen": [
+    "on_plugin_error:on_transition",
+    "on_plugin_error:on_transition"
+   ],
+   "last_plugin_error": "('BadPlugin', 'on_transition', TypeError(\"BadPlugin.on_transition is 'async def'; plugin hooks are synchronous callbacks and are never await"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N5-04",
+  "title": "on_resolve_error fires when a referenced action name is unimplemented (#134)",
+  "intent": "an unresolved action is a config error that must not be silent",
+  "detail": {
+   "ok": true,
+   "hooks": [],
+   "raised": "ImplementationMissingError",
+   "receipt_error": "None"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N5-05",
+  "title": "LoggingInspector redacts password/api_key/token by default (#126)",
+  "intent": "an OMS log must never carry a credential; a leak is a security incident",
+  "detail": {
+   "ok": true,
+   "leaked_values": [],
+   "redact_keys": [
+    "password",
+    "passwd",
+    "pwd",
+    "secret",
+    "token",
+    "api_key",
+    "apikey",
+    "authorization",
+    "auth",
+    "bearer",
+    "credential",
+    "private_key",
+    "cookie",
+    "session",
+    "signature",
+    "otp",
+    "pin",
+    "card",
+    "cvv",
+    "cvc",
+    "pan",
+    "iban",
+    "account_number",
+    "account_no",
+    "routing",
+    "swift",
+    "mnemonic",
+    "seed_phrase",
+    "seed",
+    "ssn",
+    "dob",
+    "date_of_birth",
+    "email",
+    "phone",
+    "passport"
+   ],
+   "pure_redact": {
+    "password": "***",
+    "nested": {
+     "api_key": "***"
+    },
+    "qty": 1
+   },
+   "records": 43,
+   "qty_still_logged": true
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N5-06",
+  "title": "Exported provenance API surface is present and importable (#137)",
+  "intent": "a documented API that is not exported forces adopters onto private internals",
+  "detail": {
+   "ok": true,
+   "missing": [],
+   "not_in_dunder_all": [],
+   "not_derived_from_base": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N5-07",
+  "title": "Provenance survives deepcopy and pickle (#138) and wait=True (#111)",
+  "intent": "an engine marker that a round-trip strips lets user traffic forge a system event",
+  "detail": {
+   "ok": true,
+   "original": true,
+   "deepcopy": true,
+   "pickle": true,
+   "user_event": false
+  },
+  "status": "PASS"
+ }
+]

@@ -1,0 +1,911 @@
+[
+  {
+    "machine": "B6",
+    "invariant": "happy-path",
+    "verdict": "PASS",
+    "note": "armed -> 2x submitting_slice -> completing -> completed",
+    "evidence": {
+      "states": [
+        "twap.completed"
+      ],
+      "transitions": [
+        "->twap.armed",
+        "___xstate_statemachine_init___->twap.armed",
+        "SLICE_DUE->twap.submitting_slice",
+        "done.invoke.slice->twap.armed",
+        "SLICE_DUE->twap.submitting_slice",
+        "done.invoke.slice->twap.armed",
+        "DURATION_END->twap.completing",
+        "CHILDREN_TERMINAL->twap.completed"
+      ]
+    }
+  },
+  {
+    "machine": "B6",
+    "invariant": "INV-B6-a (slices_done <= slices_total counter wiring)",
+    "verdict": "PASS",
+    "note": "bump_slices_done ran once per SLICE_DUE; the bound itself is an action-level obligation the library cannot enforce",
+    "evidence": {
+      "trace": [
+        "precompute_all_slice_deadlines",
+        "register_deadlines_with_scheduler",
+        "compute_slice_qty_with_participation_cap",
+        "apply_catch_up",
+        "bump_slices_done",
+        "record_child",
+        "compute_slice_qty_with_participation_cap",
+        "apply_catch_up",
+        "bump_slices_done",
+        "record_child"
+      ]
+    }
+  },
+  {
+    "machine": "B6",
+    "invariant": "INV-B6-c roll-forward",
+    "verdict": "PASS",
+    "note": "always-guard returns to armed WITHOUT invoking submit_child",
+    "evidence": {
+      "states": [
+        "twap.armed"
+      ],
+      "calls": [
+        "A:precompute_all_slice_deadlines",
+        "A:register_deadlines_with_scheduler",
+        "G:preflight_invalid",
+        "G:preflight_invalid",
+        "G:price_limit_breached",
+        "A:compute_slice_qty_with_participation_cap",
+        "A:apply_catch_up",
+        "A:bump_slices_done",
+        "G:slice_qty_below_min_roll_forward",
+        "G:slice_qty_below_min_roll_forward"
+      ]
+    }
+  },
+  {
+    "machine": "B6",
+    "invariant": "INV-B6-d price_blocked visible + shortfall recorded",
+    "verdict": "PASS",
+    "note": "2nd SLICE_DUE while blocked took the internal record_shortfall edge",
+    "evidence": {
+      "trace": [
+        "precompute_all_slice_deadlines",
+        "register_deadlines_with_scheduler",
+        "raise_price_limit_notice",
+        "record_shortfall"
+      ],
+      "states": [
+        "twap.armed"
+      ]
+    }
+  },
+  {
+    "machine": "B6",
+    "invariant": "B1-analogue: event during invoking state is deferred then applied",
+    "verdict": "FAIL",
+    "note": "USER_PAUSE arriving inside submitting_slice was HELD (deferred_count=0) and replayed into paused after done.invoke",
+    "evidence": {
+      "mid": [
+        "twap.submitting_slice"
+      ],
+      "deferred": 0,
+      "unhandled": [],
+      "after": [
+        "twap.armed"
+      ]
+    }
+  },
+  {
+    "machine": "B6",
+    "invariant": "rollback: raising entry action does not half-commit into invoke",
+    "verdict": "PASS",
+    "note": "entry raised -> configuration rolled back to armed, submit_child never invoked",
+    "evidence": {
+      "states": [
+        "twap.armed"
+      ],
+      "calls": [
+        "A:precompute_all_slice_deadlines",
+        "A:register_deadlines_with_scheduler",
+        "G:preflight_invalid",
+        "G:preflight_invalid",
+        "G:price_limit_breached",
+        "A:compute_slice_qty_with_participation_cap",
+        "A:apply_catch_up",
+        "A:bump_slices_done"
+      ],
+      "error": null
+    }
+  },
+  {
+    "machine": "B6",
+    "invariant": "strict: undeclared event rejected",
+    "verdict": "FAIL",
+    "note": "send of an undeclared name raised NO-RAISE",
+    "evidence": {
+      "raised": "NO-RAISE"
+    }
+  },
+  {
+    "machine": "B6",
+    "invariant": "onError retry path records shortfall",
+    "verdict": "PASS",
+    "note": "submit_child onError -> armed with bump_failure + record_shortfall",
+    "evidence": {
+      "states": [
+        "twap.armed"
+      ],
+      "trace": [
+        "precompute_all_slice_deadlines",
+        "register_deadlines_with_scheduler",
+        "compute_slice_qty_with_participation_cap",
+        "apply_catch_up",
+        "bump_slices_done",
+        "bump_failure",
+        "record_shortfall"
+      ]
+    }
+  },
+  {
+    "machine": "B6",
+    "invariant": "onError exhausted -> failed",
+    "verdict": "PASS",
+    "note": "failures_exhausted routes to the terminal failure state",
+    "evidence": {
+      "states": [
+        "twap.failed"
+      ]
+    }
+  },
+  {
+    "machine": "B6",
+    "invariant": "guardErrorPolicy raise: crashed guard is not a silent False",
+    "verdict": "PASS",
+    "note": "guard raised -> NO-RAISE ; states=['twap.armed'] status=running",
+    "evidence": {
+      "raised": "NO-RAISE",
+      "states": [
+        "twap.armed"
+      ],
+      "status": "running"
+    }
+  },
+  {
+    "machine": "B7",
+    "invariant": "happy-path",
+    "verdict": "PASS",
+    "note": "arming -> working -> repricing -> working -> completing -> completed",
+    "evidence": {
+      "states": [
+        "chase.completed"
+      ],
+      "trace": [
+        "record_child",
+        "stamp_arm_price",
+        "drain_deferred",
+        "compute_target_excluding_own_size",
+        "bump_repricings",
+        "stamp_last_reprice",
+        "drain_deferred",
+        "apply_fill",
+        "apply_fill"
+      ]
+    }
+  },
+  {
+    "machine": "B7",
+    "invariant": "INV-B7-b compute_target_excluding_own_size runs on every reprice",
+    "verdict": "PASS",
+    "note": "the excluding-own-size computation is bound to the repricing entry",
+    "evidence": {
+      "trace": [
+        "record_child",
+        "stamp_arm_price",
+        "drain_deferred",
+        "compute_target_excluding_own_size",
+        "bump_repricings",
+        "stamp_last_reprice",
+        "drain_deferred",
+        "apply_fill",
+        "apply_fill"
+      ]
+    }
+  },
+  {
+    "machine": "B7",
+    "invariant": "INV-B7-a bound_exceeded via beyond_max_chase_ticks",
+    "verdict": "PASS",
+    "note": "guard beyond_max_chase_ticks -> bound_exceeded (alert raised) -> parked",
+    "evidence": {
+      "states": [
+        "chase.parked"
+      ],
+      "transitions": [
+        "___xstate_statemachine_init___->chase.arming",
+        "done.invoke.arm->chase.working",
+        "BOOK_TARGET_MOVED->chase.bound_exceeded",
+        "->chase.parked"
+      ]
+    }
+  },
+  {
+    "machine": "B7",
+    "invariant": "INV-B7-a bound_exceeded via repricings_exhausted",
+    "verdict": "PASS",
+    "note": "guard repricings_exhausted -> bound_exceeded (alert raised) -> parked",
+    "evidence": {
+      "states": [
+        "chase.parked"
+      ],
+      "transitions": [
+        "___xstate_statemachine_init___->chase.arming",
+        "done.invoke.arm->chase.working",
+        "BOOK_TARGET_MOVED->chase.bound_exceeded",
+        "->chase.parked"
+      ]
+    }
+  },
+  {
+    "machine": "B7",
+    "invariant": "INV-B7-c rate budget parks instead of queueing amendments",
+    "verdict": "PASS",
+    "note": "RATE_BUDGET_EXHAUSTED -> paused with no amend invocation",
+    "evidence": {
+      "states": [
+        "chase.paused"
+      ],
+      "calls": [
+        "S:submit_initial_limit",
+        "A:record_child",
+        "A:stamp_arm_price",
+        "A:drain_deferred"
+      ]
+    }
+  },
+  {
+    "machine": "B7",
+    "invariant": "INV-B7-e timing_out resolves by policy (on_timeout_is_market)",
+    "verdict": "PASS",
+    "note": "TIMEOUT settled to ['completed']",
+    "evidence": {
+      "states": [
+        "chase.completed"
+      ],
+      "transitions": [
+        "___xstate_statemachine_init___->chase.arming",
+        "done.invoke.arm->chase.working",
+        "TIMEOUT->chase.timing_out",
+        "->chase.market_converting",
+        "done.invoke.mkt->chase.completing",
+        "CHILDREN_TERMINAL->chase.completed"
+      ]
+    }
+  },
+  {
+    "machine": "B7",
+    "invariant": "INV-B7-e timing_out resolves by policy (on_timeout_is_cancel)",
+    "verdict": "PASS",
+    "note": "TIMEOUT settled to ['cancelled']",
+    "evidence": {
+      "states": [
+        "chase.cancelled"
+      ],
+      "transitions": [
+        "___xstate_statemachine_init___->chase.arming",
+        "done.invoke.arm->chase.working",
+        "TIMEOUT->chase.timing_out",
+        "->chase.cancelling",
+        "done.invoke.cx->chase.cancelled"
+      ]
+    }
+  },
+  {
+    "machine": "B7",
+    "invariant": "INV-B7-e default timeout policy lands in tagged parked",
+    "verdict": "PASS",
+    "note": "no policy guard true -> parked (tags: left_working), not silence",
+    "evidence": {
+      "states": [
+        "chase.parked"
+      ]
+    }
+  },
+  {
+    "machine": "B7",
+    "invariant": "amend onError order-not-found-after-fill -> completing",
+    "verdict": "PASS",
+    "note": "a fill racing an amendment is not a failure",
+    "evidence": {
+      "states": [
+        "chase.completed"
+      ]
+    }
+  },
+  {
+    "machine": "B7",
+    "invariant": "USER_CANCEL during repricing is deferred, then cancels",
+    "verdict": "FAIL",
+    "note": "cancel held across the in-flight amend, applied on return to working",
+    "evidence": {
+      "mid": [
+        "chase.repricing"
+      ],
+      "deferred": 0,
+      "after": [
+        "chase.working"
+      ]
+    }
+  },
+  {
+    "machine": "B8",
+    "invariant": "happy-path to protected",
+    "verdict": "PASS",
+    "note": "attach -> verify (exchange_reports_sl) -> protected; watchdog armed",
+    "evidence": {
+      "states": [
+        "position_protection.sl.protected",
+        "position_protection.watchdog.scanning"
+      ],
+      "calls": [
+        "A:arm_sl_deadline",
+        "A:bump_attach_attempts",
+        "S:attach_native_sl",
+        "S:read_position_sl",
+        "G:exchange_reports_sl"
+      ]
+    }
+  },
+  {
+    "machine": "B8",
+    "invariant": "INV-B8-a protected requires a completed exchange read",
+    "verdict": "PASS",
+    "note": "read_position_sl ran before protected was entered",
+    "evidence": {
+      "calls": [
+        "A:arm_sl_deadline",
+        "A:bump_attach_attempts",
+        "S:attach_native_sl",
+        "S:read_position_sl",
+        "G:exchange_reports_sl"
+      ]
+    }
+  },
+  {
+    "machine": "B8",
+    "invariant": "INV-B8-a/B8-listed: protected UNREACHABLE without confirmed SL",
+    "verdict": "PASS",
+    "note": "32 guard x service x event-sequence runs with exchange_reports_sl pinned False; `protected` entered in 0 of them",
+    "evidence": {
+      "breaches": []
+    }
+  },
+  {
+    "machine": "B8",
+    "invariant": "INV-B8-d naked_unrecoverable pages the owner",
+    "verdict": "PASS",
+    "note": "attach fail + fallback fail -> naked_unrecoverable with both unsuppressable entry actions",
+    "evidence": {
+      "states": [
+        "position_protection.sl.naked_unrecoverable",
+        "position_protection.watchdog.scanning"
+      ],
+      "trace": [
+        "arm_sl_deadline",
+        "bump_attach_attempts",
+        "stamp_naked_since",
+        "raise_critical_alert",
+        "emit_naked_metric",
+        "page_owner",
+        "consider_reduce_only_close"
+      ]
+    }
+  },
+  {
+    "machine": "B8",
+    "invariant": "INV-3 naked entry raises the critical alert + metric",
+    "verdict": "PASS",
+    "note": "the naked state stamps the clock, alerts and metricises on entry",
+    "evidence": {
+      "trace": [
+        "arm_sl_deadline",
+        "bump_attach_attempts",
+        "stamp_naked_since",
+        "raise_critical_alert",
+        "emit_naked_metric",
+        "page_owner",
+        "consider_reduce_only_close"
+      ]
+    }
+  },
+  {
+    "machine": "B8",
+    "invariant": "INV-B8-b tightens_only deny-polarity blocks the amendment",
+    "verdict": "PASS",
+    "note": "guard False -> no amending, no set_trading_stop, stays protected",
+    "evidence": {
+      "states": [
+        "position_protection.sl.protected",
+        "position_protection.watchdog.scanning"
+      ],
+      "calls": [
+        "A:arm_sl_deadline",
+        "A:bump_attach_attempts",
+        "S:attach_native_sl",
+        "S:read_position_sl",
+        "G:exchange_reports_sl",
+        "G:tightens_only"
+      ]
+    }
+  },
+  {
+    "machine": "B8",
+    "invariant": "INV-B8-b raising guard surfaces (guardErrorPolicy raise)",
+    "verdict": "FAIL",
+    "note": "raising tightens_only produced NO-RAISE; status=running",
+    "evidence": {
+      "raised": "NO-RAISE",
+      "states": [
+        "position_protection.sl.protected",
+        "position_protection.watchdog.scanning"
+      ],
+      "status": "running",
+      "error": "None"
+    }
+  },
+  {
+    "machine": "B8",
+    "invariant": "INV-B8-c loosening blocked without explicit_audited_override",
+    "verdict": "PASS",
+    "note": "LOOSEN_SL with the override False never reaches set_trading_stop",
+    "evidence": {
+      "calls": [
+        "A:arm_sl_deadline",
+        "A:bump_attach_attempts",
+        "S:attach_native_sl",
+        "S:read_position_sl",
+        "G:exchange_reports_sl",
+        "G:explicit_audited_override"
+      ],
+      "states": [
+        "position_protection.sl.protected",
+        "position_protection.watchdog.scanning"
+      ]
+    }
+  },
+  {
+    "machine": "B8",
+    "invariant": "INV-B8-e miss counter is never reset by time alone",
+    "verdict": "PASS",
+    "note": "3 SCAN_DUE with sl_observed False -> 3 bumps, 0 resets",
+    "evidence": {
+      "trace": [
+        "arm_sl_deadline",
+        "bump_attach_attempts",
+        "bump_miss_counter",
+        "maybe_raise_watchdog_miss",
+        "bump_miss_counter",
+        "maybe_raise_watchdog_miss",
+        "bump_miss_counter",
+        "maybe_raise_watchdog_miss"
+      ]
+    }
+  },
+  {
+    "machine": "B8",
+    "invariant": "INV-B8-e positive sl_observed resets it",
+    "verdict": "PASS",
+    "note": "a positive scan takes the reset branch only",
+    "evidence": {
+      "trace": [
+        "arm_sl_deadline",
+        "bump_attach_attempts",
+        "reset_miss_counter"
+      ]
+    }
+  },
+  {
+    "machine": "B8",
+    "invariant": "SL_DEADLINE during attaching pre-empts into naked",
+    "verdict": "PASS",
+    "note": "the deadline is handled IN attaching, so it is not deferred behind the in-flight attach",
+    "evidence": {
+      "mid": [
+        "position_protection.sl.attaching",
+        "position_protection.watchdog.scanning"
+      ],
+      "after": [
+        "position_protection.sl.naked",
+        "position_protection.watchdog.scanning"
+      ]
+    }
+  },
+  {
+    "machine": "B8",
+    "invariant": "actionErrorPolicy fail halts the safety machine",
+    "verdict": "PASS",
+    "note": "raising entry action -> status=error raised=NO-RAISE",
+    "evidence": {
+      "raised": "NO-RAISE",
+      "states": [
+        "position_protection.sl.flat",
+        "position_protection.watchdog.scanning"
+      ],
+      "status": "error",
+      "error": "TransitionFailedError(\"Action 'bump_attach_attempts' raised during a transition from 'position_protection.sl.flat'; the transition was rolled back and the machine stopped (actionErrorPolicy='fail').\")"
+    }
+  },
+  {
+    "machine": "B9",
+    "invariant": "happy-path draft->simulating->armed->evaluating->acting->cooling->armed",
+    "verdict": "PASS",
+    "note": "a full fire cycle returns to armed with the fire recorded",
+    "evidence": {
+      "states": [
+        "rule_instance.armed"
+      ],
+      "transitions": [
+        "___xstate_statemachine_init___->rule_instance.draft",
+        "SAVE->rule_instance.simulating",
+        "ARM_REQUESTED->rule_instance.armed",
+        "TRIGGER->rule_instance.evaluating",
+        "done.invoke.eval->rule_instance.acting",
+        "done.invoke.act->rule_instance.cooling_down",
+        "COOLDOWN_DUE->rule_instance.armed"
+      ]
+    }
+  },
+  {
+    "machine": "B9",
+    "invariant": "INV-B9-c assert_safety_limits runs on ENTRY to acting",
+    "verdict": "PASS",
+    "note": "the safety assertion precedes the dispatch result, per-fire",
+    "evidence": {
+      "trace": [
+        "stamp_simulation_start",
+        "subscribe_triggers",
+        "emit_armed_audit",
+        "unsubscribe_triggers",
+        "assert_safety_limits",
+        "record_fire",
+        "reset_consecutive_errors",
+        "stamp_cooldown_deadline",
+        "drain_deferred",
+        "subscribe_triggers",
+        "emit_armed_audit"
+      ]
+    }
+  },
+  {
+    "machine": "B9",
+    "invariant": "INV-B9-b skip reason recorded: debounce_blocked",
+    "verdict": "PASS",
+    "note": "TRIGGER under debounce_blocked recorded record_skip_debounced and stayed armed",
+    "evidence": {
+      "trace": [
+        "stamp_simulation_start",
+        "subscribe_triggers",
+        "emit_armed_audit",
+        "record_skip_debounced"
+      ],
+      "states": [
+        "rule_instance.armed"
+      ]
+    }
+  },
+  {
+    "machine": "B9",
+    "invariant": "INV-B9-b skip reason recorded: data_stale",
+    "verdict": "PASS",
+    "note": "TRIGGER under data_stale recorded record_skip_stale_data and stayed armed",
+    "evidence": {
+      "trace": [
+        "stamp_simulation_start",
+        "subscribe_triggers",
+        "emit_armed_audit",
+        "record_skip_stale_data"
+      ],
+      "states": [
+        "rule_instance.armed"
+      ]
+    }
+  },
+  {
+    "machine": "B9",
+    "invariant": "INV-B9-b skip reason recorded: limits_blocked",
+    "verdict": "PASS",
+    "note": "TRIGGER under limits_blocked recorded record_skip_limit and stayed armed",
+    "evidence": {
+      "trace": [
+        "stamp_simulation_start",
+        "subscribe_triggers",
+        "emit_armed_audit",
+        "record_skip_limit"
+      ],
+      "states": [
+        "rule_instance.armed"
+      ]
+    }
+  },
+  {
+    "machine": "B9",
+    "invariant": "INV-B9-b condition-false no-op is logged with values",
+    "verdict": "PASS",
+    "note": "evaluate onDone false branch is never silent",
+    "evidence": {
+      "trace": [
+        "stamp_simulation_start",
+        "subscribe_triggers",
+        "emit_armed_audit",
+        "unsubscribe_triggers",
+        "log_no_op_with_values",
+        "subscribe_triggers",
+        "emit_armed_audit"
+      ]
+    }
+  },
+  {
+    "machine": "B9",
+    "invariant": "INV-B9-b CONFIRM_TIMEOUT records record_skip_unconfirmed",
+    "verdict": "PASS",
+    "note": "human-confirmation TTL / rejection is an audited non-fire",
+    "evidence": {
+      "trace": [
+        "stamp_simulation_start",
+        "subscribe_triggers",
+        "emit_armed_audit",
+        "unsubscribe_triggers",
+        "queue_for_human_confirmation",
+        "arm_confirmation_ttl",
+        "record_skip_unconfirmed",
+        "subscribe_triggers",
+        "emit_armed_audit"
+      ],
+      "states": [
+        "rule_instance.armed"
+      ]
+    }
+  },
+  {
+    "machine": "B9",
+    "invariant": "INV-B9-b REJECTED records record_skip_rejected",
+    "verdict": "PASS",
+    "note": "human-confirmation TTL / rejection is an audited non-fire",
+    "evidence": {
+      "trace": [
+        "stamp_simulation_start",
+        "subscribe_triggers",
+        "emit_armed_audit",
+        "unsubscribe_triggers",
+        "queue_for_human_confirmation",
+        "arm_confirmation_ttl",
+        "record_skip_rejected",
+        "subscribe_triggers",
+        "emit_armed_audit"
+      ],
+      "states": [
+        "rule_instance.armed"
+      ]
+    }
+  },
+  {
+    "machine": "B9",
+    "invariant": "INV-B9-d kill_switched has no automatic exit",
+    "verdict": "PASS",
+    "note": "10 further events incl. HUMAN_REARM without elevation: still kill_switched",
+    "evidence": {
+      "states": [
+        "rule_instance.kill_switched"
+      ],
+      "deferred": 7
+    }
+  },
+  {
+    "machine": "B9",
+    "invariant": "INV-B9-d elevated HUMAN_REARM is the one exit",
+    "verdict": "PASS",
+    "note": "an elevated human re-arm restores armed and clears the error budget",
+    "evidence": {
+      "states": [
+        "rule_instance.armed"
+      ]
+    }
+  },
+  {
+    "machine": "B9",
+    "invariant": "INV-B9-e promotion gate deny-polarity",
+    "verdict": "PASS",
+    "note": "a failed gate stays in simulating with a recorded reason",
+    "evidence": {
+      "states": [
+        "rule_instance.simulating"
+      ],
+      "trace": [
+        "stamp_simulation_start",
+        "reject_promotion_with_reason"
+      ]
+    }
+  },
+  {
+    "machine": "B9",
+    "invariant": "INV-B9-e raising promotion gate never promotes",
+    "verdict": "PASS",
+    "note": "guard raised (NO-RAISE); machine is ['rule_instance.simulating']",
+    "evidence": {
+      "raised": "NO-RAISE",
+      "states": [
+        "rule_instance.simulating"
+      ]
+    }
+  },
+  {
+    "machine": "B9",
+    "invariant": "error budget exhaustion routes to kill_switched",
+    "verdict": "PASS",
+    "note": "a repeatedly failing evaluator kills the rule rather than looping",
+    "evidence": {
+      "states": [
+        "rule_instance.kill_switched"
+      ]
+    }
+  },
+  {
+    "machine": "B9",
+    "invariant": "partial dispatch surfaces as onError, not a committed fire",
+    "verdict": "PASS",
+    "note": "dispatch failure is a partial fire with an alert",
+    "evidence": {
+      "trace": [
+        "stamp_simulation_start",
+        "subscribe_triggers",
+        "emit_armed_audit",
+        "unsubscribe_triggers",
+        "assert_safety_limits",
+        "record_partial_fire",
+        "bump_consecutive_errors",
+        "raise_partial_alert",
+        "stamp_cooldown_deadline"
+      ],
+      "states": [
+        "rule_instance.cooling_down"
+      ]
+    }
+  },
+  {
+    "machine": "B9",
+    "invariant": "B18-analogue: send_priority pre-empts a busy inbox",
+    "verdict": "PASS",
+    "note": "KILL_SWITCH jumped 81 queued TRIGGERs (only 0 were processed before the kill landed); final=['rule_instance.kill_switched']",
+    "evidence": {
+      "queue_depth_at_send": 81,
+      "triggers_processed": 0,
+      "states": [
+        "rule_instance.kill_switched"
+      ]
+    }
+  },
+  {
+    "machine": "B9",
+    "invariant": "bounded inbox RAISEs rather than silently dropping",
+    "verdict": "PASS",
+    "note": "200 sends into a 4-deep inbox produced QueueOverflowError",
+    "evidence": {
+      "raised": "QueueOverflowError"
+    }
+  },
+  {
+    "machine": "B10",
+    "invariant": "happy-path armed->firing->delivered->acknowledged->resolved",
+    "verdict": "PASS",
+    "note": "full delivery lifecycle reaches the terminal final state",
+    "evidence": {
+      "states": [
+        "alert.resolved"
+      ],
+      "transitions": [
+        "___xstate_statemachine_init___->alert.armed",
+        "CONDITION_MET->alert.firing",
+        "done.invoke.deliver->alert.delivered",
+        "ACK->alert.acknowledged",
+        "RESOLVE->alert.resolved"
+      ]
+    }
+  },
+  {
+    "machine": "B10",
+    "invariant": "INV-B10-d persist_fired_row precedes dispatch",
+    "verdict": "PASS",
+    "note": "the fired row is written on entry to firing, before any channel I/O",
+    "evidence": {
+      "trace": [
+        "persist_fired_row",
+        "stamp_storm_window"
+      ],
+      "calls": [
+        "G:in_storm_window",
+        "A:persist_fired_row",
+        "A:stamp_storm_window",
+        "S:dispatch_to_channels",
+        "G:all_channels_ok"
+      ]
+    }
+  },
+  {
+    "machine": "B10",
+    "invariant": "INV-B10-b partial delivery is a distinct degraded state",
+    "verdict": "PASS",
+    "note": "all_channels_ok False -> partially_delivered, not delivered",
+    "evidence": {
+      "states": [
+        "alert.partially_delivered"
+      ]
+    }
+  },
+  {
+    "machine": "B10",
+    "invariant": "INV-B10-a retry loop is driven by RETRY_DUE, bounded by the guard",
+    "verdict": "PASS",
+    "note": "each RETRY_DUE costs exactly one attempt bump; no free retries",
+    "evidence": {
+      "attempts": 7,
+      "states": [
+        "alert.retrying"
+      ]
+    }
+  },
+  {
+    "machine": "B10",
+    "invariant": "INV-B10-a exhaustion reaches the visible delivery_failed state",
+    "verdict": "PASS",
+    "note": "no infinite retry; the failure is metricised",
+    "evidence": {
+      "states": [
+        "alert.delivery_failed"
+      ],
+      "trace": [
+        "persist_fired_row",
+        "stamp_storm_window",
+        "emit_delivery_failure_metric"
+      ]
+    }
+  },
+  {
+    "machine": "B10",
+    "invariant": "INV-B10-c suppression is counted and metricised",
+    "verdict": "PASS",
+    "note": "a suppressed alert is an observable state, not a drop",
+    "evidence": {
+      "states": [
+        "alert.suppressed"
+      ],
+      "trace": [
+        "bump_storm_count",
+        "emit_suppression_metric"
+      ]
+    }
+  },
+  {
+    "machine": "B10",
+    "invariant": "onUnhandled defer holds RESOLVE in delivery_failed, replays on ACK",
+    "verdict": "PASS",
+    "note": "RESOLVE has no edge in delivery_failed; it was HELD (deferred=1) and applied after ACK moved to acknowledged -> ['alert.resolved']",
+    "evidence": {
+      "deferred": 1,
+      "unhandled": [
+        [
+          "RESOLVE",
+          "deferred"
+        ]
+      ],
+      "after_ack": [
+        "alert.resolved"
+      ]
+    }
+  }
+]
+
+=== 55 checks, 4 FAIL ===
+FAIL B6 | B1-analogue: event during invoking state is deferred then applied | USER_PAUSE arriving inside submitting_slice was HELD (deferred_count=0) and replayed into paused after done.invoke
+FAIL B6 | strict: undeclared event rejected | send of an undeclared name raised NO-RAISE
+FAIL B7 | USER_CANCEL during repricing is deferred, then cancels | cancel held across the in-flight amend, applied on return to working
+FAIL B8 | INV-B8-b raising guard surfaces (guardErrorPolicy raise) | raising tightens_only produced NO-RAISE; status=running

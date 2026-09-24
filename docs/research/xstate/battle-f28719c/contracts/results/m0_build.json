@@ -1,0 +1,259 @@
+{
+  "B16": {
+    "id": "session",
+    "root": "parallel",
+    "policy": {
+      "actionErrorPolicy": "rollback",
+      "onUnhandled": "defer",
+      "guardErrorPolicy": "raise",
+      "strictTargets": true,
+      "strict": true,
+      "spawnBlockingTimeout": 5000
+    },
+    "n": {
+      "actions": 18,
+      "guards": 1,
+      "services": 0,
+      "delays": 0,
+      "events": 11,
+      "invoke": 0,
+      "always": 0,
+      "onDone": 0
+    },
+    "events": [
+      "ABSOLUTE_DEADLINE",
+      "ELEVATION_DEADLINE",
+      "IDLE_DEADLINE",
+      "LOGOUT",
+      "MFA_FAILED",
+      "MFA_OK",
+      "MFA_TIMEOUT",
+      "REQUEST",
+      "REVOKE",
+      "STEP_UP_FAILED",
+      "STEP_UP_OK"
+    ],
+    "services": [],
+    "build_async": "OK",
+    "machine_policy": {
+      "action_error_policy": "rollback",
+      "guard_error_policy": "raise",
+      "on_unhandled": "defer",
+      "spawn_blocking_timeout_ms": 5000.0
+    },
+    "build_def": "OK",
+    "build_bare_logic": "OK",
+    "states": [
+      ".auth",
+      ".auth.pending_mfa",
+      ".auth.active",
+      ".auth.revoked",
+      ".elevation",
+      ".elevation.normal",
+      ".elevation.elevated"
+    ],
+    "final_states": [
+      ".auth.revoked"
+    ],
+    "has_halted_state": false
+  },
+  "B17": {
+    "id": "live_gate",
+    "root": "compound",
+    "policy": {
+      "actionErrorPolicy": "rollback",
+      "onUnhandled": "defer",
+      "guardErrorPolicy": "raise",
+      "strictTargets": true,
+      "strict": true,
+      "spawnBlockingTimeout": 5000
+    },
+    "n": {
+      "actions": 10,
+      "guards": 3,
+      "services": 0,
+      "delays": 0,
+      "events": 5,
+      "invoke": 0,
+      "always": 0,
+      "onDone": 0
+    },
+    "events": [
+      "DISABLE_REQUESTED",
+      "EMERGENCY_DISABLE",
+      "ENABLE_REQUESTED",
+      "EVIDENCE_INVALIDATED",
+      "EVIDENCE_RECORDED"
+    ],
+    "services": [],
+    "build_async": "OK",
+    "machine_policy": {
+      "action_error_policy": "rollback",
+      "guard_error_policy": "raise",
+      "on_unhandled": "defer",
+      "spawn_blocking_timeout_ms": 5000.0
+    },
+    "build_def": "OK",
+    "build_bare_logic": "OK",
+    "states": [
+      ".locked",
+      ".eligible",
+      ".enabled"
+    ],
+    "final_states": [],
+    "has_halted_state": false
+  },
+  "B18": {
+    "id": "kill_switch",
+    "root": "compound",
+    "policy": {
+      "actionErrorPolicy": "rollback",
+      "onUnhandled": "error",
+      "guardErrorPolicy": "raise",
+      "strictTargets": true,
+      "strict": true,
+      "spawnBlockingTimeout": 5000
+    },
+    "n": {
+      "actions": 9,
+      "guards": 5,
+      "services": 2,
+      "delays": 0,
+      "events": 3,
+      "invoke": 2,
+      "always": 1,
+      "onDone": 2
+    },
+    "events": [
+      "ENGAGE",
+      "RELEASE",
+      "RETRY_FLATTEN"
+    ],
+    "services": [
+      "cancel_all_working_orders",
+      "flatten_all_positions"
+    ],
+    "build_async": "OK",
+    "machine_policy": {
+      "action_error_policy": "rollback",
+      "guard_error_policy": "raise",
+      "on_unhandled": "error",
+      "spawn_blocking_timeout_ms": 5000.0
+    },
+    "build_def": "OK",
+    "build_bare_logic": "OK",
+    "states": [
+      ".clear",
+      ".engaging",
+      ".cancelling",
+      ".flattening",
+      ".engaged",
+      ".engaged_incomplete"
+    ],
+    "final_states": [],
+    "has_halted_state": false
+  },
+  "B19": {
+    "id": "reconciliation",
+    "root": "compound",
+    "policy": {
+      "actionErrorPolicy": "rollback",
+      "onUnhandled": "defer",
+      "guardErrorPolicy": "raise",
+      "strictTargets": true,
+      "strict": true,
+      "spawnBlockingTimeout": 5000
+    },
+    "n": {
+      "actions": 20,
+      "guards": 3,
+      "services": 3,
+      "delays": 0,
+      "events": 7,
+      "invoke": 3,
+      "always": 1,
+      "onDone": 3
+    },
+    "events": [
+      "CANCEL",
+      "OPERATOR_RESOLVED",
+      "RECONNECTED",
+      "RETRY_DUE",
+      "STARTUP",
+      "SWEEP_DUE",
+      "UNKNOWN_ORDER"
+    ],
+    "services": [
+      "apply_remediations",
+      "diff_against_local",
+      "fetch_exchange_state"
+    ],
+    "build_async": "OK",
+    "machine_policy": {
+      "action_error_policy": "rollback",
+      "guard_error_policy": "raise",
+      "on_unhandled": "defer",
+      "spawn_blocking_timeout_ms": 5000.0
+    },
+    "build_def": "OK",
+    "build_bare_logic": "OK",
+    "states": [
+      ".idle",
+      ".fetching",
+      ".backing_off",
+      ".diffing",
+      ".remediating",
+      ".reporting",
+      ".divergent",
+      ".stale_lockout"
+    ],
+    "final_states": [],
+    "has_halted_state": false
+  },
+  "B20": {
+    "id": "risk_lockout",
+    "root": "compound",
+    "policy": {
+      "actionErrorPolicy": "rollback",
+      "onUnhandled": "defer",
+      "guardErrorPolicy": "raise",
+      "strictTargets": true,
+      "strict": true,
+      "spawnBlockingTimeout": 5000
+    },
+    "n": {
+      "actions": 16,
+      "guards": 5,
+      "services": 0,
+      "delays": 0,
+      "events": 5,
+      "invoke": 0,
+      "always": 0,
+      "onDone": 0
+    },
+    "events": [
+      "CAP_BREACH",
+      "EXPIRY_DUE",
+      "MANUAL_LOCK",
+      "OVERRIDE_REQUESTED",
+      "PNL_UPDATE"
+    ],
+    "services": [],
+    "build_async": "OK",
+    "machine_policy": {
+      "action_error_policy": "rollback",
+      "guard_error_policy": "raise",
+      "on_unhandled": "defer",
+      "spawn_blocking_timeout_ms": 5000.0
+    },
+    "build_def": "OK",
+    "build_bare_logic": "OK",
+    "states": [
+      ".clear",
+      ".warning",
+      ".locked"
+    ],
+    "final_states": [],
+    "has_halted_state": false
+  }
+}

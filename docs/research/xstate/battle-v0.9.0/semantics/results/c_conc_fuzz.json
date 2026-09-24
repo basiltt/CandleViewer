@@ -1,0 +1,146 @@
+[
+ {
+  "id": "C1",
+  "title": "200 machines x workers spawned from actions that OUTLIVE them -- all external, no internal-queue starvation",
+  "detail": {
+   "ok": true,
+   "by_kind": {
+    "async": {
+     "advanced": 100,
+     "of": 100,
+     "trips": 0,
+     "errored": 0
+    },
+    "plain": {
+     "advanced": 100,
+     "of": 100,
+     "trips": 0,
+     "errored": 0
+    }
+   },
+   "external_sent": 4000,
+   "machines": 200
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "C2",
+  "title": "100 concurrent ensure_future(send(wait=True)) hand-outs while the spawning actions keep awaiting",
+  "detail": {
+   "ok": true,
+   "outcomes": {
+    "Receipt": 100
+   },
+   "advanced": 100,
+   "of": 100
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "C3",
+  "title": "#231 config fuzz: inline-dict invoke.src and 8 malformed shapes always raise a NAMED InvalidConfigError, never TypeError",
+  "detail": {
+   "ok": true,
+   "cells": {
+    "invoke_src_inline_dict": {
+     "outcome": "InvalidConfigError",
+     "named": true,
+     "msg": "State 'c.a' invoke 's': 'src' must be a service name (str), got dict. To invoke a nested machine, build it with create_machine(...) and register it under that name in MachineLogic(services={"
+    },
+    "invoke_src_inline_dict_ondone": {
+     "outcome": "InvalidConfigError",
+     "named": true,
+     "msg": "State 'c.a' invoke 's': 'src' must be a service name (str), got dict. To invoke a nested machine, build it with create_machine(...) and register it under that name in MachineLogic(services={"
+    },
+    "invoke_src_list": {
+     "outcome": "InvalidConfigError",
+     "named": true,
+     "msg": "State 'c.a' invoke 's': 'src' must be a service name (str), got list. To invoke a nested machine, build it with create_machine(...) and register it under that name in MachineLogic(services={"
+    },
+    "invoke_src_int": {
+     "outcome": "InvalidConfigError",
+     "named": true,
+     "msg": "State 'c.a' invoke 's': 'src' must be a service name (str), got int. To invoke a nested machine, build it with create_machine(...) and register it under that name in MachineLogic(services={."
+    },
+    "invoke_src_none": {
+     "outcome": "ImplementationMissingError",
+     "msg": "Service 'None' referenced by state 'c.a' is not registered."
+    },
+    "invoke_src_missing": {
+     "outcome": "ImplementationMissingError",
+     "msg": "Service 'None' referenced by state 'c.a' is not registered."
+    },
+    "invoke_src_nested_machine_key": {
+     "outcome": "InvalidConfigError",
+     "named": true,
+     "msg": "State 'c.a' invoke 's': 'src' must be a service name (str), got dict. To invoke a nested machine, build it with create_machine(...) and register it under that name in MachineLogic(services={"
+    },
+    "invoke_not_dict": {
+     "outcome": "InvalidConfigError",
+     "named": true,
+     "msg": "State 'c.a' has an invalid 'invoke' entry of type 'int'. Expected an object/dict (or a list of them)."
+    },
+    "invoke_list_with_inline": {
+     "outcome": "InvalidConfigError",
+     "named": true,
+     "msg": "State 'c.a' invoke 's': 'src' must be a service name (str), got dict. To invoke a nested machine, build it with create_machine(...) and register it under that name in MachineLogic(services={"
+    }
+   },
+   "bad": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "C4",
+  "title": "determinism: 50 runs x {async,sync} x {def,async def} -- one trace per lane incl. chain_trips, latch, and a v3 round-trip",
+  "detail": {
+   "ok": true,
+   "runs_per_lane": 50,
+   "lanes": {
+    "async/plain": {
+     "distinct": 1,
+     "sample": [
+      [
+       "D:LOOP:chain_budget",
+       "C:RunawayChainError"
+      ],
+      1,
+      "RunawayChainError",
+      [
+       "d.b"
+      ]
+     ]
+    },
+    "async/async": {
+     "distinct": 1,
+     "sample": [
+      [
+       "D:LOOP:chain_budget",
+       "C:RunawayChainError"
+      ],
+      1,
+      "RunawayChainError",
+      [
+       "d.b"
+      ]
+     ]
+    },
+    "sync/plain": {
+     "distinct": 1,
+     "sample": [
+      [
+       "D:LOOP:chain_budget",
+       "C:RunawayChainError"
+      ],
+      1,
+      "RunawayChainError",
+      [
+       "d.b"
+      ]
+     ]
+    }
+   }
+  },
+  "status": "PASS"
+ }
+]

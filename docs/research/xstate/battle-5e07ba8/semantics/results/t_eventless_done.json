@@ -1,0 +1,530 @@
+[
+  {
+    "id": "T-01",
+    "engine": "async",
+    "title": "Eventless chain settles within one macrostep (a -> b -> c)",
+    "spec": "SCXML 3.13: after each microstep the engine re-evaluates eventless transitions until none is enabled; XState v5 `always`",
+    "expected": [
+      "m.c"
+    ],
+    "observed": [
+      "m.c"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-01",
+    "engine": "sync",
+    "title": "Eventless chain settles within one macrostep (a -> b -> c)",
+    "spec": "SCXML 3.13: after each microstep the engine re-evaluates eventless transitions until none is enabled; XState v5 `always`",
+    "expected": [
+      "m.c"
+    ],
+    "observed": [
+      "m.c"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-02",
+    "engine": "async",
+    "title": "Eventless guard re-evaluated after each microstep: assign in a transition unblocks the next always",
+    "spec": "SCXML 3.13: eventless transitions are re-selected after every microstep, so a datamodel change made in microstep N is visible in microstep N+1",
+    "expected": {
+      "ids": [
+        "m.done"
+      ],
+      "n": 3
+    },
+    "observed": {
+      "ids": [
+        "m.done"
+      ],
+      "n": 3
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-02",
+    "engine": "sync",
+    "title": "Eventless guard re-evaluated after each microstep: assign in a transition unblocks the next always",
+    "spec": "SCXML 3.13: eventless transitions are re-selected after every microstep, so a datamodel change made in microstep N is visible in microstep N+1",
+    "expected": {
+      "ids": [
+        "m.done"
+      ],
+      "n": 3
+    },
+    "observed": {
+      "ids": [
+        "m.done"
+      ],
+      "n": 3
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-03",
+    "engine": "async",
+    "title": "Eventless transition fires immediately after an event transition, in the same macrostep (caller never observes the transient state)",
+    "spec": "SCXML 3.13 macrostep = event microstep followed by eventless microsteps until stable",
+    "expected": [
+      "m.c"
+    ],
+    "observed": [
+      "m.c"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-03",
+    "engine": "sync",
+    "title": "Eventless transition fires immediately after an event transition, in the same macrostep (caller never observes the transient state)",
+    "spec": "SCXML 3.13 macrostep = event microstep followed by eventless microsteps until stable",
+    "expected": [
+      "m.c"
+    ],
+    "observed": [
+      "m.c"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-04",
+    "engine": "async",
+    "title": "Transient state entry/exit actions run even though it is never observable",
+    "spec": "SCXML 3.8/3.9: onentry and onexit run for every state entered, including states left in the same macrostep",
+    "expected": [
+      "eb",
+      "xb"
+    ],
+    "observed": [
+      "eb",
+      "xb"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-04",
+    "engine": "sync",
+    "title": "Transient state entry/exit actions run even though it is never observable",
+    "spec": "SCXML 3.8/3.9: onentry and onexit run for every state entered, including states left in the same macrostep",
+    "expected": [
+      "eb",
+      "xb"
+    ],
+    "observed": [
+      "eb",
+      "xb"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-05",
+    "engine": "async",
+    "title": "Eventless transition with a false guard does not fire; machine rests in the state",
+    "spec": "SCXML 3.13: an eventless transition whose cond is false is not enabled",
+    "expected": [
+      "m.b"
+    ],
+    "observed": [
+      "m.b"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-05",
+    "engine": "sync",
+    "title": "Eventless transition with a false guard does not fire; machine rests in the state",
+    "spec": "SCXML 3.13: an eventless transition whose cond is false is not enabled",
+    "expected": [
+      "m.b"
+    ],
+    "observed": [
+      "m.b"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-06",
+    "engine": "async",
+    "title": "after:0 fires as a delayed event, NOT as an eventless transition: it is a separate macrostep",
+    "spec": "XState v5: `after: {0: ...}` schedules a delayed event with delay 0; it is not `always`. It must still settle without external input.",
+    "expected": [
+      "m.b"
+    ],
+    "observed": [
+      "m.b"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-06",
+    "engine": "sync",
+    "title": "after:0 fires as a delayed event, NOT as an eventless transition: it is a separate macrostep",
+    "spec": "XState v5: `after: {0: ...}` schedules a delayed event with delay 0; it is not `always`. It must still settle without external input.",
+    "expected": [
+      "m.b"
+    ],
+    "observed": [
+      "m.b"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-07",
+    "engine": "async",
+    "title": "after:0 chain of three states settles",
+    "spec": "XState v5 after:0; SCXML <send delay='0'> is queued to the external queue and processed in a later macrostep",
+    "expected": [
+      "m.d"
+    ],
+    "observed": [
+      "m.d"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-07",
+    "engine": "sync",
+    "title": "after:0 chain of three states settles",
+    "spec": "XState v5 after:0; SCXML <send delay='0'> is queued to the external queue and processed in a later macrostep",
+    "expected": [
+      "m.d"
+    ],
+    "observed": [
+      "m.c"
+    ],
+    "status": "FAIL"
+  },
+  {
+    "id": "T-08",
+    "engine": "async",
+    "title": "Leaving a state cancels its pending `after` timer",
+    "spec": "SCXML 6.2.2 / XState v5: delayed sends owned by a state are cancelled when the state is exited",
+    "expected": [
+      "m.other"
+    ],
+    "observed": [
+      "m.other"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-08",
+    "engine": "sync",
+    "title": "Leaving a state cancels its pending `after` timer",
+    "spec": "SCXML 6.2.2 / XState v5: delayed sends owned by a state are cancelled when the state is exited",
+    "expected": [
+      "m.other"
+    ],
+    "observed": [
+      "m.other"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-09",
+    "engine": "async",
+    "title": "done.state.<compound> fires when the compound state reaches a final child, triggering onDone",
+    "spec": "SCXML 3.7: entering a <final> child generates done.state.<parent>",
+    "expected": [
+      "m.after"
+    ],
+    "observed": [
+      "m.after"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-09",
+    "engine": "sync",
+    "title": "done.state.<compound> fires when the compound state reaches a final child, triggering onDone",
+    "spec": "SCXML 3.7: entering a <final> child generates done.state.<parent>",
+    "expected": [
+      "m.after"
+    ],
+    "observed": [
+      "m.after"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-10",
+    "engine": "async",
+    "title": "done.state.<parallel> fires only when EVERY region is in a final state (not on the first)",
+    "spec": "SCXML 3.7: for a <parallel>, done.state is generated when all of its children are in final states",
+    "expected": {
+      "after_one": [
+        "m.P.A.fin",
+        "m.P.B.b1"
+      ],
+      "after_both": [
+        "m.after"
+      ]
+    },
+    "observed": {
+      "after_one": [
+        "m.P.A.fin",
+        "m.P.B.b1"
+      ],
+      "after_both": [
+        "m.after"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-10",
+    "engine": "sync",
+    "title": "done.state.<parallel> fires only when EVERY region is in a final state (not on the first)",
+    "spec": "SCXML 3.7: for a <parallel>, done.state is generated when all of its children are in final states",
+    "expected": {
+      "after_one": [
+        "m.P.A.fin",
+        "m.P.B.b1"
+      ],
+      "after_both": [
+        "m.after"
+      ]
+    },
+    "observed": {
+      "after_one": [
+        "m.P.A.fin",
+        "m.P.B.b1"
+      ],
+      "after_both": [
+        "m.after"
+      ]
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-11",
+    "engine": "async",
+    "title": "done.state payload carries the final state's `output`",
+    "spec": "SCXML 3.7 <donedata>; XState v5 final `output` becomes event.output/data on done.state.*",
+    "expected": {
+      "code": 42
+    },
+    "observed": {
+      "code": 42
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-11",
+    "engine": "sync",
+    "title": "done.state payload carries the final state's `output`",
+    "spec": "SCXML 3.7 <donedata>; XState v5 final `output` becomes event.output/data on done.state.*",
+    "expected": {
+      "code": 42
+    },
+    "observed": {
+      "code": 42
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-12",
+    "engine": "async",
+    "title": "Top-level final state completes the machine: status 'done' and machine output resolved",
+    "spec": "SCXML 3.7: entering a top-level final state terminates the session; XState v5 status 'done' with machine output",
+    "expected": {
+      "status": "done",
+      "output": {
+        "ok": true
+      }
+    },
+    "observed": {
+      "status": "done",
+      "output": {
+        "ok": true
+      }
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-12",
+    "engine": "sync",
+    "title": "Top-level final state completes the machine: status 'done' and machine output resolved",
+    "spec": "SCXML 3.7: entering a top-level final state terminates the session; XState v5 status 'done' with machine output",
+    "expected": {
+      "status": "done",
+      "output": {
+        "ok": true
+      }
+    },
+    "observed": {
+      "status": "done",
+      "output": {
+        "ok": true
+      }
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-13",
+    "engine": "async",
+    "title": "A final state's own `output` reaches machine output when the machine declares none",
+    "spec": "XState v5: without a machine-level output, the top-level final state's output is the machine output",
+    "expected": {
+      "v": 9
+    },
+    "observed": {
+      "v": 9
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-13",
+    "engine": "sync",
+    "title": "A final state's own `output` reaches machine output when the machine declares none",
+    "spec": "XState v5: without a machine-level output, the top-level final state's output is the machine output",
+    "expected": {
+      "v": 9
+    },
+    "observed": {
+      "v": 9
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-14",
+    "engine": "async",
+    "title": "A stopped/done machine accepts no further transitions",
+    "spec": "SCXML 3.7: after the session terminates no further events are processed",
+    "expected": {
+      "status": "done",
+      "ids_unchanged": true
+    },
+    "observed": {
+      "status": "done",
+      "ids_unchanged": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-14",
+    "engine": "sync",
+    "title": "A stopped/done machine accepts no further transitions",
+    "spec": "SCXML 3.7: after the session terminates no further events are processed",
+    "expected": {
+      "status": "done",
+      "ids_unchanged": true
+    },
+    "observed": {
+      "status": "done",
+      "ids_unchanged": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-15",
+    "engine": "async",
+    "title": "onDone on a parallel state does not fire when only one region has a final state at all",
+    "spec": "SCXML 3.7: all regions must be final; a region with no final state can never satisfy the condition",
+    "expected": [
+      "m.P.A.fin",
+      "m.P.B.b1"
+    ],
+    "observed": [
+      "m.P.A.fin",
+      "m.P.B.b1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-15",
+    "engine": "sync",
+    "title": "onDone on a parallel state does not fire when only one region has a final state at all",
+    "spec": "SCXML 3.7: all regions must be final; a region with no final state can never satisfy the condition",
+    "expected": [
+      "m.P.A.fin",
+      "m.P.B.b1"
+    ],
+    "observed": [
+      "m.P.A.fin",
+      "m.P.B.b1"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-16",
+    "engine": "async",
+    "title": "Nested done: inner compound completes -> its final state is the outer's final -> outer done.state fires",
+    "spec": "SCXML 3.7 recursive done computation",
+    "expected": [
+      "m.end"
+    ],
+    "observed": [
+      "m.end"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-16",
+    "engine": "sync",
+    "title": "Nested done: inner compound completes -> its final state is the outer's final -> outer done.state fires",
+    "spec": "SCXML 3.7 recursive done computation",
+    "expected": [
+      "m.end"
+    ],
+    "observed": [
+      "m.end"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-17",
+    "engine": "async",
+    "title": "`always` on an ancestor is evaluated for the active leaf",
+    "spec": "SCXML 3.13: eventless transitions are selected by the same upward-walk rule as evented ones",
+    "expected": [
+      "m.out"
+    ],
+    "observed": [
+      "m.out"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-17",
+    "engine": "sync",
+    "title": "`always` on an ancestor is evaluated for the active leaf",
+    "spec": "SCXML 3.13: eventless transitions are selected by the same upward-walk rule as evented ones",
+    "expected": [
+      "m.out"
+    ],
+    "observed": [
+      "m.out"
+    ],
+    "status": "PASS"
+  },
+  {
+    "id": "T-18",
+    "engine": "async",
+    "title": "Eventless self-loop without progress is bounded, not an infinite hang (engine must terminate)",
+    "spec": "SCXML 3.13 note: an unconditional eventless self-loop is a non-terminating macrostep; a production engine must bound it. Library documents maxIterations / RunawayChainError.",
+    "expected": {
+      "terminated": true
+    },
+    "observed": {
+      "terminated": true
+    },
+    "status": "PASS"
+  },
+  {
+    "id": "T-18",
+    "engine": "sync",
+    "title": "Eventless self-loop without progress is bounded, not an infinite hang (engine must terminate)",
+    "spec": "SCXML 3.13 note: an unconditional eventless self-loop is a non-terminating macrostep; a production engine must bound it. Library documents maxIterations / RunawayChainError.",
+    "expected": {
+      "terminated": true
+    },
+    "observed": {
+      "terminated": true
+    },
+    "status": "PASS"
+  }
+]

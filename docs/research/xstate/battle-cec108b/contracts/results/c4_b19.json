@@ -1,0 +1,802 @@
+{
+  "clean_sweep": {
+    "ids": [
+      "reconciliation.idle"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "done.invoke.fetch->['reconciliation.diffing']",
+      "done.invoke.diff->['reconciliation.reporting']",
+      "->['reconciliation.idle']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "remediated": {
+    "ids": [
+      "reconciliation.idle"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "store_remediations",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "done.invoke.fetch->['reconciliation.diffing']",
+      "done.invoke.diff->['reconciliation.remediating']",
+      "done.invoke.rem->['reconciliation.reporting']",
+      "->['reconciliation.idle']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "divergent": {
+    "ids": [
+      "reconciliation.divergent"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "store_remediations",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete",
+      "raise_divergence_alert"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "done.invoke.fetch->['reconciliation.diffing']",
+      "done.invoke.diff->['reconciliation.remediating']",
+      "done.invoke.rem->['reconciliation.reporting']",
+      "->['reconciliation.divergent']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "divergent_resolved": {
+    "ids": [
+      "reconciliation.idle"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "store_remediations",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete",
+      "raise_divergence_alert"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "done.invoke.fetch->['reconciliation.diffing']",
+      "done.invoke.diff->['reconciliation.remediating']",
+      "done.invoke.rem->['reconciliation.reporting']",
+      "->['reconciliation.divergent']",
+      "OPERATOR_RESOLVED->['reconciliation.idle']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "reconnect": {
+    "ids": [
+      "reconciliation.idle"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_reconnect",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "RECONNECTED->['reconciliation.fetching']",
+      "done.invoke.fetch->['reconciliation.diffing']",
+      "done.invoke.diff->['reconciliation.reporting']",
+      "->['reconciliation.idle']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "unknown_order": {
+    "ids": [
+      "reconciliation.idle"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_unknown",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "UNKNOWN_ORDER->['reconciliation.fetching']",
+      "done.invoke.fetch->['reconciliation.diffing']",
+      "done.invoke.diff->['reconciliation.reporting']",
+      "->['reconciliation.idle']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "startup": {
+    "ids": [
+      "reconciliation.idle"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_startup",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "STARTUP->['reconciliation.fetching']",
+      "done.invoke.fetch->['reconciliation.diffing']",
+      "done.invoke.diff->['reconciliation.reporting']",
+      "->['reconciliation.idle']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "backoff": {
+    "ids": [
+      "reconciliation.backing_off"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "bump_failures",
+      "schedule_retry_deadline",
+      "stamp_start",
+      "emit_recon_started",
+      "bump_failures",
+      "schedule_retry_deadline"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "error.platform.fetch->['reconciliation.backing_off']",
+      "RETRY_DUE->['reconciliation.fetching']",
+      "error.platform.fetch->['reconciliation.backing_off']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "stale_lockout": {
+    "ids": [
+      "reconciliation.stale_lockout"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "lock_account_for_new_orders",
+      "page_owner"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "error.platform.fetch->['reconciliation.stale_lockout']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "stale_lockout_reconnect": {
+    "ids": [
+      "reconciliation.stale_lockout"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "lock_account_for_new_orders",
+      "page_owner",
+      "reset_failures",
+      "stamp_start",
+      "emit_recon_started",
+      "lock_account_for_new_orders",
+      "page_owner"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "error.platform.fetch->['reconciliation.stale_lockout']",
+      "RECONNECTED->['reconciliation.fetching']",
+      "error.platform.fetch->['reconciliation.stale_lockout']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "stale_lockout_operator": {
+    "ids": [
+      "reconciliation.stale_lockout"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "lock_account_for_new_orders",
+      "page_owner"
+    ],
+    "status": "running",
+    "deferred": 1,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "error.platform.fetch->['reconciliation.stale_lockout']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": false,
+        "error": null,
+        "deferred": true
+      }
+    ]
+  },
+  "diff_error": {
+    "ids": [
+      "reconciliation.idle"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "record_diff_error",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "done.invoke.fetch->['reconciliation.diffing']",
+      "error.platform.diff->['reconciliation.reporting']",
+      "->['reconciliation.idle']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "remediate_error": {
+    "ids": [
+      "reconciliation.idle"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "store_remediations",
+      "raise_critical_alert",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "done.invoke.fetch->['reconciliation.diffing']",
+      "done.invoke.diff->['reconciliation.remediating']",
+      "error.platform.rem->['reconciliation.reporting']",
+      "->['reconciliation.idle']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "cancel_midflight": {
+    "mid_ids": [
+      "reconciliation.fetching"
+    ],
+    "cancel_changed": true,
+    "cancel_deferred": false,
+    "ids_after_cancel": [
+      "reconciliation.idle"
+    ],
+    "ids_later": [
+      "reconciliation.idle"
+    ],
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "CANCEL->['reconciliation.idle']"
+    ],
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started"
+    ],
+    "status": "running"
+  },
+  "defer_during_fetch": {
+    "mid_ids": [
+      "reconciliation.fetching"
+    ],
+    "receipt": {
+      "changed": false,
+      "deferred": true
+    },
+    "deferred_count": 1,
+    "acts_at_receipt": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started"
+    ],
+    "unhandled": [
+      [
+        "UNKNOWN_ORDER",
+        "deferred"
+      ]
+    ],
+    "ids_later": [
+      "reconciliation.idle"
+    ],
+    "acts_later": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete",
+      "set_trigger_unknown",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete"
+    ],
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "done.invoke.fetch->['reconciliation.diffing']",
+      "done.invoke.diff->['reconciliation.reporting']",
+      "->['reconciliation.idle']",
+      "UNKNOWN_ORDER->['reconciliation.fetching']",
+      "done.invoke.fetch->['reconciliation.diffing']",
+      "done.invoke.diff->['reconciliation.reporting']",
+      "->['reconciliation.idle']"
+    ],
+    "deferred_later": 0
+  },
+  "snap_clean": {
+    "midstep_errors": [],
+    "diffs": {},
+    "plain_acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete",
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete"
+    ],
+    "snap_acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete",
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete"
+    ],
+    "plain_ids": [
+      "reconciliation.idle"
+    ],
+    "ids": [
+      "reconciliation.idle"
+    ]
+  },
+  "snap_divergent": {
+    "midstep_errors": [],
+    "diffs": {},
+    "plain_acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "store_remediations",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete",
+      "raise_divergence_alert"
+    ],
+    "snap_acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "store_remediations",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete",
+      "raise_divergence_alert"
+    ],
+    "plain_ids": [
+      "reconciliation.idle"
+    ],
+    "ids": [
+      "reconciliation.idle"
+    ]
+  },
+  "snap_remediate": {
+    "midstep_errors": [],
+    "diffs": {},
+    "plain_acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "store_remediations",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete"
+    ],
+    "snap_acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "store_remediations",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete"
+    ],
+    "plain_ids": [
+      "reconciliation.idle"
+    ],
+    "ids": [
+      "reconciliation.idle"
+    ]
+  },
+  "parked_midfetch": {
+    "ids_at_snapshot": [
+      "reconciliation.fetching"
+    ],
+    "snapshot": "OK",
+    "restart_services=False": {
+      "status_before_start": "running",
+      "has_dormant_invocations": true,
+      "has_dormant_timers": false,
+      "pending_invocations": [
+        "PendingInvocation(state_id='reconciliation.fetching', invoke_id='fetch', src='fetch_exchange_state')"
+      ],
+      "ids_after_start": [
+        "reconciliation.fetching"
+      ],
+      "status_after": "running"
+    },
+    "restart_services=True": {
+      "status_before_start": "running",
+      "has_dormant_invocations": true,
+      "has_dormant_timers": false,
+      "pending_invocations": [
+        "PendingInvocation(state_id='reconciliation.fetching', invoke_id='fetch', src='fetch_exchange_state')"
+      ],
+      "ids_after_start": [
+        "reconciliation.idle"
+      ],
+      "status_after": "running"
+    }
+  },
+  "sync_parity": {
+    "error": "NotSupportedError: Service 'fetch_exchange_state' is async and not supported."
+  }
+}

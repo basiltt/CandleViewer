@@ -1,0 +1,107 @@
+{
+ "issues/post-6db65d8/new/repro/R8-04_always_ondone_reentry_settle_tripped.py": [
+  "PASS",
+  "FAIL",
+  "PASS",
+  "PASS",
+  "PASS"
+ ],
+ "issues/post-6db65d8/new/repro/R8-07_send_wait_resolves_over_empty_configuration.py": [
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS"
+ ],
+ "issues/post-f28719c/new/repro/R9-08_send_wait_resolves_over_empty_configuration.py": [
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS"
+ ],
+ "issues/verify-0.8.0/LC-42_send_receipt.py": [
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS"
+ ],
+ "issues/verify-main-221ce7c/167_rollback_reinvoke_spin.py": [
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS"
+ ],
+ "issues/verify-main-3ed3099/105_external-send-not-charged-to-chain-budget.py": [
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS"
+ ],
+ "issues/verify-main-5327ba6/LC-37_wrongthreaderror-message.py": [
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS"
+ ],
+ "issues/verify-main-5327ba6/LC-42_send_receipt.py": [
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS"
+ ],
+ "issues/verify-main-cec108b/repro_147_151.py": [
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS"
+ ],
+ "issues/verify-main-f28719c/197_empty_config_wait.py": [
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS"
+ ],
+ "issues/post-c78ce99/new/repro/R11-07_nested_config_typos_silent.py": [
+  "FAIL",
+  "FAIL",
+  "FAIL",
+  "FAIL",
+  "FAIL"
+ ],
+ "issues/post-c78ce99/new/repro/R11-09_chain_trip_erased_by_next_event.py": [
+  "FAIL",
+  "FAIL",
+  "FAIL",
+  "FAIL",
+  "FAIL"
+ ],
+ "issues/verify-main-5e07ba8/final/fv4_r407_falsepos.py": [
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS"
+ ],
+ "issues/verify-main-5e07ba8/ref/refute_r407.py": [
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS"
+ ],
+ "issues/verify-main-5e07ba8/ref/refute_r407b.py": [
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS",
+  "PASS"
+ ]
+}

@@ -1,0 +1,307 @@
+{
+  "probe": "w2_persistence_latch_strict_plugins",
+  "py": "3.13.7",
+  "cases_per_kind": 160,
+  "restarts": 8,
+  "P1_latch_across_restarts": [
+    {
+      "kind": "def",
+      "restarts": 8,
+      "hops": [
+        {
+          "hop": 0,
+          "trips_on_restore": 1,
+          "latch_type_on_restore": "RestoredChainError",
+          "latch_msg_mentions_chain": true,
+          "trips_after_retrip": 2
+        },
+        {
+          "hop": 1,
+          "trips_on_restore": 2,
+          "latch_type_on_restore": "RestoredChainError",
+          "latch_msg_mentions_chain": true,
+          "trips_after_retrip": 3
+        },
+        {
+          "hop": 2,
+          "trips_on_restore": 3,
+          "latch_type_on_restore": "RestoredChainError",
+          "latch_msg_mentions_chain": true,
+          "trips_after_retrip": 4
+        },
+        {
+          "hop": 3,
+          "trips_on_restore": 4,
+          "latch_type_on_restore": "RestoredChainError",
+          "latch_msg_mentions_chain": true,
+          "trips_after_retrip": 5
+        },
+        {
+          "hop": 4,
+          "trips_on_restore": 5,
+          "latch_type_on_restore": "RestoredChainError",
+          "latch_msg_mentions_chain": true,
+          "trips_after_retrip": 6
+        },
+        {
+          "hop": 5,
+          "trips_on_restore": 6,
+          "latch_type_on_restore": "RestoredChainError",
+          "latch_msg_mentions_chain": true,
+          "trips_after_retrip": 7
+        },
+        {
+          "hop": 6,
+          "trips_on_restore": 7,
+          "latch_type_on_restore": "RestoredChainError",
+          "latch_msg_mentions_chain": true,
+          "trips_after_retrip": 8
+        },
+        {
+          "hop": 7,
+          "trips_on_restore": 8,
+          "latch_type_on_restore": "RestoredChainError",
+          "latch_msg_mentions_chain": true,
+          "trips_after_retrip": 9
+        }
+      ],
+      "monotonic": true
+    },
+    {
+      "kind": "async def",
+      "restarts": 8,
+      "hops": [
+        {
+          "hop": 0,
+          "trips_on_restore": 1,
+          "latch_type_on_restore": "RestoredChainError",
+          "latch_msg_mentions_chain": true,
+          "trips_after_retrip": 2
+        },
+        {
+          "hop": 1,
+          "trips_on_restore": 2,
+          "latch_type_on_restore": "RestoredChainError",
+          "latch_msg_mentions_chain": true,
+          "trips_after_retrip": 3
+        },
+        {
+          "hop": 2,
+          "trips_on_restore": 3,
+          "latch_type_on_restore": "RestoredChainError",
+          "latch_msg_mentions_chain": true,
+          "trips_after_retrip": 4
+        },
+        {
+          "hop": 3,
+          "trips_on_restore": 4,
+          "latch_type_on_restore": "RestoredChainError",
+          "latch_msg_mentions_chain": true,
+          "trips_after_retrip": 5
+        },
+        {
+          "hop": 4,
+          "trips_on_restore": 5,
+          "latch_type_on_restore": "RestoredChainError",
+          "latch_msg_mentions_chain": true,
+          "trips_after_retrip": 6
+        },
+        {
+          "hop": 5,
+          "trips_on_restore": 6,
+          "latch_type_on_restore": "RestoredChainError",
+          "latch_msg_mentions_chain": true,
+          "trips_after_retrip": 7
+        },
+        {
+          "hop": 6,
+          "trips_on_restore": 7,
+          "latch_type_on_restore": "RestoredChainError",
+          "latch_msg_mentions_chain": true,
+          "trips_after_retrip": 8
+        },
+        {
+          "hop": 7,
+          "trips_on_restore": 8,
+          "latch_type_on_restore": "RestoredChainError",
+          "latch_msg_mentions_chain": true,
+          "trips_after_retrip": 9
+        }
+      ],
+      "monotonic": true
+    }
+  ],
+  "P2_strict_restored_scheduled_sends": [
+    {
+      "kind": "def",
+      "cases": 160,
+      "all_armed_counts_exact": true,
+      "all_refusals_exactly_once": true,
+      "all_alive_after_refusal": true,
+      "total_refusals": 405,
+      "total_armed": 231,
+      "sample": [
+        {
+          "case": 0,
+          "sched": [
+            "OK2",
+            "FORGED",
+            "OK1",
+            "GHOST",
+            "NOPE"
+          ],
+          "pend": [],
+          "n_fired": 2,
+          "expected_fired": 2,
+          "refusals_reported": 3,
+          "expected_refusals": 3,
+          "still_alive": true,
+          "plugin_inits": 1
+        },
+        {
+          "case": 1,
+          "sched": [
+            "OK2",
+            "GHOST"
+          ],
+          "pend": [
+            "FORGED"
+          ],
+          "n_fired": 1,
+          "expected_fired": 1,
+          "refusals_reported": 2,
+          "expected_refusals": 2,
+          "still_alive": true,
+          "plugin_inits": 1
+        },
+        {
+          "case": 2,
+          "sched": [
+            "OK2",
+            "NOPE",
+            "FORGED",
+            "FORGED"
+          ],
+          "pend": [
+            "FORGED"
+          ],
+          "n_fired": 1,
+          "expected_fired": 1,
+          "refusals_reported": 4,
+          "expected_refusals": 4,
+          "still_alive": true,
+          "plugin_inits": 1
+        }
+      ]
+    },
+    {
+      "kind": "async def",
+      "cases": 160,
+      "all_armed_counts_exact": true,
+      "all_refusals_exactly_once": true,
+      "all_alive_after_refusal": true,
+      "total_refusals": 409,
+      "total_armed": 235,
+      "sample": [
+        {
+          "case": 0,
+          "sched": [
+            "NOPE",
+            "GHOST",
+            "OK1",
+            "GHOST"
+          ],
+          "pend": [
+            "NOPE"
+          ],
+          "n_fired": 1,
+          "expected_fired": 1,
+          "refusals_reported": 4,
+          "expected_refusals": 4,
+          "still_alive": true,
+          "plugin_inits": 1
+        },
+        {
+          "case": 1,
+          "sched": [
+            "FORGED",
+            "NOPE",
+            "OK1",
+            "OK1",
+            "OK1"
+          ],
+          "pend": [],
+          "n_fired": 3,
+          "expected_fired": 3,
+          "refusals_reported": 2,
+          "expected_refusals": 2,
+          "still_alive": true,
+          "plugin_inits": 1
+        },
+        {
+          "case": 2,
+          "sched": [
+            "GHOST"
+          ],
+          "pend": [],
+          "n_fired": 0,
+          "expected_fired": 0,
+          "refusals_reported": 1,
+          "expected_refusals": 1,
+          "still_alive": true,
+          "plugin_inits": 1
+        }
+      ]
+    }
+  ],
+  "P3_plugins_kwarg": [
+    {
+      "kind": "def",
+      "plugins_kwarg_saw": [
+        "GHOST",
+        "NOPE"
+      ],
+      "use_after_saw": [
+        "NOPE"
+      ],
+      "expected_refused_types": [
+        "NOPE",
+        "GHOST"
+      ]
+    },
+    {
+      "kind": "async def",
+      "plugins_kwarg_saw": [
+        "GHOST",
+        "NOPE"
+      ],
+      "use_after_saw": [
+        "NOPE"
+      ],
+      "expected_refused_types": [
+        "NOPE",
+        "GHOST"
+      ]
+    }
+  ],
+  "failures": [
+    "P1/def hop0: restored latch is RestoredChainError, expected RestoredError",
+    "P1/def hop1: restored latch is RestoredChainError, expected RestoredError",
+    "P1/def hop2: restored latch is RestoredChainError, expected RestoredError",
+    "P1/def hop3: restored latch is RestoredChainError, expected RestoredError",
+    "P1/def hop4: restored latch is RestoredChainError, expected RestoredError",
+    "P1/def hop5: restored latch is RestoredChainError, expected RestoredError",
+    "P1/def hop6: restored latch is RestoredChainError, expected RestoredError",
+    "P1/def hop7: restored latch is RestoredChainError, expected RestoredError",
+    "P1/async def hop0: restored latch is RestoredChainError, expected RestoredError",
+    "P1/async def hop1: restored latch is RestoredChainError, expected RestoredError",
+    "P1/async def hop2: restored latch is RestoredChainError, expected RestoredError",
+    "P1/async def hop3: restored latch is RestoredChainError, expected RestoredError",
+    "P1/async def hop4: restored latch is RestoredChainError, expected RestoredError",
+    "P1/async def hop5: restored latch is RestoredChainError, expected RestoredError",
+    "P1/async def hop6: restored latch is RestoredChainError, expected RestoredError",
+    "P1/async def hop7: restored latch is RestoredChainError, expected RestoredError"
+  ],
+  "failure_count": 16,
+  "verdict": "DEFECT"
+}

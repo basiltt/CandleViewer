@@ -1,0 +1,91 @@
+{
+  "id": "book",
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "error",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "initial": "init",
+  "context": {
+    "symbol": null,
+    "last_seq": 0,
+    "snapshot_seq": 0,
+    "buffered_deltas": [],
+    "resync_count": 0,
+    "desynced_since_us": null
+  },
+  "states": {
+    "init": {
+      "on": {
+        "SUBSCRIBE": {
+          "target": "#book.snapshot_pending"
+        }
+      }
+    },
+    "snapshot_pending": {
+      "entry": [
+        "clear_buffer",
+        "request_snapshot"
+      ],
+      "on": {
+        "SNAPSHOT": {
+          "target": "#book.live",
+          "actions": [
+            "install_snapshot",
+            "replay_buffered_deltas_after_seq"
+          ]
+        },
+        "DELTA": {
+          "actions": [
+            "buffer_delta"
+          ]
+        },
+        "SNAPSHOT_TIMEOUT": {
+          "target": "#book.snapshot_pending",
+          "reenter": true,
+          "actions": [
+            "bump_resync_count"
+          ]
+        }
+      }
+    },
+    "live": {
+      "tags": [
+        "consumable"
+      ],
+      "entry": [
+        "emit_book_live"
+      ],
+      "on": {
+        "DELTA": {
+          "actions": [
+            "apply_delta"
+          ]
+        },
+        "SEQUENCE_GAP": {
+          "target": "#book.desynced",
+          "actions": [
+            "stamp_desync"
+          ]
+        },
+        "UNSUBSCRIBE": {
+          "target": "#book.init"
+        }
+      }
+    },
+    "desynced": {
+      "tags": [
+        "not_consumable"
+      ],
+      "entry": [
+        "emit_book_desynced",
+        "bump_resync_count",
+        "emit_resync_metric"
+      ],
+      "always": {
+        "target": "#book.snapshot_pending"
+      }
+    }
+  }
+}

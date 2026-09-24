@@ -1,0 +1,82 @@
+{
+ "[def]B16/build-strictConfig": {
+  "pass": true,
+  "note": "clean, 0 warnings"
+ },
+ "[def]B16/neg-root-typo": {
+  "pass": true,
+  "note": "InvalidConfigError(\"Machine 'session' has unknown config key(s) -- session: 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys are ignored b"
+ },
+ "[def]B16/neg-nested-typo": {
+  "pass": true,
+  "note": "refused; path-named=True | Machine 'session' has unknown config key(s) -- session.auth: 'entyr' (did you mean 'entry'?), 'onn' (did you mean 'on'?). Unknown keys are ignored by the parser, so a misspelled key silently does noth"
+ },
+ "[def]B16/nested-meta-ok": {
+  "pass": true,
+  "note": "accepted in 'auth'"
+ },
+ "[def]B17/build-strictConfig": {
+  "pass": true,
+  "note": "clean, 0 warnings"
+ },
+ "[def]B17/neg-root-typo": {
+  "pass": true,
+  "note": "InvalidConfigError(\"Machine 'live_gate' has unknown config key(s) -- live_gate: 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys are ignor"
+ },
+ "[def]B17/neg-nested-typo": {
+  "pass": true,
+  "note": "refused; path-named=True | Machine 'live_gate' has unknown config key(s) -- live_gate.eligible: 'entyr' (did you mean 'entry'?), 'onn' (did you mean 'on'?). Unknown keys are ignored by the parser, so a misspelled key silently d"
+ },
+ "[def]B17/nested-meta-ok": {
+  "pass": true,
+  "note": "accepted in 'eligible'"
+ },
+ "[def]B18/build-strictConfig": {
+  "pass": true,
+  "note": "clean, 0 warnings"
+ },
+ "[def]B18/neg-root-typo": {
+  "pass": true,
+  "note": "InvalidConfigError(\"Machine 'kill_switch' has unknown config key(s) -- kill_switch: 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys are i"
+ },
+ "[def]B18/neg-nested-typo": {
+  "pass": true,
+  "note": "refused; path-named=True | Machine 'kill_switch' has unknown config key(s) -- kill_switch.cancelling: 'entyr' (did you mean 'entry'?), 'onn' (did you mean 'on'?). Unknown keys are ignored by the parser, so a misspelled key sile"
+ },
+ "[def]B18/nested-meta-ok": {
+  "pass": true,
+  "note": "accepted in 'cancelling'"
+ },
+ "[def]B19/build-strictConfig": {
+  "pass": true,
+  "note": "clean, 0 warnings"
+ },
+ "[def]B19/neg-root-typo": {
+  "pass": true,
+  "note": "InvalidConfigError(\"Machine 'reconciliation' has unknown config key(s) -- reconciliation: 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys"
+ },
+ "[def]B19/neg-nested-typo": {
+  "pass": true,
+  "note": "refused; path-named=True | Machine 'reconciliation' has unknown config key(s) -- reconciliation.backing_off: 'entyr' (did you mean 'entry'?), 'onn' (did you mean 'on'?). Unknown keys are ignored by the parser, so a misspelled k"
+ },
+ "[def]B19/nested-meta-ok": {
+  "pass": true,
+  "note": "accepted in 'backing_off'"
+ },
+ "[def]B20/build-strictConfig": {
+  "pass": true,
+  "note": "clean, 0 warnings"
+ },
+ "[def]B20/neg-root-typo": {
+  "pass": true,
+  "note": "InvalidConfigError(\"Machine 'risk_lockout' has unknown config key(s) -- risk_lockout: 'actionErrorPolicyy' (did you mean 'actionErrorPolicy'?). Unknown keys are"
+ },
+ "[def]B20/neg-nested-typo": {
+  "pass": true,
+  "note": "refused; path-named=True | Machine 'risk_lockout' has unknown config key(s) -- risk_lockout.clear: 'entyr' (did you mean 'entry'?), 'onn' (did you mean 'on'?). Unknown keys are ignored by the parser, so a misspelled key silentl"
+ },
+ "[def]B20/nested-meta-ok": {
+  "pass": true,
+  "note": "accepted in 'clear'"
+ }
+}

@@ -1,0 +1,102 @@
+[
+ {
+  "id": "SNAP-B11",
+  "inv": "snapshot",
+  "title": "snapshot+restore at every macrostep == uninterrupted run",
+  "detail": {
+   "ok": true,
+   "steps": 6,
+   "midstep_errors": [],
+   "trace_divergences": [],
+   "n_divergences": 0,
+   "restore_drift": [],
+   "final_plain": [
+    "recording.stopped"
+   ],
+   "final_snapshotted": [
+    "recording.stopped"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "SNAP-B12",
+  "inv": "snapshot",
+  "title": "snapshot+restore at every macrostep == uninterrupted run",
+  "detail": {
+   "ok": true,
+   "steps": 7,
+   "midstep_errors": [],
+   "trace_divergences": [],
+   "n_divergences": 0,
+   "restore_drift": [],
+   "final_plain": [
+    "replay.finished"
+   ],
+   "final_snapshotted": [
+    "replay.finished"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "SNAP-B13",
+  "inv": "snapshot",
+  "title": "snapshot+restore at every macrostep == uninterrupted run",
+  "detail": {
+   "ok": true,
+   "steps": 6,
+   "midstep_errors": [],
+   "trace_divergences": [],
+   "n_divergences": 0,
+   "restore_drift": [],
+   "final_plain": [
+    "ws_conn.closed"
+   ],
+   "final_snapshotted": [
+    "ws_conn.closed"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "SNAP-B14",
+  "inv": "snapshot",
+  "title": "snapshot+restore at every macrostep == uninterrupted run",
+  "detail": {
+   "ok": true,
+   "steps": 6,
+   "midstep_errors": [],
+   "trace_divergences": [],
+   "n_divergences": 0,
+   "restore_drift": [],
+   "final_plain": [
+    "book.live"
+   ],
+   "final_snapshotted": [
+    "book.live"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "SNAP-B15",
+  "inv": "snapshot",
+  "title": "snapshot+restore at every macrostep == uninterrupted run",
+  "detail": {
+   "ok": true,
+   "steps": 2,
+   "midstep_errors": [],
+   "trace_divergences": [],
+   "n_divergences": 0,
+   "restore_drift": [],
+   "final_plain": [
+    "paper_account.margin_call"
+   ],
+   "final_snapshotted": [
+    "paper_account.margin_call"
+   ]
+  },
+  "status": "PASS"
+ }
+]

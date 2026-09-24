@@ -1,0 +1,142 @@
+{
+ "[async]B6/#216 no unknown top-level keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B6/build strict_config=True": {
+  "pass": true,
+  "note": ""
+ },
+ "[async]B6/policy read-back": {
+  "pass": true,
+  "note": "('rollback', 'defer', 'raise')"
+ },
+ "[async]B6/strict+strictTargets": {
+  "pass": true,
+  "note": "strict=True targets=True"
+ },
+ "[async]B6/#216 typo refused via config strictConfig": {
+  "pass": true,
+  "note": "InvalidConfigError"
+ },
+ "[async]B6/start config": {
+  "pass": true,
+  "note": "['twap.armed'] | status=running"
+ },
+ "[async]B6/start-ids": {
+  "pass": true,
+  "note": "['twap.armed']"
+ },
+ "[async]B7/#216 no unknown top-level keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B7/build strict_config=True": {
+  "pass": true,
+  "note": ""
+ },
+ "[async]B7/policy read-back": {
+  "pass": true,
+  "note": "('rollback', 'defer', 'raise')"
+ },
+ "[async]B7/strict+strictTargets": {
+  "pass": true,
+  "note": "strict=True targets=True"
+ },
+ "[async]B7/#216 typo refused via config strictConfig": {
+  "pass": true,
+  "note": "InvalidConfigError"
+ },
+ "[async]B7/start config": {
+  "pass": true,
+  "note": "['chase.working'] | status=running"
+ },
+ "[async]B7/start-ids": {
+  "pass": true,
+  "note": "['chase.working']"
+ },
+ "[async]B8/#216 no unknown top-level keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B8/build strict_config=True": {
+  "pass": true,
+  "note": ""
+ },
+ "[async]B8/policy read-back": {
+  "pass": true,
+  "note": "('fail', 'defer', 'raise')"
+ },
+ "[async]B8/strict+strictTargets": {
+  "pass": true,
+  "note": "strict=True targets=True"
+ },
+ "[async]B8/#216 typo refused via config strictConfig": {
+  "pass": true,
+  "note": "InvalidConfigError"
+ },
+ "[async]B8/start config": {
+  "pass": true,
+  "note": "['position_protection.sl.flat', 'position_protection.watchdog.idle'] | status=running"
+ },
+ "[async]B8/start-ids": {
+  "pass": true,
+  "note": "['position_protection.sl.flat', 'position_protection.watchdog.idle']"
+ },
+ "[async]B9/#216 no unknown top-level keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B9/build strict_config=True": {
+  "pass": true,
+  "note": ""
+ },
+ "[async]B9/policy read-back": {
+  "pass": true,
+  "note": "('rollback', 'defer', 'raise')"
+ },
+ "[async]B9/strict+strictTargets": {
+  "pass": true,
+  "note": "strict=True targets=True"
+ },
+ "[async]B9/#216 typo refused via config strictConfig": {
+  "pass": true,
+  "note": "InvalidConfigError"
+ },
+ "[async]B9/start config": {
+  "pass": true,
+  "note": "['rule_instance.draft'] | status=running"
+ },
+ "[async]B9/start-ids": {
+  "pass": true,
+  "note": "['rule_instance.draft']"
+ },
+ "[async]B10/#216 no unknown top-level keys": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[async]B10/build strict_config=True": {
+  "pass": true,
+  "note": ""
+ },
+ "[async]B10/policy read-back": {
+  "pass": true,
+  "note": "('rollback', 'defer', 'raise')"
+ },
+ "[async]B10/strict+strictTargets": {
+  "pass": true,
+  "note": "strict=True targets=True"
+ },
+ "[async]B10/#216 typo refused via config strictConfig": {
+  "pass": true,
+  "note": "InvalidConfigError"
+ },
+ "[async]B10/start config": {
+  "pass": true,
+  "note": "['alert.armed'] | status=running"
+ },
+ "[async]B10/start-ids": {
+  "pass": true,
+  "note": "['alert.armed']"
+ }
+}

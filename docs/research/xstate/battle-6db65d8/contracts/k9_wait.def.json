@@ -1,0 +1,22 @@
+{
+ "[def]P1w/guard raise carried on wait=True receipt": {
+  "pass": true,
+  "note": "{\"call_site_raise\": false, \"receipt\": {\"error\": \"RuntimeError('guard:price_limit_breached')\", \"denied\": \"False\", \"deferred\": \"False\", \"changed\": \"True\", \"state_ids\": \"frozenset({'twap.submitting_slice'})\"}, \"states\": [\"twap.armed\"], \"guard_errors\": [\"RuntimeError('guard:price_limit_breached')\"], \"svc\": [\"submit_child\"]}"
+ },
+ "[def]P1w/on_guard_error hook fired": {
+  "pass": true,
+  "note": "[\"RuntimeError('guard:price_limit_breached')\"]"
+ },
+ "[def]P1w/unguarded fallback still taken (#152)": {
+  "pass": true,
+  "note": "[\"submit_child\"]"
+ },
+ "[def]P3/strict refuses undeclared event at the call site": {
+  "pass": true,
+  "note": "{\"wait=False\": {\"raised\": true, \"exc\": \"UnknownEventError(\\\"Event 'NOT_A_REAL_EVENT' is not declared by machine 'twap'. Known events: CHILDREN_TERMINAL, DURATION_END, MAX_DURATION, PRICE_OK, RESUME, SLICE_DUE, USER_CANCEL, USER_PAUSE, WS_DISCONNECT, done.invoke.cx, done.invoke.rec, done.invoke.slice, done.invoke.sweep, error.platform.cx, error.platform.rec, error.platform.slice, error.platform.sweep.\\\")\"}, \"wait=True\": {\"raised\": true, \"exc\": \"UnknownEventError(\\\"Event 'NOT_A_REAL_EVENT' is not declared by machine 'twap'. Known events: CHILDREN_TERMINAL, DURATION_END, MAX_DURATION, PRICE_OK, RESUME, SLICE_DUE, USER_CANCEL, USER_PAUSE, WS_DISCONNECT, done.invoke.cx, done.invoke.rec, done.invoke.slice, done.invoke.sweep, error.platform.cx, error.platform.rec, error.platform.slice, error.platform.sweep.\\\")\"}}"
+ },
+ "[def]p4/CRASH": {
+  "pass": false,
+  "note": "TimeoutError()"
+ }
+}

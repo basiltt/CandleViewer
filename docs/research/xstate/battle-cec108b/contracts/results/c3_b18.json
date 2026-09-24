@@ -1,0 +1,494 @@
+{
+  "engage_only": {
+    "ids": [
+      "kill_switch.clear"
+    ],
+    "ctx": {
+      "scope": "global",
+      "engaged_by": null,
+      "engaged_at_us": null,
+      "reason": null,
+      "cancel_working": false,
+      "flatten": false,
+      "accounts_flat": 0,
+      "accounts_total": 0
+    },
+    "acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "audit_kill_switch_released"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['kill_switch.clear']",
+      "ENGAGE->['kill_switch.engaging']",
+      "->['kill_switch.engaged']",
+      "RELEASE->['kill_switch.clear']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "full_flat": {
+    "ids": [
+      "kill_switch.clear"
+    ],
+    "ctx": {
+      "scope": "global",
+      "engaged_by": null,
+      "engaged_at_us": null,
+      "reason": null,
+      "cancel_working": false,
+      "flatten": false,
+      "accounts_flat": 0,
+      "accounts_total": 0
+    },
+    "acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "audit_kill_switch_released"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['kill_switch.clear']",
+      "ENGAGE->['kill_switch.engaging']",
+      "->['kill_switch.cancelling']",
+      "done.invoke.cx->['kill_switch.flattening']",
+      "done.invoke.fl->['kill_switch.engaged']",
+      "RELEASE->['kill_switch.clear']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "incomplete": {
+    "ids": [
+      "kill_switch.engaged_incomplete"
+    ],
+    "ctx": {
+      "scope": "global",
+      "engaged_by": null,
+      "engaged_at_us": null,
+      "reason": null,
+      "cancel_working": false,
+      "flatten": false,
+      "accounts_flat": 0,
+      "accounts_total": 0
+    },
+    "acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "page_owner",
+      "emit_incomplete_metric"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['kill_switch.clear']",
+      "ENGAGE->['kill_switch.engaging']",
+      "->['kill_switch.cancelling']",
+      "done.invoke.cx->['kill_switch.flattening']",
+      "done.invoke.fl->['kill_switch.engaged_incomplete']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "incomplete_retry": {
+    "ids": [
+      "kill_switch.engaged_incomplete"
+    ],
+    "ctx": {
+      "scope": "global",
+      "engaged_by": null,
+      "engaged_at_us": null,
+      "reason": null,
+      "cancel_working": false,
+      "flatten": false,
+      "accounts_flat": 0,
+      "accounts_total": 0
+    },
+    "acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "page_owner",
+      "emit_incomplete_metric",
+      "page_owner",
+      "emit_incomplete_metric"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['kill_switch.clear']",
+      "ENGAGE->['kill_switch.engaging']",
+      "->['kill_switch.cancelling']",
+      "done.invoke.cx->['kill_switch.flattening']",
+      "done.invoke.fl->['kill_switch.engaged_incomplete']",
+      "RETRY_FLATTEN->['kill_switch.flattening']",
+      "done.invoke.fl->['kill_switch.engaged_incomplete']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "cancel_error": {
+    "ids": [
+      "kill_switch.engaged"
+    ],
+    "ctx": {
+      "scope": "global",
+      "engaged_by": null,
+      "engaged_at_us": null,
+      "reason": null,
+      "cancel_working": false,
+      "flatten": false,
+      "accounts_flat": 0,
+      "accounts_total": 0
+    },
+    "acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "raise_critical_alert"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['kill_switch.clear']",
+      "ENGAGE->['kill_switch.engaging']",
+      "->['kill_switch.cancelling']",
+      "error.platform.cx->['kill_switch.engaged']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "flatten_error": {
+    "ids": [
+      "kill_switch.engaged_incomplete"
+    ],
+    "ctx": {
+      "scope": "global",
+      "engaged_by": null,
+      "engaged_at_us": null,
+      "reason": null,
+      "cancel_working": false,
+      "flatten": false,
+      "accounts_flat": 0,
+      "accounts_total": 0
+    },
+    "acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "raise_critical_alert",
+      "page_owner",
+      "emit_incomplete_metric"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['kill_switch.clear']",
+      "ENGAGE->['kill_switch.engaging']",
+      "->['kill_switch.cancelling']",
+      "done.invoke.cx->['kill_switch.flattening']",
+      "error.platform.fl->['kill_switch.engaged_incomplete']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "release_denied": {
+    "ids": [
+      "kill_switch.engaged"
+    ],
+    "ctx": {
+      "scope": "global",
+      "engaged_by": null,
+      "engaged_at_us": null,
+      "reason": null,
+      "cancel_working": false,
+      "flatten": false,
+      "accounts_flat": 0,
+      "accounts_total": 0
+    },
+    "acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch"
+    ],
+    "status": "error",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['kill_switch.clear']",
+      "ENGAGE->['kill_switch.engaging']",
+      "->['kill_switch.engaged']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": false,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "release_incomplete_denied": {
+    "ids": [
+      "kill_switch.engaged_incomplete"
+    ],
+    "ctx": {
+      "scope": "global",
+      "engaged_by": null,
+      "engaged_at_us": null,
+      "reason": null,
+      "cancel_working": false,
+      "flatten": false,
+      "accounts_flat": 0,
+      "accounts_total": 0
+    },
+    "acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "page_owner",
+      "emit_incomplete_metric"
+    ],
+    "status": "error",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['kill_switch.clear']",
+      "ENGAGE->['kill_switch.engaging']",
+      "->['kill_switch.cancelling']",
+      "done.invoke.cx->['kill_switch.flattening']",
+      "done.invoke.fl->['kill_switch.engaged_incomplete']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": false,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "inv_b18b": {
+    "blocked_at_receipt": true,
+    "ids_at_receipt": [
+      "kill_switch.cancelling"
+    ],
+    "trace": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch"
+    ],
+    "final_ids": [
+      "kill_switch.engaged"
+    ]
+  },
+  "priority": {
+    "busy_ids": [
+      "kill_switch.engaged"
+    ],
+    "queue_depth": 20,
+    "priority_latency_s": 0.0013,
+    "changed": true,
+    "error": null,
+    "err": null,
+    "ids_after": [
+      "kill_switch.clear"
+    ],
+    "status": "error",
+    "final_ids": [
+      "kill_switch.clear"
+    ],
+    "unhandled": [
+      [
+        "RETRY_FLATTEN",
+        "errored"
+      ]
+    ],
+    "dropped": [],
+    "trace_tail": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "audit_kill_switch_released"
+    ]
+  },
+  "unhandled_error": {
+    "changed": false,
+    "error": null,
+    "err": null,
+    "status": "error",
+    "ids": [
+      "kill_switch.clear"
+    ],
+    "unhandled": [
+      [
+        "RELEASE",
+        "errored"
+      ]
+    ]
+  },
+  "snap_engage_only": {
+    "midstep_errors": [],
+    "diffs": {},
+    "plain_acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "audit_kill_switch_released"
+    ],
+    "snap_acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "audit_kill_switch_released"
+    ],
+    "plain_ids": [
+      "kill_switch.clear"
+    ],
+    "ids": [
+      "kill_switch.clear"
+    ]
+  },
+  "snap_full": {
+    "midstep_errors": [],
+    "diffs": {},
+    "plain_acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "audit_kill_switch_released"
+    ],
+    "snap_acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "audit_kill_switch_released"
+    ],
+    "plain_ids": [
+      "kill_switch.clear"
+    ],
+    "ids": [
+      "kill_switch.clear"
+    ]
+  },
+  "snap_incomplete": {
+    "midstep_errors": [],
+    "diffs": {},
+    "plain_acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "page_owner",
+      "emit_incomplete_metric",
+      "page_owner",
+      "emit_incomplete_metric"
+    ],
+    "snap_acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "page_owner",
+      "emit_incomplete_metric",
+      "page_owner",
+      "emit_incomplete_metric"
+    ],
+    "plain_ids": [
+      "kill_switch.engaged_incomplete"
+    ],
+    "ids": [
+      "kill_switch.engaged_incomplete"
+    ]
+  },
+  "sync_parity_full": {
+    "error": "NotSupportedError: Service 'cancel_all_working_orders' is async and not supported."
+  }
+}

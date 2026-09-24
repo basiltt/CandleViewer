@@ -1,0 +1,57 @@
+[
+ {
+  "path": "send(wait=True)",
+  "pre": [
+   "position_protection.sl.protected",
+   "position_protection.watchdog.scanning"
+  ],
+  "call_raised": "NO-RAISE",
+  "receipt": {
+   "changed": false,
+   "deferred": false,
+   "denied": false,
+   "error": "RuntimeError"
+  },
+  "states": [
+   "position_protection.sl.protected",
+   "position_protection.watchdog.scanning"
+  ],
+  "status": "running",
+  "interp_error": "None",
+  "last_transition_ok": false,
+  "last_error": "RuntimeError('guard-boom:tightens_only')"
+ },
+ {
+  "path": "send() fire-and-forget",
+  "states": [
+   "position_protection.sl.protected",
+   "position_protection.watchdog.scanning"
+  ],
+  "status": "running",
+  "interp_error": "None",
+  "last_transition_ok": false,
+  "last_error": "RuntimeError('guard-boom:tightens_only')",
+  "dropped": [],
+  "unhandled": []
+ },
+ {
+  "path": "guard on invoke.onDone",
+  "after_invoke": [
+   "position_protection.sl.naked",
+   "position_protection.watchdog.scanning"
+  ],
+  "after_pokes": [
+   "position_protection.sl.naked",
+   "position_protection.watchdog.scanning"
+  ],
+  "status": "running",
+  "interp_error": "None",
+  "last_transition_ok": true,
+  "last_error": "None",
+  "deferred_count": 3,
+  "pending_invocations": [
+   "PendingInvocation(state_id='position_protection.sl.naked', invoke_id='fb', src='attach_fallback_sl')"
+  ],
+  "fallback_taken_naked": true
+ }
+]

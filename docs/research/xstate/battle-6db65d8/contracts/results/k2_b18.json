@@ -1,0 +1,402 @@
+{
+  "b17_stale_replay": {
+    "ids": [
+      "live_gate.enabled"
+    ],
+    "ctx": {
+      "evidence": {
+        "pentest_passed": false,
+        "key_audit_passed": false,
+        "env_separation_verified": false,
+        "runbooks_signed": false
+      },
+      "enabled_by": null,
+      "enabled_at_us": null,
+      "disable_reason": null,
+      "eligible_user_ids": []
+    },
+    "acts": [
+      "record_evidence",
+      "record_enable",
+      "audit_live_enabled",
+      "broadcast_live_enabled",
+      "enable_live_visual_language"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['live_gate.locked']",
+      "EVIDENCE_RECORDED->['live_gate.eligible']",
+      "ENABLE_REQUESTED->['live_gate.enabled']"
+    ],
+    "receipts": [
+      {
+        "changed": false,
+        "error": null,
+        "deferred": true
+      },
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b18_happy": {
+    "ids": [
+      "kill_switch.engaged"
+    ],
+    "ctx": {
+      "scope": "global",
+      "engaged_by": null,
+      "engaged_at_us": null,
+      "reason": null,
+      "cancel_working": false,
+      "flatten": false,
+      "accounts_flat": 0,
+      "accounts_total": 0
+    },
+    "acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['kill_switch.clear']",
+      "ENGAGE->['kill_switch.engaging']",
+      "->['kill_switch.cancelling']",
+      "done.invoke.cx->['kill_switch.flattening']",
+      "done.invoke.fl->['kill_switch.engaged']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b18_incomplete": {
+    "ids": [
+      "kill_switch.engaged_incomplete"
+    ],
+    "ctx": {
+      "scope": "global",
+      "engaged_by": null,
+      "engaged_at_us": null,
+      "reason": null,
+      "cancel_working": false,
+      "flatten": false,
+      "accounts_flat": 0,
+      "accounts_total": 0
+    },
+    "acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "page_owner",
+      "emit_incomplete_metric"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['kill_switch.clear']",
+      "ENGAGE->['kill_switch.engaging']",
+      "->['kill_switch.cancelling']",
+      "done.invoke.cx->['kill_switch.flattening']",
+      "done.invoke.fl->['kill_switch.engaged_incomplete']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b18_retry": {
+    "ids": [
+      "kill_switch.engaged_incomplete"
+    ],
+    "ctx": {
+      "scope": "global",
+      "engaged_by": null,
+      "engaged_at_us": null,
+      "reason": null,
+      "cancel_working": false,
+      "flatten": false,
+      "accounts_flat": 0,
+      "accounts_total": 0
+    },
+    "acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "page_owner",
+      "emit_incomplete_metric",
+      "page_owner",
+      "emit_incomplete_metric"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['kill_switch.clear']",
+      "ENGAGE->['kill_switch.engaging']",
+      "->['kill_switch.cancelling']",
+      "done.invoke.cx->['kill_switch.flattening']",
+      "done.invoke.fl->['kill_switch.engaged_incomplete']",
+      "RETRY_FLATTEN->['kill_switch.flattening']",
+      "done.invoke.fl->['kill_switch.engaged_incomplete']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b18_cancel_fail": {
+    "ids": [
+      "kill_switch.engaged"
+    ],
+    "ctx": {
+      "scope": "global",
+      "engaged_by": null,
+      "engaged_at_us": null,
+      "reason": null,
+      "cancel_working": false,
+      "flatten": false,
+      "accounts_flat": 0,
+      "accounts_total": 0
+    },
+    "acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "raise_critical_alert"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['kill_switch.clear']",
+      "ENGAGE->['kill_switch.engaging']",
+      "->['kill_switch.cancelling']",
+      "error.platform.cx->['kill_switch.engaged']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b18_flatten_fail": {
+    "ids": [
+      "kill_switch.engaged_incomplete"
+    ],
+    "ctx": {
+      "scope": "global",
+      "engaged_by": null,
+      "engaged_at_us": null,
+      "reason": null,
+      "cancel_working": false,
+      "flatten": false,
+      "accounts_flat": 0,
+      "accounts_total": 0
+    },
+    "acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "raise_critical_alert",
+      "page_owner",
+      "emit_incomplete_metric"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['kill_switch.clear']",
+      "ENGAGE->['kill_switch.engaging']",
+      "->['kill_switch.cancelling']",
+      "done.invoke.cx->['kill_switch.flattening']",
+      "error.platform.fl->['kill_switch.engaged_incomplete']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b18_release_ok": {
+    "ids": [
+      "kill_switch.clear"
+    ],
+    "ctx": {
+      "scope": "global",
+      "engaged_by": null,
+      "engaged_at_us": null,
+      "reason": null,
+      "cancel_working": false,
+      "flatten": false,
+      "accounts_flat": 0,
+      "accounts_total": 0
+    },
+    "acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch",
+      "audit_kill_switch_released"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['kill_switch.clear']",
+      "ENGAGE->['kill_switch.engaging']",
+      "->['kill_switch.engaged']",
+      "RELEASE->['kill_switch.clear']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b18_release_denied": {
+    "ids": [
+      "kill_switch.engaged"
+    ],
+    "ctx": {
+      "scope": "global",
+      "engaged_by": null,
+      "engaged_at_us": null,
+      "reason": null,
+      "cancel_working": false,
+      "flatten": false,
+      "accounts_flat": 0,
+      "accounts_total": 0
+    },
+    "acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch"
+    ],
+    "status": "error",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['kill_switch.clear']",
+      "ENGAGE->['kill_switch.engaging']",
+      "->['kill_switch.engaged']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": false,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b18_release_in_flight": {
+    "ids": [
+      "kill_switch.clear"
+    ],
+    "status": "running",
+    "err": null,
+    "receipt": {
+      "changed": true,
+      "error": null,
+      "deferred": false,
+      "denied": false
+    },
+    "unhandled": [],
+    "dropped": [],
+    "last_error": "NoneType"
+  },
+  "b18_denied_receipt": {
+    "changed": false,
+    "denied": true,
+    "deferred": false,
+    "error": null,
+    "unhandled": [
+      [
+        "RELEASE",
+        "errored"
+      ]
+    ],
+    "ids": [
+      "kill_switch.engaged"
+    ],
+    "status": "error"
+  },
+  "b18_send_priority": {
+    "has_send_priority": true,
+    "result": {
+      "changed": true
+    },
+    "ids": [
+      "kill_switch.engaged"
+    ],
+    "acts": [
+      "record_engagement",
+      "audit_kill_switch",
+      "block_new_orders_immediately",
+      "cancel_entry_and_poll_drains",
+      "broadcast_kill_switch"
+    ]
+  },
+  "b18_snap_engage": {
+    "midstep": [],
+    "diffs": {},
+    "trace_eq": true,
+    "ids": [
+      "kill_switch.engaged"
+    ]
+  },
+  "b18_snap_incomplete": {
+    "midstep": [],
+    "diffs": {},
+    "trace_eq": true,
+    "ids": [
+      "kill_switch.engaged_incomplete"
+    ]
+  },
+  "b18_sync": {
+    "error": "NotSupportedError: Service 'cancel_all_working_orders' is async and not supported."
+  }
+}

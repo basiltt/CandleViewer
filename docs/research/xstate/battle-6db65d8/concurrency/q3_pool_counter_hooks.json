@@ -1,0 +1,45 @@
+{
+  "probe": "q3_pool_counter_hooks",
+  "py": "3.13.7",
+  "A_pool_and_stop_midservice": {
+    "pool_1": {
+      "wall_s": 0.74,
+      "stop_midservice": "ok",
+      "thread_delta": 0,
+      "task_leftover": 0,
+      "statuses": [
+        "stopped"
+      ]
+    },
+    "pool_4": {
+      "wall_s": 0.74,
+      "stop_midservice": "ok",
+      "thread_delta": 0,
+      "task_leftover": 0,
+      "statuses": [
+        "stopped"
+      ]
+    }
+  },
+  "B_inflight_counter": {
+    "attempted": 400,
+    "raised_at_callsite": 0,
+    "future_delivered": 400,
+    "future_refused": 0,
+    "inflight_counter_after": 0,
+    "raise_depth_after_quiescence": 0,
+    "ok": true
+  },
+  "C_loopside_refusal_hook": {
+    "callsite_refusals": 7748,
+    "loopside_refusals": 483,
+    "total_refusals": 8231,
+    "queue_full_hooks": 483,
+    "other_drop_reasons": [],
+    "hooks_total": 483,
+    "exactly_once": false,
+    "loopside_observable": true
+  },
+  "C_exactly_once": false,
+  "result": "PASS"
+}

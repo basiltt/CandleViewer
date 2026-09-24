@@ -1,0 +1,28 @@
+{
+  "probe": "n5b_snapshot_corrupt_minimal",
+  "py": "3.13.7",
+  "good_snapshot_keys": [
+    "actors",
+    "configuration",
+    "context",
+    "deferred",
+    "error",
+    "history",
+    "machine_hash",
+    "machine_id",
+    "output",
+    "pending_events",
+    "state_ids",
+    "status",
+    "system",
+    "taken_at",
+    "value",
+    "version"
+  ],
+  "raw_exception_cases": [],
+  "raw_exception_case_count": 0,
+  "raw_on_delete": [],
+  "silent_empty_config": [],
+  "r2_driven_live": null,
+  "result": "PASS"
+}

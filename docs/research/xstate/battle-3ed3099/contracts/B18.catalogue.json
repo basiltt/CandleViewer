@@ -1,0 +1,136 @@
+{
+  "id": "kill_switch",
+  "actionErrorPolicy": "fail",
+  "onUnhandled": "error",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "initial": "clear",
+  "context": {
+    "scope": "global",
+    "engaged_by": null,
+    "engaged_at_us": null,
+    "reason": null,
+    "cancel_working": false,
+    "flatten": false,
+    "accounts_flat": 0,
+    "accounts_total": 0
+  },
+  "states": {
+    "clear": {
+      "tags": [
+        "trading_allowed"
+      ],
+      "on": {
+        "ENGAGE": {
+          "target": "#kill_switch.engaging",
+          "actions": [
+            "record_engagement",
+            "audit_kill_switch"
+          ]
+        }
+      }
+    },
+    "engaging": {
+      "tags": [
+        "trading_blocked"
+      ],
+      "entry": [
+        "block_new_orders_immediately",
+        "cancel_entry_and_poll_drains",
+        "broadcast_kill_switch"
+      ],
+      "always": [
+        {
+          "target": "#kill_switch.cancelling",
+          "guard": "cancel_working_requested"
+        },
+        {
+          "target": "#kill_switch.engaged"
+        }
+      ]
+    },
+    "cancelling": {
+      "tags": [
+        "trading_blocked"
+      ],
+      "invoke": {
+        "id": "cx",
+        "src": "cancel_all_working_orders",
+        "onDone": [
+          {
+            "target": "#kill_switch.flattening",
+            "guard": "flatten_requested"
+          },
+          {
+            "target": "#kill_switch.engaged"
+          }
+        ],
+        "onError": {
+          "target": "#kill_switch.engaged",
+          "actions": [
+            "raise_critical_alert"
+          ]
+        }
+      }
+    },
+    "flattening": {
+      "tags": [
+        "trading_blocked"
+      ],
+      "invoke": {
+        "id": "fl",
+        "src": "flatten_all_positions",
+        "onDone": [
+          {
+            "target": "#kill_switch.engaged",
+            "guard": "all_accounts_flat"
+          },
+          {
+            "target": "#kill_switch.engaged_incomplete"
+          }
+        ],
+        "onError": {
+          "target": "#kill_switch.engaged_incomplete",
+          "actions": [
+            "raise_critical_alert"
+          ]
+        }
+      }
+    },
+    "engaged": {
+      "tags": [
+        "trading_blocked"
+      ],
+      "on": {
+        "RELEASE": {
+          "target": "#kill_switch.clear",
+          "guard": "owner_and_elevated",
+          "actions": [
+            "audit_kill_switch_released"
+          ]
+        }
+      }
+    },
+    "engaged_incomplete": {
+      "tags": [
+        "trading_blocked",
+        "critical"
+      ],
+      "entry": [
+        "page_owner",
+        "emit_incomplete_metric"
+      ],
+      "on": {
+        "RETRY_FLATTEN": {
+          "target": "#kill_switch.flattening"
+        },
+        "RELEASE": {
+          "target": "#kill_switch.clear",
+          "guard": "owner_and_elevated_and_acknowledged_residual"
+        }
+      }
+    }
+  }
+}

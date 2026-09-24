@@ -1,0 +1,102 @@
+{
+  "probe": "q2_hook_snapshot_property",
+  "py": "3.13.7",
+  "machines": 300,
+  "blobs_restored_and_probed": 750,
+  "dispositions": {
+    "async:on_action_execute:refused": 976,
+    "async:on_action_execute:returned": 375,
+    "async:on_event_received:returned": 710,
+    "async:on_transition:refused": 639,
+    "async:on_transition:returned": 150,
+    "sync:on_action_execute:refused": 1188,
+    "sync:on_event_received:refused": 596,
+    "sync:on_transition:refused": 535,
+    "sync:on_transition:returned": 150
+  },
+  "raw_exceptions_from_hook_snapshot": [],
+  "torn_or_dead_blobs": [
+    {
+      "machine": "m0",
+      "engine": "async",
+      "hook": "on_action_execute",
+      "verdict": "TORN:empty_config_running",
+      "state_ids": [],
+      "status": "running"
+    },
+    {
+      "machine": "m4",
+      "engine": "async",
+      "hook": "on_action_execute",
+      "verdict": "TORN:empty_config_running",
+      "state_ids": [],
+      "status": "running"
+    },
+    {
+      "machine": "m8",
+      "engine": "async",
+      "hook": "on_action_execute",
+      "verdict": "TORN:empty_config_running",
+      "state_ids": [],
+      "status": "running"
+    },
+    {
+      "machine": "m10",
+      "engine": "async",
+      "hook": "on_action_execute",
+      "verdict": "TORN:empty_config_running",
+      "state_ids": [],
+      "status": "running"
+    },
+    {
+      "machine": "m14",
+      "engine": "async",
+      "hook": "on_action_execute",
+      "verdict": "TORN:empty_config_running",
+      "state_ids": [],
+      "status": "running"
+    },
+    {
+      "machine": "m22",
+      "engine": "async",
+      "hook": "on_action_execute",
+      "verdict": "TORN:empty_config_running",
+      "state_ids": [],
+      "status": "running"
+    },
+    {
+      "machine": "m24",
+      "engine": "async",
+      "hook": "on_action_execute",
+      "verdict": "TORN:empty_config_running",
+      "state_ids": [],
+      "status": "running"
+    },
+    {
+      "machine": "m28",
+      "engine": "async",
+      "hook": "on_action_execute",
+      "verdict": "TORN:empty_config_running",
+      "state_ids": [],
+      "status": "running"
+    },
+    {
+      "machine": "m34",
+      "engine": "async",
+      "hook": "on_action_execute",
+      "verdict": "TORN:empty_config_running",
+      "state_ids": [],
+      "status": "running"
+    },
+    {
+      "machine": "m36",
+      "engine": "async",
+      "hook": "on_action_execute",
+      "verdict": "TORN:empty_config_running",
+      "state_ids": [],
+      "status": "running"
+    }
+  ],
+  "torn_count": 81,
+  "result": "FAIL"
+}

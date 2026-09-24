@@ -1,0 +1,268 @@
+{
+  "B16": {
+    "actions": [
+      "audit_login",
+      "audit_mfa_failed",
+      "audit_session_revoked",
+      "audit_step_up",
+      "audit_step_up_failed",
+      "broadcast_revocation",
+      "bump_mfa_attempts",
+      "clear_elevated",
+      "mark_mfa_satisfied",
+      "schedule_elevation_deadline",
+      "set_revoke_admin",
+      "set_revoke_expired",
+      "set_revoke_idle",
+      "set_revoke_locked",
+      "set_revoke_logout",
+      "set_revoke_timeout",
+      "stamp_elevated_until",
+      "stamp_idle_deadline"
+    ],
+    "guards": [
+      "mfa_attempts_exhausted"
+    ],
+    "services": [],
+    "delays": [],
+    "events": [
+      "ABSOLUTE_DEADLINE",
+      "ELEVATION_DEADLINE",
+      "IDLE_DEADLINE",
+      "LOGOUT",
+      "MFA_FAILED",
+      "MFA_OK",
+      "MFA_TIMEOUT",
+      "REQUEST",
+      "REVOKE",
+      "STEP_UP_FAILED",
+      "STEP_UP_OK"
+    ],
+    "bare": "BUILD OK (no impls required?!)",
+    "stub": "BUILD OK",
+    "root_type": "parallel",
+    "policies": {
+      "actionErrorPolicy": "rollback",
+      "onUnhandled": "defer",
+      "guardErrorPolicy": "raise",
+      "strictTargets": true,
+      "strict": true,
+      "spawnBlockingTimeout": 5000
+    },
+    "policy_seen": {
+      "action_error_policy": "rollback",
+      "unhandled_policy": "<absent>",
+      "guard_error_policy": "raise",
+      "spawn_blocking_timeout_ms": 5000.0
+    }
+  },
+  "B17": {
+    "actions": [
+      "audit_enable_denied",
+      "audit_live_disabled",
+      "audit_live_enabled",
+      "broadcast_live_enabled",
+      "clear_evidence_item",
+      "enable_live_visual_language",
+      "raise_critical_alert",
+      "record_disable",
+      "record_enable",
+      "record_evidence"
+    ],
+    "guards": [
+      "all_evidence_present",
+      "owner_and_elevated",
+      "owner_and_elevated_and_evidence_still_valid"
+    ],
+    "services": [],
+    "delays": [],
+    "events": [
+      "DISABLE_REQUESTED",
+      "EMERGENCY_DISABLE",
+      "ENABLE_REQUESTED",
+      "EVIDENCE_INVALIDATED",
+      "EVIDENCE_RECORDED"
+    ],
+    "bare": "BUILD OK (no impls required?!)",
+    "stub": "BUILD OK",
+    "root_type": "compound",
+    "policies": {
+      "actionErrorPolicy": "fail",
+      "onUnhandled": "defer",
+      "guardErrorPolicy": "raise",
+      "strictTargets": true,
+      "strict": true,
+      "spawnBlockingTimeout": 5000
+    },
+    "policy_seen": {
+      "action_error_policy": "fail",
+      "unhandled_policy": "<absent>",
+      "guard_error_policy": "raise",
+      "spawn_blocking_timeout_ms": 5000.0
+    }
+  },
+  "B18": {
+    "actions": [
+      "audit_kill_switch",
+      "audit_kill_switch_released",
+      "block_new_orders_immediately",
+      "broadcast_kill_switch",
+      "cancel_entry_and_poll_drains",
+      "emit_incomplete_metric",
+      "page_owner",
+      "raise_critical_alert",
+      "record_engagement"
+    ],
+    "guards": [
+      "all_accounts_flat",
+      "cancel_working_requested",
+      "flatten_requested",
+      "owner_and_elevated",
+      "owner_and_elevated_and_acknowledged_residual"
+    ],
+    "services": [
+      "cancel_all_working_orders",
+      "flatten_all_positions"
+    ],
+    "delays": [],
+    "events": [
+      "ENGAGE",
+      "RELEASE",
+      "RETRY_FLATTEN"
+    ],
+    "bare": "BUILD OK (no impls required?!)",
+    "stub": "BUILD OK",
+    "root_type": "compound",
+    "policies": {
+      "actionErrorPolicy": "fail",
+      "onUnhandled": "error",
+      "guardErrorPolicy": "raise",
+      "strictTargets": true,
+      "strict": true,
+      "spawnBlockingTimeout": 5000
+    },
+    "policy_seen": {
+      "action_error_policy": "fail",
+      "unhandled_policy": "<absent>",
+      "guard_error_policy": "raise",
+      "spawn_blocking_timeout_ms": 5000.0
+    }
+  },
+  "B19": {
+    "actions": [
+      "broadcast_recon_complete",
+      "bump_failures",
+      "defer",
+      "drain_deferred",
+      "emit_recon_metrics",
+      "emit_recon_started",
+      "lock_account_for_new_orders",
+      "page_owner",
+      "persist_report",
+      "raise_critical_alert",
+      "raise_divergence_alert",
+      "record_diff_error",
+      "reset_failures",
+      "schedule_retry_deadline",
+      "set_trigger_periodic",
+      "set_trigger_reconnect",
+      "set_trigger_startup",
+      "set_trigger_unknown",
+      "stamp_start",
+      "store_divergences",
+      "store_exchange_state",
+      "store_remediations"
+    ],
+    "guards": [
+      "divergences_found_and_auto_remediate",
+      "failures_exhausted",
+      "unresolved_divergences"
+    ],
+    "services": [
+      "apply_remediations",
+      "diff_against_local",
+      "fetch_exchange_state"
+    ],
+    "delays": [],
+    "events": [
+      "*",
+      "CANCEL",
+      "OPERATOR_RESOLVED",
+      "RECONNECTED",
+      "RETRY_DUE",
+      "STARTUP",
+      "SWEEP_DUE",
+      "UNKNOWN_ORDER"
+    ],
+    "bare": "BUILD OK (no impls required?!)",
+    "stub": "BUILD OK",
+    "root_type": "compound",
+    "policies": {
+      "actionErrorPolicy": "rollback",
+      "onUnhandled": "defer",
+      "guardErrorPolicy": "raise",
+      "strictTargets": true,
+      "strict": true,
+      "spawnBlockingTimeout": 5000
+    },
+    "policy_seen": {
+      "action_error_policy": "rollback",
+      "unhandled_policy": "<absent>",
+      "guard_error_policy": "raise",
+      "spawn_blocking_timeout_ms": 5000.0
+    }
+  },
+  "B20": {
+    "actions": [
+      "audit_lockout",
+      "audit_override",
+      "audit_override_denied",
+      "broadcast_lockout",
+      "compute_until",
+      "emit_risk_warning",
+      "halt_new_orders",
+      "log_expiry_ignored_manual_mode",
+      "raise_lockout_alert",
+      "reset_daily_counters_if_new_day",
+      "resume_new_orders",
+      "schedule_expiry_deadline",
+      "set_breach_daily_loss",
+      "set_breach_from_event",
+      "set_breach_manual",
+      "update_pnl"
+    ],
+    "guards": [
+      "breaches_daily_loss_cap",
+      "outside_warning_band",
+      "owner_and_elevated_and_override_permitted",
+      "until_mode_is_time_based",
+      "within_warning_band"
+    ],
+    "services": [],
+    "delays": [],
+    "events": [
+      "CAP_BREACH",
+      "EXPIRY_DUE",
+      "MANUAL_LOCK",
+      "OVERRIDE_REQUESTED",
+      "PNL_UPDATE"
+    ],
+    "bare": "BUILD OK (no impls required?!)",
+    "stub": "BUILD OK",
+    "root_type": "compound",
+    "policies": {
+      "actionErrorPolicy": "fail",
+      "onUnhandled": "defer",
+      "guardErrorPolicy": "raise",
+      "strictTargets": true,
+      "strict": true,
+      "spawnBlockingTimeout": 5000
+    },
+    "policy_seen": {
+      "action_error_policy": "fail",
+      "unhandled_policy": "<absent>",
+      "guard_error_policy": "raise",
+      "spawn_blocking_timeout_ms": 5000.0
+    }
+  }
+}

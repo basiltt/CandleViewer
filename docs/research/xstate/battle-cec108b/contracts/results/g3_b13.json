@@ -1,0 +1,242 @@
+[
+ {
+  "id": "B13-happy-pub",
+  "inv": "happy",
+  "title": "public: disconnected->connecting->subscribing->live",
+  "detail": {
+   "ok": true,
+   "states": [
+    "ws_conn.live"
+   ],
+   "svc": [
+    "open_socket",
+    "subscribe_in_batches"
+   ],
+   "subscribed": [
+    "trade"
+   ],
+   "entry": [
+    "reset_backoff",
+    "emit_feed_healthy",
+    "arm_pong_deadline"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B13-happy-priv",
+  "inv": "happy",
+  "title": "private: inserts authenticating before subscribing",
+  "detail": {
+   "ok": true,
+   "states": [
+    "ws_conn.live"
+   ],
+   "svc": [
+    "open_socket",
+    "ws_auth",
+    "subscribe_in_batches"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B13-a",
+  "inv": "INV-B13-a",
+  "title": "budget exhausted -> budget_blocked, NO socket opened",
+  "detail": {
+   "ok": true,
+   "blocked": [
+    "ws_conn.budget_blocked"
+   ],
+   "socket_opened": false,
+   "after_recheck": [
+    "ws_conn.disconnected"
+   ],
+   "alert": 1
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B13-b",
+  "inv": "INV-B13-b",
+  "title": "backoff doubles to max and resets only on live",
+  "detail": {
+   "ok": true,
+   "backoff_seq": [
+    1000,
+    2000,
+    4000,
+    8000,
+    16000,
+    30000,
+    30000
+   ],
+   "capped_at": 30000,
+   "live": [
+    "ws_conn.live"
+   ],
+   "backoff_after_live": 500,
+   "attempts": 0
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B13-c",
+  "inv": "INV-B13-c",
+  "title": "subscribed_topics == pending_topics after subscribing",
+  "detail": {
+   "ok": true,
+   "first": [
+    "trade",
+    "kline",
+    "depth"
+   ],
+   "after_change": [
+    "trade",
+    "depth",
+    "mark"
+   ],
+   "pending": [
+    "trade",
+    "depth",
+    "mark"
+   ],
+   "states": [
+    "ws_conn.live"
+   ],
+   "sub_calls": 2
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B13-c2",
+  "inv": "INV-B13-c",
+  "title": "partial batch subscribe -> back to backing_off, never live",
+  "detail": {
+   "ok": true,
+   "states": [
+    "ws_conn.backing_off"
+   ],
+   "subscribed": [],
+   "sub_error": 1
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B13-recon",
+  "inv": "INV-B13-b",
+  "title": "reconnect/resync: live->SOCKET_CLOSED->backoff->live, topics restored",
+  "detail": {
+   "ok": true,
+   "backoff_state": [
+    "ws_conn.backing_off"
+   ],
+   "relive": [
+    "ws_conn.live"
+   ],
+   "topics_before": [
+    "trade",
+    "kline"
+   ],
+   "topics_after": [
+    "trade",
+    "kline"
+   ],
+   "degraded_notifications": [
+    1,
+    1
+   ],
+   "svc_sequence": [
+    "open_socket",
+    "subscribe_in_batches",
+    "open_socket",
+    "subscribe_in_batches"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B13-pong",
+  "inv": "INV-B13-e",
+  "title": "PONG re-arms; PONG_DEADLINE drops to backing_off",
+  "detail": {
+   "ok": true,
+   "last_pong_us": 111,
+   "rearm_calls": 1,
+   "after_deadline": [
+    "ws_conn.backing_off"
+   ],
+   "arm_calls": 1
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B13-stale",
+  "inv": "INV-B13-b",
+  "title": "TOPIC_STALE forces reconnect",
+  "detail": {
+   "ok": true,
+   "states": [
+    "ws_conn.backing_off"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B13-shutdown",
+  "inv": "happy",
+  "title": "SHUTDOWN from live -> closing -> closed (final)",
+  "detail": {
+   "ok": true,
+   "states": [
+    "ws_conn.closed"
+   ],
+   "svc": [
+    "open_socket",
+    "subscribe_in_batches",
+    "close_socket"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "B13-unh",
+  "inv": "onUnhandled=error",
+  "title": "unhandled event must surface, not be swallowed",
+  "detail": {
+   "ok": false,
+   "send_result": "no raise; receipt=Receipt(state_ids=frozenset({'ws_conn.live'}), changed=False, error=None, deferred=False, denied=False)",
+   "last_error": "None",
+   "unhandled_hook": [
+    [
+     "CONNECT",
+     "errored"
+    ]
+   ],
+   "states": [
+    "ws_conn.live"
+   ],
+   "running": false
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "B13-strict",
+  "inv": "strict=true",
+  "title": "undeclared event name must raise at the call site",
+  "detail": {
+   "ok": false,
+   "results": {
+    "NOT_A_REAL_EVENT": "ACCEPTED states=['ws_conn.live'] last_error=None",
+    "after.party": "ACCEPTED states=['ws_conn.live'] last_error=None",
+    "done.invoke.bogus": "ACCEPTED states=['ws_conn.live'] last_error=None",
+    "xstate.bogus": "ACCEPTED states=['ws_conn.live'] last_error=None"
+   },
+   "states": [
+    "ws_conn.live"
+   ]
+  },
+  "status": "FAIL"
+ }
+]

@@ -1,0 +1,201 @@
+{
+  "id": "position_protection",
+  "actionErrorPolicy": "fail",
+  "onUnhandled": "defer",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "type": "parallel",
+  "context": {
+    "account_id": null,
+    "symbol": null,
+    "position_qty": "0",
+    "native_sl_px": null,
+    "desired_sl_px": null,
+    "sl_deadline_us": null,
+    "naked_since_us": null,
+    "attach_attempts": 0
+  },
+  "states": {
+    "sl": {
+      "initial": "flat",
+      "states": {
+        "flat": {
+          "on": {
+            "POSITION_OPENED": {
+              "target": "#position_protection.sl.attaching"
+            }
+          }
+        },
+        "attaching": {
+          "entry": [
+            "arm_sl_deadline",
+            "bump_attach_attempts"
+          ],
+          "invoke": {
+            "id": "att",
+            "src": "attach_native_sl",
+            "onDone": {
+              "target": "#position_protection.sl.verifying"
+            },
+            "onError": [
+              {
+                "target": "#position_protection.sl.attaching",
+                "reenter": true,
+                "guard": "attach_attempts_left"
+              },
+              {
+                "target": "#position_protection.sl.naked"
+              }
+            ]
+          },
+          "on": {
+            "SL_DEADLINE": {
+              "target": "#position_protection.sl.naked"
+            }
+          }
+        },
+        "verifying": {
+          "invoke": {
+            "id": "ver",
+            "src": "read_position_sl",
+            "onDone": [
+              {
+                "target": "#position_protection.sl.protected",
+                "guard": "exchange_reports_sl"
+              },
+              {
+                "target": "#position_protection.sl.naked"
+              }
+            ],
+            "onError": {
+              "target": "#position_protection.sl.naked"
+            }
+          }
+        },
+        "protected": {
+          "tags": [
+            "protected"
+          ],
+          "on": {
+            "TIGHTEN_SL": {
+              "target": "#position_protection.sl.amending",
+              "guard": "tightens_only"
+            },
+            "LOOSEN_SL": {
+              "target": "#position_protection.sl.amending",
+              "guard": "explicit_audited_override"
+            },
+            "WATCHDOG_MISS": {
+              "target": "#position_protection.sl.naked"
+            },
+            "POSITION_FLAT": {
+              "target": "#position_protection.sl.flat"
+            }
+          }
+        },
+        "amending": {
+          "invoke": {
+            "id": "am",
+            "src": "set_trading_stop",
+            "onDone": {
+              "target": "#position_protection.sl.verifying"
+            },
+            "onError": {
+              "target": "#position_protection.sl.verifying"
+            }
+          },
+          "on": {
+            "*": {
+              "actions": [
+                "defer"
+              ]
+            }
+          }
+        },
+        "naked": {
+          "tags": [
+            "naked",
+            "critical"
+          ],
+          "entry": [
+            "stamp_naked_since",
+            "raise_critical_alert",
+            "emit_naked_metric"
+          ],
+          "invoke": {
+            "id": "fb",
+            "src": "attach_fallback_sl",
+            "onDone": {
+              "target": "#position_protection.sl.verifying"
+            },
+            "onError": {
+              "target": "#position_protection.sl.naked_unrecoverable"
+            }
+          },
+          "on": {
+            "POSITION_FLAT": {
+              "target": "#position_protection.sl.flat"
+            }
+          }
+        },
+        "naked_unrecoverable": {
+          "tags": [
+            "naked",
+            "critical"
+          ],
+          "entry": [
+            "page_owner",
+            "consider_reduce_only_close"
+          ],
+          "on": {
+            "SL_OBSERVED": {
+              "target": "#position_protection.sl.protected"
+            },
+            "POSITION_FLAT": {
+              "target": "#position_protection.sl.flat"
+            }
+          }
+        }
+      }
+    },
+    "watchdog": {
+      "initial": "idle",
+      "states": {
+        "idle": {
+          "on": {
+            "POSITION_OPENED": {
+              "target": "#position_protection.watchdog.scanning"
+            }
+          }
+        },
+        "scanning": {
+          "on": {
+            "SCAN_DUE": [
+              {
+                "target": "#position_protection.watchdog.scanning",
+                "reenter": true,
+                "guard": "sl_observed",
+                "actions": [
+                  "reset_miss_counter"
+                ]
+              },
+              {
+                "target": "#position_protection.watchdog.scanning",
+                "reenter": true,
+                "actions": [
+                  "bump_miss_counter",
+                  "maybe_raise_watchdog_miss"
+                ]
+              }
+            ],
+            "POSITION_FLAT": {
+              "target": "#position_protection.watchdog.idle"
+            }
+          }
+        }
+      }
+    }
+  }
+}

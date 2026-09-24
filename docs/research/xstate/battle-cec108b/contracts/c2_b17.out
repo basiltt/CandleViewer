@@ -1,0 +1,182 @@
+{
+  "b17b_locked_enable": [
+    [
+      "pentest_only",
+      [
+        "live_gate.locked"
+      ]
+    ],
+    [
+      "enable_while_locked",
+      [
+        "live_gate.locked"
+      ],
+      false,
+      true
+    ]
+  ],
+  "b17b_after_evidence": {
+    "ids": [
+      "live_gate.eligible"
+    ],
+    "deferred": 0,
+    "acts": [
+      "record_evidence",
+      "record_evidence",
+      "audit_enable_denied"
+    ],
+    "transitions": [
+      "___xstate_statemachine_init___->['live_gate.locked']",
+      "EVIDENCE_RECORDED->['live_gate.locked']",
+      "EVIDENCE_RECORDED->['live_gate.eligible']",
+      "ENABLE_REQUESTED->['live_gate.eligible']"
+    ]
+  },
+  "no_2fa": {
+    "ids": [
+      "live_gate.eligible"
+    ],
+    "acts": [
+      "record_evidence",
+      "audit_enable_denied"
+    ],
+    "changed": false,
+    "deferred": false
+  },
+  "with_2fa": {
+    "ids": [
+      "live_gate.enabled"
+    ],
+    "acts": [
+      "record_evidence",
+      "audit_enable_denied",
+      "record_enable",
+      "audit_live_enabled",
+      "broadcast_live_enabled",
+      "enable_live_visual_language"
+    ],
+    "changed": true
+  },
+  "inv_c": {
+    "ids": [
+      "live_gate.locked"
+    ],
+    "acts_tail": [
+      "broadcast_live_enabled",
+      "enable_live_visual_language",
+      "clear_evidence_item",
+      "raise_critical_alert"
+    ],
+    "changed": true
+  },
+  "inv_d_emergency": {
+    "ids": [
+      "live_gate.locked"
+    ],
+    "changed": true,
+    "acts_tail": [
+      "broadcast_live_enabled",
+      "enable_live_visual_language",
+      "record_disable",
+      "raise_critical_alert"
+    ],
+    "guard_calls_tail": [
+      "all_evidence_present",
+      "owner_and_elevated_and_evidence_still_valid"
+    ]
+  },
+  "audit_trace_no2fa": [
+    "record_evidence",
+    "audit_enable_denied"
+  ],
+  "action_fail": {
+    "ids": [
+      "live_gate.eligible"
+    ],
+    "status": "running",
+    "changed": false,
+    "error": null,
+    "acts": [
+      "record_evidence",
+      "audit_enable_denied"
+    ]
+  },
+  "after_fail_send": {
+    "changed": false,
+    "status": "running",
+    "ids": [
+      "live_gate.eligible"
+    ]
+  },
+  "snapshot": {
+    "midstep_errors": [],
+    "diffs": {},
+    "acts_equal": true,
+    "plain_acts": [
+      "record_evidence",
+      "record_enable",
+      "audit_live_enabled",
+      "broadcast_live_enabled",
+      "enable_live_visual_language",
+      "record_disable",
+      "audit_live_disabled",
+      "record_enable",
+      "audit_live_enabled",
+      "broadcast_live_enabled",
+      "enable_live_visual_language",
+      "record_disable",
+      "raise_critical_alert"
+    ],
+    "snap_acts": [
+      "record_evidence",
+      "record_enable",
+      "audit_live_enabled",
+      "broadcast_live_enabled",
+      "enable_live_visual_language",
+      "record_disable",
+      "audit_live_disabled",
+      "record_enable",
+      "audit_live_enabled",
+      "broadcast_live_enabled",
+      "enable_live_visual_language",
+      "record_disable",
+      "raise_critical_alert"
+    ],
+    "ids": [
+      "live_gate.locked"
+    ]
+  },
+  "sync_parity": {
+    "ids": [
+      "live_gate.locked"
+    ],
+    "ctx": {
+      "evidence": {
+        "pentest_passed": false,
+        "key_audit_passed": false,
+        "env_separation_verified": false,
+        "runbooks_signed": false
+      },
+      "enabled_by": null,
+      "enabled_at_us": null,
+      "disable_reason": null,
+      "eligible_user_ids": []
+    },
+    "acts": [
+      "record_evidence",
+      "record_enable",
+      "audit_live_enabled",
+      "broadcast_live_enabled",
+      "enable_live_visual_language",
+      "record_disable",
+      "audit_live_disabled",
+      "record_enable",
+      "audit_live_enabled",
+      "broadcast_live_enabled",
+      "enable_live_visual_language",
+      "record_disable",
+      "raise_critical_alert"
+    ],
+    "status": "running"
+  }
+}

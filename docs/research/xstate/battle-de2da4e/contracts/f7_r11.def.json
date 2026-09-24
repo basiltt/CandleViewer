@@ -1,0 +1,22 @@
+{
+ "[def]F7.219.audit.no_catalogue_self_wait": {
+  "pass": true,
+  "note": "[]"
+ },
+ "[def]F7.219.async.no_hang": {
+  "pass": true,
+  "note": "box='ReentrantWaitError'"
+ },
+ "[def]F7.219.async.reentrant_error": {
+  "pass": true,
+  "note": "got 'ReentrantWaitError'"
+ },
+ "[def]F7.219.async.deferred_receipt_ok": {
+  "pass": true,
+  "note": "deferred receipt resolved; states=['r.b']"
+ },
+ "[def]F7.219.sync.reentrant_error": {
+  "pass": true,
+  "note": "got 'ReentrantWaitError'"
+ }
+}

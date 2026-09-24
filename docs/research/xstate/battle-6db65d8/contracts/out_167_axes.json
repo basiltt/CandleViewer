@@ -1,0 +1,46 @@
+[
+ {
+  "entered_by": "initial state",
+  "service": "plain def",
+  "svc@1s": 1003,
+  "svc@3s": 1003,
+  "still_growing": false,
+  "status": "running",
+  "last_error": "RunawayChainError",
+  "drops": [
+   "chain_budget"
+  ]
+ },
+ {
+  "entered_by": "initial state",
+  "service": "async def",
+  "svc@1s": 1402,
+  "svc@3s": 4275,
+  "still_growing": true,
+  "status": "running",
+  "last_error": "RuntimeError",
+  "drops": []
+ },
+ {
+  "entered_by": "external send",
+  "service": "plain def",
+  "svc@1s": 1002,
+  "svc@3s": 1002,
+  "still_growing": false,
+  "status": "running",
+  "last_error": "RunawayChainError",
+  "drops": [
+   "chain_budget"
+  ]
+ },
+ {
+  "entered_by": "external send",
+  "service": "async def",
+  "svc@1s": 1441,
+  "svc@3s": 4317,
+  "still_growing": true,
+  "status": "running",
+  "last_error": "RuntimeError",
+  "drops": []
+ }
+]

@@ -1,0 +1,222 @@
+{
+  "id": "iceberg",
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "defer",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "initial": "pending",
+  "context": {
+    "algo_id": null,
+    "total_qty": "0",
+    "remaining_qty": "0",
+    "slices_done": 0,
+    "max_slices": 450,
+    "active_child_id": null,
+    "post_only_rejects": 0,
+    "next_refill_at_us": null,
+    "failure_count": 0
+  },
+  "states": {
+    "pending": {
+      "always": [
+        {
+          "target": "#iceberg.failed",
+          "guard": "preflight_invalid"
+        },
+        {
+          "target": "#iceberg.submitting_slice"
+        }
+      ]
+    },
+    "submitting_slice": {
+      "entry": [
+        "compute_slice_qty",
+        "bump_slices_done"
+      ],
+      "invoke": {
+        "id": "slice",
+        "src": "submit_child",
+        "onDone": {
+          "target": "#iceberg.working",
+          "actions": [
+            "record_child"
+          ]
+        },
+        "onError": [
+          {
+            "target": "#iceberg.repricing",
+            "guard": "is_post_only_reject"
+          },
+          {
+            "target": "#iceberg.failed",
+            "guard": "failures_exhausted"
+          },
+          {
+            "target": "#iceberg.submitting_slice",
+            "reenter": true,
+            "actions": [
+              "bump_failure"
+            ]
+          }
+        ]
+      }
+    },
+    "working": {
+      "on": {
+        "CHILD_FILLED": [
+          {
+            "target": "#iceberg.completing",
+            "guard": "remaining_is_zero",
+            "actions": [
+              "apply_fill"
+            ]
+          },
+          {
+            "target": "#iceberg.waiting_refill",
+            "actions": [
+              "apply_fill"
+            ]
+          }
+        ],
+        "CHILD_PARTIAL": {
+          "actions": [
+            "apply_fill"
+          ]
+        },
+        "CHILD_CANCELLED": {
+          "target": "#iceberg.waiting_refill"
+        },
+        "USER_PAUSE": {
+          "target": "#iceberg.paused"
+        },
+        "WS_DISCONNECT": {
+          "target": "#iceberg.paused",
+          "guard": "on_disconnect_is_freeze"
+        },
+        "USER_CANCEL": {
+          "target": "#iceberg.cancelling"
+        },
+        "POSITION_FLAT": {
+          "target": "#iceberg.cancelling",
+          "guard": "cancel_on_position_flat"
+        },
+        "MAX_DURATION": {
+          "target": "#iceberg.cancelling"
+        }
+      }
+    },
+    "waiting_refill": {
+      "entry": [
+        "schedule_refill_deadline"
+      ],
+      "on": {
+        "REFILL_DUE": [
+          {
+            "target": "#iceberg.completing",
+            "guard": "remaining_is_zero"
+          },
+          {
+            "target": "#iceberg.completing",
+            "guard": "slices_exhausted"
+          },
+          {
+            "target": "#iceberg.submitting_slice"
+          }
+        ],
+        "USER_PAUSE": {
+          "target": "#iceberg.paused"
+        },
+        "USER_CANCEL": {
+          "target": "#iceberg.cancelling"
+        }
+      }
+    },
+    "repricing": {
+      "entry": [
+        "bump_post_only_rejects"
+      ],
+      "always": [
+        {
+          "target": "#iceberg.cooling_down",
+          "guard": "two_consecutive_post_only_rejects"
+        },
+        {
+          "target": "#iceberg.submitting_slice"
+        }
+      ]
+    },
+    "cooling_down": {
+      "entry": [
+        "schedule_cooldown_deadline",
+        "reset_post_only_rejects"
+      ],
+      "on": {
+        "COOLDOWN_DUE": {
+          "target": "#iceberg.submitting_slice"
+        }
+      }
+    },
+    "paused": {
+      "on": {
+        "RESUME": {
+          "target": "#iceberg.reconciling"
+        },
+        "USER_CANCEL": {
+          "target": "#iceberg.cancelling"
+        }
+      }
+    },
+    "reconciling": {
+      "invoke": {
+        "id": "rec",
+        "src": "reconcile_children",
+        "onDone": {
+          "target": "#iceberg.working"
+        },
+        "onError": {
+          "target": "#iceberg.failed"
+        }
+      }
+    },
+    "cancelling": {
+      "invoke": {
+        "id": "cx",
+        "src": "cancel_all_children",
+        "onDone": {
+          "target": "#iceberg.cancelled"
+        },
+        "onError": {
+          "target": "#iceberg.failed"
+        }
+      }
+    },
+    "completing": {
+      "on": {
+        "CHILDREN_TERMINAL": {
+          "target": "#iceberg.completed"
+        }
+      }
+    },
+    "completed": {
+      "type": "final",
+      "tags": [
+        "terminal"
+      ]
+    },
+    "cancelled": {
+      "type": "final",
+      "tags": [
+        "terminal"
+      ]
+    },
+    "failed": {
+      "type": "final",
+      "tags": [
+        "terminal",
+        "failure"
+      ]
+    }
+  }
+}

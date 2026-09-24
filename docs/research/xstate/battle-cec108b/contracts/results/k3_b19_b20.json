@@ -1,0 +1,808 @@
+{
+  "b18_release_in_flight": {
+    "ids_mid": [
+      "kill_switch.engaged"
+    ],
+    "ids_after": [
+      "kill_switch.clear"
+    ],
+    "status": "running",
+    "raised": null,
+    "receipt": {
+      "changed": true,
+      "denied": false,
+      "deferred": false,
+      "error": null
+    },
+    "unhandled": [],
+    "dropped": []
+  },
+  "b19_happy": {
+    "ids": [
+      "reconciliation.idle"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "done.invoke.fetch->['reconciliation.diffing']",
+      "done.invoke.diff->['reconciliation.reporting']",
+      "->['reconciliation.idle']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b19_startup": {
+    "ids": [
+      "reconciliation.idle"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_startup",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "STARTUP->['reconciliation.fetching']",
+      "done.invoke.fetch->['reconciliation.diffing']",
+      "done.invoke.diff->['reconciliation.reporting']",
+      "->['reconciliation.idle']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b19_unknown_order": {
+    "ids": [
+      "reconciliation.idle"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_unknown",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "UNKNOWN_ORDER->['reconciliation.fetching']",
+      "done.invoke.fetch->['reconciliation.diffing']",
+      "done.invoke.diff->['reconciliation.reporting']",
+      "->['reconciliation.idle']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b19_fetch_fail": {
+    "ids": [
+      "reconciliation.backing_off"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "bump_failures",
+      "schedule_retry_deadline"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "error.platform.fetch->['reconciliation.backing_off']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b19_stale": {
+    "ids": [
+      "reconciliation.backing_off"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "bump_failures",
+      "schedule_retry_deadline"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "error.platform.fetch->['reconciliation.backing_off']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b19_stale_RECONNECTED": {
+    "ids": [
+      "reconciliation.backing_off"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "bump_failures",
+      "schedule_retry_deadline"
+    ],
+    "status": "running",
+    "deferred": 1,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "error.platform.fetch->['reconciliation.backing_off']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": false,
+        "error": null,
+        "deferred": true
+      }
+    ]
+  },
+  "b19_stale_OPERATOR_RESOLVED": {
+    "ids": [
+      "reconciliation.backing_off"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "bump_failures",
+      "schedule_retry_deadline"
+    ],
+    "status": "running",
+    "deferred": 1,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "error.platform.fetch->['reconciliation.backing_off']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": false,
+        "error": null,
+        "deferred": true
+      }
+    ]
+  },
+  "b19_stale_SWEEP_DUE": {
+    "ids": [
+      "reconciliation.backing_off"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "bump_failures",
+      "schedule_retry_deadline"
+    ],
+    "status": "running",
+    "deferred": 1,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "error.platform.fetch->['reconciliation.backing_off']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": false,
+        "error": null,
+        "deferred": true
+      }
+    ]
+  },
+  "b19_unknown_during_sweep": {
+    "ids": [
+      "reconciliation.idle"
+    ],
+    "deferred": 0,
+    "receipt": {
+      "changed": true,
+      "deferred": false,
+      "denied": false,
+      "error": null
+    },
+    "unhandled": [],
+    "dropped": [],
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete",
+      "set_trigger_unknown",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete"
+    ]
+  },
+  "b19_cancel": {
+    "ids": [
+      "reconciliation.idle"
+    ],
+    "ctx": {
+      "account_id": null,
+      "trigger": null,
+      "started_us": null,
+      "orders_checked": 0,
+      "divergences": [],
+      "remediations": [],
+      "consecutive_failures": 0,
+      "auto_remediate": true
+    },
+    "acts": [
+      "set_trigger_periodic",
+      "stamp_start",
+      "emit_recon_started",
+      "store_exchange_state",
+      "store_divergences",
+      "persist_report",
+      "emit_recon_metrics",
+      "reset_failures",
+      "broadcast_recon_complete"
+    ],
+    "status": "running",
+    "deferred": 1,
+    "transitions": [
+      "___xstate_statemachine_init___->['reconciliation.idle']",
+      "SWEEP_DUE->['reconciliation.fetching']",
+      "done.invoke.fetch->['reconciliation.diffing']",
+      "done.invoke.diff->['reconciliation.reporting']",
+      "->['reconciliation.idle']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": false,
+        "error": null,
+        "deferred": true
+      }
+    ]
+  },
+  "b19_snap_sweep": {
+    "midstep": [],
+    "diffs": {},
+    "trace_eq": true,
+    "ids": [
+      "reconciliation.idle"
+    ]
+  },
+  "b19_snap_fail": {
+    "midstep": [],
+    "diffs": {},
+    "trace_eq": true,
+    "ids": [
+      "reconciliation.backing_off"
+    ]
+  },
+  "b20_breach": {
+    "ids": [
+      "risk_lockout.locked"
+    ],
+    "ctx": {
+      "account_id": null,
+      "scope": "account",
+      "realised_pnl_today": "0",
+      "max_daily_loss": "0",
+      "breach_reason": null,
+      "until_mode": "next_utc_day",
+      "until_us": null,
+      "cleared_by": null
+    },
+    "acts": [
+      "set_breach_daily_loss",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['risk_lockout.clear']",
+      "PNL_UPDATE->['risk_lockout.locked']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b20_warn": {
+    "ids": [
+      "risk_lockout.clear"
+    ],
+    "ctx": {
+      "account_id": null,
+      "scope": "account",
+      "realised_pnl_today": "0",
+      "max_daily_loss": "0",
+      "breach_reason": null,
+      "until_mode": "next_utc_day",
+      "until_us": null,
+      "cleared_by": null
+    },
+    "acts": [
+      "emit_risk_warning"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['risk_lockout.clear']",
+      "PNL_UPDATE->['risk_lockout.warning']",
+      "PNL_UPDATE->['risk_lockout.clear']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b20_manual": {
+    "ids": [
+      "risk_lockout.locked"
+    ],
+    "ctx": {
+      "account_id": null,
+      "scope": "account",
+      "realised_pnl_today": "0",
+      "max_daily_loss": "0",
+      "breach_reason": null,
+      "until_mode": "next_utc_day",
+      "until_us": null,
+      "cleared_by": null
+    },
+    "acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['risk_lockout.clear']",
+      "MANUAL_LOCK->['risk_lockout.locked']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b20_expiry_time": {
+    "ids": [
+      "risk_lockout.clear"
+    ],
+    "ctx": {
+      "account_id": null,
+      "scope": "account",
+      "realised_pnl_today": "0",
+      "max_daily_loss": "0",
+      "breach_reason": null,
+      "until_mode": "next_utc_day",
+      "until_us": null,
+      "cleared_by": null
+    },
+    "acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout",
+      "resume_new_orders",
+      "reset_daily_counters_if_new_day"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['risk_lockout.clear']",
+      "MANUAL_LOCK->['risk_lockout.locked']",
+      "EXPIRY_DUE->['risk_lockout.clear']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b20_expiry_manual": {
+    "ids": [
+      "risk_lockout.locked"
+    ],
+    "ctx": {
+      "account_id": null,
+      "scope": "account",
+      "realised_pnl_today": "0",
+      "max_daily_loss": "0",
+      "breach_reason": null,
+      "until_mode": "next_utc_day",
+      "until_us": null,
+      "cleared_by": null
+    },
+    "acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout",
+      "log_expiry_ignored_manual_mode"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['risk_lockout.clear']",
+      "MANUAL_LOCK->['risk_lockout.locked']",
+      "EXPIRY_DUE->['risk_lockout.locked']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": false,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b20_override_ok": {
+    "ids": [
+      "risk_lockout.clear"
+    ],
+    "ctx": {
+      "account_id": null,
+      "scope": "account",
+      "realised_pnl_today": "0",
+      "max_daily_loss": "0",
+      "breach_reason": null,
+      "until_mode": "next_utc_day",
+      "until_us": null,
+      "cleared_by": null
+    },
+    "acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout",
+      "resume_new_orders",
+      "audit_override"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['risk_lockout.clear']",
+      "MANUAL_LOCK->['risk_lockout.locked']",
+      "OVERRIDE_REQUESTED->['risk_lockout.clear']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b20_override_denied": {
+    "ids": [
+      "risk_lockout.locked"
+    ],
+    "ctx": {
+      "account_id": null,
+      "scope": "account",
+      "realised_pnl_today": "0",
+      "max_daily_loss": "0",
+      "breach_reason": null,
+      "until_mode": "next_utc_day",
+      "until_us": null,
+      "cleared_by": null
+    },
+    "acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout",
+      "audit_override_denied"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['risk_lockout.clear']",
+      "MANUAL_LOCK->['risk_lockout.locked']",
+      "OVERRIDE_REQUESTED->['risk_lockout.locked']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": false,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "b20_rollback": {
+    "ids": [
+      "risk_lockout.clear"
+    ],
+    "ctx": {
+      "account_id": null,
+      "scope": "account",
+      "realised_pnl_today": "0",
+      "max_daily_loss": "0",
+      "breach_reason": null,
+      "until_mode": "next_utc_day",
+      "until_us": null,
+      "cleared_by": null
+    },
+    "acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['risk_lockout.clear']"
+    ],
+    "receipts": [
+      {
+        "changed": false,
+        "error": "RuntimeError",
+        "deferred": false
+      }
+    ]
+  },
+  "b20_rollback_snapshot_ok": null,
+  "b20_snap_lock": {
+    "midstep": [],
+    "diffs": {},
+    "trace_eq": true,
+    "ids": [
+      "risk_lockout.locked"
+    ]
+  },
+  "b20_snap_override": {
+    "midstep": [],
+    "diffs": {},
+    "trace_eq": true,
+    "ids": [
+      "risk_lockout.clear"
+    ]
+  },
+  "b20_sync": {
+    "ids": [
+      "risk_lockout.locked"
+    ],
+    "ctx": {
+      "account_id": null,
+      "scope": "account",
+      "realised_pnl_today": "0",
+      "max_daily_loss": "0",
+      "breach_reason": null,
+      "until_mode": "next_utc_day",
+      "until_us": null,
+      "cleared_by": null
+    },
+    "acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout"
+    ],
+    "status": "running"
+  },
+  "b19_sync": {
+    "error": "NotSupportedError: Service 'fetch_exchange_state' is async and not supported."
+  }
+}

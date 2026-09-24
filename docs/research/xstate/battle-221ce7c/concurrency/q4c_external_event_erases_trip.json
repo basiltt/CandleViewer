@@ -1,0 +1,22 @@
+{
+  "probe": "q4c_external_event_erases_trip",
+  "py": "3.13.7",
+  "async": {
+    "last_error_after_trip": "RunawayChainError",
+    "laps_before_PING": 201,
+    "last_error_after_one_external_PING": "RunawayChainError",
+    "laps_after_PING": 401,
+    "laps_bought_by_one_external_event": 200
+  },
+  "sync": {
+    "last_error_after_trip": "RunawayChainError",
+    "laps_before_PING": 201,
+    "last_error_after_one_external_PING": "RunawayChainError",
+    "laps_after_PING": 401,
+    "laps_bought_by_one_external_event": 200
+  },
+  "async_erases_trip_evidence": false,
+  "sync_erases_trip_evidence": false,
+  "engines_agree": true,
+  "result": "PASS"
+}

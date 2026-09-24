@@ -1,0 +1,568 @@
+{
+  "probe": "r3_hook_snapshot_property_both_kinds",
+  "py": "3.13.7",
+  "machines": 300,
+  "dispositions": {
+    "async:def:on_interpreter_start": {
+      "returned": 150,
+      "torn": 150
+    },
+    "async:def:on_transition": {
+      "returned": 150,
+      "torn": 0
+    },
+    "async:def:refused": {
+      "refused": 317
+    },
+    "sync:def:on_interpreter_start": {
+      "returned": 150,
+      "torn": 150
+    },
+    "sync:def:on_transition": {
+      "returned": 150,
+      "torn": 0
+    },
+    "sync:def:refused": {
+      "refused": 891
+    },
+    "async:async def:on_interpreter_start": {
+      "returned": 150,
+      "torn": 150
+    },
+    "async:async def:on_transition": {
+      "returned": 150,
+      "torn": 0
+    },
+    "async:async def:on_event_received": {
+      "returned": 78,
+      "torn": 0
+    },
+    "async:async def:refused": {
+      "refused": 292
+    },
+    "sync:async def:on_interpreter_start": {
+      "returned": 150,
+      "torn": 150
+    },
+    "sync:async def:on_transition": {
+      "returned": 150,
+      "torn": 0
+    },
+    "sync:async def:refused": {
+      "refused": 823
+    },
+    "async:def:on_event_received": {
+      "returned": 78,
+      "torn": 0
+    }
+  },
+  "total_torn": 600,
+  "torn_examples": [
+    {
+      "engine": "async",
+      "kind": "def",
+      "hook": "on_interpreter_start",
+      "status": "running",
+      "state_ids": [],
+      "machine": {
+        "id": "r3",
+        "initial": "top",
+        "context": {
+          "c": 0
+        },
+        "onUnhandled": "defer",
+        "states": {
+          "top": {
+            "type": "parallel",
+            "states": {
+              "regA": {
+                "initial": "d1",
+                "states": {
+                  "d1": {
+                    "entry": [
+                      "bump"
+                    ],
+                    "on": {
+                      "STEP": {
+                        "target": "d2"
+                      }
+                    }
+                  },
+                  "d2": {
+                    "entry": [
+                      "bump"
+                    ],
+                    "on": {
+                      "STEP": {
+                        "target": "d1"
+                      }
+                    }
+                  }
+                }
+              },
+              "regB": {
+                "initial": "b1",
+                "states": {
+                  "b1": {
+                    "entry": [
+                      "bump"
+                    ],
+                    "on": {
+                      "STEP": {
+                        "target": "b2"
+                      }
+                    }
+                  },
+                  "b2": {
+                    "entry": [
+                      "bump"
+                    ],
+                    "on": {
+                      "STEP": {
+                        "target": "b1"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "on": {
+              "OUT": {
+                "target": "#r3.fin"
+              }
+            }
+          },
+          "fin": {
+            "type": "final"
+          }
+        }
+      }
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "hook": "on_interpreter_start",
+      "status": "running",
+      "state_ids": [],
+      "machine": {
+        "id": "r3",
+        "initial": "top",
+        "context": {
+          "c": 0
+        },
+        "onUnhandled": "defer",
+        "states": {
+          "top": {
+            "type": "parallel",
+            "states": {
+              "regA": {
+                "initial": "d1",
+                "states": {
+                  "d1": {
+                    "entry": [
+                      "bump"
+                    ],
+                    "on": {
+                      "STEP": {
+                        "target": "d2"
+                      }
+                    }
+                  },
+                  "d2": {
+                    "entry": [
+                      "bump"
+                    ],
+                    "on": {
+                      "STEP": {
+                        "target": "d1"
+                      }
+                    }
+                  }
+                }
+              },
+              "regB": {
+                "initial": "b1",
+                "states": {
+                  "b1": {
+                    "entry": [
+                      "bump"
+                    ],
+                    "on": {
+                      "STEP": {
+                        "target": "b2"
+                      }
+                    }
+                  },
+                  "b2": {
+                    "entry": [
+                      "bump"
+                    ],
+                    "on": {
+                      "STEP": {
+                        "target": "b1"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "on": {
+              "OUT": {
+                "target": "#r3.fin"
+              }
+            }
+          },
+          "fin": {
+            "type": "final"
+          }
+        }
+      }
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "hook": "on_interpreter_start",
+      "status": "running",
+      "state_ids": [],
+      "machine": {
+        "id": "r3",
+        "initial": "top",
+        "context": {
+          "c": 0
+        },
+        "onUnhandled": "defer",
+        "states": {
+          "top": {
+            "initial": "d1",
+            "states": {
+              "d1": {
+                "entry": [
+                  "bump"
+                ],
+                "on": {
+                  "STEP": {
+                    "target": "d2"
+                  }
+                }
+              },
+              "d2": {
+                "entry": [
+                  "bump"
+                ],
+                "on": {
+                  "STEP": {
+                    "target": "d1"
+                  }
+                }
+              }
+            },
+            "invoke": {
+              "src": "kid",
+              "onDone": {
+                "actions": [
+                  "bump"
+                ]
+              }
+            },
+            "on": {
+              "OUT": {
+                "target": "#r3.fin"
+              }
+            }
+          },
+          "fin": {
+            "type": "final"
+          }
+        }
+      }
+    },
+    {
+      "engine": "sync",
+      "kind": "async def",
+      "hook": "on_interpreter_start",
+      "status": "running",
+      "state_ids": [],
+      "machine": {
+        "id": "r3",
+        "initial": "top",
+        "context": {
+          "c": 0
+        },
+        "onUnhandled": "defer",
+        "states": {
+          "top": {
+            "initial": "d1",
+            "states": {
+              "d1": {
+                "entry": [
+                  "bump"
+                ],
+                "on": {
+                  "STEP": {
+                    "target": "d2"
+                  }
+                }
+              },
+              "d2": {
+                "entry": [
+                  "bump"
+                ],
+                "on": {
+                  "STEP": {
+                    "target": "d1"
+                  }
+                }
+              }
+            },
+            "invoke": {
+              "src": "kid",
+              "onDone": {
+                "actions": [
+                  "bump"
+                ]
+              }
+            },
+            "on": {
+              "OUT": {
+                "target": "#r3.fin"
+              }
+            }
+          },
+          "fin": {
+            "type": "final"
+          }
+        }
+      }
+    },
+    {
+      "engine": "async",
+      "kind": "def",
+      "hook": "on_interpreter_start",
+      "status": "running",
+      "state_ids": [],
+      "machine": {
+        "id": "r3",
+        "initial": "top",
+        "context": {
+          "c": 0
+        },
+        "onUnhandled": "defer",
+        "states": {
+          "top": {
+            "type": "parallel",
+            "states": {
+              "regA": {
+                "initial": "d1",
+                "states": {
+                  "d1": {
+                    "entry": [
+                      "bump"
+                    ],
+                    "on": {
+                      "STEP": {
+                        "target": "d2"
+                      }
+                    }
+                  },
+                  "d2": {
+                    "entry": [
+                      "bump"
+                    ],
+                    "on": {
+                      "STEP": {
+                        "target": "d1"
+                      }
+                    }
+                  }
+                }
+              },
+              "regB": {
+                "initial": "b1",
+                "states": {
+                  "b1": {
+                    "entry": [
+                      "bump"
+                    ],
+                    "on": {
+                      "STEP": {
+                        "target": "b2"
+                      }
+                    }
+                  },
+                  "b2": {
+                    "entry": [
+                      "bump"
+                    ],
+                    "on": {
+                      "STEP": {
+                        "target": "b1"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "hook": "on_interpreter_start",
+      "status": "running",
+      "state_ids": [],
+      "machine": {
+        "id": "r3",
+        "initial": "top",
+        "context": {
+          "c": 0
+        },
+        "onUnhandled": "defer",
+        "states": {
+          "top": {
+            "type": "parallel",
+            "states": {
+              "regA": {
+                "initial": "d1",
+                "states": {
+                  "d1": {
+                    "entry": [
+                      "bump"
+                    ],
+                    "on": {
+                      "STEP": {
+                        "target": "d2"
+                      }
+                    }
+                  },
+                  "d2": {
+                    "entry": [
+                      "bump"
+                    ],
+                    "on": {
+                      "STEP": {
+                        "target": "d1"
+                      }
+                    }
+                  }
+                }
+              },
+              "regB": {
+                "initial": "b1",
+                "states": {
+                  "b1": {
+                    "entry": [
+                      "bump"
+                    ],
+                    "on": {
+                      "STEP": {
+                        "target": "b2"
+                      }
+                    }
+                  },
+                  "b2": {
+                    "entry": [
+                      "bump"
+                    ],
+                    "on": {
+                      "STEP": {
+                        "target": "b1"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "hook": "on_interpreter_start",
+      "status": "running",
+      "state_ids": [],
+      "machine": {
+        "id": "r3",
+        "initial": "top",
+        "context": {
+          "c": 0
+        },
+        "onUnhandled": "defer",
+        "states": {
+          "top": {
+            "initial": "d1",
+            "states": {
+              "d1": {
+                "entry": [
+                  "bump"
+                ],
+                "on": {
+                  "STEP": {
+                    "target": "d2"
+                  }
+                }
+              },
+              "d2": {
+                "entry": [
+                  "bump"
+                ],
+                "on": {
+                  "STEP": {
+                    "target": "d1"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "engine": "sync",
+      "kind": "async def",
+      "hook": "on_interpreter_start",
+      "status": "running",
+      "state_ids": [],
+      "machine": {
+        "id": "r3",
+        "initial": "top",
+        "context": {
+          "c": 0
+        },
+        "onUnhandled": "defer",
+        "states": {
+          "top": {
+            "initial": "d1",
+            "states": {
+              "d1": {
+                "entry": [
+                  "bump"
+                ],
+                "on": {
+                  "STEP": {
+                    "target": "d2"
+                  }
+                }
+              },
+              "d2": {
+                "entry": [
+                  "bump"
+                ],
+                "on": {
+                  "STEP": {
+                    "target": "d1"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "errors": {},
+  "result": "FAIL"
+}

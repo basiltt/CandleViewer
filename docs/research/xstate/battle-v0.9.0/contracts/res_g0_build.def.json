@@ -1,0 +1,50 @@
+{
+ "[def]G0.B11.build": {
+  "pass": true,
+  "note": "acts=11 guards=3 svcs=2 delays=0 evts=7"
+ },
+ "[def]G0.B11.start": {
+  "pass": true,
+  "note": "states=['recording.idle'] status=running"
+ },
+ "[def]G0.B12.build": {
+  "pass": true,
+  "note": "acts=10 guards=1 svcs=2 delays=0 evts=12"
+ },
+ "[def]G0.B12.start": {
+  "pass": true,
+  "note": "states=['replay.created'] status=running"
+ },
+ "[def]G0.B13.build": {
+  "pass": true,
+  "note": "acts=21 guards=2 svcs=4 delays=0 evts=10"
+ },
+ "[def]G0.B13.start": {
+  "pass": true,
+  "note": "states=['ws_conn.disconnected'] status=running"
+ },
+ "[def]G0.B14.build": {
+  "pass": true,
+  "note": "acts=11 guards=0 svcs=0 delays=0 evts=6"
+ },
+ "[def]G0.B14.start": {
+  "pass": true,
+  "note": "states=['book.init'] status=running"
+ },
+ "[def]G0.B15.build": {
+  "pass": true,
+  "note": "acts=3 guards=3 svcs=0 delays=0 evts=1"
+ },
+ "[def]G0.B15.start": {
+  "pass": true,
+  "note": "states=['paper_account.active'] status=running"
+ },
+ "[def]G0.api.from_snapshot_plugins": {
+  "pass": true,
+  "note": "(snapshot_str: str, machine: xstate_statemachine.models.MachineNode[typing.Any], *, verify_machine_hash: bool = True, restart_services: bool = False, restart_timers: Optional[bool] = None, clock: Optional[xstate_statemachine.clock.Clock] = None, minimum_version: int = 0, expected_machine_hash: Optional[str] = None, plugins: Optional[Iterable[xstate_statemachine.plugins.PluginBase[Any]]] = None) -> ~TInterpreter"
+ },
+ "[def]G0.api.sync_from_snapshot_plugins": {
+  "pass": true,
+  "note": "(snapshot_str: str, machine: xstate_statemachine.models.MachineNode[typing.Any], *, verify_machine_hash: bool = True, restart_services: bool = False, restart_timers: Optional[bool] = None, clock: Optional[xstate_statemachine.clock.Clock] = None, minimum_version: int = 0, expected_machine_hash: Optional[str] = None, plugins: Optional[Iterable[xstate_statemachine.plugins.PluginBase[Any]]] = None) -> ~TInterpreter"
+ }
+}

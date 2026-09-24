@@ -1,0 +1,98 @@
+{
+ "[async]/225/worker-send-advances": {
+  "pass": true,
+  "note": "states=['alert.acknowledged']"
+ },
+ "[async]/225/worker-receipt-resolved": {
+  "pass": true,
+  "note": "awaited=Receipt(state_ids=frozenset({'alert.acknowledged'}), changed=True, error=None, deferred=False, denied=False)"
+ },
+ "[async]/225/no-chain-trip": {
+  "pass": true,
+  "note": "trips=0"
+ },
+ "[async]/225/handout-not-refused": {
+  "pass": true,
+  "note": "states=['alert.acknowledged']"
+ },
+ "[async]/225/handout-receipt-ok": {
+  "pass": true,
+  "note": "exc=None"
+ },
+ "[async]/225/in-step-refused": {
+  "pass": true,
+  "note": "exc=ReentrantWaitError(\"Action on 'alert' awaited send('ACK', wait=True) on its own interpreter. The receipt resolves only when the run loop processes the event, and the loop cannot advance until this action returns -- that is a deadlock. Send without wait=True from inside an action (the event runs after the current step), or await the receipt from outside.\")"
+ },
+ "[async]/232/dropped-receipt-warns": {
+  "pass": true,
+  "note": "n=1 send('ACK', wait=True) on 'alert' was called from inside an action and its receipt was nev"
+ },
+ "[async]/232/handout-silent": {
+  "pass": true,
+  "note": "n=0 "
+ },
+ "[async]/226/persisted-fields": {
+  "pass": true,
+  "note": "trips=3 err='cv-synthetic-budget-trip'"
+ },
+ "[async]/226/count-restored": {
+  "pass": true,
+  "note": "trips=3"
+ },
+ "[async]/226/restored-error-type": {
+  "pass": true,
+  "note": "RestoredChainError('cv-synthetic-budget-trip')"
+ },
+ "[async]/226/restored-error-message": {
+  "pass": true,
+  "note": "cv-synthetic-budget-trip"
+ },
+ "[async]/226/clear-keeps-count": {
+  "pass": true,
+  "note": "trips=3 err=None"
+ },
+ "[async]/226/happy-path-zero-all5": {
+  "pass": true,
+  "note": "bad=[]"
+ },
+ "[async]/227/both-lanes-refused": {
+  "pass": true,
+  "note": "on_invalid_event n=2 [\"Event(type='CV_NOT_DECLARED_ANYWHERE', payload={})\", \"Event(type='CV_NOT_DECLARED_ANYWHERE', payload={})\"]"
+ },
+ "[async]/230/plugin-saw-restore-refusal": {
+  "pass": true,
+  "note": "plugins= registered before admission"
+ },
+ "[async]/227/machine-not-derailed": {
+  "pass": true,
+  "note": "states=['alert.armed']"
+ },
+ "[async]/227/no-chain-trip": {
+  "pass": true,
+  "note": "trips=0"
+ },
+ "[async]/227/declared-rearms-and-fires": {
+  "pass": true,
+  "note": "states=['alert.disabled'] invalid=0"
+ },
+ "[async]/233/sync-priority-head": {
+  "pass": true,
+  "note": "queue=[] final=['alert.disabled']"
+ },
+ "[async]/231/inline-src-named": {
+  "pass": true,
+  "note": "State 'alert.firing' invoke 'deliver': 'src' must be a service name (str), got dict. To invoke a nested machine, build it with create_machine(...) and"
+ },
+ "[async]/235/old-name-deprecated": {
+  "pass": true,
+  "note": "n=1"
+ },
+ "[async]/235/engine-minted-is-system": {
+  "pass": true,
+  "note": "_EngineDone(type='done.invoke.deliver', data={'ok': True}, src='deliver')"
+ },
+ "[async]/235/replace-demotes": {
+  "pass": true,
+  "note": "type=done.invoke.deliver cls=DoneEvent"
+ }
+}

@@ -1,0 +1,87 @@
+[
+ {
+  "id": "N1-01",
+  "title": "2k-event property run: snapshot at EVERY quiescent point succeeds and round-trips",
+  "intent": "#102 must never fire at quiescence; snapshot must be a fixed point of state+context",
+  "detail": {
+   "ok": true,
+   "events": 2000,
+   "bumps": 1589,
+   "failures": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N1-02",
+  "title": "Snapshot taken from INSIDE an action still raises SnapshotMidStepError (#102 holds)",
+  "intent": "the refusal must be exactly at mid-step, not merely absent",
+  "detail": {
+   "ok": false,
+   "result": "snapshot-succeeded"
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "N1-03",
+  "title": "restart_timers=True re-arms a dormant `after` on a SimulatedClock",
+  "intent": "#128: a restored order-timeout must fire; has_dormant_timers must report honestly",
+  "detail": {
+   "ok": true,
+   "dormant_without_restart": true,
+   "ids_without_restart": [
+    "t.arm"
+   ],
+   "dormant_with_restart": false,
+   "ids_with_restart": [
+    "t.fired"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N1-04",
+  "title": "Non-JSON pending payload raises SnapshotSerializationError, never stringified",
+  "intent": "#131: silent coercion of an order payload would corrupt a restored OMS",
+  "detail": {
+   "ok": true,
+   "result": "SnapshotSerializationError",
+   "msg": "Pending event 'LATER' carries data that is not JSON-serialisable (Object of type Opaque is not JSON serializable). Snapshots refuse to coerce values silently; make the data JSON-native or snapshot fro"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N1-05",
+  "title": "Priority (fired-timer) lane survives a snapshot (#107)",
+  "intent": "a due order timeout queued at priority must not be lost across a restart",
+  "detail": {
+   "ok": true,
+   "engine_has_priority_lane": false,
+   "urgent_in_blob": false
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N1-06",
+  "title": "from_snapshot(clock=) injects the clock (#117) on both engines",
+  "intent": "a restored machine must use the caller's clock, not a fresh RealClock",
+  "detail": {
+   "ok": true,
+   "clock_injected": true,
+   "ids": [
+    "c.done"
+   ]
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N1-07",
+  "title": "Round-trip of a snapshot is idempotent: snapshot(restore(s)) == s",
+  "intent": "an OMS restarted twice must not drift; drift = silent state corruption",
+  "detail": {
+   "ok": true,
+   "s1": "{\"actors\": {}, \"configuration\": [\"p\", \"p.b\"], \"context\": {\"n\": 7}, \"deferred\": [], \"error\": null, \"history\": {}, \"machine_id\": \"p\", \"output\": null, \"pending_events\": [], \"state_ids\": [\"p.b\"], \"status\": \"running\", \"system\": {}, \"value\": \"b\"}",
+   "s2": "{\"actors\": {}, \"configuration\": [\"p\", \"p.b\"], \"context\": {\"n\": 7}, \"deferred\": [], \"error\": null, \"history\": {}, \"machine_id\": \"p\", \"output\": null, \"pending_events\": [], \"state_ids\": [\"p.b\"], \"status\": \"running\", \"system\": {}, \"value\": \"b\"}"
+  },
+  "status": "PASS"
+ }
+]

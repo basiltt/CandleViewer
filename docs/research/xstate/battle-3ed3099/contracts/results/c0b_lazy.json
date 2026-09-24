@@ -1,0 +1,8 @@
+{
+  "build_bare_strict": "OK",
+  "start": "OK ids=['live_gate.locked']",
+  "send": "receipt changed=False error=ImplementationMissingError(\"Guard 'all_evidence_present' not implemented.\") deferred=False",
+  "ids": [
+    "live_gate.locked"
+  ]
+}

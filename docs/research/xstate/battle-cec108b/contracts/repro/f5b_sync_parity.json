@@ -1,0 +1,18 @@
+[
+ {
+  "mode": "false",
+  "disposition": [
+   "guard_denied"
+  ],
+  "denied": true,
+  "changed": false,
+  "raised": null
+ },
+ {
+  "mode": "raise",
+  "disposition": [],
+  "denied": true,
+  "changed": false,
+  "raised": null
+ }
+]

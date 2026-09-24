@@ -1,0 +1,51 @@
+{
+ "B1": {
+  "ok": true,
+  "ids": [
+   "order.lifecycle.validated",
+   "order.protection.not_required"
+  ],
+  "trace": [
+   "persist_event",
+   "stamp_validated",
+   "persist_event",
+   "reserve_rate_token",
+   "persist_event",
+   "arm_sl_deadline"
+  ]
+ },
+ "B2": {
+  "ok": true,
+  "ids": [
+   "trade_group.closed"
+  ],
+  "trace": [
+   "reserve_rate_budget",
+   "launch_all_legs",
+   "arm_quiesce_deadline",
+   "count_open",
+   "count_open"
+  ]
+ },
+ "B3": {
+  "ok": true,
+  "ids": [
+   "leg.closing"
+  ],
+  "trace": [
+   "size_from_profile",
+   "submit_entry_order",
+   "arm_submit_timeout",
+   "accumulate_fill",
+   "place_tp_ladder_once"
+  ]
+ },
+ "B4": {
+  "ok": false,
+  "err": "NotSupportedError: Service 'submit_both_legs' is async and not supported."
+ },
+ "B5": {
+  "ok": false,
+  "err": "NotSupportedError: Service 'submit_child' is async and not supported."
+ }
+}

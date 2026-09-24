@@ -1,0 +1,82 @@
+{
+ "B1.async": {
+  "ok": true,
+  "initial": null,
+  "acts": 25,
+  "guards": 7,
+  "svcs": 4,
+  "events": 19
+ },
+ "B1.def": {
+  "ok": true,
+  "initial": null,
+  "acts": 25,
+  "guards": 7,
+  "svcs": 4,
+  "events": 19
+ },
+ "B2.async": {
+  "ok": true,
+  "initial": null,
+  "acts": 14,
+  "guards": 7,
+  "svcs": 1,
+  "events": 10
+ },
+ "B2.def": {
+  "ok": true,
+  "initial": null,
+  "acts": 14,
+  "guards": 7,
+  "svcs": 1,
+  "events": 10
+ },
+ "B3.async": {
+  "ok": true,
+  "initial": null,
+  "acts": 11,
+  "guards": 7,
+  "svcs": 5,
+  "events": 9
+ },
+ "B3.def": {
+  "ok": true,
+  "initial": null,
+  "acts": 11,
+  "guards": 7,
+  "svcs": 5,
+  "events": 9
+ },
+ "B4.async": {
+  "ok": true,
+  "initial": null,
+  "acts": 8,
+  "guards": 6,
+  "svcs": 5,
+  "events": 5
+ },
+ "B4.def": {
+  "ok": true,
+  "initial": null,
+  "acts": 8,
+  "guards": 6,
+  "svcs": 5,
+  "events": 5
+ },
+ "B5.async": {
+  "ok": true,
+  "initial": null,
+  "acts": 9,
+  "guards": 8,
+  "svcs": 3,
+  "events": 12
+ },
+ "B5.def": {
+  "ok": true,
+  "initial": null,
+  "acts": 9,
+  "guards": 8,
+  "svcs": 3,
+  "events": 12
+ }
+}

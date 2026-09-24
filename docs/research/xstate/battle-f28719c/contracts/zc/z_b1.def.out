@@ -1,0 +1,38 @@
+PASS [def]B1.happy.parallel_leaves  | ['order.lifecycle.partially_filled', 'order.protection.sl_missing']
+PASS [def]B1.happy.lifecycle  | ['order.lifecycle.partially_filled', 'order.protection.sl_missing']
+PASS [def]B1.happy.protection_naked  | ['order.lifecycle.partially_filled', 'order.protection.sl_missing']
+PASS [def]B1.happy.naked_alert
+PASS [def]B1.happy.snapshot  | []
+PASS [def]B1.happy.no_error  | None
+PASS [def]B1.filled.terminal  | ['order.lifecycle.filled', 'order.protection.sl_present']
+PASS [def]B1.filled.emit_terminal
+PASS [def]B1.filled.two_regions  | ['order.lifecycle.filled', 'order.protection.sl_present']
+PASS [def]B1.filled.snapshot  | []
+PASS [def]B1.reject.local  | ['order.lifecycle.rejected', 'order.protection.not_required']
+PASS [def]B1.reject.set_local
+PASS [def]B1.unknown.entered  | ['order.lifecycle.unknown', 'order.protection.not_required']
+PASS [def]B1.unknown.alert
+PASS [def]B1.unknown.fault_recorded
+PASS [def]B1.recon.second_miss_rejects  | states=['order.lifecycle.rejected', 'order.protection.not_required'] misses=1
+PASS [def]B1.recon.reenter_bumped  | 1
+PASS [def]B1.recon.snapshot  | []
+PASS [def]B1.dup.needs_lookup  | ['order.lifecycle.submitted', 'order.protection.not_required']
+PASS [def]B1.quarantine.recovers  | ['order.lifecycle.submitted', 'order.protection.not_required']
+PASS [def]B1.quarantine.critical_alert
+PASS [def]B1.sl.onError_naked  | ['order.lifecycle.submitted', 'order.protection.sl_missing']
+PASS [def]B1.sl.fallback_requested
+PASS [def]B1.cancel.cancelled  | ['order.lifecycle.cancelled', 'order.protection.not_required']
+PASS [def]B1.cancel.ack_adopted
+PASS [def]B1.amend.observed  | states=['order.lifecycle.unknown', 'order.protection.not_required'] actions_tail=['persist_event', 'raise_unknown_alert', 'arm_recon_deadline']
+PASS [def]B1.R6-03.terminates  | [{'ev': 'VALIDATE', 'ok': True, 'sec': 0.0010213000350631773}, {'ev': 'SEND', 'ok': True, 'sec': 0.009333800000604242}]
+PASS [def]B1.R6-03.duplicate_orders_placed  | place_order x47 states=['order.lifecycle.submitting', 'order.protection.not_required'] status=running error=None action_errors=47
+PASS [def]B1.defer.exec_replayed  | states=['order.lifecycle.partially_filled', 'order.protection.not_required'] unhandled=[('EXEC', 'deferred'), ('EXEC', 'deferred')]
+PASS [def]B1.guard_raise.observable  | ["RuntimeError('guard:ret_code_ok')"]
+PASS [def]B1.parity.states  | async=['order.lifecycle.partially_filled', 'order.protection.sl_present'] sync=['order.lifecycle.partially_filled', 'order.protection.sl_present']
+PASS [def]B1.parity.context  | async={'order_id': None, 'order_link_id': None, 'account_id': None, 'symbol': None, 'side': None, 'qty': '0', 'filled_qty': '0', 'leaves_qty': '0', 'avg_price': None, 'seen_exec_ids': [], 'last_exchange_update': 0, 'recon_misses': 0, '_fault': None, 'sl_deadline_us': None}
+sync={'order_id': None, 'order_link_id': None, 'account_id': None, 'symbol': None, 'side': None, 'qty': '0', 'filled_qty': '0', 'leaves_qty': '0', 'avg_price': None, 'seen_exec_ids': [], 'last_exchange_update': 0, 'recon_misses': 0, '_fault': None, 'sl_deadline_us': None}
+PASS [def]B1.parity.actions  | async=['persist_event', 'stamp_validated', 'persist_event', 'reserve_rate_token', 'persist_event', 'adopt_ack', 'persist_event', 'arm_sl_deadline', 'apply_fill', 'persist_event', 'notify_protection_region']
+sync=['persist_event', 'stamp_validated', 'persist_event', 'reserve_rate_token', 'persist_event', 'adopt_ack', 'persist_event', 'arm_sl_deadline', 'apply_fill', 'persist_event', 'notify_protection_region']
+PASS [def]B1.parity.svc  | async=['place_order', 'attach_native_sl'] sync=['place_order', 'attach_native_sl']
+
+--- 34 checks, 0 FAIL: []

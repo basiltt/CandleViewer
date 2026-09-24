@@ -1,0 +1,22 @@
+PASS [def]B6/parity: configuration  | {"async": ["twap.completed"], "sync": ["twap.completed"]}
+PASS [def]B6/parity: ACTION trace  | {"async": ["precompute_all_slice_deadlines", "register_deadlines_with_scheduler", "compute_slice_qty_with_participation_cap", "apply_catch_up", "bump_slices_done", "record_child", "compute_slice_qty_with_participation_cap", "apply_catch_up", "bump_slices_done", "record_child"], "sync": ["precompute_all_slice_deadlines", "register_deadlines_with_scheduler", "compute_slice_qty_with_participation_cap", "apply_catch_up", "bump_slices_done", "record_child", "compute_slice_qty_with_participation_cap", "apply_catch_up", "bump_slices_done", "record_child"]}
+PASS [def]B6/parity: SERVICE-CALL trace  | {"async": ["submit_child", "submit_child"], "sync": ["submit_child", "submit_child"]}
+PASS [def]B6/snapshot v3 round-trip clean at every quiescence  | ["t0:v=3:sched=0", "t0:snap_chain_trips=0", "t0:restore_plugin_started=1 invalid=0", "t1:v=3:sched=0", "t1:snap_chain_trips=0", "t1:restore_plugin_started=1 invalid=0", "t2:v=3:sched=0", "t2:snap_chain_trips=0", "t2:restore_plugin_started=1 invalid=0", "t3:v=3:sched=0", "t3:snap_chain_trips=0", "t3:
+PASS [def]B7/parity: configuration  | {"async": ["chase.working"], "sync": ["chase.working"]}
+PASS [def]B7/parity: ACTION trace  | {"async": ["record_child", "stamp_arm_price", "drain_deferred"], "sync": ["record_child", "stamp_arm_price", "drain_deferred"]}
+PASS [def]B7/parity: SERVICE-CALL trace  | {"async": ["submit_initial_limit"], "sync": ["submit_initial_limit"]}
+PASS [def]B7/snapshot v3 round-trip clean at every quiescence  | ["t0:v=3:sched=0", "t0:snap_chain_trips=0", "t0:restore_plugin_started=1 invalid=0", "t1:v=3:sched=0", "t1:snap_chain_trips=0", "t1:restore_plugin_started=1 invalid=0", "t2:v=3:sched=0", "t2:snap_chain_trips=0", "t2:restore_plugin_started=1 invalid=0"]
+PASS [def]B8/parity: configuration  | {"async": ["position_protection.sl.protected", "position_protection.watchdog.scanning"], "sync": ["position_protection.sl.protected", "position_protection.watchdog.scanning"]}
+PASS [def]B8/parity: ACTION trace  | {"async": ["arm_sl_deadline", "bump_attach_attempts"], "sync": ["arm_sl_deadline", "bump_attach_attempts"]}
+PASS [def]B8/parity: SERVICE-CALL trace  | {"async": ["attach_native_sl", "read_position_sl"], "sync": ["attach_native_sl", "read_position_sl"]}
+PASS [def]B8/snapshot v3 round-trip clean at every quiescence  | ["t0:v=3:sched=0", "t0:snap_chain_trips=0", "t0:restore_plugin_started=1 invalid=0", "t1:v=3:sched=0", "t1:snap_chain_trips=0", "t1:restore_plugin_started=1 invalid=0"]
+PASS [def]B9/parity: configuration  | {"async": ["rule_instance.cooling_down"], "sync": ["rule_instance.cooling_down"]}
+PASS [def]B9/parity: ACTION trace  | {"async": ["stamp_simulation_start", "subscribe_triggers", "emit_armed_audit", "unsubscribe_triggers", "assert_safety_limits", "record_fire", "reset_consecutive_errors", "stamp_cooldown_deadline"], "sync": ["stamp_simulation_start", "subscribe_triggers", "emit_armed_audit", "unsubscribe_triggers", "assert_safety_limits", "record_fire", "reset_consecutive_errors", "stamp_cooldown_deadline"]}
+PASS [def]B9/parity: SERVICE-CALL trace  | {"async": ["evaluate_condition_dag", "dispatch_actions_in_order"], "sync": ["evaluate_condition_dag", "dispatch_actions_in_order"]}
+PASS [def]B9/snapshot v3 round-trip clean at every quiescence  | ["t0:v=3:sched=0", "t0:snap_chain_trips=0", "t0:restore_plugin_started=1 invalid=0", "t1:v=3:sched=0", "t1:snap_chain_trips=0", "t1:restore_plugin_started=1 invalid=0", "t2:v=3:sched=0", "t2:snap_chain_trips=0", "t2:restore_plugin_started=1 invalid=0", "t3:v=3:sched=0", "t3:snap_chain_trips=0", "t3:
+PASS [def]B10/parity: configuration  | {"async": ["alert.resolved"], "sync": ["alert.resolved"]}
+PASS [def]B10/parity: ACTION trace  | {"async": ["persist_fired_row", "stamp_storm_window"], "sync": ["persist_fired_row", "stamp_storm_window"]}
+PASS [def]B10/parity: SERVICE-CALL trace  | {"async": ["dispatch_to_channels"], "sync": ["dispatch_to_channels"]}
+PASS [def]B10/snapshot v3 round-trip clean at every quiescence  | ["t0:v=3:sched=0", "t0:snap_chain_trips=0", "t0:restore_plugin_started=1 invalid=0", "t1:v=3:sched=0", "t1:snap_chain_trips=0", "t1:restore_plugin_started=1 invalid=0", "t2:v=3:sched=0", "t2:snap_chain_trips=0", "t2:restore_plugin_started=1 invalid=0"]
+
+--- 20 checks, 0 FAIL: []

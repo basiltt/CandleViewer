@@ -1,0 +1,45 @@
+{
+  "probe": "e2_plugin_containment_edges",
+  "py": "3.13.7",
+  "v1_baseexception": "see e3_baseexception_case.py (one case per process)",
+  "v2_async_hook": {
+    "async_hook_body_executed": 0,
+    "warnings": [
+      "coroutine 'v2_async_hook.<locals>.AsyncHook.on_transition' was never awaited"
+    ],
+    "note": "_guarded calls the hook and discards its return value."
+  },
+  "v3_observability": {
+    "receipt_changed": true,
+    "receipt_error": "None",
+    "last_transition_ok": true,
+    "last_error": "None",
+    "error_log_lines": 2,
+    "log_sample": [
+      "\ud83d\udd0c Plugin 'Bad' raised in 'on_transition'; ignoring so the interpreter keeps running.",
+      "\ud83d\udd0c Plugin 'Bad' raised in 'on_transition'; ignoring so the interpreter keeps running."
+    ],
+    "programmatic_surface": "none found: receipt clean, last_transition_ok True, last_error None -- an ERROR log line is the only trace"
+  },
+  "v4_mutating_hook": {
+    "timed_out": false,
+    "receipt": [
+      true,
+      "None"
+    ],
+    "context": {
+      "n": 1001,
+      "tampered": 1001
+    },
+    "states": [
+      "px.b"
+    ],
+    "status": "running",
+    "queue_depth": 0
+  },
+  "v5_blocking_hook": {
+    "max_loop_stall_ms": 52.05,
+    "hook_sleep_ms": 50,
+    "note": "a synchronous plugin hook is charged to the run-loop task"
+  }
+}

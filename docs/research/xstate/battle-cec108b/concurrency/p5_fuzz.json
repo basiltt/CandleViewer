@@ -1,0 +1,57 @@
+{
+  "probe": "p5_fuzz",
+  "py": "3.13.7",
+  "a_livelock_fuzz": {
+    "cases": 48,
+    "outcome_histogram": {
+      "nested_invoke:settled": 24,
+      "always_parallel:settled": 24
+    },
+    "livelocks": [],
+    "livelock_count": 0,
+    "raw_exceptions": [],
+    "raw_count": 0,
+    "watchdog_s": 30.0,
+    "pass": true
+  },
+  "b_snapshot_mutation_fuzz": {
+    "mutations": 5000,
+    "named_exceptions": {
+      "SnapshotVersionError": 154,
+      "SnapshotCorruptError": 2726,
+      "SnapshotDriftError": 355
+    },
+    "raw_unnamed_exceptions": {},
+    "raw_total": 0,
+    "restored_without_error": 1765,
+    "restored_running_with_no_leaf": [],
+    "restored_illegal_count": 0,
+    "pass": true
+  },
+  "c_event_type_fuzz": {
+    "cases": {
+      "int": "InvalidEventError (TypeError=True)",
+      "float": "InvalidEventError (TypeError=True)",
+      "none": "InvalidEventError (TypeError=True)",
+      "bytes": "InvalidEventError (TypeError=True)",
+      "list": "InvalidEventError (TypeError=True)",
+      "tuple": "InvalidEventError (TypeError=True)",
+      "bool": "InvalidEventError (TypeError=True)",
+      "dict_no_type": "InvalidEventError (TypeError=True)",
+      "dict_type_int": "InvalidEventError (TypeError=True)",
+      "dict_type_none": "InvalidEventError (TypeError=True)",
+      "dict_type_empty": "InvalidEventError (TypeError=True)",
+      "dict_nonstr_key": "InvalidEventError (TypeError=True)",
+      "set": "InvalidEventError (TypeError=True)",
+      "class": "InvalidEventError (TypeError=True)",
+      "empty_str": "accepted (error=None)"
+    },
+    "accepted": [
+      "empty_str"
+    ],
+    "raw": [],
+    "interpreter_alive_after": true,
+    "pass": true
+  },
+  "result": "PASS"
+}

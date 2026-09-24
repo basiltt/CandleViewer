@@ -1,0 +1,94 @@
+{
+ "B2.happy.terminal": {
+  "pass": true,
+  "note": "['trade_group.closed']"
+ },
+ "B2.happy.snapshot": {
+  "pass": true,
+  "note": "[]"
+ },
+ "B2.happy.no_error": {
+  "pass": true,
+  "note": "None"
+ },
+ "B2.happy.raise_chain_bounded": {
+  "pass": true,
+  "note": "[{'ev': 'CONFIRM', 'ok': True, 'sec': 8.159998105838895e-05}, {'ev': 'LEG_OPEN', 'ok': True, 'sec': 7.090001599863172e-05}, {'ev': 'LEG_OPEN', 'ok': True, 'sec': 4.260000423528254e-05}, {'ev': 'ALL_LE"
+ },
+ "B2.partial.quiesce": {
+  "pass": true,
+  "note": "['trade_group.partially_open'] ctx={'legs_open': 1, 'legs_failed': 1, 'quiesced': True}"
+ },
+ "B2.partial.snapshot": {
+  "pass": true,
+  "note": "[]"
+ },
+ "B2.allfail.failed": {
+  "pass": true,
+  "note": "['trade_group.failed']"
+ },
+ "B2.abort.always_resolves": {
+  "pass": true,
+  "note": "['trade_group.failed']"
+ },
+ "B2.abort.entry_ran": {
+  "pass": true,
+  "note": ""
+ },
+ "B2.abort.some_open": {
+  "pass": true,
+  "note": "['trade_group.partially_open']"
+ },
+ "B2.unwind.onDone_terminal": {
+  "pass": true,
+  "note": "['trade_group.failed']"
+ },
+ "B2.unwind.svc_once": {
+  "pass": true,
+  "note": "['unwind_machine']"
+ },
+ "B2.unwind.mark_unwound": {
+  "pass": true,
+  "note": "['count_failed', 'raise', 'persist_unwind_plan', 'mark_unwound']"
+ },
+ "B2.R6-03.terminates": {
+  "pass": true,
+  "note": "sends=[{'ev': 'CONFIRM', 'ok': True, 'sec': 5.8999983593821526e-05}, {'ev': 'LEG_FAILED', 'ok': True, 'sec': 9.790001786313951e-05}]"
+ },
+ "B2.R6-03.bounded": {
+  "pass": true,
+  "note": "unwind_machine invocations=48"
+ },
+ "B2.R6-03.observable": {
+  "pass": true,
+  "note": "err=None action_errors=47"
+ },
+ "B2.unwind.onError_failed": {
+  "pass": true,
+  "note": "['trade_group.failed']"
+ },
+ "B2.unwind.onError_alert": {
+  "pass": true,
+  "note": "['raise', 'persist_unwind_plan', 'mark_unwind_incomplete', 'raise_critical_alert']"
+ },
+ "B2.defer.flushed_to_closed": {
+  "pass": true,
+  "note": "states=['trade_group.closed'] unhandled=[('ALL_LEGS_FLAT', 'deferred'), ('ALL_LEGS_FLAT', 'deferred'), ('EVALUATE', 'deferred')]"
+ },
+ "B2.guard_raise.observable": {
+  "pass": true,
+  "note": "guard_errors=[\"RuntimeError('guard:all_non_skipped_open')\"] err=None sends=[{'ev': 'LEG_OPEN', 'ok': True, 'sec': 7.35999783501029e-05}]"
+ },
+ "B2.parity.states": {
+  "pass": true,
+  "note": "async=['trade_group.closed'] sync=['trade_group.closed']"
+ },
+ "B2.parity.context": {
+  "pass": true,
+  "note": ""
+ },
+ "B2.parity.actions": {
+  "pass": true,
+  "note": "async=['reserve_rate_budget', 'launch_all_legs', 'arm_quiesce_deadline', 'count_open', 'raise', 'count_open', 'raise']\nsync=['reserve_rate_budget', 'launch_all_legs', 'arm_quiesce_deadline', 'count_open', 'raise', 'count_open', 'raise']"
+ }
+}

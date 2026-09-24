@@ -1,0 +1,49 @@
+{
+ "ok": true,
+ "configs": 250,
+ "runs": 666,
+ "hangs": 0,
+ "n_findings": 0,
+ "per_shape": {
+  "always": {
+   "runs": 84,
+   "tripped": 84,
+   "periodic_alive": 0
+  },
+  "raise0": {
+   "runs": 84,
+   "tripped": 84,
+   "periodic_alive": 0
+  },
+  "raise_delay": {
+   "runs": 84,
+   "tripped": 0,
+   "periodic_alive": 84
+  },
+  "after": {
+   "runs": 84,
+   "tripped": 0,
+   "periodic_alive": 84
+  },
+  "mixed": {
+   "runs": 82,
+   "tripped": 82,
+   "periodic_alive": 0
+  },
+  "invoke": {
+   "runs": 82,
+   "tripped": 82,
+   "periodic_alive": 0
+  }
+ },
+ "oracle": {
+  "always": "trip",
+  "raise0": "trip",
+  "raise_delay": "periodic",
+  "after": "periodic",
+  "mixed": "trip",
+  "invoke": "trip"
+ }
+}
+
+f_fuzz: PASS (666 runs, 0 hangs)

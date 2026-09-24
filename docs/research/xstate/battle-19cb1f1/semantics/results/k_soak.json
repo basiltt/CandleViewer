@@ -1,0 +1,18 @@
+{
+ "duration_s": 90.0,
+ "machines": 200,
+ "external_sent": 582400,
+ "external_actions_fired": 582400,
+ "EXTERNAL_dropped": 0,
+ "self_dropped": 220,
+ "delayed_selfsend_laps": 2000,
+ "stranded_reports": 20,
+ "dormant_without_hook": 0,
+ "snapshots": {
+  "ok": 2640,
+  "refused": 0
+ },
+ "cpu_percent": 47.4,
+ "rss_delta_mb": 1.2,
+ "ok": true
+}

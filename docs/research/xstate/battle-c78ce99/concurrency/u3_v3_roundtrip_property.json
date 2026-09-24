@@ -1,0 +1,28 @@
+{
+  "probe": "u3_v3_roundtrip_property",
+  "py": "3.13.7",
+  "p1_machines": 300,
+  "p1_failures": 0,
+  "p1_failure_sample": [],
+  "p1_no_record_count": 0,
+  "p2_resnapshot": {
+    "first_hop_records": 1,
+    "second_hop_records_before_start": 0,
+    "fail": "restore -> re-persist WITHOUT start() drops every armed delayed self-send"
+  },
+  "p3_cancel": {
+    "armed_before_cancel": 1,
+    "records_after_cancel": 0
+  },
+  "p4_strict_forgery": {
+    "strict_refusals": [],
+    "last_error": null,
+    "fail": "a forged scheduled_sends record bypasses `strict` entirely -- #214 applies strict to pending_events only"
+  },
+  "p5_hash": {
+    "hash_delay500": "590631a050c17318",
+    "hash_delay900": "590631a050c17318",
+    "note": "machine_hash is a STRUCTURE hash; scheduled_sends is runtime state and is deliberately not covered. Two charts differing only in a raise(delay=) PARAM hash equal -- action params are excluded by _node_shape."
+  },
+  "verdict": "DEFECT"
+}

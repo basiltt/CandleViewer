@@ -1,0 +1,530 @@
+{
+  "band_walk": [
+    {
+      "mode": "none",
+      "ids": [
+        "risk_lockout.clear"
+      ],
+      "changed": false,
+      "acts": [
+        "update_pnl"
+      ]
+    },
+    {
+      "mode": "warn",
+      "ids": [
+        "risk_lockout.warning"
+      ],
+      "changed": true,
+      "acts": [
+        "update_pnl",
+        "emit_risk_warning"
+      ]
+    },
+    {
+      "mode": "none",
+      "ids": [
+        "risk_lockout.clear"
+      ],
+      "changed": true,
+      "acts": [
+        "update_pnl",
+        "emit_risk_warning"
+      ]
+    },
+    {
+      "mode": "warn",
+      "ids": [
+        "risk_lockout.warning"
+      ],
+      "changed": true,
+      "acts": [
+        "update_pnl",
+        "emit_risk_warning",
+        "emit_risk_warning"
+      ]
+    },
+    {
+      "mode": "breach",
+      "ids": [
+        "risk_lockout.locked"
+      ],
+      "changed": true,
+      "acts": [
+        "update_pnl",
+        "emit_risk_warning",
+        "emit_risk_warning",
+        "set_breach_daily_loss",
+        "halt_new_orders",
+        "compute_until",
+        "schedule_expiry_deadline",
+        "raise_lockout_alert",
+        "audit_lockout",
+        "broadcast_lockout"
+      ]
+    }
+  ],
+  "band_walk_final_acts": [
+    "update_pnl",
+    "emit_risk_warning",
+    "emit_risk_warning",
+    "set_breach_daily_loss",
+    "halt_new_orders",
+    "compute_until",
+    "schedule_expiry_deadline",
+    "raise_lockout_alert",
+    "audit_lockout",
+    "broadcast_lockout"
+  ],
+  "cap_breach": {
+    "ids": [
+      "risk_lockout.locked"
+    ],
+    "ctx": {
+      "account_id": null,
+      "scope": "account",
+      "realised_pnl_today": "0",
+      "max_daily_loss": "0",
+      "breach_reason": null,
+      "until_mode": "next_utc_day",
+      "until_us": null,
+      "cleared_by": null
+    },
+    "acts": [
+      "set_breach_from_event",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['risk_lockout.clear']",
+      "CAP_BREACH->['risk_lockout.locked']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "manual_lock": {
+    "ids": [
+      "risk_lockout.locked"
+    ],
+    "ctx": {
+      "account_id": null,
+      "scope": "account",
+      "realised_pnl_today": "0",
+      "max_daily_loss": "0",
+      "breach_reason": null,
+      "until_mode": "next_utc_day",
+      "until_us": null,
+      "cleared_by": null
+    },
+    "acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['risk_lockout.clear']",
+      "MANUAL_LOCK->['risk_lockout.locked']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "expiry_time_based": {
+    "ids": [
+      "risk_lockout.clear"
+    ],
+    "ctx": {
+      "account_id": null,
+      "scope": "account",
+      "realised_pnl_today": "0",
+      "max_daily_loss": "0",
+      "breach_reason": null,
+      "until_mode": "next_utc_day",
+      "until_us": null,
+      "cleared_by": null
+    },
+    "acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout",
+      "resume_new_orders",
+      "reset_daily_counters_if_new_day"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['risk_lockout.clear']",
+      "MANUAL_LOCK->['risk_lockout.locked']",
+      "EXPIRY_DUE->['risk_lockout.clear']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "expiry_manual_mode": {
+    "ids": [
+      "risk_lockout.locked"
+    ],
+    "ctx": {
+      "account_id": null,
+      "scope": "account",
+      "realised_pnl_today": "0",
+      "max_daily_loss": "0",
+      "breach_reason": null,
+      "until_mode": "next_utc_day",
+      "until_us": null,
+      "cleared_by": null
+    },
+    "acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout",
+      "log_expiry_ignored_manual_mode"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['risk_lockout.clear']",
+      "MANUAL_LOCK->['risk_lockout.locked']",
+      "EXPIRY_DUE->['risk_lockout.locked']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": false,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "override_ok": {
+    "ids": [
+      "risk_lockout.clear"
+    ],
+    "ctx": {
+      "account_id": null,
+      "scope": "account",
+      "realised_pnl_today": "0",
+      "max_daily_loss": "0",
+      "breach_reason": null,
+      "until_mode": "next_utc_day",
+      "until_us": null,
+      "cleared_by": null
+    },
+    "acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout",
+      "resume_new_orders",
+      "audit_override"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['risk_lockout.clear']",
+      "MANUAL_LOCK->['risk_lockout.locked']",
+      "OVERRIDE_REQUESTED->['risk_lockout.clear']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "override_denied": {
+    "ids": [
+      "risk_lockout.locked"
+    ],
+    "ctx": {
+      "account_id": null,
+      "scope": "account",
+      "realised_pnl_today": "0",
+      "max_daily_loss": "0",
+      "breach_reason": null,
+      "until_mode": "next_utc_day",
+      "until_us": null,
+      "cleared_by": null
+    },
+    "acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout",
+      "audit_override_denied"
+    ],
+    "status": "running",
+    "deferred": 0,
+    "transitions": [
+      "___xstate_statemachine_init___->['risk_lockout.clear']",
+      "MANUAL_LOCK->['risk_lockout.locked']",
+      "OVERRIDE_REQUESTED->['risk_lockout.locked']"
+    ],
+    "receipts": [
+      {
+        "changed": true,
+        "error": null,
+        "deferred": false
+      },
+      {
+        "changed": false,
+        "error": null,
+        "deferred": false
+      }
+    ]
+  },
+  "guard_raises": {
+    "ids": [
+      "risk_lockout.clear"
+    ],
+    "changed": false,
+    "error": "RuntimeError",
+    "err": "guard:breaches_daily_loss_cap",
+    "status": "running",
+    "acts": [],
+    "after_manual_lock": {
+      "changed": true,
+      "ids": [
+        "risk_lockout.locked"
+      ],
+      "status": "running"
+    }
+  },
+  "fail_halt_new_orders": {
+    "ids": [
+      "risk_lockout.clear"
+    ],
+    "status": "error",
+    "changed": false,
+    "error": "RuntimeError",
+    "acts": [
+      "set_breach_manual",
+      "halt_new_orders"
+    ],
+    "snapshot": true
+  },
+  "fail_compute_until": {
+    "ids": [
+      "risk_lockout.clear"
+    ],
+    "status": "error",
+    "changed": false,
+    "error": "RuntimeError",
+    "acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until"
+    ],
+    "snapshot": true
+  },
+  "fail_broadcast_lockout": {
+    "ids": [
+      "risk_lockout.clear"
+    ],
+    "status": "error",
+    "changed": false,
+    "error": "RuntimeError",
+    "acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout"
+    ],
+    "snapshot": true
+  },
+  "snap_lock_expire": {
+    "midstep_errors": [],
+    "diffs": {},
+    "plain_acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout",
+      "resume_new_orders",
+      "reset_daily_counters_if_new_day"
+    ],
+    "snap_acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout",
+      "resume_new_orders",
+      "reset_daily_counters_if_new_day"
+    ],
+    "plain_ids": [
+      "risk_lockout.clear"
+    ],
+    "ids": [
+      "risk_lockout.clear"
+    ]
+  },
+  "snap_lock_override": {
+    "midstep_errors": [],
+    "diffs": {},
+    "plain_acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout",
+      "resume_new_orders",
+      "audit_override"
+    ],
+    "snap_acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout",
+      "resume_new_orders",
+      "audit_override"
+    ],
+    "plain_ids": [
+      "risk_lockout.clear"
+    ],
+    "ids": [
+      "risk_lockout.clear"
+    ]
+  },
+  "snap_breach": {
+    "midstep_errors": [],
+    "diffs": {},
+    "plain_acts": [
+      "set_breach_daily_loss",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout"
+    ],
+    "snap_acts": [
+      "set_breach_daily_loss",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout"
+    ],
+    "plain_ids": [
+      "risk_lockout.locked"
+    ],
+    "ids": [
+      "risk_lockout.locked"
+    ]
+  },
+  "snap_warn": {
+    "midstep_errors": [],
+    "diffs": {},
+    "plain_acts": [
+      "emit_risk_warning",
+      "update_pnl"
+    ],
+    "snap_acts": [
+      "emit_risk_warning",
+      "update_pnl"
+    ],
+    "plain_ids": [
+      "risk_lockout.warning"
+    ],
+    "ids": [
+      "risk_lockout.warning"
+    ]
+  },
+  "sync_parity": {
+    "ids": [
+      "risk_lockout.clear"
+    ],
+    "ctx": {
+      "account_id": null,
+      "scope": "account",
+      "realised_pnl_today": "0",
+      "max_daily_loss": "0",
+      "breach_reason": null,
+      "until_mode": "next_utc_day",
+      "until_us": null,
+      "cleared_by": null
+    },
+    "acts": [
+      "set_breach_manual",
+      "halt_new_orders",
+      "compute_until",
+      "schedule_expiry_deadline",
+      "raise_lockout_alert",
+      "audit_lockout",
+      "broadcast_lockout",
+      "resume_new_orders",
+      "reset_daily_counters_if_new_day"
+    ],
+    "status": "running"
+  }
+}

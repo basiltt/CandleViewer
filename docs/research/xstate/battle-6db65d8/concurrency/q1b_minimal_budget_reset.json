@@ -1,0 +1,65 @@
+{
+  "probe": "q1b_minimal_budget_reset",
+  "py": "3.13.7",
+  "baseline_no_external": {
+    "external_pokes": 0,
+    "poke_period_s": 1.0,
+    "lap_samples_per_0.5s": [
+      1000,
+      1000,
+      1000
+    ],
+    "first_trip_at_lap": 1000,
+    "still_spinning_at_end": false,
+    "send_wait_true_wedged": false,
+    "stop": "ok"
+  },
+  "one_poke_per_100ms": {
+    "external_pokes": 60,
+    "poke_period_s": 0.1,
+    "lap_samples_per_0.5s": [
+      5004,
+      9008,
+      13012,
+      17016,
+      22021,
+      27026,
+      32031,
+      37036,
+      41040,
+      45044,
+      48047
+    ],
+    "first_trip_at_lap": 5004,
+    "still_spinning_at_end": true,
+    "send_wait_true_wedged": false,
+    "stop": "ok"
+  },
+  "one_poke_per_1s": {
+    "external_pokes": 6,
+    "poke_period_s": 1.0,
+    "lap_samples_per_0.5s": [
+      2001,
+      2001,
+      3002,
+      3002,
+      4003,
+      4003,
+      5004,
+      5004,
+      6005,
+      6005,
+      7006,
+      7006
+    ],
+    "first_trip_at_lap": 2001,
+    "still_spinning_at_end": false,
+    "send_wait_true_wedged": false,
+    "stop": "ok"
+  },
+  "baseline_trips": true,
+  "cases_livelocked_by_external_traffic": [
+    "one_poke_per_100ms"
+  ],
+  "result": "FAIL"
+}

@@ -1,0 +1,189 @@
+{
+  "probe": "r1_d7_1_both_service_kinds",
+  "py": "3.13.7",
+  "rows": [
+    {
+      "shape": "always_cycle",
+      "service_kind": "def",
+      "machines": 10,
+      "events_sent": 5400,
+      "backlog_trace": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_backlog": 0,
+      "not_answering_in_5s": 0,
+      "tripped": 10,
+      "statuses": [
+        "stopped"
+      ],
+      "laps": 276410,
+      "stop": "ok"
+    },
+    {
+      "shape": "invoke_pingpong",
+      "service_kind": "def",
+      "machines": 10,
+      "events_sent": 21200,
+      "backlog_trace": [
+        201,
+        400,
+        590,
+        785,
+        972,
+        1170,
+        1364,
+        1569,
+        1750,
+        1951,
+        2141,
+        2331
+      ],
+      "final_backlog": 20019,
+      "not_answering_in_5s": 10,
+      "tripped": 0,
+      "statuses": [
+        "stopped"
+      ],
+      "laps": 61027,
+      "stop": "ok"
+    },
+    {
+      "shape": "rollback_ondone",
+      "service_kind": "def",
+      "machines": 10,
+      "events_sent": 20600,
+      "backlog_trace": [
+        200,
+        390,
+        595,
+        782,
+        985,
+        1175,
+        1370,
+        1570,
+        1760,
+        1960,
+        2155,
+        2350
+      ],
+      "final_backlog": 19643,
+      "not_answering_in_5s": 10,
+      "tripped": 0,
+      "statuses": [
+        "stopped"
+      ],
+      "laps": 49559,
+      "stop": "ok"
+    },
+    {
+      "shape": "always_cycle",
+      "service_kind": "async def",
+      "machines": 10,
+      "events_sent": 4400,
+      "backlog_trace": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_backlog": 0,
+      "not_answering_in_5s": 0,
+      "tripped": 10,
+      "statuses": [
+        "stopped"
+      ],
+      "laps": 225410,
+      "stop": "ok"
+    },
+    {
+      "shape": "invoke_pingpong",
+      "service_kind": "async def",
+      "machines": 10,
+      "events_sent": 18600,
+      "backlog_trace": [
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "final_backlog": 0,
+      "not_answering_in_5s": 0,
+      "tripped": 0,
+      "statuses": [
+        "stopped"
+      ],
+      "laps": 8720,
+      "stop": "ok"
+    },
+    {
+      "shape": "rollback_ondone",
+      "service_kind": "async def",
+      "machines": 10,
+      "events_sent": 18600,
+      "backlog_trace": [
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "final_backlog": 0,
+      "not_answering_in_5s": 0,
+      "tripped": 0,
+      "statuses": [
+        "stopped"
+      ],
+      "laps": 27030,
+      "stop": "ok"
+    }
+  ],
+  "wedged_rows": [
+    [
+      "invoke_pingpong",
+      "def",
+      10,
+      20019
+    ],
+    [
+      "rollback_ondone",
+      "def",
+      10,
+      19643
+    ]
+  ],
+  "result": "FAIL"
+}

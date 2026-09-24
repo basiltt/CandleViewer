@@ -1,0 +1,32 @@
+{
+ "soak_seconds": 720.0,
+ "machines": 200,
+ "service_kind": "async def (#179 coroutine lane)",
+ "events": 169400,
+ "snapshots": 5920,
+ "restores": 5920,
+ "orders": 6120,
+ "midstep_at_quiescence": 0,
+ "restore_drift": 0,
+ "inert_running": 0,
+ "typed_errors": 0,
+ "untyped_errors": 0,
+ "lost_fills": 0,
+ "ext_sent": 3388000,
+ "ext_applied": 0,
+ "ext_dropped": 0,
+ "drops_by_reason": {
+  "stopped:FILL": 200,
+  "stopped:done.invoke.rb.work": 4
+ },
+ "external_dropped_as_chain_budget": 0,
+ "rss_delta_mb": 8.81,
+ "cpu_percent_avg": 98.3,
+ "shapes": [
+  "ORDER(parallel)",
+  "ROLLBACK+onDone",
+  "ALWAYS->invoke"
+ ],
+ "untyped_samples": [],
+ "ok": true
+}

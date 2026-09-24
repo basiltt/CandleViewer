@@ -1,0 +1,68 @@
+[
+ {
+  "id": "S2-01",
+  "title": "#166: 16 concurrent EXTERNAL senders during a self-generated chain do NOT reset the per-macrostep budget - the chain still trips",
+  "intent": "the budget is on the instance now, reset only when an external event BEGINS its step; concurrent traffic must not hand the runaway a refill",
+  "detail": {
+   "ok": true,
+   "chain_budget_drops": 1,
+   "last_error": null,
+   "ticks": 1001,
+   "tripped": true
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "S2-02",
+  "title": "#173: service_pool_size=1 with 50 plain-def services serialises without deadlock, and stop() mid-service returns promptly leaking no threads",
+  "intent": "a public pool size must not turn a saturated pool into a hang on stop()",
+  "detail": {
+   "ok": true,
+   "all_completed": 50,
+   "dispatch_seconds": 1.379,
+   "stop_midservice_seconds": 0.008,
+   "threads_before": 1,
+   "threads_after": 1
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "S2-03",
+  "title": "#173: service_pool_size is validated (>=1) and DEFAULT_SERVICE_POOL_SIZE is exported; pool_size=8 beats pool_size=1 on 8 concurrent services",
+  "intent": "a knob that does nothing is worse than no knob",
+  "detail": {
+   "ok": false,
+   "default_pool": 4,
+   "exported_from_package_root": true,
+   "pool1_seconds": 1.39,
+   "pool8_seconds": 1.521,
+   "zero_rejected": "ValueError"
+  },
+  "status": "FAIL"
+ },
+ {
+  "id": "S2-04",
+  "title": "#157: every loop-side RAISE refusal under 16 flooding threads fires on_event_dropped(queue_full) EXACTLY once, and the count matches the refusals observed on the futures",
+  "intent": "a hidden shed rate is load shedding you cannot reconcile against",
+  "detail": {
+   "ok": true,
+   "hook_queue_full": 956,
+   "loop_side_refusals_on_futures": 956,
+   "call_site_raises": 0,
+   "other_drop_reasons": []
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "S2-05",
+  "title": "#172: the threadsafe in-flight counter returns to 0 after delivered, refused, cancelled and loop-stopped-before-run outcomes (no double-fire)",
+  "intent": "a leaked count gates the chain-budget reset for the machine's whole life",
+  "detail": {
+   "after_mixed": 0,
+   "after_cancelled": 0,
+   "after_loop_stopped": 0,
+   "ok": true
+  },
+  "status": "PASS"
+ }
+]

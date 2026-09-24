@@ -1,0 +1,180 @@
+{
+  "b18_after_trip": {
+    "first": {
+      "changed": true,
+      "error": null,
+      "svc": 91,
+      "ids": [
+        "kill_switch.flattening"
+      ],
+      "last_error": "RuntimeError",
+      "last_transition_ok": false,
+      "wall": 0.123
+    },
+    "dropped": [],
+    "unhandled": [],
+    "then": [
+      {
+        "ev": "RELEASE",
+        "changed": false,
+        "error": null,
+        "ids": [
+          "kill_switch.engaged_incomplete"
+        ]
+      }
+    ],
+    "svc_after": 0,
+    "final_ids": [
+      "kill_switch.engaged_incomplete"
+    ],
+    "status": "error"
+  },
+  "b18_after_trip_noclear": {
+    "first": {
+      "changed": true,
+      "error": null,
+      "svc": 147,
+      "ids": [
+        "kill_switch.flattening"
+      ],
+      "last_error": "RuntimeError",
+      "last_transition_ok": false,
+      "wall": 0.121
+    },
+    "dropped": [],
+    "unhandled": [],
+    "then": [
+      {
+        "ev": "RELEASE",
+        "changed": false,
+        "error": null,
+        "ids": [
+          "kill_switch.flattening"
+        ]
+      }
+    ],
+    "svc_after": 0,
+    "final_ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "error"
+  },
+  "b19_after_trip": {
+    "first": {
+      "changed": true,
+      "error": null,
+      "svc": 147,
+      "ids": [
+        "reconciliation.diffing"
+      ],
+      "last_error": "RuntimeError",
+      "last_transition_ok": false,
+      "wall": 0.121
+    },
+    "dropped": [],
+    "unhandled": [],
+    "then": [
+      {
+        "ev": "CANCEL",
+        "changed": false,
+        "error": null,
+        "ids": [
+          "reconciliation.remediating"
+        ]
+      },
+      {
+        "ev": "SWEEP_DUE",
+        "changed": true,
+        "error": null,
+        "ids": [
+          "reconciliation.fetching"
+        ]
+      }
+    ],
+    "svc_after": 1,
+    "final_ids": [
+      "reconciliation.idle"
+    ],
+    "status": "running"
+  },
+  "b18_maxiter_2": {
+    "first": {
+      "changed": true,
+      "error": null,
+      "svc": 157,
+      "ids": [
+        "kill_switch.flattening"
+      ],
+      "last_error": "RuntimeError",
+      "last_transition_ok": false,
+      "wall": 0.121
+    },
+    "dropped": [],
+    "unhandled": [],
+    "svc_after": 0,
+    "final_ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "running"
+  },
+  "b18_maxiter_5": {
+    "first": {
+      "changed": true,
+      "error": null,
+      "svc": 160,
+      "ids": [
+        "kill_switch.flattening"
+      ],
+      "last_error": "RuntimeError",
+      "last_transition_ok": false,
+      "wall": 0.121
+    },
+    "dropped": [],
+    "unhandled": [],
+    "svc_after": 0,
+    "final_ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "running"
+  },
+  "b18_maxiter_25": {
+    "first": {
+      "changed": true,
+      "error": null,
+      "svc": 161,
+      "ids": [
+        "kill_switch.flattening"
+      ],
+      "last_error": "RuntimeError",
+      "last_transition_ok": false,
+      "wall": 0.121
+    },
+    "dropped": [],
+    "unhandled": [],
+    "svc_after": 0,
+    "final_ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "running"
+  },
+  "b18_pool1": {
+    "first": {
+      "changed": true,
+      "error": null,
+      "svc": 142,
+      "ids": [
+        "kill_switch.flattening"
+      ],
+      "last_error": "RuntimeError",
+      "last_transition_ok": false,
+      "wall": 0.121
+    },
+    "dropped": [],
+    "unhandled": [],
+    "svc_after": 0,
+    "final_ids": [
+      "kill_switch.flattening"
+    ],
+    "status": "running"
+  }
+}

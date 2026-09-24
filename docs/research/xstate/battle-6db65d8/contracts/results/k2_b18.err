@@ -1,0 +1,46 @@
+ERROR:xstate_statemachine.interpreter:💥 Service 'cancel_all_working_orders' (ID: 'cx') failed: x
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2405, in _invoke_service_task
+    await produced if inspect.isawaitable(produced) else produced
+    ^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-221ce7c\contracts\charness.py", line 99, in s
+    if isinstance(v, BaseException): raise v
+                                     ^^^^^^^
+RuntimeError: x
+ERROR:xstate_statemachine.interpreter:💥 Service 'flatten_all_positions' (ID: 'fl') failed: x
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2405, in _invoke_service_task
+    await produced if inspect.isawaitable(produced) else produced
+    ^^^^^^^^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-221ce7c\contracts\charness.py", line 99, in s
+    if isinstance(v, BaseException): raise v
+                                     ^^^^^^^
+RuntimeError: x
+ERROR:xstate_statemachine.base_interpreter:🚨 Machine 'kill_switch' entered the error state: UnhandledEventError("Event 'RELEASE' is not handled in any active state ['kill_switch.engaged'] and the machine's onUnhandled policy is 'error'.")
+C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py:1531: RuntimeWarning: coroutine 'sleep' was never awaited
+  event, from_inbox = await self._next_event()
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+ERROR:xstate_statemachine.base_interpreter:🚨 Machine 'kill_switch' entered the error state: UnhandledEventError("Event 'RELEASE' is not handled in any active state ['kill_switch.engaged'] and the machine's onUnhandled policy is 'error'.")
+ERROR:xstate_statemachine.sync_interpreter:🚫 Service 'cancel_all_working_orders' is async and not supported by SyncInterpreter.
+ERROR:xstate_statemachine.base_interpreter:💥 Transition on 'kill_switch.engaging' failed; rolling back to the pre-transition configuration.
+Traceback (most recent call last):
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 2966, in _execute_transition
+    await self._enter_states(path_to_enter, event)
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3531, in _enter_states
+    self._schedule_state_tasks(state)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 4750, in _schedule_state_tasks
+    self._schedule_state_invokes(state)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 4802, in _schedule_state_invokes
+    self._invoke_service(
+    ~~~~~~~~~~~~~~~~~~~~^
+        invocation, service_callable, owner_id=state.id
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\sync_interpreter.py", line 1592, in _invoke_service
+    raise NotSupportedError(
+        f"Service '{invocation.src}' is async and not supported."
+    )
+xstate_statemachine.exceptions.NotSupportedError: Service 'cancel_all_working_orders' is async and not supported.

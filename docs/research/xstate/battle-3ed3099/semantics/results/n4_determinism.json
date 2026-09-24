@@ -1,0 +1,176 @@
+[
+ {
+  "id": "N4-01",
+  "title": "50x identical script on SyncInterpreter yields ONE byte-identical trace",
+  "intent": "a replayed order script must be bit-reproducible or audit/replay is impossible",
+  "detail": {
+   "ok": true,
+   "runs": 50,
+   "distinct": 1,
+   "sample": "{\"actions\": [\"e_idle\", \"e_q1\", \"e_work\", \"a_q\", \"e_q2\", \"a_done\", \"e_hop\", \"e_idle\", \"e_q1\", \"e_work\", \"a_q\", \"e_q2\", \"a_done\", \"e_hop\", \"e_idle\", \"e_work\", \"a_done\", \"e_hop\", \"e_idle\", \"e_q1\", \"e_work\", \"a_q\", \"e_q2\", \"a_done\", \"e_hop\", \"e_idle\", \"e_q1\"], \"ids\": [\"d.P.idle\", \"d.Q.q1\"], \"transitions"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N4-02",
+  "title": "50x identical script on Interpreter (async) yields ONE byte-identical trace",
+  "intent": "async scheduling must not leak into the observable action/transition order",
+  "detail": {
+   "ok": true,
+   "runs": 50,
+   "distinct": 1,
+   "sample": "{\"actions\": [\"e_idle\", \"e_q1\", \"e_work\", \"a_q\", \"e_q2\", \"a_done\", \"e_hop\", \"e_idle\", \"e_q1\", \"e_work\", \"a_q\", \"e_q2\", \"a_done\", \"e_hop\", \"e_idle\", \"e_work\", \"a_done\", \"e_hop\", \"e_idle\", \"e_q1\", \"e_work\", \"a_q\", \"e_q2\", \"a_done\", \"e_hop\", \"e_idle\", \"e_q1\"], \"ids\": [\"d.P.idle\", \"d.Q.q1\"], \"transitions"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N4-03",
+  "title": "The async and sync traces for the same script are IDENTICAL (#116 parity)",
+  "intent": "engine choice must not change what an OMS did; a divergence is a correctness fork",
+  "detail": {
+   "ok": true,
+   "async": {
+    "actions": [
+     "e_idle",
+     "e_q1",
+     "e_work",
+     "a_q",
+     "e_q2",
+     "a_done",
+     "e_hop",
+     "e_idle",
+     "e_q1",
+     "e_work",
+     "a_q",
+     "e_q2",
+     "a_done",
+     "e_hop",
+     "e_idle",
+     "e_work",
+     "a_done",
+     "e_hop",
+     "e_idle",
+     "e_q1",
+     "e_work",
+     "a_q",
+     "e_q2",
+     "a_done",
+     "e_hop",
+     "e_idle",
+     "e_q1"
+    ],
+    "ids": [
+     "d.P.idle",
+     "d.Q.q1"
+    ],
+    "transitions": [
+     "T:d,d.P,d.P.idle,d.Q,d.Q.q1",
+     "T:d,d.P,d.P.work,d.Q,d.Q.q1",
+     "T:d,d.P,d.P.work,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.hop,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.idle,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.idle,d.Q,d.Q.q1",
+     "T:d,d.P,d.P.work,d.Q,d.Q.q1",
+     "T:d,d.P,d.P.work,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.hop,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.idle,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.work,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.hop,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.idle,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.idle,d.Q,d.Q.q1",
+     "T:d,d.P,d.P.work,d.Q,d.Q.q1",
+     "T:d,d.P,d.P.work,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.hop,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.idle,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.idle,d.Q,d.Q.q1"
+    ]
+   },
+   "sync": {
+    "actions": [
+     "e_idle",
+     "e_q1",
+     "e_work",
+     "a_q",
+     "e_q2",
+     "a_done",
+     "e_hop",
+     "e_idle",
+     "e_q1",
+     "e_work",
+     "a_q",
+     "e_q2",
+     "a_done",
+     "e_hop",
+     "e_idle",
+     "e_work",
+     "a_done",
+     "e_hop",
+     "e_idle",
+     "e_q1",
+     "e_work",
+     "a_q",
+     "e_q2",
+     "a_done",
+     "e_hop",
+     "e_idle",
+     "e_q1"
+    ],
+    "ids": [
+     "d.P.idle",
+     "d.Q.q1"
+    ],
+    "transitions": [
+     "T:d,d.P,d.P.idle,d.Q,d.Q.q1",
+     "T:d,d.P,d.P.work,d.Q,d.Q.q1",
+     "T:d,d.P,d.P.work,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.hop,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.idle,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.idle,d.Q,d.Q.q1",
+     "T:d,d.P,d.P.work,d.Q,d.Q.q1",
+     "T:d,d.P,d.P.work,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.hop,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.idle,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.work,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.hop,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.idle,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.idle,d.Q,d.Q.q1",
+     "T:d,d.P,d.P.work,d.Q,d.Q.q1",
+     "T:d,d.P,d.P.work,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.hop,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.idle,d.Q,d.Q.q2",
+     "T:d,d.P,d.P.idle,d.Q,d.Q.q1"
+    ]
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N4-04",
+  "title": "The trace is stable across 5 PYTHONHASHSEED values (subprocess, sync engine)",
+  "intent": "a hash-seed-dependent order would be a nondeterminism, not a deviation",
+  "detail": {
+   "ok": true,
+   "digests": {
+    "0": "72f564c426474854",
+    "1": "72f564c426474854",
+    "42": "72f564c426474854",
+    "12345": "72f564c426474854",
+    "99999": "72f564c426474854"
+   }
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N4-05",
+  "title": "A SimulatedClock timer ladder is replay-identical 30x on both engines",
+  "intent": "deterministic time replay is the basis of any OMS backtest",
+  "detail": {
+   "ok": true,
+   "async_distinct": 1,
+   "sync_distinct": 1,
+   "async": "[[\"L.s1\"], [\"L.s2\"], [\"L.s3\"], [\"L.s4\"]]",
+   "sync": "[[\"L.s1\"], [\"L.s2\"], [\"L.s3\"], [\"L.s4\"]]"
+  },
+  "status": "PASS"
+ }
+]

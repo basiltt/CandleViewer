@@ -1,0 +1,206 @@
+{
+  "id": "reconciliation",
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "defer",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "initial": "idle",
+  "context": {
+    "account_id": null,
+    "trigger": null,
+    "started_us": null,
+    "orders_checked": 0,
+    "divergences": [],
+    "remediations": [],
+    "consecutive_failures": 0,
+    "auto_remediate": true
+  },
+  "states": {
+    "idle": {
+      "on": {
+        "SWEEP_DUE": {
+          "target": "#reconciliation.fetching",
+          "actions": [
+            "set_trigger_periodic"
+          ]
+        },
+        "RECONNECTED": {
+          "target": "#reconciliation.fetching",
+          "actions": [
+            "set_trigger_reconnect"
+          ]
+        },
+        "UNKNOWN_ORDER": {
+          "target": "#reconciliation.fetching",
+          "actions": [
+            "set_trigger_unknown"
+          ]
+        },
+        "STARTUP": {
+          "target": "#reconciliation.fetching",
+          "actions": [
+            "set_trigger_startup"
+          ]
+        }
+      }
+    },
+    "fetching": {
+      "entry": [
+        "stamp_start",
+        "emit_recon_started"
+      ],
+      "invoke": {
+        "id": "fetch",
+        "src": "fetch_exchange_state",
+        "onDone": {
+          "target": "#reconciliation.diffing",
+          "actions": [
+            "store_exchange_state"
+          ]
+        },
+        "onError": [
+          {
+            "target": "#reconciliation.stale_lockout",
+            "guard": "failures_exhausted"
+          },
+          {
+            "target": "#reconciliation.backing_off",
+            "actions": [
+              "bump_failures"
+            ]
+          }
+        ]
+      },
+      "on": {
+        "CANCEL": {
+          "target": "#reconciliation.idle"
+        },
+        "*": {
+          "actions": [
+            "defer"
+          ]
+        }
+      }
+    },
+    "backing_off": {
+      "entry": [
+        "schedule_retry_deadline"
+      ],
+      "on": {
+        "RETRY_DUE": {
+          "target": "#reconciliation.fetching"
+        },
+        "CANCEL": {
+          "target": "#reconciliation.idle"
+        }
+      }
+    },
+    "diffing": {
+      "invoke": {
+        "id": "diff",
+        "src": "diff_against_local",
+        "onDone": [
+          {
+            "target": "#reconciliation.remediating",
+            "guard": "divergences_found_and_auto_remediate",
+            "actions": [
+              "store_divergences"
+            ]
+          },
+          {
+            "target": "#reconciliation.reporting",
+            "actions": [
+              "store_divergences"
+            ]
+          }
+        ],
+        "onError": {
+          "target": "#reconciliation.reporting",
+          "actions": [
+            "record_diff_error"
+          ]
+        }
+      }
+    },
+    "remediating": {
+      "invoke": {
+        "id": "rem",
+        "src": "apply_remediations",
+        "onDone": {
+          "target": "#reconciliation.reporting",
+          "actions": [
+            "store_remediations"
+          ]
+        },
+        "onError": {
+          "target": "#reconciliation.reporting",
+          "actions": [
+            "store_remediations",
+            "raise_critical_alert"
+          ]
+        }
+      },
+      "on": {
+        "*": {
+          "actions": [
+            "defer"
+          ]
+        }
+      }
+    },
+    "reporting": {
+      "entry": [
+        "persist_report",
+        "emit_recon_metrics",
+        "drain_deferred",
+        "reset_failures",
+        "broadcast_recon_complete"
+      ],
+      "always": [
+        {
+          "target": "#reconciliation.divergent",
+          "guard": "unresolved_divergences"
+        },
+        {
+          "target": "#reconciliation.idle"
+        }
+      ]
+    },
+    "divergent": {
+      "tags": [
+        "needs_attention"
+      ],
+      "entry": [
+        "raise_divergence_alert"
+      ],
+      "on": {
+        "OPERATOR_RESOLVED": {
+          "target": "#reconciliation.idle"
+        },
+        "SWEEP_DUE": {
+          "target": "#reconciliation.fetching"
+        }
+      }
+    },
+    "stale_lockout": {
+      "tags": [
+        "account_locked",
+        "critical"
+      ],
+      "entry": [
+        "lock_account_for_new_orders",
+        "page_owner"
+      ],
+      "on": {
+        "RECONNECTED": {
+          "target": "#reconciliation.fetching",
+          "actions": [
+            "reset_failures"
+          ]
+        }
+      }
+    }
+  }
+}

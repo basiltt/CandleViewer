@@ -1,0 +1,58 @@
+{
+ "[def]B16/happy": {
+  "pass": true,
+  "note": "{\"st\": [\"session.auth.active\", \"session.elevation.elevated\"], \"snap\": true, \"notes\": [\"t0:v=3:sched=0\", \"t1:v=3:sched=0\", \"t2:v=3:sched=0\", \"t3:v=3:sched=0\", \"t4:v=3:sched=0\"]}"
+ },
+ "[def]B16/INV-a elevation dies with session": {
+  "pass": false,
+  "note": "still elevated after: ['LOGOUT', 'IDLE_DEADLINE', 'ABSOLUTE_DEADLINE']  ({\"REVOKE\": [\"auth.revoked\", \"elevation.normal\"], \"LOGOUT\": [\"auth.revoked\", \"elevation.elevated\"], \"IDLE_DEADLINE\": [\"auth.revoked\", \"elevation.elevated\"], \"ABSOLUTE_DEADLINE\": [\"auth.revoked\", \"elevation.elevated\"]})"
+ },
+ "[def]B16/INV-b reason+broadcast on 6 paths": {
+  "pass": true,
+  "note": "{\"REVOKE\": [true, true], \"LOGOUT\": [true, true], \"IDLE_DEADLINE\": [true, true], \"ABSOLUTE_DEADLINE\": [true, true], \"MFA_TIMEOUT\": [true, true], \"MFA_LOCKED\": [true, true]}"
+ },
+ "[def]B16/INV-c every step-up audited": {
+  "pass": false,
+  "note": "audit_step_up=1 for 2 STEP_UP_OK; acts=['mark_mfa_satisfied', 'stamp_idle_deadline', 'audit_login', 'audit_step_up_failed', 'stamp_elevated_until', 'audit_step_up', 'schedule_elevation_deadline', 'stamp_elevated_until', 'schedule_elevation_deadline']"
+ },
+ "[def]B16/INV-d revoked terminal, no post-revoke elevation": {
+  "pass": false,
+  "note": "{\"st\": [\"session.auth.revoked\", \"session.elevation.elevated\"], \"unh\": [[\"MFA_OK\", \"deferred\"], [\"REQUEST\", \"deferred\"], [\"MFA_OK\", \"deferred\"], [\"REQUEST\", \"deferred\"]]}"
+ },
+ "[def]B16/rollback on entry raise": {
+  "pass": true,
+  "note": "{\"st\": [\"session.auth.pending_mfa\", \"session.elevation.normal\"], \"err\": [\"audit_login:RuntimeError('boom:audit_login')\"]}"
+ },
+ "[def]B16/sync parity": {
+  "pass": true,
+  "note": "{\"st\": [\"session.auth.active\", \"session.elevation.elevated\"], \"err\": null}"
+ },
+ "[def]B17/happy": {
+  "pass": true,
+  "note": "{\"st\": [\"live_gate.eligible\"], \"snap\": true, \"notes\": [\"t0:v=3:sched=0\", \"t1:v=3:sched=0\", \"t2:v=3:sched=0\", \"t3:v=3:sched=0\"]}"
+ },
+ "[def]B17/INV-a no enable without evidence": {
+  "pass": true,
+  "note": "{\"st\": [\"live_gate.locked\"], \"unh\": [[\"ENABLE_REQUESTED\", \"deferred\"]], \"def\": 1}"
+ },
+ "[def]B17/INV-b denial audited, stays eligible": {
+  "pass": true,
+  "note": "{\"st\": [\"live_gate.eligible\"], \"acts\": [\"record_evidence\", \"audit_enable_denied\"]}"
+ },
+ "[def]B17/INV-c invalidation -> locked + alert": {
+  "pass": true,
+  "note": "{\"st\": [\"live_gate.locked\"], \"acts\": [\"broadcast_live_enabled\", \"enable_live_visual_language\", \"clear_evidence_item\", \"raise_critical_alert\"]}"
+ },
+ "[def]B17/INV-d emergency disable unguarded": {
+  "pass": true,
+  "note": "{\"st\": [\"live_gate.locked\"]}"
+ },
+ "[def]B17/INV-e rollback keeps gate shut": {
+  "pass": true,
+  "note": "{\"st\": [\"live_gate.eligible\"], \"acts\": [\"record_evidence\", \"record_enable\", \"audit_live_enabled\"]}"
+ },
+ "[def]B17/sync parity": {
+  "pass": true,
+  "note": "{\"st\": [\"live_gate.enabled\"], \"err\": null}"
+ }
+}

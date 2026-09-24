@@ -1,0 +1,74 @@
+[
+ {
+  "id": "N2-01",
+  "title": "#105: 64 concurrent create_task producers are NOT charged to maxIterations",
+  "intent": "external producers sending during an in-flight step must never trip the chain budget",
+  "detail": {
+   "ok": true,
+   "expected": 1280,
+   "observed": 1280,
+   "last_error": null,
+   "status": "running"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N2-02",
+  "title": "#105: 12 OS threads sending via send_threadsafe() are not charged either",
+  "intent": "a gateway thread pool feeding an OMS must not trip the self-send gate",
+  "detail": {
+   "ok": true,
+   "expected": 300,
+   "observed": 300,
+   "last_error": null
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N2-03",
+  "title": "#104: BLOCK under 16 concurrent producers loses no event and never deadlocks",
+  "intent": "a lost fill under back-pressure is money loss; a deadlock is an outage",
+  "detail": {
+   "ok": true,
+   "expected": 400,
+   "observed": 400,
+   "deadlocked": false,
+   "last_error": null
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N2-04",
+  "title": "#104: a fire-and-forget send() under BLOCK with room in the inbox is enqueued",
+  "intent": "the exact #104 shape: an un-awaited-effect send on an empty inbox was lost",
+  "detail": {
+   "ok": true,
+   "expected": 5,
+   "observed": 5
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N2-05",
+  "title": "#105: an ACTION's own self-send IS still charged (the gate did not just get disabled)",
+  "intent": "the fix must narrow the gate, not remove it -- a runaway self-send must still trip",
+  "detail": {
+   "ok": true,
+   "hung": false,
+   "last_error": "RunawayChainError"
+  },
+  "status": "PASS"
+ },
+ {
+  "id": "N2-06",
+  "title": "#105: a child actor sending to its parent is not charged to the parent's budget",
+  "intent": "a supervision tree under load must not trip the parent's chain budget",
+  "detail": {
+   "ok": false,
+   "expected": 60,
+   "observed": 45,
+   "last_error": null
+  },
+  "status": "FAIL"
+ }
+]

@@ -1,0 +1,47 @@
+{
+  "probe": "r3_hook_snapshot_property_both_kinds",
+  "py": "3.13.7",
+  "machines": 300,
+  "dispositions": {
+    "async:def:on_transition": {
+      "returned": 150,
+      "torn": 0
+    },
+    "async:def:refused": {
+      "refused": 467
+    },
+    "sync:def:on_transition": {
+      "returned": 150,
+      "torn": 0
+    },
+    "sync:def:refused": {
+      "refused": 1041
+    },
+    "async:async def:on_transition": {
+      "returned": 150,
+      "torn": 0
+    },
+    "async:async def:on_event_received": {
+      "returned": 78,
+      "torn": 0
+    },
+    "async:async def:refused": {
+      "refused": 442
+    },
+    "sync:async def:on_transition": {
+      "returned": 150,
+      "torn": 0
+    },
+    "sync:async def:refused": {
+      "refused": 973
+    },
+    "async:def:on_event_received": {
+      "returned": 78,
+      "torn": 0
+    }
+  },
+  "total_torn": 0,
+  "torn_examples": [],
+  "errors": {},
+  "result": "PASS"
+}

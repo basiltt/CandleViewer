@@ -1,0 +1,62 @@
+{
+ "[async]B1.snap.roundtrip_every_quiescence": {
+  "pass": true,
+  "note": "states=['order.lifecycle.partially_filled', 'order.protection.sl_present'] notes=[]"
+ },
+ "[async]B1.snap.null_hash_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ },
+ "[async]B1.snap.config_disagreement_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ },
+ "[async]B2.snap.roundtrip_every_quiescence": {
+  "pass": true,
+  "note": "states=['trade_group.submitting'] notes=[]"
+ },
+ "[async]B2.snap.null_hash_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ },
+ "[async]B2.snap.config_disagreement_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ },
+ "[async]B3.snap.roundtrip_every_quiescence": {
+  "pass": true,
+  "note": "states=['leg.closing'] notes=[]"
+ },
+ "[async]B3.snap.null_hash_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ },
+ "[async]B3.snap.config_disagreement_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ },
+ "[async]B4.snap.roundtrip_every_quiescence": {
+  "pass": true,
+  "note": "states=['oco.completing'] notes=[]"
+ },
+ "[async]B4.snap.null_hash_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ },
+ "[async]B4.snap.config_disagreement_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ },
+ "[async]B5.snap.roundtrip_every_quiescence": {
+  "pass": true,
+  "note": "states=['iceberg.working'] notes=[]"
+ },
+ "[async]B5.snap.null_hash_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ },
+ "[async]B5.snap.config_disagreement_refused": {
+  "pass": true,
+  "note": "{\"version\": 2, \"has_hash\": true, \"null_hash\": \"SnapshotDriftError\", \"absent_hash\": \"SnapshotDriftError\", \"empty_configuration\": \"SnapshotCorruptError\", \"contradicting_state_ids\": \"SnapshotCorruptError\"}"
+ }
+}

@@ -1,0 +1,56 @@
+{
+  "probe": "n7_security_surface",
+  "py": "3.13.7",
+  "a_redaction": {
+    "redact_keys": [
+      "password",
+      "passwd",
+      "secret",
+      "token",
+      "api_key",
+      "apikey",
+      "authorization",
+      "auth",
+      "credential",
+      "private_key",
+      "ssn",
+      "card",
+      "cvv"
+    ],
+    "log_lines": 46,
+    "secret_leaks_default": 0,
+    "leak_sample": [],
+    "non_secret_still_logged": true,
+    "explicit_optout_leaks": 2,
+    "redact_is_pure": true,
+    "redacted_sample": {
+      "password": "***",
+      "n": [
+        1,
+        {
+          "token": "***"
+        }
+      ]
+    },
+    "context_unmutated": true,
+    "pass": true
+  },
+  "b_exported_api": {
+    "missing_from_dunder_all": [],
+    "missing_attribute": [],
+    "engine_event_shapes": [
+      "___xstate",
+      "after.",
+      "done.invoke.",
+      "done.state.",
+      "error.platform.",
+      "xstate."
+    ],
+    "user_event_with_engine_name_is_system": false,
+    "Event_ctor_accepts_system_kwarg": false,
+    "system_event_mints_provenance": true,
+    "public_names_total": 78,
+    "pass": true
+  },
+  "result": "PASS"
+}

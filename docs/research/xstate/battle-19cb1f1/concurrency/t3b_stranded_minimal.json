@@ -1,0 +1,100 @@
+{
+  "probe": "t3b_stranded_minimal",
+  "py": "3.13.7",
+  "claim": "#207: a chain cut that strands an invocation fires on_invocation_stranded + an ERROR log",
+  "limit": 8,
+  "rows": [
+    {
+      "engine": "async",
+      "kind": "def",
+      "state": [
+        "t3b.work"
+      ],
+      "dormant": true,
+      "pending": [
+        "PendingInvocation(state_id='t3b.work', invoke_id='spin', src='svc')"
+      ],
+      "hook_stranded": [],
+      "hook_dropped": [],
+      "n_dropped": 0,
+      "plugin_errors": [],
+      "error_logs_207": [],
+      "n_error_logs": 0
+    },
+    {
+      "engine": "sync",
+      "kind": "def",
+      "state": [
+        "t3b.work"
+      ],
+      "dormant": true,
+      "pending": [
+        "PendingInvocation(state_id='t3b.work', invoke_id='spin', src='svc')"
+      ],
+      "hook_stranded": [],
+      "hook_dropped": [],
+      "n_dropped": 0,
+      "plugin_errors": [],
+      "error_logs_207": [],
+      "n_error_logs": 0
+    },
+    {
+      "engine": "async",
+      "kind": "async def",
+      "state": [
+        "t3b.work"
+      ],
+      "dormant": true,
+      "pending": [
+        "PendingInvocation(state_id='t3b.work', invoke_id='spin', src='svc')"
+      ],
+      "hook_stranded": [],
+      "hook_dropped": [],
+      "n_dropped": 0,
+      "plugin_errors": [],
+      "error_logs_207": [],
+      "n_error_logs": 0
+    },
+    {
+      "engine": "sync",
+      "kind": "async def",
+      "error": "NotSupportedError",
+      "hook_stranded": [],
+      "hook_dropped": [],
+      "n_dropped": 0,
+      "plugin_errors": [],
+      "error_logs_207": [],
+      "n_error_logs": 2
+    }
+  ],
+  "violations": [
+    [
+      "async",
+      "def",
+      "wedged but on_invocation_stranded silent",
+      [
+        "t3b.work"
+      ],
+      0
+    ],
+    [
+      "sync",
+      "def",
+      "wedged but on_invocation_stranded silent",
+      [
+        "t3b.work"
+      ],
+      0
+    ],
+    [
+      "async",
+      "async def",
+      "wedged but on_invocation_stranded silent",
+      [
+        "t3b.work"
+      ],
+      0
+    ]
+  ],
+  "result": "FAIL"
+}
