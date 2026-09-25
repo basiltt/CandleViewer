@@ -487,6 +487,14 @@ quadrantChart
 - **Trigger** — Drift job reports a branch-protection or workflow-permission divergence from committed config; a secrets-scan hit in issue/PR content; an agent reports an anomalous/injected instruction per `AGENTS.md` §9 instead of complying.
 - **Contingency** — Treat as a security incident per `SECURITY.md`; restore protection settings from committed source of truth; rotate any credential whose scope is found to have drifted; add a regression test/canary for the specific drift observed.
 
+> **ADR-0017 note (E01-K01 spike, 2026-09-25):** board DoD gates (QA/security/a11y sign-off) were found to
+> be enforceable only as **detective** controls (reopen + comment after an out-of-band close), not
+> preventive ones — see ADR-0017. Scored L2×I2=4 during drafting, below this register's own Low-band
+> inclusion threshold (§10.1.2), so per that rule it is **not** carried as a numbered `RSK-nnn` entry;
+> it is recorded here as a standing engineering practice instead: the PR-template + `pr-metadata` CI job
+> is the preventive gate, the board reopen-guard is a secondary detective net, and the weekly
+> `governance-drift` job closes the remaining silent-failure gap (see ADR-0017 §Observability).
+
 ---
 
 ## 10. Register summary

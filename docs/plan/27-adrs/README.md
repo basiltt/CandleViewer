@@ -22,6 +22,7 @@ Status values: `decided` (binding now), `proposed` (decision deadline stated ins
 | [ADR-0014](ADR-0014-observability.md) | Observability stack | decided |
 | [ADR-0015](ADR-0015-recording-policy.md) | Recording and retention policy | decided |
 | [ADR-0016](ADR-0016-statechart-runtime.md) | Statechart contracts and a gated runtime | **proposed (gated)** (deadline: Sprint 08 go/no-go, `E50-X01`) |
+| [ADR-0017](ADR-0017-board-automation.md) | GitHub Projects v2 board automation: capability and limits | decided |
 
 ## Writing a new ADR
 
