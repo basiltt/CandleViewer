@@ -46,7 +46,7 @@ Naming convention: `category.subcategory.variant.state` all-lowercase dot-delimi
 - **Neutrals (surface/border/text ladder)**: near-black background (`#0B0E11`, not pure `#000000`, per `05-accessibility-standard.md` §5.5 halation/eye-strain guidance), 4-step surface elevation ladder (`surface.app` → `surface.raised` → `surface.overlay` → `surface.canvas` for chart backgrounds specifically, since charts want a very slightly distinct near-black from chrome panels to visually separate data from UI), off-white primary text (`#E8EAED`, not pure `#FFFFFF`), secondary/tertiary text steps down in opacity-equivalent lightness (not literal alpha, to keep contrast math predictable against varying surface tiers).
 - **Semantic buy/sell/neutral (the single most important colour decision in the system)**:
   - `color.buy` (green family) / `color.sell` (red family) / `color.neutral` (grey/blue-grey) drive: SideToggle, PriceInput/QtyInput tint, PnLBadge, candle up/down, CVD, order lines, position rows.
-  - Two colour-blind-safe green/red pairs are pre-validated (deuteranopia/protanopia/tritanopia simulation, per `05-accessibility-standard.md` §4.2) and every buy/sell instance in the system additionally carries a non-colour cue (▲/▼ glyph, `+`/`-` sign, or explicit "Buy"/"Sell" text) — colour is reinforcement, never the sole signal.
+  - Two colour-blind-safe green/red pairs are pre-validated (deuteranopia/protanopia/tritanopia simulation, per `05-accessibility-standard.md` §4.2) and every buy/sell instance in the system additionally carries a non-colour cue (▲/▼ glyph, `+`/`-` sign, or explicit "Buy"/"Sell" text) — colour is reinforcement, never the sole signal. **Confirmed unchanged by E05-D07** (2026-09-25): `color.buy.default`/`color.sell.default` (dark default) and `color.buy.hc`/`color.sell.hc` (high-contrast theme) are the two validated pairs; both heatmap ramps' adjacent stops remain separable under all 3 dichromacies — programmatic evidence in `docs/research/artifacts/E05-D07/cvd_simulation.md`, script at `docs/research/_tools/cvd_simulate.py`.
   - Both `color.buy`/`color.sell` and their AAA-stretch high-contrast variants (`color.buy.hc`, `color.sell.hc`, ≥7:1) are defined; the high-contrast theme toggle (`Ctrl+Shift+H`) swaps to the `.hc` variants app-wide.
 - **Heatmap colour ramps (configurable convention, owner decision #10)**: two named ramps ship, `heatmap.convention.green-bid-red-ask` (default: green=bid/buy liquidity, red=ask/sell) and `heatmap.convention.red-bid-green-ask` (alternate, user-selectable in Settings, mirroring the DOM ladder screen's own colour-convention setting per `14-screens-catalogue.md`). Each ramp is a 6-stop sequential scale from `surface.canvas` (zero liquidity) through a mid saturation point to a fully-saturated "hot" stop, independently contrast-validated at every stop against the chart background (`05-accessibility-standard.md` §5.4) via an automated per-stop contrast-check script gated in CI on token-file changes (§12).
 - **Status/tone ramp**: `color.status.{success,warning,danger,info}` × `{subtle,default,strong}` — used for banners, badges, connection states, risk lockouts. `danger` and `sell` are deliberately distinct hues in the default palette (danger = amber-red, sell = pure red) so "order rejected" (status.danger) is never visually confusable with "you are short" (color.sell) at a glance — this distinction is called out explicitly because both are red-family and is a common trading-UI confusion bug.
@@ -88,8 +88,15 @@ Two supported density modes, selectable globally (Settings → Appearance) and p
 
 | Mode | Row height | Field height | Base spacing step | Default surfaces |
 |---|---|---|---|---|
-| **Compact** (default for trading surfaces) | 24px | 28px | `space.2` (8px) | Chart panels, DOM ladder, footprint, positions grid, order ticket, watchlist |
-| **Comfortable** (default for admin/onboarding/settings) | 36px | 40px | `space.3` (12px) | Admin screens, onboarding wizard, settings, journal analytics (reading-heavy, not scanning-heavy) |
+| **Compact** (default for trading surfaces) | 24px | 24px | `space.2` (8px) | Chart panels, DOM ladder, footprint, positions grid, order ticket, watchlist |
+| **Comfortable** (default for admin/onboarding/settings) | 32px | 32px | `space.3` (12px) | Admin screens, onboarding wizard, settings, journal analytics (reading-heavy, not scanning-heavy) |
+
+> **UX-research amendment (E05-D07, 2026-09-25):** row/field heights above are the *final, validated*
+> values, revised down from an earlier 24/28px and 36/40px proposal to 24/24px and 32/32px to match the
+> `size.row.*` / `size.control.*` primitive tokens already shipped in `packages/ui/tokens/primitives.tokens.json`
+> (E05-D01). Compact remains exactly the WCAG 2.2 §2.5.8 minimum (24×24px); comfortable clears it with
+> +33% headroom. Full rationale, CVD simulation evidence and the essential-exception list:
+> `docs/research/density-legibility-cvd-e05-d07.md`.
 
 Rules:
 1. Density changes spacing-token resolution only — never component structure, never which information is shown. A component must render identically in both modes except for the spacing/row-height token values it resolves.
