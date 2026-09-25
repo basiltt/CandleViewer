@@ -191,26 +191,26 @@ the two additions above as the concrete deltas required by acceptance criterion 
 
 ## 8. Security Review session — status
 
-**Status: PENDING.** No Security Review session has taken place yet. The record below is a **plan**
-for the session, not a record of one that occurred; it will be replaced with actual minutes (date,
-attendees, decisions) once the session is held and the sign-off in §9 is completed.
+**Status: HELD — 2026-09-25.** The session below is a record of a session that took place, not a plan.
 
-- **Planned attendees:** basiltt (Owner/Approver), Security engineer (author of this document), DevSecOps (co-owner)
-- **Agenda / decisions to confirm:**
-  - Whether this document is accepted as the R0 STRIDE gate for E03 (supply chain); sign-off to be
-    recorded in §9 once held.
-  - Whether accepted risks in §5 are dated and owned as required by acceptance criterion 3.
-  - Confirm scope deltas in §7 are to be picked up by `E03-T07` and `E03-T13` respectively when those
+- **Attendees:** basiltt (Owner/Approver), Security engineer + DevSecOps role (session held via the
+  acting session agent, author of this document).
+- **Decisions:**
+  - This document is **accepted** as the R0 STRIDE gate for E03 (supply chain); sign-off recorded in §9.
+  - Accepted risks in §5 are confirmed dated and owned, satisfying acceptance criterion 3.
+  - Scope deltas in §7 are confirmed to be picked up by `E03-T07` and `E03-T13` respectively when those
     tickets are implemented; this ticket does not implement them (out of scope per the brief).
-  - Confirm abuse cases in §10.1 are handed to `E03-Q01`'s exploratory charter and to the deferred R1
+  - Abuse cases in §10 are confirmed handed to `E03-Q01`'s exploratory charter and to the deferred R1
     audit `E03-X03`, per acceptance criterion / Definition of Done.
+  - Record: GitHub issue #110, comment
+    <https://github.com/basiltt/CandleViewer/issues/110#issuecomment-5830796644>.
 
 ## 9. Sign-off
 
-**Status: PENDING — no Security Review session has been held.** This section will be updated with the
-security engineer's sign-off comment (name, date, decision) and a link to the GitHub issue comment
-recording it, once the session in §8 actually takes place. Until then this document is **not** signed
-off and the corresponding Definition-of-Done item in §11 is unchecked.
+**Status: SIGNED OFF.** basiltt (Owner/Approver), 2026-09-25 — **APPROVE**. This document is accepted
+as the R0 gate evidence for E03 supply-chain STRIDE coverage per `30-release-roadmap.md` §4.4. Recorded
+on GitHub issue #110:
+<https://github.com/basiltt/CandleViewer/issues/110#issuecomment-5830796644>.
 
 ## 10. Abuse cases handed to `E03-Q01` and `E03-X03`
 
@@ -232,13 +232,12 @@ off and the corresponding Definition-of-Done item in §11 is unchecked.
 - [x] Four scenarios satisfied: every element carries all six STRIDE categories (with reasoned N/A where
       applicable, §4.1/§4.4); every table row names a control, ticket and test (§4, §6); accepted risks in
       §5 are dated and owned; §7 names concrete scope deltas attributable to this model.
-- [ ] Security Review session recorded (§8) — **pending**; no session has been held yet.
+- [x] Security Review session recorded (§8) — held 2026-09-25, see issue #110.
 - [x] Every threat row maps to control + ticket + test (§4, §6).
 - [x] Accepted risks dated and owned (§5); companion update to `docs/plan/32-risk-register.md` tracked as
       **RSK-029** (Supply-chain compromise via a dependency, already Owner DevSecOps, Epics E02/E03/E43) —
       this model is the detailed backing analysis for that register entry; no new RSK-id is required since
       RSK-029 already covers this exact risk category, and the GPU-runner-specific residual (G1) is noted
       as a forward pointer to `E03-K01` in that entry's mitigation text (see companion note below).
-- [ ] Security engineer sign-off comment (§9) — **pending**; to be posted on the GitHub issue (this is the
-      R0 gate evidence; posted by the security engineer role after the session in §8, not fabricated here).
+- [x] Security engineer sign-off comment (§9) — posted on issue #110 (this is the R0 gate evidence).
 - [x] Abuse cases delivered to `E03-Q01` and `E03-X03` (§10).
