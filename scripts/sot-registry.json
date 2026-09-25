@@ -1,0 +1,59 @@
+{
+  "$schema": "n/a (stdlib json, no external schema)",
+  "description": "C-16.5 single-source-of-truth registry: fingerprints for owned lists. Code-owned by the architect (see .github/CODEOWNERS). Threshold = minimum number of exact literal tokens found outside the owner file/section before a duplication is flagged (GOV-003).",
+  "registries": [
+    {
+      "id": "required-check-names",
+      "owner_file": "CONSTITUTION.md",
+      "owner_section": "9",
+      "threshold": 3,
+      "tokens": [
+        "unit-backend",
+        "unit-engine",
+        "unit-frontend",
+        "e2e-smoke",
+        "secrets-scan",
+        "container-scan",
+        "license-check",
+        "bundle-size",
+        "engine-bench",
+        "generated-code-check",
+        "pr-metadata"
+      ]
+    },
+    {
+      "id": "command-names",
+      "owner_file": "AGENTS.md",
+      "owner_section": "4",
+      "threshold": 3,
+      "tokens": [
+        "pnpm install --frozen-lockfile",
+        "pnpm lint",
+        "pnpm typecheck",
+        "pnpm test:cov",
+        "pnpm build",
+        "pnpm size",
+        "pnpm generate",
+        "pnpm verify",
+        "uv sync --frozen",
+        "ruff check .",
+        "mypy --strict .",
+        "lint-imports",
+        "alembic upgrade head",
+        "alembic downgrade -1"
+      ]
+    },
+    {
+      "id": "performance-budget-values",
+      "owner_file": "CONSTITUTION.md",
+      "owner_section": "14",
+      "threshold": 3,
+      "tokens": [
+        "60 fps",
+        "<16 ms p95 frame",
+        "<100 ms WS",
+        "<300 ms order ack p95"
+      ]
+    }
+  ]
+}

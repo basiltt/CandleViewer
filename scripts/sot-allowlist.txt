@@ -1,0 +1,10 @@
+# scripts/sot-allowlist.txt
+# Allowlist for legitimate single-name mentions of an owned-list token in a
+# non-owner file (C-16.5). Each entry is `<path>:<registry-id>:<token>` on one
+# line, immediately followed by a `# reason:` comment line. The duplication
+# checker (scripts/check-sot-duplication.py) ignores allowlisted
+# (path, registry-id, token) triples when counting toward the threshold.
+#
+# Do not add a whole owned list here to silence GOV-003 — that defeats the
+# purpose of the registry. Allowlist entries are for isolated prose mentions
+# only (e.g. "see the pr-metadata check in CONSTITUTION.md §9").

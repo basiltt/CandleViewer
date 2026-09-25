@@ -361,6 +361,15 @@ the source of truth for ticket *content*.
 | Secret scan on your diff | `gitleaks protect --staged --redact` |
 | Container scan | `trivy image candleviewer/api:dev` |
 
+### Governance (C-16.4, C-16.5 — runnable today, stdlib Python only)
+
+| Task | Command |
+|---|---|
+| Rule-reference link check (GOV-002) | `scripts/check-rule-refs.sh` (or `python scripts/check_rule_refs.py`) |
+| Single-source-of-truth duplication check (GOV-003) | `python scripts/check_sot_duplication.py` |
+| Both, as `pr-metadata`'s `governance` job will invoke them (job wiring: `E01-Q02`) | `make governance` |
+| Governance script tests | `python -m pytest scripts/tests --cov=scripts --cov-fail-under=85` |
+
 ---
 
 ## 5. Coding standards
