@@ -108,7 +108,7 @@ Related:
 - [ ] Logging redaction verified for any new log line/field (C-12.6)
 - [ ] Per-UID rate-limit budget respected; risk-critical reserve not consumed; WS subs ≤10 topics/request (C-12.7)
 - [ ] Demo/live isolation preserved; no hotkey path to live (C-2.11)
-- [ ] Dependencies: justified, allowlisted licence, lockfile updated, `sca`/`secrets-scan`/`container-scan` green (C-12.3)
+- [ ] Dependencies: justified, allowlisted licence, lockfile updated, relevant required checks (CONSTITUTION §9) green (C-12.3)
 - [ ] Threat-model impact considered; `security-review` label applied if C-10.2 paths are touched
 
 ### Testing (§13)
@@ -127,8 +127,8 @@ Related:
 - [ ] `aria-live` politeness appropriate for high-frequency updates; `prefers-reduced-motion` respected
 - [ ] Canvas/WebGL surfaces have the accessible alternative (data cursor / textual readout / table view)
 - [ ] `axe` clean (zero serious/critical); manual screen-reader pass done for new screens
-- [ ] Performance budgets met — authoritative values in CONSTITUTION §14.2, derivation in `docs/plan/06-performance-and-load-standard.md` (reminder: 60 fps, <16 ms p95 frame, <100 ms WS→screen p95, <300 ms order ack p95 on demo) (C-14.2)
-- [ ] `engine-bench` shows ≤5% regression; benchmark output attached (C-9.1 #16) — or N/A
+- [ ] Performance budgets met — authoritative values in CONSTITUTION §14.2, derivation in `docs/plan/06-performance-and-load-standard.md` (C-14.2)
+- [ ] Engine benchmark check shows no material regression; benchmark output attached (CONSTITUTION §9) — or N/A
 - [ ] Bundle-size budgets respected, no >5% regression (C-14.3)
 
 ### Observability & docs (§12.6, §15)

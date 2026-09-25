@@ -13,8 +13,8 @@ Rules to load: `20-python-backend.md`, `40-testing.md`, `50-security.md`; plus `
 1. Read the issue fully (all 14 body sections). Confirm acceptance criteria are testable; if not, report a blocker.
 2. Contract first: if the ticket changes REST/WS, update `docs/plan/22-api-openapi.yaml` / `23-ws-protocol.md` and regenerate.
 3. Write failing tests first (unit, then integration with recorded fixtures), then implement.
-4. Run: `ruff check .`, `black --check .`, `mypy --strict .`, `pytest -m "not integration"`, `lint-imports`
-   (and `pytest -m integration` if the stack is up).
+4. Run the backend commands from `AGENTS.md` §4 (lint, format-check, typecheck, unit tests, import-lint),
+   and the integration suite if the stack is up.
 5. Update docs named in the ticket's *Docs* section in the same PR.
 
 ## Always

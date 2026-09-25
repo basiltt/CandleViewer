@@ -1046,7 +1046,9 @@ Every PR carries exactly one security risk label, applied by the author and conf
 
 ### 12.3 Required status checks on `main`
 
-`lint` · `typecheck` · `unit-backend` · `unit-frontend` · `unit-engine` · `contract` · `integration` · `e2e-web` · `e2e-electron` · `coverage-thresholds` · `codeql` · `semgrep` · `bandit` · `pip-audit` · `npm-audit` · `gitleaks` · `license-scan` · `trivy` · `electron-hardening` · `rbac-matrix` · `a11y-axe`. Branch protection: no force-push, no direct commits, 2 approvals incl. a code-owner, linear history, signed commits required for release tags.
+The exact required-check names are owned solely by `CONSTITUTION.md` §9 (C-16.5) — do not restate them
+here. Branch protection: no force-push, no direct commits, 2 approvals incl. a code-owner, linear
+history, signed commits required for release tags.
 
 ---
 

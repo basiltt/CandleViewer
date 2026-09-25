@@ -7,8 +7,8 @@ Source: `AGENTS.md` §5.2, `CONSTITUTION.md` §2–§3, `docs/plan/20-architectu
 
 ## Stack
 - Python 3.12, FastAPI, asyncio, pydantic v2 (`BaseModel`, `model_validate`, `ConfigDict(frozen=True, extra="forbid")`
-  for inbound DTOs), SQLAlchemy 2.x async + Alembic, uv for deps (`uv sync --frozen`).
-- Tooling: `ruff check .`, `black --check .`, `mypy --strict .`, `pytest`, `lint-imports`. Commands: `AGENTS.md` §4 only.
+  for inbound DTOs), SQLAlchemy 2.x async + Alembic, uv for deps.
+- Tooling: Ruff, Black, mypy strict mode, pytest, import-linter. Commands: `AGENTS.md` §4 only — do not restate them here.
 
 ## Module boundaries (C-3.x)
 - The module list and dependency table are owned by CONSTITUTION §3 — do not restate them; read them.

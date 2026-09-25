@@ -12,7 +12,7 @@ Rules to load: `30-frontend-react.md`, `40-testing.md`, `50-security.md` (Electr
 1. Read the issue, the referenced screen (`14-screens-catalogue.md`) / component (`15-component-catalogue.md`) entries and flows.
 2. Use generated protocol types only; never hand-write DTOs.
 3. Build component + Storybook story for every state (mandatory for CMP-*), RTL tests, then wire into the feature.
-4. Run: `pnpm lint`, `pnpm typecheck`, `pnpm --filter <pkg> test`, `pnpm test:a11y` when UI changes, `pnpm size`.
+4. Run the web commands from `AGENTS.md` §4 (lint, typecheck, package tests), plus the a11y suite when UI changes and the bundle-size check.
 5. Attach Storybook/screenshot evidence for the PR.
 
 ## Always
