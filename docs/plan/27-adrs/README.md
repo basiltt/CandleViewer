@@ -23,6 +23,7 @@ Status values: `decided` (binding now), `proposed` (decision deadline stated ins
 | [ADR-0015](ADR-0015-recording-policy.md) | Recording and retention policy | decided |
 | [ADR-0016](ADR-0016-statechart-runtime.md) | Statechart contracts and a gated runtime | **proposed (gated)** (deadline: Sprint 08 go/no-go, `E50-X01`) |
 | [ADR-0017](ADR-0017-board-automation.md) | GitHub Projects v2 board automation: capability and limits | decided |
+| [ADR-0018](ADR-0018-monorepo-tooling.md) | Monorepo tooling: pnpm+Turborepo (JS) and uv+Hatch (Python) | decided |
 
 ## Writing a new ADR
 
