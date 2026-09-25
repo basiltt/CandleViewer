@@ -1,0 +1,10 @@
+# scripts/codeowners-allowlist.txt
+# Explicit exceptions to GOV-001's catch-all-rule check. Each path line must
+# be immediately followed by a `# reason:` comment line; the checker rejects
+# an entry that lacks one. Do not use this to hide a real coverage gap —
+# add a deliberate CODEOWNERS rule instead (C-8.1).
+
+LICENSE
+# reason: legal boilerplate with no meaningful review-ownership question;
+# @basiltt is sole owner of last resort for the whole repo (C-8.3) and this
+# file cannot get a more specific rule without inventing a fake team.

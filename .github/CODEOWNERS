@@ -17,6 +17,7 @@
 #   @CandleViewer/qa             - QA / SDET
 #   @CandleViewer/security       - security engineering
 #   @CandleViewer/devsecops      - CI/CD, infrastructure, observability
+#   @basiltt                     - owner of last resort; sole approver of Constitution amendments (C-8.3, C-16.1)
 
 # ---------------------------------------------------------------------------
 # Default owner for anything not matched below
@@ -34,103 +35,185 @@
 /CODE_OF_CONDUCT.md                     @basiltt
 /LICENSE                                @basiltt
 /README.md                              @basiltt @CandleViewer/architecture
+# future: created when the release process starts emitting one (07-release-and-prr.md).
 /CHANGELOG.md                           @CandleViewer/devsecops @CandleViewer/architecture
+/Makefile                               @CandleViewer/devsecops @CandleViewer/architecture
+
+# ---------------------------------------------------------------------------
+# Agentic tooling (Claude Code): rules, subagents, slash commands, hooks
+# ---------------------------------------------------------------------------
+/.claude/                               @CandleViewer/architecture @CandleViewer/devsecops
+/.claude/settings.json                  @CandleViewer/devsecops @CandleViewer/security
 
 # ---------------------------------------------------------------------------
 # Repo tooling, CI/CD, infrastructure
 # ---------------------------------------------------------------------------
 /.github/                               @CandleViewer/devsecops @CandleViewer/architecture
+# future: E02/later scaffolding; directory does not exist yet.
 /.github/workflows/                     @CandleViewer/devsecops @CandleViewer/security
 /.github/CODEOWNERS                     @basiltt @CandleViewer/architecture
 /.github/PULL_REQUEST_TEMPLATE.md       @CandleViewer/architecture @CandleViewer/qa
 /.github/ISSUE_TEMPLATE/                @CandleViewer/architecture @CandleViewer/qa
+# future: E02/later scaffolding; directory does not exist yet.
 /infra/                                 @CandleViewer/devsecops @CandleViewer/security
+# future: E02/later scaffolding; directory does not exist yet.
 /docker-compose*.yml                    @CandleViewer/devsecops @CandleViewer/security
+# future: E02/later scaffolding; directory does not exist yet.
 /Dockerfile*                            @CandleViewer/devsecops @CandleViewer/security
 /.gitignore                             @CandleViewer/devsecops
+# future: E02/later scaffolding; directory does not exist yet.
 /.gitattributes                         @CandleViewer/devsecops
+# future: E02/later scaffolding; directory does not exist yet.
 /package.json                           @CandleViewer/devsecops @CandleViewer/frontend
+# future: E02/later scaffolding; directory does not exist yet.
 /pnpm-lock.yaml                         @CandleViewer/devsecops @CandleViewer/security
+# future: E02/later scaffolding; directory does not exist yet.
 /pnpm-workspace.yaml                    @CandleViewer/devsecops @CandleViewer/architecture
+# future: E02/later scaffolding; directory does not exist yet.
 /turbo.json                             @CandleViewer/devsecops @CandleViewer/frontend
+# future: E02/later scaffolding; directory does not exist yet.
 /tsconfig.base.json                     @CandleViewer/frontend @CandleViewer/architecture
+# future: E02/later scaffolding; directory does not exist yet.
 /eslint.config.mjs                      @CandleViewer/frontend @CandleViewer/devsecops
+# future: E02/later scaffolding; directory does not exist yet.
 /.prettierrc.json                       @CandleViewer/frontend
+# future: E02/later scaffolding; directory does not exist yet.
 /commitlint.config.*                    @CandleViewer/devsecops
 
 # ---------------------------------------------------------------------------
 # Frontend applications
 # ---------------------------------------------------------------------------
+# future: E02/later scaffolding; directory does not exist yet.
 /apps/                                  @CandleViewer/frontend
+# future: E02/later scaffolding; directory does not exist yet.
 /apps/web/                              @CandleViewer/frontend
+# future: E02/later scaffolding; directory does not exist yet.
 /apps/web/src/features/admin/           @CandleViewer/frontend @CandleViewer/security
+# future: E02/later scaffolding; directory does not exist yet.
 /apps/web/src/features/risk/            @CandleViewer/frontend @CandleViewer/security
+# future: E02/later scaffolding; directory does not exist yet.
 /apps/web/src/features/ticket/          @CandleViewer/frontend @CandleViewer/security
+# future: E02/later scaffolding; directory does not exist yet.
 /apps/web/src/transport/                @CandleViewer/frontend @CandleViewer/architecture
+# future: E02/later scaffolding; directory does not exist yet.
 /apps/desktop/                          @CandleViewer/frontend @CandleViewer/devsecops
+# future: E02/later scaffolding; directory does not exist yet.
 /apps/desktop/src/main/                 @CandleViewer/devsecops @CandleViewer/security
+# future: E02/later scaffolding; directory does not exist yet.
 /apps/desktop/src/preload/              @CandleViewer/security @CandleViewer/frontend
 
 # ---------------------------------------------------------------------------
 # Shared packages
 # ---------------------------------------------------------------------------
 /packages/                              @CandleViewer/frontend @CandleViewer/architecture
+# future: E02/later scaffolding; directory does not exist yet.
 /packages/chart-engine/                 @CandleViewer/chart-engine
+# future: E02/later scaffolding; directory does not exist yet.
 /packages/chart-engine/bench/           @CandleViewer/chart-engine @CandleViewer/qa
+# future: E02/later scaffolding; directory does not exist yet.
 /packages/chart-engine/package.json     @CandleViewer/chart-engine @CandleViewer/architecture
 /packages/ui/                           @CandleViewer/design-system @CandleViewer/frontend
+/packages/ui/tokens/                    @CandleViewer/design-system @CandleViewer/design
+# future: E02 will restructure tokens under src/; keep both rules until then.
 /packages/ui/src/tokens/                @CandleViewer/design-system @CandleViewer/design
+# future: E02/later scaffolding; directory does not exist yet.
 /packages/protocol/                     @CandleViewer/architecture @CandleViewer/backend
+# future: E02/later scaffolding; directory does not exist yet.
 /packages/config/                       @CandleViewer/devsecops @CandleViewer/frontend
 
 # ---------------------------------------------------------------------------
 # Backend monolith
 # ---------------------------------------------------------------------------
+# future: E02/later scaffolding; directory does not exist yet.
 /services/                              @CandleViewer/backend
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/                          @CandleViewer/backend
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/config/                   @CandleViewer/backend @CandleViewer/devsecops
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/secrets/                  @CandleViewer/security
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/auth/                     @CandleViewer/security
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/audit/                    @CandleViewer/security
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/admin/                    @CandleViewer/backend @CandleViewer/security
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/exchange/                 @CandleViewer/backend @CandleViewer/security
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/exchange/base/            @CandleViewer/architecture @CandleViewer/backend
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/exchange/bybit/           @CandleViewer/backend @CandleViewer/security
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/oms/                      @CandleViewer/backend @CandleViewer/security
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/risk/                     @CandleViewer/backend @CandleViewer/security
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/rules/                    @CandleViewer/backend @CandleViewer/security
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/paper/                    @CandleViewer/backend
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/accounts/                 @CandleViewer/backend @CandleViewer/security
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/bus/                      @CandleViewer/backend @CandleViewer/architecture
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/ingestion/                @CandleViewer/backend
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/book/                     @CandleViewer/backend
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/bars/                     @CandleViewer/backend
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/orderflow/                @CandleViewer/backend
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/recorder/                 @CandleViewer/backend @CandleViewer/devsecops
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/replay/                   @CandleViewer/backend
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/journal/                  @CandleViewer/backend
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/alerts/                   @CandleViewer/backend
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/observability/            @CandleViewer/devsecops @CandleViewer/backend
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/http/                     @CandleViewer/backend @CandleViewer/architecture
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/ws/                       @CandleViewer/backend @CandleViewer/architecture
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/storage/                  @CandleViewer/backend @CandleViewer/architecture
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/storage/migrations/       @CandleViewer/backend @CandleViewer/architecture @CandleViewer/security
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/storage/schemas/          @CandleViewer/backend @CandleViewer/architecture
+# future: E02/later scaffolding; directory does not exist yet.
 /services/api/pyproject.toml            @CandleViewer/backend @CandleViewer/devsecops @CandleViewer/security
 
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+# future: E02/later scaffolding; directory does not exist yet.
 /tests/                                 @CandleViewer/qa
+# future: E02/later scaffolding; directory does not exist yet.
 /tests/e2e/                             @CandleViewer/qa @CandleViewer/frontend
+# future: E02/later scaffolding; directory does not exist yet.
 /tests/load/                            @CandleViewer/qa @CandleViewer/devsecops
+# future: E02/later scaffolding; directory does not exist yet.
 /tests/chaos/                           @CandleViewer/qa @CandleViewer/backend
+# future: E02/later scaffolding; directory does not exist yet.
 /tests/fixtures/                        @CandleViewer/qa @CandleViewer/backend @CandleViewer/security
+
+# ---------------------------------------------------------------------------
+# Governance / repo tooling scripts (GOV-00n checkers and their tests)
+# ---------------------------------------------------------------------------
+/scripts/                               @CandleViewer/architecture @CandleViewer/devsecops
+/scripts/tests/                         @CandleViewer/architecture @CandleViewer/qa
+# future: E02/later scaffolding; directory does not exist yet.
+/scripts/validate-backlog.*              @CandleViewer/architecture
 
 # ---------------------------------------------------------------------------
 # Documentation
 # ---------------------------------------------------------------------------
 /docs/                                  @CandleViewer/architecture
+/docs/design/                           @CandleViewer/design @CandleViewer/design-system
 /docs/plan/                             @CandleViewer/architecture
 /docs/plan/00-planning-brief.md         @basiltt @CandleViewer/architecture
 /docs/plan/01-sdlc-and-branching.md     @CandleViewer/architecture @CandleViewer/devsecops
@@ -180,15 +263,22 @@
 # is intentional — split it (C-4.6) unless the content change is a mechanical
 # migration required by the schema change, in which case label it `shared-package`
 # and get both approvals.
+# future: E02/later scaffolding; directory does not exist yet.
 /docs/plan/backlog/schema/               @CandleViewer/architecture
+# future: E02/later scaffolding; directory does not exist yet.
 /docs/plan/backlog/*.schema.json         @CandleViewer/architecture
+# future: E02/later scaffolding; directory does not exist yet.
 /docs/plan/backlog/README.md             @CandleViewer/architecture @CandleViewer/qa
+# future: E02/later scaffolding; directory does not exist yet.
 /docs/plan/backlog/_index.json           @CandleViewer/architecture
+# future: E02/later scaffolding; directory does not exist yet.
 /docs/plan/backlog/epics.json            @CandleViewer/architecture @basiltt
+# future: E02/later scaffolding; directory does not exist yet.
 /docs/plan/backlog/labels.json           @CandleViewer/architecture @CandleViewer/devsecops
+# future: E02/later scaffolding; directory does not exist yet.
 /docs/plan/backlog/tickets/              @CandleViewer/qa @CandleViewer/architecture
-/scripts/validate-backlog.*              @CandleViewer/architecture
 # -------------------------------------------------------------------------------
 /docs/adr/                              @CandleViewer/architecture
 /docs/research/                         @basiltt
+# future: E02/later scaffolding; directory does not exist yet.
 /docs/incidents/                        @CandleViewer/security @basiltt
