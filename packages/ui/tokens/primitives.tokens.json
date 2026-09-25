@@ -418,5 +418,84 @@
   "opacity.scrim": {
     "$type": "opacity",
     "$value": "0.6"
-  }
+  },
+  "elevation.0": {
+    "$type": "shadow",
+    "$value": { "offsetX": "0", "offsetY": "0", "blur": "0", "spread": "0", "color": "#00000000" }
+  },
+  "elevation.1": {
+    "$type": "shadow",
+    "$value": { "offsetX": "0", "offsetY": "1", "blur": "2", "spread": "0", "color": "#00000066" }
+  },
+  "elevation.2": {
+    "$type": "shadow",
+    "$value": { "offsetX": "0", "offsetY": "2", "blur": "6", "spread": "0", "color": "#00000080" }
+  },
+  "elevation.3": {
+    "$type": "shadow",
+    "$value": { "offsetX": "0", "offsetY": "4", "blur": "12", "spread": "0", "color": "#00000099" }
+  },
+  "elevation.4": {
+    "$type": "shadow",
+    "$value": { "offsetX": "0", "offsetY": "8", "blur": "24", "spread": "0", "color": "#000000B3" }
+  },
+  "elevation.5": {
+    "$type": "shadow",
+    "$value": { "offsetX": "0", "offsetY": "16", "blur": "48", "spread": "0", "color": "#000000CC" }
+  },
+  "motion.duration.instant": {
+    "$type": "duration",
+    "$value": "0ms"
+  },
+  "motion.duration.fast": {
+    "$type": "duration",
+    "$value": "100ms"
+  },
+  "motion.duration.normal": {
+    "$type": "duration",
+    "$value": "200ms"
+  },
+  "motion.duration.slow": {
+    "$type": "duration",
+    "$value": "400ms"
+  },
+  "motion.easing.standard": {
+    "$type": "cubicBezier",
+    "$value": [0.2, 0, 0, 1]
+  },
+  "motion.easing.decelerate": {
+    "$type": "cubicBezier",
+    "$value": [0, 0, 0, 1]
+  },
+  "motion.easing.accelerate": {
+    "$type": "cubicBezier",
+    "$value": [0.3, 0, 1, 1]
+  },
+  "palette.light.neutral.0": { "$type": "color", "$value": "#FFFFFF" },
+  "palette.light.neutral.50": { "$type": "color", "$value": "#F6F7F9" },
+  "palette.light.neutral.100": { "$type": "color", "$value": "#EDEFF2" },
+  "palette.light.neutral.150": { "$type": "color", "$value": "#E3E6EA" },
+  "palette.light.neutral.200": { "$type": "color", "$value": "#D6DAE0" },
+  "palette.light.neutral.300": { "$type": "color", "$value": "#C2C8D0" },
+  "palette.light.neutral.400": { "$type": "color", "$value": "#9AA3AE" },
+  "palette.light.neutral.500": { "$type": "color", "$value": "#707B87" },
+  "palette.light.neutral.600": { "$type": "color", "$value": "#525C66" },
+  "palette.light.neutral.700": { "$type": "color", "$value": "#3A4148" },
+  "palette.light.neutral.800": { "$type": "color", "$value": "#252A2F" },
+  "palette.light.neutral.900": { "$type": "color", "$value": "#14171A" },
+  "palette.light.green.300": { "$type": "color", "$value": "#1E9448" },
+  "palette.light.green.500": { "$type": "color", "$value": "#1C7A3C" },
+  "palette.light.green.900": { "$type": "color", "$value": "#DCF3E4" },
+  "palette.light.red.300": { "$type": "color", "$value": "#B8353A" },
+  "palette.light.red.500": { "$type": "color", "$value": "#C7373C" },
+  "palette.light.red.900": { "$type": "color", "$value": "#FBE2E3" },
+  "palette.light.blue.300": { "$type": "color", "$value": "#1F55BF" },
+  "palette.light.blue.500": { "$type": "color", "$value": "#2B6CE8" },
+  "palette.light.blue.700": { "$type": "color", "$value": "#DDE8FC" },
+  "palette.light.amber.300": { "$type": "color", "$value": "#9A6A05" },
+  "palette.light.amber.500": { "$type": "color", "$value": "#B87F0A" },
+  "palette.light.amber.900": { "$type": "color", "$value": "#FCEECB" },
+  "palette.light.cyan.300": { "$type": "color", "$value": "#12798F" },
+  "palette.light.cyan.500": { "$type": "color", "$value": "#178AA8" },
+  "palette.light.cyan.900": { "$type": "color", "$value": "#DAF2F7" }
 }

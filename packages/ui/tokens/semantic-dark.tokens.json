@@ -560,5 +560,37 @@
       "fontWeight": "{font.weight.semibold}",
       "lineHeight": "{font.lineheight.tight}"
     }
+  },
+  "elevation.chrome": {
+    "$type": "shadow",
+    "$value": "{elevation.0}"
+  },
+  "elevation.card": {
+    "$type": "shadow",
+    "$value": "{elevation.1}"
+  },
+  "elevation.dock-focus": {
+    "$type": "shadow",
+    "$value": "{elevation.2}"
+  },
+  "elevation.popover": {
+    "$type": "shadow",
+    "$value": "{elevation.3}"
+  },
+  "elevation.dialog": {
+    "$type": "shadow",
+    "$value": "{elevation.4}"
+  },
+  "elevation.scrim": {
+    "$type": "shadow",
+    "$value": "{elevation.5}"
+  },
+  "space.row.height.compact": {
+    "$type": "sizing",
+    "$value": "{size.row.compact}"
+  },
+  "space.row.height.comfortable": {
+    "$type": "sizing",
+    "$value": "{size.row.comfortable}"
   }
 }

@@ -1,0 +1,8 @@
+{
+  "color.buy.default": { "$type": "color", "$value": "{color.buy.hc}" },
+  "color.sell.default": { "$type": "color", "$value": "{color.sell.hc}" },
+  "color.text.primary": { "$type": "color", "$value": "{palette.neutral.1000}" },
+  "color.text.secondary": { "$type": "color", "$value": "{palette.neutral.900}" },
+  "color.border.default": { "$type": "color", "$value": "{palette.neutral.500}" },
+  "color.focus.ring": { "$type": "color", "$value": "{palette.blue.300}" }
+}
