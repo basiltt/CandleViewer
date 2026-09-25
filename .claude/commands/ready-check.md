@@ -11,15 +11,16 @@ report. Output a table: item | PASS/FAIL/N/A | evidence.
    ≤400 changed LOC excl. lockfiles/generated (C-4.8); every changed file is in the ticket write set (C-4.9).
 2. **Commits:** conventional commits (C-4.10); breaking changes have `!` + footer (C-4.11); no merge commits.
 3. **Acceptance criteria:** for each AC in the issue, name the test that proves it. Missing ⇒ FAIL.
-4. **Checks (run only those affected by changed paths; commands from `AGENTS.md` §4):**
-   - `services/api/**`: `ruff check .`, `black --check .`, `mypy --strict .`, `pytest -m "not integration" --cov=. --cov-fail-under=85`, `lint-imports`
-   - migrations: one new revision only; `alembic upgrade head && alembic downgrade -1 && alembic upgrade head`
-   - statechart: `tools/lint_statecharts.py`, `pytest tests/xstate_contract`, `machine_hashes.lock` updated
-   - TS packages: `pnpm lint`, `pnpm typecheck`, `pnpm test:cov`, `pnpm size`
-   - chart engine: `pnpm --filter @candleviewer/chart-engine bench` (≤5% regression)
-   - UI: Storybook story for each touched CMP-*; `pnpm test:a11y`
-   - contracts: `pnpm generate` produces no diff
-   - always: `gitleaks protect --staged --redact`
+4. **Checks (run only those affected by changed paths; commands and flags are defined only in `AGENTS.md` §4 — read
+   them there, do not copy them here):**
+   - `services/api/**`: backend lint/format/typecheck/unit-test/import-lint commands, coverage floor per C-9.4
+   - migrations: one new revision only; the up/down/up round-trip command
+   - statechart: the statechart lint command, the xstate contract suite, `machine_hashes.lock` updated
+   - TS packages: the web lint/typecheck/test/size commands
+   - chart engine: the chart-engine bench command (≤5% regression, C-9 #16)
+   - UI: Storybook story for each touched CMP-*; the a11y test command
+   - contracts: the generate command produces no diff
+   - always: the secrets-scan command
    If a command does not exist yet (pre-INFRA-001), mark N/A with the reason — never invent one.
 5. **Docs:** docs named in the ticket updated; `AGENTS.md` §4 updated if scripts changed; ADR if required.
 6. **Safety:** no secrets in diff; no flag gating a safety invariant (C-4.14); every `C-x.y` cited exists in CONSTITUTION.md.

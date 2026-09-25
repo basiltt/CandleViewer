@@ -77,18 +77,12 @@ enforced server-side**.
 ## Local commands
 
 **Single source of truth: [`AGENTS.md` §4 (Commands)](AGENTS.md#4-commands).** Task names are not
-duplicated here beyond the illustrative loop below. Note that until ticket `INFRA-001` (monorepo
-scaffolding) is Done, those names are a **specification** — the repo currently contains planning documents
-only and no `package.json`/`pyproject.toml`. After INFRA-001, `generated-code-check` fails the build if
+duplicated here. Note that until ticket `INFRA-001` (monorepo scaffolding) is Done, those names are a
+**specification** — the repo currently contains planning documents only and no
+`package.json`/`pyproject.toml`. After INFRA-001, the generated-code required check fails the build if
 `AGENTS.md` §4 and the real scripts disagree.
 
-The usual loop (see AGENTS.md §4 for the full set):
-
-```bash
-pnpm install --frozen-lockfile
-pnpm verify                 # lint + typecheck + unit + size + generated-code check
-cd services/api && ruff check . && black --check . && mypy --strict . && pytest
-```
+See `AGENTS.md` §4 for the root install/verify command and the backend lint/format/typecheck/test loop.
 
 ## Design and architecture decisions
 

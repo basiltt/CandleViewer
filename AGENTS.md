@@ -109,7 +109,7 @@ CandleViewer/
 │  │  ├─ src/core/            # scene, renderer, scales, viewport, coordinate systems
 │  │  ├─ src/layers/          # candles, footprint, profile, heatmap, bubbles, overlays, drawings
 │  │  ├─ src/workers/         # OffscreenCanvas worker entry points
-│  │  ├─ bench/               # benchmark suite consumed by the `engine-bench` CI job
+│  │  ├─ bench/               # benchmark suite consumed by the chart-engine bench required check (CONSTITUTION §9)
 │  │  └─ tests/
 │  ├─ ui/                     # design system (Radix + Tailwind + shadcn-style) + React bindings
 │  │  ├─ src/atoms/ molecules/ organisms/ trading/   # per component catalogue
@@ -283,8 +283,8 @@ the source of truth for ticket *content*.
 >   name in this section exists and exits 0 on a clean checkout, and any deviation is corrected
 >   **in this section in the same PR**. Until INFRA-001 is Done, treat this table as the spec.
 > - **After INFRA-001 is Done**, the runnable scripts become the source of truth and this section
->   becomes a mirror of them. Drift is caught by the `generated-code-check` CI job (Constitution §9
->   #19), which runs `scripts/check-agents-commands.mjs`: it parses every `|` row in §4, resolves
+>   becomes a mirror of them. Drift is caught by the generated-code required check (Constitution §9),
+>   which runs `scripts/check-agents-commands.mjs`: it parses every `|` row in §4, resolves
 >   each task against the workspace task graph (`pnpm -r run --help` / `turbo run --dry=json`) and
 >   the Python project scripts, and **fails the build** if a documented task is missing or an
 >   undocumented user-facing task exists.
@@ -360,6 +360,15 @@ the source of truth for ticket *content*.
 | Chaos suite | `pnpm chaos` |
 | Secret scan on your diff | `gitleaks protect --staged --redact` |
 | Container scan | `trivy image candleviewer/api:dev` |
+
+### Governance (C-16.4, C-16.5 — runnable today, stdlib Python only)
+
+| Task | Command |
+|---|---|
+| Rule-reference link check (GOV-002) | `scripts/check-rule-refs.sh` (or `python scripts/check_rule_refs.py`) |
+| Single-source-of-truth duplication check (GOV-003) | `python scripts/check_sot_duplication.py` |
+| Both, as `pr-metadata`'s `governance` job will invoke them (job wiring: `E01-Q02`) | `make governance` |
+| Governance script tests | `python -m pytest scripts/tests --cov=scripts --cov-fail-under=85` |
 
 ---
 
@@ -627,8 +636,6 @@ Lifecycles: implement to the contract in docs/plan/28-statechart-catalogue.md §
             hot paths are NEVER statecharts (C-2.20) · machines record, flags enforce (C-2.21) ·
             xstate-statemachine==0.9.1 IS ADOPTED — the only executor, via cv.statechart.factory (C-2.22)
 Budgets   : see CONSTITUTION §14.2 (runtime) and §14.3 (bundle) — authoritative values;
-            derivation/evidence in docs/plan/06-performance-and-load-standard.md.
-            Reminder only: 60 fps · <16 ms p95 frame · <100 ms WS→screen p95 ·
-            <300 ms order ack p95 (demo) · WCAG 2.2 AA
+            derivation/evidence in docs/plan/06-performance-and-load-standard.md. WCAG 2.2 AA
 Lists     : CI check names → CONSTITUTION §9 · commands → AGENTS.md §4 (spec until INFRA-001)
 ```

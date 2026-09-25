@@ -169,22 +169,11 @@ Full flow: `AGENTS.md` §3 (flowchart) and `docs/plan/01-sdlc-and-branching.md` 
 - **Module boundaries** enforced by `import-linter` (CONSTITUTION §3); `packages/protocol/src/generated` is
   regenerated (`pnpm generate`), never hand-edited.
 
-## 8. Commands (mirror of `AGENTS.md` §4 — that table wins)
+## 8. Commands
 
-> Until `INFRA-001` is Done these are **specifications**, not verified scripts. If one doesn't exist yet,
-> say so in the PR — never invent an alternative.
-
-| Scope | Commands |
-|---|---|
-| Root | `pnpm install --frozen-lockfile` · `pnpm lint` · `pnpm typecheck` · `pnpm test` / `pnpm test:cov` · `pnpm build` · `pnpm size` · `pnpm generate` · **`pnpm verify`** (full local gate) |
-| Web | `pnpm --filter @candleviewer/web dev\|test\|build` · Storybook `pnpm --filter @candleviewer/ui storybook` |
-| Desktop | `pnpm --filter @candleviewer/desktop dev\|package` |
-| Chart engine | `pnpm --filter @candleviewer/chart-engine test\|bench` (`bench:baseline` = maintainers only) |
-| Backend (`services/api/`) | `uv sync --frozen` · `ruff check .` · `black --check .` · `mypy --strict .` · `pytest -m "not integration" --cov=. --cov-fail-under=85` · `pytest -m integration` · `lint-imports` · `alembic upgrade head` / `alembic downgrade -1` |
-| Statecharts | `uv run pytest tests/xstate_contract` · `python tools/lint_statecharts.py` · pin bump: `python docs/research/xstate/gate/run_gate.py` |
-| Stack / E2E / load | `docker compose -f infra/docker-compose.dev.yml up -d` · `pnpm e2e` · `pnpm e2e:desktop` · `pnpm test:a11y` · `k6 run tests/load/api-ws.js` · `locust -f tests/load/ingestion_soak.py` · `pnpm chaos` |
-| Security | `gitleaks protect --staged --redact` · `trivy image candleviewer/api:dev` |
-| Backlog | `python docs/plan/backlog/_tools/validate.py` (after any ticket JSON edit) |
+Command names are owned solely by `AGENTS.md` §4 (C-16.5) — read that table there; this file does not
+mirror it, to avoid drift. Until `INFRA-001` is Done, treat `AGENTS.md` §4 as a specification, not
+verified scripts: if a command doesn't exist yet, say so in the PR — never invent an alternative.
 
 ## 9. Testing, security, and the NEVER list
 
