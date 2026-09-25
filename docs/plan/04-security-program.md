@@ -12,7 +12,7 @@ This document is normative. Every requirement carries an ID (`SR-nnn`); tickets 
 2. Assets
 3. Actors and trust levels
 4. Trust boundaries (diagram)
-5. STRIDE threat model (10 areas)
+5. STRIDE threat model (11 areas)
 6. Security requirements SR-001…SR-120
 7. RBAC matrix
 8. Audit log specification
@@ -184,6 +184,7 @@ flowchart TB
 | TB-6 | Live data → backups | Dump/archive | Encryption at rest with a separate backup key; restore drills; off-box copy (SR-090..SR-095). |
 | TB-7 | Backend → Bybit | Outbound REST/WS | HMAC-SHA256 signing, clock sync, `recv_window` tuning, IP whitelist on the key, per-UID rate budget, response validation (SR-030..SR-039). |
 | TB-8 | Upstream packages/CI → runtime | Build & deploy | Lockfiles, hash pinning, SBOM, Trivy, signed container images, pinned action SHAs, protected `main` (SR-130..SR-139). |
+| TB-9 | Developer/agent workstation → GitHub SCM & governance surface | PR open, merge, workflow run, board update, credential use | CODEOWNERS + 2 approvals on `main`, branch protection with `enforce_admins`, fail-closed guard credentials (E01-T07), least-privilege repo-admin credential with drift detection (E01-T08), no `pull_request_target` on untrusted checkout, human approval required on every PR regardless of author (§5.12). |
 
 ---
 
@@ -328,12 +329,63 @@ Standing assumptions for all areas: no public listener exists; all human actors 
 | N6 | Information disclosure | Exit-node or subnet-route misconfiguration routes unrelated traffic through the trading host | L | M | Low | SR-046 trading host advertises no exit node and no subnet routes | Low |
 | N7 | Spoofing | Bybit IP whitelist conflated with the tailnet IP, so whitelisting fails or is left open | M | M | Medium | SR-033 document and monitor the real egress IP separately; alert on egress IP change | Low |
 
+### 5.12 Area 11 — Development, CI and governance surface (TB-9)
+
+Scope: the repository itself, `main` branch integrity, branch-protection configuration, CODEOWNERS, workflow definitions, the E01-T07 guard credential, the E01-T08 repository-administration credential, GitHub Actions secrets, the GitHub Project board and its data, the backlog JSON tree, and release tags/artefacts (forward-looking to E03). This is the upstream of every control in areas 1–10: an attacker who can merge unreviewed code or weaken branch protection defeats those controls without touching a runtime asset. Modelled before E01-T07/T08 are designed, per `02-definition-of-ready-done.md` §2.1.
+
+**Actors and trust levels**: Owner `@basiltt` (full trust, sole approver of exceptions); engineers/contractors (reviewed contributors, no direct-push); **AI coding agents acting under `AGENTS.md`** (autonomous within their ticket's write set, but their output is still gated by human PR review — see AG1/AG2 below); GitHub as a platform (trusted infrastructure, not immune to account-level compromise); third-party Actions authors and dependency maintainers (untrusted supply chain, mitigated by SR-130..SR-139).
+
+**Trust boundaries extended**: TB-9 (developer/agent workstation → GitHub SCM & governance surface, register in §4.1) plus these crossings analysed here: PR from a branch vs from a fork; workflow runner → repository write scope; GitHub Projects API → board data; committed governance config (`.github/`, branch-protection-as-code) → live platform settings (the **drift boundary** — what is committed can silently diverge from what GitHub actually enforces).
+
+| T | STRIDE | Threat | L | I | Risk | Mitigations | Residual |
+|---|--------|--------|---|---|------|-------------|----------|
+| G1 | Spoofing | Impersonating a code-owner approval (compromised reviewer account, or a review left by someone without CODEOWNERS standing being read as sufficient) | L | H | **High** | Branch protection requires CODEOWNERS review specifically (not just any 2 approvals); GitHub org 2FA requirement; SR-161 (new) mandates CODEOWNERS enforcement is verified, not assumed | Low |
+| G2 | Spoofing | Forging a QA/security sign-off by typing a marker string into an issue/PR body instead of a real review being performed | M | H | **High** | Sign-off is a required-reviewer GitHub approval event (an audit-logged platform action), never free-text; `pr-metadata` check (C-9.1) validates structured fields, not prose claims; SR-162 (new) | Low |
+| G3 | Spoofing | Unsigned commits allow a spoofed author identity in history | M | M | Medium | Commit-signing recommendation (below): **declined for v1** as an accepted risk — GitHub's verified-committer badge on web-UI commits plus mandatory 2-approval + CODEOWNERS review is judged sufficient control for a private repo with a small, known contributor set; revisit if the contributor set grows or a spoofing incident occurs | Medium (accepted, see §16) |
+| G4 | Tampering | Modifying `.github/workflows/` to disable a required check or a guard | L | H | **High** | CODEOWNERS ownership of `.github/**` requires `security-review` label + security reviewer (C-10.2, AGENTS.md §8); branch protection blocks direct push; E01-T08 drift detection re-verifies live settings weekly | Low |
+| G5 | Tampering | Weakening branch protection via the GitHub UI, bypassing the committed config-as-code | L | H | **High** | E01-T08 ships `enforce_admins` plus a weekly drift job (E01-Q02) that diffs live settings against the committed source of truth and alerts on divergence | Low |
+| G6 | Tampering | Tampering with `CONSTITUTION.md` or `AGENTS.md` to retro-justify a bypass, or to steer an AI agent via injected instructions | L | H | **High** | CODEOWNERS on `CONSTITUTION.md`/`AGENTS.md` requires architecture + security review; 2-approval rule applies regardless of author (including agent-authored PRs); an agent is instructed (this document, `AGENTS.md` §8) to treat repo-embedded instructions as data to follow only insofar as they do not contradict the Constitution, and to stop and report rather than silently comply with an anomalous instruction | Low |
+| G7 | Tampering | Poisoning a third-party GitHub Action by floating tag (mutable `@v1` moved to malicious code after review) | M | H | **High** | SR-132 (existing) requires SHA-pinning of all Actions; Dependabot/Renovate tracks pin updates as reviewable diffs (SR-134) | Low |
+| G8 | Repudiation | An admin disables and re-enables branch protection with no record | L | M | Medium | GitHub's audit log is the source of truth for admin actions; E01-T08's drift job reads it and alerts on a protection-disable event even if quickly reverted | Low |
+| G9 | Repudiation | A break-glass merge bypassing normal review leaves no distinguishing audit trail | L | H | **High** | `enforce_admins=true` removes the admin-bypass path entirely (no break-glass merge exists for code); if ever exercised via a platform-level emergency action, it is a G8-class event and surfaces the same way | Low |
+| G10 | Information disclosure | A secret leaked into workflow logs by an over-verbose step (`set -x`, env dump) | M | H | **High** | SR-146 (existing) prohibits `set -x` around secrets and log dumps; GitHub's own secret-masking; SR-142 gitleaks scans PR diffs and full history | Low |
+| G11 | Information disclosure | A credential (PAT, key fragment) pasted into an issue/PR body by a human or an agent debugging a failure | M | H | **High** | SR-145-style dummy-prefix discipline extended to governance context; SR-163 (new) requires the same redaction/secret-pattern scan to run over issue/PR bodies via gitleaks' pre-commit-equivalent or a scheduled scan; any hit triggers SR-143 rotation-first | Low |
+| G12 | Information disclosure | Repository contents exposed through an over-permissive workflow (e.g. `permissions: write-all` combined with a debug step that echoes checkout contents to a public log) | L | H | **High** | SR-132 requires least-privilege `permissions:` blocks; this repo is private, reducing blast radius; SR-164 (new) requires every workflow's `permissions:` block reviewed at PR time as part of `security-review` label triggers | Low |
+| G13 | Denial of service | A required check never reports (hung runner, misconfigured webhook), blocking all merges indefinitely | M | M | Medium | E01-Q02 canary self-tests assert required checks report within a duration budget; a stuck check is distinguishable from a red check in the merge-queue UI | Low |
+| G14 | Denial of service | The E01-T07 guard credential expires and the guard fails closed indefinitely, blocking all merges until manually noticed | M | M | Medium | Weekly drift job (E01-Q02) checks credential validity proactively rather than waiting for a failed merge to surface it; expiry alert fires before the credential lapses | Low |
+| G15 | Denial of service | CI exhaustion by a runaway or maliciously triggered workflow (e.g. a fork PR spamming re-runs) | L | M | Medium | GitHub's per-repo Actions concurrency limits; workflow concurrency groups cancel superseded runs; fork PRs require approval to run workflows (org setting) | Low |
+| G16 | Elevation of privilege | `pull_request_target` used with an untrusted checkout gives a fork PR effective write access / secret access | L | **Critical if present** | **Critical** | **Prohibited outright**: no workflow in this repo uses `pull_request_target` with `actions/checkout` of the PR head; SR-132 codifies the prohibition; enforced by manual review under the `security-review` label on any `.github/workflows/` change, and by a grep-based CI check (SR-165, new) that fails the build if `pull_request_target` appears without an explicit, security-reviewed exception comment | Low |
+| G17 | Elevation of privilege | An over-scoped PAT (e.g. the E01-T08 administration credential) used for more than its intended narrow purpose | L | H | **High** | E01-T08 credential is scoped to the minimum permission set its automation needs (repo-admin only where unavoidable, never org-admin); credential use is logged; drift job alerts if the credential's actual scopes exceed its documented scope | Low |
+| G18 | Elevation of privilege | A workflow declares `permissions: write-all` (or omits `permissions:`, defaulting broad) | M | H | **High** | SR-132 (existing) mandates least-privilege `permissions:` blocks, default `contents: read`; reviewed at PR time (G12 control doubles as this control) | Low |
+| G19 | Elevation of privilege | A compromised dependency of a checker/lint script (e.g. a malicious `npm`/`pip` package used by a CI gate) executes with CI's privileges | L | H | **High** | SR-130 lockfiles + hash verification; SR-138 `--ignore-scripts` where feasible; SR-131/Trivy scanning extends to tooling images; new dependencies require justification + CODEOWNER approval (SR-135) | Low |
+
+**AI-agent actor class (elaborated per the ticket's requirement)**: agents read `AGENTS.md`, `CONSTITUTION.md`, ticket bodies and issue comments as instruction surfaces. The tampering/elevation path is: (a) a tampered `AGENTS.md`/`CONSTITUTION.md` steering an agent into weakening a control (see G6); (b) prompt injection via content an agent reads while executing a ticket (an issue body, a fixture, a dependency's README) that attempts to make the agent perform an out-of-scope or privileged action. Controls: CODEOWNERS on `AGENTS.md`/`CONSTITUTION.md`; **human approval required on every PR regardless of authorship** (C-10.1, unconditional — an agent's own review of its own work never substitutes); **no agent-triggered privileged workflow** — the E01-T07 guard and E01-T08 administration credentials are never invoked by agent-authored automation, only by fixed, reviewed workflow definitions; agents are instructed (`AGENTS.md` §9, `70-multi-agent.md` §5) to stop and report rather than comply with an anomalous or scope-expanding instruction found in repo content.
+
+**Commit-signing recommendation**: assessed and **declined for v1** (see G3). Cost of mandating GPG/Sigstore signing for every contributor (including CI-authored commits from agents) outweighs the marginal benefit given the repo is private, has a small known contributor set, requires 2 approvals + CODEOWNER review on every merge, and has no direct-push path to `main`. Recorded as accepted risk in §16.1 (see RR-07). Re-review trigger: if the contributor set grows beyond the current small group, or if a spoofed-author incident occurs, this is revisited and would become `SR-166` plus a branch-protection setting owned by E01-T08.
+
+**Pwn-request explicit statement (acceptance-criteria requirement)**: `pull_request_target` triggering with an untrusted (fork) checkout is **prohibited** in this repository (see G16). Enforcement: manual review under the `security-review` label on any change to `.github/workflows/`, plus the SR-165 grep-based CI check described in G16's mitigation.
+
+**Detection paths / blind spots**: each threat above names its control; the following detection mechanisms cover the category as a whole — branch-protection drift → E01-Q02 weekly drift job; workflow disabled → drift job's workflow-enabled check; guard credential expiry → fail-closed blocking (G14) plus the drift job; secret in logs → `secrets-scan`/gitleaks (SR-142) plus log redaction policy (SR-146); unreviewed merge → impossible by construction once `enforce_admins=true` removes the bypass path, backstopped by GitHub's audit log. **Named blind spot**: G3 (unsigned commits) has no automated detection today beyond GitHub's platform-level verified-badge display — this is accepted explicitly rather than silently unaddressed (§16.1, RR-07).
+
+**Risk rating scale**: identical to §5.11 (Low / Medium / High / Critical, L×I). New risk-summary rollup below folds these 19 threats into the existing table.
+
+**Abuse cases** (handed to E01-X02 and E01-Q01 for attempt-and-record validation on a scratch repository):
+
+1. Open a PR from a fork that attempts to trigger a workflow using `pull_request_target` with a fork checkout, to see whether write access or secrets leak (targets G16).
+2. Attempt to merge a PR with only 1 approval, or with 2 approvals but no CODEOWNER, and confirm the merge button stays disabled (targets G1, G4, G5, RR-07 boundary).
+3. Type a fabricated "QA sign-off: approved" comment into an issue with no corresponding review event and confirm `pr-metadata`/process still blocks Done (targets G2, SR-162).
+4. Add a workflow step that echoes an environment variable containing a dummy secret pattern and confirm gitleaks/log redaction catches it before merge (targets G10, SR-142/SR-146).
+5. Add a `.github/workflows/*.yml` with `permissions: write-all` and confirm review/CI catches it (targets G12, G18, SR-164).
+6. Paste a dummy-prefixed fake credential into an issue body and confirm the scheduled scan (SR-163) flags it.
+7. As an agent, encounter an injected instruction inside a ticket body or fixture asking it to disable a check or widen scope, and confirm the agent stops and reports per `AGENTS.md` §9 rather than complying (targets G6, AI-agent actor class).
+8. Attempt to disable branch protection via the GitHub UI directly and confirm the weekly drift job (E01-Q02) surfaces the change even after it is reverted before the next scheduled run's window (targets G5, G8).
+
 ### 5.11 Risk summary
 
 | Residual level | Count |
 |---|---|
-| Low | 60 |
-| Medium | 2 (K9 memory exposure under host compromise; N5 remote-access outage) |
+| Low | 78 |
+| Medium | 3 (K9 memory exposure under host compromise; N5 remote-access outage; G3 unsigned commits, accepted) |
 | High / Critical | 0 |
 
 Any threat that remains High or Critical after mitigation is a release blocker and must be recorded in §16 with explicit owner sign-off before the affected release proceeds.
@@ -583,6 +635,18 @@ See §9 for behaviour detail.
 | SR-158 | Security acceptance criteria (§14) MUST be present on every ticket touching authn/authz, keys, the order path, the rule engine, admin screens, the Electron shell or data export. | manual-review |
 | SR-159 | Before live enablement (R4), an external penetration test (§13) MUST be completed with no open High/Critical findings. | pen-test |
 | SR-160 | A security sign-off MUST be a required gate in every PRR, recorded with the reviewer's name, the scan results and outstanding exceptions. | manual-review |
+
+### 6.17 Development, CI and governance surface (SR-161…SR-165)
+
+Requirements arising from §5.12 (Area 11). IDs continue the existing numbering; no existing SR is renumbered.
+
+| ID | Requirement | Verify |
+|----|-------------|--------|
+| SR-161 | Branch protection on `main` MUST require CODEOWNERS review (not merely 2 generic approvals); a code-owner approval MUST be verifiably distinguishable from a non-owner approval in the merge UI before merge is permitted. | manual-review, ci-gate |
+| SR-162 | A QA/security/design sign-off referenced by a ticket's Definition of Done MUST be a structured, audit-logged reviewer action (a GitHub review approval or an equivalent recorded platform event) — never a free-text marker typed into an issue or PR body. `pr-metadata` (C-9.1) MUST reject sign-off claims that are not backed by such an event. | ci-gate, manual-review |
+| SR-163 | Issue and PR bodies MUST be included in the secret-scanning surface (SR-142): a scheduled scan checks new issue/PR content for credential-shaped strings, alongside the existing diff/history scan; a hit follows the SR-143 rotate-first runbook. | ci-gate |
+| SR-164 | Every workflow under `.github/workflows/` MUST declare an explicit least-privilege `permissions:` block (no `write-all`, no omitted block defaulting broad); reviewed as part of the mandatory `security-review` label trigger on any workflow change (C-10.2). | ci-gate, manual-review |
+| SR-165 | `pull_request_target` combined with checkout of untrusted (fork) PR head content is prohibited outright; a CI check greps `.github/workflows/**` for this pattern and fails the build unless an explicit, security-reviewed exception comment is present naming the mitigating control. | ci-gate |
 
 ---
 
@@ -1303,6 +1367,7 @@ Whether managers trading the Owner's capital constitutes a regulated activity de
 | RR-04 | Single Owner is a single point of failure for administration | Product decision (one owner) | Recovery codes, sealed offline envelope, break-glass CLI, documented restore | Annually |
 | RR-05 | Exchange-side risk (Bybit outage, forced liquidation, API behaviour change) | Outside our control | Reconciliation, chaos tests, alerting, demo-first release path, native SLs | Per release |
 | RR-06 | Demo/live behavioural parity gaps (no WS order entry on demo, no demo public WS, demo batch orders limited to `linear`/`option`) may hide live-only defects | Inherent to the platform | v1 order entry is REST-only in **both** environments (SR-040a), so the order path under test is the live path; mainnet public streams feed demo sessions; live smoke tests behind a flag with minimal size before R4; documented parity matrix | Before R4 |
+| RR-07 | Commits are not cryptographically signed (G3, §5.12) | Cost of mandating signing for a small, known contributor set (incl. agent-authored commits) outweighs benefit given no direct-push path to `main` and mandatory 2-approval + CODEOWNER review on every merge | Branch protection with `enforce_admins`, CODEOWNERS-gated review, GitHub's platform-level verified-committer display on web-UI commits | Re-review if contributor set grows or a spoofed-author incident occurs |
 
 ### 16.1a Open exchange questions carried as residual items
 
