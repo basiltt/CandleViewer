@@ -179,15 +179,18 @@ Comparing this model to the pre-existing `E03` task scope, it drove two concrete
 1. **New row R2 (dependency confusion)** made explicit a control that was previously only implied by "the
    monorepo has internal package names that must not be resolvable from a public registry" in the ticket's
    technical notes: `E03-T07`'s scope now must include an explicit registry-allowlist / scope-reservation
-   check, not just generic SCA scanning. This is a scope addition to `E03-T07`, to be reflected when that
-   ticket is picked up.
+   check, not just generic SCA scanning. This scope addition is now recorded directly in `E03-T07`'s ticket
+   body (`docs/plan/backlog/E03.json`), so it is not lost between this model and that ticket being picked up.
 2. **New row P2 (workflow-edits-its-own-gate)** made explicit that `E03-T13`'s required-checks configuration
    must be enforced by branch-protection settings (server-side, GitHub-owned) rather than by the workflow
    YAML itself, closing a self-referential bypass that the original ticket text did not call out by name.
+   This scope addition is now recorded directly in `E03-T13`'s ticket body (`docs/plan/backlog/E03.json`).
 
 All other rows map onto controls already named in the existing `E03` ticket scope (`E03-T07/T08/T09/T13`,
 deferred `E03-T14`/`E03-K01`); this model confirms that scope was already substantially sufficient, with
-the two additions above as the concrete deltas required by acceptance criterion 4.
+the two additions above as the concrete deltas required by acceptance criterion 4. Both `E03-K01` and
+`E03-T14` now exist as real Backlog tickets (`docs/plan/backlog/E03.json`), so every ticket reference in
+this document resolves to an actual ticket.
 
 ## 8. Security Review session — status
 
