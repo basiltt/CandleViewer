@@ -478,6 +478,15 @@ quadrantChart
 - **Trigger** — Any per-trade discrepancy above tolerance, or an unexplained equity-curve divergence.
 - **Contingency** — Display the exchange figure as authoritative with the local figure shown alongside and the delta explained; fix the computation as a P1.
 
+### RSK-051 · Repository/CI governance surface compromised, defeating downstream controls without touching a runtime asset
+
+`Risk: R11` · Category **Security** · L 2 · I 4 · **Score 8 — Medium** · Owner **Security engineer** · Epics E01, E03 · Status **Mitigating**
+
+- **Description** — Introduced by the E01-X01 STRIDE model (`04-security-program.md` §5.12, Area 11). The repository, CI and board-administration surface is the upstream of every runtime security control: an attacker who merges unreviewed code, tampers with a workflow, or weakens branch protection defeats areas 1–10 without touching a runtime asset. Includes AI coding agents as an actor class (agents obeying tampered `AGENTS.md` content or acting on injected instructions).
+- **Mitigation** — CODEOWNERS + 2-approval + `enforce_admins` branch protection removes the direct-push and admin-bypass paths; E01-T07 fail-closed guard credential; E01-T08 least-privilege repo-admin credential with weekly drift detection (E01-Q02); `pull_request_target` with untrusted checkout prohibited outright (SR-165); human approval required on every PR regardless of authorship, including agent-authored PRs.
+- **Trigger** — Drift job reports a branch-protection or workflow-permission divergence from committed config; a secrets-scan hit in issue/PR content; an agent reports an anomalous/injected instruction per `AGENTS.md` §9 instead of complying.
+- **Contingency** — Treat as a security incident per `SECURITY.md`; restore protection settings from committed source of truth; rotate any credential whose scope is found to have drifted; add a regression test/canary for the specific drift observed.
+
 ---
 
 ## 10. Register summary
@@ -486,10 +495,10 @@ quadrantChart
 |---|---|---|
 | **Critical (15–25)** | 7 | RSK-001, RSK-004, RSK-010, RSK-013, RSK-014, RSK-031, RSK-037 |
 | **High (10–14)** | 21 | RSK-002, RSK-011, RSK-012, RSK-016, RSK-017, RSK-018, RSK-019, RSK-020, RSK-022, RSK-023, RSK-026, RSK-028, RSK-029, RSK-032, RSK-036, RSK-039, RSK-041, RSK-043, RSK-046, RSK-047, RSK-049 |
-| **Medium (5–9)** | 17 | RSK-003, RSK-005, RSK-015, RSK-021, RSK-024, RSK-025, RSK-027, RSK-030, RSK-033, RSK-034, RSK-035, RSK-038, RSK-040, RSK-042, RSK-044, RSK-048, RSK-050 |
-| **Total entries** | **45** | RSK-001 … RSK-050 (non-contiguous numbering, grouped by category block; numbers are never reused) |
+| **Medium (5–9)** | 18 | RSK-003, RSK-005, RSK-015, RSK-021, RSK-024, RSK-025, RSK-027, RSK-030, RSK-033, RSK-034, RSK-035, RSK-038, RSK-040, RSK-042, RSK-044, RSK-048, RSK-050, RSK-051 |
+| **Total entries** | **46** | RSK-001 … RSK-051 (non-contiguous numbering, grouped by category block; numbers are never reused) |
 
-Band arithmetic: 7 Critical + 21 High + 17 Medium = **45**, equal to the 45 `### RSK-nnn` entries in §3–§9. There are no Low-band entries: anything that scored ≤4 during drafting was not carried into the register as a tracked risk (see §10.1.2).
+Band arithmetic: 7 Critical + 21 High + 18 Medium = **46**, equal to the 46 `### RSK-nnn` entries in §3–§9. There are no Low-band entries: anything that scored ≤4 during drafting was not carried into the register as a tracked risk (see §10.1.2).
 
 #### 10.0.1 ID allocation — which numbers exist and which never will
 
@@ -507,40 +516,41 @@ IDs are assigned in **category blocks of ten** so a reader can infer a risk's fa
 | 040–044 | Accessibility & quality (R10/R14) | 040, 041*, 042*, 043*, 044 | none unused; note 041/042 are team risks and 043 is a security risk that were issued from this range before the block boundaries were finalised — they keep their numbers because IDs are immutable. |
 | 045 | — | none | **045 was never issued.** It was drafted as "Storybook visual-regression flakiness", then merged into RSK-048 (flaky E2E tests) during the first review pass rather than being tracked twice. It is retired permanently. |
 | 046–050 | Operability & analytics trust (R14/R8/R12) | 046–050 | none |
+| 051 | Governance/CI security (R11), added by E01-X01 | 051 | none — single-entry block added when the E01-X01 STRIDE model identified a category (repository/CI governance) not covered by the original ten blocks; sized at one because a single risk captures the surface at register granularity, with detail living in `04-security-program.md` §5.12. |
 
 **Retired / never-issued numbers in one line:** `RSK-006`, `RSK-007`, `RSK-008`, `RSK-009` were reserved-but-never-issued rendering slots; `RSK-045` was drafted and merged into `RSK-048`. No other number below 050 is missing. A reader scanning for them will find nothing, and that is correct.
 
 ### 10.1 Risks by category
 
-Each of the 45 entries appears in **exactly one** category row below — the categories are a partition, not overlapping tags. IDs are listed in ascending order so a reader can verify membership by scanning.
+Each of the 46 entries appears in **exactly one** category row below — the categories are a partition, not overlapping tags. IDs are listed in ascending order so a reader can verify membership by scanning.
 
 | Category | Count | IDs (ascending) |
 |---|---|---|
 | Technical (rendering, market data, storage, concurrency, quality-of-rendering a11y) | 15 | RSK-001, 002, 003, 004, 005, 010, 011, 012, 017, 026, 027, 028, 040, 044, 050 |
-| Security | 9 | RSK-016, 018, 019, 020, 021, 022, 029, 030, 043 |
+| Security | 10 | RSK-016, 018, 019, 020, 021, 022, 029, 030, 043, 051 |
 | Vendor/Bybit | 6 | RSK-013, 014, 015, 023, 024, 025 |
 | Schedule | 5 | RSK-031, 032, 033, 036, 039 |
 | Team | 4 | RSK-037, 038, 041, 042 |
 | Operational | 3 | RSK-046, 047, 048 |
 | Scope & compliance | 3 | RSK-034, 035, 049 |
-| **Total** | **45** | — |
+| **Total** | **46** | — |
 
 #### 10.1.1 Numeric reconciliation (auditor's check)
 
-This subsection exists so an auditor does not have to re-derive the arithmetic. Three independent partitions of the same 45 entries are published in this document; all three were checked to sum to 45 with **no ID appearing twice within a partition and no ID missing from any partition**:
+This subsection exists so an auditor does not have to re-derive the arithmetic. Three independent partitions of the same 46 entries are published in this document; all three were checked to sum to 46 with **no ID appearing twice within a partition and no ID missing from any partition**:
 
 | Partition | Rows | Sum | Duplicates within the partition | Entries not covered |
 |---|---|---|---|---|
-| Score band (§10) | 3 (Critical/High/Medium) | 7 + 21 + 17 = **45** | none | none |
-| Category (§10.1) | 7 | 15 + 9 + 6 + 5 + 4 + 3 + 3 = **45** | none | none |
-| `Risk` field value (§10.2) | 15 (R1–R15) | 5+2+6+2+2+4+3+2+4+2+1+3+4+3+2 = **45** | none | none |
+| Score band (§10) | 3 (Critical/High/Medium) | 7 + 21 + 18 = **46** | none | none |
+| Category (§10.1) | 7 | 15 + 10 + 6 + 5 + 4 + 3 + 3 = **46** | none | none |
+| `Risk` field value (§10.2) | 15 (R1–R15) | 5+2+6+2+2+4+3+2+4+2+2+3+4+3+2 = **46** | none | none |
 
 Two specific double-count traps, explicitly cleared:
 
 1. **RSK-001…005 (rendering)** are counted **once**, inside the Technical category row (which totals 15: five rendering + ten non-rendering). They are *not* additionally counted anywhere else in §10.1. Their appearance in §10.3 ("Risks gating each release train") is a **gating reference, not a count** — §10.3 is deliberately non-exhaustive and deliberately repeats IDs across trains (e.g. RSK-013/014 gate both R3 and R4), so §10.3 must never be summed. A note to that effect is repeated at the head of §10.3.
 2. **RSK-026 and RSK-044** sit in the Technical category (disk exhaustion is a storage-technical risk; colour-encoding failure is scored as a rendering/technical defect class) while simultaneously carrying `Risk` field values R7 and R10 respectively in §10.2. Category and `Risk` field are **two different axes**; an entry has exactly one of each. Reading a `Risk` value as a category, or vice versa, is the only way to produce an off-by-one here.
 
-The invariant to preserve on every edit: **count of `### RSK-nnn` headings in §3–§9 == 45 == sum of §10 bands == sum of §10.1 categories == sum of §10.2 `Risk` values.** Any PR that adds or retires a risk must update all four places in the same commit; the risk-register review at each train boundary (§1.3) re-checks this equality out loud.
+The invariant to preserve on every edit: **count of `### RSK-nnn` headings in §3–§9 == 46 == sum of §10 bands == sum of §10.1 categories == sum of §10.2 `Risk` values.** Any PR that adds or retires a risk must update all four places in the same commit; the risk-register review at each train boundary (§1.3) re-checks this equality out loud.
 
 #### 10.1.2 Why there is no Low band
 
@@ -548,7 +558,7 @@ Candidate risks that scored ≤4 (L×I) during drafting were resolved one of thr
 
 ### 10.2 Risks by `Risk` field value
 
-This is the second of the three partitions reconciled in §10.1.1. Each of the 45 entries carries **exactly one** `Risk` field value, and the counts below sum to 45. Note that `Risk` value ≠ Category: e.g. RSK-026 is Category *Technical* but `Risk` value *R7*.
+This is the second of the three partitions reconciled in §10.1.1. Each of the 46 entries carries **exactly one** `Risk` field value, and the counts below sum to 46. Note that `Risk` value ≠ Category: e.g. RSK-026 is Category *Technical* but `Risk` value *R7*.
 
 | Value | Count | IDs |
 |---|---|---|
@@ -562,12 +572,12 @@ This is the second of the three partitions reconciled in §10.1.1. Each of the 4
 | R8 Concurrency & state machines | 2 | RSK-028, 050 |
 | R9 Schedule & capacity | 4 | RSK-031, 032, 033, 039 |
 | R10 Accessibility | 2 | RSK-040, 044 |
-| R11 Supply chain & tooling | 1 | RSK-029 |
+| R11 Supply chain & tooling | 2 | RSK-029, 051 |
 | R12 Scope & requirements | 3 | RSK-034, 036, 049 |
 | R13 Team & knowledge | 4 | RSK-037, 038, 041, 042 |
 | R14 Operability | 3 | RSK-046, 047, 048 |
 | R15 Legal & compliance | 2 | RSK-030, 035 |
-| **Total** | **45** | — |
+| **Total** | **46** | — |
 
 ### 10.3 Risks gating each release train
 
@@ -582,7 +592,7 @@ This is the second of the three partitions reconciled in §10.1.1. Each of the 4
 | R4 | RSK-013, RSK-014, RSK-016, RSK-019, RSK-020, RSK-022, RSK-023, RSK-043, RSK-046, RSK-047 |
 | R5 | RSK-040, RSK-044, RSK-046, RSK-047, RSK-048, plus every accepted risk re-reviewed against its expiry |
 
-Distinct IDs referenced at least once as a gating item: 30 of 45. The remaining 15 are tracked and reviewed per §1.3 but do not by themselves hold a train gate closed; they are RSK-015, 021, 024, 025, 030, 031, 032, 033, 035, 036, 037, 038, 039, 041, 042 — predominantly schedule, team and vendor-contingency risks whose consequence is a date or a contingency plan, not a gate, and gates are never waived for dates (`33-raci.md` §10, `07-release-and-prr.md`).
+Distinct IDs referenced at least once as a gating item: 30 of 46. The remaining 16 are tracked and reviewed per §1.3 but do not by themselves hold a train gate closed; they are RSK-015, 021, 024, 025, 030, 031, 032, 033, 035, 036, 037, 038, 039, 041, 042, 051 — predominantly schedule, team and vendor-contingency risks whose consequence is a date or a contingency plan, not a gate, and gates are never waived for dates (`33-raci.md` §10, `07-release-and-prr.md`).
 
 ---
 
