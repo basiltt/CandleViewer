@@ -1,0 +1,58 @@
+name: governance-drift
+
+# GOV-005: weekly branch-protection drift check (CONSTITUTION.md C-9.1,
+# docs/plan/01-sdlc-and-branching.md §6.1). Never triggered by pull_request —
+# the apply/drift credential is repository-administration scoped and must
+# never be reachable from a PR-triggered workflow (see the E01-T08 break-glass
+# runbook in CONTRIBUTING.md).
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # every Monday 06:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  governance-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Required-check reconciliation (GOV-005)
+        run: python scripts/check_required_check_reconciliation.py
+
+      - name: Branch protection drift check (GOV-005)
+        env:
+          GH_BRANCH_PROTECTION_TOKEN: ${{ secrets.GH_BRANCH_PROTECTION_TOKEN }}
+        run: |
+          python scripts/check_branch_protection_drift.py \
+            --repo "${{ github.repository }}" \
+            --json > drift-findings.json || true
+          cat drift-findings.json
+
+      - name: Open issue on drift
+        if: ${{ failure() }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let body = 'GOV-005: branch protection drift detected on `main`.\n\n';
+            try {
+              body += '```json\n' + fs.readFileSync('drift-findings.json', 'utf8') + '\n```\n';
+            } catch (e) {
+              body += 'See workflow run logs for details.\n';
+            }
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'GOV-005: branch protection drift on main',
+              body,
+              labels: ['priority/p1-high', 'security'],
+            });

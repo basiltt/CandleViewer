@@ -1,0 +1,53 @@
+{
+  "$comment": "Desired-state branch protection for `main` (CONSTITUTION.md C-9.1, C-10.1, C-16.5; docs/plan/01-sdlc-and-branching.md §6.1, §7). Applied by scripts/apply-branch-protection.py, checked for drift by scripts/check-branch-protection-drift.py. A full PUT to GitHub's protection API replaces the whole object, so this file must stay complete — never a partial patch.",
+  "branch": "main",
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 2,
+    "require_code_owner_reviews": true,
+    "dismiss_stale_reviews": true,
+    "require_last_push_approval": true
+  },
+  "required_conversation_resolution": true,
+  "required_linear_history": true,
+  "allow_force_pushes": false,
+  "allow_deletions": false,
+  "enforce_admins": true,
+  "required_status_checks": {
+    "strict": true,
+    "contexts": [
+      "governance"
+    ]
+  },
+  "x-pending-contexts": [
+    "lint",
+    "typecheck",
+    "unit-backend",
+    "unit-engine",
+    "unit-frontend",
+    "contract",
+    "integration",
+    "e2e-smoke",
+    "a11y",
+    "sast",
+    "sca",
+    "secrets-scan",
+    "container-scan",
+    "license-check",
+    "bundle-size",
+    "engine-bench",
+    "migrations",
+    "architecture",
+    "generated-code-check",
+    "pr-metadata"
+  ],
+  "merge_queue": {
+    "merge_method": "SQUASH",
+    "grouping_strategy": "HEADGREEN",
+    "check_response_timeout_minutes": 60,
+    "minimum_group_size": 1,
+    "maximum_group_size": 5,
+    "max_entries_to_build": 5,
+    "wait_time_for_minimum_entries_to_merge_minutes": 5
+  },
+  "$note_pending": "x-pending-contexts is ignored by the GitHub API (an `x-` prefixed key is stripped before PUT) and read only by scripts/apply-branch-protection.py + scripts/check-branch-protection-drift.py + scripts/check-required-check-reconciliation.py. It lists every CONSTITUTION.md §9 check not yet in `required_status_checks.contexts` so the end state is visible from day 1. E03 graduates each one from here into `contexts` as its job first goes green on `main` (see Definition of Done checklist on E01-T08)."
+}
