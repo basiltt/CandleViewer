@@ -187,12 +187,14 @@ None of these constraints remain owned by the closed E06-X01 spike (ticket's fif
 
 ## 8. Risk register update
 
-`32-risk-register.md` is updated in the same PR: this model does not surface a new Critical/High residual
-risk beyond what §5.9/§5.11 of `04-security-program.md` already records for Electron (all Low after
-mitigation, two accepted Medium items). The Tauri-side equivalents (E2, E3, E4 above) are new but are
-recorded here as constraints on E06-T03/E10 rather than as standalone register entries, since they are
-conditional on which shell ADR-0011 selects; if Tauri is chosen, `32-risk-register.md` should gain a
-dedicated entry at that point (flagged for the E06-T03 owner).
+`32-risk-register.md` is **not** modified by this PR — this PR touches only this new document. That is a
+deliberate, not an incidental, omission: this model does not surface a new Critical/High residual risk
+beyond what §5.9/§5.11 of `04-security-program.md` already records for Electron (all Low after mitigation,
+two accepted Medium items), so no register edit is warranted yet. The Tauri-side equivalents (E2, E3, E4
+above) are new but are recorded here as constraints on E06-T03/E10 rather than as standalone register
+entries, since they are conditional on which shell ADR-0011 selects. **If Tauri is chosen, a follow-up PR
+must add a dedicated `32-risk-register.md` entry before E06-T03 closes** (flagged for the E06-T03 owner;
+tracked so this doesn't get silently dropped).
 
 ---
 
