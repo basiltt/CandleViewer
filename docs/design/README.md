@@ -8,21 +8,24 @@ MPL-2.0) instead of Figma. Agents drive it through the **official Penpot MCP ser
 
 | Piece | Where | Notes |
 |---|---|---|
-| Penpot instance | https://design.penpot.app (owner's account; team **CandleViewer**) | Cloud-hosted for now. Self-hosting in WSL2 is a later option; nothing on the agent side changes. |
-| MCP server | `http://localhost:4401/mcp` (Streamable HTTP) | Built from `C:\Users\basil\Desktop\Projects\PublicProjects\penpot\mcp` (Penpot `develop`, 2.18.0-dev). Registered user-scope in `~/.claude.json` as `penpot`. |
-| Plugin server | `http://localhost:4400/manifest.json` | Serves the Penpot MCP plugin into the browser. |
-| WS bridge | `ws://localhost:4402` | Plugin ↔ MCP server. |
-
-Start everything: `C:\Users\basil\Desktop\Projects\PublicProjects\penpot\mcp\start-penpot-mcp.cmd`
-(or `pnpm run start` in that directory). Log: `%USERPROFILE%\.cache\penpot-mcp.log` when started from Claude.
+| Penpot instance | https://design.penpot.app — team **CandleViewer** (`team-id b564c72c-f31f-81ec-8008-b109a9175d0b`) | Cloud-hosted for now. Self-hosting in WSL2 is a later option; nothing on the agent side changes. |
+| MCP server | **Hosted:** `https://design.penpot.app/mcp/stream?userToken=<MCP key>` (Streamable HTTP) | Registered user-scope in `~/.claude.json` as `penpot`. The key is per-user (Your account → Integrations → MCP Server) and lives only in `~/.claude.json` — never in the repo or a ticket. Tools: `high_level_overview`, `penpot_api_info`, `execute_code`, `export_shape` (no `import_image` on hosted). |
+| Plugin | Penpot's built-in **MCP plugin** (Plugins menu in any open file) | The plugin *is* the bridge: without an open, connected plugin every tool call fails with "No plugin instance connected". |
+| Local fallback | `C:\Users\basil\Desktop\Projects\PublicProjects\penpot\mcp` → `start-penpot-mcp.cmd` (`:4401/mcp`, plugin `:4400/manifest.json`, WS `:4402`) | Built 2026-09-25 from Penpot `develop`. Use if the hosted endpoint is down or when self-hosting. |
 
 ## Session ritual (human, once per session)
 
-1. Start the servers (above).
-2. Open the design file in Penpot in a browser tab (Firefox or Chromium ≥142 — approve the
-   "access local network" prompt).
-3. Plugins menu → load `http://localhost:4400/manifest.json` → open the plugin → **Connect to MCP server**.
-4. Keep that tab and the plugin panel open for the whole agent session (browser tab suspension drops the bridge).
+1. Open the design file in Penpot in a browser tab.
+2. Plugins menu → **Penpot MCP** → **Connect**.
+3. Keep that tab and the plugin panel open for the whole agent session (browser tab suspension drops the bridge).
+
+## Fonts
+
+Team fonts uploaded 2026-09-25: **Inter** v4.1 and **JetBrains Mono** v2.304, each as 8 static TTFs
+(Regular/Medium/SemiBold/Bold + italics = weight tokens 400/500/600/700). JetBrains Mono needed its Macintosh
+`name` records stripped (fontTools): opentype.js 2.x `getEnglishName()` reads only the first platform table
+present, so Penpot silently skipped the files (upstream bug, to be filed). Fixed set:
+`C:\Users\basil\Downloads\CandleViewer-fonts\upload-static\JetBrainsMono-fixed\`.
 
 ## Rules for design agents
 
