@@ -1,0 +1,102 @@
+name: Story
+description: User-facing increment of value (INVEST, has Gherkin acceptance criteria)
+title: "[Story]: "
+labels: ["type/story", "qa"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Never paste API keys, session tokens, passwords, or real account/user identifiers into
+        this issue. Found a vulnerability? Do not file it here — see `SECURITY.md`.
+
+        See `docs/plan/02-definition-of-ready-done.md` §3 for the full Story DoR; this form
+        captures the fields needed at creation, not every DoR item (some are verified at Ready).
+  - type: textarea
+    id: user-story
+    attributes:
+      label: User story (As / I want / So that)
+      description: >-
+        INVEST form (Independent, Negotiable, Valuable, Estimable, Small — 8 pts max, Testable).
+      placeholder: |
+        As a <role>, I want <capability>, so that <benefit>.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: >-
+        Gherkin (Given/When/Then). Minimum: happy path + one edge case + one error case.
+      placeholder: |
+        Scenario: ...
+          Given ...
+          When ...
+          Then ...
+    validations:
+      required: true
+  - type: dropdown
+    id: has-ui-surface
+    attributes:
+      label: Has UI surface?
+      description: >-
+        If Yes: a design ticket must be Done ≥2 sprints ahead, or have a recorded waiver —
+        confirmed at Refinement, not here.
+      options:
+        - "No"
+        - "Yes"
+    validations:
+      required: true
+  - type: dropdown
+    id: touches-sensitive-surface
+    attributes:
+      label: Touches auth/keys/OMS/withdrawal/admin?
+      description: Triggers security-ready checks at Refinement.
+      options:
+        - "No"
+        - "Yes"
+    validations:
+      required: true
+  - type: textarea
+    id: test-plan-outline
+    attributes:
+      label: Test plan outline
+      description: >-
+        Which pyramid layers (unit/contract/integration/E2E/perf/security/a11y) and fixtures
+        needed, e.g. a recorded Bybit fixture name.
+    validations:
+      required: true
+  - type: input
+    id: contract-link
+    attributes:
+      label: Interface-first contract link
+      description: >-
+        If backend↔frontend: link the merged/PR'd OpenAPI or WS delta.
+    validations:
+      required: false
+  - type: input
+    id: dependencies
+    attributes:
+      label: Dependencies (blocked_by)
+      description: Story/Task keys this depends on, comma-separated.
+    validations:
+      required: false
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out-of-scope note
+      description: "State deliberate narrowing, e.g. \"single symbol only\"."
+    validations:
+      required: false
+  - type: dropdown
+    id: estimate
+    attributes:
+      label: Estimate
+      description: Agreed via planning poker at Refinement — this is your proposal, confirmed later.
+      options:
+        - "1"
+        - "2"
+        - "3"
+        - "5"
+        - "8"
+    validations:
+      required: true

@@ -1,0 +1,55 @@
+name: Spike
+description: Time-boxed research/prototyping to reduce uncertainty; output is a decision/ADR
+title: "[Spike]: "
+labels: ["type/spike"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Never paste API keys, session tokens, passwords, or real account/user identifiers into
+        this issue. Found a vulnerability? Do not file it here — see `SECURITY.md`.
+  - type: textarea
+    id: questions
+    attributes:
+      label: Question(s) to answer
+      description: >-
+        State precisely, e.g. "Can X render Y at Z fps in Electron and WebView2?"
+    validations:
+      required: true
+  - type: dropdown
+    id: timebox
+    attributes:
+      label: Timebox (days)
+      description: Agreed with the Architect — propose here, confirmed at Refinement.
+      options:
+        - "1"
+        - "2"
+        - "3"
+        - "5"
+    validations:
+      required: true
+  - type: textarea
+    id: decision-criteria
+    attributes:
+      label: Success / decision criteria
+      description: What result leads to which decision, stated up front.
+    validations:
+      required: true
+  - type: textarea
+    id: research-links
+    attributes:
+      label: Related research links
+      description: "`docs/research/*` links that motivate this spike."
+    validations:
+      required: false
+  - type: dropdown
+    id: produces-shippable-code
+    attributes:
+      label: Produces shippable code?
+      description: >-
+        Default is No; only mark Yes if the ticket intends throwaway code to be hardened.
+      options:
+        - "No — default"
+        - "Yes, explicitly"
+    validations:
+      required: true

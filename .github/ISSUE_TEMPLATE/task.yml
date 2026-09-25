@@ -1,0 +1,83 @@
+name: Task
+description: Engineering work with no direct independent user value (refactor, infra, migration, wiring)
+title: "[Task]: "
+labels: ["type/task"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Never paste API keys, session tokens, passwords, or real account/user identifiers into
+        this issue. Found a vulnerability? Do not file it here — see `SECURITY.md`.
+
+        This form has a **2-minute fill budget** — see `docs/plan/02-definition-of-ready-done.md`
+        §4 for the full Task DoR; some items are verified at Ready, not here.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description & why
+      description: What breaks or is missing without this change.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: Objectively checkable, e.g. a measurable threshold. Gherkin optional.
+    validations:
+      required: true
+  - type: dropdown
+    id: changes-shared-contract
+    attributes:
+      label: Defines/changes a shared contract?
+      description: >-
+        If Yes: the schema diff must be drafted and reviewed before implementation starts —
+        link it in a comment when ready.
+      options:
+        - "No"
+        - "Yes"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: "Primary area — see `docs/plan/01-sdlc-and-branching.md` §5.2."
+      options:
+        - area/chart-engine
+        - area/charting-ui
+        - area/order-flow
+        - area/oms-execution
+        - area/rule-engine
+        - area/paper-trading
+        - area/accounts-admin
+        - area/auth-rbac
+        - area/ingestion
+        - area/recorder-replay
+        - area/journal-analytics
+        - area/backend-platform
+        - area/frontend-platform
+        - area/electron-shell
+        - area/design-system
+        - area/infra-devops
+        - area/docs
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Drives triage order.
+      options:
+        - "priority/p0-critical — drop everything"
+        - "priority/p1-high"
+        - "priority/p2-normal"
+        - "priority/p3-low"
+    validations:
+      required: true
+  - type: input
+    id: dependencies
+    attributes:
+      label: Dependencies (blocked_by)
+      description: Task/Story keys, comma-separated.
+    validations:
+      required: false

@@ -3,6 +3,13 @@
   This checklist maps 1:1 to the gates in CONSTITUTION.md. Do not delete items —
   mark them [x] (done) or [~] (N/A, with a one-line reason). Rule ids like C-4.7 are
   Constitution rules; agents: see AGENTS.md §7.
+
+  Gate-heading contract (docs/design/E01/E01-D01.md §5, parsed by E01-T07 automation):
+  `### Acceptance criteria` and `### Test plan` are always required (never delete, may be
+  "N/A — <reason>" only where §5 allows it). `### QA sign-off`, `### Security review` and
+  `### a11y evidence` are required only when their trigger (Kind/label/path) applies; they
+  are actor-attributed sections (a `@handle` or an explicit `N/A`/`QA capacity deviation`
+  token) — never a checkbox the author self-ticks.
 -->
 
 ## Summary
@@ -17,6 +24,13 @@ Closes #
 <!-- Exactly one primary issue (C-4.6/C-4.7). Reference related issues below if needed. -->
 
 Related:
+
+<!-- Only fill in the field below if this diff exceeds 400 changed LOC (excluding
+     generated/lockfiles/snapshots, C-4.8). Delete it otherwise. -->
+
+### Why this can't be split
+
+<!-- One paragraph: why the work cannot land as smaller, independently mergeable PRs. -->
 
 ## Ticket brief checklist
 
@@ -41,11 +55,18 @@ Related:
 - [ ] `security` — security fix or hardening
 - [ ] **Breaking change** (`!` in the commit + `BREAKING CHANGE:` footer + version/deprecation plan, §6)
 
-## How this was tested
+### Acceptance criteria
+
+<!-- The AC→evidence table: each acceptance criterion from the ticket, and how it was verified
+     (test name / screenshot / bench output). Required on every PR — never delete this heading. -->
+
+### Test plan
 
 <!-- Commands run and their results; which pyramid levels; what a reviewer should re-run.
      Attach evidence: test output, screenshots/recording for UI, benchmark deltas for engine/hot paths,
-     alembic up/down output for migrations. "It should work" is not testing (AGENTS.md §8.14). -->
+     alembic up/down output for migrations. "It should work" is not testing (AGENTS.md §8.14).
+     For a docs/chore PR with no user-facing effect, this section may instead read exactly:
+     "N/A — no user-facing effect" (literal N/A token, not "n/a"/"NA"). -->
 
 ---
 
@@ -98,7 +119,12 @@ Related:
 - [ ] Audit tables unchanged in their append-only guarantees (C-5.7, C-2.9)
 - [ ] Retention / partitioning implications documented (C-5.8) — or N/A
 
-### Security (§12)
+### Security review
+
+<!-- Gate heading — required when the `security` label applies, or a path from C-10.2's
+     always-security list is touched (auth-rbac, oms-execution order paths, key storage,
+     withdrawal, fan-out SL). Actor-attributed, not a checkbox:
+     "Reviewed by @<security-handle>" or "N/A — <reason>". -->
 
 - [ ] **No secrets** in code, tests, fixtures, logs, commits or this PR text (C-12.2)
 - [ ] Keys still never leave `services/api/secrets/`; no endpoint returns a secret (C-2.7)
@@ -120,6 +146,12 @@ Related:
 - [ ] Relevant chaos scenarios still pass / new ones added (C-13.6) — or N/A
 - [ ] No `.only` / `.skip` / `xit` / sleeps / network / shared mutable state introduced (C-13.7 test-quality rules); no test left quarantined without a P1 ticket (C-9.3 flaky-test policy)
 
+### a11y evidence
+
+<!-- Gate heading — required when the `a11y` label applies, or `apps/web/**`,
+     `packages/ui/**`, `packages/chart-engine/**` UI surfaces are touched. Actor-attributed:
+     an axe-core CI run URL, or "N/A — no UI surface changed" (literal N/A token). -->
+
 ### Accessibility & performance (§14)
 
 - [ ] WCAG 2.2 AA: keyboard reachable, visible focus, logical order, no traps (C-14.1)
@@ -138,6 +170,12 @@ Related:
 - [ ] `CHANGELOG.md` entry for user-visible change (C-15.6) — or N/A
 
 ### Reviews required (§10)
+
+### QA sign-off
+
+<!-- Gate heading — always required on Story/Bug PRs; required on Task/Chore only when
+     labelled `qa`. Actor-attributed: "Signed off by @<handle>" or the literal string
+     "QA capacity deviation" (per docs/plan/02-definition-of-ready-done.md §8). -->
 
 - [ ] 2 approvals requested, at least 1 CODEOWNER of a touched directory (C-10.1)
 - [ ] `security-review` label + `@CandleViewer/security` reviewer if C-10.2 paths touched
