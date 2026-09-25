@@ -220,7 +220,14 @@
   },
   "E02-T01": {
     "blockedby_done": [
-      "E01",
+      "E01-K01",
+      "E01-T01",
+      "E01-T02",
+      "E01-T03",
+      "E01-T04",
+      "E01-T05",
+      "E01-T06",
+      "E01-T07",
       "E02-K01"
     ],
     "fields_done": true,
@@ -396,7 +403,14 @@
   },
   "E03-T01": {
     "blockedby_done": [
-      "E02"
+      "E02-K01",
+      "E02-T01",
+      "E02-T02",
+      "E02-T03",
+      "E02-T04",
+      "E02-T05",
+      "E02-T06",
+      "E02-T07"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eskM",
@@ -406,8 +420,15 @@
   },
   "E03-T02": {
     "blockedby_done": [
-      "E03-T01",
-      "E02"
+      "E02-K01",
+      "E02-T01",
+      "E02-T02",
+      "E02-T03",
+      "E02-T04",
+      "E02-T05",
+      "E02-T06",
+      "E02-T07",
+      "E03-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eskY",
@@ -417,8 +438,15 @@
   },
   "E03-T03": {
     "blockedby_done": [
-      "E03-T01",
-      "E02"
+      "E02-K01",
+      "E02-T01",
+      "E02-T02",
+      "E02-T03",
+      "E02-T04",
+      "E02-T05",
+      "E02-T06",
+      "E02-T07",
+      "E03-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eskc",
@@ -439,8 +467,15 @@
   },
   "E03-T05": {
     "blockedby_done": [
-      "E03-T01",
-      "E02"
+      "E02-K01",
+      "E02-T01",
+      "E02-T02",
+      "E02-T03",
+      "E02-T04",
+      "E02-T05",
+      "E02-T06",
+      "E02-T07",
+      "E03-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eslQ",
@@ -513,10 +548,17 @@
   },
   "E03-T13": {
     "blockedby_done": [
+      "E01-K01",
+      "E01-T01",
+      "E01-T02",
+      "E01-T03",
+      "E01-T04",
+      "E01-T05",
+      "E01-T06",
+      "E01-T07",
       "E03-T04",
       "E03-T06",
-      "E03-T07",
-      "E01"
+      "E03-T07"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eslE",
@@ -536,7 +578,14 @@
   },
   "E03-X01": {
     "blockedby_done": [
-      "E01"
+      "E01-K01",
+      "E01-T01",
+      "E01-T02",
+      "E01-T03",
+      "E01-T04",
+      "E01-T05",
+      "E01-T06",
+      "E01-T07"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eslo",
@@ -576,7 +625,14 @@
   },
   "E04-K01": {
     "blockedby_done": [
-      "E03"
+      "E03-T01",
+      "E03-T02",
+      "E03-T03",
+      "E03-T04",
+      "E03-T05",
+      "E03-T06",
+      "E03-T07",
+      "E03-T10"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eswo",
@@ -630,7 +686,14 @@
   },
   "E04-T01": {
     "blockedby_done": [
-      "E03",
+      "E03-T01",
+      "E03-T02",
+      "E03-T03",
+      "E03-T04",
+      "E03-T05",
+      "E03-T06",
+      "E03-T07",
+      "E03-T10",
       "E04-X01"
     ],
     "fields_done": true,
@@ -704,7 +767,14 @@
   },
   "E04-X01": {
     "blockedby_done": [
-      "E03"
+      "E03-T01",
+      "E03-T02",
+      "E03-T03",
+      "E03-T04",
+      "E03-T05",
+      "E03-T06",
+      "E03-T07",
+      "E03-T10"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8etqI",
@@ -891,8 +961,15 @@
   },
   "E05-T01": {
     "blockedby_done": [
-      "E05-D01",
-      "E02"
+      "E02-K01",
+      "E02-T01",
+      "E02-T02",
+      "E02-T03",
+      "E02-T04",
+      "E02-T05",
+      "E02-T10",
+      "E02-X02",
+      "E05-D01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8esys",
@@ -913,8 +990,15 @@
   },
   "E05-T03": {
     "blockedby_done": [
-      "E05-T02",
-      "E03"
+      "E03-T01",
+      "E03-T02",
+      "E03-T03",
+      "E03-T08",
+      "E03-T09",
+      "E03-T11",
+      "E03-T13",
+      "E03-T15",
+      "E05-T02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8es0M",
@@ -998,7 +1082,14 @@
   },
   "E06-D01": {
     "blockedby_done": [
-      "E02"
+      "E02-K01",
+      "E02-T01",
+      "E02-T02",
+      "E02-T03",
+      "E02-T04",
+      "E02-T05",
+      "E02-T06",
+      "E02-T07"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8es3Y",
@@ -1028,7 +1119,14 @@
   },
   "E06-K01": {
     "blockedby_done": [
-      "E02"
+      "E02-K01",
+      "E02-T01",
+      "E02-T02",
+      "E02-T03",
+      "E02-T04",
+      "E02-T05",
+      "E02-T06",
+      "E02-T07"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8es3o",
@@ -1127,7 +1225,14 @@
   },
   "E06-X01": {
     "blockedby_done": [
-      "E01"
+      "E01-K01",
+      "E01-T01",
+      "E01-T02",
+      "E01-T03",
+      "E01-T04",
+      "E01-T05",
+      "E01-T06",
+      "E01-T07"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8es3w",
@@ -1296,7 +1401,14 @@
   },
   "E07-X01": {
     "blockedby_done": [
-      "E02"
+      "E02-K01",
+      "E02-T01",
+      "E02-T02",
+      "E02-T03",
+      "E02-T04",
+      "E02-T05",
+      "E02-T06",
+      "E02-T07"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8et7Q",
@@ -1577,8 +1689,8 @@
   },
   "E08-S01": {
     "blockedby_done": [
-      "E08-T02",
-      "E07"
+      "E07-T01",
+      "E08-T02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8euC0",
@@ -1632,8 +1744,8 @@
   },
   "E08-S06": {
     "blockedby_done": [
-      "E08-S01",
-      "E07"
+      "E07-T01",
+      "E08-S01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8euDE",
@@ -1653,7 +1765,14 @@
   },
   "E08-T01": {
     "blockedby_done": [
-      "E02"
+      "E02-K01",
+      "E02-T01",
+      "E02-T02",
+      "E02-T03",
+      "E02-T04",
+      "E02-T05",
+      "E02-T06",
+      "E02-T07"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8etGE",
@@ -1663,8 +1782,8 @@
   },
   "E08-T02": {
     "blockedby_done": [
-      "E08-T01",
-      "E04"
+      "E04-K01",
+      "E08-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8euDU",
@@ -1708,9 +1827,16 @@
   },
   "E08-T06": {
     "blockedby_done": [
+      "E04-T01",
+      "E04-T02",
+      "E04-T03",
+      "E04-T04",
+      "E04-T05",
+      "E04-T06",
+      "E04-T07",
+      "E04-X01",
       "E08-S05",
-      "E08-S06",
-      "E04"
+      "E08-S06"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8euE4",
@@ -1899,7 +2025,14 @@
   },
   "E09-K01": {
     "blockedby_done": [
-      "E03"
+      "E03-T01",
+      "E03-T02",
+      "E03-T03",
+      "E03-T04",
+      "E03-T05",
+      "E03-T06",
+      "E03-T07",
+      "E03-T10"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8etO8",
@@ -2267,8 +2400,19 @@
   },
   "E10-T01": {
     "blockedby_done": [
-      "E09",
-      "E02"
+      "E02-K01",
+      "E02-T01",
+      "E02-T02",
+      "E02-T03",
+      "E02-T04",
+      "E02-T05",
+      "E02-T10",
+      "E02-X02",
+      "E09-K01",
+      "E09-T01",
+      "E09-T02",
+      "E09-T04",
+      "E09-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8evJE",
@@ -2278,8 +2422,15 @@
   },
   "E10-T02": {
     "blockedby_done": [
-      "E10-K01",
-      "E02"
+      "E02-K01",
+      "E02-T01",
+      "E02-T02",
+      "E02-T03",
+      "E02-T04",
+      "E02-T05",
+      "E02-T10",
+      "E02-X02",
+      "E10-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8evJU",
@@ -2289,9 +2440,12 @@
   },
   "E10-T04": {
     "blockedby_done": [
-      "E10-T01",
-      "E09",
-      "E17"
+      "E09-K01",
+      "E09-T01",
+      "E09-T02",
+      "E09-T04",
+      "E09-X01",
+      "E10-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8evJY",
@@ -2311,9 +2465,16 @@
   },
   "E10-X02": {
     "blockedby_done": [
+      "E03-T01",
+      "E03-T02",
+      "E03-T03",
+      "E03-T08",
+      "E03-T09",
+      "E03-T11",
+      "E03-T13",
+      "E03-T15",
       "E10-T02",
-      "E10-X01",
-      "E03"
+      "E10-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8evKE",
@@ -2335,7 +2496,7 @@
   },
   "E11-D01": {
     "blockedby_done": [
-      "E05"
+      "E05-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8evOM",
@@ -2345,8 +2506,11 @@
   },
   "E11-D02": {
     "blockedby_done": [
-      "E11-D01",
-      "E05"
+      "E05-T01",
+      "E05-T05",
+      "E05-T07",
+      "E05-X01",
+      "E11-D01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8ewhk",
@@ -2376,8 +2540,11 @@
   },
   "E11-D05": {
     "blockedby_done": [
-      "E11-D02",
-      "E05"
+      "E05-T01",
+      "E05-T05",
+      "E05-T07",
+      "E05-X01",
+      "E11-D02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8ewlw",
@@ -2429,7 +2596,14 @@
   },
   "E11-K01": {
     "blockedby_done": [
-      "E05",
+      "E05-T01",
+      "E05-T02",
+      "E05-T03",
+      "E05-T04",
+      "E05-T05",
+      "E05-T06",
+      "E05-T07",
+      "E05-X02",
       "E11-T01"
     ],
     "fields_done": true,
@@ -2680,9 +2854,25 @@
   },
   "E11-T01": {
     "blockedby_done": [
-      "E02",
-      "E06",
-      "E10"
+      "E02-K01",
+      "E02-T01",
+      "E02-T02",
+      "E02-T03",
+      "E02-T04",
+      "E02-T05",
+      "E02-T10",
+      "E02-X02",
+      "E06-K03",
+      "E06-K04",
+      "E06-T01",
+      "E06-T02",
+      "E06-T03",
+      "E06-X02",
+      "E10-T01",
+      "E10-T02",
+      "E10-T04",
+      "E10-X01",
+      "E10-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8exEo",
@@ -2712,9 +2902,16 @@
   },
   "E11-T04": {
     "blockedby_done": [
-      "E11-S01",
-      "E05",
-      "E11-D05"
+      "E05-T01",
+      "E05-T02",
+      "E05-T03",
+      "E05-T04",
+      "E05-T05",
+      "E05-T06",
+      "E05-T07",
+      "E05-X02",
+      "E11-D05",
+      "E11-S01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8exFs",
@@ -2965,7 +3162,11 @@
   },
   "E12-K01": {
     "blockedby_done": [
-      "E08"
+      "E08-T04",
+      "E08-T05",
+      "E08-T06",
+      "E08-X02",
+      "E08-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8exVo",
@@ -3144,8 +3345,12 @@
   },
   "E12-S06": {
     "blockedby_done": [
-      "E12-T05",
-      "E11"
+      "E11-K01",
+      "E11-T01",
+      "E11-T02",
+      "E11-T03",
+      "E11-X01",
+      "E12-T05"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8exUo",
@@ -3175,8 +3380,15 @@
   },
   "E12-S09": {
     "blockedby_done": [
-      "E12-S06",
-      "E11"
+      "E11-K01",
+      "E11-T01",
+      "E11-T02",
+      "E11-T03",
+      "E11-T04",
+      "E11-T08",
+      "E11-X01",
+      "E11-X02",
+      "E12-S06"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8exXs",
@@ -3219,7 +3431,11 @@
   },
   "E12-T01": {
     "blockedby_done": [
-      "E08"
+      "E08-T04",
+      "E08-T05",
+      "E08-T06",
+      "E08-X02",
+      "E08-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8exUA",
@@ -3229,8 +3445,9 @@
   },
   "E12-T02": {
     "blockedby_done": [
-      "E12-T01",
-      "E07"
+      "E07-T05",
+      "E07-X02",
+      "E12-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8exUI",
@@ -3276,7 +3493,10 @@
   "E12-T06": {
     "blockedby_done": [
       "E12-T05",
-      "E17"
+      "E17-K01",
+      "E17-T01",
+      "E17-T02",
+      "E17-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8exVA",
@@ -3428,7 +3648,9 @@
   },
   "E13-K01": {
     "blockedby_done": [
-      "E12"
+      "E12-T01",
+      "E12-T02",
+      "E12-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8excM",
@@ -3598,9 +3820,21 @@
   },
   "E13-T01": {
     "blockedby_done": [
-      "E13-K01",
-      "E11",
-      "E12"
+      "E11-K01",
+      "E11-T01",
+      "E11-T02",
+      "E11-T03",
+      "E11-T04",
+      "E11-T08",
+      "E11-X01",
+      "E11-X02",
+      "E12-T01",
+      "E12-T02",
+      "E12-T03",
+      "E12-T05",
+      "E12-T06",
+      "E12-X01",
+      "E13-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eyz0",
@@ -3610,8 +3844,13 @@
   },
   "E13-T02": {
     "blockedby_done": [
-      "E13-K01",
-      "E12"
+      "E12-T01",
+      "E12-T02",
+      "E12-T03",
+      "E12-T05",
+      "E12-T06",
+      "E12-X01",
+      "E13-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eyz8",
@@ -3825,7 +4064,11 @@
   },
   "E14-K01": {
     "blockedby_done": [
-      "E11"
+      "E11-K01",
+      "E11-T01",
+      "E11-T02",
+      "E11-T03",
+      "E11-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8exj8",
@@ -4034,7 +4277,11 @@
   },
   "E14-T01": {
     "blockedby_done": [
-      "E09"
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8exk4",
@@ -4055,7 +4302,11 @@
   },
   "E14-T03": {
     "blockedby_done": [
-      "E11"
+      "E11-K01",
+      "E11-T01",
+      "E11-T02",
+      "E11-T03",
+      "E11-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8exmA",
@@ -4316,7 +4567,11 @@
   },
   "E15-K01": {
     "blockedby_done": [
-      "E11"
+      "E11-K01",
+      "E11-T01",
+      "E11-T02",
+      "E11-T03",
+      "E11-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8ex0k",
@@ -4431,9 +4686,16 @@
   },
   "E15-S01": {
     "blockedby_done": [
-      "E15-T02",
+      "E05-T01",
+      "E05-T02",
+      "E05-T03",
+      "E05-T04",
+      "E05-T05",
+      "E05-T06",
+      "E05-T07",
+      "E05-X02",
       "E15-K01",
-      "E05"
+      "E15-T02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eyZ8",
@@ -4443,9 +4705,20 @@
   },
   "E15-S02": {
     "blockedby_done": [
-      "E15-T02",
-      "E10",
-      "E05"
+      "E05-T01",
+      "E05-T02",
+      "E05-T03",
+      "E05-T04",
+      "E05-T05",
+      "E05-T06",
+      "E05-T07",
+      "E05-X02",
+      "E10-T01",
+      "E10-T02",
+      "E10-T04",
+      "E10-X01",
+      "E10-X02",
+      "E15-T02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eyac",
@@ -4455,10 +4728,14 @@
   },
   "E15-S03": {
     "blockedby_done": [
+      "E13-T01",
+      "E13-T02",
+      "E13-T03",
+      "E13-X01",
+      "E14-T02",
+      "E14-X01",
       "E15-T01",
-      "E15-T02",
-      "E13",
-      "E14"
+      "E15-T02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eya0",
@@ -4468,8 +4745,15 @@
   },
   "E15-S04": {
     "blockedby_done": [
-      "E15-T03",
-      "E05"
+      "E05-T01",
+      "E05-T02",
+      "E05-T03",
+      "E05-T04",
+      "E05-T05",
+      "E05-T06",
+      "E05-T07",
+      "E05-X02",
+      "E15-T03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eybA",
@@ -4479,8 +4763,8 @@
   },
   "E15-S05": {
     "blockedby_done": [
-      "E15-S04",
-      "E11"
+      "E11-T06",
+      "E15-S04"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eyb8",
@@ -4490,11 +4774,18 @@
   },
   "E15-S06": {
     "blockedby_done": [
-      "E15-T02",
-      "E15-T03",
+      "E05-T01",
+      "E05-T02",
+      "E05-T03",
+      "E05-T04",
+      "E05-T05",
+      "E05-T06",
+      "E05-T07",
+      "E05-X02",
+      "E11-T06",
       "E15-K01",
-      "E11",
-      "E05"
+      "E15-T02",
+      "E15-T03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eycA",
@@ -4526,7 +4817,11 @@
   },
   "E15-T01": {
     "blockedby_done": [
-      "E09"
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eyaE",
@@ -4536,9 +4831,17 @@
   },
   "E15-T02": {
     "blockedby_done": [
-      "E15-K01",
-      "E11",
-      "E10"
+      "E10-T01",
+      "E10-T02",
+      "E10-T04",
+      "E10-X01",
+      "E10-X02",
+      "E11-K01",
+      "E11-T01",
+      "E11-T02",
+      "E11-T03",
+      "E11-X01",
+      "E15-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eyaM",
@@ -4548,8 +4851,15 @@
   },
   "E15-T03": {
     "blockedby_done": [
-      "E15-T02",
-      "E11"
+      "E11-K01",
+      "E11-T01",
+      "E11-T02",
+      "E11-T03",
+      "E11-T04",
+      "E11-T08",
+      "E11-X01",
+      "E11-X02",
+      "E15-T02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eyak",
@@ -4617,7 +4927,10 @@
   },
   "E16-D01": {
     "blockedby_done": [
-      "E05"
+      "E05-T01",
+      "E05-T05",
+      "E05-T07",
+      "E05-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8ew5w",
@@ -4627,8 +4940,11 @@
   },
   "E16-D02": {
     "blockedby_done": [
-      "E16-D01",
-      "E05"
+      "E05-T01",
+      "E05-T05",
+      "E05-T07",
+      "E05-X01",
+      "E16-D01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8ew7o",
@@ -4691,8 +5007,13 @@
   },
   "E16-K01": {
     "blockedby_done": [
-      "E07",
-      "E08"
+      "E07-T05",
+      "E07-X02",
+      "E08-T04",
+      "E08-T05",
+      "E08-T06",
+      "E08-X02",
+      "E08-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eyfc",
@@ -4777,10 +5098,18 @@
   },
   "E16-S01": {
     "blockedby_done": [
-      "E16-T08",
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04",
+      "E10-T01",
+      "E10-T02",
+      "E10-T04",
+      "E10-X01",
+      "E10-X02",
       "E16-D06",
-      "E10",
-      "E09"
+      "E16-T08"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eygI",
@@ -4826,9 +5155,16 @@
   },
   "E16-S05": {
     "blockedby_done": [
-      "E16-T04",
+      "E11-K01",
+      "E11-T01",
+      "E11-T02",
+      "E11-T03",
+      "E11-T04",
+      "E11-T08",
+      "E11-X01",
+      "E11-X02",
       "E16-D05",
-      "E11"
+      "E16-T04"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eygg",
@@ -4838,7 +5174,8 @@
   },
   "E16-T01": {
     "blockedby_done": [
-      "E07"
+      "E07-T05",
+      "E07-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8ex5M",
@@ -4848,10 +5185,14 @@
   },
   "E16-T02": {
     "blockedby_done": [
+      "E08-T04",
+      "E08-T05",
+      "E08-T06",
+      "E08-X02",
+      "E08-X03",
       "E16-T01",
-      "E08",
-      "E50-T59",
-      "E50-S01"
+      "E50-S01",
+      "E50-T59"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eyhU",
@@ -4861,8 +5202,9 @@
   },
   "E16-T03": {
     "blockedby_done": [
-      "E16-T02",
-      "E07"
+      "E07-T05",
+      "E07-X02",
+      "E16-T02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eyhY",
@@ -4885,8 +5227,9 @@
   },
   "E16-T05": {
     "blockedby_done": [
-      "E16-T03",
-      "E07"
+      "E07-T05",
+      "E07-X02",
+      "E16-T03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eygw",
@@ -4921,7 +5264,14 @@
       "E16-T04",
       "E16-T06",
       "E16-T07",
-      "E17"
+      "E17-K01",
+      "E17-T01",
+      "E17-T02",
+      "E17-T03",
+      "E17-T04",
+      "E17-T08",
+      "E17-X01",
+      "E17-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eyhA",
@@ -4988,7 +5338,7 @@
   },
   "E17-D01": {
     "blockedby_done": [
-      "E05"
+      "E05-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8etZs",
@@ -4998,8 +5348,11 @@
   },
   "E17-D02": {
     "blockedby_done": [
-      "E17-D01",
-      "E05"
+      "E05-T01",
+      "E05-T05",
+      "E05-T07",
+      "E05-X01",
+      "E17-D01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8etaw",
@@ -5009,7 +5362,7 @@
   },
   "E17-D03": {
     "blockedby_done": [
-      "E05"
+      "E05-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8etZw",
@@ -5030,8 +5383,19 @@
   },
   "E17-K01": {
     "blockedby_done": [
-      "E08",
-      "E02"
+      "E02-K01",
+      "E02-T01",
+      "E02-T02",
+      "E02-T03",
+      "E02-T04",
+      "E02-T05",
+      "E02-T10",
+      "E02-X02",
+      "E08-T04",
+      "E08-T05",
+      "E08-T06",
+      "E08-X02",
+      "E08-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8etZ4",
@@ -5086,8 +5450,12 @@
   },
   "E17-S01": {
     "blockedby_done": [
-      "E17-T01",
-      "E09"
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04",
+      "E17-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8etZ8",
@@ -5171,8 +5539,9 @@
   },
   "E17-T06": {
     "blockedby_done": [
-      "E17-T03",
-      "E04"
+      "E04-T06",
+      "E04-X02",
+      "E17-T03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8etb8",
@@ -5242,7 +5611,12 @@
   },
   "E18-D01": {
     "blockedby_done": [
-      "E12"
+      "E12-T01",
+      "E12-T02",
+      "E12-T03",
+      "E12-T05",
+      "E12-T06",
+      "E12-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e0BY",
@@ -5305,8 +5679,17 @@
   },
   "E18-K01": {
     "blockedby_done": [
-      "E06",
-      "E11"
+      "E06-K03",
+      "E06-K04",
+      "E06-T01",
+      "E06-T02",
+      "E06-T03",
+      "E06-X02",
+      "E11-T05",
+      "E11-T06",
+      "E11-T07",
+      "E11-T09",
+      "E11-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e1j0",
@@ -5379,11 +5762,15 @@
   },
   "E18-S01": {
     "blockedby_done": [
-      "E18-T03",
-      "E18-T04",
-      "E18-K01",
+      "E11-T05",
+      "E11-T06",
+      "E11-T07",
+      "E11-T09",
+      "E11-X03",
       "E18-D05",
-      "E11"
+      "E18-K01",
+      "E18-T03",
+      "E18-T04"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e1kI",
@@ -5499,8 +5886,21 @@
   },
   "E18-T01": {
     "blockedby_done": [
-      "E12",
-      "E16"
+      "E12-K01",
+      "E12-K02",
+      "E12-T04",
+      "E12-T07",
+      "E12-X02",
+      "E12-X03",
+      "E12-X04",
+      "E16-K01",
+      "E16-T04",
+      "E16-T05",
+      "E16-T06",
+      "E16-T07",
+      "E16-T08",
+      "E16-T09",
+      "E16-T10"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e1ks",
@@ -5531,8 +5931,10 @@
   },
   "E18-T04": {
     "blockedby_done": [
-      "E18-T02",
-      "E17"
+      "E17-T05",
+      "E17-T06",
+      "E17-T07",
+      "E18-T02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e1lA",
@@ -5542,8 +5944,15 @@
   },
   "E18-T05": {
     "blockedby_done": [
-      "E18-T01",
-      "E16"
+      "E16-K01",
+      "E16-T04",
+      "E16-T05",
+      "E16-T06",
+      "E16-T07",
+      "E16-T08",
+      "E16-T09",
+      "E16-T10",
+      "E18-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e1lE",
@@ -5576,8 +5985,16 @@
   },
   "E18-X01": {
     "blockedby_done": [
-      "E12",
-      "E17"
+      "E12-K01",
+      "E12-K02",
+      "E12-T04",
+      "E12-T07",
+      "E12-X02",
+      "E12-X03",
+      "E12-X04",
+      "E17-T05",
+      "E17-T06",
+      "E17-T07"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e1lM",
@@ -5624,7 +6041,14 @@
   },
   "E19-D01": {
     "blockedby_done": [
-      "E05"
+      "E05-T01",
+      "E05-T02",
+      "E05-T03",
+      "E05-T04",
+      "E05-T05",
+      "E05-T06",
+      "E05-T07",
+      "E05-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8ex_0",
@@ -5634,8 +6058,15 @@
   },
   "E19-D02": {
     "blockedby_done": [
-      "E19-D01",
-      "E05"
+      "E05-T01",
+      "E05-T02",
+      "E05-T03",
+      "E05-T04",
+      "E05-T05",
+      "E05-T06",
+      "E05-T07",
+      "E05-X02",
+      "E19-D01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eytc",
@@ -5707,7 +6138,13 @@
   },
   "E19-K01": {
     "blockedby_done": [
-      "E18"
+      "E18-K01",
+      "E18-T01",
+      "E18-T02",
+      "E18-T03",
+      "E18-T04",
+      "E18-T05",
+      "E18-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e1x4",
@@ -5842,8 +6279,15 @@
   },
   "E19-S03": {
     "blockedby_done": [
-      "E19-S02",
-      "E16"
+      "E16-K01",
+      "E16-T04",
+      "E16-T05",
+      "E16-T06",
+      "E16-T07",
+      "E16-T08",
+      "E16-T09",
+      "E16-T10",
+      "E19-S02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e12M",
@@ -5914,9 +6358,22 @@
   },
   "E19-T01": {
     "blockedby_done": [
-      "E19-K01",
-      "E18",
-      "E16"
+      "E16-K01",
+      "E16-T04",
+      "E16-T05",
+      "E16-T06",
+      "E16-T07",
+      "E16-T08",
+      "E16-T09",
+      "E16-T10",
+      "E18-K01",
+      "E18-T01",
+      "E18-T02",
+      "E18-T03",
+      "E18-T04",
+      "E18-T05",
+      "E18-X01",
+      "E19-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e1yE",
@@ -5936,8 +6393,10 @@
   },
   "E19-T03": {
     "blockedby_done": [
-      "E19-T02",
-      "E17"
+      "E17-T05",
+      "E17-T06",
+      "E17-T07",
+      "E19-T02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e1yU",
@@ -5947,8 +6406,14 @@
   },
   "E19-T04": {
     "blockedby_done": [
-      "E19-T01",
-      "E12"
+      "E12-K01",
+      "E12-K02",
+      "E12-T04",
+      "E12-T07",
+      "E12-X02",
+      "E12-X03",
+      "E12-X04",
+      "E19-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e10A",
@@ -6291,7 +6756,14 @@
   },
   "E21-D01": {
     "blockedby_done": [
-      "E05"
+      "E05-T01",
+      "E05-T02",
+      "E05-T03",
+      "E05-T04",
+      "E05-T05",
+      "E05-T06",
+      "E05-T07",
+      "E05-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8eyus",
@@ -6301,8 +6773,15 @@
   },
   "E21-D02": {
     "blockedby_done": [
-      "E21-D01",
-      "E05"
+      "E05-T01",
+      "E05-T02",
+      "E05-T03",
+      "E05-T04",
+      "E05-T05",
+      "E05-T06",
+      "E05-T07",
+      "E05-X02",
+      "E21-D01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8ezHg",
@@ -6382,8 +6861,17 @@
   },
   "E21-K01": {
     "blockedby_done": [
-      "E11",
-      "E06"
+      "E06-K03",
+      "E06-K04",
+      "E06-T01",
+      "E06-T02",
+      "E06-T03",
+      "E06-X02",
+      "E11-T05",
+      "E11-T06",
+      "E11-T07",
+      "E11-T09",
+      "E11-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e1_o",
@@ -6483,9 +6971,13 @@
   },
   "E21-S01": {
     "blockedby_done": [
-      "E21-T01",
+      "E11-T05",
+      "E11-T06",
+      "E11-T07",
+      "E11-T09",
+      "E11-X03",
       "E21-D07",
-      "E11"
+      "E21-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e1-k",
@@ -6589,8 +7081,14 @@
   },
   "E21-T01": {
     "blockedby_done": [
-      "E08",
-      "E17"
+      "E08-T04",
+      "E08-T05",
+      "E08-T06",
+      "E08-X02",
+      "E08-X03",
+      "E17-T05",
+      "E17-T06",
+      "E17-T07"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e2AA",
@@ -6600,9 +7098,18 @@
   },
   "E21-T02": {
     "blockedby_done": [
-      "E21-T01",
-      "E17",
-      "E16"
+      "E16-K01",
+      "E16-T04",
+      "E16-T05",
+      "E16-T06",
+      "E16-T07",
+      "E16-T08",
+      "E16-T09",
+      "E16-T10",
+      "E17-T05",
+      "E17-T06",
+      "E17-T07",
+      "E21-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e2AM",
@@ -6612,8 +7119,15 @@
   },
   "E21-T03": {
     "blockedby_done": [
-      "E21-T02",
-      "E16"
+      "E16-K01",
+      "E16-T04",
+      "E16-T05",
+      "E16-T06",
+      "E16-T07",
+      "E16-T08",
+      "E16-T09",
+      "E16-T10",
+      "E21-T02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e2AQ",
@@ -6633,7 +7147,11 @@
   },
   "E21-T05": {
     "blockedby_done": [
-      "E11",
+      "E11-T05",
+      "E11-T06",
+      "E11-T07",
+      "E11-T09",
+      "E11-X03",
       "E21-K01",
       "E21-T02"
     ],
@@ -6667,8 +7185,14 @@
   },
   "E21-X01": {
     "blockedby_done": [
-      "E17",
-      "E08"
+      "E08-T04",
+      "E08-T05",
+      "E08-T06",
+      "E08-X02",
+      "E08-X03",
+      "E17-T05",
+      "E17-T06",
+      "E17-T07"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e2AY",
@@ -6717,7 +7241,11 @@
   },
   "E22-D01": {
     "blockedby_done": [
-      "E08"
+      "E08-T04",
+      "E08-T05",
+      "E08-T06",
+      "E08-X02",
+      "E08-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8ezIg",
@@ -6780,7 +7308,11 @@
   },
   "E22-K01": {
     "blockedby_done": [
-      "E11"
+      "E11-T05",
+      "E11-T06",
+      "E11-T07",
+      "E11-T09",
+      "E11-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e2F8",
@@ -6912,7 +7444,8 @@
   "E22-S06": {
     "blockedby_done": [
       "E22-S02",
-      "E40"
+      "E40-T05",
+      "E40-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e4j8",
@@ -6922,7 +7455,11 @@
   },
   "E22-T01": {
     "blockedby_done": [
-      "E08",
+      "E08-T04",
+      "E08-T05",
+      "E08-T06",
+      "E08-X02",
+      "E08-X03",
       "E22-X01"
     ],
     "fields_done": true,
@@ -6933,8 +7470,10 @@
   },
   "E22-T02": {
     "blockedby_done": [
-      "E22-T01",
-      "E17"
+      "E17-T05",
+      "E17-T06",
+      "E17-T07",
+      "E22-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3Iw",
@@ -6966,7 +7505,11 @@
   },
   "E22-X01": {
     "blockedby_done": [
-      "E08"
+      "E08-T04",
+      "E08-T05",
+      "E08-T06",
+      "E08-X02",
+      "E08-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e2HU",
@@ -7003,7 +7546,13 @@
   },
   "E23-D01": {
     "blockedby_done": [
-      "E18"
+      "E18-K01",
+      "E18-T01",
+      "E18-T02",
+      "E18-T03",
+      "E18-T04",
+      "E18-T05",
+      "E18-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e2Ik",
@@ -7066,9 +7615,23 @@
   },
   "E23-K01": {
     "blockedby_done": [
-      "E07",
-      "E16",
-      "E18"
+      "E07-T05",
+      "E07-X02",
+      "E16-K01",
+      "E16-T04",
+      "E16-T05",
+      "E16-T06",
+      "E16-T07",
+      "E16-T08",
+      "E16-T09",
+      "E16-T10",
+      "E18-K01",
+      "E18-T01",
+      "E18-T02",
+      "E18-T03",
+      "E18-T04",
+      "E18-T05",
+      "E18-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e2NU",
@@ -7152,9 +7715,13 @@
   },
   "E23-S01": {
     "blockedby_done": [
-      "E23-T02",
+      "E11-T05",
+      "E11-T06",
+      "E11-T07",
+      "E11-T09",
+      "E11-X03",
       "E23-D05",
-      "E11"
+      "E23-T02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e4wQ",
@@ -7198,10 +7765,11 @@
   },
   "E23-S05": {
     "blockedby_done": [
+      "E13-T04",
+      "E13-X02",
+      "E23-D05",
       "E23-S02",
-      "E23-S04",
-      "E13",
-      "E23-D05"
+      "E23-S04"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e4wo",
@@ -7222,8 +7790,20 @@
   },
   "E23-T01": {
     "blockedby_done": [
-      "E18",
-      "E12",
+      "E12-K01",
+      "E12-K02",
+      "E12-T04",
+      "E12-T07",
+      "E12-X02",
+      "E12-X03",
+      "E12-X04",
+      "E18-K01",
+      "E18-T01",
+      "E18-T02",
+      "E18-T03",
+      "E18-T04",
+      "E18-T05",
+      "E18-X01",
       "E23-K01",
       "E23-X01"
     ],
@@ -7235,8 +7815,10 @@
   },
   "E23-T02": {
     "blockedby_done": [
-      "E23-T01",
-      "E17"
+      "E17-T05",
+      "E17-T06",
+      "E17-T07",
+      "E23-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3Os",
@@ -7246,9 +7828,18 @@
   },
   "E23-T03": {
     "blockedby_done": [
-      "E23-T01",
-      "E16",
-      "E17"
+      "E16-K01",
+      "E16-T04",
+      "E16-T05",
+      "E16-T06",
+      "E16-T07",
+      "E16-T08",
+      "E16-T09",
+      "E16-T10",
+      "E17-T05",
+      "E17-T06",
+      "E17-T07",
+      "E23-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3QY",
@@ -7293,8 +7884,16 @@
   },
   "E23-X01": {
     "blockedby_done": [
-      "E17",
-      "E18"
+      "E17-T05",
+      "E17-T06",
+      "E17-T07",
+      "E18-K01",
+      "E18-T01",
+      "E18-T02",
+      "E18-T03",
+      "E18-T04",
+      "E18-T05",
+      "E18-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e2O4",
@@ -7544,9 +8143,20 @@
   },
   "E24-T01": {
     "blockedby_done": [
-      "E24-X01",
-      "E08",
-      "E16"
+      "E08-T04",
+      "E08-T05",
+      "E08-T06",
+      "E08-X02",
+      "E08-X03",
+      "E16-K01",
+      "E16-T04",
+      "E16-T05",
+      "E16-T06",
+      "E16-T07",
+      "E16-T08",
+      "E16-T09",
+      "E16-T10",
+      "E24-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3Zc",
@@ -7556,8 +8166,12 @@
   },
   "E24-T02": {
     "blockedby_done": [
-      "E24-X01",
-      "E08"
+      "E08-T04",
+      "E08-T05",
+      "E08-T06",
+      "E08-X02",
+      "E08-X03",
+      "E24-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3a8",
@@ -7567,10 +8181,23 @@
   },
   "E24-T03": {
     "blockedby_done": [
-      "E24-X01",
-      "E08",
-      "E16",
-      "E17"
+      "E08-T04",
+      "E08-T05",
+      "E08-T06",
+      "E08-X02",
+      "E08-X03",
+      "E16-K01",
+      "E16-T04",
+      "E16-T05",
+      "E16-T06",
+      "E16-T07",
+      "E16-T08",
+      "E16-T09",
+      "E16-T10",
+      "E17-T05",
+      "E17-T06",
+      "E17-T07",
+      "E24-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3co",
@@ -7732,8 +8359,19 @@
   },
   "E25-K01": {
     "blockedby_done": [
-      "E16",
-      "E21"
+      "E16-K01",
+      "E16-T04",
+      "E16-T05",
+      "E16-T06",
+      "E16-T07",
+      "E16-T08",
+      "E16-T09",
+      "E16-T10",
+      "E21-K01",
+      "E21-T01",
+      "E21-T02",
+      "E21-T03",
+      "E21-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e2X4",
@@ -7874,8 +8512,19 @@
   },
   "E25-T01": {
     "blockedby_done": [
-      "E08",
-      "E21"
+      "E08-T04",
+      "E08-T05",
+      "E08-T06",
+      "E08-X02",
+      "E08-X03",
+      "E21-K01",
+      "E21-T01",
+      "E21-T02",
+      "E21-T03",
+      "E21-T05",
+      "E21-T06",
+      "E21-X01",
+      "E21-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3e0",
@@ -7896,9 +8545,16 @@
   },
   "E25-T03": {
     "blockedby_done": [
-      "E25-T02",
+      "E18-K01",
+      "E18-T01",
+      "E18-T02",
+      "E18-T03",
+      "E18-T04",
+      "E18-T05",
+      "E18-T06",
+      "E18-T07",
       "E25-K01",
-      "E18"
+      "E25-T02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3fI",
@@ -7908,9 +8564,14 @@
   },
   "E25-T04": {
     "blockedby_done": [
-      "E25-T02",
+      "E21-T04",
+      "E21-T05",
+      "E21-T06",
+      "E21-T07",
+      "E21-X02",
+      "E21-X03",
       "E25-K01",
-      "E21"
+      "E25-T02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3g0",
@@ -7920,8 +8581,13 @@
   },
   "E25-T05": {
     "blockedby_done": [
-      "E25-T01",
-      "E23"
+      "E23-K01",
+      "E23-T01",
+      "E23-T02",
+      "E23-T03",
+      "E23-T06",
+      "E23-X01",
+      "E25-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3fM",
@@ -7931,8 +8597,15 @@
   },
   "E25-T06": {
     "blockedby_done": [
-      "E25-T02",
-      "E18"
+      "E18-K01",
+      "E18-T01",
+      "E18-T02",
+      "E18-T03",
+      "E18-T04",
+      "E18-T05",
+      "E18-T06",
+      "E18-T07",
+      "E25-T02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3fQ",
@@ -8073,8 +8746,9 @@
   },
   "E26-K01": {
     "blockedby_done": [
-      "E16-T05",
-      "E07"
+      "E07-T05",
+      "E07-X02",
+      "E16-T05"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e2bE",
@@ -8190,8 +8864,13 @@
   },
   "E26-S04": {
     "blockedby_done": [
-      "E26-S03",
-      "E21"
+      "E21-T04",
+      "E21-T05",
+      "E21-T06",
+      "E21-T07",
+      "E21-X02",
+      "E21-X03",
+      "E26-S03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3rQ",
@@ -8201,8 +8880,10 @@
   },
   "E26-S05": {
     "blockedby_done": [
-      "E26-S02",
-      "E15"
+      "E15-X02",
+      "E15-X03",
+      "E15-X04",
+      "E26-S02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3rc",
@@ -8212,8 +8893,12 @@
   },
   "E26-S06": {
     "blockedby_done": [
-      "E26-S02",
-      "E25"
+      "E25-T01",
+      "E25-T02",
+      "E25-T03",
+      "E25-T05",
+      "E25-T06",
+      "E26-S02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3rg",
@@ -8245,10 +8930,14 @@
   },
   "E26-T01": {
     "blockedby_done": [
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04",
       "E16-T01",
-      "E09",
-      "E50-T59",
-      "E50-S01"
+      "E50-S01",
+      "E50-T59"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e2eE",
@@ -8280,8 +8969,14 @@
   },
   "E26-T04": {
     "blockedby_done": [
-      "E26-T03",
-      "E12"
+      "E12-K01",
+      "E12-K02",
+      "E12-T04",
+      "E12-T07",
+      "E12-X02",
+      "E12-X03",
+      "E12-X04",
+      "E26-T03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e2iY",
@@ -8303,9 +8998,16 @@
   },
   "E26-T06": {
     "blockedby_done": [
-      "E26-T03",
-      "E18",
-      "E23"
+      "E18-K01",
+      "E18-T01",
+      "E18-T02",
+      "E18-T03",
+      "E18-T04",
+      "E18-T05",
+      "E18-X01",
+      "E23-K01",
+      "E23-X01",
+      "E26-T03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e2mo",
@@ -8370,7 +9072,11 @@
   },
   "E27-D01": {
     "blockedby_done": [
-      "E09"
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e5Cc",
@@ -8448,7 +9154,11 @@
   },
   "E27-K01": {
     "blockedby_done": [
-      "E09"
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e7DE",
@@ -8583,7 +9293,11 @@
   },
   "E27-T01": {
     "blockedby_done": [
-      "E09"
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e7DU",
@@ -8637,8 +9351,12 @@
   },
   "E27-X01": {
     "blockedby_done": [
-      "E27-K01",
-      "E09"
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04",
+      "E27-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e7D4",
@@ -8899,7 +9617,12 @@
   },
   "E28-T01": {
     "blockedby_done": [
-      "E27",
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T04",
+      "E27-X01",
       "E28-X01"
     ],
     "fields_done": true,
@@ -8910,8 +9633,13 @@
   },
   "E28-T02": {
     "blockedby_done": [
-      "E28-T01",
-      "E27"
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T04",
+      "E27-X01",
+      "E28-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e8fM",
@@ -8933,7 +9661,12 @@
   "E28-T04": {
     "blockedby_done": [
       "E28-T03",
-      "E29"
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T05",
+      "E29-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e8fc",
@@ -9023,9 +9756,7 @@
     "subissue_done": false
   },
   "E29-D01": {
-    "blockedby_done": [
-      "E27"
-    ],
+    "blockedby_done": [],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e5FI",
     "node_id": "I_kwDOUZDkl88AAAABS4X9GQ",
@@ -9100,8 +9831,17 @@
   },
   "E29-K01": {
     "blockedby_done": [
-      "E08",
-      "E27"
+      "E08-T04",
+      "E08-T05",
+      "E08-T06",
+      "E08-X02",
+      "E08-X03",
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T04",
+      "E27-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e7SI",
@@ -9230,9 +9970,19 @@
   },
   "E29-S05": {
     "blockedby_done": [
-      "E29-S04",
-      "E11",
-      "E12"
+      "E11-T05",
+      "E11-T06",
+      "E11-T07",
+      "E11-T09",
+      "E11-X03",
+      "E12-K01",
+      "E12-K02",
+      "E12-T04",
+      "E12-T07",
+      "E12-X02",
+      "E12-X03",
+      "E12-X04",
+      "E29-S04"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e7TI",
@@ -9276,7 +10026,12 @@
   },
   "E29-T01": {
     "blockedby_done": [
-      "E27"
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T04",
+      "E27-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e7SY",
@@ -9385,8 +10140,13 @@
   },
   "E29-X01": {
     "blockedby_done": [
-      "E29-K01",
-      "E27"
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T04",
+      "E27-X01",
+      "E29-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e7Ss",
@@ -9432,10 +10192,7 @@
     "subissue_done": false
   },
   "E30-D01": {
-    "blockedby_done": [
-      "E27",
-      "E28"
-    ],
+    "blockedby_done": [],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e658",
     "node_id": "I_kwDOUZDkl88AAAABS4awHA",
@@ -9508,8 +10265,14 @@
   },
   "E30-K01": {
     "blockedby_done": [
-      "E29",
-      "E13"
+      "E13-T04",
+      "E13-X02",
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T05",
+      "E29-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e7dw",
@@ -9519,8 +10282,15 @@
   },
   "E30-Q01": {
     "blockedby_done": [
-      "E30-D06",
-      "E29"
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T04",
+      "E29-T06",
+      "E29-T07",
+      "E29-T08",
+      "E30-D06"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e-Ns",
@@ -9553,9 +10323,10 @@
   },
   "E30-Q04": {
     "blockedby_done": [
+      "E29-T09",
+      "E29-X02",
       "E30-S04",
-      "E30-S06",
-      "E29"
+      "E30-S06"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e-Q4",
@@ -9592,9 +10363,13 @@
   },
   "E30-S01": {
     "blockedby_done": [
-      "E30-T01",
+      "E29-T04",
+      "E29-T06",
+      "E29-T07",
+      "E29-T08",
+      "E29-X02",
       "E30-D06",
-      "E29"
+      "E30-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e-PA",
@@ -9604,9 +10379,16 @@
   },
   "E30-S02": {
     "blockedby_done": [
+      "E28-K01",
+      "E28-T01",
+      "E28-T02",
+      "E28-T03",
+      "E28-T04",
+      "E28-T05",
+      "E28-X02",
+      "E28-X03",
       "E30-S01",
-      "E30-T01",
-      "E28"
+      "E30-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e-PE",
@@ -9616,10 +10398,16 @@
   },
   "E30-S03": {
     "blockedby_done": [
+      "E28-K01",
+      "E28-T06",
+      "E28-X02",
+      "E28-X03",
       "E30-S02",
       "E30-T01",
-      "E32",
-      "E28"
+      "E32-T01",
+      "E32-T02",
+      "E32-T03",
+      "E32-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e-PU",
@@ -9631,7 +10419,7 @@
     "blockedby_done": [
       "E30-S01",
       "E30-X01",
-      "E39"
+      "E39-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e-Pw",
@@ -9641,9 +10429,10 @@
   },
   "E30-S05": {
     "blockedby_done": [
-      "E30-S04",
+      "E13-T04",
+      "E13-X02",
       "E30-S02",
-      "E13"
+      "E30-S04"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e-QA",
@@ -9653,9 +10442,13 @@
   },
   "E30-S06": {
     "blockedby_done": [
+      "E28-K01",
+      "E28-T06",
+      "E28-X02",
+      "E28-X03",
       "E30-S03",
-      "E28",
-      "E34"
+      "E34-T01",
+      "E34-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e-QE",
@@ -9676,9 +10469,21 @@
   },
   "E30-T01": {
     "blockedby_done": [
-      "E30-K01",
-      "E29",
-      "E28"
+      "E28-T01",
+      "E28-T02",
+      "E28-T03",
+      "E28-T04",
+      "E28-T05",
+      "E28-X01",
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T04",
+      "E29-T06",
+      "E29-T07",
+      "E29-T08",
+      "E30-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e-O4",
@@ -9688,8 +10493,12 @@
   },
   "E30-T02": {
     "blockedby_done": [
-      "E30-S01",
-      "E29"
+      "E29-T04",
+      "E29-T06",
+      "E29-T07",
+      "E29-T08",
+      "E29-X02",
+      "E30-S01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e-PI",
@@ -9711,8 +10520,13 @@
   },
   "E30-X01": {
     "blockedby_done": [
-      "E30-D03",
-      "E29"
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T05",
+      "E29-X01",
+      "E30-D03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e804",
@@ -9763,7 +10577,12 @@
   },
   "E31-D01": {
     "blockedby_done": [
-      "E21"
+      "E21-T04",
+      "E21-T05",
+      "E21-T06",
+      "E21-T07",
+      "E21-X02",
+      "E21-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e7eU",
@@ -9805,8 +10624,17 @@
   },
   "E31-K01": {
     "blockedby_done": [
-      "E11",
-      "E21"
+      "E11-T05",
+      "E11-T06",
+      "E11-T07",
+      "E11-T09",
+      "E11-X03",
+      "E21-T04",
+      "E21-T05",
+      "E21-T06",
+      "E21-T07",
+      "E21-X02",
+      "E21-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e7gA",
@@ -9854,9 +10682,13 @@
   },
   "E31-S02": {
     "blockedby_done": [
+      "E30-T01",
+      "E30-X01",
       "E31-S01",
-      "E30",
-      "E32"
+      "E32-T01",
+      "E32-T02",
+      "E32-T03",
+      "E32-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e_h4",
@@ -9877,9 +10709,14 @@
   },
   "E31-S04": {
     "blockedby_done": [
-      "E31-T01",
+      "E21-T04",
+      "E21-T05",
+      "E21-T06",
+      "E21-T07",
+      "E21-X02",
+      "E21-X03",
       "E31-D03",
-      "E21"
+      "E31-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e_iI",
@@ -9900,11 +10737,15 @@
   },
   "E31-S06": {
     "blockedby_done": [
-      "E31-T01",
+      "E30-T01",
+      "E30-T02",
       "E31-D03",
-      "E30",
-      "E32",
-      "E39"
+      "E31-T01",
+      "E32-T01",
+      "E32-T02",
+      "E32-T03",
+      "E32-X01",
+      "E39-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e_ik",
@@ -9914,10 +10755,18 @@
   },
   "E31-T01": {
     "blockedby_done": [
+      "E29-T04",
+      "E29-T06",
+      "E29-T07",
+      "E29-T08",
+      "E29-X02",
+      "E31-D03",
       "E31-K01",
-      "E29",
-      "E39",
-      "E31-D03"
+      "E39-K01",
+      "E39-T01",
+      "E39-T02",
+      "E39-T03",
+      "E39-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e_ig",
@@ -9940,10 +10789,11 @@
   },
   "E31-X01": {
     "blockedby_done": [
-      "E29",
-      "E39",
+      "E29-T09",
+      "E29-X02",
+      "E31-D03",
       "E31-K01",
-      "E31-D03"
+      "E39-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e_jQ",
@@ -10066,8 +10916,18 @@
   },
   "E32-K01": {
     "blockedby_done": [
-      "E27",
-      "E29"
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T04",
+      "E27-X01",
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T05",
+      "E29-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e7ik",
@@ -10164,7 +11024,12 @@
   },
   "E32-S01": {
     "blockedby_done": [
-      "E29",
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T05",
+      "E29-X01",
       "E32-T01",
       "E50-S01",
       "E50-S02",
@@ -10189,9 +11054,13 @@
   },
   "E32-S03": {
     "blockedby_done": [
-      "E32-T01",
-      "E29",
-      "E28"
+      "E28-K01",
+      "E28-T06",
+      "E28-X02",
+      "E28-X03",
+      "E29-T09",
+      "E29-X02",
+      "E32-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e-TE",
@@ -10201,8 +11070,13 @@
   },
   "E32-S04": {
     "blockedby_done": [
-      "E32-T01",
-      "E29"
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T05",
+      "E29-X01",
+      "E32-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e9CQ",
@@ -10212,9 +11086,10 @@
   },
   "E32-S05": {
     "blockedby_done": [
-      "E32-S01",
+      "E30-T01",
+      "E30-X01",
       "E32-D07",
-      "E30"
+      "E32-S01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e-S8",
@@ -10224,9 +11099,10 @@
   },
   "E32-S06": {
     "blockedby_done": [
-      "E32-S03",
+      "E30-T01",
+      "E30-T02",
       "E32-D07",
-      "E30"
+      "E32-S03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e-TI",
@@ -10236,11 +11112,12 @@
   },
   "E32-S07": {
     "blockedby_done": [
+      "E30-T01",
+      "E30-X01",
+      "E32-D07",
       "E32-S02",
       "E32-S04",
-      "E32-T03",
-      "E32-D07",
-      "E30"
+      "E32-T03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e-TA",
@@ -10250,11 +11127,24 @@
   },
   "E32-T01": {
     "blockedby_done": [
-      "E28",
-      "E29",
+      "E28-T01",
+      "E28-T02",
+      "E28-T03",
+      "E28-T04",
+      "E28-T05",
+      "E28-X01",
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T05",
+      "E29-X01",
       "E32-K01",
       "E32-X01",
-      "E39",
+      "E39-K01",
+      "E39-T01",
+      "E39-T02",
+      "E39-X01",
       "E50-S02",
       "E50-T59"
     ],
@@ -10302,7 +11192,12 @@
   },
   "E32-X01": {
     "blockedby_done": [
-      "E29"
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T05",
+      "E29-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e9G8",
@@ -10419,7 +11314,14 @@
   },
   "E33-K01": {
     "blockedby_done": [
-      "E29"
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T04",
+      "E29-T06",
+      "E29-T07",
+      "E29-T08"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e-ck",
@@ -10570,10 +11472,17 @@
   },
   "E33-T01": {
     "blockedby_done": [
-      "E32",
+      "E32-K01",
+      "E32-T01",
+      "E32-T02",
+      "E32-X01",
       "E33-K01",
       "E33-X01",
-      "E39",
+      "E39-K01",
+      "E39-T01",
+      "E39-T02",
+      "E39-T03",
+      "E39-X01",
       "E50-S01",
       "E50-T49",
       "E50-T59"
@@ -10656,7 +11565,12 @@
   },
   "E34-D01": {
     "blockedby_done": [
-      "E28"
+      "E28-T01",
+      "E28-T02",
+      "E28-T03",
+      "E28-T04",
+      "E28-T05",
+      "E28-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e9N4",
@@ -10718,8 +11632,18 @@
   },
   "E34-K01": {
     "blockedby_done": [
-      "E27",
-      "E29"
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T04",
+      "E27-X01",
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T05",
+      "E29-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e7k8",
@@ -10729,8 +11653,15 @@
   },
   "E34-Q01": {
     "blockedby_done": [
-      "E34-D05",
-      "E28"
+      "E28-K01",
+      "E28-T01",
+      "E28-T02",
+      "E28-T03",
+      "E28-T04",
+      "E28-T05",
+      "E28-X02",
+      "E28-X03",
+      "E34-D05"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e9Ow",
@@ -10801,9 +11732,17 @@
   },
   "E34-S01": {
     "blockedby_done": [
-      "E34-T01",
-      "E28",
-      "E32"
+      "E28-T01",
+      "E28-T02",
+      "E28-T03",
+      "E28-T04",
+      "E28-T05",
+      "E28-X01",
+      "E32-K01",
+      "E32-T01",
+      "E32-T02",
+      "E32-X01",
+      "E34-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e9Oc",
@@ -10813,13 +11752,16 @@
   },
   "E34-S02": {
     "blockedby_done": [
+      "E32-T01",
+      "E32-T02",
+      "E32-T03",
+      "E32-X01",
       "E34-S01",
       "E34-T02",
       "E34-X01",
-      "E32",
-      "E39",
-      "E50-T59",
-      "E50-S01"
+      "E39-X02",
+      "E50-S01",
+      "E50-T59"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e9QE",
@@ -10842,11 +11784,12 @@
   },
   "E34-S04": {
     "blockedby_done": [
+      "E30-T01",
+      "E30-T02",
       "E34-D05",
       "E34-S01",
       "E34-S02",
-      "E34-S03",
-      "E30"
+      "E34-S03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e9Po",
@@ -10868,10 +11811,22 @@
   },
   "E34-T01": {
     "blockedby_done": [
-      "E28",
-      "E29",
-      "E50-T59",
-      "E50-S01"
+      "E28-T01",
+      "E28-T02",
+      "E28-T03",
+      "E28-T04",
+      "E28-T05",
+      "E28-X01",
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T04",
+      "E29-T06",
+      "E29-T07",
+      "E29-T08",
+      "E50-S01",
+      "E50-T59"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e9Ok",
@@ -10881,8 +11836,13 @@
   },
   "E34-T02": {
     "blockedby_done": [
-      "E34-K01",
-      "E29"
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T05",
+      "E29-X01",
+      "E34-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e7l0",
@@ -10903,9 +11863,27 @@
   },
   "E34-X01": {
     "blockedby_done": [
-      "E27",
-      "E28",
-      "E29"
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T05",
+      "E27-X02",
+      "E27-X03",
+      "E27-X04",
+      "E28-K01",
+      "E28-T01",
+      "E28-T02",
+      "E28-T03",
+      "E28-T04",
+      "E28-T05",
+      "E28-X02",
+      "E28-X03",
+      "E29-T04",
+      "E29-T06",
+      "E29-T07",
+      "E29-T08",
+      "E29-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e9O0",
@@ -11300,7 +12278,11 @@
   },
   "E36-D01": {
     "blockedby_done": [
-      "E35"
+      "E35-K01",
+      "E35-T01",
+      "E35-T02",
+      "E35-T03",
+      "E35-T04"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e71M",
@@ -11481,7 +12463,13 @@
   },
   "E36-T01": {
     "blockedby_done": [
-      "E35",
+      "E35-K01",
+      "E35-T01",
+      "E35-T02",
+      "E35-T03",
+      "E35-T04",
+      "E35-T05",
+      "E35-X01",
       "E36-D05"
     ],
     "fields_done": true,
@@ -11503,7 +12491,11 @@
   },
   "E36-X01": {
     "blockedby_done": [
-      "E35",
+      "E35-K01",
+      "E35-T01",
+      "E35-T02",
+      "E35-T03",
+      "E35-T04",
       "E36-D02"
     ],
     "fields_done": true,
@@ -11609,7 +12601,11 @@
   },
   "E37-K01": {
     "blockedby_done": [
-      "E35"
+      "E35-K01",
+      "E35-T01",
+      "E35-T02",
+      "E35-T03",
+      "E35-T04"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e76s",
@@ -11717,8 +12713,8 @@
   },
   "E37-S04": {
     "blockedby_done": [
-      "E37-S03",
-      "E36"
+      "E36-X01",
+      "E37-S03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fAOA",
@@ -11739,7 +12735,11 @@
   },
   "E37-T01": {
     "blockedby_done": [
-      "E35",
+      "E35-K01",
+      "E35-T01",
+      "E35-T02",
+      "E35-T03",
+      "E35-T04",
       "E37-K01"
     ],
     "fields_done": true,
@@ -11807,8 +12807,16 @@
   },
   "E38-D01": {
     "blockedby_done": [
-      "E30",
-      "E29"
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T04",
+      "E29-T06",
+      "E29-T07",
+      "E29-T08",
+      "E30-K01",
+      "E30-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3uA",
@@ -11885,8 +12893,18 @@
   },
   "E38-K01": {
     "blockedby_done": [
-      "E27",
-      "E29"
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T04",
+      "E27-X01",
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T05",
+      "E29-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3tk",
@@ -11974,9 +12992,23 @@
   },
   "E38-S01": {
     "blockedby_done": [
-      "E38-T01",
-      "E29",
-      "E27"
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T05",
+      "E27-X02",
+      "E27-X03",
+      "E27-X04",
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T04",
+      "E29-T06",
+      "E29-T07",
+      "E29-T08",
+      "E38-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3xI",
@@ -11986,8 +13018,12 @@
   },
   "E38-S02": {
     "blockedby_done": [
-      "E38-T02",
-      "E09"
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04",
+      "E38-T02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3xU",
@@ -11997,11 +13033,14 @@
   },
   "E38-S03": {
     "blockedby_done": [
+      "E26-T07",
+      "E26-X02",
+      "E26-X03",
+      "E29-T09",
+      "E29-X02",
       "E38-S01",
-      "E26",
-      "E29",
-      "E50-T59",
-      "E50-S02"
+      "E50-S02",
+      "E50-T59"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3vE",
@@ -12023,9 +13062,11 @@
   },
   "E38-S05": {
     "blockedby_done": [
+      "E26-T07",
+      "E26-X02",
+      "E26-X03",
       "E38-D06",
       "E38-S03",
-      "E26",
       "E41-T01",
       "E41-T03"
     ],
@@ -12049,10 +13090,16 @@
   },
   "E38-S07": {
     "blockedby_done": [
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04",
       "E38-D06",
       "E38-T02",
-      "E09",
-      "E42"
+      "E42-T06",
+      "E42-T07",
+      "E42-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3ws",
@@ -12065,7 +13112,9 @@
       "E38-D06",
       "E38-K01",
       "E38-T01",
-      "E42"
+      "E42-T06",
+      "E42-T07",
+      "E42-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3w0",
@@ -12075,9 +13124,23 @@
   },
   "E38-T01": {
     "blockedby_done": [
-      "E38-K01",
-      "E29",
-      "E27"
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T05",
+      "E27-X02",
+      "E27-X03",
+      "E27-X04",
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T04",
+      "E29-T06",
+      "E29-T07",
+      "E29-T08",
+      "E38-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3xY",
@@ -12087,9 +13150,20 @@
   },
   "E38-T02": {
     "blockedby_done": [
-      "E38-T01",
-      "E29",
-      "E09"
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04",
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T04",
+      "E29-T06",
+      "E29-T07",
+      "E29-T08",
+      "E38-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3xg",
@@ -12099,9 +13173,11 @@
   },
   "E38-T03": {
     "blockedby_done": [
-      "E38-S03",
+      "E26-T07",
+      "E26-X02",
+      "E26-X03",
       "E38-S01",
-      "E26"
+      "E38-S03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3vU",
@@ -12123,9 +13199,20 @@
   },
   "E38-X01": {
     "blockedby_done": [
-      "E38-K01",
-      "E29",
-      "E27"
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T05",
+      "E27-X02",
+      "E27-X03",
+      "E27-X04",
+      "E29-T04",
+      "E29-T06",
+      "E29-T07",
+      "E29-T08",
+      "E29-X02",
+      "E38-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e3uw",
@@ -12213,8 +13300,18 @@
   },
   "E39-K01": {
     "blockedby_done": [
-      "E29",
-      "E27"
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T04",
+      "E27-X01",
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T05",
+      "E29-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e79U",
@@ -12267,8 +13364,13 @@
   },
   "E39-S01": {
     "blockedby_done": [
-      "E39-T01",
-      "E29"
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T05",
+      "E29-X01",
+      "E39-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e9pU",
@@ -12292,12 +13394,17 @@
   },
   "E39-S03": {
     "blockedby_done": [
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T05",
+      "E29-X01",
       "E39-T01",
       "E39-T02",
-      "E29",
-      "E50-T59",
       "E50-S02",
-      "E50-T49"
+      "E50-T49",
+      "E50-T59"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e9pc",
@@ -12342,8 +13449,12 @@
   },
   "E39-T02": {
     "blockedby_done": [
-      "E27",
-      "E28"
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T04",
+      "E27-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e7_8",
@@ -12364,7 +13475,12 @@
   },
   "E39-X01": {
     "blockedby_done": [
-      "E27"
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T04",
+      "E27-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e8CA",
@@ -12428,7 +13544,11 @@
   },
   "E40-K01": {
     "blockedby_done": [
-      "E35"
+      "E35-K01",
+      "E35-T01",
+      "E35-T02",
+      "E35-T03",
+      "E35-T04"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e8Dc",
@@ -12576,7 +13696,14 @@
   },
   "E41-D01": {
     "blockedby_done": [
-      "E05"
+      "E05-T01",
+      "E05-T02",
+      "E05-T03",
+      "E05-T04",
+      "E05-T05",
+      "E05-T06",
+      "E05-T07",
+      "E05-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e_ME",
@@ -12630,7 +13757,8 @@
   },
   "E41-K01": {
     "blockedby_done": [
-      "E07"
+      "E07-T05",
+      "E07-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e9yk",
@@ -12723,8 +13851,19 @@
   },
   "E41-T01": {
     "blockedby_done": [
-      "E09",
-      "E29"
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04",
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T04",
+      "E29-T06",
+      "E29-T07",
+      "E29-T08"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e_Oc",
@@ -12734,9 +13873,17 @@
   },
   "E41-T02": {
     "blockedby_done": [
-      "E41-T01",
-      "E29",
-      "E34"
+      "E29-K01",
+      "E29-T01",
+      "E29-T02",
+      "E29-T03",
+      "E29-T04",
+      "E29-T06",
+      "E29-T07",
+      "E29-T08",
+      "E34-K01",
+      "E34-T02",
+      "E41-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e_P0",
@@ -12972,9 +14119,13 @@
   },
   "E42-S01": {
     "blockedby_done": [
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04",
       "E42-D03",
-      "E42-T01",
-      "E09"
+      "E42-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e_To",
@@ -13073,10 +14224,14 @@
   },
   "E42-T01": {
     "blockedby_done": [
-      "E09",
       "E04-T04",
-      "E27-T01",
-      "E16-T07"
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04",
+      "E16-T07",
+      "E27-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8e92s",
@@ -13086,7 +14241,11 @@
   },
   "E42-T02": {
     "blockedby_done": [
-      "E09",
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04",
       "E42-K01"
     ],
     "fields_done": true,
@@ -13097,7 +14256,11 @@
   },
   "E42-T03": {
     "blockedby_done": [
-      "E09",
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04",
       "E42-T01"
     ],
     "fields_done": true,
@@ -13108,7 +14271,11 @@
   },
   "E42-T04": {
     "blockedby_done": [
-      "E09",
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04",
       "E27-S04"
     ],
     "fields_done": true,
@@ -13204,7 +14371,9 @@
   },
   "E43-D01": {
     "blockedby_done": [
-      "E42"
+      "E42-T06",
+      "E42-T07",
+      "E42-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fB08",
@@ -13214,8 +14383,17 @@
   },
   "E43-D02": {
     "blockedby_done": [
-      "E42",
-      "E27"
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T05",
+      "E27-X02",
+      "E27-X03",
+      "E27-X04",
+      "E42-T06",
+      "E42-T07",
+      "E42-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fB2U",
@@ -13281,8 +14459,10 @@
   },
   "E43-Q04": {
     "blockedby_done": [
-      "E43-T04",
-      "E34"
+      "E34-T03",
+      "E34-X02",
+      "E34-X03",
+      "E43-T04"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fDlU",
@@ -13318,10 +14498,14 @@
   },
   "E43-S01": {
     "blockedby_done": [
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04",
+      "E42-X02",
       "E43-D01",
-      "E43-S02",
-      "E42",
-      "E09"
+      "E43-S02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fDlg",
@@ -13331,11 +14515,18 @@
   },
   "E43-S02": {
     "blockedby_done": [
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T05",
+      "E27-X02",
+      "E27-X03",
+      "E27-X04",
+      "E42-X02",
       "E43-D02",
       "E43-T04",
-      "E43-T10",
-      "E27",
-      "E42"
+      "E43-T10"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fDjQ",
@@ -13366,8 +14557,12 @@
   },
   "E43-T03": {
     "blockedby_done": [
-      "E43-X01",
-      "E09"
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04",
+      "E43-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fDjk",
@@ -13377,8 +14572,12 @@
   },
   "E43-T04": {
     "blockedby_done": [
-      "E43-X01",
-      "E09"
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04",
+      "E43-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fDjs",
@@ -13388,7 +14587,14 @@
   },
   "E43-T05": {
     "blockedby_done": [
-      "E02"
+      "E02-K01",
+      "E02-T01",
+      "E02-T02",
+      "E02-T03",
+      "E02-T04",
+      "E02-T05",
+      "E02-T10",
+      "E02-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fDj0",
@@ -13398,7 +14604,14 @@
   },
   "E43-T06": {
     "blockedby_done": [
-      "E02"
+      "E02-K01",
+      "E02-T01",
+      "E02-T02",
+      "E02-T03",
+      "E02-T04",
+      "E02-T05",
+      "E02-T10",
+      "E02-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fDj4",
@@ -13432,7 +14645,11 @@
   },
   "E43-T09": {
     "blockedby_done": [
-      "E09",
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04",
       "E43-X01"
     ],
     "fields_done": true,
@@ -13443,8 +14660,12 @@
   },
   "E43-T10": {
     "blockedby_done": [
-      "E09",
-      "E42"
+      "E09-K02",
+      "E09-T03",
+      "E09-X02",
+      "E09-X03",
+      "E09-X04",
+      "E42-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fDkI",
@@ -13477,8 +14698,10 @@
   },
   "E43-X01": {
     "blockedby_done": [
-      "E34",
-      "E42"
+      "E34-T03",
+      "E34-X02",
+      "E34-X03",
+      "E42-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fDkQ",
@@ -13526,7 +14749,14 @@
   },
   "E43-X05": {
     "blockedby_done": [
-      "E02",
+      "E02-K01",
+      "E02-T01",
+      "E02-T02",
+      "E02-T03",
+      "E02-T04",
+      "E02-T05",
+      "E02-T10",
+      "E02-X02",
       "E43-X01"
     ],
     "fields_done": true,
@@ -13537,9 +14767,16 @@
   },
   "E43-X06": {
     "blockedby_done": [
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T05",
+      "E27-X02",
+      "E27-X03",
+      "E27-X04",
       "E43-S02",
-      "E43-T09",
-      "E27"
+      "E43-T09"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fDl4",
@@ -13579,8 +14816,12 @@
   },
   "E44-D01": {
     "blockedby_done": [
-      "E42",
-      "E38"
+      "E38-T01",
+      "E38-T02",
+      "E38-X01",
+      "E42-T06",
+      "E42-T07",
+      "E42-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fB4o",
@@ -13715,9 +14956,19 @@
   },
   "E44-T01": {
     "blockedby_done": [
-      "E44-X01",
-      "E27",
-      "E38"
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T05",
+      "E27-X02",
+      "E27-X03",
+      "E27-X04",
+      "E38-T03",
+      "E38-T04",
+      "E38-X02",
+      "E38-X03",
+      "E44-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fD9s",
@@ -13763,8 +15014,15 @@
   },
   "E44-T05": {
     "blockedby_done": [
-      "E44-T01",
-      "E27"
+      "E27-K01",
+      "E27-T01",
+      "E27-T02",
+      "E27-T03",
+      "E27-T05",
+      "E27-X02",
+      "E27-X03",
+      "E27-X04",
+      "E44-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fD-E",
@@ -13786,8 +15044,15 @@
   },
   "E44-X01": {
     "blockedby_done": [
-      "E43",
-      "E39"
+      "E39-X02",
+      "E43-K01",
+      "E43-T01",
+      "E43-T02",
+      "E43-T03",
+      "E43-T04",
+      "E43-T05",
+      "E43-T06",
+      "E43-T08"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fD-M",
@@ -13827,7 +15092,7 @@
   },
   "E45-D01": {
     "blockedby_done": [
-      "E42"
+      "E42-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fEJI",
@@ -13858,8 +15123,15 @@
   },
   "E45-K01": {
     "blockedby_done": [
-      "E03",
-      "E29"
+      "E03-T01",
+      "E03-T02",
+      "E03-T03",
+      "E03-T08",
+      "E03-T09",
+      "E03-T11",
+      "E03-T13",
+      "E03-T15",
+      "E29-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fENA",
@@ -13925,12 +15197,14 @@
   },
   "E45-T01": {
     "blockedby_done": [
-      "E29",
-      "E32",
+      "E29-X03",
+      "E32-T04",
+      "E32-X02",
+      "E32-X03",
       "E45-X01",
-      "E50-T59",
       "E50-S02",
-      "E50-T49"
+      "E50-T49",
+      "E50-T59"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fErQ",
@@ -13953,8 +15227,9 @@
   },
   "E45-T03": {
     "blockedby_done": [
-      "E45-T01",
-      "E04"
+      "E04-T06",
+      "E04-X02",
+      "E45-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fErc",
@@ -13964,8 +15239,10 @@
   },
   "E45-T04": {
     "blockedby_done": [
-      "E45-T01",
-      "E34"
+      "E34-T03",
+      "E34-X02",
+      "E34-X03",
+      "E45-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fErg",
@@ -13975,8 +15252,8 @@
   },
   "E45-T05": {
     "blockedby_done": [
-      "E45-T02",
-      "E39"
+      "E39-X02",
+      "E45-T02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fEro",
@@ -13986,8 +15263,15 @@
   },
   "E45-T06": {
     "blockedby_done": [
-      "E45-K01",
-      "E03"
+      "E03-T01",
+      "E03-T02",
+      "E03-T03",
+      "E03-T08",
+      "E03-T09",
+      "E03-T11",
+      "E03-T13",
+      "E03-T15",
+      "E45-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fEOs",
@@ -13997,9 +15281,11 @@
   },
   "E45-T07": {
     "blockedby_done": [
-      "E45-T06",
+      "E34-T03",
+      "E34-X02",
+      "E34-X03",
       "E45-T02",
-      "E34"
+      "E45-T06"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fErs",
@@ -14020,8 +15306,14 @@
   },
   "E45-T09": {
     "blockedby_done": [
-      "E45-T06",
-      "E44"
+      "E44-K01",
+      "E44-T01",
+      "E44-T02",
+      "E44-T03",
+      "E44-T04",
+      "E44-T05",
+      "E44-X01",
+      "E45-T06"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fEQc",
@@ -14052,7 +15344,7 @@
   },
   "E45-X01": {
     "blockedby_done": [
-      "E29"
+      "E29-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fEsE",
@@ -14091,8 +15383,13 @@
   },
   "E46-D01": {
     "blockedby_done": [
-      "E11",
-      "E04"
+      "E04-T06",
+      "E04-X02",
+      "E11-T05",
+      "E11-T06",
+      "E11-T07",
+      "E11-T09",
+      "E11-X03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fE3o",
@@ -14112,8 +15409,22 @@
   },
   "E46-K01": {
     "blockedby_done": [
-      "E44",
-      "E45"
+      "E44-K01",
+      "E44-T01",
+      "E44-T02",
+      "E44-T03",
+      "E44-T04",
+      "E44-T05",
+      "E44-T06",
+      "E44-X02",
+      "E45-T01",
+      "E45-T02",
+      "E45-T03",
+      "E45-T04",
+      "E45-T05",
+      "E45-T07",
+      "E45-T08",
+      "E45-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fFK8",
@@ -14123,9 +15434,23 @@
   },
   "E46-Q01": {
     "blockedby_done": [
-      "E46-K01",
-      "E45",
-      "E03"
+      "E03-T01",
+      "E03-T02",
+      "E03-T03",
+      "E03-T08",
+      "E03-T09",
+      "E03-T11",
+      "E03-T13",
+      "E03-T15",
+      "E45-T01",
+      "E45-T02",
+      "E45-T03",
+      "E45-T04",
+      "E45-T05",
+      "E45-T07",
+      "E45-T08",
+      "E45-X02",
+      "E46-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fFLI",
@@ -14174,11 +15499,16 @@
   },
   "E46-S01": {
     "blockedby_done": [
+      "E04-T06",
+      "E04-X02",
+      "E11-T05",
+      "E11-T06",
+      "E11-T07",
+      "E11-T09",
+      "E11-X03",
       "E46-D01",
       "E46-T01",
-      "E46-T04",
-      "E11",
-      "E04"
+      "E46-T04"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fFMA",
@@ -14188,10 +15518,14 @@
   },
   "E46-S02": {
     "blockedby_done": [
+      "E11-T05",
+      "E11-T06",
+      "E11-T07",
+      "E11-T09",
+      "E11-X03",
       "E46-D02",
       "E46-T01",
-      "E46-T09",
-      "E11"
+      "E46-T09"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fFMI",
@@ -14201,9 +15535,14 @@
   },
   "E46-T01": {
     "blockedby_done": [
-      "E46-K01",
-      "E11",
-      "E04"
+      "E04-T06",
+      "E04-X02",
+      "E11-T05",
+      "E11-T06",
+      "E11-T07",
+      "E11-T09",
+      "E11-X03",
+      "E46-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fFLQ",
@@ -14213,8 +15552,10 @@
   },
   "E46-T02": {
     "blockedby_done": [
-      "E46-T01",
-      "E18"
+      "E18-T06",
+      "E18-T07",
+      "E18-X02",
+      "E46-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fFMQ",
@@ -14224,8 +15565,13 @@
   },
   "E46-T03": {
     "blockedby_done": [
-      "E46-T01",
-      "E21"
+      "E21-T04",
+      "E21-T05",
+      "E21-T06",
+      "E21-T07",
+      "E21-X02",
+      "E21-X03",
+      "E46-T01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fFMY",
@@ -14235,8 +15581,9 @@
   },
   "E46-T04": {
     "blockedby_done": [
-      "E46-K01",
-      "E04"
+      "E04-T06",
+      "E04-X02",
+      "E46-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fFLc",
@@ -14277,8 +15624,10 @@
   },
   "E46-T08": {
     "blockedby_done": [
-      "E46-T04",
-      "E26"
+      "E26-T07",
+      "E26-X02",
+      "E26-X03",
+      "E46-T04"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fFMo",
@@ -14324,8 +15673,13 @@
   },
   "E46-X01": {
     "blockedby_done": [
-      "E46-K01",
-      "E43"
+      "E43-T07",
+      "E43-T11",
+      "E43-X02",
+      "E43-X03",
+      "E43-X06",
+      "E43-X07",
+      "E46-K01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fFLw",
@@ -14360,7 +15714,14 @@
   },
   "E47-D01": {
     "blockedby_done": [
-      "E44"
+      "E44-K01",
+      "E44-T01",
+      "E44-T02",
+      "E44-T03",
+      "E44-T04",
+      "E44-T05",
+      "E44-T06",
+      "E44-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fFYY",
@@ -14824,8 +16185,12 @@
   },
   "E48-D01": {
     "blockedby_done": [
-      "E42",
-      "E10"
+      "E10-T01",
+      "E10-T02",
+      "E10-T04",
+      "E10-X01",
+      "E10-X02",
+      "E42-X02"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fGBM",
@@ -14899,9 +16264,27 @@
   },
   "E48-T01": {
     "blockedby_done": [
-      "E46",
-      "E45",
-      "E44"
+      "E44-K01",
+      "E44-T01",
+      "E44-T02",
+      "E44-T03",
+      "E44-T04",
+      "E44-T05",
+      "E44-T06",
+      "E44-X02",
+      "E45-T01",
+      "E45-T02",
+      "E45-T03",
+      "E45-T04",
+      "E45-T05",
+      "E45-T07",
+      "E45-T08",
+      "E45-X02",
+      "E46-K01",
+      "E46-T01",
+      "E46-T04",
+      "E46-T05",
+      "E46-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fGD8",
@@ -14923,9 +16306,23 @@
   },
   "E48-T03": {
     "blockedby_done": [
-      "E45",
-      "E44",
-      "E42",
+      "E42-X02",
+      "E44-K01",
+      "E44-T01",
+      "E44-T02",
+      "E44-T03",
+      "E44-T04",
+      "E44-T05",
+      "E44-T06",
+      "E44-X02",
+      "E45-T01",
+      "E45-T02",
+      "E45-T03",
+      "E45-T04",
+      "E45-T05",
+      "E45-T07",
+      "E45-T08",
+      "E45-X02",
       "E48-T02"
     ],
     "fields_done": true,
@@ -14936,8 +16333,15 @@
   },
   "E48-T04": {
     "blockedby_done": [
-      "E48-T03",
-      "E45"
+      "E45-T01",
+      "E45-T02",
+      "E45-T03",
+      "E45-T04",
+      "E45-T05",
+      "E45-T07",
+      "E45-T08",
+      "E45-X02",
+      "E48-T03"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fHFo",
@@ -14958,14 +16362,25 @@
   },
   "E48-T06": {
     "blockedby_done": [
+      "E46-T02",
+      "E46-T03",
+      "E46-T06",
+      "E46-T07",
+      "E46-T08",
+      "E46-T09",
+      "E46-T10",
+      "E46-X02",
+      "E47-K02",
+      "E47-T04",
+      "E47-T05",
+      "E47-X02",
+      "E47-X03",
       "E48-T02",
       "E48-T04",
       "E48-T05",
       "E48-T07",
       "E48-X02",
-      "E46",
-      "E47",
-      "E49"
+      "E49-T05"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fHGg",
@@ -15017,7 +16432,11 @@
   },
   "E49-D01": {
     "blockedby_done": [
-      "E47"
+      "E47-K01",
+      "E47-T01",
+      "E47-T02",
+      "E47-T03",
+      "E47-X01"
     ],
     "fields_done": true,
     "item_id": "PVTI_lAHOAzoHns4BjW_bzg8fGGo",
