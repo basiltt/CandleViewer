@@ -28,24 +28,49 @@ Include, where you can:
 **Never include real API keys, secrets, session tokens, or captured live traffic containing them.** If a
 credential is already exposed, say so in words and rotate it immediately (§5).
 
-### Response targets
+**Escalation chain:** reporter → Security engineer (triage) → Owner `@basiltt` (disposition) → a fix
+ticket labelled `security` → re-scan proof attached before the ticket closes. A report's lifecycle is
+tracked as a private GitHub Security Advisory linked to the fix ticket, so report → fix → re-scan stays
+auditable end to end.
 
-| Stage | Target |
-|---|---|
-| Acknowledgement | 2 working days |
-| Triage + severity assignment | 5 working days |
-| Fix for **critical** (credential exposure, unauthorised order placement, RBAC bypass, RCE) | 48 hours |
-| Fix for **high** | 7 days |
-| Fix for **medium** | 30 days |
-| Fix for **low** | next release |
+### Severity and response SLAs
 
-We will keep you updated at each stage and tell you when the fix ships. Because CandleViewer is a private,
-single-owner deployment there is no bug-bounty programme and no public disclosure timeline; advisories are
-published in the repository's security advisories when a fix is released.
+Severity is assessed against the bug taxonomy owned by `docs/plan/03-testing-strategy.md` §11.3; the table
+below states the security-specific triage/fix commitments in the same terms without restating that file's
+full taxonomy.
+
+| Severity | Example (security) | Acknowledgement | Triage | Fix target |
+|---|---|---|---|---|
+| **P0 — Critical** | API-key confidentiality breach, withdrawal-permission-off invariant defeated, RBAC bypass, missing native stop-loss, unauthorised order placement, audit-log integrity broken | 4 business hours | 2 business hours | Before any further merge to the affected area; blocks release |
+| **P1 — High** | Auth/session weakness, exploitable but not yet exploited, partial RBAC scoping gap | 1 business day | 1 business day | Before the current release gate |
+| **P2 — Medium** | Defence-in-depth gap without a direct path to capital or credential loss | 2 business days | 3 business days | Should fix before release; may slip a sprint with owner sign-off |
+| **P3 — Low** | Hardening suggestion, informational finding | 5 business days | 1 sprint | Backlog, no release block |
+
+We keep you updated at each stage and tell you when the fix ships. A security emergency may also be
+handled under the Constitution's 24-hour emergency-amendment path (C-16.1 step 3), with any resulting rule
+change re-ratified within 2 weeks.
+
+Because CandleViewer is a private, single-owner deployment **there is no bug-bounty programme** — this is
+a deliberate decision, not an omission — and no public disclosure timeline; advisories are published as
+private GitHub Security Advisories and, once a fix ships, summarised (without exploit detail) in
+`CHANGELOG.md` under *Security*.
+
+### In-scope / out-of-scope
+
+**In scope:** the web app, Electron shell, the FastAPI backend, the Bybit v5 adapter, Postgres/QuestDB/
+Parquet storage, the Tailscale-only network path, CI/CD supply chain — the full asset list is
+`docs/plan/04-security-program.md` §2. **Out of scope:** physical security of the owner's host, Bybit's
+own platform security, the owner's Bybit web-login credentials, any mobile client, multi-tenant/SaaS
+concerns, payment processing — the authoritative list is `docs/plan/04-security-program.md` §1.3
+(linked, not restated here).
 
 ### Safe harbour
 
-Good-faith research against **your own deployment** is welcome. Do not test against anyone else's
+Good-faith research by the internal team, contracted pen-testers (Constitution C-15.9, the R4
+live-enablement gate in `docs/plan/07-release-and-prr.md` §6), and dependency/security researchers
+reporting upstream CVEs is welcome, **against the `demo` environment only**. Testing against the **`live`
+environment is explicitly excluded from safe harbour** — it holds real funds and real orders — mirroring
+the demo-not-prod rule in `docs/plan/02-definition-of-ready-done.md` §8. Do not test against anyone else's
 instance, do not access data that is not yours, do not perform denial-of-service testing, and do not place
 orders on accounts you do not own.
 
