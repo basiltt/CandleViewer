@@ -254,6 +254,66 @@ This brief is a *design-time enforcement mechanism* for `05-accessibility-standa
 - **Consumption contract**: React components import from the generated `build/ts/tokens.ts` (never hardcode a hex/px value); Storybook's theme-switch addon toggles the `data-theme` attribute using the generated CSS bundles for visual-regression parity across themes (`15-component-catalogue.md` §0.3 rule 7).
 - **Figma↔code sync direction**: tokens flow **design→code** as the primary direction (designer edits Figma Variables via the Tokens Studio plugin, exports to the `tokens/` JSON, opens a PR) with an occasional **code→design** reverse sync for engineering-driven token additions (e.g. a new chart-engine-only token discovered during the WebGL spike) re-imported into Figma Variables — both directions go through the same JSON files and the same PR/review process, so there is exactly one source of truth file format regardless of which side initiates a change.
 
+### 11.1 Handoff contract detail (E02-D01)
+
+The following is the ratified handoff contract agreed ahead of `packages/ui` scaffolding
+(`E02-T03`), so E05's authored token values land in a pipeline shaped by agreement, not guesswork.
+Full rationale and open questions: `docs/design/E02/E02-D01.md`.
+
+**Directory layout** (`packages/ui/tokens/`): one Tier-1 file (`primitives.tokens.json`), one Tier-2
+file per theme (`semantic-dark.tokens.json` — source of truth, `semantic-light.tokens.json`,
+`semantic-high-contrast.tokens.json`), one Tier-3 file (`component.tokens.json`), one file per density
+mode (`density-compact.tokens.json`, `density-comfortable.tokens.json`), and `themes.json` declaring
+which files compose each named theme. A theme file re-maps the *same* Tier-2 names to different Tier-1
+references — it never introduces new token names. A density file overrides only spacing/sizing Tier-2
+tokens, never colour or typography; theme and density compose independently.
+
+**Naming edge case**: where a Tier-2 group needs both children and a base value (e.g. `color.buy` needs
+`.hover`/`.subtle`/`.hc` *and* a default), the base leaf is named `color.buy.default` — a token path
+cannot be both an object and a value.
+
+**Lint rule (Tier 1 isolation)**: a build-time lint step (`tools/style-dictionary/lint-tier1-refs.*`,
+implemented in E02-T03, run in the `packages/ui` package CI) fails the build if any component/screen
+spec, Tier-3 file, or generated-`tokens.ts` consumer references a Tier-1 path (`palette.*`, `space.<n>`,
+`size.<n>`, `radius.<n>`, `border.<n>`, `font.<n>`, `opacity.<n>`) outside of a Tier-2/Tier-3 `$value`
+alias, or hardcodes a hex/px literal where a token exists.
+
+**Engine export shape** (binding on `E02-T03`): `build/engine/theme-uniforms.json` is flat and fully
+resolved (no `{alias}` left unresolved); every colour token relevant to the engine
+(`color.chart.*`/`color.candle.*`/`color.footprint.*`/`color.heatmap.*`/`color.node.*`/`color.buy.*`/
+`color.sell.*`) is an object carrying both a hex string and normalised float RGBA:
+
+```json
+{ "color.buy.default": { "hex": "#2EBD59", "rgba": [0.1804, 0.7412, 0.3490, 1.0] } }
+```
+
+Spacing/typography tokens not needed for canvas rendering are excluded from this export (layout spacing
+is a host-adapter/DOM concern). **Theme switching for the engine is a data swap, not a CSS cascade**:
+the host adapter loads the resolved uniform file for the active theme and calls the engine's typed
+"set theme" API; the engine never reads `data-theme` or any DOM/CSS state (C-2.16). Downstream tickets
+(e.g. E11) must not assume a CSS cascade drives engine colour.
+
+**Two worked examples** (Tier 1 → Tier 2 → every output, using the values already shipped in
+`packages/ui/tokens/primitives.tokens.json` / `semantic-dark.tokens.json` by E05-D01):
+
+| | `color.buy` | `space.field.gap` |
+|---|---|---|
+| Tier 1 | `palette.green.500 = "#2EBD59"` | `space.2 = "8"` |
+| Tier 2 | `color.buy.default = "{palette.green.500}"` (+ `.hover→palette.green.400 #4FC86F`, `.subtle→palette.green.900 #0E3D1F`, `.hc→palette.green.300 #6BD48A`) | `space.field.gap = "{space.2}"` |
+| CSS | `--color-buy-default: #2EBD59;` under `[data-theme="dark"]` | `--space-field-gap: 8px;` |
+| TS | `tokens.color.buy.default === "#2EBD59"` | `tokens.space.field.gap === "8"` |
+| Engine | `{ "hex": "#2EBD59", "rgba": [0.1804, 0.7412, 0.3490, 1.0] }` | not exported (colour/typography only) |
+| Contrast | `.default` ≥3:1 on `surface.canvas` (chart data-ink); `.hc` ≥7:1 (AAA stretch, high-contrast theme) | N/A |
+
+**Accessibility gate**: every semantic colour pair carries its stated minimum ratio per
+`05-accessibility-standard.md` §5 (4.5:1 body text / 3:1 large text / 3:1 non-text-UI / 3:1 chart
+data-ink / 7:1 buy-sell-hc AAA stretch); the contrast-matrix report (§11 build table) is generated on
+every token-file PR and CI fails if a required pair drops below threshold. The high-contrast theme is a
+first-class theme file (`semantic-high-contrast.tokens.json`), not an overlay/filter.
+
+**Sign-off** (recorded on issue #88, gating this ticket's own Done per §13.3): CDO or delegate, chart-
+engine owner, frontend lead, accessibility specialist.
+
 ---
 
 ## 12. Design QA checklist
