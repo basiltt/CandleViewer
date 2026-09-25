@@ -24,6 +24,7 @@ Status values: `decided` (binding now), `proposed` (decision deadline stated ins
 | [ADR-0016](ADR-0016-statechart-runtime.md) | Statechart contracts and a gated runtime | **proposed (gated)** (deadline: Sprint 08 go/no-go, `E50-X01`) |
 | [ADR-0017](ADR-0017-board-automation.md) | GitHub Projects v2 board automation: capability and limits | decided |
 | [ADR-0018](ADR-0018-monorepo-tooling.md) | Monorepo tooling: pnpm+Turborepo (JS) and uv+Hatch (Python) | decided |
+| [ADR-0019](ADR-0019-visual-regression-tooling.md) | Visual-regression tooling for design-system snapshots | decided (wall-clock/flake numbers deferred to E05-T04) |
 
 ## Writing a new ADR
 
