@@ -1,12 +1,13 @@
 name: Bug Report
-description: Report something that isn't working as expected
+description: Report a defect against previously Done work
 title: "[Bug]: "
 labels: ["type/bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to report a bug!
+        Never paste API keys, session tokens, passwords, or real account/user identifiers into
+        this issue. Found a vulnerability? Do not file it here — see `SECURITY.md`.
   - type: textarea
     id: description
     attributes:
@@ -17,8 +18,10 @@ body:
   - type: textarea
     id: repro
     attributes:
-      label: Steps to Reproduce
-      description: Steps to reproduce the behavior.
+      label: Reproduction steps
+      description: >-
+        Exact steps + environment (dev/staging/prod) + symbol/account context if relevant.
+        Never paste real account ids or keys — redact them.
       placeholder: |
         1. Go to '...'
         2. Click on '...'
@@ -28,22 +31,45 @@ body:
   - type: textarea
     id: expected
     attributes:
-      label: Expected Behavior
+      label: Expected behavior
       description: What did you expect to happen?
     validations:
       required: true
   - type: textarea
     id: actual
     attributes:
-      label: Actual Behavior
+      label: Actual behavior
       description: What actually happened?
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: >-
+        `priority/p0-critical` for anything touching live money/safety invariants, e.g. missing
+        native SL on fan-out.
+      options:
+        - "priority/p0-critical — drop everything"
+        - "priority/p1-high"
+        - "priority/p2-normal"
+        - "priority/p3-low"
+    validations:
+      required: true
+  - type: textarea
+    id: root-cause-hypothesis
+    attributes:
+      label: Root cause hypothesis
+      description: >-
+        Or write "needs investigation" — if that investigation is itself nontrivial, file a
+        Spike instead.
     validations:
       required: false
   - type: input
-    id: version
+    id: regression-origin
     attributes:
-      label: Version / Commit
-      description: Version, commit SHA, or branch where the bug occurs.
+      label: Regression origin
+      description: Linked Story/Epic key, if this is a regression of prior work.
     validations:
       required: false
   - type: dropdown
@@ -60,15 +86,10 @@ body:
   - type: textarea
     id: logs
     attributes:
-      label: Relevant Logs / Screenshots
-      description: Paste any relevant logs, stack traces, or screenshots.
+      label: Relevant logs / screenshots
+      description: >-
+        Paste any relevant logs, stack traces, or screenshots. Redact tokens/keys before
+        pasting.
       render: shell
     validations:
       required: false
-  - type: checkboxes
-    id: terms
-    attributes:
-      label: Checklist
-      options:
-        - label: I have searched existing issues to avoid duplicates
-          required: true

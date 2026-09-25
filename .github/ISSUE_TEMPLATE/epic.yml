@@ -1,60 +1,93 @@
 name: Epic
-description: High-level tracking issue spanning multiple tasks
+description: A body of work delivering a coherent capability, spans multiple sprints
 title: "[Epic]: "
 labels: ["type/epic"]
 body:
   - type: markdown
     attributes:
       value: |
-        Use this template for a high-level epic that will be broken down into smaller issues.
+        Never paste API keys, session tokens, passwords, or real account/user identifiers into
+        this issue. Found a vulnerability? Do not file it here — see `SECURITY.md`.
   - type: textarea
-    id: summary
+    id: problem-value
     attributes:
-      label: Summary
-      description: High-level summary of the epic and its goals.
-    validations:
-      required: true
-  - type: textarea
-    id: motivation
-    attributes:
-      label: Motivation / Context
-      description: Why is this epic needed? What value does it deliver?
+      label: Problem statement & value
+      description: Why this Epic exists, who benefits. One paragraph minimum.
     validations:
       required: true
   - type: textarea
     id: scope
     attributes:
-      label: Scope
-      description: What is in scope and out of scope for this epic?
+      label: Scope boundaries
+      description: Explicit In scope / Out of scope bullets.
+    validations:
+      required: true
+  - type: textarea
+    id: research-links
+    attributes:
+      label: Linked research
+      description: >-
+        Link `docs/research/digests/*` or `24-owner-decisions.md` items, if any exist yet.
     validations:
       required: false
   - type: textarea
-    id: tasks
+    id: architecture-impact
     attributes:
-      label: Sub-tasks / Checklist
-      description: List the child issues or tasks that make up this epic.
-      placeholder: |
-        - [ ] Task 1
-        - [ ] Task 2
+      label: Architecture impact
+      description: >-
+        Which C4 components / `24-internal-schemas.md` domains does this touch? (Architect
+        review itself is verified at Ready via the Refinement ceremony, not here.)
     validations:
-      required: false
+      required: true
   - type: dropdown
-    id: milestone
+    id: touches-security-surface
     attributes:
-      label: Target Milestone
+      label: Touches security-sensitive surface?
+      description: >-
+        Auth, keys, OMS, fan-out, or money movement — triggers a STRIDE kickoff (verified at
+        Ready).
       options:
-        - M0 Foundation
-        - M1 Core Charting Engine
-        - M2 Data Feeds & Indicators
-        - M3 Drawing Tools & Alerts
-        - M4 Backtesting & Scripting
-        - M5 Collaboration, Layouts & Polish
+        - "No"
+        - "Unsure"
+        - "Yes"
     validations:
-      required: false
-  - type: textarea
-    id: additional
+      required: true
+  - type: dropdown
+    id: has-user-facing-screens
     attributes:
-      label: Additional Context
-      description: Links to designs, ADRs, or related discussions.
+      label: Has user-facing screens?
+      description: >-
+        If Yes, a design Epic/tickets must exist ≥2 sprints ahead, or a waiver is recorded
+        (waiver/2-sprint check verified at Ready).
+      options:
+        - "No"
+        - "Yes"
+    validations:
+      required: true
+  - type: dropdown
+    id: sizing
+    attributes:
+      label: Rough sizing
+      description: T-shirt size for roadmap placement.
+      options:
+        - "XS"
+        - "S"
+        - "M"
+        - "L"
+        - "XL"
+    validations:
+      required: true
+  - type: input
+    id: dependencies
+    attributes:
+      label: Dependencies (blocked_by)
+      description: Other Epic keys this depends on, comma-separated.
     validations:
       required: false
+  - type: input
+    id: owner
+    attributes:
+      label: Owner
+      description: Named engineer/lead for decomposition (not a team name).
+    validations:
+      required: true

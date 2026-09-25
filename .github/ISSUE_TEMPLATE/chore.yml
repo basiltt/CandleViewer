@@ -1,0 +1,41 @@
+name: Chore
+description: Maintenance — dependency bumps, doc updates, retro action items, housekeeping
+title: "[Chore]: "
+labels: ["type/chore"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Never paste API keys, session tokens, passwords, or real account/user identifiers into
+        this issue. Found a vulnerability? Do not file it here — see `SECURITY.md`.
+  - type: textarea
+    id: what-and-why
+    attributes:
+      label: What's changing and why
+      description: >-
+        One or two sentences, e.g. "bump Playwright 1.4x→1.5x to fix known flaky selector API."
+    validations:
+      required: true
+  - type: dropdown
+    id: risk-level
+    attributes:
+      label: Risk level
+      description: >-
+        If not Low, this should probably be a Task instead — say why here.
+      options:
+        - "Low"
+        - "Medium"
+        - "High"
+    validations:
+      required: true
+  - type: dropdown
+    id: estimate
+    attributes:
+      label: Estimate
+      description: "≤3 points."
+      options:
+        - "1"
+        - "2"
+        - "3"
+    validations:
+      required: true
