@@ -45,15 +45,21 @@ or harmful.
 
 ## Scope
 
-This Code of Conduct applies within all community spaces, and also applies
-when an individual is officially representing the community in public spaces.
+CandleViewer is a private repository with a small set of participants: the owner, human contributors,
+contractors, and autonomous or semi-autonomous coding agents (Claude Code, Copilot, Codex, Cursor and
+similar) operating under human supervision. This Code of Conduct applies to every space where that work
+happens — GitHub issues, pull requests, code review comments, commit messages, and any other project
+space — and to anyone officially representing the project elsewhere. Agent-authored content is treated as
+the responsibility of the human who directed the agent; an agent producing content that would violate
+this Code of Conduct if a human wrote it is still a violation to fix.
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by opening a GitHub issue in this repository, or by contacting a
-project maintainer directly via GitHub. All complaints will be reviewed and
-investigated promptly and fairly.
+**Enforcement owner: `@basiltt`** (project owner). Instances of abusive, harassing, or otherwise
+unacceptable behavior may be reported by opening a GitHub issue in this repository, or by contacting
+`@basiltt` directly via GitHub. Do not use a public issue to report a security vulnerability — see
+[`SECURITY.md`](SECURITY.md) for that. All complaints will be reviewed and investigated promptly and
+fairly by the enforcement owner.
 
 All community leaders are obligated to respect the privacy and security of the
 reporter of any incident.

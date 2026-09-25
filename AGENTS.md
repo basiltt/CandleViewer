@@ -7,7 +7,7 @@
 > **Precedence:** `CONSTITUTION.md` > `AGENTS.md` > `CONTRIBUTING.md` > tool defaults. If this file
 > contradicts the Constitution, the Constitution wins and this file is a bug.
 >
-> **Version:** 1.0.0 · Last updated 2026-09-14 · Owner `@basiltt`
+> **Version:** 1.1.0 · Last updated 2026-09-25 · Owner `@basiltt`
 
 ---
 
@@ -602,6 +602,24 @@ Violations of this list are treated as incidents, not mistakes. If you are about
   write up what you tried, what you observed, and what you need.
 
 ---
+
+## 9a. Before you edit a governed file
+
+`CONSTITUTION.md`, the C-16.5 single-source-of-truth registry it owns, and any list a registry entry
+points at (required CI check names, command names, budget values, repo layout, statechart contracts) are
+**governed**: they change only through the process their owner document specifies, never as a drive-by
+edit inside an unrelated ticket.
+
+- **Rule text or a rule id** (`C-x.y`) — Constitution §16 amendment process only: a `constitution`-labelled
+  issue, an amendment PR touching every affected artefact, the required discussion period, and the
+  approvals §16 names. Never edit a rule's meaning to make your own PR pass.
+- **A list owned by C-16.5** (checks → §9, budgets → §14, commands → `AGENTS.md` §4, repo layout →
+  `AGENTS.md` §2, statechart contracts → `docs/plan/28-statechart-catalogue.md`) — edit it only in its
+  owner file, in the ticket that actually changes that surface (e.g. a new required check ships with the
+  workflow that adds it). Every other file links; it does not copy.
+- **This file's own rules** (§5–§8) — follow §10 below; a prohibition needs the extra approval it names.
+- If your ticket seems to require changing a governed file outside this flow, that is a sign the ticket is
+  out of scope or ambiguous — stop and report per `.claude/rules/70-multi-agent.md` rather than guessing.
 
 ## 10. How to update this file
 

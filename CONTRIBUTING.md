@@ -90,6 +90,14 @@ Sprints are **1 week** (Fri→Thu; Sprint 01 = 2026-09-25; calendar in `docs/pla
 ticket is Done. Architectural decisions are recorded as MADR ADRs in `docs/adr/` and must be proposed
 before implementation (Constitution §15.1).
 
+## Governance map — which document owns what
+
+Every list in this repo has exactly one owner (`CONSTITUTION.md` C-16.5); everything else links to it
+instead of restating it. See the [C-16.5 single-source-of-truth registry](CONSTITUTION.md#16-amendment-process)
+for the authoritative table (rules, CI check names, budgets, commands, repo layout, ownership, security
+policy, ticket schema, statechart contracts). If you find the same list copied into a second file, that
+copy is a bug — delete it and link to the owner instead.
+
 ## Reporting security issues
 
 Never open a public issue for a vulnerability. Follow [`SECURITY.md`](SECURITY.md).
