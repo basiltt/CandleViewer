@@ -35,6 +35,19 @@ ticket only moves to **Done** when the owner has approved it. Concretely:
 1. Agent builds the frames on the ticket's page (naming per §Rules), exports PNGs, writes the spec PR.
 2. Agent sets Status **In Review**, and posts on the issue: Penpot page link + PNG exports + a ≤10-line summary of
    decisions taken and open questions. It does **not** merge the spec PR.
+
+**Mandatory evidence on EVERY design ticket — no exceptions for "research" or "wireframe" tickets (owner decision
+2026-09-25).** A design PR without both of the following is incomplete and must be sent back:
+- **Penpot link** to the ticket's page, in the PR body *and* the issue comment:
+  `https://design.penpot.app/#/workspace?team-id=<team>&file-id=<file>&page-id=<page-id>` — read `page.id` from the
+  plugin API (`penpotUtils.getPageByName(...).id`); team/file ids are in §Topology.
+- **Screenshots**: one PNG per frame/state exported with `docs/design/_tools/penpot_export.py`, committed under
+  `docs/design/<epic>/img/`, and **embedded** in the PR body (`![SCR-nnn/state](../docs/design/<epic>/img/<name>.png)`
+  or the raw GitHub URL) so the owner can review without opening Penpot.
+- UX-research tickets still design in Penpot: the artefact is a research board (personas/journey/findings cards,
+  comparison matrices, annotated wireframes) on the ticket's page — not a markdown file alone. Journey maps and
+  flows are drawn as frames; Mermaid may be *additional*, never the only deliverable.
+- The `code-reviewer` for a design PR fails the review (`REQUEST_CHANGES`) if either item is missing.
 3. Owner reviews in Penpot (and the PR). Approval = **owner merges the spec PR** and/or comments `approved`.
    Any other comment = rework; agent iterates on the same page.
 4. Only after approval may the dependent frontend ticket enter Ready (design-ahead rule, C-11.1).

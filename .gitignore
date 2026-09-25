@@ -52,3 +52,9 @@ Desktop.ini
 logs/
 .cache/
 CLAUDE.local.md
+
+# agent scratch + worktrees
+.scratch/
+.claude/worktrees/
+.coverage
+*.tmp.*
