@@ -57,3 +57,18 @@ in the ticket. Skills: the official `penpot-*` skill set (penpot-ai-kit 0.4.0) i
 - Design sign-off = PR merge of the spec + exports; the Penpot file link goes in the ticket comment.
 - `execute_code` runs arbitrary JS in the plugin sandbox: only mutate the file named in the ticket; never
   delete pages/components you did not create; export before and after large mutations.
+
+## Penpot plugin-API gotchas (learned 2026-09-25, E05-D01)
+
+- **Cascade is not synchronous.** Setting `token.value` from the plugin API updates `resolvedValue` but bound shapes
+  re-paint only on a propagation event — toggle the active theme off/on (`theme.toggleActive()` ×2) after bulk token
+  edits. Changing a token in the Penpot UI propagates immediately.
+- Token names are paths: a token cannot exist at a path that is a prefix of another (`color.buy` vs `color.buy.hover`).
+  Convention: the leaf is `.default`.
+- `applyToken(tok, ["all"])` fails for radius; pass the four `borderRadius*` props explicitly.
+- `penpot.currentPage` / `file.name` are read-only from the API; place shapes on another page with
+  `page.root.appendChild(shape)`.
+- Export from code: `await shape.export({type:"png", scale:1})` returns a `Uint8Array`.
+- **Browser tab suspension** kills the bridge within ~30–45 s of the tab losing focus. Before an agent session:
+  pin the Penpot tab, Chrome → Settings → Performance → *Always keep these sites active* → `design.penpot.app`,
+  and disable Memory Saver for it. Without this, every design ticket stalls.

@@ -1,0 +1,13 @@
+{
+  "$description": "Penpot token themes; mirrors the CandleViewer DS file",
+  "themes": [
+    {
+      "group": "theme",
+      "name": "dark",
+      "sets": [
+        "primitives",
+        "semantic-dark"
+      ]
+    }
+  ]
+}
