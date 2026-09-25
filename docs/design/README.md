@@ -27,6 +27,24 @@ Team fonts uploaded 2026-09-25: **Inter** v4.1 and **JetBrains Mono** v2.304, ea
 present, so Penpot silently skipped the files (upstream bug, to be filed). Fixed set:
 `C:\Users\basil\Downloads\CandleViewer-fonts\upload-static\JetBrainsMono-fixed\`.
 
+## Approval rule (owner decision 2026-09-25) — **every UI/UX design ticket requires human approval**
+
+Design agents work **Suggest → Apply-with-review**: they may build into the ticket's Penpot page, but a design
+ticket only moves to **Done** when the owner has approved it. Concretely:
+
+1. Agent builds the frames on the ticket's page (naming per §Rules), exports PNGs, writes the spec PR.
+2. Agent sets Status **In Review**, and posts on the issue: Penpot page link + PNG exports + a ≤10-line summary of
+   decisions taken and open questions. It does **not** merge the spec PR.
+3. Owner reviews in Penpot (and the PR). Approval = **owner merges the spec PR** and/or comments `approved`.
+   Any other comment = rework; agent iterates on the same page.
+4. Only after approval may the dependent frontend ticket enter Ready (design-ahead rule, C-11.1).
+
+Agents never delete or restructure pages/components they did not create in the current ticket, never touch the
+shared DS library file without an explicit ticket, and never call `execute_code` on a file other than the one named
+in the ticket. Skills: the official `penpot-*` skill set (penpot-ai-kit 0.4.0) is installed in `~/.claude/skills/`;
+`penpot-router` picks the skill, `penpot-foundations` owns tokens, `penpot-build-screen` owns screens,
+`penpot-component-factory` owns `CMP-*`, `penpot-audit-accessibility` runs before every hand-off.
+
 ## Rules for design agents
 
 - One Penpot **file per epic**, one **page per screen** (`SCR-nnn <name>`); components live in the shared
