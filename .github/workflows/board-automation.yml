@@ -1,0 +1,119 @@
+name: Board automation
+
+# E01-T07: Kind<->label sync + QA/security/a11y close guards (detective
+# controls, per ADR-0017). Delegates to scripts/gh/run_guard.py so the
+# decision logic is unit-tested offline; this file only wires events to
+# that CLI and declares least-privilege permissions per job (G12/G18,
+# docs/plan/04-security-program.md #6.17).
+#
+# Rollout: GOVERNANCE_ENFORCE repo variable defaults to "false" (observe-only)
+# for the remainder of Sprint 01 per the ticket's rollout plan; flip to
+# "true" once the would-have-blocked log shows zero false positives.
+
+on:
+  issues:
+    types: [opened, edited, labeled, unlabeled, closed]
+
+permissions:
+  contents: read
+
+env:
+  GOVERNANCE_ENFORCE: ${{ vars.GOVERNANCE_ENFORCE || 'false' }}
+  GH_REPO: ${{ github.repository }}
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  kind-sync:
+    # AC1: keep type/* label and Kind field in agreement.
+    if: >-
+      github.event.sender.login != 'github-actions[bot]' &&
+      contains(fromJSON('["opened","edited","labeled","unlabeled"]'), github.event.action)
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2 # v5.3.0
+        with:
+          python-version: "3.12"
+      - name: Run kind-sync guard
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ACTOR_LOGIN: ${{ github.event.sender.login }}
+        run: python -m scripts.gh.run_guard kind-sync
+
+  security-label-sync:
+    # AC3 (opened/labeled half): auto-apply `security` for always-security areas.
+    if: >-
+      github.event.sender.login != 'github-actions[bot]' &&
+      contains(fromJSON('["opened","labeled"]'), github.event.action)
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2 # v5.3.0
+        with:
+          python-version: "3.12"
+      - name: Run security label-sync guard
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ACTOR_LOGIN: ${{ github.event.sender.login }}
+        run: python -m scripts.gh.run_guard security-guard --mode label-sync
+
+  qa-guard:
+    # AC1/AC2/AC4: QA sign-off required for Story/Bug close; forged body
+    # markers rejected; API errors fail closed.
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2 # v5.3.0
+        with:
+          python-version: "3.12"
+      - name: Run QA sign-off guard
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ACTOR_LOGIN: ${{ github.event.sender.login }}
+        run: python -m scripts.gh.run_guard qa-guard
+
+  security-close-guard:
+    # AC3 (closed half), AC5 (fail-closed on API error).
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2 # v5.3.0
+        with:
+          python-version: "3.12"
+      - name: Run security-close guard
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ACTOR_LOGIN: ${{ github.event.sender.login }}
+        run: python -m scripts.gh.run_guard security-guard --mode close
+
+  a11y-guard:
+    # AC6: a11y-labelled close requires a real, repo-scoped Actions run link.
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2 # v5.3.0
+        with:
+          python-version: "3.12"
+      - name: Run a11y run-link guard
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ACTOR_LOGIN: ${{ github.event.sender.login }}
+        run: python -m scripts.gh.run_guard a11y-guard
