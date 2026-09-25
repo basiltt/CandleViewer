@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://candleviewer.internal/schema/backlog/backlog-file.schema.json",
+  "title": "CandleViewer backlog file (array form)",
+  "description": "Schema for one docs/plan/backlog/E<nn>.json file: an array whose first element is the Epic and whose remaining elements are that epic's children (or, for merged files such as all-tickets.json, a superset spanning multiple epics — see README.md 'Merged files').",
+  "type": "array",
+  "minItems": 1,
+  "items": { "$ref": "ticket.schema.json" }
+}
