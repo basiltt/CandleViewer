@@ -137,6 +137,7 @@ backlog item **E03-K01**).
 | B4 | Information disclosure | Container image layers leak build-time secrets (e.g. a registry token baked into a layer) | L | H | Medium | Multi-stage builds (SR-131), no secrets in build args that persist into final layers, Trivy secret-scanning of the built image | E03-T08 | `E03-Q01`: fixture image with a dummy secret embedded in a layer is asserted flagged | Low |
 | B5 | Denial of service | GHCR outage blocks release publication | L | M | Low | Accepted — GHCR is a managed, high-availability service; no in-house mirror planned for R0 | — (accepted, no ticket) | N/A — availability risk, not exercised by a CI-gate test | Low (accepted, see §5) |
 | B6 | Elevation of privilege | A workflow with write access to the release registry is triggered by an untrusted PR event | M | H | **High** | Release/publish jobs run only on `push` to `main` (protected branch), never on `pull_request` from forks; same control family as A1/A6 | E03-T07 | `E03-Q01`: fixture fork-PR event cannot reach the publish job | Low |
+| B7 | Spoofing | An attacker impersonates the release bot's identity (forged commit author/tag) or steals its short-lived CI token to publish/sign an artefact under its name | L | H | **High** | Release bot uses a GitHub App / OIDC-federated short-lived token (no long-lived PAT); token scoped to the release job only, never exposed to PR-triggered workflows; commits/tags from the bot are verified (GPG/Sigstore) before being trusted as the release identity | E03-T08 | `E03-Q01`: fixture — a release step attempted with a non-federated/long-lived token or an unverified bot signature is rejected | Low |
 
 ## 5. Risks accepted for R0 (dated and owned — required for sign-off)
 
@@ -160,7 +161,7 @@ separate appendix. A summary count:
 | Implementing ticket | Threats covered |
 |---|---|
 | `E03-T07` (SAST/SCA/secrets/licence/container scan lane) | A1, A2, A3, A6, G4, R1, R2, B6 |
-| `E03-T08` (build/scan/SBOM/cosign sign on merge) | R3, R5, B1, B2, B3, B4 |
+| `E03-T08` (build/scan/SBOM/cosign sign on merge) | R3, R5, B1, B2, B3, B4, B7 |
 | `E03-T09` (deploy ledger / observability) | A4, G6 |
 | `E03-T13` (branch protection, required checks, merge queue) | P1, P2, P3, P4 |
 | `E03-T14` (deferred R1 — registry/runner resilience) | A5, R4, G3 |
@@ -188,19 +189,30 @@ All other rows map onto controls already named in the existing `E03` ticket scop
 deferred `E03-T14`/`E03-K01`); this model confirms that scope was already substantially sufficient, with
 the two additions above as the concrete deltas required by acceptance criterion 4.
 
-## 8. Security Review session record
+## 8. Security Review session — status
 
-- **Date:** 2026-09-25 (Sprint 01, per-epic kickoff, `01-sdlc-and-branching.md` §3)
-- **Attendees:** basiltt (Owner/Approver), Security engineer (author of this document), DevSecOps (co-owner)
-- **Decisions:**
-  - This document is the R0 STRIDE gate for E03 (supply chain); sign-off recorded in §9.
-  - Accepted risks in §5 are dated and owned as required by acceptance criterion 3.
-  - Scope deltas in §7 are to be picked up by `E03-T07` and `E03-T13` respectively when those tickets are
-    implemented; this ticket does not implement them (out of scope per the brief).
-  - Abuse cases in §9.1 are handed to `E03-Q01`'s exploratory charter and to the deferred R1 audit
-    `E03-X03`, per acceptance criterion / Definition of Done.
+**Status: PENDING.** No Security Review session has taken place yet. The record below is a **plan**
+for the session, not a record of one that occurred; it will be replaced with actual minutes (date,
+attendees, decisions) once the session is held and the sign-off in §9 is completed.
 
-## 9. Abuse cases handed to `E03-Q01` and `E03-X03`
+- **Planned attendees:** basiltt (Owner/Approver), Security engineer (author of this document), DevSecOps (co-owner)
+- **Agenda / decisions to confirm:**
+  - Whether this document is accepted as the R0 STRIDE gate for E03 (supply chain); sign-off to be
+    recorded in §9 once held.
+  - Whether accepted risks in §5 are dated and owned as required by acceptance criterion 3.
+  - Confirm scope deltas in §7 are to be picked up by `E03-T07` and `E03-T13` respectively when those
+    tickets are implemented; this ticket does not implement them (out of scope per the brief).
+  - Confirm abuse cases in §10.1 are handed to `E03-Q01`'s exploratory charter and to the deferred R1
+    audit `E03-X03`, per acceptance criterion / Definition of Done.
+
+## 9. Sign-off
+
+**Status: PENDING — no Security Review session has been held.** This section will be updated with the
+security engineer's sign-off comment (name, date, decision) and a link to the GitHub issue comment
+recording it, once the session in §8 actually takes place. Until then this document is **not** signed
+off and the corresponding Definition-of-Done item in §11 is unchecked.
+
+## 10. Abuse cases handed to `E03-Q01` and `E03-X03`
 
 1. Open a PR from a fork that edits `.github/workflows/*` to widen `permissions:` or remove a required
    check; assert the change has no effect on what actually gates merge.
@@ -215,18 +227,18 @@ the two additions above as the concrete deltas required by acceptance criterion 
 6. Attempt to pull a release image without cosign verification, and attempt to pull an image whose
    signature does not match its current digest; assert both are rejected by the deploy path.
 
-## 10. Definition of Done cross-check
+## 11. Definition of Done cross-check
 
 - [x] Four scenarios satisfied: every element carries all six STRIDE categories (with reasoned N/A where
       applicable, §4.1/§4.4); every table row names a control, ticket and test (§4, §6); accepted risks in
       §5 are dated and owned; §7 names concrete scope deltas attributable to this model.
-- [x] Security Review session recorded (§8).
+- [ ] Security Review session recorded (§8) — **pending**; no session has been held yet.
 - [x] Every threat row maps to control + ticket + test (§4, §6).
 - [x] Accepted risks dated and owned (§5); companion update to `docs/plan/32-risk-register.md` tracked as
       **RSK-029** (Supply-chain compromise via a dependency, already Owner DevSecOps, Epics E02/E03/E43) —
       this model is the detailed backing analysis for that register entry; no new RSK-id is required since
       RSK-029 already covers this exact risk category, and the GPU-runner-specific residual (G1) is noted
       as a forward pointer to `E03-K01` in that entry's mitigation text (see companion note below).
-- [ ] Security engineer sign-off comment — to be posted on the GitHub issue (this is the R0 gate evidence;
-      posted by the security engineer role after PR review, not fabricated here).
-- [x] Abuse cases delivered to `E03-Q01` and `E03-X03` (§9).
+- [ ] Security engineer sign-off comment (§9) — **pending**; to be posted on the GitHub issue (this is the
+      R0 gate evidence; posted by the security engineer role after the session in §8, not fabricated here).
+- [x] Abuse cases delivered to `E03-Q01` and `E03-X03` (§10).
