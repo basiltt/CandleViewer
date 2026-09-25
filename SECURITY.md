@@ -35,18 +35,21 @@ auditable end to end.
 
 ### Severity and response SLAs
 
-Severity is assessed against the bug taxonomy owned by `docs/plan/03-testing-strategy.md` §11.3; the table
-below states the security-specific triage/fix commitments in the same terms without restating that file's
-full taxonomy.
+Severity is assessed against the bug taxonomy owned by `docs/plan/03-testing-strategy.md` §11.3 —
+including that table's Triage SLA and Fix-before columns, which this file does not restate (C-16.5). The
+table below adds only the security-report-specific commitment: how soon a reporter hears back with an
+initial acknowledgement, which is always no later than that severity's §11.3 triage SLA.
 
-| Severity | Example (security) | Acknowledgement | Triage | Fix target |
-|---|---|---|---|---|
-| **P0 — Critical** | API-key confidentiality breach, withdrawal-permission-off invariant defeated, RBAC bypass, missing native stop-loss, unauthorised order placement, audit-log integrity broken | 4 business hours | 2 business hours | Before any further merge to the affected area; blocks release |
-| **P1 — High** | Auth/session weakness, exploitable but not yet exploited, partial RBAC scoping gap | 1 business day | 1 business day | Before the current release gate |
-| **P2 — Medium** | Defence-in-depth gap without a direct path to capital or credential loss | 2 business days | 3 business days | Should fix before release; may slip a sprint with owner sign-off |
-| **P3 — Low** | Hardening suggestion, informational finding | 5 business days | 1 sprint | Backlog, no release block |
+| Severity | Example (security) | Acknowledgement |
+|---|---|---|
+| **P0 — Critical** | API-key confidentiality breach, withdrawal-permission-off invariant defeated, RBAC bypass, missing native stop-loss, unauthorised order placement, audit-log integrity broken | 1 business hour |
+| **P1 — High** | Auth/session weakness, exploitable but not yet exploited, partial RBAC scoping gap | 4 business hours |
+| **P2 — Medium** | Defence-in-depth gap without a direct path to capital or credential loss | 1 business day |
+| **P3 — Low** | Hardening suggestion, informational finding | 2 business days |
 
-We keep you updated at each stage and tell you when the fix ships. A security emergency may also be
+See §11.3 for the Triage SLA and Fix-before commitment per severity. We also send the reporter a status
+update at least once every 2 business days for P0/P1 and once per week for P2/P3 until the fix ships, and
+tell them when it ships. A security emergency may also be
 handled under the Constitution's 24-hour emergency-amendment path (C-16.1 step 3), with any resulting rule
 change re-ratified within 2 weeks.
 
