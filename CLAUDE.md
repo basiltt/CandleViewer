@@ -105,7 +105,7 @@ Full flow: `AGENTS.md` §3 (flowchart) and `docs/plan/01-sdlc-and-branching.md` 
   `oms-execution`, `rule-engine`, `paper-trading`, `accounts-admin`, `auth-rbac`, `ingestion`,
   `recorder-replay`, `journal-analytics`, `backend-platform`, `frontend-platform`, `electron-shell`,
   `design-system`, `infra-devops`, `docs`) — `01-sdlc-and-branching.md` §5.2/§6.2. Breaking: `!` + footer.
-- **Reviews:** 2 approvals, ≥1 CODEOWNER of the touched paths (C-10.1); security-path changes get the
+- **Reviews:** 2 independent agent reviews (`code-reviewer`, plus `security-reviewer` on security paths); code PRs merge by the orchestrator once green, design PRs only with owner approval (C-10.1 v1.1.0); security-path changes get the
   `security-review` label and a security reviewer (C-10.2); UI needs design sign-off (C-10.3).
 - **Required CI checks:** the exact names live **only** in `CONSTITUTION.md` C-9.1 (20 checks — lint,
   typecheck, unit suites, contract, integration, e2e, a11y, SAST/SCA/secrets/container/licence, bundle,
@@ -208,7 +208,7 @@ CI workflows or dependency manifests without `security-review` · skip/weaken an
 bare `noqa`/`eslint-disable`/`type: ignore`, `.skip`/`.only`, lowering coverage, moving a bench
 baseline) · widen scope · handle real credentials · call a live exchange from tests/CI/dev defaults ·
 bypass a safety invariant (native SL, RBAC/risk, audit, withdrawal check, rate reserve, demo/live
-isolation) · add out-of-scope features (C-1.2) · **approve or merge a PR** · **mark a ticket Done** ·
+isolation) · add out-of-scope features (C-1.2) · **approve or merge a design PR, or any PR you authored** · **mark a ticket Done** ·
 invent UI not in the signed-off design · implement a `retired` ticket · call the statechart library
 outside `cv.statechart.factory`.
 

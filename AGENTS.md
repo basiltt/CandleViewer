@@ -537,9 +537,12 @@ Violations of this list are treated as incidents, not mistakes. If you are about
    chart library in production (C-1.2).
 10. **Never add a dependency** without justification, an allowlisted licence, and CODEOWNER approval — and
     never into `packages/chart-engine` without an ADR.
-11. **Never approve a pull request.** Agents may review and comment; approvals are human (C-10.1). Never
-    merge a PR on a human's behalf, never dismiss a reviewer's requested changes, never resolve someone
-    else's review thread.
+11. **Never approve or merge your own pull request.** Reviews come from *independent* agent sessions
+    (`code-reviewer`; `security-reviewer` on security paths) that record a PR review with rule ids and
+    evidence checked (C-10.1 v1.1.0). Only the delivery orchestrator merges code PRs, and only after both
+    reviews approve and all required checks are green. **Design PRs (`docs/design/**`, `SCR-*`/`CMP-*`) are
+    never merged by an agent — owner approval is mandatory.** Never dismiss a reviewer's requested changes,
+    never resolve someone else's review thread.
 12. **Never mark a ticket Done.** Merging puts it In Test; only QA or the owner sets Done (C-10.4).
 13. **Never invent UI.** No screen, flow, copy, colour or spacing that is not in the signed-off design
     (C-10.3). No placeholder lorem ipsum shipped to `main`.
@@ -614,7 +617,7 @@ Violations of this list are treated as incidents, not mistakes. If you are about
 ```
 Branch    : feat|fix|chore|design|spike|docs / <epic-key>-<short-slug>
 Commit    : type(scope): imperative subject   # scopes: Constitution §4.4
-PR        : one issue, "Closes #N", ≤400 LOC, template complete, 2 approvals (1 CODEOWNER)
+PR        : one issue, "Closes #N", ≤400 LOC, template complete, 2 independent agent reviews (C-10.1)
 Integrate : git pull --rebase origin main     # never merge, never force-push main
 Local gate: pnpm verify   |   ruff check . && black --check . && mypy --strict . && pytest
 Contract  : edit docs/plan/22-api-openapi.yaml or 23-ws-protocol.md FIRST, then pnpm generate

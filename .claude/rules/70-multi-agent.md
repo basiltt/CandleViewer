@@ -32,7 +32,7 @@ Several AI agents work tickets in parallel. Source: `CONSTITUTION.md` §4 (C-4.6
 - Rebase on `main` often (`git pull --rebase origin main`). On conflict in a file you do not own: stop,
   comment on both issues/PRs, and let the owner of the earlier-merged PR's area decide.
 - Two migrations racing: the later PR re-parents (C-5.3). Two machine-hash changes: later PR regenerates the lock.
-- Never force-push someone else's branch; never close/edit another agent's PR.
+- Never force-push someone else's branch; never close/edit another agent's PR; never approve or merge your own PR.
 
 ## 5. Reporting blockers and ambiguity
 Post a comment on the issue with this format, add label `blocked` (or `needs-clarification`), unassign if you stop:

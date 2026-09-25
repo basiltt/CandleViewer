@@ -30,5 +30,7 @@ Source: `CONSTITUTION.md` §4, `docs/plan/01-sdlc-and-branching.md`, `.github/PU
 - List: acceptance criteria → how each is verified (test name / screenshot / bench output).
 - Attach evidence required by the ticket (Storybook link, bench diff, axe report, migration round-trip log).
 - All 20 required checks in CONSTITUTION §9 must be green; never disable or skip a check to go green.
+- Reviews: 2 independent agent reviews (`code-reviewer`; `security-reviewer` on security paths). The orchestrator merges
+  code PRs once green; **design PRs need owner approval** (C-10.1 v1.1.0, `docs/design/README.md`).
 - Resolve every review conversation before merge; squash or rebase merge only (no merge commits).
 - Run `/ready-check` then `/pr` locally before opening.
