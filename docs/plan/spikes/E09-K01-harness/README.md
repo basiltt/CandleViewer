@@ -2,7 +2,7 @@
 
 Throwaway prototype for the session/token-rotation/revocation model. **Not shippable** — see
 `docs/plan/spikes/E09-K01-session-model.md` for the findings and
-`docs/plan/27-adrs/ADR-0017-session-access-token-and-revocation-model.md` for the decision.
+`docs/plan/27-adrs/ADR-0020-session-access-token-and-revocation-model.md` for the decision.
 
 ## What this is
 

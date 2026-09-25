@@ -1,6 +1,6 @@
-# ADR-0017 — Session access-token format, WS re-auth cadence, and rotation-family revocation
+# ADR-0020 — Session access-token format, WS re-auth cadence, and rotation-family revocation
 
-- Status: **decided** (spike E09-K01, timeboxed 3 days)
+- Status: **proposed** — owner approval pending (spike E09-K01, timeboxed 3 days)
 - Date: 2026-09-25
 - Deciders: Owner (`@basiltt`) — see `docs/plan/backlog/all-tickets.json` E09-K01 "Agent-delivery adaptations": owner approval substitutes for Architect/Security-engineer countersignature; recorded here as **owner approval pending** until the owner comments `approved` on issue #134.
 - Consulted: `docs/plan/21-database-schema.md` §3.1.4, `docs/plan/24-internal-schemas.md` §15.1, `docs/plan/23-ws-protocol.md` §4.3/§9.5, `docs/plan/20-architecture.md` §5, `docs/plan/06-performance-and-load-standard.md`, `docs/plan/04-security-program.md`, `docs/plan/11-user-stories.md` US-ONB-004/US-ONB-009
@@ -45,18 +45,29 @@ schema documents (`docs/plan/spikes/E09-K01-session-model.md`).
    `POST /auth/refresh` JSON body, held **only in an in-memory JS variable** (never `localStorage`,
    never a second cookie) and passed as the WS `auth` frame's bearer value per `23-ws-protocol.md` §4.3.
    Losing it (tab reload) means re-deriving it from the refresh cookie — an acceptable UX cost that
-   keeps it out of any persistent, XSS-exfiltratable store.
+   keeps it out of any persistent, XSS-exfiltratable store. **At rest, the access-token handle is
+   stored the same way as the existing refresh-token handle: hashed (never plaintext) in the
+   `access_tokens`/`sessions.access_token_jti` lookup column, per `21-database-schema.md` §3.1.4's
+   `refresh_token_hash` pattern; the lookup path compares hashes in constant time
+   (`hmac.compare_digest`, not `==`) to avoid a timing side channel on the hot revocation-check path;
+   and the raw handle is redacted by the mandatory logging filter (`50-security.md`, C-12.6) — it must
+   never appear in structured logs, error messages, or audit `before/after` payloads (only the session
+   id / masked handle may).**
 2. **Opaque over JWT.** The harness (`test_lookup_p50_p99_under_budget`) measures dict-backed lookup at
    p99 far under the 2 ms decision threshold; the real store backs this with a hash index on
    `sessions.access_token_jti` / a dedicated `access_tokens` table (see reconciliation note), which has
    the same O(1) shape. JWTs are rejected: they would need a deny-list for revocation anyway (buying
    nothing) and add key-rotation operational burden for zero latency benefit at this decision point.
-3. **Access-token TTL: 11 minutes.** Chosen so the client's refresh-at-`expires_at - 60s` rule
-   (`23-ws-protocol.md` §4.3) yields a refresh/re-auth interval of exactly 10 minutes — satisfying "at
-   most once per 10 minutes per connection" with zero margin for clock skew inside the same process.
-   Verified for 20 concurrent connections over a simulated hour in
-   `test_ws_reauth_cadence_at_most_once_per_ten_minutes`. Refresh is **in place**: the server returns a
-   new access token over the *existing* connection; no reconnect is triggered.
+3. **Access-token TTL: 12 minutes.** Chosen so the client's refresh-at-`expires_at - 60s` rule
+   (`23-ws-protocol.md` §4.3) yields a refresh/re-auth interval of 11 minutes — satisfying "at
+   most once per 10 minutes per connection" **with a 60s margin left over for clock skew and
+   early/jittered refresh**, not exactly zero margin. (Revised from an earlier 11-minute draft that
+   left zero skew budget between the 60s refresh-ahead margin and the "at least 10 minutes" floor;
+   see `CLOCK_SKEW_BUDGET_S` in the harness.) Verified for 20 concurrent connections over a simulated
+   hour in `test_ws_reauth_cadence_at_most_once_per_ten_minutes`, which now drives an explicit
+   per-connection virtual clock instead of only checking the interval arithmetic. Refresh is **in
+   place**: the server returns a new access token over the *existing* connection; no reconnect is
+   triggered.
 4. **Idle-lock semantics.** Idle timeout (30 min, `sessions.last_seen_at`) blocks **order-entry-class**
    REST routes and WS actions server-side (RBAC/risk layer, consistent with C-2.21 "statecharts record,
    synchronous code enforces") but does **not** revoke the session or close the WS connection; market-data
@@ -66,8 +77,13 @@ schema documents (`docs/plan/spikes/E09-K01-session-model.md`).
    `sessions_rotation` (unchanged shape). Reuse of an already-rotated refresh token walks the family
    (both directions from the reused node) and revokes every member in one pass — proven at 10k
    chained rows in `test_rotation_family_walk_cost_at_10k_rows` (walk is O(family length), not O(table
-   size), and completes in low milliseconds in-process), and emits `auth.refresh_reuse_detected` at
-   severity `critical` (`test_rotated_token_reuse_kills_entire_family`).
+   size); the store maintains the reverse rotation edge incrementally rather than rebuilding it per
+   call, and `test_rotation_family_walk_cost_independent_of_unrelated_rows` asserts the walk cost does
+   not scale with unrelated rows in the store), and emits `auth.refresh_reuse_detected` at severity
+   `critical` plus an **append-only audit record** (C-2.9) identifying which session was replayed and
+   how many family members were killed (`test_rotated_token_reuse_kills_entire_family`). A row's first
+   revocation reason/timestamp is preserved even if a later family-wide revoke also covers it, so
+   incident forensics can see *why* each row was first killed.
 6. **Step-up field: `mfa_satisfied_at` (timestamp), not `elevated_until`.** A single boundary-owned field
    models "the last moment step-up was proven"; `elevated_until = mfa_satisfied_at + step_up_window`
    (15 min, per `21-database-schema.md`) is *derived*, never stored, matching the B16 statechart's
@@ -85,9 +101,9 @@ Positive:
 Negative / risks:
 - The access token must be re-derived from the refresh cookie on every fresh page load / tab, costing one
   extra round-trip at startup versus a persisted (but XSS-exposed) token. Accepted per ADR-0010's rationale.
-- 11-minute TTL is deliberately tight to the WS cadence budget; if the API latency budget in
+- 12-minute TTL is deliberately tight to the WS cadence budget; if the API latency budget in
   `06-performance-and-load-standard.md` later requires a shorter access-token TTL for other reasons, the
-  WS re-auth interval must be re-derived, not left at a stale 10 minutes.
+  WS re-auth interval and the 60s skew margin must be re-derived, not left at a stale 10/11 minutes.
 
 ### Why not the alternatives
 
@@ -102,7 +118,7 @@ Negative / risks:
 
 ## Validation
 
-- `docs/plan/spikes/E09-K01-harness/test_harness.py` — 6 tests, all green, covering every Gherkin scenario
+- `docs/plan/spikes/E09-K01-harness/test_harness.py` — 7 tests, all green, covering every Gherkin scenario
   in the ticket (`uv run pytest docs/plan/spikes/E09-K01-harness -q` from repo root once `services/api`
   exists; run directly with `python -m pytest` from the harness directory today).
 - Full reconciliation of `21-database-schema.md` §3.1.4 vs `24-internal-schemas.md` §15.1:
