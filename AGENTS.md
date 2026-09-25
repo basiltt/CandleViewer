@@ -365,6 +365,7 @@ the source of truth for ticket *content*.
 
 | Task | Command |
 |---|---|
+| CODEOWNERS coverage check (GOV-001) | `scripts/check-codeowners-coverage.sh` (or `python scripts/check_codeowners_coverage.py`) |
 | Rule-reference link check (GOV-002) | `scripts/check-rule-refs.sh` (or `python scripts/check_rule_refs.py`) |
 | Single-source-of-truth duplication check (GOV-003) | `python scripts/check_sot_duplication.py` |
 | Both, as `pr-metadata`'s `governance` job will invoke them (job wiring: `E01-Q02`) | `make governance` |
