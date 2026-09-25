@@ -1024,7 +1024,7 @@ interface DomLadderRowProps {
 - **Tier**: Molecule (trading, canvas-adjacent, WebGL-rendered) · **Purpose**: single per-bar-per-price footprint cell (bid×ask volume, delta, imbalance colouring) — the highest-risk rendering surface per research digest 10 (text-heavy cell rendering).
 - **Props**: `bidVol: number` · `askVol: number` · `delta: number` · `isImbalanced?: boolean` · `cellMode: "volume"|"bidask"|"delta"|"delta+total"` · `displayMode: "profile"|"box"` · `inputSource: "aggTrades"|"numTrades"|"orderEstimated"`.
 - **A11y**: rendered on the WebGL canvas; **every cell is mirrored** by an off-screen DOM node per `05-accessibility-standard.md` §6.1 ("canvas control surrogate" pattern) — `tabindex`-able, `aria-label` composes "Price 65,430; bid 12.4; ask 8.1; delta +4.3" plus "(estimated)" when `inputSource==="orderEstimated"`; arrow keys move focus cell-to-cell (price axis / time axis), `Enter` opens the cell-detail Drawer (CMP-046).
-- **Tokens**: `color.footprint.bid/ask`, `color.footprint.imbalance`, `font.mono.xs` (LOD: text hidden below a legibility threshold zoom level, cell still focusable and its DOM-mirror label always carries full value regardless of zoom-driven text hiding).
+- **Tokens**: `color.footprint.bid/ask`, `color.footprint.imbalance`, `type.num.xs`/`type.num.sm` (LOD: text hidden below the `LOD_PROFILE_M0` threshold set — `docs/design/E06/E06-D01.md` §2 — L0 ≥12px/L1 ≥10px cell height; cell still focusable and its DOM-mirror label always carries full value regardless of zoom-driven text hiding). Delta direction additionally uses a `▲`/`▼` glyph + sign; imbalance uses a border-outline in addition to `color.footprint.imbalance`; `orderEstimated` cells render a hatch overlay — see `docs/design/E06/E06-D01.md` §3 for the full non-colour encoding spec.
 - **API sketch**:
 ```ts
 interface FootprintCellData {
@@ -1806,7 +1806,7 @@ interface CandleSeriesProps {
 
 ### CMP-182 FootprintSeries
 - **Tier**: Chart-primitive · **Purpose**: per-bar grid of FootprintCell (CMP-109) instances bound to the price axis — the highest-effort chassis piece per research (digest 10: "2-3 weeks — single largest line item").
-- **Props**: `data: FootprintBarData[]` · `cellMode` · `displayMode` · `lodTextThresholdPx: number` (below this per-cell pixel height, hide text but keep cell + DOM-mirror value).
+- **Props**: `data: FootprintBarData[]` · `cellMode` · `displayMode` · `lodTextThresholdPx: number` (sourced from `LOD_PROFILE_M0.L1.downSwitchPx` = 8.5px — `docs/design/E06/E06-D01.md` §2/§8 — below this per-cell pixel height, hide text but keep cell + DOM-mirror value).
 - **Tokens**: inherits CMP-109.
 - **API sketch**:
 ```ts
