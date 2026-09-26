@@ -28,11 +28,20 @@ def test_close_without_security_comment_is_blocked_for_always_security_area() ->
     assert not decision.allow
 
 
-def test_close_with_security_team_comment_is_allowed() -> None:
+def test_close_with_write_access_signoff_comment_is_allowed() -> None:
     issue = Issue(number=1, kind="Task", labels=frozenset({"security"}), body="", owner_login="alice")
-    comments = [Comment(author_login="sec-carol", body="Reviewed, approved.", author_is_team_member=True)]
+    comments = [Comment(author_login="sec-carol", body="Security sign-off: pass", author_has_write_access=True)]
     decision = sec.evaluate_close(issue, comments)
     assert decision.allow
+
+
+def test_close_with_write_access_comment_without_marker_does_not_satisfy_guard() -> None:
+    # A routine "LGTM"/approval comment from a write-access holder must not
+    # silently satisfy the gate -- only the explicit marker counts.
+    issue = Issue(number=1, kind="Task", labels=frozenset({"security"}), body="", owner_login="alice")
+    comments = [Comment(author_login="sec-carol", body="Reviewed, approved.", author_has_write_access=True)]
+    decision = sec.evaluate_close(issue, comments)
+    assert not decision.allow
 
 
 def test_close_not_security_related_is_not_gated() -> None:
@@ -41,8 +50,24 @@ def test_close_not_security_related_is_not_gated() -> None:
     assert decision.allow
 
 
-def test_close_fails_closed_on_team_lookup_error() -> None:
+def test_close_fails_closed_on_write_access_lookup_error() -> None:
     issue = Issue(number=1, kind="Task", labels=frozenset({"security"}), body="", owner_login="alice")
-    decision = sec.evaluate_close(issue, comments=[], team_lookup_failed=True)
+    decision = sec.evaluate_close(issue, comments=[], write_access_lookup_failed=True)
     assert not decision.allow
     assert decision.fail_closed
+
+
+def test_close_with_marker_but_failed_write_access_check_fails_closed() -> None:
+    issue = Issue(number=1, kind="Task", labels=frozenset({"security"}), body="", owner_login="alice")
+    comments = [
+        Comment(
+            author_login="sec-carol",
+            body="Security sign-off: pass",
+            author_has_write_access=False,
+            write_access_check_failed=True,
+        )
+    ]
+    decision = sec.evaluate_close(issue, comments)
+    assert not decision.allow
+    assert decision.fail_closed
+

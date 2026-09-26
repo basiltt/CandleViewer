@@ -9,6 +9,20 @@ name: Board automation
 # Rollout: GOVERNANCE_ENFORCE repo variable defaults to "false" (observe-only)
 # for the remainder of Sprint 01 per the ticket's rollout plan; flip to
 # "true" once the would-have-blocked log shows zero false positives.
+#
+# Credentials: `basiltt/CandleViewer` is a single-owner, user-level repo with
+# no GitHub organization (ADR-0017 Q1) -- org-team-membership endpoints
+# (`orgs/{org}/teams/{team}/memberships/{login}`) always 404 unconditionally,
+# since the org itself does not exist, so no PAT could make them work. The
+# qa-guard and security-close-guard jobs instead verify, per comment, that
+# its author independently holds repo write access via the collaborator-
+# permission API (`repos/{repo}/collaborators/{login}/permission`,
+# `gh_adapter.has_write_access`) -- available under the default
+# `GITHUB_TOKEN` with the `issues: write, contents: read` permissions already
+# declared below, no PAT required -- and require an explicit sign-off marker
+# in the comment body. `PROJECTS_PAT` (Projects: Read and write, ADR-0017) is
+# used only by kind-sync, for the Projects v2 `Kind` field, which has no
+# default-token-accessible equivalent.
 
 on:
   issues:
@@ -41,6 +55,10 @@ jobs:
         env:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ACTOR_LOGIN: ${{ github.event.sender.login }}
+          # ADR-0017: Projects v2 Kind field is unreachable via GITHUB_TOKEN.
+          # Provisioned by #1417; guard degrades to "not checked" (never a
+          # false "in agreement") when this secret is absent.
+          PROJECTS_PAT: ${{ secrets.PROJECTS_PAT }}
         run: python -m scripts.gh.run_guard kind-sync
 
   security-label-sync:

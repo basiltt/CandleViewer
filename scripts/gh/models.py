@@ -6,7 +6,7 @@ Deliberately GitHub-API-free: these are plain dataclasses so guard
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -15,7 +15,13 @@ class Comment:
 
     author_login: str
     body: str
-    author_is_team_member: bool = False
+    # True only when this comment's author independently holds repo write
+    # access (verified via the collaborator-permission API, not merely
+    # "is the ticket owner") -- see guard_qa_signoff's deviation check.
+    author_has_write_access: bool = False
+    # True when the write-access lookup above could not be completed (API
+    # error); callers must treat this as fail-closed.
+    write_access_check_failed: bool = False
 
 
 @dataclass(frozen=True)
@@ -23,12 +29,11 @@ class Issue:
     """The subset of issue state the guards need to reach a decision."""
 
     number: int
-    kind: str  # "Story" | "Bug" | "Task" | "Epic" | "Spike" | "Chore"
+    kind: str  # "Story" | "Bug" | "Task" | "Epic" | "Spike" | "Chore" | "Unlabeled"
     labels: frozenset[str]
     body: str
     owner_login: str
     actor_login: str = ""  # who triggered the current event
-    always_security_areas: frozenset[str] = field(default_factory=frozenset)
 
 
 @dataclass(frozen=True)
@@ -47,3 +52,6 @@ class Decision:
     guard: str
     fail_closed: bool = False
     add_labels: frozenset[str] = frozenset()
+    # Non-None means "write this Kind value to the Projects v2 Kind field"
+    # (kind-sync guard only; requires PROJECTS_PAT -- see gh_adapter).
+    set_project_kind: str | None = None

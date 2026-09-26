@@ -93,6 +93,12 @@ def find_repo_actions_run_urls(text: str, owner: str, repo: str) -> list[str]:
 
 QA_SIGNOFF_MARKER_RE = re.compile(r"QA sign-off:\s*(pass|fail)\b", re.IGNORECASE)
 QA_DEVIATION_MARKER_RE = re.compile(r"QA capacity deviation", re.IGNORECASE)
+# CandleViewer is a single-owner, user-level repo (`basiltt/CandleViewer`,
+# ADR-0017) -- there is no GitHub org and so no `@CandleViewer/security` team
+# to check membership of. A security sign-off must therefore carry this
+# explicit marker (mirroring QA_SIGNOFF_MARKER_RE) so *any* comment from
+# someone with write access cannot be read as an implicit approval.
+SECURITY_SIGNOFF_MARKER_RE = re.compile(r"Security sign-off:\s*(pass|fail)\b", re.IGNORECASE)
 
 GOV_BOT_MARKER_PREFIX = "<!-- gov-bot:"
 

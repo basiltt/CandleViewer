@@ -20,9 +20,9 @@ def test_story_without_signoff_is_blocked() -> None:
     assert "3.2" in decision.dod_ref
 
 
-def test_story_with_team_member_signoff_comment_is_allowed() -> None:
+def test_story_with_write_access_signoff_comment_is_allowed() -> None:
     comments = [
-        Comment(author_login="qa-bob", body="QA sign-off: pass", author_is_team_member=True)
+        Comment(author_login="qa-bob", body="QA sign-off: pass", author_has_write_access=True)
     ]
     decision = qa.evaluate(_story(), comments)
     assert decision.allow
@@ -35,9 +35,9 @@ def test_forged_signoff_in_body_does_not_satisfy_guard() -> None:
     assert not decision.allow
 
 
-def test_non_team_member_comment_with_marker_does_not_satisfy_guard() -> None:
+def test_comment_with_marker_without_write_access_does_not_satisfy_guard() -> None:
     comments = [
-        Comment(author_login="author", body="QA sign-off: pass", author_is_team_member=False)
+        Comment(author_login="author", body="QA sign-off: pass", author_has_write_access=False)
     ]
     decision = qa.evaluate(_story(), comments)
     assert not decision.allow
@@ -48,7 +48,7 @@ def test_recorded_qa_capacity_deviation_by_owner_is_accepted() -> None:
         Comment(
             author_login="alice",
             body="QA capacity deviation: I ran the black-box plan myself, all pass.",
-            author_is_team_member=False,
+            author_has_write_access=True,
         )
     ]
     decision = qa.evaluate(_story(), comments)
@@ -56,16 +56,56 @@ def test_recorded_qa_capacity_deviation_by_owner_is_accepted() -> None:
     assert "deviation" in decision.audit_note.lower()
 
 
-def test_deviation_comment_from_non_owner_does_not_count() -> None:
+def test_deviation_comment_from_owner_without_write_access_is_rejected() -> None:
+    # Anyone can open the issue and comment as its own author; being
+    # `owner_login` alone is not a credential -- only a verified,
+    # independent repo-write-access check may satisfy the deviation path.
     comments = [
-        Comment(author_login="not-the-owner", body="QA capacity deviation: done.", author_is_team_member=False)
+        Comment(
+            author_login="alice",
+            body="QA capacity deviation: done.",
+            author_has_write_access=False,
+        )
     ]
     decision = qa.evaluate(_story(), comments)
     assert not decision.allow
 
 
-def test_api_error_during_team_lookup_fails_closed() -> None:
-    decision = qa.evaluate(_story(), comments=[], team_lookup_failed=True)
+def test_deviation_comment_with_failed_write_access_check_fails_closed() -> None:
+    comments = [
+        Comment(
+            author_login="alice",
+            body="QA capacity deviation: done.",
+            author_has_write_access=False,
+            write_access_check_failed=True,
+        )
+    ]
+    decision = qa.evaluate(_story(), comments)
+    assert not decision.allow
+    assert decision.fail_closed
+
+
+def test_deviation_comment_from_non_owner_does_not_count() -> None:
+    comments = [
+        Comment(
+            author_login="not-the-owner",
+            body="QA capacity deviation: done.",
+            author_has_write_access=True,
+        )
+    ]
+    decision = qa.evaluate(_story(), comments)
+    assert not decision.allow
+
+
+def test_unlabeled_kind_is_gated_same_as_story() -> None:
+    # No type/* label at all must not silently skip QA sign-off.
+    issue = Issue(number=3, kind="Unlabeled", labels=frozenset(), body="", owner_login="alice")
+    decision = qa.evaluate(issue, comments=[])
+    assert not decision.allow
+
+
+def test_api_error_during_write_access_lookup_fails_closed() -> None:
+    decision = qa.evaluate(_story(), comments=[], write_access_lookup_failed=True)
     assert not decision.allow
     assert decision.fail_closed
     assert "could not verify" in decision.audit_note.lower()

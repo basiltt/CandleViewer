@@ -46,19 +46,38 @@ def test_fetch_issue_parses_labels_and_comments() -> None:
     assert comments[0].body == "hello"
 
 
-def test_kind_from_labels_defaults_to_task() -> None:
-    assert gh_adapter._kind_from_labels(frozenset({"area/docs"})) == "Task"
+def test_kind_from_labels_defaults_to_unlabeled() -> None:
+    # No type/* label must never silently become "Task" -- an unlabelled
+    # Story/Bug would then skip guard_qa_signoff's gate entirely.
+    assert gh_adapter._kind_from_labels(frozenset({"area/docs"})) == "Unlabeled"
 
 
-def test_is_team_member_true_on_success() -> None:
-    with patch.object(gh_adapter, "_run_gh", return_value="{}"):
-        assert gh_adapter.is_team_member("CandleViewer", "qa", "bob") is True
+def test_run_gh_raises_not_found_on_404_stderr() -> None:
+    err = subprocess.CalledProcessError(1, ["gh"], stderr="HTTP 404: Not Found")
+    with patch("subprocess.run", side_effect=err):
+        with pytest.raises(gh_adapter.GhNotFoundError):
+            gh_adapter._run_gh(["api", "repos/basiltt/CandleViewer/collaborators/z/permission"])
 
 
-def test_is_team_member_raises_on_failure() -> None:
+def test_has_write_access_raises_on_non_404_failure() -> None:
     with patch.object(gh_adapter, "_run_gh", side_effect=gh_adapter.GhApiError("boom")):
         with pytest.raises(gh_adapter.GhApiError):
-            gh_adapter.is_team_member("CandleViewer", "qa", "bob")
+            gh_adapter.has_write_access("basiltt/CandleViewer", "bob")
+
+
+def test_has_write_access_true_for_write_permission() -> None:
+    with patch.object(gh_adapter, "_run_gh", return_value=json.dumps({"permission": "write"})):
+        assert gh_adapter.has_write_access("basiltt/CandleViewer", "alice") is True
+
+
+def test_has_write_access_false_for_read_permission() -> None:
+    with patch.object(gh_adapter, "_run_gh", return_value=json.dumps({"permission": "read"})):
+        assert gh_adapter.has_write_access("basiltt/CandleViewer", "alice") is False
+
+
+def test_has_write_access_false_on_404() -> None:
+    with patch.object(gh_adapter, "_run_gh", side_effect=gh_adapter.GhNotFoundError("404")):
+        assert gh_adapter.has_write_access("basiltt/CandleViewer", "mallory") is False
 
 
 def test_reopen_issue_calls_gh_reopen() -> None:
@@ -110,7 +129,11 @@ def test_post_or_update_decision_comment_edits_existing() -> None:
         with patch.object(gh_adapter, "_run_gh") as mock_run:
             gh_adapter.post_or_update_decision_comment("basiltt/CandleViewer", 42, decision)
     args = mock_run.call_args[0][0]
-    assert "--edit-last" in args
+    # Must PATCH the specific comment id this guard found, never --edit-last
+    # (which would target whatever comment is chronologically last on the
+    # issue -- possibly a different guard's).
+    assert "--edit-last" not in args
+    assert "repos/basiltt/CandleViewer/issues/comments/IC_1" in args
 
 
 def test_post_or_update_decision_comment_posts_new() -> None:

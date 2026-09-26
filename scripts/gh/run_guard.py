@@ -15,6 +15,15 @@ Usage:
 
 Required env vars: GH_REPO ("owner/name"), ISSUE_NUMBER, ACTOR_LOGIN.
 Optional: GOVERNANCE_ENFORCE ("true"/"false", default "false" == observe-only).
+
+CandleViewer is a single-owner, user-level repo (`basiltt/CandleViewer`,
+ADR-0017 Q1) -- there is no GitHub organization, so `qa-guard` and
+`security-guard` never query org-team membership (that endpoint 404s
+unconditionally for a nonexistent org). Both instead verify, per comment,
+that its author independently holds repo write access via the
+collaborator-permission API (`gh_adapter.has_write_access`) -- available
+under the default `GITHUB_TOKEN`, no PAT required -- and require an explicit
+sign-off marker in the comment body (see `guard_qa_signoff`/`guard_security`).
 """
 
 from __future__ import annotations
@@ -32,11 +41,6 @@ from scripts.gh import (
 )
 from scripts.gh.models import Decision, Issue
 
-QA_ORG = "CandleViewer"
-QA_TEAM = "qa"
-SECURITY_ORG = "CandleViewer"
-SECURITY_TEAM = "security"
-
 
 def _enforcing() -> bool:
     return os.environ.get("GOVERNANCE_ENFORCE", "false").strip().lower() == "true"
@@ -48,29 +52,27 @@ def _with_actor(issue: Issue) -> Issue:
     return replace(issue, actor_login=os.environ.get("ACTOR_LOGIN", ""))
 
 
-def _check_team(repo_org: str, team: str, login: str) -> bool:
-    """Returns True if lookup failed (fail-closed signal)."""
-    try:
-        gh_adapter.is_team_member(repo_org, team, login)
-        return False
-    except gh_adapter.GhApiError:
-        return True
-
-
-def _annotate_team_membership(comments, org: str, team: str) -> tuple[list, bool]:
-    """Best-effort per-comment membership check; on any lookup failure the
-    caller is told via the second return value so the guard can fail closed."""
+def _annotate_write_access(comments, repo: str) -> tuple[list, bool]:
+    """Per-comment repo-write-access check, used by both `qa-guard` and
+    `security-guard` (see module docstring: no org/team exists to check
+    membership of instead). A lookup failure is recorded per-comment
+    (`write_access_check_failed`) *and* surfaced via the second return value
+    so callers that need "did any check fail at all" (as opposed to "did the
+    check fail for the specific comment carrying a marker", which the guards
+    themselves inspect) can also fail closed."""
     from dataclasses import replace
 
     annotated = []
     any_failure = False
     for c in comments:
         try:
-            is_member = gh_adapter.is_team_member(org, team, c.author_login)
+            has_access = gh_adapter.has_write_access(repo, c.author_login)
+            failed = False
         except gh_adapter.GhApiError:
-            is_member = False
+            has_access = False
+            failed = True
             any_failure = True
-        annotated.append(replace(c, author_is_team_member=is_member))
+        annotated.append(replace(c, author_has_write_access=has_access, write_access_check_failed=failed))
     return annotated, any_failure
 
 
@@ -82,6 +84,14 @@ def _apply_decision(repo: str, number: int, decision: Decision) -> None:
             gh_adapter.add_labels(repo, number, decision.add_labels)
         else:
             print(f"GOV-006 {number} {decision.guard} OBSERVE-ONLY would-add-labels={sorted(decision.add_labels)}")
+    if decision.set_project_kind is not None:
+        if enforcing:
+            _write_project_kind(repo, number, decision.set_project_kind)
+        else:
+            print(
+                f"GOV-006 {number} {decision.guard} OBSERVE-ONLY "
+                f"would-set-project-kind={decision.set_project_kind!r}"
+            )
     if not decision.allow:
         if enforcing:
             gh_adapter.reopen_issue(repo, number)
@@ -91,6 +101,23 @@ def _apply_decision(repo: str, number: int, decision: Decision) -> None:
     else:
         if enforcing:
             gh_adapter.post_or_update_decision_comment(repo, number, decision)
+
+
+def _write_project_kind(repo: str, number: int, kind: str) -> None:
+    with gh_adapter.projects_pat_env() as available:
+        if not available:
+            print(f"GOV-006 {number} kind-sync SKIPPED-WRITE: PROJECTS_PAT not set")
+            return
+        item = gh_adapter.get_project_item_kind(repo, number)
+        if item is None:
+            print(f"GOV-006 {number} kind-sync SKIPPED-WRITE: issue not on the board")
+            return
+        option_id = item.option_id_by_kind.get(kind)
+        if option_id is None:
+            print(f"GOV-006 {number} kind-sync SKIPPED-WRITE: no Kind option for {kind!r}")
+            return
+        project_id = gh_adapter.get_project_id()
+        gh_adapter.set_project_item_kind(project_id, item.item_id, item.field_id, option_id)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -107,16 +134,22 @@ def main(argv: list[str] | None = None) -> int:
     issue = _with_actor(issue)
 
     if args.guard == "kind-sync":
-        decision = guard_kind_sync.evaluate(issue)
+        with gh_adapter.projects_pat_env() as available:
+            item = gh_adapter.get_project_item_kind(repo, number) if available else None
+        decision = guard_kind_sync.evaluate(
+            issue,
+            project_kind=item.current_kind if item is not None else None,
+            project_available=item is not None,
+        )
     elif args.guard == "qa-guard":
-        annotated, failed = _annotate_team_membership(comments, QA_ORG, QA_TEAM)
-        decision = guard_qa_signoff.evaluate(issue, annotated, team_lookup_failed=failed)
+        annotated, failed = _annotate_write_access(comments, repo)
+        decision = guard_qa_signoff.evaluate(issue, annotated, write_access_lookup_failed=failed)
     elif args.guard == "security-guard":
         if args.mode == "label-sync":
             decision = guard_security.evaluate_label_sync(issue)
         else:
-            annotated, failed = _annotate_team_membership(comments, SECURITY_ORG, SECURITY_TEAM)
-            decision = guard_security.evaluate_close(issue, annotated, team_lookup_failed=failed)
+            annotated, failed = _annotate_write_access(comments, repo)
+            decision = guard_security.evaluate_close(issue, annotated, write_access_lookup_failed=failed)
     else:  # a11y-guard
         decision = guard_a11y.evaluate(issue, comments, repo_owner=owner, repo_name=name)
 

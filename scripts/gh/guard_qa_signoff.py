@@ -1,14 +1,24 @@
 """Guard 2 -- QA sign-off (E01-T07 AC1/AC2/AC4).
 
-On close of a Story/Bug: require an actor-attributed comment from a
-`@CandleViewer/qa` team member matching the documented sign-off marker
+CandleViewer is a single-owner, user-level repo (`basiltt/CandleViewer`,
+ADR-0017 Q1) -- there is no GitHub organization and so no `@CandleViewer/qa`
+team whose membership can be queried (`GET /orgs/{org}/teams/{team}/...`
+always 404s: the org does not exist). Per the ticket's "Agent-delivery
+adaptations", role sign-offs are represented as an **actor-attributed
+comment from someone who independently holds repo write access** (verified
+via `gh_adapter.has_write_access`, a real, always-available collaborator-
+permission check -- no PAT/App/org required) carrying the documented marker
 (`QA sign-off: pass`), OR an explicitly recorded QA-capacity-deviation
 statement by the ticket owner (permitted by
 `docs/plan/02-definition-of-ready-done.md` section 3.2 / section 8).
 
 A forged marker typed into the *issue body* by the author never satisfies
-this guard -- only an actor-attributed *comment* from a real QA team member,
-or the owner's own deviation comment, counts.
+this guard -- only an actor-attributed *comment* from someone with verified
+write access, or the owner's own deviation comment, counts. Being the
+ticket's *author* is not itself a credential (anyone can open an issue and
+comment as its author), so `issue.owner_login` alone can never be trusted to
+grant a QA-skip -- both the sign-off and the deviation path require the
+`author_has_write_access` check.
 """
 
 from __future__ import annotations
@@ -20,11 +30,16 @@ GUARD_NAME = "qa-guard"
 DOD_REF = "02-definition-of-ready-done.md#3.2"
 
 GATED_KINDS = {"Story", "Bug"}
+# An issue with no type/* label at all (`gh_adapter._kind_from_labels`
+# returns "Unlabeled") must not silently skip this guard just because it
+# doesn't map to a known Kind -- that would let an unlabelled Story/Bug
+# close without QA sign-off. Gate it the same as Story/Bug.
+GATED_KINDS_INCLUDING_UNKNOWN = GATED_KINDS | {"Unlabeled"}
 
 
 def _qa_signoff_comment(comments: list[Comment]) -> Comment | None:
     for comment in comments:
-        if not comment.author_is_team_member:
+        if not comment.author_has_write_access:
             continue
         match = QA_SIGNOFF_MARKER_RE.search(comment.body)
         if match and match.group(1).lower() == "pass":
@@ -36,6 +51,12 @@ def _deviation_comment(comments: list[Comment], owner_login: str) -> Comment | N
     for comment in comments:
         if comment.author_login != owner_login:
             continue
+        if not comment.author_has_write_access:
+            # Anyone can open an issue and comment as its author; being
+            # `owner_login` is not a credential. Only trust the deviation
+            # path when the commenter independently verified as holding
+            # repo write access.
+            continue
         if QA_DEVIATION_MARKER_RE.search(comment.body):
             return comment
     return None
@@ -45,9 +66,9 @@ def evaluate(
     issue: Issue,
     comments: list[Comment],
     *,
-    team_lookup_failed: bool = False,
+    write_access_lookup_failed: bool = False,
 ) -> Decision:
-    if issue.kind not in GATED_KINDS:
+    if issue.kind not in GATED_KINDS_INCLUDING_UNKNOWN:
         return Decision(
             allow=True,
             reason=f"Kind={issue.kind} is not Story/Bug; QA sign-off guard does not apply",
@@ -56,12 +77,12 @@ def evaluate(
             guard=GUARD_NAME,
         )
 
-    if team_lookup_failed:
-        # Fail-closed: an API error while checking team membership must never
-        # be treated as an implicit pass.
+    if write_access_lookup_failed:
+        # Fail-closed: an API error while checking repo write access must
+        # never be treated as an implicit pass.
         return Decision(
             allow=False,
-            reason="could not verify @CandleViewer/qa team membership (API error)",
+            reason="could not verify commenter repo write access (API error)",
             dod_ref=DOD_REF,
             audit_note="qa-guard: BLOCKED - guard could not verify, must be re-run",
             guard=GUARD_NAME,
@@ -91,10 +112,28 @@ def evaluate(
             guard=GUARD_NAME,
         )
 
+    if any(
+        c.write_access_check_failed
+        and (c.author_login == issue.owner_login or QA_SIGNOFF_MARKER_RE.search(c.body))
+        and (QA_DEVIATION_MARKER_RE.search(c.body) or QA_SIGNOFF_MARKER_RE.search(c.body))
+        for c in comments
+    ):
+        # A sign-off or deviation marker exists but we could not verify the
+        # commenter's write access -- fail closed rather than silently drop
+        # the claim.
+        return Decision(
+            allow=False,
+            reason="could not verify commenter's repo write access for QA sign-off/deviation (API error)",
+            dod_ref=DOD_REF,
+            audit_note="qa-guard: BLOCKED - guard could not verify comment author, must be re-run",
+            guard=GUARD_NAME,
+            fail_closed=True,
+        )
+
     return Decision(
         allow=False,
         reason=(
-            "no actor-attributed QA sign-off comment from @CandleViewer/qa and no "
+            "no actor-attributed QA sign-off comment from a repo-write-access holder and no "
             "recorded QA capacity deviation by the ticket owner"
         ),
         dod_ref=DOD_REF,
