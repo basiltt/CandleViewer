@@ -25,6 +25,9 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Install check dependencies (PyYAML for GOV-004, pytest for unit tests)
+        run: python -m pip install --quiet -r scripts/requirements-ci.txt
+
       - name: Rule-reference link check (GOV-002)
         run: python scripts/check_rule_refs.py
 

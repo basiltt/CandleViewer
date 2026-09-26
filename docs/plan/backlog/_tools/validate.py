@@ -107,6 +107,11 @@ QA_SUFFIX = {"Q"}
 SEC_SUFFIX = {"X"}
 
 ERRORS: list[str] = []
+
+# Owner-accepted capacity overages (docs/plan/30-release-roadmap.md §3.1 / §12, decision
+# 2026-09-24): the S07 reduced sprint carries +2 eng pts, and therefore train R1 carries +2.
+# These downgrade to WARN so the governance CI gate stays meaningful for *new* overages.
+ACCEPTED_OVERAGE = {"sprint": {7: 2}, "train": {"R1": 2}}
 WARNINGS: list[str] = []
 MOVES: list[dict] = []
 UNFIXABLE_SPRINTS: set[int] = set()
@@ -932,10 +937,15 @@ def level_load(tickets, index, fix):
                 break
         if not moved:
             if n not in UNFIXABLE_SPRINTS:
-                err("OVER-CAPACITY Sprint %02d: %d eng pts vs capacity %d (+%d over) "
-                    "— no movable ticket has room elsewhere in the train window; "
-                    "absorb from the train buffer or descope per roadmap §12"
-                    % (n, p, CAPACITY[n], p - CAPACITY[n]))
+                over = p - CAPACITY[n]
+                msg = ("OVER-CAPACITY Sprint %02d: %d eng pts vs capacity %d (+%d over) "
+                       "— no movable ticket has room elsewhere in the train window; "
+                       "absorb from the train buffer or descope per roadmap §12"
+                       % (n, p, CAPACITY[n], over))
+                if over <= ACCEPTED_OVERAGE["sprint"].get(n, 0):
+                    warn(msg + " [owner-accepted overage]")
+                else:
+                    err(msg)
             # remember, but never mutate CAPACITY (the report reads it)
             UNFIXABLE_SPRINTS.add(n)
     # final report pass
@@ -959,7 +969,11 @@ def check_train_totals(tickets):
         delta = have - want
         rows.append((name, "S%02d-S%02d" % (lo, hi), cap, want, have, delta))
         if have > cap:
-            err("TRAIN-OVER-CAPACITY %s: %d eng pts vs %d available" % (name, have, cap))
+            msg = "TRAIN-OVER-CAPACITY %s: %d eng pts vs %d available" % (name, have, cap)
+            if have - cap <= ACCEPTED_OVERAGE["train"].get(name, 0):
+                warn(msg + " [owner-accepted overage]")
+            else:
+                err(msg)
         elif want and abs(delta) > want * 0.35:
             warn("TRAIN-BUDGET-DRIFT %s: roadmap §3.1 allocates %d pts, backlog "
                  "carries %d (%+d)" % (name, want, have, delta))
