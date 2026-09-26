@@ -98,6 +98,34 @@ for the authoritative table (rules, CI check names, budgets, commands, repo layo
 policy, ticket schema, statechart contracts). If you find the same list copied into a second file, that
 copy is a bug — delete it and link to the owner instead.
 
+## Branch protection break-glass runbook
+
+`main` protection (`.github/branch-protection.json`, applied by
+`scripts/apply_branch_protection.py`, `enforce_admins: true`) has no built-in
+bypass — that is the point (C-9.1). If protection must be lifted in a genuine
+emergency (e.g. to land a hotfix while CI infrastructure itself is down):
+
+1. Only `@basiltt` or a person they explicitly delegate in writing on the
+   tracking issue may perform the bypass.
+2. Before changing anything, open (or comment on) the dedicated break-glass
+   tracking issue, stating: what is broken, why waiting for a normal PR is not
+   possible, and the exact setting(s) about to change.
+3. Use the repository-administration-scoped credential only via the GitHub UI
+   or `gh api`, never the automated apply script (which never runs from a
+   PR-triggered workflow, by design).
+4. Restore `.github/branch-protection.json` settings immediately after the
+   emergency merge — do not leave protection weakened.
+5. The weekly `governance-drift` workflow (GOV-005, `.github/workflows/governance-drift.yml`)
+   will detect any settings left un-restored and open a `priority/p1-high`
+   `security`-labelled issue regardless of step 4 — this is deliberate, not a
+   bug: break-glass usage is always independently recorded.
+6. The tracking issue is reviewed at the R4 live-enablement gate
+   (`docs/plan/28-statechart-catalogue.md` B-series live gate; see
+   `docs/plan/30-release-roadmap.md`).
+
+Break-glass is for repository infrastructure emergencies only — it is never a
+substitute for getting a second review on a normal change.
+
 ## Reporting security issues
 
 Never open a public issue for a vulnerability. Follow [`SECURITY.md`](SECURITY.md).

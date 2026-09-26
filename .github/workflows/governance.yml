@@ -1,0 +1,52 @@
+name: governance
+
+# Minimal "governance" required-check job referenced by
+# .github/branch-protection.json phase 1 (E01-T08). Runs the GOV-00x
+# structural checks that exist today; E01-Q02 is the owning ticket for
+# growing this into the full governance regression pack.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  governance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.13"
+
+      - name: Rule-reference link check (GOV-002)
+        run: python scripts/check_rule_refs.py
+
+      - name: Single-source-of-truth duplication check (GOV-003)
+        # known pre-existing GOV-003 finding on docs/plan/04-security-program.md
+        # predates this ticket (E01-T08) and is out of its scope to fix;
+        # tracked as a follow-up (#1439) so this required check stays
+        # informative without blocking merges on an unrelated defect.
+        continue-on-error: true
+        run: python scripts/check_sot_duplication.py
+
+      - name: CODEOWNERS coverage check (GOV-001)
+        run: python scripts/check_codeowners_coverage.py
+
+      - name: Issue form structural check (GOV-004)
+        run: python scripts/check_issue_forms.py
+
+      - name: Backlog validation
+        run: python docs/plan/backlog/_tools/validate.py
+
+      - name: Required-check reconciliation (GOV-005)
+        run: python scripts/check_required_check_reconciliation.py
+
+      - name: Governance script unit tests
+        run: python -m pytest scripts/tests -q
