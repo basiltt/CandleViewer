@@ -49,6 +49,32 @@ PAIRS: dict[str, tuple[tuple[int, int, int], tuple[int, int, int], float, str]] 
     ),
 }
 
+# Light-theme resolved values (semantic-light set, read via the Penpot MCP bridge from
+# the `-light` frame boards added alongside the dark ones). Same six pairs as PAIRS above.
+LIGHT_PAIRS: dict[str, tuple[tuple[int, int, int], tuple[int, int, int], float, str]] = {
+    "text.primary on status.danger.subtle (banner title)": (
+        (20, 23, 26), (251, 226, 227), 4.5, "AA text",
+    ),
+    "text.secondary on status.danger.subtle (banner body)": (
+        (58, 65, 72), (251, 226, 227), 4.5, "AA text",
+    ),
+    "status.danger.strong icon on status.danger.subtle (! glyph)": (
+        (154, 106, 5), (251, 226, 227), 3.0, "AA non-text UI",
+    ),
+    # Retry now is a filled button (btn-retry-now-bg + on-action text), not a plain-text
+    # control, so it is judged at the 3:1 non-text-UI bar against the banner background,
+    # same as the dark theme (see section 6 of E08-D03.md for the rationale).
+    "action.primary.default fill on status.danger.subtle (Retry now button)": (
+        (43, 108, 232), (251, 226, 227), 3.0, "AA non-text UI (filled button)",
+    ),
+    "text.link on status.danger.subtle (Details)": (
+        (31, 85, 191), (251, 226, 227), 4.5, "AA text (link-style control)",
+    ),
+    "text.tertiary on surface.app (workspace note)": (
+        (82, 92, 102), (255, 255, 255), 4.5, "AA text",
+    ),
+}
+
 
 def simulate_deuteranopia(rgb: tuple[int, int, int]) -> tuple[int, int, int]:
     """Rough Brettel-style deuteranopia projection, sufficient as a sanity check.
@@ -67,8 +93,15 @@ def simulate_deuteranopia(rgb: tuple[int, int, int]) -> tuple[int, int, int]:
 
 def main() -> int:
     ok = True
-    print("-- WCAG contrast --")
+    print("-- WCAG contrast (dark theme) --")
     for name, (fg, bg, minimum, label) in PAIRS.items():
+        ratio = contrast_ratio(fg, bg)
+        passed = ratio >= minimum
+        ok = ok and passed
+        print(f"{name}: {ratio:.2f}:1 (>= {minimum}:1 {label}) -> {'PASS' if passed else 'FAIL'}")
+
+    print("\n-- WCAG contrast (light theme) --")
+    for name, (fg, bg, minimum, label) in LIGHT_PAIRS.items():
         ratio = contrast_ratio(fg, bg)
         passed = ratio >= minimum
         ok = ok and passed
