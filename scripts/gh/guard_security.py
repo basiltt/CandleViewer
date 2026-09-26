@@ -72,9 +72,12 @@ def evaluate_label_sync(issue: Issue) -> Decision:
     )
 
 
-def _signoff_comment(comments: list[Comment]) -> Comment | None:
+def _signoff_comment(comments: list[Comment], closer_login: str = "") -> Comment | None:
     for comment in comments:
         if not comment.author_has_write_access:
+            continue
+        if closer_login and comment.author_login == closer_login:
+            # Separation of duties: the closer cannot self-sign-off (C-10.1).
             continue
         match = SECURITY_SIGNOFF_MARKER_RE.search(comment.body)
         if match and match.group(1).lower() == "pass":
@@ -110,7 +113,7 @@ def evaluate_close(
             fail_closed=True,
         )
 
-    signoff = _signoff_comment(comments)
+    signoff = _signoff_comment(comments, issue.actor_login)
     if signoff is not None:
         return Decision(
             allow=True,

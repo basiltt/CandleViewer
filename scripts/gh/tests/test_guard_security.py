@@ -71,3 +71,12 @@ def test_close_with_marker_but_failed_write_access_check_fails_closed() -> None:
     assert not decision.allow
     assert decision.fail_closed
 
+
+
+def test_closer_cannot_self_signoff_security() -> None:
+    issue = Issue(
+        number=1, kind="Task", labels=frozenset({"security"}), body="",
+        owner_login="alice", actor_login="basiltt",
+    )
+    comments = [Comment(author_login="basiltt", body="Security sign-off: pass", author_has_write_access=True)]
+    assert not sec.evaluate_close(issue, comments).allow

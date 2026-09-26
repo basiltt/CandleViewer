@@ -115,3 +115,23 @@ def test_task_kind_is_not_gated() -> None:
     issue = Issue(number=2, kind="Task", labels=frozenset(), body="", owner_login="alice")
     decision = qa.evaluate(issue, comments=[])
     assert decision.allow
+
+
+def test_closer_cannot_self_signoff() -> None:
+    # Separation of duties: the actor closing the issue must not be the one
+    # supplying the QA sign-off (single-owner repo: agents share the owner token).
+    issue = Issue(
+        number=9, kind="Story", labels=frozenset({"type/story"}), body="",
+        owner_login="alice", actor_login="basiltt",
+    )
+    comments = [Comment(author_login="basiltt", body="QA sign-off: pass", author_has_write_access=True)]
+    assert not qa.evaluate(issue, comments).allow
+
+
+def test_signoff_from_someone_other_than_closer_is_accepted() -> None:
+    issue = Issue(
+        number=9, kind="Story", labels=frozenset({"type/story"}), body="",
+        owner_login="alice", actor_login="basiltt",
+    )
+    comments = [Comment(author_login="qa-bob", body="QA sign-off: pass", author_has_write_access=True)]
+    assert qa.evaluate(issue, comments).allow

@@ -37,9 +37,13 @@ GATED_KINDS = {"Story", "Bug"}
 GATED_KINDS_INCLUDING_UNKNOWN = GATED_KINDS | {"Unlabeled"}
 
 
-def _qa_signoff_comment(comments: list[Comment]) -> Comment | None:
+def _qa_signoff_comment(comments: list[Comment], closer_login: str = "") -> Comment | None:
     for comment in comments:
         if not comment.author_has_write_access:
+            continue
+        if closer_login and comment.author_login == closer_login:
+            # Separation of duties: the actor who closed the issue cannot
+            # supply its own sign-off (independent review, C-10.1).
             continue
         match = QA_SIGNOFF_MARKER_RE.search(comment.body)
         if match and match.group(1).lower() == "pass":
@@ -89,7 +93,7 @@ def evaluate(
             fail_closed=True,
         )
 
-    signoff = _qa_signoff_comment(comments)
+    signoff = _qa_signoff_comment(comments, issue.actor_login)
     if signoff is not None:
         return Decision(
             allow=True,
