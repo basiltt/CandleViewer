@@ -123,6 +123,14 @@ REQUIRED_TIER2_COLOUR_PREFIXES = (
     "color.position.",
     "color.node.",
     "color.heatmap.",
+    "color.data-confidence.",
+)
+
+# E08-D04: data-confidence text/indicator pairs must clear AA contrast against
+# their paired surface in every theme (WCAG 2.2 §1.4.3/1.4.11).
+DATA_CONFIDENCE_STATES = (
+    "live", "stale", "reconnecting", "disconnected",
+    "resyncing", "gapped", "backfilling", "delisted",
 )
 
 
@@ -184,6 +192,31 @@ def main() -> int:
             cr = contrast_ratio(text, resolved_by_theme[theme][surf])
             if cr < 4.5:
                 failures.append(f"[{theme}] text.primary vs {surf} contrast {cr:.2f} < 4.5")
+
+    # E08-D04: every data-confidence text/indicator pair clears AA against its
+    # own surface (text.*.surface where defined, else the ambient app surface),
+    # and every indicator clears the non-text 3:1 minimum against that surface.
+    for theme in THEMES:
+        tokens = resolved_by_theme[theme]
+        ambient = tokens["color.surface.app"]
+        for state in DATA_CONFIDENCE_STATES:
+            text_key = f"color.data-confidence.{state}.text"
+            indicator_key = f"color.data-confidence.{state}.indicator"
+            surface_key = f"color.data-confidence.{state}.surface"
+            if text_key not in tokens:
+                failures.append(f"[{theme}] missing {text_key}")
+                continue
+            surf = tokens.get(surface_key, ambient)
+            text_cr = contrast_ratio(tokens[text_key], surf)
+            if text_cr < 4.5:
+                failures.append(
+                    f"[{theme}] {text_key} vs {surface_key if surface_key in tokens else 'ambient'} "
+                    f"contrast {text_cr:.2f} < 4.5"
+                )
+            if indicator_key in tokens:
+                ind_cr = contrast_ratio(tokens[indicator_key], surf)
+                if ind_cr < 3.0:
+                    failures.append(f"[{theme}] {indicator_key} vs surface contrast {ind_cr:.2f} < 3.0")
 
     if failures:
         for f in failures:

@@ -592,5 +592,73 @@
   "space.row.height.comfortable": {
     "$type": "sizing",
     "$value": "{size.row.comfortable}"
+  },
+  "color.data-confidence.live.text": {
+    "$type": "color",
+    "$value": "{color.text.primary}"
+  },
+  "color.data-confidence.live.indicator": {
+    "$type": "color",
+    "$value": "{color.text.primary}"
+  },
+  "color.data-confidence.stale.text": {
+    "$type": "color",
+    "$value": "{color.text.secondary}"
+  },
+  "color.data-confidence.stale.surface": {
+    "$type": "color",
+    "$value": "{color.surface.sunken}"
+  },
+  "color.data-confidence.stale.indicator": {
+    "$type": "color",
+    "$value": "{color.status.warning.strong}"
+  },
+  "color.data-confidence.reconnecting.text": {
+    "$type": "color",
+    "$value": "{color.text.primary}"
+  },
+  "color.data-confidence.reconnecting.indicator": {
+    "$type": "color",
+    "$value": "{color.status.warning.default}"
+  },
+  "color.data-confidence.disconnected.text": {
+    "$type": "color",
+    "$value": "{color.text.primary}"
+  },
+  "color.data-confidence.disconnected.indicator": {
+    "$type": "color",
+    "$value": "{color.status.danger.default}"
+  },
+  "color.data-confidence.resyncing.text": {
+    "$type": "color",
+    "$value": "{color.text.secondary}"
+  },
+  "color.data-confidence.resyncing.indicator": {
+    "$type": "color",
+    "$value": "{color.status.info.strong}"
+  },
+  "color.data-confidence.gapped.text": {
+    "$type": "color",
+    "$value": "{color.text.secondary}"
+  },
+  "color.data-confidence.gapped.indicator": {
+    "$type": "color",
+    "$value": "{color.status.warning.strong}"
+  },
+  "color.data-confidence.backfilling.text": {
+    "$type": "color",
+    "$value": "{color.text.secondary}"
+  },
+  "color.data-confidence.backfilling.indicator": {
+    "$type": "color",
+    "$value": "{color.status.info.strong}"
+  },
+  "color.data-confidence.delisted.text": {
+    "$type": "color",
+    "$value": "{color.text.secondary}"
+  },
+  "color.data-confidence.delisted.indicator": {
+    "$type": "color",
+    "$value": "{color.status.danger.strong}"
   }
 }

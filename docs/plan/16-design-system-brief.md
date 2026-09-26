@@ -54,6 +54,25 @@ Naming convention: `category.subcategory.variant.state` all-lowercase dot-delimi
 - **Env accent**: `color.env.demo` (blue) / `color.env.live` (red) — reused nowhere else in the palette to keep the Demo/Live signal visually unambiguous and never confusable with buy/sell or status colours.
 - **Focus/interaction**: `color.focus.ring` (≥3:1 against every adjacent surface tier, validated per tier, not just once).
 
+### 2.1a Data-confidence tokens (E08-D04, `docs/design/E08/E08-D01.md` vocabulary)
+
+A dedicated `color.data-confidence.<state>.{text,indicator,surface}` semantic-token group (defined in
+`packages/ui/tokens/semantic-{dark,light,hc}.tokens.json`) covers the eight states — `live`, `stale`,
+`reconnecting`, `disconnected`, `resyncing`, `gapped`, `backfilling`, `delisted` — that every live-data
+surface (watchlist, tape, DOM heatmap, chart series, CVD, positions) must express identically. Per the
+research handoff, no new primitive colour values were required: each state aliases an existing
+`color.status.*` / `color.text.*` / `color.surface.*` token so theming stays a single re-map. `stale` is
+the only state with a distinct `surface` tint (`color.surface.sunken`); the rest carry `text` +
+`indicator` only, since the indicator is reinforcing and text is the mandatory primary signal
+(`docs/design/E08/E08-D01.md` §7). Contrast for every pair is verified programmatically alongside the
+existing token proof (`packages/ui/tokens/tests/verify_tokens.py`).
+
+**Precedence and composition rule**: a surface is in exactly one state at a time (highest-severity wins,
+order in §2 of the vocabulary doc above); `estimated` (CMP-227) and a data-confidence state are never
+merged into one chip — see CMP-227/CMP-239 in `15-component-catalogue.md`. A later ticket needing a state
+outside this set of eight opens a design-system change request against `CMP-239`/this section rather than
+inventing a local variant (`02-definition-of-ready-done.md` §3.1).
+
 ### 2.2 Typography
 
 - **UI family** (`font.family.ui`): **Inter** (variable, OFL-1.1; https://github.com/rsms/inter) — **locked by owner decision 2026-09-25**. Fallback stack `Inter, system-ui, "Segoe UI", sans-serif`. Chosen for x-height and legibility at the 11–13 px sizes dense trading rows use; also Penpot's default font, so design and code share the exact family.
