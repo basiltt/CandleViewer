@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# commit-msg hook — enforces Conventional Commits (C-4.10, CONSTITUTION.md §9 #20).
+# See commitlint.config.cjs for the allowed types/scopes.
+npx --no-install commitlint --edit "$1"

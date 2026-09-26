@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+# pre-push hook — branch-name check (C-4.4) + typecheck on affected Turbo
+# projects only (budget: <=60s p95, docs/plan/backlog E02-T07).
+#
+# Emergency bypass: `git push --no-verify`. This cannot weaken `main` — CI
+# required checks re-run the same rules server-side (branch protection).
+
+node scripts/check-branch-name.mjs || exit 1
+
+BASE_REF="${PRE_PUSH_BASE_REF:-origin/main}"
+if git rev-parse --verify "$BASE_REF" >/dev/null 2>&1; then
+  npx --no-install turbo run typecheck --filter="...[$BASE_REF...HEAD]"
+else
+  # No base ref available yet (e.g. first push of a new repo/mirror) — fall
+  # back to typechecking everything rather than skipping the gate.
+  npx --no-install turbo run typecheck
+fi

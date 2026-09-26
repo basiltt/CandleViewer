@@ -6,6 +6,22 @@ import { baseConfig } from "./packages/config/eslint.config.mjs";
 export default [
   ...baseConfig,
   {
+    // Root-level tooling scripts run under plain Node (no bundler globals
+    // config), so declare the Node global env directly rather than pulling
+    // in the `globals` package for one env object (E02-T07).
+    files: ["scripts/**/*.{mjs,cjs,js}", "*.config.{mjs,cjs,js}"],
+    languageOptions: {
+      globals: {
+        process: "readonly",
+        console: "readonly",
+        __dirname: "readonly",
+        __filename: "readonly",
+        module: "readonly",
+        require: "readonly",
+      },
+    },
+  },
+  {
     ignores: ["**/dist/**", "**/coverage/**", "**/.turbo/**", "**/node_modules/**"],
   },
 ];

@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# pre-commit hook — lint-staged only (auto-fix + re-stage). Must stay fast
+# (budget: <=5s p95 on a 20-file diff, docs/plan/backlog E02-T07).
+npx --no-install lint-staged
