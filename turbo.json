@@ -1,0 +1,55 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["pnpm-lock.yaml", "tsconfig.base.json"],
+  "tasks": {
+    "lint": {
+      "dependsOn": ["^lint"],
+      "inputs": ["**/*.{ts,tsx,js,mjs,cjs,json}", "!**/*.md"],
+      "outputs": []
+    },
+    "lint:fix": {
+      "dependsOn": ["^lint:fix"],
+      "inputs": ["**/*.{ts,tsx,js,mjs,cjs,json}", "!**/*.md"],
+      "outputs": [],
+      "cache": false
+    },
+    "format": {
+      "inputs": ["**/*.{ts,tsx,js,mjs,cjs,json,css}", "!**/*.md"],
+      "outputs": [],
+      "cache": false
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck", "generate"],
+      "inputs": ["**/*.{ts,tsx}", "tsconfig*.json", "!**/*.md"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "test/**", "tests/**", "!**/*.md"],
+      "outputs": []
+    },
+    "test:cov": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "test/**", "tests/**", "!**/*.md"],
+      "outputs": ["coverage/**"]
+    },
+    "build": {
+      "dependsOn": ["^build", "generate"],
+      "inputs": ["src/**", "!**/*.md"],
+      "outputs": ["dist/**"]
+    },
+    "size": {
+      "dependsOn": ["build"],
+      "inputs": ["dist/**"],
+      "outputs": []
+    },
+    "generate": {
+      "inputs": ["**/*.{yaml,json}", "!**/*.md"],
+      "outputs": ["src/generated/**"]
+    },
+    "verify": {
+      "dependsOn": ["lint", "typecheck", "test:cov", "build", "size"],
+      "outputs": []
+    }
+  }
+}

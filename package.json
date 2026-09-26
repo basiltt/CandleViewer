@@ -1,0 +1,26 @@
+{
+  "name": "candleviewer",
+  "private": true,
+  "description": "CandleViewer monorepo root — pnpm workspace + Turborepo task graph.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20.14.0 <21"
+  },
+  "packageManager": "pnpm@12.5.1+sha512.4/MFvHhKK8ifWtO2E4iJRw+ujSr182thIW7JHCw9ZAiXdfneOKrDMQROpA8kXLDVZmOS399lgk4ZB+9qLGLeXw==",
+  "scripts": {
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "format": "turbo run format",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:cov": "turbo run test:cov",
+    "build": "turbo run build",
+    "size": "turbo run size",
+    "generate": "turbo run generate",
+    "verify": "turbo run verify",
+    "check:agents-commands": "node scripts/check-agents-commands.mjs"
+  },
+  "devDependencies": {
+    "turbo": "2.3.3"
+  }
+}
