@@ -15,25 +15,25 @@
 
 Do not write code before reading the ones relevant to your ticket. Paths are repo-relative.
 
-| # | File | Why |
-|---|---|---|
-| 1 | `CONSTITUTION.md` | Non-negotiable rules; §1 scope guardrails, §2 invariants, §9 gates |
-| 2 | `AGENTS.md` (this file) | How to actually work here |
-| 3 | The **GitHub issue** you were assigned | The only authoritative statement of your task |
-| 4 | `docs/plan/00-planning-brief.md` | Product, locked decisions, team, deliverables |
-| 5 | `docs/research/24-owner-decisions.md` | Owner decisions that override research recommendations |
-| 6 | `docs/plan/02-definition-of-ready-done.md` | DoR/DoD you must satisfy |
-| 7 | `docs/plan/01-sdlc-and-branching.md` | Branch/PR mechanics in full |
-| 8 | `docs/plan/20-architecture.md` | C4 views, module responsibilities |
-| 9 | `docs/plan/21-database-schema.md` | Postgres DDL, QuestDB tables, Parquet layouts, retention |
-| 10 | `docs/plan/22-api-openapi.yaml` + `23-ws-protocol.md` + `24-internal-schemas.md` | The contract. Change it before code |
-| 10b | `docs/plan/28-statechart-catalogue.md` | The lifecycle contracts. **Required before touching any lifecycle** (order, trade group, legs, algos, native-SL protection, rule instance, alert, recorder, replay, connection, book health, auth session, live gate, kill switch, reconciliation, risk lockout) |
-| 10c | `docs/plan/27-adrs/ADR-0016-statechart-runtime.md` | Why those contracts exist, which executor runs them, and what may never be one |
-| 11 | `docs/plan/26-chart-engine-design.md` | Engine architecture, layers, budgets |
-| 12 | `docs/plan/03-testing-strategy.md`, `04-security-program.md`, `05-accessibility-standard.md`, `06-performance-and-load-standard.md` | Gate details |
-| 13 | `docs/plan/14-screens-catalogue.md` + `15-component-catalogue.md` + `16-design-system-brief.md` | Required before any UI work |
-| 14 | `docs/adr/` | Decisions already made — do not relitigate silently |
-| 15 | `SECURITY.md` | Secrets and reporting policy |
+| #   | File                                                                                                                                | Why                                                                                                                                                                                                                                                              |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `CONSTITUTION.md`                                                                                                                   | Non-negotiable rules; §1 scope guardrails, §2 invariants, §9 gates                                                                                                                                                                                               |
+| 2   | `AGENTS.md` (this file)                                                                                                             | How to actually work here                                                                                                                                                                                                                                        |
+| 3   | The **GitHub issue** you were assigned                                                                                              | The only authoritative statement of your task                                                                                                                                                                                                                    |
+| 4   | `docs/plan/00-planning-brief.md`                                                                                                    | Product, locked decisions, team, deliverables                                                                                                                                                                                                                    |
+| 5   | `docs/research/24-owner-decisions.md`                                                                                               | Owner decisions that override research recommendations                                                                                                                                                                                                           |
+| 6   | `docs/plan/02-definition-of-ready-done.md`                                                                                          | DoR/DoD you must satisfy                                                                                                                                                                                                                                         |
+| 7   | `docs/plan/01-sdlc-and-branching.md`                                                                                                | Branch/PR mechanics in full                                                                                                                                                                                                                                      |
+| 8   | `docs/plan/20-architecture.md`                                                                                                      | C4 views, module responsibilities                                                                                                                                                                                                                                |
+| 9   | `docs/plan/21-database-schema.md`                                                                                                   | Postgres DDL, QuestDB tables, Parquet layouts, retention                                                                                                                                                                                                         |
+| 10  | `docs/plan/22-api-openapi.yaml` + `23-ws-protocol.md` + `24-internal-schemas.md`                                                    | The contract. Change it before code                                                                                                                                                                                                                              |
+| 10b | `docs/plan/28-statechart-catalogue.md`                                                                                              | The lifecycle contracts. **Required before touching any lifecycle** (order, trade group, legs, algos, native-SL protection, rule instance, alert, recorder, replay, connection, book health, auth session, live gate, kill switch, reconciliation, risk lockout) |
+| 10c | `docs/plan/27-adrs/ADR-0016-statechart-runtime.md`                                                                                  | Why those contracts exist, which executor runs them, and what may never be one                                                                                                                                                                                   |
+| 11  | `docs/plan/26-chart-engine-design.md`                                                                                               | Engine architecture, layers, budgets                                                                                                                                                                                                                             |
+| 12  | `docs/plan/03-testing-strategy.md`, `04-security-program.md`, `05-accessibility-standard.md`, `06-performance-and-load-standard.md` | Gate details                                                                                                                                                                                                                                                     |
+| 13  | `docs/plan/14-screens-catalogue.md` + `15-component-catalogue.md` + `16-design-system-brief.md`                                     | Required before any UI work                                                                                                                                                                                                                                      |
+| 14  | `docs/adr/`                                                                                                                         | Decisions already made — do not relitigate silently                                                                                                                                                                                                              |
+| 15  | `SECURITY.md`                                                                                                                       | Secrets and reporting policy                                                                                                                                                                                                                                     |
 
 **Never** rely on memory of another repository, a generic tutorial, or a model prior about "how trading
 apps usually work". This repo has locked decisions; follow them.
@@ -41,17 +41,17 @@ apps usually work". This repo has locked decisions; follow them.
 **Where the truth lives (C-16.5).** When two documents disagree, the owner below wins and the other file
 is the bug:
 
-| You need | Read only |
-|---|---|
-| A rule / its exact id | `CONSTITUTION.md` (ids are stable and verifiable — C-16.4) |
-| Required CI check names | `CONSTITUTION.md` §9 |
-| Performance & bundle budget **values** | `CONSTITUTION.md` §14.2 / §14.3 |
-| Why a budget is that number, and how it was measured | `docs/plan/06-performance-and-load-standard.md` |
-| Command / script names | `AGENTS.md` §4 (a **specification** until ticket `INFRA-001` lands) |
-| Who must approve a path | `.github/CODEOWNERS` |
-| Ticket schema vs ticket content ownership | `.github/CODEOWNERS` (backlog section) |
+| You need                                                  | Read only                                                                                                        |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| A rule / its exact id                                     | `CONSTITUTION.md` (ids are stable and verifiable — C-16.4)                                                       |
+| Required CI check names                                   | `CONSTITUTION.md` §9                                                                                             |
+| Performance & bundle budget **values**                    | `CONSTITUTION.md` §14.2 / §14.3                                                                                  |
+| Why a budget is that number, and how it was measured      | `docs/plan/06-performance-and-load-standard.md`                                                                  |
+| Command / script names                                    | `AGENTS.md` §4 (a **specification** until ticket `INFRA-001` lands)                                              |
+| Who must approve a path                                   | `.github/CODEOWNERS`                                                                                             |
+| Ticket schema vs ticket content ownership                 | `.github/CODEOWNERS` (backlog section)                                                                           |
 | A lifecycle's states, events, guards and transition table | `docs/plan/28-statechart-catalogue.md` §Bn (generated from `machines/*.json` — **never hand-edit the Markdown**) |
-| A lifecycle's enums, field types and persistence schema | `docs/plan/24-internal-schemas.md` |
+| A lifecycle's enums, field types and persistence schema   | `docs/plan/24-internal-schemas.md`                                                                               |
 
 Do not copy any of these lists into a new file — link to them.
 
@@ -141,6 +141,7 @@ CandleViewer/
 ```
 
 **Placement rules**
+
 - Business logic goes in `services/api/<module>/` or `apps/web/src/features/<feature>/` — never in
   `apps/desktop/`, never in `packages/chart-engine/`.
 - Anything Bybit-specific goes in `services/api/exchange/bybit/` only.
@@ -207,24 +208,24 @@ Detailed tickets live as JSON in `docs/plan/backlog/E*.json` (merged view:
 blocked_by, milestone, body`. `body` is a Markdown string with these sections, in this order, for every
 non-Epic ticket:
 
-| # | Section | What it tells you |
-|---|---|---|
-| 1 | `## Context` | Why this ticket exists; the product/architecture backdrop |
-| 2 | `## Scope / Deliverables` | Exactly what to build. Do not exceed this. |
-| 3 | `## Out of scope` | Explicitly excluded work — do not creep into it |
-| 4 | `## Acceptance criteria` | Gherkin-style scenarios; each one becomes a test |
-| 5 | `## Design-ahead waiver (Architect/CDO) — explicit record` | Whether design sign-off is already granted or still required (DoR gate) |
-| 6 | `## Technical notes / design` | Implementation guidance, interfaces, data shapes |
-| 7 | `## Test plan` | Which pyramid level(s), fixtures, what must be covered |
-| 8 | `## Security notes` | Threat-model points, secrets/RBAC/audit considerations |
-| 9 | `## Accessibility notes` | WCAG/keyboard/reduced-motion considerations, or N/A |
-| 10 | `## Performance notes` | Budgets this ticket must respect or measure |
-| 11 | `## Observability` | Logs/metrics/alerts to add or update |
-| 12 | `## Definition of Done` | The DoD checklist specific to this ticket |
-| 13 | `## Dependencies` | Other tickets/contracts this one needs first (see also `blocked_by`) |
-| 14 | `## Branch` | The exact branch name to use |
-| 15 | `## References` | Plan docs, ADRs, schema sections this ticket implements |
-| 16 | `## Agent execution brief` | **Read this first.** Read first / Repo paths / Interfaces you must not break / Commands / Branch & PR / Done means / Do NOT / If blocked — a self-contained, no-follow-up-questions summary of 1–15 |
+| #   | Section                                                    | What it tells you                                                                                                                                                                                   |
+| --- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `## Context`                                               | Why this ticket exists; the product/architecture backdrop                                                                                                                                           |
+| 2   | `## Scope / Deliverables`                                  | Exactly what to build. Do not exceed this.                                                                                                                                                          |
+| 3   | `## Out of scope`                                          | Explicitly excluded work — do not creep into it                                                                                                                                                     |
+| 4   | `## Acceptance criteria`                                   | Gherkin-style scenarios; each one becomes a test                                                                                                                                                    |
+| 5   | `## Design-ahead waiver (Architect/CDO) — explicit record` | Whether design sign-off is already granted or still required (DoR gate)                                                                                                                             |
+| 6   | `## Technical notes / design`                              | Implementation guidance, interfaces, data shapes                                                                                                                                                    |
+| 7   | `## Test plan`                                             | Which pyramid level(s), fixtures, what must be covered                                                                                                                                              |
+| 8   | `## Security notes`                                        | Threat-model points, secrets/RBAC/audit considerations                                                                                                                                              |
+| 9   | `## Accessibility notes`                                   | WCAG/keyboard/reduced-motion considerations, or N/A                                                                                                                                                 |
+| 10  | `## Performance notes`                                     | Budgets this ticket must respect or measure                                                                                                                                                         |
+| 11  | `## Observability`                                         | Logs/metrics/alerts to add or update                                                                                                                                                                |
+| 12  | `## Definition of Done`                                    | The DoD checklist specific to this ticket                                                                                                                                                           |
+| 13  | `## Dependencies`                                          | Other tickets/contracts this one needs first (see also `blocked_by`)                                                                                                                                |
+| 14  | `## Branch`                                                | The exact branch name to use                                                                                                                                                                        |
+| 15  | `## References`                                            | Plan docs, ADRs, schema sections this ticket implements                                                                                                                                             |
+| 16  | `## Agent execution brief`                                 | **Read this first.** Read first / Repo paths / Interfaces you must not break / Commands / Branch & PR / Done means / Do NOT / If blocked — a self-contained, no-follow-up-questions summary of 1–15 |
 
 Epic tickets (`kind: "Epic"`) end with `## Agent guidance` instead of `## Agent execution brief`:
 dependency order, parallel lanes for multiple agents working the epic concurrently, and shared
@@ -243,7 +244,7 @@ is machine-checked by `docs/plan/backlog/_tools/validate.py`; run it after any b
 ### 3b. Board protocol
 
 The project board is the single source of truth for ticket state; GitHub issue body and `body` JSON are
-the source of truth for ticket *content*.
+the source of truth for ticket _content_.
 
 - **Status semantics:** `Backlog` → `Ready` (DoR met) → `In Progress` (an agent/human has a branch open)
   → `In Review` (PR open) → `In Test` (PR merged, awaiting QA) → `Done` (QA or owner signed off) →
@@ -276,7 +277,7 @@ the source of truth for ticket *content*.
 > At the time of writing, the repository contains **planning documents only**: there is no
 > `package.json`, `pnpm-workspace.yaml`, `turbo.json` or `pyproject.toml` in the tree yet. The task
 > names below are therefore **normative specifications, not verified observations** — they are the
-> names the scaffolding is *required* to create, not names anyone has run.
+> names the scaffolding is _required_ to create, not names anyone has run.
 >
 > - **Single owning ticket:** `INFRA-001 — Bootstrap monorepo scaffolding and task graph`
 >   (`docs/plan/backlog/`, epic `EP-INFRA`). That ticket's acceptance criteria include: every task
@@ -295,82 +296,84 @@ the source of truth for ticket *content*.
 
 ### Root (pnpm workspace + Turborepo)
 
-| Task | Command |
-|---|---|
-| Install | `pnpm install --frozen-lockfile` |
-| Lint everything | `pnpm lint` |
-| Fix lint/format | `pnpm lint:fix` && `pnpm format` |
-| Typecheck | `pnpm typecheck` |
-| Unit tests (all JS/TS) | `pnpm test` |
-| Unit tests with coverage | `pnpm test:cov` |
-| Build all | `pnpm build` |
-| Bundle-size check | `pnpm size` |
-| Regenerate protocol types + tokens | `pnpm generate` |
-| Full local gate (what CI runs on a PR) | `pnpm verify` |
+| Task                                                          | Command                          |
+| ------------------------------------------------------------- | -------------------------------- |
+| Install                                                       | `pnpm install --frozen-lockfile` |
+| Lint everything                                               | `pnpm lint`                      |
+| Fix lint/format                                               | `pnpm lint:fix` && `pnpm format` |
+| Typecheck                                                     | `pnpm typecheck`                 |
+| Unit tests (all JS/TS)                                        | `pnpm test`                      |
+| Unit tests with coverage                                      | `pnpm test:cov`                  |
+| Build all                                                     | `pnpm build`                     |
+| Bundle-size check                                             | `pnpm size`                      |
+| Regenerate protocol types + tokens                            | `pnpm generate`                  |
+| Full local gate (what CI runs on a PR)                        | `pnpm verify`                    |
+| Validate current branch name (C-4.4)                          | `pnpm check:branch-name`         |
+| Install local git hooks (commitlint/lint-staged/branch check) | `pnpm prepare`                   |
 
 ### `apps/web`
 
-| Task | Command |
-|---|---|
-| Dev server | `pnpm --filter @candleviewer/web dev` |
-| Unit/component tests | `pnpm --filter @candleviewer/web test` |
-| Build | `pnpm --filter @candleviewer/web build` |
+| Task                      | Command                                    |
+| ------------------------- | ------------------------------------------ |
+| Dev server                | `pnpm --filter @candleviewer/web dev`      |
+| Unit/component tests      | `pnpm --filter @candleviewer/web test`     |
+| Build                     | `pnpm --filter @candleviewer/web build`    |
 | Storybook (design review) | `pnpm --filter @candleviewer/ui storybook` |
 
 ### `apps/desktop`
 
-| Task | Command |
-|---|---|
-| Run Electron against dev web | `pnpm --filter @candleviewer/desktop dev` |
-| Package | `pnpm --filter @candleviewer/desktop package` |
+| Task                         | Command                                       |
+| ---------------------------- | --------------------------------------------- |
+| Run Electron against dev web | `pnpm --filter @candleviewer/desktop dev`     |
+| Package                      | `pnpm --filter @candleviewer/desktop package` |
 
 ### `packages/chart-engine`
 
-| Task | Command |
-|---|---|
-| Unit tests | `pnpm --filter @candleviewer/chart-engine test` |
-| Benchmarks (compare to baseline) | `pnpm --filter @candleviewer/chart-engine bench` |
+| Task                                                                   | Command                                                   |
+| ---------------------------------------------------------------------- | --------------------------------------------------------- |
+| Unit tests                                                             | `pnpm --filter @candleviewer/chart-engine test`           |
+| Benchmarks (compare to baseline)                                       | `pnpm --filter @candleviewer/chart-engine bench`          |
 | Update benchmark baseline (maintainers only, needs CODEOWNER approval) | `pnpm --filter @candleviewer/chart-engine bench:baseline` |
 
 ### `services/api` (run from `services/api/`, inside the project venv or `uv`)
 
-| Task | Command |
-|---|---|
-| Install dev deps | `uv sync --frozen` |
-| Lint | `ruff check .` |
-| Format check / fix | `black --check .` / `black .` |
-| Typecheck | `mypy --strict .` |
-| Unit tests | `pytest -m "not integration" --cov=. --cov-fail-under=85` |
-| Integration tests (needs docker compose stack) | `pytest -m integration` |
-| Architecture contracts | `lint-imports` |
-| New migration | `alembic revision -m "<summary>"` (autogenerate then **review by hand**) |
-| Apply / roll back migration | `alembic upgrade head` / `alembic downgrade -1` |
-| Run API locally | `uvicorn services.api.main:app --host 127.0.0.1 --port 8000 --reload` |
+| Task                                           | Command                                                                  |
+| ---------------------------------------------- | ------------------------------------------------------------------------ |
+| Install dev deps                               | `uv sync --frozen`                                                       |
+| Lint                                           | `ruff check .`                                                           |
+| Format check / fix                             | `black --check .` / `black .`                                            |
+| Typecheck                                      | `mypy --strict .`                                                        |
+| Unit tests                                     | `pytest -m "not integration" --cov=. --cov-fail-under=85`                |
+| Integration tests (needs docker compose stack) | `pytest -m integration`                                                  |
+| Architecture contracts                         | `lint-imports`                                                           |
+| New migration                                  | `alembic revision -m "<summary>"` (autogenerate then **review by hand**) |
+| Apply / roll back migration                    | `alembic upgrade head` / `alembic downgrade -1`                          |
+| Run API locally                                | `uvicorn services.api.main:app --host 127.0.0.1 --port 8000 --reload`    |
 
 ### Stack, E2E, load, security
 
-| Task | Command |
-|---|---|
+| Task                                          | Command                                                |
+| --------------------------------------------- | ------------------------------------------------------ |
 | Bring up local stack (Postgres, QuestDB, API) | `docker compose -f infra/docker-compose.dev.yml up -d` |
-| E2E (web) | `pnpm e2e` |
-| E2E (Electron) | `pnpm e2e:desktop` |
-| Accessibility scan | `pnpm test:a11y` |
-| Load test | `k6 run tests/load/api-ws.js` |
-| Ingestion soak | `locust -f tests/load/ingestion_soak.py` |
-| Chaos suite | `pnpm chaos` |
-| Secret scan on your diff | `gitleaks protect --staged --redact` |
-| Container scan | `trivy image candleviewer/api:dev` |
+| E2E (web)                                     | `pnpm e2e`                                             |
+| E2E (Electron)                                | `pnpm e2e:desktop`                                     |
+| Accessibility scan                            | `pnpm test:a11y`                                       |
+| Load test                                     | `k6 run tests/load/api-ws.js`                          |
+| Ingestion soak                                | `locust -f tests/load/ingestion_soak.py`               |
+| Chaos suite                                   | `pnpm chaos`                                           |
+| Secret scan on your diff                      | `gitleaks protect --staged --redact`                   |
+| Container scan                                | `trivy image candleviewer/api:dev`                     |
 
 ### Governance (C-16.4, C-16.5 — runnable today; stdlib Python plus `jsonschema` for GOV-004)
 
-| Task | Command |
-|---|---|
-| CODEOWNERS coverage check (GOV-001) | `scripts/check-codeowners-coverage.sh` (or `python scripts/check_codeowners_coverage.py`) |
-| Rule-reference link check (GOV-002) | `scripts/check-rule-refs.sh` (or `python scripts/check_rule_refs.py`) |
-| Single-source-of-truth duplication check (GOV-003) | `python scripts/check_sot_duplication.py` |
-| Backlog ticket schema + cross-file rule validation (GOV-004) | `python scripts/validate-backlog.py` (`--summary` for the per-epic point rollup, `--json` for machine output) |
-| Both, as `pr-metadata`'s `governance` job will invoke them (job wiring: `E01-Q02`) | `make governance` |
-| Governance script tests | `python -m pytest scripts/tests --cov=scripts --cov-fail-under=85` |
+| Task                                                                               | Command                                                                                                       |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| CODEOWNERS coverage check (GOV-001)                                                | `scripts/check-codeowners-coverage.sh` (or `python scripts/check_codeowners_coverage.py`)                     |
+| Rule-reference link check (GOV-002)                                                | `scripts/check-rule-refs.sh` (or `python scripts/check_rule_refs.py`)                                         |
+| Single-source-of-truth duplication check (GOV-003)                                 | `python scripts/check_sot_duplication.py`                                                                     |
+| Backlog ticket schema + cross-file rule validation (GOV-004)                       | `python scripts/validate-backlog.py` (`--summary` for the per-epic point rollup, `--json` for machine output) |
+| Both, as `pr-metadata`'s `governance` job will invoke them (job wiring: `E01-Q02`) | `make governance`                                                                                             |
+| Governance script tests                                                            | `python -m pytest scripts/tests --cov=scripts --cov-fail-under=85`                                            |
 
 ---
 
@@ -404,7 +407,7 @@ the source of truth for ticket *content*.
 ### 5.2 Python
 
 - **Python 3.12+**, `asyncio` throughout. **Ruff** (config in `pyproject.toml`, rule set includes `E,F,W,I,
-  N,UP,B,A,C4,SIM,ASYNC,S,PT,RET,ARG,PTH,ERA,TRY,RUF`), **Black** (line length 100), **mypy `--strict`**
+N,UP,B,A,C4,SIM,ASYNC,S,PT,RET,ARG,PTH,ERA,TRY,RUF`), **Black** (line length 100), **mypy `--strict`**
   (no `Any` in public signatures, no untyped defs, no implicit `Optional`).
 - **Naming**: `snake_case` functions/variables, `PascalCase` classes, `SCREAMING_SNAKE_CASE` constants,
   modules `snake_case`. Async functions that perform I/O are named for the effect (`submit_order`,
@@ -420,8 +423,8 @@ the source of truth for ticket *content*.
   metrics. Retries: only for idempotent operations, with jittered exponential backoff and a cap; order
   submission retries **must** reuse the same `orderLinkId` (C-2.10).
 - **Async hygiene**: no blocking calls on the event loop (no sync DB drivers, no `time.sleep`, no CPU loops
-  >50 ms — offload to a worker process/executor). Every task is tracked and cancelled on shutdown; no
-  fire-and-forget `asyncio.create_task` without storing the handle. Every queue is bounded (C-2.18).
+  > 50 ms — offload to a worker process/executor). Every task is tracked and cancelled on shutdown; no
+  > fire-and-forget `asyncio.create_task` without storing the handle. Every queue is bounded (C-2.18).
 - **Logging**: `structlog`-style structured JSON via `services/api/observability/`. Always include
   `traceId`, and where applicable `userId`, `role`, `accountId`, `tradeGroupId`, `orderLinkId`. Never log
   request bodies of key-management endpoints, headers, signatures, or anything from the secrets module.
@@ -452,7 +455,7 @@ the source of truth for ticket *content*.
   including as "just an internal transition". Nothing running faster than ~100 Hz may query an
   interpreter; read the plain `bool`/enum the machine publishes on state entry.
 - **Statecharts record; synchronous code enforces** (C-2.21). Kill switch, live gate, risk caps and rate
-  budgets are enforced by a synchronous flag or function *before* any interpreter is involved. If your
+  budgets are enforced by a synchronous flag or function _before_ any interpreter is involved. If your
   design needs a machine to **return an answer** rather than **record a fact**, it is the wrong design.
 - **`xstate-statemachine==0.9.1` IS adopted, and is the only statechart executor** (C-2.22, ADR-0016
   Accepted). Every catalogue lifecycle is a statechart JSON under
@@ -548,7 +551,7 @@ Violations of this list are treated as incidents, not mistakes. If you are about
    chart library in production (C-1.2).
 10. **Never add a dependency** without justification, an allowlisted licence, and CODEOWNER approval — and
     never into `packages/chart-engine` without an ADR.
-11. **Never approve or merge your own pull request.** Reviews come from *independent* agent sessions
+11. **Never approve or merge your own pull request.** Reviews come from _independent_ agent sessions
     (`code-reviewer`; `security-reviewer` on security paths) that record a PR review with rule ids and
     evidence checked (C-10.1 v1.1.0). Only the delivery orchestrator merges code PRs, and only after both
     reviews approve and all required checks are green. **Design PRs (`docs/design/**`, `SCR-*`/`CMP-*`) are
@@ -572,7 +575,7 @@ Violations of this list are treated as incidents, not mistakes. If you are about
     the `pr-metadata` check.
 20. **Never duplicate a single-source list** (C-16.5). Required CI check names live only in
     `CONSTITUTION.md` §9; command/script names live only in `AGENTS.md` §4; performance and bundle budget
-    *values* live only in `CONSTITUTION.md` §14 with their derivation only in
+    _values_ live only in `CONSTITUTION.md` §14 with their derivation only in
     `docs/plan/06-performance-and-load-standard.md`. If you need one elsewhere, **link** to it. Copying it
     creates drift and the PR will be rejected.
 21. **Never diverge from a statechart contract, and never make a hot path one.** Do not rename a state,
