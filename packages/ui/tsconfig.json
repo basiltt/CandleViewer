@@ -1,0 +1,8 @@
+{
+  "extends": "@candleviewer/config/tsconfig/dom.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "include": ["src", "test", ".storybook/**/*.ts", "tsup.config.ts"],
+  "exclude": ["dist", "node_modules", "coverage", "storybook-static"]
+}

@@ -1,0 +1,43 @@
+{
+  "name": "@candleviewer/chart-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Custom WebGL2 candle/footprint/orderflow chart engine. No React, no DOM in core/layers, no network, no exchange knowledge (CONSTITUTION.md C-2.16).",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./bench": {
+      "types": "./dist/bench.d.ts",
+      "import": "./dist/bench.js"
+    }
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage",
+    "build": "tsup",
+    "size": "echo \"@candleviewer/chart-engine: size-limit wired in E11\"",
+    "bench": "node ./bench/run-bench.mjs",
+    "bench:baseline": "node ./bench/run-bench.mjs --baseline"
+  },
+  "devDependencies": {
+    "@candleviewer/config": "workspace:*",
+    "@types/node": "^22.10.2",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.19.0",
+    "globals": "^15.14.0",
+    "vitest": "^2.1.8",
+    "@vitest/coverage-v8": "^2.1.8",
+    "eslint": "^9.17.0"
+  }
+}
