@@ -68,7 +68,9 @@ mypy_path = "."
 exclude = ["^\\.venv/"]
 
 [[tool.mypy.overrides]]
-# Third-party stub gaps only, dated: revisit when duckdb ships inline types (tracked in E02-T02 follow-up).
+# duckdb has no inline types / py.typed marker as of 2026-09-27 (duckdb 1.1.x on PyPI).
+# Allowlisted 2026-09-27, tracked under issue #91 (E02-T02); re-check at each duckdb bump
+# and drop this override once upstream ships types (see PyPI project page / duckdb#…).
 module = ["duckdb.*"]
 ignore_missing_imports = true
 
