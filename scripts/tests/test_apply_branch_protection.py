@@ -21,6 +21,7 @@ def _valid_desired_state() -> dict:
             "required_approving_review_count": 2,
             "require_code_owner_reviews": True,
             "dismiss_stale_reviews": True,
+            "require_last_push_approval": True,
         },
         "required_conversation_resolution": True,
         "required_linear_history": True,
@@ -84,6 +85,19 @@ def test_to_api_payload_strips_internal_keys() -> None:
     assert "required_pull_request_reviews" in payload
 
 
+def test_to_api_payload_includes_restrictions_null_when_absent() -> None:
+    payload = abp.to_api_payload(_valid_desired_state())
+    assert "restrictions" in payload
+    assert payload["restrictions"] is None
+
+
+def test_to_api_payload_preserves_explicit_restrictions() -> None:
+    data = _valid_desired_state()
+    data["restrictions"] = {"users": [], "teams": ["release-managers"]}
+    payload = abp.to_api_payload(data)
+    assert payload["restrictions"] == {"users": [], "teams": ["release-managers"]}
+
+
 def test_diff_state_no_changes_is_empty() -> None:
     live = {"enforce_admins": True, "allow_force_pushes": False}
     desired = {"enforce_admins": True, "allow_force_pushes": False}
@@ -100,3 +114,110 @@ def test_diff_state_detects_added_removed_and_changed() -> None:
     assert diff.changed == {"enforce_admins": (False, True)}
     assert not diff.is_empty()
     assert "enforce_admins" in diff.render()
+
+
+# --- Live-state normalisation (finding: diff_state never went empty) -----
+
+def _recorded_get_protection_response() -> dict:
+    """Shape modelled on GitHub's documented GET
+    .../branches/{branch}/protection response: booleans wrapped as
+    `{"enabled": ...}` and nested objects carrying read-only `url` fields."""
+    return {
+        "url": "https://api.github.com/repos/o/r/branches/main/protection",
+        "required_status_checks": {
+            "url": "https://api.github.com/repos/o/r/branches/main/protection/required_status_checks",
+            "strict": True,
+            "contexts": ["governance"],
+            "contexts_url": "https://api.github.com/repos/o/r/branches/main/protection/required_status_checks/contexts",
+            "checks": [{"context": "governance", "app_id": -1}],
+        },
+        "required_pull_request_reviews": {
+            "url": "https://api.github.com/repos/o/r/branches/main/protection/required_pull_request_reviews",
+            "required_approving_review_count": 2,
+            "require_code_owner_reviews": True,
+            "dismiss_stale_reviews": True,
+            "require_last_push_approval": True,
+        },
+        "enforce_admins": {
+            "url": "https://api.github.com/repos/o/r/branches/main/protection/enforce_admins",
+            "enabled": True,
+        },
+        "required_linear_history": {"enabled": True},
+        "allow_force_pushes": {"enabled": False},
+        "allow_deletions": {"enabled": False},
+        "required_conversation_resolution": {"enabled": True},
+        "restrictions": None,
+    }
+
+
+def test_normalise_live_state_unwraps_bool_enabled_shape() -> None:
+    normalised = abp._normalise_live_state(_recorded_get_protection_response())
+    assert normalised["enforce_admins"] is True
+    assert normalised["allow_force_pushes"] is False
+    assert normalised["required_linear_history"] is True
+    assert normalised["required_conversation_resolution"] is True
+
+
+def test_normalise_live_state_strips_nested_readonly_fields() -> None:
+    normalised = abp._normalise_live_state(_recorded_get_protection_response())
+    assert "url" not in normalised["required_status_checks"]
+    assert "contexts_url" not in normalised["required_status_checks"]
+    assert "checks" not in normalised["required_status_checks"]
+    assert normalised["required_status_checks"]["contexts"] == ["governance"]
+    assert "url" not in normalised["required_pull_request_reviews"]
+
+
+def test_normalise_then_diff_against_matching_desired_is_a_no_op() -> None:
+    """AC4: re-applying identical settings must be a genuine no-op, not just
+    a no-op between two hand-built flat fixtures."""
+    desired = _valid_desired_state()
+    payload = abp.to_api_payload(desired)
+    live = abp._normalise_live_state(_recorded_get_protection_response())
+    diff = abp.diff_state(live, payload)
+    assert diff.is_empty(), diff.render()
+
+
+def test_normalise_then_diff_detects_real_drift() -> None:
+    desired = _valid_desired_state()
+    payload = abp.to_api_payload(desired)
+    raw_live = _recorded_get_protection_response()
+    raw_live["required_pull_request_reviews"]["require_code_owner_reviews"] = False
+    live = abp._normalise_live_state(raw_live)
+    diff = abp.diff_state(live, payload)
+    assert not diff.is_empty()
+    assert diff.changed["required_pull_request_reviews"][0]["require_code_owner_reviews"] is False
+
+
+# --- Merge queue (finding: merge_queue never applied or drift-checked) ----
+
+def test_merge_queue_rule_params_shapes_ruleset_body() -> None:
+    desired = _valid_desired_state()
+    body = abp._merge_queue_rule_params(desired, "main")
+    assert body is not None
+    assert body["target"] == "branch"
+    assert body["conditions"]["ref_name"]["include"] == ["refs/heads/main"]
+    rule = body["rules"][0]
+    assert rule["type"] == "merge_queue"
+    assert rule["parameters"] == desired["merge_queue"]
+
+
+def test_merge_queue_rule_params_none_when_not_configured() -> None:
+    desired = _valid_desired_state()
+    del desired["merge_queue"]
+    assert abp._merge_queue_rule_params(desired, "main") is None
+
+
+def test_diff_merge_queue_no_drift_when_matching() -> None:
+    desired = _valid_desired_state()
+    live_params = dict(desired["merge_queue"])
+    diff = abp.diff_merge_queue(live_params, desired)
+    assert diff.is_empty()
+
+
+def test_diff_merge_queue_detects_drift() -> None:
+    desired = _valid_desired_state()
+    live_params = dict(desired["merge_queue"])
+    live_params["merge_method"] = "MERGE"
+    diff = abp.diff_merge_queue(live_params, desired)
+    assert not diff.is_empty()
+    assert diff.changed["merge_method"] == ("MERGE", "SQUASH")

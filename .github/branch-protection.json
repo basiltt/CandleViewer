@@ -1,5 +1,5 @@
 {
-  "$comment": "Desired-state branch protection for `main` (CONSTITUTION.md C-9.1, C-10.1, C-16.5; docs/plan/01-sdlc-and-branching.md §6.1, §7). Applied by scripts/apply-branch-protection.py, checked for drift by scripts/check-branch-protection-drift.py. A full PUT to GitHub's protection API replaces the whole object, so this file must stay complete — never a partial patch.",
+  "$comment": "Desired-state branch protection for `main` (CONSTITUTION.md C-9.1, C-10.1, C-16.5; docs/plan/01-sdlc-and-branching.md §6.1, §7). Applied by scripts/apply_branch_protection.py, checked for drift by scripts/check_branch_protection_drift.py. A full PUT to GitHub's protection API replaces the whole object, so this file must stay complete — never a partial patch.",
   "branch": "main",
   "required_pull_request_reviews": {
     "required_approving_review_count": 2,
@@ -49,5 +49,5 @@
     "max_entries_to_build": 5,
     "wait_time_for_minimum_entries_to_merge_minutes": 5
   },
-  "$note_pending": "x-pending-contexts is ignored by the GitHub API (an `x-` prefixed key is stripped before PUT) and read only by scripts/apply-branch-protection.py + scripts/check-branch-protection-drift.py + scripts/check-required-check-reconciliation.py. It lists every CONSTITUTION.md §9 check not yet in `required_status_checks.contexts` so the end state is visible from day 1. E03 graduates each one from here into `contexts` as its job first goes green on `main` (see Definition of Done checklist on E01-T08)."
+  "$note_pending": "x-pending-contexts is ignored by the GitHub API (an `x-` prefixed key is stripped before PUT) and read only by scripts/apply_branch_protection.py + scripts/check_branch_protection_drift.py + scripts/check_required_check_reconciliation.py. It lists every CONSTITUTION.md §9 check not yet in `required_status_checks.contexts` so the end state is visible from day 1. E03 graduates each one from here into `contexts` as its job first goes green on `main` (see Definition of Done checklist on E01-T08)."
 }

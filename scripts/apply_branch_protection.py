@@ -115,11 +115,20 @@ def validate_desired_state(data: dict) -> None:
 
 def to_api_payload(desired: dict) -> dict:
     """Strip GOV-005-internal annotation keys, leaving exactly what the GitHub
-    REST API's PUT .../branches/main/protection endpoint accepts."""
-    return {k: v for k, v in desired.items() if k not in NON_API_KEYS}
+    REST API's PUT .../branches/main/protection endpoint accepts.
+
+    `restrictions` is a required key on that endpoint (null is a valid value,
+    meaning "no push-access restriction beyond protection itself"); the
+    desired-state file does not model per-actor push restrictions today, so
+    this always sends `null` unless the file explicitly sets one."""
+    payload = {k: v for k, v in desired.items() if k not in NON_API_KEYS}
+    payload.setdefault("restrictions", desired.get("restrictions", None))
+    return payload
 
 
 def fetch_live_state(repo: str, token: str, branch: str = "main") -> dict:
+    """Fetch and normalise (see `_normalise_live_state`) the live protection
+    state so callers can diff it directly against a `to_api_payload` result."""
     url = f"{API_BASE}/repos/{repo}/branches/{branch}/protection"
     request = urllib.request.Request(
         url,
@@ -131,7 +140,7 @@ def fetch_live_state(repo: str, token: str, branch: str = "main") -> dict:
     )
     try:
         with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310
-            return json.loads(response.read())
+            return _normalise_live_state(json.loads(response.read()))
     except urllib.error.HTTPError as exc:
         if exc.code == 404:
             # No protection configured yet — treat as an empty live state.
@@ -141,12 +150,59 @@ def fetch_live_state(repo: str, token: str, branch: str = "main") -> dict:
         raise ApplyError(f"GET {url} failed: {exc.reason}") from exc
 
 
+# Top-level keys the GET .../protection response wraps as `{"enabled": bool}`
+# (or, for `required_pull_request_reviews`/`required_status_checks`, embeds
+# extra read-only fields such as `url`/`contexts_url`/`checks`) that the PUT
+# body does not accept in that shape. Mapped here so the live response can be
+# normalised into the same flat shape as the desired-state payload before
+# diffing — otherwise every key differs on every run and re-apply is never a
+# no-op (AC4).
+_BOOL_WRAPPED_KEYS = (
+    "enforce_admins",
+    "allow_force_pushes",
+    "allow_deletions",
+    "required_linear_history",
+    "required_conversation_resolution",
+    "lock_branch",
+    "allow_fork_syncing",
+)
+
+# Read-only fields GitHub adds to nested objects in the GET response that
+# never appear in (and are rejected or ignored by) the PUT body.
+_NESTED_READONLY_KEYS = {"url", "contexts_url", "checks", "users_url", "teams_url", "apps_url"}
+
+
+# Top-level fields GitHub adds to the GET response that are pure metadata
+# about the response itself, never part of any desired state and never
+# accepted by the PUT body.
+_TOP_LEVEL_READONLY_KEYS = {"url"}
+
+
+def _normalise_live_state(live: dict) -> dict:
+    """Reshape a raw GET .../branches/{branch}/protection response into the
+    flat shape the PUT body (and this repo's desired-state file) uses, so
+    `diff_state` compares like with like."""
+    normalised: dict = {}
+    for key, value in live.items():
+        if key in _TOP_LEVEL_READONLY_KEYS:
+            continue
+        if key in _BOOL_WRAPPED_KEYS and isinstance(value, dict) and "enabled" in value:
+            normalised[key] = value["enabled"]
+        elif isinstance(value, dict):
+            normalised[key] = {
+                k: v for k, v in value.items() if k not in _NESTED_READONLY_KEYS
+            }
+        else:
+            normalised[key] = value
+    return normalised
+
+
 def diff_state(live: dict, desired_payload: dict) -> Diff:
-    """Shallow key-by-key diff. The live GitHub response nests values
-    differently from the PUT body (e.g. `{"enabled": true}` wrappers), so
-    callers should normalise both sides before calling this in production;
-    for the purpose of this script (and its unit tests) both sides are
-    compared as plain dicts of top-level keys."""
+    """Shallow key-by-key diff between the (already-normalised) live state
+    and the desired PUT payload. Callers reading from the real GitHub API
+    MUST pass `live` through `_normalise_live_state` first — `fetch_live_state`
+    does this for them; the two are kept separate only so unit tests can
+    exercise the diff logic directly against hand-built flat dicts."""
     added: dict = {}
     removed: dict = {}
     changed: dict = {}
@@ -183,6 +239,136 @@ def apply_state(repo: str, token: str, payload: dict, branch: str = "main") -> N
         raise ApplyError(f"PUT {url} failed: {exc.code} {exc.reason}") from exc
     except urllib.error.URLError as exc:
         raise ApplyError(f"PUT {url} failed: {exc.reason}") from exc
+
+
+# --- Merge queue (repository rulesets API) -----------------------------
+#
+# The GitHub merge queue is not part of classic branch protection; it is
+# configured as a repository ruleset (`target: branch`) carrying a
+# `merge_queue` rule whose `parameters` mirror this file's `merge_queue`
+# block. `NON_API_KEYS` still excludes `merge_queue` from the protection PUT
+# body — it is applied and drift-checked separately via the functions below.
+MERGE_QUEUE_RULESET_NAME = "candleviewer-main-merge-queue"
+
+
+def _merge_queue_rule_params(desired: dict, branch: str) -> dict | None:
+    mq = desired.get("merge_queue")
+    if not mq:
+        return None
+    return {
+        "name": MERGE_QUEUE_RULESET_NAME,
+        "target": "branch",
+        "enforcement": "active",
+        "conditions": {"ref_name": {"include": [f"refs/heads/{branch}"], "exclude": []}},
+        "rules": [{"type": "merge_queue", "parameters": dict(mq)}],
+    }
+
+
+def fetch_merge_queue_ruleset(repo: str, token: str) -> dict:
+    """Return the live merge-queue ruleset's rule parameters, or `{}` if no
+    ruleset with `MERGE_QUEUE_RULESET_NAME` exists yet."""
+    url = f"{API_BASE}/repos/{repo}/rulesets?includes_parents=false"
+    request = urllib.request.Request(
+        url,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310
+            summaries = json.loads(response.read())
+    except urllib.error.HTTPError as exc:
+        raise ApplyError(f"GET {url} failed: {exc.code} {exc.reason}") from exc
+    except urllib.error.URLError as exc:
+        raise ApplyError(f"GET {url} failed: {exc.reason}") from exc
+
+    match = next((r for r in summaries if r.get("name") == MERGE_QUEUE_RULESET_NAME), None)
+    if match is None:
+        return {}
+    detail_url = f"{API_BASE}/repos/{repo}/rulesets/{match['id']}"
+    detail_request = urllib.request.Request(
+        detail_url,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+    )
+    try:
+        with urllib.request.urlopen(detail_request, timeout=30) as response:  # noqa: S310
+            detail = json.loads(response.read())
+    except urllib.error.HTTPError as exc:
+        raise ApplyError(f"GET {detail_url} failed: {exc.code} {exc.reason}") from exc
+    except urllib.error.URLError as exc:
+        raise ApplyError(f"GET {detail_url} failed: {exc.reason}") from exc
+
+    for rule in detail.get("rules", []):
+        if rule.get("type") == "merge_queue":
+            return dict(rule.get("parameters", {}))
+    return {}
+
+
+def diff_merge_queue(live_params: dict, desired: dict) -> Diff:
+    """Diff the live merge-queue rule parameters against `desired["merge_queue"]`."""
+    return diff_state(live_params, dict(desired.get("merge_queue") or {}))
+
+
+def _fetch_merge_queue_ruleset_id(repo: str, token: str) -> int | None:
+    url = f"{API_BASE}/repos/{repo}/rulesets?includes_parents=false"
+    request = urllib.request.Request(
+        url,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310
+            summaries = json.loads(response.read())
+    except urllib.error.HTTPError as exc:
+        raise ApplyError(f"GET {url} failed: {exc.code} {exc.reason}") from exc
+    except urllib.error.URLError as exc:
+        raise ApplyError(f"GET {url} failed: {exc.reason}") from exc
+    match = next((r for r in summaries if r.get("name") == MERGE_QUEUE_RULESET_NAME), None)
+    return match["id"] if match else None
+
+
+def apply_merge_queue_ruleset(repo: str, token: str, desired: dict, branch: str = "main") -> None:
+    """Idempotently create-or-update the merge-queue ruleset: POST to create
+    it the first time, PUT to update it on subsequent applies (a bare POST
+    on every run would fail with a duplicate-name conflict)."""
+    body_dict = _merge_queue_rule_params(desired, branch)
+    if body_dict is None:
+        return
+    existing_id = _fetch_merge_queue_ruleset_id(repo, token)
+    if existing_id is None:
+        url = f"{API_BASE}/repos/{repo}/rulesets"
+        method = "POST"
+    else:
+        url = f"{API_BASE}/repos/{repo}/rulesets/{existing_id}"
+        method = "PUT"
+    body = json.dumps(body_dict).encode("utf-8")
+    request = urllib.request.Request(
+        url,
+        data=body,
+        method=method,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+            "Content-Type": "application/json",
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310
+            response.read()
+    except urllib.error.HTTPError as exc:
+        raise ApplyError(f"{method} {url} (merge queue ruleset) failed: {exc.code} {exc.reason}") from exc
+    except urllib.error.URLError as exc:
+        raise ApplyError(f"{method} {url} (merge queue ruleset) failed: {exc.reason}") from exc
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -224,15 +410,28 @@ def main(argv: list[str] | None = None) -> int:
     try:
         live = fetch_live_state(args.repo, token, args.branch)
         diff = diff_state(live, payload)
-        if diff.is_empty():
+
+        mq_diff = Diff(added={}, removed={}, changed={})
+        if desired.get("merge_queue"):
+            mq_live = fetch_merge_queue_ruleset(args.repo, token)
+            mq_diff = diff_merge_queue(mq_live, desired)
+
+        if diff.is_empty() and mq_diff.is_empty():
             print("apply-branch-protection: no changes — live state matches desired state")
             return 0
-        print("apply-branch-protection: diff (live -> desired):")
-        print(diff.render())
+        if not diff.is_empty():
+            print("apply-branch-protection: protection diff (live -> desired):")
+            print(diff.render())
+        if not mq_diff.is_empty():
+            print("apply-branch-protection: merge-queue ruleset diff (live -> desired):")
+            print(mq_diff.render())
         if args.dry_run:
             print("apply-branch-protection: --dry-run set, not applying")
             return 0
-        apply_state(args.repo, token, payload, args.branch)
+        if not diff.is_empty():
+            apply_state(args.repo, token, payload, args.branch)
+        if not mq_diff.is_empty():
+            apply_merge_queue_ruleset(args.repo, token, desired, args.branch)
         print("apply-branch-protection: applied")
         return 0
     except ApplyError as exc:

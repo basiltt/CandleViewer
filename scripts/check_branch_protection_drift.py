@@ -20,8 +20,10 @@ import sys
 from apply_branch_protection import (
     ApplyError,
     DesiredStateError,
+    diff_merge_queue,
     diff_state,
     fetch_live_state,
+    fetch_merge_queue_ruleset,
     load_desired_state,
     to_api_payload,
 )
@@ -72,19 +74,34 @@ def main(argv: list[str] | None = None) -> int:
     payload = to_api_payload(desired)
     try:
         live = fetch_live_state(args.repo, token, args.branch)
+        mq_live = fetch_merge_queue_ruleset(args.repo, token) if desired.get("merge_queue") else {}
     except ApplyError as exc:
         print(f"check-branch-protection-drift: {exc}", file=sys.stderr)
         return 2
 
     diff = diff_state(live, payload)
-    if diff.is_empty():
+    mq_diff = diff_merge_queue(mq_live, desired) if desired.get("merge_queue") else None
+
+    if diff.is_empty() and (mq_diff is None or mq_diff.is_empty()):
         if not args.json:
             print("check-branch-protection-drift: no drift")
         else:
             print("[]")
         return 0
 
-    print(render_findings(diff, args.json))
+    if args.json:
+        findings = json.loads(render_findings(diff, True)) if not diff.is_empty() else []
+        if mq_diff is not None and not mq_diff.is_empty():
+            mq_findings = json.loads(render_findings(mq_diff, True))
+            for f in mq_findings:
+                f["key"] = f"merge_queue.{f['key']}"
+            findings.extend(mq_findings)
+        print(json.dumps(findings, indent=2))
+    else:
+        if not diff.is_empty():
+            print(render_findings(diff, False))
+        if mq_diff is not None and not mq_diff.is_empty():
+            print("GOV-005 merge-queue ruleset drift detected:\n" + mq_diff.render())
     return 1
 
 
