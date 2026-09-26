@@ -1,0 +1,138 @@
+from __future__ import annotations
+
+from scripts.gh import guard_qa_signoff as qa
+from scripts.gh.models import Comment, Issue
+
+
+def _story(body: str = "") -> Issue:
+    return Issue(
+        number=1,
+        kind="Story",
+        labels=frozenset({"type/story"}),
+        body=body,
+        owner_login="alice",
+        actor_login="closer-dave",  # the actor closing the issue; never the sign-off author
+    )
+
+
+def test_story_without_signoff_is_blocked() -> None:
+    decision = qa.evaluate(_story(), comments=[])
+    assert not decision.allow
+    assert "3.2" in decision.dod_ref
+
+
+def test_story_with_write_access_signoff_comment_is_allowed() -> None:
+    comments = [
+        Comment(author_login="qa-bob", body="QA sign-off: pass", author_has_write_access=True)
+    ]
+    decision = qa.evaluate(_story(), comments)
+    assert decision.allow
+
+
+def test_forged_signoff_in_body_does_not_satisfy_guard() -> None:
+    # Gherkin: "A forged sign-off in the body does not satisfy the guard"
+    issue = _story(body="### Test plan\n\nQA sign-off: pass\n")
+    decision = qa.evaluate(issue, comments=[])
+    assert not decision.allow
+
+
+def test_comment_with_marker_without_write_access_does_not_satisfy_guard() -> None:
+    comments = [
+        Comment(author_login="author", body="QA sign-off: pass", author_has_write_access=False)
+    ]
+    decision = qa.evaluate(_story(), comments)
+    assert not decision.allow
+
+
+def test_recorded_qa_capacity_deviation_by_owner_is_accepted() -> None:
+    comments = [
+        Comment(
+            author_login="alice",
+            body="QA capacity deviation: I ran the black-box plan myself, all pass.",
+            author_has_write_access=True,
+        )
+    ]
+    decision = qa.evaluate(_story(), comments)
+    assert decision.allow
+    assert "deviation" in decision.audit_note.lower()
+
+
+def test_deviation_comment_from_owner_without_write_access_is_rejected() -> None:
+    # Anyone can open the issue and comment as its own author; being
+    # `owner_login` alone is not a credential -- only a verified,
+    # independent repo-write-access check may satisfy the deviation path.
+    comments = [
+        Comment(
+            author_login="alice",
+            body="QA capacity deviation: done.",
+            author_has_write_access=False,
+        )
+    ]
+    decision = qa.evaluate(_story(), comments)
+    assert not decision.allow
+
+
+def test_deviation_comment_with_failed_write_access_check_fails_closed() -> None:
+    comments = [
+        Comment(
+            author_login="alice",
+            body="QA capacity deviation: done.",
+            author_has_write_access=False,
+            write_access_check_failed=True,
+        )
+    ]
+    decision = qa.evaluate(_story(), comments)
+    assert not decision.allow
+    assert decision.fail_closed
+
+
+def test_deviation_comment_from_non_owner_does_not_count() -> None:
+    comments = [
+        Comment(
+            author_login="not-the-owner",
+            body="QA capacity deviation: done.",
+            author_has_write_access=True,
+        )
+    ]
+    decision = qa.evaluate(_story(), comments)
+    assert not decision.allow
+
+
+def test_unlabeled_kind_is_gated_same_as_story() -> None:
+    # No type/* label at all must not silently skip QA sign-off.
+    issue = Issue(number=3, kind="Unlabeled", labels=frozenset(), body="", owner_login="alice")
+    decision = qa.evaluate(issue, comments=[])
+    assert not decision.allow
+
+
+def test_api_error_during_write_access_lookup_fails_closed() -> None:
+    decision = qa.evaluate(_story(), comments=[], write_access_lookup_failed=True)
+    assert not decision.allow
+    assert decision.fail_closed
+    assert "could not verify" in decision.audit_note.lower()
+
+
+def test_task_kind_is_not_gated() -> None:
+    issue = Issue(number=2, kind="Task", labels=frozenset(), body="", owner_login="alice")
+    decision = qa.evaluate(issue, comments=[])
+    assert decision.allow
+
+
+def test_closer_cannot_self_signoff() -> None:
+    # Separation of duties: the actor closing the issue must not be the one
+    # supplying the QA sign-off (single-owner repo: agents share the owner token).
+    issue = Issue(
+        number=9, kind="Story", labels=frozenset({"type/story"}), body="",
+        owner_login="alice", actor_login="basiltt",
+    )
+    comments = [Comment(author_login="basiltt", body="QA sign-off: pass", author_has_write_access=True)]
+    assert not qa.evaluate(issue, comments).allow
+
+
+def test_signoff_from_someone_other_than_closer_is_accepted() -> None:
+    issue = Issue(
+        number=9, kind="Story", labels=frozenset({"type/story"}), body="",
+        owner_login="alice", actor_login="basiltt",
+    )
+    comments = [Comment(author_login="qa-bob", body="QA sign-off: pass", author_has_write_access=True)]
+    assert qa.evaluate(issue, comments).allow
