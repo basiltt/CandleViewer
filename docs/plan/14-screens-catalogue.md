@@ -180,7 +180,10 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 - **Audit:** `auth.mfa.enrolled`, `auth.mfa.recovery_generated`. **Stories:** US-AUTH-005.
 - **Performance:** QR render <=100 ms (client-side from the provisioning URI; the secret never round-trips for rendering).
 - **Stories:** US-ONB-003, US-ONB-010.
-- **Design sign-off acceptance checklist:** [ ] QR + manual secret both shown with copy affordance [ ] recovery codes screen with download/print/copy and 'I stored them' gate [ ] verification-failed state [ ] re-enrol variant (existing factor) drawn [ ] contrast of the QR quiet zone verified in dark theme
+- **Design sign-off acceptance checklist:** [x] QR + manual secret both shown with copy affordance [x] recovery codes screen with download/print/copy and 'I stored them' gate [x] verification-failed state [x] re-enrol variant (existing factor) drawn [x] contrast of the QR quiet zone verified in dark theme
+- **Hi-fi:** E09-D04 (`docs/design/E09/E09-D04.md`) — all states above plus step2 expired-secret, owner-
+  reset landing, recovery-code-consumed forced re-enrolment, and recovery-exhaustion lockout drawn in
+  `semantic-dark` tokens on Penpot page "E09-D04 TOTP Enrolment Hi-Fi".
 
 ### SCR-004 — Forced password change
 - **Type:** Page. **Route:** `/login/change-password`. Triggered when `mustChangePassword` is set (new user, owner reset, password age beyond policy).
@@ -1894,7 +1897,10 @@ Drag preview                Drop zones
 - **Performance:** Session list is fetched on open (no polling); revocation takes effect server-side within 1 s and the revoked session is terminated on its next request.
 - **Components:** CMP-001 Button, CMP-049 Table, CMP-065 FormSection, CMP-086 SettingsNav / SettingsLayout, CMP-201 PasswordField, CMP-205 QrCode, CMP-206 RecoveryCodeList.
 - **Stories:** US-ONB-003, US-ONB-009, US-ONB-004.
-- **Design sign-off acceptance checklist:** [ ] change-password flow with policy shown up front [ ] TOTP re-enrol and disable (disable requires step-up and a warning) [ ] recovery-code regeneration with the 'old codes stop working' warning [ ] active-session list with revoke and revoke-all [ ] current session marked and protected from accidental revoke [ ] every action here confirmed to emit an audit event
+- **Design sign-off acceptance checklist:** [x] change-password flow with policy shown up front [x] TOTP re-enrol and disable (disable requires step-up and a warning) [x] recovery-code regeneration with the 'old codes stop working' warning [ ] active-session list with revoke and revoke-all [ ] current session marked and protected from accidental revoke [ ] every action here confirmed to emit an audit event
+- **Hi-fi (two-factor section only):** E09-D04 (`docs/design/E09/E09-D04.md`) draws the status card, re-enrol,
+  regenerate-recovery-codes and disable-TOTP (step-up gated) actions in `semantic-dark` tokens. The
+  password/sessions/audit sections of this screen remain out of scope for E09-D04.
 
 ### SCR-113 — Hotkey editor
 - **Type:** Section. Every command with its binding, grouped by context; record-a-keystroke capture; conflict detection with the conflicting command named; reset per binding or all; import/export keymap; a "safety" group where destructive commands (flatten, cancel-all, freeze) can be required to use a modifier or be unbound entirely.
