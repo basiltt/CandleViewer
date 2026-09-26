@@ -647,7 +647,72 @@ flowchart TD
 
 ---
 
-## 21. Traceability
+## 21. Auth, session and onboarding — full chain (E09-D02)
+
+**Actors:** all personas (unauthenticated → authenticated), P2/P3 for the invite path.
+**Screens:** SCR-001, SCR-002, SCR-003, SCR-004, SCR-005, SCR-006, SCR-010, SCR-017, SCR-019
+(`14-screens-catalogue.md`). Structure and states matrix owned by `docs/design/E09/E09-D02.md`; this
+diagram is the merged, canonical state machine (adopted decisions AD-1..AD-6 from
+`docs/design/research/e09-auth-mental-models.md`, structural decisions in E09-D02 §2).
+
+```mermaid
+flowchart TD
+  L[SCR-001 Login: idle] -->|submit| Ls[submitting]
+  Ls -->|401 generic| Le[error-generic] --> L
+  Ls -->|5 failures/15min| Lr[rate-limited, countdown] -->|expires| L
+  Ls -->|account.disabled| Ld[account-disabled: terminal, contact owner]
+  Ls -->|network down| Lu[server-unreachable, Retry] --> L
+  Ls -->|200 + mfaToken| T[SCR-002 TOTP: idle]
+
+  T -->|submit code| Tv[verifying]
+  Tv -->|invalid| Ti[invalid-code] --> T
+  Tv -->|mfaToken expired| Tx[expired-challenge] --> L
+  Tv -->|5th failure| Tl[locked-after-5: recovery link stays live]
+  Tv -->|200, first login or forced| E3{needs enrolment or password change?}
+  T -->|use recovery code| Tr[recovery-code-entry]
+  Tr -->|valid, codes remain| E3
+  Tr -->|valid, zero remain, no TOTP| Tlk["recovery-exhausted-lockout: terminal,\ncontact owner (SCR-002)"]
+  Tl -->|recovery code path| Tr
+
+  E3 -->|needs TOTP enrolment| S3[SCR-003 enrol: step1-scan]
+  E3 -->|needs forced password change| S4[SCR-004: policy-shown]
+  E3 -->|neither| SH[SCR-010 App Shell]
+
+  S3 --> S3b[step2-confirm] -->|invalid| S3b
+  S3b -->|valid| S3c[step3-codes-shown] -->|I saved them + continue| S3d[step3-completed] --> SH
+  S3 -->|re-enrol trigger: owner reset or recovery consumed| S3re[re-enrol-variant] --> S3
+
+  S4 -->|typing| S4t[typing] -->|reused/breached| S4e[server-reject] --> S4t
+  S4t -->|valid + confirmed| S4s[success] --> SH
+
+  SH -->|access token cannot refresh| M5[SCR-005 modal: default]
+  M5 -->|order ticket open| M5o[expiry-during-order-entry:\nticket echoed read-only, WS paused not torn down]
+  M5 -->|sign in again| SH
+  M5 -->|sign out instead| L
+  M5o -->|sign in again| SH
+
+  SH -->|privileged action| M6[SCR-006 step-up: code-only or code+confirmation]
+  M6 -->|active grace window, non-critical action| M6g[remaining-grace: countdown, Confirm] --> SH
+  M6 -->|Live-enablement or kill-switch, grace ignored per AD-5| M6f[full dialog forced]
+  M6 -->|valid| SH
+  M6 -->|3 failures| M6d[three-strike-downgrade: action denied, toast] --> SH
+
+  I[SCR-017 invite link] -->|valid| I1[accept invite] --> I2["SCR-004 embedded:\nset password"] --> I3["SCR-003 embedded:\nenrol TOTP"] --> I4[orientation card] --> SH
+  I -->|expired| Ix[invite-expired: terminal, ask owner for new one]
+  I -->|already used| Iu[invite-already-used: terminal, ask owner for new one]
+
+  SH -.->|empty workspace / Settings-Help| CL[SCR-019 setup checklist: pending/done/blocked]
+```
+
+**Node resolution summary (no dead ends):** every terminal node above (`Ld`, `Tlk`, `Ix`, `Iu`) explicitly
+names the owner as the unblock path per the ticket's acceptance criterion; every other leaf either loops
+back to a live retry (`Le`→`L`, `Ti`→`T`, `Lu`→`L`, `S4e`→`S4t`, `S3b`→`S3b`) or reaches `SH` (the app
+shell). Full per-state detail, the recovery-code-exhaustion frame, and the interruption-preservation
+frame are specified in `docs/design/E09/E09-D02.md`.
+
+---
+
+## 22. Traceability
 
 - All routes/modals referenced (`R-###`, `M-###`) are defined in `12-sitemap.md`.
 - State machines referenced (order, rule, algo, connection) are formalized as state diagrams in `17-ux-diagrams.md` §4.
