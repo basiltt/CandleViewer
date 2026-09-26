@@ -1,0 +1,11 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Supply-chain hardening (C-12.3): .npmrc sets ignore-scripts=true globally.
+# esbuild (a transitive dev-dependency of vitest) ships a legitimate, widely
+# audited postinstall that fetches its platform binary; it is explicitly
+# allowlisted here rather than disabling ignore-scripts repo-wide. Any
+# future addition to this list needs the same review note.
+allowBuilds:
+  esbuild: true
