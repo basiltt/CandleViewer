@@ -1,13 +1,31 @@
 {
-  "$description": "Penpot token themes; mirrors the CandleViewer DS file",
+  "$description": "Penpot token themes; mirrors the CandleViewer DS file. Colour and density are independent axes: pick one colour theme + one density mode (6 combinations total, matching the ticket's 3 themes x 2 densities acceptance criterion). Density does not need its own token sets today because every density-aware alias (`space.row.height.*`, `size.control.*`) already carries both `.compact`/`.comfortable` values in `primitives`/`semantic-dark`; a density mode is a CSS-custom-property pointer at runtime (`--row-height: var(--space-row-height-compact)`), not a second token tree, per `16-design-system-brief.md` §2.3 ('density is a mode, not a compromise, no second parallel spacing scale').",
   "themes": [
     {
       "group": "theme",
       "name": "dark",
-      "sets": [
-        "primitives",
-        "semantic-dark"
-      ]
+      "sets": ["primitives", "semantic-dark"]
+    },
+    {
+      "group": "theme",
+      "name": "light",
+      "sets": ["primitives", "semantic-dark", "semantic-light"]
+    },
+    {
+      "group": "theme",
+      "name": "high-contrast",
+      "sets": ["primitives", "semantic-dark", "semantic-hc"]
     }
-  ]
+  ],
+  "density": {
+    "modes": ["compact", "comfortable"],
+    "resolves": [
+      "size.control.height",
+      "size.row.height",
+      "space.row.height.compact",
+      "space.row.height.comfortable",
+      "space.inset.*",
+      "space.field.gap"
+    ]
+  }
 }
