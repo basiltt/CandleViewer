@@ -41,7 +41,8 @@ def _qa_signoff_comment(comments: list[Comment], closer_login: str = "") -> Comm
     for comment in comments:
         if not comment.author_has_write_access:
             continue
-        if closer_login and comment.author_login == closer_login:
+        if not closer_login or comment.author_login == closer_login:
+            # Fail closed: unknown closer → no comment can be trusted as independent.
             # Separation of duties: the actor who closed the issue cannot
             # supply its own sign-off (independent review, C-10.1).
             continue

@@ -76,7 +76,8 @@ def _signoff_comment(comments: list[Comment], closer_login: str = "") -> Comment
     for comment in comments:
         if not comment.author_has_write_access:
             continue
-        if closer_login and comment.author_login == closer_login:
+        if not closer_login or comment.author_login == closer_login:
+            # Fail closed: unknown closer → no comment can be trusted as independent.
             # Separation of duties: the closer cannot self-sign-off (C-10.1).
             continue
         match = SECURITY_SIGNOFF_MARKER_RE.search(comment.body)

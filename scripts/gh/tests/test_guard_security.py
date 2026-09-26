@@ -29,7 +29,10 @@ def test_close_without_security_comment_is_blocked_for_always_security_area() ->
 
 
 def test_close_with_write_access_signoff_comment_is_allowed() -> None:
-    issue = Issue(number=1, kind="Task", labels=frozenset({"security"}), body="", owner_login="alice")
+    issue = Issue(
+        number=1, kind="Task", labels=frozenset({"security"}), body="",
+        owner_login="alice", actor_login="closer-dave",
+    )
     comments = [Comment(author_login="sec-carol", body="Security sign-off: pass", author_has_write_access=True)]
     decision = sec.evaluate_close(issue, comments)
     assert decision.allow
@@ -79,4 +82,11 @@ def test_closer_cannot_self_signoff_security() -> None:
         owner_login="alice", actor_login="basiltt",
     )
     comments = [Comment(author_login="basiltt", body="Security sign-off: pass", author_has_write_access=True)]
+    assert not sec.evaluate_close(issue, comments).allow
+
+
+def test_unknown_closer_fails_closed() -> None:
+    # ACTOR_LOGIN missing → no comment can be proven independent → block.
+    issue = Issue(number=1, kind="Task", labels=frozenset({"security"}), body="", owner_login="alice")
+    comments = [Comment(author_login="sec-carol", body="Security sign-off: pass", author_has_write_access=True)]
     assert not sec.evaluate_close(issue, comments).allow

@@ -11,6 +11,7 @@ def _story(body: str = "") -> Issue:
         labels=frozenset({"type/story"}),
         body=body,
         owner_login="alice",
+        actor_login="closer-dave",  # the actor closing the issue; never the sign-off author
     )
 
 
