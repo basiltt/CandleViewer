@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // scripts/check-agents-commands.mjs
 //
 // E02-T01: parses the `|`-delimited command tables in `AGENTS.md` §4 and
