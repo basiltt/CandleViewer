@@ -11,34 +11,39 @@ Downstream: `12-sitemap.md` (routes), `13-user-flows.md` (flows), `15-component-
 ## 0. How to read this document
 
 ### 0.1 Entry template
+
 Every entry carries: **ID** `SCR-nnn` · **Name** · **Type** (Page / Panel / Modal / Drawer / Overlay / Bar / State) · **Purpose** · **Persona & RBAC** · **Route** · **Layout + ASCII wireframe** · **Components** (CMP-* names, defined in `15-component-catalogue.md`) · **Data & sources** (REST `GET /api/v1/...` or WS topic `"..."`) · **Interactions & hotkeys** · **States** · **Validation & error messages** · **A11y** · **Performance** · **Analytics/audit events** · **Design sign-off acceptance checklist** · **Related stories**.
 
 IDs are stable and permanent. Numbers are **not** contiguous: gaps are reserved for growth inside a band.
 
 ### 0.2 ID bands
+
 IDs are stable and permanent; a retired screen's ID is never reused. Bands are deliberately larger than their current contents. The "Used / free" column is the authoritative record of which numbers are spare, so a future editor adds a screen at the next free number in the right band rather than appending at the end of the document.
 
-| Band | Area | Used | Free slots reserved for growth |
-|---|---|---|---|
-| SCR-001..019 | Auth, app shell, global chrome, onboarding | 16 of 19 | **007, 008, 009** — reserved for additional auth factors and recovery flows (e.g. WebAuthn/passkey enrolment, account-recovery challenge, device-trust prompt), kept adjacent to SCR-006 step-up. |
-| SCR-020..029 | Workspaces, dockable panel system, layouts | 10 of 10 | none — band full; the next workspace screen extends into a newly allocated band, not into a neighbouring one. |
-| SCR-030..049 | Charting: chart panel, settings dialogs, indicators, drawings, profiles | 20 of 20 | none — band full. |
-| SCR-050..059 | Order flow: DOM heatmap/ladder, tape, CVD, OI/funding/liq, detectors | 10 of 10 | none — band full. |
-| SCR-060..079 | Trading: tickets, grids, algos, risk, environment | 20 of 20 | none — band full. |
-| SCR-080..089 | Rule engine: list, form editor, node-graph editor, simulate, arming | 10 of 10 | none — band full. |
-| SCR-090..099 | Alerts, journal, analytics, replay | 10 of 10 | none — band full. |
-| SCR-100..109 | Watchlist, symbol search, symbol info | 5 of 10 | **105–109** — the largest deliberate reserve, held for scanner/screener expansion (saved-scan management, scan result detail, correlation view, symbol comparison, sector/basket grouping), which is the area most likely to grow post-v1. |
-| SCR-110..119 | Settings (user-scoped) | 10 of 10 | none — band full. |
-| SCR-120..149 | Admin (owner-only) | 28 of 30 | **138, 139** — intentionally held inside the security sub-range (SCR-135..137 audit/security) for future security screens such as an access-review report and a key-ceremony/approval flow. **Confirmed:** the admin band is 30 slots with 28 used; the two gaps are reserved, not missing screens. Admin is the largest RBAC-critical area, so every admin ID is accounted for here explicitly. |
-| SCR-150..159 | Global system states (error, offline, forbidden, degraded) | 10 of 10 | none — band full. |
+| Band         | Area                                                                    | Used     | Free slots reserved for growth                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------ | ----------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| SCR-001..019 | Auth, app shell, global chrome, onboarding                              | 16 of 19 | **007, 008, 009** — reserved for additional auth factors and recovery flows (e.g. WebAuthn/passkey enrolment, account-recovery challenge, device-trust prompt), kept adjacent to SCR-006 step-up.                                                                                                                                                                                                |
+| SCR-020..029 | Workspaces, dockable panel system, layouts                              | 10 of 10 | none — band full; the next workspace screen extends into a newly allocated band, not into a neighbouring one.                                                                                                                                                                                                                                                                                    |
+| SCR-030..049 | Charting: chart panel, settings dialogs, indicators, drawings, profiles | 20 of 20 | none — band full.                                                                                                                                                                                                                                                                                                                                                                                |
+| SCR-050..059 | Order flow: DOM heatmap/ladder, tape, CVD, OI/funding/liq, detectors    | 10 of 10 | none — band full.                                                                                                                                                                                                                                                                                                                                                                                |
+| SCR-060..079 | Trading: tickets, grids, algos, risk, environment                       | 20 of 20 | none — band full.                                                                                                                                                                                                                                                                                                                                                                                |
+| SCR-080..089 | Rule engine: list, form editor, node-graph editor, simulate, arming     | 10 of 10 | none — band full.                                                                                                                                                                                                                                                                                                                                                                                |
+| SCR-090..099 | Alerts, journal, analytics, replay                                      | 10 of 10 | none — band full.                                                                                                                                                                                                                                                                                                                                                                                |
+| SCR-100..109 | Watchlist, symbol search, symbol info                                   | 5 of 10  | **105–109** — the largest deliberate reserve, held for scanner/screener expansion (saved-scan management, scan result detail, correlation view, symbol comparison, sector/basket grouping), which is the area most likely to grow post-v1.                                                                                                                                                       |
+| SCR-110..119 | Settings (user-scoped)                                                  | 10 of 10 | none — band full.                                                                                                                                                                                                                                                                                                                                                                                |
+| SCR-120..149 | Admin (owner-only)                                                      | 28 of 30 | **138, 139** — intentionally held inside the security sub-range (SCR-135..137 audit/security) for future security screens such as an access-review report and a key-ceremony/approval flow. **Confirmed:** the admin band is 30 slots with 28 used; the two gaps are reserved, not missing screens. Admin is the largest RBAC-critical area, so every admin ID is accounted for here explicitly. |
+| SCR-150..159 | Global system states (error, offline, forbidden, degraded)              | 10 of 10 | none — band full.                                                                                                                                                                                                                                                                                                                                                                                |
 
 ### 0.3 Route conventions
+
 Single-page app, hash-free HTML5 routes served by the Electron shell or browser at `https://candleviewer.<tailnet>.ts.net` / `http://127.0.0.1:5173` in dev.
+
 - Workspace-scoped terminal: `/w/:workspaceId` — panels are **not** routes; panel focus is `/w/:workspaceId?focus=:panelId`, and modals are `?modal=<name>` query state so they are deep-linkable, restorable and back-button-safe.
 - Full-page areas: `/journal`, `/rules`, `/alerts`, `/replay`, `/settings/*`, `/admin/*`.
 - All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 min old (see SCR-149).
 
 ### 0.4 API & WS naming used here
+
 REST base `/api/v1`. All REST responses are JSON; all list endpoints support `?limit&cursor&sort`. Every endpoint named in this document exists in `22-api-openapi.yaml`, which is the **single canonical registry** of REST operations — if a screen needs a call that is not there, the OpenAPI file is changed first and this document follows.
 
 WS is a single multiplexed connection at `wss://<host>/api/v1/stream`. The **canonical topic registry is `23-ws-protocol.md` §6**; the table below is a convenience index of the topics these screens subscribe to, not a second source of truth.
@@ -48,30 +53,31 @@ Two naming rules matter when reading the screen entries below, because they chan
 - **Private topics are not per-entity.** There is no `orders.{accountId}` or `tradegroup.{groupId}`. Private topics are flat (`orders`, `positions`, `executions`, `wallet`, `trade_groups`, `rules`, `alerts`, `recorder`, `system`) and are **scoped by subscription options** (`exchange_account_ids`, `symbols`, `rule_ids`), which the server intersects with the caller's grants. One subscription covers every account the user may see, so adding an account never means opening another socket topic.
 - **Derived order-flow series share one topic.** CVD, tape speed, imbalance, regime and the estimated detectors are all `metrics.{symbol}`, selected by the `metrics` option (e.g. `metrics: ["cvd", "trades_per_sec", "regime"]`). They are one engine output family and one subscription, not five.
 
-| Topic | Payload | Options used by these screens |
-|---|---|---|
-| `book.{symbol}.{depth}` | L2 snapshot + deltas; `depth` ∈ {1, 50, 200, 500} is part of the topic identity | `throttle_ms` |
-| `trades.{symbol}` | public trades (price, qty, side, ts) | `min_size`, `cluster_window_ms` |
-| `bars.{symbol}.{bar_type}.{param}` | bar open/update/close (time, volume, tick, range, renko, P&F) | `include_delta`, `history` |
-| `footprint.{symbol}.{bar_type}.{param}` | per-bar per-price bid/ask/delta cells | `price_grouping`, `imbalance_ratio`, `min_stack`, `history` |
-| `profile.{symbol}.{kind}` | volume/delta/TPO profile buckets; `kind` ∈ {volume, delta, tpo} | `split`, `session_anchor`, `value_area_pct` |
-| `metrics.{symbol}` | CVD, delta, tape speed, imbalance, regime, and the estimated detectors | `metrics[]`, `bar_type`, `param` |
-| `ticker.{symbol}` / `ticker` | mark/index/last, funding, OI, 24 h stats | `symbols` (batched form) |
-| `liquidations.{symbol}` / `liquidations` | liquidation prints | `min_notional_usd` |
-| `heatmap.{symbol}` | historized book density columns for the heatmap trail | `time_bucket_ms`, `price_grouping`, `depth`, `window_seconds` |
-| `orders` | private order lifecycle, including emulated-algo child orders | `exchange_account_ids`, `symbols`, `open_only` |
-| `executions` | private fills | `exchange_account_ids`, `symbols` |
-| `positions` | private positions | `exchange_account_ids`, `symbols` |
-| `wallet` | balances, margin, equity | `exchange_account_ids` |
-| `trade_groups` | fan-out aggregate state | `exchange_account_ids`, `status` |
-| `rules` | rule evaluation + action events | `rule_ids`, `include_events` |
-| `alerts` | fired alert deliveries | `unacked_only` |
-| `recorder` | per-symbol recording state, disk usage | `symbols` |
-| `system` | health, ingestion lag, feature flags, kill-switch and risk/freeze transitions; **auto-subscribed, cannot be unsubscribed** | — |
+| Topic                                    | Payload                                                                                                                    | Options used by these screens                                 |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `book.{symbol}.{depth}`                  | L2 snapshot + deltas; `depth` ∈ {1, 50, 200, 500} is part of the topic identity                                            | `throttle_ms`                                                 |
+| `trades.{symbol}`                        | public trades (price, qty, side, ts)                                                                                       | `min_size`, `cluster_window_ms`                               |
+| `bars.{symbol}.{bar_type}.{param}`       | bar open/update/close (time, volume, tick, range, renko, P&F)                                                              | `include_delta`, `history`                                    |
+| `footprint.{symbol}.{bar_type}.{param}`  | per-bar per-price bid/ask/delta cells                                                                                      | `price_grouping`, `imbalance_ratio`, `min_stack`, `history`   |
+| `profile.{symbol}.{kind}`                | volume/delta/TPO profile buckets; `kind` ∈ {volume, delta, tpo}                                                            | `split`, `session_anchor`, `value_area_pct`                   |
+| `metrics.{symbol}`                       | CVD, delta, tape speed, imbalance, regime, and the estimated detectors                                                     | `metrics[]`, `bar_type`, `param`                              |
+| `ticker.{symbol}` / `ticker`             | mark/index/last, funding, OI, 24 h stats                                                                                   | `symbols` (batched form)                                      |
+| `liquidations.{symbol}` / `liquidations` | liquidation prints                                                                                                         | `min_notional_usd`                                            |
+| `heatmap.{symbol}`                       | historized book density columns for the heatmap trail                                                                      | `time_bucket_ms`, `price_grouping`, `depth`, `window_seconds` |
+| `orders`                                 | private order lifecycle, including emulated-algo child orders                                                              | `exchange_account_ids`, `symbols`, `open_only`                |
+| `executions`                             | private fills                                                                                                              | `exchange_account_ids`, `symbols`                             |
+| `positions`                              | private positions                                                                                                          | `exchange_account_ids`, `symbols`                             |
+| `wallet`                                 | balances, margin, equity                                                                                                   | `exchange_account_ids`                                        |
+| `trade_groups`                           | fan-out aggregate state                                                                                                    | `exchange_account_ids`, `status`                              |
+| `rules`                                  | rule evaluation + action events                                                                                            | `rule_ids`, `include_events`                                  |
+| `alerts`                                 | fired alert deliveries                                                                                                     | `unacked_only`                                                |
+| `recorder`                               | per-symbol recording state, disk usage                                                                                     | `symbols`                                                     |
+| `system`                                 | health, ingestion lag, feature flags, kill-switch and risk/freeze transitions; **auto-subscribed, cannot be unsubscribed** | —                                                             |
 
 Replay does not have its own topic. A replay session re-uses the **same market-data topics** with `replay_session_id` set on `sub`; frames carry `source: "replay"` and the session id, and playback is controlled over REST (`23-ws-protocol.md` §11). This is why a replayed chart and a live chart can share one pane implementation.
 
 ### 0.5 Global invariants that apply to EVERY screen
+
 1. **Demo vs Live is never colour-only.** A persistent chrome band carries the text `DEMO` (blue accent) or `LIVE` (red accent) plus an icon; every trading-capable surface repeats the badge locally (SCR-074/075).
 2. **"(estimated)" labelling.** Any value derived from a heuristic proxy (iceberg, stop-run, order-count footprint, regime, queue position) renders an `(estimated)` chip with a tooltip linking the methodology drawer (SCR-058).
 3. **Recorder-dependent emptiness is a designed state**, never a blank canvas: profiles, replay, journal back-fill and composite look-backs show "History starts <ts> — recording began then" with a CTA to the recorder admin screen (SCR-140) when the user is the owner, and an explanatory read-only message otherwise.
@@ -82,6 +88,7 @@ Replay does not have its own topic. A replay session re-uses the **same market-d
 8. **Audit.** Every state-changing action emits an append-only audit record `{actor, role, action, target, before, after, ts, ip, sessionId}` via the backing endpoint; the screens below name the `audit.*` action keys.
 
 ### 0.6 Screen map
+
 ```mermaid
 graph LR
   L[SCR-001 Login] --> T[SCR-002 TOTP] --> SH[SCR-010 App Shell]
@@ -111,9 +118,11 @@ graph LR
 ## 1. Auth, shell, chrome, onboarding (SCR-001..019)
 
 ### SCR-001 — Login
+
 - **Type:** Page. **Purpose:** authenticate a user against the local identity store; first gate after Tailscale ACL.
 - **Persona/RBAC:** unauthenticated (all personas). **Route:** `/login`.
-- **Layout:** centred single card (max 420 px) on a neutral backdrop; product mark, environment badge of the *server* (Demo-default / Live-enabled), form, footer with build version + Tailscale node name.
+- **Layout:** centred single card (max 420 px) on a neutral backdrop; product mark, environment badge of the _server_ (Demo-default / Live-enabled), form, footer with build version + Tailscale node name.
+
 ```
 +-------------------------------------------------+
 |                 CandleViewer                    |
@@ -128,6 +137,7 @@ graph LR
 |  v1.4.2 · node ws-basil · docs · support        |
 +-------------------------------------------------+
 ```
+
 - **Components:** CMP-001 Button, CMP-005 Checkbox, CMP-007 TextInput, CMP-027 ErrorState / InlineError, CMP-075 EnvBadgeLocal, CMP-200 AuthCard, CMP-201 PasswordField, CMP-207 BuildFooter.
 - **Data:** `POST /api/v1/auth/login` → `{mfaRequired, mfaToken}`; `GET /api/v1/system/build` (version, node).
 - **Interactions/hotkeys:** `Enter` submits; Tab order username→password→remember→submit; caps-lock warning on password focus.
@@ -140,8 +150,10 @@ graph LR
 - **Stories:** US-ONB-001, US-ONB-008.
 
 ### SCR-002 — Two-factor (TOTP) challenge
+
 - **Type:** Page. **Purpose:** second factor; mandatory for all roles.
 - **RBAC:** holder of a valid `mfaToken`. **Route:** `/login/2fa`.
+
 ```
 +-------------------------------------------+
 |  Two-factor code                          |
@@ -151,6 +163,7 @@ graph LR
 |  [ Verify ]   Use a recovery code >       |
 +-------------------------------------------+
 ```
+
 - **Components:** CMP-001 Button, CMP-005 Checkbox, CMP-021 Link, CMP-027 ErrorState / InlineError, CMP-200 AuthCard, CMP-204 OtpInput.
 - **Data:** `POST /api/v1/auth/mfa/verify`, `POST /api/v1/auth/mfa/recovery`.
 - **Interactions:** auto-advance per digit, paste of 6 digits fills all, auto-submit on 6th digit, Backspace steps back.
@@ -163,7 +176,9 @@ graph LR
 - **Design sign-off acceptance checklist:** [ ] code field accepts paste of 6 digits and splits correctly [ ] countdown to code expiry drawn [ ] lockout-after-5-failures state drawn [ ] recovery-code path drawn [ ] keyboard-only pass, no focus trap escape
 
 ### SCR-003 — TOTP enrolment (first login / re-enrol)
+
 - **Type:** Page wizard (3 steps). **Route:** `/login/2fa/enroll`. **RBAC:** any authenticated user without MFA.
+
 ```
 Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 +--------------+   +---------------+   +--------------------+
@@ -172,6 +187,7 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 | [Next]       |   | [Verify]      |   | [x] I saved them   |
 +--------------+   +---------------+   +--------------------+
 ```
+
 - **Components:** CMP-001 Button, CMP-033 CopyButton, CMP-066 Stepper, CMP-204 OtpInput, CMP-205 QrCode, CMP-206 RecoveryCodeList.
 - **Data:** `POST /api/v1/auth/mfa/enroll`, `POST /api/v1/auth/mfa/enroll/confirm`.
 - **States:** loading QR · confirm error · codes shown once (warning that they are never shown again) · completed.
@@ -186,6 +202,7 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
   `semantic-dark` tokens on Penpot page "E09-D04 TOTP Enrolment Hi-Fi".
 
 ### SCR-004 — Forced password change
+
 - **Type:** Page. **Route:** `/login/change-password`. Triggered when `mustChangePassword` is set (new user, owner reset, password age beyond policy).
 - **Components:** CMP-200 AuthCard, CMP-201 PasswordField, CMP-202 PasswordStrengthMeter, CMP-203 RequirementChecklist.
 - **Data:** `PUT /api/v1/auth/password`.
@@ -197,7 +214,9 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 - **Design sign-off acceptance checklist:** [ ] policy rules listed before typing, not only as errors [ ] strength meter is not colour-only (text label) [ ] 'cannot reuse last 5 passwords' server error state drawn [ ] show/hide password control [ ] no dismiss path (forced) verified
 
 ### SCR-005 — Session expired / re-auth modal
+
 - **Type:** Modal (blocking). Appears over any screen when the access token cannot be refreshed.
+
 ```
 +------------------------------------------+
 | Session expired                          |
@@ -207,6 +226,7 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 | [ Sign out instead ]                     |
 +------------------------------------------+
 ```
+
 - **Behaviour:** all WS subscriptions pause; trading controls disable behind the modal; on success subscriptions resume and open-order state is reconciled from `GET /api/v1/orders?status=open`.
 - **A11y:** focus trap, `role="alertdialog"`, Escape does **not** dismiss.
 - **Audit:** `auth.session.expired`, `auth.session.reauth`. **Stories:** US-AUTH-007.
@@ -216,7 +236,9 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 - **Design sign-off acceptance checklist:** [ ] underlying screen state is preserved and visibly frozen, not destroyed [ ] 'sign out instead' escape drawn [ ] expiry-during-order-entry case drawn (draft ticket retained, unarmed) [ ] focus moves to the modal and returns on close
 
 ### SCR-006 — Step-up authentication modal (S)
+
 - **Type:** Modal. **Purpose:** gate destructive/privileged actions (Demo→Live switch, key reveal/rotation, user deletion, arming a live rule, feature-flag change, restore from backup).
+
 ```
 +--------------------------------------------------+
 | Confirm with two-factor                          |
@@ -226,6 +248,7 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 |                     [ Cancel ]  [ Confirm ]      |
 +--------------------------------------------------+
 ```
+
 - **Data:** `POST /api/v1/auth/step-up` → short-lived `stepUpToken` (5 min, single scope).
 - **Validation:** typed confirmation must match exactly (case-sensitive); Confirm disabled until both fields are valid.
 - **Audit:** `auth.stepup.granted|denied` with the target action key. **Stories:** US-AUTH-008, US-ADMIN-011.
@@ -236,8 +259,10 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 - **Design sign-off acceptance checklist:** [ ] the exact action being authorised is restated verbatim in the dialog [ ] remaining-TTL indicator for an already-valid step-up token [ ] failure/lockout state drawn [ ] cancel returns the caller to a safe no-op state
 
 ### SCR-010 — App shell (global chrome)
+
 - **Type:** Page frame wrapping every authenticated route. **RBAC:** all authenticated.
 - **Purpose:** persistent identity of environment, account scope, connection health, navigation and global panic actions.
+
 ```
 +============================================================================+
 | CV | LIVE(!) | Acct: [Main v] Group:[Scalp x3 v] | BTCUSDT v | 1m v        |
@@ -256,6 +281,7 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 | status bar: ws o  api o  clock 14:02:11 UTC  bar close 00:41  v1.4.2      |
 +============================================================================+
 ```
+
 - **Components:** CMP-061 UserMenu, CMP-070 AppShell, CMP-071 NavRail, CMP-072 TopBar, CMP-075 EnvBadgeLocal, CMP-076 ConnectionStatus, CMP-084 GlobalSearchTrigger, CMP-085 SkipLink, CMP-105 AccountMultiSelect, CMP-208 StatusBar, CMP-209 RightRail, CMP-210 HealthChips, CMP-211 PanicButtons, CMP-212 ToastHost, CMP-219 SymbolPicker, CMP-220 IntervalPicker.
 - **Data:** `GET /api/v1/me`, `GET /api/v1/exchange-accounts`, `GET /api/v1/trade-groups`, WS `system`, `recorder`, `system`.
 - **Interactions/hotkeys:** `Ctrl+K` command palette (SCR-012); `Ctrl+Shift+A` account picker; `Ctrl+/` hotkey cheatsheet (SCR-013); `F11` full-screen workspace; `Alt+1..9` nav rail. **FLATTEN ALL** requires hold-to-confirm 800 ms plus a typed confirm in Live. **FREEZE** is owner-only.
@@ -269,7 +295,9 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 - **Design sign-off acceptance checklist:** [ ] DEMO and LIVE chrome variants drawn side by side and distinguishable in greyscale [ ] connection indicator has 4 states with text (live/lagging/reconnecting/offline) [ ] role variants (owner/manager/viewer) drawn, admin entry absent for non-owners [ ] 1280x800 and 2560x1440 layouts [ ] skip-to-content link visible on focus
 
 ### SCR-011 — Navigation rail (expanded) & workspace switcher
+
 - **Type:** Panel within shell. Shows labels, recent workspaces, pinned symbols.
+
 ```
 +---------------------------+
 | Terminal                  |
@@ -284,6 +312,7 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 | Admin        (owner only) |
 +---------------------------+
 ```
+
 - **Data:** `GET /api/v1/workspaces`, `GET /api/v1/rules?status=armed&count=true`.
 - **Interactions:** click a workspace to load; right-click → rename/duplicate/delete/set default; drag to reorder.
 - **States:** collapsed (icons + tooltips) · expanded · empty ("No workspaces yet — create one") · Admin item hidden for non-owners.
@@ -295,7 +324,9 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 - **Design sign-off acceptance checklist:** [ ] collapsed (icon) and expanded (label) variants [ ] workspace switcher with >20 workspaces (scroll + search) [ ] active-route indication is not colour-only [ ] tooltips on collapsed icons reachable by keyboard focus
 
 ### SCR-012 — Command palette
+
 - **Type:** Modal overlay. **Purpose:** keyboard-first access to every command, symbol, workspace, panel and setting.
+
 ```
 +------------------------------------------------------+
 | > flat|                                              |
@@ -308,6 +339,7 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 | Enter run - Tab complete - Esc close                  |
 +------------------------------------------------------+
 ```
+
 - **Components:** CMP-022 Kbd, CMP-059 CommandPalette, CMP-213 FuzzyList.
 - **Data:** local command registry + `GET /api/v1/instruments?q=`; recency persisted via `PATCH /api/v1/me/preferences`.
 - **Interactions:** `Ctrl+K` opens; fuzzy filter; `↑/↓` move; `Enter` run; `Ctrl+Enter` run against every account in the active group; dangerous commands are marked and route into their confirm flow rather than firing directly.
@@ -319,7 +351,8 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 - **Design sign-off acceptance checklist:** [ ] result grouping (navigate / panel / symbol / action / setting) drawn [ ] no-results state with suggestion [ ] destructive actions visually marked and step-up-gated [ ] recent/frequent ordering shown [ ] opens and closes within one frame budget on a loaded workspace
 
 ### SCR-013 — Hotkey cheatsheet overlay
-- **Type:** Overlay (`Ctrl+/`). Two columns grouped by context (Global, Chart, DOM, Ticket, Replay, Rules) showing the user's *current* bindings with a "Customise" link to SCR-113.
+
+- **Type:** Overlay (`Ctrl+/`). Two columns grouped by context (Global, Chart, DOM, Ticket, Replay, Rules) showing the user's _current_ bindings with a "Customise" link to SCR-113.
 - **Data:** `GET /api/v1/me/keymap`. **States:** loading · loaded · conflicts highlighted with a warning chip.
 - **A11y:** rendered as a real table for screen readers; printable stylesheet. **Stories:** US-SET-006.
 - **Performance:** Static content, no network; overlay mounts <=80 ms and does not pause the chart render loop.
@@ -329,7 +362,9 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 - **Design sign-off acceptance checklist:** [ ] grouped by context (global / chart / ladder / ticket / rules) [ ] shows user-remapped bindings, not just defaults [ ] printable/plain-text variant [ ] dismiss via Esc and click-outside [ ] scrollable at 125% zoom without clipping
 
 ### SCR-014 — Notification centre (right-rail drawer)
+
 - **Type:** Drawer. Streams fired alerts, rule actions, order rejects, risk events, system warnings.
+
 ```
 +-- Notifications ------------[clear all]-+
 | 14:02 ALERT BTC crossed 64,000          |
@@ -338,6 +373,7 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 | 13:40 Recorder started ETHUSDT          |
 +-----------------------------------------+
 ```
+
 - **Data:** WS `alerts`, `rules`, `orders`, `system`; history `GET /api/v1/notifications`.
 - **Interactions:** click deep-links to the source (chart at timestamp / rule / order); mute per category; `Shift+click` marks everything above as read.
 - **States:** empty ("Nothing yet today") · unread badge · muted-category indicator · overflow (keeps newest 500; older via history).
@@ -349,6 +385,7 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 - **Design sign-off acceptance checklist:** [ ] severity encoded by icon + text, never colour alone [ ] empty state [ ] grouped/collapsed repeats ('12 similar alerts') [ ] deep-link from a notification restores the right panel and symbol [ ] does not steal focus when it opens on a new event
 
 ### SCR-015 — Global toast host
+
 - **Type:** Overlay. Transient confirmations ("Order accepted · id 42f"), warnings, errors with an action ("Retry"; "Undo" within 5 s for cancellations).
 - **A11y:** respects `prefers-reduced-motion` (fade only); error toasts never auto-dismiss; every toast is duplicated into SCR-014.
 - **Components:** CMP-045 Toast / Notification, CMP-212 ToastHost.
@@ -358,8 +395,10 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 - **Design sign-off acceptance checklist:** [ ] info/success/warning/error variants with icon + text [ ] auto-dismiss timing per severity (errors are sticky) [ ] pause-on-hover/focus [ ] stacking and overflow drawn [ ] `prefers-reduced-motion` variant drawn
 
 ### SCR-016 — First-run onboarding wizard (owner)
+
 - **Type:** Page wizard, 6 steps, only on an empty install. **Route:** `/onboarding`.
 - Steps: 1 Welcome & scope reminder → 2 Verify Tailscale/host binding → 3 Add first Bybit account (SCR-126 inline, Demo first) → 4 Choose recorded symbols (SCR-140 inline) → 5 Pick a workspace preset (Scalping / Swing / Analyst) → 6 Safety briefing (Demo default, Live needs step-up, native-SL invariant) with a required acknowledgement.
+
 ```
 [1 Welcome]-[2 Network]-[3 Account]-[4 Recording]-[5 Layout]-[6 Safety]
 +------------------------------------------------------------------+
@@ -371,6 +410,7 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 |                              [ Back ]   [ Continue ]             |
 +------------------------------------------------------------------+
 ```
+
 - **Data:** `GET /api/v1/admin/health`, `POST /api/v1/exchange-accounts`, `POST /api/v1/exchange-accounts/{accountId}/keys/{keyId}/test`, `POST /api/v1/recording/symbols`, `POST /api/v1/workspaces`, `POST /api/v1/onboarding/complete`.
 - **States:** per-step loading/valid/invalid; "Skip for now" allowed on steps 3–5, leaving a persistent setup checklist (SCR-019).
 - **Validation:** the key test must pass before Continue (or be explicitly skipped). A key with withdrawal permission is a **hard block**: "This key has withdrawal permission. Create a key with withdrawal disabled."
@@ -382,7 +422,9 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 - **Design sign-off acceptance checklist:** [ ] all steps drawn incl. skip/resume [ ] key-entry step never echoes the secret after save [ ] 'start in DEMO' default is visible and explained [ ] progress and back/forward semantics [ ] completion state links to the setup checklist (SCR-019)
 
 ### SCR-017 — Manager/viewer onboarding (invited user)
+
 - **Type:** Page wizard, 4 steps: accept invite → set password (SCR-004 embedded) → enrol TOTP (SCR-003 embedded) → orientation card.
+
 ```
 +------------------------------------------------------------+
 | You're set up as: Account Manager                          |
@@ -393,6 +435,7 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 |                                    [ Open the terminal ]   |
 +------------------------------------------------------------+
 ```
+
 - **Data:** `GET /api/v1/invites/{inviteToken}`, `GET /api/v1/me/limits`.
 - **States:** invite valid · expired ("This invitation expired on <date>. Ask the owner for a new one.") · already used.
 - **Components:** CMP-001 Button, CMP-040 FormField, CMP-050 Card, CMP-066 Stepper, CMP-097 OnboardingChecklist.
@@ -403,6 +446,7 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 - **Design sign-off acceptance checklist:** [ ] scoped-account explanation drawn for manager and viewer separately [ ] 'what you cannot do' section drawn honestly [ ] mandatory TOTP enrolment step drawn [ ] skip/resume [ ] no step depends on data the invited user cannot read
 
 ### SCR-018 — Guided tour / coach marks
+
 - **Type:** Overlay. Optional 8-stop tour (chart, footprint, DOM, ticket, positions, rules, journal, panic buttons). Dismissible, resumable from Settings → Help, never auto-shown twice.
 - **A11y:** each stop is a focusable dialog with prev/next; `Esc` exits; reduced motion disables the spotlight animation. **Stories:** US-ONB-008.
 - **Performance:** Coach marks use a single overlay layer with pointer-events pass-through; they never remount the underlying panel and are disabled entirely under `prefers-reduced-motion`.
@@ -412,6 +456,7 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 - **Design sign-off acceptance checklist:** [ ] every step dismissible and resumable from Help [ ] highlight ring meets 3:1 against both themes [ ] focus is moved to the coach-mark content and restored on exit [ ] tour never blocks a trading control while LIVE [ ] reduced-motion variant
 
 ### SCR-019 — Setup checklist card
+
 - **Type:** Panel (empty workspace + Settings → Help). Outstanding setup items with deep links: add a live account, record a symbol, create a trade group, set risk caps, invite a second user, run the engine benchmark.
 - **Data:** `GET /api/v1/onboarding/checklist`. **States:** pending/done/blocked with reason. **Stories:** US-ONB-009.
 - **A11y:** Ordered list of tasks with real checkbox semantics (`aria-disabled` for tasks the user's role cannot complete, with the reason as visible text); completion is announced politely.
@@ -426,8 +471,10 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 ## 2. Workspaces, dock system, multi-chart sync (SCR-020..029)
 
 ### SCR-020 — Workspace (terminal) page
+
 - **Type:** Page. **Purpose:** the primary daily surface — a dockable canvas hosting every trading/analysis panel.
 - **RBAC:** all; trading panels degrade to read-only for `viewer`. **Route:** `/w/:workspaceId`.
+
 ```
 +------------------------------------------------------------------------------+
 | [tabs] Scalping* | Swing 4H | + |            [layout v][sync v][save][reset]  |
@@ -442,6 +489,7 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 | SCR-063 Positions & orders grid (Positions | Orders | Fills | Groups)        |
 +------------------------------------------------------------------------------+
 ```
+
 - **Components:** CMP-073 WorkspaceSwitcher, CMP-080 DockPanel, CMP-081 DockGrid / Layout Manager, CMP-082 PanelHeader, CMP-217 LayoutPresetMenu, CMP-218 SyncMenu.
 - **Data:** `GET /api/v1/workspaces/{id}` (layout tree + panel configs), `PUT /api/v1/workspaces/{id}`; panels subscribe their own topics.
 - **Interactions/hotkeys:** `Ctrl+1..9` layout presets; `Ctrl+S` save; `Ctrl+Shift+S` save as; `Alt+drag` move panel; `F11` full-screen active panel; `Ctrl+Alt+←/→` cycle panels; drag a watchlist symbol onto a panel to rebind it.
@@ -455,7 +503,9 @@ Step 1 Scan        Step 2 Confirm        Step 3 Recovery codes
 - **Design sign-off acceptance checklist:** [ ] default owner layout, manager layout and viewer layout drawn [ ] panel focus ring and active-panel affordance visible [ ] symbol-group colour tags carry a letter/number too [ ] layout restore after crash drawn [ ] DEMO and LIVE chrome variants [ ] 1280x800 minimum supported layout has no overlap
 
 ### SCR-021 — Dock / panel system (drag, split, float)
+
 - **Type:** Interaction surface within SCR-020.
+
 ```
 Drag preview                Drop zones
 +---------------+           +---------------------------+
@@ -464,6 +514,7 @@ Drag preview                Drop zones
 +---------------+           |        [ bottom ]         |
                             +---------------------------+
 ```
+
 - **Behaviour:** drop zones highlight with a 4 px accent and a translucent preview of the resulting rectangle; splitters resize by mouse or `Alt+Shift+arrows`; a panel can be floated into an OS window (Electron) or a maximised overlay (browser, with a notice).
 - **Components:** CMP-083 SplitPane, CMP-214 DockDropZone, CMP-215 FloatingWindowFrame, CMP-216 PanelMenu.
 - **States:** dragging · invalid drop (cursor + "Can't dock here") · floating · maximised · minimised-to-tab.
@@ -474,7 +525,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] drop-zone affordances for all six targets (N/S/E/W/centre/float) [ ] invalid-drop feedback [ ] keyboard move mode drawn with its own visible instructions [ ] minimum panel size and the 'panel too small - showing compact view' state [ ] drag preview does not obscure the drop target
 
 ### SCR-022 — Layout preset gallery
+
 - **Type:** Modal. Presets: 1×1, 2×1, 2×2, 1+3, 3+1, Scalping (chart+DOM+ticket+tape), Order-flow (chart+footprint+CVD+profile), Swing (3 timeframes), Analyst (read-only chart+journal+replay), Fan-out review (positions by account + group ticket).
+
 ```
 +------------------ Layouts ------------------+
 | [1x1] [2x1] [2x2] [1+3] [3+1]               |
@@ -483,6 +536,7 @@ Drag preview                Drop zones
 | [x] Keep current symbols   [ Apply ]        |
 +---------------------------------------------+
 ```
+
 - **Data:** `GET /api/v1/layout-presets`, `POST /api/v1/workspaces/{workspaceId}/layouts`.
 - **Warning state:** "Applying a preset replaces the current layout. Settings of surviving panels are kept."
 - **Components:** CMP-001 Button, CMP-043 Dialog, CMP-050 Card, CMP-217 LayoutPresetMenu.
@@ -493,7 +547,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] built-in presets drawn (Scalper DOM, Footprint focus, Multi-chart 2x2, Analysis/journal, Replay) [ ] user presets with rename/delete [ ] 'applying replaces your current layout' confirmation [ ] empty user-preset state
 
 ### SCR-023 — Multi-chart sync configuration
+
 - **Type:** Popover/Modal from the shell's `sync` menu. **Purpose:** control what propagates across chart panels.
+
 ```
 +---------- Sync ----------------------------+
 | Sync group: (A) (B) (C) (none)             |
@@ -504,6 +560,7 @@ Drag preview                Drop zones
 | Panels in group A: Chart 1, Chart 2, DOM   |
 +--------------------------------------------+
 ```
+
 - **Behaviour:** panels carry a letter+colour sync badge (letter carries the meaning, never colour alone). Crosshair sync draws a dashed line at the same timestamp in every member; drawing sync applies only between panels on the same symbol.
 - **Data:** stored in the workspace document; runtime over a local sync bus (no server round-trip).
 - **Interactions:** `Ctrl+Shift+1..3` assign the active panel to group A/B/C; `Ctrl+Shift+0` unsync.
@@ -515,6 +572,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] all sync axes drawn as independent toggles (symbol / interval / crosshair / time range / drawings / indicator set) [ ] group colour tag is paired with a letter [ ] conflicting-sync warning drawn ('Chart 3 has a different interval - crosshair sync will align by timestamp') [ ] leaving a group does not reset the panel's own settings
 
 ### SCR-024 — Panel picker ("Add panel")
+
 - **Type:** Modal. Grouped catalogue of every addable panel with a one-line description, a thumbnail and chips for "requires recording", "(estimated)", "owner only".
 - **Data:** local panel registry + `GET /api/v1/admin/feature-flags` and role.
 - **States:** search · category filter · disabled entries with reasons ("Needs a recorded symbol", "Owner only").
@@ -526,6 +584,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] all panel types listed with an icon + description [ ] panels unavailable to the role are shown disabled with a reason [ ] search with no results [ ] placement choice (where it will be inserted) is previewed
 
 ### SCR-025 — Workspace settings modal
+
 - **Type:** Modal. Name, description, default symbol/interval, default account scope, density (compact/cosy/comfortable), theme override, "open on startup", export as template, delete.
 - **Data:** `PUT /api/v1/workspaces/{workspaceId}`, `DELETE /api/v1/workspaces/{workspaceId}`, `GET /api/v1/workspaces/{workspaceId}/export`.
 - **Validation:** delete requires typing the workspace name; the last workspace cannot be deleted ("You need at least one workspace.").
@@ -537,6 +596,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] rename, default symbol/interval, environment binding, autosave toggle and sharing (owner) drawn [ ] 'this workspace is pinned to LIVE' warning drawn [ ] unsaved-changes handling [ ] delete-workspace confirmation path
 
 ### SCR-026 — Workspace import
+
 - **Type:** Modal. Drop or pick a workspace JSON; shows a diff-style preview (panels added, symbols referenced, accounts remapped).
 - **Validation:** schema-version check ("This layout was exported by v2 and can't be imported into v1."); unknown panel types are dropped and listed; inaccessible account references remap to the user's default account.
 - **Components:** CMP-001 Button, CMP-027 ErrorState / InlineError, CMP-043 Dialog, CMP-044 ConfirmDialog, CMP-067 FileDrop / Import control.
@@ -547,6 +607,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] file-picker and drag-drop paths [ ] version-mismatch state ('exported from a newer version - 2 panels will be dropped') [ ] preview of what will be imported before applying [ ] rejection state for malformed or oversized files [ ] import never carries credentials or account bindings (verified in copy)
 
 ### SCR-027 — Floating panel window (Electron)
+
 - **Type:** OS window. Slim title bar with panel name, symbol, env badge and "return to workspace"; participates in sync groups; closes back into its origin dock slot.
 - **States:** normal · display disconnected (recovered to the primary display next launch) · browser fallback notice.
 - **Components:** CMP-075 EnvBadgeLocal, CMP-080 DockPanel, CMP-215 FloatingWindowFrame.
@@ -557,6 +618,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] DEMO/LIVE band repeated in every floating window [ ] window chrome with re-dock control [ ] multi-monitor placement is remembered and restored [ ] behaviour when the parent window closes is drawn [ ] browser (non-Electron) fallback drawn - float degrades to a maximised panel with an explanatory note
 
 ### SCR-028 — Panel context menu
+
 - **Type:** Menu. Settings…, Duplicate, Move to ▸, Float, Full screen, Sync group ▸, Reset settings, Copy panel link, Close — identical for every panel type so muscle memory transfers.
 - **A11y:** full keyboard menu with type-ahead and shortcut hints. **Stories:** US-WS-023.
 - **Performance:** Menu opens in <=80 ms; it is built from a static descriptor, not a per-open API call.
@@ -566,6 +628,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] full item set drawn (settings, duplicate, float, maximise, link to sync group, rename, close) [ ] disabled items show a reason [ ] keyboard invocation via the context-menu key and Shift+F10 [ ] submenu behaviour and overflow near the viewport edge
 
 ### SCR-029 — Unsaved-changes / layout-conflict dialog
+
 - **Type:** Modal. "You have unsaved layout changes." [Save] [Discard] [Cancel]; the conflict variant adds a side-by-side summary of differences (panel count, symbols, sync groups).
 - **Components:** CMP-001 Button, CMP-027 ErrorState / InlineError, CMP-044 ConfirmDialog.
 - **Stories:** US-LAY-002, US-SET-003.
@@ -579,8 +642,10 @@ Drag preview                Drop zones
 ## 3. Charting (SCR-030..049)
 
 ### SCR-030 — Chart panel (price + footprint)
+
 - **Type:** Panel. **Purpose:** the spine of the product: price action, footprint cells, overlays, drawings, indicators and chart trading.
 - **RBAC:** all (trading overlays read-only for `viewer`). **Route:** panel in `/w/:workspaceId` (`?focus=chart-1`).
+
 ```
 +--------------------------------------------------------------------------+
 | BTCUSDT v  1m v  [Candle|Bar|Line|EquiVol|DeltaVol] [FP on] [Ind] [Draw] |
@@ -601,6 +666,7 @@ Drag preview                Drop zones
 | time axis  12:00      12:30      13:00      13:30      [ auto | fit | > ] |
 +--------------------------------------------------------------------------+
 ```
+
 - **Components:** CMP-109 FootprintCell, CMP-180 ChartRoot, CMP-181 CandleSeries, CMP-182 FootprintSeries, CMP-183 VolumeProfilePane, CMP-188 PriceAxis, CMP-189 TimeAxis, CMP-191 DrawingToolOverlay, CMP-192 OrderLineOverlay, CMP-194 IndicatorOverlay, CMP-195 AnnotationMarker, CMP-197 ChartTooltip, CMP-198 ChartWatermark / PaneBackground, CMP-219 SymbolPicker, CMP-220 IntervalPicker, CMP-221 ChartToolbar, CMP-222 ChartTypeToggle, CMP-223 DrawingToolbar, CMP-224 IndicatorChips, CMP-225 DeepStatsStrip, CMP-226 BarCountdown, CMP-227 EstimatedBadge.
 - **Data:** bootstrap `GET /api/v1/market/bars?symbol&interval&from&to`, `GET /api/v1/market/footprint?symbol&interval&from&to`; live WS `bars.{symbol}.{bar_type}.{param}`, `footprint.{symbol}.{bar_type}.{param}`, `trades.{symbol}`, `ticker.{symbol}`; overlays from `positions`, `orders`; `GET /api/v1/instruments/{symbol}` for tick size, lot size, leverage bounds.
 - **Interactions/hotkeys:** wheel = zoom time; `Shift+wheel` = zoom price; drag = pan; double-click axis = auto-fit; `F` toggle footprint; `Alt+F` profile vs box footprint mode; `1..9` interval presets; `Ctrl+drag` on price axis = place a limit order at that price (chart trading, arm-gated); `Alt+click` = market order at market; drag an SL/TP line to amend; `Esc` cancels an in-progress drawing; `Del` deletes the selected drawing; `Ctrl+Z/Ctrl+Y` undo/redo drawings; right-click cell → "Focus imbalance" / "Copy cell stats" / "Replay from here".
@@ -615,7 +681,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] footprint on/off, all four cell modes and the bar types drawn [ ] cell text legibility verified at the minimum readable zoom, with the auto-collapse-to-colour threshold agreed [ ] Deep Stats strip drawn [ ] trading overlay (position line, SL/TP, working orders) drawn [ ] crosshair + tooltip content specified [ ] loading, empty (recording start), error and stale-data states drawn [ ] engine meets the mandatory WebGL spike targets (see Performance) before sign-off
 
 ### SCR-031 — Chart settings dialog (general)
+
 - **Type:** Modal, tabbed (General · Scales · Appearance · Trading · Performance).
+
 ```
 +------------------ Chart settings ---------------------+
 | [General][Scales][Appearance][Trading][Performance]   |
@@ -629,6 +697,7 @@ Drag preview                Drop zones
 |                        [ Reset ]  [ Cancel ]  [ Save ]|
 +-------------------------------------------------------+
 ```
+
 - **Data:** persisted in the panel config inside the workspace document; defaults from `GET /api/v1/me/preferences`.
 - **Validation:** Renko brick > 0; range bars ≥ 1 tick; volume bars ≥ min lot; "Values below one tick are not allowed."
 - **A11y:** tabs are `role="tablist"`; every numeric field has units in the label; Reset requires confirmation.
@@ -639,7 +708,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] all sections drawn (appearance, grid, scales, session/timezone, crosshair, tooltip, precision) [ ] live preview against a real chart [ ] reset-to-default per section and global [ ] 'applies to this panel / all panels / as new default' scope control drawn
 
 ### SCR-032 — Footprint settings dialog
+
 - **Type:** Modal, the deepest settings surface of the chart.
+
 ```
 +---------------- Footprint (Deep Print) ----------------+
 | Cell type    (o) Bid x Ask   ( ) Volume                |
@@ -656,19 +727,22 @@ Drag preview                Drop zones
 |                 [ Preview ]  [ Reset ]  [ Cancel ] [Save]|
 +--------------------------------------------------------+
 ```
+
 - **Components:** CMP-006 RadioGroup, CMP-008 NumericStepperInput, CMP-031 ColorSwatch / ThemeChip, CMP-069 InfoPanel, CMP-227 EstimatedBadge, CMP-228 PreviewTile.
 - **Data:** panel config; recompute request `POST /api/v1/market/footprint/recompute` when input source changes (server re-aggregates from recorded trades).
 - **Validation:** imbalance ratio 100–2000 % ("Enter a ratio between 100 and 2000 %."); stack depth 2–10; noise filter ≥0.
 - **States:** live preview tile rendering a synthetic bar with current settings · recompute in progress ("Recomputing footprint from recorded trades — 40 %") · order-based source selected → persistent "(estimated)" warning banner explaining Bybit has no L3 feed.
 - **A11y:** every colour choice is paired with a glyph/pattern option; the preview tile has a textual description of what changed.
 - **Performance:** setting changes apply without a full history refetch except for input-source changes; preview renders in ≤50 ms.
-- **Mandatory WebGL engine spike gate (owner decision #2.2.1 — blocks design sign-off for this screen):** the settings this dialog exposes are precisely the knobs that determine whether the engine meets its spike targets, so each is bounded by measured evidence, not by taste. Sign-off requires the spike to demonstrate, for the **worst-case configuration this dialog can produce** (smallest tick aggregation → tallest cell count, cell text on, imbalance highlighting on, order-based *(estimated)* source): **≥60 fps with 100 k bars loaded**, **sustained 100 ms-cadence updates with no dropped frames over 10 minutes**, and **parity across Chromium, Electron and Tauri/WebView2**. Any setting combination that cannot hit those numbers must be either (a) removed from the dialog, or (b) shipped with a designed, visible guard — the dialog shows the measured cost of the current combination and warns when the user selects one that the spike showed to be below budget ("This tick aggregation renders ~180 cells per bar; measured 41 fps on your machine"). The auto-hide-cell-text-below-Npx threshold must be set from spike data, not guessed.
+- **Mandatory WebGL engine spike gate (owner decision #2.2.1 — blocks design sign-off for this screen):** the settings this dialog exposes are precisely the knobs that determine whether the engine meets its spike targets, so each is bounded by measured evidence, not by taste. Sign-off requires the spike to demonstrate, for the **worst-case configuration this dialog can produce** (smallest tick aggregation → tallest cell count, cell text on, imbalance highlighting on, order-based _(estimated)_ source): **≥60 fps with 100 k bars loaded**, **sustained 100 ms-cadence updates with no dropped frames over 10 minutes**, and **parity across Chromium, Electron and Tauri/WebView2**. Any setting combination that cannot hit those numbers must be either (a) removed from the dialog, or (b) shipped with a designed, visible guard — the dialog shows the measured cost of the current combination and warns when the user selects one that the spike showed to be below budget ("This tick aggregation renders ~180 cells per bar; measured 41 fps on your machine"). The auto-hide-cell-text-below-Npx threshold must be set from spike data, not guessed.
 - **Audit:** `chart.footprint_settings_changed`. **Stories:** US-FLOW-001, US-FLOW-002, US-CHART-007.
 - **Stories:** US-FP-003, US-FP-005, US-FP-006, US-FP-010, US-FP-009.
-- **Design sign-off acceptance checklist:** [ ] all cell display modes drawn with real rendered samples (bid x ask, delta, volume, order-count *(estimated)*) [ ] imbalance thresholds and colouring drawn with a non-colour (glyph/weight) encoding [ ] tick-aggregation control with the resulting cell height previewed [ ] POC/VAH/VAL markers drawn [ ] the *(estimated)* chip and its tooltip verified on the order-count mode [ ] performance acceptance against the mandatory WebGL spike (see Performance) recorded before sign-off
+- **Design sign-off acceptance checklist:** [ ] all cell display modes drawn with real rendered samples (bid x ask, delta, volume, order-count _(estimated)_) [ ] imbalance thresholds and colouring drawn with a non-colour (glyph/weight) encoding [ ] tick-aggregation control with the resulting cell height previewed [ ] POC/VAH/VAL markers drawn [ ] the _(estimated)_ chip and its tooltip verified on the order-count mode [ ] performance acceptance against the mandatory WebGL spike (see Performance) recorded before sign-off
 
 ### SCR-033 — Deep Stats rows configuration
+
 - **Type:** Modal. Choose and order the per-bar statistic rows: Total volume, Bid volume, Ask volume, Delta, Max delta, Min delta, Delta %, Cumulative delta, Trade count, Average trade size, Big-trade count, Speed of tape, Imbalance count.
+
 ```
 +------- Deep Stats rows -------+
 | [x] Total volume        drag  |
@@ -678,6 +752,7 @@ Drag preview                Drop zones
 | Compact mode [x]  Sparkline N [20] |
 +-------------------------------+
 ```
+
 - **Data:** derived locally from `footprint.{symbol}.{bar_type}.{param}` and `trades.{symbol}`.
 - **Validation:** at least one row selected; threshold 0–100 %.
 - **A11y:** the strip is a real table row set in the DOM alternative; drag reorder has keyboard equivalents (`Alt+↑/↓`).
@@ -688,7 +763,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] full row catalogue drawn with per-row enable/order/format controls [ ] row labels legible at compact density [ ] alignment with the bar columns verified at several zoom levels [ ] empty state when a row's source (e.g. OI) is unavailable for the symbol
 
 ### SCR-034 — Indicator library / add-indicator dialog
+
 - **Type:** Modal. Searchable list of built-in indicators (SMA, EMA, WMA, VWAP, anchored VWAP, Bollinger, Keltner, MACD, RSI, Stochastic, ATR, ADX, Supertrend, ZigZag, Volume, OBV, CVD, OI, funding, liquidation bars, custom composite), grouped by Overlay / Sub-pane / Order-flow.
+
 ```
 +---------- Add indicator -----------------+
 | search [ atr______ ]     [Overlays v]    |
@@ -698,6 +775,7 @@ Drag preview                Drop zones
 |                         [ Add to chart ] |
 +------------------------------------------+
 ```
+
 - **Data:** `GET /api/v1/indicators` (catalogue, parameter schemas). Calculations run client-side in a worker for classic TA, server-side for order-flow derived series.
 - **States:** empty search result · indicator already present (offers "Add second instance").
 - **A11y:** list is a listbox; each entry announces its pane target. **Stories:** US-CHART-008.
@@ -708,6 +786,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] categorised, searchable list with descriptions [ ] preview thumbnail per indicator [ ] indicators requiring recorded history are marked with what they need [ ] favourites/recents [ ] no-results state
 
 ### SCR-035 — Indicator settings dialog
+
 - **Type:** Modal per indicator instance: Inputs (typed parameters), Style (line/area/histogram, width, colour token, opacity), Visibility (per-interval visibility rules), Scale (own scale / merged / pinned right), Alerts (create alert from this indicator → SCR-091).
 - **Validation:** period ≥1 and ≤5 000 ("Period must be between 1 and 5000."); source field restricted to available series.
 - **A11y:** colour pickers expose token names; line style also varies dash pattern so series stay distinguishable without colour.
@@ -718,7 +797,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] inputs / style / visibility / scale tabs drawn [ ] live preview [ ] parameter validation messages [ ] 'save as default for this indicator' control [ ] reset
 
 ### SCR-036 — Indicator manager (object tree)
+
 - **Type:** Drawer. Tree of everything attached to the chart: indicators, drawings, overlays, alerts — each with visibility, lock, rename, reorder and delete. Serves as the a11y-complete alternative to manipulating canvas objects by mouse.
+
 ```
 +-- Objects on BTCUSDT 1m ------------+
 | v Overlays                          |
@@ -731,6 +812,7 @@ Drag preview                Drop zones
 | v Alerts (2)                        |
 +-------------------------------------+
 ```
+
 - **A11y:** `role="tree"`; every canvas object is reachable and editable here by keyboard. **Stories:** US-CHART-014 (T9 accessible alternative).
 - **Performance:** Tree operations (reorder, hide, delete) are O(1) against the render list and never force a full chart rebuild.
 - **Analytics/audit:** `indicator.reordered`, `indicator.visibility_toggled`, `indicator.removed`, `drawing.removed` (analytics).
@@ -739,7 +821,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] tree drawn with panes, indicators and drawings grouped [ ] per-item visibility/lock/delete controls [ ] multi-select and bulk actions [ ] this tree is confirmed as the accessible equivalent for canvas objects (keyboard-reachable, named) [ ] empty state
 
 ### SCR-037 — Drawing toolbar & drawing properties
+
 - **Type:** Toolbar (left rail of the chart) + properties popover. Tools: cursor, crosshair, trendline, ray, extended line, horizontal line/level, vertical line, rectangle, ellipse, triangle, Fibonacci retracement/extension/time zones, pitchfork, anchored VWAP, measure, long/short position tool, text note, arrow, brush, emoji marker, magnet toggle, lock-all, hide-all, delete-all.
+
 ```
 +---+           +-- Trendline -----------------+
 | k |  cursor   | colour [token v] width [2 v] |
@@ -751,6 +835,7 @@ Drag preview                Drop zones
 | T |  text
 +---+
 ```
+
 - **Data:** drawings persist per symbol+user: `GET/POST /api/v1/drawings?symbol=`, `PUT/DELETE /api/v1/drawings/{drawingId}`; shared across synced panels on the same symbol.
 - **Interactions:** keyboard tool selection (`Alt+T` trendline, `Alt+H` horizontal, `Alt+F` fib, `Alt+R` rect, `Alt+M` measure); magnet snapping toggle `Ctrl+M`; drawings can be created entirely by keyboard via SCR-045's grid ("Create horizontal line at focused price").
 - **Validation:** a drawing needs ≥2 anchors before it persists; the position tool validates against tick/lot.
@@ -762,7 +847,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] full tool set drawn (trend line, ray, horizontal/vertical, rectangle, fib retracement/extension, measure, text, arrow, brush) [ ] selected/hover/locked states [ ] properties popover [ ] magnet/snap-to-price behaviour [ ] keyboard creation and nudging path drawn (no mouse requirement) [ ] drawings sync across a sync group when that axis is enabled
 
 ### SCR-038 — Profile panel (volume / delta profile + TPO)
+
 - **Type:** Panel (also available as a chart overlay).
+
 ```
 +------- Profile: BTCUSDT ---------------------+
 | period [Visible range v]  input [Volume v]   |
@@ -777,6 +864,7 @@ Drag preview                Drop zones
 | delta split: [buy|sell] bars, hover = numbers|
 +----------------------------------------------+
 ```
+
 - **Data:** `GET /api/v1/market/profile?symbol&period&from&to`, WS `profile.{symbol}.{kind}`; bootstrapped from recorded trades, falling back to kline-derived approximation with an explicit "approximated from bars" chip when ticks are unavailable.
 - **Settings (SCR-039):** period type (Composite / Session multiples / Visible range / Personalised range / Swing-anchored), input (Volume / Trade count / Delta), value-area % (default 70), row size, VWAP ±1σ/±2σ overlay, LVN/single-print highlighting, split vs merged bars.
 - **States:** loading · partial history (chip "Partial: only 12 of 30 requested days recorded") · no history (empty-state CTA) · approximated-from-bars.
@@ -788,6 +876,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] volume, delta and TPO modes drawn [ ] POC / VAH / VAL / value-area shading drawn with non-colour labelling [ ] session, visible-range, fixed-range and composite period modes [ ] the recorder-dependent empty state ('History starts <ts>') drawn [ ] alignment with the price scale verified when docked beside a chart
 
 ### SCR-039 — Profile settings dialog
+
 - **Type:** Modal implementing the settings listed in SCR-038 plus per-period colouring, "extend POC/VA lines to the right", "show developing VA", and composite period anchors (session/day/week/custom range picker).
 - **Validation:** VA % between 1 and 100; custom range end after start; range longer than recorded history warns rather than blocks.
 - **Components:** CMP-006 RadioGroup, CMP-008 NumericStepperInput, CMP-031 ColorSwatch / ThemeChip, CMP-040 FormField, CMP-043 Dialog, CMP-065 FormSection, CMP-228 PreviewTile.
@@ -798,6 +887,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] period mode, row size/ticks, value-area %, split bid/ask, TPO letter size and composite look-back controls drawn [ ] live preview [ ] warning when the requested look-back exceeds recorded history [ ] reset
 
 ### SCR-040 — Chart trading overlay settings
+
 - **Type:** Modal. Controls what trading objects draw on the chart: position line (avg price, size, uPnL, R multiple), SL/TP lines with drag-to-amend, working orders, fills as markers, fan-out sibling positions (per-account ghost lines), liquidation-price line, break-even line, one-click arm state display.
 - **Validation:** drag-to-amend confirms when the new SL is on the wrong side of the mark ("Stop is above the mark price for a long — this would close immediately. Continue?").
 - **Components:** CMP-004 Toggle, CMP-040 FormField, CMP-043 Dialog, CMP-119 BracketEditor, CMP-192 OrderLineOverlay, CMP-229 ArmToggle.
@@ -805,9 +895,10 @@ Drag preview                Drop zones
 - **A11y:** Toggles with explicit labels for every overlay element (position line, average price, SL, TP, working orders, liquidation estimate, drag-to-modify); the drag-to-modify toggle states in text that a keyboard alternative exists via SCR-064.
 - **Performance:** Overlay elements render on the trading layer and update on private WS events only; the layer redraws in <=2 ms.
 - **Analytics/audit:** `chart.trading_overlay_changed` with `{element, enabled}` (analytics). Enabling drag-to-modify on LIVE additionally emits audit `trading.chart_drag_modify_enabled`.
-- **Design sign-off acceptance checklist:** [ ] every overlay element toggle drawn [ ] drag-to-modify confirm/no-confirm choice drawn with an explicit risk note [ ] liquidation-estimate line carries the *(estimated)* chip [ ] overlay legibility over footprint cells verified
+- **Design sign-off acceptance checklist:** [ ] every overlay element toggle drawn [ ] drag-to-modify confirm/no-confirm choice drawn with an explicit risk note [ ] liquidation-estimate line carries the _(estimated)_ chip [ ] overlay legibility over footprint cells verified
 
 ### SCR-041 — Symbol/interval quick-switcher (in-chart)
+
 - **Type:** Popover. Type-ahead symbol search with favourites, recents and instrument metadata preview (tick size, lot size, max leverage, funding, 24 h volume).
 - **Data:** `GET /api/v1/instruments?q=`, `GET /api/v1/instruments/{symbol}`.
 - **States:** no match ("No USDT perpetual matches 'xyz' — v1 supports linear perpetuals only.") · not recorded chip with "Record this symbol" action (owner).
@@ -819,6 +910,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] typeahead with fuzzy match [ ] recent symbols [ ] interval shortcuts in the same overlay [ ] not-recorded warning on symbols with no history [ ] no-results state
 
 ### SCR-042 — Interval / bar-mode menu
+
 - **Type:** Menu. Time intervals (1s, 5s, 15s, 30s, 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 12h, 1d, 1w) plus Volume, Tick, Range, Renko and Point & Figure modes with inline parameter fields and an "edit favourites" row that defines the `1..9` hotkey ladder.
 - **States:** interval unavailable for the symbol's recorded depth (greyed with "Needs recorded ticks").
 - **Components:** CMP-041 Menu, CMP-069 InfoPanel, CMP-220 IntervalPicker, CMP-222 ChartTypeToggle.
@@ -829,6 +921,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] all bar modes drawn with their parameter inputs [ ] favourites/pinned intervals [ ] custom-interval validation message [ ] non-time bar modes state clearly which ones require recorded tick history
 
 ### SCR-043 — Price-scale / time-scale context menus
+
 - **Type:** Menus. Price scale: auto / logarithmic / percentage / indexed-to-100, invert, lock, merge indicator scales, reset. Time scale: auto-fit, go to date (opens SCR-044), spacing presets, show/hide session dividers and maintenance-window markers.
 - **Components:** CMP-004 Toggle, CMP-041 Menu, CMP-188 PriceAxis, CMP-189 TimeAxis.
 - **Stories:** US-CHART-006, US-CHART-007, US-LAY-004.
@@ -838,6 +931,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] price-scale and time-scale menus drawn separately [ ] auto/log/percent/invert/lock items [ ] timezone and session-break items on the time scale [ ] 'reset scale' item [ ] double-click-to-reset behaviour documented
 
 ### SCR-044 — "Go to date" dialog
+
 - **Type:** Modal. Date+time picker (UTC and local shown side by side), quick jumps (session open, yesterday, last swing, last journal entry, last alert). Warns when the target precedes recorded history.
 - **Components:** CMP-001 Button, CMP-027 ErrorState / InlineError, CMP-043 Dialog, CMP-047 DatePicker / DateRangePicker.
 - **Stories:** US-CHART-010, US-RPL-007.
@@ -847,7 +941,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] date+time entry with timezone shown [ ] 'before recorded history' error state drawn with the recording-start timestamp [ ] quick ranges (session open, yesterday, last week) [ ] Esc cancels without moving the chart
 
 ### SCR-045 — Chart data-table alternative (a11y)
+
 - **Type:** Panel/overlay (`Alt+T` from any chart). Equal-status, fully keyboard-navigable grid of the visible range: per bar time, OHLC, volume, delta, CVD, and an expandable per-bar footprint cell list (price, bid, ask, delta, imbalance flag).
+
 ```
 +-- BTCUSDT 1m - table view (visible range) ----------------+
 | time     open   high   low    close  vol   delta  cvd     |
@@ -855,6 +951,7 @@ Drag preview                Drop zones
 |  > cells: 64020 A12/B8 d+4 | 64010 A30/B22 d+8 IMB        |
 +-----------------------------------------------------------+
 ```
+
 - **Interactions:** arrow keys move, `Enter` expands a bar's cells, `Ctrl+C` copies the selection as TSV, actions available per row (create alert here, replay from here, add note).
 - **A11y:** this is the normative accessible equivalent of SCR-030 and must reach feature parity for reading data; verified in every a11y test pass.
 - **Components:** CMP-049 Table, CMP-053 Pagination, CMP-056 ColumnPicker, CMP-099 PrintExportBar, CMP-225 DeepStatsStrip.
@@ -864,6 +961,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] table carries the same information as the canvas incl. footprint cells per bar (expandable row) [ ] column set and sorting drawn [ ] keyboard navigation within the grid [ ] CSV export control [ ] it is reachable from the chart panel header, not hidden in settings - equal status verified
 
 ### SCR-046 — Chart engine diagnostics overlay
+
 - **Type:** Overlay (`Ctrl+Shift+D`, developer/owner). Shows FPS, frame time p50/p95, draw calls, GPU memory, buffer uploads/s, WS message rate, dropped frames, and a "copy diagnostics" button used in bug reports.
 - **Data:** local engine telemetry + `system`.
 - **Components:** CMP-024 Sparkline, CMP-036 KeyValueRow, CMP-069 InfoPanel, CMP-178 SystemHealthTile.
@@ -874,7 +972,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] FPS, frame-time p50/p95, draw calls, GPU memory estimate, visible bars, cell count, WS->pixel latency and dropped-frame count drawn [ ] threshold colouring paired with text ('below budget') [ ] copy-diagnostics control for bug reports [ ] hidden by default, enabled from SCR-118
 
 ### SCR-047 — Chart empty / no-data state
+
 - **Type:** State of SCR-030. Cases: symbol never recorded (offers live-only view with a "history starts when you record" explanation), interval too fine for available data, request window entirely before recording start, exchange returned no bars.
+
 ```
 +-----------------------------------------------+
 |   No recorded history for BTCUSDT before      |
@@ -883,6 +983,7 @@ Drag preview                Drop zones
 |   [ Record this symbol ]  [ Learn more ]      |
 +-----------------------------------------------+
 ```
+
 - **Components:** CMP-001 Button, CMP-021 Link, CMP-026 EmptyState, CMP-029 Skeleton-Chart placeholder.
 - **Stories:** US-REC-005, US-REC-006, US-CHART-010.
 - **A11y:** Empty state is a heading + paragraph + action, not an icon alone; the recording-start timestamp is text; the CTA is a real button (owner) or an explanatory sentence (manager/viewer).
@@ -891,6 +992,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] three distinct reasons drawn (never recorded / no data in this range / instrument not trading) [ ] owner CTA to SCR-140 and non-owner explanatory copy both drawn [ ] live-data-still-works note present where true [ ] no infinite spinner path
 
 ### SCR-048 — Chart error state
+
 - **Type:** State of SCR-030. Bootstrap request failed, footprint recompute failed, or the engine lost its WebGL context ("Graphics context lost — restoring…", auto-retry ×3 then a manual Retry + a link to SCR-118 renderer settings).
 - **Components:** CMP-001 Button, CMP-021 Link, CMP-027 ErrorState / InlineError, CMP-091 GlobalErrorBoundaryFallback.
 - **Stories:** US-CHART-001, US-SET-008.
@@ -900,7 +1002,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] distinct copy for engine/WebGL failure, data-feed failure and backend failure [ ] WebGL-unavailable fallback message names the fallback path [ ] correlation id copyable [ ] retry + 'open diagnostics' actions [ ] the rest of the workspace remains usable
 
 ### SCR-049 — Multi-chart grid panel
+
 - **Type:** Panel hosting 2–9 chart instances in one dock slot with a shared header for layout, sync group, and a "propagate symbol" toggle; used for multi-timeframe and multi-symbol context.
+
 ```
 +-------------------+-------------------+
 | BTCUSDT 4H  [A]   | BTCUSDT 5m  [A]   |
@@ -908,6 +1012,7 @@ Drag preview                Drop zones
 | ETHUSDT 1H  [B]   | SOLUSDT 1H  [B]   |
 +-------------------+-------------------+
 ```
+
 - **Performance:** one shared WebGL context with scissored viewports; total budget for 4 charts ≥50 fps.
 - **A11y:** each sub-chart is a labelled region; `Ctrl+Alt+1..9` focuses a sub-chart.
 - **Components:** CMP-080 DockPanel, CMP-081 DockGrid / Layout Manager, CMP-196 MultiChartLinker, CMP-217 LayoutPresetMenu, CMP-218 SyncMenu.
@@ -920,8 +1025,10 @@ Drag preview                Drop zones
 ## 4. Order flow & market microstructure (SCR-050..059)
 
 ### SCR-050 — Heatmap + DOM ladder panel (the DeepDOM analogue)
+
 - **Type:** Panel. **Purpose:** see resting liquidity over time (heatmap) behind a clickable price ladder for precise execution.
 - **RBAC:** all; click-trading disabled for `viewer` and when the arm toggle is off.
+
 ```
 +-------------------- BTCUSDT - Heatmap + Ladder ---------------------+
 | depth [200 v] scale [log v] trail [60s v] cell [4px v] [ARMED] LIVE |
@@ -938,6 +1045,7 @@ Drag preview                Drop zones
 | detectors: iceberg 63,970 (estimated) - stop-run zone 63,900 (est.) |
 +---------------------------------------------------------------------+
 ```
+
 - **Components:** CMP-108 DomLadderRow, CMP-111 HeatmapCell, CMP-113 HeatmapLegend, CMP-122 QuickSizeButtons, CMP-134 DetectorEventCard, CMP-193 HeatmapOverlay, CMP-227 EstimatedBadge, CMP-229 ArmToggle, CMP-230 OwnOrderMarker.
 - **Data:** WS `book.{symbol}.{depth}` (depth 50/200/500 negotiated by the depth control), `heatmap.{symbol}` (historized density frames), `ticker.{symbol}` (mark/best bid/ask), `trades.{symbol}` (prints on the ladder), `orders` + `positions` (own orders/position overlay), `metrics.{symbol}` (iceberg/stop-run, estimated). Actions: `POST /api/v1/orders`, `PATCH /api/v1/orders/{id}`, `DELETE /api/v1/orders/{id}`, `POST /api/v1/positions/{positionId}/close`.
 - **Interactions/hotkeys:** click bid column = buy limit at that price; click ask column = sell limit; `Ctrl+click` = market order; `Shift+click` = stop order; drag an own-order marker to amend price; right-click a row = context menu (limit/stop/TP/alert here/copy price); `Esc` = cancel all working orders for the symbol (confirm in Live); `+`/`-` = price zoom; `C` = centre on mark; `Space` = re-centre + resume auto-follow; `Ctrl+Shift+T` = arm/disarm one-click.
@@ -949,10 +1057,12 @@ Drag preview                Drop zones
 - **Analytics/audit:** `dom.order_placed` (audit, with price/qty/side/source=ladder), `dom.order_amended`, `dom.cancel_all`, `dom.arm_toggled`, `dom.depth_changed`.
 - **Sign-off:** [ ] colour scale legend with numeric anchors [ ] own-order markers never obscured by heatmap [ ] arm state unmistakable [ ] keyboard ladder trading demoed [ ] resync state designed [ ] detector "(estimated)" copy approved.
 - **Stories:** US-DOM-001, US-DOM-002, US-DOM-003, US-DOM-005, US-DOM-006, US-DOM-007, US-DOM-008, US-DOM-009, US-MKT-007, US-ORD-009.
-- **Design sign-off acceptance checklist:** [ ] ladder rows, heatmap trail, bid/ask columns, working-order column and position marker drawn at 3 depth tiers [ ] green=bid / red=ask convention with a user-configurable theme and a non-colour (side label) encoding [ ] centred / free-scroll / recentre behaviour drawn [ ] arm/disarm affordance for click-trading drawn and unmistakable in LIVE [ ] accessible grid alternative confirmed equal-status [ ] *(estimated)* chips on queue-position and iceberg markers [ ] performance acceptance against the mandatory WebGL spike recorded (see Performance)
+- **Design sign-off acceptance checklist:** [ ] ladder rows, heatmap trail, bid/ask columns, working-order column and position marker drawn at 3 depth tiers [ ] green=bid / red=ask convention with a user-configurable theme and a non-colour (side label) encoding [ ] centred / free-scroll / recentre behaviour drawn [ ] arm/disarm affordance for click-trading drawn and unmistakable in LIVE [ ] accessible grid alternative confirmed equal-status [ ] _(estimated)_ chips on queue-position and iceberg markers [ ] performance acceptance against the mandatory WebGL spike recorded (see Performance)
 
 ### SCR-051 — Heatmap & ladder settings dialog
+
 - **Type:** Modal, tabs: Depth & scale · Colour · Ladder · Trading · Detectors.
+
 ```
 +---------- Heatmap + Ladder settings -------------+
 | Depth tier  ( )50  (o)200  ( )500                |
@@ -968,6 +1078,7 @@ Drag preview                Drop zones
 |            sensitivity [ medium v ]              |
 +--------------------------------------------------+
 ```
+
 - **Validation:** trail 5–600 s; row height 10–40 px; at least one qty preset.
 - **Notes:** changing the depth tier resubscribes `book.{symbol}.{depth}` and triggers a fresh snapshot; a notice explains the brief resync.
 - **Components:** CMP-006 RadioGroup, CMP-008 NumericStepperInput, CMP-010 Slider, CMP-031 ColorSwatch / ThemeChip, CMP-043 Dialog, CMP-065 FormSection, CMP-069 InfoPanel, CMP-113 HeatmapLegend, CMP-136 DisclosedInventoryChip, CMP-228 PreviewTile.
@@ -978,7 +1089,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] depth tier (50/200/500), row aggregation (ticks per row), heatmap trail length, intensity curve, colour theme, big-order threshold, tape-print overlay and click-trade behaviour all drawn [ ] live preview [ ] warning that a higher depth tier increases bandwidth and CPU, with the measured cost shown [ ] reset to defaults
 
 ### SCR-052 — CVD / delta panel
+
 - **Type:** Panel. Cumulative volume delta + per-bar delta histogram, with divergence marking.
+
 ```
 +--- CVD / Delta  BTCUSDT 1m -------------------+
 | reset [session v]  smooth [EMA 9 v]  [div x]  |
@@ -988,6 +1101,7 @@ Drag preview                Drop zones
 | divergence: price HH / CVD LH at 13:42  (flag) |
 +-----------------------------------------------+
 ```
+
 - **Data:** WS `metrics.{symbol}`, bootstrap `GET /api/v1/market/metrics?symbol&interval&from&to`.
 - **Settings:** reset anchor (session / UTC day / never / manual), line vs histogram, smoothing, divergence detection on/off with lookback, alert-on-divergence.
 - **States:** loading · streaming · reset marker shown · recorded-history limited.
@@ -996,10 +1110,12 @@ Drag preview                Drop zones
 - **Stories:** US-CVD-001, US-CVD-002, US-CVD-003, US-CVD-004, US-CVD-005, US-CVD-006.
 - **Performance:** The CVD series updates at a capped 10 Hz (updates coalesced from the `metrics.{symbol}` stream into one render per 100 ms frame) regardless of trade rate; the panel's budget is <=2 ms CPU + <=1 ms GPU per frame, and it must remain >=58 fps with 3 CVD panels open during a 5,000 trades/min burst. Divergence detection runs incrementally on bar close, never over the whole series.
 - **Analytics/audit:** `cvd.interval_changed`, `cvd.mode_changed` (absolute/session/anchored), `cvd.divergence_marker_clicked`, `cvd.anchor_set` (analytics).
-- **Design sign-off acceptance checklist:** [ ] CVD line + per-bar delta histogram drawn together with a shared time axis aligned to the chart [ ] session / anchored / rolling modes drawn [ ] divergence markers drawn with a text label and the *(estimated)* chip where the detection is heuristic [ ] recorder-dependent empty state [ ] stale-data shading after 2 s [ ] accessible table alternative reachable from the panel header
+- **Design sign-off acceptance checklist:** [ ] CVD line + per-bar delta histogram drawn together with a shared time axis aligned to the chart [ ] session / anchored / rolling modes drawn [ ] divergence markers drawn with a text label and the _(estimated)_ chip where the detection is heuristic [ ] recorder-dependent empty state [ ] stale-data shading after 2 s [ ] accessible table alternative reachable from the panel header
 
 ### SCR-053 — Tape / Time & Sales + big-trade bubbles panel
+
 - **Type:** Panel with two linked views: a scrolling print tape and (optionally) bubbles drawn over the chart.
+
 ```
 +--- Tape  BTCUSDT ----[filter >= 10k USDT]---+
 | 14:02:11.331  BUY   0.85 @ 64,012.5  54.4k  |
@@ -1009,6 +1125,7 @@ Drag preview                Drop zones
 | bubbles: scale [log v] min [10k] whale [100k]|
 +---------------------------------------------+
 ```
+
 - **Data:** WS `trades.{symbol}`; thresholds applied client-side; percentile thresholds computed server-side via `GET /api/v1/market/metrics?symbol&window`.
 - **Interactions:** click a print → crosshair jumps to that timestamp on synced charts; `Ctrl+F` filter; pause on hover; `P` pause/resume auto-scroll.
 - **States:** streaming · paused (chip "Paused — 412 prints buffered") · filtered-empty ("No prints above 10 000 USDT in the last 5 min") · disconnected.
@@ -1020,7 +1137,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] row layout (time, price, size, side, aggressor) drawn at compact and comfortable density [ ] big-trade highlighting by size tier uses weight/glyph as well as colour [ ] bubble overlay variant drawn with its size-to-notional legend [ ] pause-on-hover and explicit pause control drawn [ ] filter chips (min notional, side, aggregated-vs-raw) [ ] stale/disconnected state
 
 ### SCR-054 — OI / funding / liquidations panel
+
 - **Type:** Panel with three stacked sub-panes (each individually collapsible).
+
 ```
 +--- Derivatives context BTCUSDT --------------+
 | OI  [abs|delta]   1.24B  (+2.1% 1h)          |
@@ -1031,6 +1150,7 @@ Drag preview                Drop zones
 |   ||  |  ||||                                |
 +----------------------------------------------+
 ```
+
 - **Data:** WS `ticker.{symbol}` (openInterest, fundingRate, nextFundingTime, mark/index), `liquidations.{symbol}`; REST backfill `GET /api/v1/market/open-interest?symbol&interval`, `GET /api/v1/market/funding?symbol`. Liquidation history is **local-recorder only** — no exchange history endpoint exists.
 - **Settings:** OI absolute vs delta-per-bar, OI/price quadrant colouring, funding stepped line vs bars + annualised toggle, liquidation bars vs heatmap, notional threshold.
 - **States:** loading · partial (liquidation history limited to recorder uptime, with an explicit chip) · funding countdown running · next-funding imminent warning (<5 min, "Funding settles in 04:12 — position will be charged ≈ 12.40 USDT").
@@ -1042,6 +1162,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] OI series, funding rate + countdown to settlement, and the liquidation strip drawn together [ ] predicted vs actual funding distinguished with text [ ] liquidation cascade state drawn (aggregated bucket + counter) [ ] units and side of every figure explicit [ ] empty state where the exchange gives no value [ ] stale-data shading
 
 ### SCR-055 — Speed-of-tape panel
+
 - **Type:** Panel. Rolling trades/sec and notional/sec gauge plus a strip chart, optionally split by side, with a z-score badge used by the rule engine vocabulary (`tape_speed_zscore`).
 - **Data:** WS `metrics.{symbol}`; window 1 s / 5 s / 30 s.
 - **States:** calm · elevated · extreme (threshold chips, text labels not colour only) · insufficient sample ("Warming up — 8 s of data").
@@ -1053,7 +1174,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] trades/sec and notional/sec both shown with units [ ] rolling window selector (10s/1m/5m) [ ] z-score/threshold band drawn with a non-colour encoding [ ] spike state and its cooldown drawn [ ] quiet-market empty state [ ] 'create alert from this threshold' affordance
 
 ### SCR-056 — Imbalance tracker panel
+
 - **Type:** Panel. List + chart markers of stacked/diagonal imbalances with price, direction, stack depth, ratio, age, and whether the level has since been traded through (absorbed vs held).
+
 ```
 +--- Imbalances BTCUSDT 1m -----------------+
 | 13:58  BUY stack x4  @63,980-64,010  420% |
@@ -1061,6 +1184,7 @@ Drag preview                Drop zones
 |   [x] only unfilled   [x] alert on new    |
 +-------------------------------------------+
 ```
+
 - **Data:** WS `metrics.{symbol}`; thresholds shared with SCR-032 (single source of truth: changing one prompts to sync the other).
 - **Interactions:** click → chart crosshair jumps and highlights the cells; "Create alert from this level".
 - **Components:** CMP-011 Tag / Chip, CMP-049 Table, CMP-132 ImbalanceStackIndicator, CMP-134 DetectorEventCard, CMP-227 EstimatedBadge.
@@ -1071,7 +1195,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] event list + chart markers drawn and cross-highlighted [ ] threshold and stacked-count controls with live effect [ ] side encoded by text as well as colour [ ] link from an event to the originating footprint cell [ ] empty state ('no imbalances above 3:1 in this range') [ ] stale-data shading
 
 ### SCR-057 — Market regime panel
+
 - **Type:** Panel. Classification badge (Trending / Ranging / Volatile / Calm) with contributing sub-signals and a session transition strip. Always carries "(estimated)".
+
 ```
 +-- Regime (estimated) --------+
 | TRENDING  ^  confidence 0.71 |
@@ -1080,6 +1206,7 @@ Drag preview                Drop zones
 | transitions: 09:12 R->T ...  |
 +------------------------------+
 ```
+
 - **Data:** WS `metrics.{symbol}`; breakdown `GET /api/v1/market/regime/explain?symbol&ts`.
 - **Interactions:** click the badge → expand the contributing-signal breakdown with each signal's value, threshold and weight.
 - **A11y:** the badge is text-first; the confidence value is always numeric.
@@ -1087,9 +1214,10 @@ Drag preview                Drop zones
 - **Stories:** US-DET-008, US-DET-005.
 - **Performance:** Regime classification is computed backend-side and pushed on `metrics.{symbol}` at most 1 Hz; the panel renders only on change; the sub-signal breakdown is fetched once per change, not polled. Budget <=1 ms per update.
 - **Analytics/audit:** `regime.panel_opened`, `regime.explain_opened` (opens SCR-058), `regime.sensitivity_changed`, `regime.alert_created` (analytics).
-- **Design sign-off acceptance checklist:** [ ] current regime label with the mandatory *(estimated)* chip [ ] confidence expressed as a number plus words, never a bare colour [ ] sub-signal breakdown (trend strength, volatility, volume profile shape, tape speed, OI trend) each with its own value [ ] regime-change history strip [ ] 'why this classification?' link to SCR-058 [ ] insufficient-history state
+- **Design sign-off acceptance checklist:** [ ] current regime label with the mandatory _(estimated)_ chip [ ] confidence expressed as a number plus words, never a bare colour [ ] sub-signal breakdown (trend strength, volatility, volume profile shape, tape speed, OI trend) each with its own value [ ] regime-change history strip [ ] 'why this classification?' link to SCR-058 [ ] insufficient-history state
 
 ### SCR-058 — Detector methodology drawer ("Why estimated?")
+
 - **Type:** Drawer opened from any `(estimated)` chip. Explains, per detector, the heuristic used, the inputs, the tunable thresholds, the known false-positive modes, and the hard statement that Bybit provides no L3/MBO feed so these are proxies, not ground truth. Links to the detector settings and to the methodology section of the docs.
 - **Data:** `GET /api/v1/detectors/methodology`.
 - **A11y:** plain-language summary first, technical detail second; no jargon without a glossary link.
@@ -1100,6 +1228,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] one section per estimated signal (iceberg, stop-run, absorption, queue position, order-count footprint, regime, liquidity cluster) [ ] each section states: what it infers, from what data, the exact heuristic and thresholds in force, the known failure modes, and what would be required to know it for certain [ ] the words 'this is an estimate, not exchange-provided fact' appear in each section [ ] link to the detector settings (SCR-059)
 
 ### SCR-059 — Detector settings dialog
+
 - **Type:** Modal. Per detector (iceberg, stop-run, absorption, spoof-ish cancellation burst): enable, sensitivity preset (low/medium/high) or explicit thresholds (refill count, window ms, consumed-liquidity ratio, cluster distance ticks), symbol scope, alert routing, and a backtest-on-recorded-history preview showing how many events the current settings would have produced in the last N hours.
 - **Validation:** thresholds bounded per detector with published ranges; "Sensitivity high may produce many false positives" warning.
 - **Components:** CMP-004 Toggle, CMP-008 NumericStepperInput, CMP-010 Slider, CMP-028 Callout / Banner, CMP-040 FormField, CMP-043 Dialog, CMP-065 FormSection, CMP-227 EstimatedBadge.
@@ -1107,15 +1236,17 @@ Drag preview                Drop zones
 - **A11y:** Per-detector fieldsets with numeric inputs, units and default values shown; each detector has an enable switch and a text description; changing a value announces the new effective threshold.
 - **Performance:** Changes are applied server-side and take effect on the next evaluation window (<=2 s); the dialog shows 'applied' only after the backend confirms, never optimistically.
 - **Analytics/audit:** `detector.enabled_changed`, `detector.threshold_changed` with `{detector, key, before, after}` - **audited**, because detector output can feed armed rules that place orders.
-- **Design sign-off acceptance checklist:** [ ] every detector with its thresholds, look-back and minimum-confidence controls [ ] a warning listing armed rules that depend on the detector being changed [ ] reset-to-default per detector [ ] *(estimated)* framing repeated [ ] validation messages for out-of-range values
+- **Design sign-off acceptance checklist:** [ ] every detector with its thresholds, look-back and minimum-confidence controls [ ] a warning listing armed rules that depend on the detector being changed [ ] reset-to-default per detector [ ] _(estimated)_ framing repeated [ ] validation messages for out-of-range values
 
 ---
 
 ## 5. Trading: tickets, grids, algos, risk, environment (SCR-060..079)
 
 ### SCR-060 — Order ticket panel (single account)
+
 - **Type:** Panel. **Purpose:** the fast execution surface for one account.
 - **RBAC:** `owner`, `manager` (assigned accounts, within profile limits); `viewer` sees it read-only with a lock notice.
+
 ```
 +------------- Order ticket -------------------+
 | Account [Main v]  LIVE  lev 10x  One-Way     |
@@ -1133,6 +1264,7 @@ Drag preview                Drop zones
 | est. fee 0.55 - est. slip 0.4 - margin 1,600 |
 +----------------------------------------------+
 ```
+
 - **Components:** CMP-001 Button, CMP-075 EnvBadgeLocal, CMP-100 PriceInput, CMP-101 QtyInput, CMP-102 SideToggle, CMP-103 OrderTypeTabs, CMP-107 OrderTicket, CMP-119 BracketEditor, CMP-121 RiskCalculatorPanel, CMP-122 QuickSizeButtons, CMP-130 SlippageEstimateChip, CMP-231 TifSelect, CMP-232 LimitsChip.
 - **Data:** `GET /api/v1/instruments/{symbol}` (tick, lot, leverage, min notional), `GET /api/v1/exchange-accounts/{accountId}/profiles` (limits, sizing rule, SL/TP offsets), WS `wallet` (equity/margin), `ticker.{symbol}` (mark/bid/ask for price helpers), submit `POST /api/v1/orders`.
 - **Interactions/hotkeys:** `B`/`S` set side; `1..4` qty presets; `Ctrl+Enter` submit; `Esc` clear; `Alt+B`/`Alt+A` snap price to bid/ask; `Alt+M` mid; `R` toggle reduce-only; `Ctrl+Shift+T` arm/disarm one-click (when armed, preset buttons fire immediately without the confirm step).
@@ -1146,8 +1278,10 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] all order types drawn (market, limit, post-only, reduce-only, conditional) [ ] sizing modes (qty / notional / % equity / risk-based) with the computed result always visible [ ] mandatory native SL field cannot be left empty - state drawn [ ] arm/disarm and LIVE confirmation drawn [ ] rejection state with the exchange reason verbatim [ ] DEMO and LIVE variants unmistakable in greyscale [ ] keyboard-only order path verified end to end
 
 ### SCR-061 — Trade-group ticket (multi-account fan-out)
+
 - **Type:** Panel/Modal. **Purpose:** one intent → N per-account orders, each sized by its own profile, each with a native SL.
 - **RBAC:** `owner` (create/edit groups); `manager` may use groups granted to them.
+
 ```
 +--------- Trade group ticket: "Scalp x3" -----------------+
 | Intent: BUY BTCUSDT  entry [Limit 64,010] SL [63,900]    |
@@ -1165,6 +1299,7 @@ Drag preview                Drop zones
 | [   SEND GROUP (3 accounts)   ]   Ctrl+Shift+Enter       |
 +----------------------------------------------------------+
 ```
+
 - **Data:** `GET /api/v1/trade-groups`, `POST /api/v1/trade-groups/preview` (server computes per-account qty/leverage/SL from profiles and current equity), `POST /api/v1/trade-groups` → `{groupOrderId}`; progress via WS `trade_groups`.
 - **Interactions:** per-row include/exclude checkbox, per-row qty override (audited, and flagged as an override), `Ctrl+Shift+Enter` send, `Esc` cancel preview.
 - **States:** previewing · ready · partial-send in progress (per-row live status: queued → sent → accepted / rejected) · **partial failure** (explicit summary: "2 of 3 accepted. sub_002 rejected: insufficient margin. [Retry failed] [Flatten accepted] [Leave as is]") · rate-limit backoff (per-UID budget shown) · blocked (group contains an account in lockout).
@@ -1178,6 +1313,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] account selector with per-account computed size, leverage and SL preview drawn [ ] partial-failure state (3 of 5 accounts filled) drawn as the primary design case, not an afterthought [ ] per-account rate-limit budget indicator [ ] aggregate vs per-account confirmation drawn [ ] mandatory native SL per leg shown before submit [ ] retry/cancel-remaining actions for a partial fan-out [ ] DEMO/LIVE badge per account row
 
 ### SCR-062 — Trade-group manager
+
 - **Type:** Page/Modal (`/admin/trade-groups` for editing, read-only picker in the shell). List of groups: name, member accounts, default sizing basis, allowed symbols intersection, who may use it, armed-for-live flag.
 - **Data:** `GET/POST /api/v1/trade-groups`, `POST /api/v1/trade-groups/{tradeGroupId}/amend`, `POST /api/v1/trade-groups/{tradeGroupId}/cancel`.
 - **Validation:** a group needs ≥1 account; accounts must share at least one allowed symbol ("These accounts have no symbol in common — the group can't trade anything."); group names unique.
@@ -1189,7 +1325,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] group list with expansion to legs drawn [ ] partial-fill and partial-failure group states drawn [ ] flatten-group and cancel-remaining confirmations with the exact leg count restated [ ] per-leg retry [ ] degraded state when one account's private WS is down (the group is marked 'state unknown for sub_002' rather than assumed) [ ] every execution-affecting control confirmed to emit an audit event
 
 ### SCR-063 — Positions & orders grid panel
+
 - **Type:** Panel with tabs: **Positions · Working orders · Fills · Trade groups · Algos**.
+
 ```
 +--[Positions]--[Orders]--[Fills]--[Groups]--[Algos]------------------+
 | group by [account v]  [x] hide zero  filter [BTCUSDT]   [export]    |
@@ -1203,6 +1341,7 @@ Drag preview                Drop zones
 | row actions: [Close 25%][Close 50%][Close][Reverse][SL/TP][Chart]    |
 +---------------------------------------------------------------------+
 ```
+
 - **Data:** WS `positions`, `orders`, `executions`, `trade_groups`, `orders`; reconciliation `GET /api/v1/positions`, `GET /api/v1/orders`, `GET /api/v1/executions`.
 - **Interactions/hotkeys:** `Enter` opens the row's SL/TP editor (SCR-064); `Ctrl+W` close selected position (confirm); `Ctrl+Shift+W` close all in view; multi-select with `Shift`/`Ctrl`; column chooser; group-by account / symbol / trade group / manager; sort; CSV export; click a row to focus the matching chart panel.
 - **States:** loading · empty ("No open positions") · reconciling ("Reconciling with the exchange…" after reconnect) · desync warning (server and exchange disagree → amber banner "Position data is being verified — actions temporarily limited") · liq-proximity warning rows · frozen/lockout (actions disabled with reasons) · viewer read-only.
@@ -1215,7 +1354,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] positions, working orders, fills and algos tabs drawn [ ] full column set with units and side as text [ ] inline SL/TP edit and its confirmation drawn [ ] close-position (market/limit/%) controls with confirmation [ ] account filter and aggregate-vs-split view [ ] DEMO/LIVE badge per row when mixed environments are visible [ ] empty, loading, stale and 'position state unknown (feed down)' states drawn [ ] every mutating control confirmed to emit an audit event
 
 ### SCR-064 — Position SL/TP editor (modal)
+
 - **Type:** Modal from a position row or chart overlay. Edit stop-loss, take-profit, trailing stop (fixed offset / % / ATR multiple / structure-based), break-even trigger, partial-TP ladder, and which of these are **native exchange-side** vs **engine-managed**.
+
 ```
 +--------- Manage BTCUSDT long 0.25 (Main) ---------+
 | Stop-loss   [63,900] (-0.17%) trigger [Mark v]    |
@@ -1231,6 +1372,7 @@ Drag preview                Drop zones
 |                      [ Cancel ]  [ Apply ]        |
 +---------------------------------------------------+
 ```
+
 - **Data:** `PUT /api/v1/positions/{positionId}/tpsl`; state via `positions`.
 - **Validation:** SL/TP side correctness; ladder percentages sum ≤100 % ("Ladder totals 110 % — reduce a step."); each ladder step ≥ min lot; native-SL invariant cannot be removed ("Every position keeps a native stop — you can move it, not delete it.").
 - **A11y:** R-multiples and percentages both shown; the warning about engine-managed stops is a persistent, readable note, not a tooltip.
@@ -1241,7 +1383,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] price / ticks / % / R-multiple entry modes with the others recomputed live [ ] resulting risk in account currency and R shown before confirm [ ] 'SL cannot be removed, only moved' rule stated and enforced in the UI [ ] invalid-side and beyond-liquidation validation messages drawn [ ] partial-quantity TP ladder variant drawn [ ] keyboard path equivalent to chart drag-to-modify
 
 ### SCR-065 — Scaled / ladder order builder
+
 - **Type:** Modal. Split size across N orders between two prices with equal / linear / geometric distribution; preview table of each child order.
+
 ```
 +------- Scaled order --------------------------+
 | from [63,900] to [63,700]  orders [5]         |
@@ -1255,6 +1399,7 @@ Drag preview                Drop zones
 |                 [ Cancel ]  [ Place 5 orders ]|
 +-----------------------------------------------+
 ```
+
 - **Data:** `POST /api/v1/orders` (backend places N children and tracks them as one algo).
 - **Validation:** 2–50 child orders; each child ≥ min lot ("Child 5 is below the minimum — reduce the order count"); range must not cross the mark in the wrong direction (warning, not block).
 - **States:** preview · placing (per-child progress) · partial placement failure with retry.
@@ -1266,6 +1411,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] start/end price, level count and distribution (flat / linear / exponential / custom) drawn [ ] full preview table with resulting average price [ ] rate-limit estimate shown before submit [ ] validation messages for tick/lot rounding and for a range crossing the mark [ ] mandatory native SL applied per level or per resulting position - drawn explicitly [ ] cancel-all-levels control
 
 ### SCR-066 — TWAP builder
+
 - **Type:** Modal. Total qty, duration, slice count/interval, price limit (max slippage), randomisation, participation cap, pause/resume behaviour on disconnect.
 - **Data:** `POST /api/v1/orders`; progress via `orders`.
 - **Validation:** duration 1 min–24 h; slices 2–500; each slice ≥ min lot; "Slices of 0.0004 BTC are below the minimum — reduce slice count."
@@ -1278,6 +1424,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] total qty, duration, slice count/interval, randomisation, limit-vs-market slices and price-band guard drawn [ ] schedule preview table [ ] running / paused / degraded / completed / failed states [ ] 'algo pauses if the backend disconnects; native stops still protect' message drawn [ ] cancel and cancel-and-flatten paths with confirmation
 
 ### SCR-067 — Iceberg (emulated) builder
+
 - **Type:** Modal. Total qty, visible qty, refresh behaviour, price offset/peg, max show-ratio; explicitly labelled "emulated client-side — Bybit's API has no native iceberg field".
 - **Validation:** visible qty ≥ min lot and ≤ 50 % of total (configurable) — "Visible size must be at least the minimum lot and no more than half the total."
 - **Components:** CMP-008 NumericStepperInput, CMP-043 Dialog, CMP-100 PriceInput, CMP-101 QtyInput, CMP-118 AlgoProgressCard, CMP-158 SafetyInvariantNotice, CMP-227 EstimatedBadge.
@@ -1288,6 +1435,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] 'emulated client-side - Bybit has no native iceberg' stated prominently [ ] total/visible/refresh/peg controls drawn [ ] projected request rate shown [ ] running state with slices done/remaining [ ] residual-risk note if the backend stops mid-algo [ ] validation messages drawn
 
 ### SCR-068 — Chase-limit builder
+
 - **Type:** Modal. Peg to best bid/ask/mid with offset in ticks, re-peg threshold, max chase distance from the arrival price, max repricings, fall-back-to-market toggle, timeout.
 - **Validation:** max chase distance > offset; max repricings 1–500; a rate-limit estimate is shown ("≈ 12 requests/min — within your per-account budget").
 - **States:** running (current peg, repricings used, distance travelled) · limit reached (stops and notifies) · fell back to market.
@@ -1299,6 +1447,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] peg source, offset, re-peg threshold, max distance, max repricings, fall-back-to-market and timeout drawn [ ] rate-limit estimate [ ] running / limit-reached / fell-back / cancelled states [ ] fall-back-to-market is opt-in and its slippage risk stated [ ] validation messages drawn
 
 ### SCR-069 — Emulated OCO / bracket builder
+
 - **Type:** Modal. Entry + OCO exit pair, or a standalone OCO on an existing position; explicitly labelled "emulated — Bybit's API has no OCO"; explains the race-resolution behaviour (the losing leg is cancelled on fill notice, with a residual-risk note if the app is offline) and the mandatory native SL floor that remains regardless.
 - **Validation:** the two legs must be on opposite sides of the mark; quantities must match the position.
 - **Components:** CMP-043 Dialog, CMP-100 PriceInput, CMP-101 QtyInput, CMP-118 AlgoProgressCard, CMP-119 BracketEditor, CMP-158 SafetyInvariantNotice, CMP-227 EstimatedBadge.
@@ -1309,7 +1458,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] entry+bracket and standalone-OCO variants drawn [ ] 'emulated - Bybit has no OCO' stated prominently [ ] race-resolution behaviour explained in the dialog [ ] residual-risk state (app offline during a fill) drawn with what the user must do [ ] the mandatory native SL floor is shown as always-present and non-removable [ ] validation messages drawn
 
 ### SCR-070 — Algo monitor panel
+
 - **Type:** Panel (also a tab of SCR-063). Every running emulated algo with type, symbol, account, progress, filled/remaining, average price, next action countdown, and controls (pause, resume, cancel, cancel-and-flatten).
+
 ```
 +--- Algos ---------------------------------------------+
 | id   type   sym    acct   progress    avg      next    |
@@ -1319,6 +1470,7 @@ Drag preview                Drop zones
 | [pause][resume][cancel]  ! algos pause if backend down |
 +--------------------------------------------------------+
 ```
+
 - **Data:** WS `orders`; `GET /api/v1/orders`.
 - **States:** running · paused · degraded (backend reconnecting — banner explains algos are suspended and native stops still protect) · completed · failed with reason.
 - **Audit:** `algo.created|paused|resumed|cancelled|completed|failed`. **Stories:** US-ALGO-006, US-ALGO-007.
@@ -1329,7 +1481,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] every algo type rendered with its type-specific progress metric [ ] running / paused / degraded / completed / failed rows drawn [ ] bulk 'pause all' and 'cancel all' with a confirmation restating the count [ ] degraded banner explaining that algos suspend while the backend is reconnecting and native stops still protect [ ] empty state [ ] every control confirmed to emit an audit event
 
 ### SCR-071 — Risk dashboard
+
 - **Type:** Page/Panel. **RBAC:** `owner` full; `manager` sees only their own scope; `viewer` read-only if granted. **Route:** `/risk`.
+
 ```
 +------------------- Risk ------------------------------------+
 | Portfolio equity 128,400  uPnL +212  day P&L -1.2%  DD -3.4%|
@@ -1344,6 +1498,7 @@ Drag preview                Drop zones
 | Alerts: 2 accounts near cap - 1 position near liquidation    |
 +-------------------------------------------------------------+
 ```
+
 - **Data:** WS `system`, `wallet`, `positions`; `GET /api/v1/risk/summary`, `POST /api/v1/trading/kill-switch`, `POST /api/v1/risk/lockouts/{accountId}/override` (step-up).
 - **Interactions:** FREEZE per account/manager/all (owner only, hold-to-confirm + typed confirm); override a lockout (step-up, requires a typed reason that is audited); drill into an account.
 - **States:** normal · warning (≥80 % of a cap) · locked (auto-flatten executed; shows what was flattened and when) · frozen · stale data · reconciling after reconnect.
@@ -1357,6 +1512,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] portfolio header (equity, uPnL, day P&L, drawdown) and per-account table drawn [ ] exposure by symbol with % of equity [ ] limit-usage bars paired with numeric text [ ] breach and near-breach states drawn with non-colour encoding [ ] manager-scoped variant showing only permitted accounts [ ] kill-switch entry point [ ] stale/unknown state when an account feed is down
 
 ### SCR-072 — Kill-switch / freeze confirmation modal
+
 - **Type:** Modal. Names exactly which accounts and users are affected, what happens (new orders rejected, working orders cancelled optionally, positions optionally flattened), requires typing `FREEZE`, and offers "also cancel working orders" and "also flatten positions" as explicit checkboxes (both default off).
 - **States:** executing (per-account progress), completed summary, partial failure with retry.
 - **Audit:** `risk.freeze` with the full option set. **Stories:** US-RISK-003.
@@ -1367,6 +1523,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] scope selector (this account / all accounts / this symbol) drawn [ ] the exact effect (and non-effect on open positions) restated [ ] typed confirmation [ ] partial-completion state drawn [ ] unfreeze path with its own confirmation and step-up [ ] LIVE vs DEMO variants
 
 ### SCR-073 — Lockout notice (manager view)
+
 - **Type:** Blocking banner + panel state. "Trading locked: daily loss limit −2 % reached at 13:41 UTC. 1 position was flattened. Locked until 00:00 UTC. Contact the owner for an override." Read-only access to everything else remains.
 - **A11y:** `role="alert"` on appearance; persists as a banner thereafter. **Stories:** US-RISK-006.
 - **Performance:** Lockout state is pushed on `system`; the notice appears within 500 ms of the breach and persists across reloads (server-derived, not client-derived).
@@ -1376,7 +1533,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] the reason, the breached limit, the actual value and the reset time are all shown [ ] what remains possible (closing/reducing) vs blocked (opening) is explicit [ ] request-override path drawn for managers with the owner-approval flow [ ] the notice cannot be dismissed while the lockout holds [ ] it appears in the ticket, the grid and the risk dashboard consistently
 
 ### SCR-074 — Environment switcher (Demo ↔ Live)
+
 - **Type:** Modal from the shell env badge. **RBAC:** `owner`; `manager` only if the owner enabled Live for their account; step-up required in both cases.
+
 ```
 +--------- Switch environment -----------------------+
 | Now: DEMO (api-demo)     ->   LIVE (mainnet)       |
@@ -1388,6 +1547,7 @@ Drag preview                Drop zones
 |                   [ Cancel ]  [ Switch to LIVE ]   |
 +----------------------------------------------------+
 ```
+
 - **Data:** `POST /api/v1/session/environment` (step-up token required); on success the client tears down and re-establishes every private subscription.
 - **Interactions:** deliberately **not** bindable to a hotkey; the control is click-only.
 - **States:** switching (progress: closing subscriptions → re-authenticating → resubscribing) · switched (chrome changes, a full-width confirmation banner shows for 10 s) · failed (stays on the previous environment with the reason) · not permitted ("The owner hasn't enabled Live for your account.").
@@ -1399,6 +1559,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] the switch is a deliberate, confirmed action, never a toggle that can be hit accidentally [ ] switching to LIVE requires typed confirmation and step-up [ ] open DEMO positions/orders are listed with a statement that they remain in DEMO [ ] transition state drawn (order entry blocked) [ ] chrome, badges and all trading surfaces are shown updating together [ ] switching is blocked while any algo or trade group is running, with the reason listed
 
 ### SCR-075 — Demo / Live banner & per-panel badges
+
 - **Type:** Global state treatment. Persistent top band; each trading-capable panel repeats the badge in its header; order confirmations restate the environment in the confirm copy ("You are about to send a **LIVE** order"). Demo additionally states "Demo uses Bybit's demo matching engine — REST order entry only, no private WS order entry."
 - **Components:** CMP-074 EnvBanner, CMP-075 EnvBadgeLocal, CMP-139 EnvironmentAwareOrderGuard.
 - **Stories:** US-PAPER-003, US-PAPER-005.
@@ -1408,6 +1569,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] DEMO and LIVE bands drawn and distinguishable in greyscale and in all three colour-vision simulations [ ] per-panel badge placement drawn for ticket, group ticket, ladder, positions grid, algo monitor and chart trading overlay [ ] floating windows repeat the band [ ] the band is never scrolled away or covered by a modal
 
 ### SCR-076 — Order confirmation modal
+
 - **Type:** Modal (shown when one-click is disarmed, or always in Live per preference). Full restatement: environment, account(s), side, symbol, type, qty, price, brackets, estimated cost, resulting exposure, and profile-limit check results. Countdown auto-cancel after 20 s of inactivity (configurable).
 - **A11y:** the confirm button's accessible name restates the whole order; `Enter` confirms only after 400 ms to prevent double-entry pass-through.
 - **Components:** CMP-036 KeyValueRow, CMP-044 ConfirmDialog, CMP-075 EnvBadgeLocal, CMP-130 SlippageEstimateChip, CMP-158 SafetyInvariantNotice, CMP-232 LimitsChip.
@@ -1417,6 +1579,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] side, symbol, quantity, notional, order type, price, leverage, SL/TP and resulting risk in account currency all restated [ ] LIVE variant is visually distinct from DEMO [ ] 'don't ask again' is available for DEMO only and never for LIVE [ ] fan-out variant lists every account leg [ ] no default-focused confirm button for LIVE market orders
 
 ### SCR-077 — Order rejection detail drawer
+
 - **Type:** Drawer. For any rejected order: the exchange error code and raw message, a plain-language explanation, what CandleViewer sent (redacted of secrets), retry guidance, and a one-click "retry with corrections" that pre-fills a fixed ticket. Includes the rate-limit budget graph for code 10018.
 - **Data:** `GET /api/v1/orders/{orderId}/diagnostics`.
 - **Components:** CMP-021 Link, CMP-027 ErrorState / InlineError, CMP-036 KeyValueRow, CMP-046 Drawer, CMP-068 CopyableCodeBlock.
@@ -1427,6 +1590,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] verbatim exchange message + plain-language translation drawn [ ] the most common rejection reasons (insufficient margin, reduce-only violation, tick/lot rounding, leverage limit, risk-limit tier, rate limit, position-mode mismatch) each have written copy [ ] retry-with-fix affordance where the fix is unambiguous [ ] correlation id copyable [ ] link to the audit record (owner)
 
 ### SCR-078 — Fills / executions detail
+
 - **Type:** Panel/Drawer. Per-fill rows: time, price, qty, fee, fee currency, liquidity (maker/taker), order id, trade group, rule that caused it (if any), journal link.
 - **Data:** WS `executions`, `GET /api/v1/executions`.
 - **A11y:** table semantics; fee and funding shown with sign and currency.
@@ -1437,6 +1601,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] per-fill rows (time, price, qty, fee, fee currency, liquidity flag, order id, exec id) drawn [ ] aggregation to an average price with the maker/taker split [ ] slippage vs intended price shown where an intent exists [ ] fan-out grouping by account [ ] CSV export [ ] empty state
 
 ### SCR-079 — Account detail drawer (trading-side)
+
 - **Type:** Drawer from the account picker or positions grid. Balance, equity, available margin, margin mode, position mode (One-Way/Hedge), leverage, today's realised P&L, fees paid, funding paid/received, profile limits summary, key status (valid / expiring / restricted), and quick links to admin screens for the owner.
 - **Data:** `GET /api/v1/exchange-accounts/{id}`, WS `wallet`.
 - **States:** healthy · key expiring soon · key invalid (banner: "This account's API key was rejected — trading disabled for it") · IP-whitelist mismatch (explicit remediation text).
@@ -1452,7 +1617,9 @@ Drag preview                Drop zones
 ## 6. Rule engine (SCR-080..089)
 
 ### SCR-080 — Rules list
+
 - **Type:** Page. **Route:** `/rules`. **RBAC:** `owner`; `manager` with `rules:author`; `viewer` denied (route hidden, 403).
+
 ```
 +---------------------- Rules ---------------------------------+
 | [ + New rule ] [ Import ]  filter: [all v] [symbol] [account] |
@@ -1464,6 +1631,7 @@ Drag preview                Drop zones
 |  ! 2 rules target the same position - [resolve precedence]    |
 +---------------------------------------------------------------+
 ```
+
 - **Data:** `GET /api/v1/rules`, WS `rules` for live state/fire counts.
 - **Interactions:** row menu (edit form / edit graph / duplicate / simulate / arm / disarm / export / delete / view fire history); bulk disarm; search.
 - **States:** empty ("No rules yet — start from a template") · loading · conflict warning · engine-down banner ("The rule engine is not running — armed rules are not evaluating. Native stops are unaffected.").
@@ -1475,7 +1643,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] columns (name, scope, trigger summary, armed state, environment, last fired, author, version) drawn [ ] armed/disarmed/error states are text plus icon [ ] filters by scope, account, environment and armed state [ ] bulk disarm with confirmation [ ] empty state with a link to the templates gallery [ ] rules depending on estimated detectors are flagged in the list
 
 ### SCR-081 — Rule editor — form mode
+
 - **Type:** Page. **Route:** `/rules/:ruleId/form`. Structured condition-list editor; compiles to the shared rule IR (identical IR as the node editor — rules round-trip).
+
 ```
 +------------- Rule: "BE after 1R"  [Form | Graph]  DRAFT ------+
 | Scope   symbol [BTCUSDT v] account [Main v] applies to        |
@@ -1496,9 +1666,10 @@ Drag preview                Drop zones
 | [ Validate ]  [ Simulate ]  [ Save draft ]  [ Arm... ]        |
 +---------------------------------------------------------------+
 ```
+
 - **Components:** CMP-008 NumericStepperInput, CMP-009 Select, CMP-140 RuleConditionRow, CMP-141 RuleConditionGroup, CMP-142 RuleActionRow, CMP-143 RuleTriggerPicker, CMP-144 RuleScopeSelector, CMP-145 RuleFormEditor, CMP-157 MetricPickerCombobox, CMP-233 RuleOptions, CMP-234 ValidationPanel, CMP-235 EditorModeToggle.
 - **Data:** `GET /api/v1/rules/{id}`, `PUT /api/v1/rules/{id}`, `POST /api/v1/rules/validate`, metric/action vocabulary from `GET /api/v1/rules/vocabulary`.
-- **Metric vocabulary surfaced:** price, unrealized_r_multiple, unrealized_pnl_pct, realized_pnl_today, position_side, position_open, atr(n), ema(n), swing_low(n), swing_high(n), cvd_divergence, spread_bps, time_in_trade, orderbook_imbalance, funding_rate, iceberg_present_at_level *(estimated)*, distance_to_liquidity_cluster *(estimated)*, in_stop_hunt_zone *(estimated)*, stop_run_detected *(estimated)*, big_trade_notional, tape_speed_zscore, market_regime *(estimated)*, dom_imbalance_ratio, open_interest_delta.
+- **Metric vocabulary surfaced:** price, unrealized_r_multiple, unrealized_pnl_pct, realized_pnl_today, position_side, position_open, atr(n), ema(n), swing_low(n), swing_high(n), cvd_divergence, spread_bps, time_in_trade, orderbook_imbalance, funding_rate, iceberg_present_at_level _(estimated)_, distance_to_liquidity_cluster _(estimated)_, in_stop_hunt_zone _(estimated)_, stop_run_detected _(estimated)_, big_trade_notional, tape_speed_zscore, market_regime _(estimated)_, dom_imbalance_ratio, open_interest_delta.
 - **Action vocabulary surfaced:** place_order, modify_stop_loss, modify_take_profit, cancel_order, move_to_breakeven, scale_out, scale_in, flatten_all_positions, halt_new_orders, resume_new_orders, send_notification, log_journal_tag, reduce_leverage, widen_stop, arm_chase_limit, start_iceberg_slice.
 - **Interactions/hotkeys:** `Ctrl+S` save draft; `Ctrl+Enter` validate; `Alt+G` switch to graph; `Alt+↑/↓` reorder conditions/actions; `Ctrl+D` duplicate a row.
 - **States:** draft · validating · valid · invalid (errors listed with the offending row highlighted and focusable) · armed (editing an armed rule requires disarming first, or creates a new version with an explicit "Apply to armed rule" step-up) · vocabulary-unavailable (engine offline).
@@ -1515,7 +1686,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] condition rows, logic grouping, action rows and scope selector drawn [ ] full metric and action vocabulary reachable via a searchable picker with descriptions [ ] validation error presentation (summary + row highlight) drawn [ ] estimated-detector warning banner drawn [ ] the graph-authored read-only summary state drawn [ ] round-trip indicator drawn (see Round-trip verification) [ ] keyboard-only authoring verified [ ] arming path with its confirmation
 
 ### SCR-082 — Rule editor — node-graph mode
+
 - **Type:** Page. **Route:** `/rules/:ruleId/graph`. Visual node editor over the **same IR** — any rule authored in the form opens here and vice versa.
+
 ```
 +--- Rule: "ATR trail 2x"  [Form | Graph]  ARMED-DEMO ----------+
 | palette        canvas                                         |
@@ -1533,16 +1706,17 @@ Drag preview                Drop zones
 | [ Validate ] [ Simulate ] [ Save ] [ Arm... ]  errors: 0       |
 +---------------------------------------------------------------+
 ```
+
 - **Components:** CMP-146 NodeGraphCanvas, CMP-147 NodeGraphNode — TriggerNode, CMP-148 NodeGraphNode — ConditionNode, CMP-149 NodeGraphNode — ActionNode, CMP-150 NodeGraphNode — LogicGateNode, CMP-151 NodeGraphNode — CommentNode, CMP-152 NodeGraphEdge, CMP-153 NodeInspectorDrawer, CMP-234 ValidationPanel, CMP-235 EditorModeToggle, CMP-236 NodePalette, CMP-237 NodePort, CMP-238 Minimap.
 - **Data:** identical endpoints to SCR-081; the graph layout (node positions) is stored alongside the IR as presentation metadata so the form editor can ignore it.
 - **Interactions/hotkeys:** drag from the palette to add; drag port→port to connect; `Del` delete selection; `Ctrl+A` select all; `Ctrl+G` group into a sub-graph; `Ctrl+L` auto-layout; `Space+drag` pan; wheel zoom; `Tab` cycles nodes; `Enter` opens the selected node's inspector; `F2` rename.
 - **States:** empty canvas with a "Start from a trigger" hint · editing · invalid connections (rejected with an inline reason "A metric output can't connect to a trigger input") · cycle detected ("This graph has a loop — remove the connection from X to Y") · unsupported-construct warning when a graph uses a shape the form editor renders read-only (the form tab then shows "This rule was authored in the graph editor and contains a nested group — editable here in read-only summary form").
 - **Round-trip verification UI (owner decision #11 — both editors compile to one IR and must round-trip):** the graph editor carries the **same four-state round-trip indicator** as SCR-081, mirrored for this direction:
   1. **`Round-trips ✓`** — every node in this graph maps to a form-editor construct. Tooltip names the form tab as an equal-status alternative.
-  2. **`Unsupported in form view`** (warning, amber + warning glyph + text — *this is the state the owner decision specifically requires to be visible*) — the graph contains constructs the form editor cannot represent. The indicator is clickable and opens a **"What won't round-trip" panel** listing each offending node by its accessible name, why it cannot be represented in the form ("nested sub-graph 'Trend filter'", "the ATR node's output feeds two actions"), and what the form editor will show instead (a read-only summary card). Affected nodes are additionally badged **on the canvas** with a non-colour glyph and are enumerated in the keyboard node-list panel (`Alt+L`) so the warning is never canvas-only. Switching to the form tab from this state shows a confirmation naming the read-only parts before the switch.
+  2. **`Unsupported in form view`** (warning, amber + warning glyph + text — _this is the state the owner decision specifically requires to be visible_) — the graph contains constructs the form editor cannot represent. The indicator is clickable and opens a **"What won't round-trip" panel** listing each offending node by its accessible name, why it cannot be represented in the form ("nested sub-graph 'Trend filter'", "the ATR node's output feeds two actions"), and what the form editor will show instead (a read-only summary card). Affected nodes are additionally badged **on the canvas** with a non-colour glyph and are enumerated in the keyboard node-list panel (`Alt+L`) so the warning is never canvas-only. Switching to the form tab from this state shows a confirmation naming the read-only parts before the switch.
   3. **`Round-trip mismatch`** (error, blocking) — compile from graph and compile from the stored form representation differ. Saving and arming are blocked; the diff is shown with the diverging node selected and highlighted on the canvas (and focused in the node list); the same two explicit recovery choices as SCR-081 are offered, each restating what is lost. Never auto-resolved.
   4. **`Not verified`** (neutral) — compile service unreachable; draft-save only, arming blocked, stated in text.
-  Authoring in either editor, switching tabs, and saving must leave the IR unchanged for any rule marked `Round-trips ✓` — the round-trip equivalence test (author in form → open graph → save → recompile → assert identical IR, and the reverse) is a named acceptance test for this pair of screens.
+     Authoring in either editor, switching tabs, and saving must leave the IR unchanged for any rule marked `Round-trips ✓` — the round-trip equivalence test (author in form → open graph → save → recompile → assert identical IR, and the reverse) is a named acceptance test for this pair of screens.
 - **Round-trip guarantee:** both editors compile to the same IR; `POST /api/v1/rules/{ruleId}/compile` returns the canonical IR and a diff if the two representations disagree, which is a hard error surfaced to the user.
 - **A11y:** **full keyboard authoring** is mandatory — a node list side panel (`Alt+L`) allows add/connect/delete via forms; every node has an accessible name and its connections are described in text ("ATR 14, output connects to Multiply input A"); the canvas is never the only way to author; reduced motion disables edge animations.
 - **Performance:** 200 nodes at 60 fps; edge routing memoised; inspector edits do not re-layout the graph; the round-trip compile + diff check completes within ≤500 ms p95 for a 100-node graph and runs on save and on mode switch, not on every edit.
@@ -1551,7 +1725,8 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] palette, canvas, node, port, edge, minimap and inspector all drawn [ ] valid/invalid connection feedback drawn [ ] cycle-detected state drawn [ ] the node-list keyboard authoring panel drawn and confirmed equal-status [ ] round-trip indicator and 'unsupported in form view' warning drawn (see Round-trip verification) [ ] auto-layout result reviewed on a 60-node graph [ ] reduced-motion variant
 
 ### SCR-083 — Rule templates gallery
-- **Type:** Modal. Starting points: move SL to break-even after 1R; ATR trailing stop (ratchet); structure (swing) trailing stop; partial TP ladder at 1R/2R/3R; time stop (close after N minutes); cancel working orders when spread > N bps; daily loss lockout; halt on tape-speed spike; avoid stops inside a detected liquidity cluster *(estimated)*; reduce leverage when funding exceeds a threshold; flatten before funding settlement; re-arm chase when the book thins.
+
+- **Type:** Modal. Starting points: move SL to break-even after 1R; ATR trailing stop (ratchet); structure (swing) trailing stop; partial TP ladder at 1R/2R/3R; time stop (close after N minutes); cancel working orders when spread > N bps; daily loss lockout; halt on tape-speed spike; avoid stops inside a detected liquidity cluster _(estimated)_; reduce leverage when funding exceeds a threshold; flatten before funding settlement; re-arm chase when the book thins.
 - Each template shows its conditions in plain language, the metrics it needs, whether it depends on estimated detectors, and which editor it opens in.
 - **Components:** CMP-001 Button, CMP-026 EmptyState, CMP-043 Dialog, CMP-050 Card, CMP-054 SearchBox.
 - **Stories:** US-RULE-004, US-RULE-012.
@@ -1561,7 +1736,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] all listed templates drawn as cards with plain-language behaviour text [ ] the metrics each needs and its recorded-history requirement stated [ ] estimated-detector dependency badged [ ] which editor it opens in is stated [ ] search/filter [ ] preview-before-instantiate
 
 ### SCR-084 — Rule simulation / backtest panel
+
 - **Type:** Page section or drawer from either editor. Runs the rule against recorded history and shows the would-have-fired timeline, each firing's context, and the resulting hypothetical actions.
+
 ```
 +---- Simulate "ATR trail 2x" -------------------------------+
 | range [2026-09-01 -> 2026-09-14] symbol BTCUSDT acct Main  |
@@ -1574,6 +1751,7 @@ Drag preview                Drop zones
 | [ open in chart at this moment ]  [ export CSV ]           |
 +------------------------------------------------------------+
 ```
+
 - **Data:** `POST /api/v1/rules/{ruleId}/simulate` → job id; progress via WS `rules`; results `GET /api/v1/admin/jobs/{jobId}`.
 - **States:** idle · running (cancellable) · completed · partial (history gaps listed explicitly with the missing windows) · failed · no-history (CTA to record the symbol).
 - **Caveat copy (required):** "Simulation replays recorded market data. Fills are modelled, not real; results are not a guarantee."
@@ -1585,7 +1763,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] range, symbol and account selectors drawn [ ] the available-history statement ('13 of 14 days - recording started 09-01') drawn [ ] progress and cancel [ ] result summary (fires, actions by type, errors) [ ] a per-firing timeline with the context that triggered it [ ] 'simulation is not a backtest of PnL' caveat stated [ ] insufficient-history state
 
 ### SCR-085 — Rule arming dialog
+
 - **Type:** Modal. Choose environment (Demo / Live), scope confirmation (which accounts and symbols this will act on, expanded from a group into an explicit account list), safety summary (does it place orders? can it flatten? does it depend on estimated detectors?), engine-availability note, and step-up 2FA for Live.
+
 ```
 +------------- Arm rule "BE after 1R" ---------------------+
 | Environment ( ) Demo   (o) LIVE                          |
@@ -1597,6 +1777,7 @@ Drag preview                Drop zones
 |                       [ Cancel ]  [ Arm live ]           |
 +----------------------------------------------------------+
 ```
+
 - **Data:** `PUT /api/v1/rules/{ruleId}/mode` (step-up token).
 - **Validation:** cannot arm a rule that fails validation; cannot arm live on an account the user cannot trade; cannot arm a rule with `flatten_all_positions` without an extra acknowledgement.
 - **Audit:** `rule.armed` (high severity, includes environment + scope). **Stories:** US-RULE-014.
@@ -1607,6 +1788,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] plain-language restatement of what the rule will do [ ] environment choice with DEMO default [ ] scope (accounts, symbols) restated [ ] typed confirmation for LIVE arming plus step-up [ ] estimated-detector dependency warning [ ] conflict warning if another armed rule targets the same scope (links to SCR-086) [ ] disarm path
 
 ### SCR-086 — Rule conflict resolver
+
 - **Type:** Modal. When two or more armed rules target the same position/order, shows the overlap matrix and requires an explicit precedence ordering (drag list or numeric priority) before both can stay armed. Explains the resolution policy (highest priority wins; ties are rejected and logged).
 - **Validation:** priorities must be unique within an overlap set.
 - **Components:** CMP-001 Button, CMP-006 RadioGroup, CMP-049 Table, CMP-155 RuleListRow, CMP-159 RuleConflictWarning.
@@ -1617,6 +1799,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] conflict kinds drawn (opposing actions, duplicate stops, overlapping flatten, priority ambiguity) [ ] resolution choices (set priority, narrow scope, disarm one) with consequences [ ] 'arm anyway' is available but requires an explicit acknowledgement [ ] no-conflict state
 
 ### SCR-087 — Rule fire history / execution log
+
 - **Type:** Page/Drawer. Every evaluation that fired: timestamp, rule version, trigger, condition values at the time, action(s) taken, resulting order/stop ids, success or failure with the exchange response, and a "replay this moment" link.
 - **Data:** `GET /api/v1/rules/runs/{runId}/events`; live via WS `rules`.
 - **States:** empty · streaming · failure rows highlighted with the reason · engine-restart markers.
@@ -1628,6 +1811,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] columns (time, rule version, trigger, metric snapshot, actions attempted, results, environment) drawn [ ] failed-action rows with the exchange reason [ ] filter by outcome and environment [ ] link from a firing to the resulting order/audit record [ ] export [ ] empty state
 
 ### SCR-088 — Rule IR inspector (advanced)
+
 - **Type:** Drawer. Read-only canonical IR (JSON/YAML) of the current rule with copy/export, plus the compiled evaluation plan. Used for debugging, support and for verifying form↔graph round-trip equivalence.
 - **Components:** CMP-033 CopyButton, CMP-046 Drawer, CMP-068 CopyableCodeBlock, CMP-234 ValidationPanel.
 - **Stories:** US-RULE-001, US-RULE-006.
@@ -1637,6 +1821,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] canonical IR shown read-only with a copy control [ ] the diff view used by the round-trip check drawn [ ] version and compiler-version stamps shown [ ] it is clearly labelled advanced/diagnostic [ ] error state when compilation fails, naming the offending node/row
 
 ### SCR-089 — Rule import / export
+
 - **Type:** Modal. Export one or many rules as JSON (IR + optional graph layout). Import validates the schema version, remaps account/symbol references to what the importing user can access, and shows a per-rule accept/skip list with reasons.
 - **Validation:** unknown metric or action names are rejected with the offending path named.
 - **Audit:** `rule.imported`, `rule.exported`. **Stories:** US-RULE-018.
@@ -1651,7 +1836,9 @@ Drag preview                Drop zones
 ## 7. Alerts, journal, analytics, replay (SCR-090..099)
 
 ### SCR-090 — Alerts centre
+
 - **Type:** Page. **Route:** `/alerts`. Tabs: **Active · Triggered · Snoozed**.
+
 ```
 +---------------------- Alerts ------------------------------+
 | [ + New alert ]   [Active] [Triggered] [Snoozed]           |
@@ -1661,6 +1848,7 @@ Drag preview                Drop zones
 | Whale print      ETHUSDT big_trade > 500k     snoozed  11  |
 +------------------------------------------------------------+
 ```
+
 - **Data:** `GET/POST /api/v1/alerts`, `PUT/DELETE /api/v1/alerts/{alertId}`; live via WS `alerts`.
 - **Interactions:** toggle active, snooze (15 m / 1 h / until tomorrow), duplicate, delete, "show on chart".
 - **States:** empty ("No alerts yet") · triggered badge · expired one-shot alerts moved to Triggered · delivery failure chip ("Desktop notification blocked by the OS — enable it in Settings").
@@ -1672,6 +1860,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] active / triggered / expired / disabled states drawn [ ] filters by symbol and status [ ] bulk enable/disable/delete with confirmation [ ] delivery-channel summary per alert [ ] empty state [ ] alerts depending on estimated detectors flagged
 
 ### SCR-091 — Alert editor
+
 - **Type:** Modal. Reuses the rule condition editor (SCR-081) **minus execution actions**: condition builder, symbol/interval scope, one-shot vs recurring, cooldown, expiry, delivery channels (in-app toast, notification centre, desktop notification, sound with a preview button), message template with variable interpolation (`{{symbol}} crossed {{price}}`).
 - **Validation:** at least one condition and one delivery channel; cooldown ≥ 5 s; expiry must be in the future; "Sound requires the desktop shell" note in the browser.
 - **A11y:** sound is never the only channel; the preview button is keyboard-reachable; message template has a live preview.
@@ -1682,6 +1871,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] symbol, metric, operator, threshold, trigger mode (once / every time / once per bar), expiry and delivery channels drawn [ ] plain-language restatement of the alert ('Notify me when BTCUSDT tape speed rises above 3 sigma') [ ] validation messages [ ] estimated-metric warning [ ] test-fire control
 
 ### SCR-092 — Alert triggered toast / detail
+
 - **Type:** Toast + drawer. Shows the alert name, the value that triggered it, the symbol/timeframe, and actions: open chart at that moment, snooze, disable, create a rule from this alert.
 - **Components:** CMP-021 Link, CMP-036 KeyValueRow, CMP-045 Toast / Notification, CMP-046 Drawer, CMP-165 AlertFiredToastGroup.
 - **Stories:** US-ALRT-005, US-ALRT-007.
@@ -1691,7 +1881,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] toast content drawn with the actual metric value, not just the alert name [ ] actions drawn (open chart at that moment, snooze, disable, open detail) [ ] detail view with the full metric snapshot and a link to the bar [ ] sound/desktop-notification behaviour respects SCR-115 [ ] multiple simultaneous alerts collapse into a counted stack
 
 ### SCR-093 — Journal (trade list)
+
 - **Type:** Page. **Route:** `/journal`. **RBAC:** all (scoped to accessible accounts).
+
 ```
 +------------------------ Journal ---------------------------------+
 | range [last 30 d v] acct [all v] sym [all v] tag [all v] [export] |
@@ -1702,6 +1894,7 @@ Drag preview                Drop zones
 | Totals: 42 trades - win 57% - expectancy +0.34R - P&L +1,204      |
 +-------------------------------------------------------------------+
 ```
+
 - **Data:** `GET /api/v1/journal/trades` (auto-built from `executions`), `PATCH /api/v1/journal/trades/{id}` for notes/tags.
 - **Interactions:** click a row → SCR-094; multi-select → bulk tag; filter by tag, account, symbol, session, rule-source, setup; export CSV/JSON; "open in replay".
 - **States:** loading · empty ("No trades in this range") · partial (trades whose market context predates recording show "chart context unavailable") · reconciling (fills still arriving).
@@ -1713,7 +1906,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] columns (open/close time, symbol, side, size, entry, exit, PnL, R, fees, account, environment, tags, rating) drawn [ ] DEMO and LIVE trades are visibly separated and never aggregated together [ ] filters (date, symbol, account, environment, tag, outcome) [ ] bulk tagging [ ] empty state tied to recording/trading start [ ] export
 
 ### SCR-094 — Trade detail / post-mortem
+
 - **Type:** Page/Drawer. Everything about one trade: fills timeline, fees and funding, MAE/MFE, R multiple, the chart snapshot around entry/exit with the footprint at those moments, which rule (if any) managed it, the trade group siblings across accounts, and a free-form note with tags.
+
 ```
 +--- Trade #1842 BTCUSDT long 0.25 (Main) -------------------+
 | entry 63,980 13:41:02  exit 64,240 13:58:11  +2.1R +65.0   |
@@ -1725,6 +1920,7 @@ Drag preview                Drop zones
 | [ Open in replay ]  [ Open chart at entry ]  [ Export ]    |
 +------------------------------------------------------------+
 ```
+
 - **Data:** `GET /api/v1/journal/trades/{id}`, `GET /api/v1/journal/trades/{journalTradeId}/context` (bars + footprint window).
 - **A11y:** MAE/MFE and the SL path are described in text; the mini chart has a table alternative.
 - **Components:** CMP-021 Link, CMP-036 KeyValueRow, CMP-046 Drawer, CMP-058 InlineEdit, CMP-099 PrintExportBar, CMP-116 PnLBadge, CMP-169 TagEditor.
@@ -1734,6 +1930,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] entry/exit markers on a context chart with the footprint available [ ] the full fill list [ ] the rule/algo/manual attribution of every action taken [ ] notes and tags editor [ ] R-multiple, MAE/MFE and time-in-trade shown with units [ ] 'context not recorded' state [ ] link into replay at the trade's timestamp
 
 ### SCR-095 — Journal analytics dashboard
+
 - **Type:** Page. **Route:** `/journal/analytics`. Equity curve, drawdown curve, R-distribution histogram, win rate, expectancy, average hold time, performance by symbol / session hour / tag / rule-source / account, and a MAE/MFE scatter for stop-quality review.
 - **Data:** `GET /api/v1/journal/analytics?groupBy=&range=`.
 - **States:** loading · insufficient sample ("Fewer than 20 trades — statistics are noisy") · empty.
@@ -1745,6 +1942,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] the metric set drawn (win rate, expectancy, avg R, profit factor, max drawdown, streaks, by-symbol, by-hour, by-tag, by-account, by-rule) [ ] DEMO excluded by default with an explicit toggle [ ] every chart has a table alternative [ ] small-sample warning ('12 trades - not statistically meaningful') [ ] date-range and cohort controls [ ] empty state
 
 ### SCR-096 — Journal tag manager
+
 - **Type:** Modal. Create/rename/merge/delete tags, define auto-tag rules (by symbol, by rule that managed the trade, by session, by regime at entry), and set tag colours (always paired with the tag text).
 - **Validation:** tag names unique, ≤24 chars; merging warns how many trades are affected.
 - **Components:** CMP-043 Dialog, CMP-044 ConfirmDialog, CMP-049 Table, CMP-058 InlineEdit, CMP-169 TagEditor.
@@ -1755,7 +1953,9 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] create/rename/merge/delete flows drawn [ ] usage counts shown [ ] delete confirmation restates how many trades lose the tag [ ] colour picker output verified for contrast in both themes [ ] empty state
 
 ### SCR-097 — Replay page
+
 - **Type:** Page. **Route:** `/replay`. **Purpose:** rehearse or post-mortem a recorded session tick-by-tick with the full panel set live in replay time.
+
 ```
 +========================= REPLAY =============================+
 | REPLAY  BTCUSDT  2026-09-13 13:38:04.210  speed 4x          |
@@ -1768,6 +1968,7 @@ Drag preview                Drop zones
 | [x] paper fills  [ ] keep live panes  bookmarks: #42 #43     |
 +==============================================================+
 ```
+
 - **Data:** `POST /api/v1/replay/sessions` (symbol + range + speed) → sessionId; the same WS market-data topics (`trades.{symbol}`, `book.{symbol}.{depth}`, `bars.…`, `footprint.…`) re-subscribed with `replay_session_id` set, so replay and live share one rendering path (`23-ws-protocol.md` §11); playback is driven by `POST /api/v1/replay/sessions/{replayId}/control`; `GET /api/v1/market/data-coverage?symbol` supplies the available ranges for the scrubber.
 - **Interactions/hotkeys:** `Space` play/pause; `←/→` step one bar; `Shift+←/→` step one tick; `Ctrl+←/→` jump 1 minute; `R` jump to real time (exits replay after confirm); `B` set bookmark; `[`/`]` previous/next bookmark; drag the scrubber to seek.
 - **States:** configuring (range picker with a coverage bar showing recorded vs missing windows) · buffering · playing · paused · seeking · gap encountered ("No data 13:52–13:55 — recorder was offline. [Skip gap] [Stop here]") · end of range · paper-fill mode active (a distinct badge) · session expired (server reclaims after 2 h idle, with a resume option).
@@ -1781,6 +1982,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] transport controls (play/pause, step bar, step tick, speed 0.25x-50x, jump to time) drawn [ ] the replay clock and the 'REPLAY' chrome variant are unmistakable and cannot be confused with live [ ] every order-flow panel is shown working under replay [ ] paper-trading controls drawn with 'simulated' labelling [ ] recorded-history bounds shown [ ] buffering/seek states drawn [ ] speed limits stated where the engine cannot sustain the requested rate
 
 ### SCR-098 — Replay session setup modal
+
 - **Type:** Modal. Symbol, date/time range (with a coverage timeline showing recorded, partial and missing windows), starting speed, which panels to include, paper-trading toggle with a starting balance, and "start from a journal trade / alert / rule firing" shortcuts.
 - **States:** coverage loading · no coverage · partial coverage warning.
 - **Components:** CMP-026 EmptyState, CMP-027 ErrorState / InlineError, CMP-043 Dialog, CMP-047 DatePicker / DateRangePicker, CMP-172 ReplayRangePicker, CMP-219 SymbolPicker.
@@ -1791,6 +1993,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] range, symbols, speed and paper-account setup drawn [ ] available-history bounds enforced with a clear message [ ] preparation progress and cancel [ ] 'paper trading only - nothing reaches the exchange' stated [ ] resume-existing-session path [ ] insufficient-history state
 
 ### SCR-099 — Replay paper-trading results
+
 - **Type:** Drawer at the end of a replay session. Simulated fills, P&L, R distribution, the modelled slippage assumptions, and a clear statement that these are simulated. Option to save the session to the journal as a **clearly tagged simulated** entry that is excluded from live analytics by default.
 - **Components:** CMP-049 Table, CMP-099 PrintExportBar, CMP-116 PnLBadge, CMP-167 JournalEquityCurveChart, CMP-168 JournalStatsSummaryCard.
 - **Stories:** US-RPL-006, US-PAPER-004.
@@ -1804,7 +2007,9 @@ Drag preview                Drop zones
 ## 8. Watchlist, symbol search, symbol info (SCR-100..109)
 
 ### SCR-100 — Watchlist panel
+
 - **Type:** Panel. Symbol lists with live scanner columns.
+
 ```
 +--- Watchlist: "Majors" v -----------------------------------+
 | symbol    last     chg%   vol24h   fund%   OI-d   spd  rec  |
@@ -1814,6 +2019,7 @@ Drag preview                Drop zones
 | [ + add symbol ]  [columns]  [sort: chg% v]                 |
 +-------------------------------------------------------------+
 ```
+
 - **Data:** `GET /api/v1/watchlists`, `GET /api/v1/instruments`; live via batched `ticker.{symbol}` subscriptions; `recorder` for the REC chip.
 - **Interactions:** click = set the active symbol for the focused sync group; drag onto a panel to rebind that panel; `Del` remove; right-click = record/unrecord (owner), open in new chart, add alert, copy symbol.
 - **States:** loading · empty list ("Add symbols to watch") · symbol delisted (struck through with "Delisted by the exchange") · subscription cap reached ("Watching 200 symbols — remove some to add more").
@@ -1825,6 +2031,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] columns (symbol, last, change %, volume, funding, OI, spread) drawn with units [ ] up/down encoding uses arrows and text as well as colour [ ] flash-on-update respects reduced motion [ ] recording indicator per symbol [ ] drag-reorder with a keyboard alternative [ ] empty state with an add CTA [ ] stale-data shading
 
 ### SCR-101 — Watchlist manager
+
 - **Type:** Modal. Create/rename/delete/reorder lists, set the default list, import/export symbol sets, and bulk-add by filter (e.g. top 50 by 24 h volume).
 - **Validation:** list names unique; a list may hold ≤200 symbols.
 - **Components:** CMP-001 Button, CMP-043 Dialog, CMP-044 ConfirmDialog, CMP-049 Table, CMP-067 FileDrop / Import control, CMP-162 WatchlistGroupTabs.
@@ -1835,6 +2042,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] multiple watchlists with create/rename/duplicate/delete [ ] bulk add by paste [ ] import/export [ ] delete confirmation [ ] empty state [ ] per-list column configuration
 
 ### SCR-102 — Symbol search (global)
+
 - **Type:** Modal (`Ctrl+P`). Fuzzy search across USDT perpetuals with metadata preview, recording status, and actions (open chart, add to watchlist, record, view info).
 - **States:** no results with an explicit scope reminder ("v1 supports Bybit USDT linear perpetuals only.").
 - **Components:** CMP-011 Tag / Chip, CMP-026 EmptyState, CMP-048 Combobox / AutoComplete, CMP-160 SymbolSearchInput, CMP-213 FuzzyList.
@@ -1845,6 +2053,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] fuzzy matching with the matched substring highlighted (and not relying on colour alone) [ ] recent and favourite sections [ ] per-result actions (open chart, add to watchlist, open ladder) [ ] not-recorded indicator [ ] no-results state with a suggestion [ ] keyboard-only operation
 
 ### SCR-103 — Symbol info / instrument detail
+
 - **Type:** Drawer. Contract specs (tick size, lot size, min/max qty, min notional, max leverage, funding interval, settlement asset), current funding and next settlement, open interest, 24 h stats, risk-limit tiers, maintenance windows, and CandleViewer-side facts: recording status, recorded coverage start, disk used, retention and pin state.
 - **Data:** `GET /api/v1/instruments/{symbol}`, `GET /api/v1/market/data-coverage?symbol`.
 - **Components:** CMP-021 Link, CMP-036 KeyValueRow, CMP-046 Drawer, CMP-125 SymbolInfoPopover, CMP-126 FundingCountdown, CMP-177 RecorderStatusRow.
@@ -1855,6 +2064,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] tick size, lot size, min/max qty, max leverage, risk-limit tiers, funding interval, settlement and status drawn [ ] live ticker block [ ] recording status with a link to SCR-140 (owner) [ ] delisted/suspended state [ ] 'these rules are enforced by the exchange' note
 
 ### SCR-104 — Scanner / screener panel
+
 - **Type:** Panel. Filter the instrument universe by live criteria (24 h change, volume, funding rate, OI delta, tape speed z-score, spread, volatility) with saved screens and a "send matches to watchlist" action.
 - **Data:** `GET /api/v1/scanner?filters=`, refreshed on a 5 s cadence.
 - **States:** no matches · too many matches (capped at 200 with a note) · filter error ("Minimum must be less than maximum").
@@ -1863,13 +2073,14 @@ Drag preview                Drop zones
 - **A11y:** Results are a sortable table with a caption stating the active filter set in plain language; each filter is a labelled control; result count is announced on change.
 - **Performance:** Scanning runs server-side over the hot tier; the panel polls at <=0.2 Hz or subscribes to a scan topic, and never evaluates criteria client-side across the universe; a full-universe scan returns in <=3 s.
 - **Analytics/audit:** `scanner.filter_changed`, `scanner.preset_saved`, `scanner.result_opened`, `scanner.alert_created_from_result` (analytics).
-- **Design sign-off acceptance checklist:** [ ] filter set drawn (change %, volume, OI change, funding, spread, tape-speed z-score, regime *(estimated)*) [ ] saved presets [ ] result actions (open chart, add to watchlist, create alert) [ ] estimated-criteria flagged [ ] no-results and scan-failed states [ ] 'scanning is limited to live metrics for symbols we are not recording' note
+- **Design sign-off acceptance checklist:** [ ] filter set drawn (change %, volume, OI change, funding, spread, tape-speed z-score, regime _(estimated)_) [ ] saved presets [ ] result actions (open chart, add to watchlist, create alert) [ ] estimated-criteria flagged [ ] no-results and scan-failed states [ ] 'scanning is limited to live metrics for symbols we are not recording' note
 
 ---
 
 ## 9. Settings (user-scoped) (SCR-110..119)
 
 ### SCR-110 — Settings home
+
 - **Type:** Page. **Route:** `/settings`. Left nav: Profile · Security · Appearance · Hotkeys · Trading defaults · Notifications · Data & performance · Accessibility · Help & about. Right pane hosts the selected section. Search across all settings.
 - **A11y:** the nav is a list of links with `aria-current`; every setting has a visible label and a description, never a bare toggle.
 - **Components:** CMP-050 Card, CMP-052 Breadcrumb, CMP-086 SettingsNav / SettingsLayout, CMP-088 PageHeader.
@@ -1879,6 +2090,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] all sections listed with a one-line description [ ] sections the role cannot use are disabled with a reason, not hidden [ ] search across settings [ ] the admin area is linked only for owners [ ] responsive layout at 1280x800
 
 ### SCR-111 — Profile settings
+
 - **Type:** Section. Display name, contact e-mail (for alert delivery), timezone (display only — all trading times remain UTC with local shown secondary), preferred locale, default workspace, default account scope.
 - **Validation:** display name 1–40 chars; e-mail format.
 - **Audit:** `user.profile_updated`. **Stories:** US-SET-002.
@@ -1889,6 +2101,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] every field drawn with its validation message [ ] timezone selector with the current effective time previewed [ ] default landing screen choice [ ] save/cancel with unsaved-changes protection [ ] read-only fields (username after creation) explained
 
 ### SCR-112 — Security settings
+
 - **Type:** Section. Change password, re-enrol TOTP, regenerate recovery codes, active sessions list (device, IP, last seen, revoke), trusted devices, and the user's own recent audit entries.
 - **Data:** `GET /api/v1/me/sessions`, `DELETE /api/v1/me/sessions/{sessionId}`, `GET /api/v1/admin/audit?actor=me`.
 - **Validation:** revoking the current session signs the user out with a confirm ("This will sign you out on this device.").
@@ -1903,7 +2116,9 @@ Drag preview                Drop zones
   password/sessions/audit sections of this screen remain out of scope for E09-D04.
 
 ### SCR-113 — Hotkey editor
+
 - **Type:** Section. Every command with its binding, grouped by context; record-a-keystroke capture; conflict detection with the conflicting command named; reset per binding or all; import/export keymap; a "safety" group where destructive commands (flatten, cancel-all, freeze) can be required to use a modifier or be unbound entirely.
+
 ```
 +------------- Hotkeys ---------------------------+
 | search [ flat ]        context [Global v]       |
@@ -1914,6 +2129,7 @@ Drag preview                Drop zones
 | [ Reset all ]  [ Import ]  [ Export ]           |
 +-------------------------------------------------+
 ```
+
 - **Validation:** a binding cannot collide within the same context ("Esc is already used by Close dialog — choose another or reassign."); single-letter bindings for destructive commands are refused when the safety option is on.
 - **A11y:** key capture has a keyboard-only alternative (choose modifiers + key from selects); bindings are readable as text.
 - **Components:** CMP-001 Button, CMP-022 Kbd, CMP-027 ErrorState / InlineError, CMP-049 Table, CMP-054 SearchBox, CMP-064 KeyboardShortcutRow.
@@ -1923,6 +2139,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] grouped action list with current bindings [ ] capture mode with an explicit 'press keys now' state and an Esc escape [ ] conflict detection naming the conflicting action [ ] reserved/OS-conflicting combinations rejected with a message [ ] reset-per-action and reset-all [ ] trading actions are visually grouped and carry a caution note [ ] printable list
 
 ### SCR-114 — Trading defaults settings
+
 - **Type:** Section. Default order type, TIF, default qty and preset ladder, default sizing rule (fixed qty / fixed notional / % equity / risk-based), default SL/TP offsets (ticks / % / R), confirm-before-send rules (always / live only / never when armed), one-click arm persistence across sessions, auto-reset ticket after send, sound on fill.
 - **Note:** user defaults can never exceed the per-account profile limits set by the owner — the section shows each limit inline as a ceiling ("Your profile caps leverage at 10x").
 - **Components:** CMP-040 FormField, CMP-065 FormSection, CMP-086 SettingsNav / SettingsLayout, CMP-119 BracketEditor, CMP-122 QuickSizeButtons, CMP-158 SafetyInvariantNotice, CMP-231 TifSelect.
@@ -1933,6 +2150,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] separate DEMO and LIVE default sets drawn [ ] 'skip confirmation' is unavailable for LIVE market orders - state drawn [ ] default SL is mandatory and cannot be set to 'none' - state drawn [ ] per-account override pointer to SCR-131 [ ] validation messages [ ] reset to defaults
 
 ### SCR-115 — Notifications settings
+
 - **Type:** Section. Per category (alerts, rule actions, order rejects, risk events, system health, recorder) choose channels: in-app toast, notification centre, desktop notification, sound (with per-category sound selection and volume), and quiet hours.
 - **States:** desktop notifications blocked by the OS → remediation instructions per platform.
 - **Components:** CMP-004 Toggle, CMP-040 FormField, CMP-047 DatePicker / DateRangePicker, CMP-065 FormSection, CMP-086 SettingsNav / SettingsLayout.
@@ -1943,6 +2161,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] full event x channel matrix drawn [ ] risk, lockout, kill-switch and rejection notifications cannot be fully muted - state drawn [ ] quiet hours with an explicit 'critical events still notify' statement [ ] per-sound preview [ ] desktop-notification permission state (granted/denied/unsupported) drawn [ ] test-notification control
 
 ### SCR-116 — Appearance & density settings
+
 - **Type:** Section. Theme (dark / light / high-contrast / CVD-safe deuteranopia & protanopia / tritanopia), accent, chart palette, density (compact / cosy / comfortable), font size scale (100/112/125/150 %), grid line intensity, and a live preview tile showing a chart cell, a ladder row and a positions row under the current choice.
 - **A11y:** contrast of every chosen combination is validated at selection time; a warning appears if a custom palette falls below 4.5:1 ("This combination fails contrast — text may be hard to read.").
 - **Components:** CMP-003 SegmentedControl, CMP-006 RadioGroup, CMP-031 ColorSwatch / ThemeChip, CMP-037 SwatchLegendItem, CMP-062 ThemeSwitcher, CMP-063 DensityToggle, CMP-086 SettingsNav / SettingsLayout, CMP-228 PreviewTile.
@@ -1952,6 +2171,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] dark, light and high-contrast themes drawn [ ] compact / comfortable / spacious density drawn on a real grid [ ] font-size scale with the 125% and 200% zoom cases checked [ ] chart palette selection incl. colour-vision-safe presets, previewed on real footprint and heatmap samples [ ] 'follow system theme' option [ ] reset
 
 ### SCR-117 — Accessibility settings
+
 - **Type:** Section. Reduced motion, disable canvas animation, always show data-table alternatives, increase focus-ring thickness, announce price updates (off / on significant change / always), screen-reader verbosity for the tape, keyboard-only mode (disables drag-only interactions and reveals their form equivalents), and a link to the a11y statement.
 - **Components:** CMP-004 Toggle, CMP-006 RadioGroup, CMP-065 FormSection, CMP-069 InfoPanel, CMP-086 SettingsNav / SettingsLayout, CMP-228 PreviewTile.
 - **Stories:** US-SET-007, US-CHART-014.
@@ -1961,6 +2181,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] every option drawn with a plain-language description of its effect [ ] OS-level `prefers-reduced-motion` / `prefers-contrast` detection shown as the default with an explicit override [ ] streaming-announcement throttle control drawn [ ] a link to the accessibility statement and to the keyboard cheatsheet [ ] the page passes its own standard at 200% zoom
 
 ### SCR-118 — Data & performance settings
+
 - **Type:** Section. Renderer (WebGL2 / WebGL2 low-power / software fallback), target FPS cap (30/60/120/uncapped), max bars in memory, heatmap trail length ceiling, book depth default, panel update coalescing, cache size and "clear local cache", and a **Run benchmark** action that measures FPS on a synthetic footprint+heatmap scene and stores the result for support.
 - **States:** benchmark running · results with a pass/fail against the minimum target · GPU blacklisted ("Your GPU driver is on the known-issue list — software rendering is enabled").
 - **Components:** CMP-004 Toggle, CMP-010 Slider, CMP-036 KeyValueRow, CMP-065 FormSection, CMP-086 SettingsNav / SettingsLayout, CMP-178 SystemHealthTile.
@@ -1971,6 +2192,7 @@ Drag preview                Drop zones
 - **Design sign-off acceptance checklist:** [ ] every budget control drawn with its default, range and measured current value [ ] a 'recommended for this machine' preset derived from a startup benchmark [ ] cache size with a clear-cache action and its consequence stated [ ] the warning shown when the configured panel count exceeds the GPU budget [ ] link to diagnostics (SCR-046) [ ] reset to recommended
 
 ### SCR-119 — Help & about
+
 - **Type:** Section. Version, build hash, backend version, protocol version, changelog link, keyboard cheatsheet, glossary of order-flow terms, detector methodology (SCR-058), the guided tour restart, diagnostics bundle export (logs + settings, secrets redacted) and the licence/attribution list.
 - **Components:** CMP-001 Button, CMP-021 Link, CMP-036 KeyValueRow, CMP-051 Accordion, CMP-086 SettingsNav / SettingsLayout, CMP-096 WhatsNewPanel, CMP-207 BuildFooter.
 - **Stories:** US-SET-009, US-OBS-007.
@@ -1986,7 +2208,9 @@ Drag preview                Drop zones
 All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 min old (SCR-149). Non-owners receive 404 from the router and 403 from the API; every admin action is audited.
 
 ### SCR-120 — Admin home / overview
+
 - **Type:** Page. **Route:** `/admin`. Cards summarising each admin area with the numbers that matter and links.
+
 ```
 +----------------------- Admin ------------------------------+
 | Users 4 (1 owner, 2 managers, 1 viewer)  1 invite pending  |
@@ -1999,6 +2223,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 | Audit 1,204 events today - 2 high severity (!)             |
 +------------------------------------------------------------+
 ```
+
 - **Data:** `GET /api/v1/admin/overview`.
 - **States:** loading · healthy · attention items (each card can surface a warning with a direct link).
 - **A11y:** cards are linked regions with headings; warnings are text-prefixed ("Attention:").
@@ -2009,7 +2234,9 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] tiles for users, accounts, keys needing rotation, recorder, storage, health, flags and last backup drawn [ ] per-tile loading, error and degraded states [ ] alerts for anything requiring owner action, with the action linked [ ] the admin area is visually distinct from the trading app [ ] the re-auth freshness indicator is visible [ ] non-owner access hard-404s (verified, not just hidden)
 
 ### SCR-121 — Admin: users list
+
 - **Type:** Page. **Route:** `/admin/users`.
+
 ```
 +---------------------- Users ------------------------------------+
 | [ + Invite user ]           filter [all roles v] [active v]     |
@@ -2021,6 +2248,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 | Sub-account capacity: 3 of 5 used (20 with Business KYC)        |
 +-----------------------------------------------------------------+
 ```
+
 - **Data:** `GET /api/v1/users`, `GET /api/v1/admin/capacity`.
 - **Interactions:** row menu — edit, assign accounts, reset password, force 2FA re-enrol, view as (read-only impersonation, SCR-124), deactivate, delete; bulk deactivate.
 - **States:** empty (only the owner) · invite pending · locked (risk lockout) · deactivated · capacity reached ("Bybit allows 5 sub-accounts on your tier — you've used 5").
@@ -2034,7 +2262,9 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] columns (username, role, accounts assigned, 2FA state, last login, status) drawn [ ] status and role are text, never colour-only [ ] filters and search [ ] per-row actions (edit, suspend, reset 2FA, view as) with disabled reasons [ ] suspended and locked-out rows drawn [ ] empty state (owner only, no invitees yet)
 
 ### SCR-122 — Admin: user detail / edit
+
 - **Type:** Page. **Route:** `/admin/users/:userId`. Identity, role, account assignments with per-account permission (trade / read), rule-authoring permission, live-trading permission per account, risk caps override, session list with revoke, 2FA state, and their audit trail.
+
 ```
 +------ User: alex (manager) -------------------------------+
 | Role [manager v]   [x] may author rules                   |
@@ -2047,6 +2277,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 | [ Save ]   danger zone: [ Deactivate ] [ Delete ]          |
 +------------------------------------------------------------+
 ```
+
 - **Data:** `GET/PATCH /api/v1/users/{id}`, `PUT /api/v1/users/{userId}/account-access`.
 - **Validation:** granting live on an account whose key is still inside Bybit's 48 h restriction shows a warning with the exact unlock time; caps cannot exceed the account profile's caps ("Can't exceed the account's 3 % daily cap.").
 - **Audit:** `user.assignment_changed` (step-up). **Stories:** US-ADMIN-006, US-PROF-007.
@@ -2057,6 +2288,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] role change with its consequence restated ('alex will lose access to 3 accounts') [ ] account assignment with per-account profile shown [ ] per-user risk caps [ ] force-logout, reset-2FA, suspend and delete actions with confirmations and step-up [ ] the 'you cannot demote the last owner' guard state drawn [ ] change summary before save [ ] every action confirmed to emit an audit event
 
 ### SCR-123 — Admin: invite user
+
 - **Type:** Modal. Username, role, initial account assignments, expiry (default 72 h), delivery (copy link — no e-mail dependency required), and a reminder that the invitee also needs a Tailscale ACL grant.
 - **Validation:** username unique, 3–32 chars, `[a-z0-9._-]`; role manager requires at least one account assignment ("A manager needs at least one account.").
 - **Audit:** `user.invited`. **Stories:** US-ADMIN-003.
@@ -2067,6 +2299,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] username, role, account assignment and expiry fields drawn [ ] the generated link shown once with copy, plus the 'shown only once' warning [ ] the Tailscale ACL reminder drawn [ ] pending-invite list with revoke and resend [ ] expired-invite state [ ] validation messages
 
 ### SCR-124 — Admin: "view as" (read-only impersonation)
+
 - **Type:** Mode with a persistent, unmistakable banner: "Viewing as alex (read-only) — you cannot act. [Exit]". Every write endpoint is refused server-side for the duration; the session is audited on entry and exit.
 - **Validation:** cannot impersonate another owner; time-boxed to 30 min.
 - **Audit:** `admin.view_as_started|ended` (high severity). **Stories:** US-ADMIN-007.
@@ -2077,7 +2310,9 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] the banner is drawn and unmistakable in every window and in greyscale [ ] the mandatory reason field is drawn before entry [ ] the 30-minute time box with a visible countdown and auto-exit is drawn [ ] 'hidden in view-as' placeholders are drawn for every category listed under Audit [ ] the write-denied state is drawn (control disabled with the reason, plus a server refusal if forced) [ ] the target-user notification is drawn [ ] 'cannot impersonate another owner' guard state drawn
 
 ### SCR-125 — Admin: Bybit accounts list
+
 - **Type:** Page. **Route:** `/admin/accounts`.
+
 ```
 +------------------- Bybit accounts -----------------------------+
 | [ + Add account ]                                              |
@@ -2089,6 +2324,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 | Withdrawal permission: OFF on all accounts (verified 14:00)    |
 +----------------------------------------------------------------+
 ```
+
 - **Data:** `GET /api/v1/exchange-accounts`, `POST /api/v1/exchange-accounts/{accountId}/keys/{keyId}/test`.
 - **States:** ok · key expiring (<14 d) · key invalid · IP whitelist missing or mismatched · withdrawal permission detected (**critical**, account is auto-disabled for trading with a red banner) · within Bybit's 48 h new-key restriction.
 - **A11y:** each state is a text chip; the withdrawal check result is always shown explicitly.
@@ -2100,7 +2336,9 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] columns (label, UID, environment, permissions, IP allowlist, key age, state) drawn [ ] the warning state for a missing IP allowlist or a key older than the policy is text plus icon [ ] withdrawal-permission-detected state is drawn as a blocking error, not a warning [ ] per-row actions (edit, rotate key, disable, delete) with step-up [ ] add-account CTA [ ] empty state [ ] no secret is ever rendered in the list
 
 ### SCR-126 — Admin: add / edit Bybit account
+
 - **Type:** Modal/Page. Label, environment (Demo/Live), API key + secret (write-only fields — never rendered back), IP whitelist entries, intended permissions checklist, and a mandatory connection test that verifies read, trade and **withdrawal-disabled** before saving.
+
 ```
 +--------- Add Bybit account -------------------------------+
 | Label [ sub_003 ]   Environment ( ) Demo  (o) Live        |
@@ -2113,6 +2351,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 |                        [ Cancel ]  [ Save (step-up) ]     |
 +-----------------------------------------------------------+
 ```
+
 - **Data:** `POST /api/v1/exchange-accounts` (secrets envelope-encrypted server-side, never logged, never returned), `POST /api/v1/exchange-accounts/{accountId}/keys/{keyId}/test`.
 - **Validation:** key/secret format; test must pass; withdrawal permission present = **hard block**; duplicate UID = "This Bybit UID is already connected as 'sub_001'."
 - **A11y:** secret fields are `type=password` with an explicit "value is write-only" description; the test result is a list, not a colour.
@@ -2123,6 +2362,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] label, environment, API key and secret fields drawn, with the secret write-only (never re-displayed after save) [ ] the mandatory checks drawn: withdrawal permission must be OFF, IP allowlist must be configured, trade+read only [ ] validation result panel showing what the backend verified (UID, permissions, allowlist, server time skew) [ ] failure states for each check with actionable copy [ ] edit mode where the secret field is empty and optional [ ] step-up gate before save
 
 ### SCR-127 — Admin: API key rotation
+
 - **Type:** Modal wizard: create the new key on Bybit (with an instruction checklist), enter it, test it, switch traffic, verify, then revoke the old key. Shows the 48 h restriction implication and offers a scheduled cut-over.
 - **States:** step progress; rollback available until the old key is revoked.
 - **Audit:** `account.key_rotated` (high severity, fingerprints only). **Stories:** US-ACCT-003.
@@ -2133,6 +2373,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] all rotation stages drawn with their success and failure states [ ] the 'orders are drained before switch-over' behaviour stated [ ] rollback state if the new key fails validation [ ] the reminder to delete the old key at Bybit, with a confirmation checkbox [ ] key-age policy restated [ ] step-up gate
 
 ### SCR-128 — Admin: key health & secrets policy panel
+
 - **Type:** Panel within `/admin/accounts`. Key ages against policy, last successful use, failure counts, rate-limit consumption per UID, envelope-encryption status (KEK id, last re-wrap), and the statement that secrets are never displayed, exported or logged.
 - **Components:** CMP-028 Callout / Banner, CMP-035 Countdown / Timer text, CMP-049 Table, CMP-087 AdminLayout, CMP-175 KeyPermissionBadge, CMP-178 SystemHealthTile.
 - **Stories:** US-ACCT-005, US-ACCT-007, US-ADMIN-010, US-ACCT-003.
@@ -2142,6 +2383,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] per-key age, permissions, allowlist and rotation-due state drawn [ ] the secrets-at-rest policy stated (where keys live, how they are encrypted, who can read them) [ ] 'mark as compromised' emergency action with its immediate effect (key disabled, orders halted for that account) [ ] overdue-rotation state [ ] no secret material is rendered anywhere - verified in copy review
 
 ### SCR-129 — Admin: account disable / delete confirmation
+
 - **Type:** Modal. Explains consequences: open positions are **not** closed automatically (with a "flatten first" shortcut), working orders can optionally be cancelled, assigned users lose access, rules scoped to the account are disarmed and listed by name.
 - **Validation:** typed account label + step-up. **Audit:** `account.disabled|deleted`. **Stories:** US-ACCT-008.
 - **A11y:** `role="alertdialog"` restating the consequences as a list (open positions, working orders, running algos, assigned users, historical records); typed confirmation of the account label; focus starts on Cancel.
@@ -2151,7 +2393,9 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] disable and delete are separate flows with different copy [ ] open positions/orders/algos block deletion and are listed with counts [ ] historical records are retained and this is stated explicitly [ ] assigned users are listed and told what they lose [ ] typed confirmation plus step-up [ ] the irreversible nature of delete is stated
 
 ### SCR-130 — Admin: per-account profiles list
+
 - **Type:** Page. **Route:** `/admin/profiles`. One profile per account (leverage, sizing rule, SL/TP offsets, risk caps, allowed symbols, mandatory-SL flag), with a diff-style "changed since" column and templates.
+
 ```
 +------------------ Account profiles ----------------------------+
 | account  lev  sizing        SL/TP     daily  maxpos  symbols   |
@@ -2161,6 +2405,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 | (!) sub_002 allows all symbols - consider restricting          |
 +----------------------------------------------------------------+
 ```
+
 - **Data:** `GET /api/v1/exchange-accounts/{accountId}/profiles`, `PUT /api/v1/exchange-accounts/{accountId}/profiles/{profileId}`.
 - **Components:** CMP-001 Button, CMP-011 Tag / Chip, CMP-049 Table, CMP-055 FilterBar, CMP-087 AdminLayout, CMP-106 ProfileBadge.
 - **Stories:** US-PROF-001, US-PROF-002.
@@ -2170,7 +2415,9 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] the profile-to-account binding is unambiguous on every row [ ] unbound accounts are flagged (they cannot trade until bound) [ ] duplicate/clone action [ ] delete confirmation naming the affected account [ ] empty state [ ] the fields shown match the locked per-account profile schema (leverage, sizing rule, SL/TP offsets, max risk/day, allowed symbols)
 
 ### SCR-131 — Admin: profile editor
+
 - **Type:** Page/Modal, sections: Leverage & margin · Sizing · Brackets · Risk caps · Symbols · Safety.
+
 ```
 +--------- Profile: sub_001 --------------------------------+
 | Leverage  max [5]x   margin mode [isolated v]             |
@@ -2189,6 +2436,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 |                      [ Cancel ]  [ Save (step-up) ]       |
 +-----------------------------------------------------------+
 ```
+
 - **Validation:** leverage ≤ the exchange maximum for every allowed symbol ("SOLUSDT allows at most 20x — your 25x would be rejected"); daily loss between −0.1 % and −50 %; max position ≥ min lot; sizing rule must produce ≥ min lot at the current equity, otherwise a warning with a worked example; disabling the mandatory-stop flag requires an extra typed acknowledgement because it removes the safety invariant.
 - **A11y:** every field has units and a worked example ("0.5 % of 21 300 USDT ≈ 106 USDT risk ≈ 0.08 BTC at a 25-tick stop").
 - **Audit:** `profile.updated` (step-up, full before/after diff). **Stories:** US-PROF-003..006.
@@ -2198,6 +2446,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] every profile field drawn (leverage, sizing rule + parameter, SL offset, TP offsets/ladder, max risk per trade, max risk per day, max position notional, allowed symbols, allowed order types, position mode) [ ] a worked example showing the resulting order size for a sample price and equity [ ] the mandatory native-SL floor is shown as non-removable [ ] validation messages against exchange limits [ ] 'applies to future orders only' stated [ ] step-up gate on save [ ] diff summary before save
 
 ### SCR-132 — Admin: profile templates
+
 - **Type:** Modal. Save a profile as a template, apply a template to N accounts with a per-account preview of the resulting numbers before committing.
 - **Validation:** applying shows which accounts would breach exchange limits and excludes them with reasons.
 - **Components:** CMP-001 Button, CMP-044 ConfirmDialog, CMP-049 Table, CMP-050 Card, CMP-087 AdminLayout.
@@ -2208,6 +2457,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] built-in templates drawn (conservative, standard, aggressive-demo-only) with their exact values [ ] user-saved templates with rename/delete [ ] 'aggressive' templates are unavailable for LIVE accounts without an explicit acknowledgement - state drawn [ ] apply always routes through the profile editor for confirmation [ ] empty state
 
 ### SCR-133 — Admin: symbol permissions matrix
+
 - **Type:** Page. Grid of accounts × symbols with allow/deny toggles, bulk row/column operations, and a warning when a trade group's accounts have an empty symbol intersection.
 - **A11y:** grid cells are checkboxes with accessible names combining account and symbol.
 - **Components:** CMP-005 Checkbox, CMP-049 Table, CMP-055 FilterBar, CMP-087 AdminLayout, CMP-093 AuditActionTrigger.
@@ -2217,6 +2467,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] matrix with row/column headers that stay visible while scrolling [ ] allow/deny states are glyph + text, not colour alone [ ] bulk row/column actions with confirmation [ ] symbols with open positions are marked and cannot be denied - state drawn [ ] search/filter [ ] unsaved-changes summary before save
 
 ### SCR-134 — Admin: risk policy (global)
+
 - **Type:** Page. **Route:** `/admin/risk-policy`. Portfolio-level caps across all accounts (total exposure, per-symbol exposure, correlated exposure), auto-flatten behaviour, lockout durations, override policy, freeze defaults, and the "block trading while the backend is degraded" switch.
 - **Validation:** portfolio caps must be ≥ the sum of the smallest per-account caps, otherwise an explanatory warning.
 - **Audit:** `risk_policy.updated` (step-up). **Stories:** US-RISK-008, US-RISK-009.
@@ -2227,7 +2478,9 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] every global limit drawn (max daily loss, max drawdown, max total notional, max positions, max leverage, max orders/min, per-symbol concentration) with units [ ] breach behaviour per limit (warn / block new orders / flatten) drawn [ ] per-user and per-account override visibility [ ] the current measured value beside each limit [ ] 'this cannot be disabled entirely' guard [ ] step-up gate on save [ ] change summary before save
 
 ### SCR-135 — Admin: audit log
+
 - **Type:** Page. **Route:** `/admin/audit`. Append-only, immutable event stream.
+
 ```
 +------------------------- Audit log ----------------------------+
 | range [today v] actor [all v] action [all v] sev [all v] [csv] |
@@ -2240,6 +2493,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 | integrity: chain verified to 2026-09-14 00:00 (hash ok)         |
 +----------------------------------------------------------------+
 ```
+
 - **Data:** `GET /api/v1/admin/audit?from&to&actor&action&severity&cursor`, `POST /api/v1/admin/audit/verify` (hash-chain integrity check).
 - **Interactions:** expand a row for the full before/after diff; filter; export CSV/JSON (export is itself audited); jump from any audit row to the related order, rule or user.
 - **States:** loading · empty for filter · integrity verified · **integrity failure** (critical banner: "Audit chain verification failed at 2026-09-10 — contact security"; this is a security incident, not a UI error) · retention notice.
@@ -2253,6 +2507,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] columns (time, actor, role, action, target, environment, IP, severity, result) drawn [ ] the before/after diff is reachable from every row [ ] filters (actor, action class, target, severity, date range, environment) and full-text search [ ] the append-only guarantee is stated on the page, with the integrity/verification indicator drawn [ ] export with its own audit event [ ] high-severity rows are distinguishable without colour [ ] empty/filtered-to-nothing state [ ] retention statement
 
 ### SCR-136 — Admin: audit event detail
+
 - **Type:** Drawer. Full event: actor, role at the time, session, IP, user agent, action, target, before/after, request id, correlated events (the same request id across services), and linked artefacts (order, rule version, profile diff).
 - **Components:** CMP-033 CopyButton, CMP-036 KeyValueRow, CMP-046 Drawer, CMP-068 CopyableCodeBlock, CMP-173 AuditRow.
 - **Stories:** US-ADMIN-008, US-ADMIN-010.
@@ -2262,7 +2517,8 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] full field set drawn (actor, role, action, target, before, after, ts, ip, sessionId, environment, correlationId, result) [ ] before/after diff rendering for structured changes [ ] links to the related order, rule, account or user [ ] raw record with copy [ ] 'this record cannot be edited or deleted' stated
 
 ### SCR-137 — Admin: security centre
-- **Type:** Page. **Route:** `/admin/security`. Failed-login trends, active sessions across all users, step-up usage, key-policy compliance, dependency/vulnerability summary from the last scan, pen-test status gate for Live enablement, and links to the security program doc.
+
+- **Type:** Page. **Route:** `/admin/security`. Failed-login trends, active sessions across all users, step-up usage, API-key policy compliance, dependency and vulnerability summary from the last scan, pen-test status gate for Live enablement, and links to the security program doc.
 - **Data:** `GET /api/v1/admin/security/summary`.
 - **States:** compliant · findings outstanding (count by severity) · Live enablement blocked ("Live trading stays disabled until the pen-test sign-off is recorded").
 - **Components:** CMP-028 Callout / Banner, CMP-036 KeyValueRow, CMP-050 Card, CMP-087 AdminLayout, CMP-093 AuditActionTrigger, CMP-175 KeyPermissionBadge, CMP-178 SystemHealthTile.
@@ -2273,7 +2529,9 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] finding categories drawn (keys without allowlist, overdue rotations, users without 2FA, stale sessions, failed-login spikes, permission anomalies, withdrawal permission detected) [ ] severity as text [ ] remediation action per finding [ ] dismiss-with-reason path [ ] all-clear state [ ] last-scan timestamp
 
 ### SCR-140 — Admin: recorder & storage
+
 - **Type:** Page. **Route:** `/admin/recorder`.
+
 ```
 +------------------- Recorder ----------------------------------+
 | Recording 3 symbols - disk 41.2 GB - retention 30 d default   |
@@ -2287,6 +2545,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 | [ Retention policy ]  [ Compact now ]  [ Purge expired ]      |
 +---------------------------------------------------------------+
 ```
+
 - **Data:** `GET /api/v1/recording/status`, `POST /api/v1/recording/symbols`, `DELETE /api/v1/recording/symbols/{recordedSymbolId}`, `PATCH /api/v1/recording/symbols/{recordedSymbolId}` (pin, retention, depth), `POST /api/v1/admin/recorder/compact`, `POST /api/v1/admin/recorder/purge`; live via WS `recorder`.
 - **Interactions:** start/stop recording, pin (keep forever), change depth tier, set per-symbol retention, purge expired data, compact cold storage.
 - **States:** running · starting (initial snapshot) · degraded (WS gaps recorded in a gap table with timestamps) · paused · disk warning at 80 % ("Disk 80 % full — recording stops at 95 % to protect the database") · disk critical (recording stopped, banner) · purge in progress.
@@ -2300,6 +2559,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] the user-managed recorded-symbols list with add/remove drawn [ ] auto-record triggers (chart open, position open) shown as explicit, labelled rules with the ability to review what they added [ ] per-symbol state (recording / paused / stopped / backfilling), start timestamp and disk used [ ] the disk-budget display (~0.5-0.75 GB/day/symbol at 200 depth) with a projection [ ] retention per symbol incl. 'pin = keep forever' [ ] the 'nothing is recorded by default' statement [ ] stop-recording confirmation explaining that history stops accruing but existing data is kept [ ] empty state (no symbols recorded yet)
 
 ### SCR-141 — Admin: retention policy editor
+
 - **Type:** Modal. Default retention days, per-tier rules (raw ticks / L2 deltas / bars / footprint aggregates), cold-tier migration age (QuestDB → Parquet), pin overrides, and a live estimate of steady-state disk usage under the chosen policy.
 - **Validation:** retention ≥1 day; raw-tick retention ≤ bar retention ("Bars can't be deleted before the ticks they came from are kept — adjust the tiers.").
 - **Components:** CMP-008 NumericStepperInput, CMP-040 FormField, CMP-044 ConfirmDialog, CMP-065 FormSection, CMP-087 AdminLayout, CMP-093 AuditActionTrigger.
@@ -2310,6 +2570,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] global default (30 days) and per-symbol overrides drawn [ ] pin-forever control [ ] the 'this will delete N GB covering dates X-Y' warning before applying a reduction [ ] typed confirmation for destructive reductions [ ] compaction job state [ ] the effect on replay and journal back-fill stated
 
 ### SCR-142 — Admin: storage & database panel
+
 - **Type:** Page section. QuestDB, Postgres and Parquet/DuckDB status: size, row counts by table, ingestion lag, slowest queries, last vacuum/compaction, migration version and pending migrations.
 - **Data:** `GET /api/v1/recording/storage`.
 - **States:** healthy · migration pending (banner with the version delta) · lag warning · read-only mode (disk full).
@@ -2321,7 +2582,9 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] all three tiers drawn with size, growth rate and projected full date [ ] per-symbol breakdown for the hot tier [ ] maintenance actions with progress and cancel [ ] low-disk warning and critical states drawn with what stops working first (recording pauses before trading is affected - stated) [ ] query-performance indicators [ ] error state when a tier is unreachable
 
 ### SCR-143 — Admin: system health
+
 - **Type:** Page. **Route:** `/admin/health`.
+
 ```
 +--------------------- System health --------------------------+
 | API      ok   p95 42 ms   errors 0.1%                        |
@@ -2336,6 +2599,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 | [ incidents (2 in 7 d) ]  [ export diagnostics ]             |
 +--------------------------------------------------------------+
 ```
+
 - **Data:** WS `system`; `GET /api/v1/admin/health`, `GET /api/v1/admin/incidents`.
 - **States:** all-green · degraded (per-subsystem amber with the reason and the last good timestamp) · outage (red with the ongoing incident and what is still safe — "Native stops on the exchange are unaffected") · maintenance window.
 - **A11y:** each subsystem is a labelled row with a text status; no reliance on dot colour.
@@ -2346,6 +2610,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] tiles for ingestion lag, public WS, private WS per account, REST latency, recorder, DB tiers, rule engine, algo engine and chart-engine FPS reports [ ] each tile shows a number with units plus a state word, never colour alone [ ] degraded and down states drawn per tile with what the user should expect to stop working [ ] historical sparkline per tile with a table alternative [ ] link to the incident log [ ] the page works when the backend is partially down
 
 ### SCR-144 — Admin: incident / connectivity log
+
 - **Type:** Page. Chronological record of WS disconnects, resubscriptions, sequence gaps, exchange 5xx, rate-limit hits (10018), engine restarts and recorder gaps, with duration, impact and what the system did automatically.
 - **Components:** CMP-047 DatePicker / DateRangePicker, CMP-049 Table, CMP-055 FilterBar, CMP-068 CopyableCodeBlock, CMP-087 AdminLayout.
 - **Stories:** US-OBS-003, US-OBS-006.
@@ -2355,7 +2620,9 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] columns drawn with duration and resolution [ ] filters by subsystem, severity and date [ ] open vs resolved states [ ] correlation with trading impact ('12 orders rejected during this window') where derivable [ ] acknowledge action [ ] export [ ] empty state
 
 ### SCR-145 — Admin: feature flags
+
 - **Type:** Page. **Route:** `/admin/flags`.
+
 ```
 +--------------------- Feature flags ---------------------------+
 | flag                      state   scope        changed        |
@@ -2366,6 +2633,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 | [ + Add flag ]   [ history ]                                  |
 +---------------------------------------------------------------+
 ```
+
 - **Data:** `GET /api/v1/admin/feature-flags`, `PUT /api/v1/admin/feature-flags/{flagKey}`; clients receive changes over `system` and apply them without a reload where possible.
 - **Validation:** `live_trading_enabled` cannot be turned on until the PRR/pen-test gate is satisfied — the toggle is disabled with the blocking reason and a link to SCR-137; turning off a flag that an armed rule depends on lists the affected rules and requires acknowledgement.
 - **States:** applied · rollout in progress (scoped to users/accounts) · blocked by gate · rollback available.
@@ -2377,7 +2645,9 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] every flag with a human description of what it changes [ ] scope (global / per-user / per-account) drawn [ ] risky flags (anything affecting order routing, risk enforcement or audit) are grouped, marked and step-up-gated [ ] the 'requires reload' indicator [ ] change history per flag [ ] search [ ] every toggle confirmed to emit an audit event with before/after
 
 ### SCR-146 — Admin: backups & restore
+
 - **Type:** Page. **Route:** `/admin/backups`. Backup schedule, last run and outcome for each store (Postgres dump, QuestDB snapshot, Parquet sync, config + encrypted secrets), size, retention of backups, integrity verification results, and a **restore** wizard.
+
 ```
 +---------------------- Backups --------------------------------+
 | Schedule daily 04:00 UTC - retention 14 daily / 8 weekly      |
@@ -2389,6 +2659,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 | [ Back up now ]  [ Verify ]  [ Restore... ]  [ Download ]     |
 +---------------------------------------------------------------+
 ```
+
 - **Data:** `GET /api/v1/admin/backups`, `POST /api/v1/admin/backups`, `POST /api/v1/admin/backups/{backupId}/verify`, `POST /api/v1/admin/backups/{backupId}/restore`.
 - **Restore wizard states:** choose backup → impact preview (what is overwritten, that trading is halted during restore, that exchange state is untouched) → typed confirm + step-up → progress → verification → summary.
 - **Validation:** restore is blocked while any position is open unless the owner explicitly acknowledges ("You have 2 open positions. A restore does not change anything on Bybit. Continue?"); downloading a backup containing encrypted secrets warns about handling.
@@ -2401,6 +2672,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] backup list with timestamp, scope (Postgres OMS / rules / audit / config), size, integrity-check result and retention [ ] 'run backup now' with progress [ ] restore flow with its maintenance-mode gate, typed confirmation and step-up [ ] the explicit statement of what a restore does and does not recover (market history is not restored from these backups) [ ] failed-backup and failed-verification states [ ] last-successful-backup age warning [ ] download/export of a backup is audited and step-up-gated
 
 ### SCR-147 — Admin: exchange connectivity & rate limits
+
 - **Type:** Page. Per-account REST and WS rate-limit budgets, current consumption, recent 10018 events, the fan-out budgeting model, and per-endpoint weights; includes a simulator ("a 5-account fan-out with brackets costs ≈ 15 requests — 9 % of your minute budget").
 - **Components:** CMP-023 Progress Bar, CMP-024 Sparkline, CMP-036 KeyValueRow, CMP-049 Table, CMP-087 AdminLayout, CMP-178 SystemHealthTile.
 - **Stories:** US-OBS-005, US-ADMIN-014, US-MKT-009.
@@ -2410,6 +2682,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] per-account, per-endpoint-class usage against limit with headroom [ ] the fan-out budget view showing how many accounts can be served at the configured rate [ ] throttled and banned states with the exchange's stated recovery time [ ] force-reconnect action with confirmation [ ] server-time-skew indicator [ ] historical usage sparkline with a table alternative
 
 ### SCR-148 — Admin: maintenance mode
+
 - **Type:** Page section + modal. Put the app into maintenance: a banner for all users, new orders blocked, algos paused, recorder optionally kept running; with a scheduled window, a message shown to users, and an explicit statement that native exchange stops remain active.
 - **Audit:** `maintenance.enabled|disabled`. **Stories:** US-REL-004.
 - **A11y:** `role="alertdialog"` for entry; the consequences are a list ('New orders are blocked. Running algos are cancelled. Recording continues. Managers see a maintenance notice.'); typed confirmation.
@@ -2419,6 +2692,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] entry and exit flows with their own confirmations [ ] the exact consequence list drawn [ ] a scheduled-window option with an advance notice to users [ ] the manager/viewer-facing maintenance notice drawn [ ] open positions and their protection during maintenance stated explicitly [ ] step-up gate
 
 ### SCR-149 — Admin re-authentication gate
+
 - **Type:** Page/Modal shown on first entry to any `/admin/*` route when the admin token is older than 15 minutes. Password + TOTP; explains why ("Admin screens need a fresh confirmation"); on success, admin routes unlock for 15 minutes of activity.
 - **Audit:** `admin.session_elevated`. **Stories:** US-ADMIN-016.
 - **A11y:** `role="alertdialog"` explaining why re-authentication is required and for how long the resulting token is valid; the TOTP field has a visible label and format hint; failures are announced assertively.
@@ -2432,6 +2706,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 ## 11. Global system states (SCR-150..159)
 
 ### SCR-150 — Global loading / app boot
+
 - **Type:** Full-screen state. Product mark, a determinate progress description ("Loading preferences → workspaces → market metadata → connecting"), and a "still working…" message after 5 s with a cancel/reload option after 15 s.
 - **A11y:** progress is announced politely at each phase; never a bare spinner.
 - **Components:** CMP-014 Spinner / Loader, CMP-015 Skeleton, CMP-038 InlineSpinnerText, CMP-207 BuildFooter.
@@ -2441,6 +2716,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] staged progress drawn with named stages [ ] per-stage failure states with an action (retry, sign in again, open diagnostics) [ ] slow-boot state after 5 s explaining what is waiting [ ] the environment (DEMO/LIVE) is not shown until it is actually known - no default assumption [ ] version-mismatch handoff to SCR-157
 
 ### SCR-151 — Empty state pattern
+
 - **Type:** Reusable state. Every empty surface uses the same anatomy: a short heading stating the fact, one sentence of cause, one primary action, one secondary learn-more link, and — where relevant — the recorder explanation. Catalogued instances: empty workspace, no positions, no orders, no rules, no alerts, no journal trades, no watchlist symbols, no recorded history, no replay coverage, no audit results for a filter, no scanner matches, no notifications.
 - **Components:** CMP-001 Button, CMP-019 Icon, CMP-021 Link, CMP-026 EmptyState.
 - **Stories:** US-REC-006, US-MKT-008.
@@ -2450,7 +2726,9 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] the three empty-state classes drawn (nothing created yet / nothing matches the filter / data not recorded yet) [ ] role-aware action vs explanation variants [ ] the recorder-dependent variant carries the recording-start timestamp [ ] copy for each class written and reviewed [ ] the pattern is applied consistently in every panel that can be empty
 
 ### SCR-152 — Disconnected / reconnecting state
+
 - **Type:** Global banner + per-panel treatment.
+
 ```
 +---------------------------------------------------------------+
 | ! Disconnected - reconnecting (attempt 3, next in 4 s)        |
@@ -2459,6 +2737,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 |   [ Retry now ]  [ Details ]                                  |
 +---------------------------------------------------------------+
 ```
+
 - **Behaviour:** exponential backoff with jitter; trading controls hard-disabled; panels freeze with their last-good timestamp; on reconnect, snapshots are re-fetched, order/position state is reconciled and any divergence is reported explicitly ("While you were offline: 1 order filled, 1 stop moved by a rule").
 - **A11y:** `role="alert"` once, then a persistent banner; the countdown is not announced on every tick.
 - **Components:** CMP-028 Callout / Banner, CMP-035 Countdown / Timer text, CMP-076 ConnectionStatus, CMP-077 ReconnectOverlay, CMP-078 StaleDataShade.
@@ -2468,6 +2747,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] the global overlay and the per-panel stale shading are drawn together and are consistent [ ] last-good timestamp shown on every affected panel [ ] order entry is visibly blocked with the reason while private feeds are down [ ] the 'native stops still protect your positions' reassurance is stated where true [ ] reconnecting, gap-filling and restored states drawn [ ] the overlay never hides the positions grid entirely
 
 ### SCR-153 — Degraded-mode state
+
 - **Type:** Banner. Backend up but a dependency is impaired (exchange WS down → REST polling; recorder down → no new history; rule engine down → armed rules not evaluating; GPU fallback → reduced visuals). Each variant states precisely what still works and what does not.
 - **Components:** CMP-028 Callout / Banner, CMP-069 InfoPanel, CMP-092 DegradedModeBanner, CMP-227 EstimatedBadge.
 - **Stories:** US-DOM-005, US-SET-008, US-LAY-008.
@@ -2477,6 +2757,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] each degradation cause drawn (backend partial outage, recorder down, cold tier unavailable, GPU budget exceeded, rate-limited) [ ] what still works vs what does not, stated per cause [ ] the automatic feature-shedding is disclosed, never silent [ ] manual 'reduce quality' control [ ] exit/restore state [ ] trading remains possible or is explicitly blocked - never ambiguous
 
 ### SCR-154 — Permission denied (403)
+
 - **Type:** Page/inline. States the required role or permission, who can grant it, and offers "Request access" which notifies the owner. Never a bare "Forbidden".
 - **Components:** CMP-001 Button, CMP-021 Link, CMP-079 RbacGate, CMP-089 ForbiddenState.
 - **Stories:** US-ADMIN-002, US-ONB-005.
@@ -2486,6 +2767,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] the resource and the required permission are named (without leaking whether the resource exists, for admin-only objects) [ ] 'ask the owner' guidance with the owner's contact route [ ] a link back to a permitted screen [ ] the correlation id [ ] distinct copy for 'you lack the role' vs 'this account is not assigned to you'
 
 ### SCR-155 — Not found (404)
+
 - **Type:** Page. For unknown routes, deleted workspaces, deleted rules and stale deep links; offers the nearest valid destination.
 - **Components:** CMP-001 Button, CMP-021 Link, CMP-090 NotFoundState.
 - **Stories:** US-SET-001.
@@ -2495,6 +2777,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] the attempted route echoed [ ] likely destinations offered [ ] distinct copy for a deleted object ('this workspace was deleted') vs an unknown route [ ] admin routes 404 for non-owners with identical copy to any other 404 - verified, so the admin area's existence is not disclosed
 
 ### SCR-156 — Application error boundary (500 / crash)
+
 - **Type:** Page/panel. Panel-level boundaries keep the rest of the app alive ("This panel crashed — [Reload panel] [Remove panel]"); the app-level boundary offers reload, safe mode (loads with a minimal workspace and software rendering) and a diagnostics bundle export with a correlation id.
 - **Components:** CMP-001 Button, CMP-033 CopyButton, CMP-068 CopyableCodeBlock, CMP-091 GlobalErrorBoundaryFallback.
 - **Stories:** US-OBS-003, US-OBS-007.
@@ -2504,6 +2787,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] panel-level and route-level variants drawn [ ] the surviving surrounding UI is shown in the panel-level variant [ ] correlation id and copy-diagnostics action [ ] 'your positions are unaffected and protected by native stops' reassurance where true [ ] reload-panel vs reload-app actions [ ] repeated-crash state that stops auto-remounting and explains why
 
 ### SCR-157 — Version mismatch / update available
+
 - **Type:** Banner + modal. Client and backend protocol versions differ, or an Electron update is ready: explains what is incompatible, blocks trading if the protocol is incompatible, and offers reload/update with release notes.
 - **Components:** CMP-001 Button, CMP-028 Callout / Banner, CMP-096 WhatsNewPanel, CMP-207 BuildFooter.
 - **Stories:** US-SET-009.
@@ -2513,6 +2797,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] non-blocking 'update available' and blocking 'incompatible version' variants drawn [ ] what stops working in the blocking case is listed [ ] the update action per shell (Electron auto-update vs browser reload) [ ] 'do not update mid-trade' guidance with the open-position count [ ] postpone behaviour for the non-blocking case
 
 ### SCR-158 — Rate-limited state
+
 - **Type:** Banner + inline. When the per-UID budget is exhausted: the affected account, the retry time, which actions are queued and which were dropped, and a link to SCR-147.
 - **Components:** CMP-023 Progress Bar, CMP-028 Callout / Banner, CMP-035 Countdown / Timer text, CMP-069 InfoPanel.
 - **Stories:** US-OBS-005, US-ORD-001.
@@ -2522,6 +2807,7 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 - **Design sign-off acceptance checklist:** [ ] per-scope variants drawn (exchange per-UID, backend per-user, fan-out budget) [ ] the countdown and what is still permitted [ ] the fan-out case naming which accounts were served and which were not [ ] held-action queue with explicit replay confirmation [ ] guidance on reducing the request rate (link to SCR-147)
 
 ### SCR-159 — Offline / shell-specific states
+
 - **Type:** States. Browser offline (navigator offline), Tailscale down ("Can't reach the backend — check that Tailscale is connected"), backend unreachable at boot (retry with a diagnostic checklist), and Electron-specific GPU-process-crash recovery.
 - **Components:** CMP-028 Callout / Banner, CMP-092 DegradedModeBanner, CMP-207 BuildFooter, CMP-215 FloatingWindowFrame.
 - **Stories:** US-SET-009, US-OBS-004.
@@ -2535,69 +2821,74 @@ All `/admin/*` routes require role `owner` **and** an admin re-auth token ≤15 
 ## 12. Traceability & coverage
 
 ### 12.1 Research view → screen mapping
-| Research view (`23-views-and-screens.md`) | Screens |
-|---|---|
-| 1 Main chart + footprint | SCR-030, 031, 032, 040, 045, 047, 048 |
-| 2 Deep Stats rows | SCR-030 (strip), SCR-033 |
-| 3 Profile panel | SCR-038, 039 |
-| 4 Heatmap + DOM ladder | SCR-050, 051 |
-| 5 Big trades / bubbles | SCR-053 |
-| 6 CVD / delta | SCR-052 |
-| 7 OI / funding / liquidations | SCR-054 |
-| 8 Speed of tape | SCR-055 |
-| 9 Imbalance tracker | SCR-056 |
-| 10 Market regime | SCR-057, 058, 059 |
-| 11 Multi-chart layouts | SCR-020, 021, 022, 023, 049 |
-| 12 Replay | SCR-097, 098, 099 |
-| 13 Trading terminal / ticket | SCR-060, 065–070, 076, 077 |
-| 14 Positions & orders | SCR-063, 064, 078, 079 |
-| 15 Risk dashboard | SCR-071, 072, 073, 134 |
-| 16 Rule builder | SCR-080–089 |
-| 17 Journal / auto-tracker | SCR-093, 094, 095, 096 |
-| 18 Watchlist / symbol search | SCR-100–104 |
-| 19 Alerts | SCR-090, 091, 092 |
-| 20 Demo/Live switcher | SCR-074, 075 |
-| 21 Admin / users | SCR-120–149 |
-| *(new, beyond research)* | auth & onboarding SCR-001–019, settings SCR-110–119, global states SCR-150–159, trade groups SCR-061/062, algos SCR-065–070, recorder SCR-140–142, backups SCR-146 |
+
+| Research view (`23-views-and-screens.md`) | Screens                                                                                                                                                            |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1 Main chart + footprint                  | SCR-030, 031, 032, 040, 045, 047, 048                                                                                                                              |
+| 2 Deep Stats rows                         | SCR-030 (strip), SCR-033                                                                                                                                           |
+| 3 Profile panel                           | SCR-038, 039                                                                                                                                                       |
+| 4 Heatmap + DOM ladder                    | SCR-050, 051                                                                                                                                                       |
+| 5 Big trades / bubbles                    | SCR-053                                                                                                                                                            |
+| 6 CVD / delta                             | SCR-052                                                                                                                                                            |
+| 7 OI / funding / liquidations             | SCR-054                                                                                                                                                            |
+| 8 Speed of tape                           | SCR-055                                                                                                                                                            |
+| 9 Imbalance tracker                       | SCR-056                                                                                                                                                            |
+| 10 Market regime                          | SCR-057, 058, 059                                                                                                                                                  |
+| 11 Multi-chart layouts                    | SCR-020, 021, 022, 023, 049                                                                                                                                        |
+| 12 Replay                                 | SCR-097, 098, 099                                                                                                                                                  |
+| 13 Trading terminal / ticket              | SCR-060, 065–070, 076, 077                                                                                                                                         |
+| 14 Positions & orders                     | SCR-063, 064, 078, 079                                                                                                                                             |
+| 15 Risk dashboard                         | SCR-071, 072, 073, 134                                                                                                                                             |
+| 16 Rule builder                           | SCR-080–089                                                                                                                                                        |
+| 17 Journal / auto-tracker                 | SCR-093, 094, 095, 096                                                                                                                                             |
+| 18 Watchlist / symbol search              | SCR-100–104                                                                                                                                                        |
+| 19 Alerts                                 | SCR-090, 091, 092                                                                                                                                                  |
+| 20 Demo/Live switcher                     | SCR-074, 075                                                                                                                                                       |
+| 21 Admin / users                          | SCR-120–149                                                                                                                                                        |
+| _(new, beyond research)_                  | auth & onboarding SCR-001–019, settings SCR-110–119, global states SCR-150–159, trade groups SCR-061/062, algos SCR-065–070, recorder SCR-140–142, backups SCR-146 |
 
 ### 12.2 Persona coverage check
+
 Every persona's primary surfaces from `10-personas.md` §8 are catalogued: Owner (all), Manager (terminal scoped, SCR-060/063/071 manager variants, SCR-073), Viewer (read-only variants of SCR-030/050/063/093/095, SCR-097), Admin hat (SCR-120–149), Rule author (SCR-080–089).
 
 ### 12.3 Cross-cutting requirements → screens
-| Requirement | Screens enforcing it |
-|---|---|
-| Demo/Live never colour-only | SCR-010, 074, 075, 060, 061, 076 |
-| "(estimated)" labelling | SCR-030, 050, 056, 057, 058, 059, 081 |
-| Recorder-dependent empty states | SCR-038, 047, 084, 093, 097, 098, 140 |
-| Native-SL invariant | SCR-060, 061, 064, 069, 131 |
-| Server-side RBAC with visible reasons | SCR-010, 063, 074, 122, 154 |
-| Accessible canvas alternatives | SCR-036, 045, 050 (grid ladder), 082 (node list), 095 |
-| Append-only audit | SCR-135, 136, every "Analytics/audit" line above; **execution-affecting surfaces verified per-screen**: SCR-060, 061, **062**, **063**, 064, **065**, **066**, **067**, **068**, **069**, **070**, 072, 073, 074, 076, 077, 085, 086, 087, 131, 133, 134 |
-| Mandatory WebGL engine spike gate | SCR-030, 032, 049, 050 (see §12.5) |
-| Rule IR round-trip (form ↔ graph) | SCR-081, 082, 088 |
-| Disconnect/degraded honesty | SCR-152, 153, 158, 159, 070, 143 |
+
+| Requirement                           | Screens enforcing it                                                                                                                                                                                                                                     |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Demo/Live never colour-only           | SCR-010, 074, 075, 060, 061, 076                                                                                                                                                                                                                         |
+| "(estimated)" labelling               | SCR-030, 050, 056, 057, 058, 059, 081                                                                                                                                                                                                                    |
+| Recorder-dependent empty states       | SCR-038, 047, 084, 093, 097, 098, 140                                                                                                                                                                                                                    |
+| Native-SL invariant                   | SCR-060, 061, 064, 069, 131                                                                                                                                                                                                                              |
+| Server-side RBAC with visible reasons | SCR-010, 063, 074, 122, 154                                                                                                                                                                                                                              |
+| Accessible canvas alternatives        | SCR-036, 045, 050 (grid ladder), 082 (node list), 095                                                                                                                                                                                                    |
+| Append-only audit                     | SCR-135, 136, every "Analytics/audit" line above; **execution-affecting surfaces verified per-screen**: SCR-060, 061, **062**, **063**, 064, **065**, **066**, **067**, **068**, **069**, **070**, 072, 073, 074, 076, 077, 085, 086, 087, 131, 133, 134 |
+| Mandatory WebGL engine spike gate     | SCR-030, 032, 049, 050 (see §12.5)                                                                                                                                                                                                                       |
+| Rule IR round-trip (form ↔ graph)     | SCR-081, 082, 088                                                                                                                                                                                                                                        |
+| Disconnect/degraded honesty           | SCR-152, 153, 158, 159, 070, 143                                                                                                                                                                                                                         |
 
 ### 12.4 Counts
+
 Every entry in this catalogue carries all of the template's fields, including its own **Design sign-off acceptance checklist**, **A11y** and **Performance** notes, and **Analytics/audit events** line — verified mechanically across all 149 entries, not assumed from the template.
 
-| Bucket | Count | Band slots | Free (reserved) |
-|---|---|---|---|
-| Auth/shell/onboarding (SCR-001..019) | 16 | 19 | 007, 008, 009 |
-| Workspaces & dock (SCR-020..029) | 10 | 10 | — |
-| Charting (SCR-030..049) | 20 | 20 | — |
-| Order flow (SCR-050..059) | 10 | 10 | — |
-| Trading (SCR-060..079) | 20 | 20 | — |
-| Rules (SCR-080..089) | 10 | 10 | — |
-| Alerts/journal/replay (SCR-090..099) | 10 | 10 | — |
-| Watchlist/symbols (SCR-100..109) | 5 | 10 | 105–109 |
-| Settings (SCR-110..119) | 10 | 10 | — |
-| Admin (SCR-120..149) | 28 | 30 | 138, 139 |
-| Global states (SCR-150..159) | 10 | 10 | — |
-| **Total catalogued screens/panels/modals/states** | **149** | **159** | **10 reserved** |
+| Bucket                                            | Count   | Band slots | Free (reserved) |
+| ------------------------------------------------- | ------- | ---------- | --------------- |
+| Auth/shell/onboarding (SCR-001..019)              | 16      | 19         | 007, 008, 009   |
+| Workspaces & dock (SCR-020..029)                  | 10      | 10         | —               |
+| Charting (SCR-030..049)                           | 20      | 20         | —               |
+| Order flow (SCR-050..059)                         | 10      | 10         | —               |
+| Trading (SCR-060..079)                            | 20      | 20         | —               |
+| Rules (SCR-080..089)                              | 10      | 10         | —               |
+| Alerts/journal/replay (SCR-090..099)              | 10      | 10         | —               |
+| Watchlist/symbols (SCR-100..109)                  | 5       | 10         | 105–109         |
+| Settings (SCR-110..119)                           | 10      | 10         | —               |
+| Admin (SCR-120..149)                              | 28      | 30         | 138, 139        |
+| Global states (SCR-150..159)                      | 10      | 10         | —               |
+| **Total catalogued screens/panels/modals/states** | **149** | **159**    | **10 reserved** |
 
 Per-field coverage across those 149 entries: purpose/type **149**, persona & RBAC or an explicit inherited scope **149**, route or host surface **149**, components **149**, data & sources **149**, interactions **149**, states **149**, A11y notes **149**, performance notes **149**, analytics/audit events **149**, design sign-off acceptance checklist **149**, related stories **149**.
 
 ### 12.5 Design sign-off gate (applies to every screen)
+
 Each screen carries its **own** acceptance checklist in its entry above; the gate below is the additional, uniform bar that every screen must clear in addition to its specific checklist — it does not replace it.
 
 A screen is "Done" for design when: the wireframe is realised in the design system; all states in its States list are drawn; every message in its Validation list is written and reviewed; the a11y notes are verified against `05-accessibility-standard.md` (keyboard path, SR labels, contrast, reduced motion, non-colour encoding); the performance notes are agreed with engineering against `06-performance-and-load-standard.md`; the analytics/audit events are registered in the event catalogue and every state-changing control on the screen has been confirmed to emit one; and **its own per-screen acceptance checklist is fully ticked** by the Chief Design Officer or delegate. Engineering may not start a screen before this gate (design-ahead rule, `00-planning-brief.md`).

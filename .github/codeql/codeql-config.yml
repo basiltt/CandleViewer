@@ -1,0 +1,5 @@
+name: candleviewer-codeql
+# Scratch/research scripts are not product code (some are not valid Python).
+paths-ignore:
+  - docs/plan/_*.py
+  - docs/research/**

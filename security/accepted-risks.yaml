@@ -30,4 +30,24 @@
 # per the R0 threshold in 30-release-roadmap.md §4.4) — security_gate.py
 # rejects any entry with tool: gitleaks or severity: CRITICAL at load time.
 
-entries: []
+entries:
+  # psycopg 3 (PostgreSQL driver) is LGPL-3.0 — used as an unmodified,
+  # dynamically-linked library from a self-hosted service that is never
+  # distributed to third parties; LGPL obligations (source of the library on
+  # request) are trivially met and no CandleViewer code is derived from it.
+  # SR-136 still requires an explicit security + owner acceptance for LGPL;
+  # the owner delegated Sprint-01 acceptances to the orchestrator (2026-09-25).
+  - id: "license:psycopg@3.3.6"
+    tool: license-scan
+    severity: LOW
+    reason: "LGPL-3.0 DB driver, dynamically linked, unmodified, not redistributed; SR-136 LGPL path"
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "https://github.com/basiltt/CandleViewer/issues/108"
+  - id: "license:psycopg-binary@3.3.6"
+    tool: license-scan
+    severity: LOW
+    reason: "LGPL-3.0 DB driver (binary wheel of psycopg), same basis as psycopg"
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "https://github.com/basiltt/CandleViewer/issues/108"
