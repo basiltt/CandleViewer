@@ -23,6 +23,8 @@ def _run(cmd: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
         cwd=cwd,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         shell=sys.platform == "win32",
         timeout=120,
     )
