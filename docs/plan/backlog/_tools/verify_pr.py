@@ -28,7 +28,7 @@ try:
             except Exception as e: fails.append(f"json {f}: {e}")
         if f.endswith((".yml", ".yaml")):
             try:
-                import yaml; yaml.safe_load(open(p, encoding="utf-8"))
+                import yaml; list(yaml.safe_load_all(open(p, encoding="utf-8")))  # pnpm 12 lockfiles are multi-document
             except Exception as e: fails.append(f"yaml {f}: {e}")
     test_dirs = sorted({os.path.dirname(f) for f in files if "/tests/" in f or os.path.basename(f).startswith("test_")})
     test_dirs = [d for d in test_dirs if os.path.isdir(os.path.join(wt, d))]
