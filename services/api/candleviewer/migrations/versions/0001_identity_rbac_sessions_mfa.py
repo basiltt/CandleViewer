@@ -253,6 +253,21 @@ COMMENT ON COLUMN recovery_codes.code_hash IS 'SECRET: SHA-256 of the one-time r
 -- user must hold role 'owner'. DEFERRABLE INITIALLY DEFERRED so a single
 -- transaction may remove-then-re-add an owner role; only the end-of-transaction
 -- state is checked. Raises SQLSTATE 23514 (check_violation) on violation.
+--
+-- KNOWN GAP (by design, tracked): this trigger fires only on a row change to
+-- `user_roles`/`users`. If the last owner's `user_roles.expires_at` merely
+-- lapses with no write (time passing, no INSERT/UPDATE/DELETE), the trigger
+-- never runs and the DB will not raise 23514 even though the floor is
+-- logically violated. Postgres has no "row became stale" trigger event, so
+-- this cannot be closed in SQL alone. The app-side authorization/session
+-- layer (E09 auth service, not yet implemented — see
+-- `services/api/candleviewer/auth/service.py`) MUST additionally re-check the
+-- effective active-owner count (same predicate as `trg_owner_floor_fn`)
+-- whenever it evaluates `user_roles.expires_at` against `now()`, and refuse
+-- to treat the expiry as effective if it would leave zero active owners, or
+-- must run a periodic reconciliation job that surfaces/pages on the
+-- condition. This ticket is schema-only (see docstring); the follow-up
+-- auth-service ticket owns the runtime check and must not skip it.
 CREATE FUNCTION trg_owner_floor_fn() RETURNS trigger LANGUAGE plpgsql AS $BODY$
 DECLARE
   owner_count integer;
@@ -333,10 +348,10 @@ INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r, permissions p WHERE r.name = 'owner';
 
 INSERT INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id FROM roles r, permissions p WHERE r.name = 'manager' AND p.code IN ('marketdata:read', 'instruments:read', 'recording:read', 'replay:read', 'replay:write', 'orders:read', 'orders:write', 'positions:read', 'positions:write', 'executions:read', 'rules:read', 'rules:write', 'alerts:read', 'alerts:write', 'journal:read', 'journal:write', 'accounts:read', 'workspaces:read', 'workspaces:write', 'settings:read', 'settings:write');
+SELECT r.id, p.id FROM roles r, permissions p WHERE r.name = 'manager' AND p.code IN ('marketdata:read', 'instruments:read', 'recording:read', 'recording:write', 'replay:read', 'replay:write', 'orders:read', 'orders:write', 'positions:read', 'positions:write', 'executions:read', 'rules:read', 'rules:write', 'alerts:read', 'alerts:write', 'journal:read', 'journal:write', 'accounts:read', 'workspaces:read', 'workspaces:write', 'settings:read', 'settings:write', 'killswitch:write');
 
 INSERT INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id FROM roles r, permissions p WHERE r.name = 'viewer' AND p.code IN ('marketdata:read', 'instruments:read', 'recording:read', 'replay:read', 'replay:write', 'orders:read', 'positions:read', 'executions:read', 'rules:read', 'alerts:read', 'alerts:write', 'journal:read', 'accounts:read', 'workspaces:read', 'workspaces:write', 'settings:read', 'settings:write');
+SELECT r.id, p.id FROM roles r, permissions p WHERE r.name = 'viewer' AND p.code IN ('marketdata:read', 'instruments:read', 'recording:read', 'replay:read', 'orders:read', 'positions:read', 'executions:read', 'rules:read', 'alerts:read', 'journal:read', 'accounts:read', 'workspaces:read', 'settings:read', 'audit:read');
 """
 
 _DOWNGRADE_SQL = """

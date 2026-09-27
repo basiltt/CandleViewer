@@ -204,3 +204,59 @@ def test_permission_seed_matches_rbac_seed_fixture(migrated_conn: psycopg.Connec
     conn.rollback()
 
     assert actual_codes == expected_codes
+
+
+def test_role_permissions_match_openapi_x_permissions(
+    migrated_conn: psycopg.Connection,
+) -> None:
+    """AC5: RBAC seed matches the single source of truth.
+
+    `docs/plan/22-api-openapi.yaml` `x-permissions` is the contract (per its own
+    comment). This directly parses that block and compares it against the
+    seeded `role_permissions` for `manager` and `viewer` (owner is `"*"` i.e.
+    every permission, checked separately) so drift between the migration seed
+    and the API contract fails this ticket's gate rather than only a
+    fixture-vs-fixture comparison. A stronger generator-based check lands in
+    E09-T03 (`rbac_vocabulary_single_source`); this is the interim real check.
+    """
+    import re
+
+    openapi_path = (
+        _SERVICES_API_ROOT.parent.parent / "docs" / "plan" / "22-api-openapi.yaml"
+    )
+    text = openapi_path.read_text(encoding="utf-8")
+    block_match = re.search(r"x-permissions:\n(.*?)\npaths:", text, re.S)
+    assert block_match is not None, "x-permissions block not found in 22-api-openapi.yaml"
+    block = block_match.group(1)
+
+    def _role_codes(role: str) -> set[str]:
+        role_match = re.search(role + r":\n((?:    - .*\n)+)", block)
+        assert role_match is not None, f"role {role!r} not found in x-permissions"
+        return {line.strip("- ").strip() for line in role_match.group(1).splitlines()}
+
+    expected_manager = _role_codes("manager")
+    expected_viewer = _role_codes("viewer")
+
+    conn = migrated_conn
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT p.code FROM role_permissions rp "
+            "JOIN roles r ON r.id = rp.role_id "
+            "JOIN permissions p ON p.id = rp.permission_id "
+            "WHERE r.name = %s",
+            ("manager",),
+        )
+        actual_manager = {row[0] for row in cur.fetchall()}
+
+        cur.execute(
+            "SELECT p.code FROM role_permissions rp "
+            "JOIN roles r ON r.id = rp.role_id "
+            "JOIN permissions p ON p.id = rp.permission_id "
+            "WHERE r.name = %s",
+            ("viewer",),
+        )
+        actual_viewer = {row[0] for row in cur.fetchall()}
+    conn.rollback()
+
+    assert actual_manager == expected_manager
+    assert actual_viewer == expected_viewer

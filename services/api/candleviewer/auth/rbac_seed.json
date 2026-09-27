@@ -47,21 +47,23 @@
     "owner": ["*"],
     "manager": [
       "marketdata:read", "instruments:read",
-      "recording:read", "replay:read", "replay:write",
+      "recording:read", "recording:write", "replay:read", "replay:write",
       "orders:read", "orders:write", "positions:read", "positions:write", "executions:read",
       "rules:read", "rules:write", "alerts:read", "alerts:write",
       "journal:read", "journal:write",
       "accounts:read",
-      "workspaces:read", "workspaces:write", "settings:read", "settings:write"
+      "workspaces:read", "workspaces:write", "settings:read", "settings:write",
+      "killswitch:write"
     ],
     "viewer": [
       "marketdata:read", "instruments:read",
-      "recording:read", "replay:read", "replay:write",
+      "recording:read", "replay:read",
       "orders:read", "positions:read", "executions:read",
-      "rules:read", "alerts:read", "alerts:write",
+      "rules:read", "alerts:read",
       "journal:read",
       "accounts:read",
-      "workspaces:read", "workspaces:write", "settings:read", "settings:write"
+      "workspaces:read", "settings:read",
+      "audit:read"
     ]
   }
 }
