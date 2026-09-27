@@ -64,7 +64,7 @@ CREATE TABLE users (
   username             citext NOT NULL,
   display_name         text,
   password_hash        text NOT NULL,
-  password_algo_params jsonb NOT NULL DEFAULT '{"m":65536,"t":3,"p":4}'::jsonb,
+  password_algo_params jsonb NOT NULL DEFAULT '{"m"\:65536,"t"\:3,"p"\:4}'::jsonb,
   password_changed_at  timestamptz NOT NULL DEFAULT now(),
   status               user_status NOT NULL DEFAULT 'invited',
   mfa_required         boolean NOT NULL DEFAULT true,
