@@ -38,6 +38,7 @@ test = [
   "hypothesis>=6.108",
   "testcontainers[postgres]>=4.8",
   "psycopg[binary]>=3.2",
+  "asyncpg>=0.29",
 ]
 
 [build-system]
