@@ -103,6 +103,18 @@ def test_secrets_import_violation_caught_by_c_3_2() -> None:
     assert "C-3.2" in result.stdout or "secrets" in result.stdout.lower()
 
 
+def test_asyncpg_import_outside_storage_caught_by_adr_0003() -> None:
+    """E07-T01 acceptance criterion 2: a module outside M10 (storage) that
+    imports a storage driver package directly must fail CI, citing ADR-0003."""
+    target = REPO_ROOT / "services" / "api" / "candleviewer" / "bars" / "service.py"
+    with _PatchedFile(target) as f:
+        f.write(f.backup + "\nimport asyncpg  # noqa\n")
+        result = _run(["uv", "run", "lint-imports"], cwd=REPO_ROOT / "services" / "api")
+    assert result.returncode != 0
+    assert "BROKEN" in result.stdout
+    assert "ADR-0003" in result.stdout
+
+
 def test_react_in_chart_engine_core_caught_by_c_2_16() -> None:
     target = REPO_ROOT / "packages" / "chart-engine" / "src" / "core" / "handle.ts"
     with _PatchedFile(target) as f:

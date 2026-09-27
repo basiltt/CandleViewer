@@ -137,6 +137,28 @@ def render(manifest: dict) -> str:
     lines.append(f"modules =\n    {modules_block}")
     lines.append("")
 
+    # ADR-0003 / E07-T01: storage engine driver packages are forbidden
+    # outside candleviewer.storage. One forbidden contract per non-storage
+    # module, forbidding the driver package set — import-linter's
+    # `forbidden` contract type works against external packages too when
+    # `include_external_packages = True` (set in HEADER).
+    drivers = cc["storage_driver_imports"]
+    exempt = set(drivers["exempt_modules"])
+    driver_forbidden_block = "\n    ".join(drivers["forbidden_packages"])
+    for m in modules:
+        path = m["path"]
+        if path in exempt:
+            continue
+        lines.append(f"[importlinter:contract:forbidden-storage-drivers-{m['number']}]")
+        lines.append(
+            f"name = {drivers['rule']} — {m['number']} ({m['name']}) may not import a "
+            "storage driver directly"
+        )
+        lines.append("type = forbidden")
+        lines.append(f"source_modules =\n    {path}")
+        lines.append(f"forbidden_modules =\n    {driver_forbidden_block}")
+        lines.append("")
+
     return "\n".join(lines) + "\n"
 
 

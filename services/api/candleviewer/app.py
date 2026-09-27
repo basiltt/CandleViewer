@@ -98,8 +98,9 @@ def build_app_context(settings: Settings | None = None) -> AppContext:
     `_started = False`), which is what keeps `create_app()` fast and
     fake-only per the acceptance criteria.
     """
+    resolved = settings or get_settings()
     return AppContext(
-        settings=settings or get_settings(),
+        settings=resolved,
         metrics=CollectorRegistry(),
         secrets=build_secrets_service(),
         exchange_base=ExchangeBaseService(),
@@ -109,7 +110,7 @@ def build_app_context(settings: Settings | None = None) -> AppContext:
         book=BookService(),
         bars=BarsService(),
         orderflow=OrderflowService(),
-        storage=StorageService(),
+        storage=StorageService(backend=resolved.storage_backend),
         recorder=RecorderService(),
         replay=ReplayService(),
         accounts=AccountsService(),
