@@ -22,6 +22,524 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, RootModel
 
 
+class T(Enum):
+    hello = 'hello'
+    welcome = 'welcome'
+    auth = 'auth'
+    auth_ok = 'auth_ok'
+    sub = 'sub'
+    sub_ok = 'sub_ok'
+    unsub = 'unsub'
+    unsub_ok = 'unsub_ok'
+    snap = 'snap'
+    d = 'd'
+    resync = 'resync'
+    revoked = 'revoked'
+    ping = 'ping'
+    pong = 'pong'
+    err = 'err'
+    ctl = 'ctl'
+    ctl_ok = 'ctl_ok'
+    bye = 'bye'
+
+
+class E(Enum):
+    j = 'j'
+    b = 'b'
+    b64 = 'b64'
+
+
+class Shell(Enum):
+    electron = 'electron'
+    browser = 'browser'
+    other = 'other'
+
+
+class Encoding(Enum):
+    binary = 'binary'
+    structured = 'structured'
+
+
+class Capability(Enum):
+    binary_book = 'binary_book'
+    binary_bars = 'binary_bars'
+    binary_trades = 'binary_trades'
+    binary_footprint = 'binary_footprint'
+    binary_heatmap = 'binary_heatmap'
+    coalescing = 'coalescing'
+    replay = 'replay'
+    partial_snapshots = 'partial_snapshots'
+
+
+class Encoding1(Enum):
+    msgpack = 'msgpack'
+    json = 'json'
+
+
+class Heartbeat1(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    interval_ms: int = Field(..., ge=1000, le=120000)
+    timeout_ms: int = Field(..., ge=5000, le=300000)
+
+
+class Limits(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    max_subscriptions: int
+    max_topics_per_request: int
+    max_inbound_frame_bytes: int
+    max_outbound_frame_bytes: int
+    min_throttle_ms: int
+    max_symbols_per_connection: int | None = None
+
+
+class Role(Enum):
+    owner = 'owner'
+    manager = 'manager'
+    viewer = 'viewer'
+
+
+class TimeBucketMs(Enum):
+    int_100 = 100
+    int_250 = 250
+    int_500 = 500
+    int_1000 = 1000
+    int_5000 = 5000
+
+
+class CtlOk(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    effective: dict[str, Any]
+    resnapshot: bool | None = Field(
+        False, description='When true, a fresh `snap` follows and prior state must be discarded.'
+    )
+
+
+class Reason(Enum):
+    sequence_gap = 'sequence_gap'
+    decode_error = 'decode_error'
+    state_corrupt = 'state_corrupt'
+    client_restart = 'client_restart'
+    manual = 'manual'
+
+
+class Reason1(Enum):
+    permission_revoked = 'permission_revoked'
+    account_scope_changed = 'account_scope_changed'
+    user_disabled = 'user_disabled'
+    session_revoked = 'session_revoked'
+    key_revoked = 'key_revoked'
+    account_disabled = 'account_disabled'
+    replay_session_ended = 'replay_session_ended'
+    resync_rate_limited = 'resync_rate_limited'
+    topic_removed = 'topic_removed'
+
+
+class Code(Enum):
+    int_1000 = 1000
+    int_1001 = 1001
+    int_1002 = 1002
+    int_1009 = 1009
+    int_1011 = 1011
+    int_1013 = 1013
+    int_4400 = 4400
+    int_4401 = 4401
+    int_4403 = 4403
+    int_4429 = 4429
+
+
+class TickDirection(Enum):
+    PlusTick = 'PlusTick'
+    ZeroPlusTick = 'ZeroPlusTick'
+    MinusTick = 'MinusTick'
+    ZeroMinusTick = 'ZeroMinusTick'
+
+
+class UnfinishedAuction(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    high: bool | None = None
+    low: bool | None = None
+
+
+class Kind(Enum):
+    volume = 'volume'
+    delta = 'delta'
+    tpo = 'tpo'
+
+
+class Split(Enum):
+    composite = 'composite'
+    session = 'session'
+    fixed = 'fixed'
+
+
+class Metric(Enum):
+    cvd = 'cvd'
+    delta = 'delta'
+    min_max_delta = 'min_max_delta'
+    trades_per_sec = 'trades_per_sec'
+    volume_per_sec = 'volume_per_sec'
+    book_updates_per_sec = 'book_updates_per_sec'
+    tape_acceleration = 'tape_acceleration'
+    imbalance_ratio = 'imbalance_ratio'
+    absorption = 'absorption'
+    exhaustion = 'exhaustion'
+    iceberg = 'iceberg'
+    stop_run = 'stop_run'
+    adx = 'adx'
+    atr = 'atr'
+    hurst = 'hurst'
+    regime = 'regime'
+    vwap = 'vwap'
+    open_interest_delta = 'open_interest_delta'
+    funding_basis = 'funding_basis'
+    liquidation_intensity = 'liquidation_intensity'
+
+
+class Unit(Enum):
+    base_volume = 'base_volume'
+    index = 'index'
+    ratio = 'ratio'
+    confidence = 'confidence'
+    usd = 'usd'
+    price = 'price'
+    count = 'count'
+
+
+class OrderType(Enum):
+    market = 'market'
+    limit = 'limit'
+
+
+class Intent(Enum):
+    entry = 'entry'
+    stop_loss = 'stop_loss'
+    take_profit = 'take_profit'
+    scale_in = 'scale_in'
+    scale_out = 'scale_out'
+    flatten = 'flatten'
+    reverse = 'reverse'
+    algo_child = 'algo_child'
+
+
+class State(Enum):
+    new = 'new'
+    pending_submit = 'pending_submit'
+    submitted = 'submitted'
+    accepted = 'accepted'
+    partially_filled = 'partially_filled'
+    filled = 'filled'
+    pending_cancel = 'pending_cancel'
+    cancelled = 'cancelled'
+    pending_amend = 'pending_amend'
+    rejected = 'rejected'
+    expired = 'expired'
+    untracked = 'untracked'
+
+
+class TimeInForce(Enum):
+    GTC = 'GTC'
+    IOC = 'IOC'
+    FOK = 'FOK'
+    PostOnly = 'PostOnly'
+
+
+class PositionIdx(Enum):
+    int_0 = 0
+    int_1 = 1
+    int_2 = 2
+
+
+class TriggerBy(Enum):
+    LastPrice = 'LastPrice'
+    MarkPrice = 'MarkPrice'
+    IndexPrice = 'IndexPrice'
+    NoneType_None = None
+
+
+class TriggerDirection(Enum):
+    rise = 'rise'
+    fall = 'fall'
+    NoneType_None = None
+
+
+class TpslMode(Enum):
+    Full = 'Full'
+    Partial = 'Partial'
+
+
+class AlgoKind(Enum):
+    none = 'none'
+    oco = 'oco'
+    iceberg = 'iceberg'
+    twap = 'twap'
+    chase = 'chase'
+    scaled = 'scaled'
+    bracket = 'bracket'
+
+
+class Change(Enum):
+    created = 'created'
+    submitted = 'submitted'
+    ack = 'ack'
+    fill = 'fill'
+    amend = 'amend'
+    cancel = 'cancel'
+    reject = 'reject'
+    expire = 'expire'
+    reconcile = 'reconcile'
+
+
+class Side1(Enum):
+    long = 'long'
+    short = 'short'
+    flat = 'flat'
+
+
+class MarginMode(Enum):
+    cross = 'cross'
+    isolated = 'isolated'
+    portfolio = 'portfolio'
+
+
+class ExecType(Enum):
+    Trade = 'Trade'
+    AdlTrade = 'AdlTrade'
+    Funding = 'Funding'
+    BustTrade = 'BustTrade'
+    Settle = 'Settle'
+
+
+class Status(Enum):
+    draft = 'draft'
+    submitting = 'submitting'
+    partially_open = 'partially_open'
+    open = 'open'
+    closing = 'closing'
+    closed = 'closed'
+    failed = 'failed'
+    cancelled = 'cancelled'
+
+
+class Atomicity(Enum):
+    best_effort = 'best_effort'
+    all_or_none = 'all_or_none'
+
+
+class Status1(Enum):
+    pending = 'pending'
+    submitted = 'submitted'
+    rejected = 'rejected'
+    open = 'open'
+    partially_filled = 'partially_filled'
+    filled = 'filled'
+    cancelled = 'cancelled'
+    closed = 'closed'
+    error = 'error'
+
+
+class Error1(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    code: str
+    message: str
+    exchange_ret_code: int | None = None
+    retryable: bool | None = None
+
+
+class Mode(Enum):
+    disabled = 'disabled'
+    simulate = 'simulate'
+    armed = 'armed'
+
+
+class LastRunStatus(Enum):
+    running = 'running'
+    ok = 'ok'
+    error = 'error'
+    aborted = 'aborted'
+    throttled = 'throttled'
+    NoneType_None = None
+
+
+class Kind1(Enum):
+    evaluated = 'evaluated'
+    suppressed = 'suppressed'
+    action_sent = 'action_sent'
+    action_result = 'action_result'
+    error = 'error'
+    started = 'started'
+    finished = 'finished'
+
+
+class Channel(Enum):
+    in_app = 'in_app'
+    email = 'email'
+    webhook = 'webhook'
+    push = 'push'
+    desktop = 'desktop'
+
+
+class Status2(Enum):
+    queued = 'queued'
+    sent = 'sent'
+    failed = 'failed'
+    suppressed = 'suppressed'
+    acked = 'acked'
+
+
+class Severity(Enum):
+    debug = 'debug'
+    info = 'info'
+    warning = 'warning'
+    error = 'error'
+    critical = 'critical'
+
+
+class Overall(Enum):
+    healthy = 'healthy'
+    degraded = 'degraded'
+    warning = 'warning'
+    down = 'down'
+
+
+class State1(Enum):
+    connecting = 'connecting'
+    connected = 'connected'
+    degraded = 'degraded'
+    disconnected = 'disconnected'
+
+
+class Connection(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    endpoint: str | None = None
+    state: State1 | None = None
+    subscribed_topics: int | None = None
+    reconnects_last_hour: int | None = None
+    last_ping_ms: int | None = None
+
+
+class State2(Enum):
+    idle = 'idle'
+    starting = 'starting'
+    recording = 'recording'
+    degraded = 'degraded'
+    stopping = 'stopping'
+    stopped = 'stopped'
+    error = 'error'
+
+
+class Reason2(Enum):
+    manual = 'manual'
+    chart_open = 'chart_open'
+    position_open = 'position_open'
+    rule_dependency = 'rule_dependency'
+    alert_dependency = 'alert_dependency'
+
+
+class Kind2(Enum):
+    health = 'health'
+    kill_switch = 'kill_switch'
+    feature_flags = 'feature_flags'
+    exchange_state = 'exchange_state'
+    connection_quality = 'connection_quality'
+    shutdown_notice = 'shutdown_notice'
+    degraded_data = 'degraded_data'
+    clock_drift = 'clock_drift'
+    notice = 'notice'
+
+
+class Health(Enum):
+    healthy = 'healthy'
+    degraded = 'degraded'
+    warning = 'warning'
+    down = 'down'
+
+
+class State3(Enum):
+    healthy = 'healthy'
+    degraded = 'degraded'
+    warning = 'warning'
+    down = 'down'
+
+
+class Component(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    name: str | None = None
+    state: State3 | None = None
+    detail: str | None = None
+
+
+class Actions(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    orders_cancelled: int | None = None
+    positions_flattened: int | None = None
+    rules_disarmed: int | None = None
+
+
+class PublicWs(Enum):
+    connected = 'connected'
+    connecting = 'connecting'
+    resyncing = 'resyncing'
+    disconnected = 'disconnected'
+
+
+class PrivateWs(Enum):
+    connected = 'connected'
+    connecting = 'connecting'
+    resyncing = 'resyncing'
+    disconnected = 'disconnected'
+
+
+class Rest(Enum):
+    healthy = 'healthy'
+    degraded = 'degraded'
+    rate_limited = 'rate_limited'
+    down = 'down'
+
+
+class Exchange(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    public_ws: PublicWs | None = None
+    private_ws: PrivateWs | None = None
+    rest: Rest | None = None
+    rate_budget_free_pct: float | None = Field(None, ge=0.0, le=100.0)
+
+
+class Class(Enum):
+    healthy = 'healthy'
+    lagging = 'lagging'
+    saturated = 'saturated'
+    overflowing = 'overflowing'
+
+
+class BarType(Enum):
+    time = 'time'
+    tick = 'tick'
+    volume = 'volume'
+    range = 'range'
+    delta = 'delta'
+    renko = 'renko'
+    pnf = 'pnf'
+    heikin_ashi = 'heikin_ashi'
+
+
 def _cv_parse_decimal(v: object) -> object:
     """Parses a wire-format decimal string; pydantic wraps a raised ValueError
     into its own ValidationError (a bare decimal.InvalidOperation would not
@@ -43,16 +561,11 @@ Decimal = Annotated[
 
 
 
-class Symbol(RootModel[str]):
-    root: str = Field(..., pattern='^[A-Z0-9]{2,20}USDT$')
-
-
-class EpochMs(RootModel[int]):
-    root: int = Field(..., description='Epoch milliseconds, UTC.', ge=0)
-
-
-class Topic(RootModel[str]):
-    root: str = Field(..., max_length=120, min_length=1, pattern='^[a-z_]+(\\.[A-Za-z0-9:_-]+)*$')
+class Depth(Enum):
+    int_1 = 1
+    int_50 = 50
+    int_200 = 200
+    int_500 = 500
 
 
 class Environment(Enum):
@@ -61,27 +574,126 @@ class Environment(Enum):
     testnet = 'testnet'
 
 
+class EpochMs(RootModel[int]):
+    root: int = Field(..., description='Epoch milliseconds, UTC.', ge=0)
+
+
 class Side(Enum):
     buy = 'buy'
     sell = 'sell'
 
 
-class BarType(Enum):
-    time = 'time'
-    tick = 'tick'
-    volume = 'volume'
-    range = 'range'
-    delta = 'delta'
-    renko = 'renko'
-    pnf = 'pnf'
-    heikin_ashi = 'heikin_ashi'
+class Reason3(Enum):
+    initial = 'initial'
+    client_resync = 'client_resync'
+    upstream_desync = 'upstream_desync'
+    upstream_reconnect = 'upstream_reconnect'
+    backpressure = 'backpressure'
+    reconfigure = 'reconfigure'
+    instrument_revision = 'instrument_revision'
+    replay_seek = 'replay_seek'
 
 
-class Depth(Enum):
-    int_1 = 1
-    int_50 = 50
-    int_200 = 200
-    int_500 = 500
+class Source(Enum):
+    live = 'live'
+    replay = 'replay'
+
+
+class SnapMeta(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    reason: Reason3 | None = None
+    previous_seq: int | None = Field(None, ge=0)
+    recording_started_at_ms: int | None = Field(None, description='Epoch milliseconds, UTC.', ge=0)
+    history_bars: int | None = Field(None, ge=0)
+    source: Source | None = 'live'
+
+
+class Symbol(RootModel[str]):
+    root: str = Field(..., pattern='^[A-Z0-9]{2,20}USDT$')
+
+
+class Encoding2(Enum):
+    binary = 'binary'
+    structured = 'structured'
+
+
+class SessionAnchor(Enum):
+    utc_day = 'utc_day'
+    funding_8h = 'funding_8h'
+    custom = 'custom'
+
+
+class Options(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    throttle_ms: int | None = Field(None, ge=0, le=60000)
+    encoding: Encoding2 | None = None
+    coalesce: bool | None = True
+    from_seq: int | None = Field(None, ge=0)
+    from_ts_ms: int | None = Field(None, description='Epoch milliseconds, UTC.', ge=0)
+    min_size: str | None = Field(
+        None,
+        description='Arbitrary-precision decimal as a string; never a JSON number.',
+        pattern='^-?[0-9]+(\\.[0-9]+)?$',
+    )
+    cluster_window_ms: int | None = Field(None, ge=0, le=5000)
+    cluster_tolerance_ticks: int | None = Field(None, ge=0, le=20)
+    include_delta: bool | None = None
+    history: int | None = Field(None, ge=0, le=1000)
+    price_grouping: int | None = Field(None, ge=1, le=1000)
+    imbalance_ratio: float | None = Field(None, ge=1.5, le=20.0)
+    min_stack: int | None = Field(None, ge=2, le=10)
+    min_imbalance_volume: str | None = Field(
+        None,
+        description='Arbitrary-precision decimal as a string; never a JSON number.',
+        pattern='^-?[0-9]+(\\.[0-9]+)?$',
+    )
+    time_bucket_ms: TimeBucketMs | None = Field(
+        500,
+        description='Client SHOULD derive this per �6.1.1 rather than sending a constant; 500 is the non-visual-client fallback.',
+    )
+    depth: Depth | None = None
+    window_seconds: int | None = Field(None, ge=10, le=900)
+    split: Split | None = None
+    session_anchor: SessionAnchor | None = None
+    value_area_pct: float | None = Field(None, ge=50.0, le=95.0)
+    metrics: list[str] | None = Field(None, max_length=12, min_length=1)
+    bar_type: BarType | None = None
+    param: str | None = Field(None, max_length=24)
+    params: dict[str, Any] | None = None
+    exchange_account_ids: list[UUID] | None = Field(None, max_length=25)
+    symbols: list[str] | None = Field(None, max_length=40, pattern='^[A-Z0-9]{2,20}USDT$')
+    open_only: bool | None = None
+    status: list[str] | None = None
+    rule_ids: list[UUID] | None = None
+    include_events: bool | None = None
+    unacked_only: bool | None = None
+    min_notional_usd: str | None = Field(
+        None,
+        description='Arbitrary-precision decimal as a string; never a JSON number.',
+        pattern='^-?[0-9]+(\\.[0-9]+)?$',
+    )
+
+
+class Scope(Enum):
+    global_ = 'global'
+    accounts = 'accounts'
+
+
+class KillSwitch(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    engaged: bool
+    scope: Scope
+    exchange_account_ids: list[UUID] | None = None
+    engaged_at_ms: EpochMs | None = None
+    engaged_by: UUID | None = None
+    engaged_by_username: str | None = None
+    reason: str | None = None
 
 
 class ErrorCode(Enum):
@@ -115,72 +727,6 @@ class ErrorCode(Enum):
     internal_error = 'internal_error'
 
 
-class Error(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    code: ErrorCode
-    message: str = Field(..., max_length=1000)
-    retryable: bool | None = False
-    field: str | None = None
-    request_id: str | None = None
-    close: bool | None = False
-
-
-class Reason(Enum):
-    initial = 'initial'
-    client_resync = 'client_resync'
-    upstream_desync = 'upstream_desync'
-    upstream_reconnect = 'upstream_reconnect'
-    backpressure = 'backpressure'
-    reconfigure = 'reconfigure'
-    instrument_revision = 'instrument_revision'
-    replay_seek = 'replay_seek'
-
-
-class Source(Enum):
-    live = 'live'
-    replay = 'replay'
-
-
-class SnapMeta(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    reason: Reason | None = None
-    previous_seq: int | None = Field(None, ge=0)
-    recording_started_at_ms: int | None = Field(None, description='Epoch milliseconds, UTC.', ge=0)
-    history_bars: int | None = Field(None, ge=0)
-    source: Source | None = 'live'
-
-
-class T(Enum):
-    hello = 'hello'
-    welcome = 'welcome'
-    auth = 'auth'
-    auth_ok = 'auth_ok'
-    sub = 'sub'
-    sub_ok = 'sub_ok'
-    unsub = 'unsub'
-    unsub_ok = 'unsub_ok'
-    snap = 'snap'
-    d = 'd'
-    resync = 'resync'
-    revoked = 'revoked'
-    ping = 'ping'
-    pong = 'pong'
-    err = 'err'
-    ctl = 'ctl'
-    ctl_ok = 'ctl_ok'
-    bye = 'bye'
-
-
-class E(Enum):
-    j = 'j'
-    b = 'b'
-    b64 = 'b64'
-
-
 class Envelope(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -203,28 +749,6 @@ class Envelope(BaseModel):
     p: Any | None = None
 
 
-class Shell(Enum):
-    electron = 'electron'
-    browser = 'browser'
-    other = 'other'
-
-
-class Encoding(Enum):
-    binary = 'binary'
-    structured = 'structured'
-
-
-class Capability(Enum):
-    binary_book = 'binary_book'
-    binary_bars = 'binary_bars'
-    binary_trades = 'binary_trades'
-    binary_footprint = 'binary_footprint'
-    binary_heatmap = 'binary_heatmap'
-    coalescing = 'coalescing'
-    replay = 'replay'
-    partial_snapshots = 'partial_snapshots'
-
-
 class Hello(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -237,31 +761,6 @@ class Hello(BaseModel):
     capabilities: list[Capability] | None = None
     locale: str | None = Field(None, max_length=16)
     clock_ms: int | None = Field(None, description='Epoch milliseconds, UTC.', ge=0)
-
-
-class Encoding1(Enum):
-    msgpack = 'msgpack'
-    json = 'json'
-
-
-class Heartbeat1(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    interval_ms: int = Field(..., ge=1000, le=120000)
-    timeout_ms: int = Field(..., ge=5000, le=300000)
-
-
-class Limits(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    max_subscriptions: int
-    max_topics_per_request: int
-    max_inbound_frame_bytes: int
-    max_outbound_frame_bytes: int
-    min_throttle_ms: int
-    max_symbols_per_connection: int | None = None
 
 
 class Welcome(BaseModel):
@@ -293,38 +792,45 @@ class Auth(BaseModel):
     )
 
 
-class Role(Enum):
-    owner = 'owner'
-    manager = 'manager'
-    viewer = 'viewer'
+class AuthOk(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    user_id: UUID
+    username: str | None = None
+    roles: list[Role]
+    permissions: list[str]
+    account_scope: list[UUID]
+    allowed_environments: list[Environment] | None = None
+    session_id: UUID
+    token_expires_at_ms: int = Field(..., description='Epoch milliseconds, UTC.', ge=0)
+    kill_switch: KillSwitch | None = None
 
 
-class Result(BaseModel):
+class Topic1(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
     ch: str = Field(..., max_length=120, min_length=1, pattern='^[a-z_]+(\\.[A-Za-z0-9:_-]+)*$')
-    ok: bool
-    sub_id: str | None = None
-    snapshot_pending: bool | None = None
-    snapshot_forced: bool | None = None
-    effective: dict[str, Any] | None = None
-    warning: Error | None = None
-    error: Error | None = None
+    opts: Options | None = None
 
 
-class SubOk(BaseModel):
+class Sub(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    results: list[Result]
+    topics: list[Topic1] = Field(..., max_length=50, min_length=1)
+    snapshot: bool | None = True
+    replay_session_id: UUID | None = None
 
 
 class Unsub(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    topics: list[Topic] = Field(..., max_length=50, min_length=1)
+    topics: list[str] = Field(
+        ..., max_length=50, min_length=1, pattern='^[a-z_]+(\\.[A-Za-z0-9:_-]+)*$'
+    )
 
 
 class Result1(BaseModel):
@@ -343,14 +849,6 @@ class UnsubOk(BaseModel):
     results: list[Result1]
 
 
-class TimeBucketMs(Enum):
-    int_100 = 100
-    int_250 = 250
-    int_500 = 500
-    int_1000 = 1000
-    int_5000 = 5000
-
-
 class Ctl(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -366,29 +864,11 @@ class Ctl(BaseModel):
         pattern='^-?[0-9]+(\\.[0-9]+)?$',
     )
     time_bucket_ms: TimeBucketMs | None = Field(
-        None, description='Re-derived bucket (§6.1.1); triggers `resnapshot: true`.'
+        None, description='Re-derived bucket (�6.1.1); triggers `resnapshot: true`.'
     )
     paused: bool | None = Field(
         None, description='Client-side pause; the server stops emitting but keeps state.'
     )
-
-
-class CtlOk(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    effective: dict[str, Any]
-    resnapshot: bool | None = Field(
-        False, description='When true, a fresh `snap` follows and prior state must be discarded.'
-    )
-
-
-class Reason1(Enum):
-    sequence_gap = 'sequence_gap'
-    decode_error = 'decode_error'
-    state_corrupt = 'state_corrupt'
-    client_restart = 'client_restart'
-    manual = 'manual'
 
 
 class Resync(BaseModel):
@@ -396,26 +876,14 @@ class Resync(BaseModel):
         extra='forbid',
     )
     last_seq: int | None = Field(None, ge=0)
-    reason: Reason1
-
-
-class Reason2(Enum):
-    permission_revoked = 'permission_revoked'
-    account_scope_changed = 'account_scope_changed'
-    user_disabled = 'user_disabled'
-    session_revoked = 'session_revoked'
-    key_revoked = 'key_revoked'
-    account_disabled = 'account_disabled'
-    replay_session_ended = 'replay_session_ended'
-    resync_rate_limited = 'resync_rate_limited'
-    topic_removed = 'topic_removed'
+    reason: Reason
 
 
 class Revoked(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    reason: Reason2
+    reason: Reason1
     message: str
     removed_accounts: list[UUID] | None = None
     resubscribe_allowed: bool | None = False
@@ -430,24 +898,13 @@ class Heartbeat(BaseModel):
     rtt_hint_ms: int | None = Field(None, ge=0)
 
 
-class Code(Enum):
-    int_1000 = 1000
-    int_1001 = 1001
-    int_1002 = 1002
-    int_1009 = 1009
-    int_1011 = 1011
-    int_1013 = 1013
-    int_4400 = 4400
-    int_4401 = 4401
-    int_4403 = 4403
-    int_4429 = 4429
-
-
 class Hint(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    most_expensive_topics: list[Topic] | None = None
+    most_expensive_topics: list[str] | None = Field(
+        None, max_length=120, min_length=1, pattern='^[a-z_]+(\\.[A-Za-z0-9:_-]+)*$'
+    )
 
 
 class Bye(BaseModel):
@@ -460,13 +917,6 @@ class Bye(BaseModel):
     retry_after_ms: int | None = Field(None, ge=0)
     reconnect: bool | None = None
     hint: Hint | None = None
-
-
-class TickDirection(Enum):
-    PlusTick = 'PlusTick'
-    ZeroPlusTick = 'ZeroPlusTick'
-    MinusTick = 'MinusTick'
-    ZeroMinusTick = 'ZeroMinusTick'
 
 
 class Trade(BaseModel):
@@ -579,14 +1029,6 @@ class Bars(BaseModel):
     coalesced_count: int | None = Field(None, ge=1)
 
 
-class UnfinishedAuction(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    high: bool | None = None
-    low: bool | None = None
-
-
 class Cell(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -690,14 +1132,6 @@ class Footprint(BaseModel):
     coalesced_count: int | None = Field(None, ge=1)
 
 
-class Bid(RootModel[float]):
-    root: float = Field(..., ge=0.0)
-
-
-class Ask(RootModel[float]):
-    root: float = Field(..., ge=0.0)
-
-
 class Column(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -713,10 +1147,10 @@ class Column(BaseModel):
         description='Arbitrary-precision decimal as a string; never a JSON number.',
         pattern='^-?[0-9]+(\\.[0-9]+)?$',
     )
-    bids: list[Bid] = Field(
-        ..., description='Resting bid size per price row, ascending from `price_min`.'
+    bids: list[float] = Field(
+        ..., description='Resting bid size per price row, ascending from `price_min`.', ge=0.0
     )
-    asks: list[Ask]
+    asks: list[float] = Field(..., ge=0.0)
     complete: bool | None = Field(
         None, description='False while the time bucket is still accumulating.'
     )
@@ -729,25 +1163,13 @@ class Heatmap(BaseModel):
     symbol: str = Field(..., pattern='^[A-Z0-9]{2,20}USDT$')
     time_bucket_ms: TimeBucketMs = Field(
         ...,
-        description='Effective bucket in force, echoing what the client derived per §6.1.1 (or 500 if the client sent none).',
+        description='Effective bucket in force, echoing what the client derived per �6.1.1 (or 500 if the client sent none).',
     )
     price_grouping: int | None = Field(None, ge=1)
     depth: Depth | None = None
     columns: list[Column]
     max_value: float | None = None
     estimated: bool | None = False
-
-
-class Kind(Enum):
-    volume = 'volume'
-    delta = 'delta'
-    tpo = 'tpo'
-
-
-class Split(Enum):
-    composite = 'composite'
-    session = 'session'
-    fixed = 'fixed'
 
 
 class Row(BaseModel):
@@ -810,8 +1232,8 @@ class Profile1(BaseModel):
     )
     naked_poc: bool | None = None
     rows: list[Row]
-    hvn: list[Decimal] | None = None
-    lvn: list[Decimal] | None = None
+    hvn: list[str] | None = Field(None, pattern='^-?[0-9]+(\\.[0-9]+)?$')
+    lvn: list[str] | None = Field(None, pattern='^-?[0-9]+(\\.[0-9]+)?$')
 
 
 class Profile(BaseModel):
@@ -824,46 +1246,13 @@ class Profile(BaseModel):
     profiles: list[Profile1]
 
 
-class Metric(Enum):
-    cvd = 'cvd'
-    delta = 'delta'
-    min_max_delta = 'min_max_delta'
-    trades_per_sec = 'trades_per_sec'
-    volume_per_sec = 'volume_per_sec'
-    book_updates_per_sec = 'book_updates_per_sec'
-    tape_acceleration = 'tape_acceleration'
-    imbalance_ratio = 'imbalance_ratio'
-    absorption = 'absorption'
-    exhaustion = 'exhaustion'
-    iceberg = 'iceberg'
-    stop_run = 'stop_run'
-    adx = 'adx'
-    atr = 'atr'
-    hurst = 'hurst'
-    regime = 'regime'
-    vwap = 'vwap'
-    open_interest_delta = 'open_interest_delta'
-    funding_basis = 'funding_basis'
-    liquidation_intensity = 'liquidation_intensity'
-
-
-class Unit(Enum):
-    base_volume = 'base_volume'
-    index = 'index'
-    ratio = 'ratio'
-    confidence = 'confidence'
-    usd = 'usd'
-    price = 'price'
-    count = 'count'
-
-
 class Series(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
     metric: Metric
     t_ms: int = Field(..., description='Epoch milliseconds, UTC.', ge=0)
-    v: Decimal | None
+    v: Decimal | None = None
     unit: Unit | None = None
     estimated: bool | None = Field(
         False, description='True for heuristic metrics (iceberg, stop_run, absorption, exhaustion).'
@@ -1012,90 +1401,6 @@ class Liquidations(BaseModel):
     )
 
 
-class OrderType(Enum):
-    market = 'market'
-    limit = 'limit'
-
-
-class Intent(Enum):
-    entry = 'entry'
-    stop_loss = 'stop_loss'
-    take_profit = 'take_profit'
-    scale_in = 'scale_in'
-    scale_out = 'scale_out'
-    flatten = 'flatten'
-    reverse = 'reverse'
-    algo_child = 'algo_child'
-
-
-class State(Enum):
-    new = 'new'
-    pending_submit = 'pending_submit'
-    submitted = 'submitted'
-    accepted = 'accepted'
-    partially_filled = 'partially_filled'
-    filled = 'filled'
-    pending_cancel = 'pending_cancel'
-    cancelled = 'cancelled'
-    pending_amend = 'pending_amend'
-    rejected = 'rejected'
-    expired = 'expired'
-    untracked = 'untracked'
-
-
-class TimeInForce(Enum):
-    GTC = 'GTC'
-    IOC = 'IOC'
-    FOK = 'FOK'
-    PostOnly = 'PostOnly'
-
-
-class PositionIdx(Enum):
-    int_0 = 0
-    int_1 = 1
-    int_2 = 2
-
-
-class TriggerBy(Enum):
-    LastPrice = 'LastPrice'
-    MarkPrice = 'MarkPrice'
-    IndexPrice = 'IndexPrice'
-    NoneType_None = None
-
-
-class TriggerDirection(Enum):
-    rise = 'rise'
-    fall = 'fall'
-    NoneType_None = None
-
-
-class TpslMode(Enum):
-    Full = 'Full'
-    Partial = 'Partial'
-
-
-class AlgoKind(Enum):
-    none = 'none'
-    oco = 'oco'
-    iceberg = 'iceberg'
-    twap = 'twap'
-    chase = 'chase'
-    scaled = 'scaled'
-    bracket = 'bracket'
-
-
-class Change(Enum):
-    created = 'created'
-    submitted = 'submitted'
-    ack = 'ack'
-    fill = 'fill'
-    amend = 'amend'
-    cancel = 'cancel'
-    reject = 'reject'
-    expire = 'expire'
-    reconcile = 'reconcile'
-
-
 class Order(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -1142,7 +1447,7 @@ class Order(BaseModel):
     algo_kind: AlgoKind | None = None
     environment: Environment | None = None
     is_paper: bool | None = Field(
-        False,
+        None,
         description='True when the fill/order came from the paper matcher rather than the exchange. Mirrors the `is_paper` column.',
     )
     rejected_reason: str | None = None
@@ -1162,18 +1467,6 @@ class Orders(BaseModel):
         None,
         description='Order ids that left the open set (terminal state) and may be dropped from the live view.',
     )
-
-
-class Side1(Enum):
-    long = 'long'
-    short = 'short'
-    flat = 'flat'
-
-
-class MarginMode(Enum):
-    cross = 'cross'
-    isolated = 'isolated'
-    portfolio = 'portfolio'
 
 
 class Position(BaseModel):
@@ -1239,7 +1532,7 @@ class Position(BaseModel):
     r_multiple: Decimal | None = None
     environment: Environment | None = None
     is_paper: bool | None = Field(
-        False,
+        None,
         description='True when the fill/order came from the paper matcher rather than the exchange. Mirrors the `is_paper` column.',
     )
     updated_at_ms: int = Field(..., description='Epoch milliseconds, UTC.', ge=0)
@@ -1251,14 +1544,6 @@ class Positions(BaseModel):
     )
     positions: list[Position]
     removed: list[UUID] | None = Field(None, description='Positions that went flat.')
-
-
-class ExecType(Enum):
-    Trade = 'Trade'
-    AdlTrade = 'AdlTrade'
-    Funding = 'Funding'
-    BustTrade = 'BustTrade'
-    Settle = 'Settle'
 
 
 class Execution(BaseModel):
@@ -1307,7 +1592,7 @@ class Execution(BaseModel):
     )
     environment: Environment | None = None
     is_paper: bool | None = Field(
-        False,
+        None,
         description='True when the fill/order came from the paper matcher rather than the exchange. Mirrors the `is_paper` column.',
     )
     ts_ms: int = Field(..., description='Epoch milliseconds, UTC.', ge=0)
@@ -1386,7 +1671,7 @@ class Balance(BaseModel):
     )
     environment: Environment | None = None
     is_paper: bool | None = Field(
-        False,
+        None,
         description='True when the fill/order came from the paper matcher rather than the exchange. Mirrors the `is_paper` column.',
     )
     stale: bool | None = False
@@ -1398,44 +1683,6 @@ class Wallet(BaseModel):
         extra='forbid',
     )
     balances: list[Balance]
-
-
-class Status(Enum):
-    draft = 'draft'
-    submitting = 'submitting'
-    partially_open = 'partially_open'
-    open = 'open'
-    closing = 'closing'
-    closed = 'closed'
-    failed = 'failed'
-    cancelled = 'cancelled'
-
-
-class Atomicity(Enum):
-    best_effort = 'best_effort'
-    all_or_none = 'all_or_none'
-
-
-class Status1(Enum):
-    pending = 'pending'
-    submitted = 'submitted'
-    rejected = 'rejected'
-    open = 'open'
-    partially_filled = 'partially_filled'
-    filled = 'filled'
-    cancelled = 'cancelled'
-    closed = 'closed'
-    error = 'error'
-
-
-class Error1(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    code: str
-    message: str
-    exchange_ret_code: int | None = None
-    retryable: bool | None = None
 
 
 class Leg(BaseModel):
@@ -1515,21 +1762,6 @@ class TradeGroups(BaseModel):
     trade_groups: list[TradeGroup]
 
 
-class Mode(Enum):
-    disabled = 'disabled'
-    simulate = 'simulate'
-    armed = 'armed'
-
-
-class LastRunStatus(Enum):
-    running = 'running'
-    ok = 'ok'
-    error = 'error'
-    aborted = 'aborted'
-    throttled = 'throttled'
-    NoneType_None = None
-
-
 class Rule(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
@@ -1545,16 +1777,6 @@ class Rule(BaseModel):
         None, description='Set while a cooldown guard is active.'
     )
     updated_at_ms: int = Field(..., description='Epoch milliseconds, UTC.', ge=0)
-
-
-class Kind1(Enum):
-    evaluated = 'evaluated'
-    suppressed = 'suppressed'
-    action_sent = 'action_sent'
-    action_result = 'action_result'
-    error = 'error'
-    started = 'started'
-    finished = 'finished'
 
 
 class Event(BaseModel):
@@ -1576,30 +1798,6 @@ class Rules(BaseModel):
     events: list[Event] | None = Field(
         None, description='Present only when subscribed with include_events: true.'
     )
-
-
-class Channel(Enum):
-    in_app = 'in_app'
-    email = 'email'
-    webhook = 'webhook'
-    push = 'push'
-    desktop = 'desktop'
-
-
-class Status2(Enum):
-    queued = 'queued'
-    sent = 'sent'
-    failed = 'failed'
-    suppressed = 'suppressed'
-    acked = 'acked'
-
-
-class Severity(Enum):
-    debug = 'debug'
-    info = 'info'
-    warning = 'warning'
-    error = 'error'
-    critical = 'critical'
 
 
 class Delivery(BaseModel):
@@ -1627,56 +1825,13 @@ class Alerts(BaseModel):
     unacked_count: int | None = Field(None, ge=0)
 
 
-class Overall(Enum):
-    healthy = 'healthy'
-    degraded = 'degraded'
-    warning = 'warning'
-    down = 'down'
-
-
-class State1(Enum):
-    connecting = 'connecting'
-    connected = 'connected'
-    degraded = 'degraded'
-    disconnected = 'disconnected'
-
-
-class Connection(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    endpoint: str | None = None
-    state: State1 | None = None
-    subscribed_topics: int | None = None
-    reconnects_last_hour: int | None = None
-    last_ping_ms: int | None = None
-
-
-class State2(Enum):
-    idle = 'idle'
-    starting = 'starting'
-    recording = 'recording'
-    degraded = 'degraded'
-    stopping = 'stopping'
-    stopped = 'stopped'
-    error = 'error'
-
-
-class Reason3(Enum):
-    manual = 'manual'
-    chart_open = 'chart_open'
-    position_open = 'position_open'
-    rule_dependency = 'rule_dependency'
-    alert_dependency = 'alert_dependency'
-
-
 class Symbol1(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
     symbol: str = Field(..., pattern='^[A-Z0-9]{2,20}USDT$')
     state: State2
-    reason: Reason3 | None = None
+    reason: Reason2 | None = None
     pinned: bool | None = None
     lag_ms: int | None = None
     rows_last_hour: int | None = None
@@ -1709,230 +1864,15 @@ class Recorder(BaseModel):
     storage: Storage | None = None
 
 
-class Kind2(Enum):
-    health = 'health'
-    kill_switch = 'kill_switch'
-    feature_flags = 'feature_flags'
-    exchange_state = 'exchange_state'
-    connection_quality = 'connection_quality'
-    shutdown_notice = 'shutdown_notice'
-    degraded_data = 'degraded_data'
-    clock_drift = 'clock_drift'
-    notice = 'notice'
-
-
-class Health(Enum):
-    healthy = 'healthy'
-    degraded = 'degraded'
-    warning = 'warning'
-    down = 'down'
-
-
-class State3(Enum):
-    healthy = 'healthy'
-    degraded = 'degraded'
-    warning = 'warning'
-    down = 'down'
-
-
-class Component(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    name: str | None = None
-    state: State3 | None = None
-    detail: str | None = None
-
-
-class Actions(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    orders_cancelled: int | None = None
-    positions_flattened: int | None = None
-    rules_disarmed: int | None = None
-
-
-class PublicWs(Enum):
-    connected = 'connected'
-    connecting = 'connecting'
-    resyncing = 'resyncing'
-    disconnected = 'disconnected'
-
-
-class PrivateWs(Enum):
-    connected = 'connected'
-    connecting = 'connecting'
-    resyncing = 'resyncing'
-    disconnected = 'disconnected'
-
-
-class Rest(Enum):
-    healthy = 'healthy'
-    degraded = 'degraded'
-    rate_limited = 'rate_limited'
-    down = 'down'
-
-
-class Exchange(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    public_ws: PublicWs | None = None
-    private_ws: PrivateWs | None = None
-    rest: Rest | None = None
-    rate_budget_free_pct: float | None = Field(None, ge=0.0, le=100.0)
-
-
-class Class(Enum):
-    healthy = 'healthy'
-    lagging = 'lagging'
-    saturated = 'saturated'
-    overflowing = 'overflowing'
-
-
 class Applied(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
     throttle_multiplier: float | None = None
     forced_coalesce: bool | None = None
-    degraded_topics: list[Topic] | None = None
-
-
-class Level(RootModel[list[Decimal]]):
-    root: list[Decimal] = Field(..., max_length=2, min_length=2)
-
-
-class Encoding2(Enum):
-    binary = 'binary'
-    structured = 'structured'
-
-
-class SessionAnchor(Enum):
-    utc_day = 'utc_day'
-    funding_8h = 'funding_8h'
-    custom = 'custom'
-
-
-class Options(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
+    degraded_topics: list[str] | None = Field(
+        None, max_length=120, min_length=1, pattern='^[a-z_]+(\\.[A-Za-z0-9:_-]+)*$'
     )
-    throttle_ms: int | None = Field(None, ge=0, le=60000)
-    encoding: Encoding2 | None = None
-    coalesce: bool | None = True
-    from_seq: int | None = Field(None, ge=0)
-    from_ts_ms: int | None = Field(None, description='Epoch milliseconds, UTC.', ge=0)
-    min_size: str | None = Field(
-        None,
-        description='Arbitrary-precision decimal as a string; never a JSON number.',
-        pattern='^-?[0-9]+(\\.[0-9]+)?$',
-    )
-    cluster_window_ms: int | None = Field(None, ge=0, le=5000)
-    cluster_tolerance_ticks: int | None = Field(None, ge=0, le=20)
-    include_delta: bool | None = None
-    history: int | None = Field(None, ge=0, le=1000)
-    price_grouping: int | None = Field(None, ge=1, le=1000)
-    imbalance_ratio: float | None = Field(None, ge=1.5, le=20.0)
-    min_stack: int | None = Field(None, ge=2, le=10)
-    min_imbalance_volume: str | None = Field(
-        None,
-        description='Arbitrary-precision decimal as a string; never a JSON number.',
-        pattern='^-?[0-9]+(\\.[0-9]+)?$',
-    )
-    time_bucket_ms: TimeBucketMs | None = Field(
-        500,
-        description='Client SHOULD derive this per §6.1.1 rather than sending a constant; 500 is the non-visual-client fallback.',
-    )
-    depth: Depth | None = None
-    window_seconds: int | None = Field(None, ge=10, le=900)
-    split: Split | None = None
-    session_anchor: SessionAnchor | None = None
-    value_area_pct: float | None = Field(None, ge=50.0, le=95.0)
-    metrics: list[str] | None = Field(None, max_length=12, min_length=1)
-    bar_type: BarType | None = None
-    param: str | None = Field(None, max_length=24)
-    params: dict[str, Any] | None = None
-    exchange_account_ids: list[UUID] | None = Field(None, max_length=25)
-    symbols: list[Symbol] | None = Field(None, max_length=40)
-    open_only: bool | None = None
-    status: list[str] | None = None
-    rule_ids: list[UUID] | None = None
-    include_events: bool | None = None
-    unacked_only: bool | None = None
-    min_notional_usd: str | None = Field(
-        None,
-        description='Arbitrary-precision decimal as a string; never a JSON number.',
-        pattern='^-?[0-9]+(\\.[0-9]+)?$',
-    )
-
-
-class Scope(Enum):
-    global_ = 'global'
-    accounts = 'accounts'
-
-
-class KillSwitch(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    engaged: bool
-    scope: Scope
-    exchange_account_ids: list[UUID] | None = None
-    engaged_at_ms: EpochMs | None = None
-    engaged_by: UUID | None = None
-    engaged_by_username: str | None = None
-    reason: str | None = None
-
-
-class AuthOk(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    user_id: UUID
-    username: str | None = None
-    roles: list[Role]
-    permissions: list[str]
-    account_scope: list[UUID]
-    allowed_environments: list[Environment] | None = None
-    session_id: UUID
-    token_expires_at_ms: int = Field(..., description='Epoch milliseconds, UTC.', ge=0)
-    kill_switch: KillSwitch | None = None
-
-
-class Topic1(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    ch: str = Field(..., max_length=120, min_length=1, pattern='^[a-z_]+(\\.[A-Za-z0-9:_-]+)*$')
-    opts: Options | None = None
-
-
-class Sub(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    topics: list[Topic1] = Field(..., max_length=50, min_length=1)
-    snapshot: bool | None = True
-    replay_session_id: UUID | None = None
-
-
-class Book(BaseModel):
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    symbol: str = Field(..., pattern='^[A-Z0-9]{2,20}USDT$')
-    depth: Depth | None = None
-    price_scale: int | None = Field(None, ge=0, le=18)
-    qty_scale: int | None = Field(None, ge=0, le=18)
-    xu: int | None = Field(None, description='Bybit orderbook update id `u`, for diagnostics only.')
-    xseq: int | None = Field(None, description='Bybit cross-topic sequence `seq`.')
-    bids: list[Level] = Field(..., description='Descending by price. Size "0" deletes the level.')
-    asks: list[Level] = Field(..., description='Ascending by price. Size "0" deletes the level.')
-    stale: bool | None = False
-    coalesced: bool | None = False
-    coalesced_count: int | None = Field(None, ge=1)
 
 
 class System(BaseModel):
@@ -1950,7 +1890,7 @@ class System(BaseModel):
     exchange: Exchange | None = None
     public_ws: PublicWs | None = None
     private_ws: PrivateWs | None = None
-    affected_symbols: list[Symbol] | None = None
+    affected_symbols: list[str] | None = Field(None, pattern='^[A-Z0-9]{2,20}USDT$')
     class_: Class | None = Field(None, alias='class')
     queue_pct: float | None = Field(None, ge=0.0, le=100.0)
     rtt_ms: int | None = Field(None, ge=0)
@@ -1959,7 +1899,71 @@ class System(BaseModel):
     closing_in_ms: int | None = None
     expected_downtime_ms: int | None = None
     clock_offset_ms: int | None = None
-    degraded_topics: list[Topic] | None = None
+    degraded_topics: list[str] | None = Field(
+        None, max_length=120, min_length=1, pattern='^[a-z_]+(\\.[A-Za-z0-9:_-]+)*$'
+    )
+
+
+class Error(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    code: ErrorCode
+    message: str = Field(..., max_length=1000)
+    retryable: bool | None = False
+    field: str | None = None
+    request_id: str | None = None
+    close: bool | None = False
+
+
+class Result(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    ch: str = Field(..., max_length=120, min_length=1, pattern='^[a-z_]+(\\.[A-Za-z0-9:_-]+)*$')
+    ok: bool
+    sub_id: str | None = None
+    snapshot_pending: bool | None = None
+    snapshot_forced: bool | None = None
+    effective: dict[str, Any] | None = None
+    warning: Error | None = None
+    error: Error | None = None
+
+
+class SubOk(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    results: list[Result]
+
+
+class Book(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    symbol: str = Field(..., pattern='^[A-Z0-9]{2,20}USDT$')
+    depth: Depth | None = None
+    price_scale: int | None = Field(None, ge=0, le=18)
+    qty_scale: int | None = Field(None, ge=0, le=18)
+    xu: int | None = Field(None, description='Bybit orderbook update id `u`, for diagnostics only.')
+    xseq: int | None = Field(None, description='Bybit cross-topic sequence `seq`.')
+    bids: list[list[str]] = Field(
+        ...,
+        description='Descending by price. Size "0" deletes the level.',
+        max_length=2,
+        min_length=2,
+        pattern='^-?[0-9]+(\\.[0-9]+)?$',
+    )
+    asks: list[list[str]] = Field(
+        ...,
+        description='Ascending by price. Size "0" deletes the level.',
+        max_length=2,
+        min_length=2,
+        pattern='^-?[0-9]+(\\.[0-9]+)?$',
+    )
+    stale: bool | None = False
+    coalesced: bool | None = False
+    coalesced_count: int | None = Field(None, ge=1)
 
 
 class Model(
