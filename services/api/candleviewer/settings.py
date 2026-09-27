@@ -19,7 +19,7 @@ from __future__ import annotations
 import re
 from enum import StrEnum
 
-from pydantic import SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _REDACT_NAME_RE = re.compile(r"(key|secret|token|password|dsn)", re.IGNORECASE)
@@ -68,6 +68,11 @@ class Settings(BaseSettings):
 
     environment: Environment = Environment.DEMO
     feed: FeedMode = FeedMode.SYNTHETIC
+    feed_rate_hz: float = Field(default=2.0, gt=0.0)
+    feed_sample_path: str = "packages/fixtures/raw/synthetic_sample.jsonl"
+
+    bybit_api_key: SecretStr | None = None
+    bybit_api_secret: SecretStr | None = None
 
     bind_host: str = "127.0.0.1"
     bind_port: int = 8080
@@ -102,6 +107,31 @@ class Settings(BaseSettings):
                 "CV_BIND_HOST must not be 0.0.0.0 (see docs/plan/20-architecture.md Sec.7.2)"
             )
         return value
+
+    @field_validator("feed_rate_hz")
+    @classmethod
+    def _feed_rate_positive(cls, value: float) -> float:
+        """`CV_FEED_RATE_HZ` must be positive (acceptance criterion 2)."""
+        if value <= 0:
+            raise ValueError("CV_FEED_RATE_HZ must be > 0")
+        return value
+
+    def model_post_init(self, __context: object) -> None:
+        """Fail fast on `CV_FEED=live` without credentials (acceptance criterion 3).
+
+        A half-configured live feed must never start — this raises before any
+        module is constructed, with a message that names the missing env vars
+        and never echoes any credential material (C-12.6/C-12.9).
+        """
+        if self.feed is FeedMode.LIVE and (
+            self.bybit_api_key is None or self.bybit_api_secret is None
+        ):
+            raise ValueError(
+                "CV_FEED=live requires CV_BYBIT_API_KEY and CV_BYBIT_API_SECRET to be "
+                "set; refusing to start half-configured (see "
+                "docs/plan/20-architecture.md Sec.7.3). Use CV_FEED=synthetic for local "
+                "development without Bybit credentials."
+            )
 
     def __repr_args__(self) -> list[tuple[str | None, object]]:
         """Redact any field whose name looks like a secret before it is ever printed.

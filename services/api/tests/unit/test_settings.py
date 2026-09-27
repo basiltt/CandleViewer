@@ -83,3 +83,47 @@ def test_settings_repr_does_not_redact_non_secret_fields() -> None:
     settings = get_settings()
     rendered = repr(settings)
     assert "environment=" in rendered
+
+
+def test_settings_feed_live_without_credentials_fails_fast(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("CV_FEED", "live")
+    monkeypatch.delenv("CV_BYBIT_API_KEY", raising=False)
+    monkeypatch.delenv("CV_BYBIT_API_SECRET", raising=False)
+    with pytest.raises(ValidationError) as exc_info:
+        get_settings()
+    message = str(exc_info.value)
+    assert "CV_FEED=live" in message
+    assert "CV_BYBIT_API_KEY" in message
+
+
+def test_settings_feed_live_error_never_echoes_credential_value(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("CV_FEED", "live")
+    monkeypatch.setenv("CV_BYBIT_API_KEY", "super-secret-value-should-not-leak")
+    monkeypatch.delenv("CV_BYBIT_API_SECRET", raising=False)
+    with pytest.raises(ValidationError) as exc_info:
+        get_settings()
+    assert "super-secret-value-should-not-leak" not in str(exc_info.value)
+
+
+def test_settings_feed_live_with_credentials_constructs(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("CV_FEED", "live")
+    monkeypatch.setenv("CV_BYBIT_API_KEY", "k")
+    monkeypatch.setenv("CV_BYBIT_API_SECRET", "s")
+    settings = get_settings()
+    assert settings.feed == FeedMode.LIVE
+
+
+def test_settings_feed_rate_hz_defaults_positive() -> None:
+    assert get_settings().feed_rate_hz > 0
+
+
+def test_settings_feed_rate_hz_rejects_non_positive(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CV_FEED_RATE_HZ", "0")
+    with pytest.raises(ValidationError):
+        get_settings()

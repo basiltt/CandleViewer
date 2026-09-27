@@ -1,11 +1,21 @@
-.PHONY: governance dev test gen up down reset arch
+.PHONY: governance dev dev-down test gen up down reset arch
 
 # E02-T01: root convenience targets delegating to pnpm/uv (20-architecture.md
 # §5 Tooling). Thin wrappers only — the pnpm/turbo task graph and the uv/ruff
 # commands remain the single source of truth (AGENTS.md §4); this Makefile
 # never redefines what they do.
+#
+# E02-T12: the full dev loop promised by 20-architecture.md §5 — bring up the
+# compose stack against `demo` with the synthetic feed (`CV_FEED=synthetic`,
+# no Bybit credentials needed), then start the web Vite dev server against
+# it. Teardown is `make dev-down` (equivalent to `make down`, named
+# separately so the pairing with `make dev` is obvious to a new joiner).
 dev:
+	$(MAKE) up
 	pnpm --filter @candleviewer/web dev
+
+dev-down:
+	$(MAKE) down
 
 test:
 	pnpm test
