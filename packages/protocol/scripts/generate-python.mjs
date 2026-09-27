@@ -83,7 +83,10 @@ Decimal = Annotated[
 
 function writeGenerated(dir, filename, content) {
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, filename), HEADER + content, "utf8");
+  // Byte-stable across OSes: datamodel-codegen emits CRLF on Windows; the
+  // committed artefact (and the staleness gate) must be LF-only.
+  const lf = content.split(String.fromCharCode(13, 10)).join(String.fromCharCode(10));
+  writeFileSync(join(dir, filename), HEADER + lf, "utf8");
   const initFile = join(dir, "__init__.py");
   if (!existsSync(initFile)) {
     writeFileSync(

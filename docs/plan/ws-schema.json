@@ -28,7 +28,10 @@
           "description": "Epoch milliseconds, UTC."
         },
         "seq": {
-          "type": ["integer", "null"],
+          "type": [
+            "integer",
+            "null"
+          ],
           "minimum": 0
         },
         "topic": {
@@ -39,7 +42,11 @@
         },
         "environment": {
           "$comment": "Mirrors OpenAPI `Environment` / Postgres `exchange_env` exactly. `paper` is NOT a member: paper trading is the orthogonal boolean `is_paper`, because a paper fill still belongs to a real environment (demo, or live during a replay) and collapsing the two would lose that.",
-          "enum": ["live", "demo", "testnet"]
+          "enum": [
+            "live",
+            "demo",
+            "testnet"
+          ]
         },
         "isPaper": {
           "type": "boolean",
@@ -47,13 +54,30 @@
           "description": "True when the fill/order came from the paper matcher rather than the exchange. Mirrors the `is_paper` column."
         },
         "side": {
-          "enum": ["buy", "sell"]
+          "enum": [
+            "buy",
+            "sell"
+          ]
         },
         "barType": {
-          "enum": ["time", "tick", "volume", "range", "delta", "renko", "pnf", "heikin_ashi"]
+          "enum": [
+            "time",
+            "tick",
+            "volume",
+            "range",
+            "delta",
+            "renko",
+            "pnf",
+            "heikin_ashi"
+          ]
         },
         "depth": {
-          "enum": [1, 50, 200, 500]
+          "enum": [
+            1,
+            50,
+            200,
+            500
+          ]
         },
         "errorCode": {
           "$comment": "GENERATED from 22-api-openapi.yaml x-error-codes-ws + x-error-codes[surface contains ws]. Do not hand-edit; CI gate error_registry_single_source regenerates and diffs.",
@@ -90,7 +114,10 @@
         },
         "error": {
           "type": "object",
-          "required": ["code", "message"],
+          "required": [
+            "code",
+            "message"
+          ],
           "properties": {
             "code": {
               "$ref": "#/$defs/errorCode"
@@ -142,7 +169,10 @@
               "minimum": 0
             },
             "source": {
-              "enum": ["live", "replay"],
+              "enum": [
+                "live",
+                "replay"
+              ],
               "default": "live"
             }
           },
@@ -155,7 +185,9 @@
       "$id": "cv://ws/v1/envelope.schema.json",
       "title": "CandleViewer WS envelope",
       "type": "object",
-      "required": ["t"],
+      "required": [
+        "t"
+      ],
       "properties": {
         "t": {
           "enum": [
@@ -202,7 +234,11 @@
           "description": "Replay session id; present only on replay frames."
         },
         "e": {
-          "enum": ["j", "b", "b64"],
+          "enum": [
+            "j",
+            "b",
+            "b64"
+          ],
           "default": "j"
         },
         "meta": {
@@ -219,10 +255,17 @@
                 "const": "d"
               }
             },
-            "required": ["t"]
+            "required": [
+              "t"
+            ]
           },
           "then": {
-            "required": ["ch", "s", "ts", "p"]
+            "required": [
+              "ch",
+              "s",
+              "ts",
+              "p"
+            ]
           }
         },
         {
@@ -232,10 +275,16 @@
                 "const": "snap"
               }
             },
-            "required": ["t"]
+            "required": [
+              "t"
+            ]
           },
           "then": {
-            "required": ["ch", "ts", "p"]
+            "required": [
+              "ch",
+              "ts",
+              "p"
+            ]
           }
         },
         {
@@ -245,7 +294,9 @@
                 "const": "b"
               }
             },
-            "required": ["e"]
+            "required": [
+              "e"
+            ]
           },
           "then": {
             "properties": {
@@ -262,7 +313,11 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "cv://ws/v1/hello.schema.json",
       "type": "object",
-      "required": ["client", "client_version", "protocol"],
+      "required": [
+        "client",
+        "client_version",
+        "protocol"
+      ],
       "properties": {
         "client": {
           "type": "string",
@@ -273,7 +328,11 @@
           "maxLength": 32
         },
         "shell": {
-          "enum": ["electron", "browser", "other"]
+          "enum": [
+            "electron",
+            "browser",
+            "other"
+          ]
         },
         "protocol": {
           "const": "cv.v1"
@@ -281,7 +340,10 @@
         "encodings": {
           "type": "array",
           "items": {
-            "enum": ["binary", "structured"]
+            "enum": [
+              "binary",
+              "structured"
+            ]
           }
         },
         "capabilities": {
@@ -328,7 +390,10 @@
           "const": "cv.v1"
         },
         "encoding": {
-          "enum": ["msgpack", "json"]
+          "enum": [
+            "msgpack",
+            "json"
+          ]
         },
         "server_version": {
           "type": "string"
@@ -355,7 +420,10 @@
         },
         "heartbeat": {
           "type": "object",
-          "required": ["interval_ms", "timeout_ms"],
+          "required": [
+            "interval_ms",
+            "timeout_ms"
+          ],
           "properties": {
             "interval_ms": {
               "type": "integer",
@@ -414,7 +482,9 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "cv://ws/v1/auth.schema.json",
       "type": "object",
-      "required": ["access_token"],
+      "required": [
+        "access_token"
+      ],
       "properties": {
         "access_token": {
           "type": "string",
@@ -453,7 +523,11 @@
         "roles": {
           "type": "array",
           "items": {
-            "enum": ["owner", "manager", "viewer"]
+            "enum": [
+              "owner",
+              "manager",
+              "viewer"
+            ]
           }
         },
         "permissions": {
@@ -490,7 +564,9 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "cv://ws/v1/sub.schema.json",
       "type": "object",
-      "required": ["topics"],
+      "required": [
+        "topics"
+      ],
       "properties": {
         "topics": {
           "type": "array",
@@ -498,7 +574,9 @@
           "maxItems": 50,
           "items": {
             "type": "object",
-            "required": ["ch"],
+            "required": [
+              "ch"
+            ],
             "properties": {
               "ch": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/topic"
@@ -537,7 +615,10 @@
               "maximum": 60000
             },
             "encoding": {
-              "enum": ["binary", "structured"]
+              "enum": [
+                "binary",
+                "structured"
+              ]
             },
             "coalesce": {
               "type": "boolean",
@@ -589,7 +670,13 @@
               "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
             },
             "time_bucket_ms": {
-              "enum": [100, 250, 500, 1000, 5000],
+              "enum": [
+                100,
+                250,
+                500,
+                1000,
+                5000
+              ],
               "default": 500,
               "description": "Client SHOULD derive this per §6.1.1 rather than sending a constant; 500 is the non-visual-client fallback."
             },
@@ -602,10 +689,18 @@
               "maximum": 900
             },
             "split": {
-              "enum": ["composite", "session", "fixed"]
+              "enum": [
+                "composite",
+                "session",
+                "fixed"
+              ]
             },
             "session_anchor": {
-              "enum": ["utc_day", "funding_8h", "custom"]
+              "enum": [
+                "utc_day",
+                "funding_8h",
+                "custom"
+              ]
             },
             "value_area_pct": {
               "type": "number",
@@ -678,13 +773,18 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "cv://ws/v1/sub_ok.schema.json",
       "type": "object",
-      "required": ["results"],
+      "required": [
+        "results"
+      ],
       "properties": {
         "results": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["ch", "ok"],
+            "required": [
+              "ch",
+              "ok"
+            ],
             "properties": {
               "ch": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/topic"
@@ -722,7 +822,9 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "cv://ws/v1/unsub.schema.json",
       "type": "object",
-      "required": ["topics"],
+      "required": [
+        "topics"
+      ],
       "properties": {
         "topics": {
           "type": "array",
@@ -739,13 +841,18 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "cv://ws/v1/unsub_ok.schema.json",
       "type": "object",
-      "required": ["results"],
+      "required": [
+        "results"
+      ],
       "properties": {
         "results": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["ch", "ok"],
+            "required": [
+              "ch",
+              "ok"
+            ],
             "properties": {
               "ch": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/topic"
@@ -795,7 +902,13 @@
           "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
         },
         "time_bucket_ms": {
-          "enum": [100, 250, 500, 1000, 5000],
+          "enum": [
+            100,
+            250,
+            500,
+            1000,
+            5000
+          ],
           "description": "Re-derived bucket (§6.1.1); triggers `resnapshot: true`."
         },
         "paused": {
@@ -809,7 +922,9 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "cv://ws/v1/ctl_ok.schema.json",
       "type": "object",
-      "required": ["effective"],
+      "required": [
+        "effective"
+      ],
       "properties": {
         "effective": {
           "type": "object",
@@ -827,13 +942,21 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "cv://ws/v1/resync.schema.json",
       "type": "object",
-      "required": ["reason"],
+      "required": [
+        "reason"
+      ],
       "properties": {
         "last_seq": {
           "$ref": "cv://ws/v1/common.schema.json#/$defs/seq"
         },
         "reason": {
-          "enum": ["sequence_gap", "decode_error", "state_corrupt", "client_restart", "manual"]
+          "enum": [
+            "sequence_gap",
+            "decode_error",
+            "state_corrupt",
+            "client_restart",
+            "manual"
+          ]
         }
       },
       "additionalProperties": false
@@ -842,7 +965,10 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "cv://ws/v1/revoked.schema.json",
       "type": "object",
-      "required": ["reason", "message"],
+      "required": [
+        "reason",
+        "message"
+      ],
       "properties": {
         "reason": {
           "enum": [
@@ -896,10 +1022,25 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$id": "cv://ws/v1/bye.schema.json",
       "type": "object",
-      "required": ["code", "reason", "message"],
+      "required": [
+        "code",
+        "reason",
+        "message"
+      ],
       "properties": {
         "code": {
-          "enum": [1000, 1001, 1002, 1009, 1011, 1013, 4400, 4401, 4403, 4429]
+          "enum": [
+            1000,
+            1001,
+            1002,
+            1009,
+            1011,
+            1013,
+            4400,
+            4401,
+            4403,
+            4429
+          ]
         },
         "reason": {
           "type": "string",
@@ -936,7 +1077,11 @@
       "$id": "cv://ws/v1/book.schema.json",
       "title": "book.{symbol}.{depth}",
       "type": "object",
-      "required": ["symbol", "bids", "asks"],
+      "required": [
+        "symbol",
+        "bids",
+        "asks"
+      ],
       "properties": {
         "symbol": {
           "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
@@ -1003,7 +1148,10 @@
       "$id": "cv://ws/v1/trades.schema.json",
       "title": "trades.{symbol}",
       "type": "object",
-      "required": ["symbol", "trades"],
+      "required": [
+        "symbol",
+        "trades"
+      ],
       "properties": {
         "symbol": {
           "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
@@ -1012,7 +1160,12 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["ts_ms", "price", "size", "side"],
+            "required": [
+              "ts_ms",
+              "price",
+              "size",
+              "side"
+            ],
             "properties": {
               "id": {
                 "type": "string"
@@ -1044,7 +1197,12 @@
                 "default": 1
               },
               "tick_direction": {
-                "enum": ["PlusTick", "ZeroPlusTick", "MinusTick", "ZeroMinusTick"]
+                "enum": [
+                  "PlusTick",
+                  "ZeroPlusTick",
+                  "MinusTick",
+                  "ZeroMinusTick"
+                ]
               }
             },
             "additionalProperties": false
@@ -1063,7 +1221,12 @@
       "$id": "cv://ws/v1/bars.schema.json",
       "title": "bars.{symbol}.{bar_type}.{param}",
       "type": "object",
-      "required": ["symbol", "bar_type", "param", "bars"],
+      "required": [
+        "symbol",
+        "bar_type",
+        "param",
+        "bars"
+      ],
       "properties": {
         "symbol": {
           "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
@@ -1079,7 +1242,15 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["t_ms", "o", "h", "l", "c", "v", "confirm"],
+            "required": [
+              "t_ms",
+              "o",
+              "h",
+              "l",
+              "c",
+              "v",
+              "confirm"
+            ],
             "properties": {
               "t_ms": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs",
@@ -1147,7 +1318,12 @@
       "$id": "cv://ws/v1/footprint.schema.json",
       "title": "footprint.{symbol}.{bar_type}.{param}",
       "type": "object",
-      "required": ["symbol", "bar_type", "param", "bars"],
+      "required": [
+        "symbol",
+        "bar_type",
+        "param",
+        "bars"
+      ],
       "properties": {
         "symbol": {
           "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
@@ -1170,7 +1346,10 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["t_ms", "cells"],
+            "required": [
+              "t_ms",
+              "cells"
+            ],
             "properties": {
               "t_ms": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
@@ -1209,7 +1388,11 @@
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": ["price", "bid_volume", "ask_volume"],
+                  "required": [
+                    "price",
+                    "bid_volume",
+                    "ask_volume"
+                  ],
                   "properties": {
                     "price": {
                       "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
@@ -1244,7 +1427,11 @@
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": ["price", "direction", "ratio"],
+                  "required": [
+                    "price",
+                    "direction",
+                    "ratio"
+                  ],
                   "properties": {
                     "price": {
                       "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
@@ -1291,13 +1478,23 @@
       "$id": "cv://ws/v1/heatmap.schema.json",
       "title": "heatmap.{symbol}",
       "type": "object",
-      "required": ["symbol", "time_bucket_ms", "columns"],
+      "required": [
+        "symbol",
+        "time_bucket_ms",
+        "columns"
+      ],
       "properties": {
         "symbol": {
           "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
         },
         "time_bucket_ms": {
-          "enum": [100, 250, 500, 1000, 5000],
+          "enum": [
+            100,
+            250,
+            500,
+            1000,
+            5000
+          ],
           "description": "Effective bucket in force, echoing what the client derived per §6.1.1 (or 500 if the client sent none)."
         },
         "price_grouping": {
@@ -1311,7 +1508,13 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["t_ms", "price_min", "price_step", "bids", "asks"],
+            "required": [
+              "t_ms",
+              "price_min",
+              "price_step",
+              "bids",
+              "asks"
+            ],
             "properties": {
               "t_ms": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
@@ -1360,22 +1563,37 @@
       "$id": "cv://ws/v1/profile.schema.json",
       "title": "profile.{symbol}.{kind}",
       "type": "object",
-      "required": ["symbol", "kind", "profiles"],
+      "required": [
+        "symbol",
+        "kind",
+        "profiles"
+      ],
       "properties": {
         "symbol": {
           "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
         },
         "kind": {
-          "enum": ["volume", "delta", "tpo"]
+          "enum": [
+            "volume",
+            "delta",
+            "tpo"
+          ]
         },
         "split": {
-          "enum": ["composite", "session", "fixed"]
+          "enum": [
+            "composite",
+            "session",
+            "fixed"
+          ]
         },
         "profiles": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["period_start_ms", "rows"],
+            "required": [
+              "period_start_ms",
+              "rows"
+            ],
             "properties": {
               "period_start_ms": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
@@ -1402,7 +1620,10 @@
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": ["price", "volume"],
+                  "required": [
+                    "price",
+                    "volume"
+                  ],
                   "properties": {
                     "price": {
                       "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
@@ -1451,7 +1672,10 @@
       "$id": "cv://ws/v1/metrics.schema.json",
       "title": "metrics.{symbol}",
       "type": "object",
-      "required": ["symbol", "series"],
+      "required": [
+        "symbol",
+        "series"
+      ],
       "properties": {
         "symbol": {
           "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
@@ -1466,7 +1690,11 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["metric", "t_ms", "v"],
+            "required": [
+              "metric",
+              "t_ms",
+              "v"
+            ],
             "properties": {
               "metric": {
                 "enum": [
@@ -1506,7 +1734,15 @@
                 ]
               },
               "unit": {
-                "enum": ["base_volume", "index", "ratio", "confidence", "usd", "price", "count"]
+                "enum": [
+                  "base_volume",
+                  "index",
+                  "ratio",
+                  "confidence",
+                  "usd",
+                  "price",
+                  "count"
+                ]
               },
               "estimated": {
                 "type": "boolean",
@@ -1534,13 +1770,19 @@
       "$id": "cv://ws/v1/ticker.schema.json",
       "title": "ticker.{symbol} / ticker",
       "type": "object",
-      "required": ["tickers"],
+      "required": [
+        "tickers"
+      ],
       "properties": {
         "tickers": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["symbol", "last_price", "ts_ms"],
+            "required": [
+              "symbol",
+              "last_price",
+              "ts_ms"
+            ],
             "properties": {
               "symbol": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
@@ -1612,13 +1854,21 @@
       "$id": "cv://ws/v1/liquidations.schema.json",
       "title": "liquidations.{symbol} / liquidations",
       "type": "object",
-      "required": ["liquidations"],
+      "required": [
+        "liquidations"
+      ],
       "properties": {
         "liquidations": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["symbol", "ts_ms", "side", "price", "size"],
+            "required": [
+              "symbol",
+              "ts_ms",
+              "side",
+              "price",
+              "size"
+            ],
             "properties": {
               "symbol": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
@@ -1659,13 +1909,21 @@
       "$id": "cv://ws/v1/orders.schema.json",
       "title": "orders",
       "type": "object",
-      "required": ["orders"],
+      "required": [
+        "orders"
+      ],
       "properties": {
         "orders": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["id", "exchange_account_id", "symbol", "state", "updated_at_ms"],
+            "required": [
+              "id",
+              "exchange_account_id",
+              "symbol",
+              "state",
+              "updated_at_ms"
+            ],
             "properties": {
               "id": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
@@ -1708,7 +1966,10 @@
                 "maxLength": 36
               },
               "exchange_order_id": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "symbol": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
@@ -1717,7 +1978,10 @@
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/side"
               },
               "order_type": {
-                "enum": ["market", "limit"]
+                "enum": [
+                  "market",
+                  "limit"
+                ]
               },
               "intent": {
                 "enum": [
@@ -1777,7 +2041,12 @@
                 ]
               },
               "time_in_force": {
-                "enum": ["GTC", "IOC", "FOK", "PostOnly"]
+                "enum": [
+                  "GTC",
+                  "IOC",
+                  "FOK",
+                  "PostOnly"
+                ]
               },
               "reduce_only": {
                 "type": "boolean"
@@ -1786,7 +2055,11 @@
                 "type": "boolean"
               },
               "position_idx": {
-                "enum": [0, 1, 2]
+                "enum": [
+                  0,
+                  1,
+                  2
+                ]
               },
               "trigger_price": {
                 "oneOf": [
@@ -1799,10 +2072,19 @@
                 ]
               },
               "trigger_by": {
-                "enum": ["LastPrice", "MarkPrice", "IndexPrice", null]
+                "enum": [
+                  "LastPrice",
+                  "MarkPrice",
+                  "IndexPrice",
+                  null
+                ]
               },
               "trigger_direction": {
-                "enum": ["rise", "fall", null]
+                "enum": [
+                  "rise",
+                  "fall",
+                  null
+                ]
               },
               "take_profit": {
                 "oneOf": [
@@ -1825,10 +2107,21 @@
                 ]
               },
               "tpsl_mode": {
-                "enum": ["Full", "Partial"]
+                "enum": [
+                  "Full",
+                  "Partial"
+                ]
               },
               "algo_kind": {
-                "enum": ["none", "oco", "iceberg", "twap", "chase", "scaled", "bracket"]
+                "enum": [
+                  "none",
+                  "oco",
+                  "iceberg",
+                  "twap",
+                  "chase",
+                  "scaled",
+                  "bracket"
+                ]
               },
               "environment": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/environment"
@@ -1837,7 +2130,10 @@
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/isPaper"
               },
               "rejected_reason": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "change": {
                 "enum": [
@@ -1875,13 +2171,22 @@
       "$id": "cv://ws/v1/positions.schema.json",
       "title": "positions",
       "type": "object",
-      "required": ["positions"],
+      "required": [
+        "positions"
+      ],
       "properties": {
         "positions": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["id", "exchange_account_id", "symbol", "side", "size", "updated_at_ms"],
+            "required": [
+              "id",
+              "exchange_account_id",
+              "symbol",
+              "side",
+              "size",
+              "updated_at_ms"
+            ],
             "properties": {
               "id": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
@@ -1893,10 +2198,18 @@
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
               },
               "side": {
-                "enum": ["long", "short", "flat"]
+                "enum": [
+                  "long",
+                  "short",
+                  "flat"
+                ]
               },
               "position_idx": {
-                "enum": [0, 1, 2]
+                "enum": [
+                  0,
+                  1,
+                  2
+                ]
               },
               "size": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
@@ -1914,7 +2227,11 @@
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
               },
               "margin_mode": {
-                "enum": ["cross", "isolated", "portfolio"]
+                "enum": [
+                  "cross",
+                  "isolated",
+                  "portfolio"
+                ]
               },
               "unrealised_pnl": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
@@ -1967,7 +2284,10 @@
                 "description": "Price distance, not a percentage (Bybit semantics)."
               },
               "tpsl_mode": {
-                "enum": ["Full", "Partial"]
+                "enum": [
+                  "Full",
+                  "Partial"
+                ]
               },
               "native_stop_present": {
                 "type": "boolean",
@@ -2021,7 +2341,9 @@
       "$id": "cv://ws/v1/executions.schema.json",
       "title": "executions",
       "type": "object",
-      "required": ["executions"],
+      "required": [
+        "executions"
+      ],
       "properties": {
         "executions": {
           "type": "array",
@@ -2090,7 +2412,13 @@
                 "type": "boolean"
               },
               "exec_type": {
-                "enum": ["Trade", "AdlTrade", "Funding", "BustTrade", "Settle"]
+                "enum": [
+                  "Trade",
+                  "AdlTrade",
+                  "Funding",
+                  "BustTrade",
+                  "Settle"
+                ]
               },
               "exec_pnl": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
@@ -2116,13 +2444,20 @@
       "$id": "cv://ws/v1/wallet.schema.json",
       "title": "wallet",
       "type": "object",
-      "required": ["balances"],
+      "required": [
+        "balances"
+      ],
       "properties": {
         "balances": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["exchange_account_id", "coin", "equity", "updated_at_ms"],
+            "required": [
+              "exchange_account_id",
+              "coin",
+              "equity",
+              "updated_at_ms"
+            ],
             "properties": {
               "exchange_account_id": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
@@ -2205,13 +2540,19 @@
       "$id": "cv://ws/v1/trade_groups.schema.json",
       "title": "trade_groups",
       "type": "object",
-      "required": ["trade_groups"],
+      "required": [
+        "trade_groups"
+      ],
       "properties": {
         "trade_groups": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["id", "status", "updated_at_ms"],
+            "required": [
+              "id",
+              "status",
+              "updated_at_ms"
+            ],
             "properties": {
               "id": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
@@ -2241,10 +2582,21 @@
                 ]
               },
               "atomicity": {
-                "enum": ["best_effort", "all_or_none"]
+                "enum": [
+                  "best_effort",
+                  "all_or_none"
+                ]
               },
               "algo_kind": {
-                "enum": ["none", "oco", "iceberg", "twap", "chase", "scaled", "bracket"]
+                "enum": [
+                  "none",
+                  "oco",
+                  "iceberg",
+                  "twap",
+                  "chase",
+                  "scaled",
+                  "bracket"
+                ]
               },
               "rule_id": {
                 "oneOf": [
@@ -2260,7 +2612,11 @@
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": ["id", "exchange_account_id", "status"],
+                  "required": [
+                    "id",
+                    "exchange_account_id",
+                    "status"
+                  ],
                   "properties": {
                     "id": {
                       "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
@@ -2353,7 +2709,10 @@
                         },
                         {
                           "type": "object",
-                          "required": ["code", "message"],
+                          "required": [
+                            "code",
+                            "message"
+                          ],
                           "properties": {
                             "code": {
                               "type": "string"
@@ -2362,7 +2721,10 @@
                               "type": "string"
                             },
                             "exchange_ret_code": {
-                              "type": ["integer", "null"]
+                              "type": [
+                                "integer",
+                                "null"
+                              ]
                             },
                             "retryable": {
                               "type": "boolean"
@@ -2427,7 +2789,11 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["id", "mode", "updated_at_ms"],
+            "required": [
+              "id",
+              "mode",
+              "updated_at_ms"
+            ],
             "properties": {
               "id": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
@@ -2436,7 +2802,11 @@
                 "type": "string"
               },
               "mode": {
-                "enum": ["disabled", "simulate", "armed"]
+                "enum": [
+                  "disabled",
+                  "simulate",
+                  "armed"
+                ]
               },
               "active_version_id": {
                 "oneOf": [
@@ -2452,7 +2822,14 @@
                 "type": "integer"
               },
               "last_run_status": {
-                "enum": ["running", "ok", "error", "aborted", "throttled", null]
+                "enum": [
+                  "running",
+                  "ok",
+                  "error",
+                  "aborted",
+                  "throttled",
+                  null
+                ]
               },
               "fire_count_24h": {
                 "type": "integer"
@@ -2480,7 +2857,12 @@
           "description": "Present only when subscribed with include_events: true.",
           "items": {
             "type": "object",
-            "required": ["rule_id", "run_id", "kind", "ts_ms"],
+            "required": [
+              "rule_id",
+              "run_id",
+              "kind",
+              "ts_ms"
+            ],
             "properties": {
               "rule_id": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
@@ -2518,13 +2900,22 @@
       "$id": "cv://ws/v1/alerts.schema.json",
       "title": "alerts",
       "type": "object",
-      "required": ["deliveries"],
+      "required": [
+        "deliveries"
+      ],
       "properties": {
         "deliveries": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["id", "alert_id", "channel", "status", "message", "fired_at_ms"],
+            "required": [
+              "id",
+              "alert_id",
+              "channel",
+              "status",
+              "message",
+              "fired_at_ms"
+            ],
             "properties": {
               "id": {
                 "type": "integer"
@@ -2533,13 +2924,31 @@
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
               },
               "channel": {
-                "enum": ["in_app", "email", "webhook", "push", "desktop"]
+                "enum": [
+                  "in_app",
+                  "email",
+                  "webhook",
+                  "push",
+                  "desktop"
+                ]
               },
               "status": {
-                "enum": ["queued", "sent", "failed", "suppressed", "acked"]
+                "enum": [
+                  "queued",
+                  "sent",
+                  "failed",
+                  "suppressed",
+                  "acked"
+                ]
               },
               "severity": {
-                "enum": ["debug", "info", "warning", "error", "critical"]
+                "enum": [
+                  "debug",
+                  "info",
+                  "warning",
+                  "error",
+                  "critical"
+                ]
               },
               "title": {
                 "type": "string"
@@ -2571,7 +2980,10 @@
                 ]
               },
               "error": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             },
             "additionalProperties": false
@@ -2589,10 +3001,18 @@
       "$id": "cv://ws/v1/recorder.schema.json",
       "title": "recorder",
       "type": "object",
-      "required": ["overall", "symbols"],
+      "required": [
+        "overall",
+        "symbols"
+      ],
       "properties": {
         "overall": {
-          "enum": ["healthy", "degraded", "warning", "down"]
+          "enum": [
+            "healthy",
+            "degraded",
+            "warning",
+            "down"
+          ]
         },
         "connections": {
           "type": "array",
@@ -2603,7 +3023,12 @@
                 "type": "string"
               },
               "state": {
-                "enum": ["connecting", "connected", "degraded", "disconnected"]
+                "enum": [
+                  "connecting",
+                  "connected",
+                  "degraded",
+                  "disconnected"
+                ]
               },
               "subscribed_topics": {
                 "type": "integer"
@@ -2622,7 +3047,10 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["symbol", "state"],
+            "required": [
+              "symbol",
+              "state"
+            ],
             "properties": {
               "symbol": {
                 "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
@@ -2709,7 +3137,9 @@
       "$id": "cv://ws/v1/system.schema.json",
       "title": "system",
       "type": "object",
-      "required": ["kind"],
+      "required": [
+        "kind"
+      ],
       "properties": {
         "kind": {
           "enum": [
@@ -2725,13 +3155,24 @@
           ]
         },
         "severity": {
-          "enum": ["debug", "info", "warning", "error", "critical"]
+          "enum": [
+            "debug",
+            "info",
+            "warning",
+            "error",
+            "critical"
+          ]
         },
         "message": {
           "type": "string"
         },
         "health": {
-          "enum": ["healthy", "degraded", "warning", "down"]
+          "enum": [
+            "healthy",
+            "degraded",
+            "warning",
+            "down"
+          ]
         },
         "components": {
           "type": "array",
@@ -2742,7 +3183,12 @@
                 "type": "string"
               },
               "state": {
-                "enum": ["healthy", "degraded", "warning", "down"]
+                "enum": [
+                  "healthy",
+                  "degraded",
+                  "warning",
+                  "down"
+                ]
               },
               "detail": {
                 "type": "string"
@@ -2777,13 +3223,28 @@
           "type": "object",
           "properties": {
             "public_ws": {
-              "enum": ["connected", "connecting", "resyncing", "disconnected"]
+              "enum": [
+                "connected",
+                "connecting",
+                "resyncing",
+                "disconnected"
+              ]
             },
             "private_ws": {
-              "enum": ["connected", "connecting", "resyncing", "disconnected"]
+              "enum": [
+                "connected",
+                "connecting",
+                "resyncing",
+                "disconnected"
+              ]
             },
             "rest": {
-              "enum": ["healthy", "degraded", "rate_limited", "down"]
+              "enum": [
+                "healthy",
+                "degraded",
+                "rate_limited",
+                "down"
+              ]
             },
             "rate_budget_free_pct": {
               "type": "number",
@@ -2794,10 +3255,20 @@
           "additionalProperties": false
         },
         "public_ws": {
-          "enum": ["connected", "connecting", "resyncing", "disconnected"]
+          "enum": [
+            "connected",
+            "connecting",
+            "resyncing",
+            "disconnected"
+          ]
         },
         "private_ws": {
-          "enum": ["connected", "connecting", "resyncing", "disconnected"]
+          "enum": [
+            "connected",
+            "connecting",
+            "resyncing",
+            "disconnected"
+          ]
         },
         "affected_symbols": {
           "type": "array",
@@ -2806,7 +3277,12 @@
           }
         },
         "class": {
-          "enum": ["healthy", "lagging", "saturated", "overflowing"]
+          "enum": [
+            "healthy",
+            "lagging",
+            "saturated",
+            "overflowing"
+          ]
         },
         "queue_pct": {
           "type": "number",
@@ -2858,13 +3334,19 @@
       "$defs": {
         "killSwitch": {
           "type": "object",
-          "required": ["engaged", "scope"],
+          "required": [
+            "engaged",
+            "scope"
+          ],
           "properties": {
             "engaged": {
               "type": "boolean"
             },
             "scope": {
-              "enum": ["global", "accounts"]
+              "enum": [
+                "global",
+                "accounts"
+              ]
             },
             "exchange_account_ids": {
               "type": "array",
@@ -2893,10 +3375,16 @@
               ]
             },
             "engaged_by_username": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "reason": {
-              "type": ["string", "null"]
+              "type": [
+                "string",
+                "null"
+              ]
             }
           },
           "additionalProperties": false

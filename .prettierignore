@@ -2,3 +2,6 @@
 # (packages/protocol/scripts/generate.mjs) with their own formatting; prettier
 # reformatting them would desync the manifest hash / staleness gate (E02-T09).
 packages/protocol/src/generated/
+docs/plan/ws-schema.json
+services/api/candleviewer/api/_generated/
+services/api/candleviewer/ws/_generated/
