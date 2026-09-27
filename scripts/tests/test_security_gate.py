@@ -1,0 +1,442 @@
+"""Unit tests for tools/ci/security_gate.py (E03-T07).
+
+Exercises the five Gherkin acceptance scenarios plus the underlying
+severity-normalisation / accepted-risk-expiry logic, over fixture SARIF/JSON
+outputs synthesised in-test (no network, no real scanner invocation).
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from datetime import date
+from pathlib import Path
+
+import pytest
+import yaml
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from tools.ci.security_gate import (
+    AcceptedRisk,
+    Finding,
+    LicenseFinding,
+    SecurityGateError,
+    evaluate_findings,
+    evaluate_licenses,
+    load_accepted_risks,
+    load_license_allowlist,
+    main,
+    parse_gitleaks,
+    parse_npm_audit,
+    parse_pip_audit,
+    parse_sarif,
+)
+
+
+def _write_yaml(tmp_path: Path, data: object) -> Path:
+    p = tmp_path / "accepted-risks.yaml"
+    p.write_text(yaml.safe_dump(data), encoding="utf-8")
+    return p
+
+
+def _write_json(tmp_path: Path, name: str, data: object) -> Path:
+    p = tmp_path / name
+    p.write_text(json.dumps(data), encoding="utf-8")
+    return p
+
+
+# --------------------------------------------------------------------------
+# Scenario: A planted synthetic secret blocks the merge
+# --------------------------------------------------------------------------
+
+
+def test_gitleaks_finding_always_blocks_even_with_no_accepted_risks(tmp_path: Path) -> None:
+    risks_path = _write_yaml(tmp_path, {"entries": []})
+    risks = load_accepted_risks(risks_path)
+    findings = [
+        Finding(tool="gitleaks", finding_id="aws-key:app.py:10", severity="CRITICAL", detail="x")
+    ]
+    result = evaluate_findings(findings, risks, run_date=date(2026, 1, 1))
+    assert result.blocked
+    assert result.code == "CI-SEC-001"
+
+
+def test_gitleaks_finding_cannot_be_accepted_even_if_entry_present(tmp_path: Path) -> None:
+    # load_accepted_risks rejects a gitleaks entry outright (CI-SEC-005) —
+    # the register itself refuses to hold one.
+    risks_path = _write_yaml(
+        tmp_path,
+        {
+            "entries": [
+                {
+                    "id": "aws-key:app.py:10",
+                    "tool": "gitleaks",
+                    "severity": "CRITICAL",
+                    "reason": "test",
+                    "approver": "sec",
+                    "expires": "2099-01-01",
+                }
+            ]
+        },
+    )
+    with pytest.raises(SecurityGateError) as exc_info:
+        load_accepted_risks(risks_path)
+    assert exc_info.value.code == "CI-SEC-005"
+
+
+def test_parse_gitleaks_report_never_reprints_secret_value(tmp_path: Path) -> None:
+    report = _write_json(
+        tmp_path,
+        "gitleaks.json",
+        [{"RuleID": "generic-api-key", "File": "app.py", "StartLine": 5, "Secret": "REDACTED"}],
+    )
+    findings = parse_gitleaks(report)
+    assert len(findings) == 1
+    assert findings[0].severity == "CRITICAL"
+    assert "REDACTED" not in findings[0].detail
+    assert "generic-api-key" in findings[0].finding_id
+
+
+# --------------------------------------------------------------------------
+# Scenario: A prohibited licence fails the build
+# --------------------------------------------------------------------------
+
+
+def test_prohibited_license_fails_naming_package_license_and_sr136(tmp_path: Path) -> None:
+    allowlist_path = tmp_path / "allowlist.json"
+    allowlist_path.write_text(
+        json.dumps(
+            {
+                "allowed": ["MIT"],
+                "needs_approval": {"licenses": ["LGPL-3.0-only"]},
+                "prohibited": {"licenses": ["AGPL-3.0-only"]},
+                "dev_only_exceptions": {"packages": []},
+                "unknown_license_policy": "fail",
+            }
+        ),
+        encoding="utf-8",
+    )
+    allowlist = load_license_allowlist(allowlist_path)
+    deps = [LicenseFinding(package="evil-dep", version="1.0.0", license="AGPL-3.0-only")]
+    result = evaluate_licenses(deps, allowlist, risks=[], run_date=date(2026, 1, 1))
+    assert result.blocked
+    assert result.code == "CI-SEC-002"
+    assert any("evil-dep" in m and "AGPL-3.0-only" in m and "SR-136" in m for m in result.messages)
+
+
+def test_unknown_license_fails_closed(tmp_path: Path) -> None:
+    allowlist = {
+        "allowed": ["MIT"],
+        "needs_approval": {"licenses": []},
+        "prohibited": {"licenses": []},
+        "dev_only_exceptions": {"packages": []},
+        "unknown_license_policy": "fail",
+    }
+    deps = [LicenseFinding(package="mystery-dep", version="2.0.0", license="Some-Weird-License")]
+    result = evaluate_licenses(deps, allowlist, risks=[], run_date=date(2026, 1, 1))
+    assert result.blocked
+    assert result.code == "CI-SEC-002"
+
+
+def test_lgpl_needs_approval_blocks_without_accepted_risk() -> None:
+    allowlist = {
+        "allowed": [],
+        "needs_approval": {"licenses": ["LGPL-3.0-only"]},
+        "prohibited": {"licenses": []},
+        "dev_only_exceptions": {"packages": []},
+        "unknown_license_policy": "fail",
+    }
+    deps = [LicenseFinding(package="lgpl-dep", version="1.0.0", license="LGPL-3.0-only")]
+    result = evaluate_licenses(deps, allowlist, risks=[], run_date=date(2026, 1, 1))
+    assert result.blocked
+    assert result.code == "CI-SEC-003"
+
+
+def test_lgpl_needs_approval_passes_with_unexpired_accepted_risk() -> None:
+    allowlist = {
+        "allowed": [],
+        "needs_approval": {"licenses": ["LGPL-3.0-only"]},
+        "prohibited": {"licenses": []},
+        "dev_only_exceptions": {"packages": []},
+        "unknown_license_policy": "fail",
+    }
+    deps = [LicenseFinding(package="lgpl-dep", version="1.0.0", license="LGPL-3.0-only")]
+    risks = [
+        AcceptedRisk(
+            finding_id="license:lgpl-dep@1.0.0",
+            tool="license-scan",
+            severity="MEDIUM",
+            reason="owner approved LGPL for this tool",
+            approver="basiltt",
+            expires=date(2099, 1, 1),
+        )
+    ]
+    result = evaluate_licenses(deps, allowlist, risks=risks, run_date=date(2026, 1, 1))
+    assert not result.blocked
+
+
+# --------------------------------------------------------------------------
+# Scenario: A High-severity dependency advisory blocks
+# --------------------------------------------------------------------------
+
+
+def test_pip_audit_high_severity_with_no_accepted_risk_blocks(tmp_path: Path) -> None:
+    report = _write_json(
+        tmp_path,
+        "pip-audit.json",
+        {
+            "dependencies": [
+                {
+                    "name": "vulnerable-pkg",
+                    "version": "1.2.3",
+                    "vulns": [
+                        {
+                            "id": "GHSA-xxxx",
+                            "severity": "HIGH",
+                            "description": "remote code execution",
+                        }
+                    ],
+                }
+            ]
+        },
+    )
+    findings = parse_pip_audit(report)
+    result = evaluate_findings(findings, risks=[], run_date=date(2026, 1, 1))
+    assert result.blocked
+    assert result.code == "CI-SEC-001"
+
+
+def test_pip_audit_unscored_advisory_treated_as_high_fail_closed(tmp_path: Path) -> None:
+    report = _write_json(
+        tmp_path,
+        "pip-audit.json",
+        {"dependencies": [{"name": "p", "version": "1", "vulns": [{"id": "GHSA-yyyy"}]}]},
+    )
+    findings = parse_pip_audit(report)
+    assert findings[0].severity == "HIGH"
+
+
+def test_npm_audit_high_severity_blocks(tmp_path: Path) -> None:
+    report = _write_json(
+        tmp_path,
+        "npm-audit.json",
+        {"vulnerabilities": {"left-pad": {"severity": "high", "via": [{"source": "GHSA-zzzz"}]}}},
+    )
+    findings = parse_npm_audit(report)
+    result = evaluate_findings(findings, risks=[], run_date=date(2026, 1, 1))
+    assert result.blocked
+
+
+def test_low_severity_finding_does_not_block(tmp_path: Path) -> None:
+    report = _write_json(
+        tmp_path,
+        "pip-audit.json",
+        {
+            "dependencies": [
+                {"name": "p", "version": "1", "vulns": [{"id": "X", "severity": "LOW"}]}
+            ]
+        },
+    )
+    findings = parse_pip_audit(report)
+    result = evaluate_findings(findings, risks=[], run_date=date(2026, 1, 1))
+    assert not result.blocked
+
+
+# --------------------------------------------------------------------------
+# Scenario: An expired accepted risk re-blocks
+# --------------------------------------------------------------------------
+
+
+def test_expired_accepted_risk_reblocks_on_run_date(tmp_path: Path) -> None:
+    risks_path = _write_yaml(
+        tmp_path,
+        {
+            "entries": [
+                {
+                    "id": "GHSA-xxxx",
+                    "tool": "pip-audit",
+                    "severity": "HIGH",
+                    "reason": "temporary — fix in progress",
+                    "approver": "basiltt",
+                    "expires": "2026-09-27",
+                }
+            ]
+        },
+    )
+    risks = load_accepted_risks(risks_path)
+    findings = [Finding(tool="pip-audit", finding_id="GHSA-xxxx", severity="HIGH", detail="x")]
+
+    # On the expiry date itself the entry no longer protects (exclusive expiry).
+    result = evaluate_findings(findings, risks, run_date=date(2026, 9, 27))
+    assert result.blocked
+    assert result.code == "CI-SEC-004"
+    assert any("accepted risk expired" in m for m in result.messages)
+
+    # The day before, it still protects.
+    result_before = evaluate_findings(findings, risks, run_date=date(2026, 9, 26))
+    assert not result_before.blocked
+
+
+def test_unexpired_accepted_risk_does_not_block() -> None:
+    risks = [
+        AcceptedRisk(
+            finding_id="GHSA-aaaa",
+            tool="pip-audit",
+            severity="HIGH",
+            reason="vendor patch pending",
+            approver="basiltt",
+            expires=date(2099, 1, 1),
+        )
+    ]
+    findings = [Finding(tool="pip-audit", finding_id="GHSA-aaaa", severity="HIGH", detail="x")]
+    result = evaluate_findings(findings, risks, run_date=date(2026, 1, 1))
+    assert not result.blocked
+
+
+def test_accepted_risks_register_rejects_critical_severity_entry(tmp_path: Path) -> None:
+    risks_path = _write_yaml(
+        tmp_path,
+        {
+            "entries": [
+                {
+                    "id": "GHSA-crit",
+                    "tool": "pip-audit",
+                    "severity": "CRITICAL",
+                    "reason": "test",
+                    "approver": "basiltt",
+                    "expires": "2099-01-01",
+                }
+            ]
+        },
+    )
+    with pytest.raises(SecurityGateError) as exc_info:
+        load_accepted_risks(risks_path)
+    assert exc_info.value.code == "CI-SEC-005"
+
+
+# --------------------------------------------------------------------------
+# Scenario: A Semgrep custom rule catches an unpinned action
+# --------------------------------------------------------------------------
+
+
+def _sarif_doc(rule_id: str, level: str = "error", severity: float | None = None) -> dict:
+    props = {"security-severity": str(severity)} if severity is not None else {}
+    return {
+        "version": "2.1.0",
+        "runs": [
+            {
+                "tool": {"driver": {"name": "semgrep"}},
+                "results": [
+                    {
+                        "ruleId": rule_id,
+                        "level": level,
+                        "message": {"text": f"{rule_id} violated"},
+                        "properties": props,
+                        "locations": [
+                            {
+                                "physicalLocation": {
+                                    "artifactLocation": {"uri": ".github/workflows/pr.yml"},
+                                    "region": {"startLine": 12},
+                                }
+                            }
+                        ],
+                    }
+                ],
+            }
+        ],
+    }
+
+
+def test_semgrep_cv_unpinned_action_rule_blocks_referencing_sr132(tmp_path: Path) -> None:
+    report = _write_json(tmp_path, "semgrep.sarif", _sarif_doc("cv-unpinned-action"))
+    findings = parse_sarif(report, "semgrep")
+    assert findings[0].severity == "HIGH"
+    result = evaluate_findings(findings, risks=[], run_date=date(2026, 1, 1))
+    assert result.blocked
+    assert any("cv-unpinned-action" in m for m in result.messages)
+
+
+def test_sarif_security_severity_maps_to_critical_bucket(tmp_path: Path) -> None:
+    report = _write_json(tmp_path, "codeql.sarif", _sarif_doc("py/sql-injection", severity=9.5))
+    findings = parse_sarif(report, "codeql")
+    assert findings[0].severity == "CRITICAL"
+
+
+def test_sarif_warning_level_maps_to_medium_and_does_not_block(tmp_path: Path) -> None:
+    report = _write_json(
+        tmp_path, "semgrep.sarif", _sarif_doc("some-warning-rule", level="warning")
+    )
+    findings = parse_sarif(report, "semgrep")
+    assert findings[0].severity == "MEDIUM"
+    result = evaluate_findings(findings, risks=[], run_date=date(2026, 1, 1))
+    assert not result.blocked
+
+
+# --------------------------------------------------------------------------
+# Scanner infrastructure failure (CI-SEC-005) never passes as clean
+# --------------------------------------------------------------------------
+
+
+def test_malformed_sarif_raises_ci_sec_005_not_treated_as_clean(tmp_path: Path) -> None:
+    bad = tmp_path / "broken.sarif"
+    bad.write_text("{not valid json", encoding="utf-8")
+    with pytest.raises(SecurityGateError) as exc_info:
+        parse_sarif(bad, "codeql")
+    assert exc_info.value.code == "CI-SEC-005"
+
+
+def test_missing_accepted_risks_file_raises_ci_sec_005(tmp_path: Path) -> None:
+    with pytest.raises(SecurityGateError) as exc_info:
+        load_accepted_risks(tmp_path / "does-not-exist.yaml")
+    assert exc_info.value.code == "CI-SEC-005"
+
+
+def test_malformed_accepted_risks_entry_raises_ci_sec_005(tmp_path: Path) -> None:
+    risks_path = _write_yaml(tmp_path, {"entries": [{"id": "x", "tool": "bandit"}]})
+    with pytest.raises(SecurityGateError) as exc_info:
+        load_accepted_risks(risks_path)
+    assert exc_info.value.code == "CI-SEC-005"
+
+
+# --------------------------------------------------------------------------
+# CLI entrypoint
+# --------------------------------------------------------------------------
+
+
+def test_main_cli_blocks_on_gitleaks_finding(tmp_path: Path) -> None:
+    risks = _write_yaml(tmp_path, {"entries": []})
+    report = _write_json(
+        tmp_path, "gitleaks.json", [{"RuleID": "generic-api-key", "File": "a.py", "StartLine": 1}]
+    )
+    rc = main(
+        [
+            "--tool",
+            "gitleaks",
+            "--report",
+            str(report),
+            "--accepted-risks",
+            str(risks),
+            "--run-date",
+            "2026-01-01",
+        ]
+    )
+    assert rc == 1
+
+
+def test_main_cli_ok_on_clean_report(tmp_path: Path) -> None:
+    risks = _write_yaml(tmp_path, {"entries": []})
+    report = _write_json(tmp_path, "gitleaks.json", [])
+    rc = main(
+        [
+            "--tool",
+            "gitleaks",
+            "--report",
+            str(report),
+            "--accepted-risks",
+            str(risks),
+            "--run-date",
+            "2026-01-01",
+        ]
+    )
+    assert rc == 0
