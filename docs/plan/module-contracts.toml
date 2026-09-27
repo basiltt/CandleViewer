@@ -287,6 +287,17 @@ rule = "C-3.3"
 module = "candleviewer.audit"
 only_importable_by = ["candleviewer.admin", "candleviewer.api", "candleviewer.ws"]
 
+[cross_cutting.storage_driver_imports]
+# ADR-0003 / E07-T01 acceptance criterion 2: "all storage access goes
+# through repository interfaces in candleviewer.storage (M10). No module
+# issues SQL or ILP directly." Every module other than M10 itself (and the
+# non-Python `backend.db.*` layout referenced by the ticket, which does not
+# exist yet) is forbidden from importing any of the underlying storage
+# engine driver packages directly.
+rule = "ADR-0003"
+forbidden_packages = ["asyncpg", "psycopg", "sqlalchemy", "duckdb", "pyarrow", "questdb"]
+exempt_modules = ["candleviewer.storage"]
+
 # Frontend module boundaries (§3 "Frontend module boundaries" table).
 # dependency-cruiser (`.dependency-cruiser.js`) reads this table; there is no
 # frontend import-linter equivalent, so this section is descriptive only —

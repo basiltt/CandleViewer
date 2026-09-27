@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import re
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -81,6 +82,15 @@ class Settings(BaseSettings):
     questdb_ilp: str = "questdb:9009"
     questdb_pg: str = "questdb:8812"
     parquet_root: str = "/data/parquet"
+
+    # E07-T01: selects the M10 `storage` tier client implementations.
+    # `"fake"` (the default) wires the in-memory fakes from
+    # `candleviewer.storage.testing` and performs no I/O — this is what lets
+    # `create_app()`/the supervisor boot with no database containers running
+    # (ticket acceptance criterion 1). `"real"` is reserved for E07-T02/T03/
+    # T04's engine clients; selecting it before those land is a configuration
+    # error the storage service surfaces via `StorageTierUnavailable`.
+    storage_backend: Literal["fake", "real"] = "fake"
 
     kek_source: str = "host-keychain"
 

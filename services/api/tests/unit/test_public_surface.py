@@ -27,6 +27,28 @@ _MANIFEST = json.loads(_MANIFEST_PATH.read_text(encoding="utf-8"))
 # Modules with a richer public surface than "Service/Error" (allow-listed
 # here, not guessed): each entry names exactly what may appear in __all__.
 _ALLOWED_EXTRA_EXPORTS: dict[str, set[str]] = {
+    "M10": {
+        "ColdTierRepository",
+        "ExportRun",
+        "MarketDataRepository",
+        "RelationalRepository",
+        "RetentionDecision",
+        "RetentionRepository",
+        "StorageDiskCritical",
+        "StorageExportVerifyFailed",
+        "StorageHealthReport",
+        "StorageRetentionBlockedByPin",
+        "StorageSchemaDrift",
+        "StorageTier",
+        "StorageTierUnavailable",
+        "StreamKind",
+        "SymbolStream",
+        "TierHealth",
+        "TierHint",
+        "TierState",
+        "TimeRange",
+        "UnitOfWork",
+    },
     "M23a": {"make_health_router"},
     "M24": {"HealthReport", "HealthStatus"},
     # E02-T12: the normalised domain-event shapes (C-2.3) the synthetic feed

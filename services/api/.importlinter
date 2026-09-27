@@ -668,3 +668,315 @@ modules =
     candleviewer.paper
     candleviewer.risk
 
+[importlinter:contract:forbidden-storage-drivers-M1]
+name = ADR-0003 — M1 (config) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.settings
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M2]
+name = ADR-0003 — M2 (secrets) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.secrets
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M3]
+name = ADR-0003 — M3 (exchange.base) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.exchange.base
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M4]
+name = ADR-0003 — M4 (exchange.bybit) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.exchange.bybit
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M5]
+name = ADR-0003 — M5 (bus) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.bus
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M6]
+name = ADR-0003 — M6 (ingestion) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.ingestion
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M7]
+name = ADR-0003 — M7 (book) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.book
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M8]
+name = ADR-0003 — M8 (bars) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.bars
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M9]
+name = ADR-0003 — M9 (orderflow) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.orderflow
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M11]
+name = ADR-0003 — M11 (recorder) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.recorder
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M12]
+name = ADR-0003 — M12 (replay) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.replay
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M13]
+name = ADR-0003 — M13 (accounts) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.accounts
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M14]
+name = ADR-0003 — M14 (oms) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.oms
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M15]
+name = ADR-0003 — M15 (rules) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.rules
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M16]
+name = ADR-0003 — M16 (paper) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.paper
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M17]
+name = ADR-0003 — M17 (risk) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.risk
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M18]
+name = ADR-0003 — M18 (auth) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.auth
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M19]
+name = ADR-0003 — M19 (audit) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.audit
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M20]
+name = ADR-0003 — M20 (journal) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.journal
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M21]
+name = ADR-0003 — M21 (admin) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.admin
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M22]
+name = ADR-0003 — M22 (alerts) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.alerts
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M23]
+name = ADR-0003 — M23 (api) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.api
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M23b]
+name = ADR-0003 — M23b (ws) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.ws
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M24]
+name = ADR-0003 — M24 (observability) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.observability
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
