@@ -1,0 +1,94 @@
+[project]
+name = "candleviewer-api"
+version = "0.1.0"
+description = "CandleViewer backend — Python modular monolith (services/api)."
+requires-python = ">=3.12"
+readme = "README.md"
+license = { text = "UNLICENSED" }
+dependencies = [
+  "fastapi>=0.115",
+  "starlette>=0.38",
+  "uvicorn[standard]>=0.30",
+  "pydantic>=2.7",
+  "pydantic-settings>=2.3",
+  "sqlalchemy>=2.0",
+  "alembic>=1.13",
+  "httpx>=0.27",
+  "websockets>=12.0",
+  "numpy>=1.26",
+  "duckdb>=1.0",
+  "prometheus-client>=0.20",
+  "structlog>=24.1",
+]
+
+[dependency-groups]
+dev = [
+  "ruff>=0.6",
+  "black>=24.8",
+  "mypy>=1.11",
+  "import-linter>=2.0",
+  "bandit>=1.7",
+  "pip-audit>=2.7",
+]
+test = [
+  "pytest>=8.3",
+  "pytest-asyncio>=0.24",
+  "pytest-cov>=5.0",
+  "hypothesis>=6.108",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+default-groups = ["dev", "test"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["candleviewer"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "S", "ASYNC", "RUF"]
+# Tests exercise assert-heavy patterns and fixtures that legitimately trip S101/S106.
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+mypy_path = "."
+exclude = ["^\\.venv/"]
+
+[[tool.mypy.overrides]]
+# duckdb has no inline types / py.typed marker as of 2026-09-27 (duckdb 1.1.x on PyPI).
+# Allowlisted 2026-09-27, tracked under issue #91 (E02-T02); re-check at each duckdb bump
+# and drop this override once upstream ships types (see PyPI project page / duckdb#…).
+module = ["duckdb.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+  "integration: needs the docker compose stack (Postgres/QuestDB)",
+  "flaky: quarantined per Constitution C-9.3 — must link a P1 ticket",
+]
+addopts = "--cov=candleviewer --cov-branch --cov-fail-under=85"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["candleviewer"]
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+
+[tool.importlinter]
+root_package = "candleviewer"
