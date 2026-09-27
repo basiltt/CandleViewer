@@ -35,7 +35,8 @@ async function main() {
     alphabetize: true,
   });
   const body = astToString(ast);
-  const formatted = await prettier.format(HEADER + body, { filepath: outPath });
+  const config = (await prettier.resolveConfig(outPath)) ?? {};
+  const formatted = await prettier.format(HEADER + body, { ...config, filepath: outPath });
 
   writeFileSync(outPath, formatted, "utf8");
   console.log(`[generate-rest-types] wrote ${outPath}.`);

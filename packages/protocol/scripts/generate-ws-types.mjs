@@ -125,7 +125,12 @@ async function main() {
       "\n};\n",
   );
 
-  writeFileSync(outPath, await prettier.format(chunks.join("\n"), { filepath: outPath }), "utf8");
+  const config = (await prettier.resolveConfig(outPath)) ?? {};
+  writeFileSync(
+    outPath,
+    await prettier.format(chunks.join("\n"), { ...config, filepath: outPath }),
+    "utf8",
+  );
   console.log(`[generate-ws-types] wrote ${outPath} (${exportedNames.length} types).`);
 }
 

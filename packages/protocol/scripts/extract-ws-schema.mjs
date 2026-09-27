@@ -113,7 +113,9 @@ async function main() {
     schemas: byId,
   };
 
+  const config = (await prettier.resolveConfig(outPath)) ?? {};
   const serialized = await prettier.format(JSON.stringify(artefact, null, 2) + "\n", {
+    ...config,
     filepath: outPath,
   });
 
