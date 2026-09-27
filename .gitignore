@@ -68,3 +68,5 @@ packages/chart-engine/bench/results.json
 packages/chart-engine/bench/baseline.json
 packages/chart-engine/bench/report-*.json
 packages/chart-engine/bench/report-*.md
+packages/chart-engine/bench/scenes/report-*.json
+packages/chart-engine/bench/scenes/report-*.md

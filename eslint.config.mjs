@@ -26,6 +26,7 @@ export default [
         module: "readonly",
         require: "readonly",
         URL: "readonly",
+        performance: "readonly",
       },
     },
   },
