@@ -258,6 +258,9 @@ importers:
       openapi-typescript:
         specifier: ^7.13.0
         version: 7.13.0(typescript@5.9.3)
+      prettier:
+        specifier: ^3.4.2
+        version: 3.9.9
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(jiti@2.6.1)(postcss@8.5.28)(supports-color@10.2.2)(typescript@5.9.3)(yaml@2.9.1)

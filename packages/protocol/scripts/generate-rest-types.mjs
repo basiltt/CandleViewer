@@ -8,6 +8,7 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import openapiTS, { astToString } from "openapi-typescript";
+import prettier from "prettier";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, "..", "..", "..");
@@ -34,8 +35,9 @@ async function main() {
     alphabetize: true,
   });
   const body = astToString(ast);
+  const formatted = await prettier.format(HEADER + body, { filepath: outPath });
 
-  writeFileSync(outPath, HEADER + body, "utf8");
+  writeFileSync(outPath, formatted, "utf8");
   console.log(`[generate-rest-types] wrote ${outPath}.`);
 }
 

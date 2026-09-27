@@ -10,6 +10,7 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { compile } from "json-schema-to-typescript";
+import prettier from "prettier";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, "..", "..", "..");
@@ -124,7 +125,7 @@ async function main() {
       "\n};\n",
   );
 
-  writeFileSync(outPath, chunks.join("\n"), "utf8");
+  writeFileSync(outPath, await prettier.format(chunks.join("\n"), { filepath: outPath }), "utf8");
   console.log(`[generate-ws-types] wrote ${outPath} (${exportedNames.length} types).`);
 }
 

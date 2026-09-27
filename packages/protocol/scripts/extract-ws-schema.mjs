@@ -11,6 +11,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import prettier from "prettier";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, "..", "..", "..");
@@ -77,7 +78,7 @@ function extractTopicCatalogue(markdown) {
   return topics;
 }
 
-function main() {
+async function main() {
   const checkMode = process.argv.includes("--check");
   const markdown = readFileSync(mdPath, "utf8");
   const section = extractRange(markdown);
@@ -112,7 +113,9 @@ function main() {
     schemas: byId,
   };
 
-  const serialized = JSON.stringify(artefact, null, 2) + "\n";
+  const serialized = await prettier.format(JSON.stringify(artefact, null, 2) + "\n", {
+    filepath: outPath,
+  });
 
   if (checkMode) {
     let existing = "";
@@ -140,4 +143,7 @@ function main() {
   );
 }
 
-main();
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
