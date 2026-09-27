@@ -191,6 +191,12 @@ jobs:
     needs: changed-paths
     # Security scanning applies to any code/infra change, not just one lane.
     if: ${{ needs.changed-paths.outputs.js == 'true' || needs.changed-paths.outputs.py == 'true' || needs.changed-paths.outputs.infra == 'true' }}
+    # A called reusable workflow may only use permissions its caller job grants.
+    # _job-security.yml uploads SARIF (security-events: write); granting it here
+    # keeps the workflow-level default at contents: read for every other lane.
+    permissions:
+      contents: read
+      security-events: write
     uses: ./.github/workflows/_job-security.yml
 
   e2e:
