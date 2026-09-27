@@ -1,0 +1,57 @@
+{
+  "name": "@candleviewer/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CandleViewer React SPA (Vite): routes, feature slices, ws client, state. E02-T04 ships only the bootable skeleton; the real route tree, RBAC guards and env badge are E10.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage",
+    "build": "vite build",
+    "size": "size-limit",
+    "e2e": "playwright test -c e2e/playwright.config.ts",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@candleviewer/config": "workspace:*",
+    "@candleviewer/protocol": "workspace:*",
+    "@candleviewer/ui": "workspace:*",
+    "@candleviewer/chart-engine": "workspace:*",
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.7",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.19.0",
+    "vitest": "^2.1.8",
+    "@vitest/coverage-v8": "^2.1.8",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "jsdom": "^25.0.1",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react": "^7.37.3",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "@playwright/test": "^1.49.1",
+    "@axe-core/playwright": "^4.10.1",
+    "size-limit": "^11.1.6",
+    "@size-limit/file": "^11.1.6"
+  },
+  "size-limit": [
+    {
+      "path": "dist/assets/*.js",
+      "limit": "8 MB",
+      "gzip": true
+    }
+  ]
+}
