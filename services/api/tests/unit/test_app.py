@@ -60,6 +60,17 @@ def test_healthz_does_not_leak_internal_hostnames_or_datastore_versions() -> Non
     assert set(body.keys()) == {"git_sha", "version", "environment", "status"}
 
 
+def test_metrics_returns_200_prometheus_exposition_format() -> None:
+    # E02-T08 acceptance: prometheus.yml scrapes api:8000/metrics — this
+    # asserts the target this ticket wires prometheus.yml at actually exists
+    # and returns the Prometheus text-exposition content type.
+    app = create_app(_fake_settings())
+    client = TestClient(app)
+    response = client.get("/metrics")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/plain")
+
+
 async def test_supervisor_starts_storage_before_ws_and_stops_in_reverse() -> None:
     ctx = build_app_context(_fake_settings())
     supervisor = Supervisor(ctx)

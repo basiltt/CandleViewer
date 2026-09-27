@@ -1,0 +1,11 @@
+# infra/docker-compose.dev.yml — AGENTS.md §4 "Bring up local stack" entry.
+#
+# Thin pointer at repo root so `docker compose -f infra/docker-compose.dev.yml
+# up -d` (the documented command) works without engineers needing to know
+# about infra/compose/ internals. Delegates via `include:` to the real base +
+# dev override, and enables the `core` + `obs` profiles (no `cold`/minio by
+# default — engineers opt in with `--profile cold` when they need it).
+include:
+  - path:
+      - compose/docker-compose.yml
+      - compose/docker-compose.dev.yml

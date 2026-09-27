@@ -8,7 +8,8 @@ constructible and servable with fakes only.
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
+from prometheus_client import CONTENT_TYPE_LATEST, CollectorRegistry, generate_latest
 
 from candleviewer.api.models import LivenessResponse, ReadinessResponse
 from candleviewer.settings import Settings
@@ -22,13 +23,19 @@ def _build_info(settings: Settings) -> dict[str, str]:
     }
 
 
-def make_health_router(settings: Settings) -> APIRouter:
-    """Bind the health routes to a concrete `Settings` instance.
+def make_health_router(settings: Settings, metrics: CollectorRegistry | None = None) -> APIRouter:
+    """Bind the health/metrics routes to a concrete `Settings` instance.
 
     Returned as a fresh router (rather than reusing the module-level
     `router`) so `create_app()` can inject settings without a global.
+    `metrics` is the `AppContext.metrics` registry (E02-T05); `/metrics` is
+    the Prometheus scrape target `infra/prometheus/prometheus.yml` polls at
+    `api:8000/metrics` (E02-T08 acceptance criteria). Falls back to the
+    default global registry when not supplied so this router stays usable
+    standalone (e.g. in unit tests that only exercise `make_health_router`).
     """
     bound = APIRouter(tags=["health"])
+    registry = metrics if metrics is not None else CollectorRegistry()
 
     @bound.get("/healthz", response_model=LivenessResponse)
     def healthz() -> LivenessResponse:
@@ -37,5 +44,9 @@ def make_health_router(settings: Settings) -> APIRouter:
     @bound.get("/readyz", response_model=ReadinessResponse)
     def readyz() -> ReadinessResponse:
         return ReadinessResponse(checks=[], **_build_info(settings))
+
+    @bound.get("/metrics")
+    def metrics_endpoint() -> Response:
+        return Response(content=generate_latest(registry), media_type=CONTENT_TYPE_LATEST)
 
     return bound

@@ -1,4 +1,4 @@
-.PHONY: governance dev test gen up
+.PHONY: governance dev test gen up down reset
 
 # E02-T01: root convenience targets delegating to pnpm/uv (20-architecture.md
 # §5 Tooling). Thin wrappers only — the pnpm/turbo task graph and the uv/ruff
@@ -14,8 +14,20 @@ test:
 gen:
 	pnpm generate
 
+# E02-T08: local compose stack (`core` + `obs` profiles by default; add
+# `--profile cold` for MinIO). `up` waits for all-healthy via
+# infra/scripts/healthcheck.sh; `down` stops containers but keeps volumes;
+# `reset` also removes named volumes for a clean-state rebuild.
 up:
-	docker compose -f infra/docker-compose.dev.yml up -d
+	docker compose -f infra/docker-compose.dev.yml --profile core --profile obs up -d
+	infra/scripts/healthcheck.sh core obs
+
+down:
+	docker compose -f infra/docker-compose.dev.yml --profile core --profile obs --profile cold down
+
+reset:
+	docker compose -f infra/docker-compose.dev.yml --profile core --profile obs --profile cold down -v
+
 
 # GOV-001 (CODEOWNERS coverage check) + GOV-002 (rule-reference link check) +
 # GOV-003 (single-source-of-truth duplication check). Stdlib-only Python; runs

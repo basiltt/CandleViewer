@@ -189,5 +189,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         version=resolved.version,
     )
     app.state.app_context = build_app_context(resolved)
-    app.include_router(make_health_router(resolved))
+    app.include_router(make_health_router(resolved, app.state.app_context.metrics))
     return app
