@@ -47,7 +47,7 @@ is the bug:
 | Required CI check names                                   | `CONSTITUTION.md` §9                                                                                             |
 | Performance & bundle budget **values**                    | `CONSTITUTION.md` §14.2 / §14.3                                                                                  |
 | Why a budget is that number, and how it was measured      | `docs/plan/06-performance-and-load-standard.md`                                                                  |
-| Command / script names                                    | `AGENTS.md` §4 (a **specification** until ticket `INFRA-001` lands)                                              |
+| Command / script names                                    | `AGENTS.md` §4 (mirrors the shipped `turbo`/`uv` task graph — E02/E02-T11)                                       |
 | Who must approve a path                                   | `.github/CODEOWNERS`                                                                                             |
 | Ticket schema vs ticket content ownership                 | `.github/CODEOWNERS` (backlog section)                                                                           |
 | A lifecycle's states, events, guards and transition table | `docs/plan/28-statechart-catalogue.md` §Bn (generated from `machines/*.json` — **never hand-edit the Markdown**) |
@@ -272,23 +272,16 @@ the source of truth for ticket _content_.
 
 ## 4. Commands
 
-> **⚠️ Status of this section — read before you trust a command.**
+> **Status of this section — the scripts are authoritative; this table mirrors them.**
 >
-> At the time of writing, the repository contains **planning documents only**: there is no
-> `package.json`, `pnpm-workspace.yaml`, `turbo.json` or `pyproject.toml` in the tree yet. The task
-> names below are therefore **normative specifications, not verified observations** — they are the
-> names the scaffolding is _required_ to create, not names anyone has run.
+> The monorepo scaffold (`pnpm-workspace.yaml`, `turbo.json`, root `package.json`, `services/api/pyproject.toml`)
+> is shipped and is now the source of truth. This section is a **mirror** of the runnable task graph, not
+> a specification of intent — the closing ticket for that transition was `E02-T11` (epic `E02`).
 >
-> - **Single owning ticket:** `INFRA-001 — Bootstrap monorepo scaffolding and task graph`
->   (`docs/plan/backlog/`, epic `EP-INFRA`). That ticket's acceptance criteria include: every task
->   name in this section exists and exits 0 on a clean checkout, and any deviation is corrected
->   **in this section in the same PR**. Until INFRA-001 is Done, treat this table as the spec.
-> - **After INFRA-001 is Done**, the runnable scripts become the source of truth and this section
->   becomes a mirror of them. Drift is caught by the generated-code required check (Constitution §9),
->   which runs `scripts/check-agents-commands.mjs`: it parses every `|` row in §4, resolves
->   each task against the workspace task graph (`pnpm -r run --help` / `turbo run --dry=json`) and
->   the Python project scripts, and **fails the build** if a documented task is missing or an
->   undocumented user-facing task exists.
+> - Drift is caught by the generated-code required check (Constitution §9), which runs
+>   `scripts/check-agents-commands.mjs`: it parses every `|` row in §4, resolves each task against the
+>   workspace task graph (`pnpm -r run --help` / `turbo run --dry=json`) and the Python project scripts,
+>   and **fails the build** if a documented task is missing or an undocumented user-facing task exists.
 > - **If you change a script, update this section in the same PR** (C-15.4). If a command does not
 >   yet exist because its epic has not landed, say so in the PR instead of inventing an alternative.
 > - This is the **only** place in the repo where command names are enumerated. `CONTRIBUTING.md`,
@@ -590,9 +583,9 @@ Violations of this list are treated as incidents, not mistakes. If you are about
     statechart in any form (C-2.20). Do not make a machine an enforcement point for a safety decision
     (C-2.21). `xstate-statemachine==0.9.1` is adopted and mandatory via `cv.statechart.factory` only — do
     not bypass it and do not build a shim (C-2.22).
-22. **Never assert that a command works because this file lists it.** Until `INFRA-001` lands there is no
-    `package.json`/`pyproject.toml` in the repo; §4 is a specification. Run the command; if it does not
-    exist, say so in the PR rather than substituting an improvised equivalent.
+22. **Never assert that a command works because this file lists it.** §4 mirrors the shipped `turbo`/`uv`
+    task graph, but still run the command yourself; if it does not exist or drifted (a new epic added a
+    task the check hasn't caught yet), say so in the PR rather than substituting an improvised equivalent.
 
 ---
 
@@ -668,5 +661,5 @@ Lifecycles: implement to the contract in docs/plan/28-statechart-catalogue.md §
             xstate-statemachine==0.9.1 IS ADOPTED — the only executor, via cv.statechart.factory (C-2.22)
 Budgets   : see CONSTITUTION §14.2 (runtime) and §14.3 (bundle) — authoritative values;
             derivation/evidence in docs/plan/06-performance-and-load-standard.md. WCAG 2.2 AA
-Lists     : CI check names → CONSTITUTION §9 · commands → AGENTS.md §4 (spec until INFRA-001)
+Lists     : CI check names → CONSTITUTION §9 · commands → AGENTS.md §4 (mirrors shipped task graph)
 ```
