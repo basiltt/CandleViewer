@@ -1,23 +1,217 @@
 name: _job-js
 
-# Reusable-workflow stub (E03-T01). This lane is filled in by E03-T02
-# (lint eslint, typecheck tsc, unit vitest, build) per ADR-0013 pipeline
-# shape. Until then it reports `success` unconditionally so the
-# `ci-required` resolver (see .github/workflows/pr.yml) is exercisable
-# end-to-end. Replace the single step below without changing the
-# `workflow_call` trigger shape or job name — `pr.yml` calls this by path.
+# E03-T02: the JS/TS CI lane (ADR-0013 pipeline shape `[js] lint (eslint) ·
+# typecheck (tsc) · unit (vitest) · build`, binding rule 5 caching). Called
+# by `pr.yml` (`js:` job) only when the `js` path filter is true; that call
+# site passes no `secrets:`, so PR runs never get Turborepo cache write
+# access (ADR-0013 rule 6). Job outputs are split (`lint`, `typecheck`,
+# `unit-frontend`, `unit-engine`) so branch protection can require each one
+# individually per `04-security-program.md` §12.3. Coverage *thresholds* are
+# E03-T04's scope; this lane runs the suites and uploads coverage/JUnit
+# artifacts only. E2E execution is E03-T06 (this lane only provisions the
+# Playwright browser cache); npm audit / licence scanning is E03-T07 (this
+# lane emits a hand-off marker artifact only).
 
 on:
-  workflow_call: {}
+  workflow_call:
+    secrets:
+      TURBO_TOKEN:
+        required: false
 
 permissions:
   contents: read
 
+env:
+  # PR runs pass no `secrets:` at the `pr.yml` call site, so `TURBO_TOKEN` is
+  # empty here and the Turborepo client reads from remote cache read-only (if
+  # `TURBO_API`/`TURBO_TEAM` vars are configured) or falls back to the job's
+  # local cache. A future `main`-branch workflow can call this reusable
+  # workflow with `secrets: { TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }} }` to
+  # get write access (ADR-0013 rule 6: write token scoped to `main` only).
+  TURBO_API: ${{ vars.TURBO_API }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+
 jobs:
-  js-stub:
-    name: js (stub — see E03-T02)
+  node-version-check:
+    name: node-version-check (CI-JS-001)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Placeholder (E03-T02 fills in lint/typecheck/unit/build)
-        run: echo "js lane stub — implemented by E03-T02"
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Assert .nvmrc matches package.json#engines (CI-JS-001)
+        run: node tools/ci/check-node-version.mjs
+
+  install:
+    name: install
+    needs: node-version-check
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ fromJSON(vars.CV_CI_TIMEOUT_MINUTES || 20) }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version-file: ".nvmrc"
+      - name: Enable pnpm via corepack
+        run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+      - name: Cache Playwright browsers (keyed on the pinned version, provisioned for E03-T06)
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('apps/web/package.json') }}
+      - name: Install (frozen lockfile, no lifecycle scripts — SR-130, SR-138)
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Install allowlisted postinstall builds (SR-138 exception list)
+        run: node tools/ci/run-allowed-postinstall.mjs
+      - name: pnpm dedupe --check (no redundant duplicate deps, SR-138 companion gate)
+        run: pnpm dedupe --check
+      - name: pnpm audit hand-off marker (audit gate itself runs in the security lane — E03-T07)
+        run: pnpm audit --audit-level=high --json > pnpm-audit.json || node tools/ci/mark-audit-handoff.mjs pnpm-audit.json
+      - name: Upload pnpm audit hand-off artifact
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.6.0
+        with:
+          name: pnpm-audit-handoff
+          path: pnpm-audit.json
+          retention-days: 14
+
+  lint:
+    name: lint
+    needs: install
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ fromJSON(vars.CV_CI_TIMEOUT_MINUTES || 20) }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version-file: ".nvmrc"
+      - run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: node tools/ci/run-allowed-postinstall.mjs
+      - name: Turbo lint --filter=...[origin/main]
+        run: pnpm turbo run lint --filter='...[origin/main]' --summarize
+      - name: Record lane duration in job summary
+        if: always()
+        run: node tools/ci/write-turbo-summary.mjs lint >> "$GITHUB_STEP_SUMMARY"
+
+  typecheck:
+    name: typecheck
+    needs: install
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ fromJSON(vars.CV_CI_TIMEOUT_MINUTES || 20) }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version-file: ".nvmrc"
+      - run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: node tools/ci/run-allowed-postinstall.mjs
+      - name: Turbo typecheck --filter=...[origin/main] (tsc annotates errors inline)
+        run: pnpm turbo run typecheck --filter='...[origin/main]' --summarize
+      - name: Record lane duration in job summary
+        if: always()
+        run: node tools/ci/write-turbo-summary.mjs typecheck >> "$GITHUB_STEP_SUMMARY"
+
+  unit-frontend:
+    name: unit-frontend
+    needs: install
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ fromJSON(vars.CV_CI_TIMEOUT_MINUTES || 20) }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version-file: ".nvmrc"
+      - run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: node tools/ci/run-allowed-postinstall.mjs
+      - name: Turbo test:cov (ui, app-web, app-electron) --filter=...[origin/main]
+        run: >
+          pnpm turbo run test:cov
+          --filter='@candleviewer/ui...[origin/main]'
+          --filter='@candleviewer/web...[origin/main]'
+          --filter='@candleviewer/desktop...[origin/main]'
+          --summarize
+      - name: Record lane duration in job summary
+        if: always()
+        run: node tools/ci/write-turbo-summary.mjs unit-frontend >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload coverage (unit-frontend) for E03-T04
+        if: always()
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.6.0
+        with:
+          name: coverage-unit-frontend
+          path: |
+            apps/web/coverage/lcov.info
+            apps/desktop/coverage/lcov.info
+            packages/ui/coverage/lcov.info
+            apps/web/junit.xml
+            apps/desktop/junit.xml
+            packages/ui/junit.xml
+          retention-days: 14
+          if-no-files-found: warn
+
+  unit-engine:
+    name: unit-engine
+    needs: install
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ fromJSON(vars.CV_CI_TIMEOUT_MINUTES || 20) }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version-file: ".nvmrc"
+      - run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: node tools/ci/run-allowed-postinstall.mjs
+      - name: Turbo test:cov (chart-engine, protocol) --filter=...[origin/main]
+        run: >
+          pnpm turbo run test:cov
+          --filter='@candleviewer/chart-engine...[origin/main]'
+          --filter='@candleviewer/protocol...[origin/main]'
+          --summarize
+      - name: Record lane duration in job summary
+        if: always()
+        run: node tools/ci/write-turbo-summary.mjs unit-engine >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload coverage (unit-engine) for E03-T04
+        if: always()
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.6.0
+        with:
+          name: coverage-unit-engine
+          path: |
+            packages/chart-engine/coverage/lcov.info
+            packages/protocol/coverage/lcov.info
+            packages/chart-engine/junit.xml
+            packages/protocol/junit.xml
+          retention-days: 14
+          if-no-files-found: warn
+
+  build:
+    name: build
+    needs: [lint, typecheck, unit-frontend, unit-engine]
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ fromJSON(vars.CV_CI_TIMEOUT_MINUTES || 20) }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version-file: ".nvmrc"
+      - run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: node tools/ci/run-allowed-postinstall.mjs
+      - name: Turbo build --filter=...[origin/main] (generated-code freshness is E03-T06's gate)
+        run: pnpm turbo run build --filter='...[origin/main]' --summarize
+      - name: Record lane duration in job summary
+        if: always()
+        run: node tools/ci/write-turbo-summary.mjs build >> "$GITHUB_STEP_SUMMARY"
