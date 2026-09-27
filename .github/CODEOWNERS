@@ -86,6 +86,7 @@
 /.nvmrc                                 @CandleViewer/devsecops
 /.husky/                                @CandleViewer/devsecops @CandleViewer/frontend
 /.editorconfig                          @CandleViewer/devsecops
+/.gitleaks.toml                         @CandleViewer/security @CandleViewer/devsecops
 /Makefile                               @CandleViewer/devsecops @CandleViewer/architecture
 /scripts/                               @CandleViewer/devsecops @CandleViewer/architecture
 /tools/                                 @CandleViewer/devsecops @CandleViewer/security

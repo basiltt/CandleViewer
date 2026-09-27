@@ -8,6 +8,8 @@ useDefault = true
 
 [allowlist]
 description = "Known non-secrets"
+# NB: `regexes` are matched against the *secret* gitleaks extracted, not the
+# whole line.
 # 1) Planning/contract docs redact every example credential with the literal
 #    word REDACTED (docs/plan/22-api-openapi.yaml, 23-ws-protocol.md ...).
 # 2) docs/research/xstate/** are third-party-library battle-test artefacts:
@@ -15,11 +17,14 @@ description = "Known non-secrets"
 #    Research is not shipped code (docs/design/README.md, C-1.3).
 paths = [
   '''docs/research/xstate/.*''',
+  # packages/fixtures ships its own secret scanner; these tests feed it fake
+  # keys ("sk-abcdef1234567890") on purpose.
+  '''packages/fixtures/test/.*\.test\.mjs''',
   '''docs/plan/backlog/all-tickets\.json''',   # generated from E*.json (covered there)
 ]
 regexes = [
   '''REDACTED''',
   '''<[^>]*example placeholder>''',
   # ticket prose "config keys: `oms.algo.max_children=450`" — settings names, not secrets
-  '''keys?: `[a-z0-9_.]+=[^`]*`''',
+  '''^oms\.[a-z0-9_.]+=[a-z0-9_.]+$''',
 ]
