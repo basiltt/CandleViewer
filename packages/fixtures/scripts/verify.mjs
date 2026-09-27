@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // Redaction gate for packages/fixtures (E02-T03 placeholder; real fixtures
 // land in E08). Fails if any file under raw/ or golden/ looks like it
 // contains a credential (API key, signature, PEM block, bearer token).
@@ -15,8 +14,14 @@ const scanDirs = ["raw", "golden"].map((d) => join(packageRoot, d));
 const SECRET_PATTERNS = [
   { name: "PEM private key block", re: /-----BEGIN [A-Z ]*PRIVATE KEY-----/ },
   { name: "bearer token", re: /Bearer\s+[A-Za-z0-9._-]{20,}/ },
-  { name: "Bybit-style api key/secret field", re: /"(api[_-]?key|api[_-]?secret|sign|signature)"\s*:\s*"[^"]{8,}"/i },
-  { name: "generic long hex/base64 secret-shaped field", re: /"(secret|token|password)"\s*:\s*"[A-Za-z0-9+/=_-]{16,}"/i },
+  {
+    name: "Bybit-style api key/secret field",
+    re: /"(api[_-]?key|api[_-]?secret|sign|signature)"\s*:\s*"[^"]{8,}"/i,
+  },
+  {
+    name: "generic long hex/base64 secret-shaped field",
+    re: /"(secret|token|password)"\s*:\s*"[A-Za-z0-9+/=_-]{16,}"/i,
+  },
 ];
 
 export function listFiles(dir) {
