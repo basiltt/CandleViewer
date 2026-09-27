@@ -29,7 +29,9 @@ permissions:
   contents: read
 
 env:
-  PYTHON_VERSION: "3.13"
+  # 3.12: semgrep 1.99 still imports pkg_resources (setuptools is not
+  # preinstalled on 3.13 runners).
+  PYTHON_VERSION: "3.12"
   NODE_VERSION: "20"
 
 jobs:
@@ -52,9 +54,13 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Install gate helper deps (PyYAML for security_gate.py)
+        run: pip install -r scripts/requirements-ci.txt
+
       - uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
         with:
           languages: javascript-typescript,python
+          config-file: ./.github/codeql/codeql-config.yml
 
       - uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
         with:
@@ -75,7 +81,10 @@ jobs:
           done
 
       - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
-        if: always()
+        # Gate decided above; code scanning is not enabled on this private repo
+        # (no GHAS) so the upload API 403s — never let that mask the gate result.
+        if: always() && hashFiles('codeql-results/*.sarif') != ''
+        continue-on-error: true
         with:
           sarif_file: codeql-results
           category: codeql
@@ -99,8 +108,11 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Install gate helper deps (PyYAML for security_gate.py)
+        run: pip install -r scripts/requirements-ci.txt
+
       - name: Install semgrep
-        run: pip install "semgrep==1.99.0"
+        run: pip install setuptools "semgrep==1.99.0"
 
       - name: Run Semgrep (registry packs + .semgrep/ custom rules if present)
         run: |
@@ -127,7 +139,11 @@ jobs:
         run: python tools/ci/security_gate.py --tool semgrep --report semgrep.sarif
 
       - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
-        if: always()
+        # Upload only when the scanner wrote a report; the gate step above (not
+        # this upload) decides pass/fail. continue-on-error: code scanning is not
+        # enabled on this private repo (no GHAS), so the API 403s.
+        if: always() && hashFiles('semgrep.sarif') != ''
+        continue-on-error: true
         with:
           sarif_file: semgrep.sarif
           category: semgrep
@@ -151,6 +167,9 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Install gate helper deps (PyYAML for security_gate.py)
+        run: pip install -r scripts/requirements-ci.txt
+
       - name: Install bandit
         run: pip install "bandit[sarif]==1.8.6"
 
@@ -161,7 +180,11 @@ jobs:
         run: python tools/ci/security_gate.py --tool bandit --report bandit.sarif
 
       - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
-        if: always()
+        # Upload only when the scanner wrote a report; the gate step above (not
+        # this upload) decides pass/fail. continue-on-error: code scanning is not
+        # enabled on this private repo (no GHAS), so the API 403s.
+        if: always() && hashFiles('bandit.sarif') != ''
+        continue-on-error: true
         with:
           sarif_file: bandit.sarif
           category: bandit
@@ -181,6 +204,9 @@ jobs:
       - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install gate helper deps (PyYAML for security_gate.py)
+        run: pip install -r scripts/requirements-ci.txt
 
       - name: Install pip-audit
         run: pip install "pip-audit==2.7.3"
@@ -245,6 +271,10 @@ jobs:
 
       - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
         env:
+          # The action requires a token to list PR commits. This is the built-in,
+          # job-scoped GITHUB_TOKEN (contents: read) — not a stored secret in the
+          # ADR-0013 sense; no permission widening.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
           GITLEAKS_ENABLE_SUMMARY: "true"
         continue-on-error: true
@@ -259,6 +289,9 @@ jobs:
       - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install gate helper deps (PyYAML for security_gate.py)
+        run: pip install -r scripts/requirements-ci.txt
 
       - name: Evaluate gitleaks findings (security_gate.py, CI-SEC-001 — no exceptions ever)
         run: python tools/ci/security_gate.py --tool gitleaks --report gitleaks.json
@@ -278,6 +311,9 @@ jobs:
       - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install gate helper deps (PyYAML for security_gate.py)
+        run: pip install -r scripts/requirements-ci.txt
 
       - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
         with:
@@ -347,12 +383,18 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Install gate helper deps (PyYAML for security_gate.py)
+        run: pip install -r scripts/requirements-ci.txt
+
       - name: Evaluate Trivy findings (security_gate.py, CI-SEC-001/004)
         run: python tools/ci/security_gate.py --tool trivy --report trivy.sarif
 
       - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
-        if: always()
+        # Upload only when the scanner wrote a report; the gate step above (not
+        # this upload) decides pass/fail. continue-on-error: code scanning is not
+        # enabled on this private repo (no GHAS), so the API 403s.
+        if: always() && hashFiles('trivy.sarif') != ''
+        continue-on-error: true
         with:
           sarif_file: trivy.sarif
           category: trivy
-

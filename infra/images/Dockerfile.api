@@ -7,7 +7,7 @@
 # E02-X01 threat model (supply-chain / container-escape controls).
 
 # --- builder ---------------------------------------------------------------
-FROM python:3.12-slim@sha256:c46b9a41e79bfcae4d0d772316a24b39bb69cb51a45a5a7e0eb576e1c0a0e2e3 AS builder
+FROM python:3.12-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f AS builder
 
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
@@ -24,7 +24,7 @@ COPY services/api/README.md ./README.md
 RUN uv sync --frozen --no-dev
 
 # --- runtime -----------------------------------------------------------------
-FROM python:3.12-slim@sha256:c46b9a41e79bfcae4d0d772316a24b39bb69cb51a45a5a7e0eb576e1c0a0e2e3 AS runtime
+FROM python:3.12-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f AS runtime
 
 RUN groupadd --gid 10001 cvapi \
     && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin cvapi
