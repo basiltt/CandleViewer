@@ -51,6 +51,17 @@ _ALLOWED_EXTRA_EXPORTS: dict[str, set[str]] = {
     },
     "M23a": {"make_health_router"},
     "M24": {"HealthReport", "HealthStatus"},
+    # E08-T03: the bus's public pub/sub surface — `Bus`/`Subscription` are
+    # not `*Service`/`*Error` by name but are the module's documented public
+    # interface (docs/plan/20-architecture.md Sec.3 bus contract).
+    "M5": {
+        "Bus",
+        "Subscription",
+        "Topic",
+        "TopicPattern",
+        "QueuePolicy",
+        "StreamInvalidated",
+    },
     # E02-T12: the normalised domain-event shapes (C-2.3) the synthetic feed
     # generator and, later, the real Bybit adapter (E08) both publish.
     # E08-T01 adds the full ExchangeAdapter interface, capability record,

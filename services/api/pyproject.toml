@@ -121,7 +121,6 @@ omit = [
   "candleviewer/auth/*",
   "candleviewer/bars/*",
   "candleviewer/book/*",
-  "candleviewer/bus/*",
   "candleviewer/exchange/base/service.py",
   "candleviewer/exchange/bybit/*",
   "candleviewer/journal/*",
