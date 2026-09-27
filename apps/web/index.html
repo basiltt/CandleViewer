@@ -3,9 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      This meta CSP is the *effective* policy for packaged file:// builds:
+      Electron's session.webRequest.onHeadersReceived (apps/desktop/src/main/index.ts)
+      does not fire for file:// navigations, so it never overrides this tag there.
+      It must therefore be scoped exactly like apps/desktop/src/main/csp.ts
+      (backend origin only, not `ws:`/`wss:` wildcards) — keep both in sync.
+    -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; connect-src 'self' ws: wss:; img-src 'self' data:; style-src 'self' 'unsafe-inline'"
+      content="default-src 'self'; connect-src 'self' http://127.0.0.1:8000 ws://127.0.0.1:8000; img-src 'self' data:; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
     />
     <title>CandleViewer</title>
   </head>
