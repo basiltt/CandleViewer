@@ -42,6 +42,9 @@ jobs:
       docs: ${{ steps.filter.outputs.docs }}
       e2e: ${{ steps.filter.outputs.e2e }}
       migrations: ${{ steps.filter.outputs.migrations }}
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
