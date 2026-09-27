@@ -9828,8 +9828,8 @@ snapshots:
       "@storybook/theming": 8.6.18(storybook@8.6.18(prettier@3.9.9)(supports-color@7.2.0))
       better-opn: 3.0.2
       browser-assert: 1.2.1
-      esbuild: 0.21.5
-      esbuild-register: 3.6.0(esbuild@0.21.5)(supports-color@7.2.0)
+      esbuild: 0.25.12
+      esbuild-register: 3.6.0(esbuild@0.25.12)(supports-color@7.2.0)
       jsdoc-type-pratt-parser: 4.8.0
       process: 0.11.10
       recast: 0.23.21
@@ -11383,10 +11383,10 @@ snapshots:
   es6-error@4.1.1:
     optional: true
 
-  esbuild-register@3.6.0(esbuild@0.21.5)(supports-color@7.2.0):
+  esbuild-register@3.6.0(esbuild@0.25.12)(supports-color@7.2.0):
     dependencies:
       debug: 4.4.3(supports-color@7.2.0)
-      esbuild: 0.21.5
+      esbuild: 0.25.12
     transitivePeerDependencies:
       - supports-color
 
