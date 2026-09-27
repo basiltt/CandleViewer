@@ -1,0 +1,17 @@
+{
+  "$comment": "Style Dictionary entry point wiring the DTCG token JSON in packages/ui/tokens/ (contract from E02-D01, verified by tokens/tests/verify_tokens.py) to CSS custom properties. Scaffold only (E02-T03) — theme/density-specific build passes are added when E05 content lands.",
+  "source": ["tokens/primitives.tokens.json", "tokens/semantic-dark.tokens.json"],
+  "platforms": {
+    "css": {
+      "transformGroup": "css",
+      "buildPath": "dist/tokens/",
+      "files": [
+        {
+          "destination": "dark.css",
+          "format": "css/variables",
+          "options": { "selector": ":root[data-theme=\"dark\"]" }
+        }
+      ]
+    }
+  }
+}
