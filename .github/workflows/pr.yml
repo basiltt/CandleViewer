@@ -156,6 +156,12 @@ jobs:
       - name: Rule-reference and internal link check (GOV-002)
         run: python scripts/check_rule_refs.py
 
+  gen:
+    name: gen
+    # E03-T05: generated-code freshness gate is always-on (ADR-0013 rule 3) —
+    # the contract sources can change from any lane, not just `protocol`.
+    uses: ./.github/workflows/_job-gen.yml
+
   # --- Path-filtered lanes ---------------------------------------------------
   # Each callee is a `workflow_call` stub in this Task (echoes a placeholder
   # conclusion); its owning ticket replaces the body without changing this
@@ -210,6 +216,7 @@ jobs:
       - commitlint
       - licence-header
       - docs-link-check
+      - gen
       - js
       - py
       - contract
@@ -238,6 +245,7 @@ jobs:
           RESULT_COMMITLINT: ${{ needs.commitlint.result }}
           RESULT_LICENCE_HEADER: ${{ needs.licence-header.result }}
           RESULT_DOCS_LINK_CHECK: ${{ needs.docs-link-check.result }}
+          RESULT_GEN: ${{ needs.gen.result }}
           RESULT_JS: ${{ needs.js.result }}
           RESULT_PY: ${{ needs.py.result }}
           RESULT_CONTRACT: ${{ needs.contract.result }}
@@ -253,6 +261,7 @@ jobs:
               commitlint: { applicable: true, result: process.env.RESULT_COMMITLINT },
               "licence-header": { applicable: true, result: process.env.RESULT_LICENCE_HEADER },
               "docs-link-check": { applicable: true, result: process.env.RESULT_DOCS_LINK_CHECK },
+              gen: { applicable: true, result: process.env.RESULT_GEN },
               js: { applicable: isTrue(process.env.FILTER_JS), result: process.env.RESULT_JS },
               py: { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_PY },
               contract: { applicable: isTrue(process.env.FILTER_PROTOCOL), result: process.env.RESULT_CONTRACT },

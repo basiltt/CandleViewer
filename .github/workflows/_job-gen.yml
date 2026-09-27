@@ -1,0 +1,68 @@
+name: _job-gen
+
+# E03-T05: generated-code freshness gate for packages/protocol
+# (ADR-0013 binding rule 3, ADR-0005 reinforcement). Always-on: the contract
+# sources (docs/plan/22-api-openapi.yaml, docs/plan/23-ws-protocol.md) may
+# change from any lane, so this cannot be path-filtered the way `contract`
+# (E03-T06) is.
+#
+# Runs on a clean checkout with no dependency/build cache (ticket "Technical
+# notes": a stale cached artifact must never mask drift).
+#
+# CI-GEN-001 drift, CI-GEN-002 untracked generated output, CI-GEN-003
+# non-deterministic generation, CI-GEN-004 generator toolchain failure.
+# tools/ci/check_gen_freshness.py runs the determinism check before the
+# freshness check, per the ticket's ordering requirement.
+
+on:
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+jobs:
+  gen-freshness:
+    name: gen-freshness
+    runs-on: ubuntu-latest
+    timeout-minutes: 5 # ticket target <= 90s; 5 min is the CI budget ceiling
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: "20"
+
+      - name: Enable pnpm via corepack
+        run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+
+      # No cache action here (actions/cache, setup-node's built-in cache):
+      # deliberate, per ticket "the job runs on a clean checkout with no
+      # cache to prevent a stale cached artifact masking drift".
+      - name: Install dependencies (no cache)
+        run: pnpm install --frozen-lockfile
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.13"
+
+      - name: Determinism + freshness + untracked-output check
+        id: gen-check
+        run: python tools/ci/check_gen_freshness.py
+
+      - name: Job summary on failure
+        if: failure()
+        run: |
+          {
+            echo "### Generated-code freshness gate failed"
+            echo ""
+            echo "Reproduce locally:"
+            echo '```'
+            echo "make gen"
+            echo "git diff -- packages/protocol"
+            echo "git status --porcelain -- packages/protocol"
+            echo '```'
+            echo ""
+            echo "See the \`Determinism + freshness + untracked-output check\` step log above for the CI-GEN-* code and diff."
+          } >> "$GITHUB_STEP_SUMMARY"

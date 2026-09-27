@@ -1,4 +1,4 @@
-.PHONY: governance dev dev-down test gen up down reset arch
+.PHONY: governance dev dev-down test gen gen-check up down reset arch
 
 # E02-T01: root convenience targets delegating to pnpm/uv (20-architecture.md
 # §5 Tooling). Thin wrappers only — the pnpm/turbo task graph and the uv/ruff
@@ -23,6 +23,13 @@ test:
 
 gen:
 	pnpm generate
+
+# E03-T05: generated-code freshness gate (ADR-0013 binding rule 3). Runs
+# `make gen` twice to assert determinism (CI-GEN-003), then fails on any
+# diff/untracked output under packages/protocol (CI-GEN-001/002). Same
+# script `.github/workflows/_job-gen.yml` invokes in CI.
+gen-check:
+	python tools/ci/check_gen_freshness.py
 
 # E02-T08: local compose stack (`core` + `obs` profiles by default; add
 # `--profile cold` for MinIO). `up` waits for all-healthy via
