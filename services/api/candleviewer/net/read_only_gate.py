@@ -1,0 +1,74 @@
+"""Process-wide read-only degradation gate.
+
+A single, process-wide flag consulted by the OMS validator so an unsafe
+binding cannot be routed around: no flag, config, or role may re-enable
+order placement while the gate is tripped (mirrors the native-SL invariant
+pattern, C-4.14). This module holds only the flag and the human-readable
+reason; the OMS validator import and consult it directly, it never lives
+inside the OMS module itself (C-2.16-style separation is not applicable
+here, but module boundaries per C-3.1 still require the flag to be owned
+by `net`, not duplicated).
+"""
+
+from __future__ import annotations
+
+import threading
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .binding_check import BindingCheckResult
+
+
+class ReadOnlyGate:
+    """Thread-safe, process-wide read-only flag.
+
+    Defaults to writable (`tripped=False`). Once tripped it stays tripped
+    until explicitly cleared by a fresh, passing self-check — never by
+    catching an exception or by a request handler.
+    """
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._tripped = False
+        self._reason_code: str | None = None
+        self._reason_text: str | None = None
+
+    def trip(self, *, reason_code: str, reason_text: str) -> None:
+        with self._lock:
+            self._tripped = True
+            self._reason_code = reason_code
+            self._reason_text = reason_text
+
+    def clear(self, *, check_result: BindingCheckResult) -> None:
+        """Clear the gate, but only given a fresh, *passing* self-check.
+
+        `check_result` must be the `BindingCheckResult` from a self-check
+        run that just completed with `safe=True`. A caller cannot clear the
+        gate on a whim (e.g. from a request handler, or after merely
+        catching an exception) without re-running the check.
+        """
+        if not check_result.safe:
+            raise ValueError(
+                "ReadOnlyGate.clear() requires a passing BindingCheckResult "
+                f"(got reason_code={check_result.reason_code!r}); the gate stays "
+                "tripped until the self-check actually passes."
+            )
+        with self._lock:
+            self._tripped = False
+            self._reason_code = None
+            self._reason_text = None
+
+    @property
+    def is_read_only(self) -> bool:
+        with self._lock:
+            return self._tripped
+
+    @property
+    def reason_code(self) -> str | None:
+        with self._lock:
+            return self._reason_code
+
+    @property
+    def reason_text(self) -> str | None:
+        with self._lock:
+            return self._reason_text
