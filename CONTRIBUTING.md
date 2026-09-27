@@ -90,6 +90,30 @@ typecheck). This is a deliberate, code-owned exception to the repo's `ignore-scr
 the comment in `.npmrc` — so it is not run implicitly by `pnpm install`. Hooks are a convenience; the same
 rules are enforced server-side by CI and cannot be weakened by `--no-verify`.
 
+### Generated-code freshness (`packages/protocol`)
+
+`packages/protocol` is regenerated from `docs/plan/22-api-openapi.yaml` and the WS schema in
+`docs/plan/23-ws-protocol.md` (ADR-0013 binding rule 3, ADR-0005). If you touch either source, run
+`make gen` and commit the resulting diff under `packages/protocol` — never hand-edit
+`packages/protocol/src/generated/**`.
+
+The `gen` job (`.github/workflows/_job-gen.yml`) is an always-on required check. If it fails:
+
+1. **`CI-GEN-003` (codegen is not deterministic)** — the generator itself is flaky; this is a bug in
+   `packages/protocol/scripts/*`, not something you can fix by regenerating again. Reproduce locally
+   with `make gen && make gen` and diff the tree; file it against the protocol package before retrying.
+2. **`CI-GEN-001` (drift)** — run `make gen` locally, review the diff under `packages/protocol`, and
+   commit it in the same PR as the schema change.
+3. **`CI-GEN-002` (untracked output)** — `make gen` produced a new file CI can see via `git status` but
+   `git diff` couldn't. Check `.gitignore` hasn't accidentally swallowed a new generated path, then `git
+   add` and commit it.
+4. **`CI-GEN-004` (generator toolchain failure)** — the generator command itself errored (missing
+   dependency, syntax error in the schema, pinned tool version mismatch); the job summary and step log
+   carry the underlying stdout/stderr.
+
+Run the same check locally before pushing: `make gen-check` (wraps
+`tools/ci/check_gen_freshness.py`).
+
 ## Design and architecture decisions
 
 Sprints are **1 week** (Fri→Thu; Sprint 01 = 2026-09-25; calendar in `docs/plan/backlog/_tools/calendar_cv.py`). Design runs at least two sprints ahead of engineering; no frontend screen work starts before its design
