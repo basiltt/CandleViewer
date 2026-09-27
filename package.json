@@ -18,9 +18,32 @@
     "size": "turbo run size",
     "generate": "turbo run generate",
     "verify": "turbo run verify",
-    "check:agents-commands": "node scripts/check-agents-commands.mjs"
+    "check:agents-commands": "node scripts/check-agents-commands.mjs",
+    "check:branch-name": "node scripts/check-branch-name.mjs",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs,cjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,yaml,yml,md,css}": [
+      "prettier --write"
+    ],
+    "services/api/**/*.py": [
+      "uv run --project services/api ruff check --fix",
+      "uv run --project services/api black"
+    ]
   },
   "devDependencies": {
-    "turbo": "2.3.3"
+    "turbo": "2.3.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.3.0",
+    "@commitlint/cli": "^19.6.1",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@commitlint/load": "^19.6.1",
+    "@commitlint/lint": "^19.6.0",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2"
   }
 }

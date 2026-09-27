@@ -1,0 +1,11 @@
+# Force LF for cross-platform dev tooling: shebang scripts and git hooks must
+# never be checked out with CRLF, or POSIX shebang-stripping (Node/ESM loaders,
+# Vite/Vitest, and the shell that runs husky hooks) breaks on Windows checkouts
+# even though the committed blob is LF (see PR #1454 review).
+* text=auto eol=lf
+
+/scripts/**       text eol=lf
+/.husky/**        text eol=lf
+*.mjs             text eol=lf
+*.cjs             text eol=lf
+*.sh              text eol=lf

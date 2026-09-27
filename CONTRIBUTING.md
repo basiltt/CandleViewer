@@ -6,16 +6,16 @@ so the bar for changes is high and the rules are explicit.
 
 ## Read these first
 
-| Document | What it is |
-|---|---|
-| **[`CONSTITUTION.md`](CONSTITUTION.md)** | **The binding rules.** Scope guardrails, architecture invariants, branching, quality gates, review rules, DoR/DoD, security, testing, a11y/performance budgets, release and amendment process. It outranks every other document in this repo. |
-| **[`AGENTS.md`](AGENTS.md)** | The practical operating manual — repo map, how to pick up a ticket, ticket anatomy (§3a), board protocol (§3b), commands per package, coding standards, test-writing rules, PR checklist, prohibitions. Written for AI coding agents (tool-agnostic: Copilot, Codex, Cursor, Claude Code, humans). |
-| **[`CLAUDE.md`](CLAUDE.md)** | Claude Code's entry point specifically — a thin pointer into `CONSTITUTION.md` and `AGENTS.md`, not a second rulebook. If you use a different agent, read `AGENTS.md` directly instead. |
-| **[`SECURITY.md`](SECURITY.md)** | Vulnerability reporting, supported versions, secrets policy, incident process. |
-| `docs/plan/` | Planning source of truth: SDLC, DoR/DoD, testing, security, a11y, performance, release/PRR, UX, architecture, API/WS contract, schema, roadmap, backlog. |
-| `docs/adr/` | Accepted architecture decisions (MADR). Do not relitigate them silently. |
-| `.github/PULL_REQUEST_TEMPLATE.md` | The checklist your PR must satisfy. |
-| `.github/CODEOWNERS` | Who must review what. |
+| Document                                 | What it is                                                                                                                                                                                                                                                                                         |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **[`CONSTITUTION.md`](CONSTITUTION.md)** | **The binding rules.** Scope guardrails, architecture invariants, branching, quality gates, review rules, DoR/DoD, security, testing, a11y/performance budgets, release and amendment process. It outranks every other document in this repo.                                                      |
+| **[`AGENTS.md`](AGENTS.md)**             | The practical operating manual — repo map, how to pick up a ticket, ticket anatomy (§3a), board protocol (§3b), commands per package, coding standards, test-writing rules, PR checklist, prohibitions. Written for AI coding agents (tool-agnostic: Copilot, Codex, Cursor, Claude Code, humans). |
+| **[`CLAUDE.md`](CLAUDE.md)**             | Claude Code's entry point specifically — a thin pointer into `CONSTITUTION.md` and `AGENTS.md`, not a second rulebook. If you use a different agent, read `AGENTS.md` directly instead.                                                                                                            |
+| **[`SECURITY.md`](SECURITY.md)**         | Vulnerability reporting, supported versions, secrets policy, incident process.                                                                                                                                                                                                                     |
+| `docs/plan/`                             | Planning source of truth: SDLC, DoR/DoD, testing, security, a11y, performance, release/PRR, UX, architecture, API/WS contract, schema, roadmap, backlog.                                                                                                                                           |
+| `docs/adr/`                              | Accepted architecture decisions (MADR). Do not relitigate them silently.                                                                                                                                                                                                                           |
+| `.github/PULL_REQUEST_TEMPLATE.md`       | The checklist your PR must satisfy.                                                                                                                                                                                                                                                                |
+| `.github/CODEOWNERS`                     | Who must review what.                                                                                                                                                                                                                                                                              |
 
 If anything below appears to conflict with the Constitution, **the Constitution wins** and the conflict is
 a bug to report.
@@ -83,6 +83,12 @@ duplicated here. Note that until ticket `INFRA-001` (monorepo scaffolding) is Do
 `AGENTS.md` §4 and the real scripts disagree.
 
 See `AGENTS.md` §4 for the root install/verify command and the backend lint/format/typecheck/test loop.
+
+After `pnpm install --frozen-lockfile`, run `pnpm prepare` once to install the local git hooks
+(`.husky/`: `commit-msg` commitlint, `pre-commit` lint-staged, `pre-push` branch-name + affected-project
+typecheck). This is a deliberate, code-owned exception to the repo's `ignore-scripts=true` posture — see
+the comment in `.npmrc` — so it is not run implicitly by `pnpm install`. Hooks are a convenience; the same
+rules are enforced server-side by CI and cannot be weakened by `--no-verify`.
 
 ## Design and architecture decisions
 
