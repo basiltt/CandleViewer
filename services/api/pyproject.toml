@@ -86,6 +86,36 @@ testpaths = ["tests"]
 [tool.coverage.run]
 branch = true
 source = ["candleviewer"]
+# Empty scaffold modules created by E02-T05 (2026-09-27, docs/plan/backlog/
+# all-tickets.json) — no real logic yet, so they are excluded from the
+# coverage floor. Each entry must be removed by the ticket that implements
+# real logic in that module; do not add new entries without a ticket ref.
+omit = [
+  "candleviewer/accounts/*",
+  "candleviewer/admin/*",
+  "candleviewer/alerts/*",
+  "candleviewer/audit/*",
+  "candleviewer/auth/*",
+  "candleviewer/bars/*",
+  "candleviewer/book/*",
+  "candleviewer/bus/*",
+  "candleviewer/exchange/base/*",
+  "candleviewer/exchange/bybit/*",
+  "candleviewer/ingestion/*",
+  "candleviewer/journal/*",
+  "candleviewer/main.py",
+  "candleviewer/observability/service.py",
+  "candleviewer/oms/*",
+  "candleviewer/orderflow/*",
+  "candleviewer/paper/*",
+  "candleviewer/recorder/*",
+  "candleviewer/replay/*",
+  "candleviewer/risk/*",
+  "candleviewer/rules/*",
+  "candleviewer/secrets/*",
+  "candleviewer/storage/*",
+  "candleviewer/ws/service.py",
+]
 
 [tool.bandit]
 exclude_dirs = ["tests"]
