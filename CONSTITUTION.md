@@ -335,7 +335,7 @@ the list fail the `import-linter` contract check in CI (`architecture` job).
 | M20 | `journal` | `services/api/journal/` | Trade journal, tagging, analytics | M1, M10, M14 |
 | M21 | `admin` | `services/api/admin/` | Users/roles, key management flows, feature flags, system health | M1, M2, M10, M13, M17, M18, M19 |
 | M22 | `alerts` | `services/api/alerts/` | Alert conditions (shared IR with M15), delivery | M1, M5, M15 |
-| M23 | `api` | `services/api/http/`, `services/api/ws/` | Contract-first routers, WS topics, serialisation, authz enforcement | all modules' public interfaces |
+| M23 | `api` | `services/api/candleviewer/api/`, `services/api/candleviewer/ws/` | Contract-first routers, WS topics, serialisation, authz enforcement | all modules' public interfaces |
 | M24 | `observability` | `services/api/observability/` | Structured logging, redaction filters, metrics, tracing | M1 |
 
 **C-3.1** Dependencies flow one way down this table's numbering wherever possible; cycles are forbidden.

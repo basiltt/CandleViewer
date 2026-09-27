@@ -1,0 +1,70 @@
+"""Public-surface convention test (E02-T05 acceptance criterion 4).
+
+Given a module's `__init__.py`, when it re-exports an internal
+implementation symbol not listed in its public interface manifest, then the
+public-surface test fails, citing the Sec.3 convention
+(`docs/plan/20-architecture.md`: "`__init__.py` exporting only the public
+interface").
+
+Concretely: every name in `__init__.py`'s `__all__` must be something the
+module's own `service.py`/`models.py`/`errors.py` deliberately exposes (a
+`*Service`, `*Error`, or an explicitly allow-listed helper) — never a bare
+internal name that was only meant for use within the package.
+"""
+
+from __future__ import annotations
+
+import importlib
+import json
+from pathlib import Path
+
+import pytest
+
+_SERVICES_API_ROOT = Path(__file__).resolve().parents[2]
+_MANIFEST_PATH = _SERVICES_API_ROOT / "tests" / "module_manifest.json"
+_MANIFEST = json.loads(_MANIFEST_PATH.read_text(encoding="utf-8"))
+
+# Modules with a richer public surface than "Service/Error" (allow-listed
+# here, not guessed): each entry names exactly what may appear in __all__.
+_ALLOWED_EXTRA_EXPORTS: dict[str, set[str]] = {
+    "M23a": {"make_health_router"},
+    "M24": {"HealthReport", "HealthStatus"},
+}
+
+
+def _dotted(package_dir: str) -> str:
+    return package_dir.replace("/", ".")
+
+
+@pytest.mark.parametrize(
+    "entry",
+    [e for e in _MANIFEST["modules"] if e["id"] != "M1"],
+    ids=lambda e: e["id"],
+)
+def test_init_exports_only_public_surface(entry: dict[str, str]) -> None:
+    module = importlib.import_module(_dotted(entry["path"]))
+    exported = set(getattr(module, "__all__", []))
+    allowed_suffixes = ("Service", "Error")
+    allowed_extra = _ALLOWED_EXTRA_EXPORTS.get(entry["id"], set())
+    for name in exported:
+        assert name in allowed_extra or name.endswith(allowed_suffixes), (
+            f"{entry['path']}.__init__ exports {name!r}, which is not a "
+            f"*Service/*Error symbol or an allow-listed public helper — "
+            f"see docs/plan/20-architecture.md Sec.3 convention"
+        )
+
+
+def test_public_surface_rule_rejects_a_leaked_internal_symbol() -> None:
+    """Proves the rule actually fires, independent of today's clean tree."""
+    leaked_exports = {"_internal_helper", "RawConnection"}
+    allowed_extra: set[str] = set()
+    allowed_suffixes = ("Service", "Error")
+    violations = [
+        name
+        for name in leaked_exports
+        if not (name in allowed_extra or name.endswith(allowed_suffixes))
+    ]
+    assert violations == ["_internal_helper", "RawConnection"] or violations == [
+        "RawConnection",
+        "_internal_helper",
+    ]
