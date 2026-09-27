@@ -70,3 +70,7 @@ packages/chart-engine/bench/report-*.json
 packages/chart-engine/bench/report-*.md
 packages/chart-engine/bench/scenes/report-*.json
 packages/chart-engine/bench/scenes/report-*.md
+
+# planning-phase one-shot generators are never committed
+docs/plan/_*.py
+docs/plan/__*.json
