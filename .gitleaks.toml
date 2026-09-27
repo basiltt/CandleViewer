@@ -18,5 +18,8 @@ paths = [
   '''docs/plan/backlog/all-tickets\.json''',   # generated from E*.json (covered there)
 ]
 regexes = [
-  '''(?i)["'`]?REDACTED["'`]?''',
+  '''REDACTED''',
+  '''<[^>]*example placeholder>''',
+  # ticket prose "config keys: `oms.algo.max_children=450`" — settings names, not secrets
+  '''keys?: `[a-z0-9_.]+=[^`]*`''',
 ]

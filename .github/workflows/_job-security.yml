@@ -227,7 +227,8 @@ jobs:
           # pinned requirements. Auditing the runner's own site-packages mixed
           # CI tooling (scripts/requirements-ci.txt) into the product SBOM.
           pip install "uv==0.12.19" --quiet
-          uv export --frozen --no-hashes --all-groups --project services/api -o /tmp/api-requirements.txt
+          # --no-emit-project: the editable `file://` self-reference is not a third-party dependency.
+          uv export --frozen --no-hashes --all-groups --no-emit-project --project services/api -o /tmp/api-requirements.txt
           pip-audit -r /tmp/api-requirements.txt --no-deps --format json --output pip-audit.json --progress-spinner off || true
 
       - name: Evaluate pip-audit findings (security_gate.py, CI-SEC-001/004)
