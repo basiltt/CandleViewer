@@ -28,7 +28,10 @@ function listFiles(dir) {
 }
 
 function sha256(content) {
-  return createHash("sha256").update(content).digest("hex");
+  // Line-ending agnostic: a Windows checkout may present CRLF while the manifest
+  // was recorded from LF content. Only bytes, never EOL style, decide "hand-edited".
+  const normalised = content.split("\r\n").join("\n");
+  return createHash("sha256").update(normalised).digest("hex");
 }
 
 function main() {

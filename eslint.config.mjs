@@ -9,7 +9,11 @@ export default [
     // Root-level tooling scripts run under plain Node (no bundler globals
     // config), so declare the Node global env directly rather than pulling
     // in the `globals` package for one env object (E02-T07).
-    files: ["scripts/**/*.{mjs,cjs,js}", "*.config.{mjs,cjs,js}"],
+    files: [
+      "scripts/**/*.{mjs,cjs,js}",
+      "packages/*/scripts/**/*.{mjs,cjs,js}",
+      "*.config.{mjs,cjs,js}",
+    ],
     languageOptions: {
       globals: {
         process: "readonly",
