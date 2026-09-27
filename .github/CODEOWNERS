@@ -86,6 +86,7 @@
 /.editorconfig                          @CandleViewer/devsecops
 /Makefile                               @CandleViewer/devsecops @CandleViewer/architecture
 /scripts/                               @CandleViewer/devsecops @CandleViewer/architecture
+/tools/                                 @CandleViewer/devsecops @CandleViewer/security
 # future: E02/later scaffolding; directory does not exist yet.
 /commitlint.config.*                    @CandleViewer/devsecops
 

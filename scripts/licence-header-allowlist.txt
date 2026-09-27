@@ -1,0 +1,8 @@
+# Files exempt from scripts/check_licence_headers.py's undeclared-third-party
+# licence banner check, one path per line, relative to repo root. Add an
+# entry only with a justification comment above it and CODEOWNER sign-off
+# (CONSTITUTION §9 #14 licence allowlist).
+
+# Test fixture strings intentionally contain OSS licence boilerplate text to
+# exercise the banned-pattern matcher itself; not a real licence banner.
+scripts/tests/test_check_licence_headers.py

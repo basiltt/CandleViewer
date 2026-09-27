@@ -1,0 +1,267 @@
+name: pr
+
+# E03-T01: entry-point workflow for every pull request into `main`.
+# ADR-0013-ci-pipeline.md binding rules 1, 2, 5, 6, 7. This workflow only
+# computes the change-path filters, wires the always-on jobs (commitlint,
+# licence-header, docs-link), calls the (still-stub) reusable per-lane
+# workflows, and resolves the final `ci-required` conclusion. Lane *contents*
+# are out of scope here (T02 js, T03 py, T06 contract, T07 security,
+# T14 engine-bench) — each reusable workflow below is a `workflow_call` stub
+# until its owning ticket fills it in.
+#
+# CV-ERR codes surfaced by the resolver: CI-GATE-001 (applicable lane not
+# successful), CI-GATE-002 (gate misconfiguration: applicable lane skipped),
+# CI-GATE-003 (unpinned action / pull_request_target — tools/ci/check_action_pins.py).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.head_ref }}
+  cancel-in-progress: true
+
+env:
+  CV_CI_TIMEOUT_MINUTES: ${{ vars.CV_CI_TIMEOUT_MINUTES || 20 }}
+
+jobs:
+  changed-paths:
+    name: changed-paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      js: ${{ steps.filter.outputs.js }}
+      py: ${{ steps.filter.outputs.py }}
+      engine: ${{ steps.filter.outputs.engine }}
+      protocol: ${{ steps.filter.outputs.protocol }}
+      infra: ${{ steps.filter.outputs.infra }}
+      docs: ${{ steps.filter.outputs.docs }}
+      e2e: ${{ steps.filter.outputs.e2e }}
+      migrations: ${{ steps.filter.outputs.migrations }}
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          filters: |
+            js:
+              - 'apps/web/**'
+              - 'apps/desktop/**'
+              - 'packages/ui/**'
+              - 'packages/config/**'
+              - 'packages/fixtures/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+            py:
+              - 'services/api/**'
+              - 'tools/ci/**'
+              - 'scripts/**/*.py'
+            engine:
+              - 'packages/chart-engine/**'
+            protocol:
+              - 'packages/protocol/**'
+              - 'docs/plan/22-api-openapi.yaml'
+              - 'docs/plan/23-ws-protocol.md'
+            infra:
+              - 'infra/**'
+              - '.github/workflows/**'
+              - 'docker-compose*.yml'
+              - 'Dockerfile*'
+            docs:
+              - 'docs/**'
+              - '**/*.md'
+            e2e:
+              - 'apps/web/**'
+              - 'apps/desktop/**'
+              - 'packages/chart-engine/**'
+              - 'packages/protocol/**'
+            migrations:
+              - 'services/api/candleviewer/migrations/versions/**'
+
+  pin-check:
+    name: pin-check (SR-132)
+    needs: changed-paths
+    if: ${{ needs.changed-paths.outputs.infra == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.13"
+      - name: Check action pins and pull_request_target (CI-GATE-003)
+        run: python tools/ci/check_action_pins.py .github/workflows
+
+  # --- Always-on jobs (ADR-0013 pipeline shape "[always]") ------------------
+
+  commitlint:
+    name: commitlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: "20"
+      - name: Enable pnpm via corepack
+        run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+      - name: Install commitlint (pinned via lockfile)
+        run: pnpm install --frozen-lockfile --filter . --prod=false
+      - name: Lint PR commits against Conventional Commits (01-sdlc-and-branching.md §6)
+        run: pnpm exec commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
+
+  licence-header:
+    name: licence-header
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.13"
+      - name: Verify SPDX/licence headers where required
+        run: python scripts/check_licence_headers.py
+
+  docs-link-check:
+    name: docs-link-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.13"
+      - name: Rule-reference and internal link check (GOV-002)
+        run: python scripts/check_rule_refs.py
+
+  # --- Path-filtered lanes ---------------------------------------------------
+  # Each callee is a `workflow_call` stub in this Task (echoes a placeholder
+  # conclusion); its owning ticket replaces the body without changing this
+  # call site or its `if:` condition. `secrets: inherit` is intentionally
+  # omitted (ADR-0013 rule 6): PR workflows receive no secrets.
+
+  js:
+    name: js
+    needs: changed-paths
+    if: ${{ needs.changed-paths.outputs.js == 'true' }}
+    uses: ./.github/workflows/_job-js.yml
+
+  py:
+    name: py
+    needs: changed-paths
+    if: ${{ needs.changed-paths.outputs.py == 'true' }}
+    uses: ./.github/workflows/_job-py.yml
+
+  contract:
+    name: contract
+    needs: changed-paths
+    if: ${{ needs.changed-paths.outputs.protocol == 'true' }}
+    uses: ./.github/workflows/_job-contract.yml
+
+  security:
+    name: security
+    needs: changed-paths
+    # Security scanning applies to any code/infra change, not just one lane.
+    if: ${{ needs.changed-paths.outputs.js == 'true' || needs.changed-paths.outputs.py == 'true' || needs.changed-paths.outputs.infra == 'true' }}
+    uses: ./.github/workflows/_job-security.yml
+
+  e2e:
+    name: e2e
+    needs: changed-paths
+    if: ${{ needs.changed-paths.outputs.e2e == 'true' }}
+    uses: ./.github/workflows/_job-e2e.yml
+
+  engine-bench:
+    name: engine-bench
+    needs: changed-paths
+    if: ${{ needs.changed-paths.outputs.engine == 'true' }}
+    uses: ./.github/workflows/_job-engine-bench.yml
+
+  # --- Gate resolver (ADR-0013 binding rule 2) -------------------------------
+
+  ci-required:
+    name: ci-required
+    if: always()
+    needs:
+      - changed-paths
+      - pin-check
+      - commitlint
+      - licence-header
+      - docs-link-check
+      - js
+      - py
+      - contract
+      - security
+      - e2e
+      - engine-bench
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: "20"
+      - name: Resolve ci-required conclusion
+        env:
+          FILTER_JS: ${{ needs.changed-paths.outputs.js }}
+          FILTER_PY: ${{ needs.changed-paths.outputs.py }}
+          FILTER_PROTOCOL: ${{ needs.changed-paths.outputs.protocol }}
+          FILTER_INFRA: ${{ needs.changed-paths.outputs.infra }}
+          FILTER_E2E: ${{ needs.changed-paths.outputs.e2e }}
+          FILTER_ENGINE: ${{ needs.changed-paths.outputs.engine }}
+          RESULT_CHANGED_PATHS: ${{ needs.changed-paths.result }}
+          RESULT_PIN_CHECK: ${{ needs.pin-check.result }}
+          RESULT_COMMITLINT: ${{ needs.commitlint.result }}
+          RESULT_LICENCE_HEADER: ${{ needs.licence-header.result }}
+          RESULT_DOCS_LINK_CHECK: ${{ needs.docs-link-check.result }}
+          RESULT_JS: ${{ needs.js.result }}
+          RESULT_PY: ${{ needs.py.result }}
+          RESULT_CONTRACT: ${{ needs.contract.result }}
+          RESULT_SECURITY: ${{ needs.security.result }}
+          RESULT_E2E: ${{ needs.e2e.result }}
+          RESULT_ENGINE_BENCH: ${{ needs.engine-bench.result }}
+        run: |
+          node scripts/ci_gate_resolver.mjs "$(node -e '
+            const isTrue = (v) => v === "true";
+            const lanes = {
+              "changed-paths": { applicable: true, result: process.env.RESULT_CHANGED_PATHS },
+              "pin-check": { applicable: isTrue(process.env.FILTER_INFRA), result: process.env.RESULT_PIN_CHECK },
+              commitlint: { applicable: true, result: process.env.RESULT_COMMITLINT },
+              "licence-header": { applicable: true, result: process.env.RESULT_LICENCE_HEADER },
+              "docs-link-check": { applicable: true, result: process.env.RESULT_DOCS_LINK_CHECK },
+              js: { applicable: isTrue(process.env.FILTER_JS), result: process.env.RESULT_JS },
+              py: { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_PY },
+              contract: { applicable: isTrue(process.env.FILTER_PROTOCOL), result: process.env.RESULT_CONTRACT },
+              security: {
+                applicable: isTrue(process.env.FILTER_JS) || isTrue(process.env.FILTER_PY) || isTrue(process.env.FILTER_INFRA),
+                result: process.env.RESULT_SECURITY,
+              },
+              e2e: { applicable: isTrue(process.env.FILTER_E2E), result: process.env.RESULT_E2E },
+              "engine-bench": { applicable: isTrue(process.env.FILTER_ENGINE), result: process.env.RESULT_ENGINE_BENCH },
+            };
+            console.log(JSON.stringify(lanes));
+          ')"
