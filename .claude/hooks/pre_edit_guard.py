@@ -2,7 +2,7 @@
 """PreToolUse guard for Edit/Write/MultiEdit.
 
 Blocks (exit 2, reason on stderr):
-  1. Edits to an existing Alembic revision under services/api/candleviewer/db/migrations/versions/
+  1. Edits to an existing Alembic revision under services/api/candleviewer/migrations/versions/
      that is already applied, i.e. tracked in git on origin/main (or main) - C-5.4.
   2. Content that imports xstate_statemachine outside services/api/candleviewer/statechart/
      (CV-LINT-IMPORT; tests/xstate_contract/ is allowed for parity tests).
