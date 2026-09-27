@@ -32,6 +32,20 @@ try:
             except Exception as e: fails.append(f"yaml {f}: {e}")
     test_dirs = sorted({os.path.dirname(f) for f in files if "/tests/" in f or os.path.basename(f).startswith("test_")})
     test_dirs = [d for d in test_dirs if os.path.isdir(os.path.join(wt, d))]
+    # Python workspace (services/api): run via uv inside the package so the
+    # candleviewer package and pytest config resolve (AGENTS.md §4). Any test
+    # dir under services/api is delegated to that one run.
+    api_dirs = [d for d in test_dirs if d.replace(chr(92), "/").startswith("services/api/")]
+    if api_dirs and os.path.exists(os.path.join(wt, "services", "api", "pyproject.toml")):
+        api = os.path.join(wt, "services", "api")
+        r = subprocess.run(["uv", "sync", "--frozen", "--quiet"], capture_output=True, text=True, cwd=api, env=env)
+        if r.returncode: fails.append(f"uv sync: {(r.stderr or r.stdout).strip()[-300:]}")
+        else:
+            r = subprocess.run(["uv", "run", "--frozen", "pytest", "-q", "-p", "no:cacheprovider", "-m", "not integration"], capture_output=True, text=True, cwd=api, env=env)
+            tail = " | ".join((r.stdout or r.stderr).strip().splitlines()[-3:])
+            print("pytest(services/api):", tail)
+            if r.returncode not in (0, 5): fails.append(f"services/api pytest rc={r.returncode}: {tail[:300]}")
+        test_dirs = [d for d in test_dirs if d not in api_dirs]
     if test_dirs:
         r = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", *test_dirs], capture_output=True, text=True, cwd=wt, env=env)
         tail = "\n".join(r.stdout.strip().splitlines()[-3:])
