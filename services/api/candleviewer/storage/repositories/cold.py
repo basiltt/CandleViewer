@@ -18,9 +18,7 @@ from candleviewer.storage.models import ExportRun, StreamKind, TimeRange
 class ColdTierRepository(Protocol):
     """Parquet/DuckDB cold-tier export, catalogue, and query surface."""
 
-    async def export_partition(
-        self, symbol: str, stream: StreamKind, rng: TimeRange
-    ) -> ExportRun:
+    async def export_partition(self, symbol: str, stream: StreamKind, rng: TimeRange) -> ExportRun:
         """Export one `(symbol, stream)` partition covering `rng` from the hot
         tier to Parquet. Returns an `ExportRun` with `verified=False` —
         callers must call `verify_checksums` before treating the export as
@@ -32,9 +30,7 @@ class ColdTierRepository(Protocol):
         `partition_range.start_us`."""
         ...
 
-    async def query(
-        self, symbol: str, stream: StreamKind, rng: TimeRange
-    ) -> list[dict[str, Any]]:
+    async def query(self, symbol: str, stream: StreamKind, rng: TimeRange) -> list[dict[str, Any]]:
         """Ad-hoc DuckDB query over the cold tier for `(symbol, stream)`
         within `rng`. Returns plain dicts (not the hot-path row dataclasses)
         because cold-tier query shape varies by stream and callers are

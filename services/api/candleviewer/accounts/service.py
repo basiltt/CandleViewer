@@ -33,6 +33,4 @@ class AccountsService:
     def health(self) -> HealthReport:
         """Report module health. Scaffold modules report `ok` when constructed."""
         status = HealthStatus.OK if self._started else HealthStatus.STOPPED
-        return HealthReport(
-            module="", status=status, detail="scaffold module — no real logic yet"
-        )
+        return HealthReport(module="", status=status, detail="scaffold module — no real logic yet")
