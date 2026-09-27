@@ -1,17 +1,35 @@
 """bus module (M5).
 
-In-process pub/sub, bounded queues, backpressure policies.
+In-process pub/sub, bounded queues, backpressure policies
+(`docs/plan/20-architecture.md` §3 bus contract, §4.2 backpressure matrix).
 
-Public interface only — internal implementation modules are not re-exported.
+Public interface: `Bus`, `Topic`, `TopicPattern`, `QueuePolicy`,
+`StreamInvalidated`, and the errors below. Internal implementation modules
+(`bus.py`, `metrics.py`) are not otherwise re-exported.
+
 Allowed dependencies (CONSTITUTION.md C-3.1): M1.
-
-This module is a conforming EMPTY module scaffolded by E02-T05
-(docs/plan/backlog/all-tickets.json). Real logic lands in the epic that owns
-this module (see docs/plan/20-architecture.md Sec.3 and the module table in
-CONSTITUTION.md Sec.3). Do not add business logic here without a linked
-ticket.
 """
 
 from __future__ import annotations
 
-__all__: list[str] = []
+from candleviewer.bus.bus import Bus, Subscription
+from candleviewer.bus.errors import (
+    BusError,
+    BusNotStartedError,
+    BusShuttingDownError,
+    InvalidTopicError,
+)
+from candleviewer.bus.models import QueuePolicy, StreamInvalidated, Topic, TopicPattern
+
+__all__ = [
+    "Bus",
+    "BusError",
+    "BusNotStartedError",
+    "BusShuttingDownError",
+    "InvalidTopicError",
+    "QueuePolicy",
+    "StreamInvalidated",
+    "Subscription",
+    "Topic",
+    "TopicPattern",
+]
