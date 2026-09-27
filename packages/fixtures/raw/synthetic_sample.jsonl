@@ -1,0 +1,8 @@
+{"kind": "trade", "data": {"symbol": "BTCUSDT", "price": "65000.10", "size": "0.010", "side": "buy", "ts": "2026-01-01T00:00:00Z"}}
+{"kind": "ticker", "data": {"symbol": "BTCUSDT", "last_price": "65000.10", "bid_price": "65000.00", "ask_price": "65000.20", "ts": "2026-01-01T00:00:00Z"}}
+{"kind": "trade", "data": {"symbol": "BTCUSDT", "price": "64998.50", "size": "0.025", "side": "sell", "ts": "2026-01-01T00:00:01Z"}}
+{"kind": "ticker", "data": {"symbol": "BTCUSDT", "last_price": "64998.50", "bid_price": "64998.40", "ask_price": "64998.60", "ts": "2026-01-01T00:00:01Z"}}
+{"kind": "trade", "data": {"symbol": "ETHUSDT", "price": "3400.25", "size": "0.100", "side": "buy", "ts": "2026-01-01T00:00:02Z"}}
+{"kind": "ticker", "data": {"symbol": "ETHUSDT", "last_price": "3400.25", "bid_price": "3400.10", "ask_price": "3400.40", "ts": "2026-01-01T00:00:02Z"}}
+{"kind": "trade", "data": {"symbol": "BTCUSDT", "price": "65001.75", "size": "0.005", "side": "buy", "ts": "2026-01-01T00:00:03Z"}}
+{"kind": "trade", "data": {"symbol": "ETHUSDT", "price": "3399.80", "size": "0.050", "side": "sell", "ts": "2026-01-01T00:00:04Z"}}

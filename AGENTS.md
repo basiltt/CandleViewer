@@ -348,19 +348,20 @@ the source of truth for ticket _content_.
 
 ### Stack, E2E, load, security
 
-| Task                                                               | Command                                                                                                       |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| Bring up local stack (Postgres, QuestDB, API, Prometheus, Grafana) | `make up` (equivalent to `docker compose -f infra/docker-compose.dev.yml --profile core --profile obs up -d`) |
-| Stop local stack (keep volumes)                                    | `make down`                                                                                                   |
-| Reset local stack (drop volumes, clean-state rebuild)              | `make reset`                                                                                                  |
-| E2E (web)                                                          | `pnpm e2e`                                                                                                    |
-| E2E (Electron)                                                     | `pnpm e2e:desktop`                                                                                            |
-| Accessibility scan                                                 | `pnpm test:a11y`                                                                                              |
-| Load test                                                          | `k6 run tests/load/api-ws.js`                                                                                 |
-| Ingestion soak                                                     | `locust -f tests/load/ingestion_soak.py`                                                                      |
-| Chaos suite                                                        | `pnpm chaos`                                                                                                  |
-| Secret scan on your diff                                           | `gitleaks protect --staged --redact`                                                                          |
-| Container scan                                                     | `trivy image candleviewer/api:dev`                                                                            |
+| Task                                                                | Command                                                                                                       |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Bring up local stack (Postgres, QuestDB, API, Prometheus, Grafana)  | `make up` (equivalent to `docker compose -f infra/docker-compose.dev.yml --profile core --profile obs up -d`) |
+| Full dev loop (stack + api in `CV_FEED=synthetic` + web dev server) | `make dev` (E02-T12; teardown: `make dev-down`)                                                               |
+| Stop local stack (keep volumes)                                     | `make down`                                                                                                   |
+| Reset local stack (drop volumes, clean-state rebuild)               | `make reset`                                                                                                  |
+| E2E (web)                                                           | `pnpm e2e`                                                                                                    |
+| E2E (Electron)                                                      | `pnpm e2e:desktop`                                                                                            |
+| Accessibility scan                                                  | `pnpm test:a11y`                                                                                              |
+| Load test                                                           | `k6 run tests/load/api-ws.js`                                                                                 |
+| Ingestion soak                                                      | `locust -f tests/load/ingestion_soak.py`                                                                      |
+| Chaos suite                                                         | `pnpm chaos`                                                                                                  |
+| Secret scan on your diff                                            | `gitleaks protect --staged --redact`                                                                          |
+| Container scan                                                      | `trivy image candleviewer/api:dev`                                                                            |
 
 ### Governance (C-16.4, C-16.5 — runnable today; stdlib Python plus `jsonschema` for GOV-004)
 

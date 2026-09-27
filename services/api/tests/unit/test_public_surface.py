@@ -29,6 +29,9 @@ _MANIFEST = json.loads(_MANIFEST_PATH.read_text(encoding="utf-8"))
 _ALLOWED_EXTRA_EXPORTS: dict[str, set[str]] = {
     "M23a": {"make_health_router"},
     "M24": {"HealthReport", "HealthStatus"},
+    # E02-T12: the normalised domain-event shapes (C-2.3) the synthetic feed
+    # generator and, later, the real Bybit adapter (E08) both publish.
+    "M3": {"Trade", "Ticker", "TradeSide"},
 }
 
 
