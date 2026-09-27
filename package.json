@@ -31,8 +31,8 @@
       "prettier --write"
     ],
     "services/api/**/*.py": [
-      "uv run --project services/api ruff check --fix",
-      "uv run --project services/api black"
+      "uv run --project services/api ruff check --fix --force-exclude",
+      "uv run --project services/api black --force-exclude '(candleviewer/(api|ws)/_generated)'"
     ]
   },
   "devDependencies": {

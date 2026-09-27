@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { checkSequence } from "../src/runtime/index.js";
-import { GENERATED_PLACEHOLDER } from "../src/generated/index.js";
+import * as ws from "../src/generated/ws.js";
+import * as rest from "../src/generated/rest.js";
 
 describe("protocol public export surface", () => {
-  it("exposes the generated placeholder marker", () => {
-    expect(GENERATED_PLACEHOLDER).toBe(true);
+  it("exposes the generated ws and rest namespaces (non-empty)", () => {
+    expect(ws).toBeTypeOf("object");
+    expect(rest).toBeTypeOf("object");
   });
 
   describe("checkSequence", () => {

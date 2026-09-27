@@ -1,0 +1,4 @@
+candleviewer/api/_generated/** linguist-generated=true
+candleviewer/api/_generated/** -diff
+candleviewer/ws/_generated/** linguist-generated=true
+candleviewer/ws/_generated/** -diff

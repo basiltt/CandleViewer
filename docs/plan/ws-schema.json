@@ -1,0 +1,2993 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "generatedFrom": "docs/plan/23-ws-protocol.md §13-15 (schemas), §6 (topic catalogue)",
+  "generatedBy": "packages/protocol/scripts/extract-ws-schema.mjs",
+  "schemaCount": 34,
+  "schemas": {
+    "cv://ws/v1/common.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/common.schema.json",
+      "title": "CandleViewer WS — shared definitions",
+      "$defs": {
+        "decimal": {
+          "type": "string",
+          "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+          "description": "Arbitrary-precision decimal as a string; never a JSON number."
+        },
+        "symbol": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{2,20}USDT$"
+        },
+        "uuid": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "epochMs": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Epoch milliseconds, UTC."
+        },
+        "seq": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "topic": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "pattern": "^[a-z_]+(\\.[A-Za-z0-9:_-]+)*$"
+        },
+        "environment": {
+          "$comment": "Mirrors OpenAPI `Environment` / Postgres `exchange_env` exactly. `paper` is NOT a member: paper trading is the orthogonal boolean `is_paper`, because a paper fill still belongs to a real environment (demo, or live during a replay) and collapsing the two would lose that.",
+          "enum": ["live", "demo", "testnet"]
+        },
+        "isPaper": {
+          "type": "boolean",
+          "default": false,
+          "description": "True when the fill/order came from the paper matcher rather than the exchange. Mirrors the `is_paper` column."
+        },
+        "side": {
+          "enum": ["buy", "sell"]
+        },
+        "barType": {
+          "enum": ["time", "tick", "volume", "range", "delta", "renko", "pnf", "heikin_ashi"]
+        },
+        "depth": {
+          "enum": [1, 50, 200, 500]
+        },
+        "errorCode": {
+          "$comment": "GENERATED from 22-api-openapi.yaml x-error-codes-ws + x-error-codes[surface contains ws]. Do not hand-edit; CI gate error_registry_single_source regenerates and diffs.",
+          "enum": [
+            "protocol_violation",
+            "frame_malformed",
+            "unsupported_protocol",
+            "not_authenticated",
+            "auth_failed",
+            "auth_timeout",
+            "token_expired",
+            "user_disabled",
+            "forbidden",
+            "account_scope_denied",
+            "unknown_topic",
+            "invalid_topic_format",
+            "unsupported_symbol",
+            "invalid_options",
+            "encoding_unsupported",
+            "subscription_limit",
+            "too_many_topics",
+            "duplicate_subscription",
+            "not_subscribed",
+            "resync_rate_limited",
+            "client_rate_limited",
+            "slow_consumer",
+            "no_data_recorded",
+            "degraded_data",
+            "exchange_unavailable",
+            "replay_session_not_found",
+            "replay_session_ended",
+            "internal_error"
+          ]
+        },
+        "error": {
+          "type": "object",
+          "required": ["code", "message"],
+          "properties": {
+            "code": {
+              "$ref": "#/$defs/errorCode"
+            },
+            "message": {
+              "type": "string",
+              "maxLength": 1000
+            },
+            "retryable": {
+              "type": "boolean",
+              "default": false
+            },
+            "field": {
+              "type": "string"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "close": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "snapMeta": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "enum": [
+                "initial",
+                "client_resync",
+                "upstream_desync",
+                "upstream_reconnect",
+                "backpressure",
+                "reconfigure",
+                "instrument_revision",
+                "replay_seek"
+              ]
+            },
+            "previous_seq": {
+              "$ref": "#/$defs/seq"
+            },
+            "recording_started_at_ms": {
+              "$ref": "#/$defs/epochMs"
+            },
+            "history_bars": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "source": {
+              "enum": ["live", "replay"],
+              "default": "live"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "cv://ws/v1/envelope.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/envelope.schema.json",
+      "title": "CandleViewer WS envelope",
+      "type": "object",
+      "required": ["t"],
+      "properties": {
+        "t": {
+          "enum": [
+            "hello",
+            "welcome",
+            "auth",
+            "auth_ok",
+            "sub",
+            "sub_ok",
+            "unsub",
+            "unsub_ok",
+            "snap",
+            "d",
+            "resync",
+            "revoked",
+            "ping",
+            "pong",
+            "err",
+            "ctl",
+            "ctl_ok",
+            "bye"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Correlation id; echoed on replies."
+        },
+        "ch": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/topic"
+        },
+        "s": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/seq"
+        },
+        "ts": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+        },
+        "wt": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs",
+          "description": "Wall-clock send time; present only on replay frames where `ts` is the recorded time."
+        },
+        "rs": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid",
+          "description": "Replay session id; present only on replay frames."
+        },
+        "e": {
+          "enum": ["j", "b", "b64"],
+          "default": "j"
+        },
+        "meta": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/snapMeta"
+        },
+        "p": {}
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "t": {
+                "const": "d"
+              }
+            },
+            "required": ["t"]
+          },
+          "then": {
+            "required": ["ch", "s", "ts", "p"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "t": {
+                "const": "snap"
+              }
+            },
+            "required": ["t"]
+          },
+          "then": {
+            "required": ["ch", "ts", "p"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "e": {
+                "const": "b"
+              }
+            },
+            "required": ["e"]
+          },
+          "then": {
+            "properties": {
+              "p": {
+                "type": "string",
+                "contentEncoding": "binary"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "cv://ws/v1/hello.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/hello.schema.json",
+      "type": "object",
+      "required": ["client", "client_version", "protocol"],
+      "properties": {
+        "client": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "client_version": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "shell": {
+          "enum": ["electron", "browser", "other"]
+        },
+        "protocol": {
+          "const": "cv.v1"
+        },
+        "encodings": {
+          "type": "array",
+          "items": {
+            "enum": ["binary", "structured"]
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "binary_book",
+              "binary_bars",
+              "binary_trades",
+              "binary_footprint",
+              "binary_heatmap",
+              "coalescing",
+              "replay",
+              "partial_snapshots"
+            ]
+          }
+        },
+        "locale": {
+          "type": "string",
+          "maxLength": 16
+        },
+        "clock_ms": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/welcome.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/welcome.schema.json",
+      "type": "object",
+      "required": [
+        "protocol",
+        "encoding",
+        "server_version",
+        "connection_id",
+        "server_time_ms",
+        "auth_required",
+        "heartbeat",
+        "limits"
+      ],
+      "properties": {
+        "protocol": {
+          "const": "cv.v1"
+        },
+        "encoding": {
+          "enum": ["msgpack", "json"]
+        },
+        "server_version": {
+          "type": "string"
+        },
+        "git_sha": {
+          "type": "string"
+        },
+        "connection_id": {
+          "type": "string"
+        },
+        "server_time_ms": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+        },
+        "clock_skew_ms": {
+          "type": "integer"
+        },
+        "auth_required": {
+          "type": "boolean"
+        },
+        "auth_timeout_ms": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 60000
+        },
+        "heartbeat": {
+          "type": "object",
+          "required": ["interval_ms", "timeout_ms"],
+          "properties": {
+            "interval_ms": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 120000
+            },
+            "timeout_ms": {
+              "type": "integer",
+              "minimum": 5000,
+              "maximum": 300000
+            }
+          },
+          "additionalProperties": false
+        },
+        "limits": {
+          "type": "object",
+          "required": [
+            "max_subscriptions",
+            "max_topics_per_request",
+            "max_inbound_frame_bytes",
+            "max_outbound_frame_bytes",
+            "min_throttle_ms"
+          ],
+          "properties": {
+            "max_subscriptions": {
+              "type": "integer"
+            },
+            "max_topics_per_request": {
+              "type": "integer"
+            },
+            "max_inbound_frame_bytes": {
+              "type": "integer"
+            },
+            "max_outbound_frame_bytes": {
+              "type": "integer"
+            },
+            "min_throttle_ms": {
+              "type": "integer"
+            },
+            "max_symbols_per_connection": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false
+        },
+        "features": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/auth.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/auth.schema.json",
+      "type": "object",
+      "required": ["access_token"],
+      "properties": {
+        "access_token": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 4096
+        },
+        "environments": {
+          "type": "array",
+          "items": {
+            "$ref": "cv://ws/v1/common.schema.json#/$defs/environment"
+          },
+          "description": "Environments this connection intends to observe; intersected with the token's grants."
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/auth_ok.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/auth_ok.schema.json",
+      "type": "object",
+      "required": [
+        "user_id",
+        "roles",
+        "permissions",
+        "account_scope",
+        "session_id",
+        "token_expires_at_ms"
+      ],
+      "properties": {
+        "user_id": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+        },
+        "username": {
+          "type": "string"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "enum": ["owner", "manager", "viewer"]
+          }
+        },
+        "permissions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "account_scope": {
+          "type": "array",
+          "items": {
+            "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+          }
+        },
+        "allowed_environments": {
+          "type": "array",
+          "items": {
+            "$ref": "cv://ws/v1/common.schema.json#/$defs/environment"
+          }
+        },
+        "session_id": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+        },
+        "token_expires_at_ms": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+        },
+        "kill_switch": {
+          "$ref": "cv://ws/v1/system.schema.json#/$defs/killSwitch"
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/sub.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/sub.schema.json",
+      "type": "object",
+      "required": ["topics"],
+      "properties": {
+        "topics": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "items": {
+            "type": "object",
+            "required": ["ch"],
+            "properties": {
+              "ch": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/topic"
+              },
+              "opts": {
+                "$ref": "#/$defs/options"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "snapshot": {
+          "type": "boolean",
+          "default": true
+        },
+        "replay_session_id": {
+          "oneOf": [
+            {
+              "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "$defs": {
+        "options": {
+          "type": "object",
+          "description": "Union of universal and topic-specific options. Unknown keys are rejected with `invalid_options`.",
+          "properties": {
+            "throttle_ms": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60000
+            },
+            "encoding": {
+              "enum": ["binary", "structured"]
+            },
+            "coalesce": {
+              "type": "boolean",
+              "default": true
+            },
+            "from_seq": {
+              "$ref": "cv://ws/v1/common.schema.json#/$defs/seq"
+            },
+            "from_ts_ms": {
+              "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+            },
+            "min_size": {
+              "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+            },
+            "cluster_window_ms": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5000
+            },
+            "cluster_tolerance_ticks": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 20
+            },
+            "include_delta": {
+              "type": "boolean"
+            },
+            "history": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            },
+            "price_grouping": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "imbalance_ratio": {
+              "type": "number",
+              "minimum": 1.5,
+              "maximum": 20
+            },
+            "min_stack": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 10
+            },
+            "min_imbalance_volume": {
+              "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+            },
+            "time_bucket_ms": {
+              "enum": [100, 250, 500, 1000, 5000],
+              "default": 500,
+              "description": "Client SHOULD derive this per §6.1.1 rather than sending a constant; 500 is the non-visual-client fallback."
+            },
+            "depth": {
+              "$ref": "cv://ws/v1/common.schema.json#/$defs/depth"
+            },
+            "window_seconds": {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 900
+            },
+            "split": {
+              "enum": ["composite", "session", "fixed"]
+            },
+            "session_anchor": {
+              "enum": ["utc_day", "funding_8h", "custom"]
+            },
+            "value_area_pct": {
+              "type": "number",
+              "minimum": 50,
+              "maximum": 95
+            },
+            "metrics": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 12,
+              "items": {
+                "type": "string"
+              }
+            },
+            "bar_type": {
+              "$ref": "cv://ws/v1/common.schema.json#/$defs/barType"
+            },
+            "param": {
+              "type": "string",
+              "maxLength": 24
+            },
+            "params": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "exchange_account_ids": {
+              "type": "array",
+              "maxItems": 25,
+              "items": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+              }
+            },
+            "symbols": {
+              "type": "array",
+              "maxItems": 40,
+              "items": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
+              }
+            },
+            "open_only": {
+              "type": "boolean"
+            },
+            "status": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "rule_ids": {
+              "type": "array",
+              "items": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+              }
+            },
+            "include_events": {
+              "type": "boolean"
+            },
+            "unacked_only": {
+              "type": "boolean"
+            },
+            "min_notional_usd": {
+              "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "cv://ws/v1/sub_ok.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/sub_ok.schema.json",
+      "type": "object",
+      "required": ["results"],
+      "properties": {
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ch", "ok"],
+            "properties": {
+              "ch": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/topic"
+              },
+              "ok": {
+                "type": "boolean"
+              },
+              "sub_id": {
+                "type": "string"
+              },
+              "snapshot_pending": {
+                "type": "boolean"
+              },
+              "snapshot_forced": {
+                "type": "boolean"
+              },
+              "effective": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "warning": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/error"
+              },
+              "error": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/error"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/unsub.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/unsub.schema.json",
+      "type": "object",
+      "required": ["topics"],
+      "properties": {
+        "topics": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "items": {
+            "$ref": "cv://ws/v1/common.schema.json#/$defs/topic"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/unsub_ok.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/unsub_ok.schema.json",
+      "type": "object",
+      "required": ["results"],
+      "properties": {
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ch", "ok"],
+            "properties": {
+              "ch": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/topic"
+              },
+              "ok": {
+                "type": "boolean"
+              },
+              "noop": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/ctl.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/ctl.schema.json",
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "throttle_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60000
+        },
+        "coalesce": {
+          "type": "boolean"
+        },
+        "depth": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/depth"
+        },
+        "price_grouping": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "min_size": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+        },
+        "time_bucket_ms": {
+          "enum": [100, 250, 500, 1000, 5000],
+          "description": "Re-derived bucket (§6.1.1); triggers `resnapshot: true`."
+        },
+        "paused": {
+          "type": "boolean",
+          "description": "Client-side pause; the server stops emitting but keeps state."
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/ctl_ok.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/ctl_ok.schema.json",
+      "type": "object",
+      "required": ["effective"],
+      "properties": {
+        "effective": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "resnapshot": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, a fresh `snap` follows and prior state must be discarded."
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/resync.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/resync.schema.json",
+      "type": "object",
+      "required": ["reason"],
+      "properties": {
+        "last_seq": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/seq"
+        },
+        "reason": {
+          "enum": ["sequence_gap", "decode_error", "state_corrupt", "client_restart", "manual"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/revoked.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/revoked.schema.json",
+      "type": "object",
+      "required": ["reason", "message"],
+      "properties": {
+        "reason": {
+          "enum": [
+            "permission_revoked",
+            "account_scope_changed",
+            "user_disabled",
+            "session_revoked",
+            "key_revoked",
+            "account_disabled",
+            "replay_session_ended",
+            "resync_rate_limited",
+            "topic_removed"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "removed_accounts": {
+          "type": "array",
+          "items": {
+            "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+          }
+        },
+        "resubscribe_allowed": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/heartbeat.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/heartbeat.schema.json",
+      "title": "ping / pong payloads",
+      "type": "object",
+      "properties": {
+        "client_ms": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+        },
+        "server_ms": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+        },
+        "rtt_hint_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/bye.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/bye.schema.json",
+      "type": "object",
+      "required": ["code", "reason", "message"],
+      "properties": {
+        "code": {
+          "enum": [1000, 1001, 1002, 1009, 1011, 1013, 4400, 4401, 4403, 4429]
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "retry_after_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reconnect": {
+          "type": "boolean"
+        },
+        "hint": {
+          "type": "object",
+          "properties": {
+            "most_expensive_topics": {
+              "type": "array",
+              "items": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/topic"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/book.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/book.schema.json",
+      "title": "book.{symbol}.{depth}",
+      "type": "object",
+      "required": ["symbol", "bids", "asks"],
+      "properties": {
+        "symbol": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
+        },
+        "depth": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/depth"
+        },
+        "price_scale": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18
+        },
+        "qty_scale": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18
+        },
+        "xu": {
+          "type": "integer",
+          "description": "Bybit orderbook update id `u`, for diagnostics only."
+        },
+        "xseq": {
+          "type": "integer",
+          "description": "Bybit cross-topic sequence `seq`."
+        },
+        "bids": {
+          "$ref": "#/$defs/levels",
+          "description": "Descending by price. Size \"0\" deletes the level."
+        },
+        "asks": {
+          "$ref": "#/$defs/levels",
+          "description": "Ascending by price. Size \"0\" deletes the level."
+        },
+        "stale": {
+          "type": "boolean",
+          "default": false
+        },
+        "coalesced": {
+          "type": "boolean",
+          "default": false
+        },
+        "coalesced_count": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "$defs": {
+        "levels": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+            }
+          }
+        }
+      }
+    },
+    "cv://ws/v1/trades.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/trades.schema.json",
+      "title": "trades.{symbol}",
+      "type": "object",
+      "required": ["symbol", "trades"],
+      "properties": {
+        "symbol": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
+        },
+        "trades": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ts_ms", "price", "size", "side"],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "ts_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              },
+              "price": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "size": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "side": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/side",
+                "description": "Taker/aggressor side, taken directly from Bybit `S`."
+              },
+              "is_block_trade": {
+                "type": "boolean",
+                "default": false
+              },
+              "is_liquidation": {
+                "type": "boolean",
+                "default": false
+              },
+              "cluster_size": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              },
+              "tick_direction": {
+                "enum": ["PlusTick", "ZeroPlusTick", "MinusTick", "ZeroMinusTick"]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "dropped": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Prints filtered out by `min_size` since the previous frame; never silent."
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/bars.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/bars.schema.json",
+      "title": "bars.{symbol}.{bar_type}.{param}",
+      "type": "object",
+      "required": ["symbol", "bar_type", "param", "bars"],
+      "properties": {
+        "symbol": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
+        },
+        "bar_type": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/barType"
+        },
+        "param": {
+          "type": "string",
+          "maxLength": 24
+        },
+        "bars": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["t_ms", "o", "h", "l", "c", "v", "confirm"],
+            "properties": {
+              "t_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs",
+                "description": "Bar open time."
+              },
+              "close_t_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs",
+                "description": "Present for non-time bars."
+              },
+              "o": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "h": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "l": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "c": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "v": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "turnover": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "trades": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "confirm": {
+                "type": "boolean",
+                "description": "False for the in-progress bar. A client MUST NOT treat it as closed."
+              },
+              "delta": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "cvd": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "min_delta": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "max_delta": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "coalesced": {
+          "type": "boolean",
+          "default": false
+        },
+        "coalesced_count": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/footprint.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/footprint.schema.json",
+      "title": "footprint.{symbol}.{bar_type}.{param}",
+      "type": "object",
+      "required": ["symbol", "bar_type", "param", "bars"],
+      "properties": {
+        "symbol": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
+        },
+        "bar_type": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/barType"
+        },
+        "param": {
+          "type": "string",
+          "maxLength": 24
+        },
+        "tick_size": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+        },
+        "price_grouping": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bars": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["t_ms", "cells"],
+            "properties": {
+              "t_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              },
+              "close_t_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              },
+              "confirm": {
+                "type": "boolean"
+              },
+              "poc_price": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "value_area_high": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "value_area_low": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "delta": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "unfinished_auction": {
+                "type": "object",
+                "properties": {
+                  "high": {
+                    "type": "boolean"
+                  },
+                  "low": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "cells": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["price", "bid_volume", "ask_volume"],
+                  "properties": {
+                    "price": {
+                      "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                    },
+                    "bid_volume": {
+                      "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal",
+                      "description": "Volume traded into the bid (taker sells)."
+                    },
+                    "ask_volume": {
+                      "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal",
+                      "description": "Volume traded into the ask (taker buys)."
+                    },
+                    "delta": {
+                      "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                    },
+                    "total_volume": {
+                      "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                    },
+                    "trades": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "is_poc": {
+                      "type": "boolean",
+                      "default": false
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "imbalances": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["price", "direction", "ratio"],
+                  "properties": {
+                    "price": {
+                      "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                    },
+                    "direction": {
+                      "$ref": "cv://ws/v1/common.schema.json#/$defs/side"
+                    },
+                    "ratio": {
+                      "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                    },
+                    "stacked": {
+                      "type": "boolean",
+                      "default": false
+                    },
+                    "stack_size": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "estimated": {
+                      "type": "boolean",
+                      "default": false
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "coalesced": {
+          "type": "boolean",
+          "default": false
+        },
+        "coalesced_count": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/heatmap.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/heatmap.schema.json",
+      "title": "heatmap.{symbol}",
+      "type": "object",
+      "required": ["symbol", "time_bucket_ms", "columns"],
+      "properties": {
+        "symbol": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
+        },
+        "time_bucket_ms": {
+          "enum": [100, 250, 500, 1000, 5000],
+          "description": "Effective bucket in force, echoing what the client derived per §6.1.1 (or 500 if the client sent none)."
+        },
+        "price_grouping": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/depth"
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["t_ms", "price_min", "price_step", "bids", "asks"],
+            "properties": {
+              "t_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              },
+              "price_min": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "price_step": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "bids": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "description": "Resting bid size per price row, ascending from `price_min`."
+              },
+              "asks": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "complete": {
+                "type": "boolean",
+                "description": "False while the time bucket is still accumulating."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "max_value": {
+          "type": "number"
+        },
+        "estimated": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/profile.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/profile.schema.json",
+      "title": "profile.{symbol}.{kind}",
+      "type": "object",
+      "required": ["symbol", "kind", "profiles"],
+      "properties": {
+        "symbol": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
+        },
+        "kind": {
+          "enum": ["volume", "delta", "tpo"]
+        },
+        "split": {
+          "enum": ["composite", "session", "fixed"]
+        },
+        "profiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["period_start_ms", "rows"],
+            "properties": {
+              "period_start_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              },
+              "period_end_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              },
+              "total_volume": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "poc_price": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "value_area_high": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "value_area_low": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "naked_poc": {
+                "type": "boolean"
+              },
+              "rows": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["price", "volume"],
+                  "properties": {
+                    "price": {
+                      "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                    },
+                    "volume": {
+                      "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                    },
+                    "buy_volume": {
+                      "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                    },
+                    "sell_volume": {
+                      "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                    },
+                    "delta": {
+                      "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                    },
+                    "tpo_count": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "hvn": {
+                "type": "array",
+                "items": {
+                  "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                }
+              },
+              "lvn": {
+                "type": "array",
+                "items": {
+                  "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/metrics.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/metrics.schema.json",
+      "title": "metrics.{symbol}",
+      "type": "object",
+      "required": ["symbol", "series"],
+      "properties": {
+        "symbol": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
+        },
+        "bar_type": {
+          "$ref": "cv://ws/v1/common.schema.json#/$defs/barType"
+        },
+        "param": {
+          "type": "string"
+        },
+        "series": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["metric", "t_ms", "v"],
+            "properties": {
+              "metric": {
+                "enum": [
+                  "cvd",
+                  "delta",
+                  "min_max_delta",
+                  "trades_per_sec",
+                  "volume_per_sec",
+                  "book_updates_per_sec",
+                  "tape_acceleration",
+                  "imbalance_ratio",
+                  "absorption",
+                  "exhaustion",
+                  "iceberg",
+                  "stop_run",
+                  "adx",
+                  "atr",
+                  "hurst",
+                  "regime",
+                  "vwap",
+                  "open_interest_delta",
+                  "funding_basis",
+                  "liquidation_intensity"
+                ]
+              },
+              "t_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              },
+              "v": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "unit": {
+                "enum": ["base_volume", "index", "ratio", "confidence", "usd", "price", "count"]
+              },
+              "estimated": {
+                "type": "boolean",
+                "default": false,
+                "description": "True for heuristic metrics (iceberg, stop_run, absorption, exhaustion)."
+              },
+              "params": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "meta": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Event detail for event-like metrics, e.g. {price, side, reloads}."
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/ticker.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/ticker.schema.json",
+      "title": "ticker.{symbol} / ticker",
+      "type": "object",
+      "required": ["tickers"],
+      "properties": {
+        "tickers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["symbol", "last_price", "ts_ms"],
+            "properties": {
+              "symbol": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
+              },
+              "last_price": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "mark_price": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "index_price": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "bid1_price": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "bid1_size": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "ask1_price": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "ask1_size": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "price_change_pct_24h": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "high_24h": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "low_24h": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "volume_24h": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "turnover_24h": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "open_interest": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "open_interest_value": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "funding_rate": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "next_funding_time_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              },
+              "ts_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              },
+              "stale": {
+                "type": "boolean",
+                "default": false
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/liquidations.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/liquidations.schema.json",
+      "title": "liquidations.{symbol} / liquidations",
+      "type": "object",
+      "required": ["liquidations"],
+      "properties": {
+        "liquidations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["symbol", "ts_ms", "side", "price", "size"],
+            "properties": {
+              "symbol": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
+              },
+              "ts_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              },
+              "side": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/side"
+              },
+              "price": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "size": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "notional_usd": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "cluster_size": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "note": {
+          "type": "string",
+          "description": "Bybit batches at most one allLiquidation push per symbol per 500 ms; counts are lower bounds."
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/orders.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/orders.schema.json",
+      "title": "orders",
+      "type": "object",
+      "required": ["orders"],
+      "properties": {
+        "orders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "exchange_account_id", "symbol", "state", "updated_at_ms"],
+            "properties": {
+              "id": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+              },
+              "exchange_account_id": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+              },
+              "trade_group_id": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "trade_group_leg_id": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "parent_order_id": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "order_link_id": {
+                "type": "string",
+                "maxLength": 36
+              },
+              "exchange_order_id": {
+                "type": ["string", "null"]
+              },
+              "symbol": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
+              },
+              "side": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/side"
+              },
+              "order_type": {
+                "enum": ["market", "limit"]
+              },
+              "intent": {
+                "enum": [
+                  "entry",
+                  "stop_loss",
+                  "take_profit",
+                  "scale_in",
+                  "scale_out",
+                  "flatten",
+                  "reverse",
+                  "algo_child"
+                ]
+              },
+              "state": {
+                "enum": [
+                  "new",
+                  "pending_submit",
+                  "submitted",
+                  "accepted",
+                  "partially_filled",
+                  "filled",
+                  "pending_cancel",
+                  "cancelled",
+                  "pending_amend",
+                  "rejected",
+                  "expired",
+                  "untracked"
+                ]
+              },
+              "qty": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "filled_qty": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "remaining_qty": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "price": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "avg_fill_price": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "time_in_force": {
+                "enum": ["GTC", "IOC", "FOK", "PostOnly"]
+              },
+              "reduce_only": {
+                "type": "boolean"
+              },
+              "close_on_trigger": {
+                "type": "boolean"
+              },
+              "position_idx": {
+                "enum": [0, 1, 2]
+              },
+              "trigger_price": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "trigger_by": {
+                "enum": ["LastPrice", "MarkPrice", "IndexPrice", null]
+              },
+              "trigger_direction": {
+                "enum": ["rise", "fall", null]
+              },
+              "take_profit": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "stop_loss": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "tpsl_mode": {
+                "enum": ["Full", "Partial"]
+              },
+              "algo_kind": {
+                "enum": ["none", "oco", "iceberg", "twap", "chase", "scaled", "bracket"]
+              },
+              "environment": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/environment"
+              },
+              "is_paper": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/isPaper"
+              },
+              "rejected_reason": {
+                "type": ["string", "null"]
+              },
+              "change": {
+                "enum": [
+                  "created",
+                  "submitted",
+                  "ack",
+                  "fill",
+                  "amend",
+                  "cancel",
+                  "reject",
+                  "expire",
+                  "reconcile"
+                ],
+                "description": "What caused this frame; drives UI animation and the order-timeline widget."
+              },
+              "updated_at_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+          },
+          "description": "Order ids that left the open set (terminal state) and may be dropped from the live view."
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/positions.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/positions.schema.json",
+      "title": "positions",
+      "type": "object",
+      "required": ["positions"],
+      "properties": {
+        "positions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "exchange_account_id", "symbol", "side", "size", "updated_at_ms"],
+            "properties": {
+              "id": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+              },
+              "exchange_account_id": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+              },
+              "symbol": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
+              },
+              "side": {
+                "enum": ["long", "short", "flat"]
+              },
+              "position_idx": {
+                "enum": [0, 1, 2]
+              },
+              "size": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "avg_price": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "mark_price": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "position_value": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "leverage": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "margin_mode": {
+                "enum": ["cross", "isolated", "portfolio"]
+              },
+              "unrealised_pnl": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "realised_pnl_session": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "liq_price": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "bust_price": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "take_profit": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "stop_loss": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "trailing_stop": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal",
+                "description": "Price distance, not a percentage (Bybit semantics)."
+              },
+              "tpsl_mode": {
+                "enum": ["Full", "Partial"]
+              },
+              "native_stop_present": {
+                "type": "boolean",
+                "description": "False violates the safety invariant (arch P4); the OMS re-asserts the stop and raises a critical alert."
+              },
+              "trade_group_id": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "r_multiple": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "environment": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/environment"
+              },
+              "is_paper": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/isPaper"
+              },
+              "updated_at_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+          },
+          "description": "Positions that went flat."
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/executions.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/executions.schema.json",
+      "title": "executions",
+      "type": "object",
+      "required": ["executions"],
+      "properties": {
+        "executions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "exec_id",
+              "order_id",
+              "exchange_account_id",
+              "symbol",
+              "side",
+              "exec_qty",
+              "exec_price",
+              "ts_ms"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+              },
+              "exec_id": {
+                "type": "string",
+                "description": "Exchange fill id; unique, used for dedupe."
+              },
+              "order_id": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+              },
+              "exchange_account_id": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+              },
+              "trade_group_id": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "symbol": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
+              },
+              "side": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/side"
+              },
+              "exec_qty": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "exec_price": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "exec_value": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "fee": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "fee_rate": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "fee_coin": {
+                "type": "string"
+              },
+              "is_maker": {
+                "type": "boolean"
+              },
+              "exec_type": {
+                "enum": ["Trade", "AdlTrade", "Funding", "BustTrade", "Settle"]
+              },
+              "exec_pnl": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "environment": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/environment"
+              },
+              "is_paper": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/isPaper"
+              },
+              "ts_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/wallet.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/wallet.schema.json",
+      "title": "wallet",
+      "type": "object",
+      "required": ["balances"],
+      "properties": {
+        "balances": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["exchange_account_id", "coin", "equity", "updated_at_ms"],
+            "properties": {
+              "exchange_account_id": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+              },
+              "coin": {
+                "type": "string"
+              },
+              "equity": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "wallet_balance": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "available_balance": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "unrealised_pnl": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "realised_pnl_today": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "account_im_rate": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "account_mm_rate": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+              },
+              "risk_cap_usage": {
+                "type": "object",
+                "description": "Live usage against the account profile's risk caps; drives the risk gauge.",
+                "properties": {
+                  "daily_loss_usd": {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                  },
+                  "daily_loss_limit_usd": {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                  },
+                  "open_positions": {
+                    "type": "integer"
+                  },
+                  "max_open_positions": {
+                    "type": "integer"
+                  },
+                  "locked_out_until_ms": {
+                    "oneOf": [
+                      {
+                        "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "environment": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/environment"
+              },
+              "is_paper": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/isPaper"
+              },
+              "stale": {
+                "type": "boolean",
+                "default": false
+              },
+              "updated_at_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/trade_groups.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/trade_groups.schema.json",
+      "title": "trade_groups",
+      "type": "object",
+      "required": ["trade_groups"],
+      "properties": {
+        "trade_groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "status", "updated_at_ms"],
+            "properties": {
+              "id": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+              },
+              "client_group_ref": {
+                "type": "string"
+              },
+              "symbol": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
+              },
+              "side": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/side"
+              },
+              "intent": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "draft",
+                  "submitting",
+                  "partially_open",
+                  "open",
+                  "closing",
+                  "closed",
+                  "failed",
+                  "cancelled"
+                ]
+              },
+              "atomicity": {
+                "enum": ["best_effort", "all_or_none"]
+              },
+              "algo_kind": {
+                "enum": ["none", "oco", "iceberg", "twap", "chase", "scaled", "bracket"]
+              },
+              "rule_id": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "legs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["id", "exchange_account_id", "status"],
+                  "properties": {
+                    "id": {
+                      "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+                    },
+                    "exchange_account_id": {
+                      "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+                    },
+                    "account_profile_id": {
+                      "oneOf": [
+                        {
+                          "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "sequence_no": {
+                      "type": "integer"
+                    },
+                    "status": {
+                      "enum": [
+                        "pending",
+                        "submitted",
+                        "rejected",
+                        "open",
+                        "partially_filled",
+                        "filled",
+                        "cancelled",
+                        "closed",
+                        "error"
+                      ]
+                    },
+                    "target_qty": {
+                      "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                    },
+                    "filled_qty": {
+                      "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                    },
+                    "avg_entry_price": {
+                      "oneOf": [
+                        {
+                          "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "avg_exit_price": {
+                      "oneOf": [
+                        {
+                          "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "native_sl_confirmed": {
+                      "type": "boolean"
+                    },
+                    "risk_usd": {
+                      "oneOf": [
+                        {
+                          "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "realised_pnl": {
+                      "oneOf": [
+                        {
+                          "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "fees_paid": {
+                      "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                    },
+                    "error": {
+                      "oneOf": [
+                        {
+                          "type": "null"
+                        },
+                        {
+                          "type": "object",
+                          "required": ["code", "message"],
+                          "properties": {
+                            "code": {
+                              "type": "string"
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "exchange_ret_code": {
+                              "type": ["integer", "null"]
+                            },
+                            "retryable": {
+                              "type": "boolean"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "totals": {
+                "type": "object",
+                "properties": {
+                  "requested_legs": {
+                    "type": "integer"
+                  },
+                  "submitted_legs": {
+                    "type": "integer"
+                  },
+                  "rejected_legs": {
+                    "type": "integer"
+                  },
+                  "filled_qty": {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                  },
+                  "target_qty": {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                  },
+                  "realised_pnl": {
+                    "oneOf": [
+                      {
+                        "$ref": "cv://ws/v1/common.schema.json#/$defs/decimal"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "updated_at_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/rules.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/rules.schema.json",
+      "title": "rules",
+      "type": "object",
+      "properties": {
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "mode", "updated_at_ms"],
+            "properties": {
+              "id": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+              },
+              "name": {
+                "type": "string"
+              },
+              "mode": {
+                "enum": ["disabled", "simulate", "armed"]
+              },
+              "active_version_id": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "version": {
+                "type": "integer"
+              },
+              "last_run_status": {
+                "enum": ["running", "ok", "error", "aborted", "throttled", null]
+              },
+              "fire_count_24h": {
+                "type": "integer"
+              },
+              "next_eligible_fire_at_ms": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Set while a cooldown guard is active."
+              },
+              "updated_at_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "events": {
+          "type": "array",
+          "description": "Present only when subscribed with include_events: true.",
+          "items": {
+            "type": "object",
+            "required": ["rule_id", "run_id", "kind", "ts_ms"],
+            "properties": {
+              "rule_id": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+              },
+              "run_id": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+              },
+              "kind": {
+                "enum": [
+                  "evaluated",
+                  "suppressed",
+                  "action_sent",
+                  "action_result",
+                  "error",
+                  "started",
+                  "finished"
+                ]
+              },
+              "ts_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              },
+              "payload": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/alerts.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/alerts.schema.json",
+      "title": "alerts",
+      "type": "object",
+      "required": ["deliveries"],
+      "properties": {
+        "deliveries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "alert_id", "channel", "status", "message", "fired_at_ms"],
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "alert_id": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+              },
+              "channel": {
+                "enum": ["in_app", "email", "webhook", "push", "desktop"]
+              },
+              "status": {
+                "enum": ["queued", "sent", "failed", "suppressed", "acked"]
+              },
+              "severity": {
+                "enum": ["debug", "info", "warning", "error", "critical"]
+              },
+              "title": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "symbol": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "fired_at_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              },
+              "acked_at_ms": {
+                "oneOf": [
+                  {
+                    "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "error": {
+                "type": ["string", "null"]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "unacked_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/recorder.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/recorder.schema.json",
+      "title": "recorder",
+      "type": "object",
+      "required": ["overall", "symbols"],
+      "properties": {
+        "overall": {
+          "enum": ["healthy", "degraded", "warning", "down"]
+        },
+        "connections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "endpoint": {
+                "type": "string"
+              },
+              "state": {
+                "enum": ["connecting", "connected", "degraded", "disconnected"]
+              },
+              "subscribed_topics": {
+                "type": "integer"
+              },
+              "reconnects_last_hour": {
+                "type": "integer"
+              },
+              "last_ping_ms": {
+                "type": "integer"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "symbols": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["symbol", "state"],
+            "properties": {
+              "symbol": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
+              },
+              "state": {
+                "enum": [
+                  "idle",
+                  "starting",
+                  "recording",
+                  "degraded",
+                  "stopping",
+                  "stopped",
+                  "error"
+                ]
+              },
+              "reason": {
+                "enum": [
+                  "manual",
+                  "chart_open",
+                  "position_open",
+                  "rule_dependency",
+                  "alert_dependency"
+                ]
+              },
+              "pinned": {
+                "type": "boolean"
+              },
+              "lag_ms": {
+                "type": "integer"
+              },
+              "rows_last_hour": {
+                "type": "integer"
+              },
+              "dropped_messages": {
+                "type": "integer",
+                "description": "Non-zero is an incident, not a warning."
+              },
+              "resyncs_last_hour": {
+                "type": "integer"
+              },
+              "disk_bytes": {
+                "type": "integer"
+              },
+              "last_event_at_ms": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "ingest_rate_msgs_per_sec": {
+          "type": "integer"
+        },
+        "write_backlog_rows": {
+          "type": "integer"
+        },
+        "storage": {
+          "type": "object",
+          "properties": {
+            "disk_free_bytes": {
+              "type": "integer"
+            },
+            "daily_growth_bytes": {
+              "type": "integer"
+            },
+            "projected_full_at_ms": {
+              "oneOf": [
+                {
+                  "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "cv://ws/v1/system.schema.json": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "cv://ws/v1/system.schema.json",
+      "title": "system",
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "health",
+            "kill_switch",
+            "feature_flags",
+            "exchange_state",
+            "connection_quality",
+            "shutdown_notice",
+            "degraded_data",
+            "clock_drift",
+            "notice"
+          ]
+        },
+        "severity": {
+          "enum": ["debug", "info", "warning", "error", "critical"]
+        },
+        "message": {
+          "type": "string"
+        },
+        "health": {
+          "enum": ["healthy", "degraded", "warning", "down"]
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "state": {
+                "enum": ["healthy", "degraded", "warning", "down"]
+              },
+              "detail": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "kill_switch": {
+          "$ref": "#/$defs/killSwitch"
+        },
+        "actions": {
+          "type": "object",
+          "properties": {
+            "orders_cancelled": {
+              "type": "integer"
+            },
+            "positions_flattened": {
+              "type": "integer"
+            },
+            "rules_disarmed": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false
+        },
+        "feature_flags": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "exchange": {
+          "type": "object",
+          "properties": {
+            "public_ws": {
+              "enum": ["connected", "connecting", "resyncing", "disconnected"]
+            },
+            "private_ws": {
+              "enum": ["connected", "connecting", "resyncing", "disconnected"]
+            },
+            "rest": {
+              "enum": ["healthy", "degraded", "rate_limited", "down"]
+            },
+            "rate_budget_free_pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "additionalProperties": false
+        },
+        "public_ws": {
+          "enum": ["connected", "connecting", "resyncing", "disconnected"]
+        },
+        "private_ws": {
+          "enum": ["connected", "connecting", "resyncing", "disconnected"]
+        },
+        "affected_symbols": {
+          "type": "array",
+          "items": {
+            "$ref": "cv://ws/v1/common.schema.json#/$defs/symbol"
+          }
+        },
+        "class": {
+          "enum": ["healthy", "lagging", "saturated", "overflowing"]
+        },
+        "queue_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "rtt_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "applied": {
+          "type": "object",
+          "properties": {
+            "throttle_multiplier": {
+              "type": "number"
+            },
+            "forced_coalesce": {
+              "type": "boolean"
+            },
+            "degraded_topics": {
+              "type": "array",
+              "items": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/topic"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "reason": {
+          "type": "string"
+        },
+        "closing_in_ms": {
+          "type": "integer"
+        },
+        "expected_downtime_ms": {
+          "type": "integer"
+        },
+        "clock_offset_ms": {
+          "type": "integer"
+        },
+        "degraded_topics": {
+          "type": "array",
+          "items": {
+            "$ref": "cv://ws/v1/common.schema.json#/$defs/topic"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "$defs": {
+        "killSwitch": {
+          "type": "object",
+          "required": ["engaged", "scope"],
+          "properties": {
+            "engaged": {
+              "type": "boolean"
+            },
+            "scope": {
+              "enum": ["global", "accounts"]
+            },
+            "exchange_account_ids": {
+              "type": "array",
+              "items": {
+                "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+              }
+            },
+            "engaged_at_ms": {
+              "oneOf": [
+                {
+                  "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "engaged_by": {
+              "oneOf": [
+                {
+                  "$ref": "cv://ws/v1/common.schema.json#/$defs/uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "engaged_by_username": {
+              "type": ["string", "null"]
+            },
+            "reason": {
+              "type": ["string", "null"]
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "topics": [
+    {
+      "topic": "book.{symbol}.{depth}",
+      "payloadSchemaName": "BookSnapshot"
+    },
+    {
+      "topic": "book.{symbol}.{depth}",
+      "payloadSchemaName": "BookDelta"
+    },
+    {
+      "topic": "trades.{symbol}",
+      "payloadSchemaName": "TradesBatch"
+    },
+    {
+      "topic": "bars.{symbol}.{bar_type}.{param}",
+      "payloadSchemaName": "BarsBatch"
+    },
+    {
+      "topic": "footprint.{symbol}.{bar_type}.{param}",
+      "payloadSchemaName": "FootprintUpdate"
+    },
+    {
+      "topic": "heatmap.{symbol}",
+      "payloadSchemaName": "HeatmapColumn"
+    },
+    {
+      "topic": "profile.{symbol}.{kind}",
+      "payloadSchemaName": "ProfileUpdate"
+    },
+    {
+      "topic": "metrics.{symbol}",
+      "payloadSchemaName": "MetricsUpdate"
+    },
+    {
+      "topic": "ticker.{symbol}",
+      "payloadSchemaName": "TickerUpdate"
+    },
+    {
+      "topic": "ticker",
+      "payloadSchemaName": "TickerUpdate"
+    },
+    {
+      "topic": "liquidations.{symbol}",
+      "payloadSchemaName": "LiquidationBatch"
+    },
+    {
+      "topic": "liquidations",
+      "payloadSchemaName": "LiquidationBatch"
+    },
+    {
+      "topic": "orders",
+      "payloadSchemaName": "OrderUpdate"
+    },
+    {
+      "topic": "positions",
+      "payloadSchemaName": "PositionUpdate"
+    },
+    {
+      "topic": "executions",
+      "payloadSchemaName": "ExecutionUpdate"
+    },
+    {
+      "topic": "wallet",
+      "payloadSchemaName": "WalletUpdate"
+    },
+    {
+      "topic": "trade_groups",
+      "payloadSchemaName": "TradeGroupUpdate"
+    },
+    {
+      "topic": "rules",
+      "payloadSchemaName": "RuleUpdate"
+    },
+    {
+      "topic": "alerts",
+      "payloadSchemaName": "AlertUpdate"
+    },
+    {
+      "topic": "recorder",
+      "payloadSchemaName": "RecorderUpdate"
+    },
+    {
+      "topic": "system",
+      "payloadSchemaName": "SystemUpdate"
+    }
+  ]
+}
