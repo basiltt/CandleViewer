@@ -77,6 +77,7 @@
 /eslint.config.mjs                      @CandleViewer/frontend @CandleViewer/devsecops
 # future: E02/later scaffolding; directory does not exist yet.
 /.prettierrc.json                       @CandleViewer/frontend
+/.prettierignore                        @CandleViewer/frontend
 /prettier.config.mjs                    @CandleViewer/frontend
 /tsconfig.json                          @CandleViewer/frontend @CandleViewer/architecture
 /.npmrc                                 @CandleViewer/devsecops
