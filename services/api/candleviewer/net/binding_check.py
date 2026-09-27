@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
     from .read_only_gate import ReadOnlyGate
 
-PUBLIC_WILDCARDS = frozenset({"0.0.0.0", "::"})  # noqa: S104 - detection constants, not a bind call
+PUBLIC_WILDCARDS = frozenset({"0.0.0.0", "::"})  # noqa: S104  # nosec B104
 
 SocketAddressEnumerator = Callable[[], Iterable[str]]
 
@@ -94,9 +94,7 @@ class BindingSelfCheck:
                 ),
             )
 
-        off_mesh = [
-            addr for addr in addresses if not self._allow_list.is_allowed(_host_of(addr))
-        ]
+        off_mesh = [addr for addr in addresses if not self._allow_list.is_allowed(_host_of(addr))]
         if off_mesh:
             return BindingCheckResult(
                 safe=False,

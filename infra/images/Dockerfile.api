@@ -26,6 +26,13 @@ RUN uv sync --frozen --no-dev
 # --- runtime -----------------------------------------------------------------
 FROM python:3.12-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f AS runtime
 
+# Apply Debian security fixes published after the pinned digest was cut, so
+# already-fixed CVEs never ship; unfixed ones are covered by the weekly rebuild.
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN groupadd --gid 10001 cvapi \
     && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin cvapi
 

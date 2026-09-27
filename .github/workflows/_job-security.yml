@@ -180,7 +180,10 @@ jobs:
         run: pip install "bandit[sarif]==1.8.6"
 
       - name: Run bandit on services/api (SARIF output)
-        run: bandit -r services/api -f sarif -o bandit.sarif -ll || true
+        # -c: honour [tool.bandit] (exclude_dirs=tests; assert/subprocess in tests are not
+        # production findings). Production-code noqa markers are ruff-style; bandit
+        # needs its own `# nosec` — the two guard sites carry both.
+        run: bandit -c services/api/pyproject.toml -r services/api/candleviewer -f sarif -o bandit.sarif -ll || true
 
       - name: Evaluate Bandit findings (security_gate.py, CI-SEC-001/004)
         run: python tools/ci/security_gate.py --tool bandit --report bandit.sarif
@@ -220,11 +223,12 @@ jobs:
       - name: Run pip-audit against services/api dependencies
         run: |
           set -euo pipefail
-          # Install with real dependencies (no --no-deps) so pip-audit and
-          # pip-licenses (license-scan job) actually see the backend's
-          # third-party packages, not just runner tooling.
-          pip install -e services/api --quiet
-          pip-audit --format json --output pip-audit.json --progress-spinner off || true
+          # Audit exactly what ships: the uv lockfile (all groups), exported as
+          # pinned requirements. Auditing the runner's own site-packages mixed
+          # CI tooling (scripts/requirements-ci.txt) into the product SBOM.
+          pip install "uv==0.12.19" --quiet
+          uv export --frozen --no-hashes --all-groups --project services/api -o /tmp/api-requirements.txt
+          pip-audit -r /tmp/api-requirements.txt --no-deps --format json --output pip-audit.json --progress-spinner off || true
 
       - name: Evaluate pip-audit findings (security_gate.py, CI-SEC-001/004)
         run: python tools/ci/security_gate.py --tool pip-audit --report pip-audit.json
@@ -275,21 +279,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
-        env:
-          # The action requires a token to list PR commits. This is the built-in,
-          # job-scoped GITHUB_TOKEN (contents: read) — not a stored secret in the
-          # ADR-0013 sense; no permission widening.
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
-          GITLEAKS_ENABLE_SUMMARY: "true"
-        continue-on-error: true
-
-      - name: Re-run gitleaks for a normalised JSON report (redacted)
+      # gitleaks-action needs `pull-requests: read` (crashes with "Resource not
+      # accessible by integration" without it). The gate below reads the pinned
+      # gitleaks binary's own JSON report, which needs no GitHub API access at
+      # all, so the action is not used; the scan covers the checked-out tree.
+      - name: Run gitleaks (pinned binary, redacted JSON report)
         run: |
           set -euo pipefail
           docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.21.2 \
-            detect --source=/repo --no-git --redact -f json -r /repo/gitleaks.json || true
+            detect --source=/repo --no-git --config=/repo/.gitleaks.toml --redact -f json -r /repo/gitleaks.json || true
         continue-on-error: true
 
       - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
@@ -334,26 +332,25 @@ jobs:
       - name: Verify internal package scope (STRIDE R2 dependency-confusion delta)
         run: python tools/ci/check_internal_package_scope.py --root .
 
-      - name: Install pip-licenses
+      - name: Install the locked backend environment (uv, all groups)
         run: |
           set -euo pipefail
-          # Real dependency install (no --no-deps) so pip-licenses reports the
-          # actual third-party licences services/api ships with, not just
-          # runner tooling.
-          pip install -e services/api --quiet
-          pip install "pip-licenses==4.5.1"
-
-      - name: Collect Python licences
-        run: pip-licenses --format=json --output-file pip-licenses.json
+          pip install "uv==0.12.19" --quiet
+          uv sync --frozen --all-groups --project services/api
 
       - name: Collect JS/TS licences
-        run: pnpm dlx license-checker --production --json > license-checker.json
+        # license-checker does not understand pnpm workspaces ("No packages found").
+        # pnpm licenses is workspace-aware and reads the lockfile CI just installed.
+        run: pnpm licenses list --json --prod > pnpm-licenses.json
 
       - name: Combine licence reports
+        # Python licences are read from the uv venv via importlib.metadata
+        # (PEP 639 License-Expression first) — pip-licenses 5.x reports UNKNOWN
+        # for urllib3/uvicorn/websockets that only carry License-Expression.
         run: |
-          python tools/ci/collect_licenses.py \
-            --pip-licenses pip-licenses.json \
-            --license-checker license-checker.json \
+          services/api/.venv/bin/python tools/ci/collect_licenses.py \
+            --python-env \
+            --pnpm-licenses pnpm-licenses.json \
             --out licenses.json
 
       - name: Evaluate licences against allowlist (security_gate.py, CI-SEC-002/003/004, SR-136)
@@ -384,6 +381,11 @@ jobs:
           output: trivy.sarif
           severity: "CRITICAL,HIGH,MEDIUM"
           exit-code: "0"
+          # Debian base-image CVEs with no upstream fix yet cannot be remediated
+          # by us (the Dockerfile already applies apt security upgrades); they
+          # would otherwise block every PR forever. Unfixed = tracked by the
+          # weekly image rebuild (C-12.3); fixed-but-present = a real finding.
+          ignore-unfixed: true
 
       - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:

@@ -112,7 +112,7 @@ class Settings(BaseSettings):
     @classmethod
     def _bind_host_not_wildcard(cls, value: str) -> str:
         """`CV_BIND_HOST` must never be `0.0.0.0` (C-12.9, no public exposure)."""
-        if value == "0.0.0.0":  # noqa: S104 - this validator is the guard, not a bind call
+        if value == "0.0.0.0":  # noqa: S104  # nosec B104
             raise ValueError(
                 "CV_BIND_HOST must not be 0.0.0.0 (see docs/plan/20-architecture.md Sec.7.2)"
             )
