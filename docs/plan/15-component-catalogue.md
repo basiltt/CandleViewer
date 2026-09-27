@@ -248,7 +248,8 @@ Every component entry states: **ID** `CMP-nnn` · **Name** · **Tier** (Atom / M
 
 ### CMP-026 EmptyState
 - **Tier**: Atom (composed) · **Purpose**: designed empty/zero-data state (recorder-dependent emptiness per `14-screens-catalogue.md` §0.5.3).
-- **Props**: `icon` · `title` · `description` · `cta?: {label,onClick}` · `variant: "no-data"|"recording-not-started"|"filtered-empty"|"error"`.
+- **Props**: `icon` · `title` · `description` · `cta?: {label,onClick}` · `variant: "no-data"|"recording-not-started"|"backfill-in-progress"|"filtered-empty"|"error"`.
+- **E08-D04**: `variant="backfill-in-progress"` (data-confidence `backfilling` state) pairs a determinate/indeterminate progress affordance with the description text (e.g. "Loading history — page 3 of ~9"); it is informational, not an error, and never uses `color.status.danger.*`. `variant="recording-not-started"` is confirmed unchanged for `SCR-151`.
 - **A11y**: heading semantics preserved (`h3` inside panel context), CTA is a real focusable button.
 - **Tokens**: `color.text.secondary`, `space.emptystate.*`.
 - **Storybook**: AllVariants.
@@ -264,11 +265,12 @@ Every component entry states: **ID** `CMP-nnn` · **Name** · **Tier** (Atom / M
 
 ### CMP-028 Callout / Banner (inline, non-global)
 - **Tier**: Atom (composed) · **Purpose**: inline informational/warning block inside a panel or form (distinct from the global EnvBanner CMP-078).
-- **Props**: `tone: "info"|"warning"|"danger"|"success"` · `icon?` · `dismissible?`.
-- **A11y**: `role="status"` (info/success) or `role="alert"` (warning/danger).
-- **Tokens**: `color.callout.*`.
-- **Storybook**: AllTones, Dismissible.
-- **Tests**: unit, visual, axe.
+- **Props**: `tone: "info"|"warning"|"danger"|"success"|"connection-reconnecting"|"connection-disconnected"` · `icon?` · `dismissible?` · `retry?: {label,onClick}`.
+- **E08-D04 — `connection` severity variants** (used by `SCR-152`, data-confidence vocabulary `docs/design/E08/E08-D01.md`): `tone="connection-disconnected"` renders `role="alert"` (assertive) with `color.data-confidence.disconnected.indicator` accent and a `[ Retry now ]` action; `tone="connection-reconnecting"` renders `role="status"` (polite) with `color.data-confidence.reconnecting.indicator`. Neither tone ever renders raw exchange error text — only the mapped state label plus an optional `details` string supplied by the caller (never a passthrough of the wire error). Flapping reconnect attempts within 5s collapse into a single "Connection unstable" announcement (no per-attempt re-announce).
+- **A11y**: `role="status"` (info/success/connection-reconnecting) or `role="alert"` (warning/danger/connection-disconnected).
+- **Tokens**: `color.callout.*`, `color.data-confidence.reconnecting.indicator`, `color.data-confidence.disconnected.indicator`.
+- **Storybook**: AllTones, Dismissible, ConnectionReconnecting, ConnectionDisconnected.
+- **Tests**: unit, visual, axe, live-region announcement test (assertive vs polite, flap-collapse).
 
 ### CMP-029 Skeleton-Chart placeholder
 - **Tier**: Atom · **Purpose**: chart-shaped loading placeholder distinct from generic Skeleton (candlestick silhouette).
@@ -328,10 +330,10 @@ Every component entry states: **ID** `CMP-nnn` · **Name** · **Tier** (Atom / M
 
 ### CMP-036 KeyValueRow
 - **Tier**: Atom · **Purpose**: label/value pair row used across summary cards (order review, position detail).
-- **Props**: `label` · `value: ReactNode` · `emphasis?: boolean`.
+- **Props**: `label` · `value: ReactNode` · `emphasis?: boolean` · `freshness?: DataConfidenceState` (renders CMP-239 FreshnessMarker beside `value` for live fields — see E08-D04).
 - **A11y**: renders as definition-list pair (`dt`/`dd`) semantics for screen-reader table-like traversal.
 - **Tokens**: `space.row.*`, `font.size.body/label`.
-- **Storybook**: Default, Emphasis.
+- **Storybook**: Default, Emphasis, LiveFreshness.
 - **Tests**: unit, visual, axe.
 
 ### CMP-037 SwatchLegendItem
@@ -1577,6 +1579,7 @@ interface NodeGraphCanvasProps {
 - **Props**: `row: WatchlistRowData` · `onOpenChart` · `onRemove` · `columns: string[]` (configurable via CMP-056 ColumnPicker).
 - **A11y**: extends CMP-049 row contract; %chg/PnL-style values use CMP-020 NumericText.
 - **Tokens**: `font.mono`, `color.text.buy/sell`.
+- **E08-D04**: each per-value cell carries an optional CMP-239 FreshnessMarker (rendered as a CSS class change on the existing cell — no extra DOM node — per the freshness-marker contract) reflecting the data-confidence state for that field's feed. If the row's overall connection is `disconnected`, the row shows only that state (precedence rule, `docs/design/E08/E08-D01.md` §2) — per-cell markers are suppressed rather than stacked.
 - **API sketch**:
 ```ts
 interface WatchlistRowData {
@@ -1584,7 +1587,7 @@ interface WatchlistRowData {
   volume24h: number; fundingRate: number; openInterestDelta: number;
 }
 ```
-- **Storybook**: Default, Gainer, Loser, CustomColumns.
+- **Storybook**: Default, Gainer, Loser, CustomColumns, StaleCell, DisconnectedRow.
 - **Tests**: unit, visual, axe, keyboard.
 
 ### CMP-162 WatchlistGroupTabs
@@ -2208,9 +2211,10 @@ This band was added during the cross-document traceability reconciliation (see `
 - **Tier**: Atom (honesty affordance, cross-cutting) · **Purpose**: the mandatory `(estimated)` chip on every heuristic-derived view, opening CMP-069 InfoPanel / SCR-058 with the methodology.
 - **Props**: `detector: DetectorId` · `confidence?: "low"|"medium"|"high"` · `onOpenMethodology`.
 - **A11y**: the literal word "estimated" is in the accessible name — this badge may **never** be conveyed by colour, icon or opacity alone; it is focusable and opens the methodology drawer by `Enter`.
+- **E08-D04 — composition with CMP-239 FreshnessMarker (confirmed contract)**: `estimated` and data-confidence `stale`/`gapped` are different claims — one says "derived, not raw" (never changes once computed), the other says "not current" (temporal). They are never merged into one chip. When a value is both, CMP-227 renders first (leftmost) and CMP-239 renders immediately after it; each keeps its own accessible name so a screen reader announces both ("Estimated, low confidence. Stale, 4 seconds."). Visual separation: distinct shapes (pill vs dot+text) plus a minimum 4px gap — never touching or overlapping.
 - **Tokens**: `color.status.info`, `radius.pill`, `font.size.xs`.
-- **Storybook**: Default, LowConfidence, HighConfidence.
-- **Tests**: unit, visual, axe; plus a **catalogue-level test** asserting that every screen listed in `14-screens-catalogue.md` §12.3 under "(estimated) labelling" renders this component.
+- **Storybook**: Default, LowConfidence, HighConfidence, WithStaleFreshnessMarker.
+- **Tests**: unit, visual, axe; plus a **catalogue-level test** asserting that every screen listed in `14-screens-catalogue.md` §12.3 under "(estimated) labelling" renders this component, and a composition test asserting CMP-227 + CMP-239 never collapse into a single accessible name.
 
 ### CMP-228 PreviewTile
 - **Tier**: Molecule · **Purpose**: the live miniature preview inside settings dialogs (footprint, heatmap, theme, density) showing the effect of the current settings on sample data.
@@ -2303,6 +2307,18 @@ This band was added during the cross-document traceability reconciliation (see `
 - **Storybook**: SmallGraph, LargeGraph, WithErrorNodes.
 - **Tests**: unit, visual, performance (200-node graph).
 
+### CMP-239 FreshnessMarker (E08-D04, data-confidence vocabulary)
+- **Tier**: Atom (cross-cutting, safety) · **Purpose**: the per-value marker communicating a data-confidence state (`live|stale|reconnecting|disconnected|resyncing|gapped|backfilling|delisted`, precedence order in `docs/design/E08/E08-D01.md` §2) for a single cell/field, used by CMP-161 WatchlistRow, CMP-036 KeyValueRow live fields, and tape/DOM cells.
+- **Props**: `state: DataConfidenceState` · `lastUpdatedAgeMs?: number` (renders as "Stale 4s" text for `stale`) · `label?: string` (override for compound rows).
+- **Contract**: exactly one state is shown at a time (never stacked — a row in `disconnected` never additionally shows a `stale` marker on individual cells). State changes are a single flip on enter/exit, no pulsing/flashing, respects `prefers-reduced-motion`. `live` renders no visible chip (baseline — absence of a marker IS the live state, so it costs nothing at 4 Hz+ update rates).
+- **Renderable as a pure CSS class change** — no extra DOM node per cell on hot surfaces (watchlist, tape, DOM ladder); the accessible name/text content already exists in the cell and the marker only swaps a class plus (for `stale`) appends the age text node, so the row does not gain a wrapper element per update.
+- **A11y**: never colour-only — text label (mandatory for every non-`live` state) pairs with the reinforcing colour; `disconnected`/`reconnecting` states bubble to the parent CMP-028 banner (`role="alert"`/`role="status"`) rather than re-announcing per cell; a degraded state entering/exiting a *panel* (not per-row) announces once via the parent's live region, collapsing flapping within 5s into one announcement — individual FreshnessMarker instances do not each own a live region.
+- **Tokens**: `color.data-confidence.{state}.text`, `color.data-confidence.{state}.indicator`, `color.data-confidence.{state}.surface` (only `stale` defines a surface tint; see `packages/ui/tokens/semantic-*.tokens.json`).
+- **Composition rule with CMP-227 EstimatedBadge**: see CMP-227 entry — they are always rendered as two separate, non-overlapping elements, never merged.
+- **Escalation process for an undefined state**: a later epic needing a data-confidence state not in the eight above raises a design-system change request against this entry (comment on the `16-design-system-brief.md` token PR or open a new `E08-D*`-scoped ticket) — it must **not** add a local one-off variant on a consuming screen. The precedence table in `docs/design/E08/E08-D01.md` §2 is the single source for state ordering and must be updated in the same change.
+- **Storybook**: Live, Stale, Reconnecting, Disconnected, Resyncing, Gapped, Backfilling, Delisted, WithEstimatedBadgeComposition.
+- **Tests**: unit (precedence/never-stacked assertion, CSS-class-only render), visual (both themes), axe (redundant non-colour channel present for every non-live state), live-region collapse test (flapping within 5s → one announcement).
+
 ---
 
 ## 8. Summary tallies
@@ -2316,10 +2332,15 @@ This band was added during the cross-document traceability reconciliation (see `
 | Rule engine & node-graph (CMP-140..159) | 20 |
 | Watchlist/alerts/journal/replay/audit (CMP-160..179) | 20 |
 | Chart-engine primitives (CMP-180..199) | 20 |
-| Auth / shell-surface / chart-chrome / editor-chrome (CMP-200..238) | 39 |
-| **Total catalogued components** | **238 — LOCKED FINAL COUNT** |
+| Auth / shell-surface / chart-chrome / editor-chrome (CMP-200..239) | 40 |
+| **Total catalogued components** | **239 — see E08-D04 addendum below** |
 
-**Decision — final count is 238, not 120–180 (supersedes the brief's range for this deliverable).** The count was 199 until the cross-document traceability reconciliation (`18-traceability-matrix.md`), which found 39 components composed by `14-screens-catalogue.md` that had no catalogue entry; rather than silently dropping those references or overloading existing IDs, band 7A was opened at CMP-200..238. 238 is the number backlog tickets are generated from. Rationale for not consolidating: the trading-specific, chart-engine and band-7A entries intentionally enumerate each node-graph node type, each chart primitive, each piece of chart/editor chrome and each heuristic-detector chip as its own first-class CMP-* entry (per `05-accessibility-standard.md` §11.3's requirement that trading-specific components get the same first-class a11y/test treatment as generic atoms — collapsing them would under-specify their individual contracts, e.g. CMP-147..151's distinct keyboard-connect and a11y-label behaviours per node type, or CMP-227 EstimatedBadge's catalogue-level enforcement test).
+**Addendum (E08-D04, 2026-09-27):** CMP-239 FreshnessMarker was added as the design-system contribution for the
+data-confidence vocabulary (`docs/design/E08/E08-D01.md`) — a genuinely new cross-cutting atom (per-value
+freshness marker for WatchlistRow/KeyValueRow/tape/DOM cells) with no existing entry to extend, per the ticket's
+scope. This is the only count change since the lock below; future changes still require the same rationale.
+
+**Decision — final count was locked at 238, not 120–180 (supersedes the brief's range for this deliverable).** The count was 199 until the cross-document traceability reconciliation (`18-traceability-matrix.md`), which found 39 components composed by `14-screens-catalogue.md` that had no catalogue entry; rather than silently dropping those references or overloading existing IDs, band 7A was opened at CMP-200..238. 238 is the number backlog tickets are generated from. Rationale for not consolidating: the trading-specific, chart-engine and band-7A entries intentionally enumerate each node-graph node type, each chart primitive, each piece of chart/editor chrome and each heuristic-detector chip as its own first-class CMP-* entry (per `05-accessibility-standard.md` §11.3's requirement that trading-specific components get the same first-class a11y/test treatment as generic atoms — collapsing them would under-specify their individual contracts, e.g. CMP-147..151's distinct keyboard-connect and a11y-label behaviours per node type, or CMP-227 EstimatedBadge's catalogue-level enforcement test).
 
 An alternative was considered and explicitly **rejected**: merging CMP-147..151 (node-graph node types) into a single parameterised `NodeGraphNode` component with a `type` discriminator, which would reduce the nominal count to ~180. This is rejected because (a) it would require the a11y and Storybook contracts for five materially different keyboard/interaction behaviours to live inside one entry's Variants table, degrading ticket-writer clarity rather than improving it, and (b) it does not change the actual implementation surface — five distinct React components would still exist either way. **Ticket generation must produce exactly 238 tickets, one per CMP-* ID in this document.**
 
