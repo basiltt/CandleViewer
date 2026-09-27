@@ -1,0 +1,20 @@
+name: _job-security
+
+# Reusable-workflow stub (E03-T01). Filled in by E03-T07 (CodeQL, Semgrep,
+# Bandit, pip-audit, npm audit, gitleaks, Trivy) per ADR-0013 pipeline
+# shape and CONSTITUTION §9 #10-#13.
+
+on:
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+jobs:
+  security-stub:
+    name: security (stub — see E03-T07)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Placeholder (E03-T07 fills in SAST/SCA/secrets/container scans)
+        run: echo "security lane stub — implemented by E03-T07"

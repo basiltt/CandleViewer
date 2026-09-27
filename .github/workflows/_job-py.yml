@@ -1,0 +1,19 @@
+name: _job-py
+
+# Reusable-workflow stub (E03-T01). Filled in by E03-T03 (ruff lint,
+# mypy --strict, pytest unit, build) per ADR-0013 pipeline shape.
+
+on:
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+jobs:
+  py-stub:
+    name: py (stub — see E03-T03)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Placeholder (E03-T03 fills in lint/typecheck/unit/build)
+        run: echo "py lane stub — implemented by E03-T03"

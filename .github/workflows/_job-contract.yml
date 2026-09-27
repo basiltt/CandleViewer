@@ -1,0 +1,20 @@
+name: _job-contract
+
+# Reusable-workflow stub (E03-T01). Filled in by E03-T06 (OpenAPI/WS schema
+# conformance, protocol codec round-trip, generated-code freshness gate)
+# per ADR-0013 pipeline shape and binding rule 3.
+
+on:
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+jobs:
+  contract-stub:
+    name: contract (stub — see E03-T06)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Placeholder (E03-T06 fills in contract + generated-code checks)
+        run: echo "contract lane stub — implemented by E03-T06"

@@ -1,0 +1,23 @@
+name: _job-js
+
+# Reusable-workflow stub (E03-T01). This lane is filled in by E03-T02
+# (lint eslint, typecheck tsc, unit vitest, build) per ADR-0013 pipeline
+# shape. Until then it reports `success` unconditionally so the
+# `ci-required` resolver (see .github/workflows/pr.yml) is exercisable
+# end-to-end. Replace the single step below without changing the
+# `workflow_call` trigger shape or job name — `pr.yml` calls this by path.
+
+on:
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+jobs:
+  js-stub:
+    name: js (stub — see E03-T02)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Placeholder (E03-T02 fills in lint/typecheck/unit/build)
+        run: echo "js lane stub — implemented by E03-T02"

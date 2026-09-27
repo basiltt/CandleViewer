@@ -1,0 +1,19 @@
+name: _job-e2e
+
+# Reusable-workflow stub (E03-T01). Filled in by a later E03 Task
+# (Playwright web e2e, axe-core a11y suite) per ADR-0013 pipeline shape.
+
+on:
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+jobs:
+  e2e-stub:
+    name: e2e (stub)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Placeholder (filled in by the owning E03 e2e/a11y Task)
+        run: echo "e2e lane stub"
