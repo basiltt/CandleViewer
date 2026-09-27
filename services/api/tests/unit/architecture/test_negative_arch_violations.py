@@ -10,9 +10,12 @@ repo and are always restored (C-13.5/C-13.7).
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[5]
 
@@ -30,12 +33,42 @@ def _run(cmd: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
     )
 
 
+def resolve_depcruise(repo_root: Path) -> list[str] | None:
+    """Return a command prefix that runs the *locally installed, lockfile-pinned*
+    dependency-cruiser, or None if it is not installed.
+
+    Never returns a bare `npx` form: `npx <pkg>` can fetch an arbitrary
+    registry package (typosquat risk + network in tests, C-13.5). Resolution
+    order: explicit `node_modules/.bin/depcruise[.cmd]` path, then
+    `pnpm exec depcruise` only if that local bin exists (pnpm exec does not
+    download).
+    """
+    bin_dir = repo_root / "node_modules" / ".bin"
+    names = ["depcruise.cmd", "depcruise"] if sys.platform == "win32" else ["depcruise"]
+    for name in names:
+        candidate = bin_dir / name
+        if candidate.is_file():
+            return [str(candidate)]
+    pnpm = shutil.which("pnpm")
+    if pnpm and (repo_root / "node_modules" / "dependency-cruiser").is_dir():
+        return [pnpm, "exec", "depcruise"]
+    return None
+
+
+def _depcruise(*args: str) -> subprocess.CompletedProcess[str]:
+    prefix = resolve_depcruise(REPO_ROOT)
+    if prefix is None:
+        pytest.skip("dependency-cruiser not installed locally; skipping architecture negative test")
+    return _run([*prefix, "--config", ".dependency-cruiser.js", *args], cwd=REPO_ROOT)
+
+
 class _PatchedFile:
     """Context manager: back up a tracked file, restore it on exit."""
 
     def __init__(self, path: Path) -> None:
         self.path = path
-        self.backup = path.read_text(encoding="utf-8")
+        self._raw = path.read_bytes()
+        self.backup = self._raw.decode("utf-8")
 
     def write(self, content: str) -> None:
         self.path.write_text(content, encoding="utf-8")
@@ -44,7 +77,8 @@ class _PatchedFile:
         return self
 
     def __exit__(self, *exc: object) -> None:
-        self.path.write_text(self.backup, encoding="utf-8")
+        # Byte-exact restore: a text round-trip rewrites LF as CRLF on Windows.
+        self.path.write_bytes(self._raw)
 
 
 def test_clean_scaffold_passes_import_linter() -> None:
@@ -54,10 +88,7 @@ def test_clean_scaffold_passes_import_linter() -> None:
 
 
 def test_clean_scaffold_passes_dependency_cruiser() -> None:
-    result = _run(
-        ["npx", "--no-install", "depcruise", "--config", ".dependency-cruiser.js", "packages"],
-        cwd=REPO_ROOT,
-    )
+    result = _depcruise("packages")
     assert result.returncode == 0, result.stdout + result.stderr
 
 
@@ -76,19 +107,7 @@ def test_react_in_chart_engine_core_caught_by_c_2_16() -> None:
     target = REPO_ROOT / "packages" / "chart-engine" / "src" / "core" / "handle.ts"
     with _PatchedFile(target) as f:
         f.write('import React from "react";\n' + f.backup)
-        result = _run(
-            [
-                "npx",
-                "--no-install",
-                "depcruise",
-                "--config",
-                ".dependency-cruiser.js",
-                "--output-type",
-                "err-long",
-                "packages",
-            ],
-            cwd=REPO_ROOT,
-        )
+        result = _depcruise("--output-type", "err-long", "packages")
     assert result.returncode != 0
     combined = result.stdout + result.stderr
     assert "chart-engine-no-react" in combined
@@ -99,19 +118,7 @@ def test_deep_import_violation_caught() -> None:
     target = REPO_ROOT / "packages" / "protocol" / "src" / "index.ts"
     with _PatchedFile(target) as f:
         f.write(f.backup + '\nexport { Placeholder } from "../../ui/src/primitives/Placeholder";\n')
-        result = _run(
-            [
-                "npx",
-                "--no-install",
-                "depcruise",
-                "--config",
-                ".dependency-cruiser.js",
-                "--output-type",
-                "err-long",
-                "packages",
-            ],
-            cwd=REPO_ROOT,
-        )
+        result = _depcruise("--output-type", "err-long", "packages")
     assert result.returncode != 0
     combined = result.stdout + result.stderr
     assert "no-deep-imports-ui" in combined

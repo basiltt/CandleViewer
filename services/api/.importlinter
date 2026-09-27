@@ -649,7 +649,6 @@ protected_modules =
 allowed_importers =
     candleviewer.exchange.bybit
     candleviewer.admin
-    candleviewer.app
 
 [importlinter:contract:protected-audit]
 name = C-3.3 — audit is write-only except its read-path allow-list
@@ -660,7 +659,6 @@ allowed_importers =
     candleviewer.admin
     candleviewer.api
     candleviewer.ws
-    candleviewer.app
 
 [importlinter:contract:independence-oms-siblings]
 name = C-3.1 rules/paper/risk are independent siblings of oms (no cross-imports)

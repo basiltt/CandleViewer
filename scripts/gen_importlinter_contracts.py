@@ -97,13 +97,10 @@ def render(manifest: dict) -> str:
     lines.append(f"name = {secrets['rule']} — secrets is importable only by its allow-list")
     lines.append("type = protected")
     lines.append(f"protected_modules =\n    {secrets['module']}")
-    # `candleviewer.app` is the composition root (Sec.6.1 of
-    # `20-architecture.md`): it constructs every module's scaffold instance
-    # by design ("everything is injected"), so it must be able to import
-    # every module including the protected ones. This does not weaken C-3.2
-    # — business-logic modules besides M4/M21 still cannot import
-    # `candleviewer.secrets` directly.
-    importers_block = "\n    ".join([*secrets["only_importable_by"], "candleviewer.app"])
+    # No composition-root exception: `candleviewer.app` obtains secrets/audit
+    # instances via `candleviewer.admin.wiring` (M21) injection, so the
+    # allow-lists are exactly C-3.2 / C-3.3.
+    importers_block = "\n    ".join(secrets["only_importable_by"])
     lines.append(f"allowed_importers =\n    {importers_block}")
     lines.append("")
 
@@ -112,7 +109,7 @@ def render(manifest: dict) -> str:
     lines.append(f"name = {audit['rule']} — audit is write-only except its read-path allow-list")
     lines.append("type = protected")
     lines.append(f"protected_modules =\n    {audit['module']}")
-    importers_block = "\n    ".join([*audit["only_importable_by"], "candleviewer.app"])
+    importers_block = "\n    ".join(audit["only_importable_by"])
     lines.append(f"allowed_importers =\n    {importers_block}")
     lines.append("")
 

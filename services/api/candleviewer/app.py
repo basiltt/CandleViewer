@@ -20,9 +20,14 @@ from prometheus_client import CollectorRegistry
 
 from candleviewer.accounts.service import AccountsService
 from candleviewer.admin.service import AdminService
+from candleviewer.admin.wiring import (
+    AuditHandle,
+    SecretsHandle,
+    build_audit_service,
+    build_secrets_service,
+)
 from candleviewer.alerts.service import AlertsService
 from candleviewer.api import make_health_router
-from candleviewer.audit.service import AuditService
 from candleviewer.auth.service import AuthService
 from candleviewer.bars.service import BarsService
 from candleviewer.book.service import BookService
@@ -39,7 +44,6 @@ from candleviewer.recorder.service import RecorderService
 from candleviewer.replay.service import ReplayService
 from candleviewer.risk.service import RiskService
 from candleviewer.rules.service import RulesService
-from candleviewer.secrets.service import SecretsService
 from candleviewer.settings import Settings, get_settings
 from candleviewer.storage.service import StorageService
 from candleviewer.ws.service import WsService
@@ -61,7 +65,7 @@ class AppContext:
     settings: Settings
     metrics: CollectorRegistry
 
-    secrets: SecretsService
+    secrets: SecretsHandle
     exchange_base: ExchangeBaseService
     exchange_bybit: ExchangeBybitService
     bus: BusService
@@ -78,7 +82,7 @@ class AppContext:
     paper: PaperService
     risk: RiskService
     auth: AuthService
-    audit: AuditService
+    audit: AuditHandle
     journal: JournalService
     admin: AdminService
     alerts: AlertsService
@@ -97,7 +101,7 @@ def build_app_context(settings: Settings | None = None) -> AppContext:
     return AppContext(
         settings=settings or get_settings(),
         metrics=CollectorRegistry(),
-        secrets=SecretsService(),
+        secrets=build_secrets_service(),
         exchange_base=ExchangeBaseService(),
         exchange_bybit=ExchangeBybitService(),
         bus=BusService(),
@@ -114,7 +118,7 @@ def build_app_context(settings: Settings | None = None) -> AppContext:
         paper=PaperService(),
         risk=RiskService(),
         auth=AuthService(),
-        audit=AuditService(),
+        audit=build_audit_service(),
         journal=JournalService(),
         admin=AdminService(),
         alerts=AlertsService(),
