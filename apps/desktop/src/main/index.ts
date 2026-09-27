@@ -7,9 +7,67 @@ import { logStartup, logAuditEvent } from "./logger.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// The app origin allow-list for will-navigate / window.open. In dev this is
-// the Vite dev server; in a packaged build it is the local file:// origin.
-const APP_ORIGIN = process.env["CV_DEV_SERVER_URL"] ?? "file://";
+// Packaged-build navigation is confined to the app's own dist directory; in
+// dev it is confined to the Vite dev server's origin. Neither is a bare
+// scheme/prefix string match (see isNavigationAllowed) so a lookalike host
+// (e.g. "http://localhost:5173.evil.test") or an arbitrary local file cannot
+// pass the check.
+const APP_ROOT_DIR = path.resolve(__dirname, "../../../web/dist");
+
+/**
+ * Returns the origin of `url` for audit logging, or "invalid-url" if it does
+ * not parse. Never returns the full URL: query strings can carry tokens
+ * (C-12.6) so only the origin is safe to persist.
+ */
+export function safeOriginOf(url: string): string {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return "invalid-url";
+  }
+}
+
+/**
+ * Returns true only if `url` targets the packaged app's own dist directory
+ * (file: scheme, path confined to APP_ROOT_DIR) or, in dev, exactly the dev
+ * server's origin. Compares parsed URL fields, never a string prefix, so
+ * "file://" cannot match arbitrary local files and a dev origin cannot match
+ * a lookalike host that merely starts with the same string.
+ */
+export function isNavigationAllowed(
+  url: string,
+  devServerUrl: string | undefined,
+  appRootDir: string = APP_ROOT_DIR,
+): boolean {
+  let target: URL;
+  try {
+    target = new URL(url);
+  } catch {
+    return false;
+  }
+
+  if (devServerUrl) {
+    let dev: URL;
+    try {
+      dev = new URL(devServerUrl);
+    } catch {
+      return false;
+    }
+    return target.origin === dev.origin;
+  }
+
+  if (target.protocol !== "file:") {
+    return false;
+  }
+  let targetPath: string;
+  try {
+    targetPath = path.resolve(fileURLToPath(target));
+  } catch {
+    return false;
+  }
+  const relative = path.relative(appRootDir, targetPath);
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+}
 
 export function createMainWindow(): BrowserWindow {
   const win = new BrowserWindow({
@@ -25,13 +83,13 @@ export function createMainWindow(): BrowserWindow {
   });
 
   win.webContents.setWindowOpenHandler(({ url }) => {
-    logAuditEvent("window-open-denied", { url });
+    logAuditEvent("window-open-denied", { url: safeOriginOf(url) });
     return { action: "deny" };
   });
 
   win.webContents.on("will-navigate", (event, url) => {
-    if (!url.startsWith(APP_ORIGIN)) {
-      logAuditEvent("navigation-denied", { url });
+    if (!isNavigationAllowed(url, process.env["CV_DEV_SERVER_URL"])) {
+      logAuditEvent("navigation-denied", { url: safeOriginOf(url) });
       event.preventDefault();
     }
   });

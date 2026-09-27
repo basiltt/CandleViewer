@@ -17,6 +17,18 @@ test.describe("Electron main-window smoke", () => {
     await expect(window).toBeTruthy();
     await app.close();
   });
+
+  test("the sandboxed preload bundle exposes window.cv", async () => {
+    // Regression guard: a sandboxed preload built as ESM with unresolved
+    // relative imports fails silently (no thrown error, window.cv simply
+    // never appears). Bundling to a single CJS file (scripts/build-preload.mjs)
+    // fixes this; this assertion fails loudly if that regresses.
+    const app = await launchApp();
+    const window = await app.firstWindow();
+    const hasCv = await window.evaluate(() => typeof (window as unknown as { cv?: unknown }).cv !== "undefined");
+    expect(hasCv).toBe(true);
+    await app.close();
+  });
 });
 
 test.describe("Electron hardening assertion", () => {

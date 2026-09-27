@@ -14,7 +14,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:cov": "vitest run --coverage",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && pnpm run build:preload",
+    "build:preload": "node scripts/build-preload.mjs",
     "build:installer": "electron-builder --config electron-builder.yml",
     "size": "echo \"@candleviewer/desktop: no bundle budget (renderer budget lives in apps/web)\"",
     "e2e": "playwright test -c e2e/playwright.config.ts"
@@ -26,6 +27,7 @@
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.19.0",
     "electron": "^33.2.1",
+    "esbuild": "^0.25.12",
     "electron-builder": "^25.1.8",
     "vitest": "^2.1.8",
     "@vitest/coverage-v8": "^2.1.8",
