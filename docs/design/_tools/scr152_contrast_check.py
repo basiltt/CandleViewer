@@ -38,8 +38,11 @@ PAIRS: dict[str, tuple[tuple[int, int, int], tuple[int, int, int], float, str]] 
     "status.danger.strong icon on status.danger.subtle (! glyph)": (
         (240, 180, 65), (78, 21, 24), 3.0, "AA non-text UI",
     ),
-    "action.primary.default on status.danger.subtle (Retry now)": (
-        (43, 108, 232), (78, 21, 24), 4.5, "AA text (link-style control)",
+    # Retry now is a filled button (btn-retry-now-bg + on-action text), not a plain-text
+    # control, so it is judged at the 3:1 non-text-UI bar against the banner background,
+    # same as the light theme (see section 6 of E08-D03.md for the rationale).
+    "action.primary.default fill on status.danger.subtle (Retry now button)": (
+        (43, 108, 232), (78, 21, 24), 3.0, "AA non-text UI (filled button)",
     ),
     "text.link on status.danger.subtle (Details)": (
         (110, 161, 245), (78, 21, 24), 4.5, "AA text (link-style control)",
