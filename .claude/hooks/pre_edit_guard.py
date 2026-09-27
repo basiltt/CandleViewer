@@ -15,7 +15,7 @@ import re
 import subprocess
 import sys
 
-MIGRATIONS = "services/api/candleviewer/db/migrations/versions/"
+MIGRATIONS = "services/api/candleviewer/migrations/versions/"
 STATECHART = "services/api/candleviewer/statechart/"
 ALLOWED_TEST_DIRS = ("services/api/tests/xstate_contract/", "tests/xstate_contract/")
 IMPORT_RE = re.compile(r"^\s*(from\s+xstate_statemachine\b|import\s+xstate_statemachine\b)", re.M)
