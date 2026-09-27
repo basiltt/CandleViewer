@@ -75,17 +75,36 @@ async def test_conflate_latest_scenario_state_topics_conflate() -> None:
 
 
 @pytest.mark.asyncio
+async def test_conflate_latest_keeps_newest_only_even_with_large_maxsize() -> None:
+    """Regression: a paused CONFLATE_LATEST subscriber with a large maxsize
+    must not accumulate a backlog — every publish collapses the queue down
+    to just the newest event, well before the queue is ever `full()`."""
+    bus = Bus()
+    sub = bus.subscribe(
+        "watchlist", "demo.md.BTCUSDT.ticker", QueuePolicy.CONFLATE_LATEST, maxsize=4096
+    )
+
+    for i in range(50):
+        await bus.publish(TICKER_TOPIC, f"ticker-{i}")
+
+    assert sub.qsize() == 1, "queue must never grow past 1 item under CONFLATE_LATEST"
+    assert await sub.get() == "ticker-49"
+
+
+@pytest.mark.asyncio
 async def test_slow_consumer_scenario_is_named_not_guessed(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Gherkin: Slow consumer is named, not guessed."""
+    # CONFLATE_LATEST keeps newest-only (depth is always <=1 regardless of
+    # maxsize), so the lag threshold must be 1 for this scenario to fire.
     bus = Bus()
     bus.subscribe(
         "footprint",
         "demo.of.BTCUSDT.trade",
         QueuePolicy.CONFLATE_LATEST,
         maxsize=100,
-        lag_warn_threshold=2,
+        lag_warn_threshold=1,
     )
     with caplog.at_level("WARNING", logger="candleviewer.bus"):
         for i in range(3):
@@ -95,7 +114,7 @@ async def test_slow_consumer_scenario_is_named_not_guessed(
     assert warnings, "a structured warning must be logged once the lag threshold is crossed"
     assert warnings[-1].subscriber == "footprint"  # type: ignore[attr-defined]
     assert warnings[-1].topic == TRADE_TOPIC.key  # type: ignore[attr-defined]
-    assert bus_subscriber_lag.labels(subscriber="footprint")._value.get() >= 2
+    assert bus_subscriber_lag.labels(subscriber="footprint")._value.get() >= 1
 
 
 @pytest.mark.asyncio

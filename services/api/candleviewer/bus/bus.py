@@ -49,14 +49,11 @@ class Subscription:
     maxsize: int
     lag_warn_threshold: int
     _high_water: int = field(default=0, init=False)
-    _conflated_slot: Any = field(default=None, init=False, repr=False)
-    _has_conflated: bool = field(default=False, init=False, repr=False)
 
     async def get(self) -> Any:
-        """Await the next item. For `CONFLATE_LATEST`, drain the single
-        conflation slot first if it holds an item the queue hasn't been
-        given yet — in this implementation the slot always mirrors the
-        queue's sole item, so this simply awaits the queue."""
+        """Await the next item. For `CONFLATE_LATEST` subscribers the bus
+        already collapses the queue down to the newest item on delivery
+        (see `Bus._deliver`), so this is a plain queue `get`."""
         item = await self.queue.get()
         self.queue.task_done()
         return item
@@ -150,8 +147,11 @@ class Bus:
             else:
                 sub.queue.put_nowait(event)
         elif sub.policy is QueuePolicy.CONFLATE_LATEST:
-            if sub.queue.full():
-                self._drain_queue_nowait(sub.queue)
+            # Keep newest only: drop whatever is already queued (0 or more
+            # items), regardless of whether the queue happens to be full,
+            # so a paused subscriber never accumulates stale backlog.
+            drained = self._drain_queue_nowait(sub.queue)
+            if drained:
                 bus_conflated_total.labels(topic_class=topic.topic_class).inc()
             sub.queue.put_nowait(event)
         else:  # pragma: no cover - exhaustive enum guarded by mypy
@@ -169,7 +169,9 @@ class Bus:
             )
 
     @staticmethod
-    def _drain_queue_nowait(queue: asyncio.Queue[Any]) -> None:
+    def _drain_queue_nowait(queue: asyncio.Queue[Any]) -> int:
+        """Drain and discard every currently-queued item. Returns the count
+        of items removed."""
         drained: deque[Any] = deque()
         while True:
             try:
@@ -177,6 +179,7 @@ class Bus:
                 queue.task_done()
             except asyncio.QueueEmpty:
                 break
+        return len(drained)
 
     async def drain(self, grace_s: float) -> dict[str, int]:
         """Stop accepting new publishes, then wait up to `grace_s` seconds
