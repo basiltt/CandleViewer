@@ -30,6 +30,7 @@ dev = [
   "import-linter>=2.0",
   "bandit>=1.7",
   "pip-audit>=2.7",
+  "datamodel-code-generator[http]>=0.26,<0.27",  # E02-T09 protocol codegen (pydantic v2 models from OpenAPI)
 ]
 test = [
   "pytest>=8.3",

@@ -15,20 +15,12 @@ from typing import Annotated
 
 from pydantic import BeforeValidator, PlainSerializer
 
-from enum import Enum, IntEnum, StrEnum
+from datetime import datetime
+from enum import Enum
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import (
-    AnyUrl,
-    AwareDatetime,
-    BaseModel,
-    ConfigDict,
-    EmailStr,
-    Field,
-    RootModel,
-    SecretStr,
-)
+from pydantic import AnyUrl, BaseModel, ConfigDict, EmailStr, Field, RootModel, SecretStr
 
 
 def _cv_parse_decimal(v: object) -> object:
@@ -61,7 +53,7 @@ class Symbol(RootModel[str]):
     )
 
 
-class ExchangeCode(StrEnum):
+class ExchangeCode(Enum):
     """
     Exchange identifier. v1 supports Bybit only (locked scope: Bybit USDT linear perpetuals).
     Mirrors the Postgres type `exchange_code`; the adapter abstraction
@@ -72,7 +64,7 @@ class ExchangeCode(StrEnum):
     bybit = 'bybit'
 
 
-class Environment(StrEnum):
+class Environment(Enum):
     """
     Structural environment selector (arch P9). Mirrors the Postgres type `exchange_env`.
     """
@@ -132,11 +124,11 @@ class PageMeta(BaseModel):
 
 
 class Page(BaseModel):
-    items: list[Any]
+    items: list
     meta: PageMeta
 
 
-class Source(StrEnum):
+class Source(Enum):
     questdb = 'questdb'
     parquet = 'parquet'
     postgres = 'postgres'
@@ -146,35 +138,35 @@ class Source(StrEnum):
 
 class DataMeta(PageMeta):
     sources: list[Source] | None = Field(None, description='Storage tiers consulted.')
-    recording_started_at: AwareDatetime | None = None
-    generated_at: AwareDatetime | None = None
+    recording_started_at: datetime | None = None
+    generated_at: datetime | None = None
 
 
-class UserStatus(StrEnum):
+class UserStatus(Enum):
     invited = 'invited'
     active = 'active'
     disabled = 'disabled'
     locked = 'locked'
 
 
-class RoleName(StrEnum):
+class RoleName(Enum):
     owner = 'owner'
     manager = 'manager'
     viewer = 'viewer'
 
 
-class MfaMethodKind(StrEnum):
+class MfaMethodKind(Enum):
     totp = 'totp'
     webauthn = 'webauthn'
     recovery_code = 'recovery_code'
 
 
-class AccountKind(StrEnum):
+class AccountKind(Enum):
     main = 'main'
     sub = 'sub'
 
 
-class KeyStatus(StrEnum):
+class KeyStatus(Enum):
     pending = 'pending'
     active = 'active'
     rotating = 'rotating'
@@ -183,12 +175,12 @@ class KeyStatus(StrEnum):
     invalid = 'invalid'
 
 
-class SizingMode(StrEnum):
+class SizingMode(Enum):
     """
     How a request expresses order size.
 
     **Persistence contract.** The Postgres type `sizing_mode`
-    (`21-database-schema.md` §Enums) holds only the four *resolved* modes
+    (`21-database-schema.md` �Enums) holds only the four *resolved* modes
     `fixed_qty | fixed_notional | pct_equity | risk_based`. The two extra API values are
     **request-time sugar that never reaches the database**; the OMS resolves them before
     any row is written, and `orders.requested_qty_mode` / `account_profiles.sizing_mode`
@@ -212,7 +204,7 @@ class SizingMode(StrEnum):
     profile = 'profile'
 
 
-class OffsetUnit(StrEnum):
+class OffsetUnit(Enum):
     """
     Unit in which a stop/target distance is expressed.
 
@@ -232,7 +224,7 @@ class OffsetUnit(StrEnum):
     price = 'price'
 
 
-class TradeGroupStatus(StrEnum):
+class TradeGroupStatus(Enum):
     draft = 'draft'
     submitting = 'submitting'
     partially_open = 'partially_open'
@@ -243,7 +235,7 @@ class TradeGroupStatus(StrEnum):
     cancelled = 'cancelled'
 
 
-class LegStatus(StrEnum):
+class LegStatus(Enum):
     pending = 'pending'
     submitted = 'submitted'
     rejected = 'rejected'
@@ -255,7 +247,7 @@ class LegStatus(StrEnum):
     error = 'error'
 
 
-class OrderIntent(StrEnum):
+class OrderIntent(Enum):
     entry = 'entry'
     stop_loss = 'stop_loss'
     take_profit = 'take_profit'
@@ -266,7 +258,7 @@ class OrderIntent(StrEnum):
     algo_child = 'algo_child'
 
 
-class OrderState(StrEnum):
+class OrderState(Enum):
     new = 'new'
     pending_submit = 'pending_submit'
     submitted = 'submitted'
@@ -281,46 +273,46 @@ class OrderState(StrEnum):
     untracked = 'untracked'
 
 
-class OrderType(StrEnum):
+class OrderType(Enum):
     market = 'market'
     limit = 'limit'
 
 
-class OrderSide(StrEnum):
+class OrderSide(Enum):
     buy = 'buy'
     sell = 'sell'
 
 
-class TimeInForce(StrEnum):
+class TimeInForce(Enum):
     GTC = 'GTC'
     IOC = 'IOC'
     FOK = 'FOK'
     PostOnly = 'PostOnly'
 
 
-class TriggerBy(StrEnum):
+class TriggerBy(Enum):
     LastPrice = 'LastPrice'
     MarkPrice = 'MarkPrice'
     IndexPrice = 'IndexPrice'
 
 
-class TpSlMode(StrEnum):
+class TpSlMode(Enum):
     Full = 'Full'
     Partial = 'Partial'
 
 
-class PositionMode(StrEnum):
+class PositionMode(Enum):
     one_way = 'one_way'
     hedge = 'hedge'
 
 
-class MarginMode(StrEnum):
+class MarginMode(Enum):
     cross = 'cross'
     isolated = 'isolated'
     portfolio = 'portfolio'
 
 
-class AlgoKind(StrEnum):
+class AlgoKind(Enum):
     none = 'none'
     oco = 'oco'
     iceberg = 'iceberg'
@@ -330,7 +322,7 @@ class AlgoKind(StrEnum):
     bracket = 'bracket'
 
 
-class RuleScope(StrEnum):
+class RuleScope(Enum):
     global_ = 'global'
     account = 'account'
     symbol = 'symbol'
@@ -338,13 +330,13 @@ class RuleScope(StrEnum):
     trade_group = 'trade_group'
 
 
-class RuleMode(StrEnum):
+class RuleMode(Enum):
     disabled = 'disabled'
     simulate = 'simulate'
     armed = 'armed'
 
 
-class RuleRunStatus(StrEnum):
+class RuleRunStatus(Enum):
     running = 'running'
     ok = 'ok'
     error = 'error'
@@ -352,7 +344,7 @@ class RuleRunStatus(StrEnum):
     throttled = 'throttled'
 
 
-class AlertChannel(StrEnum):
+class AlertChannel(Enum):
     in_app = 'in_app'
     email = 'email'
     webhook = 'webhook'
@@ -360,7 +352,7 @@ class AlertChannel(StrEnum):
     desktop = 'desktop'
 
 
-class DeliveryStatus(StrEnum):
+class DeliveryStatus(Enum):
     queued = 'queued'
     sent = 'sent'
     failed = 'failed'
@@ -368,7 +360,7 @@ class DeliveryStatus(StrEnum):
     acked = 'acked'
 
 
-class RecordingState(StrEnum):
+class RecordingState(Enum):
     idle = 'idle'
     starting = 'starting'
     recording = 'recording'
@@ -378,7 +370,7 @@ class RecordingState(StrEnum):
     error = 'error'
 
 
-class RecordReason(StrEnum):
+class RecordReason(Enum):
     manual = 'manual'
     chart_open = 'chart_open'
     position_open = 'position_open'
@@ -386,7 +378,7 @@ class RecordReason(StrEnum):
     alert_dependency = 'alert_dependency'
 
 
-class StreamKind(StrEnum):
+class StreamKind(Enum):
     trades = 'trades'
     orderbook_delta = 'orderbook_delta'
     orderbook_snapshot = 'orderbook_snapshot'
@@ -397,14 +389,14 @@ class StreamKind(StrEnum):
     funding = 'funding'
 
 
-class RetentionAction(StrEnum):
+class RetentionAction(Enum):
     drop = 'drop'
     archive_parquet = 'archive_parquet'
     downsample = 'downsample'
     pin = 'pin'
 
 
-class ReplayState(StrEnum):
+class ReplayState(Enum):
     created = 'created'
     buffering = 'buffering'
     playing = 'playing'
@@ -413,24 +405,24 @@ class ReplayState(StrEnum):
     error = 'error'
 
 
-class JournalSide(StrEnum):
+class JournalSide(Enum):
     long = 'long'
     short = 'short'
 
 
-class FlagKind(StrEnum):
+class FlagKind(Enum):
     boolean = 'boolean'
     percentage = 'percentage'
     variant = 'variant'
 
 
-class AuditOutcome(StrEnum):
+class AuditOutcome(Enum):
     success = 'success'
     failure = 'failure'
     denied = 'denied'
 
 
-class Severity(StrEnum):
+class Severity(Enum):
     debug = 'debug'
     info = 'info'
     warning = 'warning'
@@ -438,7 +430,7 @@ class Severity(StrEnum):
     critical = 'critical'
 
 
-class BackupKind(StrEnum):
+class BackupKind(Enum):
     pg_basebackup = 'pg_basebackup'
     pg_dump = 'pg_dump'
     questdb_snapshot = 'questdb_snapshot'
@@ -446,7 +438,7 @@ class BackupKind(StrEnum):
     config_bundle = 'config_bundle'
 
 
-class BackupStatus(StrEnum):
+class BackupStatus(Enum):
     running = 'running'
     ok = 'ok'
     failed = 'failed'
@@ -454,14 +446,14 @@ class BackupStatus(StrEnum):
     restored = 'restored'
 
 
-class ComponentState(StrEnum):
+class ComponentState(Enum):
     healthy = 'healthy'
     degraded = 'degraded'
     warning = 'warning'
     down = 'down'
 
 
-class KlineInterval(StrEnum):
+class KlineInterval(Enum):
     """
     Bybit-compatible interval codes (minutes, or D/W/M).
     """
@@ -481,7 +473,7 @@ class KlineInterval(StrEnum):
     M = 'M'
 
 
-class BarType(StrEnum):
+class BarType(Enum):
     time = 'time'
     tick = 'tick'
     volume = 'volume'
@@ -492,7 +484,7 @@ class BarType(StrEnum):
     heikin_ashi = 'heikin_ashi'
 
 
-class MetricCode(StrEnum):
+class MetricCode(Enum):
     cvd = 'cvd'
     delta = 'delta'
     min_max_delta = 'min_max_delta'
@@ -558,7 +550,7 @@ class MfaVerifyRequest(BaseModel):
     remember_device_days: int | None = Field(0, ge=0, le=30)
 
 
-class Method(StrEnum):
+class Method(Enum):
     totp = 'totp'
     webauthn = 'webauthn'
 
@@ -595,8 +587,8 @@ class MfaMethod(BaseModel):
     kind: MfaMethodKind | None = None
     label: str | None = None
     active: bool | None = None
-    created_at: AwareDatetime | None = None
-    last_used_at: AwareDatetime | None = None
+    created_at: datetime | None = None
+    last_used_at: datetime | None = None
 
 
 class RefreshRequest(BaseModel):
@@ -619,9 +611,9 @@ class UserSession(BaseModel):
     device_name: str | None = None
     ip: str | None = None
     user_agent: str | None = None
-    created_at: AwareDatetime | None = None
-    last_seen_at: AwareDatetime | None = None
-    expires_at: AwareDatetime | None = None
+    created_at: datetime | None = None
+    last_seen_at: datetime | None = None
+    expires_at: datetime | None = None
     current: bool | None = None
 
 
@@ -634,14 +626,14 @@ class User(BaseModel):
     status: UserStatus
     mfa_enabled: bool | None = None
     mfa_required: bool | None = None
-    last_login_at: AwareDatetime | None = None
-    created_at: AwareDatetime | None = None
-    updated_at: AwareDatetime | None = None
+    last_login_at: datetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class UserWithInvite(User):
     invite_url: str | None = Field(None, description='One-time link, valid 72 h. Shown once.')
-    invite_expires_at: AwareDatetime | None = None
+    invite_expires_at: datetime | None = None
 
 
 class UpdateUserRequest(BaseModel):
@@ -662,7 +654,7 @@ class Role(BaseModel):
     user_count: int | None = None
 
 
-class Level(StrEnum):
+class Level(Enum):
     """
     `trade` implies `read`.
     """
@@ -679,11 +671,11 @@ class AccountAccessGrantInput(BaseModel):
 class AccountAccessGrant(AccountAccessGrantInput):
     account_label: str | None = None
     environment: Environment | None = None
-    granted_at: AwareDatetime | None = None
+    granted_at: datetime | None = None
     granted_by: UUID | None = None
 
 
-class ConnectionState(StrEnum):
+class ConnectionState(Enum):
     pending = 'pending'
     connected = 'connected'
     degraded = 'degraded'
@@ -691,7 +683,7 @@ class ConnectionState(StrEnum):
     disabled = 'disabled'
 
 
-class KeyStatus1(StrEnum):
+class KeyStatus1(Enum):
     missing = 'missing'
     pending = 'pending'
     active = 'active'
@@ -742,7 +734,7 @@ class WalletBalance(BaseModel):
         examples=['63120.50', '-0.0004', '0'],
         pattern='^-?[0-9]+(\\.[0-9]+)?$',
     )
-    updated_at: AwareDatetime | None = None
+    updated_at: datetime | None = None
 
 
 class CreateExchangeAccountRequest(BaseModel):
@@ -775,9 +767,9 @@ class ApiKey(BaseModel):
     label: str | None = Field(None, max_length=80)
     status: KeyStatus
     read_only: bool | None = None
-    expires_at: AwareDatetime | None = None
-    created_at: AwareDatetime | None = None
-    last_verified_at: AwareDatetime | None = None
+    expires_at: datetime | None = None
+    created_at: datetime | None = None
+    last_verified_at: datetime | None = None
 
 
 class CreateApiKeyRequest(BaseModel):
@@ -821,7 +813,7 @@ class RotateApiKeyRequest(BaseModel):
     overlap_seconds: int | None = Field(300, ge=0, le=3600)
 
 
-class State(StrEnum):
+class State(Enum):
     overlapping = 'overlapping'
     completed = 'completed'
     failed = 'failed'
@@ -832,7 +824,7 @@ class ApiKeyRotation(BaseModel):
     old_key_id: UUID | None = None
     new_key: ApiKey | None = None
     verification: KeyVerification | None = None
-    overlap_until: AwareDatetime | None = None
+    overlap_until: datetime | None = None
     state: State | None = None
 
 
@@ -851,7 +843,7 @@ class Websocket(BaseModel):
 
 class KeyTestResult(BaseModel):
     passed: bool | None = None
-    checked_at: AwareDatetime | None = None
+    checked_at: datetime | None = None
     rest: Rest | None = None
     websocket: Websocket | None = None
     verification: KeyVerification | None = None
@@ -962,8 +954,10 @@ class AccountProfileInput(BaseModel):
     take_profit: Offset | None = None
     trailing_stop: Offset | None = None
     risk_caps: RiskCaps | None = None
-    allowed_symbols: list[Symbol] | None = Field(
-        None, description='Empty means "all instruments permitted by the deployment".'
+    allowed_symbols: list[str] | None = Field(
+        None,
+        description='Empty means "all instruments permitted by the deployment".',
+        pattern='^[A-Z0-9]{2,20}USDT$',
     )
     require_native_stop: Literal[True] = Field(
         True, description='Always true; the safety invariant cannot be disabled (arch P4).'
@@ -976,11 +970,11 @@ class AccountProfile(AccountProfileInput):
     id: UUID | None = None
     exchange_account_id: UUID | None = None
     is_active: bool | None = None
-    created_at: AwareDatetime | None = None
-    updated_at: AwareDatetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
-class Status(StrEnum):
+class Status(Enum):
     Trading = 'Trading'
     PreLaunch = 'PreLaunch'
     Delivering = 'Delivering'
@@ -1044,12 +1038,12 @@ class Instrument(BaseModel):
         pattern='^-?[0-9]+(\\.[0-9]+)?$',
     )
     funding_interval_minutes: int | None = None
-    launch_time: AwareDatetime | None = None
+    launch_time: datetime | None = None
     copy_trading: bool | None = None
     revision: int | None = Field(
         None, description='Increments whenever Bybit changes the instrument metadata.'
     )
-    updated_at: AwareDatetime | None = None
+    updated_at: datetime | None = None
 
 
 class RiskLimitTier(BaseModel):
@@ -1083,7 +1077,7 @@ class RiskLimitTier(BaseModel):
 class InstrumentDetail(Instrument):
     risk_limit_tiers: list[RiskLimitTier] | None = None
     recorded: bool | None = None
-    recording_started_at: AwareDatetime | None = None
+    recording_started_at: datetime | None = None
 
 
 class Ticker(BaseModel):
@@ -1183,14 +1177,14 @@ class Ticker(BaseModel):
         examples=['63120.50', '-0.0004', '0'],
         pattern='^-?[0-9]+(\\.[0-9]+)?$',
     )
-    next_funding_time: AwareDatetime | None = None
-    ts: AwareDatetime | None = None
+    next_funding_time: datetime | None = None
+    ts: datetime | None = None
     stale: bool | None = None
 
 
 class Bar(BaseModel):
-    t: AwareDatetime = Field(..., description='Bar open time.')
-    close_time: AwareDatetime | None = Field(None, description='Present for non-time bars.')
+    t: datetime = Field(..., description='Bar open time.')
+    close_time: datetime | None = Field(None, description='Present for non-time bars.')
     o: str = Field(
         ...,
         description='Arbitrary-precision decimal transported as a string (convention C6).',
@@ -1284,7 +1278,7 @@ class FootprintCell(BaseModel):
     trades: int | None = None
 
 
-class Direction(StrEnum):
+class Direction(Enum):
     buy = 'buy'
     sell = 'sell'
 
@@ -1392,8 +1386,8 @@ class ProfileRow(BaseModel):
 
 
 class ProfilePeriod(BaseModel):
-    period_start: AwareDatetime | None = None
-    period_end: AwareDatetime | None = None
+    period_start: datetime | None = None
+    period_end: datetime | None = None
     total_volume: str | None = Field(
         None,
         description='Arbitrary-precision decimal transported as a string (convention C6).',
@@ -1422,17 +1416,17 @@ class ProfilePeriod(BaseModel):
         None, description="True while this period's POC has not been retraded by a later bar."
     )
     rows: list[ProfileRow] | None = None
-    hvn: list[Decimal] | None = None
-    lvn: list[Decimal] | None = None
+    hvn: list[str] | None = Field(None, pattern='^-?[0-9]+(\\.[0-9]+)?$')
+    lvn: list[str] | None = Field(None, pattern='^-?[0-9]+(\\.[0-9]+)?$')
 
 
-class Kind(StrEnum):
+class Kind(Enum):
     volume = 'volume'
     delta = 'delta'
     tpo = 'tpo'
 
 
-class Split(StrEnum):
+class Split(Enum):
     composite = 'composite'
     session = 'session'
     fixed = 'fixed'
@@ -1451,7 +1445,7 @@ class ProfileResponse(BaseModel):
     meta: DataMeta | None = None
 
 
-class Side(StrEnum):
+class Side(Enum):
     """
     Taker/aggressor side, taken directly from Bybit `S`.
     """
@@ -1460,7 +1454,7 @@ class Side(StrEnum):
     sell = 'sell'
 
 
-class TickDirection(StrEnum):
+class TickDirection(Enum):
     PlusTick = 'PlusTick'
     ZeroPlusTick = 'ZeroPlusTick'
     MinusTick = 'MinusTick'
@@ -1469,7 +1463,7 @@ class TickDirection(StrEnum):
 
 class PublicTrade(BaseModel):
     id: str | None = None
-    ts: AwareDatetime | None = None
+    ts: datetime | None = None
     price: str | None = Field(
         None,
         description='Arbitrary-precision decimal transported as a string (convention C6).',
@@ -1492,19 +1486,11 @@ class PublicTrade(BaseModel):
     tick_direction: TickDirection | None = None
 
 
-class Depth(IntEnum):
+class Depth(Enum):
     integer_1 = 1
     integer_50 = 50
     integer_200 = 200
     integer_500 = 500
-
-
-class Bid(RootModel[list[Decimal]]):
-    root: list[Decimal] = Field(..., max_length=2, min_length=2)
-
-
-class Ask(RootModel[list[Decimal]]):
-    root: list[Decimal] = Field(..., max_length=2, min_length=2)
 
 
 class OrderbookSnapshot(BaseModel):
@@ -1517,13 +1503,25 @@ class OrderbookSnapshot(BaseModel):
     depth: Depth
     u: int = Field(..., description='Monotonic update id from Bybit.')
     seq: int = Field(..., description='Cross-topic sequence from Bybit.')
-    ts: AwareDatetime
-    bids: list[Bid] = Field(..., description='[price, size], descending.')
-    asks: list[Ask] = Field(..., description='[price, size], ascending.')
+    ts: datetime
+    bids: list[list[str]] = Field(
+        ...,
+        description='[price, size], descending.',
+        max_length=2,
+        min_length=2,
+        pattern='^-?[0-9]+(\\.[0-9]+)?$',
+    )
+    asks: list[list[str]] = Field(
+        ...,
+        description='[price, size], ascending.',
+        max_length=2,
+        min_length=2,
+        pattern='^-?[0-9]+(\\.[0-9]+)?$',
+    )
     stale: bool | None = None
 
 
-class Normalize(StrEnum):
+class Normalize(Enum):
     none = 'none'
     column = 'column'
     window = 'window'
@@ -1536,12 +1534,12 @@ class HeatmapResponse(BaseModel):
         examples=['BTCUSDT', 'ETHUSDT', 'SOLUSDT'],
         pattern='^[A-Z0-9]{2,20}USDT$',
     )
-    from_: AwareDatetime | None = Field(None, alias='from')
-    to: AwareDatetime | None = None
+    from_: datetime | None = Field(None, alias='from')
+    to: datetime | None = None
     time_bucket_ms: int | None = None
     price_grouping: int | None = None
-    times: list[AwareDatetime] | None = None
-    prices: list[Decimal] | None = None
+    times: list[datetime] | None = None
+    prices: list[str] | None = Field(None, pattern='^-?[0-9]+(\\.[0-9]+)?$')
     bid_matrix: list[list[float]] | None = Field(
         None, description='Row-major [price][time] resting bid size.'
     )
@@ -1554,8 +1552,8 @@ class HeatmapResponse(BaseModel):
 
 
 class MetricPoint(BaseModel):
-    t: AwareDatetime
-    v: Decimal | None
+    t: datetime
+    v: Decimal | None = None
     meta: dict[str, Any] | None = Field(
         None, description='Per-point detail for event-like metrics (iceberg, stop_run, absorption).'
     )
@@ -1584,13 +1582,13 @@ class MetricsResponse(BaseModel):
     meta: DataMeta | None = None
 
 
-class Side1(StrEnum):
+class Side1(Enum):
     buy = 'buy'
     sell = 'sell'
 
 
 class Liquidation(BaseModel):
-    ts: AwareDatetime | None = None
+    ts: datetime | None = None
     symbol: str | None = Field(
         None,
         description='Bybit USDT linear perpetual symbol. v1 accepts USDT-quoted linear symbols only.',
@@ -1619,19 +1617,19 @@ class Liquidation(BaseModel):
     cluster_size: int | None = None
 
 
-class Tier(StrEnum):
+class Tier(Enum):
     questdb = 'questdb'
     parquet = 'parquet'
 
 
 class Interval(BaseModel):
-    from_: AwareDatetime | None = Field(None, alias='from')
-    to: AwareDatetime | None = None
+    from_: datetime | None = Field(None, alias='from')
+    to: datetime | None = None
     tier: Tier | None = None
     rows: int | None = None
 
 
-class Reason(StrEnum):
+class Reason(Enum):
     ws_disconnect = 'ws_disconnect'
     backend_restart = 'backend_restart'
     retention_purge = 'retention_purge'
@@ -1640,8 +1638,8 @@ class Reason(StrEnum):
 
 
 class Gap(BaseModel):
-    from_: AwareDatetime | None = Field(None, alias='from')
-    to: AwareDatetime | None = None
+    from_: datetime | None = Field(None, alias='from')
+    to: datetime | None = None
     reason: Reason | None = None
 
 
@@ -1659,7 +1657,7 @@ class DataCoverage(BaseModel):
         pattern='^[A-Z0-9]{2,20}USDT$',
     )
     streams: list[Stream] | None = None
-    generated_at: AwareDatetime | None = None
+    generated_at: datetime | None = None
 
 
 class RecordedSymbol(BaseModel):
@@ -1675,7 +1673,7 @@ class RecordedSymbol(BaseModel):
     state: RecordingState
     streams: list[StreamKind] | None = None
     depth: Depth | None = None
-    started_at: AwareDatetime | None = None
+    started_at: datetime | None = None
     retention_days: int | None = None
     disk_bytes: int | None = None
     rows_last_hour: int | None = None
@@ -1728,7 +1726,7 @@ class UpdateRecordedSymbolRequest(BaseModel):
     retention_days: int | None = Field(None, ge=1, le=3650)
 
 
-class State1(StrEnum):
+class State1(Enum):
     connecting = 'connecting'
     connected = 'connected'
     degraded = 'degraded'
@@ -1739,7 +1737,7 @@ class Connection(BaseModel):
     endpoint: str | None = None
     state: State1 | None = None
     subscribed_topics: int | None = None
-    connected_since: AwareDatetime | None = None
+    connected_since: datetime | None = None
     reconnects_last_hour: int | None = None
     last_ping_ms: int | None = None
 
@@ -1756,7 +1754,7 @@ class Symbol1(BaseModel):
     rows_last_hour: int | None = None
     dropped_messages: int | None = None
     resyncs_last_hour: int | None = None
-    last_event_at: AwareDatetime | None = None
+    last_event_at: datetime | None = None
 
 
 class RecordingStatus(BaseModel):
@@ -1765,10 +1763,10 @@ class RecordingStatus(BaseModel):
     symbols: list[Symbol1] | None = None
     ingest_rate_msgs_per_sec: int | None = None
     write_backlog_rows: int | None = None
-    generated_at: AwareDatetime | None = None
+    generated_at: datetime | None = None
 
 
-class Tier2(StrEnum):
+class Tier2(Enum):
     questdb = 'questdb'
     parquet = 'parquet'
     postgres = 'postgres'
@@ -1796,11 +1794,11 @@ class StorageUsage(BaseModel):
     disk_total_bytes: int | None = None
     disk_used_bytes: int | None = None
     disk_free_bytes: int | None = None
-    projected_full_at: AwareDatetime | None = None
+    projected_full_at: datetime | None = None
     daily_growth_bytes: int | None = None
     tiers: list[Tier1] | None = None
     symbols: list[Symbol2] | None = None
-    generated_at: AwareDatetime | None = None
+    generated_at: datetime | None = None
 
 
 class RetentionPolicyInput(BaseModel):
@@ -1813,7 +1811,7 @@ class RetentionPolicyInput(BaseModel):
 
 class RetentionPolicy(RetentionPolicyInput):
     id: UUID | None = None
-    updated_at: AwareDatetime | None = None
+    updated_at: datetime | None = None
 
 
 class RecordingSession(BaseModel):
@@ -1826,8 +1824,8 @@ class RecordingSession(BaseModel):
         pattern='^[A-Z0-9]{2,20}USDT$',
     )
     state: RecordingState | None = None
-    started_at: AwareDatetime | None = None
-    ended_at: AwareDatetime | None = None
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
     streams: list[StreamKind] | None = None
     depth: int | None = None
     rows: int | None = None
@@ -1839,9 +1837,9 @@ class CreateReplaySessionRequest(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    symbols: list[Symbol] = Field(..., max_length=8, min_length=1)
-    from_: AwareDatetime = Field(..., alias='from')
-    to: AwareDatetime
+    symbols: list[str] = Field(..., max_length=8, min_length=1, pattern='^[A-Z0-9]{2,20}USDT$')
+    from_: datetime = Field(..., alias='from')
+    to: datetime
     speed: float | None = Field(
         1, description='0 = as fast as possible (used by rule simulation).', ge=0.0, le=100.0
     )
@@ -1854,21 +1852,21 @@ class CreateReplaySessionRequest(BaseModel):
 class ReplaySession(BaseModel):
     id: UUID | None = None
     state: ReplayState | None = None
-    symbols: list[Symbol] | None = None
-    from_: AwareDatetime | None = Field(None, alias='from')
-    to: AwareDatetime | None = None
-    cursor_ts: AwareDatetime | None = None
+    symbols: list[str] | None = Field(None, pattern='^[A-Z0-9]{2,20}USDT$')
+    from_: datetime | None = Field(None, alias='from')
+    to: datetime | None = None
+    cursor_ts: datetime | None = None
     speed: float | None = None
     streams: list[StreamKind] | None = None
     depth: int | None = None
     paper_account_id: UUID | None = None
     created_by: UUID | None = None
-    created_at: AwareDatetime | None = None
+    created_at: datetime | None = None
     progress_pct: float | None = Field(None, ge=0.0, le=100.0)
     error: str | None = None
 
 
-class Action(StrEnum):
+class Action(Enum):
     play = 'play'
     pause = 'pause'
     seek = 'seek'
@@ -1883,12 +1881,12 @@ class ReplayControlRequest(BaseModel):
     )
     action: Action
     speed: float | None = Field(None, ge=0.0, le=100.0)
-    to: AwareDatetime | None = Field(None, description='Required for `seek`.')
+    to: datetime | None = Field(None, description='Required for `seek`.')
     step_events: int | None = Field(None, ge=1, le=100000)
     step_ms: int | None = Field(None, ge=1, le=3600000)
 
 
-class Direction1(StrEnum):
+class Direction1(Enum):
     rise = 'rise'
     fall = 'fall'
 
@@ -1963,7 +1961,7 @@ class Chase(BaseModel):
     fallback_to_market: bool | None = False
 
 
-class Distribution(StrEnum):
+class Distribution(Enum):
     equal = 'equal'
     linear = 'linear'
     geometric = 'geometric'
@@ -2032,7 +2030,7 @@ class AlgoSpec(BaseModel):
     bracket: Bracket | None = None
 
 
-class PositionIdx(IntEnum):
+class PositionIdx(Enum):
     """
     Required in hedge mode (1 = long, 2 = short).
     """
@@ -2186,14 +2184,14 @@ class Order(BaseModel):
     algo: AlgoSpec | None = None
     environment: Environment | None = None
     rejected_reason: str | None = None
-    created_at: AwareDatetime | None = None
-    updated_at: AwareDatetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
-class OrderEventKind(StrEnum):
+class OrderEventKind(Enum):
     """
     Append-only OMS event taxonomy. Exact 1:1 mirror of the Postgres type
-    `order_event_kind` (`21-database-schema.md`, table `order_events`) — no supersets,
+    `order_event_kind` (`21-database-schema.md`, table `order_events`) � no supersets,
     no omissions; contract test `enum_parity_order_event_kind` asserts set equality.
 
     """
@@ -2217,11 +2215,11 @@ class OrderEventKind(StrEnum):
 class OrderEvent(BaseModel):
     id: int | None = None
     kind: OrderEventKind | None = None
-    event_ts: AwareDatetime | None = None
+    event_ts: datetime | None = None
     payload: dict[str, Any] | None = None
 
 
-class PositionIdx1(IntEnum):
+class PositionIdx1(Enum):
     integer_0 = 0
     integer_1 = 1
     integer_2 = 2
@@ -2271,12 +2269,12 @@ class TradeGroupLegInput(BaseModel):
     )
 
 
-class Atomicity(StrEnum):
+class Atomicity(Enum):
     best_effort = 'best_effort'
     all_or_none = 'all_or_none'
 
 
-class Compensate(StrEnum):
+class Compensate(Enum):
     """
     Applies when `all_or_none` fails after sending.
     """
@@ -2485,7 +2483,7 @@ class BulkLegResult(BaseModel):
     succeeded: int | None = None
 
 
-class Scope(StrEnum):
+class Scope(Enum):
     global_ = 'global'
     accounts = 'accounts'
 
@@ -2494,7 +2492,7 @@ class KillSwitch(BaseModel):
     engaged: bool
     scope: Scope
     exchange_account_ids: list[UUID] | None = None
-    engaged_at: AwareDatetime | None = None
+    engaged_at: datetime | None = None
     engaged_by: UUID | None = None
     reason: str | None = None
 
@@ -2524,7 +2522,7 @@ class KillSwitchResult(BaseModel):
     actions: Actions | None = None
 
 
-class Side2(StrEnum):
+class Side2(Enum):
     long = 'long'
     short = 'short'
     flat = 'flat'
@@ -2605,10 +2603,10 @@ class Position(BaseModel):
     )
     trade_group_id: UUID | None = None
     r_multiple: Decimal | None = None
-    updated_at: AwareDatetime | None = None
+    updated_at: datetime | None = None
 
 
-class Side3(StrEnum):
+class Side3(Enum):
     long = 'long'
     short = 'short'
 
@@ -2702,7 +2700,7 @@ class TpSlResult(BaseModel):
     trailing_stop_requested: Offset | None = None
     activation_price: Decimal | None = None
     tpsl_mode: TpSlMode | None = None
-    applied_at: AwareDatetime | None = None
+    applied_at: datetime | None = None
 
 
 class ClosePositionRequest(BaseModel):
@@ -2732,7 +2730,7 @@ class ClosePositionRequest(BaseModel):
     arm_token: str | None = None
 
 
-class SizeMode(StrEnum):
+class SizeMode(Enum):
     same = 'same'
     profile = 'profile'
     custom = 'custom'
@@ -2759,7 +2757,7 @@ class ReversePositionRequest(BaseModel):
     arm_token: str | None = None
 
 
-class ExecType(StrEnum):
+class ExecType(Enum):
     Trade = 'Trade'
     AdlTrade = 'AdlTrade'
     Funding = 'Funding'
@@ -2823,7 +2821,7 @@ class Execution(BaseModel):
         examples=['63120.50', '-0.0004', '0'],
         pattern='^-?[0-9]+(\\.[0-9]+)?$',
     )
-    ts: AwareDatetime | None = None
+    ts: datetime | None = None
 
 
 class ClosedPnl(BaseModel):
@@ -2878,8 +2876,8 @@ class ClosedPnl(BaseModel):
         examples=['63120.50', '-0.0004', '0'],
         pattern='^-?[0-9]+(\\.[0-9]+)?$',
     )
-    opened_at: AwareDatetime | None = None
-    closed_at: AwareDatetime | None = None
+    opened_at: datetime | None = None
+    closed_at: datetime | None = None
 
 
 class RuleOperand1(BaseModel):
@@ -2911,7 +2909,7 @@ class RuleMetricRef(BaseModel):
     timeframe: str | None = None
 
 
-class Op(StrEnum):
+class Op(Enum):
     add = 'add'
     sub = 'sub'
     mul = 'mul'
@@ -2923,7 +2921,7 @@ class Op(StrEnum):
     pct_of = 'pct_of'
 
 
-class Op1(StrEnum):
+class Op1(Enum):
     gt = 'gt'
     gte = 'gte'
     lt = 'lt'
@@ -2941,21 +2939,21 @@ class Op1(StrEnum):
     not_in_set = 'not_in_set'
 
 
-class Op2(StrEnum):
+class Op2(Enum):
     all_of = 'all_of'
     any_of = 'any_of'
     none_of = 'none_of'
     n_of = 'n_of'
 
 
-class Op3(StrEnum):
+class Op3(Enum):
     sustained_for = 'sustained_for'
     occurred_within = 'occurred_within'
     count_within = 'count_within'
     stable_for = 'stable_for'
 
 
-class Type(StrEnum):
+class Type(Enum):
     """
     Order-sending actions (`place_order`, `flatten_*`, `reverse_position`,
     `scale_in`, `scale_out`, `modify_*`, `cancel_*`, `reduce_leverage`,
@@ -2993,13 +2991,13 @@ class Type(StrEnum):
     enable_rule = 'enable_rule'
 
 
-class OnError(StrEnum):
+class OnError(Enum):
     abort_remaining = 'abort_remaining'
     continue_ = 'continue'
     retry_once = 'retry_once'
 
 
-class Targets(StrEnum):
+class Targets(Enum):
     scope_accounts = 'scope_accounts'
     originating_account = 'originating_account'
     all_accounts = 'all_accounts'
@@ -3050,7 +3048,7 @@ class RuleLimits(BaseModel):
     kill_switch_on_error_count: int | None = Field(5, ge=1)
 
 
-class Type1(StrEnum):
+class Type1(Enum):
     on_price_update = 'on_price_update'
     on_bar_close = 'on_bar_close'
     on_order_fill = 'on_order_fill'
@@ -3078,7 +3076,7 @@ class RuleTrigger(BaseModel):
     debounce_ms: int | None = Field(0, ge=0)
 
 
-class IrVersion(IntEnum):
+class IrVersion(Enum):
     integer_1 = 1
 
 
@@ -3087,17 +3085,13 @@ class RuleBindings(BaseModel):
         extra='forbid',
     )
     exchange_account_ids: list[UUID] | None = None
-    symbols: list[Symbol] | None = None
+    symbols: list[str] | None = Field(None, pattern='^[A-Z0-9]{2,20}USDT$')
     trade_group_ids: list[UUID] | None = None
 
 
-class Editor(StrEnum):
+class Editor(Enum):
     form = 'form'
     graph = 'graph'
-
-
-class Tag(RootModel[str]):
-    root: str = Field(..., max_length=40)
 
 
 class Rule(BaseModel):
@@ -3111,18 +3105,18 @@ class Rule(BaseModel):
     active_version_id: UUID | None = None
     version: int | None = None
     bindings: RuleBindings | None = None
-    last_run_at: AwareDatetime | None = None
+    last_run_at: datetime | None = None
     last_run_status: RuleRunStatus | None = None
     fire_count_24h: int | None = None
     created_by: UUID | None = None
-    created_at: AwareDatetime | None = None
-    updated_at: AwareDatetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class LastSimulation(BaseModel):
     run_id: UUID | None = None
     ir_hash: str | None = None
-    completed_at: AwareDatetime | None = None
+    completed_at: datetime | None = None
     fires: int | None = None
 
 
@@ -3133,11 +3127,11 @@ class RuleVersion(BaseModel):
     ir_hash: str | None = None
     is_active: bool | None = None
     created_by: UUID | None = None
-    created_at: AwareDatetime | None = None
+    created_at: datetime | None = None
     note: str | None = None
 
 
-class Code(StrEnum):
+class Code(Enum):
     schema_error = 'schema_error'
     unknown_variable = 'unknown_variable'
     unknown_function = 'unknown_function'
@@ -3150,12 +3144,12 @@ class Code(StrEnum):
     unsupported_symbol = 'unsupported_symbol'
 
 
-class Severity1(StrEnum):
+class Severity1(Enum):
     error = 'error'
     warning = 'warning'
 
 
-class Class(StrEnum):
+class Class(Enum):
     syntax = 'syntax'
     semantics = 'semantics'
     safety = 'safety'
@@ -3184,10 +3178,10 @@ class SimulateRuleRequest(BaseModel):
         extra='forbid',
     )
     version_id: UUID | None = Field(None, description='Defaults to the active version.')
-    from_: AwareDatetime | None = Field(None, alias='from')
-    to: AwareDatetime | None = None
+    from_: datetime | None = Field(None, alias='from')
+    to: datetime | None = None
     replay_session_id: UUID | None = None
-    symbols: list[Symbol] | None = None
+    symbols: list[str] | None = Field(None, pattern='^[A-Z0-9]{2,20}USDT$')
     exchange_account_ids: list[UUID] | None = None
     speed: float | None = Field(0, ge=0.0, le=100.0)
     starting_equity_usd: str | None = Field(
@@ -3199,7 +3193,7 @@ class SimulateRuleRequest(BaseModel):
 
 
 class Action1(BaseModel):
-    ts: AwareDatetime | None = None
+    ts: datetime | None = None
     action: str | None = None
     params: dict[str, Any] | None = None
     would_have_succeeded: bool | None = None
@@ -3216,8 +3210,8 @@ class RuleSimulationResult(BaseModel):
     run_id: UUID | None = None
     rule_id: UUID | None = None
     version_id: UUID | None = None
-    from_: AwareDatetime | None = Field(None, alias='from')
-    to: AwareDatetime | None = None
+    from_: datetime | None = Field(None, alias='from')
+    to: datetime | None = None
     evaluations: int | None = None
     fires: int | None = None
     suppressed_by_guard: int | None = None
@@ -3227,7 +3221,7 @@ class RuleSimulationResult(BaseModel):
     duration_ms: int | None = None
 
 
-class Kind1(StrEnum):
+class Kind1(Enum):
     live = 'live'
     simulation = 'simulation'
 
@@ -3238,15 +3232,15 @@ class RuleRun(BaseModel):
     rule_version_id: UUID | None = None
     kind: Kind1 | None = None
     status: RuleRunStatus | None = None
-    started_at: AwareDatetime | None = None
-    finished_at: AwareDatetime | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
     evaluations: int | None = None
     fires: int | None = None
     errors: int | None = None
     error_message: str | None = None
 
 
-class Kind2(StrEnum):
+class Kind2(Enum):
     evaluated = 'evaluated'
     suppressed = 'suppressed'
     action_sent = 'action_sent'
@@ -3258,12 +3252,12 @@ class Kind2(StrEnum):
 
 class RuleEvent(BaseModel):
     id: int | None = None
-    ts: AwareDatetime | None = None
+    ts: datetime | None = None
     kind: Kind2 | None = None
     payload: dict[str, Any] | None = None
 
 
-class TriggerMode(StrEnum):
+class TriggerMode(Enum):
     once = 'once'
     every_time = 'every_time'
     once_per_bar = 'once_per_bar'
@@ -3278,12 +3272,12 @@ class AlertDelivery(BaseModel):
     title: str | None = None
     message: str | None = None
     symbol: Symbol | None = None
-    fired_at: AwareDatetime | None = None
-    acked_at: AwareDatetime | None = None
+    fired_at: datetime | None = None
+    acked_at: datetime | None = None
     error: str | None = None
 
 
-class Outcome(StrEnum):
+class Outcome(Enum):
     win = 'win'
     loss = 'loss'
     breakeven = 'breakeven'
@@ -3301,8 +3295,8 @@ class JournalTrade(BaseModel):
         pattern='^[A-Z0-9]{2,20}USDT$',
     )
     side: JournalSide | None = None
-    opened_at: AwareDatetime | None = None
-    closed_at: AwareDatetime | None = None
+    opened_at: datetime | None = None
+    closed_at: datetime | None = None
     qty: str | None = Field(
         None,
         description='Arbitrary-precision decimal transported as a string (convention C6).',
@@ -3355,18 +3349,14 @@ class JournalTrade(BaseModel):
     notes_count: int | None = None
 
 
-class Mistake(RootModel[str]):
-    root: str = Field(..., max_length=120)
-
-
 class UpdateJournalTradeRequest(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
     rating: int | None = Field(None, ge=1, le=5)
-    tags: list[Tag] | None = None
+    tags: list[str] | None = Field(None, max_length=40)
     setup: str | None = Field(None, max_length=200)
-    mistakes: list[Mistake] | None = None
+    mistakes: list[str] | None = Field(None, max_length=120)
     checklist: list[dict[str, Any]] | None = None
 
 
@@ -3378,8 +3368,8 @@ class NoteInput(BaseModel):
 class Note(NoteInput):
     id: UUID | None = None
     author_user_id: UUID | None = None
-    created_at: AwareDatetime | None = None
-    updated_at: AwareDatetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class Totals1(BaseModel):
@@ -3458,7 +3448,7 @@ class Totals1(BaseModel):
 
 
 class EquityCurveItem(BaseModel):
-    t: AwareDatetime | None = None
+    t: datetime | None = None
     equity: str | None = Field(
         None,
         description='Arbitrary-precision decimal transported as a string (convention C6).',
@@ -3505,7 +3495,7 @@ class JournalAnalytics(BaseModel):
     totals: Totals1 | None = None
     equity_curve: list[EquityCurveItem] | None = None
     breakdowns: list[Breakdown] | None = None
-    generated_at: AwareDatetime | None = None
+    generated_at: datetime | None = None
 
 
 class WorkspaceInput(BaseModel):
@@ -3518,11 +3508,11 @@ class Workspace(WorkspaceInput):
     id: UUID | None = None
     user_id: UUID | None = None
     layout_count: int | None = None
-    created_at: AwareDatetime | None = None
-    updated_at: AwareDatetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
-class Kind3(StrEnum):
+class Kind3(Enum):
     chart = 'chart'
     dom = 'dom'
     tape = 'tape'
@@ -3594,11 +3584,11 @@ class LayoutInput(BaseModel):
 class Layout(LayoutInput):
     id: UUID | None = None
     workspace_id: UUID | None = None
-    created_at: AwareDatetime | None = None
-    updated_at: AwareDatetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
-class ChartType(StrEnum):
+class ChartType(Enum):
     candlestick = 'candlestick'
     hollow_candlestick = 'hollow_candlestick'
     bar = 'bar'
@@ -3611,14 +3601,14 @@ class ChartType(StrEnum):
     heikin_ashi = 'heikin_ashi'
 
 
-class CellType(StrEnum):
+class CellType(Enum):
     volume = 'volume'
     bid_ask = 'bid_ask'
     delta = 'delta'
     delta_total = 'delta_total'
 
 
-class DisplayMode(StrEnum):
+class DisplayMode(Enum):
     profile = 'profile'
     box = 'box'
 
@@ -3632,7 +3622,7 @@ class Footprint(BaseModel):
     show_unfinished_auctions: bool | None = None
 
 
-class Pane(StrEnum):
+class Pane(Enum):
     main = 'main'
     sub1 = 'sub1'
     sub2 = 'sub2'
@@ -3645,7 +3635,7 @@ class Indicator(BaseModel):
     pane: Pane | None = None
 
 
-class Mode(StrEnum):
+class Mode(Enum):
     linear = 'linear'
     logarithmic = 'logarithmic'
     percent = 'percent'
@@ -3686,11 +3676,11 @@ class ChartTemplateInput(BaseModel):
 class ChartTemplate(ChartTemplateInput):
     id: UUID | None = None
     owner_user_id: UUID | None = None
-    created_at: AwareDatetime | None = None
-    updated_at: AwareDatetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
-class Tool(StrEnum):
+class Tool(Enum):
     trendline = 'trendline'
     horizontal_line = 'horizontal_line'
     vertical_line = 'vertical_line'
@@ -3718,7 +3708,7 @@ class Tool(StrEnum):
 
 
 class Point(BaseModel):
-    t: AwareDatetime | None = None
+    t: datetime | None = None
     p: str | None = Field(
         None,
         description='Arbitrary-precision decimal transported as a string (convention C6).',
@@ -3742,7 +3732,7 @@ class Geometry(BaseModel):
     text: str | None = None
 
 
-class Dash(StrEnum):
+class Dash(Enum):
     solid = 'solid'
     dashed = 'dashed'
     dotted = 'dotted'
@@ -3784,8 +3774,8 @@ class DrawingInput(BaseModel):
 class Drawing(DrawingInput):
     id: UUID | None = None
     owner_user_id: UUID | None = None
-    created_at: AwareDatetime | None = None
-    updated_at: AwareDatetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class IndicatorPresetInput(BaseModel):
@@ -3798,17 +3788,17 @@ class IndicatorPresetInput(BaseModel):
 class IndicatorPreset(IndicatorPresetInput):
     id: UUID | None = None
     owner_user_id: UUID | None = None
-    created_at: AwareDatetime | None = None
-    updated_at: AwareDatetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
-class Theme(StrEnum):
+class Theme(Enum):
     dark = 'dark'
     light = 'light'
     system = 'system'
 
 
-class Density(StrEnum):
+class Density(Enum):
     compact = 'compact'
     comfortable = 'comfortable'
     spacious = 'spacious'
@@ -3822,7 +3812,7 @@ class Appearance(BaseModel):
     high_contrast: bool | None = None
 
 
-class PriceScaleMode(StrEnum):
+class PriceScaleMode(Enum):
     linear = 'linear'
     logarithmic = 'logarithmic'
     percent = 'percent'
@@ -3836,7 +3826,7 @@ class Chart(BaseModel):
     price_scale_mode: PriceScaleMode | None = None
 
 
-class BigTradeThresholdMode(StrEnum):
+class BigTradeThresholdMode(Enum):
     absolute = 'absolute'
     relative = 'relative'
     zscore = 'zscore'
@@ -3858,7 +3848,7 @@ class Trading(BaseModel):
     confirm_market_orders: bool | None = None
     confirm_flatten: bool | None = None
     default_environment: Environment | None = None
-    default_qty_presets: list[Decimal] | None = None
+    default_qty_presets: list[str] | None = Field(None, pattern='^-?[0-9]+(\\.[0-9]+)?$')
 
 
 class Notifications(BaseModel):
@@ -3876,12 +3866,12 @@ class Data(BaseModel):
 
 class FieldMeta(BaseModel):
     overridden: list[str] | None = None
-    updated_at: AwareDatetime | None = None
+    updated_at: datetime | None = None
 
 
 class Settings(BaseModel):
     """
-    Effective settings — deployment defaults overlaid with user overrides.
+    Effective settings � deployment defaults overlaid with user overrides.
     """
 
     appearance: Appearance | None = None
@@ -3903,7 +3893,7 @@ class SettingsPatch(BaseModel):
     )
 
 
-class Scope2(StrEnum):
+class Scope2(Enum):
     global_ = 'global'
     chart = 'chart'
     dom = 'dom'
@@ -3941,12 +3931,12 @@ class HotkeyProfile(HotkeyProfileInput):
     id: UUID | None = None
     owner_user_id: UUID | None = None
     is_active: bool | None = None
-    updated_at: AwareDatetime | None = None
+    updated_at: datetime | None = None
 
 
 class AuditEntry(BaseModel):
     id: int | None = None
-    ts: AwareDatetime | None = None
+    ts: datetime | None = None
     actor_user_id: UUID | None = None
     actor_username: str | None = None
     action: str | None = None
@@ -3974,7 +3964,7 @@ class HealthReport(BaseModel):
     version: str | None = None
     git_sha: str | None = None
     uptime_seconds: int | None = None
-    server_time: AwareDatetime | None = None
+    server_time: datetime | None = None
     clock_offset_ms: int | None = None
     components: list[Component] | None = None
     alerts_active: int | None = None
@@ -3993,7 +3983,7 @@ class FeatureFlag(BaseModel):
     default_value: Any | None = Field(None, description='Deployment default.')
     overrides: list[Override] | None = None
     updated_by: UUID | None = None
-    updated_at: AwareDatetime | None = None
+    updated_at: datetime | None = None
 
 
 class Override1(BaseModel):
@@ -4022,18 +4012,18 @@ class Backup(BaseModel):
     id: UUID | None = None
     kind: BackupKind | None = None
     status: BackupStatus | None = None
-    started_at: AwareDatetime | None = None
-    finished_at: AwareDatetime | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
     size_bytes: int | None = None
     location: str | None = None
     checksum_sha256: str | None = None
     encrypted: bool | None = None
-    retention_until: AwareDatetime | None = None
-    verified_at: AwareDatetime | None = None
+    retention_until: datetime | None = None
+    verified_at: datetime | None = None
     error: str | None = None
 
 
-class Kind4(StrEnum):
+class Kind4(Enum):
     instrument_refresh = 'instrument_refresh'
     audit_export = 'audit_export'
     backup = 'backup'
@@ -4043,7 +4033,7 @@ class Kind4(StrEnum):
     reconciliation = 'reconciliation'
 
 
-class Status1(StrEnum):
+class Status1(Enum):
     queued = 'queued'
     running = 'running'
     succeeded = 'succeeded'
@@ -4056,13 +4046,13 @@ class Job(BaseModel):
     kind: Kind4 | None = None
     status: Status1 | None = None
     progress_pct: float | None = Field(None, ge=0.0, le=100.0)
-    started_at: AwareDatetime | None = None
-    finished_at: AwareDatetime | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
     result: dict[str, Any] | None = None
     error: str | None = None
 
 
-class Mode1(StrEnum):
+class Mode1(Enum):
     read = 'read'
     trade = 'trade'
 
@@ -4077,8 +4067,8 @@ class Account1(BaseModel):
 class Session(BaseModel):
     session_id: UUID | None = None
     environment: Environment | None = None
-    elevated_until: AwareDatetime | None = None
-    one_click_armed_until: AwareDatetime | None = None
+    elevated_until: datetime | None = None
+    one_click_armed_until: datetime | None = None
 
 
 class Me(BaseModel):
@@ -4113,7 +4103,7 @@ class Account2(BaseModel):
         pattern='^-?[0-9]+(\\.[0-9]+)?$',
     )
     open_positions: int | None = None
-    lockout_until: AwareDatetime | None = None
+    lockout_until: datetime | None = None
 
 
 class EffectiveLimits(BaseModel):
@@ -4121,7 +4111,7 @@ class EffectiveLimits(BaseModel):
     accounts: list[Account2] | None = None
 
 
-class Key(StrEnum):
+class Key(Enum):
     mfa_enrolled = 'mfa_enrolled'
     exchange_account_added = 'exchange_account_added'
     api_key_verified = 'api_key_verified'
@@ -4142,7 +4132,7 @@ class OnboardingChecklist(BaseModel):
     items: list[Item] | None = None
 
 
-class Kind5(StrEnum):
+class Kind5(Enum):
     alert = 'alert'
     rule = 'rule'
     order = 'order'
@@ -4156,8 +4146,8 @@ class Notification(BaseModel):
     severity: Severity
     title: str
     body: str | None = None
-    created_at: AwareDatetime
-    read_at: AwareDatetime | None = None
+    created_at: datetime
+    read_at: datetime | None = None
     symbol: str | None = None
     exchange_account_id: UUID | None = None
     source_id: UUID | None = Field(
@@ -4173,13 +4163,13 @@ class WatchlistInput(BaseModel):
         extra='forbid',
     )
     name: str = Field(..., max_length=80, min_length=1)
-    symbols: list[Symbol] = Field(..., max_length=200)
+    symbols: list[str] = Field(..., max_length=200, pattern='^[A-Z0-9]{2,20}USDT$')
     columns: list[str] | None = Field(
         None, description='Column ids shown for this watchlist, in order.'
     )
 
 
-class Coverage(StrEnum):
+class Coverage(Enum):
     """
     `live_only` means no local history exists for this symbol, so criteria that need recorded history were skipped for this row rather than evaluated as zero.
 
@@ -4245,7 +4235,7 @@ class ScannerRow(BaseModel):
     )
 
 
-class Category(StrEnum):
+class Category(Enum):
     trend = 'trend'
     momentum = 'momentum'
     volatility = 'volatility'
@@ -4253,13 +4243,13 @@ class Category(StrEnum):
     orderflow = 'orderflow'
 
 
-class Pane1(StrEnum):
+class Pane1(Enum):
     price = 'price'
     sub = 'sub'
     both = 'both'
 
 
-class Compute(StrEnum):
+class Compute(Enum):
     """
     `server` indicators are read from `orderflow_metrics` and require recorded history; `client_worker` indicators are computed from bars already in the client.
 
@@ -4305,7 +4295,7 @@ class WorkspaceBundle(BaseModel):
     """
 
     schema_version: str
-    exported_at: AwareDatetime | None = None
+    exported_at: datetime | None = None
     workspace: WorkspaceInput
     layouts: list[LayoutInput]
     chart_templates: list[ChartTemplateInput] | None = None
@@ -4314,7 +4304,7 @@ class WorkspaceBundle(BaseModel):
 
 
 class ExchangeCall(BaseModel):
-    at: AwareDatetime | None = None
+    at: datetime | None = None
     endpoint: str | None = None
     http_status: int | None = None
     ret_code: int | None = None
@@ -4324,7 +4314,7 @@ class ExchangeCall(BaseModel):
     response_redacted: dict[str, Any] | None = None
 
 
-class Verdict(StrEnum):
+class Verdict(Enum):
     in_sync = 'in_sync'
     drifted = 'drifted'
     repaired = 'repaired'
@@ -4332,7 +4322,7 @@ class Verdict(StrEnum):
 
 
 class Reconciliation(BaseModel):
-    last_checked_at: AwareDatetime | None = None
+    last_checked_at: datetime | None = None
     verdict: Verdict | None = None
     detail: str | None = None
 
@@ -4347,7 +4337,7 @@ class OrderDiagnostics(BaseModel):
     reconciliation: Reconciliation | None = None
 
 
-class Code1(StrEnum):
+class Code1(Enum):
     cap_breached = 'cap_breached'
     symbol_not_allowed = 'symbol_not_allowed'
     insufficient_margin = 'insufficient_margin'
@@ -4417,7 +4407,7 @@ class TradeGroupPreview(BaseModel):
     totals: Totals2
 
 
-class Scope3(StrEnum):
+class Scope3(Enum):
     global_ = 'global'
     accounts = 'accounts'
 
@@ -4454,7 +4444,7 @@ class Totals3(BaseModel):
     )
 
 
-class Reason1(StrEnum):
+class Reason1(Enum):
     daily_loss = 'daily_loss'
     consecutive_losses = 'consecutive_losses'
     max_positions = 'max_positions'
@@ -4463,8 +4453,8 @@ class Reason1(StrEnum):
 
 class Lockout(BaseModel):
     reason: Reason1 | None = None
-    since: AwareDatetime | None = None
-    until: AwareDatetime | None = None
+    since: datetime | None = None
+    until: datetime | None = None
 
 
 class Account3(BaseModel):
@@ -4533,7 +4523,7 @@ class Exhaustion(BaseModel):
     min_delta_divergence: float | None = Field(0.5, ge=0.0)
 
 
-class Mode2(StrEnum):
+class Mode2(Enum):
     absolute_usd = 'absolute_usd'
     percentile = 'percentile'
 
@@ -4565,7 +4555,7 @@ class DetectorConfig(BaseModel):
     big_trade: BigTrade | None = None
 
 
-class Detector(StrEnum):
+class Detector(Enum):
     iceberg = 'iceberg'
     stop_run = 'stop_run'
     absorption = 'absorption'
@@ -4583,7 +4573,7 @@ class DetectorMethodology(BaseModel):
     confidence_basis: str | None = None
 
 
-class Regime(StrEnum):
+class Regime(Enum):
     trending_up = 'trending_up'
     trending_down = 'trending_down'
     ranging = 'ranging'
@@ -4591,7 +4581,7 @@ class Regime(StrEnum):
     compression = 'compression'
 
 
-class Direction2(StrEnum):
+class Direction2(Enum):
     supports = 'supports'
     opposes = 'opposes'
     neutral = 'neutral'
@@ -4614,11 +4604,11 @@ class RegimeExplanation(BaseModel):
     )
     regime: Regime
     confidence: float | None = Field(None, ge=0.0, le=1.0)
-    as_of: AwareDatetime | None = None
+    as_of: datetime | None = None
     signals: list[Signal]
 
 
-class Type2(StrEnum):
+class Type2(Enum):
     number = 'number'
     boolean = 'boolean'
     price = 'price'
@@ -4675,7 +4665,7 @@ class RuleVocabulary(BaseModel):
     guards: list[Guard]
 
 
-class Kind6(StrEnum):
+class Kind6(Enum):
     entry = 'entry'
     exit = 'exit'
     stop_moved = 'stop_moved'
@@ -4685,7 +4675,7 @@ class Kind6(StrEnum):
 
 
 class Marker(BaseModel):
-    at: AwareDatetime | None = None
+    at: datetime | None = None
     kind: Kind6 | None = None
     price: str | None = Field(
         None,
@@ -4704,8 +4694,8 @@ class JournalTradeContext(BaseModel):
         examples=['BTCUSDT', 'ETHUSDT', 'SOLUSDT'],
         pattern='^[A-Z0-9]{2,20}USDT$',
     )
-    from_: AwareDatetime = Field(..., alias='from')
-    to: AwareDatetime
+    from_: datetime = Field(..., alias='from')
+    to: datetime
     bars: list[Bar] | None = None
     footprint: list[FootprintBar] | None = None
     executions: list[Execution] | None = None
@@ -4716,7 +4706,7 @@ class JournalTradeContext(BaseModel):
 class BuildInfo(BaseModel):
     version: str
     commit: str
-    built_at: AwareDatetime
+    built_at: datetime
     api_version: str | None = None
     ws_protocol_version: str | None = None
     electron_version: str | None = None
@@ -4803,7 +4793,7 @@ class CapacityReport(BaseModel):
     rate_budget: list[RateBudgetItem] | None = None
 
 
-class Status2(StrEnum):
+class Status2(Enum):
     open = 'open'
     acknowledged = 'acknowledged'
     resolved = 'resolved'
@@ -4817,10 +4807,10 @@ class Incident(BaseModel):
     title: str | None = None
     detail: str | None = None
     occurrences: int | None = None
-    first_seen_at: AwareDatetime
-    last_seen_at: AwareDatetime
+    first_seen_at: datetime
+    last_seen_at: datetime
     acknowledged_by: UUID | None = None
-    resolved_at: AwareDatetime | None = None
+    resolved_at: datetime | None = None
     runbook_ref: str | None = None
 
 
@@ -4829,12 +4819,12 @@ class Key1(BaseModel):
     key_id_prefix: str | None = None
     status: KeyStatus | None = None
     age_days: int | None = None
-    expires_at: AwareDatetime | None = None
+    expires_at: datetime | None = None
     withdrawal_permission_present: bool | None = Field(
         None, description='MUST be false; true raises a critical finding immediately.'
     )
     ip_whitelist_matches_expected: bool | None = None
-    last_verified_at: AwareDatetime | None = None
+    last_verified_at: datetime | None = None
 
 
 class Auth(BaseModel):
@@ -4845,7 +4835,7 @@ class Auth(BaseModel):
 
 
 class Audit(BaseModel):
-    last_chain_verification_at: AwareDatetime | None = None
+    last_chain_verification_at: datetime | None = None
     chain_intact: bool | None = None
     entries_total: int | None = None
 
@@ -4857,7 +4847,7 @@ class Finding(BaseModel):
 
 
 class SecuritySummary(BaseModel):
-    generated_at: AwareDatetime | None = None
+    generated_at: datetime | None = None
     keys: list[Key1] | None = None
     auth: Auth | None = None
     audit: Audit | None = None
@@ -4880,7 +4870,7 @@ class SessionInfo(BaseModel):
     account_scope: list[UUID]
     allowed_environments: list[Environment] | None = None
     kill_switch: KillSwitch | None = None
-    server_time: AwareDatetime
+    server_time: datetime
     clock_offset_ms: int | None = Field(
         None,
         description='Backend clock minus Bybit server time; |offset| > 1000 ms is an incident.',
@@ -4917,8 +4907,8 @@ class ExchangeAccount(BaseModel):
     balance: WalletBalance | None = None
     balance_stale: bool | None = None
     enabled: bool | None = True
-    created_at: AwareDatetime | None = None
-    updated_at: AwareDatetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class OrderWithEvents(Order):
@@ -4928,7 +4918,7 @@ class OrderWithEvents(Order):
 
 class TradeGroupLeg(BaseModel):
     """
-    One account's share of a fan-out. Field names mirror the `trade_group_legs` columns in 21-database-schema.md §3.3.3 one-for-one; the only additions are `orders` (the leg's order ids, a join rather than a column) and `resolved` (the computed parameters, stored as `resolved_*` columns and the `profile_snapshot` JSONB).
+    One account's share of a fan-out. Field names mirror the `trade_group_legs` columns in 21-database-schema.md �3.3.3 one-for-one; the only additions are `orders` (the leg's order ids, a join rather than a column) and `resolved` (the computed parameters, stored as `resolved_*` columns and the `profile_snapshot` JSONB).
 
     """
 
@@ -4964,7 +4954,7 @@ class TradeGroupLeg(BaseModel):
         None,
         description='True once the exchange has acknowledged a native stop-loss on this leg. The safety invariant (arch P4) requires this to become true for every filled leg; a filled leg with `false` is an alertable condition, not a cosmetic gap.\n',
     )
-    native_sl_confirmed_at: AwareDatetime | None = None
+    native_sl_confirmed_at: datetime | None = None
     risk_usd: Decimal | None = None
     realised_pnl: Decimal | None = None
     fees_paid: str | None = Field(
@@ -4974,10 +4964,10 @@ class TradeGroupLeg(BaseModel):
         pattern='^-?[0-9]+(\\.[0-9]+)?$',
     )
     error: LegError | None = None
-    submitted_at: AwareDatetime | None = None
-    closed_at: AwareDatetime | None = None
-    created_at: AwareDatetime | None = None
-    updated_at: AwareDatetime | None = None
+    submitted_at: datetime | None = None
+    closed_at: datetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class TradeGroup(BaseModel):
@@ -5000,9 +4990,9 @@ class TradeGroup(BaseModel):
     algo: AlgoSpec | None = None
     rule_id: UUID | None = None
     created_by: UUID | None = None
-    created_at: AwareDatetime | None = None
-    updated_at: AwareDatetime | None = None
-    closed_at: AwareDatetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    closed_at: datetime | None = None
     note: str | None = None
     legs: list[TradeGroupLeg]
     totals: Totals | None = None
@@ -5022,8 +5012,8 @@ class WorkspaceDetail(Workspace):
 
 class Watchlist(WatchlistInput):
     id: UUID | None = None
-    created_at: AwareDatetime | None = None
-    updated_at: AwareDatetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class RuleArithmeticNode(BaseModel):
@@ -5032,9 +5022,7 @@ class RuleArithmeticNode(BaseModel):
     )
     node_id: str
     op: Op
-    operands: list[RuleMetricRef | RuleOperand1 | RuleArithmeticNode] = Field(
-        ..., max_length=8, min_length=1
-    )
+    operands: list[RuleMetricRef | RuleOperand1 | RuleArithmeticNode]
 
 
 class RuleComparisonNode(BaseModel):
@@ -5064,9 +5052,7 @@ class RuleBooleanNode(BaseModel):
     )
     node_id: str
     op: Op2
-    children: list[RuleComparisonNode | RuleBooleanNode | RuleTemporalNode] = Field(
-        ..., max_length=32, min_length=1
-    )
+    children: list[RuleComparisonNode | RuleBooleanNode | RuleTemporalNode]
     n: int | None = Field(None, description='Required for `n_of`.', ge=1)
 
 
@@ -5144,7 +5130,7 @@ class RuleInput(BaseModel):
     description: str | None = Field(None, max_length=1000)
     scope: RuleScope
     editor: Editor | None = 'form'
-    tags: list[Tag] | None = None
+    tags: list[str] | None = Field(None, max_length=40)
     bindings: RuleBindings | None = None
     ir: RuleIr
     graph_layout: dict[str, Any] | None = Field(
@@ -5178,7 +5164,7 @@ class AlertInput(BaseModel):
         max_length=500,
     )
     severity: Severity | None = None
-    expires_at: AwareDatetime | None = None
+    expires_at: datetime | None = None
     webhook_url: AnyUrl | None = None
     enabled: bool | None = True
 
@@ -5187,11 +5173,6 @@ class Alert(AlertInput):
     id: UUID | None = None
     owner_user_id: UUID | None = None
     fire_count: int | None = None
-    last_fired_at: AwareDatetime | None = None
-    created_at: AwareDatetime | None = None
-    updated_at: AwareDatetime | None = None
-
-
-RuleArithmeticNode.model_rebuild()
-RuleBooleanNode.model_rebuild()
-RuleTemporalNode.model_rebuild()
+    last_fired_at: datetime | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
