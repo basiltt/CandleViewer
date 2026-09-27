@@ -75,6 +75,7 @@
 /tsconfig.base.json                     @CandleViewer/frontend @CandleViewer/architecture
 # future: E02/later scaffolding; directory does not exist yet.
 /eslint.config.mjs                      @CandleViewer/frontend @CandleViewer/devsecops
+/.dependency-cruiser.js                 @CandleViewer/frontend @CandleViewer/architecture
 # future: E02/later scaffolding; directory does not exist yet.
 /.prettierrc.json                       @CandleViewer/frontend
 /prettier.config.mjs                    @CandleViewer/frontend
