@@ -9,3 +9,14 @@
 *.mjs             text eol=lf
 *.cjs             text eol=lf
 *.sh              text eol=lf
+
+# Generated protocol contracts (E02-T09) — never hand-edit; regenerate via
+# `pnpm --filter @candleviewer/protocol generate` and
+# `uv run --project services/api python scripts/generate_protocol_models.py`.
+# linguist-generated hides these from PR diffs by default and from GitHub's
+# language stats; the header-guard lints still fail a build on a hand-edit.
+packages/protocol/src/generated/** linguist-generated=true
+docs/plan/ws-schema.json linguist-generated=true
+services/api/candleviewer/api/_generated/** linguist-generated=true
+services/api/candleviewer/ws/_generated/** linguist-generated=true
+
