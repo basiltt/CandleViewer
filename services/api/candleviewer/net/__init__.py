@@ -7,7 +7,10 @@ internet, independent of and enforced *before* authentication:
   Tailscale CIDR(s) plus loopback (IPv4/IPv6, mapped addresses).
 - `binding_check.BindingSelfCheck` — enumerates the process's actual bound
   listening addresses (never trusts the configured bind string) and reports
-  whether any of them are a public wildcard bind (`0.0.0.0` / `::`).
+  whether any of them are a public wildcard bind (`0.0.0.0` / `::`) or fall
+  outside the configured mesh/loopback CIDR allow-list.
+- `binding_check.apply_self_check_result` — wires one self-check outcome
+  end to end: trips/clears `ReadOnlyGate` and sets `net_binding_safe`.
 - `read_only_gate.ReadOnlyGate` — process-wide, single-flag degraded-mode
   switch consulted by the OMS validator; cannot be bypassed by any route.
 - `middleware.MeshOnlyMiddleware` — ASGI middleware rejecting off-mesh
@@ -34,11 +37,12 @@ __all__ = [
     "MeshOnlyMiddleware",
     "NullAuditSink",
     "ReadOnlyGate",
+    "apply_self_check_result",
     "net_binding_safe",
 ]
 
 from .audit import AuditSink, InMemoryAuditSink, NullAuditSink
-from .binding_check import BindingCheckResult, BindingSelfCheck
+from .binding_check import BindingCheckResult, BindingSelfCheck, apply_self_check_result
 from .cidr import CidrAllowList
 from .metrics import net_binding_safe
 from .middleware import MeshOnlyMiddleware

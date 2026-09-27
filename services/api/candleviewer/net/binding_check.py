@@ -5,6 +5,13 @@ configured bind string, because the leak mode this guards against
 (`20-architecture.md` "WSL hazards": a `0.0.0.0` binding leak via Windows
 `portproxy`) is precisely a mismatch between configuration and reality.
 
+A bound address is unsafe not only when it is a public wildcard
+(`0.0.0.0` / `::`) but also whenever it falls outside the configured
+mesh/loopback CIDR allow-list: a bind to a specific LAN or public IP is
+just as reachable off-mesh as a wildcard bind, so every bound address is
+checked against `CidrAllowList` rather than only pattern-matching the
+wildcard forms.
+
 Fail-closed: if the socket table cannot be read, the result is unsafe.
 """
 
@@ -13,6 +20,14 @@ from __future__ import annotations
 import socket
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+from .cidr import CidrAllowList
+
+if TYPE_CHECKING:
+    from prometheus_client import Gauge
+
+    from .read_only_gate import ReadOnlyGate
 
 PUBLIC_WILDCARDS = frozenset({"0.0.0.0", "::"})  # noqa: S104 - detection constants, not a bind call
 
@@ -42,8 +57,15 @@ class BindingSelfCheck:
     def __init__(
         self,
         address_enumerator: SocketAddressEnumerator | None = None,
+        *,
+        allow_list: CidrAllowList | None = None,
     ) -> None:
         self._enumerate = address_enumerator or _enumerate_own_listening_sockets
+        # Defaults to loopback/`::1` only (no extra CIDRs) so a caller that
+        # forgets to pass the real mesh allow-list still fails closed on any
+        # non-loopback bind, instead of silently degrading to a wildcard-only
+        # check.
+        self._allow_list = allow_list or CidrAllowList([])
 
     def run(self) -> BindingCheckResult:
         try:
@@ -69,6 +91,21 @@ class BindingSelfCheck:
                     f"Public wildcard binding detected on {', '.join(public)}; the "
                     "trading terminal must never be reachable from the public "
                     "internet. Starting in read-only mode."
+                ),
+            )
+
+        off_mesh = [
+            addr for addr in addresses if not self._allow_list.is_allowed(_host_of(addr))
+        ]
+        if off_mesh:
+            return BindingCheckResult(
+                safe=False,
+                bound_addresses=addresses,
+                reason_code="net.off_mesh_binding_detected",
+                reason_text=(
+                    f"Bound to address(es) outside the mesh/loopback allow-list: "
+                    f"{', '.join(off_mesh)}; the trading terminal must never be "
+                    "reachable from outside the mesh. Starting in read-only mode."
                 ),
             )
         return BindingCheckResult(
@@ -115,3 +152,32 @@ def enumerator_from_sockets(sockets: list[socket.socket]) -> SocketAddressEnumer
         return result
 
     return _enumerate
+
+
+def apply_self_check_result(
+    result: BindingCheckResult,
+    *,
+    read_only_gate: ReadOnlyGate,
+    gauge: Gauge | None = None,
+) -> None:
+    """Wire one self-check outcome to the read-only gate and the metric.
+
+    This is the single place that connects `BindingSelfCheck.run()` to
+    `ReadOnlyGate` and to the `net_binding_safe` gauge, so the boot check,
+    the hourly re-check and tests all exercise the same end-to-end path
+    described in the acceptance criteria ("public binding degrades the
+    app", "drift after resume is caught") rather than each caller wiring
+    (or forgetting to wire) it ad hoc.
+
+    - `result.safe is False` trips the gate with the check's reason.
+    - `result.safe is True` clears the gate (a no-op if it was not
+      tripped) using this same passing result.
+    - The `net_binding_safe` gauge, when provided, is set to 1/0 to match.
+    """
+    if gauge is not None:
+        gauge.set(1 if result.safe else 0)
+    if result.safe:
+        if read_only_gate.is_read_only:
+            read_only_gate.clear(check_result=result)
+    else:
+        read_only_gate.trip(reason_code=result.reason_code, reason_text=result.reason_text)

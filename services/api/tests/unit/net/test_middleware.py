@@ -144,3 +144,26 @@ async def test_header_is_honoured_only_from_the_configured_trusted_proxy() -> No
     await mw(scope, _noop_receive, sent)
 
     assert sent.messages[0]["status"] == 200
+
+
+@pytest.mark.asyncio
+async def test_only_the_right_most_forwarded_hop_is_trusted() -> None:
+    # A client cannot pre-seed an on-mesh address as the left-most hop to
+    # get through: only the right-most hop (appended by our own proxy) is
+    # trusted.
+    allow_list = CidrAllowList([MESH_CIDR])
+    mw = MeshOnlyMiddleware(
+        _downstream_app,
+        allow_list=allow_list,
+        trusted_proxy_header="x-forwarded-for",
+        trusted_proxy_address="127.0.0.1",
+    )
+    sent = _Sent()
+    scope = _http_scope(
+        "127.0.0.1",
+        headers=[(b"x-forwarded-for", b"100.70.1.2, 8.8.8.8")],
+    )
+
+    await mw(scope, _noop_receive, sent)
+
+    assert sent.messages[0]["status"] == 403

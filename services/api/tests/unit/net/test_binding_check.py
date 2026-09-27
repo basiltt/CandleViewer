@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from candleviewer.net.binding_check import BindingSelfCheck
+from candleviewer.net.cidr import CidrAllowList
+
+MESH_CIDR = "100.64.0.0/10"
 
 
 def test_self_check_passes_when_bound_only_to_loopback() -> None:
@@ -13,9 +16,34 @@ def test_self_check_passes_when_bound_only_to_loopback() -> None:
 
 
 def test_self_check_passes_when_bound_to_a_mesh_address() -> None:
-    check = BindingSelfCheck(address_enumerator=lambda: ["100.70.1.2:8000"])
+    check = BindingSelfCheck(
+        address_enumerator=lambda: ["100.70.1.2:8000"],
+        allow_list=CidrAllowList([MESH_CIDR]),
+    )
     result = check.run()
     assert result.safe is True
+
+
+def test_self_check_fails_on_a_specific_lan_address_outside_the_allow_list() -> None:
+    # A bind to a concrete, non-wildcard LAN address is just as reachable
+    # off-mesh as a wildcard bind and must not be reported safe.
+    check = BindingSelfCheck(
+        address_enumerator=lambda: ["192.168.1.50:8000"],
+        allow_list=CidrAllowList([MESH_CIDR]),
+    )
+    result = check.run()
+    assert result.safe is False
+    assert result.reason_code == "net.off_mesh_binding_detected"
+
+
+def test_self_check_fails_on_a_public_ip_outside_the_allow_list() -> None:
+    check = BindingSelfCheck(
+        address_enumerator=lambda: ["203.0.113.10:8000"],
+        allow_list=CidrAllowList([MESH_CIDR]),
+    )
+    result = check.run()
+    assert result.safe is False
+    assert result.reason_code == "net.off_mesh_binding_detected"
 
 
 def test_self_check_fails_on_ipv4_wildcard_bind() -> None:

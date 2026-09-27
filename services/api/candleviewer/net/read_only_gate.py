@@ -13,6 +13,10 @@ by `net`, not duplicated).
 from __future__ import annotations
 
 import threading
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .binding_check import BindingCheckResult
 
 
 class ReadOnlyGate:
@@ -35,7 +39,20 @@ class ReadOnlyGate:
             self._reason_code = reason_code
             self._reason_text = reason_text
 
-    def clear(self) -> None:
+    def clear(self, *, check_result: BindingCheckResult) -> None:
+        """Clear the gate, but only given a fresh, *passing* self-check.
+
+        `check_result` must be the `BindingCheckResult` from a self-check
+        run that just completed with `safe=True`. A caller cannot clear the
+        gate on a whim (e.g. from a request handler, or after merely
+        catching an exception) without re-running the check.
+        """
+        if not check_result.safe:
+            raise ValueError(
+                "ReadOnlyGate.clear() requires a passing BindingCheckResult "
+                f"(got reason_code={check_result.reason_code!r}); the gate stays "
+                "tripped until the self-check actually passes."
+            )
         with self._lock:
             self._tripped = False
             self._reason_code = None

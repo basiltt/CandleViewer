@@ -7,6 +7,13 @@ Applies to both HTTP and the WS upgrade (ASGI `scope["type"]` in
 configured trusted proxy sits in front — and even then only that proxy's
 own immediate peer address is trusted to supply it, never an arbitrary
 downstream hop.
+
+This middleware only guards the *mesh-membership* check (per-request CIDR
+match on the source address); it does not consult or mutate
+`ReadOnlyGate` — that flag is driven by the boot/hourly binding self-check
+(see `binding_check.apply_self_check_result`) and is consulted directly by
+the OMS validator, never by this middleware, so a request cannot route
+around a tripped gate by simply being on-mesh.
 """
 
 from __future__ import annotations
@@ -15,7 +22,6 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from .audit import AuditSink, NullAuditSink
 from .cidr import CidrAllowList
-from .read_only_gate import ReadOnlyGate
 
 _GENERIC_403_BODY = b'{"detail":"Forbidden"}'
 
@@ -35,14 +41,12 @@ class MeshOnlyMiddleware:
         app: ASGIApp,
         *,
         allow_list: CidrAllowList,
-        read_only_gate: ReadOnlyGate | None = None,
         audit_sink: AuditSink | None = None,
         trusted_proxy_header: str | None = None,
         trusted_proxy_address: str | None = None,
     ) -> None:
         self._app = app
         self._allow_list = allow_list
-        self._gate = read_only_gate
         self._audit = audit_sink or NullAuditSink()
         self._trusted_proxy_header = trusted_proxy_header
         self._trusted_proxy_address = trusted_proxy_address
@@ -81,9 +85,16 @@ class MeshOnlyMiddleware:
         raw = headers.get(self._trusted_proxy_header.lower().encode("latin-1"))
         if raw is None:
             return peer_address
-        # Only the first, left-most hop is trusted (the proxy's own client).
-        forwarded: str = raw.decode("latin-1").split(",")[0].strip()
-        return forwarded
+        # Only the right-most hop is trusted: it is the address our own
+        # configured proxy observed directly. Left-most (and every other)
+        # hop is attacker-controlled — an off-mesh client can prepend any
+        # value it likes, so trusting it would let it forge an on-mesh
+        # source address.
+        hops = [hop.strip() for hop in raw.decode("latin-1").split(",") if hop.strip()]
+        if not hops:
+            return peer_address
+        result: str = hops[-1]
+        return result
 
     async def _reject(self, scope: Scope, send: Send) -> None:
         if scope["type"] == "websocket":
