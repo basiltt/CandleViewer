@@ -354,7 +354,9 @@ the source of truth for ticket _content_.
 
 | Task                                          | Command                                                |
 | --------------------------------------------- | ------------------------------------------------------ |
-| Bring up local stack (Postgres, QuestDB, API) | `docker compose -f infra/docker-compose.dev.yml up -d` |
+| Bring up local stack (Postgres, QuestDB, API, Prometheus, Grafana) | `make up` (equivalent to `docker compose -f infra/docker-compose.dev.yml --profile core --profile obs up -d`) |
+| Stop local stack (keep volumes) | `make down` |
+| Reset local stack (drop volumes, clean-state rebuild) | `make reset` |
 | E2E (web)                                     | `pnpm e2e`                                             |
 | E2E (Electron)                                | `pnpm e2e:desktop`                                     |
 | Accessibility scan                            | `pnpm test:a11y`                                       |

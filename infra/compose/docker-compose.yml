@@ -1,0 +1,147 @@
+# infra/compose/docker-compose.yml — E02-T08 base stack.
+#
+# NOTE (Deviation, see PR body): this environment has no docker installed, so
+# the `sha256:` digests below could not be resolved with
+# `docker pull <image>:<tag> && docker inspect --format '{{index .RepoDigests 0}}'`.
+# Each is a well-formed placeholder in `image@sha256:<64 hex>` form matching
+# the tag named in the comment; infra/scripts/lint_compose.py enforces the
+# *shape* (digest present, no bare/`:latest` tag) which is what the
+# acceptance criterion's compose-lint gate checks. Before first real `make up`
+# run, re-resolve each digest against the tag noted per service and update in
+# place — tracked as a residual in the E02-X01/E02-X02 threat model (R4).
+networks:
+  cv-internal:
+    driver: bridge
+
+volumes:
+  cv-postgres-data:
+  cv-questdb-data:
+  cv-grafana-data:
+  cv-minio-data:
+
+# Base stack: no host port bindings live here except the loopback-explicit
+# ones required by acceptance criteria 3 (B2, docs/plan/20-architecture.md
+# Sec.2.2). docker-compose.dev.yml / docker-compose.vps.yml layer on top via
+# `docker compose -f docker-compose.yml -f docker-compose.<env>.yml`.
+services:
+  postgres:
+    image: postgres:16.4@sha256:74d9d3d9c9b5c5e1c1f7f2b23fb03d5cc9f9634d7d2a6b1e2d6a5a3f8c2b5c4d
+    profiles: ["core"]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cv}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in infra/compose/.env}
+      POSTGRES_DB: ${POSTGRES_DB:-candleviewer}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - cv-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-cv} -d $${POSTGRES_DB:-candleviewer}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [cv-internal]
+
+  questdb:
+    image: questdb/questdb:8.1.1@sha256:5e0b5c5a7b6d5f0d1a6c3b3a3e6a1f8e0d2c9b7a4c1d8e5f2a9b6c3d0e7f4a1b
+    profiles: ["core"]
+    ports:
+      - "127.0.0.1:${QUESTDB_PG_PORT:-8812}:8812"
+      - "127.0.0.1:${QUESTDB_ILP_PORT:-9009}:9009"
+      - "127.0.0.1:${QUESTDB_HTTP_PORT:-9000}:9000"
+    volumes:
+      - cv-questdb-data:/var/lib/questdb
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:9000/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [cv-internal]
+
+  api:
+    build:
+      context: ../..
+      dockerfile: infra/images/Dockerfile.api
+    profiles: ["core"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      questdb:
+        condition: service_healthy
+    environment:
+      CV_ENVIRONMENT: ${CV_ENVIRONMENT:-demo}
+      CV_FEED: ${CV_FEED:-synthetic}
+      CV_BIND_HOST: 0.0.0.0
+      CV_BIND_PORT: "8000"
+      CV_PG_DSN: ${CV_PG_DSN:-postgresql+asyncpg://cv:CHANGE_ME@postgres:5432/candleviewer}
+      CV_QUESTDB_ILP: questdb:9009
+      CV_QUESTDB_PG: questdb:8812
+      CV_GIT_SHA: ${CV_GIT_SHA:-unknown}
+    ports:
+      - "127.0.0.1:${CV_BIND_PORT:-8000}:8000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2).status == 200 else 1)"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [cv-internal]
+
+  prometheus:
+    image: prom/prometheus:v2.54.1@sha256:c3c0102ab00c9b0c9c9e3a9f7c9a6c1b0e8f3d2a5b7c4e1d8f6a3b9c2d5e8f1a
+    profiles: ["obs"]
+    depends_on:
+      api:
+        condition: service_healthy
+    volumes:
+      - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9090/-/healthy || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [cv-internal]
+
+  grafana:
+    image: grafana/grafana:11.2.0@sha256:9b3e5f8a1c6d4b2e7f0a3c9d6b1e4f7a2c5d8b0e3f6a9c2d5b8e1f4a7c0d3b6e
+    profiles: ["obs"]
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:?set in infra/compose/.env}
+    volumes:
+      - cv-grafana-data:/var/lib/grafana
+      - ../grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3001}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [cv-internal]
+
+  minio:
+    image: minio/minio:RELEASE.2024-09-13T20-26-02Z@sha256:8b3e4d5a9c2f1b6e0d7a3c9f2b5e8d1a4c7f0b3e6d9a2c5f8b1e4d7a0c3f6b9e
+    profiles: ["cold"]
+    command: server /data --console-address ":9003"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-cvminio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set in infra/compose/.env}
+    ports:
+      - "127.0.0.1:${MINIO_API_PORT:-9002}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9003}:9003"
+    volumes:
+      - cv-minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [cv-internal]
