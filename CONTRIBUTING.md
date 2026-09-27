@@ -77,10 +77,10 @@ enforced server-side**.
 ## Local commands
 
 **Single source of truth: [`AGENTS.md` §4 (Commands)](AGENTS.md#4-commands).** Task names are not
-duplicated here. Note that until ticket `INFRA-001` (monorepo scaffolding) is Done, those names are a
-**specification** — the repo currently contains planning documents only and no
-`package.json`/`pyproject.toml`. After INFRA-001, the generated-code required check fails the build if
-`AGENTS.md` §4 and the real scripts disagree.
+duplicated here. The monorepo scaffold (`pnpm-workspace.yaml`, `turbo.json`, `package.json`,
+`services/api/pyproject.toml`) shipped with `E02-T11`, so `AGENTS.md` §4 mirrors the real, runnable
+task graph. The generated-code required check fails the build if `AGENTS.md` §4 and the real scripts
+disagree.
 
 See `AGENTS.md` §4 for the root install/verify command and the backend lint/format/typecheck/test loop.
 
