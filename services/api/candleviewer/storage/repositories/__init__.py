@@ -17,6 +17,6 @@ __all__ = [
     "ColdTierRepository",
     "MarketDataRepository",
     "RelationalRepository",
-    "UnitOfWork",
     "RetentionRepository",
+    "UnitOfWork",
 ]

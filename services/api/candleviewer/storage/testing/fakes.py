@@ -134,7 +134,7 @@ class FakeUnitOfWork:
         self.committed = False
         self.rolled_back = False
 
-    async def __aenter__(self) -> "FakeUnitOfWork":
+    async def __aenter__(self) -> FakeUnitOfWork:
         return self
 
     async def __aexit__(self, exc_type: object, exc: object, tb: object) -> None:

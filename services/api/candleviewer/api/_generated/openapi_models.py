@@ -6,22 +6,24 @@ Source: docs/plan/22-api-openapi.yaml, via datamodel-code-generator.
 
 from __future__ import annotations
 
-from decimal import Decimal as _StdlibDecimal
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
+from decimal import Decimal as _StdlibDecimal
+
 from pydantic import (
+    PlainSerializer,
+    BeforeValidator,
     AnyUrl,
     AwareDatetime,
     BaseModel,
-    BeforeValidator,
     ConfigDict,
     EmailStr,
     Field,
-    PlainSerializer,
     RootModel,
     SecretStr,
 )
+
 
 Decimal = Annotated[
     _StdlibDecimal,
