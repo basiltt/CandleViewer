@@ -20,12 +20,20 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-# `uses:` lines referencing local paths (`./`) or Docker refs (`docker://`)
-# are exempt from SHA pinning — they aren't fetched from the marketplace.
+# `uses:` lines referencing local paths (`./`) are exempt from SHA pinning —
+# they aren't fetched from the marketplace. `docker://` refs must instead
+# carry an `@sha256:<digest>` pin (SR-132) — image tags float just like
+# branches do.
 USES_RE = re.compile(r"^\s*(?:-\s*)?uses:\s*(?P<ref>\S+)\s*(?:#.*)?$")
 SHA_SUFFIX_RE = re.compile(r"@([0-9a-f]{40})$")
+DOCKER_DIGEST_RE = re.compile(r"@sha256:[0-9a-f]{64}$")
 COMMENT_LINE_RE = re.compile(r"^\s*#")
-PULL_REQUEST_TARGET_RE = re.compile(r"^\s*(?:-\s*)?pull_request_target\b")
+PULL_REQUEST_TARGET_WORD_RE = re.compile(r"\bpull_request_target\b")
+# Top-level `on:` key (workflow trigger map). May be followed inline by a
+# scalar/list value on the same line, or by an indented block on following
+# lines — both forms must be scanned for `pull_request_target` (SR-132).
+ON_KEY_RE = re.compile(r"^on:\s*(?P<inline>.*)$")
+INDENT_RE = re.compile(r"^(\s*)\S")
 
 
 @dataclass(frozen=True)
@@ -48,14 +56,49 @@ def _iter_workflow_files(root: Path) -> list[Path]:
     return found
 
 
+def _on_block_line_nos(lines: list[str]) -> set[int]:
+    """Return 1-based line numbers that belong to the workflow's top-level
+    ``on:`` trigger declaration — the inline value line itself (if any) plus
+    any indented block lines that follow it. Handles both:
+
+        on: pull_request_target
+        on: [push, pull_request_target]
+
+    and the block-mapping form:
+
+        on:
+          pull_request_target:
+    """
+    result: set[int] = set()
+    in_block = False
+    for idx, line in enumerate(lines):
+        line_no = idx + 1
+        if COMMENT_LINE_RE.match(line):
+            continue
+        m = ON_KEY_RE.match(line)
+        if m:
+            result.add(line_no)
+            in_block = bool(not m.group("inline").strip())
+            continue
+        if in_block:
+            indent_m = INDENT_RE.match(line)
+            if indent_m and len(indent_m.group(1)) > 0:
+                result.add(line_no)
+                continue
+            in_block = False
+    return result
+
+
 def check_file(path: Path) -> list[Violation]:
     violations: list[Violation] = []
     text = path.read_text(encoding="utf-8")
-    for line_no, line in enumerate(text.splitlines(), start=1):
+    lines = text.splitlines()
+    on_line_nos = _on_block_line_nos(lines)
+    for line_no, line in enumerate(lines, start=1):
         if COMMENT_LINE_RE.match(line):
             continue
 
-        if PULL_REQUEST_TARGET_RE.match(line):
+        if line_no in on_line_nos and PULL_REQUEST_TARGET_WORD_RE.search(line):
             violations.append(
                 Violation(
                     path,
@@ -69,7 +112,18 @@ def check_file(path: Path) -> list[Violation]:
         if not m:
             continue
         ref = m.group("ref").strip('"').strip("'")
-        if ref.startswith(("./", "docker://")):
+        if ref.startswith("./"):
+            continue
+        if ref.startswith("docker://"):
+            if not DOCKER_DIGEST_RE.search(ref):
+                violations.append(
+                    Violation(
+                        path,
+                        line_no,
+                        line,
+                        "unpinned docker:// reference (requires @sha256:<digest>)",
+                    )
+                )
             continue
         if "@" not in ref:
             violations.append(

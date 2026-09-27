@@ -102,7 +102,7 @@ jobs:
     assert check_file(wf) == []
 
 
-def test_check_file_local_and_docker_refs_exempt(tmp_path: Path) -> None:
+def test_check_file_local_ref_exempt(tmp_path: Path) -> None:
     wf = _write(
         tmp_path,
         "local.yml",
@@ -111,7 +111,87 @@ jobs:
   build:
     steps:
       - uses: ./.github/actions/local-thing
+""",
+    )
+    assert check_file(wf) == []
+
+
+def test_check_file_docker_ref_with_digest_passes(tmp_path: Path) -> None:
+    wf = _write(
+        tmp_path,
+        "docker_ok.yml",
+        """\
+jobs:
+  build:
+    steps:
+      - uses: docker://alpine@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+""",
+    )
+    assert check_file(wf) == []
+
+
+def test_check_file_docker_ref_floating_tag_fails(tmp_path: Path) -> None:
+    wf = _write(
+        tmp_path,
+        "docker_bad.yml",
+        """\
+jobs:
+  build:
+    steps:
       - uses: docker://alpine:3.19
+""",
+    )
+    violations = check_file(wf)
+    assert len(violations) == 1
+    assert "sha256" in violations[0].reason
+
+
+def test_check_file_pull_request_target_inline_scalar_fails(tmp_path: Path) -> None:
+    wf = _write(
+        tmp_path,
+        "prt_inline.yml",
+        f"""\
+on: pull_request_target
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@{PINNED_SHA}
+""",
+    )
+    violations = check_file(wf)
+    assert any("pull_request_target" in v.reason for v in violations)
+
+
+def test_check_file_pull_request_target_inline_list_fails(tmp_path: Path) -> None:
+    wf = _write(
+        tmp_path,
+        "prt_list.yml",
+        f"""\
+on: [push, pull_request_target]
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@{PINNED_SHA}
+""",
+    )
+    violations = check_file(wf)
+    assert any("pull_request_target" in v.reason for v in violations)
+
+
+def test_check_file_pull_request_target_as_substring_not_flagged(tmp_path: Path) -> None:
+    # A job step that merely mentions the trigger name in an unrelated
+    # `run:` line must not trip the check — only the `on:` trigger block does.
+    wf = _write(
+        tmp_path,
+        "mention.yml",
+        f"""\
+on:
+  push:
+jobs:
+  build:
+    steps:
+      - run: echo "not a pull_request_target trigger"
+      - uses: actions/checkout@{PINNED_SHA}
 """,
     )
     assert check_file(wf) == []
