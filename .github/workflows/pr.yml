@@ -116,8 +116,12 @@ jobs:
       - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
         with:
           node-version: "20"
+      - name: Enable pnpm via corepack
+        run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+      - name: Install commitlint (pinned via lockfile)
+        run: pnpm install --frozen-lockfile --filter . --prod=false
       - name: Lint PR commits against Conventional Commits (01-sdlc-and-branching.md §6)
-        run: npx --yes commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
+        run: pnpm exec commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
 
   licence-header:
     name: licence-header
@@ -226,6 +230,7 @@ jobs:
           FILTER_INFRA: ${{ needs.changed-paths.outputs.infra }}
           FILTER_E2E: ${{ needs.changed-paths.outputs.e2e }}
           FILTER_ENGINE: ${{ needs.changed-paths.outputs.engine }}
+          RESULT_CHANGED_PATHS: ${{ needs.changed-paths.result }}
           RESULT_PIN_CHECK: ${{ needs.pin-check.result }}
           RESULT_COMMITLINT: ${{ needs.commitlint.result }}
           RESULT_LICENCE_HEADER: ${{ needs.licence-header.result }}
@@ -240,6 +245,7 @@ jobs:
           node scripts/ci_gate_resolver.mjs "$(node -e '
             const isTrue = (v) => v === "true";
             const lanes = {
+              "changed-paths": { applicable: true, result: process.env.RESULT_CHANGED_PATHS },
               "pin-check": { applicable: isTrue(process.env.FILTER_INFRA), result: process.env.RESULT_PIN_CHECK },
               commitlint: { applicable: true, result: process.env.RESULT_COMMITLINT },
               "licence-header": { applicable: true, result: process.env.RESULT_LICENCE_HEADER },
@@ -256,4 +262,3 @@ jobs:
             };
             console.log(JSON.stringify(lanes));
           ')"
-

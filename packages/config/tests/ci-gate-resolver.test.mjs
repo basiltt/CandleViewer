@@ -71,6 +71,24 @@ describe("resolveGate", () => {
     expect(failures).toHaveLength(2);
   });
 
+  it("fails closed when changed-paths itself did not succeed, even if every filter-gated lane skipped (CI-GATE-001)", () => {
+    // Regression for the fail-open bug: if `changed-paths` fails/cancels,
+    // every filter output comes back empty ("false"), so js/py/security would
+    // otherwise all read as inapplicable and skipped, letting ci-required pass
+    // with none of them having run. `changed-paths` must be its own
+    // always-applicable lane so that outcome is CI-GATE-001, not success.
+    const { conclusion, failures } = resolveGate({
+      "changed-paths": { applicable: true, result: "failure" },
+      js: { applicable: false, result: "skipped" },
+      py: { applicable: false, result: "skipped" },
+      security: { applicable: false, result: "skipped" },
+    });
+    expect(conclusion).toBe("failure");
+    expect(failures).toHaveLength(1);
+    expect(failures[0].code).toBe("CI-GATE-001");
+    expect(failures[0].reason).toContain("changed-paths");
+  });
+
   it("docs-only PR: all code lanes inapplicable and skipped -> success", () => {
     const { conclusion } = resolveGate({
       js: { applicable: false, result: "skipped" },
