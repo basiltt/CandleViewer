@@ -62,3 +62,9 @@ CLAUDE.local.md
 .coverage
 *.tmp.*
 .spike-tmp/
+
+# chart-engine bench: generated run artefacts (E06-K01), never committed
+packages/chart-engine/bench/results.json
+packages/chart-engine/bench/baseline.json
+packages/chart-engine/bench/report-*.json
+packages/chart-engine/bench/report-*.md
