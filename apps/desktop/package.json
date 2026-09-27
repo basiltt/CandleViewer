@@ -1,0 +1,36 @@
+{
+  "name": "@candleviewer/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Electron shell wrapping apps/web. NO business logic (C-3.5). E02-T04 ships the hardened bootable skeleton; routing, RBAC, auto-update and crash reporting are E10.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "dev": "pnpm run build && electron .",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage",
+    "build": "tsc -p tsconfig.build.json",
+    "build:installer": "electron-builder --config electron-builder.yml",
+    "size": "echo \"@candleviewer/desktop: no bundle budget (renderer budget lives in apps/web)\"",
+    "e2e": "playwright test -c e2e/playwright.config.ts"
+  },
+  "devDependencies": {
+    "@candleviewer/config": "workspace:*",
+    "@candleviewer/web": "workspace:*",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.19.0",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "vitest": "^2.1.8",
+    "@vitest/coverage-v8": "^2.1.8",
+    "eslint": "^9.17.0",
+    "@playwright/test": "^1.49.1",
+    "playwright": "^1.49.1"
+  }
+}

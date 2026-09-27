@@ -1,0 +1,18 @@
+appId: com.candleviewer.desktop
+productName: CandleViewer
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/**/*
+  - "!**/*.map"
+extraResources: []
+# Real signing/notarization config, auto-update feed and platform targets
+# are added in E10 once the release pipeline (ADR-0013) is decided.
+win:
+  target: nsis
+linux:
+  target: AppImage
+mac:
+  target: dmg
+  hardenedRuntime: true
