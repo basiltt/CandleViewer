@@ -79,6 +79,7 @@
 # future: E02/later scaffolding; directory does not exist yet.
 /.prettierrc.json                       @CandleViewer/frontend
 /prettier.config.mjs                    @CandleViewer/frontend
+/.prettierignore                        @CandleViewer/frontend
 /tsconfig.json                          @CandleViewer/frontend @CandleViewer/architecture
 /.npmrc                                 @CandleViewer/devsecops
 /.nvmrc                                 @CandleViewer/devsecops

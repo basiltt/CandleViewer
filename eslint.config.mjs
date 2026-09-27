@@ -12,6 +12,7 @@ export default [
     files: [
       "scripts/**/*.{mjs,cjs,js}",
       "packages/*/scripts/**/*.{mjs,cjs,js}",
+      "tools/ci/**/*.{mjs,cjs,js}",
       "*.config.{mjs,cjs,js}",
       ".dependency-cruiser.js",
     ],

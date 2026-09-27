@@ -114,6 +114,22 @@ The `gen` job (`.github/workflows/_job-gen.yml`) is an always-on required check.
 Run the same check locally before pushing: `make gen-check` (wraps
 `tools/ci/check_gen_freshness.py`).
 
+**Reproducing the JS CI lane locally** (E03-T02, `.github/workflows/_job-js.yml`): the lane is exactly
+`pnpm turbo run <task> --filter='...[origin/main]'` for `lint`, `typecheck`, `test:cov` (split into
+`unit-frontend`: `ui`/`web`/`desktop`, and `unit-engine`: `chart-engine`/`protocol`), then `build` — same
+task names as `pnpm verify`, just scoped to what changed since `origin/main` the way CI scopes it. Run
+the whole thing exactly as CI does with:
+
+```sh
+pnpm install --frozen-lockfile --ignore-scripts
+node tools/ci/run-allowed-postinstall.mjs   # SR-138 exception list (electron, esbuild)
+pnpm turbo run lint typecheck test:cov build --filter='...[origin/main]'
+```
+
+CI reads `TURBO_API`/`TURBO_TEAM` (repository variables) and, on `main`-branch runs only, a write-scoped
+`TURBO_TOKEN` secret for the Turborepo remote cache (ADR-0013 rule 6); PR runs and local runs without
+those variables set simply fall back to Turborepo's local cache.
+
 ## Design and architecture decisions
 
 Sprints are **1 week** (Fri→Thu; Sprint 01 = 2026-09-25; calendar in `docs/plan/backlog/_tools/calendar_cv.py`). Design runs at least two sprints ahead of engineering; no frontend screen work starts before its design
