@@ -45,7 +45,6 @@ jobs:
     permissions:
       contents: read
       security-events: write # required to upload SARIF to code scanning
-      actions: read # codeql-action needs to read the workflow run on private repos
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -63,12 +62,17 @@ jobs:
           languages: javascript-typescript,python
           config-file: ./.github/codeql/codeql-config.yml
 
+      # analyze writes SARIF then errors on a workflow-run API call the
+      # reusable-workflow token cannot make (no actions: read from pr.yml).
+      # Not a pass-by-default: the gate step fails CI-SEC-005 if no SARIF.
       - uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        continue-on-error: true
         with:
           output: codeql-results
           upload: false # gate on our normalised policy first, then upload
 
       - name: Evaluate CodeQL findings (security_gate.py, CI-SEC-001/004)
+        if: always()
         run: |
           set -euo pipefail
           shopt -s nullglob
