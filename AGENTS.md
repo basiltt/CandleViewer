@@ -346,25 +346,27 @@ the source of truth for ticket _content_.
 | Unit tests                                     | `pytest -m "not integration" --cov=. --cov-fail-under=85`                |
 | Integration tests (needs docker compose stack) | `pytest -m integration`                                                  |
 | Architecture contracts                         | `lint-imports`                                                           |
+| Regenerate protocol pydantic models            | `python scripts/generate_protocol_models.py`                             |
+| Protocol-model staleness gate (what CI runs)   | `python scripts/generate_protocol_models.py --check`                     |
 | New migration                                  | `alembic revision -m "<summary>"` (autogenerate then **review by hand**) |
 | Apply / roll back migration                    | `alembic upgrade head` / `alembic downgrade -1`                          |
 | Run API locally                                | `uvicorn services.api.main:app --host 127.0.0.1 --port 8000 --reload`    |
 
 ### Stack, E2E, load, security
 
-| Task                                          | Command                                                |
-| --------------------------------------------- | ------------------------------------------------------ |
+| Task                                                               | Command                                                                                                       |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
 | Bring up local stack (Postgres, QuestDB, API, Prometheus, Grafana) | `make up` (equivalent to `docker compose -f infra/docker-compose.dev.yml --profile core --profile obs up -d`) |
-| Stop local stack (keep volumes) | `make down` |
-| Reset local stack (drop volumes, clean-state rebuild) | `make reset` |
-| E2E (web)                                     | `pnpm e2e`                                             |
-| E2E (Electron)                                | `pnpm e2e:desktop`                                     |
-| Accessibility scan                            | `pnpm test:a11y`                                       |
-| Load test                                     | `k6 run tests/load/api-ws.js`                          |
-| Ingestion soak                                | `locust -f tests/load/ingestion_soak.py`               |
-| Chaos suite                                   | `pnpm chaos`                                           |
-| Secret scan on your diff                      | `gitleaks protect --staged --redact`                   |
-| Container scan                                | `trivy image candleviewer/api:dev`                     |
+| Stop local stack (keep volumes)                                    | `make down`                                                                                                   |
+| Reset local stack (drop volumes, clean-state rebuild)              | `make reset`                                                                                                  |
+| E2E (web)                                                          | `pnpm e2e`                                                                                                    |
+| E2E (Electron)                                                     | `pnpm e2e:desktop`                                                                                            |
+| Accessibility scan                                                 | `pnpm test:a11y`                                                                                              |
+| Load test                                                          | `k6 run tests/load/api-ws.js`                                                                                 |
+| Ingestion soak                                                     | `locust -f tests/load/ingestion_soak.py`                                                                      |
+| Chaos suite                                                        | `pnpm chaos`                                                                                                  |
+| Secret scan on your diff                                           | `gitleaks protect --staged --redact`                                                                          |
+| Container scan                                                     | `trivy image candleviewer/api:dev`                                                                            |
 
 ### Governance (C-16.4, C-16.5 — runnable today; stdlib Python plus `jsonschema` for GOV-004)
 
