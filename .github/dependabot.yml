@@ -13,3 +13,35 @@ updates:
       - "security"
     commit-message:
       prefix: "chore(infra-devops)"
+
+  # E03-T07: SCA coverage (CONSTITUTION §9 #11) for pip, npm and Docker base
+  # images, mirroring the pip-audit / npm-audit / trivy CI jobs above.
+  - package-ecosystem: "pip"
+    directory: "/services/api"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "area/backend-platform"
+      - "security"
+    commit-message:
+      prefix: "chore(backend-platform)"
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "area/frontend-platform"
+      - "security"
+    commit-message:
+      prefix: "chore(frontend-platform)"
+
+  - package-ecosystem: "docker"
+    directory: "/infra/images"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "area/infra-devops"
+      - "security"
+    commit-message:
+      prefix: "chore(infra-devops)"

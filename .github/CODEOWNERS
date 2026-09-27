@@ -31,6 +31,7 @@
 /AGENTS.md                              @basiltt @CandleViewer/architecture
 /CLAUDE.md                              @basiltt @CandleViewer/architecture
 /SECURITY.md                            @basiltt @CandleViewer/security
+/security/                              @CandleViewer/devsecops @CandleViewer/security
 /CONTRIBUTING.md                        @basiltt @CandleViewer/architecture
 /CODE_OF_CONDUCT.md                     @basiltt
 /LICENSE                                @basiltt

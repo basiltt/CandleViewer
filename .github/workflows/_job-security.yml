@@ -1,8 +1,26 @@
 name: _job-security
 
-# Reusable-workflow stub (E03-T01). Filled in by E03-T07 (CodeQL, Semgrep,
-# Bandit, pip-audit, npm audit, gitleaks, Trivy) per ADR-0013 pipeline
-# shape and CONSTITUTION §9 #10-#13.
+# E03-T07: SAST, SCA, secrets, licence and container scanning lane.
+# ADR-0013 pipeline shape; 04-security-program.md §6.13/§6.14/§12.1/§12.3;
+# CONSTITUTION §9 checks #10-#14 (sast, sca, secrets-scan, container-scan,
+# license-check). Ticket "Technical notes": "Each tool is its own job so
+# branch protection can name them individually ... a single flaky scanner
+# does not mask the others" — this reusable workflow therefore declares one
+# job per tool (codeql, semgrep, bandit, pip-audit, npm-audit, gitleaks,
+# license-scan, trivy); each surfaces as its own check run under the calling
+# `security` job in `pr.yml`.
+#
+# Error codes (tools/ci/security_gate.py): CI-SEC-001 blocking finding,
+# CI-SEC-002 licence violation, CI-SEC-003 LGPL needs approval,
+# CI-SEC-004 accepted risk expired, CI-SEC-005 scanner infrastructure
+# failure (never pass-by-default — every job below fails, not skips, on a
+# scanner error).
+#
+# Out of scope here (ticket "Out of scope"): image signing/SBOM (E03-T08),
+# ZAP DAST (E03-X04, deferred), the STRIDE model itself (E03-X01), authoring
+# the cv-* Semgrep rules (E03-X02, deferred — this lane runs Semgrep's
+# registry packs only until `.semgrep/` lands; picked up automatically with
+# no workflow change once it does), pen-test (R4/E43).
 
 on:
   workflow_call: {}
@@ -10,11 +28,331 @@ on:
 permissions:
   contents: read
 
+env:
+  PYTHON_VERSION: "3.13"
+  NODE_VERSION: "20"
+
 jobs:
-  security-stub:
-    name: security (stub — see E03-T07)
+  # ---------------------------------------------------------------------
+  # codeql — CONSTITUTION §9 #10 (sast)
+  # ---------------------------------------------------------------------
+  codeql:
+    name: codeql
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      security-events: write # required to upload SARIF to code scanning
     steps:
-      - name: Placeholder (E03-T07 fills in SAST/SCA/secrets/container scans)
-        run: echo "security lane stub — implemented by E03-T07"
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          languages: javascript-typescript,python
+
+      - uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          output: codeql-results
+          upload: false # gate on our normalised policy first, then upload
+
+      - name: Evaluate CodeQL findings (security_gate.py, CI-SEC-001/004)
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(codeql-results/*.sarif)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "CI-SEC-005: codeql produced no SARIF output under codeql-results/ — scanner infrastructure failure" >&2
+            exit 1
+          fi
+          for f in "${files[@]}"; do
+            python tools/ci/security_gate.py --tool codeql --report "$f"
+          done
+
+      - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        if: always()
+        with:
+          sarif_file: codeql-results
+          category: codeql
+
+  # ---------------------------------------------------------------------
+  # semgrep — CONSTITUTION §9 #10 (sast). Registry packs per 12.2; the
+  # cv-* custom rules (incl. cv-unpinned-action, SR-132) load from
+  # `.semgrep/` once E03-X02 lands it.
+  # ---------------------------------------------------------------------
+  semgrep:
+    name: semgrep
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install semgrep
+        run: pip install "semgrep==1.99.0"
+
+      - name: Run Semgrep (registry packs + .semgrep/ custom rules if present)
+        run: |
+          set -euo pipefail
+          CONFIGS="p/python p/typescript p/react p/electron p/docker p/github-actions \
+                   p/secrets p/owasp-top-ten p/sql-injection p/jwt p/insecure-transport"
+          if [ -d .semgrep ]; then CONFIGS="$CONFIGS .semgrep"; fi
+          CONFIG_ARGS=""
+          for c in $CONFIGS; do CONFIG_ARGS="$CONFIG_ARGS --config $c"; done
+          # --error makes semgrep exit non-zero on findings AND on engine errors;
+          # security_gate.py is what decides pass/fail on findings, so we only
+          # want to swallow the "findings present" exit code (1), never a
+          # genuine engine/config failure (>1) — CI-SEC-005 must not pass-by-default.
+          set +e
+          semgrep scan $CONFIG_ARGS --sarif --output semgrep.sarif
+          status=$?
+          set -e
+          if [ "$status" -gt 1 ]; then
+            echo "CI-SEC-005: semgrep exited $status (engine/config error) — scanner infrastructure failure" >&2
+            exit "$status"
+          fi
+
+      - name: Evaluate Semgrep findings (security_gate.py, CI-SEC-001/004)
+        run: python tools/ci/security_gate.py --tool semgrep --report semgrep.sarif
+
+      - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+  # ---------------------------------------------------------------------
+  # bandit — CONSTITUTION §9 #10 (sast), scoped to services/api (12.1 table:
+  # "High/Medium confidence+severity blocks; `# nosec` requires an inline
+  # justification and security approval").
+  # ---------------------------------------------------------------------
+  bandit:
+    name: bandit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install bandit
+        run: pip install "bandit[sarif]==1.8.6"
+
+      - name: Run bandit on services/api (SARIF output)
+        run: bandit -r services/api -f sarif -o bandit.sarif -ll || true
+
+      - name: Evaluate Bandit findings (security_gate.py, CI-SEC-001/004)
+        run: python tools/ci/security_gate.py --tool bandit --report bandit.sarif
+
+      - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        if: always()
+        with:
+          sarif_file: bandit.sarif
+          category: bandit
+
+  # ---------------------------------------------------------------------
+  # pip-audit — CONSTITUTION §9 #11 (sca), Python dependency advisories.
+  # ---------------------------------------------------------------------
+  pip-audit:
+    name: pip-audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install pip-audit
+        run: pip install "pip-audit==2.7.3"
+
+      - name: Run pip-audit against services/api dependencies
+        run: |
+          set -euo pipefail
+          # Install with real dependencies (no --no-deps) so pip-audit and
+          # pip-licenses (license-scan job) actually see the backend's
+          # third-party packages, not just runner tooling.
+          pip install -e services/api --quiet
+          pip-audit --format json --output pip-audit.json --progress-spinner off || true
+
+      - name: Evaluate pip-audit findings (security_gate.py, CI-SEC-001/004)
+        run: python tools/ci/security_gate.py --tool pip-audit --report pip-audit.json
+
+  # ---------------------------------------------------------------------
+  # npm-audit — CONSTITUTION §9 #11 (sca), JS/TS dependency advisories.
+  # ---------------------------------------------------------------------
+  npm-audit:
+    name: npm-audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable pnpm via corepack
+        run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+
+      - name: Install dependencies (ignore-scripts, C-12.3)
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Run pnpm audit (JSON output)
+        run: pnpm audit --json > npm-audit.json || true
+
+      - name: Evaluate npm audit findings (security_gate.py, CI-SEC-001/004)
+        run: python tools/ci/security_gate.py --tool npm-audit --report npm-audit.json
+
+  # ---------------------------------------------------------------------
+  # gitleaks — CONSTITUTION §9 #12 (secrets-scan). Any finding blocks; a
+  # gitleaks finding can never be exception-listed in accepted-risks.yaml
+  # (security_gate.py enforces this at load time). Full-history nightly
+  # scan is configured separately by E03-T12 (deferred); this PR-scoped
+  # job diffs only the PR's commit range.
+  # ---------------------------------------------------------------------
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
+        env:
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+          GITLEAKS_ENABLE_SUMMARY: "true"
+        continue-on-error: true
+
+      - name: Re-run gitleaks for a normalised JSON report (redacted)
+        run: |
+          set -euo pipefail
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.21.2 \
+            detect --source=/repo --no-git --redact -f json -r /repo/gitleaks.json || true
+        continue-on-error: true
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Evaluate gitleaks findings (security_gate.py, CI-SEC-001 — no exceptions ever)
+        run: python tools/ci/security_gate.py --tool gitleaks --report gitleaks.json
+
+  # ---------------------------------------------------------------------
+  # license-scan — CONSTITUTION §9 #14 (license-check), SR-136 policy.
+  # ---------------------------------------------------------------------
+  license-scan:
+    name: license-scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable pnpm via corepack
+        run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+
+      - name: Install dependencies (ignore-scripts, C-12.3)
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Verify internal package scope (STRIDE R2 dependency-confusion delta)
+        run: python tools/ci/check_internal_package_scope.py --root .
+
+      - name: Install pip-licenses
+        run: |
+          set -euo pipefail
+          # Real dependency install (no --no-deps) so pip-licenses reports the
+          # actual third-party licences services/api ships with, not just
+          # runner tooling.
+          pip install -e services/api --quiet
+          pip install "pip-licenses==4.5.1"
+
+      - name: Collect Python licences
+        run: pip-licenses --format=json --output-file pip-licenses.json
+
+      - name: Collect JS/TS licences
+        run: pnpm dlx license-checker --production --json > license-checker.json
+
+      - name: Combine licence reports
+        run: |
+          python tools/ci/collect_licenses.py \
+            --pip-licenses pip-licenses.json \
+            --license-checker license-checker.json \
+            --out licenses.json
+
+      - name: Evaluate licences against allowlist (security_gate.py, CI-SEC-002/003/004, SR-136)
+        run: python tools/ci/security_gate.py --tool license-scan --report licenses.json
+
+  # ---------------------------------------------------------------------
+  # trivy — CONSTITUTION §9 #13 (container-scan). Scoped to the one
+  # Dockerfile that exists today (infra/images/Dockerfile.api); add more
+  # `matrix` entries here as further images land (never a second job).
+  # ---------------------------------------------------------------------
+  trivy:
+    name: trivy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Build image under test (not pushed)
+        run: docker build -f infra/images/Dockerfile.api -t candleviewer-api:ci .
+
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: candleviewer-api:ci
+          format: sarif
+          output: trivy.sarif
+          severity: "CRITICAL,HIGH,MEDIUM"
+          exit-code: "0"
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Evaluate Trivy findings (security_gate.py, CI-SEC-001/004)
+        run: python tools/ci/security_gate.py --tool trivy --report trivy.sarif
+
+      - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        if: always()
+        with:
+          sarif_file: trivy.sarif
+          category: trivy
+
