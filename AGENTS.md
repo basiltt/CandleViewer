@@ -296,20 +296,21 @@ the source of truth for ticket _content_.
 
 ### Root (pnpm workspace + Turborepo)
 
-| Task                                                          | Command                          |
-| ------------------------------------------------------------- | -------------------------------- |
-| Install                                                       | `pnpm install --frozen-lockfile` |
-| Lint everything                                               | `pnpm lint`                      |
-| Fix lint/format                                               | `pnpm lint:fix` && `pnpm format` |
-| Typecheck                                                     | `pnpm typecheck`                 |
-| Unit tests (all JS/TS)                                        | `pnpm test`                      |
-| Unit tests with coverage                                      | `pnpm test:cov`                  |
-| Build all                                                     | `pnpm build`                     |
-| Bundle-size check                                             | `pnpm size`                      |
-| Regenerate protocol types + tokens                            | `pnpm generate`                  |
-| Full local gate (what CI runs on a PR)                        | `pnpm verify`                    |
-| Validate current branch name (C-4.4)                          | `pnpm check:branch-name`         |
-| Install local git hooks (commitlint/lint-staged/branch check) | `pnpm prepare`                   |
+| Task                                                                                       | Command                          |
+| ------------------------------------------------------------------------------------------ | -------------------------------- |
+| Install                                                                                    | `pnpm install --frozen-lockfile` |
+| Lint everything                                                                            | `pnpm lint`                      |
+| Fix lint/format                                                                            | `pnpm lint:fix` && `pnpm format` |
+| Typecheck                                                                                  | `pnpm typecheck`                 |
+| Unit tests (all JS/TS)                                                                     | `pnpm test`                      |
+| Unit tests with coverage                                                                   | `pnpm test:cov`                  |
+| Build all                                                                                  | `pnpm build`                     |
+| Bundle-size check                                                                          | `pnpm size`                      |
+| Regenerate protocol types + tokens                                                         | `pnpm generate`                  |
+| Architecture-boundary contracts (import-linter + dependency-cruiser, C-3.1..C-3.5, §9 #18) | `pnpm arch` (or `make arch`)     |
+| Full local gate (what CI runs on a PR)                                                     | `pnpm verify`                    |
+| Validate current branch name (C-4.4)                                                       | `pnpm check:branch-name`         |
+| Install local git hooks (commitlint/lint-staged/branch check)                              | `pnpm prepare`                   |
 
 ### `apps/web`
 

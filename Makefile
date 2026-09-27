@@ -1,4 +1,4 @@
-.PHONY: governance dev test gen up down reset
+.PHONY: governance dev test gen up down reset arch
 
 # E02-T01: root convenience targets delegating to pnpm/uv (20-architecture.md
 # §5 Tooling). Thin wrappers only — the pnpm/turbo task graph and the uv/ruff
@@ -28,6 +28,13 @@ down:
 reset:
 	docker compose -f infra/docker-compose.dev.yml --profile core --profile obs --profile cold down -v
 
+
+# E02-T06: module-boundary architecture gate (CONSTITUTION.md §3, C-3.1..C-3.5,
+# §9 #18). Regenerates/checks services/api/.importlinter against
+# docs/plan/module-contracts.toml, runs dependency-cruiser (frontend) and
+# import-linter (backend). Wired into `pnpm verify`.
+arch:
+	pnpm arch
 
 # GOV-001 (CODEOWNERS coverage check) + GOV-002 (rule-reference link check) +
 # GOV-003 (single-source-of-truth duplication check). Stdlib-only Python; runs

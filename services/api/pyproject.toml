@@ -70,6 +70,9 @@ select = ["E", "F", "I", "UP", "B", "S", "ASYNC", "RUF"]
 # generated INSERT/CREATE statements at 100 cols hurts readability without
 # improving anything (E-4.16: seed rows come from a generator, not hand-tuning).
 "candleviewer/migrations/versions/**" = ["E501"]
+# E02-T06 arch-gate negative tests invoke the pinned local toolchain (uv/npx/git)
+# with hardcoded argument lists — not untrusted input; S603 is a false positive here.
+"tests/unit/architecture/test_negative_arch_violations.py" = ["S101", "S603"]
 
 [tool.black]
 line-length = 100

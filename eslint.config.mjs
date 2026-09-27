@@ -13,6 +13,7 @@ export default [
       "scripts/**/*.{mjs,cjs,js}",
       "packages/*/scripts/**/*.{mjs,cjs,js}",
       "*.config.{mjs,cjs,js}",
+      ".dependency-cruiser.js",
     ],
     languageOptions: {
       globals: {
