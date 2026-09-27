@@ -568,15 +568,7 @@ export interface WsOrders {
     symbol: string;
     side?: "buy" | "sell";
     order_type?: "market" | "limit";
-    intent?:
-      | "entry"
-      | "stop_loss"
-      | "take_profit"
-      | "scale_in"
-      | "scale_out"
-      | "flatten"
-      | "reverse"
-      | "algo_child";
+    intent?: "entry" | "stop_loss" | "take_profit" | "scale_in" | "scale_out" | "flatten" | "reverse" | "algo_child";
     state:
       | "new"
       | "pending_submit"
@@ -624,16 +616,7 @@ export interface WsOrders {
     /**
      * What caused this frame; drives UI animation and the order-timeline widget.
      */
-    change?:
-      | "created"
-      | "submitted"
-      | "ack"
-      | "fill"
-      | "amend"
-      | "cancel"
-      | "reject"
-      | "expire"
-      | "reconcile";
+    change?: "created" | "submitted" | "ack" | "fill" | "amend" | "cancel" | "reject" | "expire" | "reconcile";
     /**
      * Epoch milliseconds, UTC.
      */
@@ -851,14 +834,7 @@ export interface WsRules {
   events?: {
     rule_id: string;
     run_id: string;
-    kind:
-      | "evaluated"
-      | "suppressed"
-      | "action_sent"
-      | "action_result"
-      | "error"
-      | "started"
-      | "finished";
+    kind: "evaluated" | "suppressed" | "action_sent" | "action_result" | "error" | "started" | "finished";
     /**
      * Epoch milliseconds, UTC.
      */
@@ -881,7 +857,7 @@ export interface WsSub {
     ...{
       ch: string;
       opts?: WsOptions;
-    }[],
+    }[]
   ];
   snapshot?: boolean;
   replay_session_id?: string | null;
@@ -938,20 +914,7 @@ export interface WsOptions {
     | [string, string, string, string, string, string, string, string, string]
     | [string, string, string, string, string, string, string, string, string, string]
     | [string, string, string, string, string, string, string, string, string, string, string]
-    | [
-        string,
-        string,
-        string,
-        string,
-        string,
-        string,
-        string,
-        string,
-        string,
-        string,
-        string,
-        string,
-      ];
+    | [string, string, string, string, string, string, string, string, string, string, string, string];
   bar_type?: "time" | "tick" | "volume" | "range" | "delta" | "renko" | "pnf" | "heikin_ashi";
   param?: string;
   params?: {
@@ -1157,15 +1120,7 @@ export interface WsTradeGroups {
     symbol?: string;
     side?: "buy" | "sell";
     intent?: string;
-    status:
-      | "draft"
-      | "submitting"
-      | "partially_open"
-      | "open"
-      | "closing"
-      | "closed"
-      | "failed"
-      | "cancelled";
+    status: "draft" | "submitting" | "partially_open" | "open" | "closing" | "closed" | "failed" | "cancelled";
     atomicity?: "best_effort" | "all_or_none";
     algo_kind?: "none" | "oco" | "iceberg" | "twap" | "chase" | "scaled" | "bracket";
     rule_id?: string | null;
