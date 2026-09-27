@@ -31,13 +31,27 @@ def pg_dsn() -> Iterator[str]:
         yield container.get_connection_url().replace("postgresql+psycopg2", "postgresql+asyncpg")
 
 
+def _alembic_sync_dsn(async_dsn: str) -> str:
+    # SQLAlchemy's `postgresql://` default dialect is psycopg2, which is not
+    # a project dependency; force the installed sync driver (psycopg v3) so
+    # `engine_from_config` in `candleviewer/migrations/env.py` can connect.
+    return async_dsn.replace("postgresql+asyncpg", "postgresql+psycopg")
+
+
 def _alembic(dsn: str, *args: str) -> None:
+    # `candleviewer/migrations/env.py` runs migrations with a synchronous
+    # SQLAlchemy engine (`engine_from_config` + `connectable.connect()`), so
+    # the DSN handed to the alembic subprocess must use the sync `psycopg`
+    # driver, not `asyncpg` (which requires an async engine and otherwise
+    # fails with `sqlalchemy.exc.MissingGreenlet`). The app itself still uses
+    # the asyncpg DSN (`pg_dsn`) for everything else in this module.
+    #
     # Fixed argv (sys.executable + literal alembic subcommands from this test
     # module only); no shell, no untrusted input.
     subprocess.run(  # noqa: S603 -- fixed argv, literal alembic subcommands, no shell
         [sys.executable, "-m", "alembic", *args],
         cwd=_SERVICES_API_ROOT,
-        env={**os.environ, "CV_PG_DSN": dsn},
+        env={**os.environ, "CV_PG_DSN": _alembic_sync_dsn(dsn)},
         check=True,
     )
 
