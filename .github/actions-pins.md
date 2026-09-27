@@ -19,6 +19,8 @@ cases Dependabot hasn't caught up with yet.
 | `actions/setup-node` | `0a44ba7841725637a19e28fa30b79a866c81b0a6` | `v4.0.4` | `pr.yml` |
 | `actions/github-script` | `f28e40c7f34bde8b3046d885e986cb6290c5673b` | `v7.0.1` | `governance-drift.yml` |
 | `dorny/paths-filter` | `de90cc6fb38fc0963ad72b210f1f284cd68cea36` | `v3.0.2` | `pr.yml` |
+| `astral-sh/setup-uv` | `c18668ad3cf93ea998bef934396af7bb5c839dc7` | `v10.2.0` | `_job-py.yml` |
+| `actions/upload-artifact` | `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a` | `v7.0.1` | `_job-py.yml` |
 
 Verification: `tools/ci/check_action_pins.py .github/workflows` fails the
 build if any `uses:` line drifts back to a tag, and independently rejects any

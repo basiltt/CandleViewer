@@ -101,9 +101,11 @@ ignore_missing_imports = true
 asyncio_mode = "auto"
 markers = [
   "integration: needs the docker compose stack (Postgres/QuestDB)",
+  "integration_db: integration test needing the CI Postgres/QuestDB service containers (E03-T03, SR-131)",
+  "exchange_smoke: manual-only smoke test against a real exchange host — deselected in CI (E03-T03, SR-140)",
   "flaky: quarantined per Constitution C-9.3 — must link a P1 ticket",
 ]
-addopts = "--cov=candleviewer --cov-branch --cov-fail-under=85"
+addopts = "--strict-markers --cov=candleviewer --cov-branch --cov-fail-under=85"
 testpaths = ["tests"]
 
 [tool.coverage.run]

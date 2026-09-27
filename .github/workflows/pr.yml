@@ -180,6 +180,15 @@ jobs:
     if: ${{ needs.changed-paths.outputs.py == 'true' }}
     uses: ./.github/workflows/_job-py.yml
 
+  # `_job-py.yml`'s internal `architecture` job (import-linter, ADR-0004)
+  # cannot itself be `needs:`-ed from the caller because reusable-workflow
+  # jobs aren't addressable individually — but `py`'s conclusion already
+  # reflects it (the architecture-contract step runs inside that job and
+  # fails it on a violation). No separate top-level job is added here; the
+  # `architecture` required-check name is the job of that name inside
+  # `_job-py.yml`, visible in the PR checks list once GitHub Actions exposes
+  # reusable-workflow job names ("_job-py / architecture").
+
   contract:
     name: contract
     needs: changed-paths

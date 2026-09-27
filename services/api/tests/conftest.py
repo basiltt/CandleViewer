@@ -12,6 +12,12 @@ from dataclasses import dataclass
 
 import pytest
 
+# Re-exported so the autouse fixture is picked up for every test under
+# services/api/tests/** (E03-T03 network guard, ADR-0012 / SR-140). Import
+# has a side effect of registering the fixture with pytest; do not remove
+# even though `_cv_network_guard` looks unused to a linter.
+from tests._ci_network_guard import _cv_network_guard  # noqa: F401
+
 
 @dataclass(frozen=True)
 class FakeAppContext:
