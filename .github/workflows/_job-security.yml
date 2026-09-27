@@ -65,7 +65,12 @@ jobs:
         run: |
           set -euo pipefail
           shopt -s nullglob
-          for f in codeql-results/*.sarif; do
+          files=(codeql-results/*.sarif)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "CI-SEC-005: codeql produced no SARIF output under codeql-results/ — scanner infrastructure failure" >&2
+            exit 1
+          fi
+          for f in "${files[@]}"; do
             python tools/ci/security_gate.py --tool codeql --report "$f"
           done
 
@@ -105,7 +110,18 @@ jobs:
           if [ -d .semgrep ]; then CONFIGS="$CONFIGS .semgrep"; fi
           CONFIG_ARGS=""
           for c in $CONFIGS; do CONFIG_ARGS="$CONFIG_ARGS --config $c"; done
-          semgrep scan $CONFIG_ARGS --sarif --output semgrep.sarif || true
+          # --error makes semgrep exit non-zero on findings AND on engine errors;
+          # security_gate.py is what decides pass/fail on findings, so we only
+          # want to swallow the "findings present" exit code (1), never a
+          # genuine engine/config failure (>1) — CI-SEC-005 must not pass-by-default.
+          set +e
+          semgrep scan $CONFIG_ARGS --sarif --output semgrep.sarif
+          status=$?
+          set -e
+          if [ "$status" -gt 1 ]; then
+            echo "CI-SEC-005: semgrep exited $status (engine/config error) — scanner infrastructure failure" >&2
+            exit "$status"
+          fi
 
       - name: Evaluate Semgrep findings (security_gate.py, CI-SEC-001/004)
         run: python tools/ci/security_gate.py --tool semgrep --report semgrep.sarif
@@ -172,7 +188,10 @@ jobs:
       - name: Run pip-audit against services/api dependencies
         run: |
           set -euo pipefail
-          pip install -e services/api --no-deps --quiet || true
+          # Install with real dependencies (no --no-deps) so pip-audit and
+          # pip-licenses (license-scan job) actually see the backend's
+          # third-party packages, not just runner tooling.
+          pip install -e services/api --quiet
           pip-audit --format json --output pip-audit.json --progress-spinner off || true
 
       - name: Evaluate pip-audit findings (security_gate.py, CI-SEC-001/004)
@@ -276,14 +295,17 @@ jobs:
       - name: Install pip-licenses
         run: |
           set -euo pipefail
-          pip install -e services/api --no-deps --quiet || true
+          # Real dependency install (no --no-deps) so pip-licenses reports the
+          # actual third-party licences services/api ships with, not just
+          # runner tooling.
+          pip install -e services/api --quiet
           pip install "pip-licenses==4.5.1"
 
       - name: Collect Python licences
         run: pip-licenses --format=json --output-file pip-licenses.json
 
       - name: Collect JS/TS licences
-        run: pnpm dlx license-checker --production --json > license-checker.json || echo '{}' > license-checker.json
+        run: pnpm dlx license-checker --production --json > license-checker.json
 
       - name: Combine licence reports
         run: |
