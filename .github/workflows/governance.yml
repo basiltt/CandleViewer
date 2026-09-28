@@ -1,9 +1,12 @@
 name: governance
 
 # Minimal "governance" required-check job referenced by
-# .github/branch-protection.json phase 1 (E01-T08). Runs the GOV-00x
-# structural checks that exist today; E01-Q02 is the owning ticket for
-# growing this into the full governance regression pack.
+# .github/branch-protection.json phase 1 (E01-T08). E01-Q02 grows this into
+# the full governance regression pack: run order is cheapest-first with NO
+# fail-fast (every checker runs via `continue-on-error: true` + its own
+# step id, and a final step fails the job if any checker failed), so a
+# contributor sees every problem in one iteration instead of a drip-feed of
+# CI failures across re-runs.
 
 on:
   pull_request:
@@ -29,31 +32,128 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install check dependencies (PyYAML for GOV-004, pytest for unit tests)
+      - name: Job start time (for the perf annotation)
+        id: start
+        run: echo "epoch=$(date +%s)" >> "$GITHUB_OUTPUT"
+
+      - name: Install check dependencies (PyYAML for GOV-004, pytest + pytest-cov for unit tests)
         run: python -m pip install --quiet -r scripts/requirements-ci.txt
 
       - name: Rule-reference link check (GOV-002)
+        id: gov002
+        continue-on-error: true
         run: python scripts/check_rule_refs.py
 
       - name: Single-source-of-truth duplication check (GOV-003)
+        id: gov003
         # known pre-existing GOV-003 finding on docs/plan/04-security-program.md
         # predates this ticket (E01-T08) and is out of its scope to fix;
         # tracked as a follow-up (#1439) so this required check stays
-        # informative without blocking merges on an unrelated defect.
+        # informative without blocking merges on an unrelated defect (recorded
+        # explicitly in the final "all checkers" gate below, not silently).
         continue-on-error: true
         run: python scripts/check_sot_duplication.py
 
       - name: CODEOWNERS coverage check (GOV-001)
+        id: gov001
+        continue-on-error: true
         run: python scripts/check_codeowners_coverage.py
 
       - name: Issue form structural check (GOV-004)
+        id: gov004a
+        continue-on-error: true
         run: python scripts/check_issue_forms.py
 
-      - name: Backlog validation
+      - name: Backlog validation (GOV-004)
+        id: gov004b
+        continue-on-error: true
         run: python docs/plan/backlog/_tools/validate.py
 
       - name: Required-check reconciliation (GOV-005)
+        id: gov005
+        continue-on-error: true
         run: python scripts/check_required_check_reconciliation.py
 
-      - name: Governance script unit tests
-        run: python -m pytest scripts/tests -q
+      - name: markdownlint governance documents
+        id: mdlint
+        # Scoped to the core governance documents (CONSTITUTION/AGENTS/
+        # CONTRIBUTING/SECURITY + this ticket's own rule files), not the
+        # full docs/plan/ corpus, which carries a large pre-existing
+        # markdown-style backlog out of this ticket's scope to fix.
+        continue-on-error: true
+        run: |
+          npx --yes markdownlint-cli2@0.13.0 \
+            "CONSTITUTION.md" "AGENTS.md" "CONTRIBUTING.md" "SECURITY.md" \
+            ".claude/rules/*.md"
+
+      - name: Relative-link resolution over governance documents (GOV-LINK)
+        id: linkcheck
+        continue-on-error: true
+        run: python scripts/check_governance_links.py
+
+      - name: Governance canary self-test (proves the checkers can still fail)
+        id: selftest
+        continue-on-error: true
+        run: python scripts/gov_self_test.py
+
+      - name: Governance script unit tests (+ coverage gate, scripts/**)
+        id: unittests
+        continue-on-error: true
+        run: |
+          python -m pytest scripts/tests scripts/gh/tests -q \
+            --cov=scripts --cov-report=term-missing --cov-report=xml:gov-coverage.xml \
+            --cov-fail-under=85
+
+      - name: Ownership report (E01-T04 --report, uploaded for diffable history)
+        if: always()
+        run: python scripts/check_codeowners_coverage.py --report > codeowners-report.txt || true
+
+      - name: Backlog summary (E01-T06 --summary, uploaded for diffable history)
+        if: always()
+        run: python docs/plan/backlog/_tools/validate.py --summary > backlog-summary.txt || true
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: governance-artefacts
+          path: |
+            codeowners-report.txt
+            backlog-summary.txt
+            gov-coverage.xml
+          retention-days: 90
+          if-no-files-found: warn
+
+      - name: "Job duration annotation (perf budget: <=60s)"
+        if: always()
+        run: |
+          start="${{ steps.start.outputs.epoch }}"
+          end=$(date +%s)
+          duration=$((end - start))
+          echo "governance job duration: ${duration}s (budget: 60s)"
+          echo "::notice title=governance job duration::${duration}s (budget 60s)"
+
+      - name: All governance checkers must pass (GOV-003 and markdownlint/link-check are informative-only)
+        if: always()
+        run: |
+          fail=0
+          declare -A OUTCOMES=(
+            [gov002]="${{ steps.gov002.outcome }}"
+            [gov001]="${{ steps.gov001.outcome }}"
+            [gov004a]="${{ steps.gov004a.outcome }}"
+            [gov004b]="${{ steps.gov004b.outcome }}"
+            [gov005]="${{ steps.gov005.outcome }}"
+            [selftest]="${{ steps.selftest.outcome }}"
+            [unittests]="${{ steps.unittests.outcome }}"
+          )
+          for name in "${!OUTCOMES[@]}"; do
+            if [ "${OUTCOMES[$name]}" != "success" ]; then
+              echo "governance: blocking checker '$name' did not pass (outcome=${OUTCOMES[$name]})"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "governance job: FAILED — see the checker step logs above for GOV-00n details"
+            exit 1
+          fi
+          echo "governance job: all blocking checkers passed"
+

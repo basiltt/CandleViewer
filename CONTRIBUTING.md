@@ -147,6 +147,26 @@ for the authoritative table (rules, CI check names, budgets, commands, repo layo
 policy, ticket schema, statechart contracts). If you find the same list copied into a second file, that
 copy is a bug — delete it and link to the owner instead.
 
+## Governance job (`GOV-00n` codes)
+
+The `governance` required check (`.github/workflows/governance.yml`, E01-Q02) runs every `GOV-00n`
+structural checker on every pull request, plus its own unit-test/coverage gate and a canary self-test.
+Each code names one checker and one fix path:
+
+| Code | Checker | What it means | Fix locally |
+|---|---|---|---|
+| `GOV-001` | `scripts/check_codeowners_coverage.py` | A tracked path has no `.github/CODEOWNERS` rule beyond an unintended catch-all. | Add a rule for the path (or extend an existing glob); run `python scripts/check_codeowners_coverage.py --report` to see the full path→owner table. |
+| `GOV-002` | `scripts/check_rule_refs.py` | A `C-x.y` rule id cited somewhere in the repo has no matching declaration in `CONSTITUTION.md`. | Fix the typo, or add the rule via the amendment process (`CONSTITUTION.md` §16) if it should exist. |
+| `GOV-003` | `scripts/check_sot_duplication.py` | A C-16.5-owned list (e.g. required-check names) is restated verbatim outside its owner file. | Delete the restatement and link to the owner file instead, or add a reviewed entry to `scripts/sot-allowlist.txt` with a `# reason:` line if the mention is prose, not a restated list. Currently informative-only (issue #1439) pending a pre-existing fix. |
+| `GOV-004` | `scripts/check_issue_forms.py`, `docs/plan/backlog/_tools/validate.py` | An issue form is structurally broken, or a backlog ticket fails schema/dependency/capacity validation. | Run the failing command locally for the exact violation and file:line; fix the form or ticket JSON. |
+| `GOV-005` | `scripts/check_required_check_reconciliation.py`, `scripts/check_branch_protection_drift.py` | The `governance` job name (or another required check) doesn't match between `.github/branch-protection.json`, `CONSTITUTION.md` §9, and the workflow files — or live branch protection has drifted from the desired-state file. | Reconcile the three sources by hand; for live drift, follow the break-glass runbook above if the drift was deliberate, otherwise re-apply `scripts/apply_branch_protection.py`. |
+| `GOV-LINK` | `scripts/check_governance_links.py` | A relative markdown link in a governance document (`CONSTITUTION.md`, `AGENTS.md`, `CONTRIBUTING.md`, `SECURITY.md`, `.claude/rules/*.md`) points at a path that no longer exists. | Fix the link target or remove the link. |
+
+The job also runs `python scripts/gov_self_test.py` — a canary that proves the checkers above still fail
+against deliberately-broken fixtures (the guard against a green tick that no longer checks anything) —
+and `python -m pytest scripts/tests --cov=scripts --cov-fail-under=85`, the ≥85% coverage gate on
+`scripts/**`. A failing self-test or a coverage drop blocks the merge the same as a `GOV-00n` finding.
+
 ## Branch protection break-glass runbook
 
 `main` protection (`.github/branch-protection.json`, applied by
