@@ -48,7 +48,7 @@ jobs:
     # AC1: keep type/* label and Kind field in agreement.
     if: >-
       github.event.sender.login != 'github-actions[bot]' &&
-      contains(fromJSON('["opened","edited","labeled","unlabeled"]'), github.event.action)
+      contains(fromJSON('["opened","labeled","unlabeled"]'), github.event.action)
     runs-on: ubuntu-latest
     permissions:
       issues: write
