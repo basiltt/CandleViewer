@@ -49,6 +49,14 @@ const ALLOWED_SCOPES = Array.from(
 
 module.exports = {
   extends: ["@commitlint/config-conventional"],
+  // Dependabot writes release-notes bodies with unbreakable long lines (URLs,
+  // changelog bullets). The header rules (type/scope/subject) still apply to
+  // its commits via the `commit-message.prefix` in .github/dependabot.yml;
+  // only the body line-length rule is relaxed, and only for that author.
+  ignores: [
+    (message) =>
+      /^chore\([a-z-]+\): bump /.test(message) && /Signed-off-by: dependabot\[bot\]/.test(message),
+  ],
   rules: {
     "type-enum": [
       2,
