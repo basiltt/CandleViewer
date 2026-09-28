@@ -77,9 +77,7 @@ class FakeMarketDataRepository:
     async def read_book_snapshot_at(
         self, sym: str, ts_us: int, depth: int, tier: str = "auto"
     ) -> BookSnapshotRow | None:
-        candidates = [
-            r for r in self._snapshots.values() if r.symbol == sym and r.ts_us <= ts_us
-        ]
+        candidates = [r for r in self._snapshots.values() if r.symbol == sym and r.ts_us <= ts_us]
         if not candidates:
             return None
         latest = max(candidates, key=lambda r: r.ts_us)
@@ -111,9 +109,7 @@ class FakeMarketDataRepository:
         self, sym: str, rng: TimeRange, tier: str = "auto"
     ) -> list[FootprintCellRow]:
         rows = [
-            r
-            for r in self._footprint.values()
-            if r.symbol == sym and _in_range(r.bar_ts_us, rng)
+            r for r in self._footprint.values() if r.symbol == sym and _in_range(r.bar_ts_us, rng)
         ]
         return sorted(rows, key=lambda r: (r.bar_ts_us, r.price_level))
 
@@ -134,7 +130,7 @@ class FakeUnitOfWork:
         self.committed = False
         self.rolled_back = False
 
-    async def __aenter__(self) -> "FakeUnitOfWork":
+    async def __aenter__(self) -> FakeUnitOfWork:
         return self
 
     async def __aexit__(self, exc_type: object, exc: object, tb: object) -> None:
@@ -175,9 +171,7 @@ class FakeColdTierRepository:
         """Test helper: make a subsequent `verify_checksums(run)` fail."""
         self._poisoned.add(run_id)
 
-    async def export_partition(
-        self, symbol: str, stream: StreamKind, rng: TimeRange
-    ) -> ExportRun:
+    async def export_partition(self, symbol: str, stream: StreamKind, rng: TimeRange) -> ExportRun:
         run = ExportRun(
             run_id=f"{symbol}:{stream.value}:{rng.start_us}:{rng.end_us}",
             symbol=symbol,
@@ -190,16 +184,10 @@ class FakeColdTierRepository:
         return run
 
     async def list_manifest(self, symbol: str, stream: StreamKind) -> list[ExportRun]:
-        runs = [
-            r
-            for r in self._runs.values()
-            if r.symbol == symbol and r.stream == stream
-        ]
+        runs = [r for r in self._runs.values() if r.symbol == symbol and r.stream == stream]
         return sorted(runs, key=lambda r: r.partition_range.start_us)
 
-    async def query(
-        self, symbol: str, stream: StreamKind, rng: TimeRange
-    ) -> list[dict[str, Any]]:
+    async def query(self, symbol: str, stream: StreamKind, rng: TimeRange) -> list[dict[str, Any]]:
         rows = self._rows.get((symbol, stream.value), [])
         return [r for r in rows if _in_range(int(r["ts_us"]), rng)]
 

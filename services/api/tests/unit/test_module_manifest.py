@@ -32,11 +32,7 @@ def test_manifest_covers_all_24_constitution_modules() -> None:
 
 @pytest.mark.parametrize(
     "package_dir",
-    [
-        entry["path"]
-        for entry in _MANIFEST["modules"]
-        if entry["id"] not in {"M1"}
-    ],
+    [entry["path"] for entry in _MANIFEST["modules"] if entry["id"] not in {"M1"}],
 )
 def test_module_has_public_surface_files(package_dir: str) -> None:
     root = _SERVICES_API_ROOT / package_dir

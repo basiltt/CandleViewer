@@ -11,7 +11,7 @@ dependencies = [
   "uvicorn[standard]>=0.30",
   "pydantic[email]>=2.7",
   "pydantic-settings>=2.3",
-  "sqlalchemy>=2.0",
+  "sqlalchemy[asyncio]>=2.0",
   "alembic>=1.13",
   "httpx>=0.27",
   "websockets>=12.0",
@@ -38,6 +38,7 @@ test = [
   "hypothesis>=6.108",
   "testcontainers[postgres]>=4.8",
   "psycopg[binary]>=3.2",
+  "asyncpg>=0.29",
 ]
 
 [build-system]
@@ -101,9 +102,11 @@ ignore_missing_imports = true
 asyncio_mode = "auto"
 markers = [
   "integration: needs the docker compose stack (Postgres/QuestDB)",
+  "integration_db: integration test needing the CI Postgres/QuestDB service containers (E03-T03, SR-131)",
+  "exchange_smoke: manual-only smoke test against a real exchange host — deselected in CI (E03-T03, SR-140)",
   "flaky: quarantined per Constitution C-9.3 — must link a P1 ticket",
 ]
-addopts = "--cov=candleviewer --cov-branch --cov-fail-under=85"
+addopts = "--strict-markers --cov=candleviewer --cov-branch --cov-fail-under=85"
 testpaths = ["tests"]
 
 [tool.coverage.run]

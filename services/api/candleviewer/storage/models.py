@@ -22,6 +22,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
+
 #: Aligned with `docs/plan/22-api-openapi.yaml` `StreamKind` and
 #: `docs/plan/21-database-schema.md` Sec.4. The OpenAPI enum only lists the
 #: raw ingestion streams (`trades`, `orderbook_delta`, ...); the engine's own

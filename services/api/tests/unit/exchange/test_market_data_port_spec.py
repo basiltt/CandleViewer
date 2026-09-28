@@ -75,6 +75,6 @@ def test_market_data_port_methods_are_all_coroutines_or_async_generators() -> No
         member = inspect.getattr_static(MarketDataPort, name)
         # Protocol methods are plain functions on the class; check the
         # underlying function is a coroutine function or async generator.
-        assert inspect.iscoroutinefunction(member) or inspect.isasyncgenfunction(
-            member
-        ), f"{name} must be declared async"
+        assert inspect.iscoroutinefunction(member) or inspect.isasyncgenfunction(member), (
+            f"{name} must be declared async"
+        )

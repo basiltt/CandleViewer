@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC
+
 import pytest
 from pydantic import ValidationError
 
@@ -31,10 +33,10 @@ def test_timerange_is_frozen() -> None:
 
 
 def test_timerange_from_datetimes_round_trips_to_microseconds() -> None:
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    start = datetime(2026, 1, 1, tzinfo=timezone.utc)
-    end = datetime(2026, 1, 1, 0, 0, 1, tzinfo=timezone.utc)
+    start = datetime(2026, 1, 1, tzinfo=UTC)
+    end = datetime(2026, 1, 1, 0, 0, 1, tzinfo=UTC)
     rng = TimeRange.from_datetimes(start, end)
     assert rng.end_us - rng.start_us == 1_000_000
 

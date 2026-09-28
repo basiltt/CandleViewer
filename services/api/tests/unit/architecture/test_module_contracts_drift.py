@@ -97,9 +97,9 @@ def manifest() -> dict[str, Any]:
 def test_backend_module_count_matches(constitution_lines: list[str]) -> None:
     section = _extract_section(constitution_lines, r"^## 3\. Module boundaries", r"^---$")
     backend = _parse_backend_table(section)
-    assert (
-        len(backend) == 24
-    ), f"CONSTITUTION.md §3 backend table has {len(backend)} modules, expected 24 (M1-M24)"
+    assert len(backend) == 24, (
+        f"CONSTITUTION.md §3 backend table has {len(backend)} modules, expected 24 (M1-M24)"
+    )
 
 
 def test_every_constitution_module_is_in_manifest(
@@ -109,9 +109,9 @@ def test_every_constitution_module_is_in_manifest(
     backend = _parse_backend_table(section)
     manifest_numbers = {m["number"].rstrip("b") for m in manifest["module"]}
     for number in backend:
-        assert (
-            number in manifest_numbers
-        ), f"{number} is in CONSTITUTION.md §3 but missing from docs/plan/module-contracts.toml"
+        assert number in manifest_numbers, (
+            f"{number} is in CONSTITUTION.md §3 but missing from docs/plan/module-contracts.toml"
+        )
 
 
 def test_manifest_path_is_dotted_candleviewer_import(manifest: dict[str, Any]) -> None:

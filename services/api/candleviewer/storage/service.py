@@ -78,7 +78,7 @@ class StorageService:
             raise StorageTierUnavailable("storage.start() has not been called")
         return self._retention
 
-    async def start(self, ctx: "AppContext") -> None:
+    async def start(self, ctx: AppContext) -> None:
         """Construct and "connect" the configured tier clients.
 
         On the `fake` backend this performs no I/O by construction — the
@@ -110,7 +110,7 @@ class StorageService:
         """
         pending = list(self._pending_writes)
         if pending:
-            done, not_done = await asyncio.wait(pending, timeout=grace_s)
+            _done, not_done = await asyncio.wait(pending, timeout=grace_s)
             for task in not_done:
                 task.cancel()
             for task in not_done:
@@ -164,7 +164,7 @@ class StorageService:
             return StorageHealthReport(
                 tiers=tuple(
                     TierHealth(
-                        tier=tier,  # type: ignore[arg-type]
+                        tier=tier,
                         state=TierState.OK,
                         latency_ms=latency_ms,
                         detail="fake/healthy",

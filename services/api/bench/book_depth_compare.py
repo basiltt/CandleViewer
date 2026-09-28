@@ -87,7 +87,7 @@ SYMBOLS: dict[str, dict[str, float]] = {
 }
 
 DECISION_RULE = (
-    "if depth 500 exceeds 0.5 vCPU/symbol or 300 MB/symbol, depth 200 is " "chosen outright"
+    "if depth 500 exceeds 0.5 vCPU/symbol or 300 MB/symbol, depth 200 is chosen outright"
 )
 CPU_BUDGET_VCPU_PER_SYMBOL = 0.5
 MEM_BUDGET_MB_PER_SYMBOL = 300.0

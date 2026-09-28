@@ -26,8 +26,12 @@ def repo(request: pytest.FixtureRequest) -> MarketDataRepository:
 
 async def test_write_then_read_trades_round_trips(repo: MarketDataRepository) -> None:
     rows = [
-        TradeRow(ts_us=1_000, symbol="BTCUSDT", price="50000", qty="0.1", side="buy", trade_id="t1"),
-        TradeRow(ts_us=2_000, symbol="BTCUSDT", price="50010", qty="0.2", side="sell", trade_id="t2"),
+        TradeRow(
+            ts_us=1_000, symbol="BTCUSDT", price="50000", qty="0.1", side="buy", trade_id="t1"
+        ),
+        TradeRow(
+            ts_us=2_000, symbol="BTCUSDT", price="50010", qty="0.2", side="sell", trade_id="t2"
+        ),
     ]
     await repo.write_trades(rows)
     result = await repo.read_trades("BTCUSDT", TimeRange(start_us=0, end_us=3_000))

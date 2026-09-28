@@ -24,8 +24,10 @@ def test_storage_package_never_calls_os_environ_directly() -> None:
         for node in ast.walk(tree):
             if isinstance(node, ast.Attribute) and node.attr == "environ":
                 offenders.append(f"{path}:{node.lineno}")
-            if isinstance(node, ast.ImportFrom) and node.module == "os" and any(
-                alias.name == "environ" for alias in node.names
+            if (
+                isinstance(node, ast.ImportFrom)
+                and node.module == "os"
+                and any(alias.name == "environ" for alias in node.names)
             ):
                 offenders.append(f"{path}:{node.lineno}")
     assert not offenders, f"os.environ used directly in storage package: {offenders}"

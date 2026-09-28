@@ -13,7 +13,8 @@ unreachable (ticket "Technical notes / design"). Every read method takes a
 
 from __future__ import annotations
 
-from typing import Protocol, Sequence, runtime_checkable
+from collections.abc import Sequence
+from typing import Protocol, runtime_checkable
 
 from candleviewer.storage.models import TierHint, TimeRange
 from candleviewer.storage.repositories.rows import (
