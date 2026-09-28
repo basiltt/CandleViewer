@@ -41,6 +41,16 @@ import asyncpg
 _LOCK_KEY_NAME = "cv_migrations"
 _DEFAULT_LOCK_TIMEOUT_S = 300.0
 _SCHEME_RE = re.compile(r"^postgres(?:ql)?(?:\+[a-z0-9_]+)?://")
+# Matches the `user:pass@` (or bare `user@`) credential segment of any DSN
+# that may appear verbatim in alembic/psycopg driver error text on stderr.
+_DSN_CREDENTIALS_RE = re.compile(r"://[^/@\s]+@")
+
+
+def redact_dsn_credentials(text: str) -> str:
+    """Strip `user:pass@`/`user@` DSN credentials from arbitrary text (e.g.
+    subprocess stderr) before it is logged or embedded in an exception
+    message (C-12.6 — never let a secret reach a log/exception)."""
+    return _DSN_CREDENTIALS_RE.sub("://***@", text)
 
 
 def to_sync_dsn(dsn: str) -> str:
@@ -116,7 +126,8 @@ async def run_migrations_under_advisory_lock(
             )
             if result.returncode != 0:
                 raise MigrationApplyFailed(
-                    f"alembic upgrade head failed (exit {result.returncode}): {result.stderr}"
+                    f"alembic upgrade head failed (exit {result.returncode}): "
+                    f"{redact_dsn_credentials(result.stderr)}"
                 )
             return MigrationRunResult(applied=True, stdout=result.stdout, stderr=result.stderr)
         finally:

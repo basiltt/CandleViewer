@@ -23,6 +23,17 @@ import sys
 from pathlib import Path
 
 
+def _to_psql_dsn(dsn: str, root: Path) -> str:
+    """Normalise any SQLAlchemy-style driver suffix (`+asyncpg`, `+psycopg`,
+    ...) to the plain `postgresql://` form `psql` accepts, reusing the single
+    source of truth in `candleviewer.migrations.boot` instead of an ad-hoc
+    string replace that only handled `+asyncpg`."""
+    sys.path.insert(0, str(root))
+    from candleviewer.migrations.boot import to_asyncpg_dsn
+
+    return to_asyncpg_dsn(dsn)
+
+
 def _latest_snapshot(schema_dir: Path) -> Path | None:
     if not schema_dir.is_dir():
         return None
@@ -47,15 +58,18 @@ def main(argv: list[str] | None = None) -> int:
     snapshot = _latest_snapshot(schema_dir)
 
     if snapshot is None:
+        # TODO(E03-T10 follow-up): turn this into a hard failure once the
+        # first release tag exists and schema/<tag>.sql is published — a
+        # perpetual "nothing to verify" pass must not survive past that.
         print(
-            "CI-MIG-004: no previous-release schema snapshot found under "
-            f"{schema_dir} yet (no release tag has been cut) — nothing to "
-            "verify; this check activates automatically once the first "
-            "release publishes schema/<tag>.sql"
+            "::notice::CI-MIG-004: no previous-release schema snapshot found "
+            f"under {schema_dir} yet (no release tag has been cut) — this "
+            "check is vacuous until the first release publishes "
+            "schema/<tag>.sql; see the TODO in this script for the follow-up"
         )
         return 0
 
-    sync_dsn = args.dsn.replace("postgresql+asyncpg", "postgresql")
+    sync_dsn = _to_psql_dsn(args.dsn, root)
     restore = subprocess.run(
         ["psql", sync_dsn, "-v", "ON_ERROR_STOP=1", "-f", str(snapshot)],
         capture_output=True,

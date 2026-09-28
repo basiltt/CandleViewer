@@ -19,6 +19,7 @@ import pytest
 from candleviewer.migrations.boot import (
     MigrationApplyFailed,
     MigrationLockTimeout,
+    redact_dsn_credentials,
     run_migrations_under_advisory_lock,
     to_asyncpg_dsn,
     to_sync_dsn,
@@ -132,3 +133,27 @@ async def test_alembic_subprocess_receives_sync_dsn(fake_conn: _FakeConn) -> Non
 
     assert run_mock.call_args.kwargs["env"]["CV_PG_DSN"] == "postgresql+psycopg://u:p@h/d"
     assert connect.call_args.kwargs["dsn"] == "postgresql://u:p@h/d"
+
+
+def test_redact_dsn_credentials_strips_user_and_password() -> None:
+    text = "connection failed: postgresql+psycopg://cv_app:s3cr3t@db-host:5432/candleviewer refused"
+    redacted = redact_dsn_credentials(text)
+    assert "s3cr3t" not in redacted
+    assert "cv_app" not in redacted
+    assert "postgresql+psycopg://***@db-host:5432/candleviewer" in redacted
+
+
+async def test_migration_apply_failed_message_redacts_dsn_in_stderr(fake_conn: _FakeConn) -> None:
+    stderr = "sqlalchemy.exc.OperationalError: postgresql+psycopg://cv_app:s3cr3t@db-host:5432/d"
+    completed = subprocess.CompletedProcess(args=[], returncode=1, stdout="", stderr=stderr)
+    with (
+        patch("candleviewer.migrations.boot.asyncpg.connect", AsyncMock(return_value=fake_conn)),
+        patch("candleviewer.migrations.boot.subprocess.run", return_value=completed),
+        pytest.raises(MigrationApplyFailed) as excinfo,
+    ):
+        await run_migrations_under_advisory_lock(
+            "postgresql://x", services_api_root=Path("."), lock_timeout_s=5.0
+        )
+
+    assert "s3cr3t" not in str(excinfo.value)
+    assert "cv_app" not in str(excinfo.value)
