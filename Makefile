@@ -1,4 +1,4 @@
-.PHONY: governance dev dev-down test gen gen-check up down reset arch
+.PHONY: governance dev dev-down test gen gen-check up down reset arch security
 
 # E02-T01: root convenience targets delegating to pnpm/uv (20-architecture.md
 # §5 Tooling). Thin wrappers only — the pnpm/turbo task graph and the uv/ruff
@@ -52,6 +52,14 @@ reset:
 # import-linter (backend). Wired into `pnpm verify`.
 arch:
 	pnpm arch
+
+# E02-X02: single local entry point for everything the security lane
+# (.github/workflows/_job-security.yml) runs, reduced through the same
+# tools/ci/security_gate.py policy. Tools unrunnable on this machine
+# (no Windows semgrep wheel, no docker) report SKIPPED with a reason
+# rather than being silently treated as clean (CI-SEC-005 semantics).
+security:
+	python tools/ci/run_security_local.py
 
 # GOV-001 (CODEOWNERS coverage check) + GOV-002 (rule-reference link check) +
 # GOV-003 (single-source-of-truth duplication check). Stdlib-only Python; runs

@@ -3,3 +3,8 @@ name: candleviewer-codeql
 paths-ignore:
   - docs/plan/_*.py
   - docs/research/**
+  # Semgrep rule-test fixtures under .semgrep/tests/ are intentional
+  # negative examples (never executed as application code) exercising the
+  # cv-* custom rules in .semgrep/*.yml (E02-X02); they deliberately contain
+  # the exact bad patterns those rules exist to catch.
+  - .semgrep/tests/**

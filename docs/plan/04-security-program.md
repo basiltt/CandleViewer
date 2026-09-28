@@ -1148,6 +1148,22 @@ Every PR carries exactly one security risk label, applied by the author and conf
   11. `cv-unpinned-action` — a GitHub Action referenced by tag instead of SHA.
   12. `cv-path-from-request` — filesystem path constructed from request data.
 
+E02-X02 lands the first slice of this pack ahead of application code existing:
+`cv-withdrawal-endpoint-ban` (C-1.2 item 5 / C-2.7 — the static half of the
+`20-architecture.md` §2.2 B3 startup self-check), `cv-adapter-isolation`
+(C-2.2, generalises the ticket's "no `bybit` outside `exchange/bybit/`"
+scenario), `cv-raw-sql-string-interpolation`, `cv-secret-shaped-literal` and
+`cv-log-secret` above. Each rule has a `--test` fixture pair (positive +
+negative) under `.semgrep/tests/`. The remaining rules in the numbered list
+land with the application code they guard (route/OMS/rule-engine/Electron
+work does not exist yet). Run the whole pack locally with `pnpm security` /
+`make security` (`tools/ci/run_security_local.py`), which also runs
+Bandit, pip-audit, `pnpm audit`, gitleaks and the licence check end to end
+where the tool is installed, reducing every report through the same
+`tools/ci/security_gate.py` policy CI uses; an unrunnable tool (no Windows
+semgrep wheel, no docker) is reported `SKIPPED` with a reason, never
+silently treated as a clean scan.
+
 ### 12.3 Required status checks on `main`
 
 The exact required-check names are owned solely by `CONSTITUTION.md` §9 (C-16.5) — do not restate them

@@ -18,6 +18,7 @@
     "size": "turbo run size",
     "generate": "turbo run generate",
     "arch": "node scripts/run-arch-checks.mjs",
+    "security": "python tools/ci/run_security_local.py",
     "verify": "turbo run verify && pnpm arch",
     "check:agents-commands": "node scripts/check-agents-commands.mjs",
     "check:branch-name": "node scripts/check-branch-name.mjs",
