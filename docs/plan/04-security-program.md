@@ -267,6 +267,11 @@ Standing assumptions for all areas: no public listener exists; all human actors 
 | W10 | Spoofing | Demo public market data is taken from a demo WS endpoint that does not exist, or demo/live endpoints are mixed within one session | M | M | Medium | SR-040a: demo has **no public WS**; mainnet public streams are used for market data while orders route to `api-demo.bybit.com`; the session banner states the order-routing environment explicitly | integration, e2e |
 | W11 | Repudiation | Candle treated as closed before Bybit's `confirm` flag is true, so recorded/rule-triggering data disagrees with the exchange | M | M | Medium | SR-040b `confirm` gating on every kline frame before a bar is persisted or fed to the rule engine | unit |
 
+> W2, W6, W9, W10, W11 above are re-derived in full, against the concrete E08-T01 design, in the
+> dedicated model `docs/security/threat-models/e08-exchange-boundary.md` (E08-X01), which also covers
+> the exchange-boundary elements (M3 port, M4 Bybit adapter, M6 ingestion) not enumerated by this
+> programme-level table.
+
 ### 5.6 Area 6 — Authentication & RBAC (A-03, A-04)
 
 | T | STRIDE | Threat | L | I | Risk | Mitigations | Residual |
