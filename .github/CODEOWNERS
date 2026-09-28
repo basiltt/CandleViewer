@@ -73,10 +73,11 @@
 # future: E02/later scaffolding; directory does not exist yet.
 /turbo.json                             @CandleViewer/devsecops @CandleViewer/frontend
 # future: E02/later scaffolding; directory does not exist yet.
-/quality-gates.json                     @CandleViewer/devsecops @CandleViewer/architecture
-/reports/bundle-size-baseline.json      @CandleViewer/devsecops @CandleViewer/frontend
 /tsconfig.base.json                     @CandleViewer/frontend @CandleViewer/architecture
 # future: E02/later scaffolding; directory does not exist yet.
+/quality-gates.json                     @CandleViewer/devsecops @CandleViewer/architecture
+# future: E02/later scaffolding; directory does not exist yet.
+/reports/bundle-size-baseline.json      @CandleViewer/devsecops @CandleViewer/frontend
 /eslint.config.mjs                      @CandleViewer/frontend @CandleViewer/devsecops
 /.dependency-cruiser.js                 @CandleViewer/frontend @CandleViewer/architecture
 # future: E02/later scaffolding; directory does not exist yet.
