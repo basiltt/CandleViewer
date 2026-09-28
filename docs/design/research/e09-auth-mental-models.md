@@ -7,6 +7,25 @@
 - **Out of scope (unchanged):** visual design (E09-D02..D06), RBAC denied-state vocabulary (E09-D09),
   Bybit-side auth/API-key handling (E27), password policy content (`04-security-program.md`).
 
+## Research boards (Penpot)
+
+Per `docs/design/README.md`, UX-research deliverables are drawn as boards on the ticket's Penpot page,
+not left as markdown alone. Page **`E09-D01`** in the CandleViewer Penpot file
+(`https://design.penpot.app/#/workspace?team-id=b564c72c-f31f-81ec-8008-b109a9175d0b&file-id=b564c72c-f31f-81ec-8008-b112c6fdc116&page-id=3d1e9f08-1714-8020-8008-b5531d291bae`)
+holds three boards backfilling the journey/mental-model/findings artefacts this report describes in prose:
+
+1. **Interruption journey map** — idle lock, absolute 12h expiry, step-up (F1–F4, AD-1..AD-3):
+
+   ![Interruption journey map](../E09/img/E09-D01-journey-interruption.png)
+
+2. **Recovery-code mental model — gap analysis** (intended vs. believed vs. observed-not-available, F5):
+
+   ![Recovery-code mental model](../E09/img/E09-D01-mental-model-recovery-codes.png)
+
+3. **Heuristic findings summary** (F1–F8 mapped to Nielsen's 10 heuristics):
+
+   ![Heuristic findings summary](../E09/img/E09-D01-heuristic-findings-summary.png)
+
 ## Method note (Agent-delivery adaptation, owner decision 2026-09-25)
 
 This ticket's brief calls for 3 moderated 45-minute sessions with the Owner and up to 2 prospective
