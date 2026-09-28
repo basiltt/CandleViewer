@@ -77,6 +77,11 @@ _ALLOWED_EXTRA_EXPORTS: dict[str, set[str]] = {
         "OmsErrorCode",
         "translate_exchange_error",
     },
+    # E09-T04: `Validator`/`ReadOnlyCheck` are the always-on read-only
+    # degradation boundary (docs/plan/20-architecture.md Sec.3.x Validator) —
+    # not `*Service`/`*Error` by name, but the module's documented public
+    # interface alongside `OmsService`.
+    "M14": {"Validator", "ReadOnlyCheck", "OrderPlacementRefused"},
 }
 
 
