@@ -13,6 +13,7 @@ import { captureMachineDescriptor } from "./machine.mjs";
 import { mulberry32, toSeed32 } from "./fixtures/rng.mjs";
 import { renderMarkdownSummary } from "./report.mjs";
 import { DEFAULT_REPETITIONS } from "./stats.mjs";
+import { generateM0Fixture, assertFixtureHash } from "./fixtures/index.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -40,6 +41,14 @@ function main() {
   const seedInput = args.seed ?? "20260928";
   const seed = toSeed32(seedInput);
   const durationMs = args.durationMs ? Number(args.durationMs) : 1000;
+
+  // Negative-guard AC (E06-Q01): if the caller records an expected fixture
+  // hash, a run producing a different fixture must fail loudly rather than
+  // silently proceed against unverified data.
+  if (args.expectedHash) {
+    const fixture = generateM0Fixture({ seed: seedInput });
+    assertFixtureHash(fixture, args.expectedHash);
+  }
 
   const scene = new StubScene({ seedRng: mulberry32(seed) });
   const report = runScenario({
