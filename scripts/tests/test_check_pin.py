@@ -1,0 +1,104 @@
+"""Unit tests for tools/ci/check_pin.py (E50-T57: xstate-statemachine pin
+must stay exact and hash-locked)."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from tools.ci.check_pin import (
+    PINNED_WHEEL_SHA256,
+    check_lock,
+    check_pyproject,
+    main,
+)
+
+VALID_PYPROJECT = """\
+[project]
+name = "candleviewer-api"
+dependencies = [
+  "fastapi>=0.115",
+  "xstate-statemachine==0.9.1",
+]
+"""
+
+VALID_LOCK = f"""\
+[[package]]
+name = "xstate-statemachine"
+version = "0.9.1"
+wheels = [
+    {{ url = "https://example.invalid/x.whl", hash = "sha256:{PINNED_WHEEL_SHA256}" }},
+]
+"""
+
+
+def _write(root: Path, rel: str, content: str) -> Path:
+    path = root / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+    return path
+
+
+def test_check_pyproject_exact_pin_passes(tmp_path: Path) -> None:
+    p = _write(tmp_path, "pyproject.toml", VALID_PYPROJECT)
+    assert check_pyproject(p) == []
+
+
+def test_check_pyproject_loose_specifier_fails(tmp_path: Path) -> None:
+    loose = VALID_PYPROJECT.replace("==0.9.1", "~=0.9.1")
+    p = _write(tmp_path, "pyproject.toml", loose)
+    violations = check_pyproject(p)
+    assert len(violations) == 1
+    assert "~=0.9.1" in str(violations[0])
+
+
+def test_check_pyproject_missing_entry_fails(tmp_path: Path) -> None:
+    missing = """\
+[project]
+name = "candleviewer-api"
+dependencies = ["fastapi>=0.115"]
+"""
+    p = _write(tmp_path, "pyproject.toml", missing)
+    violations = check_pyproject(p)
+    assert len(violations) == 1
+    assert "no 'xstate-statemachine' entry" in str(violations[0])
+
+
+def test_check_lock_matching_hash_passes(tmp_path: Path) -> None:
+    p = _write(tmp_path, "uv.lock", VALID_LOCK)
+    assert check_lock(p) == []
+
+
+def test_check_lock_mismatched_hash_fails(tmp_path: Path) -> None:
+    tampered = VALID_LOCK.replace(PINNED_WHEEL_SHA256, "f" * 64)
+    p = _write(tmp_path, "uv.lock", tampered)
+    violations = check_lock(p)
+    assert len(violations) == 1
+    assert "do not include the pinned hash" in str(violations[0])
+
+
+def test_check_lock_missing_package_fails(tmp_path: Path) -> None:
+    p = _write(
+        tmp_path, "uv.lock", '[[package]]\nname = "other-package"\nversion = "1.0"\n'
+    )
+    violations = check_lock(p)
+    assert len(violations) == 1
+    assert "no locked 'xstate-statemachine' package entry" in str(violations[0])
+
+
+def test_main_exits_zero_on_clean_repo(tmp_path: Path) -> None:
+    _write(tmp_path, "services/api/pyproject.toml", VALID_PYPROJECT)
+    _write(tmp_path, "services/api/uv.lock", VALID_LOCK)
+    assert main(["--root", str(tmp_path)]) == 0
+
+
+def test_main_exits_one_on_violation(tmp_path: Path) -> None:
+    _write(
+        tmp_path,
+        "services/api/pyproject.toml",
+        VALID_PYPROJECT.replace("==0.9.1", ">=0.9.1"),
+    )
+    _write(tmp_path, "services/api/uv.lock", VALID_LOCK)
+    assert main(["--root", str(tmp_path)]) == 1
