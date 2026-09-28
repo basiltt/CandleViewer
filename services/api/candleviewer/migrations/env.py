@@ -6,6 +6,10 @@ migration history against. The `sqlalchemy.url` is resolved from
 `Settings.pg_dsn` at runtime — never hard-coded here (C-12.2, no secrets in
 code); `CV_PG_DSN` overrides it directly for tooling (e.g. the integration
 test's testcontainers DSN) without going through `.env`.
+
+Alembic runs synchronously: whichever source the URL comes from, it is
+normalised to the sync psycopg 3 driver (`postgresql+psycopg://`) — an async
+driver here raises `MissingGreenlet` (see `candleviewer.migrations.boot`).
 """
 
 from __future__ import annotations
@@ -25,16 +29,18 @@ if config.config_file_name is not None:
 
 
 def _get_url() -> str:
+    from candleviewer.migrations.boot import to_sync_dsn
+
     # `CV_PG_DSN` env override takes priority so tooling (the identity-migration
     # integration test, `alembic upgrade --sql` in CI) can point at a
     # testcontainers/scratch DSN without touching `.env` or `Settings` defaults.
     override = os.environ.get("CV_PG_DSN")
     if override:
-        return override
+        return to_sync_dsn(override)
 
     from candleviewer.settings import get_settings
 
-    return get_settings().pg_dsn.get_secret_value()
+    return to_sync_dsn(get_settings().pg_dsn.get_secret_value())
 
 
 def run_migrations_offline() -> None:

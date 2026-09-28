@@ -20,6 +20,8 @@ from candleviewer.migrations.boot import (
     MigrationApplyFailed,
     MigrationLockTimeout,
     run_migrations_under_advisory_lock,
+    to_asyncpg_dsn,
+    to_sync_dsn,
 )
 
 
@@ -101,3 +103,32 @@ async def test_lock_timeout_raises_ci_dep_004(fake_conn: _FakeConn) -> None:
         )
 
     assert fake_conn.closed is True
+
+
+@pytest.mark.parametrize(
+    "dsn",
+    [
+        "postgresql+asyncpg://u:p@h:5432/d",
+        "postgresql+psycopg_async://u:p@h:5432/d",
+        "postgresql+psycopg2://u:p@h:5432/d",
+        "postgresql://u:p@h:5432/d",
+    ],
+)
+def test_to_sync_dsn_any_driver_uses_sync_psycopg(dsn: str) -> None:
+    assert to_sync_dsn(dsn) == "postgresql+psycopg://u:p@h:5432/d"
+    assert to_asyncpg_dsn(dsn) == "postgresql://u:p@h:5432/d"
+
+
+async def test_alembic_subprocess_receives_sync_dsn(fake_conn: _FakeConn) -> None:
+    completed = subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
+    connect = AsyncMock(return_value=fake_conn)
+    with (
+        patch("candleviewer.migrations.boot.asyncpg.connect", connect),
+        patch("candleviewer.migrations.boot.subprocess.run", return_value=completed) as run_mock,
+    ):
+        await run_migrations_under_advisory_lock(
+            "postgresql+asyncpg://u:p@h/d", services_api_root=Path("."), lock_timeout_s=5.0
+        )
+
+    assert run_mock.call_args.kwargs["env"]["CV_PG_DSN"] == "postgresql+psycopg://u:p@h/d"
+    assert connect.call_args.kwargs["dsn"] == "postgresql://u:p@h/d"

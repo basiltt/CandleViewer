@@ -15,11 +15,22 @@ head` (matching `alembic.ini`'s `script_location`) so the exact same
 programmatic entrypoint `env.py` uses for offline/online mode is exercised,
 keeping this helper and CI's `alembic upgrade head` step identical in
 behaviour.
+
+Driver policy (one consistent approach): Alembic always runs SYNCHRONOUSLY on
+psycopg 3 (`postgresql+psycopg://`). The subprocess receives the target DSN
+explicitly via `CV_PG_DSN`, normalised by `to_sync_dsn`, and `env.py` applies
+the same normalisation — handing Alembic's sync engine an async driver
+(`+asyncpg` / `+psycopg_async`) raises `MissingGreenlet`. The advisory lock is
+held on a dedicated asyncpg session for the whole subprocess lifetime; since
+`pg_advisory_lock` is session-scoped this serialises every booting process
+without the migration needing to share that connection.
 """
 
 from __future__ import annotations
 
 import asyncio
+import os
+import re
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -29,6 +40,17 @@ import asyncpg
 
 _LOCK_KEY_NAME = "cv_migrations"
 _DEFAULT_LOCK_TIMEOUT_S = 300.0
+_SCHEME_RE = re.compile(r"^postgres(?:ql)?(?:\+[a-z0-9_]+)?://")
+
+
+def to_sync_dsn(dsn: str) -> str:
+    """Rewrite any Postgres DSN to the sync psycopg 3 driver Alembic uses."""
+    return _SCHEME_RE.sub("postgresql+psycopg://", dsn, count=1)
+
+
+def to_asyncpg_dsn(dsn: str) -> str:
+    """Rewrite any Postgres DSN to the plain form `asyncpg.connect` accepts."""
+    return _SCHEME_RE.sub("postgresql://", dsn, count=1)
 
 
 class MigrationLockTimeout(Exception):
@@ -63,10 +85,11 @@ async def run_migrations_under_advisory_lock(
     release the lock. Blocks (does not poll/retry) while another process
     holds the lock, bounded by `lock_timeout_s`.
 
-    `dsn` must be a plain `postgresql://` (not `+asyncpg`) DSN for
-    `asyncpg.connect`; callers strip the SQLAlchemy driver suffix.
+    `dsn` may carry any SQLAlchemy driver suffix; it is normalised to plain
+    `postgresql://` for the lock connection and to `postgresql+psycopg://`
+    for the Alembic subprocess (see module docstring).
     """
-    conn = await asyncpg.connect(dsn=dsn)
+    conn = await asyncpg.connect(dsn=to_asyncpg_dsn(dsn))
     try:
         try:
             await asyncio.wait_for(
@@ -89,6 +112,7 @@ async def run_migrations_under_advisory_lock(
                 capture_output=True,
                 text=True,
                 timeout=lock_timeout_s,
+                env={**os.environ, "CV_PG_DSN": to_sync_dsn(dsn)},
             )
             if result.returncode != 0:
                 raise MigrationApplyFailed(
