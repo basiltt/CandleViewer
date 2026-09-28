@@ -304,6 +304,30 @@ Standing assumptions for all areas: no public listener exists; all human actors 
 | S5 | Tampering | Retention job deletes pinned data | L | M | Low | SR-099 pin flag honoured; dry-run report before destructive runs; deletions audited | Low |
 | S6 | Information disclosure | QuestDB/DuckDB consoles exposed without auth | M | H | **High** | SR-048 no data-store port published to the host; console disabled or loopback-bound with credentials | Low |
 
+**Implementation-level detail** (`docs/security/threat-models/E07-storage.md`, ticket E07-X01): the
+planning-level threats S1–S6 above are confirmed at their existing ratings against E07's real design.
+The implementation model adds the following, scoped to the ILP write path, PGWire read path, exporter +
+manifest, compactor, DuckDB view layer + Postgres attachment, retention reaper, and the Alembic migration
+path for E07's recorder/retention tables:
+
+| T | STRIDE | Threat | L | I | Risk | Mitigations | Residual |
+|---|--------|--------|---|---|------|-------------|----------|
+| S10 | Denial of service | ILP client on the recorder floods QuestDB faster than it can flush, causing unbounded WAL growth on the same volume as hot query data | M | H | **High** | SR-096 disk-budget guard extended to the ILP write path: rate-limited to configured symbol/depth budget, conservative commit-lag config, alert at 75%/pause at 90% | Low |
+| S11 | Repudiation | ILP has no per-row authentication; a rogue TB-3 process could inject fabricated rows attributed to the recorder | L | M | Low | SR-047 loopback/WSL-internal ILP port; `recording_sessions`/`recording_gaps` reconciliation detects divergence from the recorder's own record | Low |
+| S12 | Information disclosure | A backend module bypasses the storage repository layer and opens a direct PGWire connection, skipping scope checks | L | M | Low | ADR-0003 binding rule (all storage access via `storage/` repositories) + import-linter boundary | Low |
+| S13 | Elevation of privilege | PGWire query-path role can run DDL against QuestDB | L | H | Medium | Query-path role is read-only at the QuestDB permission level; DDL only via recorder bootstrap | Low |
+| S14 | Tampering | Exported dataset's manifest is regenerated from a stale checksum after a partition is silently rewritten | L | M | Low | Parquet partitions are append-only/immutable; exporter refuses to serve a dataset whose mtime postdates its manifest entry without a logged regeneration event | Low |
+| S15 | Tampering | Compaction crash mid-write leaves a gap invisible to the manifest | M | M | Medium | Atomic rename on success, never in-place write; manifest updated only after rename; `recording_gaps` reconciliation as backstop | Low |
+| S16 | Denial of service | Compaction starves concurrent export/replay reads of I/O, or a rename is read as partial data | L | L | Low | Atomic rename (readers see old or new partition, never partial); off-peak scheduling, rate-limited I/O | Low |
+| S17 | Elevation of privilege | DuckDB's Postgres attachment is opened with `cv_app`/`cv_owner` instead of `cv_ro`, giving analytics write access to the ledger | M | H | **High** | TB-3a boundary enforced structurally: attachment hard-coded to `cv_ro`; E07-T02 privilege-introspection test asserts zero write/DDL grants on `cv_ro` | Low, contingent on E07-T02's grant test shipping |
+| S18 | Information disclosure | A DuckDB view exposes S-class or P2-class Postgres columns to the analytics/export path | M | H | **High** | Explicit column projection only, never `SELECT *`; E07's own recorder/retention tables hold no S-class columns (see E07-storage.md §5) | Low |
+| S19 | Elevation of privilege | A Manager (not the Owner) changes global retention policy, e.g. `hot_days=0`, destroying the recording for everyone | M | H | **High** | Retention-policy mutation is Owner-only; policy change and resulting deletion are separately audited; reaper requires export-verified-before-drop (SR-094/SR-099) even when Owner-authorised | Low, contingent on E07-T05 implementing the ordered control flow in E07-storage.md §4 |
+| S20 | Tampering | A migration under E07 drops or rewrites an audited table | L | Critical-impact | **High** | CODEOWNER (data-owner) approval on the migrations path in addition to the standard two reviews; forward-only migrations (C-5.4); mandatory `pre_migration` backup | Low, contingent on E07-T02's CODEOWNERS gate |
+| S21 | Information disclosure | Postgres (not just QuestDB's console) is published to `0.0.0.0` by a compose misconfiguration | L | H | Medium | SR-047's startup bind healthcheck extended to assert every data-store bind (QuestDB PGWire/HTTP/ILP, Postgres), not just the console | Low |
+
+Full abuse cases, per-element rationale (including the manifest-authenticity acceptance for S1/S14), and
+the abuse-case → test → ticket traceability table live in `docs/security/threat-models/E07-storage.md`.
+
 ### 5.9 Area 9 — Electron shell (A-16, AC-09)
 
 | T | STRIDE | Threat | L | I | Risk | Mitigations | Residual |
@@ -384,11 +408,13 @@ Scope: the repository itself, `main` branch integrity, branch-protection configu
 
 | Residual level | Count |
 |---|---|
-| Low | 78 |
-| Medium | 3 (K9 memory exposure under host compromise; N5 remote-access outage; G3 unsigned commits, accepted) |
+| Low | 90 (adds S10–S12, S14, S16–S18, S20–S21 from E07-X01) |
+| Medium | 5 (K9 memory exposure under host compromise; N5 remote-access outage; G3 unsigned commits, accepted; S13, S15 from E07-X01) |
 | High / Critical | 0 |
 
-Any threat that remains High or Critical after mitigation is a release blocker and must be recorded in §16 with explicit owner sign-off before the affected release proceeds.
+Any threat that remains High or Critical after mitigation is a release blocker and must be recorded in §16 with explicit owner sign-off before the affected release proceeds. S17/S19/S20 (E07-X01) are rated
+Low contingent on E07-T02/E07-T05 shipping their named controls (`docs/security/threat-models/E07-storage.md`
+§7) — tracked, not silently accepted, and re-triaged at those PRs' security review if the control is missing.
 
 ---
 
