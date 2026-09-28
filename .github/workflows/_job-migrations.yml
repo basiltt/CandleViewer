@@ -85,11 +85,11 @@ jobs:
 
       - name: alembic downgrade to base then upgrade head again (round-trip sanity)
         run: |
-          uv run alembic downgrade base || echo "no reversible downgrade chain yet — see 21-database-schema.md §9 note on impossible downgrades"
+          uv run alembic downgrade base
           uv run alembic upgrade head
 
       - name: Upgrade path from the previous release tag's schema (CI-MIG-004)
         run: python ../../tools/ci/run_previous_release_upgrade.py --root . --dsn "$CV_PG_DSN"
 
       - name: Concurrent-boot advisory-lock integration test
-        run: uv run pytest -p no:cacheprovider -m integration tests/integration/migrations/test_boot_advisory_lock.py --no-cov
+        run: uv run pytest -p no:cacheprovider -m integration tests/integration/migrations/test_boot_advisory_lock_integration.py --no-cov

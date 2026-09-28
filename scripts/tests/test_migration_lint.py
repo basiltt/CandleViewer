@@ -14,6 +14,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from tools.ci.migration_lint import (
+    check_audit_table_integrity,
     check_destructive_annotations,
     check_if_not_exists,
     check_security_sensitive,
@@ -99,6 +100,88 @@ import sqlalchemy as sa
 
 def upgrade() -> None:
     op.add_column("api_keys", sa.Column("label", sa.Text(), nullable=True))
+'''
+
+
+_RAW_SQL_DELETE_AUDIT_LOG = '''
+from alembic import op
+
+
+def upgrade() -> None:
+    op.execute("DELETE FROM audit_log WHERE event_ts < now() - interval '1 year'")
+'''
+
+_RAW_SQL_UPDATE_AUDIT_LOG = '''
+from alembic import op
+
+
+def upgrade() -> None:
+    op.execute("update audit_log set outcome = 'success'")
+'''
+
+_RAW_SQL_DROP_AUDIT_CHECKPOINTS = '''
+from alembic import op
+
+
+def upgrade() -> None:
+    op.execute("DROP TABLE audit_checkpoints")
+'''
+
+_RAW_SQL_TRUNCATE_AUDIT_LOG = '''
+from alembic import op
+
+
+def upgrade() -> None:
+    op.execute("TRUNCATE audit_log")
+'''
+
+_RAW_SQL_GRANT_UPDATE_AUDIT_LOG = '''
+from alembic import op
+
+
+def upgrade() -> None:
+    op.execute("GRANT UPDATE ON audit_log TO cv_app")
+'''
+
+_RAW_SQL_GRANT_DELETE_AUDIT_LOG = '''
+from alembic import op
+
+
+def upgrade() -> None:
+    op.execute("grant delete on audit_log to cv_app")
+'''
+
+_RENAME_AUDIT_LOG = '''
+from alembic import op
+
+
+def upgrade() -> None:
+    op.rename_table("audit_log", "audit_log_old")
+'''
+
+_ALTER_COLUMN_AUDIT_LOG = '''
+from alembic import op
+import sqlalchemy as sa
+
+
+def upgrade() -> None:
+    op.alter_column("audit_log", "outcome", type_=sa.Text())
+'''
+
+_RAW_SQL_DELETE_NON_AUDIT_TABLE = '''
+from alembic import op
+
+
+def upgrade() -> None:
+    op.execute("DELETE FROM stale_sessions WHERE expires_at < now()")
+'''
+
+_RENAME_NON_AUDIT_TABLE = '''
+from alembic import op
+
+
+def upgrade() -> None:
+    op.rename_table("orders", "orders_v2")
 '''
 
 
@@ -193,8 +276,46 @@ def test_main_exits_two_when_versions_dir_missing(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize(
     "fixture",
+    [
+        _RAW_SQL_DELETE_AUDIT_LOG,
+        _RAW_SQL_UPDATE_AUDIT_LOG,
+        _RAW_SQL_DROP_AUDIT_CHECKPOINTS,
+        _RAW_SQL_TRUNCATE_AUDIT_LOG,
+        _RAW_SQL_GRANT_UPDATE_AUDIT_LOG,
+        _RAW_SQL_GRANT_DELETE_AUDIT_LOG,
+        _RENAME_AUDIT_LOG,
+        _ALTER_COLUMN_AUDIT_LOG,
+    ],
+)
+def test_audit_table_mutation_is_always_flagged(tmp_path: Path, fixture: str) -> None:
+    path = _write(tmp_path, "audit_mutation.py", fixture)
+    findings = check_audit_table_integrity([path])
+    assert len(findings) == 1
+    assert findings[0].code == "CI-MIG-003"
+    assert "append-only" in findings[0].message
+
+
+@pytest.mark.parametrize(
+    "fixture",
+    [_RAW_SQL_DELETE_NON_AUDIT_TABLE, _RENAME_NON_AUDIT_TABLE],
+)
+def test_non_audit_table_mutation_is_not_flagged(tmp_path: Path, fixture: str) -> None:
+    path = _write(tmp_path, "non_audit_mutation.py", fixture)
+    assert check_audit_table_integrity([path]) == []
+
+
+def test_main_flags_raw_sql_audit_mutation_end_to_end(tmp_path: Path) -> None:
+    versions = tmp_path / "versions"
+    versions.mkdir()
+    _write(versions, "0001_bad.py", _RAW_SQL_DELETE_AUDIT_LOG)
+    assert main(["--versions-dir", str(versions)]) == 1
+
+
+@pytest.mark.parametrize(
+    "fixture",
     [_ADDITIVE, _DESTRUCTIVE_ANNOTATED],
 )
 def test_multiple_clean_fixtures_never_flagged(tmp_path: Path, fixture: str) -> None:
     path = _write(tmp_path, "x.py", fixture)
     assert check_if_not_exists([path]) == []
+

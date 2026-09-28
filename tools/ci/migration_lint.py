@@ -48,7 +48,18 @@ _IF_NOT_EXISTS_RE = re.compile(r"\bIF\s+NOT\s+EXISTS\b", re.IGNORECASE)
 
 # Tables that must never be a destructive-op target, contract-phase
 # annotation or not (append-only audit, per ticket "Security notes").
-_FORBIDDEN_DESTRUCTIVE_TABLES = frozenset({"audit_log", "audit_entries"})
+# Names confirmed against `docs/plan/21-database-schema.md` §3.10
+# (`audit_log`, `audit_checkpoints` — no `audit_entries` table exists).
+_FORBIDDEN_DESTRUCTIVE_TABLES = frozenset({"audit_log", "audit_checkpoints"})
+
+# Raw-SQL (`op.execute(...)`) statements that mutate or reshape an audit
+# table bypass the `op.drop_*`/`op.alter_column` AST-level checks above.
+# Case-insensitive: DDL/DML keywords are not case-sensitive in Postgres.
+_RAW_SQL_MUTATION_RE = re.compile(
+    r"\b(DELETE\s+FROM|UPDATE|DROP\s+TABLE|TRUNCATE(?:\s+TABLE)?|"
+    r"ALTER\s+TABLE|GRANT\s+(?:UPDATE|DELETE|UPDATE\s*,\s*DELETE|DELETE\s*,\s*UPDATE))\b",
+    re.IGNORECASE,
+)
 
 # Populated from `tools/ci/security-sensitive-tables.txt` when present;
 # migrations touching these need the `security-review` label (flagged, not
@@ -112,6 +123,60 @@ def _table_mentioned(line: str, tables: frozenset[str]) -> str | None:
         if re.search(rf"['\"]{re.escape(table)}['\"]", line):
             return table
     return None
+
+
+def check_audit_table_integrity(
+    paths: list[Path],
+    forbidden_tables: frozenset[str] = _FORBIDDEN_DESTRUCTIVE_TABLES,
+) -> list[LintFinding]:
+    """C-5.7: audit tables are append-only — no `UPDATE`/`DELETE` grants, no
+    dropping/mutating audit history, however the operation is spelled.
+    Catches raw-SQL (`op.execute(...)`) DML/DDL and schema-shape changes
+    (`op.alter_column`, `op.rename_table`) that the AST-level destructive-op
+    check above does not see."""
+    findings: list[LintFinding] = []
+    for path in paths:
+        lines = path.read_text(encoding="utf-8").splitlines()
+        for idx, line in enumerate(lines):
+            is_raw_sql_mutation = "op.execute" in line and bool(
+                _RAW_SQL_MUTATION_RE.search(line)
+            )
+            is_rename = bool(re.search(r"\bop\.rename_table\s*\(", line))
+            is_alter_shape = bool(re.search(r"\bop\.alter_column\s*\(", line))
+
+            if not (is_raw_sql_mutation or is_rename or is_alter_shape):
+                continue
+
+            if is_raw_sql_mutation:
+                # Raw SQL embeds the table name as a bare identifier inside
+                # the statement string, not as a quoted Alembic-API arg —
+                # match on a word boundary instead of `_table_mentioned`.
+                forbidden_hit = next(
+                    (
+                        table
+                        for table in forbidden_tables
+                        if re.search(rf"\b{re.escape(table)}\b", line)
+                    ),
+                    None,
+                )
+            else:
+                forbidden_hit = _table_mentioned(line, forbidden_tables)
+
+            if forbidden_hit is None:
+                continue
+
+            findings.append(
+                LintFinding(
+                    code="CI-MIG-003",
+                    path=path,
+                    message=(
+                        f"line {idx + 1}: operation targets append-only "
+                        f"table '{forbidden_hit}' — forbidden regardless of "
+                        "annotation (C-5.7, ADR-0013 rule 9)"
+                    ),
+                )
+            )
+    return findings
 
 
 def check_destructive_annotations(
@@ -215,6 +280,7 @@ def main(argv: list[str] | None = None) -> int:
     findings: list[LintFinding] = []
     findings.extend(check_if_not_exists(paths))
     findings.extend(check_destructive_annotations(paths))
+    findings.extend(check_audit_table_integrity(paths))
     security_findings = check_security_sensitive(paths)
 
     for finding in findings:
