@@ -289,22 +289,27 @@ the source of truth for ticket _content_.
 
 ### Root (pnpm workspace + Turborepo)
 
-| Task                                                                                       | Command                          |
-| ------------------------------------------------------------------------------------------ | -------------------------------- |
-| Install                                                                                    | `pnpm install --frozen-lockfile` |
-| Lint everything                                                                            | `pnpm lint`                      |
-| Fix lint/format                                                                            | `pnpm lint:fix` && `pnpm format` |
-| Typecheck                                                                                  | `pnpm typecheck`                 |
-| Unit tests (all JS/TS)                                                                     | `pnpm test`                      |
-| Unit tests with coverage                                                                   | `pnpm test:cov`                  |
-| Build all                                                                                  | `pnpm build`                     |
-| Bundle-size check                                                                          | `pnpm size`                      |
-| Regenerate protocol types + tokens                                                         | `pnpm generate`                  |
-| Architecture-boundary contracts (import-linter + dependency-cruiser, C-3.1..C-3.5, §9 #18) | `pnpm arch` (or `make arch`)     |
+| Task                                                                                       | Command                              |
+| ------------------------------------------------------------------------------------------ | ------------------------------------- |
+| Install                                                                                    | `pnpm install --frozen-lockfile`     |
+| Lint everything                                                                            | `pnpm lint`                          |
+| Fix lint/format                                                                            | `pnpm lint:fix` && `pnpm format`     |
+| Typecheck                                                                                  | `pnpm typecheck`                     |
+| Unit tests (all JS/TS)                                                                     | `pnpm test`                          |
+| Unit tests with coverage                                                                   | `pnpm test:cov`                      |
+| Build all                                                                                  | `pnpm build`                         |
+| Bundle-size check                                                                          | `pnpm size`                          |
+| Regenerate protocol types + tokens                                                         | `pnpm generate`                      |
+| Architecture-boundary contracts (import-linter + dependency-cruiser, C-3.1..C-3.5, §9 #18) | `pnpm arch` (or `make arch`)         |
 | Local security lane (SAST/SCA/secrets/license-check, whatever is runnable on this machine) | `pnpm security` (or `make security`) |
-| Full local gate (what CI runs on a PR)                                                     | `pnpm verify`                    |
-| Validate current branch name (C-4.4)                                                       | `pnpm check:branch-name`         |
-| Install local git hooks (commitlint/lint-staged/branch check)                              | `pnpm prepare`                   |
+| Full local gate (what CI runs on a PR)                                                     | `pnpm verify`                        |
+| Meta: assert `pnpm verify`'s gate list matches CONSTITUTION.md §9 (C-16.5 drift guard)     | `pnpm check:verify-gate-list`        |
+| Threshold-guard: fail on an un-amended coverage/bundle-size floor decrease (C-9.4)         | `pnpm gate:threshold-guard`          |
+| Flaky-test quarantine report (C-9.3)                                                       | `pnpm gate:flaky-quarantine`         |
+| Bundle-size regression vs baseline (§9 #15, +5% rule)                                      | `pnpm gate:bundle-size-regression`   |
+| Negative-test harness: prove each gate above actually fails                                | `pnpm gate:negative-tests`           |
+| Validate current branch name (C-4.4)                                                       | `pnpm check:branch-name`             |
+| Install local git hooks (commitlint/lint-staged/branch check)                              | `pnpm prepare`                       |
 
 ### `apps/web`
 

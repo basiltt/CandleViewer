@@ -49,6 +49,7 @@
   },
   "size-limit": [
     {
+      "name": "dist/assets/*.js",
       "path": "dist/assets/*.js",
       "limit": "8 MB",
       "gzip": true
