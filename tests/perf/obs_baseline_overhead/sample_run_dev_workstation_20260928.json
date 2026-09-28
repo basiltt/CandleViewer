@@ -1,0 +1,337 @@
+{
+  "rate_per_s": 4000,
+  "duration_s": 10.0,
+  "repeats": 3,
+  "configurations": [
+    {
+      "configuration": "none",
+      "label_shape": "inline",
+      "repeats": [
+        {
+          "configuration": "none",
+          "label_shape": "inline",
+          "message_count": 39991,
+          "duration_s": 10.003005700000358,
+          "cpu_percent": 1.2496244003939287,
+          "rss_bytes": 42381312,
+          "p50_latency_ns": 1300,
+          "p95_latency_ns": 2800,
+          "p99_latency_ns": 4000
+        },
+        {
+          "configuration": "none",
+          "label_shape": "inline",
+          "message_count": 39979,
+          "duration_s": 10.000146099999256,
+          "cpu_percent": 0.7812385861043152,
+          "rss_bytes": 42405888,
+          "p50_latency_ns": 1200,
+          "p95_latency_ns": 2800,
+          "p99_latency_ns": 4200
+        },
+        {
+          "configuration": "none",
+          "label_shape": "inline",
+          "message_count": 39994,
+          "duration_s": 10.003927999998268,
+          "cpu_percent": 1.4056978418879498,
+          "rss_bytes": 42405888,
+          "p50_latency_ns": 1300,
+          "p95_latency_ns": 2900,
+          "p99_latency_ns": 3900
+        }
+      ],
+      "summary": {
+        "cpu_percent_mean": 1.1455202761287313,
+        "cpu_percent_stdev": 0.32498552590881713,
+        "rss_bytes_mean": 42397696,
+        "rss_bytes_stdev": 14188.960215604242,
+        "p95_latency_ns_mean": 2833.3333333333335,
+        "p95_latency_ns_stdev": 57.735026918962575
+      }
+    },
+    {
+      "configuration": "metrics_only",
+      "label_shape": "inline",
+      "repeats": [
+        {
+          "configuration": "metrics_only",
+          "label_shape": "inline",
+          "message_count": 39989,
+          "duration_s": 10.002682000002096,
+          "cpu_percent": 3.436578309696619,
+          "rss_bytes": 42553344,
+          "p50_latency_ns": 8100,
+          "p95_latency_ns": 19500,
+          "p99_latency_ns": 24000
+        },
+        {
+          "configuration": "metrics_only",
+          "label_shape": "inline",
+          "message_count": 39993,
+          "duration_s": 10.003909300001396,
+          "cpu_percent": 4.529479290660269,
+          "rss_bytes": 42557440,
+          "p50_latency_ns": 8200,
+          "p95_latency_ns": 20000,
+          "p99_latency_ns": 31300
+        },
+        {
+          "configuration": "metrics_only",
+          "label_shape": "inline",
+          "message_count": 39983,
+          "duration_s": 10.001368699999148,
+          "cpu_percent": 3.12457233978412,
+          "rss_bytes": 42500096,
+          "p50_latency_ns": 8100,
+          "p95_latency_ns": 20700,
+          "p99_latency_ns": 33300
+        }
+      ],
+      "summary": {
+        "cpu_percent_mean": 3.6968766467136693,
+        "cpu_percent_stdev": 0.7377379638770201,
+        "rss_bytes_mean": 42536960,
+        "rss_bytes_stdev": 31990.782672513655,
+        "p95_latency_ns_mean": 20066.666666666668,
+        "p95_latency_ns_stdev": 602.7713773341708
+      }
+    },
+    {
+      "configuration": "metrics_only",
+      "label_shape": "pre_bound",
+      "repeats": [
+        {
+          "configuration": "metrics_only",
+          "label_shape": "pre_bound",
+          "message_count": 39984,
+          "duration_s": 10.001852599998529,
+          "cpu_percent": 2.0308737603274603,
+          "rss_bytes": 42512384,
+          "p50_latency_ns": 3900,
+          "p95_latency_ns": 9900,
+          "p99_latency_ns": 14600
+        },
+        {
+          "configuration": "metrics_only",
+          "label_shape": "pre_bound",
+          "message_count": 39995,
+          "duration_s": 10.004427199997735,
+          "cpu_percent": 2.8112554010095017,
+          "rss_bytes": 42512384,
+          "p50_latency_ns": 4000,
+          "p95_latency_ns": 9800,
+          "p99_latency_ns": 14400
+        },
+        {
+          "configuration": "metrics_only",
+          "label_shape": "pre_bound",
+          "message_count": 39992,
+          "duration_s": 10.003675100000692,
+          "cpu_percent": 2.6552741601932035,
+          "rss_bytes": 42512384,
+          "p50_latency_ns": 3900,
+          "p95_latency_ns": 10000,
+          "p99_latency_ns": 16300
+        }
+      ],
+      "summary": {
+        "cpu_percent_mean": 2.4991344405100553,
+        "cpu_percent_stdev": 0.4129571228656164,
+        "rss_bytes_mean": 42512384,
+        "rss_bytes_stdev": 0.0,
+        "p95_latency_ns_mean": 9900,
+        "p95_latency_ns_stdev": 100.0
+      }
+    },
+    {
+      "configuration": "metrics_structlog",
+      "label_shape": "inline",
+      "repeats": [
+        {
+          "configuration": "metrics_structlog",
+          "label_shape": "inline",
+          "message_count": 39992,
+          "duration_s": 10.005120300000272,
+          "cpu_percent": 12.649772936762846,
+          "rss_bytes": 42553344,
+          "p50_latency_ns": 32200,
+          "p95_latency_ns": 60900,
+          "p99_latency_ns": 79500
+        },
+        {
+          "configuration": "metrics_structlog",
+          "label_shape": "inline",
+          "message_count": 39977,
+          "duration_s": 10.000352099999873,
+          "cpu_percent": 13.124537885021233,
+          "rss_bytes": 42582016,
+          "p50_latency_ns": 32000,
+          "p95_latency_ns": 61200,
+          "p99_latency_ns": 80200
+        },
+        {
+          "configuration": "metrics_structlog",
+          "label_shape": "inline",
+          "message_count": 39998,
+          "duration_s": 10.005769799998234,
+          "cpu_percent": 14.054390897542419,
+          "rss_bytes": 42586112,
+          "p50_latency_ns": 32800,
+          "p95_latency_ns": 61700,
+          "p99_latency_ns": 86700
+        }
+      ],
+      "summary": {
+        "cpu_percent_mean": 13.276233906442165,
+        "cpu_percent_stdev": 0.7144904940741666,
+        "rss_bytes_mean": 42573824,
+        "rss_bytes_stdev": 17854.0500727426,
+        "p95_latency_ns_mean": 61266.666666666664,
+        "p95_latency_ns_stdev": 404.14518843273805
+      }
+    },
+    {
+      "configuration": "metrics_structlog",
+      "label_shape": "pre_bound",
+      "repeats": [
+        {
+          "configuration": "metrics_structlog",
+          "label_shape": "pre_bound",
+          "message_count": 39978,
+          "duration_s": 10.000485199998366,
+          "cpu_percent": 11.718181433838746,
+          "rss_bytes": 42598400,
+          "p50_latency_ns": 26100,
+          "p95_latency_ns": 52600,
+          "p99_latency_ns": 86000
+        },
+        {
+          "configuration": "metrics_structlog",
+          "label_shape": "pre_bound",
+          "message_count": 39990,
+          "duration_s": 10.003553700000339,
+          "cpu_percent": 12.026975973547872,
+          "rss_bytes": 42565632,
+          "p50_latency_ns": 26100,
+          "p95_latency_ns": 51700,
+          "p99_latency_ns": 67600
+        },
+        {
+          "configuration": "metrics_structlog",
+          "label_shape": "pre_bound",
+          "message_count": 39999,
+          "duration_s": 10.005843199996889,
+          "cpu_percent": 12.024224005432886,
+          "rss_bytes": 42565632,
+          "p50_latency_ns": 25700,
+          "p95_latency_ns": 51700,
+          "p99_latency_ns": 64700
+        }
+      ],
+      "summary": {
+        "cpu_percent_mean": 11.923127137606501,
+        "cpu_percent_stdev": 0.1774935194641538,
+        "rss_bytes_mean": 42576554.666666664,
+        "rss_bytes_stdev": 18918.613620805656,
+        "p95_latency_ns_mean": 52000,
+        "p95_latency_ns_stdev": 519.6152422706632
+      }
+    },
+    {
+      "configuration": "metrics_structlog_otel",
+      "label_shape": "inline",
+      "repeats": [
+        {
+          "configuration": "metrics_structlog_otel",
+          "label_shape": "inline",
+          "message_count": 35474,
+          "duration_s": 10.553678899999795,
+          "cpu_percent": 98.30695152190201,
+          "rss_bytes": 43212800,
+          "p50_latency_ns": 269800,
+          "p95_latency_ns": 409500,
+          "p99_latency_ns": 541300
+        },
+        {
+          "configuration": "metrics_structlog_otel",
+          "label_shape": "inline",
+          "message_count": 37189,
+          "duration_s": 11.157981799999106,
+          "cpu_percent": 98.44410214041467,
+          "rss_bytes": 43225088,
+          "p50_latency_ns": 271300,
+          "p95_latency_ns": 432100,
+          "p99_latency_ns": 581900
+        },
+        {
+          "configuration": "metrics_structlog_otel",
+          "label_shape": "inline",
+          "message_count": 38253,
+          "duration_s": 11.510374400000728,
+          "cpu_percent": 98.55239808706207,
+          "rss_bytes": 43253760,
+          "p50_latency_ns": 272100,
+          "p95_latency_ns": 429300,
+          "p99_latency_ns": 658200
+        }
+      ],
+      "summary": {
+        "cpu_percent_mean": 98.43448391645958,
+        "cpu_percent_stdev": 0.12300563711170416,
+        "rss_bytes_mean": 43230549.333333336,
+        "rss_bytes_stdev": 21019.039495974437,
+        "p95_latency_ns_mean": 423633.3333333333,
+        "p95_latency_ns_stdev": 12319.632029136801
+      }
+    },
+    {
+      "configuration": "metrics_structlog_otel",
+      "label_shape": "pre_bound",
+      "repeats": [
+        {
+          "configuration": "metrics_structlog_otel",
+          "label_shape": "pre_bound",
+          "message_count": 36282,
+          "duration_s": 10.445170200000575,
+          "cpu_percent": 97.68270697972387,
+          "rss_bytes": 43274240,
+          "p50_latency_ns": 256900,
+          "p95_latency_ns": 407500,
+          "p99_latency_ns": 506700
+        },
+        {
+          "configuration": "metrics_structlog_otel",
+          "label_shape": "pre_bound",
+          "message_count": 37355,
+          "duration_s": 10.70323990000179,
+          "cpu_percent": 98.68507198458883,
+          "rss_bytes": 43352064,
+          "p50_latency_ns": 256900,
+          "p95_latency_ns": 376300,
+          "p99_latency_ns": 490600
+        },
+        {
+          "configuration": "metrics_structlog_otel",
+          "label_shape": "pre_bound",
+          "message_count": 38199,
+          "duration_s": 10.88942870000028,
+          "cpu_percent": 98.1456446838182,
+          "rss_bytes": 43380736,
+          "p50_latency_ns": 256400,
+          "p95_latency_ns": 378800,
+          "p99_latency_ns": 504000
+        }
+      ],
+      "summary": {
+        "cpu_percent_mean": 98.17114121604364,
+        "cpu_percent_stdev": 0.5016686711477233,
+        "rss_bytes_mean": 43335680,
+        "rss_bytes_stdev": 55106.044096813916,
+        "p95_latency_ns_mean": 387533.3333333333,
+        "p95_latency_ns_stdev": 17336.762481309288
+      }
+    }
+  ],
+  "contextvars_cost_ns_per_call": 256.9325
+}

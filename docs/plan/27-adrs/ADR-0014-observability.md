@@ -37,18 +37,20 @@ The system runs unattended while holding real positions. Failures are mostly sil
 6. **Alerting** — Alertmanager with two severities and nothing else:
    - **Page** (immediate): `naked_position_alerts_total > 0`; `oms_unknown_orders > 0` for 60 s; Postgres down; clock drift blocking trading; disk > 95 %.
    - **Ticket** (next working session): public WS down > 60 s; high book-resync rate; event-loop lag > 100 ms for 5 min; disk > 80 %; rule auto-disarm; demo/live mismatch attempts; certificate/credential expiry approaching.
-   Every alert links to a runbook section in `07-release-and-prr.md`. An alert without a runbook is not allowed to be created.
+     Every alert links to a runbook section in `07-release-and-prr.md`. An alert without a runbook is not allowed to be created.
 7. **Health** — `/healthz` (liveness) and `/readyz` (readiness, including migrations-at-head and storage reachability) plus an aggregated module health report surfaced in the Admin health console, which is the operator's first stop.
 8. **SLOs** — the budgets in `06-performance-and-load-standard.md` are encoded as recording rules so dashboards show burn rate rather than raw numbers, making "is this getting worse?" answerable at a glance.
 
 ### Consequences
 
 Positive:
+
 - Prometheus + Grafana is boring, well understood, self-hosted, and cheap enough to run beside the workload on one box.
 - Restricting tracing to two paths keeps overhead negligible while covering the only flows where causality across modules is genuinely hard to reconstruct.
 - A two-severity alert policy with mandatory runbooks is the only shape that survives a single-operator reality.
 
 Negative / risks:
+
 - No centralised log search until Loki is added; correlating an incident means `docker compose logs` plus `jq`. Accepted at this scale, and the correlation fields make it workable. Loki is a documented, non-breaking addition.
 - Prometheus is not a long-term store; 15 days is short for slow trends. Mitigated by nightly Grafana snapshot exports for load-test and release comparisons.
 - Frontend telemetry is a (small) new endpoint with a new data flow. Mitigated by authentication, aggressive aggregation, strict schema validation, and no PII.
@@ -64,3 +66,40 @@ Negative / risks:
 - Every alert is fired deliberately at least once (in staging with the synthetic feed) and its runbook walked, before Live enablement (R4) — a PRR checklist item.
 - Load tests assert that the metric endpoints themselves stay under 50 ms scrape time with the full label set.
 - Dashboard JSON is reviewed in PRs like code; a dashboard change without a review is a merge blocker.
+
+## Addendum (2026-09-28) — E04-K01 instrumentation overhead spike
+
+**Status of this addendum: measured, not overturning the original decision.**
+
+E04-K01 (`docs/plan/spikes/E04-K01.md`) measured four instrumentation configurations
+(none / metrics-only / metrics+structlog / metrics+structlog+OTel) on a synthetic
+20,000-msg/s-shaped ingestion pipeline, and two label-handling shapes for the
+metrics path (inline vs pre-bound). Full method, raw numbers, and gaps are in the
+spike doc; the two decisions this ADR's original text depended on are:
+
+1. **"Tracing every market-data event would distort the very loop it measures"
+   (Context, above) — confirmed, measured.** OpenTelemetry spans at 100% sampling on
+   the hot loop measured at **~98% CPU** against a 5%-over-baseline threshold — over
+   19x the budget. The original decision (metrics only on market-data hot loops,
+   tracing restricted to the order path and replay-session-start) **stands
+   unchanged.**
+2. **New finding, not previously assumed: the metrics facade's label-binding
+   pattern matters.** A naive `counter.labels(topic, symbol).inc()` call inside the
+   hot loop measured **3.70% CPU** overhead vs. a 1% budget (US-OBS-002 NFR); the
+   same counter with labels pre-bound once per (topic, symbol) pair outside the
+   loop measured **2.50%** — both exceed 1%, but pre-binding is meaningfully
+   cheaper and the gap is expected to widen with label cardinality (more symbols
+   in production). **Decision: the pre-bound-label pattern is adopted as the
+   mandatory shape for the metrics facade being designed in E04-T03**; E04-T03's
+   public API must not expose a per-message `.labels(...)` call as the supported
+   entry point.
+
+**Caveat:** measurements were taken on the delivery workstation, not the
+4 vCPU / 8 GB reference VPS profile named in `06-performance-and-load-standard.md`
+§3.1 (no VPS/container access in the delivery environment) — the _comparison_
+between configurations is expected to hold, but a re-run on the actual reference
+profile is filed as a follow-up before these absolute percentages are used to size
+the production capacity plan (§10). See the spike doc's "Follow-up tickets"
+section for the tracked items.
+
+No change to the alerting, dashboard, logging or health-check sections of this ADR.
