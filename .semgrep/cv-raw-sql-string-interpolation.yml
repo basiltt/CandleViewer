@@ -1,0 +1,21 @@
+rules:
+  - id: cv-raw-sql-string-interpolation
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Raw SQL built via string interpolation/formatting risks injection.
+      Use parameterised queries (SQLAlchemy `text()` with bound params, or
+      the ORM query builder) — never f-strings, `%`-formatting, `.format()`
+      or string concatenation to build SQL (CONSTITUTION.md §12,
+      docs/plan/04-security-program.md).
+    metadata:
+      rule-id: cv-raw-sql-string-interpolation
+    patterns:
+      - pattern-either:
+          - pattern: $CONN.execute(f"...")
+          - pattern: $CONN.execute("..." % ...)
+          - pattern: $CONN.execute("...".format(...))
+          - pattern: $CONN.execute("..." + ... )
+          - pattern: text(f"...")
+          - pattern: text("..." % ...)
+          - pattern: text("...".format(...))

@@ -1,0 +1,26 @@
+rules:
+  - id: cv-withdrawal-endpoint-ban
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Withdrawal/transfer/funding operations are out of scope of any kind,
+      through any code path (CONSTITUTION.md C-1.2 item 5, C-2.7). This
+      matches a call that looks like a Bybit asset-transfer/withdrawal
+      endpoint invocation. Remove it; CandleViewer never calls a withdrawal
+      endpoint.
+    metadata:
+      references:
+        - CONSTITUTION.md C-1.2
+        - CONSTITUTION.md C-2.7
+      rule-id: cv-withdrawal-endpoint-ban
+    patterns:
+      - pattern-either:
+          - pattern: $CLIENT.withdraw(...)
+          - pattern: $CLIENT.create_withdrawal(...)
+          - pattern: $CLIENT.asset_withdraw(...)
+          - pattern: $CLIENT.create_internal_transfer(...)
+          - pattern: $CLIENT.create_universal_transfer(...)
+          - pattern: $CLIENT.inter_transfer(...)
+          - pattern: $CLIENT.universal_transfer(...)
+          - pattern-regex: '["\']\/v5\/asset\/withdraw\/.*["\']'
+          - pattern-regex: '["\']\/v5\/asset\/transfer\/.*["\']'

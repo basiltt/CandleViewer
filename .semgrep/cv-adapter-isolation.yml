@@ -1,0 +1,28 @@
+rules:
+  - id: cv-adapter-isolation
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Bybit-specific identifiers must stay inside
+      services/api/candleviewer/exchange/bybit/ (CONSTITUTION.md C-2.2);
+      everything else consumes exchange/base/ interfaces and normalised
+      domain events. This file is outside that boundary and must not
+      reference Bybit-specific nomenclature.
+    metadata:
+      references:
+        - CONSTITUTION.md C-2.2
+      rule-id: cv-adapter-isolation
+    pattern-regex: '(?i)\bbybit\b'
+    paths:
+      exclude:
+        - "services/api/candleviewer/exchange/bybit/**"
+        - "packages/protocol/**"
+        - "docs/**"
+        - "**/*.md"
+        - "**/*.yaml"
+        - "**/*.yml"
+        - "**/*.json"
+        - "**/*.toml"
+        - "**/conftest.py"
+        - "**/test_*.py"
+        - "**/*_test.py"

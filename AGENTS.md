@@ -301,6 +301,7 @@ the source of truth for ticket _content_.
 | Bundle-size check                                                                          | `pnpm size`                      |
 | Regenerate protocol types + tokens                                                         | `pnpm generate`                  |
 | Architecture-boundary contracts (import-linter + dependency-cruiser, C-3.1..C-3.5, §9 #18) | `pnpm arch` (or `make arch`)     |
+| Local security lane (SAST/SCA/secrets/license-check, whatever is runnable on this machine) | `pnpm security` (or `make security`) |
 | Full local gate (what CI runs on a PR)                                                     | `pnpm verify`                    |
 | Validate current branch name (C-4.4)                                                       | `pnpm check:branch-name`         |
 | Install local git hooks (commitlint/lint-staged/branch check)                              | `pnpm prepare`                   |
