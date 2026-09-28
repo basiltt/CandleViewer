@@ -240,6 +240,10 @@ jobs:
       contents: read
       pull-requests: write
     uses: ./.github/workflows/_job-coverage.yml
+    with:
+      # Only lanes that actually ran can have produced an artifact; the gate
+      # marks the others N/A instead of failing on a missing report.
+      ran_lanes: ${{ format('{0}{1}', needs.changed-paths.outputs.py == 'true' && 'py,' || '', needs.changed-paths.outputs.js == 'true' && 'js' || '') }}
 
   # --- Gate resolver (ADR-0013 binding rule 2) -------------------------------
 

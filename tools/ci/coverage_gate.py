@@ -36,6 +36,16 @@ from xml.etree import ElementTree as ET
 
 RATCHET_STEP_PP = 1.0
 
+# Which CI lane produces which coverage artifact. A package is *applicable* only
+# when its producing lane ran in this workflow run; lanes are path-filtered
+# (pr.yml `changed-paths`), so a py-only PR legitimately has no frontend
+# artifacts. "Lane skipped" is N/A; "lane ran but no artifact" is CI-COV-003.
+ARTIFACT_LANE: dict[str, str] = {
+    "py-coverage": "py",
+    "coverage-unit-engine": "js",
+    "coverage-unit-frontend": "js",
+}
+
 
 class CoverageGateError(Exception):
     """Raised for malformed configuration; distinct from a gate *failure*
@@ -58,7 +68,7 @@ class PackageResult:
     baseline: float
     measured: float | None
     delta: float | None
-    verdict: str  # "PASS" | "FAIL"
+    verdict: str  # "PASS" | "FAIL" | "N/A" (producing lane did not run)
     code: str | None
     reason: str | None
 
@@ -70,7 +80,9 @@ class GateReport:
     @property
     def conclusion(self) -> str:
         return (
-            "success" if all(r.verdict == "PASS" for r in self.results) else "failure"
+            "success"
+            if all(r.verdict in ("PASS", "N/A") for r in self.results)
+            else "failure"
         )
 
 
@@ -261,12 +273,30 @@ def evaluate_all(
     report_dir: Path,
     tolerance_pp: float,
     report_filenames: dict[str, str] | None = None,
+    ran_lanes: set[str] | None = None,
 ) -> GateReport:
     """Evaluate every configured package. `report_filenames` maps package
     name -> the filename to look for under `report_dir/<artifact>/`
-    (defaults to `coverage.xml` for coverage-xml, `lcov.info` for lcov)."""
+    (defaults to `coverage.xml` for coverage-xml, `lcov.info` for lcov).
+    `ran_lanes` (None = all lanes ran) marks packages whose producing lane was
+    path-skipped as N/A instead of CI-COV-003."""
     results: list[PackageResult] = []
     for name, pkg in packages.items():
+        lane = ARTIFACT_LANE.get(pkg.artifact)
+        if ran_lanes is not None and lane is not None and lane not in ran_lanes:
+            results.append(
+                PackageResult(
+                    name=name,
+                    floor=pkg.floor,
+                    baseline=pkg.baseline,
+                    measured=None,
+                    delta=None,
+                    verdict="N/A",
+                    code=None,
+                    reason=f"{lane} lane did not run for this change set",
+                )
+            )
+            continue
         filename: str
         if report_filenames and name in report_filenames:
             filename = report_filenames[name]
@@ -328,6 +358,12 @@ def main(argv: list[str] | None = None) -> int:
         help="Directory containing one subdirectory per downloaded coverage artifact",
     )
     parser.add_argument(
+        "--ran-lanes",
+        default=None,
+        help="Comma-separated lanes that ran (e.g. 'py' or 'js,py'); packages whose "
+        "producing lane is absent report N/A. Omit to require every artifact.",
+    )
+    parser.add_argument(
         "--ratchet",
         action="store_true",
         help="Emit baseline-raise proposals (used on merges to main only)",
@@ -352,7 +388,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"coverage gate configuration error: {exc}", file=sys.stderr)
         return 2
 
-    report = evaluate_all(packages, args.report_dir, tolerance_pp)
+    ran_lanes = (
+        {x.strip() for x in args.ran_lanes.split(",") if x.strip()}
+        if args.ran_lanes is not None
+        else None
+    )
+    report = evaluate_all(packages, args.report_dir, tolerance_pp, ran_lanes=ran_lanes)
     summary = render_summary_table(report)
     print(summary)
 

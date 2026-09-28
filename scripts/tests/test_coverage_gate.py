@@ -463,3 +463,51 @@ def test_main_bad_config_returns_two(tmp_path: Path) -> None:
     baselines = tmp_path / "coverage-baselines.json"
     baselines.write_text("not json", encoding="utf-8")
     assert main(["--baselines", str(baselines)]) == 2
+
+
+# --- Lane applicability (path-filtered lanes) -----------------------------
+
+
+def _engine_pkg() -> PackageConfig:
+    return PackageConfig(
+        "packages/chart-engine",
+        floor=85.0,
+        baseline=85.0,
+        artifact="coverage-unit-engine",
+        report_format="lcov",
+    )
+
+
+def test_missing_artifact_is_na_when_producing_lane_did_not_run(tmp_path: Path) -> None:
+    # A py-only PR skips the js lane; frontend/engine artifacts legitimately do not exist.
+    report = evaluate_all(
+        {"packages/chart-engine": _engine_pkg()},
+        tmp_path,
+        tolerance_pp=0.5,
+        ran_lanes={"py"},
+    )
+    (r,) = report.results
+    assert r.verdict == "N/A"
+    assert r.code is None
+    assert report.conclusion == "success"
+
+
+def test_missing_artifact_still_fails_when_producing_lane_ran(tmp_path: Path) -> None:
+    report = evaluate_all(
+        {"packages/chart-engine": _engine_pkg()},
+        tmp_path,
+        tolerance_pp=0.5,
+        ran_lanes={"js", "py"},
+    )
+    (r,) = report.results
+    assert r.verdict == "FAIL"
+    assert r.code == "CI-COV-003"
+    assert report.conclusion == "failure"
+
+
+def test_ran_lanes_none_requires_every_artifact(tmp_path: Path) -> None:
+    # Backwards compatible: no lane info means every configured package is applicable.
+    report = evaluate_all(
+        {"packages/chart-engine": _engine_pkg()}, tmp_path, tolerance_pp=0.5
+    )
+    assert report.results[0].code == "CI-COV-003"

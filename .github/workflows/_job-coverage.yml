@@ -18,7 +18,12 @@ name: _job-coverage
 # CI-COV-003 missing coverage artifact.
 
 on:
-  workflow_call: {}
+  workflow_call:
+    inputs:
+      ran_lanes:
+        description: "Comma-separated coverage-producing lanes that ran (py, js); path-skipped lanes make their packages N/A"
+        type: string
+        required: true
 
 permissions:
   contents: read
