@@ -117,7 +117,8 @@ def test_owner_floor_rejects_removing_the_last_active_owner(
 
     with conn.cursor() as cur:
         cur.execute("DELETE FROM user_roles WHERE user_id = %s", (user_id,))
-        with pytest.raises(psycopg.errors.RaiseException) as excinfo:
+        # ERRCODE 23514 is mapped by psycopg to CheckViolation, not RaiseException.
+        with pytest.raises(psycopg.errors.CheckViolation) as excinfo:
             conn.commit()
     assert excinfo.value.sqlstate == "23514"
     conn.rollback()
@@ -152,8 +153,14 @@ def test_owner_floor_allows_reshuffle_within_one_transaction(
     conn.commit()  # must succeed: exactly one owner at commit time
 
     with conn.cursor() as cur:
-        cur.execute("SELECT 1 FROM user_roles WHERE role_id = %s", (owner_role_id,))
-        assert len(cur.fetchall()) == 1
+        # The module-scoped connection has already committed other owners in
+        # earlier tests; assert on *this* test's reshuffle, not on a global count.
+        cur.execute(
+            "SELECT user_id FROM user_roles WHERE role_id = %s AND user_id IN (%s, %s)",
+            (owner_role_id, first_id, second_id),
+        )
+        rows = [r[0] for r in cur.fetchall()]
+        assert rows == [second_id]
     conn.rollback()
 
 
@@ -221,9 +228,7 @@ def test_role_permissions_match_openapi_x_permissions(
     """
     import re
 
-    openapi_path = (
-        _SERVICES_API_ROOT.parent.parent / "docs" / "plan" / "22-api-openapi.yaml"
-    )
+    openapi_path = _SERVICES_API_ROOT.parent.parent / "docs" / "plan" / "22-api-openapi.yaml"
     text = openapi_path.read_text(encoding="utf-8")
     block_match = re.search(r"x-permissions:\n(.*?)\npaths:", text, re.S)
     assert block_match is not None, "x-permissions block not found in 22-api-openapi.yaml"
