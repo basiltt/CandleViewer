@@ -7,8 +7,12 @@ name: governance
 
 on:
   pull_request:
-  push:
-    branches: [main]
+  # Not on push-to-main: the merged PR already ran this exact check on the
+  # same tree (squash merges only). Saves one full run per merge.
+
+concurrency:
+  group: governance-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read

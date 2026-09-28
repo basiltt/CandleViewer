@@ -39,6 +39,7 @@ jobs:
       engine: ${{ steps.filter.outputs.engine }}
       protocol: ${{ steps.filter.outputs.protocol }}
       infra: ${{ steps.filter.outputs.infra }}
+      image: ${{ steps.filter.outputs.image }}
       docs: ${{ steps.filter.outputs.docs }}
       e2e: ${{ steps.filter.outputs.e2e }}
       migrations: ${{ steps.filter.outputs.migrations }}
@@ -77,6 +78,11 @@ jobs:
               - '.github/workflows/**'
               - 'docker-compose*.yml'
               - 'Dockerfile*'
+            image:
+              - 'infra/images/**'
+              - 'services/api/pyproject.toml'
+              - 'services/api/uv.lock'
+              - '.github/workflows/_job-security.yml'
             docs:
               - 'docs/**'
               - '**/*.md'
@@ -200,6 +206,8 @@ jobs:
     needs: changed-paths
     # Security scanning applies to any code/infra change, not just one lane.
     if: ${{ needs.changed-paths.outputs.js == 'true' || needs.changed-paths.outputs.py == 'true' || needs.changed-paths.outputs.infra == 'true' }}
+    with:
+      image_changed: ${{ needs.changed-paths.outputs.image == 'true' }}
     # A called reusable workflow may only use permissions its caller job grants.
     # _job-security.yml uploads SARIF (security-events: write); granting it here
     # keeps the workflow-level default at contents: read for every other lane.

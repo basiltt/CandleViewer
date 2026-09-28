@@ -23,7 +23,13 @@ name: _job-security
 # no workflow change once it does), pen-test (R4/E43).
 
 on:
-  workflow_call: {}
+  workflow_call:
+    inputs:
+      image_changed:
+        description: "true when infra/images/**, services/api/pyproject.toml or uv.lock changed (gates the trivy image build)"
+        type: boolean
+        required: false
+        default: true
 
 permissions:
   contents: read
@@ -364,6 +370,10 @@ jobs:
   # ---------------------------------------------------------------------
   trivy:
     name: trivy
+    # The image is built from infra/images/Dockerfile.api + the locked Python
+    # deps; scanning it on PRs that touch neither is ~10 runner-minutes for a
+    # result identical to main's. The nightly (E03-T12) rescans main daily.
+    if: ${{ inputs.image_changed }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
