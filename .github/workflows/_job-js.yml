@@ -70,7 +70,7 @@ jobs:
       - name: pnpm audit hand-off marker (audit gate itself runs in the security lane — E03-T07)
         run: pnpm audit --audit-level=high --json > pnpm-audit.json || node tools/ci/mark-audit-handoff.mjs pnpm-audit.json
       - name: Upload pnpm audit hand-off artifact
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.6.0
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: pnpm-audit-handoff
           path: pnpm-audit.json
@@ -145,7 +145,7 @@ jobs:
         run: node tools/ci/write-turbo-summary.mjs unit-frontend >> "$GITHUB_STEP_SUMMARY"
       - name: Upload coverage (unit-frontend) for E03-T04
         if: always()
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.6.0
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: coverage-unit-frontend
           path: |
@@ -184,7 +184,7 @@ jobs:
         run: node tools/ci/write-turbo-summary.mjs unit-engine >> "$GITHUB_STEP_SUMMARY"
       - name: Upload coverage (unit-engine) for E03-T04
         if: always()
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.6.0
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: coverage-unit-engine
           path: |

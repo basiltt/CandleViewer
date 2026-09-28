@@ -91,6 +91,9 @@
 /Makefile                               @CandleViewer/devsecops @CandleViewer/architecture
 /scripts/                               @CandleViewer/devsecops @CandleViewer/architecture
 /tools/                                 @CandleViewer/devsecops @CandleViewer/security
+# E03-T04: coverage floors/baselines/tolerance policy — QA lead is CODEOWNER
+# (must approve any edit, including a baseline lowering, to this file).
+/tools/ci/coverage-baselines.json       @CandleViewer/qa @CandleViewer/devsecops
 # future: E02/later scaffolding; directory does not exist yet.
 /commitlint.config.*                    @CandleViewer/devsecops
 
