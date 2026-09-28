@@ -45,12 +45,11 @@ jobs:
 
       # Each `download-artifact` call is best-effort: an artifact that was
       # never uploaded (e.g. the `py` lane didn't run because `changed-paths`
-      # said `py: false`) must not fail this step — coverage_gate.py itself
-      # turns "file not found under report-dir" into CI-COV-003, which is
-      # the ticket's intended behaviour for a package that should have had a
-      # report but doesn't. `continue-on-error` here only covers "artifact
-      # never existed for this PR at all" so the download step itself
-      # doesn't abort before the gate gets a chance to report why.
+      # said `py: false`) must not fail this step — coverage_gate.py decides:
+      # a package whose producing lane is absent from `inputs.ran_lanes` is
+      # N/A; a package whose lane ran but left no report is CI-COV-003.
+      # `continue-on-error` here only stops the download step itself from
+      # aborting before the gate gets a chance to report why.
       - name: Download py-coverage artifact
         continue-on-error: true
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
@@ -88,6 +87,7 @@ jobs:
           python tools/ci/coverage_gate.py \
             --baselines tools/ci/coverage-baselines.json \
             --report-dir coverage-artifacts \
+            --ran-lanes "${{ inputs.ran_lanes }}" \
             --summary-out coverage-summary.md
 
       - name: Post PR summary comment
