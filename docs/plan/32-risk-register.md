@@ -162,12 +162,12 @@ quadrantChart
 
 ### RSK-012 · QuestDB underperforms on real footprint and replay query shapes
 
-`Risk: R7` · Category **Technical** · L 3 · I 4 · **Score 12 — High** · Owner **Architect** · Epics E07, E26, E46 · Status **Mitigating**
+`Risk: R7` · Category **Technical** · L 2 · I 4 · **Score 8 — Medium** · Owner **Architect** · Epics E07, E26, E46 · Status **Mitigating (partially retired — E07-K01)**
 
 - **Description** — QuestDB's performance claims are disputed (research finding #19). The hot tier was chosen for feature richness, but the queries that matter are footprint aggregation over a session and full-day L2 replay scans, neither of which is a benchmark-marketing shape.
-- **Mitigation** — E07 benchmarks QuestDB _and_ TimescaleDB on exactly those two query shapes plus CVD roll-up before committing; the storage layer (M10) is written behind a repository interface so the hot tier is replaceable; ADR-0008 records the measured numbers.
-- **Trigger** — Footprint session aggregation >2 s, or a symbol-day replay scan unable to sustain 20× replay speed.
-- **Contingency** — Switch the hot tier to TimescaleDB per ADR-0008's recorded alternative; the Parquet/DuckDB cold tier and Postgres relational tier are unaffected, which bounds the blast radius to one module.
+- **Mitigation** — E07-K01 (spike, `docs/plan/spikes/S2-hot-tier.md`, `ADR-0022-hot-tier-questdb-vs-timescaledb.md`) benchmarked QuestDB and TimescaleDB on six shapes including footprint aggregation and CVD roll-up: **QuestDB meets target on 5/6 shapes and is faster than TimescaleDB on all 5**, retiring most of this risk's original likelihood. The sixth shape (full-day replay scan) misses target on *both* engines on the synthetic dataset this spike could run (no docker/live engine available in that session) — L lowered from 3 to 2 to reflect the narrowed, single-shape residual risk, not eliminated. The storage layer (M10) remains written behind a repository interface so the hot tier stays replaceable; `E07-S07` (follow-up) re-runs the replay shape against the real E02-T08 containers with the §4.14 tuning levers before a production decision on that shape specifically.
+- **Trigger** — Footprint session aggregation >2 s (retired — measured at ~4 ms), or a symbol-day replay scan unable to sustain 20× replay speed (**open** — E07-K01 measured the replay-scan p95 at ~626 ms against a <200 ms target on the synthetic dataset; `E07-S07` re-measures against real containers before this trigger is considered fired or cleared).
+- **Contingency** — Switch the hot tier to TimescaleDB per ADR-0022's recorded reversal path (not taken for the 5 confirmed shapes; remains available for the replay shape specifically pending `E07-S07`); the Parquet/DuckDB cold tier and Postgres relational tier are unaffected, which bounds the blast radius to one module.
 
 ### RSK-026 · Recorder exhausts disk and takes the system down
 
@@ -566,11 +566,11 @@ Not a new `RSK-nnn` entry (no new risk was identified; this is reference evidenc
 | Score band           | Count  | IDs                                                                                                                                                                                         |
 | -------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Critical (15–25)** | 7      | RSK-001, RSK-004, RSK-010, RSK-013, RSK-014, RSK-031, RSK-037                                                                                                                               |
-| **High (10–14)**     | 21     | RSK-002, RSK-011, RSK-012, RSK-016, RSK-017, RSK-018, RSK-019, RSK-020, RSK-022, RSK-023, RSK-026, RSK-028, RSK-029, RSK-032, RSK-036, RSK-039, RSK-041, RSK-043, RSK-046, RSK-047, RSK-049 |
-| **Medium (5–9)**     | 18     | RSK-003, RSK-005, RSK-015, RSK-021, RSK-024, RSK-025, RSK-027, RSK-030, RSK-033, RSK-034, RSK-035, RSK-038, RSK-040, RSK-042, RSK-044, RSK-048, RSK-050, RSK-051                            |
+| **High (10–14)**     | 20     | RSK-002, RSK-011, RSK-016, RSK-017, RSK-018, RSK-019, RSK-020, RSK-022, RSK-023, RSK-026, RSK-028, RSK-029, RSK-032, RSK-036, RSK-039, RSK-041, RSK-043, RSK-046, RSK-047, RSK-049 |
+| **Medium (5–9)**     | 19     | RSK-003, RSK-005, RSK-012, RSK-015, RSK-021, RSK-024, RSK-025, RSK-027, RSK-030, RSK-033, RSK-034, RSK-035, RSK-038, RSK-040, RSK-042, RSK-044, RSK-048, RSK-050, RSK-051                            |
 | **Total entries**    | **46** | RSK-001 … RSK-051 (non-contiguous numbering, grouped by category block; numbers are never reused)                                                                                           |
 
-Band arithmetic: 7 Critical + 21 High + 18 Medium = **46**, equal to the 46 `### RSK-nnn` entries in §3–§9. There are no Low-band entries: anything that scored ≤4 during drafting was not carried into the register as a tracked risk (see §10.1.2).
+Band arithmetic: 7 Critical + 20 High + 19 Medium = **46**, equal to the 46 `### RSK-nnn` entries in §3–§9. There are no Low-band entries: anything that scored ≤4 during drafting was not carried into the register as a tracked risk (see §10.1.2). RSK-012 moved High->Medium in this PR (E07-K01 spike evidence, partial retirement; see §4 entry).
 
 #### 10.0.1 ID allocation — which numbers exist and which never will
 

@@ -26,6 +26,7 @@ Status values: `decided` (binding now), `proposed` (decision deadline stated ins
 | [ADR-0018](ADR-0018-monorepo-tooling.md) | Monorepo tooling: pnpm+Turborepo (JS) and uv+Hatch (Python) | decided |
 | [ADR-0019](ADR-0019-visual-regression-tooling.md) | Visual-regression tooling for design-system snapshots | decided (wall-clock/flake numbers deferred to E05-T04) |
 | [ADR-0020](ADR-0020-session-access-token-and-revocation-model.md) | Session access-token format, WS re-auth cadence, and rotation-family revocation | **proposed** (owner approval pending, spike E09-K01) |
+| [ADR-0022](ADR-0022-hot-tier-questdb-vs-timescaledb.md) | Hot tier: QuestDB confirmed for five of six query shapes; replay scan deferred | **accepted-partial** (owner approval pending, spike E07-K01) |
 
 ## Writing a new ADR
 
