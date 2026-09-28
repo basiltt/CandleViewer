@@ -30,6 +30,7 @@ dev = [
   "bandit>=1.7",
   "pip-audit>=2.7",
   "datamodel-code-generator>=0.83.0",
+  "types-PyYAML>=6.0",
 ]
 test = [
   "pytest>=8.3",

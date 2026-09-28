@@ -19,7 +19,7 @@ Stdlib + PyYAML + openapi-spec-validator only; no network.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import yaml
 from openapi_spec_validator import validate as validate_openapi_spec
@@ -48,7 +48,7 @@ class ContractDriftError(Exception):
 
 def load_openapi_spec(spec_path: Path = OPENAPI_SPEC_PATH) -> dict[str, Any]:
     with spec_path.open(encoding="utf-8") as fh:
-        return yaml.safe_load(fh)
+        return cast(dict[str, Any], yaml.safe_load(fh))
 
 
 def assert_spec_is_valid(spec: dict[str, Any]) -> None:

@@ -81,6 +81,7 @@
 /.prettierrc.json                       @CandleViewer/frontend
 /prettier.config.mjs                    @CandleViewer/frontend
 /.prettierignore                        @CandleViewer/frontend
+/.pa11yci.json                          @CandleViewer/frontend @CandleViewer/devsecops
 /tsconfig.json                          @CandleViewer/frontend @CandleViewer/architecture
 /.npmrc                                 @CandleViewer/devsecops
 /.nvmrc                                 @CandleViewer/devsecops

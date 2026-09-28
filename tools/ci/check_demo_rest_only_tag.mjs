@@ -8,7 +8,7 @@
 // Usage: node tools/ci/check_demo_rest_only_tag.mjs
 import { execFileSync } from "node:child_process";
 
-const CONFIG = "apps/web/e2e/playwright.config.ts";
+const CONFIG = "e2e/playwright.config.ts";
 const TAG = "@demo-rest-only";
 
 function main() {

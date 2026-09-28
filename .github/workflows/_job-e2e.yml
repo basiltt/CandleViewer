@@ -55,6 +55,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build web app (Playwright's webServer runs the built `dist/` via vite preview)
+        working-directory: apps/web
+        run: pnpm run build
+
       - name: Install Playwright browsers
         working-directory: apps/web
         run: npx playwright install --with-deps chromium
@@ -88,6 +92,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build web app (Playwright's webServer runs the built `dist/` via vite preview)
+        working-directory: apps/web
+        run: pnpm run build
+
       - name: Install Playwright browsers
         working-directory: apps/web
         run: npx playwright install --with-deps chromium
@@ -118,6 +126,10 @@ jobs:
 
       - name: vitest-axe component suite (apps/web, packages/ui)
         run: pnpm --filter @candleviewer/web --filter @candleviewer/ui test
+
+      - name: Build web app (Playwright's webServer runs the built `dist/` via vite preview)
+        working-directory: apps/web
+        run: pnpm run build
 
       - name: Install Playwright browsers
         working-directory: apps/web
