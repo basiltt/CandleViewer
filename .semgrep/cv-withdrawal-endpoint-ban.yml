@@ -22,5 +22,5 @@ rules:
           - pattern: $CLIENT.create_universal_transfer(...)
           - pattern: $CLIENT.inter_transfer(...)
           - pattern: $CLIENT.universal_transfer(...)
-          - pattern-regex: '["\']\/v5\/asset\/withdraw\/.*["\']'
-          - pattern-regex: '["\']\/v5\/asset\/transfer\/.*["\']'
+          - pattern-regex: '["'']/v5/asset/withdraw/.*["'']'
+          - pattern-regex: '["'']/v5/asset/transfer/.*["'']'

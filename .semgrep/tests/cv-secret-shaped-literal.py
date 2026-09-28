@@ -4,7 +4,7 @@ Run with: semgrep --test --config .semgrep/cv-secret-shaped-literal.yml .semgrep
 
 
 def bad_hardcoded_api_key() -> None:
-    api_key = "AKIAABCDEFGHIJKLMNOP"  # ruleid: cv-secret-shaped-literal
+    api_key = "not-a-real-key-but-secret-shaped-value"  # ruleid: cv-secret-shaped-literal
 
 
 def bad_hardcoded_api_secret() -> None:
