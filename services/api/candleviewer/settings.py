@@ -78,6 +78,24 @@ class Settings(BaseSettings):
     bind_host: str = "127.0.0.1"
     bind_port: int = 8080
 
+    # E09-T04: Tailscale-only reachability guard (US-ONB-008). Comma-joined
+    # CIDR list (e.g. "100.64.0.0/10,192.168.1.0/24"); loopback/`::1` are
+    # always allowed in addition (see `candleviewer.net.cidr.CidrAllowList`).
+    # A plain string (not a JSON array) so the deployment runbook/`.env` can
+    # set it without quoting a JSON list. Empty by default so a forgotten env
+    # var fails closed to loopback-only rather than silently allowing
+    # everything.
+    mesh_cidrs_csv: str = ""
+    # Boot + hourly re-check cadence (Performance notes: must not block the
+    # event loop; runs in a thread executor with a 2s timeout — see
+    # `candleviewer.net.scheduler`).
+    mesh_self_check_interval_s: float = Field(default=3600.0, gt=0.0)
+    # No trusted proxy by default: `X-Forwarded-For` and friends are always
+    # ignored unless both are set, and even then only the configured proxy's
+    # own immediate peer address is trusted to supply the header.
+    mesh_trusted_proxy_header: str | None = None
+    mesh_trusted_proxy_address: str | None = None
+
     pg_dsn: SecretStr = SecretStr("postgresql+asyncpg://cv:cv@localhost:5432/candleviewer")
     questdb_ilp: str = "questdb:9009"
     questdb_pg: str = "questdb:8812"
@@ -107,6 +125,11 @@ class Settings(BaseSettings):
 
     git_sha: str = "unknown"
     version: str = "0.1.0"
+
+    @property
+    def mesh_cidrs(self) -> tuple[str, ...]:
+        """`CV_MESH_CIDRS_CSV` split on commas, trimmed, empties dropped."""
+        return tuple(part.strip() for part in self.mesh_cidrs_csv.split(",") if part.strip())
 
     @field_validator("bind_host")
     @classmethod

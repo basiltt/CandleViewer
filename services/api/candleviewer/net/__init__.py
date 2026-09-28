@@ -22,6 +22,11 @@ internet, independent of and enforced *before* authentication:
   (owned by its own ticket, C-3.3) wires a concrete sink in the composition
   root once it lands.
 - `metrics.net_binding_safe` — the `net_binding_safe` Prometheus gauge.
+- `host_sockets.real_socket_enumerator` — the `psutil`-backed enumerator the
+  composition root wires into `BindingSelfCheck` in production.
+- `scheduler.MeshSelfCheckScheduler` — supervises the hourly re-check
+  (drift-after-resume, AC5) using the exact same `apply_self_check_result`
+  path as the boot check.
 
 See `docs/plan/backlog/E09-T04` and `20-architecture.md` "WSL hazards".
 """
@@ -35,15 +40,19 @@ __all__ = [
     "CidrAllowList",
     "InMemoryAuditSink",
     "MeshOnlyMiddleware",
+    "MeshSelfCheckScheduler",
     "NullAuditSink",
     "ReadOnlyGate",
     "apply_self_check_result",
     "net_binding_safe",
+    "real_socket_enumerator",
 ]
 
 from .audit import AuditSink, InMemoryAuditSink, NullAuditSink
 from .binding_check import BindingCheckResult, BindingSelfCheck, apply_self_check_result
 from .cidr import CidrAllowList
+from .host_sockets import real_socket_enumerator
 from .metrics import net_binding_safe
 from .middleware import MeshOnlyMiddleware
 from .read_only_gate import ReadOnlyGate
+from .scheduler import MeshSelfCheckScheduler

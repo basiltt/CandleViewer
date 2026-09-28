@@ -829,6 +829,22 @@ Resource baseline (2 symbols @200 depth): api 2 vCPU / 3 GB, QuestDB 2 vCPU / 4 
 
 WSL-specific hazards designed around from day one: clock drift after sleep/resume (chrony mandatory, ClockGuard alerts), no reliable headless keyring (KEK lives on the Windows side), `0.0.0.0` binding leak via portproxy (bind loopback only, verified by a `make audit-net` check in CI-on-host), and the machine sleeping while positions are open (watchdog + native SL floor make this survivable; the Admin health screen warns).
 
+**E09-T04 implementation note (mesh-only reachability guard):** `candleviewer.net` (`BindingSelfCheck`,
+`CidrAllowList`, `MeshOnlyMiddleware`, `ReadOnlyGate`, `MeshSelfCheckScheduler`) is wired into the
+composition root in `services/api/candleviewer/app.py` (`create_app()` mounts `MeshOnlyMiddleware`
+ahead of every route) and the ASGI lifespan in `services/api/candleviewer/main.py` (`_lifespan` runs
+the boot self-check synchronously before serving, then starts the hourly re-check via
+`MeshSelfCheckScheduler.start()`/`.stop()`). The OMS `Validator` (`services/api/candleviewer/oms/validator.py`)
+consults the same `ReadOnlyGate` instance through a structurally-typed `ReadOnlyCheck` protocol — `oms`
+never imports `candleviewer.net` directly, per its CONSTITUTION §3 allow-list. Allowed CIDRs are
+configured via `Settings.mesh_cidrs_csv` (comma-separated, parsed into `Settings.mesh_cidrs`); a trusted
+reverse proxy (if any) is configured via `Settings.mesh_trusted_proxy_header` /
+`Settings.mesh_trusted_proxy_address` — unset by default, so `X-Forwarded-For` and similar headers are
+always ignored and only the ASGI `scope["client"]` peer address is trusted. `make audit-net`
+(`tools/ci/audit_net.py`) runs the identical `BindingSelfCheck` against the host's real listening
+sockets (via `psutil`, catching a Windows-side `portproxy` leak the process's own sockets cannot see)
+for CI-on-host.
+
 ### 8.2 Phase 2 — always-on VPS / home server
 
 Identical compose topology. Migration = copy compose files + data volumes + restore Tailscale identity + re-point the Bybit IP allowlist to the new egress IP. Region selection must avoid geo-restricted origins (US / Mainland China IPs receive 403 from some Bybit REST hosts). Nothing about the application changes — this is the payoff of P7.

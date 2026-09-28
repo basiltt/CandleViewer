@@ -1,4 +1,4 @@
-.PHONY: governance dev dev-down test gen gen-check up down reset arch security
+.PHONY: governance dev dev-down test gen gen-check up down reset arch security audit-net
 
 # E02-T01: root convenience targets delegating to pnpm/uv (20-architecture.md
 # §5 Tooling). Thin wrappers only — the pnpm/turbo task graph and the uv/ruff
@@ -70,3 +70,12 @@ governance:
 	python scripts/check_codeowners_coverage.py --repo-root .
 	python scripts/check_rule_refs.py --repo-root .
 	python scripts/check_sot_duplication.py --repo-root .
+
+# E09-T04: CI-on-host mesh-binding audit (20-architecture.md "WSL hazards" —
+# "0.0.0.0 binding leak via portproxy ... verified by a make audit-net check
+# in CI-on-host"). Runs the same BindingSelfCheck the app's boot/hourly
+# self-check uses against this host's real listening sockets; exits
+# non-zero if anything is bound off-mesh.
+audit-net:
+	uv run --project services/api python tools/ci/audit_net.py
+
