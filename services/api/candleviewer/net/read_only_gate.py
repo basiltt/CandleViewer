@@ -12,9 +12,12 @@ by `net`, not duplicated).
 
 from __future__ import annotations
 
+import logging
 import threading
 from collections.abc import Callable
 from typing import TYPE_CHECKING
+
+_logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from .binding_check import BindingCheckResult
@@ -59,7 +62,20 @@ class ReadOnlyGate:
             )
             listeners = tuple(self._listeners)
         for listener in listeners:
-            listener(tripped, reason_code, reason_text)
+            try:
+                listener(tripped, reason_code, reason_text)
+            except Exception:
+                # A misbehaving listener must never be able to crash the
+                # trip()/clear() caller (e.g. the scheduler loop) or prevent
+                # the other listeners from being notified. The gate's own
+                # state was already updated above, so this stays fail-closed
+                # regardless of listener behaviour.
+                _logger.exception(
+                    "net.read_only_gate: listener raised while handling "
+                    "tripped=%s reason_code=%s",
+                    tripped,
+                    reason_code,
+                )
 
     def trip(self, *, reason_code: str, reason_text: str) -> None:
         with self._lock:
