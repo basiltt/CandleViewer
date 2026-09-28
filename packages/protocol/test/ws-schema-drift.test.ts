@@ -2,7 +2,7 @@ import { describe, expect, it, afterEach } from "vitest";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { readFileSync, writeFileSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 
 // This test binds docs/plan/ws-schema.json (machine-authoritative) to
 // docs/plan/23-ws-protocol.md (human-authoritative) — the "doc-drift" pattern
