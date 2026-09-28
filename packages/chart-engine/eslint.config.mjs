@@ -48,6 +48,12 @@ export default tseslint.config(
               group: ["**/exchange/**", "**/bybit/**"],
               message: "C-2.16: packages/chart-engine must have no Bybit/exchange knowledge.",
             },
+            {
+              group: ["**/spike/**"],
+              message:
+                "E06-X02: the promoted benchmark harness must never import from a spike-only " +
+                "(throwaway prototype) path. See tools/ci/check_spike_containment.py.",
+            },
           ],
         },
       ],
@@ -56,6 +62,28 @@ export default tseslint.config(
         { name: "fetch", message: "C-2.16: packages/chart-engine must not call fetch." },
         { name: "document", message: "C-2.16: no DOM globals in src/core or src/layers." },
         { name: "window", message: "C-2.16: no DOM globals in src/core or src/layers." },
+      ],
+    },
+  },
+  {
+    // The bench harness/runner/driver `.mjs` files are not covered by the
+    // `**/*.ts` glob above but are exactly the "promoted harness" this
+    // boundary protects (E06-X02 acceptance criterion "The harness does not
+    // depend on the prototype").
+    files: ["bench/**/*.mjs"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/spike/**"],
+              message:
+                "E06-X02: the promoted benchmark harness must never import from a spike-only " +
+                "(throwaway prototype) path. See tools/ci/check_spike_containment.py.",
+            },
+          ],
+        },
       ],
     },
   },

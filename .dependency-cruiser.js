@@ -109,6 +109,16 @@ module.exports = {
       to: { path: "^packages/chart-engine/src/host" },
     },
     {
+      name: "chart-engine-harness-no-spike",
+      severity: "error",
+      comment:
+        "E06-X02: the promoted M0 benchmark harness (src/**, bench/**) must never import from " +
+        "a spike-only throwaway-prototype path (docs/plan/02-definition-of-ready-done.md §5.2). " +
+        "See tools/ci/check_spike_containment.py.",
+      from: { path: "^packages/chart-engine/(src|bench)" },
+      to: { path: "^packages/chart-engine/spike" },
+    },
+    {
       name: "protocol-not-to-ui",
       severity: "error",
       comment: "§3 frontend table: packages/protocol must never depend on packages/ui.",
