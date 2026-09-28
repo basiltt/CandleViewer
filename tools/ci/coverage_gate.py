@@ -268,6 +268,33 @@ def evaluate_package(
     )
 
 
+AFFECTED_MANIFEST = "affected-packages.txt"
+
+# Ticket package labels vs. repo directories (mirrors flatten_coverage_artifacts.py).
+_PACKAGE_TO_REPO_DIR: dict[str, str] = {
+    "apps/app-web": "apps/web",
+    "apps/app-electron": "apps/desktop",
+}
+
+
+def _affected_by_change_set(package: str, artifact_dir: Path) -> bool:
+    """The JS lanes run `turbo run test:cov --filter=<pkg>...[origin/main]`, so a
+    package untouched by the PR is never scheduled and writes no lcov. The lane
+    uploads `affected-packages.txt` (tools/ci/turbo-affected-packages.mjs) listing
+    the repo directories turbo *did* schedule. A package absent from that list is
+    N/A. No manifest at all = legacy artifact = every package is required, so a
+    lane that forgot to upload it can never make packages vanish silently."""
+    manifest = artifact_dir / AFFECTED_MANIFEST
+    if not manifest.is_file():
+        return True
+    listed = {
+        line.strip().replace("\\", "/").rstrip("/")
+        for line in manifest.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    }
+    return _PACKAGE_TO_REPO_DIR.get(package, package) in listed
+
+
 def evaluate_all(
     packages: dict[str, PackageConfig],
     report_dir: Path,
@@ -294,6 +321,20 @@ def evaluate_all(
                     verdict="N/A",
                     code=None,
                     reason=f"{lane} lane did not run for this change set",
+                )
+            )
+            continue
+        if not _affected_by_change_set(name, report_dir / pkg.artifact):
+            results.append(
+                PackageResult(
+                    name=name,
+                    floor=pkg.floor,
+                    baseline=pkg.baseline,
+                    measured=None,
+                    delta=None,
+                    verdict="N/A",
+                    code=None,
+                    reason="package not in the lane's turbo affected graph for this change set",
                 )
             )
             continue
