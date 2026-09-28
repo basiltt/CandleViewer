@@ -61,9 +61,9 @@ def _run(cmd: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess
             capture_output=True,
             text=True,
             check=False,
-            # Windows-only shim for .cmd binaries; argv is our own fixed
-            # command list, never untrusted input.
-            shell=True,  # nosec B602 # nosemgrep: python.lang.security.audit.subprocess-shell-true.subprocess-shell-true
+            shell=True,  # nosemgrep: python.lang.security.audit.subprocess-shell-true.subprocess-shell-true
+            # nosec B602 -- Windows-only shim for .cmd binaries; argv is our
+            # own fixed command list, never untrusted input.
         )
     return subprocess.run(
         cmd,
