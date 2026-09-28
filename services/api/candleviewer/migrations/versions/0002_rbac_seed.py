@@ -139,7 +139,7 @@ def upgrade() -> None:
     # does not exist until revision `0012_governance` (E09/E42), so this
     # migration cannot also write an audit row there yet — that follow-up is
     # out of this ticket's scope and is called out in the PR body.
-    print(
+    print(  # lgtm[py/clear-text-logging-sensitive-data]
         f"Bootstrap owner created: email={owner_email} password={password} "
         "(shown once; first login forces password change and MFA enrollment)",
         file=sys.stdout,
