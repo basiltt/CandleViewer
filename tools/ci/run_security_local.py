@@ -26,7 +26,6 @@ tool fails or is blocked by security_gate.py.
 from __future__ import annotations
 
 import argparse
-import os
 import shutil
 import subprocess
 import sys
@@ -46,27 +45,13 @@ class ToolResult:
 
 
 def _run(cmd: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
-    # Windows CreateProcess cannot exec a .cmd/.bat shim directly without a
-    # shell (pnpm/npm on Windows resolve to pnpm.CMD via shutil.which);
-    # POSIX runners (CI, WSL, macOS/Linux dev boxes) need no such shim, and
-    # shell=True with a list argv is unsafe/wrong there, so we only take the
-    # shell path — and only join to a string — on Windows.
-    if os.name == "nt":
-        import subprocess as _sp
-
-        quoted = " ".join(f'"{part}"' if " " in part else part for part in cmd)
-        return _sp.run(
-            quoted,
-            cwd=str(cwd or REPO_ROOT),
-            capture_output=True,
-            text=True,
-            check=False,
-            shell=True,  # nosemgrep: python.lang.security.audit.subprocess-shell-true.subprocess-shell-true
-            # nosec B602 -- Windows-only shim for .cmd binaries; argv is our
-            # own fixed command list, never untrusted input.
-        )
+    # Windows CreateProcess cannot exec a .cmd/.bat shim directly (pnpm/npm
+    # on Windows resolve to pnpm.CMD via shutil.which); resolve the
+    # executable's full path so subprocess can invoke the shim without a
+    # shell, keeping argv a list on every platform (no shell=True anywhere).
+    resolved = shutil.which(cmd[0]) or cmd[0]
     return subprocess.run(
-        cmd,
+        [resolved, *cmd[1:]],
         cwd=str(cwd or REPO_ROOT),
         capture_output=True,
         text=True,
