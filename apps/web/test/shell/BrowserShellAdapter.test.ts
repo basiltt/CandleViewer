@@ -59,6 +59,22 @@ describe("createBrowserShellAdapter", () => {
     expect(() => unsubscribe()).not.toThrow();
   });
 
+  it("rejects windows.redock and windows.saveState with an explanatory error", async () => {
+    const adapter = createBrowserShellAdapter();
+    await expect(adapter.windows.redock("win-1")).rejects.toThrow(/not available/i);
+    await expect(adapter.windows.saveState([])).rejects.toThrow(/not available/i);
+  });
+
+  it("rejects tray.setStatus, updates.apply, keychain.getKekHandle and crashLog.append", async () => {
+    const adapter = createBrowserShellAdapter();
+    await expect(adapter.tray.setStatus("ok")).rejects.toThrow(/not available/i);
+    await expect(adapter.updates.apply()).rejects.toThrow(/not available/i);
+    await expect(adapter.keychain.getKekHandle()).rejects.toThrow(/not available/i);
+    await expect(adapter.crashLog.append({ timestampMs: 1, message: "m" })).rejects.toThrow(
+      /not available/i,
+    );
+  });
+
   it("gpu.info returns a GpuInfo shape even without a real WebGL2 context", async () => {
     const adapter = createBrowserShellAdapter();
     const info = await adapter.gpu.info();

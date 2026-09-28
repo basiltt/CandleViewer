@@ -52,6 +52,34 @@ describe("createElectronShellAdapter", () => {
 
     await adapter.gpu.info();
     expect(bridge.gpuInfo).toHaveBeenCalledTimes(1);
+
+    await adapter.windows.redock("win-1");
+    expect(bridge.windowsRedock).toHaveBeenCalledWith("win-1");
+
+    await adapter.windows.saveState([]);
+    expect(bridge.windowsSaveState).toHaveBeenCalledWith([]);
+
+    await adapter.windows.restoreState();
+    expect(bridge.windowsRestoreState).toHaveBeenCalledTimes(1);
+
+    await adapter.tray.setStatus("ok");
+    expect(bridge.traySetStatus).toHaveBeenCalledWith("ok");
+
+    await adapter.updates.check();
+    expect(bridge.updatesCheck).toHaveBeenCalledTimes(1);
+
+    await adapter.updates.apply();
+    expect(bridge.updatesApply).toHaveBeenCalledTimes(1);
+
+    await adapter.notifications.show("t", "b");
+    expect(bridge.notificationsShow).toHaveBeenCalledWith("t", "b");
+
+    await adapter.crashLog.append({ timestampMs: 1, message: "m" });
+    expect(bridge.crashLogAppend).toHaveBeenCalledWith({ timestampMs: 1, message: "m" });
+
+    const unsubscribe = adapter.deepLinks.onDeepLink(() => {});
+    expect(bridge.onDeepLink).toHaveBeenCalledTimes(1);
+    expect(typeof unsubscribe).toBe("function");
   });
 
   it("throws a clear error if used before the preload script installed window.cv", () => {

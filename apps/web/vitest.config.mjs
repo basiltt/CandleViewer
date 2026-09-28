@@ -13,7 +13,7 @@ export default defineConfig({
     coverage: {
       ...vitestPreset.test.coverage,
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/main.tsx", "src/**/*.stories.tsx"],
+      exclude: ["src/main.tsx", "src/**/*.stories.tsx", "src/shell/ShellPort.ts"],
       thresholds: {
         lines: 80,
         statements: 80,
