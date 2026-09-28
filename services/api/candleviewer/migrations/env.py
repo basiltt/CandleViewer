@@ -1,27 +1,37 @@
 """Alembic environment for CandleViewer's Postgres schema (M10 `storage`).
 
-This is an empty skeleton (E02-T05): the revision tree is currently empty
-(single-head check passes trivially) and content is added by E07. The
-`sqlalchemy.url` is resolved from `Settings.pg_dsn` at runtime — never
-hard-coded here (C-12.2, no secrets in code).
+`target_metadata` is `candleviewer.db.models.metadata` (E07-T02) so
+`alembic check` (autogenerate-drift CI gate) has a source of truth to diff
+migration history against. The `sqlalchemy.url` is resolved from
+`Settings.pg_dsn` at runtime — never hard-coded here (C-12.2, no secrets in
+code); `CV_PG_DSN` overrides it directly for tooling (e.g. the integration
+test's testcontainers DSN) without going through `.env`.
 """
 
 from __future__ import annotations
 
+import os
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
+
+from candleviewer.db.models import metadata as target_metadata
 
 config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-target_metadata = None  # populated once storage models exist (E07).
-
 
 def _get_url() -> str:
+    # `CV_PG_DSN` env override takes priority so tooling (the identity-migration
+    # integration test, `alembic upgrade --sql` in CI) can point at a
+    # testcontainers/scratch DSN without touching `.env` or `Settings` defaults.
+    override = os.environ.get("CV_PG_DSN")
+    if override:
+        return override
+
     from candleviewer.settings import get_settings
 
     return get_settings().pg_dsn.get_secret_value()
