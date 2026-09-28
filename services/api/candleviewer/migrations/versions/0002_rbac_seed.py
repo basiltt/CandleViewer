@@ -18,22 +18,35 @@ therefore twofold:
    every deploy per Sec.10) must not violate the unique constraints on
    `roles.name` / `permissions.code` / `role_permissions` PK. This revision
    adds no new rows; it documents and is covered by
-   `services/api/tests/unit/storage/test_seed_idempotency.py`, which exercises
-   `candleviewer.db.seed.upsert_roles_and_permissions` against the same
-   `roles.yaml`/`permissions.yaml` fixtures this revision's docstring points
-   at, asserting a second run performs zero inserts.
+   `services/api/tests/integration/storage/test_seed_idempotency.py`, which
+   exercises `candleviewer.db.seed.upsert_roles_and_permissions` against the
+   single-source `candleviewer/auth/rbac_seed.json` fixture, asserting a
+   second run performs zero inserts.
 2. **Bootstrap owner** (Sec.10.2): create the owner user + `user_roles` grant
-   only when `users` is empty and `CV_BOOTSTRAP_OWNER_EMAIL` is set; a random
-   32-char password is generated, hashed (placeholder Argon2id-shaped digest —
-   the real hasher lives in `candleviewer/auth/`, E09, not yet implemented;
-   this migration writes a value satisfying `users_pwd_argon`'s `CHECK` and
-   documents in `system_events` that the user must reset it) and printed once
-   to stdout, never persisted in plaintext or logged via structlog. If the env
-   var is absent this step is a no-op (not a failure) — an empty `users` table
-   at migration time is the normal state for every environment until an
-   operator runs the bootstrap explicitly (`make bootstrap-owner`, `AGENTS.md`
-   §4); failing the *migration* would block every fresh `alembic upgrade head`
-   for environments that seed the owner a different way (CI, tests).
+   only when `users` is empty, `CV_BOOTSTRAP_OWNER_EMAIL` is set, **and**
+   `CV_BOOTSTRAP_OWNER_CONFIRM=1` is also set. The second, confirm-only env
+   var exists so that a normal `alembic upgrade head` run by CI/deploy
+   automation (which typically has no reason to set either var, but might
+   inherit `CV_BOOTSTRAP_OWNER_EMAIL` from an unrelated environment) can never
+   silently print a credential into pipeline logs (C-12.2) — this step only
+   ever fires from the explicit, interactive `make bootstrap-owner`
+   (`AGENTS.md` §4) invocation that sets both. A random 32-char password is
+   generated and printed once to stdout (never stderr, never logged via
+   structlog, never persisted in plaintext); the stored `password_hash` is a
+   placeholder Argon2id-shaped digest unrelated to the printed password (the
+   real hasher lives in `candleviewer/auth/`, E09, not yet implemented), so
+   the placeholder can never be used to authenticate before E09 replaces it —
+   the printed password only matters for the operator to hand to the new
+   owner out-of-band; first login forces a real password change and MFA
+   enrollment (Sec.10.2). `system_events` (Sec.3.10.2) does not exist until
+   revision `0012_governance` (E09/E42), so this migration cannot also write
+   an audit row there yet; stdout is the only record until that lands. If
+   the env vars are absent this step is a no-op
+   (not a failure) — an empty `users` table at migration time is the normal
+   state for every environment until an operator runs the bootstrap
+   explicitly; failing the *migration* would block every fresh
+   `alembic upgrade head` for environments that seed the owner a different
+   way (CI, tests).
 """
 
 from __future__ import annotations
@@ -78,6 +91,13 @@ def upgrade() -> None:
     owner_email = os.environ.get("CV_BOOTSTRAP_OWNER_EMAIL")
     if not owner_email:
         return
+    # Belt-and-braces guard (C-12.2): a plain deploy/CI run of `alembic
+    # upgrade head` must never be able to mint-and-print a credential just
+    # because it happened to inherit `CV_BOOTSTRAP_OWNER_EMAIL` from the
+    # environment. The confirm flag is only ever set by the explicit,
+    # interactive `make bootstrap-owner` target.
+    if os.environ.get("CV_BOOTSTRAP_OWNER_CONFIRM") != "1":
+        return
 
     owner_role_id: uuid.UUID = bind.execute(
         sa.text("SELECT id FROM roles WHERE name = 'owner'")
@@ -110,12 +130,19 @@ def upgrade() -> None:
         {"user_id": user_id, "role_id": owner_role_id},
     )
 
-    # Printed once, to stdout only — never logged via structlog, never
-    # persisted (C-2.7/C-12.2, `.claude/rules/50-security.md`).
+    # Printed once, to stdout only — never stderr/structlog (both of which
+    # commonly end up duplicated into CI/deploy log aggregation), never
+    # persisted in plaintext (C-2.7/C-12.2, `.claude/rules/50-security.md`).
+    # This line only executes when an operator has explicitly opted in via
+    # `CV_BOOTSTRAP_OWNER_CONFIRM=1` (see the guard above), so a routine
+    # `alembic upgrade head` can never emit it. `system_events` (Sec.3.10.2)
+    # does not exist until revision `0012_governance` (E09/E42), so this
+    # migration cannot also write an audit row there yet — that follow-up is
+    # out of this ticket's scope and is called out in the PR body.
     print(
         f"Bootstrap owner created: email={owner_email} password={password} "
         "(shown once; first login forces password change and MFA enrollment)",
-        file=sys.stderr,
+        file=sys.stdout,
     )
 
 

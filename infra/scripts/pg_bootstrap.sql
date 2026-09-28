@@ -57,7 +57,28 @@ ALTER DEFAULT PRIVILEGES FOR ROLE cv_owner IN SCHEMA public
 ALTER DEFAULT PRIVILEGES FOR ROLE cv_owner IN SCHEMA public
   GRANT USAGE, SELECT ON SEQUENCES TO cv_app;
 
--- Audit tables get no UPDATE/DELETE grant for cv_app (C-5.7, applied once
--- `audit_log` exists — E09/E42's revision 0012 must re-run the equivalent
--- REVOKE for that specific table; nothing to revoke yet in this ticket's
--- scope since `audit_log` is out of scope here).
+-- Audit tables get no UPDATE/DELETE grant for cv_app (C-5.7). The default
+-- privileges above are fail-open for any future audit-classified table, so
+-- this script re-asserts the append-only invariant defensively for every
+-- table already named `audit_log` (or ending in `_audit_log`) at the time it
+-- runs — a no-op today since that table does not exist until `0012_governance`
+-- (E09/E42), and a real REVOKE the moment it does, without depending on that
+-- later revision remembering to repeat it. `0012_governance` still owns the
+-- authoritative REVOKE for `audit_log` (`docs/plan/21-database-schema.md`
+-- Sec.1.1) — this is a defence-in-depth backstop, not a substitute.
+DO $$
+DECLARE
+  audit_table regclass;
+BEGIN
+  FOR audit_table IN
+    SELECT c.oid::regclass
+    FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public'
+      AND c.relkind = 'r'
+      AND (c.relname = 'audit_log' OR c.relname LIKE '%\_audit\_log')
+  LOOP
+    EXECUTE format('REVOKE UPDATE, DELETE ON %s FROM cv_app, cv_ro', audit_table);
+  END LOOP;
+END
+$$;
