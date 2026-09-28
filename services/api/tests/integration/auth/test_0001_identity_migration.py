@@ -159,8 +159,8 @@ def test_owner_floor_allows_reshuffle_within_one_transaction(
             "SELECT user_id FROM user_roles WHERE role_id = %s AND user_id IN (%s, %s)",
             (owner_role_id, first_id, second_id),
         )
-        rows = [r[0] for r in cur.fetchall()]
-        assert rows == [second_id]
+        rows = [str(r[0]) for r in cur.fetchall()]  # psycopg returns uuid.UUID
+        assert rows == [str(second_id)]
     conn.rollback()
 
 
