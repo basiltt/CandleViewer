@@ -511,3 +511,68 @@ def test_ran_lanes_none_requires_every_artifact(tmp_path: Path) -> None:
         {"packages/chart-engine": _engine_pkg()}, tmp_path, tolerance_pp=0.5
     )
     assert report.results[0].code == "CI-COV-003"
+
+
+# --- Turbo affected-graph manifest (affected-packages.txt) -----------------
+
+
+def _write_manifest(tmp_path: Path, artifact: str, lines: list[str]) -> None:
+    d = tmp_path / artifact
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "affected-packages.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def test_unaffected_package_is_na_when_manifest_omits_it(tmp_path: Path) -> None:
+    # An e2e-config-only PR: the js lane ran but turbo never scheduled chart-engine.
+    _write_manifest(tmp_path, "coverage-unit-engine", ["packages/protocol"])
+    report = evaluate_all(
+        {"packages/chart-engine": _engine_pkg()},
+        tmp_path,
+        tolerance_pp=0.5,
+        ran_lanes={"js"},
+    )
+    (r,) = report.results
+    assert r.verdict == "N/A"
+    assert "affected graph" in r.reason
+    assert report.conclusion == "success"
+
+
+def test_affected_package_without_report_still_fails(tmp_path: Path) -> None:
+    _write_manifest(tmp_path, "coverage-unit-engine", ["packages/chart-engine"])
+    report = evaluate_all(
+        {"packages/chart-engine": _engine_pkg()},
+        tmp_path,
+        tolerance_pp=0.5,
+        ran_lanes={"js"},
+    )
+    assert report.results[0].code == "CI-COV-003"
+
+
+def test_missing_manifest_requires_every_package(tmp_path: Path) -> None:
+    # Legacy artifact without the manifest: fail closed, never silently N/A.
+    (tmp_path / "coverage-unit-engine").mkdir()
+    report = evaluate_all(
+        {"packages/chart-engine": _engine_pkg()},
+        tmp_path,
+        tolerance_pp=0.5,
+        ran_lanes={"js"},
+    )
+    assert report.results[0].code == "CI-COV-003"
+
+
+def test_manifest_maps_ticket_label_to_repo_dir(tmp_path: Path) -> None:
+    # coverage-baselines.json names apps/app-web; turbo reports apps/web.
+    _write_manifest(tmp_path, "coverage-unit-frontend", [r"apps\web"])
+    web = PackageConfig(
+        "apps/app-web",
+        floor=80.0,
+        baseline=80.0,
+        artifact="coverage-unit-frontend",
+        report_format="lcov",
+    )
+    report = evaluate_all(
+        {"apps/app-web": web}, tmp_path, tolerance_pp=0.5, ran_lanes={"js"}
+    )
+    assert (
+        report.results[0].code == "CI-COV-003"
+    )  # listed (after normalising) but no lcov

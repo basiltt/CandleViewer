@@ -140,6 +140,13 @@ jobs:
           --filter='@candleviewer/web...[origin/main]'
           --filter='@candleviewer/desktop...[origin/main]'
           --summarize
+      - name: Record which packages turbo scheduled (coverage gate N/A vs CI-COV-003)
+        if: always()
+        run: >
+          node tools/ci/turbo-affected-packages.mjs affected-packages.txt --
+          --filter='@candleviewer/ui...[origin/main]'
+          --filter='@candleviewer/web...[origin/main]'
+          --filter='@candleviewer/desktop...[origin/main]'
       - name: Record lane duration in job summary
         if: always()
         run: node tools/ci/write-turbo-summary.mjs unit-frontend >> "$GITHUB_STEP_SUMMARY"
@@ -149,6 +156,7 @@ jobs:
         with:
           name: coverage-unit-frontend
           path: |
+            affected-packages.txt
             apps/web/coverage/lcov.info
             apps/desktop/coverage/lcov.info
             packages/ui/coverage/lcov.info
@@ -179,6 +187,12 @@ jobs:
           --filter='@candleviewer/chart-engine...[origin/main]'
           --filter='@candleviewer/protocol...[origin/main]'
           --summarize
+      - name: Record which packages turbo scheduled (coverage gate N/A vs CI-COV-003)
+        if: always()
+        run: >
+          node tools/ci/turbo-affected-packages.mjs affected-packages.txt --
+          --filter='@candleviewer/chart-engine...[origin/main]'
+          --filter='@candleviewer/protocol...[origin/main]'
       - name: Record lane duration in job summary
         if: always()
         run: node tools/ci/write-turbo-summary.mjs unit-engine >> "$GITHUB_STEP_SUMMARY"
@@ -188,6 +202,7 @@ jobs:
         with:
           name: coverage-unit-engine
           path: |
+            affected-packages.txt
             packages/chart-engine/coverage/lcov.info
             packages/protocol/coverage/lcov.info
             packages/chart-engine/junit.xml
