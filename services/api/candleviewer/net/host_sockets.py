@@ -59,9 +59,14 @@ def _enumerate_psutil_listening_sockets() -> list[str]:
 
     result: list[str] = []
     for conn in connections:
-        if conn.status != psutil.CONN_LISTEN or conn.laddr is None:
+        if conn.status != psutil.CONN_LISTEN:
             continue
-        host, port = conn.laddr[:2]
+        # psutil types `laddr` as `addr | tuple[()]`: a listener with no local
+        # address has nothing to report, and the empty tuple cannot be unpacked.
+        laddr = conn.laddr
+        if not laddr or len(laddr) < 2:
+            continue
+        host, port = laddr[0], laddr[1]
         result.append(_format(host, port))
     return result
 
