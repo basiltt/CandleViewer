@@ -93,6 +93,8 @@ jobs:
               - 'packages/protocol/**'
             migrations:
               - 'services/api/candleviewer/migrations/versions/**'
+              - 'services/api/**/models.py'
+              - 'services/api/alembic.ini'
 
   pin-check:
     name: pin-check (SR-132)
@@ -317,6 +319,13 @@ jobs:
     # applicable whenever backend code, tooling or fixtures change.
     if: ${{ needs.changed-paths.outputs.py == 'true' }}
     uses: ./.github/workflows/_job-integration.yml
+  migrations:
+    name: migrations
+    needs: changed-paths
+    # E03-T10: single-head/drift/expand-contract/upgrade-path checks, only
+    # when a migration file or models.py under services/api actually changed.
+    if: ${{ needs.changed-paths.outputs.migrations == 'true' }}
+    uses: ./.github/workflows/_job-migrations.yml
 
   security:
     name: security
@@ -382,6 +391,7 @@ jobs:
       - xstate-pin-attestation
       - contract
       - integration
+      - migrations
       - security
       - e2e
       - engine-bench
@@ -403,6 +413,7 @@ jobs:
           FILTER_INFRA: ${{ needs.changed-paths.outputs.infra }}
           FILTER_E2E: ${{ needs.changed-paths.outputs.e2e }}
           FILTER_ENGINE: ${{ needs.changed-paths.outputs.engine }}
+          FILTER_MIGRATIONS: ${{ needs.changed-paths.outputs.migrations }}
           RESULT_CHANGED_PATHS: ${{ needs.changed-paths.result }}
           RESULT_PIN_CHECK: ${{ needs.pin-check.result }}
           RESULT_SPIKE_CONTAINMENT: ${{ needs.spike-containment.result }}
@@ -417,6 +428,7 @@ jobs:
           RESULT_XSTATE_PIN_ATTESTATION: ${{ needs.xstate-pin-attestation.result }}
           RESULT_CONTRACT: ${{ needs.contract.result }}
           RESULT_INTEGRATION: ${{ needs.integration.result }}
+          RESULT_MIGRATIONS: ${{ needs.migrations.result }}
           RESULT_SECURITY: ${{ needs.security.result }}
           RESULT_E2E: ${{ needs.e2e.result }}
           RESULT_ENGINE_BENCH: ${{ needs.engine-bench.result }}
@@ -439,6 +451,7 @@ jobs:
               "xstate-pin-attestation": { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_XSTATE_PIN_ATTESTATION },
               contract: { applicable: isTrue(process.env.FILTER_PROTOCOL), result: process.env.RESULT_CONTRACT },
               integration: { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_INTEGRATION },
+              migrations: { applicable: isTrue(process.env.FILTER_MIGRATIONS), result: process.env.RESULT_MIGRATIONS },
               security: {
                 applicable: isTrue(process.env.FILTER_JS) || isTrue(process.env.FILTER_PY) || isTrue(process.env.FILTER_INFRA),
                 result: process.env.RESULT_SECURITY,
