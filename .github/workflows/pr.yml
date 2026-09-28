@@ -327,6 +327,16 @@ jobs:
     if: ${{ needs.changed-paths.outputs.migrations == 'true' }}
     uses: ./.github/workflows/_job-migrations.yml
 
+  migrations:
+    name: migrations
+    needs: changed-paths
+    # Bugfix #1556 (E07-T02 / #168 defect 1): dedicated Alembic gate — single
+    # head, round-trip, autogenerate-drift, timing budget, lockfile
+    # integrity, cv_app privilege matrix. Applicable whenever a migration
+    # revision file changes.
+    if: ${{ needs.changed-paths.outputs.migrations == 'true' }}
+    uses: ./.github/workflows/_job-migrations.yml
+
   security:
     name: security
     needs: changed-paths
@@ -409,6 +419,7 @@ jobs:
         env:
           FILTER_JS: ${{ needs.changed-paths.outputs.js }}
           FILTER_PY: ${{ needs.changed-paths.outputs.py }}
+          FILTER_MIGRATIONS: ${{ needs.changed-paths.outputs.migrations }}
           FILTER_PROTOCOL: ${{ needs.changed-paths.outputs.protocol }}
           FILTER_INFRA: ${{ needs.changed-paths.outputs.infra }}
           FILTER_E2E: ${{ needs.changed-paths.outputs.e2e }}

@@ -12,6 +12,14 @@ name: _job-migrations
 # CV-ERR codes: CI-MIG-001 multiple heads, CI-MIG-002 drift, CI-MIG-003
 # destructive without annotation, CI-MIG-004 upgrade-path failure,
 # CI-MIG-005 `IF NOT EXISTS` used.
+#
+# Bugfix #1556 (parent E07-T02, issue #168) adds, on top of the E03-T10
+# steps above, the pieces #1556's QA re-verification found missing:
+# lockfile integrity (rule 9 — forward-only in production), the
+# cv_owner/cv_app/cv_ro role bootstrap plus the `cv_app` DDL-refusal
+# integration suite, a 60s upgrade-timing budget (§9.3 rule 11), and a
+# byte-identical-modulo-timestamps schema dump assertion around the
+# round-trip.
 
 on:
   workflow_call: {}
@@ -60,8 +68,19 @@ jobs:
       - name: uv sync --frozen (fails if pyproject.toml drifted from uv.lock)
         run: uv sync --frozen --all-groups
 
+      - name: Migration lockfile integrity (#1556, rule 9 — forward-only in production)
+        run: uv run python ../../tools/ci/verify_migration_lockfile.py --base-ref origin/${{ github.base_ref }}
+
       - name: CV_PG_DSN for the service container (loopback only, CI-only creds)
         run: echo "CV_PG_DSN=postgresql+asyncpg://cv:cv@localhost:5432/candleviewer" >> "$GITHUB_ENV"
+
+      - name: Bootstrap cv_owner/cv_app/cv_ro roles and privileges (#1556)
+        working-directory: .
+        run: |
+          PGPASSWORD=cv psql -h localhost -U cv -d candleviewer \
+            -v ON_ERROR_STOP=1 \
+            -v owner_pw="'cv_owner_ci_pw'" -v app_pw="'cv_app_ci_pw'" -v ro_pw="'cv_ro_ci_pw'" \
+            -f infra/scripts/pg_bootstrap.sql
 
       - name: alembic heads — single linear history (CI-MIG-001)
         run: |
@@ -77,8 +96,22 @@ jobs:
       - name: Expand/contract lint — destructive ops need cv:contract-phase (CI-MIG-003)
         run: uv run python ../../tools/ci/migration_lint.py --versions-dir candleviewer/migrations/versions
 
-      - name: alembic upgrade head — greenfield (empty database)
-        run: uv run alembic upgrade head
+      - name: alembic upgrade head — greenfield (empty database, budget 60s, #1556)
+        run: |
+          start=$(date +%s)
+          uv run alembic upgrade head
+          elapsed=$(( $(date +%s) - start ))
+          echo "upgrade head took ${elapsed}s"
+          if [ "$elapsed" -ge 60 ]; then
+            echo "CI-MIG-TIMING-001: migration exceeded the 60s budget (${elapsed}s)" >&2
+            exit 1
+          fi
+
+      - name: Schema dump before round-trip (#1556)
+        working-directory: .
+        run: pg_dump -h localhost -U cv -d candleviewer --schema-only --no-owner --no-privileges > /tmp/schema_before.sql
+        env:
+          PGPASSWORD: cv
 
       # `alembic check` compares models.py against the *live* schema at head, so
       # it must run after `upgrade head` — on an empty database it always fails
@@ -91,8 +124,23 @@ jobs:
           uv run alembic downgrade base
           uv run alembic upgrade head
 
+      - name: Schema dump after round-trip (#1556)
+        working-directory: .
+        run: pg_dump -h localhost -U cv -d candleviewer --schema-only --no-owner --no-privileges > /tmp/schema_after.sql
+        env:
+          PGPASSWORD: cv
+
+      - name: Assert schema dumps are byte-identical modulo timestamps (#1556)
+        working-directory: .
+        run: |
+          norm() { sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}[ T][0-9:.+-]+//g' "$1"; }
+          diff <(norm /tmp/schema_before.sql) <(norm /tmp/schema_after.sql)
+
       - name: Upgrade path from the previous release tag's schema (CI-MIG-004)
         run: python ../../tools/ci/run_previous_release_upgrade.py --root . --dsn "$CV_PG_DSN"
 
       - name: Concurrent-boot advisory-lock integration test
         run: uv run pytest -p no:cacheprovider -m integration tests/integration/migrations/test_boot_advisory_lock_integration.py --no-cov
+
+      - name: cv_app has no DDL privilege (integration, testcontainers, #1556)
+        run: uv run pytest -p no:cacheprovider -m integration tests/integration/auth tests/integration/storage --no-cov
