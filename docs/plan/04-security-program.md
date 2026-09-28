@@ -605,6 +605,15 @@ See §8 for the full specification.
 | SR-145 | Test fixtures MUST contain synthetic keys with an obvious dummy prefix; a test asserts that no fixture matches real key patterns. | unit, ci-gate |
 | SR-146 | CI logs and artefacts MUST be checked for secret leakage by the same redaction rules; workflows MUST NOT `set -x` around secret usage or echo environment dumps. | ci-gate, manual-review |
 
+**Governance-automation secret inventory (E01-X02, `docs/plan/security-reviews/E01-X02-findings.md`
+owns the full audit; this table is the SR-140…SR-146-scoped extract kept here per C-16.5 single-source
+rules — do not duplicate the full audit, link to it):**
+
+| Secret | Type | Scope | Reachable from | Rotation owner/interval | Blast radius if leaked |
+|---|---|---|---|---|---|
+| `PROJECTS_PAT` | Fine-grained PAT (ADR-0017) | Account-level Projects: Read and write | `board-automation.yml` `kind-sync` job only (`issues` trigger, never fork-reachable) | Owner, 90 days (#1417) | All of owner's Projects v2 boards; no repo code/secrets/org access |
+| `GH_BRANCH_PROTECTION_TOKEN` | Repo-administration-scoped credential (E01-T08) | Branch-protection read/write | `governance-drift.yml` only, triggers `schedule`/`workflow_dispatch` — never `pull_request`/`issues` | Owner (interval owned by E01-T08's DoD) | Could rewrite `main` branch protection; break-glass runbook (`CONTRIBUTING.md`) governs manual use |
+
 ### 6.15 Kill switch (SR-080…SR-087)
 
 See §9 for behaviour detail.

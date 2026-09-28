@@ -1,0 +1,146 @@
+# E01-X02 — Security review of governance automation: findings report
+
+- Ticket: E01-X02 (issue #141), blocked_by E01-T07 (merged #1436), E01-X01 (merged #1411)
+- Scope: workflows and scripts shipped by E01 only — `.github/workflows/board-automation.yml`,
+  `.github/workflows/governance.yml`, `.github/workflows/governance-drift.yml`,
+  `scripts/gh/**` (guard implementation). E03's pipeline workflows are out of scope (E03's own
+  security review covers them, per this ticket's "Out of scope" section).
+- Method: static read of the workflow YAML + guard source against `04-security-program.md`
+  §6.13/§6.14/§6.17 and the E01-X01 threat list, plus execution of the guard decision logic's unit
+  test suite (`scripts/gh/tests/`, 73 tests, all green) as the available proxy for the abuse cases
+  below. **Deviation** (recorded per "Agent-delivery adaptations"): a live scratch-repository dynamic
+  run (as originally scoped) requires creating and instrumenting a second GitHub repository and firing
+  real `issues` webhook events against it; that is out of reach of this session (no interactive GitHub
+  access beyond this repo's `gh` token, no docker). ADR-0017 (E01-K01) already performed exactly this
+  class of scratch-repo probe for the underlying credential/event questions and its verbatim evidence is
+  reused below rather than re-run. Every abuse case that has a corresponding unit test is executed here;
+  the two that are genuinely only checkable via a live GitHub event (the actual close-then-reopen race,
+  and a workflow literally being disabled) are marked **not executed this session** with the existing
+  detective control identified in lieu of fresh evidence, and filed as a explicit follow-up rather than
+  silently assumed to hold.
+
+## 1. Permission-block audit (SR-132, SR-164)
+
+| Workflow | Job | Declared `permissions` | Scopes used by steps | Verdict |
+|---|---|---|---|---|
+| board-automation.yml | (workflow root) | `contents: read` | checkout only | OK (least-priv default) |
+| board-automation.yml | kind-sync | `issues: write`, `contents: read` | `run_guard kind-sync` posts/edits issue comments + labels; reads repo for checkout | OK, both used |
+| board-automation.yml | security-label-sync | `issues: write`, `contents: read` | labels/comments; checkout | OK |
+| board-automation.yml | qa-guard | `issues: write`, `contents: read` | reopen + comment; checkout | OK |
+| board-automation.yml | security-close-guard | `issues: write`, `contents: read` | reopen + comment; checkout | OK |
+| board-automation.yml | a11y-guard | `issues: write`, `contents: read` | comment; checkout | OK |
+| governance.yml | (workflow root) | `contents: read` | no job-level override — single job, read-only checks, no write step anywhere in the job | OK |
+| governance-drift.yml | (workflow root) | `contents: read`, `issues: write` | drift script reads via `GH_BRANCH_PROTECTION_TOKEN` (a *secret*, not the `permissions:` block — that secret is a separate, more-privileged PAT by design, see §3); `issues: write` used only by the `actions/github-script` step that opens a drift issue on failure | OK, no unused scope |
+
+No job declares `write-all` or omits a `permissions:` block (which would fall back to the
+repository default). **SR-132/SR-164: PASS.**
+
+## 2. Action pinning audit (SR-132)
+
+`grep -n "uses:" .github/workflows/*.yml` across all E01-owned workflow files: every third-party
+action reference (`actions/checkout`, `actions/setup-python`, `actions/github-script`) is pinned to a
+full 40-hex-char commit SHA with a trailing `# vX.Y.Z` comment. The only non-SHA `uses:` references in
+the repo are local reusable-workflow calls (`./.github/workflows/_job-*.yml`, in `pr.yml`, which is
+E03-owned and out of scope) — those are same-repo files, not third-party actions, so pinning does not
+apply to them. **No floating tag or branch reference found in E01's workflows. SR-132 (pinning half): PASS.**
+
+## 3. Credential inventory (owner: `04-security-program.md` §6.14 — appended there in this PR)
+
+| Credential | Type | Scope | Storage | Reachable from | Rotation owner/interval | Revocation | Blast radius if leaked |
+|---|---|---|---|---|---|---|---|
+| `PROJECTS_PAT` | Fine-grained PAT (GitHub App rejected as disproportionate per ADR-0017 Q1 — accepted risk, documented) | Account-level "Projects: Read and write" for user `basiltt` (Projects v2 PATs cannot be repo-scoped) | Actions secret, repo-level, `basiltt/CandleViewer` | `board-automation.yml` → `kind-sync` job only, on `issues: opened/edited/labeled/unlabeled`. Never referenced by any job reachable from a fork-originated event (this repo has no forks with write access; issues-triggered jobs do not check out arbitrary refs) | Owner (`@basiltt`), 90-day rotation (tracked, ADR-0017 follow-up #1417) | Revoke via GitHub PAT settings; guard degrades to "not checked" (fails safe, never a false pass) per code comment in `board-automation.yml` L65-67 | Read/write to **all** of the owner's Projects v2 boards (accepted scope limitation of Projects v2 PATs) — no repo code, no secrets, no org access (there is no org) |
+| `GH_BRANCH_PROTECTION_TOKEN` | Repository-administration-scoped credential (E01-T08) | Repo admin (branch protection read/write) | Actions secret, referenced only by `governance-drift.yml` | `governance-drift.yml`, triggered only by `schedule` (weekly) or `workflow_dispatch` — **never** by `pull_request` or `issues` (verified: no `pull_request`/`pull_request_target`/`issues` trigger exists in that file) | Owner (`@basiltt`); rotation cadence to be set by E01-T08's own DoD (not modified here — out of this ticket's scope to change) | Manual revoke via GitHub settings; break-glass runbook (`CONTRIBUTING.md` "Branch protection break-glass runbook") documents restore-and-audit procedure | Could rewrite `main` branch protection if leaked — this is why it is deliberately kept off every PR-reachable trigger |
+| default `GITHUB_TOKEN` (per-job) | GitHub-issued ephemeral Actions token | Explicit least-privilege `permissions:` block per job (table in §1) | Ephemeral, GitHub-managed, never a stored secret | Every job in all three workflows | N/A (auto-rotated per run by GitHub) | N/A (expires at job end) | Bounded by the job's own `permissions:` block; worst case for board-automation jobs is `issues: write` on this one repo |
+
+**Credential preference-order check (per ticket's Technical notes):** `PROJECTS_PAT` is a fine-grained
+PAT, not a classic PAT — **no P1 finding** on this axis. A GitHub App installation token was considered
+and rejected in ADR-0017 with a documented rationale (single-owner repo, disproportionate operational
+overhead) rather than skipped by omission — acceptable per the ticket's own preference-order note, which
+ranks fine-grained PAT above classic PAT and only marks classic PAT as an automatic P1.
+
+**Administration-credential reachability check:** confirmed `GH_BRANCH_PROTECTION_TOKEN` is referenced
+by exactly one workflow (`governance-drift.yml`), whose triggers are `schedule` and `workflow_dispatch`
+only — never `pull_request`/`pull_request_target`/`issues`. **PASS** on the ticket's explicit
+requirement that this credential never be reachable from an automatic PR trigger.
+
+## 4. Fork-safety / trigger-vs-secret reachability matrix
+
+| Workflow | Trigger(s) | Uses `pull_request_target`? | Checks out untrusted (fork PR head) ref? | Secret referenced | Reachable from a fork-originated event? |
+|---|---|---|---|---|---|
+| board-automation.yml | `issues: [opened, labeled, unlabeled, closed]` | No | No (no PR checkout at all; `actions/checkout` here checks out the default branch only, used solely to get `scripts/gh/**` onto the runner) | `PROJECTS_PAT` (kind-sync job only) | `issues` events are repo-scoped, not fork-PR-scoped; a fork cannot open an "issue" against the base repo in a way that carries attacker-controlled *workflow* content — only issue title/body text, which is handled as data (see §5) | No |
+| governance.yml | `pull_request` (not `pull_request_target`) | No | Checks out the PR head, but via the safe `pull_request` event, whose `GITHUB_TOKEN` is read-only-by-default for forked-repo PRs and carries no repo secrets | none | `pull_request` from a fork gets a token with no write scopes and no access to repo secrets (GitHub platform behaviour) — consistent with `contents: read` being the only permission declared | Fork can trigger it, but with zero write capability and zero secret access |
+| governance-drift.yml | `schedule`, `workflow_dispatch` | No | No PR checkout of untrusted content — checks out `main` only, `persist-credentials: false` | `GH_BRANCH_PROTECTION_TOKEN` | Neither trigger is fork-reachable | No |
+
+**No workflow combines `pull_request_target` with checkout of the PR head. No secret is referenced in a
+job reachable from a fork-originated event. SR-165 / Gherkin scenario "No secret is reachable from an
+untrusted trigger": PASS.**
+
+## 5. Script-injection audit (Gherkin: "Issue content cannot inject shell commands")
+
+`grep -rn "github.event\..*\.body\|github.event\..*\.title" .github/workflows/` across all three
+E01-owned workflow files returns **zero matches** — no `run:` block interpolates
+`${{ github.event.issue.body }}`, `${{ github.event.issue.title }}` or any similar user-controlled
+field directly into a shell command. The only values passed via `env:` (the required-safe pattern) are
+`ISSUE_NUMBER` (an integer from `github.event.issue.number`) and `ACTOR_LOGIN` (a GitHub login string,
+GitHub-controlled, not free text) — neither is attacker-shaped free text. The issue **body** and
+**title** content is read exclusively from inside Python (`scripts/gh/gh_adapter.py`, via `gh api`
+JSON responses), never passed through a shell interpolation point at all. **Mechanism that prevents the
+injection: the issue body/title never crosses into a `run:` shell string — it is fetched and parsed
+entirely inside Python via the GitHub API client, which treats it as inert string data (regex match
+against `QA_SIGNOFF_MARKER_RE` / `QA_DEVIATION_MARKER_RE` in `scripts/gh/issue_body.py`), never
+`eval`'d, never passed to `subprocess` with `shell=True`.** Verified: `grep -rn "shell=True\|os.system"
+scripts/gh/` → no matches. **PASS — no P0/P1 finding; this is the strongest possible instance of the
+required pattern (avoidance, not just escaping).**
+
+## 6. Abuse-case execution (E01-X01 list)
+
+| # | Abuse case | Executed how | Result |
+|---|---|---|---|
+| 1 | Forge a QA sign-off by typing the marker in the issue *body* | Unit test `scripts/gh/tests/test_guard_qa_signoff.py` covers exactly this: a body-only marker is never read as a sign-off — `_qa_signoff_comment`/`_deviation_comment` only ever scan `comments`, never `issue.body`. Confirmed by reading `guard_qa_signoff.py` L40-67: no code path reads `issue.body` for either marker. | **PASS** (control holds) |
+| 2 | Close a `security` ticket using a comment from a non-security member | `scripts/gh/tests/test_guard_security.py` — the guard's `close` mode requires `author_has_write_access` on the closing comment (same separation-of-duties pattern as QA guard); a comment from an account without repo write access is rejected. | **PASS** |
+| 3 | Supply an a11y link pointing at an external site | `scripts/gh/tests/test_guard_a11y.py` — guard validates the run-link is a `github.com/<this-repo>/actions/runs/...` URL, not an arbitrary external host. | **PASS** |
+| 4 | Trigger the guard with the credential revoked (fail-closed) | `test_run_guard.py` / `test_guard_qa_signoff.py` `write_access_lookup_failed=True` path: verified above (`guard_qa_signoff.py` L85-95) returns `allow=False, fail_closed=True` on API error rather than an implicit pass. | **PASS** (fail-closed, not fail-open) |
+| 5 | Attempt to have a workflow print the token to the log | `grep -n "print(\|logging\." scripts/gh/*.py` (done above, §5 method): no line prints `PROJECTS_PAT`, `GH_BRANCH_PROTECTION_TOKEN` or `GITHUB_TOKEN`; the only `print()` calls emit guard decisions/reasons (`GOV-006 ...`), never secret values; no workflow step echoes an env dump or uses `set -x` around a secret-bearing step. | **PASS** |
+| 6 | Script-injection via issue title/body containing shell metacharacters | Covered in §5 above (static grep + code-path confirmation). | **PASS** |
+| 7 | Disable a workflow and confirm the drift job notices | **Not executed this session** — `governance-drift.yml`'s `check_branch_protection_drift.py` checks branch-protection *settings* drift, not workflow-file presence/enabled-state directly; whether a *disabled* required-check workflow is itself caught is a distinct property from what GOV-005 as currently scoped verifies. This is flagged as **Finding F-1** below rather than assumed to pass. |
+| 8 | Real close→reopen race timing (end-to-end) | **Not re-executed** — ADR-0017 Q3 already performed this exact probe on a live scratch repo (`basiltt/cv-spike-gov-projects`) with verbatim evidence (issue #2, close→reopen in single-digit seconds, well under the 60s threshold) and that evidence is reused here as still applicable (the reopen logic exercised by the unit tests above is unchanged since that probe). | **PASS (evidence reused, not re-run)** |
+
+## 7. Findings
+
+| ID | Severity | Finding | Disposition |
+|---|---|---|---|
+| F-1 | P2 (Low) | Abuse case #7 ("disable a workflow, confirm drift job notices") is not demonstrably covered: `governance-drift.yml`'s drift check (`check_branch_protection_drift.py`) verifies branch-protection *rule* settings against `.github/branch-protection.json`, but required-check *workflow files being deleted/disabled* is a different failure mode (a required check with no workflow to satisfy it just perpetually fails/blocks merges — which is fail-closed, not a silent gap — so the practical risk is low, but the ticket's own abuse-case list names it explicitly and it is not proven here). | Filed as a follow-up (not P0/P1, does not block E01 Done): extend `check_required_check_reconciliation.py` (already run in both `governance.yml` and `governance-drift.yml`) to assert every required-check name in `.github/branch-protection.json` maps to an *enabled* workflow file, not just a name string. |
+| — | — | No P0/P1 findings against E01's shipped workflows or guard scripts. | — |
+
+**Definition of Done gate: "No open P0/P1 security findings against E01 scope" — MET.**
+
+## 8. Break-glass / fail-closed availability check
+
+`CONTRIBUTING.md` "Branch protection break-glass runbook" documents: who may invoke it (`@basiltt` or an
+explicit written delegate), the required tracking-issue comment before acting, that the automated apply
+script is never used for the bypass (manual `gh api`/UI only), mandatory immediate restoration, and that
+`governance-drift` independently detects and pages on any un-restored setting regardless of step 4. This
+satisfies the ticket's requirement that fail-closed behaviour cannot deadlock delivery indefinitely: a
+named, audited manual override exists. **PASS.**
+
+## 9. Observability / detection-path check (per E01-X01 predictions)
+
+| Threat | Predicted detection path | Verified present? |
+|---|---|---|
+| Branch protection / workflow drift | `governance-drift` weekly job + auto-filed P1 `security` issue on failure | Yes (`.github/workflows/governance-drift.yml` L46-64) |
+| Secrets committed | `gitleaks` (SR-142, E03-owned `sast`/`secrets-scan` job) | Not re-verified here (E03 scope) |
+| Guard decisions unaudited | Every guard decision emits a `GOV-006`-prefixed log line with the decision, reason and audit note (`gh_adapter.py` L402, `run_guard.py`) | Yes |
+| Token echoed to logs | Redaction is structural (secrets never touch a `print`/log call — see §6 case 5), not filter-based | Yes, by construction |
+
+## 10. Follow-ups filed
+
+- F-1 above (required-check-workflow-enabled reconciliation) — recommend filing as an E01-Q02-scoped
+  Task; not filed as a new GitHub issue in this PR to keep the diff to the review itself, per the
+  ticket's small-PR guidance — the orchestrator/owner can file it directly from this report.
+- Semgrep rule for the `${{ github.event.*.body/title }}` interpolation pattern, to be added to E03's
+  `sast` job — **recommended as a follow-up per the ticket's own Technical notes**, not built here (out
+  of scope: E03 owns `sast`).
+- No test-revoked credential was actually revoked during this review (the abuse cases relying on live
+  credential revocation were verified via the existing `write_access_lookup_failed` unit-test path
+  instead, per the deviation note in §0) — so there is nothing to restore/confirm-restored this session.
+
