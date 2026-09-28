@@ -219,6 +219,11 @@
 /tests/fixtures/                        @CandleViewer/qa @CandleViewer/backend @CandleViewer/security
 
 # ---------------------------------------------------------------------------
+# Spikes (docs/plan/01-sdlc-and-branching.md C-4.5 — written finding + deleted branch)
+# ---------------------------------------------------------------------------
+/spikes/                                @CandleViewer/backend @CandleViewer/architecture
+
+# ---------------------------------------------------------------------------
 # Governance / repo tooling scripts (GOV-00n checkers and their tests)
 # ---------------------------------------------------------------------------
 /scripts/                               @CandleViewer/architecture @CandleViewer/devsecops
