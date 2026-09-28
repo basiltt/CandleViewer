@@ -1,7 +1,28 @@
 name: _job-e2e
 
-# Reusable-workflow stub (E03-T01). Filled in by a later E03 Task
-# (Playwright web e2e, axe-core a11y suite) per ADR-0013 pipeline shape.
+# E03-T06: e2e + a11y lane (ADR-0013 pipeline shape "[e2e] Playwright web/electron
+# + axe-core a11y", CONSTITUTION §9 checks 8/9).
+#
+# Four sub-jobs, each its own required-check name once GitHub Actions exposes
+# reusable-workflow job names (precedent: `_job-py.yml`'s `architecture` job):
+#   - `e2e-web`      : Playwright web suite, sharded 4x, every PR.
+#   - `e2e-electron` : Electron smoke, `release/*` branches + nightly only
+#                      (not on every PR — Electron packaging is slow).
+#   - `a11y-axe`     : axe-core assertions over the E2E web routes (subset of
+#                      `e2e-web`'s own specs, e.g. smoke.spec.ts) plus this repo's
+#                      `vitest-axe` component suite (apps/web unit tests already
+#                      cover this per E02-T04; re-asserted here as the blocking gate).
+#   - `e2e-staging`  : `@demo-rest-only`-tagged specs only, against demo REST
+#                      endpoints. Zero real order specs exist in R0 (ticket's
+#                      "Out of scope"), so `demo-rest-only.spec.ts` is the sole
+#                      placeholder spec; `check_demo_rest_only_tag.mjs` fails this
+#                      job loudly if the tag itself ever resolves to 0 specs,
+#                      instead of the job silently going green on nothing.
+#
+# Flake handling: Playwright's own `retries: 1` in CI (see playwright.config.ts)
+# gives one automatic retry; a failure that still fails after the retry is
+# CI-E2E-001. Retries are visible in the uploaded JSON reporter output for
+# E03-Q03's (deferred, R1) quarantine automation to consume later.
 
 on:
   workflow_call: {}
@@ -9,11 +30,145 @@ on:
 permissions:
   contents: read
 
+env:
+  PYTHONIOENCODING: utf-8
+
 jobs:
-  e2e-stub:
-    name: e2e (stub)
+  e2e-web:
+    name: e2e-web
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: ${{ fromJSON(vars.CV_CI_TIMEOUT_MINUTES || 20) }}
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
-      - name: Placeholder (filled in by the owning E03 e2e/a11y Task)
-        run: echo "e2e lane stub"
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: "20"
+
+      - name: Enable pnpm via corepack
+        run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web app (Playwright's webServer runs the built `dist/` via vite preview)
+        working-directory: apps/web
+        run: pnpm run build
+
+      - name: Install Playwright browsers
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+
+      - name: Playwright web suite (shard ${{ matrix.shard }}/4, CI-E2E-001 on post-retry failure)
+        working-directory: apps/web
+        run: npx playwright test -c e2e/playwright.config.ts --grep-invert "@demo-rest-only" --shard=${{ matrix.shard }}/4 --retries=1
+
+      - name: Upload failure artifacts (traces/videos/screenshots — failure only)
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: e2e-web-failure-shard-${{ matrix.shard }}
+          path: apps/web/test-results/
+          retention-days: 14
+
+  e2e-staging:
+    name: e2e-staging
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ fromJSON(vars.CV_CI_TIMEOUT_MINUTES || 20) }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: "20"
+
+      - name: Enable pnpm via corepack
+        run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web app (Playwright's webServer runs the built `dist/` via vite preview)
+        working-directory: apps/web
+        run: pnpm run build
+
+      - name: Install Playwright browsers
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+
+      - name: Assert the @demo-rest-only tag still resolves (fails loudly, not silently, if removed)
+        run: node tools/ci/check_demo_rest_only_tag.mjs
+
+      - name: Demo REST-only order-entry suite (asserts no WS order-entry frames)
+        working-directory: apps/web
+        run: npx playwright test -c e2e/playwright.config.ts --grep "@demo-rest-only" --retries=1
+
+  a11y-axe:
+    name: a11y-axe
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ fromJSON(vars.CV_CI_TIMEOUT_MINUTES || 20) }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: "20"
+
+      - name: Enable pnpm via corepack
+        run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: vitest-axe component suite (apps/web, packages/ui)
+        run: pnpm --filter @candleviewer/web --filter @candleviewer/ui test
+
+      - name: Build web app (Playwright's webServer runs the built `dist/` via vite preview)
+        working-directory: apps/web
+        run: pnpm run build
+
+      - name: Install Playwright browsers
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+
+      - name: axe-core route assertions (CI-A11Y-001 on new serious/critical violation)
+        working-directory: apps/web
+        run: npx playwright test -c e2e/playwright.config.ts smoke.spec.ts --retries=1
+
+  e2e-electron:
+    name: e2e-electron
+    if: ${{ startsWith(github.head_ref, 'release/') || github.event_name == 'schedule' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ fromJSON(vars.CV_CI_TIMEOUT_MINUTES || 20) }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: "20"
+
+      - name: Enable pnpm via corepack
+        run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: apps/desktop
+        run: npx playwright install --with-deps chromium
+
+      - name: Electron smoke suite (release/* branches and nightly only)
+        working-directory: apps/desktop
+        run: pnpm run e2e --retries=1
+
+      - name: Upload failure artifacts (failure only)
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: e2e-electron-failure
+          path: apps/desktop/test-results/
+          retention-days: 14

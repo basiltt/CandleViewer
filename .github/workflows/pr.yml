@@ -201,6 +201,14 @@ jobs:
     if: ${{ needs.changed-paths.outputs.protocol == 'true' }}
     uses: ./.github/workflows/_job-contract.yml
 
+  integration:
+    name: integration
+    needs: changed-paths
+    # Integration exercises services/api's fixture-driven pipeline + OMS suite;
+    # applicable whenever backend code, tooling or fixtures change.
+    if: ${{ needs.changed-paths.outputs.py == 'true' }}
+    uses: ./.github/workflows/_job-integration.yml
+
   security:
     name: security
     needs: changed-paths
@@ -243,6 +251,7 @@ jobs:
       - js
       - py
       - contract
+      - integration
       - security
       - e2e
       - engine-bench
@@ -272,6 +281,7 @@ jobs:
           RESULT_JS: ${{ needs.js.result }}
           RESULT_PY: ${{ needs.py.result }}
           RESULT_CONTRACT: ${{ needs.contract.result }}
+          RESULT_INTEGRATION: ${{ needs.integration.result }}
           RESULT_SECURITY: ${{ needs.security.result }}
           RESULT_E2E: ${{ needs.e2e.result }}
           RESULT_ENGINE_BENCH: ${{ needs.engine-bench.result }}
@@ -288,6 +298,7 @@ jobs:
               js: { applicable: isTrue(process.env.FILTER_JS), result: process.env.RESULT_JS },
               py: { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_PY },
               contract: { applicable: isTrue(process.env.FILTER_PROTOCOL), result: process.env.RESULT_CONTRACT },
+              integration: { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_INTEGRATION },
               security: {
                 applicable: isTrue(process.env.FILTER_JS) || isTrue(process.env.FILTER_PY) || isTrue(process.env.FILTER_INFRA),
                 result: process.env.RESULT_SECURITY,

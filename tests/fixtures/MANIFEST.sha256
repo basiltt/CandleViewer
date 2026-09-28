@@ -1,0 +1,17 @@
+# Fixture integrity manifest (E03-T06).
+#
+# One line per recorded fixture used by the `integration` CI job / pytest
+# `integration` suites: "<sha256-hex>  <repo-relative-path>". Verified by
+# `tools/ci/verify_fixture_manifest.py` before any fixture-driven test runs
+# (ticket "Technical notes": a missing/corrupt fixture fails loudly —
+# CI-INT-001 / CI-INT-002 — instead of silently skipping the affected
+# tests). Regenerate an entry's digest whenever the fixture file is
+# intentionally updated:
+#
+#   python -c "import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest())" <path>
+#
+# Fixtures with real Bybit-sourced captures land under
+# `services/api/tests/fixtures/bybit/` (C-13.5) as each pipeline stage is
+# implemented; this ticket only builds the harness. `synthetic_sample.jsonl`
+# is the one fixture that exists today (E02-T12 synthetic-feed dev loop).
+5765e0fe59dfeba078e998149bd363ee1d30e04f1c69652c8da1bb8c22eff0b6  packages/fixtures/raw/synthetic_sample.jsonl
