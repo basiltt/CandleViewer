@@ -228,6 +228,19 @@ jobs:
     if: ${{ needs.changed-paths.outputs.engine == 'true' }}
     uses: ./.github/workflows/_job-engine-bench.yml
 
+  coverage-thresholds:
+    name: coverage-thresholds
+    # E03-T04: runs whenever any lane that produces a coverage artifact ran,
+    # so the gate sees every report that could have changed (a py-only PR
+    # still needs its services/api number checked; a js-only PR its
+    # frontend/engine packages).
+    needs: [changed-paths, js, py]
+    if: ${{ always() && (needs.changed-paths.outputs.js == 'true' || needs.changed-paths.outputs.py == 'true') }}
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/_job-coverage.yml
+
   # --- Gate resolver (ADR-0013 binding rule 2) -------------------------------
 
   ci-required:
@@ -246,6 +259,7 @@ jobs:
       - security
       - e2e
       - engine-bench
+      - coverage-thresholds
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -275,6 +289,7 @@ jobs:
           RESULT_SECURITY: ${{ needs.security.result }}
           RESULT_E2E: ${{ needs.e2e.result }}
           RESULT_ENGINE_BENCH: ${{ needs.engine-bench.result }}
+          RESULT_COVERAGE_THRESHOLDS: ${{ needs.coverage-thresholds.result }}
         run: |
           node scripts/ci_gate_resolver.mjs "$(node -e '
             const isTrue = (v) => v === "true";
@@ -294,6 +309,10 @@ jobs:
               },
               e2e: { applicable: isTrue(process.env.FILTER_E2E), result: process.env.RESULT_E2E },
               "engine-bench": { applicable: isTrue(process.env.FILTER_ENGINE), result: process.env.RESULT_ENGINE_BENCH },
+              "coverage-thresholds": {
+                applicable: isTrue(process.env.FILTER_JS) || isTrue(process.env.FILTER_PY),
+                result: process.env.RESULT_COVERAGE_THRESHOLDS,
+              },
             };
             console.log(JSON.stringify(lanes));
           ')"

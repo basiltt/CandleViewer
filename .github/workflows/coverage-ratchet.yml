@@ -1,0 +1,86 @@
+name: coverage-ratchet
+
+# E03-T04: baseline-raise automation (ticket Scope/Deliverables + Gherkin
+# scenario 3). Runs after `pr` completes on a push to `main` so it can read
+# that run's coverage artifacts; if any package's measured coverage beats
+# its recorded baseline by >=1.0pp, opens (or updates) a bot PR raising
+# just that package's `baseline` in `tools/ci/coverage-baselines.json`.
+#
+# The bot PR only ever raises a baseline (coverage_gate.py's
+# `compute_ratchet_proposals` never proposes a lower number); a baseline
+# *lowering* is a manual, CODEOWNER-gated edit with a `Reason:` line per
+# the file's own header comment and `.github/CODEOWNERS`.
+#
+# Token scope: `contents: write` + `pull-requests: write` only, matching
+# the ticket's Security notes (least-privilege, scoped to opening a PR
+# against this one file — SR-141 favours OIDC/GitHub App over a PAT; this
+# uses the default `GITHUB_TOKEN`, which is already scoped down to the
+# workflow's declared `permissions:` block below).
+
+on:
+  workflow_run:
+    workflows: ["pr"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ratchet:
+    name: coverage-ratchet
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: main
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.13"
+
+      - name: Download coverage artifacts from the triggering pr run
+        continue-on-error: true
+        uses: actions/download-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          pattern: "*coverage*"
+          path: coverage-artifacts
+          merge-multiple: false
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Flatten per-package reports
+        run: python tools/ci/flatten_coverage_artifacts.py coverage-artifacts
+
+      - name: Compute ratchet proposals (does not fail the job on a below-floor package)
+        continue-on-error: true
+        run: >
+          python tools/ci/coverage_gate.py --baselines tools/ci/coverage-baselines.json
+          --report-dir coverage-artifacts --ratchet --ratchet-out ratchet-proposals.json
+
+      - name: Apply ratchet proposals to coverage-baselines.json
+        id: apply
+        run: python tools/ci/apply_ratchet_proposals.py ratchet-proposals.json tools/ci/coverage-baselines.json
+
+      - name: Open baseline-raise PR
+        if: ${{ steps.apply.outputs.changed == 'true' }}
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(infra-devops): ratchet coverage baseline(s) up"
+          branch: bot/coverage-baseline-ratchet
+          delete-branch: true
+          title: "chore(infra-devops): ratchet coverage baseline(s) up"
+          labels: type/chore,area/infra-devops
+          body: |
+            Automated baseline raise (E03-T04, coverage-ratchet workflow).
+
+            ${{ steps.apply.outputs.summary }}
+
+            This PR only ever raises a baseline. A baseline lowering must be a
+            manual, CODEOWNER-gated commit with a `Reason:` line.

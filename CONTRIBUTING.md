@@ -57,7 +57,10 @@ Rules that always hold, wherever the list lives:
 - A red required check is never merged. There is no admin merge and no "re-run until green".
 - Checks are never disabled, skipped, marked `continue-on-error`, or removed from branch protection in a
   feature PR. Changing the required-check set is an amendment (Constitution §16).
-- Coverage floors are floors and may never be lowered in the PR that fails them (C-9.4).
+- Coverage floors are floors and may never be lowered in the PR that fails them (C-9.4). Per-package floors,
+  ratchet baselines and tolerance live in `tools/ci/coverage-baselines.json` (CODEOWNER-gated by the QA
+  lead — see `.github/CODEOWNERS`); the `coverage-thresholds` check (`tools/ci/coverage_gate.py`) reads it
+  and fails a PR with a specific `CI-COV-00x` code and reason rather than a bare red X.
 - Run the same gates locally before pushing — see [`AGENTS.md` §4 (Commands)](AGENTS.md#4-commands), which
   is the single source of truth for task/script names.
 

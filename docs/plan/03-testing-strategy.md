@@ -37,6 +37,10 @@ Numeric quality gates (CI-enforced, see §14):
 - Backend package coverage: **≥85% line**, **≥75% branch**, enforced per-package (not just repo aggregate) via `pytest --cov` + `coverage.py` fail-under, per `packages/backend/<module>/pyproject.toml`.
 - Chart engine package coverage: **≥85% line** (same bar as backend, because rendering-math bugs are as costly as backend bugs).
 - Frontend (non-engine) coverage: **≥80% line**.
+- These floors, their per-package ratchet baselines and the 0.5pp regression tolerance are enforced as a
+  blocking CI check (`coverage-thresholds`, E03-T04) reading `tools/ci/coverage-baselines.json`; see
+  `CONTRIBUTING.md` "Quality gates" for the check name and `tools/ci/coverage_gate.py`'s `CI-COV-00x`
+  error codes.
 - Mutation-testing spot check (not a gate, a quarterly health check): `mutmut` on rule engine + bar builders, target ≥60% mutation score, tracked as a metric not blocking merges. Process: the on-call QA/SDET engineer (rotates monthly per the QA/SDET pair's shared calendar) runs `mutmut run` against `packages/backend/rules` and `packages/backend/bar_builders` on the first Monday of each quarter (Jan/Apr/Jul/Oct), attaches the HTML report (`mutmut html`) to a recurring backlog chore ticket (`CHORE-MUTATION-<year>-<quarter>`), and files a normal-severity bug (P2, §11.3 taxonomy) for any surviving mutant that reveals a genuinely untested behavior (not for equivalent/no-op mutants, which are logged and ignored in the ticket). The mutation score trend (quarter-over-quarter) is reported in the quarterly QA health review alongside flaky-test metrics (§13).
 - Zero P0/P1 open bugs (see §11 taxonomy) to enter "In Test"→"Done" transition.
 - Zero flaky tests quarantined for >2 sprints (see §13).

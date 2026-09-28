@@ -1,0 +1,42 @@
+{
+  "_comment": "E03-T04: per-package coverage floors and ratchet baselines. Floors are the hard, never-lowered standard from docs/plan/30-release-roadmap.md §4.4 / docs/plan/03-testing-strategy.md §2. Baselines start equal to the floor and only ratchet upward (never down) via the baseline-raise bot PR. Lowering a baseline requires a hand-edited commit with a 'Reason:' line and CODEOWNER (QA lead) approval — see CODEOWNERS entry for this file.",
+  "tolerance_pp": 0.5,
+  "packages": {
+    "services/api": {
+      "floor": 85.0,
+      "baseline": 85.0,
+      "artifact": "py-coverage",
+      "report_format": "coverage-xml"
+    },
+    "packages/chart-engine": {
+      "floor": 85.0,
+      "baseline": 85.0,
+      "artifact": "coverage-unit-engine",
+      "report_format": "lcov"
+    },
+    "packages/protocol": {
+      "floor": 85.0,
+      "baseline": 85.0,
+      "artifact": "coverage-unit-engine",
+      "report_format": "lcov"
+    },
+    "packages/ui": {
+      "floor": 80.0,
+      "baseline": 80.0,
+      "artifact": "coverage-unit-frontend",
+      "report_format": "lcov"
+    },
+    "apps/app-web": {
+      "floor": 80.0,
+      "baseline": 80.0,
+      "artifact": "coverage-unit-frontend",
+      "report_format": "lcov"
+    },
+    "apps/app-electron": {
+      "floor": 80.0,
+      "baseline": 80.0,
+      "artifact": "coverage-unit-frontend",
+      "report_format": "lcov"
+    }
+  }
+}

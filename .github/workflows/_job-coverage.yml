@@ -1,0 +1,117 @@
+name: _job-coverage
+
+# E03-T04: per-package coverage threshold gate. Consumes the coverage
+# artifacts produced by `_job-py.yml` (E03-T03, `py-coverage` ->
+# `coverage.xml`) and `_job-js.yml` (E03-T02, `coverage-unit-frontend` /
+# `coverage-unit-engine` -> `lcov.info` per package). Reports
+# `coverage-thresholds` as the required check name (ticket Done means /
+# `E03-T13`).
+#
+# `tools/ci/coverage_gate.py` owns the actual pass/fail decision (floor,
+# baseline-regression tolerance, missing-artifact-is-failure); this
+# workflow only downloads artifacts, runs the gate, posts the PR-comment
+# summary table, and — on `push` to `main` only — proposes baseline raises
+# via a bot PR. Out of scope (ticket): writing tests to reach the
+# thresholds, mutation testing / flake quarantine (E03-Q03).
+#
+# Error codes: CI-COV-001 below floor, CI-COV-002 baseline regression,
+# CI-COV-003 missing coverage artifact.
+
+on:
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+jobs:
+  coverage-thresholds:
+    name: coverage-thresholds
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write # PR-comment summary table only; no other write scope
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.13"
+
+      # Each `download-artifact` call is best-effort: an artifact that was
+      # never uploaded (e.g. the `py` lane didn't run because `changed-paths`
+      # said `py: false`) must not fail this step — coverage_gate.py itself
+      # turns "file not found under report-dir" into CI-COV-003, which is
+      # the ticket's intended behaviour for a package that should have had a
+      # report but doesn't. `continue-on-error` here only covers "artifact
+      # never existed for this PR at all" so the download step itself
+      # doesn't abort before the gate gets a chance to report why.
+      - name: Download py-coverage artifact
+        continue-on-error: true
+        uses: actions/download-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: py-coverage
+          path: coverage-artifacts/py-coverage
+
+      - name: Download coverage-unit-frontend artifact
+        continue-on-error: true
+        uses: actions/download-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage-unit-frontend
+          path: coverage-artifacts/coverage-unit-frontend
+
+      - name: Download coverage-unit-engine artifact
+        continue-on-error: true
+        uses: actions/download-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage-unit-engine
+          path: coverage-artifacts/coverage-unit-engine
+
+      # The frontend/engine lanes upload one lcov.info per package under a
+      # shared artifact name (`apps/web/coverage/lcov.info`, etc. — see
+      # `_job-js.yml`); flatten each package's report to the single
+      # `<artifact>/lcov.info` (or `coverage.xml`) path coverage_gate.py's
+      # default filename lookup expects, without hand-listing every package
+      # path twice (that duplication already lives once, in
+      # coverage-baselines.json's `artifact` field).
+      - name: Flatten per-package reports to coverage_gate.py's expected layout
+        run: python tools/ci/flatten_coverage_artifacts.py coverage-artifacts
+
+      - name: Run coverage gate
+        id: gate
+        run: |
+          python tools/ci/coverage_gate.py \
+            --baselines tools/ci/coverage-baselines.json \
+            --report-dir coverage-artifacts \
+            --summary-out coverage-summary.md
+
+      - name: Post PR summary comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.0.1
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('coverage-summary.md', 'utf8');
+            const body = `### Coverage gate (\`coverage-thresholds\`)\n\n${summary}`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const marker = '### Coverage gate (`coverage-thresholds`)';
+            const existing = comments.find((c) => c.body && c.body.startsWith(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
