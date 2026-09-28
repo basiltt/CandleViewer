@@ -1,0 +1,257 @@
+name: main
+
+# E03-T08: build, scan, SBOM and cosign-sign container images on merge to
+# `main`. ADR-0013 rule 8 ("every merge to main produces a tagged image with
+# an SBOM and a signature"); 04-security-program.md SR-131, SR-133, SR-135,
+# SR-137, SR-141.
+#
+# Scope (ticket "Scope / Deliverables"): the one image that exists today,
+# `infra/images/Dockerfile.api` (services/api). A second `matrix` entry (web
+# bundle server) lands with its own Dockerfile in a later ticket — this
+# workflow is written so adding it is a matrix-entry change, not a rewrite.
+# Electron installer build/sign hooks are stubbed in `release.yml`
+# (E03-T11); packaging itself is out of scope here.
+#
+# Out of scope (ticket "Out of scope"): deployment (E03-T09), release
+# tagging/changelog (E03-T11), Electron hardening assertions (E10).
+#
+# Error codes (ticket "Technical notes"): CI-IMG-001 unpinned base,
+# CI-IMG-002 root user, CI-IMG-003 Trivy High/Critical, CI-IMG-004 cosign
+# verification failed, CI-IMG-005 SBOM generation failed.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/images/**"
+      - "services/api/**"
+      - ".github/workflows/main.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  # One image build per branch at a time; never cancel an in-flight main
+  # build (a cancelled-mid-push image would leave an untagged/unsigned
+  # digest in GHCR) — only queue behind it.
+  group: main-image-build
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: "3.12"
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/candleviewer-api
+
+jobs:
+  # ---------------------------------------------------------------------
+  # dockerfile-pins — SR-131: hadolint (style/best-practice) plus the
+  # digest-pin check (acceptance scenario "A floating base image is
+  # rejected", CI-IMG-001). Runs first and cheap; nothing else proceeds
+  # if a Dockerfile itself is broken.
+  # ---------------------------------------------------------------------
+  dockerfile-pins:
+    name: dockerfile-pins
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
+        with:
+          dockerfile: infra/images/Dockerfile.api
+          # SR-131 digest pinning is enforced by check_dockerfile_pins.py
+          # below, not hadolint's own (weaker) DL3007 "avoid latest" rule.
+          failure-threshold: warning
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Digest-pin check (SR-131, CI-IMG-001)
+        run: python tools/ci/check_dockerfile_pins.py infra/images
+
+  # ---------------------------------------------------------------------
+  # build-scan-sign — builds the api image, runs the non-root hardening
+  # assertion, gates on Trivy High/Critical, generates + attests a
+  # CycloneDX SBOM, pushes to GHCR, signs keyless with cosign and verifies
+  # the pushed digest in the same job (ticket: "a signature nobody
+  # verifies is decoration").
+  # ---------------------------------------------------------------------
+  build-scan-sign:
+    name: build-scan-sign
+    needs: dockerfile-pins
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write # push to GHCR
+      id-token: write # cosign keyless OIDC (SR-141: no long-lived registry password)
+      attestations: write # attach the SBOM as an in-toto attestation
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0 # need history for the previous :dev digest (SBOM diff)
+
+      - name: Compute tags (ADR-0013 rule 8 tagging scheme)
+        id: meta
+        run: |
+          set -euo pipefail
+          SHORT_SHA="$(git rev-parse --short=12 HEAD)"
+          VERSION="$(python -c "import tomllib; print(tomllib.load(open('services/api/pyproject.toml','rb'))['project']['version'])")"
+          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+          echo "semver_tag=${VERSION}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          # SOURCE_DATE_EPOCH from the commit timestamp for reproducible
+          # layer metadata (ticket "Technical notes / design").
+          echo "source_date_epoch=$(git log -1 --format=%ct)" >> "$GITHUB_OUTPUT"
+
+      - name: Record previous :dev digest (for the SBOM diff)
+        id: prev
+        run: |
+          set +e
+          PREV="$(docker manifest inspect "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev" 2>/dev/null \
+            | python -c "import sys,json; d=json.load(sys.stdin); print(d.get('config',{}).get('digest',''))" 2>/dev/null)"
+          set -e
+          echo "digest=${PREV:-none}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.6.1
+
+      - uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build (load locally for the hardening + Trivy gates)
+        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
+        with:
+          context: .
+          file: infra/images/Dockerfile.api
+          load: true
+          tags: candleviewer-api:ci
+          build-args: |
+            SOURCE_DATE_EPOCH=${{ steps.meta.outputs.source_date_epoch }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Non-root hardening assertion (SR-131, CI-IMG-002)
+        run: python tools/ci/check_image_non_root.py --image candleviewer-api:ci
+
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: candleviewer-api:ci
+          format: sarif
+          output: trivy-image.sarif
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"
+          ignore-unfixed: true
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install gate helper deps
+        run: pip install -r scripts/requirements-ci.txt
+
+      - name: Trivy High/Critical gate (SR-131, CI-IMG-003)
+        # Reuses the E03-T07 policy engine so "what blocks" stays defined
+        # once; a Critical/High finding here blocks the push+sign steps
+        # below, per the ticket's acceptance scenario (deploy stage never
+        # runs and the image is never pushed as a fit-for-deploy artefact).
+        run: python tools/ci/security_gate.py --tool trivy --report trivy-image.sarif
+
+      - uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
+        id: push
+        with:
+          context: .
+          file: infra/images/Dockerfile.api
+          push: true
+          build-args: |
+            SOURCE_DATE_EPOCH=${{ steps.meta.outputs.source_date_epoch }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.semver_tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Generate CycloneDX SBOM (syft, SR-133)
+        uses: anchore/sbom-action@f5e124a5ffb6460cb2fbb2f8259ca7cb50fb18b1 # v0.17.9
+        with:
+          image: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}"
+          format: cyclonedx-json
+          output-file: sbom.cyclonedx.json
+          upload-artifact: true
+          upload-release-assets: false
+
+      - name: Validate SBOM structure (contract gate, CI-IMG-005)
+        run: python tools/ci/validate_sbom.py --sbom sbom.cyclonedx.json
+
+      - name: SBOM diff vs previous :dev image (job summary, SR-135)
+        run: |
+          set -euo pipefail
+          python tools/ci/sbom_diff.py \
+            --current sbom.cyclonedx.json \
+            --previous-digest "${{ steps.prev.outputs.digest }}" \
+            --image "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" \
+            >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9101 # v3.7.0
+
+      - name: Attach the SBOM as an attestation (in-toto, SR-133)
+        run: |
+          cosign attest --yes \
+            --predicate sbom.cyclonedx.json \
+            --type cyclonedx \
+            "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}"
+        env:
+          COSIGN_EXPERIMENTAL: "1" # keyless OIDC signing/attesting
+
+      - name: Sign the image (cosign keyless OIDC, SR-137)
+        run: |
+          cosign sign --yes \
+            "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}"
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+
+      - name: Verify the pushed signature (CI-IMG-004)
+        # "A signature nobody verifies is decoration" — verify in the same
+        # workflow, immediately after signing, and archive the output.
+        run: |
+          set -euo pipefail
+          cosign verify \
+            --certificate-identity-regexp "^https://github.com/${{ github.repository }}/" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}" \
+            | tee cosign-verify.json
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+
+      - name: Job summary (digest, size, layers, SBOM/Trivy counts)
+        if: always()
+        run: |
+          {
+            echo "### Image build summary"
+            echo "- digest: \`${{ steps.push.outputs.digest }}\`"
+            echo "- tags: \`${{ steps.meta.outputs.semver_tag }}\`, \`dev\`"
+            echo "- SBOM components: $(python -c "import json; print(len(json.load(open('sbom.cyclonedx.json'))['components']))" 2>/dev/null || echo 'n/a')"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: image-supply-chain-evidence
+          path: |
+            sbom.cyclonedx.json
+            trivy-image.sarif
+            cosign-verify.json
+          retention-days: 90
+
+  # NOTE (ticket "Out of scope" / acceptance scenario 2 — "A Critical image
+  # vulnerability blocks the deploy"): the Trivy High/Critical gate above
+  # runs as a step *inside* build-scan-sign, before the push+sign steps —
+  # a Critical finding fails the job via security_gate.py's exit code, so
+  # the image is never pushed/signed as fit-for-deploy and no downstream
+  # job can consume it. The actual deploy stage (staging redeploy, `docker
+  # pull` by digest + `cosign verify` at deploy time) is E03-T09's scope —
+  # not defined in this workflow.
