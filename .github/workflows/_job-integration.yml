@@ -1,0 +1,70 @@
+name: _job-integration
+
+# E03-T06: integration lane (ADR-0013 pipeline shape "[integration] fixture-driven
+# pipeline + OMS fake-exchange suite", CONSTITUTION §9 check 7).
+#
+# Two suites:
+#   1. Fixture-driven pipeline (`services/api/tests/integration/pipeline/`):
+#      fixture manifest + checksum verification (CI-INT-001/002) then the
+#      recorded-fixture -> normalised-events replay. Runs with outbound
+#      network denied except loopback (`_ci_network_guard.py`, autouse).
+#   2. `-m integration` suites needing Postgres/QuestDB (currently the
+#      identity/RBAC migration round-trip, `tests/integration/auth/`) —
+#      these spin their own service container via testcontainers, which
+#      needs Docker; `services=docker` is available on GitHub-hosted
+#      ubuntu runners.
+#
+# The OMS fake-exchange suite (per ADR-0012's table) has no product logic
+# to exercise yet — `oms/service.py` is an R0 scaffold with no order
+# lifecycle implemented (ticket "Out of scope": "product E2E specs,
+# contract fixtures ... for features that do not exist yet"). The lane
+# exists and is wired here; it activates automatically as `unit/exchange`
+# and `oms` gain real logic under the existing `-m integration` marker.
+
+on:
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+env:
+  PYTHONIOENCODING: utf-8
+  CV_CI_ALLOWED_HOSTS: ""
+
+jobs:
+  integration:
+    name: integration
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ fromJSON(vars.CV_CI_TIMEOUT_MINUTES || 20) }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.9.x"
+          enable-cache: true
+          cache-dependency-glob: "services/api/uv.lock"
+          python-version: "3.12"
+
+      - name: uv sync --frozen --all-groups
+        working-directory: services/api
+        run: uv sync --frozen --all-groups
+
+      - name: Verify fixture manifest (CI-INT-001 fixture unavailable, CI-INT-002 checksum mismatch)
+        run: python tools/ci/verify_fixture_manifest.py --manifest tests/fixtures/MANIFEST.sha256 --repo-root .
+
+      - name: Fixture-driven pipeline suite (network denied except loopback)
+        working-directory: services/api
+        run: uv run pytest tests/integration/pipeline -m "not integration" --no-cov
+
+      - name: Postgres/QuestDB-backed integration suite (testcontainers, needs Docker)
+        working-directory: services/api
+        run: uv run pytest tests/integration -m integration --no-cov
+
+      - name: Assert no live-exchange egress occurred
+        if: always()
+        run: |
+          echo "Network guard (services/api/tests/_ci_network_guard.py) denies any non-loopback"
+          echo "connect() for the whole run; a test reaching api.bybit.com raises NetworkGuardViolation"
+          echo "and fails this job rather than silently succeeding."

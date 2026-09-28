@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/pa11y/pa11y-ci/main/schema.json",
+  "_comment": "E03-T06: pa11y-ci config. Scheduled nightly by the deferred E03-T12 workflow (not this ticket's scope) — this file only authors the config so that scheduling can wire `pa11y-ci --config .pa11yci.json` without further design work. Complements the blocking `a11y-axe` PR job (axe-core), giving a second WCAG 2.2 AA engine (HTML_CodeSniffer via pa11y) as a nightly, non-blocking signal per 05-accessibility-standard.md.",
+  "defaults": {
+    "standard": "WCAG2AA",
+    "timeout": 30000,
+    "wait": 500,
+    "chromeLaunchConfig": {
+      "args": ["--no-sandbox", "--disable-dev-shm-usage"]
+    },
+    "ignore": []
+  },
+  "urls": [
+    {
+      "url": "http://127.0.0.1:4173/",
+      "_comment": "R0 placeholder route (apps/web). Extend this list as screens land (14-screens-catalogue.md)."
+    }
+  ]
+}

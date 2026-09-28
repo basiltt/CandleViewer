@@ -1,8 +1,23 @@
 name: _job-contract
 
-# Reusable-workflow stub (E03-T01). Filled in by E03-T06 (OpenAPI/WS schema
-# conformance, protocol codec round-trip, generated-code freshness gate)
-# per ADR-0013 pipeline shape and binding rule 3.
+# E03-T06: contract conformance lane (ADR-0013 pipeline shape "[contract] OpenAPI/WS
+# schema conformance + protocol codec round-trip", binding rule 3).
+#
+# Runs three conformance surfaces:
+#   1. OpenAPI structural validity + server-route drift
+#      (services/api/tests/contract/test_openapi_conformance.py, CI-CON-001).
+#   2. WS schema / protocol codec round-trip (packages/protocol's own vitest
+#      suite: ws-schema-drift.test.ts, runtime-binary.test.ts,
+#      generated-guard.test.ts) plus the generated-models contract suite
+#      (services/api/tests/contract/test_generate_protocol_models.py).
+#   3. Schemathesis fuzz on /v1 (CONSTITUTION §9 check 6) — deferred until a
+#      real /v1 route exists to fuzz (R0 has none beyond health/metrics);
+#      tracked as a follow-up once E04+ lands the first REST route, so this
+#      step is a documented placeholder rather than a silent no-op.
+#
+# CI-CON-001 (route/field drift) is raised by
+# candleviewer/api/contract_conformance.py; WS/codec drift codes are owned
+# by E02-T09 (ws-schema-drift.test.ts) and E03-T05 (gen-freshness).
 
 on:
   workflow_call: {}
@@ -10,11 +25,48 @@ on:
 permissions:
   contents: read
 
+env:
+  PYTHONIOENCODING: utf-8
+  CV_CI_ALLOWED_HOSTS: ""
+
 jobs:
-  contract-stub:
-    name: contract (stub — see E03-T06)
+  contract:
+    name: contract
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: ${{ fromJSON(vars.CV_CI_TIMEOUT_MINUTES || 20) }}
     steps:
-      - name: Placeholder (E03-T06 fills in contract + generated-code checks)
-        run: echo "contract lane stub — implemented by E03-T06"
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install uv (services/api contract suite)
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.9.x"
+          enable-cache: true
+          cache-dependency-glob: "services/api/uv.lock"
+          python-version: "3.12"
+
+      - name: uv sync --frozen (fails if pyproject.toml drifted from uv.lock)
+        working-directory: services/api
+        run: uv sync --frozen --all-groups
+
+      - name: OpenAPI structural validity + server-route drift (CI-CON-001)
+        working-directory: services/api
+        run: uv run pytest tests/contract -m "not integration" --no-cov
+
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: "20"
+
+      - name: Enable pnpm via corepack
+        run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: WS schema conformance + protocol codec round-trip (packages/protocol)
+        run: pnpm --filter @candleviewer/protocol test
+
+      - name: Schemathesis fuzz on /v1 (deferred — no /v1 route exists yet)
+        run: |
+          echo "No REST route beyond /healthz, /readyz, /metrics exists in R0 (services/api/candleviewer/app.py)."
+          echo "Schemathesis fuzz on /v1 activates once the first /v1 route lands; tracked in the owning epic's ticket, not skipped silently."
