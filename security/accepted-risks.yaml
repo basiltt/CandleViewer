@@ -51,3 +51,19 @@ entries:
     approver: "basiltt"
     expires: "2027-03-25"
     ticket: "https://github.com/basiltt/CandleViewer/issues/108"
+  # E07-T02 bootstrap-owner migration (0002_rbac_seed) prints a one-time
+  # random password to stdout only, gated behind two operator-set env vars
+  # (CV_BOOTSTRAP_OWNER_EMAIL and CV_BOOTSTRAP_OWNER_CONFIRM=1) so a routine
+  # `alembic upgrade head` never emits it; the first login forces a password
+  # change and MFA enrollment (Sec.10.2). CodeQL's clear-text-logging rule
+  # cannot distinguish this gated, intentional operator handoff from an
+  # unconditional secret leak. Sprint-01 owner-delegated acceptance
+  # (2026-09-25); follow-up to replace the print with a structured,
+  # redaction-aware bootstrap channel is out of this ticket's scope.
+  - id: "py/clear-text-logging-sensitive-data:services/api/candleviewer/migrations/versions/0002_rbac_seed.py:146"
+    tool: codeql
+    severity: HIGH
+    reason: "Gated one-time bootstrap-owner password print to stdout only, never a routine-upgrade path; forced change+MFA on first login"
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "https://github.com/basiltt/CandleViewer/issues/1551"
