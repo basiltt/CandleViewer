@@ -72,3 +72,22 @@ export function serializeFixture(fixture) {
 export function hashFixture(fixture) {
   return fnv1aHex(serializeFixture(fixture));
 }
+
+/**
+ * Asserts a fixture's hash matches an expected, previously-recorded hash.
+ * (E06-Q01 negative-guard AC: "a run whose fixture hash differs from the
+ * recorded seed must fail loudly rather than proceed" — a run that silently
+ * regenerates a different fixture than the one it claims to use would
+ * invalidate every downstream comparison without any visible symptom.)
+ * @param {M0Fixture} fixture
+ * @param {string} expectedHash
+ */
+export function assertFixtureHash(fixture, expectedHash) {
+  const actual = hashFixture(fixture);
+  if (actual !== expectedHash) {
+    throw new Error(
+      `[bench] fixture hash mismatch: expected ${expectedHash}, got ${actual} ` +
+        `(seed=${fixture.seed}) — refusing to run against an unverified fixture`,
+    );
+  }
+}
