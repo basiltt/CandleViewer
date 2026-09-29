@@ -62,6 +62,6 @@ If spike S2 shows QuestDB failing our real footprint/replay query shapes, the ho
 
 ## Validation
 
-- Spike S2: run the real footprint, profile, CVD and replay-scan queries against both QuestDB and TimescaleDB on a week of recorded BTCUSDT/ETHUSDT data; record p95 per query shape.
+- Spike S2: run the real footprint, profile, CVD and replay-scan queries against both QuestDB and TimescaleDB on a week of recorded BTCUSDT/ETHUSDT data; record p95 per query shape. **Executed** (E07-K01, `docs/plan/spikes/S2-hot-tier.md`) — see `ADR-0022-hot-tier-questdb-vs-timescaledb.md` for the full results table, the decision-rule arithmetic and the corrected (QA bug #1562) reproducible run. Decision: **confirm QuestDB** on all six shapes A-F; this ADR's status stands unamended (`decided`), the reversal path was not triggered. Only the real-container PGWire/ILP confirmation (`E07-S07`) remains outstanding.
 - Spike S6: instrument the recorder for 7 days to replace the GB/day estimate before finalising retention and disk sizing.
 - Monthly restore drill (Postgres PITR + Parquet tree) as a PRR checklist item.

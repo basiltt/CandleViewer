@@ -1269,7 +1269,7 @@ The chart engine exposes an accessible parallel representation (see `26-chart-en
 |---|---|---|---|---|
 | Custom WebGL engine underdelivers vs schedule | Medium | High | Engine spike first (S1) with a hard go/no-go; Lightweight Charts v5 remains the documented fallback chassis (ADR-0002); engine milestones are independently releasable (doc 26 §14) | Chart-engine owner |
 | Footprint text density kills frame budget | Medium | High | SDF atlas + instanced glyph batching + aggressive LOD; benchmark gate in CI | Chart-engine owner |
-| QuestDB does not meet real query shapes | Medium | Medium | Spike S2 against real footprint/replay queries; storage access is behind a repository interface so TimescaleDB is a swap, not a rewrite (ADR-0003) | Backend lead |
+| QuestDB does not meet real query shapes | Low | Medium | **Resolved** — Spike S2 (E07-K01) ran the real footprint/replay/CVD query shapes on both engines; corrected re-run (QA bug #1562) confirms QuestDB meets target on all six shapes A-F and is faster than TimescaleDB on every one (`ADR-0022-hot-tier-questdb-vs-timescaledb.md`); ADR-0003 stands unamended. Storage access remains behind a repository interface so TimescaleDB stays a swap, not a rewrite, pending `E07-S07`'s real-container confirmation (ADR-0003) | Backend lead |
 | Python event loop saturates at higher symbol counts | Medium | Medium | Pre-designed escape hatches (§4.1 rule 4); loop-lag SLO with an alert that triggers the decision procedure | Architect |
 | Emulated algos misbehave while the process is down | Medium | **Critical** | P4 native SL floor, watchdog, reconciliation, opt-in disconnect-flatten | Backend lead |
 | Bybit API changes break adapters | Medium-High | Medium | Adapter isolation, contract tests on fixtures, demo smoke tests in CI, changelog watch task each sprint | Backend lead |
@@ -1284,7 +1284,7 @@ The chart engine exposes an accessible parallel representation (see `26-chart-en
 | ID | Spike | Question | Exit criteria | Gates |
 |---|---|---|---|---|
 | S1 | Chart engine core | Can a custom WebGL2 engine render 100k candles + footprint text cells + a 100 ms heatmap at 60 fps in Chromium, Electron and Tauri/WebView2? | Benchmark report meeting doc 26 §13 thresholds on the reference machine | ADR-0002, ADR-0011, R1 |
-| S2 | QuestDB vs TimescaleDB | Do real footprint/replay query shapes meet latency targets? | Query suite p95 documented for both | ADR-0003, R2 |
+| S2 | QuestDB vs TimescaleDB | Do real footprint/replay query shapes meet latency targets? | Query suite p95 documented for both | **Resolved** — E07-K01, `docs/plan/spikes/S2-hot-tier.md`; ADR-0003, ADR-0022, R2 |
 | S3 | Bybit private WS client | Custom asyncio client vs pybit: reliability under load, demo/live parity | 24 h soak with zero missed executions | ADR-0004, R3 |
 | S4 | Multi-account fan-out | Latency and rate budget with 3–5 sub-accounts on demo | All legs < 1.5 s, no 10018 under the designed budget | ADR-0008, R3 |
 | S5 | Binary WS encoding | Does the binary frame layout beat JSON enough to justify it for heatmap/footprint? | ≥40 % bandwidth and ≥30 % decode-time reduction | ADR-0005, R2 |
@@ -1320,6 +1320,7 @@ All ADRs live in `docs/plan/27-adrs/` in MADR format. Status values: `decided` (
 | [ADR-0017](27-adrs/ADR-0017-board-automation.md) | GitHub Projects v2 board automation: capability and limits | decided | Default `GITHUB_TOKEN` cannot write Projects v2 fields (verified); fine-grained PAT chosen; board DoD gates are detective (reopen+comment), preventive layer is PR-template + `pr-metadata` CI; bulk import needs a throttled importer |
 | [ADR-0018](27-adrs/ADR-0018-monorepo-tooling.md) | Monorepo tooling: pnpm+Turborepo (JS) and uv+Hatch (Python) | decided | pnpm workspaces + Turborepo for JS/TS; uv+Hatch over Poetry for Python packaging/locking |
 | [ADR-0019](27-adrs/ADR-0019-visual-regression-tooling.md) | Visual-regression tooling selection | decided | Playwright `toHaveScreenshot` against committed PNG baselines, run in our own CI (no third-party screenshot upload); Chromatic rejected on Tailscale-only network-egress grounds; measured CI wall-clock/flake numbers deferred to E05-T04's first CI run |
+| [ADR-0022](27-adrs/ADR-0022-hot-tier-questdb-vs-timescaledb.md) | Hot tier: QuestDB confirmed for all six query shapes | accepted-partial (owner approval pending) | Spike S2 (E07-K01) confirms QuestDB meets target on all six shapes A-F and beats TimescaleDB on every one; amends ADR-0003 (not superseded), reversal path not triggered; `E07-S07` (real-container PGWire/ILP re-run) is the only outstanding follow-up |
 
 **‡** ADR-0016 is **Accepted**, in full: every lifecycle in `28-statechart-catalogue.md` is specified as statechart JSON, implementations conform to it, hot paths are never statecharts, and the library `xstate-statemachine==0.9.1` (tag `v0.9.1` = `45bb7f3`, sha256 `d832d4d9a17b7b8003f61fa0714a8e57eaff316bcd5dd699d81d410362687162`, PEP 740 attested) is the sole executor, adopted completely per the owner decision of 2026-09-24 (`docs/research/xstate/79-r14-final-readiness-verdict.md`, `docs/plan/29-statechart-adoption-plan.md`).
 
