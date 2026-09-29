@@ -25,7 +25,7 @@ jobs:
   governance:
     runs-on: ubuntu-latest
     steps:
-      - name: Record job start time (perf budget: <=60s, E01-Q02)
+      - name: "Record job start time (perf budget <=60s, E01-Q02)"
         id: gov_start
         run: echo "start_ns=$(date +%s%N)" >> "$GITHUB_OUTPUT"
 
