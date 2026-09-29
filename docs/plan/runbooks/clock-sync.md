@@ -2,20 +2,20 @@
 
 ## Alerts
 
-| Alert | Metric | Threshold | Meaning |
-|---|---|---|---|
-| `BybitClockDriftWarning` | `bybit_clock_drift_ms` | 500 < \|x\| ≤ 2000 ms | Offset is drifting; trading still allowed. |
-| `BybitClockDriftCritical` | `bybit_clock_drift_ms` | \|x\| > 2000 ms | Hard threshold breached; `assert_healthy()` raises `ClockDriftError` and order entry (E29) is refused. |
-| `BybitClockOffsetStale` | `clock_offset_age_seconds` | > 900 s | `GET /v5/market/time` has been failing; the last known offset is still applied but is aging out. |
+| Alert                     | Metric                     | Threshold             | Meaning                                                                                                |
+| ------------------------- | -------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------ |
+| `BybitClockDriftWarning`  | `exchange_clock_drift_ms`  | 500 < \|x\| ≤ 2000 ms | Offset is drifting; trading still allowed.                                                             |
+| `BybitClockDriftCritical` | `exchange_clock_drift_ms`  | \|x\| > 2000 ms       | Hard threshold breached; `assert_healthy()` raises `ClockDriftError` and order entry (E29) is refused. |
+| `BybitClockOffsetStale`   | `clock_offset_age_seconds` | > 900 s               | `GET /v5/market/time` has been failing; the last known offset is still applied but is aging out.       |
 
-`bybit_clock_drift_ms` is signed: positive means the local clock is **ahead**
+`exchange_clock_drift_ms` is signed: positive means the local clock is **ahead**
 of the exchange, negative means **behind** (matches `ClockGuard.describe()`
 on the health screen, SCR-147).
 
 ## What to do
 
 1. **Check the direction and magnitude** on the health screen or
-   `bybit_clock_drift_ms` in Grafana. A slow, steady drift is a host clock
+   `exchange_clock_drift_ms` in Grafana. A slow, steady drift is a host clock
    problem; a sudden jump usually means the host slept/resumed (WSL is a
    known drift source after host sleep — ticket Context paragraph).
 2. **Fix the host clock, do not widen `recv_window`.** `recv_window_ms` is
@@ -30,7 +30,7 @@ on the health screen, SCR-147).
      the WSL distro (`wsl --shutdown` then relaunch) also resyncs it.
 3. **Confirm the alarm clears.** `ClockGuard` re-measures every 5 minutes
    (`resync_interval_s`, default 300 s) — once the host clock is fixed,
-   `bybit_clock_drift_ms` should drop under 500 ms within one or two
+   `exchange_clock_drift_ms` should drop under 500 ms within one or two
    resync cycles. You do not need to restart the process.
 4. **If `BybitClockOffsetStale` fires instead (or alongside)**: check
    outbound connectivity to the Bybit REST host (`ALLOWED_REST_HOSTS` in

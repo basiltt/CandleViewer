@@ -1,19 +1,21 @@
 """Prometheus metrics for `ClockGuard` (E08-S07 Observability section):
-`bybit_clock_drift_ms`, `clock_offset_age_seconds`,
+`exchange_clock_drift_ms`, `clock_offset_age_seconds`,
 `clock_measurements_total{result}`, `clock_resync_triggered_total{reason}`.
 
-Named exactly as the ticket body's Observability section so the alert rules
-in `infra/prometheus/alerts/clock_sync.yml` and SCR-147 (E42) can reference
-them verbatim.
+Named to match the alert rules in `infra/prometheus/alerts/clock_sync.yml`
+and SCR-147 (E42); kept adapter-agnostic (CONSTITUTION.md C-2.2 — this
+module lives outside the concrete exchange adapter package and must not
+reference exchange-specific nomenclature) even though only one exchange
+adapter is wired up behind `exchange/base/` today.
 """
 
 from __future__ import annotations
 
 from prometheus_client import Counter, Gauge
 
-bybit_clock_drift_ms = Gauge(
-    "bybit_clock_drift_ms",
-    "Last measured signed offset (server - local) to Bybit server time, in milliseconds.",
+exchange_clock_drift_ms = Gauge(
+    "exchange_clock_drift_ms",
+    "Last measured signed offset (server - local) to exchange server time, in milliseconds.",
 )
 
 clock_offset_age_seconds = Gauge(

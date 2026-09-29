@@ -2,7 +2,7 @@ groups:
   - name: clock-sync
     rules:
       - alert: BybitClockDriftWarning
-        expr: abs(bybit_clock_drift_ms) > 500 and abs(bybit_clock_drift_ms) <= 2000
+        expr: abs(exchange_clock_drift_ms) > 500 and abs(exchange_clock_drift_ms) <= 2000
         for: 2m
         labels:
           severity: warning
@@ -14,7 +14,7 @@ groups:
             blocked yet. See docs/plan/runbooks/clock-sync.md.
 
       - alert: BybitClockDriftCritical
-        expr: abs(bybit_clock_drift_ms) > 2000
+        expr: abs(exchange_clock_drift_ms) > 2000
         for: 1m
         labels:
           severity: critical

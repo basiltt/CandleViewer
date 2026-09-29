@@ -1,18 +1,24 @@
-"""`ClockGuard`: verified offset against Bybit server time (E08-S07,
+"""`ClockGuard`: verified offset against exchange server time (E08-S07,
 `docs/plan/24-internal-schemas.md` §14.3, `docs/plan/20-architecture.md`
 §3.1).
 
-Bybit rejects a signed request whose `X-BAPI-TIMESTAMP` falls outside
-`recv_window` (fixed at 5000 ms — `24-internal-schemas.md` §14.3 states
-plainly that we *fix clocks rather than widening the window*). `ClockGuard`
-measures the offset via `GET /v5/market/time`, re-measures on a fixed
-cadence and on signature failure, and exposes `offset_us()`/`assert_healthy()`
-so the REST client's `clock_offset_ms_provider` (E08-T02) and the trading
-gate (E29) both consume one governed measurement.
+This module lives outside the concrete exchange adapter package, so per
+CONSTITUTION.md C-2.2 it stays adapter-agnostic and never references
+exchange-specific nomenclature; the exchange adapter rejects a signed
+request whose signed
+timestamp header falls outside its recv-window (fixed — `24-internal-
+schemas.md` §14.3 states plainly that we *fix clocks rather than widening
+the window*). `ClockGuard` measures the offset via the adapter's public
+server-time endpoint (through the `ServerTimeFetcher` protocol below),
+re-measures on a fixed cadence and on signature failure, and exposes
+`offset_us()`/`assert_healthy()` so the REST client's
+`clock_offset_ms_provider` (E08-T02) and the trading gate (E29) both
+consume one governed measurement.
 
 All internal timestamps are microseconds (`TsUs`, `24-internal-schemas.md`
 §1.2); the offset is stored in microseconds and converted to milliseconds
-only at the Bybit header boundary (technical notes, ticket body).
+only at the adapter's signed-request header boundary (technical notes,
+ticket body).
 
 Hot-path exclusion: this module runs a low-frequency supervised background
 task (one measurement burst per `resync_interval_s`, default 300 s), never
@@ -25,21 +31,18 @@ import asyncio
 import random
 import time
 from collections.abc import Awaitable, Callable
-from typing import TYPE_CHECKING, Protocol
+from typing import Any, Protocol
 
 import structlog
 
 from candleviewer.exchange.base.errors import ClockDriftError
 from candleviewer.ingestion.errors import IngestionError
 from candleviewer.ingestion.metrics import (
-    bybit_clock_drift_ms,
     clock_measurements_total,
     clock_offset_age_seconds,
     clock_resync_triggered_total,
+    exchange_clock_drift_ms,
 )
-
-if TYPE_CHECKING:
-    from candleviewer.exchange.bybit.rest import BybitRestClient
 
 logger = structlog.get_logger(__name__)
 
@@ -51,38 +54,39 @@ rejection" needs more than one sample to have an outlier to reject)."""
 
 class ServerTimeFetcher(Protocol):
     """Returns `(server_time_us, request_sent_epoch_s, round_trip_s)` for
-    one `GET /v5/market/time` call. `request_sent_epoch_s` MUST be a
-    wall-clock (epoch) timestamp — e.g. `time.time()`/`time_ns()` — never a
-    `time.monotonic()` value, because it is compared directly against the
-    server's epoch time to compute the offset; monotonic time has an
-    arbitrary origin and would make the offset roughly the full epoch
-    value. `round_trip_s` may (and should) come from a monotonic clock,
-    since only the *difference* between two monotonic reads is meaningful.
-    Implemented by a thin adapter over `BybitRestClient.get_public` — kept
-    as a narrow protocol here so this module never imports
-    `httpx`/`exchange.bybit` directly (module boundaries, C-3.1) and stays
-    unit-testable with a fake."""
+    one call to the exchange adapter's public server-time endpoint.
+    `request_sent_epoch_s` MUST be a wall-clock (epoch) timestamp — e.g.
+    `time.time()`/`time_ns()` — never a `time.monotonic()` value, because it
+    is compared directly against the server's epoch time to compute the
+    offset; monotonic time has an arbitrary origin and would make the
+    offset roughly the full epoch value. `round_trip_s` may (and should)
+    come from a monotonic clock, since only the *difference* between two
+    monotonic reads is meaningful. Implemented by a thin adapter over the
+    exchange adapter's REST client — kept as a narrow protocol here so this
+    module never imports the concrete adapter directly (module boundaries,
+    C-3.1, C-2.2) and stays unit-testable with a fake."""
 
     async def __call__(self) -> tuple[int, float, float]: ...
 
 
 class ClockMeasurementUnavailableError(IngestionError):
-    """`GET /v5/market/time` failed on every sample in a burst. The last
-    known offset continues to be applied (scenario "Exchange time endpoint
-    unavailable") — this error is raised only to the caller that requested a
-    fresh measurement, never used to fall back to an uncorrected clock.
+    """The public server-time endpoint failed on every sample in a burst.
+    The last known offset continues to be applied (scenario "Exchange time
+    endpoint unavailable") — this error is raised only to the caller that
+    requested a fresh measurement, never used to fall back to an
+    uncorrected clock.
 
-    The message embeds `str(exc)` from the last failed sample. `/v5/market/time`
-    is public and unsigned, so no request headers (API key, signature) are
-    ever attached to it, and `BybitRestClient` only surfaces
-    `TransportError`/`UnknownStateError` text (status code, path, body
-    snippet) here — never raw request headers (see review note,
-    `50-security.md`). Do not widen this fetcher to a signed endpoint
+    The message embeds `str(exc)` from the last failed sample. The
+    server-time endpoint is public and unsigned, so no request headers
+    (API key, signature) are ever attached to it, and the adapter's REST
+    client only surfaces `TransportError`/`UnknownStateError` text (status
+    code, path, body snippet) here — never raw request headers (see review
+    note, `50-security.md`). Do not widen this fetcher to a signed endpoint
     without re-auditing this message for leaking credentials."""
 
 
 class ClockGuard:
-    """Owns the measured offset to Bybit server time.
+    """Owns the measured offset to the exchange's server time.
 
     `offset_us()` is the value injected into signed requests (E08-T02's
     `clock_offset_ms_provider`, converted to ms at that boundary — this
@@ -223,7 +227,7 @@ class ClockGuard:
         self._last_measured_monotonic = self._clock()
         self._consecutive_failures = 0
         clock_measurements_total.labels(result="ok").inc()
-        bybit_clock_drift_ms.set(median_offset_us / _MICROS_PER_MS)
+        exchange_clock_drift_ms.set(median_offset_us / _MICROS_PER_MS)
         clock_offset_age_seconds.set(0.0)
         self._log_if_drifted(median_offset_us)
         return median_offset_us
@@ -306,11 +310,21 @@ class ClockGuard:
             clock_offset_age_seconds.set(self.offset_age_s())
 
 
-def rest_client_fetcher(client: BybitRestClient) -> ServerTimeFetcher:
-    """Adapt `BybitRestClient.get_public("/v5/market/time")` to
-    `ServerTimeFetcher`. Kept as a factory function (not a method on the
-    client) so the REST client itself never depends on this module — the
-    dependency direction is `ClockGuard` -> REST client, matching the
+class _PublicRestClient(Protocol):
+    """Structural shape this module needs from an exchange adapter's REST
+    client: an unsigned public `GET`. Declared here (not imported from a
+    concrete adapter) so this module never depends on the exchange adapter
+    (C-2.2, C-3.1) — any adapter's REST client that exposes `get_public`
+    satisfies this protocol."""
+
+    async def get_public(self, path: str) -> dict[str, Any]: ...
+
+
+def rest_client_fetcher(client: _PublicRestClient) -> ServerTimeFetcher:
+    """Adapt an exchange adapter's `get_public("/v5/market/time")` REST
+    call to `ServerTimeFetcher`. Kept as a factory function (not a method
+    on the client) so the REST client itself never depends on this module —
+    the dependency direction is `ClockGuard` -> REST client, matching the
     ticket's "offset is injected into the REST client rather than read from
     a global" (technical notes)."""
 
@@ -320,10 +334,11 @@ def rest_client_fetcher(client: BybitRestClient) -> ServerTimeFetcher:
         response = await client.get_public("/v5/market/time")
         rtt_s = time.monotonic() - sent_monotonic_s
         result = response.get("result", {})
-        # Bybit returns both a second-resolution and a nanosecond-resolution
-        # field (`timeSecond`, `timeNano`); prefer the nanosecond one for
-        # sub-millisecond precision, falling back to milliseconds (`time`)
-        # when a fixture or an older API surface omits it.
+        # The exchange's server-time endpoint returns both a
+        # second-resolution and a nanosecond-resolution field (`timeSecond`,
+        # `timeNano`); prefer the nanosecond one for sub-millisecond
+        # precision, falling back to milliseconds (`time`) when a fixture
+        # or an older API surface omits it.
         if "timeNano" in result:
             server_time_us = int(result["timeNano"]) // 1_000
         elif "timeSecond" in result:
