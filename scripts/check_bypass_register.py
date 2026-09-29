@@ -10,6 +10,10 @@ Review date |` rows and fails when:
   * a row's review date is in the past relative to `--today` (default:
     today's UTC date) — a stale bypass grant is a finding, not silently
     renewed;
+  * a row's review date is more than one quarter (`MAX_REVIEW_HORIZON_DAYS`)
+    beyond `--today` — the register's own rule 2 caps review dates at one
+    quarter out so a far-future date (e.g. `2099-01-01`) can never stand in
+    as a permanent, un-reviewed bypass;
   * a row's review date cannot be parsed as `YYYY-MM-DD`.
 
 This script does not (and cannot, without a repo-administration-scoped
@@ -30,6 +34,12 @@ import re
 import sys
 
 DEFAULT_REGISTER_PATH = ".github/rulesets/bypass-register.md"
+
+# Rule 2 in the register: "no more than one quarter (13 sprints) out". One
+# sprint is a week (docs/plan/01-sdlc-and-branching.md), so 13 sprints is
+# 13*7 = 91 days; a review date beyond that horizon is a finding, not a
+# permanent bypass hiding behind a far-future date such as 2099-01-01.
+MAX_REVIEW_HORIZON_DAYS = 13 * 7
 
 # A markdown table data row: | actor | scope | justification | review date |
 ROW_RE = re.compile(r"^\|(?!---)(.+)\|\s*$")
@@ -55,12 +65,29 @@ def load_rows(path: str) -> list[list[str]]:
             in_table = True
             continue
         if in_table:
-            if stripped.strip().startswith("|---"):
+            text = stripped.strip()
+            if not text:
+                # A table is allowed to be split by a blank line (e.g. a
+                # header row followed by a blank separator before the data
+                # rows resume); skip it rather than silently ending the
+                # table and dropping every row after it.
                 continue
-            match = ROW_RE.match(stripped.strip())
+            if text.startswith("|---"):
+                # The tight `|---|---|` separator row: ROW_RE's negative
+                # lookahead rejects it outright (it would otherwise be
+                # treated as "end of table"), so skip it explicitly here.
+                continue
+            match = ROW_RE.match(text)
             if not match:
+                # A genuine non-table line (prose, next heading, etc.) ends
+                # the table.
                 break
             cells = [c.strip() for c in match.group(1).split("|")]
+            if all(re.fullmatch(r":?-+:?", c) for c in cells):
+                # The header/body separator row, possibly widened with
+                # alignment colons/extra dashes/spaces by a markdown
+                # formatter (`| --- | --- |` or wider) — not a data row.
+                continue
             rows.append(cells)
     return rows
 
@@ -89,6 +116,15 @@ def check_rows(rows: list[list[str]], today: dt.date) -> list[str]:
             errors.append(
                 f"CI-PROT-004: bypass register row for {actor!r} is stale "
                 f"(review date {review_date.isoformat()} has passed as of {today.isoformat()})"
+            )
+            continue
+        horizon = today + dt.timedelta(days=MAX_REVIEW_HORIZON_DAYS)
+        if review_date > horizon:
+            errors.append(
+                f"CI-PROT-004: bypass register row for {actor!r} has a review date "
+                f"{review_date.isoformat()} more than one quarter "
+                f"({MAX_REVIEW_HORIZON_DAYS} days) beyond {today.isoformat()} — "
+                "a far-future date cannot be used as a permanent bypass (rule 2)"
             )
     return errors
 

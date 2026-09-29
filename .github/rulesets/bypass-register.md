@@ -30,10 +30,17 @@ is **not** a bypass of `main`'s protection at all, since it never pushes to `mai
 4. This table is the single source of truth for "who can bypass `main`'s protection" (C-16.5); do not
    duplicate it elsewhere — link here instead.
 5. `scripts/check_bypass_register.py` only validates internal consistency of this file (rows parse,
-   dates unexpired); it does **not** reconcile the table against the live actors that
-   `.github/branch-protection.json` / the repo's actual GitHub settings currently permit to bypass
-   `main`. That reconciliation is `scripts/check_branch_protection_drift.py`, run in
-   `governance-drift.yml` — it diffs the live GitHub branch-protection API response (including
-   admin/bypass allowances) against the desired-state JSON and opens a `GOV-005` issue on drift.
-   A row here for an actor no longer permitted live, or a live bypass actor with no row here, is
-   caught by that job, not by `check_bypass_register.py` alone.
+   dates unexpired, dates not more than one quarter out); it does **not** reconcile the table against
+   the live actors that currently hold push/bypass access to `main`, and — despite an earlier version
+   of this note — `scripts/check_branch_protection_drift.py` does **not** do that reconciliation
+   either: it diffs `.github/branch-protection.json`'s known keys (`enforce_admins`,
+   `required_pull_request_reviews`, etc.) against the live classic branch-protection API response, and
+   the classic protection API has no per-actor bypass-allowance field to diff against in the first
+   place. So a passed `enforce_admins: true` check tells you admin bypass is off in general; it does
+   **not** tell you whether every actor with some other route to `main` (a repo collaborator with
+   direct push rights, a ruleset bypass list, an app installation) is named in this table. **There is
+   currently no automated check that catches an unregistered live bypass actor by identity** — that
+   reconciliation is a manual review step (repo Settings → Collaborators/Rulesets, cross-checked
+   against this table) until a script is written against the GitHub rulesets/collaborators APIs to do
+   it (tracked as a follow-up; not yet a ticket). Treat any discrepancy you find manually as an
+   incident per this file's intro, the same as a `CI-PROT-004` finding.
