@@ -99,11 +99,7 @@ def export_stately(chart: dict[str, Any]) -> dict[str, Any]:
 
     def strip(node: Any) -> Any:
         if isinstance(node, dict):
-            out = {k: strip(v) for k, v in node.items() if k not in drop}
-            states = out.get("states")
-            if isinstance(states, dict):
-                out["states"] = {k: strip(v) for k, v in states.items()}
-            return out
+            return {k: strip(v) for k, v in node.items() if k not in drop}
         if isinstance(node, list):
             return [strip(v) for v in node]
         return node
