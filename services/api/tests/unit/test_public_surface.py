@@ -63,7 +63,16 @@ _ALLOWED_EXTRA_EXPORTS: dict[str, set[str]] = {
         "Severity",
         "VerifyResult",
     },
-    "M24": {"HealthReport", "HealthStatus"},
+    "M24": {
+        "HealthReport",
+        "HealthStatus",
+        # E04-T01: the logging entry point + its supporting public surface
+        # (`docs/plan/20-architecture.md` Sec.12.2).
+        "BodyLoggingGate",
+        "RedactionFilter",
+        "Secret",
+        "configure_logging",
+    },
     # E08-T03: the bus's public pub/sub surface — `Bus`/`Subscription` are
     # not `*Service`/`*Error` by name but are the module's documented public
     # interface (docs/plan/20-architecture.md Sec.3 bus contract).

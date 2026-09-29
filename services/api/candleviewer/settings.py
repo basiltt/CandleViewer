@@ -125,6 +125,17 @@ class Settings(BaseSettings):
 
     kek_source: str = "host-keychain"
 
+    # E04-T01: `configure_logging()` inputs. `log_format="console"` is only
+    # permitted in dev/CI contexts — enforced by
+    # `candleviewer.observability.logging.configure_logging`, not here.
+    log_level: str = "info"
+    log_format: Literal["json", "console"] = "json"
+    # RFC 3339 instant; absent (`None`) means body logging is off (SR-123
+    # default-off requirement). Kept as `str | None` rather than `datetime`
+    # so an unparsable value fails fast at settings-load time with a clear
+    # `CV_LOG_BODIES_UNTIL` error rather than silently becoming `None`.
+    log_bodies_until: str | None = None
+
     recv_window_ms: int = 5000
     max_ws_topics_per_conn: int = 64
     heatmap_cadence_ms: int = 100
