@@ -151,6 +151,28 @@ jobs:
       - name: Lint PR commits against Conventional Commits (01-sdlc-and-branching.md §6)
         run: pnpm exec commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
 
+  changelog-fragment:
+    name: changelog-fragment
+    # E03-T11: CI-REL-001 — every PR needs a conventional title or a
+    # `Changelog:` footer, except chore/ci/docs-only PRs (acceptance
+    # scenarios "A PR without a usable changelog line is blocked" /
+    # "A docs-only PR is exempt").
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.13"
+      - name: "Check changelog fragment (title or Changelog: footer)"
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          python tools/ci/check_changelog_fragment.py --title "$PR_TITLE" --body "$PR_BODY"
+
   licence-header:
     name: licence-header
     runs-on: ubuntu-latest
@@ -342,6 +364,7 @@ jobs:
       - pin-check
       - spike-containment
       - commitlint
+      - changelog-fragment
       - licence-header
       - docs-link-check
       - gen
@@ -375,6 +398,7 @@ jobs:
           RESULT_PIN_CHECK: ${{ needs.pin-check.result }}
           RESULT_SPIKE_CONTAINMENT: ${{ needs.spike-containment.result }}
           RESULT_COMMITLINT: ${{ needs.commitlint.result }}
+          RESULT_CHANGELOG_FRAGMENT: ${{ needs.changelog-fragment.result }}
           RESULT_LICENCE_HEADER: ${{ needs.licence-header.result }}
           RESULT_DOCS_LINK_CHECK: ${{ needs.docs-link-check.result }}
           RESULT_GEN: ${{ needs.gen.result }}
@@ -395,6 +419,7 @@ jobs:
               "pin-check": { applicable: isTrue(process.env.FILTER_INFRA), result: process.env.RESULT_PIN_CHECK },
               "spike-containment": { applicable: true, result: process.env.RESULT_SPIKE_CONTAINMENT },
               commitlint: { applicable: true, result: process.env.RESULT_COMMITLINT },
+              "changelog-fragment": { applicable: true, result: process.env.RESULT_CHANGELOG_FRAGMENT },
               "licence-header": { applicable: true, result: process.env.RESULT_LICENCE_HEADER },
               "docs-link-check": { applicable: true, result: process.env.RESULT_DOCS_LINK_CHECK },
               gen: { applicable: true, result: process.env.RESULT_GEN },
