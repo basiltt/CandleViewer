@@ -110,6 +110,12 @@ class Settings(BaseSettings):
     # error the storage service surfaces via `StorageTierUnavailable`.
     storage_backend: Literal["fake", "real"] = "fake"
 
+    # E03-T10: bounds `pg_advisory_lock` acquisition in the boot-time
+    # migration runner (`candleviewer.migrations.boot`). A deadlocked
+    # migration in another process turns into a clear `CI-DEP-004` error at
+    # this timeout instead of hanging startup indefinitely (ADR-0013 rule 9).
+    migration_lock_timeout_s: float = Field(default=300.0, gt=0.0)
+
     kek_source: str = "host-keychain"
 
     recv_window_ms: int = 5000
