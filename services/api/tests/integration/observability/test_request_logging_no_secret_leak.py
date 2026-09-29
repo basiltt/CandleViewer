@@ -18,9 +18,7 @@ from starlette.testclient import TestClient
 
 from candleviewer.observability.logging import configure_logging
 
-_CANARY_TOKEN = (
-    "Bearer CANARYBYBITKEY0123456789ABCDEF"  # noqa: S105 - test fixture, not a real secret
-)
+_CANARY_TOKEN = "Bearer CANARYBYBITKEY0123456789ABCDEF"  # noqa: S105 - test fixture, not a real secret
 _CANARY_BODY_FIELD = "CANARY-BODY-FIELD-VALUE"
 
 

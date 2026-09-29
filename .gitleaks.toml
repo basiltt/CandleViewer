@@ -21,6 +21,12 @@ paths = [
   # keys ("sk-abcdef1234567890") on purpose.
   '''packages/fixtures/test/.*\.test\.mjs''',
   '''docs/plan/backlog/all-tickets\.json''',   # generated from E*.json (covered there)
+  # E04-T01: redaction-matrix unit/integration tests plant synthetic
+  # "CANARY*" secrets to assert they never survive the redaction filter.
+  # These are not real credentials — they exist solely to be redacted.
+  '''services/api/tests/unit/observability/test_redaction\.py''',
+  '''services/api/tests/unit/observability/test_redaction_filter\.py''',
+  '''services/api/tests/integration/observability/test_request_logging_no_secret_leak\.py''',
 ]
 regexes = [
   '''REDACTED''',
