@@ -14,6 +14,12 @@ dependencies = [
   "sqlalchemy[asyncio]>=2.0",
   "alembic>=1.13",
   "httpx>=0.27",
+  # Pinned exact: official Bybit SDK; WS-trade module is not used by this
+  # ticket (E08-T04 scope) — only its typed request/response shapes are
+  # referenced in contract tests so our own signer/mapper stay honest
+  # against the vendor's own vectors (ticket body "Pinned httpx (and pybit
+  # pinned to an exact version where used) with a documented rationale").
+  "pybit==5.17.0",
   "websockets>=12.0",
   "numpy>=1.26",
   "duckdb>=1.0",
@@ -45,6 +51,7 @@ test = [
   "opentelemetry-sdk",
   "opentelemetry-api",
   "psutil",
+  "respx>=0.21",
 ]
 
 [build-system]
@@ -131,7 +138,9 @@ omit = [
   "candleviewer/bars/*",
   "candleviewer/book/*",
   "candleviewer/exchange/base/service.py",
-  "candleviewer/exchange/bybit/*",
+  # rest.py/mapping.py/errors.py/models.py are implemented and tested by
+  # E08-T02 (>=85% required); only the lifecycle scaffold stays omitted.
+  "candleviewer/exchange/bybit/service.py",
   "candleviewer/journal/*",
   "candleviewer/main.py",
   "candleviewer/observability/service.py",
