@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "E07-T02 / bugfix #1556: revision hash lock enforcing 21-database-schema.md §9.3 rule 9 (\"migrations are forward-only in production\"). Each entry pins the SHA-256 of an applied revision file's bytes; `tools/ci/verify_migration_lockfile.py` (run by the `migrations` CI job) recomputes the digest of every file listed here and fails the build with the exact rule-9 message if any applied revision has been edited. Adding a *new* revision requires adding its entry here in the same PR; the checker also fails if a versions/*.py file exists on disk with no lockfile entry, or if the down_revision chain implied by revision ids does not match the file's actual `down_revision`.",
+  "description": "E07-T02 / bugfix #1556: revision hash lock enforcing 21-database-schema.md \u00a79.3 rule 9 (\"migrations are forward-only in production\"). Each entry pins the SHA-256 of an applied revision file's bytes; `tools/ci/verify_migration_lockfile.py` (run by the `migrations` CI job) recomputes the digest of every file listed here and fails the build with the exact rule-9 message if any applied revision has been edited. Adding a *new* revision requires adding its entry here in the same PR; the checker also fails if a versions/*.py file exists on disk with no lockfile entry, or if the down_revision chain implied by revision ids does not match the file's actual `down_revision`.",
   "revisions": {
     "0001_identity_rbac_sessions_mfa": {
       "path": "services/api/candleviewer/migrations/versions/0001_identity_rbac_sessions_mfa.py",
@@ -11,6 +11,11 @@
       "path": "services/api/candleviewer/migrations/versions/0002_rbac_seed.py",
       "sha256": "5729a521f22aebbd81f2afae1d34930d3d11dbbb14c3469ac3fc3cb6bbe7f3f4",
       "down_revision": "0001_identity_rbac_sessions_mfa"
+    },
+    "0003_audit_log": {
+      "path": "services/api/candleviewer/migrations/versions/0003_audit_log.py",
+      "sha256": "cdcfd0fc1f9476c2fd31e8fde85d5ece392342ffbe95cfc98bd0710b8e3d2f08",
+      "down_revision": "0002_rbac_seed"
     }
   }
 }
