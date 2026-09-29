@@ -1,22 +1,29 @@
-"""`AuditWriter` — the single writer task through which every `audit.emit`
-call is serialised (ticket "Technical notes / design": "Inserts are
-serialised through a single writer task to keep the chain well-ordered under
-concurrency"; the trigger's own `SELECT ... ORDER BY id DESC LIMIT 1` would
-otherwise race under concurrent INSERTs).
+"""`AuditWriter` — WAL-first, never-lossy audit append path (C-2.9, C-2.18).
 
-Write path: `emit()` builds a redacted `AuditEmission` and puts it on a
-bounded `asyncio.Queue` — this is the only thing on the hot call-site path,
-so it returns in the ticket's <1 ms budget. The writer task pulls one
-record at a time, durably appends it to the on-disk WAL (`fsync`, survives a
-crash), then inserts it into `audit_log` inside
-`pg_advisory_xact_lock(hashtext('audit_log'))` so the chain trigger's
-read-then-write cannot race with a second connection. On success the WAL
-cursor advances past that record; on a Postgres outage the insert is retried
-with backoff while later `emit()` calls keep queuing (backpressure is the
-bounded queue, not data loss) until Postgres returns, at which point the
-writer drains the backlog **and** the WAL (crash-recovery path) in original
-order, so `audit_log` ends up densely, monotonically chained with no gaps
-and no duplicates (ticket AC "Postgres outage does not lose events").
+Write path (PR #1561 security findings 1-2):
+
+1. `emit()` validates the action, redacts `before_state`/`after_state`,
+   assigns a `record_id` (uuid) and **durably appends** the record to the
+   local WAL (`write` + `fsync`, in a worker thread so the loop never blocks,
+   serialised by `_wal_lock`) *before it returns*. Acceptance == durability:
+   once `emit()` returns, the record survives `stop()`, a crash or a
+   Postgres outage.
+2. A single flusher task reads uncommitted records from the WAL in append
+   order and inserts each into `audit_log` (the repository and the
+   `audit_chain()` trigger both take `pg_advisory_xact_lock`), then advances
+   the WAL commit cursor. Postgres errors are retried with backoff; the WAL
+   is the buffer.
+3. `start()` replays any WAL records left by a previous run first (same
+   loop). Replay is idempotent: `record_id` is UNIQUE and the insert is
+   `ON CONFLICT (record_id) DO NOTHING`, closing the "row committed, cursor
+   not advanced" crash window — every record reaches the DB exactly once.
+
+Overflow policy (bounded, fail-closed, never drop): the WAL is capped at
+`max_wal_bytes`. When full, the committed prefix is compacted and the append
+retried; if it is still full (Postgres down long enough to fill it), or the
+WAL cannot be written at all (`OSError`), `emit()` raises
+`AuditUnavailable` and fires `on_alarm`. Callers MUST treat that as "refuse
+the audited action". No record that `emit()` accepted is ever discarded.
 """
 
 from __future__ import annotations
@@ -55,13 +62,12 @@ def _uuid_or_none(value: str | uuid.UUID | None) -> uuid.UUID | None:
 
 
 class AuditWriter:
-    """Owns the bounded queue, the WAL and the single background writer task.
+    """Owns the WAL and the single flusher task.
 
-    `start()`/`stop()` follow the module lifecycle contract every other
-    package here implements: `start()` spawns the writer task (and replays
-    any WAL backlog left over from a previous crash); `stop(grace_s)` stops
-    accepting new `emit()` calls, drains the queue (bounded by `grace_s`)
-    and joins the writer task.
+    `start()` spawns the flusher (which first replays WAL backlog);
+    `stop(grace_s)` stops accepting `emit()`, waits up to `grace_s` for the
+    WAL to drain into Postgres, then cancels the flusher. Anything not yet
+    flushed is already durable in the WAL and is replayed on the next start.
     """
 
     def __init__(
@@ -69,7 +75,7 @@ class AuditWriter:
         repository: AuditRepository,
         wal_path: str,
         *,
-        max_queue_size: int = 10_000,
+        flush_batch_size: int = 500,
         max_wal_bytes: int = 64 * 1024 * 1024,
         retry_initial_delay_s: float = 0.5,
         retry_max_delay_s: float = 30.0,
@@ -79,7 +85,10 @@ class AuditWriter:
     ) -> None:
         self._repository = repository
         self._wal = AuditWal(_path(wal_path), max_bytes=max_wal_bytes)
-        self._queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=max_queue_size)
+        self._wal_lock = asyncio.Lock()
+        self._wake = asyncio.Event()
+        self._idle = asyncio.Event()
+        self._flush_batch_size = flush_batch_size
         self._retry_initial_delay_s = retry_initial_delay_s
         self._retry_max_delay_s = retry_max_delay_s
         self._on_alarm = on_alarm
@@ -87,17 +96,20 @@ class AuditWriter:
         self._sleep = sleep
         self._task: asyncio.Task[None] | None = None
         self._running = False
-        self._dropped_total = 0
+        self._pending = 0
         self._written_total = 0
         self._write_errors_total = 0
+        self._refused_total = 0
+        self._inflight = False
 
     @property
     def written_total(self) -> int:
         return self._written_total
 
     @property
-    def dropped_total(self) -> int:
-        return self._dropped_total
+    def refused_total(self) -> int:
+        """`emit()` calls refused with `AuditUnavailable` (WAL full/unwritable)."""
+        return self._refused_total
 
     @property
     def write_errors_total(self) -> int:
@@ -105,34 +117,40 @@ class AuditWriter:
 
     @property
     def buffer_depth(self) -> int:
-        return self._queue.qsize()
+        """Records accepted into the WAL by this process, not yet in Postgres."""
+        return self._pending
 
     async def start(self) -> None:
-        """Start the single writer task. It first replays any WAL backlog
-        left by a previous crash (in original order), then consumes new
-        `emit()` calls — replay runs inside the task so `start()` never
-        blocks the composition root while Postgres is unavailable."""
+        """Start the flusher. It replays WAL backlog from a previous run
+        first, inside the task, so `start()` never blocks on Postgres."""
         if self._task is not None:
             return
         self._running = True
+        self._idle.clear()
+        self._wake.set()
         self._task = asyncio.create_task(self._run(), name="audit-writer")
         self._task.add_done_callback(_log_task_failure)
+
+    async def flush(self, timeout_s: float) -> None:
+        """Wait until every WAL record is committed to Postgres."""
+        async with asyncio.timeout(timeout_s):
+            await self._idle.wait()
 
     async def stop(self, grace_s: float = 5.0) -> None:
         self._running = False
         if self._task is None:
             return
         try:
-            await asyncio.wait_for(self._queue.join(), timeout=grace_s)
+            await self.flush(grace_s)
         except TimeoutError:
-            logger.warning("AuditWriter.stop: queue did not drain within %.1fs", grace_s)
+            logger.warning("AuditWriter.stop: WAL not drained within %.1fs", grace_s)
         self._task.cancel()
         try:
             await self._task
         except asyncio.CancelledError:
-            # Expected: we cancelled it. Anything still queued is either
-            # already in the WAL (replayed on next start) or was never
-            # accepted durably; stop() is the only place this is swallowed.
+            # Expected: we cancelled it. Every record emit() accepted is
+            # already fsync'd in the WAL; unflushed ones are replayed
+            # (idempotently, by record_id) on the next start().
             pass
         self._task = None
 
@@ -155,13 +173,16 @@ class AuditWriter:
         request_id: str | uuid.UUID | None = None,
         env: ExchangeEnv | None = None,
     ) -> None:
-        """Enqueue one audit entry. Returns once the record is on the bounded
-        queue (ticket perf budget: <1 ms at the call site) — durability is
-        the writer task's job, not this coroutine's."""
+        """Durably append one audit entry to the WAL, then return.
+
+        Raises `AuditWriterStopped` if not running, `UnknownAuditAction` for
+        an unregistered action, and `AuditUnavailable` if the record could
+        not be made durable — the caller must then refuse the action."""
         if not self._running:
             raise AuditWriterStopped()
         validate_action(action)
         emission = AuditEmission(
+            record_id=uuid.uuid4(),
             action=action,
             actor_label=actor_label,
             actor_user_id=_uuid_or_none(actor_user_id),
@@ -181,49 +202,54 @@ class AuditWriter:
         )
         record = json.loads(emission.model_dump_json())
         try:
-            self._queue.put_nowait(record)
-        except asyncio.QueueFull:
-            await self._drop_oldest_and_alarm("queue full")
-            self._queue.put_nowait(record)
+            async with self._wal_lock:
+                await self._append_durably(record)
+                self._pending += 1
+                # Under the lock, so the flusher cannot mark idle after this.
+                self._idle.clear()
+        except (AuditWalFull, OSError) as exc:
+            self._refused_total += 1
+            reason_text = f"audit WAL unavailable: {type(exc).__name__}"
+            if self._on_alarm is not None:
+                await self._on_alarm(reason_text)
+            logger.critical(reason_text)
+            raise AuditUnavailable(reason_text) from exc
+        self._wake.set()
 
-    async def _drop_oldest_and_alarm(self, reason: str) -> None:
+    async def _append_durably(self, record: dict[str, Any]) -> None:
+        """Caller holds `_wal_lock`. On `AuditWalFull`, reclaim the committed
+        prefix (only when no flush batch is in flight, whose offsets a
+        compaction would invalidate) and retry once."""
         try:
-            self._queue.get_nowait()
-            self._queue.task_done()
-            self._dropped_total += 1
-        except asyncio.QueueEmpty:  # pragma: no cover - race only
-            pass
-        if self._on_alarm is not None:
-            await self._on_alarm(reason)
-        else:
-            logger.error("audit WAL/queue overflow: %s", reason)
-
-    async def _replay_backlog(self) -> None:
-        for end_offset, record in self._wal.replay():
-            await self._write_with_retry(record)
-            self._wal.mark_committed(end_offset)
-        self._wal.compact()
+            await asyncio.to_thread(self._wal.append, record)
+        except AuditWalFull:
+            if self._inflight or self._wal.committed_offset() == 0:
+                raise
+            await asyncio.to_thread(self._wal.compact)
+            await asyncio.to_thread(self._wal.append, record)
 
     async def _run(self) -> None:
-        await self._replay_backlog()
         while True:
-            record = await self._queue.get()
-            try:
-                self._append_to_wal(record)
-                offset = self._wal.size_bytes()
-                await self._write_with_retry(record)
-                self._wal.mark_committed(offset)
-                self._written_total += 1
-            finally:
-                self._queue.task_done()
-
-    def _append_to_wal(self, record: dict[str, Any]) -> None:
-        try:
-            self._wal.append(record)
-        except AuditWalFull:
-            # Everything before the cursor is already in Postgres; reclaim it.
-            self._wal.compact()
-            self._wal.append(record)
+            await self._wake.wait()
+            self._wake.clear()
+            while True:
+                async with self._wal_lock:
+                    batch = await asyncio.to_thread(self._wal.read_pending, self._flush_batch_size)
+                    self._inflight = bool(batch)
+                    if not batch:
+                        self._idle.set()
+                if not batch:
+                    break
+                for _end_offset, record in batch:
+                    await self._write_with_retry(record)
+                    self._written_total += 1
+                # One cursor fsync per batch: a crash mid-batch re-inserts the
+                # already-written prefix, which ON CONFLICT (record_id) ignores.
+                async with self._wal_lock:
+                    await asyncio.to_thread(self._wal.mark_committed, batch[-1][0])
+                    self._pending = max(0, self._pending - len(batch))
+                    self._inflight = False
+                    await asyncio.to_thread(self._wal.compact)
 
     async def _write_with_retry(self, record: dict[str, Any]) -> None:
         delay = self._retry_initial_delay_s
@@ -247,6 +273,11 @@ class AuditWriterStopped(AuditError):
 
     def __init__(self) -> None:
         super().__init__("AuditWriter is not running; emit() refused")
+
+
+class AuditUnavailable(AuditError):
+    """Raised by `emit()` when the record could not be made durable (WAL full
+    or unwritable). The audited action must be refused (C-2.9 fail-closed)."""
 
 
 def _log_task_failure(task: asyncio.Task[None]) -> None:

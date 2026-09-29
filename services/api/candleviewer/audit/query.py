@@ -18,10 +18,26 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from candleviewer.audit.models import AuditEntry, AuditPage, ExportResult, VerifyResult
+from candleviewer.audit.models import (
+    AuditEntry,
+    AuditPage,
+    AuditQueryRequest,
+    ExportResult,
+    VerifyResult,
+)
 from candleviewer.audit.repository import AuditRepository
 
 _GENESIS_HASH = "0" * 64
+
+
+def _canonical_field(value: object) -> str:
+    """Mirror of the SQL `audit_field()`: NULL -> `-`, else `<len>:<value>`
+    (length in characters, as Postgres `length(text)`). Prefix-free, so the
+    concatenation of fields is unambiguous (PR #1561 finding 8)."""
+    if value is None:
+        return "-"
+    text = str(value)
+    return f"{len(text)}:{text}"
 
 
 def _canonical_hash(prev_hash: str, row: dict[str, Any]) -> str:
@@ -29,8 +45,8 @@ def _canonical_hash(prev_hash: str, row: dict[str, Any]) -> str:
 
     `row` carries every hashed column already rendered to text by Postgres
     with the trigger's own casts (see `AuditRepository.fetch_verify_batch`),
-    so this is a pure concatenation — `None` becomes `''` exactly like the
-    trigger's `coalesce(...,'')`.
+    so this is a pure concatenation of `_canonical_field` encodings — the
+    same length-prefixed form as the trigger's `audit_field()`.
     """
     parts = (
         prev_hash,
@@ -50,7 +66,7 @@ def _canonical_hash(prev_hash: str, row: dict[str, Any]) -> str:
         row["env"],
         row["event_ts"],
     )
-    payload = "".join("" if part is None else str(part) for part in parts)
+    payload = "".join(_canonical_field(part) for part in parts)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
@@ -75,14 +91,30 @@ class AuditQueryService:
         cursor: int | None = None,
         limit: int = 50,
     ) -> AuditPage:
+        """`limit` is validated to 1..1000 by `AuditQueryRequest`
+        (`extra="forbid"`); out-of-range values raise `ValidationError`
+        rather than issuing an unbounded query."""
+        req = AuditQueryRequest.model_validate(
+            {
+                "actor_user_id": actor_user_id,
+                "actions": actions,
+                "severity": severity,
+                "outcome": outcome,
+                "from_ts": from_ts,
+                "to_ts": to_ts,
+                "cursor": cursor,
+                "limit": limit,
+            }
+        )
+        limit = req.limit
         rows = await self._repository.query_page(
-            actor_user_id=actor_user_id,
-            actions=actions,
-            severity=severity,
-            outcome=outcome,
-            from_ts=from_ts,
-            to_ts=to_ts,
-            cursor=cursor,
+            actor_user_id=req.actor_user_id,
+            actions=req.actions,
+            severity=None if req.severity is None else req.severity.value,
+            outcome=None if req.outcome is None else req.outcome.value,
+            from_ts=req.from_ts,
+            to_ts=req.to_ts,
+            cursor=req.cursor,
             limit=limit + 1,
         )
 

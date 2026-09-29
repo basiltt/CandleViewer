@@ -44,6 +44,7 @@ class AuditEmission(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
+    record_id: uuid.UUID
     action: str
     actor_user_id: uuid.UUID | None = None
     actor_label: str
@@ -82,6 +83,26 @@ class AuditEntry(BaseModel):
     detail: dict[str, Any] = Field(default_factory=dict)
     entry_hash: str
     prev_hash: str | None
+
+
+#: Upper bound on one `GET /admin/audit` page (PR #1561 finding 5).
+AUDIT_QUERY_MAX_LIMIT = 1000
+
+
+class AuditQueryRequest(BaseModel):
+    """Validated filter set for `AuditQueryService.query` — `limit` bounded
+    to 1..`AUDIT_QUERY_MAX_LIMIT`, unknown keys rejected."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    actor_user_id: str | None = None
+    actions: list[str] | None = None
+    severity: Severity | None = None
+    outcome: AuditOutcome | None = None
+    from_ts: datetime | None = None
+    to_ts: datetime | None = None
+    cursor: int | None = Field(default=None, ge=1)
+    limit: int = Field(default=50, ge=1, le=AUDIT_QUERY_MAX_LIMIT)
 
 
 class AuditPage(BaseModel):
