@@ -6,8 +6,13 @@ describe("HARDENED_WEB_PREFERENCES", () => {
     expect(HARDENED_WEB_PREFERENCES).toEqual({
       contextIsolation: true,
       nodeIntegration: false,
+      nodeIntegrationInWorker: false,
+      nodeIntegrationInSubFrames: false,
       sandbox: true,
       webSecurity: true,
+      allowRunningInsecureContent: false,
+      experimentalFeatures: false,
     });
+    expect(HARDENED_WEB_PREFERENCES).not.toHaveProperty("enableRemoteModule");
   });
 });

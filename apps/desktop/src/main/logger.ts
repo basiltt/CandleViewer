@@ -1,6 +1,7 @@
 import { app } from "electron";
 import fs from "node:fs";
 import path from "node:path";
+import { HARDENED_WEB_PREFERENCES } from "./shellPort.js";
 
 /**
  * Structured startup/audit logging (Observability section, E02-T04).
@@ -25,12 +26,7 @@ export function logStartup(): void {
     appVersion: app.getVersion(),
     electronVersion: process.versions.electron,
     chromeVersion: process.versions.chrome,
-    hardening: {
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-      webSecurity: true,
-    },
+    hardening: HARDENED_WEB_PREFERENCES,
   });
 }
 

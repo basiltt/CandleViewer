@@ -25,7 +25,9 @@ test.describe("Electron main-window smoke", () => {
     // fixes this; this assertion fails loudly if that regresses.
     const app = await launchApp();
     const window = await app.firstWindow();
-    const hasCv = await window.evaluate(() => typeof (window as unknown as { cv?: unknown }).cv !== "undefined");
+    const hasCv = await window.evaluate(
+      () => typeof (window as unknown as { cv?: unknown }).cv !== "undefined",
+    );
     expect(hasCv).toBe(true);
     await app.close();
   });
@@ -47,8 +49,13 @@ test.describe("Electron hardening assertion", () => {
       interface LiveWebPreferences {
         contextIsolation?: boolean;
         nodeIntegration?: boolean;
+        nodeIntegrationInWorker?: boolean;
+        nodeIntegrationInSubFrames?: boolean;
         sandbox?: boolean;
         webSecurity?: boolean;
+        allowRunningInsecureContent?: boolean;
+        experimentalFeatures?: boolean;
+        enableRemoteModule?: boolean;
       }
       const webContents = win.webContents as unknown as {
         getLastWebPreferences: () => LiveWebPreferences | undefined;
@@ -57,17 +64,67 @@ test.describe("Electron hardening assertion", () => {
       return {
         contextIsolation: wp?.contextIsolation,
         nodeIntegration: wp?.nodeIntegration,
+        nodeIntegrationInWorker: wp?.nodeIntegrationInWorker,
+        nodeIntegrationInSubFrames: wp?.nodeIntegrationInSubFrames,
         sandbox: wp?.sandbox,
         webSecurity: wp?.webSecurity,
+        allowRunningInsecureContent: wp?.allowRunningInsecureContent,
+        experimentalFeatures: wp?.experimentalFeatures,
+        enableRemoteModule: wp?.enableRemoteModule,
       };
     });
 
     expect(webPreferences.contextIsolation).toBe(true);
     expect(webPreferences.nodeIntegration).toBe(false);
+    expect(webPreferences.nodeIntegrationInWorker).toBe(false);
+    expect(webPreferences.nodeIntegrationInSubFrames).toBe(false);
     expect(webPreferences.sandbox).toBe(true);
     expect(webPreferences.webSecurity).toBe(true);
+    expect(webPreferences.allowRunningInsecureContent).toBe(false);
+    expect(webPreferences.experimentalFeatures).toBe(false);
+    expect(webPreferences.enableRemoteModule).toBeUndefined();
 
     await window.close();
+    await app.close();
+  });
+});
+
+test.describe("SR-112 CSP", () => {
+  test("the CSP header matches SR-112 verbatim and lists no Bybit host", async () => {
+    const app = await launchApp();
+    const electronWindow = await app.firstWindow();
+
+    const cspHeader = await electronWindow.evaluate(async () => {
+      const response = await fetch(
+        (globalThis as unknown as { location: { href: string } }).location.href,
+      );
+      return response.headers.get("Content-Security-Policy");
+    });
+
+    expect(cspHeader).not.toBeNull();
+    expect(cspHeader).not.toContain("unsafe-eval");
+    for (const host of ["api.bybit.com", "api-demo.bybit.com", "api.bytick.com", "stream"]) {
+      expect(cspHeader ?? "").not.toContain(host);
+    }
+
+    await app.close();
+  });
+});
+
+test.describe("Navigation and window-open denial (SR-113)", () => {
+  test("window.open to an arbitrary origin is denied and nothing opens", async () => {
+    const app = await launchApp();
+    const electronWindow = await app.firstWindow();
+
+    const openedHandle = await electronWindow.evaluate(() => {
+      const popup = (
+        globalThis as unknown as { open: (url: string, target: string) => unknown }
+      ).open("https://example.com", "_blank");
+      return popup === null;
+    });
+
+    expect(openedHandle).toBe(true);
+
     await app.close();
   });
 });
