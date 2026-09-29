@@ -42,8 +42,10 @@ from candleviewer.net import (
     MeshOnlyMiddleware,
     MeshSelfCheckScheduler,
     ReadOnlyGate,
+    SystemTopicPublisher,
     net_binding_safe,
     real_socket_enumerator,
+    register_system_topic_subscriber,
 )
 from candleviewer.observability.service import ObservabilityService
 from candleviewer.oms.service import OmsService
@@ -108,6 +110,11 @@ class AppContext:
     # at startup (the boot check) then `start()` for the hourly loop, and
     # `stop()` on shutdown.
     mesh_self_check: MeshSelfCheckScheduler
+    # QA defect #1578 blocker 1: the one production subscriber wiring
+    # `oms_read_only_gate` transitions onto the `system` WS topic
+    # (`23-ws-protocol.md` §6) so the mandatory blocking banner is actually
+    # published, not merely mechanically possible via `ReadOnlyGate.subscribe`.
+    mesh_system_topic_publisher: SystemTopicPublisher
 
 
 def build_app_context(settings: Settings | None = None) -> AppContext:
@@ -129,13 +136,19 @@ def build_app_context(settings: Settings | None = None) -> AppContext:
         gauge=net_binding_safe,
         interval_s=resolved.mesh_self_check_interval_s,
     )
+    bus_service = BusService()
+    mesh_system_topic_publisher = register_system_topic_subscriber(
+        bus=bus_service.bus,
+        env=resolved.environment.value,
+        read_only_gate=read_only_gate,
+    )
     return AppContext(
         settings=resolved,
         metrics=CollectorRegistry(),
         secrets=build_secrets_service(),
         exchange_base=ExchangeBaseService(),
         exchange_bybit=ExchangeBybitService(),
-        bus=BusService(),
+        bus=bus_service,
         ingestion=IngestionService(),
         book=BookService(),
         bars=BarsService(),
@@ -157,6 +170,7 @@ def build_app_context(settings: Settings | None = None) -> AppContext:
         ws=WsService(),
         oms_read_only_gate=read_only_gate,
         mesh_self_check=mesh_self_check,
+        mesh_system_topic_publisher=mesh_system_topic_publisher,
     )
 
 
@@ -241,5 +255,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         trusted_proxy_header=resolved.mesh_trusted_proxy_header,
         trusted_proxy_address=resolved.mesh_trusted_proxy_address,
     )
-    app.include_router(make_health_router(resolved, ctx.metrics))
+    app.include_router(
+        make_health_router(resolved, ctx.metrics, mesh_read_only_gate=ctx.oms_read_only_gate)
+    )
     return app

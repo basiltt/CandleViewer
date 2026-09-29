@@ -27,6 +27,11 @@ internet, independent of and enforced *before* authentication:
 - `scheduler.MeshSelfCheckScheduler` — supervises the hourly re-check
   (drift-after-resume, AC5) using the exact same `apply_self_check_result`
   path as the boot check.
+- `system_topic.register_system_topic_subscriber` — the one production
+  `ReadOnlyGate.subscribe()` call site (QA defect #1578 blocker 1): wires
+  gate trip/clear transitions onto the `system` WS topic (`23-ws-protocol.md`
+  §6) so the mandatory blocking banner is actually published, not merely
+  mechanically possible.
 
 See `docs/plan/backlog/E09-T04` and `20-architecture.md` "WSL hazards".
 """
@@ -43,9 +48,11 @@ __all__ = [
     "MeshSelfCheckScheduler",
     "NullAuditSink",
     "ReadOnlyGate",
+    "SystemTopicPublisher",
     "apply_self_check_result",
     "net_binding_safe",
     "real_socket_enumerator",
+    "register_system_topic_subscriber",
 ]
 
 from .audit import AuditSink, InMemoryAuditSink, NullAuditSink
@@ -56,3 +63,4 @@ from .metrics import net_binding_safe
 from .middleware import MeshOnlyMiddleware
 from .read_only_gate import ReadOnlyGate
 from .scheduler import MeshSelfCheckScheduler
+from .system_topic import SystemTopicPublisher, register_system_topic_subscriber

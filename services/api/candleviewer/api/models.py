@@ -35,7 +35,19 @@ class LivenessResponse(BuildInfo):
 
 
 class ReadinessResponse(BuildInfo):
-    """`GET /readyz` response body."""
+    """`GET /readyz` response body.
+
+    `mesh_binding_safe`/`mesh_reason_code` (E09-T04 deliverable: "the
+    self-check result exposed on the health payload consumed by SCR-137
+    Admin security centre and SCR-016 first-run wizard") surface the mesh
+    guard's current `ReadOnlyGate` state so those screens have a data
+    source without needing a second, mesh-specific endpoint. `None` when no
+    mesh guard is wired (e.g. a bare `make_health_router()` call in a unit
+    test that does not pass one) rather than a misleading default of
+    `True`.
+    """
 
     status: str = "ok"
     checks: list[ReadyCheck] = []
+    mesh_binding_safe: bool | None = None
+    mesh_reason_code: str | None = None

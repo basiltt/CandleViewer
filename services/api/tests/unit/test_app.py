@@ -8,6 +8,7 @@ containing `gitSha`, `version` and `environment`.
 
 from __future__ import annotations
 
+import asyncio
 import time
 
 from fastapi.testclient import TestClient
@@ -124,3 +125,37 @@ async def test_oms_service_validator_is_bound_to_the_shared_read_only_gate() -> 
             pass
     finally:
         await supervisor.stop_all(grace_s=0.1)
+
+
+def test_readyz_exposes_mesh_binding_safe_from_the_shared_read_only_gate() -> None:
+    # QA defect #1578 blocker 2: SCR-137/SCR-016 need the mesh self-check
+    # result on a health payload; this is the "never wired in" regression.
+    app = create_app(_fake_settings())
+    client = TestClient(app, client=("127.0.0.1", 50000))
+
+    body = client.get("/readyz").json()
+    assert body["mesh_binding_safe"] is True
+    assert body["mesh_reason_code"] is None
+
+    ctx = app.state.app_context
+    ctx.oms_read_only_gate.trip(reason_code="net.public_binding_detected", reason_text="bad")
+
+    body = client.get("/readyz").json()
+    assert body["mesh_binding_safe"] is False
+    assert body["mesh_reason_code"] == "net.public_binding_detected"
+
+
+async def test_build_app_context_wires_a_system_topic_publisher_to_the_gate() -> None:
+    # QA defect #1578 blocker 1: the gate must have a production subscriber
+    # publishing onto the `system` WS topic, not merely the mechanism to.
+    from candleviewer.bus.models import QueuePolicy
+
+    ctx = build_app_context(_fake_settings())
+    assert ctx.mesh_system_topic_publisher is not None
+
+    sub = ctx.bus.bus.subscribe("test", "demo.system", QueuePolicy.CONFLATE_LATEST)
+    ctx.oms_read_only_gate.trip(reason_code="net.test", reason_text="test")
+    await asyncio.sleep(0)
+
+    payload = sub.get_nowait()
+    assert payload["reason_code"] == "net.test"
