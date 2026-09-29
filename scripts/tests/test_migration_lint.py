@@ -524,3 +524,57 @@ def test_fstring_update_via_resolved_non_audit_name_is_not_flagged(
         _RAW_SQL_FSTRING_UPDATE_NON_AUDIT_TABLE_VIA_NAME,
     )
     assert check_audit_table_integrity([path]) == []
+
+
+# --- Round-4 finding: unresolvable placeholder in table position (fail-closed) ---
+
+_UNRESOLVED_CASES = {
+    "end_of_string": 'op.execute(f"delete from {t}")',
+    "followed_by_space": 'op.execute(f"delete from {t} where 1=1")',
+    "truncate": 'op.execute(f"TRUNCATE {t}")',
+    "grant_list": 'op.execute(f"GRANT SELECT, DELETE ON {t} TO cv_app")',
+}
+
+
+@pytest.mark.parametrize("case", sorted(_UNRESOLVED_CASES))
+def test_unresolvable_dynamic_table_in_mutation_is_flagged(
+    tmp_path: Path, case: str
+) -> None:
+    """A table name the lint cannot resolve at lint time must be treated as
+    potentially an audit table (C-5.7, fail-closed) — including when the
+    placeholder ends the string or is followed by whitespace, where a trailing
+    `\b` after the NUL sentinel would never match."""
+    src = (
+        "from alembic import op\n\n\ndef get_name():\n    return 'x'\n\n\n"
+        "def upgrade() -> None:\n    t = get_name()\n    "
+        + _UNRESOLVED_CASES[case]
+        + "\n"
+    )
+    path = _write(tmp_path, f"audit_dynamic_{case}.py", src)
+    findings = check_audit_table_integrity([path])
+    assert len(findings) == 1, findings
+    assert findings[0].code == "CI-MIG-003"
+
+
+def test_unresolvable_dynamic_table_in_create_is_not_flagged(tmp_path: Path) -> None:
+    src = (
+        "from alembic import op\n\n\ndef get_name():\n    return 'x'\n\n\n"
+        'def upgrade() -> None:\n    t = get_name()\n    op.execute(f"CREATE INDEX ix ON {t} (id)")\n'
+    )
+    path = _write(tmp_path, "audit_dynamic_create.py", src)
+    assert check_audit_table_integrity([path]) == []
+
+
+def test_create_extension_if_not_exists_is_exempt(tmp_path: Path) -> None:
+    """Extensions are cluster-level objects Alembic does not own; the idempotent
+    `CREATE EXTENSION IF NOT EXISTS` idiom (used by merged migration 0001) is
+    not the table/index/column state the CI-MIG-005 ban targets."""
+    src = (
+        "from alembic import op\n\n\ndef upgrade() -> None:\n"
+        '    op.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto;")\n'
+        '    op.execute("CREATE TABLE IF NOT EXISTS t (id int)")\n'
+    )
+    path = _write(tmp_path, "0011_ext.py", src)
+    findings = check_if_not_exists([path])
+    assert len(findings) == 1
+    assert "line 6" in findings[0].message

@@ -46,6 +46,14 @@ _SERVER_DEFAULT_RE = re.compile(r"server_default\s*=")
 _ALTER_COLUMN_TYPE_RE = re.compile(r"\bop\.alter_column\s*\([^)]*type_\s*=")
 _CONTRACT_PHASE_RE = re.compile(r"#\s*cv:contract-phase:\s*\S+")
 _IF_NOT_EXISTS_RE = re.compile(r"\bIF\s+NOT\s+EXISTS\b", re.IGNORECASE)
+# `CREATE EXTENSION IF NOT EXISTS` is exempt: extensions are cluster-level
+# objects Alembic does not own (no downgrade drops them — other databases may
+# depend on them) and the idempotent form is the documented Postgres idiom.
+# The ban (21-database-schema.md §9) targets tables/indexes/columns, whose
+# state Alembic *does* own.
+_CREATE_EXTENSION_RE = re.compile(
+    r"\bCREATE\s+EXTENSION\s+IF\s+NOT\s+EXISTS\b", re.IGNORECASE
+)
 
 # Tables that must never be a destructive-op target, contract-phase
 # annotation or not (append-only audit, per ticket "Security notes").
@@ -69,13 +77,15 @@ _TABLE_QUALIFIER = r"(?:\"?\w+\"?\.)?\"?'?"
 # Sentinel substituted for an f-string placeholder whose value could not be
 # resolved to a string constant at lint time. Never matches a real table name
 # (NUL cannot appear in Python source), so it only trips the dedicated
-# dynamic-table check below and never the static per-table patterns.
+# dynamic-table check below and never the static per-table patterns. NUL is not
+# a word character, so the pattern ends in `(?!\w)` — a trailing `\b` would
+# silently never match at end-of-string or before whitespace.
 _UNRESOLVED_PLACEHOLDER = "\x00"
 _DYNAMIC_MUTATION_RE = re.compile(
     rf"\b(?:DELETE\s+FROM|UPDATE|DROP\s+TABLE|TRUNCATE(?:\s+TABLE)?|ALTER\s+TABLE)"
-    rf"\s+{_TABLE_QUALIFIER}{re.escape(_UNRESOLVED_PLACEHOLDER)}\b"
+    rf"\s+{_TABLE_QUALIFIER}{re.escape(_UNRESOLVED_PLACEHOLDER)}(?!\w)"
     rf"|\bGRANT\s+(?:ALL(?:\s+PRIVILEGES)?|[A-Za-z, ]*?\b(?:UPDATE|DELETE|TRUNCATE)\b[A-Za-z, ]*?)"
-    rf"\s+ON\s+{_TABLE_QUALIFIER}{re.escape(_UNRESOLVED_PLACEHOLDER)}\b",
+    rf"\s+ON\s+{_TABLE_QUALIFIER}{re.escape(_UNRESOLVED_PLACEHOLDER)}(?!\w)",
     re.IGNORECASE,
 )
 
@@ -225,7 +235,7 @@ def check_if_not_exists(paths: list[Path]) -> list[LintFinding]:
     for path in paths:
         text = path.read_text(encoding="utf-8")
         for lineno, line in enumerate(text.splitlines(), start=1):
-            if _IF_NOT_EXISTS_RE.search(line):
+            if _IF_NOT_EXISTS_RE.search(line) and not _CREATE_EXTENSION_RE.search(line):
                 findings.append(
                     LintFinding(
                         code="CI-MIG-005",
