@@ -2,8 +2,12 @@ import { describe, expect, it } from "vitest";
 import { ALLOWED_IPC_CHANNELS, buildAllowList, isChannelAllowed } from "../src/preload/allowList";
 
 describe("preload allow-list builder", () => {
-  it("has an empty allow-list at this stage (E02-T04 ships no IPC channels)", () => {
-    expect(ALLOWED_IPC_CHANNELS).toEqual([]);
+  it("has exactly the three named channels this ticket's ShellPort surface needs (SR-111)", () => {
+    expect(ALLOWED_IPC_CHANNELS).toEqual([
+      "cv:gpu:info",
+      "cv:keychain:getKekHandle",
+      "cv:updates:check",
+    ]);
   });
 
   it("rejects a channel not present in the allow-list", () => {
@@ -14,7 +18,7 @@ describe("preload allow-list builder", () => {
   });
 
   it("builds an invoke function only for allow-listed channels", () => {
-    const built = buildAllowList([], async () => undefined);
+    const built = buildAllowList([], async () => undefined, []);
     expect(Object.keys(built)).toEqual([]);
   });
 
@@ -28,5 +32,9 @@ describe("preload allow-list builder", () => {
     const result = await built["test-channel"]?.("arg1");
     expect(result).toBe("ok");
     expect(calls).toEqual([["test-channel", ["arg1"]]]);
+  });
+
+  it("rejects a real channel name that is not itself allow-listed for a given caller", () => {
+    expect(isChannelAllowed("cv:gpu:info", ["cv:keychain:getKekHandle"])).toBe(false);
   });
 });

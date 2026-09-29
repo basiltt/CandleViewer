@@ -1,11 +1,22 @@
-import { app, BrowserWindow, session } from "electron";
+import { app, BrowserWindow, ipcMain, session, shell } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { HARDENED_WEB_PREFERENCES } from "./shellPort.js";
 import { buildCsp } from "./csp.js";
 import { logStartup, logAuditEvent } from "./logger.js";
+import { applyGpuFlags, probeGpu } from "./gpu.js";
+import { getKekHandle } from "./keychain.js";
+import { checkForUpdate } from "./updateChannel.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Single-instance lock: a second launch hands its args to the first
+// instance and quits immediately rather than opening a second window (and a
+// second, racing KEK-handle session).
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+}
 
 // Packaged-build navigation is confined to the app's own dist directory; in
 // dev it is confined to the Vite dev server's origin. Neither is a bare
@@ -69,21 +80,62 @@ export function isNavigationAllowed(
   return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
 }
 
+/**
+ * Schemes `shell.openExternal` is allowed to hand off to the OS browser
+ * (SR-113): external links never open inside the app, and never for an
+ * arbitrary scheme (e.g. `file:`, a custom protocol, or something that could
+ * trigger a local application handler unexpectedly).
+ */
+const ALLOWED_EXTERNAL_PROTOCOLS = new Set(["https:", "http:"]);
+
+/**
+ * Returns true only if `url` is `https:`/`http:` and not the app's own dev
+ * server or packaged origin — i.e. it is a genuine external link, not a
+ * same-origin navigation that merely used `window.open`.
+ */
+export function isExternalLinkAllowed(url: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  return ALLOWED_EXTERNAL_PROTOCOLS.has(parsed.protocol);
+}
+
 export function createMainWindow(): BrowserWindow {
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.js"),
       contextIsolation: HARDENED_WEB_PREFERENCES.contextIsolation,
       nodeIntegration: HARDENED_WEB_PREFERENCES.nodeIntegration,
+      nodeIntegrationInWorker: HARDENED_WEB_PREFERENCES.nodeIntegrationInWorker,
+      nodeIntegrationInSubFrames: HARDENED_WEB_PREFERENCES.nodeIntegrationInSubFrames,
       sandbox: HARDENED_WEB_PREFERENCES.sandbox,
       webSecurity: HARDENED_WEB_PREFERENCES.webSecurity,
+      allowRunningInsecureContent: HARDENED_WEB_PREFERENCES.allowRunningInsecureContent,
+      experimentalFeatures: HARDENED_WEB_PREFERENCES.experimentalFeatures,
+      // enableRemoteModule is deliberately absent (SR-110) — never set it.
     },
   });
 
+  // "shell interactive" instrumentation (Performance notes): the window is
+  // created hidden and shown only on first paint to avoid a white flash and
+  // to keep the measured cold-start honest (budget #10, <=3s cold start).
+  win.once("ready-to-show", () => {
+    win.show();
+  });
+
   win.webContents.setWindowOpenHandler(({ url }) => {
-    logAuditEvent("window-open-denied", { url: safeOriginOf(url) });
+    if (isExternalLinkAllowed(url) && !isNavigationAllowed(url, process.env["CV_DEV_SERVER_URL"])) {
+      logAuditEvent("external-link-opened", { url: safeOriginOf(url) });
+      void shell.openExternal(url);
+    } else {
+      logAuditEvent("window-open-denied", { url: safeOriginOf(url) });
+    }
     return { action: "deny" };
   });
 
@@ -116,14 +168,41 @@ function installCspHeader(): void {
   });
 }
 
+/**
+ * Denies every Electron permission the app does not need. Nothing in
+ * CandleViewer's scope needs camera, microphone, geolocation, MIDI or OS
+ * notifications from the renderer's own request path (notifications are
+ * surfaced via `ShellPort.notifications`, main-process initiated) — every
+ * request is therefore explicitly denied rather than left to Electron's
+ * default (which varies by permission).
+ */
+function installPermissionHandler(): void {
+  session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => {
+    callback(false);
+  });
+}
+
+/** Registers the fixed set of ipcMain handlers backing the preload bridge (SR-111). */
+function installIpcHandlers(): void {
+  ipcMain.handle("cv:gpu:info", () => probeGpu());
+  ipcMain.handle("cv:keychain:getKekHandle", () => getKekHandle());
+  ipcMain.handle("cv:updates:check", () => checkForUpdate());
+}
+
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
   }
 });
 
+// GPU flags must be applied before app.whenReady() (Electron requirement);
+// see GPU_FLAGS.md for the documented rationale of each switch.
+applyGpuFlags();
+
 void app.whenReady().then(() => {
   installCspHeader();
+  installPermissionHandler();
+  installIpcHandlers();
   logStartup();
   createMainWindow();
   app.emit("workspace-ready");

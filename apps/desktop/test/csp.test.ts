@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { buildCsp } from "../src/main/csp";
 
 describe("CSP string builder", () => {
-  it("matches the documented policy (snapshot)", () => {
+  it("matches the SR-112 policy verbatim (snapshot)", () => {
     expect(buildCsp("http://127.0.0.1:8000")).toBe(
-      "default-src 'self'; connect-src 'self' http://127.0.0.1:8000 ws://127.0.0.1:8000; img-src 'self' data:; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://127.0.0.1:8000 ws://127.0.0.1:8000; img-src 'self' data: blob:; worker-src 'self' blob:; object-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
     );
   });
 
@@ -13,13 +13,29 @@ describe("CSP string builder", () => {
     expect(csp).toContain("object-src 'none'");
     expect(csp).toContain("base-uri 'none'");
     expect(csp).toContain("frame-ancestors 'none'");
-    expect(csp).toContain("form-action 'self'");
+    expect(csp).toContain("form-action 'none'");
+  });
+
+  it("never allows unsafe-eval", () => {
+    expect(buildCsp()).not.toContain("unsafe-eval");
+  });
+
+  it("never lists a Bybit host in any directive (SR-119)", () => {
+    const csp = buildCsp();
+    for (const host of [
+      "api.bybit.com",
+      "api-demo.bybit.com",
+      "api.bytick.com",
+      "stream.bybit.com",
+    ]) {
+      expect(csp).not.toContain(host);
+    }
   });
 
   it("falls back to the default origin for a non-loopback CV_BACKEND_ORIGIN (rejects injection)", () => {
     const csp = buildCsp("http://evil.example.com\"; script-src 'unsafe-inline");
     expect(csp).not.toContain("evil.example.com");
-    expect(csp).not.toContain("script-src");
+    expect(csp).not.toContain("'unsafe-inline'; script-src 'unsafe-inline'");
     expect(csp).toContain("connect-src 'self' http://127.0.0.1:8000 ws://127.0.0.1:8000");
   });
 
@@ -29,7 +45,9 @@ describe("CSP string builder", () => {
   });
 
   it("accepts localhost and IPv6 loopback as valid backend origins", () => {
-    expect(buildCsp("http://localhost:9000")).toContain("http://localhost:9000 ws://localhost:9000");
+    expect(buildCsp("http://localhost:9000")).toContain(
+      "http://localhost:9000 ws://localhost:9000",
+    );
     expect(buildCsp("http://[::1]:9000")).toContain("http://[::1]:9000");
   });
 

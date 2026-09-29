@@ -1,11 +1,18 @@
 /**
  * Explicit IPC channel allow-list. Empty at E02-T04 (Do NOT: no business
- * logic here). Adding a channel later means editing this array, which is
- * code-owned by the security engineer (trust boundary B4, 20-architecture.md
- * §2.2). `buildAllowedChannels` rejects any channel not present here so a
- * caller can never widen the surface implicitly.
+ * logic here). E10-T02 adds exactly the three channels this ticket's
+ * ShellPort surface needs (gpu info, opaque KEK handle, disabled update
+ * check) — each is code-owned by the security engineer (trust boundary B4,
+ * 20-architecture.md §2.2). `isChannelAllowed` rejects any channel not
+ * present here so a caller can never widen the surface implicitly, and the
+ * preload never accepts a caller-supplied channel name (SR-111): only these
+ * literal, compile-time-constant strings are ever passed to `invoke`.
  */
-export const ALLOWED_IPC_CHANNELS: readonly string[] = [];
+export const ALLOWED_IPC_CHANNELS: readonly string[] = [
+  "cv:gpu:info",
+  "cv:keychain:getKekHandle",
+  "cv:updates:check",
+];
 
 export function isChannelAllowed(
   channel: string,

@@ -33,17 +33,21 @@ function resolveBackendOrigin(rawOrigin: string): string {
   return parsed.origin;
 }
 
-export function buildCsp(backendOrigin: string = process.env["CV_BACKEND_ORIGIN"] ?? DEFAULT_BACKEND_ORIGIN): string {
+export function buildCsp(
+  backendOrigin: string = process.env["CV_BACKEND_ORIGIN"] ?? DEFAULT_BACKEND_ORIGIN,
+): string {
   const safeOrigin = resolveBackendOrigin(backendOrigin);
   const wsOrigin = safeOrigin.replace(/^http/, "ws");
   return [
     "default-src 'self'",
-    `connect-src 'self' ${safeOrigin} ${wsOrigin}`,
-    "img-src 'self' data:",
+    "script-src 'self'",
     "style-src 'self' 'unsafe-inline'",
+    `connect-src 'self' ${safeOrigin} ${wsOrigin}`,
+    "img-src 'self' data: blob:",
+    "worker-src 'self' blob:",
     "object-src 'none'",
-    "base-uri 'none'",
     "frame-ancestors 'none'",
-    "form-action 'self'",
+    "base-uri 'none'",
+    "form-action 'none'",
   ].join("; ");
 }
