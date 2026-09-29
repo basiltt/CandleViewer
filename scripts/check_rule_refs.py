@@ -26,6 +26,10 @@ DECL_RE_TEMPLATE = r"^\*\*{id}\b"
 TRACKED_GLOBS = (".md", ".yaml", ".yml")
 TRACKED_BASENAMES = ("CODEOWNERS",)
 CONSTITUTION_FILE = "CONSTITUTION.md"
+# Deliberately-broken governance self-test fixtures (scripts/gov_self_test.py)
+# ship real tracked files with dangling rule ids on purpose. They must be
+# excluded from the real GOV-002 scan or every normal run fails permanently.
+EXCLUDED_PREFIX = "scripts/tests/fixtures/self_test/"
 
 
 @dataclass(frozen=True)
@@ -50,6 +54,9 @@ def git_tracked_files(repo_root: str) -> list[str]:
 
 
 def is_scanned_file(path: str) -> bool:
+    normalized = path.replace(os.sep, "/")
+    if normalized.startswith(EXCLUDED_PREFIX):
+        return False
     base = os.path.basename(path)
     if base in TRACKED_BASENAMES:
         return True

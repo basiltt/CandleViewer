@@ -1,0 +1,11 @@
+{
+  "registries": [
+    {
+      "id": "required-check-names",
+      "owner_file": "CONSTITUTION.md",
+      "owner_section": "9",
+      "threshold": 3,
+      "tokens": ["unit-backend", "unit-engine", "unit-frontend"]
+    }
+  ]
+}

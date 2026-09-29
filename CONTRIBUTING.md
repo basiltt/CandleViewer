@@ -133,7 +133,29 @@ CI reads `TURBO_API`/`TURBO_TEAM` (repository variables) and, on `main`-branch r
 `TURBO_TOKEN` secret for the Turborepo remote cache (ADR-0013 rule 6); PR runs and local runs without
 those variables set simply fall back to Turborepo's local cache.
 
-## Design and architecture decisions
+### Governance regression pack (`GOV-00n` codes)
+
+The `governance` required check (`.github/workflows/governance.yml`, E01-Q02) runs a fixed pack of
+checkers, each emitting a stable `GOV-00n` code so CI history stays greppable. Reproduce any of them
+locally with `python scripts/<checker>.py` (or `python docs/plan/backlog/_tools/validate.py` for the
+backlog report tool); fix instructions live in the tool's own `--help` and its emitted message.
+
+| Code | Checker | What it means |
+|---|---|---|
+| `GOV-001` | `scripts/check_codeowners_coverage.py` | A tracked path resolves only to the CODEOWNERS catch-all `*`, a rule matches no tracked path, or a rule names an undeclared owner. |
+| `GOV-002` | `scripts/check_rule_refs.py` | A `C-x.y` rule reference doesn't resolve to a declaration in `CONSTITUTION.md`. Run with `--fix-suggest` for nearest-id suggestions. |
+| `GOV-003` | `scripts/check_sot_duplication.py` | A `C-16.5`-owned list has been restated outside its owner file/section (`scripts/sot-registry.json`). Delete the copy and link to the owner, or add an isolated-mention entry to `scripts/sot-allowlist.txt`. |
+| `GOV-004` | `scripts/check_issue_forms.py`, `scripts/validate-backlog.py`, `docs/plan/backlog/_tools/validate.py` | An issue form is structurally broken, or a backlog ticket JSON fails schema/cross-file validation (dependency cycles, parent chains, sprint ordering, secret-pattern scan). |
+| `GOV-005` | `scripts/check_required_check_reconciliation.py` | `.github/branch-protection.json` and `CONSTITUTION.md` §9 (and, once populated, the workflow job names) disagree on required-check names. |
+
+The job also runs a **canary self-test** (`python scripts/gov_self_test.py --self-test`) that replays
+every checker above against a deliberately-broken fixture tree under
+`scripts/tests/fixtures/self_test/` and asserts each one fails — the guard against a green `governance`
+check that has silently stopped checking anything — and a **coverage gate** (`pytest --cov=scripts
+--cov-fail-under=85`) over all of `scripts/**`. Job duration is measured against a 60s budget and
+recorded as a `::notice`/`::error` annotation on every run.
+
+
 
 Sprints are **1 week** (Fri→Thu; Sprint 01 = 2026-09-25; calendar in `docs/plan/backlog/_tools/calendar_cv.py`). Design runs at least two sprints ahead of engineering; no frontend screen work starts before its design
 ticket is Done. Architectural decisions are recorded as MADR ADRs in `docs/adr/` and must be proposed
