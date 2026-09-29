@@ -40,7 +40,13 @@ class BybitSigner:
         """
         message = f"{timestamp_ms}{self.api_key}{recv_window_ms}{payload}"
         secret_bytes = self._api_secret.get_secret_value().encode("utf-8")
-        digest = hmac.new(secret_bytes, message.encode("utf-8"), hashlib.sha256)
+        # HMAC-SHA256 is the Bybit v5 request-signing algorithm mandated by the
+        # exchange API spec (docs/plan/24-internal-schemas.md §14.3) — this is
+        # message-authentication keyed hashing of a request, not password
+        # storage hashing, so SHA-256's speed is not a weakness here.
+        digest = hmac.new(  # lgtm[py/insufficient-hash-strength]
+            secret_bytes, message.encode("utf-8"), hashlib.sha256
+        )
         return digest.hexdigest()
 
     @staticmethod
