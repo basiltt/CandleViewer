@@ -1,0 +1,53 @@
+name: Quarterly CI review (SR-132)
+description: Recurring review of GitHub Actions action pins and workflow permissions
+title: "[Quarterly CI review]: <year>-Q<n>"
+labels: ["type/chore", "area/infra-devops", "quarterly-ci-review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Filed per `docs/ci-runbook.md` §6 (SR-132). Cadence: first business
+        day of Jan/Apr/Jul/Oct. Never paste API keys, session tokens,
+        passwords, or real account/user identifiers into this issue.
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Review checklist
+      options:
+        - label: >-
+            Every `uses:` action reference under `.github/workflows/**` is
+            still pinned to a commit SHA matching its documented tag in
+            `.github/actions-pins.md`; no floating tags introduced since
+            last review.
+          required: true
+        - label: >-
+            Every workflow's top-level and job-level `permissions:` block is
+            still least-privilege for what that workflow actually does.
+          required: true
+        - label: >-
+            The self-hosted GPU benchmark runner's isolation (ephemeral
+            workspace, no secrets, restricted to this repository) matches
+            ADR-0013's risk note.
+          required: true
+        - label: >-
+            `.github/rulesets/bypass-register.md` (`docs/ci-runbook.md` §4
+            CI-PROT-004) has no stale or malformed rows.
+          required: true
+        - label: >-
+            Any finding from this review has its own follow-up issue linked
+            below, or is fixed directly in a PR linked below.
+          required: true
+  - type: textarea
+    id: findings
+    attributes:
+      label: Findings and follow-up links
+      description: One line per finding, with a PR or issue link.
+    validations:
+      required: false
+  - type: input
+    id: next-review-date
+    attributes:
+      label: Next review date
+      description: First business day of the following quarter.
+    validations:
+      required: true

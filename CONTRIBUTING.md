@@ -16,6 +16,7 @@ so the bar for changes is high and the rules are explicit.
 | `docs/adr/`                              | Accepted architecture decisions (MADR). Do not relitigate them silently.                                                                                                                                                                                                                           |
 | `.github/PULL_REQUEST_TEMPLATE.md`       | The checklist your PR must satisfy.                                                                                                                                                                                                                                                                |
 | `.github/CODEOWNERS`                     | Who must review what.                                                                                                                                                                                                                                                                              |
+| **[`docs/ci-runbook.md`](docs/ci-runbook.md)** | Operating manual for the CI/CD pipeline: job map, `ci-required` resolver, per-error-code triage recipes, dev-environment rebuild, secret-exposure and bad-deploy response, flaky-test quarantine, weekly PR-feedback-time metrics.                                                        |
 
 If anything below appears to conflict with the Constitution, **the Constitution wins** and the conflict is
 a bug to report.
@@ -88,6 +89,14 @@ duplicated here. The monorepo scaffold (`pnpm-workspace.yaml`, `turbo.json`, `pa
 `services/api/pyproject.toml`) shipped with `E02-T11`, so `AGENTS.md` §4 mirrors the real, runnable
 task graph. The generated-code required check fails the build if `AGENTS.md` §4 and the real scripts
 disagree.
+
+**Reproducing any CI gate locally, and what a red check means:** see
+[`docs/ci-runbook.md`](docs/ci-runbook.md) §4 for the full per-error-code
+(`CI-<FAMILY>-<NNN>`) triage table — this file does not duplicate it. The
+runbook also covers the dev-environment rebuild procedure (§7), secret-exposure
+response (§5), bad-deploy rollback (§8) and the flaky-test quarantine process
+(§9); this section stays limited to the JS/generated-code local-reproduction
+commands already documented below.
 
 See `AGENTS.md` §4 for the root install/verify command and the backend lint/format/typecheck/test loop.
 
