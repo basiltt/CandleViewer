@@ -186,17 +186,20 @@ def make_audit_router(
             return _problem(
                 400, "Bad request", f"limit must be between 1 and {AUDIT_QUERY_MAX_LIMIT}"
             )
-        page = await service.query.query(
-            actor_user_id=actor_user_id,
-            actions=action,
-            subject_type=subject_type,
-            severity=severity,
-            outcome=outcome,
-            from_ts=from_,
-            to_ts=to,
-            cursor=cursor,
-            limit=limit,
-        )
+        try:
+            page = await service.query.query(
+                actor_user_id=actor_user_id,
+                actions=action,
+                subject_type=subject_type,
+                severity=severity,
+                outcome=outcome,
+                from_ts=from_,
+                to_ts=to,
+                cursor=cursor,
+                limit=limit,
+            )
+        except ValidationError as exc:
+            return _problem(400, "Bad request", str(exc))
         return JSONResponse(status_code=200, content=_jsonable(page))
 
     @router.post("/verify")

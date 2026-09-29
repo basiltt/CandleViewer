@@ -15,7 +15,7 @@ from fastapi.testclient import TestClient
 
 from candleviewer.api.audit import make_audit_router
 from candleviewer.audit.access import AuditPrincipal
-from candleviewer.audit.models import AuditPage, ExportResult, VerifyResult
+from candleviewer.audit.models import AuditPage, AuditQueryRequest, ExportResult, VerifyResult
 
 
 class _FakeQuery:
@@ -25,6 +25,10 @@ class _FakeQuery:
         self.export_calls: list[dict[str, Any]] = []
 
     async def query(self, **kwargs: Any) -> AuditPage:
+        # Mirrors `AuditQueryService.query`'s own validation (QA defect
+        # #1596 review): a naive datetime or `from_ts > to_ts` must raise
+        # `ValidationError`, not be accepted silently by the fake.
+        AuditQueryRequest.model_validate(kwargs)
         self.query_calls.append(kwargs)
         return AuditPage(items=[], chain_verified=True, count=0)
 
@@ -186,6 +190,31 @@ def test_query_audit_log_passes_subject_type_through_to_query_service() -> None:
     assert response.status_code == 200
     [call] = service.query_service.query_calls
     assert call["subject_type"] == "order"
+
+
+def test_query_audit_log_rejects_naive_from_ts_with_400_not_500() -> None:
+    """QA defect #1596 review: `AuditQueryService.query` raises
+    `pydantic.ValidationError` (via `AuditQueryRequest`) for a naive
+    `from_`/`to` datetime; the route used to let that propagate as an
+    unhandled 500 instead of a 400."""
+    service = _FakeAuditService()
+    client = TestClient(_app(service, _FakeResolver(_owner())))
+    response = client.get(
+        "/admin/audit",
+        params={"from_": "2026-01-01T00:00:00", "to": "2026-01-02T00:00:00"},
+    )
+    assert response.status_code == 400
+    assert response.json()["status"] == 400
+
+
+def test_query_audit_log_rejects_from_after_to_with_400_not_500() -> None:
+    service = _FakeAuditService()
+    client = TestClient(_app(service, _FakeResolver(_owner())))
+    response = client.get(
+        "/admin/audit",
+        params={"from_": "2026-01-02T00:00:00Z", "to": "2026-01-01T00:00:00Z"},
+    )
+    assert response.status_code == 400
 
 
 def test_verify_audit_chain_rejects_unknown_body_field() -> None:
