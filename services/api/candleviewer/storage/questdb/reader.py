@@ -41,7 +41,7 @@ def build_read_bars(sym: str, family: str, param: str, rng: TimeRange) -> QueryB
         raise ValueError(f"unknown bar family {family!r}")
     table = f"bars_{family}"
     sql = (
-        f"SELECT * FROM {table} WHERE symbol = $1 AND bar_param = $2 "  # noqa: S608
+        f"SELECT * FROM {table} WHERE symbol = $1 AND bar_param = $2 "  # noqa: S608  # nosec B608 - table from _BAR_FAMILIES allowlist, not user input
         "AND ts >= $3 AND ts < $4 ORDER BY ts"
     )
     return QueryBuilder(sql, (sym, param, rng.start_us, rng.end_us))

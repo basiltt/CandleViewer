@@ -50,7 +50,9 @@ async def applied_migrations(executor: QuestDbExecutor) -> set[str]:
     # `_MIGRATIONS_TABLE` is a module constant, never user input; noqa'd
     # rather than parameterised because QuestDB/Postgres bind params are
     # values, not identifiers.
-    rows = await executor.fetch(f"SELECT filename FROM {_MIGRATIONS_TABLE}")  # noqa: S608
+    rows = await executor.fetch(
+        f"SELECT filename FROM {_MIGRATIONS_TABLE}"  # noqa: S608  # nosec B608 - module constant identifier, not user input
+    )
     return {str(row["filename"]) for row in rows}
 
 
@@ -76,7 +78,7 @@ async def run_migrations(executor: QuestDbExecutor, ddl_dir: Path) -> list[str]:
             await executor.execute(table)
         await executor.execute(
             # `_MIGRATIONS_TABLE` is a module constant; `$1` binds the value.
-            f"INSERT INTO {_MIGRATIONS_TABLE} (ts, filename, applied_at) "  # noqa: S608
+            f"INSERT INTO {_MIGRATIONS_TABLE} (ts, filename, applied_at) "  # noqa: S608  # nosec B608 - module constant identifier, not user input
             "VALUES (now(), $1, now())",
             sql_path.name,
         )
@@ -118,7 +120,7 @@ async def assert_no_schema_drift(executor: QuestDbExecutor, ddl_dir: Path) -> No
     for table in expected:
         # `table.name` comes from parsing our own trusted `.sql` files, never
         # from user input.
-        query = f"SELECT column FROM table_columns('{table.name}')"  # noqa: S608
+        query = f"SELECT column FROM table_columns('{table.name}')"  # noqa: S608  # nosec B608 - table.name from trusted parsed DDL files, not user input
         rows = await executor.fetch(query)
         live_columns = {str(row["column"]).lower() for row in rows}
         expected_columns = set(table.columns)

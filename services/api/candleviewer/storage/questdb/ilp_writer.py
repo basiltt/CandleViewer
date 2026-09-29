@@ -3,7 +3,8 @@
 `docs/plan/21-database-schema.md` Sec.4.14: batched 5 000 rows or 100 ms,
 per-table buffers, bounded queue with explicit backpressure (never silently
 drop — trades/executions must never be dropped, `20-architecture.md` Sec.3.1),
-reconnect with exponential backoff, `flush()` awaited on `stop()`.
+reconnect with exponential backoff and bounded jitter, `flush()` awaited on
+`stop()`.
 
 Line format: `table,tag=val,... field=val,... timestamp_ns` — `SYMBOL`
 columns are ILP *tags*, everything else (`DOUBLE`, `LONG`, `STRING`,
@@ -16,6 +17,7 @@ columns are tags — never inferred per-row.
 from __future__ import annotations
 
 import asyncio
+import random
 import time
 from dataclasses import dataclass, field
 from typing import Protocol
@@ -30,6 +32,8 @@ _FLUSH_ROWS = 5_000
 _FLUSH_INTERVAL_S = 0.1  # 100 ms, per Sec.4.14
 _RECONNECT_BASE_S = 0.5
 _RECONNECT_MAX_S = 30.0
+_JITTER_LOW = 0.5
+_JITTER_HIGH = 1.5
 
 
 class IlpTransport(Protocol):
@@ -44,16 +48,27 @@ class IlpTransport(Protocol):
 
 
 def _escape_symbol(value: str) -> str:
-    """Escape a `SYMBOL`/tag value per ILP: space, comma and `=` are escaped
-    with a backslash; nothing else needs escaping in this codebase's tag
-    values (`side`, `action`, `regime`, ... are closed enums, not arbitrary
-    user text)."""
-    return value.replace(" ", r"\ ").replace(",", r"\,").replace("=", r"\=")
+    """Escape a `SYMBOL`/tag value per ILP: backslash, space, comma and `=`
+    are escaped with a backslash. A raw newline or carriage-return would
+    terminate (or corrupt) the ILP line, so those are also backslash-encoded
+    rather than rejected, keeping every buffered row exactly one line even
+    for hostile/unexpected input (defence in depth beyond the closed-enum
+    tag values normally seen here)."""
+    return (
+        value.replace("\\", "\\\\")
+        .replace(" ", r"\ ")
+        .replace(",", r"\,")
+        .replace("=", r"\=")
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+    )
 
 
 def _escape_string_field(value: str) -> str:
-    """Escape a `STRING` field value: backslash and double-quote."""
-    return value.replace("\\", "\\\\").replace('"', '\\"')
+    """Escape a `STRING` field value: backslash and double-quote, plus a raw
+    newline/carriage-return (which would otherwise terminate/corrupt the ILP
+    line) encoded as the two-character escape sequence."""
+    return value.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n").replace("\r", "\\r")
 
 
 @dataclass(frozen=True, slots=True)
@@ -132,12 +147,14 @@ class IlpWriter:
         max_queue_rows: int = 200_000,
         flush_rows: int = _FLUSH_ROWS,
         flush_interval_s: float = _FLUSH_INTERVAL_S,
+        rng: random.Random | None = None,
     ) -> None:
         self._transport = transport
         self._schemas = schemas
         self._max_queue_rows = max_queue_rows
         self._flush_rows = flush_rows
         self._flush_interval_s = flush_interval_s
+        self._rng = rng if rng is not None else random.Random()  # noqa: S311 - jitter, not crypto
         self._buffers: dict[str, _TableBuffer] = {}
         self._total_buffered = 0
         self._not_full = asyncio.Event()
@@ -172,13 +189,23 @@ class IlpWriter:
                 return
             except Exception as exc:
                 self._write_errors_total += 1
+                jittered_delay_s = self._jittered_delay_s()
                 logger.warning(
                     "questdb_ilp_connect_failed",
                     error=str(exc),
-                    retry_in_s=self._reconnect_delay_s,
+                    retry_in_s=jittered_delay_s,
                 )
-                await asyncio.sleep(self._reconnect_delay_s)
+                await asyncio.sleep(jittered_delay_s)
                 self._reconnect_delay_s = min(self._reconnect_delay_s * 2, _RECONNECT_MAX_S)
+
+    def _jittered_delay_s(self) -> float:
+        """Bounded jitter on the current exponential-backoff delay: the
+        base delay is multiplied by a factor drawn uniformly from
+        `[_JITTER_LOW, _JITTER_HIGH]` and capped at `_RECONNECT_MAX_S`, so
+        many reconnecting clients do not retry in lockstep (thundering herd)
+        while the delay still grows exponentially and stays bounded."""
+        factor = self._rng.uniform(_JITTER_LOW, _JITTER_HIGH)
+        return min(self._reconnect_delay_s * factor, _RECONNECT_MAX_S)
 
     async def write_rows(self, table: str, rows: list[dict[str, object]], ts_us_key: str) -> None:
         """Buffer `rows` for `table`; applies backpressure (awaits, never

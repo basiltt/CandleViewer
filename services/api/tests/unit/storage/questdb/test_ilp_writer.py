@@ -8,8 +8,11 @@ backpressure at queue-full (never drops, always awaits).
 from __future__ import annotations
 
 import asyncio
+import random
 
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
 from candleviewer.storage.errors import StorageTierUnavailable
 from candleviewer.storage.questdb.ilp_writer import IlpWriter, TableSchema, serialize_ilp_line
@@ -39,6 +42,27 @@ def test_serialize_ilp_line_escapes_tag_special_characters() -> None:
     schema = TableSchema(name="t", tag_columns=("symbol",))
     line = serialize_ilp_line(schema, {"symbol": "A B,C=D"}, ts_us=1)
     assert r"symbol=A\ B\,C\=D" in line
+
+
+def test_serialize_ilp_line_hostile_tag_value_stays_one_line() -> None:
+    schema = TableSchema(name="t", tag_columns=("symbol",))
+    hostile = "A\nB\rC,D E=F"
+    line = serialize_ilp_line(schema, {"symbol": hostile}, ts_us=1)
+    assert line.count("\n") == 0
+    assert line.count("\r") == 0
+    assert r"\n" in line
+    assert r"\r" in line
+
+
+def test_serialize_ilp_line_hostile_string_field_stays_one_line() -> None:
+    schema = TableSchema(name="t", tag_columns=(), string_field_columns=("note",))
+    hostile = 'A\nB\rC"D\\E'
+    line = serialize_ilp_line(schema, {"note": hostile}, ts_us=1)
+    assert line.count("\n") == 0
+    assert line.count("\r") == 0
+    assert r"\n" in line
+    assert r"\r" in line
+    assert '\\"' in line
 
 
 def test_serialize_ilp_line_emits_int_and_timestamp_fields() -> None:
@@ -225,11 +249,49 @@ async def test_start_retries_connect_with_backoff_until_success(
 
     monkeypatch.setattr(asyncio, "sleep", _fake_sleep)
     transport = _FlakyTransport()
-    writer = IlpWriter(transport, {"trades": TRADES_SCHEMA})
+    writer = IlpWriter(transport, {"trades": TRADES_SCHEMA}, rng=random.Random(1234))  # noqa: S311 - jitter, not crypto
     await writer.start()
     assert transport.connected is True
     assert writer.write_errors_total == 2
-    assert sleeps == [0.5, 1.0]
+    # Jittered: base delays 0.5, 1.0 each multiplied by a factor in [0.5, 1.5].
+    assert len(sleeps) == 2
+    assert 0.25 <= sleeps[0] <= 0.75
+    assert 0.5 <= sleeps[1] <= 1.5
+
+
+def test_jittered_delay_grows_exponentially_and_stays_capped() -> None:
+    transport = _FakeTransport()
+    writer = IlpWriter(transport, {"trades": TRADES_SCHEMA}, rng=random.Random(42))  # noqa: S311 - jitter, not crypto
+    base_delays = [0.5, 1.0, 2.0, 4.0, 8.0, 16.0, 30.0, 30.0, 30.0]
+    for base in base_delays:
+        writer._reconnect_delay_s = base
+        delay = writer._jittered_delay_s()
+        assert base * 0.5 <= delay <= min(base * 1.5, 30.0)
+        assert delay <= 30.0
+
+
+def test_jittered_delay_sequences_differ_across_seeds() -> None:
+    transport = _FakeTransport()
+    writer_a = IlpWriter(transport, {"trades": TRADES_SCHEMA}, rng=random.Random(1))  # noqa: S311 - jitter, not crypto
+    writer_b = IlpWriter(transport, {"trades": TRADES_SCHEMA}, rng=random.Random(2))  # noqa: S311 - jitter, not crypto
+    base_delays = [0.5, 1.0, 2.0, 4.0, 8.0]
+    seq_a: list[float] = []
+    seq_b: list[float] = []
+    for base in base_delays:
+        writer_a._reconnect_delay_s = base
+        writer_b._reconnect_delay_s = base
+        seq_a.append(writer_a._jittered_delay_s())
+        seq_b.append(writer_b._jittered_delay_s())
+    assert seq_a != seq_b
+
+
+def test_jittered_delay_same_seed_is_reproducible() -> None:
+    transport = _FakeTransport()
+    writer_a = IlpWriter(transport, {"trades": TRADES_SCHEMA}, rng=random.Random(7))  # noqa: S311 - jitter, not crypto
+    writer_b = IlpWriter(transport, {"trades": TRADES_SCHEMA}, rng=random.Random(7))  # noqa: S311 - jitter, not crypto
+    writer_a._reconnect_delay_s = 4.0
+    writer_b._reconnect_delay_s = 4.0
+    assert writer_a._jittered_delay_s() == writer_b._jittered_delay_s()
 
 
 @pytest.mark.asyncio
@@ -254,3 +316,21 @@ async def test_stop_flushes_and_closes_transport() -> None:
     await writer.stop()
     assert len(transport.written) == 1
     assert transport.closed is True
+
+
+@given(st.text(min_size=0, max_size=40))
+def test_serialize_ilp_line_arbitrary_tag_text_is_one_line(text: str) -> None:
+    # ILP line boundaries are ASCII newline/carriage-return only; other
+    # Unicode line separators are not special to the ILP wire format.
+    schema = TableSchema(name="t", tag_columns=("symbol",))
+    line = serialize_ilp_line(schema, {"symbol": text}, ts_us=1)
+    assert "\n" not in line
+    assert "\r" not in line
+
+
+@given(st.text(min_size=0, max_size=40))
+def test_serialize_ilp_line_arbitrary_string_field_text_is_one_line(text: str) -> None:
+    schema = TableSchema(name="t", tag_columns=(), string_field_columns=("note",))
+    line = serialize_ilp_line(schema, {"note": text}, ts_us=1)
+    assert "\n" not in line
+    assert "\r" not in line
