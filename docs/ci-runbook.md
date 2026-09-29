@@ -39,7 +39,10 @@ PR opened/updated (.github/workflows/pr.yml)
 merge to main (.github/workflows/main.yml)
 ├─ dockerfile-pins        → digest-pin check                            (CI-IMG-001)
 ├─ build-scan-sign        → non-root hardening, Trivy, SBOM, cosign      (CI-IMG-002..005)
-└─ (E03-T09 dev/staging deploy — see §7)
+└─ deploy-dev.yml (workflow_run, self-hosted dev-host) → verify+deploy+smoke (CI-DEP-001..004, see §8)
+
+on demand / release branch (.github/workflows/deploy-staging.yml)
+└─ deploy-staging (Environment "staging", required reviewers)          → CI-DEP-001..004, see §8
 
 scheduled (.github/workflows/governance*.yml, coverage-ratchet.yml)
 ├─ governance             → bypass-register check                        (CI-PROT-004)
@@ -282,6 +285,30 @@ diff` cannot see because they were never tracked. `git add` them in the
   is not a bug — do not publish manually; complete the PRR checklist
   (`docs/plan/07-release-and-prr.md` §5) and let the checklist gate lift it.
 
+### CI-DEP-* — dev/staging deploy (`tools/ci/deploy_dev.py`, §8)
+
+- **CI-DEP-001** (signature verification failed): `cosign verify` did not
+  accept the target digest against the expected OIDC identity/issuer.
+  Deployment aborts before any container is replaced; the ledger records
+  `signature-verification-failed`. Never re-run with `--no-...` to bypass
+  this — investigate why `main.yml`'s own sign step produced (or the
+  registry served) an unverifiable digest.
+- **CI-DEP-002** (smoke test failed / timed out): `/healthz` or `/readyz`
+  never returned `status: "ok"` within the timeout. On dev this triggers
+  automatic redeploy of the last known-good digest (`rolled-back` ledger
+  entry); on staging it stops and alerts — roll back manually (§8). Check
+  the container logs for a stuck boot-time migration (advisory lock,
+  E03-T10) first; a long CI-DEP-002 wait is often a CI-DEP-004 in disguise.
+- **CI-DEP-003** (sha mismatch after deploy): the container came up healthy
+  but `/healthz`'s `git_sha` never matched the digest we just deployed —
+  "deploy succeeded, old image still running". Check that the compose
+  service actually pulled the new digest (`docker compose images`) rather
+  than reusing a cached local tag.
+- **CI-DEP-004** (migration lock timeout): the boot-time Alembic advisory
+  lock (E03-T10) did not release within its own timeout, so the container
+  never reaches `/readyz`. Surfaces here as a CI-DEP-002 smoke timeout;
+  check the API container's boot logs for the lock-wait message.
+
 ### CI-DOC-* — documentation drift (this runbook's own gate)
 
 - **CI-DOC-001** (undocumented error code): `scripts/check_runbook_completeness.py`
@@ -353,21 +380,38 @@ section in the same sprint — do not just work around it and move on.
 
 ## 8. Rollback of a bad dev/staging deploy
 
-- Dev and staging deploy from tagged, signed, SBOM'd images built by
-  `main.yml`'s `build-scan-sign` job (§2) — never from an untagged local
-  build.
-- To roll back: redeploy the previous known-good image tag (the tag before
-  the one that regressed); the previous digest is recorded in the
-  `image-supply-chain-evidence` artifact from that job's own run, and in the
-  SBOM-diff job summary.
+- Dev auto-deploys via `.github/workflows/deploy-dev.yml` on every green
+  `main.yml` run (`workflow_run` trigger); staging deploys via
+  `.github/workflows/deploy-staging.yml`, `workflow_dispatch` or a
+  `release/*` push, gated on the `staging` GitHub Environment (required
+  reviewers + a deployment branch policy restricting it to `main`/
+  `release/*`, SR-141). Both call `tools/ci/deploy_dev.py`, which
+  `cosign verify`s the digest immediately before applying it, renders
+  `infra/compose/.env` from `infra/compose/.env.example`, runs
+  `docker compose ... up -d --wait`, smoke-tests `/healthz` + `/readyz` and
+  asserts the deployed `git_sha` matches, then appends a record to
+  `deployments/ledger.jsonl` (sha, digest, environment, actor, timestamp,
+  outcome, duration) — committed by the workflow for auditability until
+  E04's observability lands.
+- **Dev** auto-rolls-back on a failed smoke test: the previous `success`
+  ledger entry's digest is looked up and redeployed automatically. Both
+  outcomes (`smoke-failed` then `rolled-back`) land in the ledger.
+- **Staging never auto-rolls-back** (a half-rolled-back staging environment
+  mid-soak is harder to reason about than a stopped one) — a failed smoke
+  test stops the job; roll back manually by dispatching
+  `deploy-staging.yml` with `rollback_to_digest` set to the previous
+  digest (find it via `grep '"environment":"staging"' deployments/ledger.jsonl | tail -5`
+  or the digest recorded in `main.yml`'s `image-supply-chain-evidence`
+  artifact / SBOM-diff job summary).
+- Rollback never runs a down-migration (ADR-0013 rule 9): migrations are
+  additive expand/contract, so redeploying an older image against the
+  current schema is always safe; the deploy script does not invoke
+  `alembic downgrade`.
 - Never roll back by editing the running container in place — always
-  redeploy a previously-built, previously-scanned image.
+  redeploy a previously-built, previously-scanned image by digest.
 - Production is a deliberate, checklisted action (ADR-0013 rule 8) and is
   out of scope here; see `docs/plan/07-release-and-prr.md` §4 for the
   release checklist and rollback procedure at that stage.
-- Full automated dev-deploy/staging-gate/rollback tooling is `E03-T09`'s
-  scope; this section documents the manual procedure until that ticket
-  lands its automation, per this ticket's dependency note.
 
 ## 9. Flaky-test quarantine process
 

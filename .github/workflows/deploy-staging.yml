@@ -1,0 +1,180 @@
+name: deploy-staging
+
+# E03-T09: gated staging deploy (staging = Bybit demo, `01-sdlc-and-branching.md`
+# §9) plus the rollback path shared with dev. Bound to the GitHub Environment
+# `staging`, which carries required reviewers and a deployment branch policy
+# restricting it to `main`/`release/*` (SR-141 environment protection) —
+# configured once in repo Settings -> Environments; this workflow only
+# references the environment name, it does not (and cannot) create the
+# protection rule itself.
+#
+# Unlike dev, a failed staging smoke test never auto-rolls-back (ticket
+# "Technical notes": a half-rolled-back staging environment mid-soak is
+# harder to reason about than a stopped one) — it alerts and stops.
+#
+# Error codes: CI-DEP-001..004, same meanings as `deploy-dev.yml`.
+
+on:
+  workflow_dispatch:
+    inputs:
+      digest:
+        description: "Image digest to deploy (sha256:...); required unless rollback_to_digest is set"
+        required: false
+        default: ""
+      sha:
+        description: "Git sha the digest was built from"
+        required: false
+        default: ""
+      rollback_to_digest:
+        description: "Redeploy this previously-deployed digest instead of a new one (no down-migration, ADR-0013 rule 9)"
+        required: false
+        default: ""
+  push:
+    branches: ["release/*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+env:
+  PYTHONIOENCODING: utf-8
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/candleviewer-api
+
+jobs:
+  deploy-staging:
+    name: deploy-staging
+    runs-on: [self-hosted, staging-host]
+    timeout-minutes: 15
+    # SR-141: required reviewers + deployment branch policy (main/release/*)
+    # are configured on this named Environment in repo Settings; dispatch
+    # waits at this gate for a required reviewer's approval and is
+    # auto-cancelled by GitHub after the environment's configured wait
+    # timer if nobody approves (acceptance scenario "Staging requires a
+    # named reviewer").
+    environment:
+      name: staging
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9101 # v3.7.0
+
+      - name: Resolve target digest/sha (forward deploy or rollback)
+        id: target
+        # SR-140/CI-DEP guard: `inputs.*` are attacker-controllable
+        # workflow_dispatch strings on a self-hosted runner. Never
+        # interpolate them directly into `run:` (that is arbitrary shell
+        # injection the moment an input contains `` ` ``/`$(...)`/`;`);
+        # pass them through `env:` instead (safe — env values are never
+        # shell-expanded) and validate the digest shape before any
+        # further step can use it.
+        env:
+          IN_ROLLBACK_TO_DIGEST: ${{ inputs.rollback_to_digest }}
+          IN_DIGEST: ${{ inputs.digest }}
+          IN_SHA: ${{ inputs.sha }}
+        run: |
+          set -euo pipefail
+          DIGEST_RE='^sha256:[0-9a-f]{64}$'
+          SHA_RE='^[0-9a-f]{7,40}$'
+          if [ -n "$IN_ROLLBACK_TO_DIGEST" ]; then
+            if ! [[ "$IN_ROLLBACK_TO_DIGEST" =~ $DIGEST_RE ]]; then
+              echo "::error::rollback_to_digest must match $DIGEST_RE" >&2
+              exit 1
+            fi
+            echo "digest=$IN_ROLLBACK_TO_DIGEST" >> "$GITHUB_OUTPUT"
+            echo "sha=rollback" >> "$GITHUB_OUTPUT"
+          elif [ -n "$IN_DIGEST" ]; then
+            if ! [[ "$IN_DIGEST" =~ $DIGEST_RE ]]; then
+              echo "::error::digest must match $DIGEST_RE" >&2
+              exit 1
+            fi
+            if [ -n "$IN_SHA" ] && ! [[ "$IN_SHA" =~ $SHA_RE ]]; then
+              echo "::error::sha must be a hex git sha ($SHA_RE)" >&2
+              exit 1
+            fi
+            echo "digest=$IN_DIGEST" >> "$GITHUB_OUTPUT"
+            echo "sha=${IN_SHA:-unknown}" >> "$GITHUB_OUTPUT"
+          else
+            SHORT_SHA="$(git rev-parse --short=12 HEAD)"
+            DIGEST="$(docker buildx imagetools inspect \
+              "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev" --format '{{json .Manifest}}' \
+              | python3 -c "import sys,json; print(json.load(sys.stdin)['digest'])")"
+            if ! [[ "$DIGEST" =~ $DIGEST_RE ]]; then
+              echo "::error::resolved digest '$DIGEST' failed shape validation" >&2
+              exit 1
+            fi
+            echo "sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+            echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy by digest, verify + smoke test — no auto-rollback (staging)
+        run: |
+          python3 tools/ci/deploy_dev.py \
+            --image-ref "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" \
+            --digest "${{ steps.target.outputs.digest }}" \
+            --sha "${{ steps.target.outputs.sha }}" \
+            --environment staging \
+            --actor "${{ github.actor }}" \
+            --repository "${{ github.repository }}" \
+            --base-url "http://127.0.0.1:8001" \
+            --no-auto-rollback
+
+      - name: Staging smoke — demo-rest-only E2E subset (E03-T06; empty until R3)
+        run: |
+          if [ -d apps/web/e2e/demo-rest-only ] && [ -n "$(ls -A apps/web/e2e/demo-rest-only 2>/dev/null)" ]; then
+            pnpm --filter @candleviewer/web exec playwright test --grep @demo-rest-only
+          else
+            echo "no @demo-rest-only specs registered yet (mandatory from R3 per the ticket) — skipping"
+          fi
+
+      - name: Commit the updated deployment ledger
+        # See deploy-dev.yml's equivalent step for the full rationale:
+        # `main` is protected (C-4.1) and has no registered bypass for
+        # this identity, so ledger commits land on the shared
+        # `ops/deploy-ledger` ref instead of `main`.
+        if: always()
+        env:
+          DEPLOY_SHA: ${{ steps.target.outputs.sha }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- deployments/ledger.jsonl; then
+            echo "no ledger change to commit"
+            exit 0
+          fi
+          NEW_LEDGER="$(mktemp)"
+          cp deployments/ledger.jsonl "$NEW_LEDGER"
+          git config user.name "candleviewer-ci[bot]"
+          git config user.email "ci@users.noreply.github.com"
+          git fetch origin ops/deploy-ledger || true
+          if git show-ref --verify --quiet refs/remotes/origin/ops/deploy-ledger; then
+            git checkout -B ops/deploy-ledger origin/ops/deploy-ledger
+          else
+            git checkout --orphan ops/deploy-ledger
+            git rm -rf --quiet . || true
+          fi
+          mkdir -p deployments
+          cp "$NEW_LEDGER" deployments/ledger.jsonl
+          cp "${GITHUB_WORKSPACE}/deployments/README.md" deployments/README.md 2>/dev/null || true
+          git add deployments/ledger.jsonl deployments/README.md
+          git commit -m "chore(infra-devops): record staging deploy ${DEPLOY_SHA} [skip ci]"
+          git push origin HEAD:refs/heads/ops/deploy-ledger
+
+      - name: Job summary
+        if: always()
+        env:
+          DEPLOY_SHA: ${{ steps.target.outputs.sha }}
+          DEPLOY_DIGEST: ${{ steps.target.outputs.digest }}
+          DEPLOY_IS_ROLLBACK: ${{ inputs.rollback_to_digest != '' }}
+        run: |
+          {
+            echo "### Staging deploy"
+            echo "- sha: \`${DEPLOY_SHA}\`"
+            echo "- digest: \`${DEPLOY_DIGEST}\`"
+            echo "- rollback: \`${DEPLOY_IS_ROLLBACK}\`"
+            tail -n 1 deployments/ledger.jsonl 2>/dev/null || true
+          } >> "$GITHUB_STEP_SUMMARY"

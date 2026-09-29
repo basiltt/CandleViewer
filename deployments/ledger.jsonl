@@ -1,0 +1,1 @@
+{"sha":"0","digest":"sha256:0000000000000000000000000000000000000000000000000000000000000000","environment":"dev","actor":"seed","timestamp":"2026-09-29T00:00:00Z","outcome":"success","duration_s":0.0,"detail":"seed row so deployments/ledger.jsonl is non-empty/tracked from creation; see deployments/README.md"}

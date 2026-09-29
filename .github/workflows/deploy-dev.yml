@@ -1,0 +1,140 @@
+name: deploy-dev
+
+# E03-T09: automate dev deploy after a signed image lands on `main`
+# (`.github/workflows/main.yml`'s `build-scan-sign` job, E03-T08). Digest +
+# signature verified again immediately before applying (E03-T08 threat
+# closure — a signature nobody re-checks at deploy time is decoration).
+#
+# Runs on the self-hosted dev-host runner: no SSH keys held in GitHub, the
+# runner is inside the trust boundary and holds no secrets beyond its own
+# registration token (SR-141). Migrations run on container boot under an
+# advisory lock (E03-T10); `docker compose up --wait` blocks on the `api`
+# service healthcheck, which only goes healthy once that boot sequence
+# completes, so this workflow never smoke-tests a container that is still
+# migrating.
+#
+# Error codes: CI-DEP-001 signature verification failed, CI-DEP-002 smoke
+# failed, CI-DEP-003 sha mismatch after deploy, CI-DEP-004 migration lock
+# timeout (surfaced inside the boot sequence itself; a stuck migration
+# shows up here as a CI-DEP-002 smoke timeout).
+
+on:
+  workflow_run:
+    workflows: ["main"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+concurrency:
+  # Only one dev deploy in flight; queue behind it rather than cancel, so a
+  # cancelled-mid-deploy run never leaves the ledger and the running stack
+  # disagreeing about which digest is current.
+  group: deploy-dev
+  cancel-in-progress: false
+
+env:
+  PYTHONIOENCODING: utf-8
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/candleviewer-api
+
+jobs:
+  deploy-dev:
+    name: deploy-dev
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.event == 'push'
+    runs-on: [self-hosted, dev-host]
+    timeout-minutes: 10
+    environment:
+      name: dev
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9101 # v3.7.0
+
+      - name: Resolve the digest just built by main.yml
+        id: digest
+        # CI-DEP-003 hardening: inspect main.yml's per-commit semver+shortsha
+        # tag (`{version}-{shortsha}`, immutable in practice — a new build
+        # for the same commit would need a version bump to retag it) instead
+        # of the mutable `:dev` tag — a second `main.yml` run landing
+        # between this trigger firing and this step executing would
+        # otherwise let `imagetools inspect :dev` race ahead to a *newer*
+        # digest than the one that actually completed and triggered this
+        # run (previously caught only after the fact, by CI-DEP-003's
+        # post-deploy sha check).
+        run: |
+          set -euo pipefail
+          SHORT_SHA="$(git rev-parse --short=12 ${{ github.event.workflow_run.head_sha }})"
+          VERSION="$(python3 -c "import tomllib; print(tomllib.load(open('services/api/pyproject.toml','rb'))['project']['version'])")"
+          DIGEST="$(docker buildx imagetools inspect \
+            "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION}-${SHORT_SHA}" --format '{{json .Manifest}}' \
+            | python3 -c "import sys,json; print(json.load(sys.stdin)['digest'])")"
+          echo "sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy by digest, verify + smoke test (CI-DEP-001..003)
+        run: |
+          python3 tools/ci/deploy_dev.py \
+            --image-ref "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" \
+            --digest "${{ steps.digest.outputs.digest }}" \
+            --sha "${{ steps.digest.outputs.sha }}" \
+            --environment dev \
+            --actor "${{ github.actor }}" \
+            --repository "${{ github.repository }}"
+
+      - name: Commit the updated deployment ledger (auditability, ticket "Deployment records")
+        # C-4.1: `main` is protected (`enforce_admins: true`, 2 reviews,
+        # required checks) and this bot identity has no registered bypass
+        # in `.github/rulesets/bypass-register.md` — a direct
+        # `push origin HEAD:main` here both violates that rule and simply
+        # fails once `permissions.contents` is correctly scoped. Ledger
+        # commits instead land on a dedicated, unprotected
+        # `ops/deploy-ledger` ref that carries *only* `deployments/*` (the
+        # same "commit outside main's protection" shape the release
+        # workflow already uses for its changelog commit — see the
+        # bypass-register intro: pushing a ref that is not `main` is not a
+        # protection bypass). The `deploy-dev` concurrency group above
+        # serialises runs, so this workflow is always the ref's sole
+        # writer at any given time; a fresh checkout of the ref each run
+        # (rather than reusing the `head_sha` checkout, which has no
+        # relation to the ledger ref's history) keeps the push a normal
+        # fast-forward.
+        if: always()
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- deployments/ledger.jsonl; then
+            echo "no ledger change to commit"
+            exit 0
+          fi
+          NEW_LEDGER="$(mktemp)"
+          cp deployments/ledger.jsonl "$NEW_LEDGER"
+          git config user.name "candleviewer-ci[bot]"
+          git config user.email "ci@users.noreply.github.com"
+          git fetch origin ops/deploy-ledger || true
+          if git show-ref --verify --quiet refs/remotes/origin/ops/deploy-ledger; then
+            git checkout -B ops/deploy-ledger origin/ops/deploy-ledger
+          else
+            git checkout --orphan ops/deploy-ledger
+            git rm -rf --quiet . || true
+          fi
+          mkdir -p deployments
+          cp "$NEW_LEDGER" deployments/ledger.jsonl
+          cp "${GITHUB_WORKSPACE}/deployments/README.md" deployments/README.md 2>/dev/null || true
+          git add deployments/ledger.jsonl deployments/README.md
+          git commit -m "chore(infra-devops): record dev deploy ${{ steps.digest.outputs.sha }} [skip ci]"
+          git push origin HEAD:refs/heads/ops/deploy-ledger
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "### Dev deploy"
+            echo "- sha: \`${{ steps.digest.outputs.sha }}\`"
+            echo "- digest: \`${{ steps.digest.outputs.digest }}\`"
+            tail -n 1 deployments/ledger.jsonl 2>/dev/null || true
+          } >> "$GITHUB_STEP_SUMMARY"
