@@ -28,10 +28,6 @@ rules:
         # services/api/scripts/lint_exchange_vocabulary.py already applies.
         - "services/api/candleviewer/exchange/base/**"
         - "services/api/scripts/lint_exchange_vocabulary.py"
-        # Allow-list (ticket "the only escape"): module docstring prose that
-        # *describes* the P3 invariant in words, not a Bybit field name used
-        # as an identifier. Linked ticket: E08-X03 (this ticket).
-        - "services/api/candleviewer/domain/__init__.py"
         - "packages/protocol/**"
         - "packages/fixtures/**"
         - "tests/fixtures/**"

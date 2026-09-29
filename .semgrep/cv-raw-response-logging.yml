@@ -14,15 +14,27 @@ rules:
       rule-id: cv-raw-response-logging
     patterns:
       - pattern-either:
-          - pattern: logger.$METHOD(..., $RESP, ...)
-          - pattern: logger.$METHOD(..., $KW=$RESP, ...)
-          - pattern: logging.$METHOD(..., $RESP, ...)
-          - pattern: $SPAN.set_attribute($ATTR, $RESP)
-          - pattern: $METRIC.labels(..., $RESP, ...)
-          - pattern: $METRIC.labels(..., $KW=$RESP, ...)
-      - metavariable-regex:
-          metavariable: $RESP
-          regex: "(?i)^(response|resp|raw_response|raw_resp|headers|raw_headers|api_key|api_secret|secret|signature|sign)$"
+          - patterns:
+              - pattern-either:
+                  - pattern: $LOGGER.$METHOD(..., $RESP, ...)
+                  - pattern: $LOGGER.$METHOD(..., $KW=$RESP, ...)
+                  - pattern: $LOGGER.$METHOD(f"...{$RESP}...", ...)
+                  - pattern: $LOGGER.$METHOD($STR % $RESP, ...)
+                  - pattern: $LOGGER.$METHOD("...{}...".format($RESP), ...)
+              - metavariable-regex:
+                  metavariable: $LOGGER
+                  regex: "(?i)^(logger|logging|log|_logger|_log)$"
+              - metavariable-regex:
+                  metavariable: $RESP
+                  regex: "(?i)^(response|resp|raw_response|raw_resp|headers|raw_headers|api_key|api_secret|secret|signature|sign)$"
+          - patterns:
+              - pattern-either:
+                  - pattern: $SPAN.set_attribute($ATTR, $RESP)
+                  - pattern: $METRIC.labels(..., $RESP, ...)
+                  - pattern: $METRIC.labels(..., $KW=$RESP, ...)
+              - metavariable-regex:
+                  metavariable: $RESP
+                  regex: "(?i)^(response|resp|raw_response|raw_resp|headers|raw_headers|api_key|api_secret|secret|signature|sign)$"
     paths:
       exclude:
         - "services/**/tests/**"
