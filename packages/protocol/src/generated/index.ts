@@ -5,9 +5,12 @@
 // (packages/protocol/scripts/check-generated-guard.mjs) and by
 // `linguist-generated` in .gitattributes.
 //
-// Barrel for the two generated surfaces:
-//  - ./rest  — TS types for docs/plan/22-api-openapi.yaml (via openapi-typescript)
-//  - ./ws    — TS types for docs/plan/23-ws-protocol.md §13-15 (via ws-schema.json)
+// Barrel for the generated surfaces:
+//  - ./rest   — TS types for docs/plan/22-api-openapi.yaml (via openapi-typescript)
+//  - ./ws     — TS types for docs/plan/23-ws-protocol.md §13-15 (via ws-schema.json)
+//  - ./policy — enum-value tables mirroring services/api/candleviewer/
+//               exchange/policy.py (tools/gen/export_instrument_policy_rules.py)
 // ==========================================================================
 export * as rest from "./rest/index.js";
 export * as ws from "./ws/index.js";
+export * as policy from "./policy/index.js";

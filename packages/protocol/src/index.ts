@@ -3,3 +3,4 @@
 // binary frame decoder and seq/resync helpers (src/runtime).
 export * from "./runtime/index.js";
 export * as generated from "./generated/index.js";
+export * as policy from "./rules/policy.js";

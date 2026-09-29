@@ -1,0 +1,13 @@
+{
+  "$schema_note": "GENERATED - do not hand-edit. Regenerate with `python tools/gen/export_instrument_policy_rules.py` (also run by `pnpm --filter @candleviewer/protocol generate`). Source of truth: services/api/candleviewer/exchange/policy.py.",
+  "violation_codes": [
+    "PRICE_NOT_TICK_MULTIPLE",
+    "QTY_NOT_LOT_MULTIPLE",
+    "QTY_BELOW_MIN",
+    "QTY_ABOVE_MAX",
+    "NOTIONAL_BELOW_MIN",
+    "SYMBOL_NOT_TRADING"
+  ],
+  "price_round_modes": ["nearest"],
+  "qty_round_modes": ["down"]
+}
