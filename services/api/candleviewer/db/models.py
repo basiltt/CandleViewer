@@ -372,12 +372,19 @@ audit_log = Table(
     "audit_log",
     metadata,
     Column("id", BigInteger, primary_key=True),
-    Column("record_id", UUID(as_uuid=True), nullable=False, unique=True),
+    Column(
+        "record_id",
+        UUID(as_uuid=True),
+        nullable=False,
+        comment=(
+            "Writer-assigned idempotency key: WAL replay is ON CONFLICT (record_id) DO NOTHING"
+        ),
+    ),
     Column("prev_hash", _sha256_hex, nullable=False),
-    Column("entry_hash", _sha256_hex, nullable=False, unique=True),
+    Column("entry_hash", _sha256_hex, nullable=False),
     Column("actor_user_id", ForeignKey("users.id", ondelete="SET NULL")),
     Column("actor_label", Text, nullable=False),
-    Column("actor_ip", INET),
+    Column("actor_ip", INET, comment="PII: purge on account erase / retention job"),
     Column("session_id", UUID(as_uuid=True)),
     Column("action", Text, nullable=False),
     Column("object_kind", Text),
@@ -386,26 +393,49 @@ audit_log = Table(
     Column("outcome", audit_outcome, nullable=False, server_default=text("'success'")),
     Column("severity", severity, nullable=False, server_default=text("'info'")),
     Column("reason", Text),
-    Column("before_state", JSONB),
-    Column("after_state", JSONB),
+    Column(
+        "before_state",
+        JSONB,
+        comment=(
+            "Redacted diff source — SECRET-classified fields must never appear "
+            "here (candleviewer.audit.redact)"
+        ),
+    ),
+    Column(
+        "after_state",
+        JSONB,
+        comment=(
+            "Redacted diff source — SECRET-classified fields must never appear "
+            "here (candleviewer.audit.redact)"
+        ),
+    ),
     Column("request_id", UUID(as_uuid=True)),
     Column("env", exchange_env),
     Column("event_ts", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     CheckConstraint("action ~ '^[a-z0-9_]+([.][a-z0-9_]+){1,3}$'", name="au_action_fmt"),
+    UniqueConstraint("record_id", name="audit_log_record_id_key"),
+    UniqueConstraint("entry_hash", name="audit_log_entry_hash_key"),
     Index("ix_audit_time", text("event_ts DESC")),
     Index("ix_audit_actor", "actor_user_id", text("event_ts DESC")),
     Index("ix_audit_action", "action", text("event_ts DESC")),
     Index("ix_audit_object", "object_kind", "object_id", text("event_ts DESC")),
+    Index(
+        "ix_audit_sev",
+        "severity",
+        text("event_ts DESC"),
+        postgresql_where=text("severity IN ('error','critical')"),
+    ),
 )
 
 audit_checkpoints = Table(
     "audit_checkpoints",
     metadata,
     Column("id", UUID(as_uuid=True), primary_key=True),
-    Column("head_id", BigInteger, nullable=False, unique=True),
+    Column("head_id", BigInteger, nullable=False),
     Column("head_hash", _sha256_hex, nullable=False),
     Column("row_count", BigInteger, nullable=False),
     Column("signed_by", Text, nullable=False, server_default=text("'cv-audit-key-v1'")),
     Column("signature", BYTEA),
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    UniqueConstraint("head_id", name="audit_checkpoints_head_id_key"),
 )
