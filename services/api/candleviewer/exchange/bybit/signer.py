@@ -45,8 +45,10 @@ class BybitSigner:
         # message-authentication keyed hashing of a request, not password
         # storage hashing, so SHA-256's speed is not a weakness here.
         digest = hmac.new(
-            secret_bytes, message.encode("utf-8"), hashlib.sha256
-        )  # lgtm[py/insufficient-hash-strength]
+            secret_bytes,
+            message.encode("utf-8"),
+            hashlib.sha256,  # lgtm[py/insufficient-hash-strength]
+        )
         return digest.hexdigest()
 
     @staticmethod
