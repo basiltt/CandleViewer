@@ -211,6 +211,13 @@ flowchart LR
 
 ## 3. C4 Level 3 — Components (backend modules)
 
+> **Exchange-adapter boundary and trust semantics:** the decisions behind the `MarketDataPort`/
+> `TradingPort` split, principle P3 and the order-book invalidate-and-resync rule are recorded in
+> [`27-adrs/ADR-0023-exchange-adapter-boundary.md`](27-adrs/ADR-0023-exchange-adapter-boundary.md); the
+> per-field trust semantics (measured/derived/estimated, confirmed/unconfirmed, fresh/stale/desynced,
+> complete/gapped) a consumer must know before rendering market data are in
+> [`25-market-data-trust-contract.md`](25-market-data-trust-contract.md).
+
 Common conventions for every module below:
 
 - **Module package**: `services/api/candleviewer/<module>/` with `__init__.py` exporting only the public interface, `service.py` (lifecycle), `models.py` (pydantic v2 domain types), `errors.py`, and internal implementation files.

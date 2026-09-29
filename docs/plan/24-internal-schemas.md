@@ -2754,6 +2754,13 @@ class ReplayBookmark(BaseModel):
 
 The port every exchange must satisfy. Bybit is the only implementation in v1; the interface exists so that a second exchange is additive rather than invasive. This section is the full specification of the sketch in `20-architecture.md` §9.
 
+> **Decisions and evidence:** why this boundary is shaped this way (port split, P3 enforcement, the
+> depth-tier default, the invalidate-and-resync rule, environment separation, arithmetic conventions) is
+> recorded in [`27-adrs/ADR-0023-exchange-adapter-boundary.md`](27-adrs/ADR-0023-exchange-adapter-boundary.md).
+> How much a consumer may trust a value that crosses this boundary is recorded in
+> [`25-market-data-trust-contract.md`](25-market-data-trust-contract.md) — read that before writing any
+> code that renders or acts on market data from this interface.
+
 ### 14.1 Protocols
 
 ```python
