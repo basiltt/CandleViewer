@@ -108,6 +108,9 @@ jobs:
             exit 1
           fi
 
+      # `alembic check` compares models.py against the *live* schema at head, so
+      # it must run after `upgrade head` — on an empty database it always fails
+      # with "Target database is not up to date" regardless of models.py.
       - name: alembic check — drift between models.py and head (CI-MIG-002)
         run: uv run alembic check
 
@@ -116,12 +119,6 @@ jobs:
         run: pg_dump -h localhost -U cv -d candleviewer --schema-only --no-owner --no-privileges > /tmp/schema_before.sql
         env:
           PGPASSWORD: cv
-
-      # `alembic check` compares models.py against the *live* schema at head, so
-      # it must run after `upgrade head` — on an empty database it always fails
-      # with "Target database is not up to date" regardless of models.py.
-      - name: alembic check — drift between models.py and head (CI-MIG-002)
-        run: uv run alembic check
 
       - name: alembic downgrade to base then upgrade head again (round-trip sanity)
         run: |
