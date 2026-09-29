@@ -91,9 +91,23 @@ describe("safeOriginOf", () => {
 });
 
 describe("isExternalLinkAllowed (SR-113)", () => {
-  it("allows https and http URLs", () => {
-    expect(isExternalLinkAllowed("https://example.com")).toBe(true);
-    expect(isExternalLinkAllowed("http://example.com")).toBe(true);
+  it("allows an https URL on the host allowlist", () => {
+    expect(isExternalLinkAllowed("https://docs.candleviewer.app/guide")).toBe(true);
+    expect(isExternalLinkAllowed("https://www.bybit.com/en/help")).toBe(true);
+    expect(isExternalLinkAllowed("https://bybit.com/en/help")).toBe(true);
+  });
+
+  it("denies an http URL even for an allowlisted host", () => {
+    expect(isExternalLinkAllowed("http://docs.candleviewer.app")).toBe(false);
+  });
+
+  it("denies an https URL for a host not on the allowlist", () => {
+    expect(isExternalLinkAllowed("https://example.com")).toBe(false);
+  });
+
+  it("denies a lookalike host that merely contains an allowlisted host", () => {
+    expect(isExternalLinkAllowed("https://docs.candleviewer.app.evil.test")).toBe(false);
+    expect(isExternalLinkAllowed("https://evil-bybit.com")).toBe(false);
   });
 
   it("denies a file:// URL", () => {

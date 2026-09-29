@@ -16,6 +16,19 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const gotSingleInstanceLock = app.requestSingleInstanceLock();
 if (!gotSingleInstanceLock) {
   app.quit();
+} else {
+  // A second launch reaches here instead of quitting; focus (and restore, if
+  // minimized) the existing window rather than leaving the user with no
+  // visible window and no indication the app is already running.
+  app.on("second-instance", () => {
+    const [existing] = BrowserWindow.getAllWindows();
+    if (existing) {
+      if (existing.isMinimized()) {
+        existing.restore();
+      }
+      existing.focus();
+    }
+  });
 }
 
 // Packaged-build navigation is confined to the app's own dist directory; in
@@ -81,17 +94,31 @@ export function isNavigationAllowed(
 }
 
 /**
- * Schemes `shell.openExternal` is allowed to hand off to the OS browser
- * (SR-113): external links never open inside the app, and never for an
- * arbitrary scheme (e.g. `file:`, a custom protocol, or something that could
- * trigger a local application handler unexpectedly).
+ * Scheme `shell.openExternal` is allowed to hand off to the OS browser
+ * (SR-113): only `https:` — plain `http:` is never handed to the OS shell
+ * (no integrity/confidentiality on the wire, and it is not needed by any
+ * genuine external destination this app links to), and no arbitrary scheme
+ * (e.g. `file:`, a custom protocol, or something that could trigger a local
+ * application handler unexpectedly).
  */
-const ALLOWED_EXTERNAL_PROTOCOLS = new Set(["https:", "http:"]);
+const ALLOWED_EXTERNAL_PROTOCOLS = new Set(["https:"]);
 
 /**
- * Returns true only if `url` is `https:`/`http:` and not the app's own dev
- * server or packaged origin — i.e. it is a genuine external link, not a
- * same-origin navigation that merely used `window.open`.
+ * Hosts `shell.openExternal` is allowed to hand off to the OS browser
+ * (SR-113 requires scheme **and** host). Scheme-only checks let a
+ * compromised/malicious renderer send the user's OS browser to an arbitrary
+ * attacker-controlled `https:` URL (phishing, credential harvesting); this
+ * closed allowlist limits external hand-off to CandleViewer's own docs host
+ * and the exchange this product integrates with. Extend deliberately, in
+ * review, not via runtime configuration.
+ */
+const ALLOWED_EXTERNAL_HOSTS = new Set(["docs.candleviewer.app", "www.bybit.com", "bybit.com"]);
+
+/**
+ * Returns true only if `url` is `https:` and its host is on the fixed
+ * allowlist, and it is not the app's own dev server or packaged origin —
+ * i.e. it is a genuine, known external link, not a same-origin navigation
+ * that merely used `window.open`.
  */
 export function isExternalLinkAllowed(url: string): boolean {
   let parsed: URL;
@@ -100,7 +127,9 @@ export function isExternalLinkAllowed(url: string): boolean {
   } catch {
     return false;
   }
-  return ALLOWED_EXTERNAL_PROTOCOLS.has(parsed.protocol);
+  return (
+    ALLOWED_EXTERNAL_PROTOCOLS.has(parsed.protocol) && ALLOWED_EXTERNAL_HOSTS.has(parsed.hostname)
+  );
 }
 
 export function createMainWindow(): BrowserWindow {
