@@ -21,6 +21,19 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from candleviewer.app import AppContext, Supervisor, create_app
+from candleviewer.observability.logging import configure_logging
+from candleviewer.settings import Settings
+
+# E04-T01: logging must be configured before anything else logs a line, and
+# exactly once per process (`configure_logging()`'s own docstring). Every
+# worker entrypoint (ingestion/recorder/replay) added by later tickets must
+# call this the same way, at the top of its own `main.py`.
+_settings = Settings()
+configure_logging(
+    env=_settings.environment.value,
+    level=_settings.log_level,
+    fmt=_settings.log_format,
+)
 
 logger = logging.getLogger(__name__)
 

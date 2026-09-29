@@ -19,6 +19,7 @@ dependencies = [
   "duckdb>=1.0",
   "prometheus-client>=0.20",
   "structlog>=24.1",
+  "orjson>=3.10",
   "xstate-statemachine==0.9.1",
   "jsonschema>=4.23",
   "argon2-cffi>=25.1.0",

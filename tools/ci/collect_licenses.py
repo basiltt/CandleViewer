@@ -89,8 +89,29 @@ _CONJUNCTION_SAFE = frozenset(
         "PSF",
         "Unlicense",
         "CC0-1.0",
+        "MPL-2.0",
     }
 )
+
+
+def _normalise_and_part(part: str) -> str:
+    """Normalise one operand of an "A AND B" SPDX expression.
+
+    An operand may itself be a parenthesised "(X OR Y)" disjunction (e.g.
+    orjson's ``MPL-2.0 AND (Apache-2.0 OR MIT)``): pick the first allow-listed
+    id inside it, mirroring the top-level OR-collapse behaviour, so the
+    conjunction-safety check below sees a single SPDX id per operand.
+    """
+    stripped = part.strip()
+    inner = stripped.removeprefix("(").removesuffix(")") if stripped.startswith("(") else None
+    if inner is not None:
+        sub_parts = [p.strip() for p in inner.split(" OR ") if p.strip()]
+        mapped_sub = [_SPDX_ALIASES.get(p.lower(), p) for p in sub_parts] or ["UNKNOWN"]
+        for m in mapped_sub:
+            if m in _CONJUNCTION_SAFE:
+                return m
+        return mapped_sub[0]
+    return _SPDX_ALIASES.get(stripped.lower(), stripped)
 
 
 def normalise_license(raw: str) -> str:
@@ -104,9 +125,7 @@ def normalise_license(raw: str) -> str:
     # must be acceptable, so keep the conjunction intact for the gate when any
     # part is outside the plain allow-list — otherwise collapse to the parts.
     if " AND " in raw:
-        parts_and = [
-            _SPDX_ALIASES.get(p.strip().lower(), p.strip()) for p in raw.split(" AND ")
-        ]
+        parts_and = [_normalise_and_part(p.strip()) for p in raw.split(" AND ")]
         return (
             parts_and[0]
             if all(p in _CONJUNCTION_SAFE for p in parts_and)
