@@ -61,44 +61,61 @@ def _sha256_of(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _load_base_lockfile(
-    base_ref: str, lockfile_path: Path
-) -> dict[str, dict[str, object]] | None:
+def _load_base_lockfile(base_ref: str, lockfile_path: Path) -> dict[str, dict[str, object]]:
     """Return the `revisions` map from `lockfile_path` as it existed at the
-    merge-base with `base_ref`, or None if it cannot be determined (e.g. no
-    git repo, base_ref unavailable, or the file didn't exist yet at the base).
+    merge-base with `base_ref`.
 
     This is rule 9's real enforcement point: a PR that edits an already-locked
     revision *and* rewrites its own sha256 in the same PR must still fail,
     because comparing the lockfile only against the PR's own tree (as before)
     makes such a self-consistent edit invisible.
+
+    Resolving `base_ref` is required to succeed — if the merge-base can't be
+    found (bad ref, shallow clone, not a git repo at all) this raises
+    `LockfileError` rather than silently skipping CI-MIG-LOCK-006: a fail-open
+    here would let a PR edit an already-applied revision and rewrite its own
+    sha256 undetected whenever the base ref happens to be unresolvable.
+
+    If the lockfile simply didn't exist yet at the merge-base (a brand new
+    lockfile), that's a legitimate empty baseline, not a resolution failure,
+    so it returns `{}` rather than raising.
     """
+    # Fixed argv, literal `git` executable, no shell — not untrusted input.
     try:
-        merge_base = subprocess.run(  # noqa: S603 -- fixed argv, no shell
-            ["git", "merge-base", "HEAD", base_ref],  # noqa: S607 -- literal `git`
+        merge_base = subprocess.run(  # noqa: S603
+            ["git", "merge-base", "HEAD", base_ref],  # noqa: S607
             capture_output=True,
             text=True,
             check=True,
         ).stdout.strip()
-        show = subprocess.run(  # noqa: S603 -- fixed argv, no shell
-            [
-                "git",
-                "show",
-                f"{merge_base}:{lockfile_path.as_posix()}",
-            ],  # noqa: S607 -- literal `git`
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-    except (OSError, subprocess.CalledProcessError):
-        return None
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise LockfileError(
+            f"could not resolve merge-base with {base_ref!r} to enforce "
+            f"CI-MIG-LOCK-006 ({RULE_9_MESSAGE}); pass --no-base-check only "
+            "for local/offline use: "
+            f"{exc}"
+        ) from exc
+
+    show = subprocess.run(  # noqa: S603
+        ["git", "show", f"{merge_base}:{lockfile_path.as_posix()}"],  # noqa: S607
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if show.returncode != 0:
+        # No lockfile at the merge-base at all (e.g. it was added in this PR)
+        # is a legitimate empty baseline, not a resolution failure.
+        return {}
+
     try:
         data = json.loads(show.stdout)
-    except json.JSONDecodeError:
-        return None
+    except json.JSONDecodeError as exc:
+        raise LockfileError(
+            f"lockfile at {base_ref}:{lockfile_path} is not valid JSON: {exc}"
+        ) from exc
     revisions = data.get("revisions")
     if not isinstance(revisions, dict):
-        return None
+        raise LockfileError(f"lockfile at {base_ref}:{lockfile_path} is missing object 'revisions'")
     return revisions
 
 
@@ -139,9 +156,7 @@ def verify(
     violations: list[Violation] = []
     revisions = _load_lockfile(lockfile_path)
 
-    on_disk = {
-        f.stem: f for f in sorted(versions_dir.glob("*.py")) if f.name != "__init__.py"
-    }
+    on_disk = {f.stem: f for f in sorted(versions_dir.glob("*.py")) if f.name != "__init__.py"}
 
     # CI-MIG-LOCK-002: a versions/*.py file exists with no lockfile entry.
     for rev_id, file_path in on_disk.items():
@@ -162,9 +177,7 @@ def verify(
         expected_sha = entry.get("sha256")
         expected_down = entry.get("down_revision")
         if not isinstance(rel_path, str) or not isinstance(expected_sha, str):
-            raise LockfileError(
-                f"malformed lockfile entry for {rev_id!r} in {lockfile_path}"
-            )
+            raise LockfileError(f"malformed lockfile entry for {rev_id!r} in {lockfile_path}")
 
         file_path = repo_root / rel_path
         if not file_path.is_file():
@@ -274,13 +287,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     base_revisions = None
-    if not args.no_base_check:
-        base_revisions = _load_base_lockfile(args.base_ref, args.lockfile)
-
     try:
-        violations = verify(
-            args.lockfile, args.versions_dir, args.repo_root, base_revisions
-        )
+        if not args.no_base_check:
+            base_revisions = _load_base_lockfile(args.base_ref, args.lockfile)
+
+        violations = verify(args.lockfile, args.versions_dir, args.repo_root, base_revisions)
     except LockfileError as exc:
         print(f"CI-MIG-LOCK-000 internal error: {exc}", file=sys.stderr)
         return 2
@@ -290,9 +301,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{v.code} [{v.revision}]: {v.message}", file=sys.stderr)
         return 1
 
-    print(
-        f"OK: {len(_load_lockfile(args.lockfile))} revision(s) verified against {args.lockfile}"
-    )
+    print(f"OK: {len(_load_lockfile(args.lockfile))} revision(s) verified against {args.lockfile}")
     return 0
 
 

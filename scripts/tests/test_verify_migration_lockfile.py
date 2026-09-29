@@ -93,9 +93,7 @@ def test_verify_edited_applied_revision_fails_rule_9(tmp_path: Path) -> None:
     """AC (#1556 defect 2 / ticket #168 negative check): editing an
     already-applied revision fails with the rule-9 message."""
     lockfile, versions_dir, repo_root = _make_repo(tmp_path)
-    (versions_dir / "0001_initial.py").write_text(
-        _REV_0001 + "\n# tampered\n", encoding="utf-8"
-    )
+    (versions_dir / "0001_initial.py").write_text(_REV_0001 + "\n# tampered\n", encoding="utf-8")
 
     violations = gate.verify(lockfile, versions_dir, repo_root)
 
@@ -112,9 +110,7 @@ def test_verify_new_revision_missing_lockfile_entry_fails(tmp_path: Path) -> Non
 
     violations = gate.verify(lockfile, versions_dir, repo_root)
 
-    assert any(
-        v.code == "CI-MIG-LOCK-002" and v.revision == "0003_third" for v in violations
-    )
+    assert any(v.code == "CI-MIG-LOCK-002" and v.revision == "0003_third" for v in violations)
 
 
 def test_verify_locked_revision_deleted_from_disk_fails(tmp_path: Path) -> None:
@@ -123,9 +119,7 @@ def test_verify_locked_revision_deleted_from_disk_fails(tmp_path: Path) -> None:
 
     violations = gate.verify(lockfile, versions_dir, repo_root)
 
-    assert any(
-        v.code == "CI-MIG-LOCK-003" and v.revision == "0002_second" for v in violations
-    )
+    assert any(v.code == "CI-MIG-LOCK-003" and v.revision == "0002_second" for v in violations)
 
 
 def test_verify_revision_id_mismatch_fails(tmp_path: Path) -> None:
@@ -159,9 +153,7 @@ def test_verify_down_revision_mismatch_fails(tmp_path: Path) -> None:
 
 def test_main_exits_nonzero_on_violation(tmp_path: Path, capsys, monkeypatch) -> None:
     lockfile, versions_dir, repo_root = _make_repo(tmp_path)
-    (versions_dir / "0001_initial.py").write_text(
-        _REV_0001 + "\n# tampered\n", encoding="utf-8"
-    )
+    (versions_dir / "0001_initial.py").write_text(_REV_0001 + "\n# tampered\n", encoding="utf-8")
 
     exit_code = gate.main(
         [
@@ -217,9 +209,7 @@ def test_verify_edit_and_own_lockfile_update_fails_against_base(tmp_path: Path) 
 
     # ...but comparing against the merge-base lockfile catches it.
     violations = gate.verify(lockfile, versions_dir, repo_root, base_revisions)
-    assert any(
-        v.code == "CI-MIG-LOCK-006" and v.revision == "0001_initial" for v in violations
-    )
+    assert any(v.code == "CI-MIG-LOCK-006" and v.revision == "0001_initial" for v in violations)
 
 
 def test_verify_revision_removed_from_lockfile_fails_against_base(
@@ -235,9 +225,7 @@ def test_verify_revision_removed_from_lockfile_fails_against_base(
 
     violations = gate.verify(lockfile, versions_dir, repo_root, base_revisions)
 
-    assert any(
-        v.code == "CI-MIG-LOCK-006" and v.revision == "0002_second" for v in violations
-    )
+    assert any(v.code == "CI-MIG-LOCK-006" and v.revision == "0002_second" for v in violations)
 
 
 def test_verify_unchanged_repo_passes_against_base(tmp_path: Path) -> None:
@@ -247,6 +235,42 @@ def test_verify_unchanged_repo_passes_against_base(tmp_path: Path) -> None:
     violations = gate.verify(lockfile, versions_dir, repo_root, base_revisions)
 
     assert violations == []
+
+
+def test_load_base_lockfile_unresolvable_ref_fails_closed(tmp_path: Path) -> None:
+    """Bugfix #1556 QA follow-up: a base ref that can't be resolved (bad ref,
+    shallow clone, no git repo) must raise `LockfileError` — CI-MIG-LOCK-006
+    must fail closed, not silently skip the rule-9 base comparison."""
+    lockfile = tmp_path / "lockfile.json"
+    lockfile.write_text(json.dumps({"revisions": {}}), encoding="utf-8")
+
+    try:
+        gate._load_base_lockfile("definitely-not-a-real-ref-xyz", lockfile)
+    except gate.LockfileError as exc:
+        assert "could not resolve merge-base" in str(exc)
+    else:
+        raise AssertionError("expected LockfileError for an unresolvable base ref")
+
+
+def test_main_exits_with_internal_error_on_unresolvable_base_ref(tmp_path: Path, capsys) -> None:
+    lockfile, versions_dir, repo_root = _make_repo(tmp_path)
+
+    exit_code = gate.main(
+        [
+            "--lockfile",
+            str(lockfile),
+            "--versions-dir",
+            str(versions_dir),
+            "--repo-root",
+            str(repo_root),
+            "--base-ref",
+            "definitely-not-a-real-ref-xyz",
+        ]
+    )
+
+    assert exit_code == 2
+    captured = capsys.readouterr()
+    assert "CI-MIG-LOCK-000" in captured.err
 
 
 def test_missing_lockfile_is_internal_error(tmp_path: Path) -> None:
