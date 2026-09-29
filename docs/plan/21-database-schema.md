@@ -2058,6 +2058,7 @@ Append-only, tamper-evident. Each row's `entry_hash` = SHA-256 over the canonica
 | Column | Type | Null | Default | Notes |
 |---|---|---|---|---|
 | `id` | bigserial | no | — | PK, chain order |
+| `record_id` | uuid | no | — | UNIQUE; writer-assigned idempotency key (WAL replay is `ON CONFLICT (record_id) DO NOTHING`) |
 | `prev_hash` | sha256_hex | no | — | Previous row's `entry_hash`; genesis = 64×`0` |
 | `entry_hash` | sha256_hex | no | — | UNIQUE; computed by trigger, never by the app |
 | `actor_user_id` | uuid | yes | NULL | NULL for system actions |
@@ -2080,6 +2081,7 @@ Append-only, tamper-evident. Each row's `entry_hash` = SHA-256 over the canonica
 ```sql
 CREATE TABLE audit_log (
   id            bigserial PRIMARY KEY,
+  record_id     uuid NOT NULL UNIQUE,
   prev_hash     sha256_hex NOT NULL,
   entry_hash    sha256_hex NOT NULL UNIQUE,
   actor_user_id uuid REFERENCES users(id) ON DELETE SET NULL,
@@ -2106,28 +2108,41 @@ CREATE INDEX ix_audit_action  ON audit_log (action, event_ts DESC);
 CREATE INDEX ix_audit_object  ON audit_log (object_kind, object_id, event_ts DESC);
 CREATE INDEX ix_audit_sev     ON audit_log (severity, event_ts DESC) WHERE severity IN ('error','critical');
 
+-- Length-prefixed, prefix-free field encoding: NULL -> '-', else '<len>:<value>'.
+CREATE FUNCTION audit_field(v text) RETURNS text LANGUAGE sql IMMUTABLE AS $$
+  SELECT CASE WHEN v IS NULL THEN '-' ELSE length(v)::text || ':' || v END
+$$;
+
 CREATE FUNCTION audit_chain() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE last_hash sha256_hex;
 BEGIN
+  PERFORM pg_advisory_xact_lock(hashtext('audit_log'));  -- every insert path serialises
   SELECT entry_hash INTO last_hash FROM audit_log ORDER BY id DESC LIMIT 1;
   NEW.prev_hash := COALESCE(last_hash, repeat('0',64));
   NEW.entry_hash := encode(digest(
-      NEW.prev_hash
-      || coalesce(NEW.actor_user_id::text,'') || NEW.actor_label
-      || coalesce(NEW.actor_ip::text,'') || coalesce(NEW.session_id::text,'')
-      || NEW.action || coalesce(NEW.object_kind,'') || coalesce(NEW.object_id,'')
-      || NEW.outcome::text || NEW.severity::text || coalesce(NEW.reason,'')
-      || coalesce(NEW.before_state::text,'') || coalesce(NEW.after_state::text,'')
-      || coalesce(NEW.request_id::text,'') || coalesce(NEW.env::text,'')
-      || to_char(NEW.event_ts AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.USOF'),
+      audit_field(NEW.prev_hash)
+      || audit_field(NEW.actor_user_id::text) || audit_field(NEW.actor_label)
+      || audit_field(NEW.actor_ip::text) || audit_field(NEW.session_id::text)
+      || audit_field(NEW.action) || audit_field(NEW.object_kind)
+      || audit_field(NEW.object_id) || audit_field(NEW.outcome::text)
+      || audit_field(NEW.severity::text) || audit_field(NEW.reason)
+      || audit_field(NEW.before_state::text) || audit_field(NEW.after_state::text)
+      || audit_field(NEW.request_id::text) || audit_field(NEW.env::text)
+      || audit_field(to_char(NEW.event_ts AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.USOF')),
     'sha256'), 'hex');
   RETURN NEW;
 END $$;
+
+CREATE FUNCTION audit_refuse_truncate() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN RAISE EXCEPTION 'table % is append-only: TRUNCATE refused (C-5.7)', TG_TABLE_NAME; END $$;
 
 CREATE TRIGGER trg_audit_chain BEFORE INSERT ON audit_log
   FOR EACH ROW EXECUTE FUNCTION audit_chain();
 CREATE TRIGGER trg_audit_append BEFORE UPDATE OR DELETE ON audit_log
   FOR EACH ROW EXECUTE FUNCTION forbid_mutation();
+CREATE TRIGGER trg_audit_no_truncate BEFORE TRUNCATE ON audit_log
+  FOR EACH STATEMENT EXECUTE FUNCTION audit_refuse_truncate();
+-- REVOKE UPDATE, DELETE, TRUNCATE ON audit_log FROM cv_app, cv_ro;
 
 CREATE TABLE audit_checkpoints (
   id           uuid PRIMARY KEY,
@@ -2139,9 +2154,21 @@ CREATE TABLE audit_checkpoints (
   created_at   timestamptz NOT NULL DEFAULT now(),
   UNIQUE (head_id)
 );
+CREATE TRIGGER trg_audit_ckpt_append BEFORE UPDATE OR DELETE ON audit_checkpoints
+  FOR EACH ROW EXECUTE FUNCTION forbid_mutation();
+CREATE TRIGGER trg_audit_ckpt_no_truncate BEFORE TRUNCATE ON audit_checkpoints
+  FOR EACH STATEMENT EXECUTE FUNCTION audit_refuse_truncate();
+-- REVOKE UPDATE, DELETE, TRUNCATE ON audit_checkpoints FROM cv_app, cv_ro;
 ```
 
-Inserts into `audit_log` are **serialised** by an advisory lock (`pg_advisory_xact_lock(hashtext('audit_log'))`) taken by the writer, so concurrent appends cannot fork the chain. The verifier job (`cv-audit-verify`) walks the chain nightly and raises a `critical` system event on any mismatch.
+`audit_checkpoints` is append-only exactly like `audit_log` (it is the anchor for tail-truncation detection).
+
+The writer's local WAL (buffer during a Postgres outage) stores self-validating frames `<len>
+<json>
+<crc32-hex8>
+`; a torn final frame is truncated before the next append, while a bad frame in the middle raises `AuditWalCorrupt` and the writer fails closed.
+
+Inserts into `audit_log` are **serialised** by an advisory lock (`pg_advisory_xact_lock(hashtext('audit_log'))`) taken by the writer *and* inside `audit_chain()` itself, so concurrent appends cannot fork the chain. The verifier job (`cv-audit-verify`) walks the chain nightly and raises a `critical` system event on any mismatch.
 
 Actions that MUST be audited (non-exhaustive, enforced by a Semgrep rule on the service layer):
 `auth.login`, `auth.login_failed`, `auth.logout`, `auth.refresh_reuse_detected`, `auth.mfa_enroll`, `auth.mfa_reset`, `auth.password_change`, `users.create`, `users.disable`, `roles.grant`, `roles.revoke`, `accounts.create`, `accounts.enable_trading`, `api_key.import`, `api_key.rotate`, `api_key.revoke`, `api_key.reveal_attempt`, `profiles.update`, `orders.submit`, `orders.cancel`, `orders.amend`, `trade_group.submit`, `positions.flatten`, `risk.freeze_manager`, `risk.unfreeze_manager`, `rules.arm`, `rules.disarm`, `rules.version_create`, `alerts.create`, `recorder.start`, `recorder.stop`, `retention.change`, `retention.purge`, `flags.change`, `settings.change`, `backup.run`, `backup.restore`, `env.switch_live`.

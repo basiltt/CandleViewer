@@ -116,6 +116,13 @@ class Settings(BaseSettings):
     # this timeout instead of hanging startup indefinitely (ADR-0013 rule 9).
     migration_lock_timeout_s: float = Field(default=300.0, gt=0.0)
 
+    # E09-T02: `audit.emit` durably buffers to an on-disk WAL before writing
+    # to `audit_log` (F8 — survives a Postgres outage), and the daily
+    # checkpoint job appends the head hash to a file outside the database
+    # volume so tail truncation is detectable even if Postgres data is lost.
+    audit_wal_path: str = "var/audit/audit.wal"
+    audit_checkpoint_path: str = "var/audit/checkpoints.ndjson"
+
     kek_source: str = "host-keychain"
 
     recv_window_ms: int = 5000

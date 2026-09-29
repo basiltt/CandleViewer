@@ -81,6 +81,24 @@ mfa_method_kind = ENUM(
     create_type=False,
 )
 
+exchange_env = ENUM(
+    "live", "demo", "testnet", name="exchange_env", metadata=metadata, create_type=False
+)
+audit_outcome = ENUM(
+    "success", "failure", "denied", name="audit_outcome", metadata=metadata, create_type=False
+)
+severity = ENUM(
+    "debug",
+    "info",
+    "warning",
+    "error",
+    "critical",
+    name="severity",
+    metadata=metadata,
+    create_type=False,
+)
+
+
 #: The `sha256_hex` DOMAIN (`CREATE DOMAIN sha256_hex AS char(64) CHECK (...)`,
 #: revision 0001) is modelled as a first-class `postgresql.DOMAIN` so
 #: `compare_type=True` diffs against the actual domain name/definition instead
@@ -343,4 +361,81 @@ recovery_codes = Table(
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     UniqueConstraint("user_id", "code_hash", name="recovery_codes_user_id_code_hash_key"),
     Index("ix_recovery_unused", "user_id", postgresql_where=text("used_at IS NULL")),
+)
+
+#: `audit_log` / `audit_checkpoints` (E09-T02, revision 0003_audit_log).
+#: `prev_hash`/`entry_hash` are populated by the `audit_chain()` trigger, never
+#: by the app (`server_default` intentionally omitted — a bare `bigserial`-style
+#: PK plus trigger-computed columns has no default SQLAlchemy can express, so
+#: they are simply `nullable=False` here to match the trigger's guarantee).
+audit_log = Table(
+    "audit_log",
+    metadata,
+    Column("id", BigInteger, primary_key=True),
+    Column(
+        "record_id",
+        UUID(as_uuid=True),
+        nullable=False,
+        comment=(
+            "Writer-assigned idempotency key: WAL replay is ON CONFLICT (record_id) DO NOTHING"
+        ),
+    ),
+    Column("prev_hash", _sha256_hex, nullable=False),
+    Column("entry_hash", _sha256_hex, nullable=False),
+    Column("actor_user_id", ForeignKey("users.id", ondelete="SET NULL")),
+    Column("actor_label", Text, nullable=False),
+    Column("actor_ip", INET, comment="PII: purge on account erase / retention job"),
+    Column("session_id", UUID(as_uuid=True)),
+    Column("action", Text, nullable=False),
+    Column("object_kind", Text),
+    Column("object_id", Text),
+    Column("object_label", Text),
+    Column("outcome", audit_outcome, nullable=False, server_default=text("'success'")),
+    Column("severity", severity, nullable=False, server_default=text("'info'")),
+    Column("reason", Text),
+    Column(
+        "before_state",
+        JSONB,
+        comment=(
+            "Redacted diff source — SECRET-classified fields must never appear "
+            "here (candleviewer.audit.redact)"
+        ),
+    ),
+    Column(
+        "after_state",
+        JSONB,
+        comment=(
+            "Redacted diff source — SECRET-classified fields must never appear "
+            "here (candleviewer.audit.redact)"
+        ),
+    ),
+    Column("request_id", UUID(as_uuid=True)),
+    Column("env", exchange_env),
+    Column("event_ts", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    CheckConstraint("action ~ '^[a-z0-9_]+([.][a-z0-9_]+){1,3}$'", name="au_action_fmt"),
+    UniqueConstraint("record_id", name="audit_log_record_id_key"),
+    UniqueConstraint("entry_hash", name="audit_log_entry_hash_key"),
+    Index("ix_audit_time", text("event_ts DESC")),
+    Index("ix_audit_actor", "actor_user_id", text("event_ts DESC")),
+    Index("ix_audit_action", "action", text("event_ts DESC")),
+    Index("ix_audit_object", "object_kind", "object_id", text("event_ts DESC")),
+    Index(
+        "ix_audit_sev",
+        "severity",
+        text("event_ts DESC"),
+        postgresql_where=text("severity IN ('error','critical')"),
+    ),
+)
+
+audit_checkpoints = Table(
+    "audit_checkpoints",
+    metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("head_id", BigInteger, nullable=False),
+    Column("head_hash", _sha256_hex, nullable=False),
+    Column("row_count", BigInteger, nullable=False),
+    Column("signed_by", Text, nullable=False, server_default=text("'cv-audit-key-v1'")),
+    Column("signature", BYTEA),
+    Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    UniqueConstraint("head_id", name="audit_checkpoints_head_id_key"),
 )

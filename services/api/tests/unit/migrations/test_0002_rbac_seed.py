@@ -28,7 +28,7 @@ def test_alembic_heads_is_single_revision() -> None:
     assert result.returncode == 0, result.stderr
     heads = [line for line in result.stdout.splitlines() if line.strip()]
     assert len(heads) == 1, f"expected exactly one head, got: {heads!r}"
-    assert "0002_rbac_seed" in heads[0]
+    assert heads[0].endswith("(head)")
 
 
 def test_migration_0002_renders_offline_without_error() -> None:
