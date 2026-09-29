@@ -1,3 +1,5 @@
 {
-  "index.ts": "7c353f13324c5ed4d34f8231960c3922476347defcb89c80982a5bb18d3b67ba"
+  "index.ts": "f42b76d5d301b7a319dd3e57963d2c84dd855f3a257ca94327156afcf6a5594e",
+  "rest/index.ts": "84ca957d72aa4cf364662e8cdd42673383f9da7c273fcebeb3bbf7fe392152c1",
+  "ws/index.ts": "fd6c12eb52cafb828baf44db208e2aed8cafb9c90e38b11ae8c0934bae1e613a"
 }

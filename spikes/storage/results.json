@@ -1,0 +1,321 @@
+{
+  "seed": 1,
+  "days": 7,
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT"
+  ],
+  "shapes": {
+    "A": {
+      "questdb": {
+        "p50_ms": 4.123,
+        "p95_ms": 4.139,
+        "p99_ms": 4.14,
+        "meets_target": true
+      },
+      "timescale": {
+        "p50_ms": 7.043,
+        "p95_ms": 7.049,
+        "p99_ms": 7.049,
+        "meets_target": true
+      },
+      "_by_symbol": {
+        "BTCUSDT": {
+          "questdb": {
+            "p50_ms": 4.12,
+            "p95_ms": 4.139,
+            "p99_ms": 4.14,
+            "result_rows": 420,
+            "meets_target": true
+          },
+          "timescale": {
+            "p50_ms": 7.042,
+            "p95_ms": 7.049,
+            "p99_ms": 7.049,
+            "result_rows": 420,
+            "meets_target": true
+          }
+        },
+        "ETHUSDT": {
+          "questdb": {
+            "p50_ms": 4.127,
+            "p95_ms": 4.139,
+            "p99_ms": 4.14,
+            "result_rows": 420,
+            "meets_target": true
+          },
+          "timescale": {
+            "p50_ms": 7.044,
+            "p95_ms": 7.049,
+            "p99_ms": 7.049,
+            "result_rows": 420,
+            "meets_target": true
+          }
+        }
+      },
+      "name": "footprint session aggregation",
+      "target_ms": 150.0
+    },
+    "B": {
+      "questdb": {
+        "p50_ms": 73.552,
+        "p95_ms": 625.695,
+        "p99_ms": 989.261,
+        "meets_target": false
+      },
+      "timescale": {
+        "p50_ms": 76.552,
+        "p95_ms": 628.695,
+        "p99_ms": 992.261,
+        "meets_target": false
+      },
+      "_by_symbol": {
+        "BTCUSDT": {
+          "questdb": {
+            "p50_ms": 84.742,
+            "p95_ms": 625.695,
+            "p99_ms": 989.261,
+            "result_rows": 66501,
+            "meets_target": false
+          },
+          "timescale": {
+            "p50_ms": 87.742,
+            "p95_ms": 628.695,
+            "p99_ms": 992.261,
+            "result_rows": 66501,
+            "meets_target": false
+          }
+        },
+        "ETHUSDT": {
+          "questdb": {
+            "p50_ms": 62.362,
+            "p95_ms": 173.419,
+            "p99_ms": 712.625,
+            "result_rows": 66501,
+            "meets_target": true
+          },
+          "timescale": {
+            "p50_ms": 65.362,
+            "p95_ms": 176.419,
+            "p99_ms": 715.625,
+            "result_rows": 66501,
+            "meets_target": true
+          }
+        }
+      },
+      "name": "replay scan (snapshot seek + forward deltas)",
+      "target_ms": 200.0
+    },
+    "C": {
+      "questdb": {
+        "p50_ms": 4.008,
+        "p95_ms": 4.009,
+        "p99_ms": 4.013,
+        "meets_target": true
+      },
+      "timescale": {
+        "p50_ms": 7.003,
+        "p95_ms": 7.004,
+        "p99_ms": 7.005,
+        "meets_target": true
+      },
+      "_by_symbol": {
+        "BTCUSDT": {
+          "questdb": {
+            "p50_ms": 4.008,
+            "p95_ms": 4.009,
+            "p99_ms": 4.013,
+            "result_rows": 28,
+            "meets_target": true
+          },
+          "timescale": {
+            "p50_ms": 7.003,
+            "p95_ms": 7.004,
+            "p99_ms": 7.005,
+            "result_rows": 28,
+            "meets_target": true
+          }
+        },
+        "ETHUSDT": {
+          "questdb": {
+            "p50_ms": 4.008,
+            "p95_ms": 4.009,
+            "p99_ms": 4.009,
+            "result_rows": 28,
+            "meets_target": true
+          },
+          "timescale": {
+            "p50_ms": 7.003,
+            "p95_ms": 7.003,
+            "p99_ms": 7.004,
+            "result_rows": 28,
+            "meets_target": true
+          }
+        }
+      },
+      "name": "CVD roll-up",
+      "target_ms": 60.0
+    },
+    "D": {
+      "questdb": {
+        "p50_ms": 4.002,
+        "p95_ms": 4.003,
+        "p99_ms": 4.005,
+        "meets_target": true
+      },
+      "timescale": {
+        "p50_ms": 7.001,
+        "p95_ms": 7.001,
+        "p99_ms": 7.001,
+        "meets_target": true
+      },
+      "_by_symbol": {
+        "BTCUSDT": {
+          "questdb": {
+            "p50_ms": 4.003,
+            "p95_ms": 4.003,
+            "p99_ms": 4.005,
+            "result_rows": 7,
+            "meets_target": true
+          },
+          "timescale": {
+            "p50_ms": 7.001,
+            "p95_ms": 7.001,
+            "p99_ms": 7.001,
+            "result_rows": 7,
+            "meets_target": true
+          }
+        },
+        "ETHUSDT": {
+          "questdb": {
+            "p50_ms": 4.002,
+            "p95_ms": 4.003,
+            "p99_ms": 4.003,
+            "result_rows": 7,
+            "meets_target": true
+          },
+          "timescale": {
+            "p50_ms": 7.001,
+            "p95_ms": 7.001,
+            "p99_ms": 7.001,
+            "result_rows": 7,
+            "meets_target": true
+          }
+        }
+      },
+      "name": "chart bootstrap",
+      "target_ms": 100.0
+    },
+    "E": {
+      "questdb": {
+        "p50_ms": 4.873,
+        "p95_ms": 5.443,
+        "p99_ms": 5.873,
+        "meets_target": true
+      },
+      "timescale": {
+        "p50_ms": 7.436,
+        "p95_ms": 7.722,
+        "p99_ms": 7.936,
+        "meets_target": true
+      },
+      "_by_symbol": {
+        "BTCUSDT": {
+          "questdb": {
+            "p50_ms": 5.354,
+            "p95_ms": 5.443,
+            "p99_ms": 5.873,
+            "result_rows": 860,
+            "meets_target": true
+          },
+          "timescale": {
+            "p50_ms": 7.677,
+            "p95_ms": 7.722,
+            "p99_ms": 7.936,
+            "result_rows": 860,
+            "meets_target": true
+          }
+        },
+        "ETHUSDT": {
+          "questdb": {
+            "p50_ms": 4.391,
+            "p95_ms": 5.396,
+            "p99_ms": 5.568,
+            "result_rows": 853,
+            "meets_target": true
+          },
+          "timescale": {
+            "p50_ms": 7.196,
+            "p95_ms": 7.698,
+            "p99_ms": 7.784,
+            "result_rows": 853,
+            "meets_target": true
+          }
+        }
+      },
+      "name": "big-trade scan",
+      "target_ms": 80.0
+    },
+    "F": {
+      "questdb": {
+        "p50_ms": 4.26,
+        "p95_ms": 4.397,
+        "p99_ms": 4.566,
+        "meets_target": true
+      },
+      "timescale": {
+        "p50_ms": 7.013,
+        "p95_ms": 7.02,
+        "p99_ms": 7.028,
+        "meets_target": true
+      },
+      "_by_symbol": {
+        "BTCUSDT": {
+          "questdb": {
+            "p50_ms": 4.268,
+            "p95_ms": 4.397,
+            "p99_ms": 4.566,
+            "result_rows": 1,
+            "meets_target": true
+          },
+          "timescale": {
+            "p50_ms": 7.013,
+            "p95_ms": 7.02,
+            "p99_ms": 7.028,
+            "result_rows": 1,
+            "meets_target": true
+          }
+        },
+        "ETHUSDT": {
+          "questdb": {
+            "p50_ms": 4.251,
+            "p95_ms": 4.268,
+            "p99_ms": 4.276,
+            "result_rows": 1,
+            "meets_target": true
+          },
+          "timescale": {
+            "p50_ms": 7.013,
+            "p95_ms": 7.013,
+            "p99_ms": 7.014,
+            "result_rows": 1,
+            "meets_target": true
+          }
+        }
+      },
+      "name": "last price (LATEST ON)",
+      "target_ms": 10.0
+    }
+  },
+  "decision": {
+    "decision": "extend-2-days-for-tuning",
+    "questdb_all_targets_met": false,
+    "timescale_all_targets_met": false,
+    "worse_by_more_than_25pct": [],
+    "reversal_shapes": [],
+    "both_miss_shapes": [
+      "B"
+    ]
+  },
+  "methodology": "in-process scan cost measured with time.perf_counter() on a seeded synthetic dataset calibrated to \u00a711.1; engine constant factors (network/planning overhead, index-seek multiplier) are documented, cited constants, not measured live -- see module docstring."
+}

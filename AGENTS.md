@@ -47,7 +47,7 @@ is the bug:
 | Required CI check names                                   | `CONSTITUTION.md` §9                                                                                             |
 | Performance & bundle budget **values**                    | `CONSTITUTION.md` §14.2 / §14.3                                                                                  |
 | Why a budget is that number, and how it was measured      | `docs/plan/06-performance-and-load-standard.md`                                                                  |
-| Command / script names                                    | `AGENTS.md` §4 (a **specification** until ticket `INFRA-001` lands)                                              |
+| Command / script names                                    | `AGENTS.md` §4 (mirrors the shipped `turbo`/`uv` task graph — E02/E02-T11)                                       |
 | Who must approve a path                                   | `.github/CODEOWNERS`                                                                                             |
 | Ticket schema vs ticket content ownership                 | `.github/CODEOWNERS` (backlog section)                                                                           |
 | A lifecycle's states, events, guards and transition table | `docs/plan/28-statechart-catalogue.md` §Bn (generated from `machines/*.json` — **never hand-edit the Markdown**) |
@@ -272,23 +272,16 @@ the source of truth for ticket _content_.
 
 ## 4. Commands
 
-> **⚠️ Status of this section — read before you trust a command.**
+> **Status of this section — the scripts are authoritative; this table mirrors them.**
 >
-> At the time of writing, the repository contains **planning documents only**: there is no
-> `package.json`, `pnpm-workspace.yaml`, `turbo.json` or `pyproject.toml` in the tree yet. The task
-> names below are therefore **normative specifications, not verified observations** — they are the
-> names the scaffolding is _required_ to create, not names anyone has run.
+> The monorepo scaffold (`pnpm-workspace.yaml`, `turbo.json`, root `package.json`, `services/api/pyproject.toml`)
+> is shipped and is now the source of truth. This section is a **mirror** of the runnable task graph, not
+> a specification of intent — the closing ticket for that transition was `E02-T11` (epic `E02`).
 >
-> - **Single owning ticket:** `INFRA-001 — Bootstrap monorepo scaffolding and task graph`
->   (`docs/plan/backlog/`, epic `EP-INFRA`). That ticket's acceptance criteria include: every task
->   name in this section exists and exits 0 on a clean checkout, and any deviation is corrected
->   **in this section in the same PR**. Until INFRA-001 is Done, treat this table as the spec.
-> - **After INFRA-001 is Done**, the runnable scripts become the source of truth and this section
->   becomes a mirror of them. Drift is caught by the generated-code required check (Constitution §9),
->   which runs `scripts/check-agents-commands.mjs`: it parses every `|` row in §4, resolves
->   each task against the workspace task graph (`pnpm -r run --help` / `turbo run --dry=json`) and
->   the Python project scripts, and **fails the build** if a documented task is missing or an
->   undocumented user-facing task exists.
+> - Drift is caught by the generated-code required check (Constitution §9), which runs
+>   `scripts/check-agents-commands.mjs`: it parses every `|` row in §4, resolves each task against the
+>   workspace task graph (`pnpm -r run --help` / `turbo run --dry=json`) and the Python project scripts,
+>   and **fails the build** if a documented task is missing or an undocumented user-facing task exists.
 > - **If you change a script, update this section in the same PR** (C-15.4). If a command does not
 >   yet exist because its epic has not landed, say so in the PR instead of inventing an alternative.
 > - This is the **only** place in the repo where command names are enumerated. `CONTRIBUTING.md`,
@@ -296,20 +289,27 @@ the source of truth for ticket _content_.
 
 ### Root (pnpm workspace + Turborepo)
 
-| Task                                                          | Command                          |
-| ------------------------------------------------------------- | -------------------------------- |
-| Install                                                       | `pnpm install --frozen-lockfile` |
-| Lint everything                                               | `pnpm lint`                      |
-| Fix lint/format                                               | `pnpm lint:fix` && `pnpm format` |
-| Typecheck                                                     | `pnpm typecheck`                 |
-| Unit tests (all JS/TS)                                        | `pnpm test`                      |
-| Unit tests with coverage                                      | `pnpm test:cov`                  |
-| Build all                                                     | `pnpm build`                     |
-| Bundle-size check                                             | `pnpm size`                      |
-| Regenerate protocol types + tokens                            | `pnpm generate`                  |
-| Full local gate (what CI runs on a PR)                        | `pnpm verify`                    |
-| Validate current branch name (C-4.4)                          | `pnpm check:branch-name`         |
-| Install local git hooks (commitlint/lint-staged/branch check) | `pnpm prepare`                   |
+| Task                                                                                       | Command                              |
+| ------------------------------------------------------------------------------------------ | ------------------------------------- |
+| Install                                                                                    | `pnpm install --frozen-lockfile`     |
+| Lint everything                                                                            | `pnpm lint`                          |
+| Fix lint/format                                                                            | `pnpm lint:fix` && `pnpm format`     |
+| Typecheck                                                                                  | `pnpm typecheck`                     |
+| Unit tests (all JS/TS)                                                                     | `pnpm test`                          |
+| Unit tests with coverage                                                                   | `pnpm test:cov`                      |
+| Build all                                                                                  | `pnpm build`                         |
+| Bundle-size check                                                                          | `pnpm size`                          |
+| Regenerate protocol types + tokens                                                         | `pnpm generate`                      |
+| Architecture-boundary contracts (import-linter + dependency-cruiser, C-3.1..C-3.5, §9 #18) | `pnpm arch` (or `make arch`)         |
+| Local security lane (SAST/SCA/secrets/license-check, whatever is runnable on this machine) | `pnpm security` (or `make security`) |
+| Full local gate (what CI runs on a PR)                                                     | `pnpm verify`                        |
+| Meta: assert `pnpm verify`'s gate list matches CONSTITUTION.md §9 (C-16.5 drift guard)     | `pnpm check:verify-gate-list`        |
+| Threshold-guard: fail on an un-amended coverage/bundle-size floor decrease (C-9.4)         | `pnpm gate:threshold-guard`          |
+| Flaky-test quarantine report (C-9.3)                                                       | `pnpm gate:flaky-quarantine`         |
+| Bundle-size regression vs baseline (§9 #15, +5% rule)                                      | `pnpm gate:bundle-size-regression`   |
+| Negative-test harness: prove each gate above actually fails                                | `pnpm gate:negative-tests`           |
+| Validate current branch name (C-4.4)                                                       | `pnpm check:branch-name`             |
+| Install local git hooks (commitlint/lint-staged/branch check)                              | `pnpm prepare`                       |
 
 ### `apps/web`
 
@@ -346,23 +346,28 @@ the source of truth for ticket _content_.
 | Unit tests                                     | `pytest -m "not integration" --cov=. --cov-fail-under=85`                |
 | Integration tests (needs docker compose stack) | `pytest -m integration`                                                  |
 | Architecture contracts                         | `lint-imports`                                                           |
+| Regenerate protocol pydantic models            | `python scripts/generate_protocol_models.py`                             |
+| Protocol-model staleness gate (what CI runs)   | `python scripts/generate_protocol_models.py --check`                     |
 | New migration                                  | `alembic revision -m "<summary>"` (autogenerate then **review by hand**) |
 | Apply / roll back migration                    | `alembic upgrade head` / `alembic downgrade -1`                          |
 | Run API locally                                | `uvicorn services.api.main:app --host 127.0.0.1 --port 8000 --reload`    |
 
 ### Stack, E2E, load, security
 
-| Task                                          | Command                                                |
-| --------------------------------------------- | ------------------------------------------------------ |
-| Bring up local stack (Postgres, QuestDB, API) | `docker compose -f infra/docker-compose.dev.yml up -d` |
-| E2E (web)                                     | `pnpm e2e`                                             |
-| E2E (Electron)                                | `pnpm e2e:desktop`                                     |
-| Accessibility scan                            | `pnpm test:a11y`                                       |
-| Load test                                     | `k6 run tests/load/api-ws.js`                          |
-| Ingestion soak                                | `locust -f tests/load/ingestion_soak.py`               |
-| Chaos suite                                   | `pnpm chaos`                                           |
-| Secret scan on your diff                      | `gitleaks protect --staged --redact`                   |
-| Container scan                                | `trivy image candleviewer/api:dev`                     |
+| Task                                                                | Command                                                                                                       |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Bring up local stack (Postgres, QuestDB, API, Prometheus, Grafana)  | `make up` (equivalent to `docker compose -f infra/docker-compose.dev.yml --profile core --profile obs up -d`) |
+| Full dev loop (stack + api in `CV_FEED=synthetic` + web dev server) | `make dev` (E02-T12; teardown: `make dev-down`)                                                               |
+| Stop local stack (keep volumes)                                     | `make down`                                                                                                   |
+| Reset local stack (drop volumes, clean-state rebuild)               | `make reset`                                                                                                  |
+| E2E (web)                                                           | `pnpm e2e`                                                                                                    |
+| E2E (Electron)                                                      | `pnpm e2e:desktop`                                                                                            |
+| Accessibility scan                                                  | `pnpm test:a11y`                                                                                              |
+| Load test                                                           | `k6 run tests/load/api-ws.js`                                                                                 |
+| Ingestion soak                                                      | `locust -f tests/load/ingestion_soak.py`                                                                      |
+| Chaos suite                                                         | `pnpm chaos`                                                                                                  |
+| Secret scan on your diff                                            | `gitleaks protect --staged --redact`                                                                          |
+| Container scan                                                      | `trivy image candleviewer/api:dev`                                                                            |
 
 ### Governance (C-16.4, C-16.5 — runnable today; stdlib Python plus `jsonschema` for GOV-004)
 
@@ -585,9 +590,9 @@ Violations of this list are treated as incidents, not mistakes. If you are about
     statechart in any form (C-2.20). Do not make a machine an enforcement point for a safety decision
     (C-2.21). `xstate-statemachine==0.9.1` is adopted and mandatory via `cv.statechart.factory` only — do
     not bypass it and do not build a shim (C-2.22).
-22. **Never assert that a command works because this file lists it.** Until `INFRA-001` lands there is no
-    `package.json`/`pyproject.toml` in the repo; §4 is a specification. Run the command; if it does not
-    exist, say so in the PR rather than substituting an improvised equivalent.
+22. **Never assert that a command works because this file lists it.** §4 mirrors the shipped `turbo`/`uv`
+    task graph, but still run the command yourself; if it does not exist or drifted (a new epic added a
+    task the check hasn't caught yet), say so in the PR rather than substituting an improvised equivalent.
 
 ---
 
@@ -663,5 +668,5 @@ Lifecycles: implement to the contract in docs/plan/28-statechart-catalogue.md §
             xstate-statemachine==0.9.1 IS ADOPTED — the only executor, via cv.statechart.factory (C-2.22)
 Budgets   : see CONSTITUTION §14.2 (runtime) and §14.3 (bundle) — authoritative values;
             derivation/evidence in docs/plan/06-performance-and-load-standard.md. WCAG 2.2 AA
-Lists     : CI check names → CONSTITUTION §9 · commands → AGENTS.md §4 (spec until INFRA-001)
+Lists     : CI check names → CONSTITUTION §9 · commands → AGENTS.md §4 (mirrors shipped task graph)
 ```

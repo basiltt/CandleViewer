@@ -1,0 +1,20 @@
+# infra/compose/docker-compose.vps.yml — VPS override (out of scope beyond
+# "startable and scriptable" per this ticket; no provisioning/deployment).
+#
+# Swaps minio for a filesystem-backed Parquet path (per the ticket's
+# technical notes), tightens resource limits, and keeps every port bound to
+# `127.0.0.1` unchanged — remote reachability on a VPS is via Tailscale only
+# (C-12.9), never a public bind, so this override never widens a `ports:`
+# entry.
+services:
+  api:
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2g
+    environment:
+      CV_PARQUET_ROOT: /data/parquet
+
+  minio:
+    profiles: ["cold-disabled-on-vps"]

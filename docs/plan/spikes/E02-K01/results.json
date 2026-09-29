@@ -1,0 +1,27 @@
+{
+  "spike": "E02-K01",
+  "issue": 89,
+  "recorded": "2026-09-25",
+  "note": "Committed per QA defect #1459 item 3 - figures reproduced from the throwaway .spike-tmp/ session referenced in docs/plan/spikes/E02-K01.md and docs/plan/27-adrs/ADR-0018-monorepo-tooling.md; not re-measured on reference hardware (see that ADR's Deviations note).",
+  "js_toolchain": {
+    "pnpm_install_workspace": { "cold_s": 0.45, "warm_s": 0.38 },
+    "turbo_gate_forced_cold_s_range": [1.2, 3.2],
+    "turbo_gate_cached_warm_s": 0.155,
+    "turbo_gate_one_file_change_warm_s": 0.14,
+    "nx_workspace_scaffold_s": 71.8
+  },
+  "python_toolchain": {
+    "uv_sync_full_stack": { "cold_s": 15.1, "warm_s": 1.9 },
+    "poetry_lock_and_install": {
+      "cold_s": 50.7,
+      "cold_breakdown_s": { "poetry_lock": 28.9, "poetry_install": 21.8 },
+      "warm_s": 2.3
+    }
+  },
+  "budgets": {
+    "warm_full_gate_max_min": 5,
+    "cold_full_gate_max_min": 10,
+    "cold_install_max_min": 3
+  },
+  "methodology": "median of 5 runs (3 runs for the Python cold-install candidates, per docs/plan/spikes/E02-K01.md), wall-clock time on the implementing agent's dev machine, not the docs/plan/06-performance-and-load-standard.md section 3.1 reference hardware."
+}

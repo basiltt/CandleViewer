@@ -1,0 +1,103 @@
+name: _job-py
+
+# E03-T03: Python CI lane for services/api (and any Python tooling under
+# scripts/**, tools/ci/**), invoked from pr.yml when the `py` path filter is
+# true. Pipeline shape per ADR-0013 ("[py] lint (ruff) - typecheck (mypy
+# --strict on modules) - unit (pytest) - build"):
+#
+#   checkout -> setup-uv (cache keyed on uv.lock) -> uv sync --frozen
+#   -> ruff check + ruff format --check -> mypy --strict
+#   -> import-linter architecture contract (its own `architecture` check)
+#   -> pytest -m "not exchange_smoke" --cov (network-guarded, ADR-0012/SR-140)
+#   -> uv build -> upload coverage artifact (consumed by E03-T04's threshold
+#   gate; this job does not itself gate on the number).
+#
+# Out of scope (per ticket): coverage threshold enforcement (E03-T04),
+# Bandit/pip-audit (E03-T07), Alembic migration checks (E03-T10), contract
+# and integration pipeline suites (E03-T06). Postgres/QuestDB service
+# containers for `integration_db`-marked tests are added by whichever
+# ticket lands the first such test (none exist yet); the network guard
+# already honours `CV_CI_ALLOWED_HOSTS` for when that lands.
+
+on:
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+env:
+  PYTHONIOENCODING: utf-8
+  # SR-140: CI never holds production Bybit credentials. Loopback is always
+  # allowed by the guard; this var stays empty until a ticket adds
+  # `integration_db`-marked tests with digest-pinned service containers.
+  CV_CI_ALLOWED_HOSTS: ""
+
+jobs:
+  py:
+    name: py
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ fromJSON(vars.CV_CI_TIMEOUT_MINUTES || 20) }}
+    defaults:
+      run:
+        working-directory: services/api
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install uv (cache keyed on uv.lock)
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.9.x"
+          enable-cache: true
+          cache-dependency-glob: "services/api/uv.lock"
+          python-version: "3.12"
+
+      - name: uv sync --frozen (fails if pyproject.toml drifted from uv.lock)
+        run: uv sync --frozen --all-groups
+
+      - name: ruff check
+        run: uv run ruff check .
+
+      - name: ruff format --check
+        run: uv run ruff format --check .
+
+      - name: mypy --strict
+        run: uv run mypy --strict candleviewer
+
+      - name: Architecture contract (import-linter, ADR-0004)
+        id: architecture
+        run: uv run lint-imports
+
+      - name: pytest (unit + non-exchange_smoke, network-guarded)
+        run: >
+          uv run pytest -p no:cacheprovider -m "not exchange_smoke"
+          --cov --cov-report=xml:coverage.xml --cov-report=term
+
+      - name: uv build
+        run: uv build
+
+      - name: Upload coverage report (for E03-T04's threshold gate)
+        if: always()
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: py-coverage
+          path: services/api/coverage.xml
+          retention-days: 14
+
+  architecture:
+    # Reported as its own required check named `architecture` per the
+    # ticket's Definition of Done — mirrors the `py` job's result so
+    # `ci-required` (pr.yml) and any future required-check config can depend
+    # on `architecture` directly without re-running import-linter.
+    name: architecture
+    needs: py
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Reflect the py job's architecture-contract step outcome
+        run: |
+          if [ "${{ needs.py.result }}" != "success" ]; then
+            echo "py job (which runs the import-linter architecture contract) did not succeed"
+            exit 1
+          fi
+          echo "architecture contract passed (see the 'py' job's 'Architecture contract' step)"

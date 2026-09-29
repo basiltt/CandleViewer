@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://candleviewer.internal/schema/backlog/ticket.schema.json",
+  "title": "CandleViewer backlog ticket",
+  "description": "Single source of truth for the backlog ticket object shape (CONSTITUTION.md C-16.5). See README.md in this directory for field-by-field semantics.",
+  "type": "object",
+  "required": [
+    "key", "kind", "title", "labels", "component", "phase", "sprint",
+    "priority", "perspective", "risk", "estimate", "parent", "blocked_by",
+    "milestone", "body"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "key": {
+      "type": "string",
+      "pattern": "^E\\d{2}(-[STKDQXC]\\d{2})?$",
+      "description": "Epic id (E01) or ticket id (E01-T06). Prefix letter is the kind: S Story, T Task, K Spike, D Design, Q QA, X Security, C Chore."
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["Epic", "Story", "Task", "Spike", "Bug", "Chore"]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human summary. 01-sdlc-and-branching.md targets <=80 chars for board-list readability, but this is enforced as a validator warning, not a schema error, because a material share of the authored Sprint 01 backlog already exceeds it (see validate-backlog.py check_title_length and its deviation note)."
+    },
+    "labels": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "component": {
+      "type": "string",
+      "enum": [
+        "chart-engine", "data-feeds", "indicators", "drawing-tools", "alerts",
+        "backtesting", "scripting", "web", "api", "auth", "collaboration",
+        "infra", "docs", "cross-cutting"
+      ]
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "P0 Foundations", "P1 Core Charting", "P2 Data & Indicators",
+        "P3 Drawing & Alerts", "P4 Backtesting & Scripting",
+        "P5 Collaboration & Polish"
+      ]
+    },
+    "sprint": {
+      "type": "string",
+      "pattern": "^(Sprint (0[1-9]|1[0-9]|2[0-6])|Backlog)$"
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["P0 Critical", "P1 High", "P2 Medium", "P3 Low"]
+    },
+    "perspective": {
+      "type": "string",
+      "enum": [
+        "Product", "Architecture", "Development", "Test", "QA", "Security",
+        "Compliance", "Ops"
+      ]
+    },
+    "risk": {
+      "type": "string",
+      "enum": [
+        "R1 Data licensing", "R2 Render performance", "R3 Real-time cost",
+        "R4 Script sandbox", "R5 Scope", "R6 Feed rot", "R7 Data accuracy",
+        "R8 Browser/GPU compat", "R9 Advice boundary", "R10 Key-person",
+        "R11 Alert reliability", "R12 Backtest bias", "R13 Sharing abuse",
+        "R14 User retention", "R15 Data lifecycle", "None"
+      ]
+    },
+    "estimate": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Fibonacci-like (0,1,2,3,5,8) for non-Epic kinds; an Epic's estimate is the rolled-up point budget for all its children (may be any non-negative integer), reconciled against the sum of children by the validator rather than constrained to the Fibonacci set here."
+    },
+    "parent": {
+      "type": ["string", "null"],
+      "pattern": "^E\\d{2}$"
+    },
+    "blocked_by": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^E\\d{2}(-[STKDQXC]\\d{2})?$"
+      },
+      "uniqueItems": true
+    },
+    "milestone": {
+      "type": "string",
+      "enum": [
+        "R0 Foundations", "R1 Charting alpha", "R2 Order-flow beta",
+        "R3 Trading on demo", "R4 Live enablement", "R5 Hardening / GA"
+      ]
+    },
+    "body": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "Epic" } } },
+      "then": {
+        "properties": { "parent": { "const": null } }
+      },
+      "else": {
+        "properties": { "parent": { "type": "string" } }
+      }
+    },
+    {
+      "if": {
+        "not": { "properties": { "kind": { "const": "Epic" } } }
+      },
+      "then": {
+        "properties": { "estimate": { "enum": [0, 1, 2, 3, 5, 8] } }
+      }
+    }
+  ]
+}

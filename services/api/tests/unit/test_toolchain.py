@@ -9,7 +9,7 @@ from __future__ import annotations
 import sys
 
 from candleviewer import __version__
-from candleviewer.settings import Settings, get_settings
+from candleviewer.settings import Environment, Settings, get_settings
 
 
 def test_toolchain_interpreter_is_at_least_3_12() -> None:
@@ -23,4 +23,4 @@ def test_toolchain_package_imports() -> None:
 def test_toolchain_settings_load_with_defaults() -> None:
     settings = get_settings()
     assert isinstance(settings, Settings)
-    assert settings.environment == "dev"
+    assert settings.environment == Environment.DEMO

@@ -1,10 +1,11 @@
 # ADR-0018 — Monorepo tooling: pnpm+Turborepo (JS) and uv+Hatch (Python)
 
-- Status: **Accepted (2026-09-25)**
+- Status: **Accepted — Approved (owner waiver 2026-09-25)**
 - Date: 2026-09-25
 - Deciders: Owner (`@basiltt`) — see "Agent-delivery adaptations" in ticket E02-K01 (issue #89): owner
-  sign-off is recorded via the owner's `approved` comment on the issue or PR merge; this ADR is drafted
-  by the implementing agent and awaits that approval.
+  sign-off is recorded via the owner's `approved` comment on the issue or PR merge; the owner has waived
+  per-ticket sign-off for Sprint 01, so this ADR is Approved on drafting and does not await a separate
+  countersignature.
 - Consulted: `docs/plan/20-architecture.md` §5, `docs/plan/30-release-roadmap.md` §4.2/§4.3, `CONSTITUTION.md` §9,
   `docs/plan/02-definition-of-ready-done.md` §5, spike findings `docs/plan/spikes/E02-K01.md`
 - Related: E02-T01, E02-T02 (scaffolding tickets that consume this decision), E02-X01 (supply-chain STRIDE model)
@@ -59,7 +60,8 @@ close the Python question and to sanity-check the JS choice against this repo's 
 
 - E02-T01/T02 (scaffolding tickets) proceed with pnpm+Turborepo and uv+Hatch; both are already implied by
   `20-architecture.md` §5, so no `docs/plan/20-architecture.md` edit is required — this ADR formalizes the
-  Python half that document already flagged as pending.
+  Python half that document already flagged as pending. Both tickets now reference this ADR explicitly
+  (see their bodies in `docs/plan/backlog/all-tickets.json`).
 - No new toolchain risk surfaced beyond what's already tracked; `docs/plan/32-risk-register.md` is left
   unchanged (see spike doc "Definition of Done" checklist).
 - CI workflow authoring (E03) can now assume `pnpm`/`turbo` and `uv`/Hatch without a placeholder.

@@ -1,0 +1,30 @@
+{
+  "_comment": "Checked-in manifest of M1-M24 module paths (CONSTITUTION.md Sec.3). Used by tests/unit/test_module_manifest.py to assert the shipped tree matches the contract. Update in the same PR as any CONSTITUTION.md Sec.3 change.",
+  "modules": [
+    { "id": "M1", "name": "config", "path": "candleviewer/settings.py" },
+    { "id": "M2", "name": "secrets", "path": "candleviewer/secrets" },
+    { "id": "M3", "name": "exchange.base", "path": "candleviewer/exchange/base" },
+    { "id": "M4", "name": "exchange.bybit", "path": "candleviewer/exchange/bybit" },
+    { "id": "M5", "name": "bus", "path": "candleviewer/bus" },
+    { "id": "M6", "name": "ingestion", "path": "candleviewer/ingestion" },
+    { "id": "M7", "name": "book", "path": "candleviewer/book" },
+    { "id": "M8", "name": "bars", "path": "candleviewer/bars" },
+    { "id": "M9", "name": "orderflow", "path": "candleviewer/orderflow" },
+    { "id": "M10", "name": "storage", "path": "candleviewer/storage" },
+    { "id": "M11", "name": "recorder", "path": "candleviewer/recorder" },
+    { "id": "M12", "name": "replay", "path": "candleviewer/replay" },
+    { "id": "M13", "name": "accounts", "path": "candleviewer/accounts" },
+    { "id": "M14", "name": "oms", "path": "candleviewer/oms" },
+    { "id": "M15", "name": "rules", "path": "candleviewer/rules" },
+    { "id": "M16", "name": "paper", "path": "candleviewer/paper" },
+    { "id": "M17", "name": "risk", "path": "candleviewer/risk" },
+    { "id": "M18", "name": "auth", "path": "candleviewer/auth" },
+    { "id": "M19", "name": "audit", "path": "candleviewer/audit" },
+    { "id": "M20", "name": "journal", "path": "candleviewer/journal" },
+    { "id": "M21", "name": "admin", "path": "candleviewer/admin" },
+    { "id": "M22", "name": "alerts", "path": "candleviewer/alerts" },
+    { "id": "M23a", "name": "api", "path": "candleviewer/api" },
+    { "id": "M23b", "name": "ws", "path": "candleviewer/ws" },
+    { "id": "M24", "name": "observability", "path": "candleviewer/observability" }
+  ]
+}

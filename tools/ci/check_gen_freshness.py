@@ -1,0 +1,162 @@
+#!/usr/bin/env python3
+"""E03-T05: generated-code freshness gate for ``packages/protocol``.
+
+ADR-0013 binding rule 3: "packages/protocol is regenerated from
+22-api-openapi.yaml and the WS schema; any diff fails the build. Generated
+files are committed so consumers need no codegen step." ADR-0005 reinforces
+it for the binary WS framing constants.
+
+This script is the single implementation invoked by
+``.github/workflows/_job-gen.yml`` and locally via ``make gen-check``:
+
+1. Runs the generator (``pnpm generate``, i.e. ``make gen``) twice in a row
+   on the current checkout and hashes the generated tree after each run.
+   If the two hashes differ, generation is non-deterministic (CI-GEN-003)
+   and we fail *before* even looking at git diff, so a flaky generator never
+   masquerades as a "someone forgot to regenerate" freshness failure.
+2. Runs ``git diff --exit-code -- packages/protocol`` (CI-GEN-001: drift
+   against a committed schema change).
+3. Runs ``git status --porcelain -- packages/protocol`` (CI-GEN-002:
+   untracked generated output the first check cannot see).
+
+Exit codes: 0 clean, 1 a CI-GEN-* violation was found, 2 internal error
+(generator command failed to run at all).
+
+Stdlib only (subprocess/git/node are external processes, not imports).
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import subprocess
+import sys
+from pathlib import Path
+
+GENERATED_ROOT = Path("packages/protocol")
+# Directory whose *contents* determinism/freshness we assert; kept narrow so
+# unrelated protocol package churn (README edits, etc.) doesn't get pulled
+# into the hash unnecessarily — though a diff there would also legitimately
+# fail freshness, since it's still under packages/protocol.
+GENERATE_CMD = ["pnpm", "generate"]
+
+
+class GenGateError(Exception):
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
+        self.message = message
+
+
+def _run(
+    cmd: list[str], *, cwd: Path | None = None
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        cmd,
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def _hash_generated_tree(root: Path) -> str:
+    """Deterministic content hash of every tracked file under ``root``.
+
+    Uses ``git ls-files`` (not ``os.walk``) so `.gitignore`d build scratch
+    (e.g. ``node_modules``, ``dist``) never perturbs the hash — only files
+    git would actually track/diff are included, matching what the freshness
+    check below inspects.
+    """
+    listed = _run(["git", "ls-files", "-z", "--", str(root)])
+    if listed.returncode != 0:
+        raise GenGateError(
+            "CI-GEN-004", f"git ls-files failed: {listed.stderr.strip()}"
+        )
+    paths = [p for p in listed.stdout.split("\0") if p]
+    digest = hashlib.sha256()
+    for rel in sorted(paths):
+        path = Path(rel)
+        if not path.is_file():
+            continue
+        data = path.read_bytes().replace(b"\r\n", b"\n")
+        digest.update(rel.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(hashlib.sha256(data).digest())
+    return digest.hexdigest()
+
+
+def run_generator() -> None:
+    result = _run(GENERATE_CMD)
+    if result.returncode != 0:
+        raise GenGateError(
+            "CI-GEN-004",
+            "generator toolchain failed to run "
+            f"({' '.join(GENERATE_CMD)}):\n{result.stdout}\n{result.stderr}",
+        )
+
+
+def check_determinism() -> None:
+    run_generator()
+    first_hash = _hash_generated_tree(GENERATED_ROOT)
+    run_generator()
+    second_hash = _hash_generated_tree(GENERATED_ROOT)
+    if first_hash != second_hash:
+        raise GenGateError(
+            "CI-GEN-003",
+            "codegen is not deterministic: two consecutive `make gen` runs "
+            f"produced different output under {GENERATED_ROOT} "
+            f"(run 1 hash {first_hash}, run 2 hash {second_hash}). "
+            "Reproduce locally with `make gen && make gen` and diff the tree.",
+        )
+
+
+def check_freshness() -> None:
+    """CI-GEN-001: the working tree must match `make gen`'s tracked output."""
+    diff = _run(["git", "diff", "--exit-code", "--", str(GENERATED_ROOT)])
+    if diff.returncode != 0:
+        raise GenGateError(
+            "CI-GEN-001",
+            "packages/protocol is stale — `make gen` produced a diff "
+            "against docs/plan/22-api-openapi.yaml / docs/plan/23-ws-protocol.md.\n"
+            "Reproduce locally with `make gen`, review, and commit the result.\n\n"
+            f"{diff.stdout}",
+        )
+
+
+def check_untracked() -> None:
+    """CI-GEN-002: catch new generated files `git diff` cannot see."""
+    status = _run(["git", "status", "--porcelain", "--", str(GENERATED_ROOT)])
+    if status.returncode != 0:
+        raise GenGateError("CI-GEN-004", f"git status failed: {status.stderr.strip()}")
+    untracked = [line for line in status.stdout.splitlines() if line.startswith("??")]
+    if untracked:
+        raise GenGateError(
+            "CI-GEN-002",
+            "`make gen` produced untracked output under packages/protocol "
+            "(new generated file not committed, possibly git-ignored by "
+            "mistake). Reproduce locally with `make gen && git status "
+            "--porcelain -- packages/protocol`.\n\n" + "\n".join(untracked),
+        )
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.parse_args(argv)
+
+    try:
+        # Order matters (ticket "Technical notes"): determinism first, so a
+        # flaky generator never presents as a random freshness failure.
+        check_determinism()
+        check_freshness()
+        check_untracked()
+    except GenGateError as exc:
+        print(f"{exc.code}: {exc.message}", file=sys.stderr)
+        return 1
+
+    print("check_gen_freshness: OK — packages/protocol is fresh and deterministic")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

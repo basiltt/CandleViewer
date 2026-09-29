@@ -6,7 +6,7 @@
   "engines": {
     "node": ">=20.14.0 <21"
   },
-  "packageManager": "pnpm@12.5.1+sha512.4/MFvHhKK8ifWtO2E4iJRw+ujSr182thIW7JHCw9ZAiXdfneOKrDMQROpA8kXLDVZmOS399lgk4ZB+9qLGLeXw==",
+  "packageManager": "pnpm@12.5.1+sha512.e3f305bc784a2bc89f5ad3b6138889470fae8d2af5f36b61216ec91c2c3d64089775f9de38aac331044ea40f245cb0d5666392dfdf65824e1907ef6a2c62de5f",
   "scripts": {
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
@@ -17,9 +17,16 @@
     "build": "turbo run build",
     "size": "turbo run size",
     "generate": "turbo run generate",
-    "verify": "turbo run verify",
+    "arch": "node scripts/run-arch-checks.mjs",
+    "security": "python tools/ci/run_security_local.py",
+    "verify": "node scripts/run-verify-gate.mjs",
+    "check:verify-gate-list": "node scripts/check-verify-gate-list.mjs",
     "check:agents-commands": "node scripts/check-agents-commands.mjs",
     "check:branch-name": "node scripts/check-branch-name.mjs",
+    "gate:threshold-guard": "python tools/ci/quality_gates.py",
+    "gate:flaky-quarantine": "python tools/ci/flaky_quarantine_report.py --repo-root .",
+    "gate:bundle-size-regression": "node scripts/check-bundle-size-regression.mjs",
+    "gate:negative-tests": "node scripts/gate-negative-tests.mjs",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -31,19 +38,20 @@
       "prettier --write"
     ],
     "services/api/**/*.py": [
-      "uv run --project services/api ruff check --fix",
-      "uv run --project services/api black"
+      "uv run --project services/api ruff check --fix --force-exclude",
+      "uv run --project services/api black --force-exclude '(candleviewer/(api|ws)/_generated/.*)'"
     ]
   },
   "devDependencies": {
-    "turbo": "2.3.3",
-    "husky": "^9.1.7",
-    "lint-staged": "^15.3.0",
     "@commitlint/cli": "^19.6.1",
     "@commitlint/config-conventional": "^19.6.0",
-    "@commitlint/load": "^19.6.1",
     "@commitlint/lint": "^19.6.0",
+    "@commitlint/load": "^19.6.1",
+    "dependency-cruiser": "17.4.3",
     "eslint": "^9.17.0",
-    "prettier": "^3.4.2"
+    "husky": "^9.1.7",
+    "lint-staged": "^15.3.0",
+    "prettier": "^3.4.2",
+    "turbo": "2.3.3"
   }
 }

@@ -1,0 +1,328 @@
+# Machine-readable mirror of CONSTITUTION.md §3 (module boundaries).
+#
+# This file is the single source of truth *for machines* (import-linter,
+# dependency-cruiser, the drift test in
+# `services/api/tests/unit/architecture/test_module_contracts_drift.py`).
+# `CONSTITUTION.md` §3 remains the source of truth *for humans*. The two must
+# never diverge — that is what the drift test enforces (C-16.5).
+#
+# Do not hand-edit the `allowed` lists without also editing the §3 table in
+# the same PR, and vice versa. Adding a module or an edge needs an ADR
+# (C-3.4).
+#
+# `path` is the Python dotted import path rooted at `candleviewer` (the
+# `root_package` of `services/api/.importlinter`). `allowed` lists the
+# dotted paths (not numbers) this module may import, transcribed from the
+# "May depend on" column of §3.
+
+schema_version = 1
+
+[[module]]
+number = "M1"
+name = "config"
+path = "candleviewer.settings"
+allowed = []
+
+[[module]]
+number = "M2"
+name = "secrets"
+path = "candleviewer.secrets"
+allowed = ["candleviewer.settings"]
+
+[[module]]
+number = "M3"
+name = "exchange.base"
+path = "candleviewer.exchange.base"
+allowed = ["candleviewer.settings"]
+
+[[module]]
+number = "M4"
+name = "exchange.bybit"
+path = "candleviewer.exchange.bybit"
+allowed = ["candleviewer.settings", "candleviewer.secrets", "candleviewer.exchange.base"]
+
+[[module]]
+number = "M5"
+name = "bus"
+path = "candleviewer.bus"
+allowed = ["candleviewer.settings"]
+
+[[module]]
+number = "M6"
+name = "ingestion"
+path = "candleviewer.ingestion"
+allowed = [
+  "candleviewer.settings",
+  "candleviewer.exchange.base",
+  "candleviewer.exchange.bybit",
+  "candleviewer.bus",
+]
+
+[[module]]
+number = "M7"
+name = "book"
+path = "candleviewer.book"
+allowed = ["candleviewer.settings", "candleviewer.exchange.base", "candleviewer.bus"]
+
+[[module]]
+number = "M8"
+name = "bars"
+path = "candleviewer.bars"
+allowed = ["candleviewer.settings", "candleviewer.exchange.base", "candleviewer.bus"]
+
+[[module]]
+number = "M9"
+name = "orderflow"
+path = "candleviewer.orderflow"
+allowed = [
+  "candleviewer.settings",
+  "candleviewer.exchange.base",
+  "candleviewer.bus",
+  "candleviewer.book",
+  "candleviewer.bars",
+]
+
+[[module]]
+number = "M10"
+name = "storage"
+path = "candleviewer.storage"
+allowed = ["candleviewer.settings"]
+
+[[module]]
+number = "M11"
+name = "recorder"
+path = "candleviewer.recorder"
+allowed = ["candleviewer.settings", "candleviewer.bus", "candleviewer.storage"]
+
+[[module]]
+number = "M12"
+name = "replay"
+path = "candleviewer.replay"
+allowed = [
+  "candleviewer.settings",
+  "candleviewer.bus",
+  "candleviewer.bars",
+  "candleviewer.orderflow",
+  "candleviewer.storage",
+]
+
+[[module]]
+number = "M13"
+name = "accounts"
+path = "candleviewer.accounts"
+allowed = ["candleviewer.settings", "candleviewer.storage"]
+
+[[module]]
+number = "M14"
+name = "oms"
+path = "candleviewer.oms"
+allowed = [
+  "candleviewer.settings",
+  "candleviewer.exchange.base",
+  "candleviewer.exchange.bybit",
+  "candleviewer.bus",
+  "candleviewer.storage",
+  "candleviewer.accounts",
+  "candleviewer.risk",
+]
+
+[[module]]
+number = "M15"
+name = "rules"
+path = "candleviewer.rules"
+allowed = [
+  "candleviewer.settings",
+  "candleviewer.bus",
+  "candleviewer.orderflow",
+  "candleviewer.oms",
+]
+
+[[module]]
+number = "M16"
+name = "paper"
+path = "candleviewer.paper"
+allowed = [
+  "candleviewer.settings",
+  "candleviewer.exchange.base",
+  "candleviewer.exchange.bybit",
+  "candleviewer.bus",
+  "candleviewer.oms",
+]
+
+[[module]]
+number = "M17"
+name = "risk"
+path = "candleviewer.risk"
+allowed = [
+  "candleviewer.settings",
+  "candleviewer.bus",
+  "candleviewer.storage",
+  "candleviewer.accounts",
+]
+
+[[module]]
+number = "M18"
+name = "auth"
+path = "candleviewer.auth"
+allowed = ["candleviewer.settings", "candleviewer.storage"]
+
+[[module]]
+number = "M19"
+name = "audit"
+path = "candleviewer.audit"
+allowed = ["candleviewer.settings", "candleviewer.storage"]
+
+[[module]]
+number = "M20"
+name = "journal"
+path = "candleviewer.journal"
+allowed = ["candleviewer.settings", "candleviewer.storage", "candleviewer.oms"]
+
+[[module]]
+number = "M21"
+name = "admin"
+path = "candleviewer.admin"
+allowed = [
+  "candleviewer.settings",
+  "candleviewer.secrets",
+  "candleviewer.storage",
+  "candleviewer.accounts",
+  "candleviewer.risk",
+  "candleviewer.auth",
+  "candleviewer.audit",
+]
+
+[[module]]
+number = "M22"
+name = "alerts"
+path = "candleviewer.alerts"
+allowed = ["candleviewer.settings", "candleviewer.bus", "candleviewer.rules"]
+
+[[module]]
+number = "M23"
+name = "api"
+path = "candleviewer.api"
+# §3: "all modules' public interfaces" — represented as the full module list
+# rather than a wildcard so import-linter's forbidden/independence contracts
+# stay decidable; also includes ws (M23's own second path root).
+allowed = [
+  "candleviewer.settings",
+  "candleviewer.secrets",
+  "candleviewer.exchange.base",
+  "candleviewer.exchange.bybit",
+  "candleviewer.bus",
+  "candleviewer.ingestion",
+  "candleviewer.book",
+  "candleviewer.bars",
+  "candleviewer.orderflow",
+  "candleviewer.storage",
+  "candleviewer.recorder",
+  "candleviewer.replay",
+  "candleviewer.accounts",
+  "candleviewer.oms",
+  "candleviewer.rules",
+  "candleviewer.paper",
+  "candleviewer.risk",
+  "candleviewer.auth",
+  "candleviewer.audit",
+  "candleviewer.journal",
+  "candleviewer.admin",
+  "candleviewer.alerts",
+  "candleviewer.observability",
+  "candleviewer.ws",
+]
+
+[[module]]
+number = "M23b"
+name = "ws"
+path = "candleviewer.ws"
+allowed = [
+  "candleviewer.settings",
+  "candleviewer.secrets",
+  "candleviewer.exchange.base",
+  "candleviewer.exchange.bybit",
+  "candleviewer.bus",
+  "candleviewer.ingestion",
+  "candleviewer.book",
+  "candleviewer.bars",
+  "candleviewer.orderflow",
+  "candleviewer.storage",
+  "candleviewer.recorder",
+  "candleviewer.replay",
+  "candleviewer.accounts",
+  "candleviewer.oms",
+  "candleviewer.rules",
+  "candleviewer.paper",
+  "candleviewer.risk",
+  "candleviewer.auth",
+  "candleviewer.audit",
+  "candleviewer.journal",
+  "candleviewer.admin",
+  "candleviewer.alerts",
+  "candleviewer.observability",
+]
+
+[[module]]
+number = "M24"
+name = "observability"
+path = "candleviewer.observability"
+allowed = ["candleviewer.settings"]
+
+# Cross-cutting forbidden-import rules (C-3.2, C-3.3) not expressible as a
+# simple per-module `allowed` list, because they restrict *who may import
+# this module* rather than *what this module may import*.
+[cross_cutting]
+
+[cross_cutting.secrets_importers]
+# C-3.2: M2 (secrets) is importable only by M4 (exchange.bybit) and M21
+# (admin, metadata only).
+rule = "C-3.2"
+module = "candleviewer.secrets"
+only_importable_by = ["candleviewer.exchange.bybit", "candleviewer.admin"]
+
+[cross_cutting.audit_read_importers]
+# C-3.3: M19 (audit) is write-only for every module except M21 (admin) and
+# M23 (api) read paths.
+rule = "C-3.3"
+module = "candleviewer.audit"
+only_importable_by = ["candleviewer.admin", "candleviewer.api", "candleviewer.ws"]
+
+[cross_cutting.storage_driver_imports]
+# ADR-0003 / E07-T01 acceptance criterion 2: "all storage access goes
+# through repository interfaces in candleviewer.storage (M10). No module
+# issues SQL or ILP directly." Every module other than M10 itself (and the
+# non-Python `backend.db.*` layout referenced by the ticket, which does not
+# exist yet) is forbidden from importing any of the underlying storage
+# engine driver packages directly.
+rule = "ADR-0003"
+forbidden_packages = ["asyncpg", "psycopg", "sqlalchemy", "duckdb", "pyarrow", "questdb"]
+exempt_modules = ["candleviewer.storage"]
+
+# Frontend module boundaries (§3 "Frontend module boundaries" table).
+# dependency-cruiser (`.dependency-cruiser.js`) reads this table; there is no
+# frontend import-linter equivalent, so this section is descriptive only —
+# the `.dependency-cruiser.js` rules are the enforcement mechanism and must
+# be kept in sync by hand (checked by the same drift test's frontend half).
+[[frontend_package]]
+name = "packages/chart-engine"
+rule = "C-2.16"
+forbidden_deps = ["react", "react-dom"]
+forbidden_identifiers = ["fetch", "XMLHttpRequest", "bybit"]
+
+[[frontend_package]]
+name = "packages/protocol"
+forbidden_deps = ["packages/ui", "apps/*"]
+
+[[frontend_package]]
+name = "packages/ui"
+allowed_deps = ["packages/protocol", "packages/chart-engine"]
+
+[[frontend_package]]
+name = "apps/web"
+allowed_deps = ["packages/*"]
+forbidden_deps = ["apps/desktop"]
+
+[[frontend_package]]
+name = "apps/desktop"
+rule = "no business logic — windows, GPU flags, updater, deep links only"
+forbidden_deps = ["apps/web"]

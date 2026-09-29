@@ -1,0 +1,69 @@
+# Accepted-risk register (E03-T07).
+#
+# Every entry documents a *time-boxed* exception to an otherwise-blocking
+# finding from the security lane (`.github/workflows/_job-security.yml`,
+# `tools/ci/security_gate.py`). An accepted risk without an `expires` date is
+# not accepted — it is forgotten — so `expires` is mandatory and enforced:
+# `security_gate.py` fails the build with CI-SEC-004 ("accepted risk expired")
+# the moment `expires` is on or before the run date, even though the entry
+# still exists in this file.
+#
+# Schema per entry (all fields required unless noted):
+#   id:        str   — the tool's own finding id (GHSA-...., CVE-...., a
+#                       CodeQL/Semgrep rule id + location hash, a licence
+#                       exception key "license:<package>@<version>", etc.)
+#                       Must match exactly what the normalised tool output in
+#                       security_gate.py reports as `finding_id`.
+#   tool:      str   — one of: codeql, semgrep, bandit, pip-audit, npm-audit,
+#                       gitleaks, license-scan, trivy
+#   severity:  str   — CRITICAL | HIGH | MEDIUM | LOW (informational only;
+#                       does not override the tool's own reported severity)
+#   reason:    str   — why this is accepted now (not "will fix later")
+#   approver:  str   — GitHub handle; MUST be security or the owner per
+#                       SR-135/SR-136 approval rule (CI-SEC-003 licence path)
+#   expires:   str   — ISO 8601 date (YYYY-MM-DD). Exclusive: the entry stops
+#                       protecting on this date (fails from `expires` onward).
+#   ticket:    str, optional — tracking issue for the real fix
+#
+# gitleaks findings and Critical severity CANNOT be accepted here (§12.1: any
+# gitleaks finding blocks unconditionally; Critical is never exception-able
+# per the R0 threshold in 30-release-roadmap.md §4.4) — security_gate.py
+# rejects any entry with tool: gitleaks or severity: CRITICAL at load time.
+
+entries:
+  # psycopg 3 (PostgreSQL driver) is LGPL-3.0 — used as an unmodified,
+  # dynamically-linked library from a self-hosted service that is never
+  # distributed to third parties; LGPL obligations (source of the library on
+  # request) are trivially met and no CandleViewer code is derived from it.
+  # SR-136 still requires an explicit security + owner acceptance for LGPL;
+  # the owner delegated Sprint-01 acceptances to the orchestrator (2026-09-25).
+  - id: "license:psycopg@3.3.6"
+    tool: license-scan
+    severity: LOW
+    reason: "LGPL-3.0 DB driver, dynamically linked, unmodified, not redistributed; SR-136 LGPL path"
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "https://github.com/basiltt/CandleViewer/issues/108"
+  - id: "license:psycopg-binary@3.3.6"
+    tool: license-scan
+    severity: LOW
+    reason: "LGPL-3.0 DB driver (binary wheel of psycopg), same basis as psycopg"
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "https://github.com/basiltt/CandleViewer/issues/108"
+  # E07-T02 bootstrap-owner migration (0002_rbac_seed) prints a one-time
+  # random password to stdout only, gated behind two operator-set env vars
+  # (CV_BOOTSTRAP_OWNER_EMAIL and CV_BOOTSTRAP_OWNER_CONFIRM=1) so a routine
+  # `alembic upgrade head` never emits it; the first login forces a password
+  # change and MFA enrollment (Sec.10.2). CodeQL's clear-text-logging rule
+  # cannot distinguish this gated, intentional operator handoff from an
+  # unconditional secret leak. Sprint-01 owner-delegated acceptance
+  # (2026-09-25); follow-up to replace the print with a structured,
+  # redaction-aware bootstrap channel is out of this ticket's scope.
+  - id: "py/clear-text-logging-sensitive-data:services/api/candleviewer/migrations/versions/0002_rbac_seed.py:146"
+    tool: codeql
+    severity: HIGH
+    reason: "Gated one-time bootstrap-owner password print to stdout only, never a routine-upgrade path; forced change+MFA on first login"
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "https://github.com/basiltt/CandleViewer/issues/1551"

@@ -1,0 +1,3 @@
+unowned file, not in the codeowners-allowlist.txt (self-test fixture for
+GOV-001 — check_codeowners_coverage.py must fail against this tree because
+this path resolves only to the catch-all `*` rule).

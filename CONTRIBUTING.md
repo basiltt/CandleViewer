@@ -57,7 +57,10 @@ Rules that always hold, wherever the list lives:
 - A red required check is never merged. There is no admin merge and no "re-run until green".
 - Checks are never disabled, skipped, marked `continue-on-error`, or removed from branch protection in a
   feature PR. Changing the required-check set is an amendment (Constitution §16).
-- Coverage floors are floors and may never be lowered in the PR that fails them (C-9.4).
+- Coverage floors are floors and may never be lowered in the PR that fails them (C-9.4). Per-package floors,
+  ratchet baselines and tolerance live in `tools/ci/coverage-baselines.json` (CODEOWNER-gated by the QA
+  lead — see `.github/CODEOWNERS`); the `coverage-thresholds` check (`tools/ci/coverage_gate.py`) reads it
+  and fails a PR with a specific `CI-COV-00x` code and reason rather than a bare red X.
 - Run the same gates locally before pushing — see [`AGENTS.md` §4 (Commands)](AGENTS.md#4-commands), which
   is the single source of truth for task/script names.
 
@@ -77,10 +80,10 @@ enforced server-side**.
 ## Local commands
 
 **Single source of truth: [`AGENTS.md` §4 (Commands)](AGENTS.md#4-commands).** Task names are not
-duplicated here. Note that until ticket `INFRA-001` (monorepo scaffolding) is Done, those names are a
-**specification** — the repo currently contains planning documents only and no
-`package.json`/`pyproject.toml`. After INFRA-001, the generated-code required check fails the build if
-`AGENTS.md` §4 and the real scripts disagree.
+duplicated here. The monorepo scaffold (`pnpm-workspace.yaml`, `turbo.json`, `package.json`,
+`services/api/pyproject.toml`) shipped with `E02-T11`, so `AGENTS.md` §4 mirrors the real, runnable
+task graph. The generated-code required check fails the build if `AGENTS.md` §4 and the real scripts
+disagree.
 
 See `AGENTS.md` §4 for the root install/verify command and the backend lint/format/typecheck/test loop.
 
@@ -90,7 +93,69 @@ typecheck). This is a deliberate, code-owned exception to the repo's `ignore-scr
 the comment in `.npmrc` — so it is not run implicitly by `pnpm install`. Hooks are a convenience; the same
 rules are enforced server-side by CI and cannot be weakened by `--no-verify`.
 
-## Design and architecture decisions
+### Generated-code freshness (`packages/protocol`)
+
+`packages/protocol` is regenerated from `docs/plan/22-api-openapi.yaml` and the WS schema in
+`docs/plan/23-ws-protocol.md` (ADR-0013 binding rule 3, ADR-0005). If you touch either source, run
+`make gen` and commit the resulting diff under `packages/protocol` — never hand-edit
+`packages/protocol/src/generated/**`.
+
+The `gen` job (`.github/workflows/_job-gen.yml`) is an always-on required check. If it fails:
+
+1. **`CI-GEN-003` (codegen is not deterministic)** — the generator itself is flaky; this is a bug in
+   `packages/protocol/scripts/*`, not something you can fix by regenerating again. Reproduce locally
+   with `make gen && make gen` and diff the tree; file it against the protocol package before retrying.
+2. **`CI-GEN-001` (drift)** — run `make gen` locally, review the diff under `packages/protocol`, and
+   commit it in the same PR as the schema change.
+3. **`CI-GEN-002` (untracked output)** — `make gen` produced a new file CI can see via `git status` but
+   `git diff` couldn't. Check `.gitignore` hasn't accidentally swallowed a new generated path, then `git
+   add` and commit it.
+4. **`CI-GEN-004` (generator toolchain failure)** — the generator command itself errored (missing
+   dependency, syntax error in the schema, pinned tool version mismatch); the job summary and step log
+   carry the underlying stdout/stderr.
+
+Run the same check locally before pushing: `make gen-check` (wraps
+`tools/ci/check_gen_freshness.py`).
+
+**Reproducing the JS CI lane locally** (E03-T02, `.github/workflows/_job-js.yml`): the lane is exactly
+`pnpm turbo run <task> --filter='...[origin/main]'` for `lint`, `typecheck`, `test:cov` (split into
+`unit-frontend`: `ui`/`web`/`desktop`, and `unit-engine`: `chart-engine`/`protocol`), then `build` — same
+task names as `pnpm verify`, just scoped to what changed since `origin/main` the way CI scopes it. Run
+the whole thing exactly as CI does with:
+
+```sh
+pnpm install --frozen-lockfile --ignore-scripts
+node tools/ci/run-allowed-postinstall.mjs   # SR-138 exception list (electron, esbuild)
+pnpm turbo run lint typecheck test:cov build --filter='...[origin/main]'
+```
+
+CI reads `TURBO_API`/`TURBO_TEAM` (repository variables) and, on `main`-branch runs only, a write-scoped
+`TURBO_TOKEN` secret for the Turborepo remote cache (ADR-0013 rule 6); PR runs and local runs without
+those variables set simply fall back to Turborepo's local cache.
+
+### Governance regression pack (`GOV-00n` codes)
+
+The `governance` required check (`.github/workflows/governance.yml`, E01-Q02) runs a fixed pack of
+checkers, each emitting a stable `GOV-00n` code so CI history stays greppable. Reproduce any of them
+locally with `python scripts/<checker>.py` (or `python docs/plan/backlog/_tools/validate.py` for the
+backlog report tool); fix instructions live in the tool's own `--help` and its emitted message.
+
+| Code | Checker | What it means |
+|---|---|---|
+| `GOV-001` | `scripts/check_codeowners_coverage.py` | A tracked path resolves only to the CODEOWNERS catch-all `*`, a rule matches no tracked path, or a rule names an undeclared owner. |
+| `GOV-002` | `scripts/check_rule_refs.py` | A `C-x.y` rule reference doesn't resolve to a declaration in `CONSTITUTION.md`. Run with `--fix-suggest` for nearest-id suggestions. |
+| `GOV-003` | `scripts/check_sot_duplication.py` | A `C-16.5`-owned list has been restated outside its owner file/section (`scripts/sot-registry.json`). Delete the copy and link to the owner, or add an isolated-mention entry to `scripts/sot-allowlist.txt`. |
+| `GOV-004` | `scripts/check_issue_forms.py`, `scripts/validate-backlog.py`, `docs/plan/backlog/_tools/validate.py` | An issue form is structurally broken, or a backlog ticket JSON fails schema/cross-file validation (dependency cycles, parent chains, sprint ordering, secret-pattern scan). |
+| `GOV-005` | `scripts/check_required_check_reconciliation.py` | `.github/branch-protection.json` and `CONSTITUTION.md` §9 (and, once populated, the workflow job names) disagree on required-check names. |
+
+The job also runs a **canary self-test** (`python scripts/gov_self_test.py --self-test`) that replays
+every checker above against a deliberately-broken fixture tree under
+`scripts/tests/fixtures/self_test/` and asserts each one fails — the guard against a green `governance`
+check that has silently stopped checking anything — and a **coverage gate** (`pytest --cov=scripts
+--cov-fail-under=85`) over all of `scripts/**`. Job duration is measured against a 60s budget and
+recorded as a `::notice`/`::error` annotation on every run.
+
+
 
 Sprints are **1 week** (Fri→Thu; Sprint 01 = 2026-09-25; calendar in `docs/plan/backlog/_tools/calendar_cv.py`). Design runs at least two sprints ahead of engineering; no frontend screen work starts before its design
 ticket is Done. Architectural decisions are recorded as MADR ADRs in `docs/adr/` and must be proposed

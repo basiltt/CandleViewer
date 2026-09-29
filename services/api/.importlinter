@@ -1,0 +1,982 @@
+# GENERATED FILE — do not hand-edit.
+#
+# Regenerate with: python scripts/gen_importlinter_contracts.py
+# Source of truth: docs/plan/module-contracts.toml (itself a mirror of
+# CONSTITUTION.md §3 — see that file's header for the drift-prevention
+# contract between the three). This wires C-3.1 (one-way dependencies, no
+# cycles), C-3.2 (secrets), C-3.3 (audit) and §9 #18 (architecture gate).
+
+[importlinter]
+root_package = candleviewer
+include_external_packages = True
+exclude_type_checking_imports = True
+
+
+[importlinter:contract:forbidden-M1]
+name = M1 (config) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.settings
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.bus
+    candleviewer.exchange.base
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.rules
+    candleviewer.secrets
+    candleviewer.storage
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M2]
+name = M2 (secrets) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.secrets
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.bus
+    candleviewer.exchange.base
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.rules
+    candleviewer.storage
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M3]
+name = M3 (exchange.base) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.exchange.base
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.bus
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.rules
+    candleviewer.secrets
+    candleviewer.storage
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M4]
+name = M4 (exchange.bybit) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.exchange.bybit
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.bus
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.rules
+    candleviewer.storage
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M5]
+name = M5 (bus) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.bus
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.exchange.base
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.rules
+    candleviewer.secrets
+    candleviewer.storage
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M6]
+name = M6 (ingestion) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.ingestion
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.rules
+    candleviewer.secrets
+    candleviewer.storage
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M7]
+name = M7 (book) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.book
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.bars
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.rules
+    candleviewer.secrets
+    candleviewer.storage
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M8]
+name = M8 (bars) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.bars
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.book
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.rules
+    candleviewer.secrets
+    candleviewer.storage
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M9]
+name = M9 (orderflow) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.orderflow
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.rules
+    candleviewer.secrets
+    candleviewer.storage
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M10]
+name = M10 (storage) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.storage
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.bus
+    candleviewer.exchange.base
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.rules
+    candleviewer.secrets
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M11]
+name = M11 (recorder) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.recorder
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.exchange.base
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.rules
+    candleviewer.secrets
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M12]
+name = M12 (replay) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.replay
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.book
+    candleviewer.exchange.base
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.risk
+    candleviewer.rules
+    candleviewer.secrets
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M13]
+name = M13 (accounts) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.accounts
+forbidden_modules =
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.bus
+    candleviewer.exchange.base
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.rules
+    candleviewer.secrets
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M14]
+name = M14 (oms) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.oms
+forbidden_modules =
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.rules
+    candleviewer.secrets
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M15]
+name = M15 (rules) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.rules
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.exchange.base
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.secrets
+    candleviewer.storage
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M16]
+name = M16 (paper) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.paper
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.orderflow
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.rules
+    candleviewer.secrets
+    candleviewer.storage
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M17]
+name = M17 (risk) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.risk
+forbidden_modules =
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.exchange.base
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.rules
+    candleviewer.secrets
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M18]
+name = M18 (auth) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.auth
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.bus
+    candleviewer.exchange.base
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.rules
+    candleviewer.secrets
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M19]
+name = M19 (audit) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.audit
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.auth
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.bus
+    candleviewer.exchange.base
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.rules
+    candleviewer.secrets
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M20]
+name = M20 (journal) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.journal
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.bus
+    candleviewer.exchange.base
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.rules
+    candleviewer.secrets
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M21]
+name = M21 (admin) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.admin
+forbidden_modules =
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.bus
+    candleviewer.exchange.base
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.rules
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M22]
+name = M22 (alerts) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.alerts
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.exchange.base
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.secrets
+    candleviewer.storage
+    candleviewer.ws
+
+[importlinter:contract:forbidden-M23b]
+name = M23b (ws) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.ws
+forbidden_modules =
+    candleviewer.api
+
+[importlinter:contract:forbidden-M24]
+name = M24 (observability) may only import its §3 allowed list
+type = forbidden
+source_modules =
+    candleviewer.observability
+forbidden_modules =
+    candleviewer.accounts
+    candleviewer.admin
+    candleviewer.alerts
+    candleviewer.api
+    candleviewer.audit
+    candleviewer.auth
+    candleviewer.bars
+    candleviewer.book
+    candleviewer.bus
+    candleviewer.exchange.base
+    candleviewer.exchange.bybit
+    candleviewer.ingestion
+    candleviewer.journal
+    candleviewer.oms
+    candleviewer.orderflow
+    candleviewer.paper
+    candleviewer.recorder
+    candleviewer.replay
+    candleviewer.risk
+    candleviewer.rules
+    candleviewer.secrets
+    candleviewer.storage
+    candleviewer.ws
+
+[importlinter:contract:protected-secrets]
+name = C-3.2 — secrets is importable only by its allow-list
+type = protected
+protected_modules =
+    candleviewer.secrets
+allowed_importers =
+    candleviewer.exchange.bybit
+    candleviewer.admin
+
+[importlinter:contract:protected-audit]
+name = C-3.3 — audit is write-only except its read-path allow-list
+type = protected
+protected_modules =
+    candleviewer.audit
+allowed_importers =
+    candleviewer.admin
+    candleviewer.api
+    candleviewer.ws
+
+[importlinter:contract:independence-oms-siblings]
+name = C-3.1 rules/paper/risk are independent siblings of oms (no cross-imports)
+type = independence
+modules =
+    candleviewer.rules
+    candleviewer.paper
+    candleviewer.risk
+
+[importlinter:contract:forbidden-storage-drivers-M1]
+name = ADR-0003 — M1 (config) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.settings
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M2]
+name = ADR-0003 — M2 (secrets) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.secrets
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M3]
+name = ADR-0003 — M3 (exchange.base) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.exchange.base
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M4]
+name = ADR-0003 — M4 (exchange.bybit) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.exchange.bybit
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M5]
+name = ADR-0003 — M5 (bus) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.bus
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M6]
+name = ADR-0003 — M6 (ingestion) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.ingestion
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M7]
+name = ADR-0003 — M7 (book) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.book
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M8]
+name = ADR-0003 — M8 (bars) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.bars
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M9]
+name = ADR-0003 — M9 (orderflow) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.orderflow
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M11]
+name = ADR-0003 — M11 (recorder) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.recorder
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M12]
+name = ADR-0003 — M12 (replay) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.replay
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M13]
+name = ADR-0003 — M13 (accounts) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.accounts
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M14]
+name = ADR-0003 — M14 (oms) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.oms
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M15]
+name = ADR-0003 — M15 (rules) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.rules
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M16]
+name = ADR-0003 — M16 (paper) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.paper
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M17]
+name = ADR-0003 — M17 (risk) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.risk
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M18]
+name = ADR-0003 — M18 (auth) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.auth
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M19]
+name = ADR-0003 — M19 (audit) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.audit
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M20]
+name = ADR-0003 — M20 (journal) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.journal
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M21]
+name = ADR-0003 — M21 (admin) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.admin
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M22]
+name = ADR-0003 — M22 (alerts) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.alerts
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M23]
+name = ADR-0003 — M23 (api) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.api
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M23b]
+name = ADR-0003 — M23b (ws) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.ws
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+
+[importlinter:contract:forbidden-storage-drivers-M24]
+name = ADR-0003 — M24 (observability) may not import a storage driver directly
+type = forbidden
+source_modules =
+    candleviewer.observability
+forbidden_modules =
+    asyncpg
+    psycopg
+    sqlalchemy
+    duckdb
+    pyarrow
+    questdb
+

@@ -31,6 +31,7 @@
 /AGENTS.md                              @basiltt @CandleViewer/architecture
 /CLAUDE.md                              @basiltt @CandleViewer/architecture
 /SECURITY.md                            @basiltt @CandleViewer/security
+/security/                              @CandleViewer/devsecops @CandleViewer/security
 /CONTRIBUTING.md                        @basiltt @CandleViewer/architecture
 /CODE_OF_CONDUCT.md                     @basiltt
 /LICENSE                                @basiltt
@@ -74,17 +75,29 @@
 # future: E02/later scaffolding; directory does not exist yet.
 /tsconfig.base.json                     @CandleViewer/frontend @CandleViewer/architecture
 # future: E02/later scaffolding; directory does not exist yet.
+/quality-gates.json                     @CandleViewer/devsecops @CandleViewer/architecture
+# future: E02/later scaffolding; directory does not exist yet.
+/reports/bundle-size-baseline.json      @CandleViewer/devsecops @CandleViewer/frontend
 /eslint.config.mjs                      @CandleViewer/frontend @CandleViewer/devsecops
+/.dependency-cruiser.js                 @CandleViewer/frontend @CandleViewer/architecture
 # future: E02/later scaffolding; directory does not exist yet.
 /.prettierrc.json                       @CandleViewer/frontend
 /prettier.config.mjs                    @CandleViewer/frontend
+/.prettierignore                        @CandleViewer/frontend
+/.pa11yci.json                          @CandleViewer/frontend @CandleViewer/devsecops
 /tsconfig.json                          @CandleViewer/frontend @CandleViewer/architecture
 /.npmrc                                 @CandleViewer/devsecops
 /.nvmrc                                 @CandleViewer/devsecops
 /.husky/                                @CandleViewer/devsecops @CandleViewer/frontend
 /.editorconfig                          @CandleViewer/devsecops
+/.gitleaks.toml                         @CandleViewer/security @CandleViewer/devsecops
+/.semgrep/                              @CandleViewer/security @CandleViewer/devsecops
 /Makefile                               @CandleViewer/devsecops @CandleViewer/architecture
 /scripts/                               @CandleViewer/devsecops @CandleViewer/architecture
+/tools/                                 @CandleViewer/devsecops @CandleViewer/security
+# E03-T04: coverage floors/baselines/tolerance policy — QA lead is CODEOWNER
+# (must approve any edit, including a baseline lowering, to this file).
+/tools/ci/coverage-baselines.json       @CandleViewer/qa @CandleViewer/devsecops
 # future: E02/later scaffolding; directory does not exist yet.
 /commitlint.config.*                    @CandleViewer/devsecops
 
@@ -208,6 +221,11 @@
 /tests/chaos/                           @CandleViewer/qa @CandleViewer/backend
 # future: E02/later scaffolding; directory does not exist yet.
 /tests/fixtures/                        @CandleViewer/qa @CandleViewer/backend @CandleViewer/security
+
+# ---------------------------------------------------------------------------
+# Spikes (docs/plan/01-sdlc-and-branching.md C-4.5 — written finding + deleted branch)
+# ---------------------------------------------------------------------------
+/spikes/                                @CandleViewer/backend @CandleViewer/architecture
 
 # ---------------------------------------------------------------------------
 # Governance / repo tooling scripts (GOV-00n checkers and their tests)

@@ -47,8 +47,8 @@ is not met, **stop and comment on the issue** listing exactly what is missing.
 ## 3. Repo map
 
 Planned monorepo layout (authoritative: `docs/plan/20-architecture.md` §5; annotated in `AGENTS.md` §2).
-**Today only the ✅ items exist** — everything else is created by its owning ticket (scaffolding:
-`INFRA-001`). Do not create a top-level directory your ticket does not own.
+**Today only the ✅ items exist** — everything else is created by its owning ticket (scaffolding shipped
+via `E02-T11`). Do not create a top-level directory your ticket does not own.
 
 ```text
 CandleViewer/
@@ -172,8 +172,9 @@ Full flow: `AGENTS.md` §3 (flowchart) and `docs/plan/01-sdlc-and-branching.md` 
 ## 8. Commands
 
 Command names are owned solely by `AGENTS.md` §4 (C-16.5) — read that table there; this file does not
-mirror it, to avoid drift. Until `INFRA-001` is Done, treat `AGENTS.md` §4 as a specification, not
-verified scripts: if a command doesn't exist yet, say so in the PR — never invent an alternative.
+mirror it, to avoid drift. The monorepo scaffold shipped with `E02-T11`, so `AGENTS.md` §4 mirrors the
+real, runnable task graph (drift is caught by the `generated-code` required check). If a command doesn't
+exist yet because its epic hasn't landed, say so in the PR — never invent an alternative.
 
 ## 9. Testing, security, and the NEVER list
 

@@ -30,6 +30,7 @@ The web app needs a desktop wrapper for window management, workspace persistence
 ### Decision criteria (binding, applied at the deadline)
 
 Tauri is adopted **only if all** of the following hold in the M0 report:
+
 1. p95 frame time for B5 in WebView2 is within **10 %** of Electron on the same machine.
 2. No frame-time outliers above 33 ms during a 30-minute heatmap soak (B10) that are absent under Electron.
 3. `texSubImage2D` streaming at 10 Hz shows no progressive degradation over 30 minutes.
@@ -41,11 +42,13 @@ If any criterion fails, **Electron is confirmed** and this ADR moves to `decided
 ### Interim consequences
 
 Positive:
+
 - Chromium is pinned, so GPU behaviour is reproducible across machines and across time — the property the chart engine's benchmarks depend on.
 - Mature tooling: `electron-builder`, code signing, Playwright's Electron driver, crash reporting.
 - The engine's `RenderProfile` probe and `degraded-2d` fallback already handle capability variance, so a later switch is not a cliff.
 
 Negative / risks:
+
 - Resident memory is roughly 100–150 MB higher than Tauri, on a machine already running the full backend stack. Accepted; measured in M0 and reported.
 - Electron's security posture requires deliberate hardening: `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`, strict CSP, an allow-list preload, navigation and `window.open` blocked, and signed auto-updates. These are mandatory checklist items in `04-security-program.md`, not defaults.
 - Larger installers and a Chromium update treadmill (security patches must be tracked and shipped).
@@ -59,3 +62,15 @@ Negative / risks:
 
 - M0 benchmark report covering all five criteria above, published in `docs/plan/` and linked from this ADR.
 - Whichever shell wins runs the full E2E suite in CI on every release.
+
+### E10-K01 addendum — criterion-5 evidence (ShellPort spike, 2026-09-29)
+
+`docs/plan/spikes/E10-K01.md` records the shell-responsibility (criterion 5) column that M0 (E06-K01/K02,
+merged) did not address: a typed `ShellPort` interface (`apps/web/src/shell/ShellPort.ts`) covering every
+responsibility in criterion 5, an `ElectronShellAdapter` proving the preload bridge needs no generic IPC
+escape hatch (SR-111), and a `BrowserShellAdapter` proving honest capability degradation (US-SET-009). Of
+the eight responsibilities, six (window persistence, keychain, auto-update, deep links, tray, OS
+notifications) have a close-to-direct Tauri v2 equivalent; two (GPU flag control, Playwright-driver
+maturity) would need real redesign under Tauri. This is evidence only — it does not decide criteria 1–4
+(frame-time parity), which remain gated on the M0 report content. The interim decision (Electron is the
+default) is unchanged.

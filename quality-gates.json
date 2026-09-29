@@ -1,0 +1,16 @@
+{
+  "_comment": "E02-T10: single declared source for the per-package quality-gate thresholds that CONSTITUTION.md §9 (#3, #4, #5, #15) requires. Values here MUST match the thresholds actually enforced in each package's own config (vitest coverage.thresholds, services/api/pyproject.toml --cov-fail-under, apps/web's size-limit budget) -- this file is a mirror for the drift/threshold-guard tooling (tools/ci/quality_gates.py), not a second place that configures anything. C-9.4: these are floors and may only be RAISED without an amendment; lowering a value needs an \"amendment\" key on that entry naming the CONSTITUTION.md amendment that authorised it.",
+  "coverage": {
+    "services/api": { "lines": 85.0, "branches": 75.0 },
+    "packages/chart-engine": { "lines": 85.0, "branches": 75.0 },
+    "packages/protocol": { "lines": 80.0, "branches": 70.0 },
+    "packages/ui": { "lines": 80.0, "branches": 70.0 },
+    "packages/fixtures": { "lines": 80.0, "branches": 70.0 },
+    "packages/config": { "lines": 80.0, "branches": 70.0 },
+    "apps/web": { "lines": 80.0, "branches": 70.0 },
+    "apps/desktop": { "lines": 80.0, "branches": 70.0 }
+  },
+  "bundleSize": {
+    "apps/web": { "limitBytes": 8388608, "gzip": true, "regressionPct": 5.0 }
+  }
+}

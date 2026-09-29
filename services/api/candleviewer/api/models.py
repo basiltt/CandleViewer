@@ -1,0 +1,41 @@
+"""Response models for the api module (M23)."""
+
+from __future__ import annotations
+
+from pydantic import BaseModel, ConfigDict
+
+
+class BuildInfo(BaseModel):
+    """Build/version metadata returned by health probes.
+
+    Deliberately minimal (C-2.9 / security notes in E02-T05): no datastore
+    versions or internal hostnames are exposed to an unauthenticated caller.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    git_sha: str
+    version: str
+    environment: str
+
+
+class ReadyCheck(BaseModel):
+    """A single named readiness sub-check (filled in by E04)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    name: str
+    ok: bool
+
+
+class LivenessResponse(BuildInfo):
+    """`GET /healthz` response body."""
+
+    status: str = "ok"
+
+
+class ReadinessResponse(BuildInfo):
+    """`GET /readyz` response body."""
+
+    status: str = "ok"
+    checks: list[ReadyCheck] = []

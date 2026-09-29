@@ -1,0 +1,418 @@
+name: pr
+
+# E03-T01: entry-point workflow for every pull request into `main`.
+# ADR-0013-ci-pipeline.md binding rules 1, 2, 5, 6, 7. This workflow only
+# computes the change-path filters, wires the always-on jobs (commitlint,
+# licence-header, docs-link), calls the (still-stub) reusable per-lane
+# workflows, and resolves the final `ci-required` conclusion. Lane *contents*
+# are out of scope here (T02 js, T03 py, T06 contract, T07 security,
+# T14 engine-bench) — each reusable workflow below is a `workflow_call` stub
+# until its owning ticket fills it in.
+#
+# CV-ERR codes surfaced by the resolver: CI-GATE-001 (applicable lane not
+# successful), CI-GATE-002 (gate misconfiguration: applicable lane skipped),
+# CI-GATE-003 (unpinned action / pull_request_target — tools/ci/check_action_pins.py).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.head_ref }}
+  cancel-in-progress: true
+
+env:
+  CV_CI_TIMEOUT_MINUTES: ${{ vars.CV_CI_TIMEOUT_MINUTES || 20 }}
+
+jobs:
+  changed-paths:
+    name: changed-paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      js: ${{ steps.filter.outputs.js }}
+      py: ${{ steps.filter.outputs.py }}
+      engine: ${{ steps.filter.outputs.engine }}
+      protocol: ${{ steps.filter.outputs.protocol }}
+      infra: ${{ steps.filter.outputs.infra }}
+      image: ${{ steps.filter.outputs.image }}
+      docs: ${{ steps.filter.outputs.docs }}
+      e2e: ${{ steps.filter.outputs.e2e }}
+      migrations: ${{ steps.filter.outputs.migrations }}
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          filters: |
+            js:
+              - 'apps/web/**'
+              - 'apps/desktop/**'
+              - 'packages/ui/**'
+              - 'packages/config/**'
+              - 'packages/fixtures/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+            py:
+              - 'services/api/**'
+              - 'tools/ci/**'
+              - 'scripts/**/*.py'
+            engine:
+              - 'packages/chart-engine/**'
+            protocol:
+              - 'packages/protocol/**'
+              - 'docs/plan/22-api-openapi.yaml'
+              - 'docs/plan/23-ws-protocol.md'
+            infra:
+              - 'infra/**'
+              - '.github/workflows/**'
+              - 'docker-compose*.yml'
+              - 'Dockerfile*'
+            image:
+              - 'infra/images/**'
+              - 'services/api/pyproject.toml'
+              - 'services/api/uv.lock'
+              - '.github/workflows/_job-security.yml'
+            docs:
+              - 'docs/**'
+              - '**/*.md'
+            e2e:
+              - 'apps/web/**'
+              - 'apps/desktop/**'
+              - 'packages/chart-engine/**'
+              - 'packages/protocol/**'
+            migrations:
+              - 'services/api/candleviewer/migrations/versions/**'
+
+  pin-check:
+    name: pin-check (SR-132)
+    needs: changed-paths
+    if: ${{ needs.changed-paths.outputs.infra == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.13"
+      - name: Check action pins and pull_request_target (CI-GATE-003)
+        run: python tools/ci/check_action_pins.py .github/workflows
+
+  spike-containment:
+    name: spike-containment
+    # E06-X02: always-on, unconditional on path filters — a spike-only path
+    # reaching a PR must fail regardless of which `changed-paths` filter it
+    # happens to trip (CI-SPIKE-001/002). Deliberately crude per the ticket's
+    # own "Technical notes": a path-existence assertion plus a static import
+    # scan, not a policy engine.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.13"
+      - name: Enforce spike/throwaway-code containment (E06-X02)
+        run: python tools/ci/check_spike_containment.py --root .
+
+  # --- Always-on jobs (ADR-0013 pipeline shape "[always]") ------------------
+
+  commitlint:
+    name: commitlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: "20"
+      - name: Enable pnpm via corepack
+        run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+      - name: Install commitlint (pinned via lockfile)
+        run: pnpm install --frozen-lockfile --filter . --prod=false
+      - name: Lint PR commits against Conventional Commits (01-sdlc-and-branching.md §6)
+        run: pnpm exec commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
+
+  licence-header:
+    name: licence-header
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.13"
+      - name: Verify SPDX/licence headers where required
+        run: python scripts/check_licence_headers.py
+
+  docs-link-check:
+    name: docs-link-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.13"
+      - name: Rule-reference and internal link check (GOV-002)
+        run: python scripts/check_rule_refs.py
+
+  gen:
+    name: gen
+    # E03-T05: generated-code freshness gate is always-on (ADR-0013 rule 3) —
+    # the contract sources can change from any lane, not just `protocol`.
+    uses: ./.github/workflows/_job-gen.yml
+
+  # --- Path-filtered lanes ---------------------------------------------------
+  # Each callee is a `workflow_call` stub in this Task (echoes a placeholder
+  # conclusion); its owning ticket replaces the body without changing this
+  # call site or its `if:` condition. `secrets: inherit` is intentionally
+  # omitted (ADR-0013 rule 6): PR workflows receive no secrets.
+
+  js:
+    name: js
+    needs: changed-paths
+    if: ${{ needs.changed-paths.outputs.js == 'true' }}
+    uses: ./.github/workflows/_job-js.yml
+
+  py:
+    name: py
+    needs: changed-paths
+    if: ${{ needs.changed-paths.outputs.py == 'true' }}
+    uses: ./.github/workflows/_job-py.yml
+
+  # `_job-py.yml`'s internal `architecture` job (import-linter, ADR-0004)
+  # cannot itself be `needs:`-ed from the caller because reusable-workflow
+  # jobs aren't addressable individually — but `py`'s conclusion already
+  # reflects it (the architecture-contract step runs inside that job and
+  # fails it on a violation). No separate top-level job is added here; the
+  # `architecture` required-check name is the job of that name inside
+  # `_job-py.yml`, visible in the PR checks list once GitHub Actions exposes
+  # reusable-workflow job names ("_job-py / architecture").
+
+  xstate-pin-attestation:
+    name: xstate-pin-attestation
+    # E50-T57: verify the xstate-statemachine==0.9.1 pin is exact and
+    # hash-locked (tools/ci/check_pin.py), then re-download the pinned
+    # wheel, re-check its sha256, and verify its PEP 740 publish
+    # attestation against the upstream GitHub repository. A tampered
+    # wheel or missing/mismatched provenance fails this job.
+    needs: changed-paths
+    if: ${{ needs.changed-paths.outputs.py == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: none
+    env:
+      XSTATE_VERSION: "0.9.1"
+      XSTATE_WHEEL: "xstate_statemachine-0.9.1-py3-none-any.whl"
+      XSTATE_WHEEL_SHA256: "d832d4d9a17b7b8003f61fa0714a8e57eaff316bcd5dd699d81d410362687162"
+      XSTATE_REPO: "basiltt/xstate-statemachine"
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.13"
+
+      - name: Check pin is exact and hash-locked (bans ~=, >=, drift)
+        run: python tools/ci/check_pin.py --root .
+
+      - name: Download pinned wheel from PyPI
+        run: |
+          set -euo pipefail
+          python -m pip download --no-deps \
+            "xstate-statemachine==${XSTATE_VERSION}" \
+            -d /tmp/xstate-pin
+
+      - name: Verify wheel sha256 matches the pin (fails closed on tamper)
+        run: |
+          set -euo pipefail
+          cd /tmp/xstate-pin
+          echo "${XSTATE_WHEEL_SHA256}  ${XSTATE_WHEEL}" > expected.sha256
+          sha256sum -c expected.sha256
+
+      - name: Verify PEP 740 publish attestation (primary)
+        id: attest_primary
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet pypi-attestations
+          python -m pypi_attestations verify pypi \
+            --repository "https://github.com/${XSTATE_REPO}" \
+            "pypi:${XSTATE_WHEEL}"
+
+      - name: Verify PEP 740 publish attestation (fallback - gh attestation)
+        if: steps.attest_primary.outcome != 'success'
+        run: |
+          set -euo pipefail
+          gh attestation verify "/tmp/xstate-pin/${XSTATE_WHEEL}" --repo "${XSTATE_REPO}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  contract:
+    name: contract
+    needs: changed-paths
+    if: ${{ needs.changed-paths.outputs.protocol == 'true' }}
+    uses: ./.github/workflows/_job-contract.yml
+
+  integration:
+    name: integration
+    needs: changed-paths
+    # Integration exercises services/api's fixture-driven pipeline + OMS suite;
+    # applicable whenever backend code, tooling or fixtures change.
+    if: ${{ needs.changed-paths.outputs.py == 'true' }}
+    uses: ./.github/workflows/_job-integration.yml
+
+  security:
+    name: security
+    needs: changed-paths
+    # Security scanning applies to any code/infra change, not just one lane.
+    if: ${{ needs.changed-paths.outputs.js == 'true' || needs.changed-paths.outputs.py == 'true' || needs.changed-paths.outputs.infra == 'true' }}
+    with:
+      image_changed: ${{ needs.changed-paths.outputs.image == 'true' }}
+    # A called reusable workflow may only use permissions its caller job grants.
+    # _job-security.yml uploads SARIF (security-events: write); granting it here
+    # keeps the workflow-level default at contents: read for every other lane.
+    permissions:
+      contents: read
+      security-events: write
+    uses: ./.github/workflows/_job-security.yml
+
+  e2e:
+    name: e2e
+    needs: changed-paths
+    if: ${{ needs.changed-paths.outputs.e2e == 'true' }}
+    uses: ./.github/workflows/_job-e2e.yml
+
+  engine-bench:
+    name: engine-bench
+    needs: changed-paths
+    if: ${{ needs.changed-paths.outputs.engine == 'true' }}
+    uses: ./.github/workflows/_job-engine-bench.yml
+
+  coverage-thresholds:
+    name: coverage-thresholds
+    # E03-T04: runs whenever any lane that produces a coverage artifact ran,
+    # so the gate sees every report that could have changed (a py-only PR
+    # still needs its services/api number checked; a js-only PR its
+    # frontend/engine packages).
+    needs: [changed-paths, js, py]
+    if: ${{ always() && (needs.changed-paths.outputs.js == 'true' || needs.changed-paths.outputs.py == 'true') }}
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/_job-coverage.yml
+    with:
+      # Only lanes that actually ran can have produced an artifact; the gate
+      # marks the others N/A instead of failing on a missing report.
+      ran_lanes: ${{ format('{0}{1}', needs.changed-paths.outputs.py == 'true' && 'py,' || '', needs.changed-paths.outputs.js == 'true' && 'js' || '') }}
+
+  # --- Gate resolver (ADR-0013 binding rule 2) -------------------------------
+
+  ci-required:
+    name: ci-required
+    if: always()
+    needs:
+      - changed-paths
+      - pin-check
+      - spike-containment
+      - commitlint
+      - licence-header
+      - docs-link-check
+      - gen
+      - js
+      - py
+      - xstate-pin-attestation
+      - contract
+      - integration
+      - security
+      - e2e
+      - engine-bench
+      - coverage-thresholds
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: "20"
+      - name: Resolve ci-required conclusion
+        env:
+          FILTER_JS: ${{ needs.changed-paths.outputs.js }}
+          FILTER_PY: ${{ needs.changed-paths.outputs.py }}
+          FILTER_PROTOCOL: ${{ needs.changed-paths.outputs.protocol }}
+          FILTER_INFRA: ${{ needs.changed-paths.outputs.infra }}
+          FILTER_E2E: ${{ needs.changed-paths.outputs.e2e }}
+          FILTER_ENGINE: ${{ needs.changed-paths.outputs.engine }}
+          RESULT_CHANGED_PATHS: ${{ needs.changed-paths.result }}
+          RESULT_PIN_CHECK: ${{ needs.pin-check.result }}
+          RESULT_SPIKE_CONTAINMENT: ${{ needs.spike-containment.result }}
+          RESULT_COMMITLINT: ${{ needs.commitlint.result }}
+          RESULT_LICENCE_HEADER: ${{ needs.licence-header.result }}
+          RESULT_DOCS_LINK_CHECK: ${{ needs.docs-link-check.result }}
+          RESULT_GEN: ${{ needs.gen.result }}
+          RESULT_JS: ${{ needs.js.result }}
+          RESULT_PY: ${{ needs.py.result }}
+          RESULT_XSTATE_PIN_ATTESTATION: ${{ needs.xstate-pin-attestation.result }}
+          RESULT_CONTRACT: ${{ needs.contract.result }}
+          RESULT_INTEGRATION: ${{ needs.integration.result }}
+          RESULT_SECURITY: ${{ needs.security.result }}
+          RESULT_E2E: ${{ needs.e2e.result }}
+          RESULT_ENGINE_BENCH: ${{ needs.engine-bench.result }}
+          RESULT_COVERAGE_THRESHOLDS: ${{ needs.coverage-thresholds.result }}
+        run: |
+          node scripts/ci_gate_resolver.mjs "$(node -e '
+            const isTrue = (v) => v === "true";
+            const lanes = {
+              "changed-paths": { applicable: true, result: process.env.RESULT_CHANGED_PATHS },
+              "pin-check": { applicable: isTrue(process.env.FILTER_INFRA), result: process.env.RESULT_PIN_CHECK },
+              "spike-containment": { applicable: true, result: process.env.RESULT_SPIKE_CONTAINMENT },
+              commitlint: { applicable: true, result: process.env.RESULT_COMMITLINT },
+              "licence-header": { applicable: true, result: process.env.RESULT_LICENCE_HEADER },
+              "docs-link-check": { applicable: true, result: process.env.RESULT_DOCS_LINK_CHECK },
+              gen: { applicable: true, result: process.env.RESULT_GEN },
+              js: { applicable: isTrue(process.env.FILTER_JS), result: process.env.RESULT_JS },
+              py: { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_PY },
+              "xstate-pin-attestation": { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_XSTATE_PIN_ATTESTATION },
+              contract: { applicable: isTrue(process.env.FILTER_PROTOCOL), result: process.env.RESULT_CONTRACT },
+              integration: { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_INTEGRATION },
+              security: {
+                applicable: isTrue(process.env.FILTER_JS) || isTrue(process.env.FILTER_PY) || isTrue(process.env.FILTER_INFRA),
+                result: process.env.RESULT_SECURITY,
+              },
+              e2e: { applicable: isTrue(process.env.FILTER_E2E), result: process.env.RESULT_E2E },
+              "engine-bench": { applicable: isTrue(process.env.FILTER_ENGINE), result: process.env.RESULT_ENGINE_BENCH },
+              "coverage-thresholds": {
+                applicable: isTrue(process.env.FILTER_JS) || isTrue(process.env.FILTER_PY),
+                result: process.env.RESULT_COVERAGE_THRESHOLDS,
+              },
+            };
+            console.log(JSON.stringify(lanes));
+          ')"

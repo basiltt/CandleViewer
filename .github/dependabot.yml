@@ -1,0 +1,47 @@
+version: 2
+updates:
+  # SR-132/SR-134: keep pinned GitHub Actions SHAs current. Dependabot opens
+  # a PR bumping `uses: owner/repo@<sha> # vX.Y.Z` to the latest release;
+  # tools/ci/check_action_pins.py still requires the new reference be a full
+  # commit SHA, and .github/actions-pins.md must be updated in the same PR.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "area/infra-devops"
+      - "security"
+    commit-message:
+      prefix: "chore(infra-devops)"
+
+  # E03-T07: SCA coverage (CONSTITUTION §9 #11) for pip, npm and Docker base
+  # images, mirroring the pip-audit / npm-audit / trivy CI jobs above.
+  - package-ecosystem: "pip"
+    directory: "/services/api"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "area/backend-platform"
+      - "security"
+    commit-message:
+      prefix: "chore(backend-platform)"
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "area/frontend-platform"
+      - "security"
+    commit-message:
+      prefix: "chore(frontend-platform)"
+
+  - package-ecosystem: "docker"
+    directory: "/infra/images"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "area/infra-devops"
+      - "security"
+    commit-message:
+      prefix: "chore(infra-devops)"

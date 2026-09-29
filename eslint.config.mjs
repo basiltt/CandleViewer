@@ -12,7 +12,10 @@ export default [
     files: [
       "scripts/**/*.{mjs,cjs,js}",
       "packages/*/scripts/**/*.{mjs,cjs,js}",
+      "tools/ci/**/*.{mjs,cjs,js}",
+      "packages/*/bench/**/*.{mjs,cjs,js}",
       "*.config.{mjs,cjs,js}",
+      ".dependency-cruiser.js",
     ],
     languageOptions: {
       globals: {
@@ -22,6 +25,8 @@ export default [
         __filename: "readonly",
         module: "readonly",
         require: "readonly",
+        URL: "readonly",
+        performance: "readonly",
       },
     },
   },

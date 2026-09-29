@@ -26,7 +26,14 @@ name: Board automation
 
 on:
   issues:
-    types: [opened, edited, labeled, unlabeled, closed]
+    # `edited` removed: the backlog resync scripts rewrite issue bodies in
+    # bulk (hundreds of events) and no guard depends on body edits — Kind sync
+    # keys on labels, the close guards on `closed`.
+    types: [opened, labeled, unlabeled, closed]
+
+concurrency:
+  group: board-${{ github.event.issue.number }}
+  cancel-in-progress: true
 
 permissions:
   contents: read

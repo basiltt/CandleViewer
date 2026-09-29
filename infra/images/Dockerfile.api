@@ -1,0 +1,64 @@
+# infra/images/Dockerfile.api — E02-T08
+#
+# Multi-stage build for services/api. Builder installs the locked venv with
+# uv; the runtime stage copies only the venv + application code, runs as a
+# non-root UID, and carries no dev dependencies (ruff/mypy/pytest/etc. never
+# reach the runtime layer). See docs/plan/20-architecture.md Sec.5 and the
+# E02-X01 threat model (supply-chain / container-escape controls).
+
+# --- builder ---------------------------------------------------------------
+FROM python:3.12-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f AS builder
+
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    PYTHONDONTWRITEBYTECODE=1
+
+RUN pip install --no-cache-dir uv==0.4.27
+
+WORKDIR /build
+COPY services/api/pyproject.toml services/api/uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
+
+COPY services/api/candleviewer ./candleviewer
+COPY services/api/README.md ./README.md
+RUN uv sync --frozen --no-dev
+
+# --- runtime -----------------------------------------------------------------
+FROM python:3.12-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f AS runtime
+
+# Apply Debian security fixes published after the pinned digest was cut, so
+# already-fixed CVEs never ship; unfixed ones are covered by the weekly rebuild.
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd --gid 10001 cvapi \
+    && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin cvapi
+
+WORKDIR /app
+COPY --from=builder --chown=10001:10001 /build/.venv /app/.venv
+COPY --from=builder --chown=10001:10001 /build/candleviewer /app/candleviewer
+# E02-T12: the synthetic feed generator's committed sample fixture
+# (CV_FEED=synthetic default). No real fixtures/credentials — see
+# packages/fixtures/README.md.
+COPY --chown=10001:10001 packages/fixtures/raw/synthetic_sample.jsonl \
+    /app/packages/fixtures/raw/synthetic_sample.jsonl
+
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+USER 10001:10001
+
+# Read-only root filesystem at runtime (compose sets `read_only: true` plus an
+# explicit writable tmpfs for /tmp); nothing here needs to write to the image.
+EXPOSE 8000
+
+# NOTE on B2 (loopback-only): binding 0.0.0.0 *inside* the container's own
+# network namespace is required for docker's bridge networking to route the
+# published port at all (a container-local 127.0.0.1 bind is unreachable
+# even from the docker-proxy). The loopback-only control lives one layer
+# out, in docker-compose.yml's explicit `127.0.0.1:<port>:<port>` publish —
+# that is what stops the socket being reachable from the LAN/WSL portproxy.
+ENTRYPOINT ["uvicorn", "candleviewer.main:app", "--host", "0.0.0.0", "--port", "8000"]
