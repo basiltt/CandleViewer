@@ -117,8 +117,14 @@ def _bootstrap_roles(dsn: str) -> None:
 
 @pytest.fixture(scope="module")
 def cv_app_dsn(pg_dsn: str) -> str:
-    _alembic(pg_dsn, "upgrade", "head")
+    # Bootstrap roles/default-privileges *before* running migrations, exactly
+    # as the `migrations` CI job orders these two steps — `pg_bootstrap.sql`'s
+    # `ALTER DEFAULT PRIVILEGES` only auto-grants `cv_app`/`cv_ro` access to
+    # tables created *after* it runs, so reversing the order here would leave
+    # every migrated table ungranted and give a false-negative DDL-refusal
+    # signal masked by a permission-denied-for-everything role.
     _bootstrap_roles(pg_dsn)
+    _alembic(pg_dsn, "upgrade", "head")
     return _psycopg_dsn(
         pg_dsn,
         user="cv_app",
