@@ -39,7 +39,7 @@ from candleviewer.storage.repositories.rows import TradeRow
 
 pytestmark = pytest.mark.integration
 
-DDL_DIR = Path(__file__).resolve().parents[3] / "backend" / "db" / "questdb"
+DDL_DIR = Path(__file__).resolve().parents[5] / "backend" / "db" / "questdb"
 
 _PGWIRE_USER = "admin"
 _PGWIRE_PASSWORD = "quest"  # noqa: S105 -- QuestDB OSS demo-container default, not a secret.

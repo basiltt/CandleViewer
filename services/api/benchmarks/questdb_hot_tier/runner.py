@@ -189,7 +189,7 @@ async def _measure_ilp_sustained_rows_per_sec(ilp_host: str, seconds: float = 2.
 async def run_all_live() -> dict[str, object]:
     """Full live run: skips (raises `NotConfigured`) when env is absent."""
     dsn, ilp_host = _require_env()
-    import asyncpg  # type: ignore[import-untyped]
+    import asyncpg
 
     from candleviewer.storage.questdb.reader import QuestDbReader
 
