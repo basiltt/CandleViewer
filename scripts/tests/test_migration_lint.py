@@ -21,51 +21,51 @@ from tools.ci.migration_lint import (
     main,
 )
 
-_ADDITIVE = '''
+_ADDITIVE = """
 from alembic import op
 
 
 def upgrade() -> None:
     op.add_column("orders", sa.Column("note", sa.Text(), nullable=True))
     op.create_index("ix_orders_note", "orders", ["note"])
-'''
+"""
 
-_DESTRUCTIVE_UNANNOTATED = '''
+_DESTRUCTIVE_UNANNOTATED = """
 from alembic import op
 
 
 def upgrade() -> None:
     op.drop_column("orders", "legacy_status")
-'''
+"""
 
-_DESTRUCTIVE_ANNOTATED = '''
+_DESTRUCTIVE_ANNOTATED = """
 from alembic import op
 
 
 def upgrade() -> None:
     # cv:contract-phase: R2
     op.drop_column("orders", "legacy_status")
-'''
+"""
 
-_DESTRUCTIVE_FORBIDDEN_TABLE = '''
+_DESTRUCTIVE_FORBIDDEN_TABLE = """
 from alembic import op
 
 
 def upgrade() -> None:
     # cv:contract-phase: R2
     op.drop_column("audit_log", "note")
-'''
+"""
 
-_NON_NULLABLE_ADD_NO_DEFAULT = '''
+_NON_NULLABLE_ADD_NO_DEFAULT = """
 from alembic import op
 import sqlalchemy as sa
 
 
 def upgrade() -> None:
     op.add_column("orders", sa.Column("qty", sa.Numeric(), nullable=False))
-'''
+"""
 
-_NON_NULLABLE_ADD_WITH_DEFAULT = '''
+_NON_NULLABLE_ADD_WITH_DEFAULT = """
 from alembic import op
 import sqlalchemy as sa
 
@@ -74,115 +74,193 @@ def upgrade() -> None:
     op.add_column(
         "orders", sa.Column("qty", sa.Numeric(), nullable=False, server_default="0")
     )
-'''
+"""
 
-_TYPE_NARROWING = '''
+_TYPE_NARROWING = """
 from alembic import op
 import sqlalchemy as sa
 
 
 def upgrade() -> None:
     op.alter_column("orders", "qty", type_=sa.Integer())
-'''
+"""
 
-_IF_NOT_EXISTS_SQL = '''
+_IF_NOT_EXISTS_SQL = """
 from alembic import op
 
 
 def upgrade() -> None:
     op.execute("CREATE TABLE IF NOT EXISTS widgets (id uuid primary key)")
-'''
+"""
 
-_SECURITY_SENSITIVE = '''
+_SECURITY_SENSITIVE = """
 from alembic import op
 import sqlalchemy as sa
 
 
 def upgrade() -> None:
     op.add_column("api_keys", sa.Column("label", sa.Text(), nullable=True))
-'''
+"""
 
 
-_RAW_SQL_DELETE_AUDIT_LOG = '''
+_RAW_SQL_DELETE_AUDIT_LOG = """
 from alembic import op
 
 
 def upgrade() -> None:
     op.execute("DELETE FROM audit_log WHERE event_ts < now() - interval '1 year'")
-'''
+"""
 
-_RAW_SQL_UPDATE_AUDIT_LOG = '''
+_RAW_SQL_UPDATE_AUDIT_LOG = """
 from alembic import op
 
 
 def upgrade() -> None:
     op.execute("update audit_log set outcome = 'success'")
-'''
+"""
 
-_RAW_SQL_DROP_AUDIT_CHECKPOINTS = '''
+_RAW_SQL_DROP_AUDIT_CHECKPOINTS = """
 from alembic import op
 
 
 def upgrade() -> None:
     op.execute("DROP TABLE audit_checkpoints")
-'''
+"""
 
-_RAW_SQL_TRUNCATE_AUDIT_LOG = '''
+_RAW_SQL_TRUNCATE_AUDIT_LOG = """
 from alembic import op
 
 
 def upgrade() -> None:
     op.execute("TRUNCATE audit_log")
-'''
+"""
 
-_RAW_SQL_GRANT_UPDATE_AUDIT_LOG = '''
+_RAW_SQL_GRANT_UPDATE_AUDIT_LOG = """
 from alembic import op
 
 
 def upgrade() -> None:
     op.execute("GRANT UPDATE ON audit_log TO cv_app")
-'''
+"""
 
-_RAW_SQL_GRANT_DELETE_AUDIT_LOG = '''
+_RAW_SQL_GRANT_DELETE_AUDIT_LOG = """
 from alembic import op
 
 
 def upgrade() -> None:
     op.execute("grant delete on audit_log to cv_app")
-'''
+"""
 
-_RENAME_AUDIT_LOG = '''
+_RENAME_AUDIT_LOG = """
 from alembic import op
 
 
 def upgrade() -> None:
     op.rename_table("audit_log", "audit_log_old")
-'''
+"""
 
-_ALTER_COLUMN_AUDIT_LOG = '''
+_ALTER_COLUMN_AUDIT_LOG = """
 from alembic import op
 import sqlalchemy as sa
 
 
 def upgrade() -> None:
     op.alter_column("audit_log", "outcome", type_=sa.Text())
-'''
+"""
 
-_RAW_SQL_DELETE_NON_AUDIT_TABLE = '''
+_RAW_SQL_DELETE_UPPERCASE_AUDIT_LOG = """
+from alembic import op
+
+
+def upgrade() -> None:
+    op.execute("DELETE FROM AUDIT_LOG WHERE 1=1")
+"""
+
+_RAW_SQL_GRANT_ALL_AUDIT_LOG = """
+from alembic import op
+
+
+def upgrade() -> None:
+    op.execute("GRANT ALL ON audit_log TO cv")
+"""
+
+_RAW_SQL_GRANT_TRUNCATE_AUDIT_LOG = """
+from alembic import op
+
+
+def upgrade() -> None:
+    op.execute("GRANT TRUNCATE ON audit_log TO cv")
+"""
+
+_RAW_SQL_GRANT_LIST_AUDIT_LOG = """
+from alembic import op
+
+
+def upgrade() -> None:
+    op.execute("GRANT SELECT, DELETE ON audit_log TO cv")
+"""
+
+_RAW_SQL_MULTILINE_DELETE_AUDIT_LOG = """
+from alembic import op
+
+
+def upgrade() -> None:
+    op.execute(
+        "DELETE FROM audit_log WHERE event_ts < now() - interval '1 year'"
+    )
+"""
+
+_RAW_SQL_INDIRECTED_DELETE_AUDIT_LOG = """
+from alembic import op
+
+_SQL = "DELETE FROM audit_log"
+
+
+def upgrade() -> None:
+    op.execute(_SQL)
+"""
+
+_CREATE_TABLE_AUDIT_LOG = """
+from alembic import op
+
+
+def upgrade() -> None:
+    op.execute(
+        "CREATE TABLE audit_log (id bigserial primary key, event_ts timestamptz not null)"
+    )
+"""
+
+_CREATE_INDEX_ON_AUDIT_LOG = """
+from alembic import op
+
+
+def upgrade() -> None:
+    op.execute("CREATE INDEX ix_audit_log_event_ts ON audit_log (event_ts)")
+"""
+
+_GRANT_SELECT_INSERT_AUDIT_LOG = """
+from alembic import op
+
+
+def upgrade() -> None:
+    op.execute("GRANT SELECT, INSERT ON audit_log TO cv")
+"""
+
+_RAW_SQL_DELETE_NON_AUDIT_TABLE = """
 from alembic import op
 
 
 def upgrade() -> None:
     op.execute("DELETE FROM stale_sessions WHERE expires_at < now()")
-'''
+"""
 
-_RENAME_NON_AUDIT_TABLE = '''
+_RENAME_NON_AUDIT_TABLE = """
 from alembic import op
 
 
 def upgrade() -> None:
     op.rename_table("orders", "orders_v2")
-'''
+"""
 
 
 def _write(tmp_path: Path, name: str, content: str) -> Path:
@@ -251,7 +329,9 @@ def test_security_sensitive_table_is_flagged_as_warning(tmp_path: Path) -> None:
     assert findings[0].code == "CI-MIG-006"
 
 
-def test_security_sensitive_returns_empty_when_no_table_list_given(tmp_path: Path) -> None:
+def test_security_sensitive_returns_empty_when_no_table_list_given(
+    tmp_path: Path,
+) -> None:
     path = _write(tmp_path, "0011_api_keys.py", _SECURITY_SENSITIVE)
     assert check_security_sensitive([path], sensitive_tables=frozenset()) == []
 
@@ -297,7 +377,36 @@ def test_audit_table_mutation_is_always_flagged(tmp_path: Path, fixture: str) ->
 
 @pytest.mark.parametrize(
     "fixture",
-    [_RAW_SQL_DELETE_NON_AUDIT_TABLE, _RENAME_NON_AUDIT_TABLE],
+    [
+        _RAW_SQL_DELETE_UPPERCASE_AUDIT_LOG,
+        _RAW_SQL_GRANT_ALL_AUDIT_LOG,
+        _RAW_SQL_GRANT_TRUNCATE_AUDIT_LOG,
+        _RAW_SQL_GRANT_LIST_AUDIT_LOG,
+        _RAW_SQL_MULTILINE_DELETE_AUDIT_LOG,
+        _RAW_SQL_INDIRECTED_DELETE_AUDIT_LOG,
+    ],
+)
+def test_audit_table_mutation_variant_is_flagged(tmp_path: Path, fixture: str) -> None:
+    """Round-2 review findings: uppercase identifier, GRANT ALL/TRUNCATE,
+    a grant list naming DELETE alongside harmless privileges, a multi-line
+    `op.execute(\\n "...")` call, and SQL held in a variable before
+    `op.execute(SQL)` must all be caught (C-5.7)."""
+    path = _write(tmp_path, "audit_mutation_variant.py", fixture)
+    findings = check_audit_table_integrity([path])
+    assert len(findings) == 1
+    assert findings[0].code == "CI-MIG-003"
+    assert "append-only" in findings[0].message
+
+
+@pytest.mark.parametrize(
+    "fixture",
+    [
+        _RAW_SQL_DELETE_NON_AUDIT_TABLE,
+        _RENAME_NON_AUDIT_TABLE,
+        _CREATE_TABLE_AUDIT_LOG,
+        _CREATE_INDEX_ON_AUDIT_LOG,
+        _GRANT_SELECT_INSERT_AUDIT_LOG,
+    ],
 )
 def test_non_audit_table_mutation_is_not_flagged(tmp_path: Path, fixture: str) -> None:
     path = _write(tmp_path, "non_audit_mutation.py", fixture)
@@ -318,4 +427,3 @@ def test_main_flags_raw_sql_audit_mutation_end_to_end(tmp_path: Path) -> None:
 def test_multiple_clean_fixtures_never_flagged(tmp_path: Path, fixture: str) -> None:
     path = _write(tmp_path, "x.py", fixture)
     assert check_if_not_exists([path]) == []
-

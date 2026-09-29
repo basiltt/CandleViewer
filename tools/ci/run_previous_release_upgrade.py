@@ -26,10 +26,15 @@ from pathlib import Path
 def _to_psql_dsn(dsn: str, root: Path) -> str:
     """Normalise any SQLAlchemy-style driver suffix (`+asyncpg`, `+psycopg`,
     ...) to the plain `postgresql://` form `psql` accepts, reusing the single
-    source of truth in `candleviewer.migrations.boot` instead of an ad-hoc
-    string replace that only handled `+asyncpg`."""
+    source of truth in `candleviewer.migrations.dsn` instead of an ad-hoc
+    string replace that only handled `+asyncpg`.
+
+    Imports `candleviewer.migrations.dsn` specifically (not `...migrations.boot`,
+    which imports `asyncpg`) so this script keeps working when invoked with
+    the plain system `python` (no `uv run`, no venv) as the CI job and
+    `governance.yml` both do."""
     sys.path.insert(0, str(root))
-    from candleviewer.migrations.boot import to_asyncpg_dsn
+    from candleviewer.migrations.dsn import to_asyncpg_dsn
 
     return to_asyncpg_dsn(dsn)
 
@@ -44,7 +49,11 @@ def _latest_snapshot(schema_dir: Path) -> Path | None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path("."), help="services/api root")
-    parser.add_argument("--dsn", required=True, help="postgresql+asyncpg:// DSN for the CI Postgres service")
+    parser.add_argument(
+        "--dsn",
+        required=True,
+        help="postgresql+asyncpg:// DSN for the CI Postgres service",
+    )
     parser.add_argument(
         "--schema-dir",
         type=Path,
@@ -77,7 +86,10 @@ def main(argv: list[str] | None = None) -> int:
         timeout=120,
     )
     if restore.returncode != 0:
-        print(f"CI-MIG-004: failed to restore snapshot {snapshot}: {restore.stderr}", file=sys.stderr)
+        print(
+            f"CI-MIG-004: failed to restore snapshot {snapshot}: {restore.stderr}",
+            file=sys.stderr,
+        )
         return 1
 
     upgrade = subprocess.run(

@@ -93,6 +93,12 @@ async def test_lock_timeout_raises_ci_dep_004(fake_conn: _FakeConn) -> None:
             await asyncio.sleep(10)
         return "SELECT 1"
 
+    # Reassigning the bound instance method with a plain function is the
+    # simplest way to make only the first `execute()` call hang while every
+    # other call (including the `finally` block's unlock) behaves normally;
+    # mypy sees this as an incompatible method-assign, which is expected and
+    # safe here since `fake_conn` is a test-only stand-in, not the real
+    # asyncpg connection type.
     fake_conn.execute = _hang_once  # type: ignore[method-assign]
 
     with (

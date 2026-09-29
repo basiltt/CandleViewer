@@ -30,7 +30,6 @@ from __future__ import annotations
 
 import asyncio
 import os
-import re
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -38,29 +37,24 @@ from pathlib import Path
 
 import asyncpg
 
+from candleviewer.migrations.dsn import (
+    redact_dsn_credentials,
+    to_asyncpg_dsn,
+    to_sync_dsn,
+)
+
+__all__ = [
+    "MigrationApplyFailed",
+    "MigrationLockTimeout",
+    "MigrationRunResult",
+    "redact_dsn_credentials",
+    "run_migrations_under_advisory_lock",
+    "to_asyncpg_dsn",
+    "to_sync_dsn",
+]
+
 _LOCK_KEY_NAME = "cv_migrations"
 _DEFAULT_LOCK_TIMEOUT_S = 300.0
-_SCHEME_RE = re.compile(r"^postgres(?:ql)?(?:\+[a-z0-9_]+)?://")
-# Matches the `user:pass@` (or bare `user@`) credential segment of any DSN
-# that may appear verbatim in alembic/psycopg driver error text on stderr.
-_DSN_CREDENTIALS_RE = re.compile(r"://[^/@\s]+@")
-
-
-def redact_dsn_credentials(text: str) -> str:
-    """Strip `user:pass@`/`user@` DSN credentials from arbitrary text (e.g.
-    subprocess stderr) before it is logged or embedded in an exception
-    message (C-12.6 — never let a secret reach a log/exception)."""
-    return _DSN_CREDENTIALS_RE.sub("://***@", text)
-
-
-def to_sync_dsn(dsn: str) -> str:
-    """Rewrite any Postgres DSN to the sync psycopg 3 driver Alembic uses."""
-    return _SCHEME_RE.sub("postgresql+psycopg://", dsn, count=1)
-
-
-def to_asyncpg_dsn(dsn: str) -> str:
-    """Rewrite any Postgres DSN to the plain form `asyncpg.connect` accepts."""
-    return _SCHEME_RE.sub("postgresql://", dsn, count=1)
 
 
 class MigrationLockTimeout(Exception):
