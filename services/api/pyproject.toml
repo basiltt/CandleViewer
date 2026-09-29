@@ -106,6 +106,14 @@ exclude = ["^\\.venv/"]
 module = ["duckdb.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+# asyncpg has no inline types / py.typed marker as of 2026-09-28 (asyncpg
+# 0.29.x on PyPI). Allowlisted 2026-09-28 for E03-T10's boot-time advisory
+# lock helper (`candleviewer.migrations.boot`); re-check at each asyncpg bump
+# and drop this override once upstream ships types.
+module = ["asyncpg.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 markers = [

@@ -1,0 +1,10 @@
+# E03-T10: tables that trigger the migration lint's mandatory Security
+# review flag (CI-MIG-006, informational) when a migration file references
+# them. Populated as later epics add these tables (E27 accounts/keys, E09
+# audit already exists structurally but is covered separately as a
+# forbidden-destructive-target rather than a security-sensitive one).
+#
+# One table name per line; '#' starts a comment; blank lines ignored.
+api_keys
+exchange_accounts
+account_profiles
