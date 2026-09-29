@@ -2958,8 +2958,9 @@ NAMING_CONVENTION = {
 |---|---|
 | `0001_initial` | extensions, domains, enums, trigger functions, `users`, `roles`, `permissions`, `role_permissions`, `user_roles`, `sessions`, `sessions_rotation`, `mfa_*`, `recovery_codes` — **landed in E07-T02** as `0001_identity_rbac_sessions_mfa` |
 | `0002_rbac_seed` | seed roles, permissions, role_permissions, bootstrap owner — **landed in E07-T02** |
-| `0003_exchange_accounts` | `exchange_accounts`, `user_account_access`, `instruments` |
-| `0004_api_keys` | `api_keys`, `api_key_rotations`, withdrawal-off constraint |
+| `0003_audit_log` | `audit_log` + hash-chain trigger, `audit_checkpoints` — **landed in E09-T02** (superseded the placeholder `0003_exchange_accounts` slot below; `exchange_accounts`/`user_account_access` remain future work under a later revision number) |
+| `0004_instruments` | `instruments`, `instrument_versions` (§3.3.9) — **landed in E08-S01** |
+| `0005_api_keys` | `api_keys`, `api_key_rotations`, withdrawal-off constraint |
 | `0005_profiles` | `account_profiles` + ladder trigger |
 | `0006_trading_core` | `trade_groups`, `trade_group_legs`, `orders`, `order_events`, `executions`, `positions`, `position_snapshots`, `wallet_balances` |
 | `0007_recorder` | `recorded_symbols`, `recording_sessions`, `recording_gaps`, `retention_policies`, `replay_sessions` |
