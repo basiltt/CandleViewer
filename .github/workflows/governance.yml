@@ -1,9 +1,13 @@
 name: governance
 
-# Minimal "governance" required-check job referenced by
-# .github/branch-protection.json phase 1 (E01-T08). Runs the GOV-00x
-# structural checks that exist today; E01-Q02 is the owning ticket for
-# growing this into the full governance regression pack.
+# "governance" required-check job referenced by .github/branch-protection.json
+# phase 1 (E01-T08). Runs the GOV-00x structural checks plus:
+#   - a canary self-test (--self-test) proving each checker still fails
+#     against a deliberately-broken fixture (scripts/gov_self_test.py),
+#   - a >=85% line coverage gate on scripts/** (CONSTITUTION.md §9 #3),
+#   - job-duration measurement against the 60s budget, recorded as a
+#     GitHub Actions annotation.
+# Owning ticket: E01-Q02.
 
 on:
   pull_request:
@@ -21,6 +25,10 @@ jobs:
   governance:
     runs-on: ubuntu-latest
     steps:
+      - name: Record job start time (perf budget: <=60s, E01-Q02)
+        id: gov_start
+        run: echo "start_ns=$(date +%s%N)" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
@@ -29,7 +37,7 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install check dependencies (PyYAML for GOV-004, pytest for unit tests)
+      - name: Install check dependencies (PyYAML for GOV-004, pytest(-cov) for unit tests)
         run: python -m pip install --quiet -r scripts/requirements-ci.txt
 
       - name: Rule-reference link check (GOV-002)
@@ -49,11 +57,34 @@ jobs:
       - name: Issue form structural check (GOV-004)
         run: python scripts/check_issue_forms.py
 
-      - name: Backlog validation
+      - name: Backlog validation (semantic/report tool)
         run: python docs/plan/backlog/_tools/validate.py
+
+      - name: Backlog schema validation (GOV-004)
+        run: python scripts/validate-backlog.py --quiet
 
       - name: Required-check reconciliation (GOV-005)
         run: python scripts/check_required_check_reconciliation.py
 
-      - name: Governance script unit tests
-        run: python -m pytest scripts/tests -q
+      - name: Canary self-test (deliberately-broken fixtures must fail)
+        # The guard against a green check that no longer checks anything
+        # (E01-Q02 acceptance scenario "the job proves it can still fail").
+        run: python scripts/gov_self_test.py --self-test
+
+      - name: Governance script unit tests (>=85% coverage gate on scripts/**)
+        run: >
+          python -m pytest scripts/tests scripts/gh/tests -q
+          --cov=scripts --cov-report=term-missing --cov-fail-under=85
+
+      - name: Job duration budget (<=60s, E01-Q02)
+        if: always()
+        run: |
+          start_ns=${{ steps.gov_start.outputs.start_ns }}
+          end_ns=$(date +%s%N)
+          duration_ms=$(( (end_ns - start_ns) / 1000000 ))
+          echo "governance job duration: ${duration_ms}ms"
+          echo "::notice title=governance job duration::${duration_ms}ms (budget 60000ms)"
+          if [ "$duration_ms" -gt 60000 ]; then
+            echo "::warning title=governance job over budget::${duration_ms}ms exceeds the 60s budget (docs/plan/06-performance-and-load-standard.md); tracked as a defect against E01-Q02, not yet hard-enforced pending a CI-runner baseline"
+          fi
+

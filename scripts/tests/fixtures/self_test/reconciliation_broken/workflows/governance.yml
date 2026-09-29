@@ -1,0 +1,7 @@
+name: governance
+
+jobs:
+  governance:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo hi

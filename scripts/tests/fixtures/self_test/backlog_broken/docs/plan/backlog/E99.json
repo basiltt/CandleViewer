@@ -1,0 +1,1 @@
+{ this is not valid json (self-test fixture for GOV-004 / validate-backlog.py: malformed backlog JSON must fail, not exit 0)

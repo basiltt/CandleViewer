@@ -1,0 +1,5 @@
+{
+  "required_status_checks": {
+    "contexts": ["governance-renamed"]
+  }
+}
