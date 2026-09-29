@@ -2,6 +2,7 @@ import tseslint from "typescript-eslint";
 import reactPlugin from "eslint-plugin-react";
 import reactHooksPlugin from "eslint-plugin-react-hooks";
 import baseConfig from "@candleviewer/config/eslint";
+import noRawDesignValues from "./eslint-rules/no-raw-design-values.mjs";
 
 /** @type {import("eslint").Linter.Config[]} */
 export default tseslint.config(
@@ -32,6 +33,24 @@ export default tseslint.config(
     },
     settings: {
       react: { version: "18.3" },
+    },
+  },
+  {
+    files: ["scripts/**/*.mjs"],
+    languageOptions: {
+      globals: {
+        console: "readonly",
+        process: "readonly",
+      },
+    },
+  },
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    plugins: {
+      candleviewer: { rules: { "no-raw-design-values": noRawDesignValues } },
+    },
+    rules: {
+      "candleviewer/no-raw-design-values": "error",
     },
   },
 );
