@@ -297,7 +297,7 @@ class BybitRestClient:
                 bybit_rest_requests_total.labels(endpoint=path, result="5xx").inc()
                 if attempt > self._config.max_retries:
                     raise TransportError(
-                        f"{path} returned HTTP {response.status_code} after " f"{attempt} attempts"
+                        f"{path} returned HTTP {response.status_code} after {attempt} attempts"
                     )
                 await self._backoff(attempt)
                 continue
@@ -312,7 +312,7 @@ class BybitRestClient:
                 bybit_rest_requests_total.labels(endpoint=path, result="error").inc()
                 exchange_errors_total.labels(**{"class": UnknownStateError.code.value}).inc()
                 raise UnknownStateError(
-                    f"{path} returned HTTP {response.status_code} with a " f"non-JSON body: {exc}"
+                    f"{path} returned HTTP {response.status_code} with a non-JSON body: {exc}"
                 ) from exc
 
             # A missing `retCode`, or `retCode == 0` on an HTTP error status,
@@ -325,8 +325,7 @@ class BybitRestClient:
                 bybit_rest_requests_total.labels(endpoint=path, result="error").inc()
                 exchange_errors_total.labels(**{"class": UnknownStateError.code.value}).inc()
                 raise UnknownStateError(
-                    f"{path} returned HTTP {response.status_code} with no "
-                    f"usable retCode: {data!r}"
+                    f"{path} returned HTTP {response.status_code} with no usable retCode: {data!r}"
                 )
             if ret_code == 0:
                 bybit_rest_requests_total.labels(endpoint=path, result="ok").inc()
