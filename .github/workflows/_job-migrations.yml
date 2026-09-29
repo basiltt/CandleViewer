@@ -74,14 +74,17 @@ jobs:
           fi
           echo "single head: $heads"
 
-      - name: alembic check — drift between models.py and head (CI-MIG-002)
-        run: uv run alembic check
-
       - name: Expand/contract lint — destructive ops need cv:contract-phase (CI-MIG-003)
         run: uv run python ../../tools/ci/migration_lint.py --versions-dir candleviewer/migrations/versions
 
       - name: alembic upgrade head — greenfield (empty database)
         run: uv run alembic upgrade head
+
+      # `alembic check` compares models.py against the *live* schema at head, so
+      # it must run after `upgrade head` — on an empty database it always fails
+      # with "Target database is not up to date" regardless of models.py.
+      - name: alembic check — drift between models.py and head (CI-MIG-002)
+        run: uv run alembic check
 
       - name: alembic downgrade to base then upgrade head again (round-trip sanity)
         run: |
