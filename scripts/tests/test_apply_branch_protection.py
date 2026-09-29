@@ -64,6 +64,9 @@ def test_load_desired_state_invalid_json_raises(tmp_path: Path) -> None:
         (lambda d: d.update(required_linear_history=False), "linear_history"),
     ],
 )
+# Regression: encodes E01-Q01 cases 1.1-1.5 (originating case id) -- desired-state
+# mutations that must be rejected (review count, code-owner reviews, enforce_admins,
+# force pushes, linear history).
 def test_validate_desired_state_rejects_weakened_settings(mutation, message_fragment) -> None:
     data = _valid_desired_state()
     mutation(data)
@@ -98,6 +101,8 @@ def test_to_api_payload_preserves_explicit_restrictions() -> None:
     assert payload["restrictions"] == {"users": [], "teams": ["release-managers"]}
 
 
+# Regression: encodes E01-Q01 case 1.9 (originating case id) -- re-apply of an
+# identical live/desired state must be a no-op diff.
 def test_diff_state_no_changes_is_empty() -> None:
     live = {"enforce_admins": True, "allow_force_pushes": False}
     desired = {"enforce_admins": True, "allow_force_pushes": False}

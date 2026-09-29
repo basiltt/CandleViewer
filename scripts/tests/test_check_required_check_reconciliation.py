@@ -45,6 +45,8 @@ def test_load_constitution_check_names_missing_table_raises(tmp_path: Path) -> N
         pass
 
 
+# Regression: encodes E01-Q01 case 1.11 (originating case id) -- required-check
+# reconciliation must stay clean when contexts/pending lists agree with §9.
 def test_reconcile_clean_when_fully_covered() -> None:
     desired = {
         "required_status_checks": {"contexts": ["lint"]},

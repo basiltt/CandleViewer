@@ -151,13 +151,16 @@ backlog report tool); fix instructions live in the tool's own `--help` and its e
 | `GOV-003` | `scripts/check_sot_duplication.py` | A `C-16.5`-owned list has been restated outside its owner file/section (`scripts/sot-registry.json`). Delete the copy and link to the owner, or add an isolated-mention entry to `scripts/sot-allowlist.txt`. |
 | `GOV-004` | `scripts/check_issue_forms.py`, `scripts/validate-backlog.py`, `docs/plan/backlog/_tools/validate.py` | An issue form is structurally broken, or a backlog ticket JSON fails schema/cross-file validation (dependency cycles, parent chains, sprint ordering, secret-pattern scan). |
 | `GOV-005` | `scripts/check_required_check_reconciliation.py` | `.github/branch-protection.json` and `CONSTITUTION.md` §9 (and, once populated, the workflow job names) disagree on required-check names. |
+| `GOV-006` | `scripts/check_markdown_governance_docs.py` | A governance document (`CONTRIBUTING.md`, the E01 test plans, the E01-X02 security findings doc) has a broken relative link or a lint issue (hard tab, trailing whitespace, a heading level jump, a bare autolink, missing trailing newline). |
 
 The job also runs a **canary self-test** (`python scripts/gov_self_test.py --self-test`) that replays
 every checker above against a deliberately-broken fixture tree under
 `scripts/tests/fixtures/self_test/` and asserts each one fails — the guard against a green `governance`
 check that has silently stopped checking anything — and a **coverage gate** (`pytest --cov=scripts
 --cov-fail-under=85`) over all of `scripts/**`. Job duration is measured against a 60s budget and
-recorded as a `::notice`/`::error` annotation on every run.
+recorded as a `::notice` annotation on every run; exceeding the budget fails the job (`::error`
+annotation). Per-run artefacts (CODEOWNERS ownership report, backlog per-epic summary) are uploaded
+as the `governance-reports` artefact for diffable history across runs.
 
 
 

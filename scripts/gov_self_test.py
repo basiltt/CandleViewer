@@ -62,6 +62,10 @@ def _reconciliation_argv(fixture_dir: str) -> list[str]:
     ]
 
 
+def _markdown_governance_docs_argv(fixture_dir: str) -> list[str]:
+    return ["--repo-root", fixture_dir, "--docs", "CONTRIBUTING.md"]
+
+
 CHECKERS: tuple[CheckerEntry, ...] = (
     CheckerEntry(
         "check_rule_refs",
@@ -93,6 +97,13 @@ CHECKERS: tuple[CheckerEntry, ...] = (
         os.path.join("scripts", "check_required_check_reconciliation.py"),
         lambda: _reconciliation_argv(
             os.path.join(FIXTURES_ROOT, "reconciliation_broken")
+        ),
+    ),
+    CheckerEntry(
+        "check_markdown_governance_docs",
+        os.path.join("scripts", "check_markdown_governance_docs.py"),
+        lambda: _markdown_governance_docs_argv(
+            os.path.join(FIXTURES_ROOT, "markdown_broken")
         ),
     ),
 )

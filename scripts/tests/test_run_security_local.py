@@ -66,6 +66,14 @@ def test_run_gitleaks_skips_when_no_binary_and_no_docker(tmp_path: Path) -> None
 
 
 def test_run_license_check_skips_when_venv_missing(tmp_path: Path) -> None:
+    # Regression (originating case: QA defect #1563 P1): this must not depend
+    # on whether services/api/.venv happens to exist on the machine running
+    # the suite -- CI runners that have already run `uv sync` (e.g. a prior
+    # backend job step) leave a real venv behind, which previously made this
+    # test flip from SKIPPED to PASS/FAIL depending on execution order instead
+    # of exercising the "venv missing" branch it claims to cover. Patch
+    # `Path.exists` so the assertion is deterministic regardless of the real
+    # filesystem state.
     def fake_which(name: str) -> str | None:
         return "/usr/bin/pnpm" if name == "pnpm" else None
 
