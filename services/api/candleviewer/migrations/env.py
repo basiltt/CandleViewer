@@ -29,7 +29,7 @@ if config.config_file_name is not None:
 
 
 def _get_url() -> str:
-    from candleviewer.migrations.boot import to_sync_dsn
+    from candleviewer.migrations.dsn import to_sync_dsn
 
     # `CV_PG_DSN` env override takes priority so tooling (the identity-migration
     # integration test, `alembic upgrade --sql` in CI) can point at a
