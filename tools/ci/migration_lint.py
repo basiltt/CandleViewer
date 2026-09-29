@@ -121,11 +121,14 @@ def _resolve_simple_name_constants(tree: ast.AST) -> dict[str, str]:
     adds table names to check, it never removes a real finding)."""
     values: dict[str, str] = {}
     for node in ast.walk(tree):
-        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant):
-            if isinstance(node.value.value, str):
-                for target in node.targets:
-                    if isinstance(target, ast.Name):
-                        values[target.id] = node.value.value
+        if (
+            isinstance(node, ast.Assign)
+            and isinstance(node.value, ast.Constant)
+            and isinstance(node.value.value, str)
+        ):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    values[target.id] = node.value.value
     return values
 
 
