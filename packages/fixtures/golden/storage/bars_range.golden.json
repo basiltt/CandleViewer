@@ -1,0 +1,22 @@
+{
+  "$schema": "https://candleviewer.internal/schemas/storage-golden.json",
+  "case": "bars_range",
+  "description": "Canonical, hand-verifiable case: 3 one-minute time bars on BTCUSDT within [0, 180000000). OHLCV values are hand-computed round numbers, not derived from the repository under test.",
+  "query": {
+    "symbol": "BTCUSDT",
+    "family": "time",
+    "param": "60000",
+    "range": { "start_us": 0, "end_us": 180000000 }
+  },
+  "input_rows": [
+    { "ts_us": 120000000, "symbol": "BTCUSDT", "family": "time", "param": "60000", "open": "3", "high": "4", "low": "2.5", "close": "3.5", "volume": "30" },
+    { "ts_us": 0, "symbol": "BTCUSDT", "family": "time", "param": "60000", "open": "1", "high": "2", "low": "0.5", "close": "1.5", "volume": "10" },
+    { "ts_us": 60000000, "symbol": "BTCUSDT", "family": "time", "param": "60000", "open": "2", "high": "3", "low": "1.5", "close": "2.5", "volume": "20" }
+  ],
+  "expected_rows": [
+    { "ts_us": 0, "symbol": "BTCUSDT", "family": "time", "param": "60000", "open": "1", "high": "2", "low": "0.5", "close": "1.5", "volume": "10" },
+    { "ts_us": 60000000, "symbol": "BTCUSDT", "family": "time", "param": "60000", "open": "2", "high": "3", "low": "1.5", "close": "2.5", "volume": "20" },
+    { "ts_us": 120000000, "symbol": "BTCUSDT", "family": "time", "param": "60000", "open": "3", "high": "4", "low": "2.5", "close": "3.5", "volume": "30" }
+  ],
+  "notes": "Written out of ts_us order; expected output is ascending ts_us. OHLCV values are decimal-precision strings compared with zero float tolerance per docs/qa/plans/E07-storage.md section 3 (mutation exercise) test-vector conventions."
+}
