@@ -166,11 +166,15 @@ jobs:
 
       - name: Job summary
         if: always()
+        env:
+          DEPLOY_SHA: ${{ steps.target.outputs.sha }}
+          DEPLOY_DIGEST: ${{ steps.target.outputs.digest }}
+          DEPLOY_IS_ROLLBACK: ${{ inputs.rollback_to_digest != '' }}
         run: |
           {
             echo "### Staging deploy"
-            echo "- sha: \`${{ steps.target.outputs.sha }}\`"
-            echo "- digest: \`${{ steps.target.outputs.digest }}\`"
-            echo "- rollback: \`${{ inputs.rollback_to_digest != '' }}\`"
+            echo "- sha: \`${DEPLOY_SHA}\`"
+            echo "- digest: \`${DEPLOY_DIGEST}\`"
+            echo "- rollback: \`${DEPLOY_IS_ROLLBACK}\`"
             tail -n 1 deployments/ledger.jsonl 2>/dev/null || true
           } >> "$GITHUB_STEP_SUMMARY"
