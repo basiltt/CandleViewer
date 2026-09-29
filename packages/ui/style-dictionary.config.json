@@ -1,17 +1,51 @@
 {
-  "$comment": "Style Dictionary entry point wiring the DTCG token JSON in packages/ui/tokens/ (contract from E02-D01, verified by tokens/tests/verify_tokens.py) to CSS custom properties. Scaffold only (E02-T03) — theme/density-specific build passes are added when E05 content lands.",
+  "$comment": "Style Dictionary contract for packages/ui/tokens/ (E05-T01, docs/plan/16-design-system-brief.md #11/#11.1). This file documents the binding platform/output shape; the actual build runs via `pnpm --filter @candleviewer/ui build:tokens`, which invokes packages/ui/scripts/build-tokens.mjs — a thin driver that additionally performs theme-set composition (tokens/themes.json) and the TOKENS-E001/E002/E003 checks described in the ticket, using the custom formats in tools/style-dictionary/formats/. Keep this file's `platforms` shape in sync with build-tokens.mjs by hand; a drift is a bug fixed in the same PR (see packages/ui/README.md).",
   "source": ["tokens/primitives.tokens.json", "tokens/semantic-dark.tokens.json"],
   "platforms": {
     "css": {
       "transformGroup": "css",
-      "buildPath": "dist/tokens/",
+      "buildPath": "build/css/",
       "files": [
         {
-          "destination": "dark.css",
+          "destination": "tokens.dark.css",
           "format": "css/variables",
-          "options": { "selector": ":root[data-theme=\"dark\"]" }
+          "filter": { "theme": "dark" },
+          "options": { "selector": "[data-theme=\"dark\"]" }
+        },
+        {
+          "destination": "tokens.light.css",
+          "format": "css/variables",
+          "filter": { "theme": "light" },
+          "options": { "selector": "[data-theme=\"light\"]" }
+        },
+        {
+          "destination": "tokens.high-contrast.css",
+          "format": "css/variables",
+          "filter": { "theme": "high-contrast" },
+          "options": { "selector": "[data-theme=\"high-contrast\"]" }
         }
       ]
+    },
+    "ts": {
+      "transformGroup": "js",
+      "buildPath": "build/ts/",
+      "files": [{ "destination": "tokens.ts", "format": "typescript/nested-object" }]
+    },
+    "engine": {
+      "transformGroup": "js",
+      "buildPath": "build/engine/",
+      "files": [
+        {
+          "destination": "theme-uniforms.json",
+          "format": "json/flat-rgba",
+          "filter": { "category": "chart" }
+        }
+      ]
+    },
+    "electron": {
+      "transformGroup": "js",
+      "buildPath": "build/electron/",
+      "files": [{ "destination": "tokens.main.json", "format": "json/flat" }]
     }
   }
 }
