@@ -35,7 +35,9 @@ from pathlib import Path
 
 # Destructive operations that need an explicit `# cv:contract-phase: <release>`
 # justification per ADR-0013 rule 9 / expand-contract discipline.
-_DESTRUCTIVE_OP_RE = re.compile(r"\bop\.(drop_column|drop_table|drop_index|drop_constraint)\s*\(")
+_DESTRUCTIVE_OP_RE = re.compile(
+    r"\bop\.(drop_column|drop_table|drop_index|drop_constraint)\s*\("
+)
 # `add_column` with `nullable=False` and no `server_default=` is destructive
 # for existing rows (breaks expand/contract) unless annotated.
 _ADD_COLUMN_RE = re.compile(r"\bop\.add_column\s*\(")
@@ -62,50 +64,101 @@ _FORBIDDEN_DESTRUCTIVE_TABLES = frozenset({"audit_log", "audit_checkpoints"})
 # an actual SQL statement. `GRANT ALL` implicitly includes UPDATE/DELETE/
 # TRUNCATE; a grant list may name a mutating verb alongside harmless
 # privileges (e.g. `GRANT SELECT, DELETE ON ...`).
-_TABLE_QUALIFIER = r"(?:[\w]+\.)?\"?'?"
+_TABLE_QUALIFIER = r"(?:\"?\w+\"?\.)?\"?'?"
+
+# Sentinel substituted for an f-string placeholder whose value could not be
+# resolved to a string constant at lint time. Never matches a real table name
+# (NUL cannot appear in Python source), so it only trips the dedicated
+# dynamic-table check below and never the static per-table patterns.
+_UNRESOLVED_PLACEHOLDER = "\x00"
+_DYNAMIC_MUTATION_RE = re.compile(
+    rf"\b(?:DELETE\s+FROM|UPDATE|DROP\s+TABLE|TRUNCATE(?:\s+TABLE)?|ALTER\s+TABLE)"
+    rf"\s+{_TABLE_QUALIFIER}{re.escape(_UNRESOLVED_PLACEHOLDER)}\b"
+    rf"|\bGRANT\s+(?:ALL(?:\s+PRIVILEGES)?|[A-Za-z, ]*?\b(?:UPDATE|DELETE|TRUNCATE)\b[A-Za-z, ]*?)"
+    rf"\s+ON\s+{_TABLE_QUALIFIER}{re.escape(_UNRESOLVED_PLACEHOLDER)}\b",
+    re.IGNORECASE,
+)
 
 
 def _mutation_pattern_for(table: str) -> re.Pattern[str]:
     t = re.escape(table)
     q = _TABLE_QUALIFIER
     return re.compile(
-        rf"\b(?:DELETE\s+FROM|UPDATE|DROP\s+TABLE|TRUNCATE(?:\s+TABLE)?|ALTER\s+TABLE)\s+{q}{t}\b"
-        rf"|\bGRANT\s+(?:ALL(?:\s+PRIVILEGES)?|[A-Za-z, ]*?\b(?:UPDATE|DELETE|TRUNCATE)\b[A-Za-z, ]*?)"
+        rf"\b(?:DELETE\s+FROM|UPDATE|DROP\s+TABLE|TRUNCATE(?:\s+TABLE)?|ALTER\s+TABLE)"
+        rf"\s+{q}{t}\b"
+        rf"|\bGRANT\s+(?:ALL(?:\s+PRIVILEGES)?|"
+        rf"[A-Za-z, ]*?\b(?:UPDATE|DELETE|TRUNCATE)\b[A-Za-z, ]*?)"
         rf"\s+ON\s+{q}{t}\b",
         re.IGNORECASE,
     )
 
 
-# `# cv:audit-exempt: <reason>` on the same source line as the offending
-# string literal (or `op.execute(...)` call) is the only accepted escape
-# hatch, and only for a CREATE-only statement (never for a genuine mutation
-# of an existing audit table).
-_AUDIT_EXEMPT_RE = re.compile(r"#\s*cv:audit-exempt:\s*\S+")
+# There is deliberately no escape hatch for audit-table mutations: C-5.7
+# forbids UPDATE/DELETE/DROP/TRUNCATE/ALTER/mutating GRANT on an audit table
+# unconditionally, so no annotation (however spelled) may suppress a genuine
+# finding. A previous `# cv:audit-exempt:` marker was removed because it was
+# indistinguishable, at review time, from a bypass of a real mutation — see
+# PR #1518 review history.
 _CREATE_ONLY_RE = re.compile(r"^\s*CREATE\s+(TABLE|INDEX)\b", re.IGNORECASE)
 
 
-def _iter_string_literals(path: Path, source: str) -> list[tuple[int, str]]:
+def _resolve_simple_name_constants(tree: ast.AST) -> dict[str, str]:
+    """Map `Name = Constant(str)` module/function-level assignments
+    (`tbl = "audit_log"`) to their string value, so an f-string placeholder
+    that is just a `Name` reference can be substituted before matching.
+    Last assignment wins if a name is reassigned; conditional/loop-only
+    assignments are still collected (fail-closed: over-resolving only ever
+    adds table names to check, it never removes a real finding)."""
+    values: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant):
+            if isinstance(node.value.value, str):
+                for target in node.targets:
+                    if isinstance(target, ast.Name):
+                        values[target.id] = node.value.value
+    return values
+
+
+def _iter_string_literals(path: Path, source: str) -> list[tuple[int, str, bool]]:
     """Every string literal in the migration file, via the AST (so f-string
     parts and implicit concatenation are covered, not just single-line
     `op.execute("...")` calls). Returns `(1-based lineno of the literal's
-    first line, normalised text)` pairs."""
+    first line, normalised text, had_unresolved_interpolation)` triples.
+
+    F-string interpolations that reference a simple `Name` bound to a string
+    constant elsewhere in the module (`tbl = "audit_log"; f"...{tbl}..."`)
+    are substituted with that value. Any other interpolation (attribute
+    access, call, unresolved name, f-string format spec, etc.) is replaced
+    with `_UNRESOLVED_PLACEHOLDER` and the triple's third element is `True`,
+    so a dynamic table name in an audit-sensitive statement still trips a
+    dedicated fail-closed finding even though the real name is unknown."""
     try:
         tree = ast.parse(source, filename=str(path))
     except SyntaxError:
         return []
-    literals: list[tuple[int, str]] = []
+    name_constants = _resolve_simple_name_constants(tree)
+    literals: list[tuple[int, str, bool]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
-            literals.append((node.lineno, node.value))
+            literals.append((node.lineno, node.value, False))
         elif isinstance(node, ast.JoinedStr):
-            # f-string: collect the literal (non-interpolated) parts.
-            text = "".join(
-                part.value
-                for part in node.values
-                if isinstance(part, ast.Constant) and isinstance(part.value, str)
-            )
+            parts: list[str] = []
+            unresolved = False
+            for part in node.values:
+                if isinstance(part, ast.Constant) and isinstance(part.value, str):
+                    parts.append(part.value)
+                elif isinstance(part, ast.FormattedValue):
+                    resolved = None
+                    if isinstance(part.value, ast.Name):
+                        resolved = name_constants.get(part.value.id)
+                    if resolved is not None:
+                        parts.append(resolved)
+                    else:
+                        parts.append(_UNRESOLVED_PLACEHOLDER)
+                        unresolved = True
+            text = "".join(parts)
             if text:
-                literals.append((node.lineno, text))
+                literals.append((node.lineno, text, unresolved))
     return literals
 
 
@@ -130,7 +183,9 @@ def _sql_statements(text: str) -> list[str]:
 # Populated from `tools/ci/security-sensitive-tables.txt` when present;
 # migrations touching these need the `security-review` label (flagged, not
 # blocked, by this tool — the label/reviewer gate is enforced elsewhere).
-_DEFAULT_SECURITY_SENSITIVE_TABLES_PATH = Path(__file__).with_name("security-sensitive-tables.txt")
+_DEFAULT_SECURITY_SENSITIVE_TABLES_PATH = Path(__file__).with_name(
+    "security-sensitive-tables.txt"
+)
 
 
 @dataclass(frozen=True)
@@ -154,7 +209,9 @@ def _read_sensitive_tables(path: Path) -> frozenset[str]:
     return frozenset(names)
 
 
-def _line_has_contract_phase_nearby(lines: list[str], idx: int, window: int = 3) -> bool:
+def _line_has_contract_phase_nearby(
+    lines: list[str], idx: int, window: int = 3
+) -> bool:
     """A `# cv:contract-phase:` comment on the same line or within `window`
     lines above/below the offending call counts as justification — matches
     how engineers naturally annotate a multi-line `op.*(...)` call."""
@@ -205,17 +262,33 @@ def check_audit_table_integrity(
     `op.rename_table` line-level checks the AST-level destructive-op check
     above does not see.
 
-    The only escape hatch is `# cv:audit-exempt: <reason>` on the same source
-    line, and only when the statement is CREATE-only (`CREATE TABLE`/
-    `CREATE INDEX ... ON <table>`) — never for a genuine mutation."""
+    There is no escape hatch: a genuine `CREATE TABLE`/`CREATE INDEX` on an
+    audit table is allowed through unconditionally (it never mutates
+    existing rows), but any mutation keyword is always forbidden — no
+    comment, marker or annotation of any kind suppresses a finding here."""
     findings: list[LintFinding] = []
     for path in paths:
         source = path.read_text(encoding="utf-8")
         lines = source.splitlines()
 
-        for lineno, literal in _iter_string_literals(path, source):
+        for lineno, literal, unresolved in _iter_string_literals(path, source):
             for statement in _sql_statements(literal):
                 normalised = _normalise_sql(statement)
+                if unresolved and _DYNAMIC_MUTATION_RE.search(normalised):
+                    findings.append(
+                        LintFinding(
+                            code="CI-MIG-003",
+                            path=path,
+                            message=(
+                                f"line {lineno}: dynamic table name in an "
+                                "audit-sensitive statement (mutation keyword "
+                                "with an unresolved interpolated target) — "
+                                "forbidden, resolve to a literal table name "
+                                "or refactor (C-5.7, ADR-0013 rule 9)"
+                            ),
+                        )
+                    )
+                    continue
                 forbidden_hit = next(
                     (
                         table
@@ -227,9 +300,6 @@ def check_audit_table_integrity(
                 if forbidden_hit is None:
                     continue
                 if _CREATE_ONLY_RE.match(normalised):
-                    continue
-                source_line = lines[lineno - 1] if 0 < lineno <= len(lines) else ""
-                if _AUDIT_EXEMPT_RE.search(source_line):
                     continue
                 findings.append(
                     LintFinding(

@@ -324,7 +324,9 @@ def test_if_not_exists_is_flagged(tmp_path: Path) -> None:
 
 def test_security_sensitive_table_is_flagged_as_warning(tmp_path: Path) -> None:
     path = _write(tmp_path, "0010_api_keys.py", _SECURITY_SENSITIVE)
-    findings = check_security_sensitive([path], sensitive_tables=frozenset({"api_keys"}))
+    findings = check_security_sensitive(
+        [path], sensitive_tables=frozenset({"api_keys"})
+    )
     assert len(findings) == 1
     assert findings[0].code == "CI-MIG-006"
 
@@ -427,3 +429,98 @@ def test_main_flags_raw_sql_audit_mutation_end_to_end(tmp_path: Path) -> None:
 def test_multiple_clean_fixtures_never_flagged(tmp_path: Path, fixture: str) -> None:
     path = _write(tmp_path, "x.py", fixture)
     assert check_if_not_exists([path]) == []
+
+
+# --- Round-3 review findings -------------------------------------------------
+
+_RAW_SQL_DELETE_AUDIT_LOG_WITH_MARKER = """
+from alembic import op
+
+
+def upgrade() -> None:
+    op.execute("DELETE FROM audit_log")  # cv:audit-exempt: cleanup
+"""
+
+_RAW_SQL_GRANT_DELETE_QUOTED_SCHEMA_AUDIT_CHECKPOINTS = """
+from alembic import op
+
+
+def upgrade() -> None:
+    op.execute('GRANT SELECT, DELETE ON "public"."audit_checkpoints" TO x')
+"""
+
+_RAW_SQL_FSTRING_UPDATE_AUDIT_LOG_VIA_NAME = """
+from alembic import op
+import sqlalchemy as sa
+
+
+def upgrade() -> None:
+    tbl = "audit_log"
+    op.execute(sa.text(f"update {tbl} set a=1"))
+"""
+
+_RAW_SQL_FSTRING_UPDATE_NON_AUDIT_TABLE_VIA_NAME = """
+from alembic import op
+import sqlalchemy as sa
+
+
+def upgrade() -> None:
+    tbl = "orders"
+    op.execute(sa.text(f"update {tbl} set a=1"))
+"""
+
+
+def test_audit_exempt_marker_never_suppresses_a_mutation(tmp_path: Path) -> None:
+    """Round-3 finding 1: the marker must never exempt a genuine mutation —
+    there is no escape hatch at all for a mutation keyword against an audit
+    table, regardless of any trailing comment (C-5.7)."""
+    path = _write(
+        tmp_path, "audit_exempt_marker.py", _RAW_SQL_DELETE_AUDIT_LOG_WITH_MARKER
+    )
+    findings = check_audit_table_integrity([path])
+    assert len(findings) == 1
+    assert findings[0].code == "CI-MIG-003"
+    assert "append-only" in findings[0].message
+
+
+def test_grant_delete_quoted_schema_and_table_is_flagged(tmp_path: Path) -> None:
+    """Round-3 finding 2: `"public"."audit_checkpoints"` (quoted schema and
+    quoted table) must be caught, not just an unquoted or table-only-quoted
+    form (C-5.7)."""
+    path = _write(
+        tmp_path,
+        "audit_grant_quoted_schema.py",
+        _RAW_SQL_GRANT_DELETE_QUOTED_SCHEMA_AUDIT_CHECKPOINTS,
+    )
+    findings = check_audit_table_integrity([path])
+    assert len(findings) == 1
+    assert findings[0].code == "CI-MIG-003"
+    assert "audit_checkpoints" in findings[0].message
+
+
+def test_fstring_update_via_resolved_name_constant_is_flagged(tmp_path: Path) -> None:
+    """Round-3 finding 3: `tbl = "audit_log"; f"update {tbl} ..."` must
+    resolve the simple `Name` placeholder to its assigned string constant and
+    still be caught (C-5.7)."""
+    path = _write(
+        tmp_path,
+        "audit_fstring_resolved.py",
+        _RAW_SQL_FSTRING_UPDATE_AUDIT_LOG_VIA_NAME,
+    )
+    findings = check_audit_table_integrity([path])
+    assert len(findings) == 1
+    assert findings[0].code == "CI-MIG-003"
+    assert "audit_log" in findings[0].message
+
+
+def test_fstring_update_via_resolved_non_audit_name_is_not_flagged(
+    tmp_path: Path,
+) -> None:
+    """Negative for finding 3: when the resolved name constant is not an
+    audit table, no finding is raised."""
+    path = _write(
+        tmp_path,
+        "audit_fstring_resolved_non_audit.py",
+        _RAW_SQL_FSTRING_UPDATE_NON_AUDIT_TABLE_VIA_NAME,
+    )
+    assert check_audit_table_integrity([path]) == []
