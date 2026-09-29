@@ -1,0 +1,35 @@
+{
+  "id": "bad_nested_key",
+  "strictConfig": true,
+  "strict": true,
+  "strictTargets": true,
+  "onUnhandled": "defer",
+  "maxIterations": 50,
+  "initial": "idle",
+  "context": {},
+  "states": {
+    "idle": {
+      "on": {
+        "GO": {"target": "#bad_nested_key.working"}
+      }
+    },
+    "working": {
+      "invoke": {
+        "id": "svc",
+        "src": {
+          "id": "inline",
+          "initial": "a",
+          "states": {
+            "a": {
+              "entryy": ["oops"],
+              "on": {"NEXT": {"target": "#inline.b"}}
+            },
+            "b": {"type": "final"}
+          }
+        },
+        "onDone": {"target": "#bad_nested_key.done"}
+      }
+    },
+    "done": {"type": "final"}
+  }
+}

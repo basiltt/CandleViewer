@@ -1,0 +1,20 @@
+{
+  "id": "valid_min",
+  "strictConfig": true,
+  "strict": true,
+  "strictTargets": true,
+  "onUnhandled": "defer",
+  "maxIterations": 50,
+  "initial": "idle",
+  "context": {},
+  "states": {
+    "idle": {
+      "on": {
+        "GO": {"target": "#valid_min.done"}
+      }
+    },
+    "done": {
+      "type": "final"
+    }
+  }
+}

@@ -20,6 +20,7 @@ dependencies = [
   "prometheus-client>=0.20",
   "structlog>=24.1",
   "xstate-statemachine==0.9.1",
+  "jsonschema>=4.23",
 ]
 
 [dependency-groups]
@@ -33,6 +34,7 @@ dev = [
   "datamodel-code-generator>=0.83.0",
   "types-PyYAML>=6.0",
   "types-psutil>=6.0",
+  "types-jsonschema>=4.23",
 ]
 test = [
   "pytest>=8.3",

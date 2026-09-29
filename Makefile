@@ -23,6 +23,7 @@ test:
 
 gen:
 	pnpm generate
+	uv run --project services/api python tools/statechart/render_catalogue.py
 
 # E03-T05: generated-code freshness gate (ADR-0013 binding rule 3). Runs
 # `make gen` twice to assert determinism (CI-GEN-003), then fails on any
