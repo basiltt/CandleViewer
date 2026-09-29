@@ -15,19 +15,15 @@ from candleviewer.audit.actions import UnknownAuditAction
 from candleviewer.audit.models import ExchangeEnv
 from candleviewer.audit.query import AuditQueryService
 from candleviewer.audit.redact import REDACTION_MARKER
-from candleviewer.audit.writer import AuditWriter, AuditWriterStopped
-
-
-async def _no_sleep(_: float) -> None:
-    await asyncio.sleep(0)
+from candleviewer.audit.writer import AuditUnavailable, AuditWriter, AuditWriterStopped
 
 
 def _writer(repo: FakeAuditRepository, tmp_path: Path, clock: FakeClock, **kw: Any) -> AuditWriter:
-    return AuditWriter(repo, str(tmp_path / "audit.wal"), clock=clock, sleep=_no_sleep, **kw)
+    return AuditWriter(repo, str(tmp_path / "audit.wal"), clock=clock, sleep=repo.retry_sleep, **kw)
 
 
 async def _drain(writer: AuditWriter) -> None:
-    await asyncio.wait_for(writer._queue.join(), timeout=5)
+    await writer.flush(5)
 
 
 async def test_writer_genesis_and_chain_links_previous_entry(
@@ -71,7 +67,7 @@ async def test_writer_secret_fields_absent_and_marker_present(
 async def test_writer_postgres_outage_500_events_in_order_no_duplicates(
     repo: FakeAuditRepository, tmp_path: Path, clock: FakeClock
 ) -> None:
-    w = _writer(repo, tmp_path, clock, max_queue_size=1000)
+    w = _writer(repo, tmp_path, clock)
     await w.start()
     repo.down = True
     for i in range(500):
@@ -149,33 +145,96 @@ async def test_writer_typed_ids_and_env_persisted(
     await _drain(w)
     await w.stop(1)
     assert repo.rows[0]["actor_user_id"] == str(uid) and repo.rows[0]["env"] == "demo"
-    assert w.written_total == 1 and w.dropped_total == 0 and w.buffer_depth == 0
+    assert w.written_total == 1 and w.refused_total == 0 and w.buffer_depth == 0
 
 
-async def test_writer_queue_overflow_drops_oldest_and_alarms(
+async def test_writer_emit_is_durable_in_wal_before_returning(
     repo: FakeAuditRepository, tmp_path: Path, clock: FakeClock
+) -> None:
+    w = _writer(repo, tmp_path, clock)
+    w._running = True  # no flusher task: only emit() itself runs
+    await w.emit("auth.login", actor_label="durable")
+    assert "durable" in (tmp_path / "audit.wal").read_text(encoding="utf-8")
+    assert w.buffer_depth == 1 and repo.rows == []
+
+
+async def test_writer_wal_write_failure_raises_and_alarms(
+    repo: FakeAuditRepository,
+    tmp_path: Path,
+    clock: FakeClock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     alarms: list[str] = []
 
     async def alarm(reason: str) -> None:
         alarms.append(reason)
 
-    w = _writer(repo, tmp_path, clock, max_queue_size=2, on_alarm=alarm)
-    w._running = True  # no writer task: queue fills deterministically
-    for i in range(3):
-        await w.emit("auth.login", actor_label=str(i))
-    assert alarms == ["queue full"] and w.dropped_total == 1
-    assert [w._queue.get_nowait()["actor_label"] for _ in range(2)] == ["1", "2"]
+    w = _writer(repo, tmp_path, clock, on_alarm=alarm)
+    await w.start()
+
+    def boom(_record: dict[str, Any]) -> int:
+        raise OSError("disk gone")
+
+    monkeypatch.setattr(w._wal, "append", boom)
+    with pytest.raises(AuditUnavailable):
+        await w.emit("auth.login", actor_label="x")
+    assert w.refused_total == 1 and alarms and "OSError" in alarms[0]
+    await w.stop(1)
 
 
-async def test_writer_queue_overflow_without_callback_logs(
-    repo: FakeAuditRepository, tmp_path: Path, clock: FakeClock, caplog: pytest.LogCaptureFixture
+async def test_writer_wal_full_with_postgres_down_refuses_never_drops(
+    repo: FakeAuditRepository, tmp_path: Path, clock: FakeClock
 ) -> None:
-    w = _writer(repo, tmp_path, clock, max_queue_size=1)
-    w._running = True
-    await w.emit("auth.login", actor_label="a")
-    await w.emit("auth.login", actor_label="b")
-    assert "overflow" in caplog.text
+    repo.down = True
+    w = _writer(repo, tmp_path, clock, max_wal_bytes=1500)
+    await w.start()
+    accepted = 0
+    with pytest.raises(AuditUnavailable):
+        for i in range(100):
+            await w.emit("auth.login", actor_label=str(i))
+            accepted += 1
+    assert 0 < accepted < 100
+    repo.down = False
+    await _drain(w)
+    await w.stop(1)
+    assert [r["actor_label"] for r in repo.rows] == [str(i) for i in range(accepted)]
+
+
+async def test_writer_stop_without_flush_then_restart_delivers_exactly_once(
+    repo: FakeAuditRepository, tmp_path: Path, clock: FakeClock
+) -> None:
+    repo.down = True
+    w1 = _writer(repo, tmp_path, clock)
+    await w1.start()
+    for i in range(5):
+        await w1.emit("orders.submit", actor_label="bot", object_id=str(i))
+    await w1.stop(0.01)
+    assert repo.rows == []
+    repo.down = False
+    w2 = _writer(repo, tmp_path, clock)
+    await w2.start()
+    await _drain(w2)
+    await w2.stop(1)
+    assert [r["object_id"] for r in repo.rows] == [str(i) for i in range(5)]
+
+
+async def test_writer_replay_after_commit_before_cursor_is_idempotent(
+    repo: FakeAuditRepository, tmp_path: Path, clock: FakeClock
+) -> None:
+    repo.down = True
+    w1 = _writer(repo, tmp_path, clock)
+    await w1.start()
+    await w1.emit("auth.login", actor_label="a")
+    await w1.stop(0.01)
+    # Simulate a crash after the INSERT committed but before the cursor moved.
+    (record,) = [json.loads(x) for x in (tmp_path / "audit.wal").read_text().splitlines()]
+    repo.down = False
+    await repo.insert(record)
+    w2 = _writer(repo, tmp_path, clock)
+    await w2.start()
+    await _drain(w2)
+    await w2.stop(1)
+    assert len(repo.rows) == 1
 
 
 async def test_writer_wal_full_compacts_committed_prefix(

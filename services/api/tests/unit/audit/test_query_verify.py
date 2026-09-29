@@ -22,6 +22,7 @@ async def _seed(repo: FakeAuditRepository, n: int, clock: FakeClock) -> None:
     for i in range(n):
         await repo.insert(
             {
+                "record_id": f"00000000-0000-4000-8000-{i:012d}",
                 "action": "orders.submit" if i % 2 else "auth.login",
                 "actor_label": f"u{i}",
                 "outcome": "denied" if i % 3 == 0 else "success",
@@ -138,3 +139,51 @@ async def test_verify_detects_tampered_head_hash(
     repo.rows[-1]["entry_hash"] = bad
     result = await AuditQueryService(repo).verify()
     assert result.first_bad_id == 2
+
+
+_HASHED_KEYS = (
+    "actor_user_id",
+    "actor_label",
+    "actor_ip",
+    "session_id",
+    "action",
+    "object_kind",
+    "object_id",
+    "outcome",
+    "severity",
+    "reason",
+    "before_state",
+    "after_state",
+    "request_id",
+    "env",
+    "event_ts",
+)
+_field = st.one_of(st.none(), st.text(alphabet="ab:-1|", max_size=4))
+
+
+@settings(max_examples=300)
+@given(a=st.lists(_field, min_size=16, max_size=16), b=st.lists(_field, min_size=16, max_size=16))
+def test_canonical_hash_input_is_injective(a: list[str | None], b: list[str | None]) -> None:
+    from candleviewer.audit.query import _canonical_field
+
+    def encode(vals: list[str | None]) -> str:
+        return "".join(_canonical_field(v) for v in vals)
+
+    if a != b:
+        assert encode(a) != encode(b)
+
+
+def test_canonical_field_golden() -> None:
+    from candleviewer.audit.query import _canonical_field, _canonical_hash
+
+    assert _canonical_field(None) == "-" and _canonical_field("") == "0:"
+    assert _canonical_field("ab") == "2:ab" and _canonical_field("é") == "1:é"
+    row = dict.fromkeys(_HASHED_KEYS)
+    row.update(actor_label="a", action="auth.login", outcome="success", severity="info")
+    # sha256("64:000..0" "-" "1:a" "-" "-" "10:auth.login" "-" "-" "7:success" "4:info" "-"*6)
+    import hashlib
+
+    expected = hashlib.sha256(
+        ("64:" + "0" * 64 + "-1:a--10:auth.login--7:success4:info" + "-" * 6).encode()
+    ).hexdigest()
+    assert _canonical_hash("0" * 64, row) == expected

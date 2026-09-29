@@ -9,6 +9,9 @@ import subprocess
 import sys
 from pathlib import Path
 from types import ModuleType
+from typing import Any
+
+import pytest
 
 _ROOT = Path(__file__).resolve().parents[3]
 
@@ -56,8 +59,13 @@ def test_0003_ddl_matches_schema_doc_invariants() -> None:
     for needle in (
         "CREATE TRIGGER trg_audit_chain BEFORE INSERT ON audit_log",
         "CREATE TRIGGER trg_audit_append BEFORE UPDATE OR DELETE ON audit_log",
-        "REVOKE UPDATE, DELETE ON audit_log FROM cv_app",
-        "REVOKE UPDATE, DELETE ON audit_log FROM cv_ro",
+        "REVOKE UPDATE, DELETE, TRUNCATE ON audit_log FROM cv_app",
+        "REVOKE UPDATE, DELETE, TRUNCATE ON audit_log FROM cv_ro",
+        "CREATE TRIGGER trg_audit_no_truncate BEFORE TRUNCATE ON audit_log",
+        "FOR EACH STATEMENT EXECUTE FUNCTION audit_refuse_truncate()",
+        "PERFORM pg_advisory_xact_lock(hashtext('audit_log'))",
+        "record_id     uuid NOT NULL UNIQUE",
+        "audit_field(NEW.prev_hash)",
         "COALESCE(last_hash, repeat('0',64))",
         "au_action_fmt",
         "CREATE TABLE audit_checkpoints",
@@ -72,3 +80,55 @@ def test_0003_downgrade_drops_everything_it_created() -> None:
     sql = _load()._DOWNGRADE_SQL
     for obj in ("audit_checkpoints", "audit_log", "audit_chain()", "forbid_mutation()"):
         assert obj in sql
+
+
+class _FakeResult:
+    def __init__(self, value: int) -> None:
+        self._value = value
+
+    def scalar(self) -> int:
+        return self._value
+
+
+class _FakeBind:
+    def __init__(self, counts: dict[str, int]) -> None:
+        self._counts = counts
+
+    def exec_driver_sql(self, sql: str) -> _FakeResult:
+        table = sql.rsplit(" ", 1)[-1]
+        return _FakeResult(self._counts[table])
+
+
+class _FakeOp:
+    def __init__(self, counts: dict[str, int]) -> None:
+        self._bind = _FakeBind(counts)
+        self.executed: list[str] = []
+
+    def get_bind(self) -> _FakeBind:
+        return self._bind
+
+    def execute(self, sql: Any) -> None:
+        self.executed.append(str(sql))
+
+
+@pytest.mark.parametrize(
+    "counts",
+    [{"audit_log": 3, "audit_checkpoints": 0}, {"audit_log": 0, "audit_checkpoints": 1}],
+)
+def test_0003_downgrade_refuses_when_audit_history_present(
+    counts: dict[str, int], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    mod = _load()
+    fake = _FakeOp(counts)
+    monkeypatch.setattr(mod, "op", fake)
+    with pytest.raises(RuntimeError, match=r"C-5.7"):
+        mod.downgrade()
+    assert fake.executed == []
+
+
+def test_0003_downgrade_proceeds_when_empty(monkeypatch: pytest.MonkeyPatch) -> None:
+    mod = _load()
+    fake = _FakeOp({"audit_log": 0, "audit_checkpoints": 0})
+    monkeypatch.setattr(mod, "op", fake)
+    mod.downgrade()
+    assert fake.executed == [mod._DOWNGRADE_SQL]

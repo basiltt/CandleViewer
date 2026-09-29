@@ -4,6 +4,7 @@ a controllable outage switch, and a fixed clock. No database, no network."""
 
 from __future__ import annotations
 
+import asyncio
 import json
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -20,13 +21,33 @@ class FakeAuditRepository:
     def __init__(self) -> None:
         self.rows: list[dict[str, Any]] = []
         self.checkpoints: dict[int, dict[str, Any]] = {}
-        self.down = False
+        self._up = asyncio.Event()
+        self._up.set()
         self.insert_attempts = 0
+
+    @property
+    def down(self) -> bool:
+        return not self._up.is_set()
+
+    @down.setter
+    def down(self, value: bool) -> None:
+        if value:
+            self._up.clear()
+        else:
+            self._up.set()
+
+    async def retry_sleep(self, _delay: float) -> None:
+        """Deterministic stand-in for the writer's backoff sleep: parks until
+        the fake Postgres is back up (no wall-clock sleeping, no busy spin)."""
+        await asyncio.sleep(0)
+        await self._up.wait()
 
     async def insert(self, record: dict[str, Any]) -> None:
         self.insert_attempts += 1
         if self.down:
             raise ConnectionError("postgres unavailable")
+        if any(r["record_id"] == record["record_id"] for r in self.rows):
+            return  # ON CONFLICT (record_id) DO NOTHING
         prev = self.rows[-1]["entry_hash"] if self.rows else GENESIS
 
         def js(v: Any) -> str | None:
@@ -34,6 +55,7 @@ class FakeAuditRepository:
 
         row: dict[str, Any] = {
             "id": len(self.rows) + 1,
+            "record_id": record["record_id"],
             "prev_hash": prev,
             "actor_user_id": record.get("actor_user_id"),
             "actor_label": record["actor_label"],
