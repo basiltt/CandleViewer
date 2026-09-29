@@ -4,15 +4,36 @@
 checks array with real probes (Postgres, QuestDB, exchange connectivity).
 Neither route touches a datastore or the network — `create_app()` must be
 constructible and servable with fakes only.
+
+QA defect #1578 blocker 2: `/readyz` also exposes the mesh guard's current
+`ReadOnlyGate` state (`mesh_binding_safe`/`mesh_reason_code`) so SCR-137
+(Admin security centre) and SCR-016 (first-run wizard) have a data source,
+per the ticket's explicit deliverable ("self-check result exposed on the
+health payload"). `mesh_read_only_gate` is optional and structurally typed
+(mirrors `oms.validator.ReadOnlyCheck`) so this module never needs to import
+`candleviewer.net` directly, and a caller that does not pass one (e.g. a
+bare unit test) still gets a valid response with `mesh_binding_safe=None`.
 """
 
 from __future__ import annotations
+
+from typing import Protocol
 
 from fastapi import APIRouter, Response
 from prometheus_client import CONTENT_TYPE_LATEST, CollectorRegistry, generate_latest
 
 from candleviewer.api.models import LivenessResponse, ReadinessResponse
 from candleviewer.settings import Settings
+
+
+class ReadOnlyGateLike(Protocol):
+    """Structural type for `candleviewer.net.ReadOnlyGate` (no import edge)."""
+
+    @property
+    def is_read_only(self) -> bool: ...
+
+    @property
+    def reason_code(self) -> str | None: ...
 
 
 def _build_info(settings: Settings) -> dict[str, str]:
@@ -23,7 +44,11 @@ def _build_info(settings: Settings) -> dict[str, str]:
     }
 
 
-def make_health_router(settings: Settings, metrics: CollectorRegistry | None = None) -> APIRouter:
+def make_health_router(
+    settings: Settings,
+    metrics: CollectorRegistry | None = None,
+    mesh_read_only_gate: ReadOnlyGateLike | None = None,
+) -> APIRouter:
     """Bind the health/metrics routes to a concrete `Settings` instance.
 
     Returned as a fresh router (rather than reusing the module-level
@@ -43,7 +68,18 @@ def make_health_router(settings: Settings, metrics: CollectorRegistry | None = N
 
     @bound.get("/readyz", response_model=ReadinessResponse)
     def readyz() -> ReadinessResponse:
-        return ReadinessResponse(checks=[], **_build_info(settings))
+        mesh_binding_safe = (
+            not mesh_read_only_gate.is_read_only if mesh_read_only_gate is not None else None
+        )
+        mesh_reason_code = (
+            mesh_read_only_gate.reason_code if mesh_read_only_gate is not None else None
+        )
+        return ReadinessResponse(
+            checks=[],
+            mesh_binding_safe=mesh_binding_safe,
+            mesh_reason_code=mesh_reason_code,
+            **_build_info(settings),
+        )
 
     @bound.get("/metrics")
     def metrics_endpoint() -> Response:
