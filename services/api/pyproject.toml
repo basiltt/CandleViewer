@@ -45,6 +45,7 @@ test = [
   "opentelemetry-sdk",
   "opentelemetry-api",
   "psutil",
+  "respx==0.23.1",
 ]
 
 [build-system]
@@ -131,7 +132,9 @@ omit = [
   "candleviewer/bars/*",
   "candleviewer/book/*",
   "candleviewer/exchange/base/service.py",
-  "candleviewer/exchange/bybit/*",
+  # rest.py/mapping.py/errors.py/models.py are implemented and tested by
+  # E08-T02 (>=85% required); only the lifecycle scaffold stays omitted.
+  "candleviewer/exchange/bybit/service.py",
   "candleviewer/journal/*",
   "candleviewer/main.py",
   "candleviewer/observability/service.py",
