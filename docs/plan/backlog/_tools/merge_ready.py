@@ -21,8 +21,20 @@ after = [(t, b) for t, b in verdicts if t > last]
 if not after: fail(f"no VERDICT after last commit {last}")
 if any(re.search(r"VERDICT:\s*REQUEST_CHANGES", b, re.I) and t == after[-1][0] for t, b in after): fail("latest verdict is REQUEST_CHANGES")
 if not any(re.search(r"VERDICT:\s*APPROVE", b, re.I) for _, b in after): fail("no APPROVE after last commit")
-bad = [c for c in d.get("statusCheckRollup") or [] if c.get("conclusion") not in (None, "SUCCESS", "NEUTRAL", "SKIPPED") or c.get("state") in ("FAILURE", "ERROR")]
-if bad: fail("failing checks: " + ", ".join(c.get("name") or c.get("context", "?") for c in bad))
+rollup = d.get("statusCheckRollup") or []
+def _name(c): return c.get("name") or c.get("context", "?")
+def _failed(c): return c.get("conclusion") not in (None, "SUCCESS", "NEUTRAL", "SKIPPED") or c.get("state") in ("FAILURE", "ERROR")
+# Only checks our workflows own gate the merge (C-9.1: the required-check list is resolved
+# by `ci-required`; `governance` is its own required workflow). GitHub code-scanning
+# "echo" check runs ("Semgrep OSS", "CodeQL", "Bandit" — SARIF uploads with no workflowName)
+# re-surface the very alerts the `security/*` lanes already evaluated via security_gate.py
+# and are not in C-9.1; they are reported but never block.
+own = [c for c in rollup if c.get("workflowName")]
+echo_bad = [c for c in rollup if not c.get("workflowName") and _failed(c)]
+bad = [c for c in own if _failed(c)]
+if bad: fail("failing checks: " + ", ".join(_name(c) for c in bad))
+if not any(_name(c) == "ci-required" and c.get("conclusion") == "SUCCESS" for c in own): fail("ci-required not SUCCESS")
+if echo_bad: print("note: non-gating code-scanning echo check(s) red (not in C-9.1): " + ", ".join(_name(c) for c in echo_bad))
 r = subprocess.run([sys.executable, os.path.join(HERE, "verify_pr.py"), pr], capture_output=True, text=True, encoding="utf-8", errors="replace")
 print(r.stdout.strip().splitlines()[-1] if r.stdout.strip() else r.stderr[-200:])
 if r.returncode: fail("verify_pr FAIL")
