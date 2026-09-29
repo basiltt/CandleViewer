@@ -161,7 +161,11 @@ _HASHED_KEYS = (
 _field = st.one_of(st.none(), st.text(alphabet="ab:-1|", max_size=4))
 
 
-@settings(max_examples=300)
+# deadline=None: 300 examples x 32 generated strings takes 12-15 s on the CI
+# runner; hypothesis's default 200 ms per-example deadline trips under full-suite
+# load (observed on PR #1601, unrelated diff). The property itself is cheap and
+# deterministic; the deadline is the only source of flakiness (C-9.3).
+@settings(max_examples=300, deadline=None)
 @given(a=st.lists(_field, min_size=16, max_size=16), b=st.lists(_field, min_size=16, max_size=16))
 def test_canonical_hash_input_is_injective(a: list[str | None], b: list[str | None]) -> None:
     from candleviewer.audit.query import _canonical_field
