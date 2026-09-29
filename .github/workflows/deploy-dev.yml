@@ -55,11 +55,21 @@ jobs:
 
       - name: Resolve the digest just built by main.yml
         id: digest
+        # CI-DEP-003 hardening: inspect main.yml's per-commit semver+shortsha
+        # tag (`{version}-{shortsha}`, immutable in practice — a new build
+        # for the same commit would need a version bump to retag it) instead
+        # of the mutable `:dev` tag — a second `main.yml` run landing
+        # between this trigger firing and this step executing would
+        # otherwise let `imagetools inspect :dev` race ahead to a *newer*
+        # digest than the one that actually completed and triggered this
+        # run (previously caught only after the fact, by CI-DEP-003's
+        # post-deploy sha check).
         run: |
           set -euo pipefail
           SHORT_SHA="$(git rev-parse --short=12 ${{ github.event.workflow_run.head_sha }})"
+          VERSION="$(python3 -c "import tomllib; print(tomllib.load(open('services/api/pyproject.toml','rb'))['project']['version'])")"
           DIGEST="$(docker buildx imagetools inspect \
-            "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev" --format '{{json .Manifest}}' \
+            "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${VERSION}-${SHORT_SHA}" --format '{{json .Manifest}}' \
             | python3 -c "import sys,json; print(json.load(sys.stdin)['digest'])")"
           echo "sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
           echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
