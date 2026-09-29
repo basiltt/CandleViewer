@@ -1,0 +1,135 @@
+"""`LoginService` — the M18 credential-check core for E09-S01 (US-ONB-001).
+
+`login()` implements every Gherkin scenario in the ticket:
+
+- successful credentials on an MFA-enrolled user -> `MfaChallengeResult`
+  (never a session; E09-S02 completes the second leg);
+- wrong password / unknown identifier -> `InvalidCredentials`, same message,
+  same code path, same timing (dummy-hash verification on the unknown-user
+  path — see `hashing.Hasher.verify_dummy`);
+- disabled account -> `AccountDisabled`, but only ever raised *after* a
+  correct password (ticket's documented trade-off);
+- five consecutive failures -> `AccountLocked` for 15 minutes, persisted so
+  a process restart does not clear it;
+- a per-IP throttle independent of the per-account one (ticket "Scope /
+  Deliverables": "one attacker cannot lock every account").
+
+Audit emissions (`auth.login`/`auth.login_failed`) are the caller's
+responsibility here: `LoginService` raises typed errors and returns typed
+results, and the router (`candleviewer.api`, which *is* allowed to import
+`candleviewer.audit`) emits the audit record with the HTTP-layer context
+(source IP, request id) this module does not have. This keeps M18's own
+`.importlinter` contract (`forbidden-M18` — `auth` may not import `audit`)
+intact.
+"""
+
+from __future__ import annotations
+
+import secrets
+from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
+
+from candleviewer.auth.errors import AccountDisabled, AccountLocked, InvalidCredentials
+from candleviewer.auth.hashing import DEFAULT_ARGON2_PARAMS, Hasher
+from candleviewer.auth.models import LoginRequest, MfaChallengeResult, UserRecord, UserStatus
+from candleviewer.auth.repository import UserRepository
+from candleviewer.auth.throttle import PerIpLoginThrottle
+
+#: Ticket "Scope / Deliverables": "5 failures -> 15 min lockout".
+LOCKOUT_THRESHOLD = 5
+LOCKOUT_DURATION = timedelta(minutes=15)
+
+Clock = Callable[[], datetime]
+
+
+def _utc_now() -> datetime:
+    return datetime.now(UTC)
+
+
+class LoginService:
+    def __init__(
+        self,
+        repository: UserRepository,
+        hasher: Hasher,
+        *,
+        per_ip_throttle: PerIpLoginThrottle | None = None,
+        clock: Clock = _utc_now,
+        mfa_token_factory: Callable[[], str] = lambda: secrets.token_urlsafe(32),
+    ) -> None:
+        self._repository = repository
+        self._hasher = hasher
+        self._per_ip_throttle = per_ip_throttle or PerIpLoginThrottle()
+        self._clock = clock
+        self._mfa_token_factory = mfa_token_factory
+
+    async def login(self, request: LoginRequest, *, source_ip: str) -> MfaChallengeResult:
+        """Verify credentials and return the MFA challenge for step 2.
+
+        Raises `InvalidCredentials`, `AccountDisabled`, or `AccountLocked`.
+        A full (non-MFA) `TokenBundle` path is out of this ticket's scope
+        (E09-S03 owns session/token minting) — a user with no enrolled MFA
+        method still raises `InvalidCredentials` is wrong; instead see the
+        `NotImplementedError` note below for that one uncovered branch.
+        """
+        if self._per_ip_throttle.is_blocked(source_ip):
+            # Per-IP throttle failures are indistinguishable from a wrong
+            # password to the caller (no extra information leaked about
+            # *why* the request was refused).
+            raise InvalidCredentials("too many attempts from this source")
+
+        user = await self._repository.find_by_identifier(request.identifier)
+        if user is None:
+            # Enumeration resistance: run the identical Argon2id work a real
+            # user would incur, then fail exactly like a wrong password.
+            self._hasher.verify_dummy(request.password)
+            self._per_ip_throttle.record_failure(source_ip)
+            raise InvalidCredentials("Username or password is incorrect")
+
+        if user.locked_until is not None and user.locked_until > self._clock():
+            remaining = int((user.locked_until - self._clock()).total_seconds())
+            raise AccountLocked(max(remaining, 1))
+
+        password_ok = self._hasher.verify(user.password_hash, request.password)
+        if not password_ok:
+            self._per_ip_throttle.record_failure(source_ip)
+            await self._on_failure(user)
+            raise InvalidCredentials("Username or password is incorrect")
+
+        # Password verified. Only now may the disabled state be revealed
+        # (ticket's documented trade-off).
+        if user.status is UserStatus.DISABLED:
+            raise AccountDisabled("Account disabled - contact the owner")
+
+        if self._hasher.needs_rehash(user.password_hash, DEFAULT_ARGON2_PARAMS):
+            new_hash = self._hasher.hash(request.password, DEFAULT_ARGON2_PARAMS)
+            await self._repository.rehash_password(
+                str(user.id), password_hash=new_hash, algo_params=DEFAULT_ARGON2_PARAMS
+            )
+
+        await self._repository.record_login_success(str(user.id))
+
+        if not user.mfa_required or not user.mfa_methods:
+            # This story's scope is exactly the two-legged path (ticket
+            # References: "POST /auth/login returns an mfa_required
+            # challenge ... POST /auth/mfa/verify (E09-S02) completes it").
+            # A non-MFA full-session response is schema-valid
+            # (`AuthenticatedResponse`) but minting a real session/JWT is
+            # E09-S03 scope ("Out of scope: Session lifetime ... "); raising
+            # here rather than fabricating an unsigned token keeps this
+            # service from inventing a security-critical shape ahead of its
+            # owning ticket.
+            raise NotImplementedError(
+                "non-MFA session issuance is E09-S03 scope; this user has no "
+                "enrolled MFA method — see the ticket's Out of scope section"
+            )
+
+        return MfaChallengeResult(
+            mfa_token=self._mfa_token_factory(),
+            methods=user.mfa_methods,
+            expires_in=300,
+        )
+
+    async def _on_failure(self, user: UserRecord) -> None:
+        new_count = user.failed_login_count + 1
+        lock_until = self._clock() + LOCKOUT_DURATION if new_count >= LOCKOUT_THRESHOLD else None
+        await self._repository.record_login_failure(str(user.id), lock_until=lock_until)
