@@ -138,6 +138,8 @@ jobs:
         # this identity, so ledger commits land on the shared
         # `ops/deploy-ledger` ref instead of `main`.
         if: always()
+        env:
+          DEPLOY_SHA: ${{ steps.target.outputs.sha }}
         run: |
           set -euo pipefail
           if git diff --quiet -- deployments/ledger.jsonl; then
@@ -159,7 +161,7 @@ jobs:
           cp "$NEW_LEDGER" deployments/ledger.jsonl
           cp "${GITHUB_WORKSPACE}/deployments/README.md" deployments/README.md 2>/dev/null || true
           git add deployments/ledger.jsonl deployments/README.md
-          git commit -m "chore(infra-devops): record staging deploy ${{ steps.target.outputs.sha }} [skip ci]"
+          git commit -m "chore(infra-devops): record staging deploy ${DEPLOY_SHA} [skip ci]"
           git push origin HEAD:refs/heads/ops/deploy-ledger
 
       - name: Job summary
