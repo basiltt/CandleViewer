@@ -129,8 +129,9 @@ async def assert_no_schema_drift(executor: QuestDbExecutor, ddl_dir: Path) -> No
     expected = parse_ddl_dir(ddl_dir)
     for table in expected:
         # `table.name` comes from parsing our own trusted `.sql` files, never
-        # from user input.
-        query = f"SELECT column FROM table_columns('{table.name}')"  # noqa: S608  # nosec B608 - table.name from trusted parsed DDL files, not user input
+        # from user input. `column` is a SQL keyword in QuestDB and must be
+        # double-quoted when referenced as an identifier in the SELECT list.
+        query = f"SELECT \"column\" FROM table_columns('{table.name}')"  # noqa: S608  # nosec B608 - table.name from trusted parsed DDL files, not user input
         rows = await executor.fetch(query)
         live_columns = {str(row["column"]).lower() for row in rows}
         expected_columns = set(table.columns)
