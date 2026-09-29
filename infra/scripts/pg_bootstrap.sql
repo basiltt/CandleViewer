@@ -65,7 +65,18 @@ SELECT 'CREATE DATABASE candleviewer OWNER cv_owner'
 WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'candleviewer')
 \gexec
 
+-- If `candleviewer` already existed (e.g. created by the CI service
+-- container's own POSTGRES_DB bootstrap, owned by that container's
+-- superuser) the CREATE DATABASE above is a no-op, so re-assert
+-- ownership here unconditionally — cv_owner must own the database it
+-- migrates, or the REVOKE/GRANT block below leaves it without CREATE
+-- on schema public (bug #1556 CI follow-up).
+ALTER DATABASE candleviewer OWNER TO cv_owner;
+
 \connect candleviewer
+
+-- Re-assert schema ownership too, for the same already-existed case.
+ALTER SCHEMA public OWNER TO cv_owner;
 
 -- `cv_app` never receives CREATE/ALTER/DROP on this database (§9.1: "the app
 -- role cv_app has no DDL privileges") — no GRANT of schema-level CREATE is
