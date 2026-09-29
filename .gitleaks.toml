@@ -28,3 +28,26 @@ regexes = [
   # ticket prose "config keys: `oms.algo.max_children=450`" — settings names, not secrets
   '''^oms\.[a-z0-9_.]+=[a-z0-9_.]+$''',
 ]
+
+# E08-X03: Bybit-specific secret shapes the default gitleaks ruleset does
+# not know about — API key, HMAC signature and the X-BAPI-* auth headers.
+# These extend (never replace) the default pack and feed both the CI
+# gitleaks job and the fixture pre-commit check (packages/fixtures/scripts/verify.mjs).
+[[rules]]
+id = "bybit-api-key"
+description = "Bybit v5 API key/secret field"
+regex = '''(?i)"(api[_-]?key|api[_-]?secret)"\s*:\s*"[A-Za-z0-9]{16,}"'''
+tags = ["key", "bybit"]
+
+[[rules]]
+id = "bybit-hmac-signature"
+description = "Bybit v5 request HMAC signature (hex-encoded)"
+regex = '''(?i)"sign(ature)?"\s*:\s*"[A-Fa-f0-9]{32,}"'''
+tags = ["signature", "bybit"]
+
+[[rules]]
+id = "bybit-bapi-header"
+description = "Bybit v5 X-BAPI-* authentication header with a live-looking value"
+regex = '''(?i)X-BAPI-(API-KEY|SIGN)\s*[:=]\s*["']?[A-Za-z0-9]{16,}'''
+tags = ["header", "bybit"]
+

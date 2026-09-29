@@ -1,0 +1,47 @@
+rules:
+  - id: cv-bybit-vocabulary-leak
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Bybit-native field/header/topic vocabulary (retCode, retMsg, X-BAPI-*,
+      publicTrade, orderbook.200, tickers, category, recvWindow, confirm,
+      qtyStep, tickSize, lotSizeFilter, ...) must not appear outside
+      services/api/candleviewer/exchange/bybit/ (docs/plan/20-architecture.md
+      §0 principle P3; docs/plan/24-internal-schemas.md C9). Everything else
+      consumes exchange/base/ interfaces and normalised domain events. This
+      is the explicit identifier list named by the ticket (E08-X03); an
+      allow-list entry (a `# nosemgrep: cv-bybit-vocabulary-leak` with a
+      justification comment and a linked ticket) is the only escape.
+    metadata:
+      references:
+        - docs/plan/20-architecture.md §0 P3
+        - docs/plan/24-internal-schemas.md C9
+      rule-id: cv-bybit-vocabulary-leak
+    pattern-regex: '\b(retCode|retMsg|retExtInfo|X-BAPI-[A-Z-]+|publicTrade|orderbook\.200|recvWindow|qtyStep|tickSize|lotSizeFilter|orderLinkId|orderFilter|triggerBy|positionIdx|timeInForce|reduceOnly|closeOnTrigger|tpTriggerBy|slTriggerBy|tpslMode)\b'
+    paths:
+      exclude:
+        - "services/api/candleviewer/exchange/bybit/**"
+        # exchange/base/ is the port/taxonomy layer: its docstrings legitimately
+        # cite Bybit retCode numbers verbatim for traceability back to the wire
+        # mapping table (§8.6) without *using* the vocabulary as a field name —
+        # same exemption tools/ci precedent in
+        # services/api/scripts/lint_exchange_vocabulary.py already applies.
+        - "services/api/candleviewer/exchange/base/**"
+        - "services/api/scripts/lint_exchange_vocabulary.py"
+        # Allow-list (ticket "the only escape"): module docstring prose that
+        # *describes* the P3 invariant in words, not a Bybit field name used
+        # as an identifier. Linked ticket: E08-X03 (this ticket).
+        - "services/api/candleviewer/domain/__init__.py"
+        - "packages/protocol/**"
+        - "packages/fixtures/**"
+        - "tests/fixtures/**"
+        - "services/api/tests/fixtures/**"
+        - "docs/**"
+        - "**/*.md"
+        - "**/*.yaml"
+        - "**/*.yml"
+        - "**/*.json"
+        - "**/*.toml"
+        - "**/conftest.py"
+        - "**/test_*.py"
+        - "**/*_test.py"

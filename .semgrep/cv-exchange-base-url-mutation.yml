@@ -1,0 +1,29 @@
+rules:
+  - id: cv-exchange-base-url-mutation
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Assignment to a client's base URL / host attribute outside
+      construction (`__init__`) is banned: SR-040a requires one client
+      instance per environment with the host and key pair bound together
+      at construction and never re-resolved per call (E08-X01 §E8-5,
+      docs/security/threat-models/e08-exchange-boundary.md). Rebuild a new
+      client instead of mutating an existing one's base URL/host.
+    metadata:
+      references:
+        - docs/security/threat-models/e08-exchange-boundary.md SR-040a
+      rule-id: cv-exchange-base-url-mutation
+    patterns:
+      - pattern-either:
+          - pattern: $SELF.base_url = $VALUE
+          - pattern: $SELF._base_url = $VALUE
+          - pattern: $SELF.host = $VALUE
+          - pattern: $SELF._host = $VALUE
+      - pattern-not-inside: |
+          def __init__(...):
+              ...
+    paths:
+      exclude:
+        - "**/test_*.py"
+        - "**/*_test.py"
+        - "**/conftest.py"
