@@ -23,19 +23,26 @@
 \set app_pw `echo "${CV_PG_APP_PASSWORD:-CHANGE_ME}"`
 \set ro_pw `echo "${CV_PG_RO_PASSWORD:-CHANGE_ME}"`
 
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cv_owner') THEN
-    CREATE ROLE cv_owner LOGIN PASSWORD :'owner_pw';
-  END IF;
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cv_app') THEN
-    CREATE ROLE cv_app LOGIN PASSWORD :'app_pw';
-  END IF;
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cv_ro') THEN
-    CREATE ROLE cv_ro LOGIN PASSWORD :'ro_pw';
-  END IF;
-END
-$$;
+-- NOTE: role creation is expressed as three `SELECT ... \gexec` statements
+-- rather than a single `DO $$ ... $$` block. psql's `:'var'` interpolation
+-- is a client-side lexer pass that does not descend into dollar-quoted
+-- string bodies, so `PASSWORD :'owner_pw'` inside `DO $$ ... $$` is sent to
+-- the server byte-for-byte (including the literal colon), which the server
+-- then rejects with `syntax error at or near ":"` (bug #1556 CI failure).
+-- `\gexec` statements are plain top-level SQL, not dollar-quoted, so the
+-- substitution happens as intended before the generated `CREATE ROLE` text
+-- is sent back to the server for execution.
+SELECT format('CREATE ROLE cv_owner LOGIN PASSWORD %L', :'owner_pw')
+WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cv_owner')
+\gexec
+
+SELECT format('CREATE ROLE cv_app LOGIN PASSWORD %L', :'app_pw')
+WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cv_app')
+\gexec
+
+SELECT format('CREATE ROLE cv_ro LOGIN PASSWORD %L', :'ro_pw')
+WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cv_ro')
+\gexec
 
 SELECT 'CREATE DATABASE candleviewer OWNER cv_owner'
 WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'candleviewer')

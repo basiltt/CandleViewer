@@ -69,7 +69,8 @@ jobs:
         run: uv sync --frozen --all-groups
 
       - name: Migration lockfile integrity (#1556, rule 9 — forward-only in production)
-        run: uv run python ../../tools/ci/verify_migration_lockfile.py --base-ref origin/${{ github.base_ref }}
+        working-directory: .
+        run: uv run --project services/api python tools/ci/verify_migration_lockfile.py --base-ref origin/${{ github.base_ref }}
 
       - name: CV_PG_DSN for the service container (loopback only, CI-only creds)
         run: echo "CV_PG_DSN=postgresql+asyncpg://cv:cv@localhost:5432/candleviewer" >> "$GITHUB_ENV"

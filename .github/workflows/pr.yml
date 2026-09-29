@@ -326,18 +326,10 @@ jobs:
   migrations:
     name: migrations
     needs: changed-paths
-    # E03-T10: single-head/drift/expand-contract/upgrade-path checks, only
-    # when a migration file or models.py under services/api actually changed.
-    if: ${{ needs.changed-paths.outputs.migrations == 'true' }}
-    uses: ./.github/workflows/_job-migrations.yml
-
-  migrations:
-    name: migrations
-    needs: changed-paths
-    # Bugfix #1556 (E07-T02 / #168 defect 1): dedicated Alembic gate — single
-    # head, round-trip, autogenerate-drift, timing budget, lockfile
-    # integrity, cv_app privilege matrix. Applicable whenever a migration
-    # revision file changes.
+    # E03-T10 base gate (single-head/drift/expand-contract/upgrade-path) plus
+    # bugfix #1556 (E07-T02 / #168 defect 1) additions: timing budget,
+    # lockfile integrity, cv_app privilege matrix. Applicable whenever a
+    # migration revision file, models.py or the migration tooling changes.
     if: ${{ needs.changed-paths.outputs.migrations == 'true' }}
     uses: ./.github/workflows/_job-migrations.yml
 
@@ -428,7 +420,6 @@ jobs:
           FILTER_INFRA: ${{ needs.changed-paths.outputs.infra }}
           FILTER_E2E: ${{ needs.changed-paths.outputs.e2e }}
           FILTER_ENGINE: ${{ needs.changed-paths.outputs.engine }}
-          FILTER_MIGRATIONS: ${{ needs.changed-paths.outputs.migrations }}
           RESULT_CHANGED_PATHS: ${{ needs.changed-paths.result }}
           RESULT_PIN_CHECK: ${{ needs.pin-check.result }}
           RESULT_SPIKE_CONTAINMENT: ${{ needs.spike-containment.result }}
