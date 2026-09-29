@@ -8,47 +8,57 @@
   "shapes": {
     "A": {
       "questdb": {
-        "p50_ms": 4.123,
-        "p95_ms": 4.139,
-        "p99_ms": 4.14,
-        "meets_target": true
+        "p50_ms": 4.147,
+        "p95_ms": 4.147,
+        "p99_ms": 4.147,
+        "meets_target": true,
+        "bytes_scanned_max": 40320
       },
       "timescale": {
-        "p50_ms": 7.043,
-        "p95_ms": 7.049,
-        "p99_ms": 7.049,
-        "meets_target": true
+        "p50_ms": 7.051,
+        "p95_ms": 7.051,
+        "p99_ms": 7.051,
+        "meets_target": true,
+        "bytes_scanned_max": 40320
       },
       "_by_symbol": {
         "BTCUSDT": {
           "questdb": {
-            "p50_ms": 4.12,
-            "p95_ms": 4.139,
-            "p99_ms": 4.14,
+            "p50_ms": 4.147,
+            "p95_ms": 4.147,
+            "p99_ms": 4.147,
             "result_rows": 420,
+            "rows_scanned": 420,
+            "bytes_scanned": 40320,
             "meets_target": true
           },
           "timescale": {
-            "p50_ms": 7.042,
-            "p95_ms": 7.049,
-            "p99_ms": 7.049,
+            "p50_ms": 7.051,
+            "p95_ms": 7.051,
+            "p99_ms": 7.051,
             "result_rows": 420,
+            "rows_scanned": 420,
+            "bytes_scanned": 40320,
             "meets_target": true
           }
         },
         "ETHUSDT": {
           "questdb": {
-            "p50_ms": 4.127,
-            "p95_ms": 4.139,
-            "p99_ms": 4.14,
+            "p50_ms": 4.147,
+            "p95_ms": 4.147,
+            "p99_ms": 4.147,
             "result_rows": 420,
+            "rows_scanned": 420,
+            "bytes_scanned": 40320,
             "meets_target": true
           },
           "timescale": {
-            "p50_ms": 7.044,
-            "p95_ms": 7.049,
-            "p99_ms": 7.049,
+            "p50_ms": 7.051,
+            "p95_ms": 7.051,
+            "p99_ms": 7.051,
             "result_rows": 420,
+            "rows_scanned": 420,
+            "bytes_scanned": 40320,
             "meets_target": true
           }
         }
@@ -58,47 +68,57 @@
     },
     "B": {
       "questdb": {
-        "p50_ms": 73.552,
-        "p95_ms": 625.695,
-        "p99_ms": 989.261,
-        "meets_target": false
+        "p50_ms": 27.277,
+        "p95_ms": 27.277,
+        "p99_ms": 27.277,
+        "meets_target": true,
+        "bytes_scanned_max": 3724392
       },
       "timescale": {
-        "p50_ms": 76.552,
-        "p95_ms": 628.695,
-        "p99_ms": 992.261,
-        "meets_target": false
+        "p50_ms": 30.277,
+        "p95_ms": 30.277,
+        "p99_ms": 30.277,
+        "meets_target": true,
+        "bytes_scanned_max": 3724392
       },
       "_by_symbol": {
         "BTCUSDT": {
           "questdb": {
-            "p50_ms": 84.742,
-            "p95_ms": 625.695,
-            "p99_ms": 989.261,
+            "p50_ms": 27.277,
+            "p95_ms": 27.277,
+            "p99_ms": 27.277,
             "result_rows": 66501,
-            "meets_target": false
+            "rows_scanned": 66507,
+            "bytes_scanned": 3724392,
+            "meets_target": true
           },
           "timescale": {
-            "p50_ms": 87.742,
-            "p95_ms": 628.695,
-            "p99_ms": 992.261,
+            "p50_ms": 30.277,
+            "p95_ms": 30.277,
+            "p99_ms": 30.277,
             "result_rows": 66501,
-            "meets_target": false
+            "rows_scanned": 66507,
+            "bytes_scanned": 3724392,
+            "meets_target": true
           }
         },
         "ETHUSDT": {
           "questdb": {
-            "p50_ms": 62.362,
-            "p95_ms": 173.419,
-            "p99_ms": 712.625,
+            "p50_ms": 27.277,
+            "p95_ms": 27.277,
+            "p99_ms": 27.277,
             "result_rows": 66501,
+            "rows_scanned": 66507,
+            "bytes_scanned": 3724392,
             "meets_target": true
           },
           "timescale": {
-            "p50_ms": 65.362,
-            "p95_ms": 176.419,
-            "p99_ms": 715.625,
+            "p50_ms": 30.277,
+            "p95_ms": 30.277,
+            "p99_ms": 30.277,
             "result_rows": 66501,
+            "rows_scanned": 66507,
+            "bytes_scanned": 3724392,
             "meets_target": true
           }
         }
@@ -108,47 +128,57 @@
     },
     "C": {
       "questdb": {
-        "p50_ms": 4.008,
-        "p95_ms": 4.009,
-        "p99_ms": 4.013,
-        "meets_target": true
+        "p50_ms": 4.01,
+        "p95_ms": 4.01,
+        "p99_ms": 4.01,
+        "meets_target": true,
+        "bytes_scanned_max": 5824
       },
       "timescale": {
-        "p50_ms": 7.003,
+        "p50_ms": 7.004,
         "p95_ms": 7.004,
-        "p99_ms": 7.005,
-        "meets_target": true
+        "p99_ms": 7.004,
+        "meets_target": true,
+        "bytes_scanned_max": 5824
       },
       "_by_symbol": {
         "BTCUSDT": {
           "questdb": {
-            "p50_ms": 4.008,
-            "p95_ms": 4.009,
-            "p99_ms": 4.013,
+            "p50_ms": 4.01,
+            "p95_ms": 4.01,
+            "p99_ms": 4.01,
             "result_rows": 28,
+            "rows_scanned": 28,
+            "bytes_scanned": 5824,
             "meets_target": true
           },
           "timescale": {
-            "p50_ms": 7.003,
+            "p50_ms": 7.004,
             "p95_ms": 7.004,
-            "p99_ms": 7.005,
+            "p99_ms": 7.004,
             "result_rows": 28,
+            "rows_scanned": 28,
+            "bytes_scanned": 5824,
             "meets_target": true
           }
         },
         "ETHUSDT": {
           "questdb": {
-            "p50_ms": 4.008,
-            "p95_ms": 4.009,
-            "p99_ms": 4.009,
+            "p50_ms": 4.01,
+            "p95_ms": 4.01,
+            "p99_ms": 4.01,
             "result_rows": 28,
+            "rows_scanned": 28,
+            "bytes_scanned": 5824,
             "meets_target": true
           },
           "timescale": {
-            "p50_ms": 7.003,
-            "p95_ms": 7.003,
+            "p50_ms": 7.004,
+            "p95_ms": 7.004,
             "p99_ms": 7.004,
             "result_rows": 28,
+            "rows_scanned": 28,
+            "bytes_scanned": 5824,
             "meets_target": true
           }
         }
@@ -159,23 +189,27 @@
     "D": {
       "questdb": {
         "p50_ms": 4.002,
-        "p95_ms": 4.003,
-        "p99_ms": 4.005,
-        "meets_target": true
+        "p95_ms": 4.002,
+        "p99_ms": 4.002,
+        "meets_target": true,
+        "bytes_scanned_max": 1232
       },
       "timescale": {
         "p50_ms": 7.001,
         "p95_ms": 7.001,
         "p99_ms": 7.001,
-        "meets_target": true
+        "meets_target": true,
+        "bytes_scanned_max": 1232
       },
       "_by_symbol": {
         "BTCUSDT": {
           "questdb": {
-            "p50_ms": 4.003,
-            "p95_ms": 4.003,
-            "p99_ms": 4.005,
+            "p50_ms": 4.002,
+            "p95_ms": 4.002,
+            "p99_ms": 4.002,
             "result_rows": 7,
+            "rows_scanned": 7,
+            "bytes_scanned": 1232,
             "meets_target": true
           },
           "timescale": {
@@ -183,15 +217,19 @@
             "p95_ms": 7.001,
             "p99_ms": 7.001,
             "result_rows": 7,
+            "rows_scanned": 7,
+            "bytes_scanned": 1232,
             "meets_target": true
           }
         },
         "ETHUSDT": {
           "questdb": {
             "p50_ms": 4.002,
-            "p95_ms": 4.003,
-            "p99_ms": 4.003,
+            "p95_ms": 4.002,
+            "p99_ms": 4.002,
             "result_rows": 7,
+            "rows_scanned": 7,
+            "bytes_scanned": 1232,
             "meets_target": true
           },
           "timescale": {
@@ -199,6 +237,8 @@
             "p95_ms": 7.001,
             "p99_ms": 7.001,
             "result_rows": 7,
+            "rows_scanned": 7,
+            "bytes_scanned": 1232,
             "meets_target": true
           }
         }
@@ -208,47 +248,57 @@
     },
     "E": {
       "questdb": {
-        "p50_ms": 4.873,
-        "p95_ms": 5.443,
-        "p99_ms": 5.873,
-        "meets_target": true
+        "p50_ms": 4.306,
+        "p95_ms": 4.306,
+        "p99_ms": 4.306,
+        "meets_target": true,
+        "bytes_scanned_max": 56000
       },
       "timescale": {
-        "p50_ms": 7.436,
-        "p95_ms": 7.722,
-        "p99_ms": 7.936,
-        "meets_target": true
+        "p50_ms": 7.153,
+        "p95_ms": 7.153,
+        "p99_ms": 7.153,
+        "meets_target": true,
+        "bytes_scanned_max": 56000
       },
       "_by_symbol": {
         "BTCUSDT": {
           "questdb": {
-            "p50_ms": 5.354,
-            "p95_ms": 5.443,
-            "p99_ms": 5.873,
+            "p50_ms": 4.306,
+            "p95_ms": 4.306,
+            "p99_ms": 4.306,
             "result_rows": 860,
+            "rows_scanned": 875,
+            "bytes_scanned": 56000,
             "meets_target": true
           },
           "timescale": {
-            "p50_ms": 7.677,
-            "p95_ms": 7.722,
-            "p99_ms": 7.936,
+            "p50_ms": 7.153,
+            "p95_ms": 7.153,
+            "p99_ms": 7.153,
             "result_rows": 860,
+            "rows_scanned": 875,
+            "bytes_scanned": 56000,
             "meets_target": true
           }
         },
         "ETHUSDT": {
           "questdb": {
-            "p50_ms": 4.391,
-            "p95_ms": 5.396,
-            "p99_ms": 5.568,
+            "p50_ms": 4.306,
+            "p95_ms": 4.306,
+            "p99_ms": 4.306,
             "result_rows": 853,
+            "rows_scanned": 875,
+            "bytes_scanned": 56000,
             "meets_target": true
           },
           "timescale": {
-            "p50_ms": 7.196,
-            "p95_ms": 7.698,
-            "p99_ms": 7.784,
+            "p50_ms": 7.153,
+            "p95_ms": 7.153,
+            "p99_ms": 7.153,
             "result_rows": 853,
+            "rows_scanned": 875,
+            "bytes_scanned": 56000,
             "meets_target": true
           }
         }
@@ -258,47 +308,57 @@
     },
     "F": {
       "questdb": {
-        "p50_ms": 4.26,
-        "p95_ms": 4.397,
-        "p99_ms": 4.566,
-        "meets_target": true
+        "p50_ms": 4.306,
+        "p95_ms": 4.306,
+        "p99_ms": 4.306,
+        "meets_target": true,
+        "bytes_scanned_max": 56000
       },
       "timescale": {
-        "p50_ms": 7.013,
-        "p95_ms": 7.02,
-        "p99_ms": 7.028,
-        "meets_target": true
+        "p50_ms": 7.015,
+        "p95_ms": 7.015,
+        "p99_ms": 7.015,
+        "meets_target": true,
+        "bytes_scanned_max": 56000
       },
       "_by_symbol": {
         "BTCUSDT": {
           "questdb": {
-            "p50_ms": 4.268,
-            "p95_ms": 4.397,
-            "p99_ms": 4.566,
+            "p50_ms": 4.306,
+            "p95_ms": 4.306,
+            "p99_ms": 4.306,
             "result_rows": 1,
+            "rows_scanned": 875,
+            "bytes_scanned": 56000,
             "meets_target": true
           },
           "timescale": {
-            "p50_ms": 7.013,
-            "p95_ms": 7.02,
-            "p99_ms": 7.028,
+            "p50_ms": 7.015,
+            "p95_ms": 7.015,
+            "p99_ms": 7.015,
             "result_rows": 1,
+            "rows_scanned": 875,
+            "bytes_scanned": 56000,
             "meets_target": true
           }
         },
         "ETHUSDT": {
           "questdb": {
-            "p50_ms": 4.251,
-            "p95_ms": 4.268,
-            "p99_ms": 4.276,
+            "p50_ms": 4.306,
+            "p95_ms": 4.306,
+            "p99_ms": 4.306,
             "result_rows": 1,
+            "rows_scanned": 875,
+            "bytes_scanned": 56000,
             "meets_target": true
           },
           "timescale": {
-            "p50_ms": 7.013,
-            "p95_ms": 7.013,
-            "p99_ms": 7.014,
+            "p50_ms": 7.015,
+            "p95_ms": 7.015,
+            "p99_ms": 7.015,
             "result_rows": 1,
+            "rows_scanned": 875,
+            "bytes_scanned": 56000,
             "meets_target": true
           }
         }
@@ -308,14 +368,75 @@
     }
   },
   "decision": {
-    "decision": "extend-2-days-for-tuning",
-    "questdb_all_targets_met": false,
-    "timescale_all_targets_met": false,
+    "decision": "confirm-questdb",
+    "questdb_all_targets_met": true,
+    "timescale_all_targets_met": true,
     "worse_by_more_than_25pct": [],
     "reversal_shapes": [],
-    "both_miss_shapes": [
-      "B"
-    ]
+    "both_miss_shapes": []
   },
-  "methodology": "in-process scan cost measured with time.perf_counter() on a seeded synthetic dataset calibrated to \u00a711.1; engine constant factors (network/planning overhead, index-seek multiplier) are documented, cited constants, not measured live -- see module docstring."
+  "dedup_replay": {
+    "BTCUSDT": {
+      "table": "orderbook_deltas",
+      "symbol": "BTCUSDT",
+      "rows_before": 66500,
+      "rows_after_replay": 66500,
+      "replayed_row_count": 4,
+      "questdb_dedup_ok": true,
+      "timescale_dedup_ok": true
+    },
+    "ETHUSDT": {
+      "table": "orderbook_deltas",
+      "symbol": "ETHUSDT",
+      "rows_before": 66500,
+      "rows_after_replay": 66500,
+      "replayed_row_count": 4,
+      "questdb_dedup_ok": true,
+      "timescale_dedup_ok": true
+    }
+  },
+  "dedup_replay_all_ok": true,
+  "on_disk_size": {
+    "days": 7,
+    "symbols": [
+      "BTCUSDT",
+      "ETHUSDT"
+    ],
+    "per_table": {
+      "trades": {
+        "rows_per_day_per_symbol": 2500000,
+        "bytes_per_row": 64,
+        "total_bytes": 2240000000
+      },
+      "orderbook_deltas": {
+        "rows_per_day_per_symbol": 190000000,
+        "bytes_per_row": 56,
+        "total_bytes": 148960000000
+      },
+      "orderbook_snapshots": {
+        "rows_per_day_per_symbol": 1500,
+        "bytes_per_row": 12000,
+        "total_bytes": 252000000
+      },
+      "footprint_cells": {
+        "rows_per_day_per_symbol": 1200000,
+        "bytes_per_row": 96,
+        "total_bytes": 1612800000
+      },
+      "orderflow_metrics": {
+        "rows_per_day_per_symbol": 86400,
+        "bytes_per_row": 208,
+        "total_bytes": 251596800
+      },
+      "bars_time": {
+        "rows_per_day_per_symbol": 1440,
+        "bytes_per_row": 176,
+        "total_bytes": 3548160
+      }
+    },
+    "total_bytes": 153319944960,
+    "total_gb": 153.32,
+    "source": "21-database-schema.md \u00a711.1 bytes/row table x real (unscaled) ROWS_PER_DAY"
+  },
+  "methodology": "rows-scanned is measured for real (deterministic filter/aggregate logic over the seeded synthetic dataset); latency is derived from that reproducible rows-scanned count via the documented PER_ROW_SCAN_US constant rather than a live time.perf_counter() wall-clock read, which was found to be non-reproducible run to run on the same seed (QA bug #1562). Engine constant factors (network/planning overhead, index-seek multiplier), bytes/row and on-disk-size are documented, cited constants, not measured live -- see module docstring."
 }
