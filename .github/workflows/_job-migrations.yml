@@ -70,7 +70,9 @@ jobs:
 
       - name: Migration lockfile integrity (#1556, rule 9 — forward-only in production)
         working-directory: .
-        run: uv run --project services/api python tools/ci/verify_migration_lockfile.py --base-ref origin/${{ github.base_ref }}
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: uv run --project services/api python tools/ci/verify_migration_lockfile.py --base-ref "origin/$BASE_REF"
 
       - name: Bootstrap cv_owner/cv_app/cv_ro roles and privileges (#1556)
         working-directory: .
@@ -134,7 +136,7 @@ jobs:
       - name: Assert schema dumps are byte-identical modulo timestamps (#1556)
         working-directory: .
         run: |
-          norm() { sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}[ T][0-9:.+-]+//g' "$1"; }
+          norm() { sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}[ T][0-9:.+-]+//g; /^\\(restrict|unrestrict) /d' "$1"; }
           diff <(norm /tmp/schema_before.sql) <(norm /tmp/schema_after.sql)
 
       - name: Upgrade path from the previous release tag's schema (CI-MIG-004)
