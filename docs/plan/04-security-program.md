@@ -13,7 +13,7 @@ This document is normative. Every requirement carries an ID (`SR-nnn`); tickets 
 3. Actors and trust levels
 4. Trust boundaries (diagram)
 5. STRIDE threat model (11 areas)
-6. Security requirements SR-001…SR-175
+6. Security requirements SR-001…SR-182
 7. RBAC matrix
 8. Audit log specification
 9. Kill switch
@@ -349,7 +349,7 @@ the abuse-case → test → ticket traceability table live in `docs/security/thr
 **E10 extension (E10-X01, route tree/bootstrap/deep-link/diagnostics surface).** Threats E9..E23 covering
 the route tree and guards, shell bootstrap (`/me`, `/me/preferences`, `/me/keymap`, WS `system` topic),
 window-state file, crash log, diagnostics bundle and `app://` protocol/deep-link handling are modelled in
-full in `docs/plan/security/E10-threat-model.md`, which also introduces controls **SR-166..SR-175** (see
+full in `docs/plan/security/E10-threat-model.md`, which also introduces controls **SR-173..SR-182** (see
 §6.11a). That document is the source of truth for this surface; this row set (E1..E8) is not duplicated
 there.
 
@@ -608,25 +608,25 @@ See §8 for the full specification.
 | SR-118 | Startup MUST verify application integrity (ASAR integrity/code signature); a mismatch aborts launch with a clear message. | drill |
 | SR-119 | **No exchange contact from the renderer or the Electron main process.** All Bybit REST/WS traffic originates from the backend only, so that credentials, the per-UID rate tracker (SR-044a), the per-IP bucket (SR-044c) and the environment capability record (SR-040a) have exactly one chokepoint. The CSP `connect-src` therefore MUST NOT list any Bybit host (`api.bybit.com`, `api-demo.bybit.com`, `api.bytick.com`, regional domains, or any `stream*.bybit.com`), and the Electron main process MUST NOT hold or proxy API credentials — the keyring bridge passes an opaque handle to the backend, never key material to the renderer. A CI assertion (SR-114) fails the build if a Bybit host appears in any CSP directive or in renderer-bundled code. | ci-gate, manual-review |
 
-### 6.11a Shell route/bootstrap/deep-link/diagnostics hardening (SR-166…SR-175)
+### 6.11a Shell route/bootstrap/deep-link/diagnostics hardening (SR-173…SR-182)
 
 Requirements arising from `docs/plan/security/E10-threat-model.md` (E10-X01), extending §5.9's Area 9
 model to the route tree, shell bootstrap, window-state/crash-log/diagnostics files and the `app://`/
-deep-link surface. IDs continue the existing SR numbering; no existing SR is renumbered. Each requirement
+deep-link surface. IDs continue the existing SR numbering (after SR-172, the last id used by the E04 observability threat model); no existing SR is renumbered. Each requirement
 names its owner ticket, per the traceability convention in `docs/plan/security/E10-threat-model.md` §8.
 
 | ID | Requirement | Verify | Owner |
 |----|-------------|--------|-------|
-| SR-166 | The renderer's root layout MUST assert `window.location.origin` matches the packaged app origin on mount and refuse to render otherwise, as defence-in-depth alongside the main-process navigation guard (SR-113). | e2e | E10-T01 |
-| SR-167 | The `app://` protocol handler MUST be a read-only static-file server scoped to the packaged asset root, path-traversal-checked, and MUST NOT dispatch IPC actions or app-state changes for non-asset requests. | unit, ci-gate | E10-T02 |
-| SR-168 | Deep-link parameters MUST be schema-validated and MUST NOT directly trigger a state-changing action (arm/disarm, order placement, account switch); a deep link may only pre-fill a route/view, with any resulting state change still requiring the normal in-app confirmation/step-up path. | unit, e2e | E10-T01 |
-| SR-169 | Window-state persisted to disk MUST be schema-validated on read (size/route/bounds bounds-checked) and MUST NOT be used to construct `webPreferences` or any main-process security setting; malformed state falls back to defaults, logged, without crashing. | unit | E10-T04 |
-| SR-170 | Diagnostics bundle export MUST run through the same redaction filter as application logging (SR-006/SR-121), applied at bundle-assembly time, and requires explicit user action — never automatic upload. | unit, manual-review | E10-T04 |
-| SR-171 | `/me`, `/me/preferences` and `/me/keymap` responses MUST be held only in memory for the session lifetime and MUST NOT be written to the window-state file or any persistent renderer storage; window-state persists only UI layout (panel positions, last route path without query params). | unit | E10-T04 |
-| SR-172 | The DEMO/LIVE environment badge's source of truth MUST be the WS `system` topic; on any WS disconnect the badge MUST enter a visibly-degraded "unconfirmed" state rather than silently retaining the last-known environment, and the badge state and the trading-enabled state MUST derive from the same signal so they cannot diverge. The perceivability requirement (non-visual, per `docs/plan/05-accessibility-standard.md`) is part of this control, not a separate one. | e2e, integration | E10-T04 |
-| SR-173 | Window creation MUST be capped at a fixed maximum count; any request beyond the cap is refused and logged, never queued unboundedly. | unit | E10-T02 |
-| SR-174 | Each `ShellPort` preload channel's capability MUST be scoped to the minimum the calling route needs; no generic "read any file"/"run any command" channel exists, by construction. | unit, manual-review | E10-T02 |
-| SR-175 | Step-up re-authentication state MUST be re-validated against the backend on every route entry that requires it, including on window restore after sleep/relaunch; a restored window MUST NOT trust cached pre-suspend step-up status without a fresh server round-trip. | e2e, integration | E10-T01 |
+| SR-173 | The renderer's root layout MUST assert `window.location.origin` matches the packaged app origin on mount and refuse to render otherwise, as defence-in-depth alongside the main-process navigation guard (SR-113). | e2e | E10-T01 |
+| SR-174 | The `app://` protocol handler MUST be a read-only static-file server scoped to the packaged asset root, path-traversal-checked, and MUST NOT dispatch IPC actions or app-state changes for non-asset requests. | unit, ci-gate | E10-T02 |
+| SR-175 | Deep-link parameters MUST be schema-validated and MUST NOT directly trigger a state-changing action (arm/disarm, order placement, account switch); a deep link may only pre-fill a route/view, with any resulting state change still requiring the normal in-app confirmation/step-up path. | unit, e2e | E10-T01 |
+| SR-176 | Window-state persisted to disk MUST be schema-validated on read (size/route/bounds bounds-checked) and MUST NOT be used to construct `webPreferences` or any main-process security setting; malformed state falls back to defaults, logged, without crashing. | unit | E10-T04 |
+| SR-177 | Diagnostics bundle export MUST run through the same redaction filter as application logging (SR-006/SR-121), applied at bundle-assembly time, and requires explicit user action — never automatic upload. | unit, manual-review | E10-T04 |
+| SR-178 | `/me`, `/me/preferences` and `/me/keymap` responses MUST be held only in memory for the session lifetime and MUST NOT be written to the window-state file or any persistent renderer storage; window-state persists only UI layout (panel positions, last route path without query params). | unit | E10-T04 |
+| SR-179 | The DEMO/LIVE environment badge's source of truth MUST be the WS `system` topic; on any WS disconnect the badge MUST enter a visibly-degraded "unconfirmed" state rather than silently retaining the last-known environment, and the badge state and the trading-enabled state MUST derive from the same signal so they cannot diverge. The perceivability requirement (non-visual, per `docs/plan/05-accessibility-standard.md`) is part of this control, not a separate one. | e2e, integration | E10-T04 |
+| SR-180 | Window creation MUST be capped at a fixed maximum count; any request beyond the cap is refused and logged, never queued unboundedly. | unit | E10-T02 |
+| SR-181 | Each `ShellPort` preload channel's capability MUST be scoped to the minimum the calling route needs; no generic "read any file"/"run any command" channel exists, by construction. | unit, manual-review | E10-T02 |
+| SR-182 | Step-up re-authentication state MUST be re-validated against the backend on every route entry that requires it, including on window restore after sleep/relaunch; a restored window MUST NOT trust cached pre-suspend step-up status without a fresh server round-trip. | e2e, integration | E10-T01 |
 
 ### 6.12 Frontend application security (SR-127…SR-129)
 
