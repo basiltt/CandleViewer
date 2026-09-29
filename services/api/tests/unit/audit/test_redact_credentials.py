@@ -4,9 +4,12 @@ only next to an OTP marker; non-secrets (`recv_window`, `design`) pass."""
 
 from __future__ import annotations
 
+import json
+from typing import Any
+
 import pytest
 
-from candleviewer.audit.redact import REDACTION_MARKER, redact
+from candleviewer.audit.redact import OVERSIZE_MARKER, REDACTION_MARKER, redact
 
 _SECRET_NAMES = (
     "authorization",
@@ -114,3 +117,18 @@ def test_redact_embedded_json_bounded_depth_and_size() -> None:
     assert out is not None and "LEAK" not in json.dumps(out) and OVERSIZE_MARKER in json.dumps(out)
     big = redact({"b": "[" + "1," * 40000 + "1]"})
     assert big == {"b": OVERSIZE_MARKER}
+
+
+def test_redact_pathological_structural_nesting_fails_closed() -> None:
+    """Security re-review S1: thousands of nested lists exhaust the interpreter
+    stack before the embedded-JSON depth bound applies. The whole state must
+    collapse to the oversize marker (nothing leaks) instead of raising, so the
+    audited action is not refused by a RecursionError."""
+    deep: Any = "LEAK"
+    for _ in range(5000):
+        deep = [deep]
+    out = redact({"api_key": "SECRET", "payload": deep})
+    assert out is not None
+    assert "LEAK" not in json.dumps(out)
+    assert "SECRET" not in json.dumps(out)
+    assert OVERSIZE_MARKER in json.dumps(out)

@@ -169,7 +169,15 @@ def redact(state: dict[str, Any] | None) -> dict[str, Any] | None:
     """
     if state is None:
         return None
-    return _redact_mapping(state, 0)
+    try:
+        return _redact_mapping(state, 0)
+    except RecursionError:
+        # Pathologically deep structural nesting (e.g. `[[[[...]]]]` thousands
+        # deep) exhausts the interpreter stack before `_MAX_EMBED_DEPTH` (which
+        # bounds only *embedded-JSON* hops) can apply. Fail closed: the record
+        # is kept, its state replaced wholesale by the oversize marker, so no
+        # unredacted field can leak and the audited action is not refused.
+        return {"_redacted": OVERSIZE_MARKER}
 
 
 def _has_otp_sibling(mapping: dict[str, Any]) -> bool:
