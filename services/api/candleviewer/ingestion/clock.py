@@ -1,0 +1,321 @@
+"""`ClockGuard`: verified offset against Bybit server time (E08-S07,
+`docs/plan/24-internal-schemas.md` §14.3, `docs/plan/20-architecture.md`
+§3.1).
+
+Bybit rejects a signed request whose `X-BAPI-TIMESTAMP` falls outside
+`recv_window` (fixed at 5000 ms — `24-internal-schemas.md` §14.3 states
+plainly that we *fix clocks rather than widening the window*). `ClockGuard`
+measures the offset via `GET /v5/market/time`, re-measures on a fixed
+cadence and on signature failure, and exposes `offset_us()`/`assert_healthy()`
+so the REST client's `clock_offset_ms_provider` (E08-T02) and the trading
+gate (E29) both consume one governed measurement.
+
+All internal timestamps are microseconds (`TsUs`, `24-internal-schemas.md`
+§1.2); the offset is stored in microseconds and converted to milliseconds
+only at the Bybit header boundary (technical notes, ticket body).
+
+Hot-path exclusion: this module runs a low-frequency supervised background
+task (one measurement burst per `resync_interval_s`, default 300 s), never
+a per-tick or per-message call — it is not a statechart (catalogue §1.2).
+"""
+
+from __future__ import annotations
+
+import asyncio
+import random
+import time
+from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING, Protocol
+
+import structlog
+
+from candleviewer.exchange.base.errors import ClockDriftError
+from candleviewer.ingestion.errors import IngestionError
+from candleviewer.ingestion.metrics import (
+    bybit_clock_drift_ms,
+    clock_measurements_total,
+    clock_offset_age_seconds,
+    clock_resync_triggered_total,
+)
+
+if TYPE_CHECKING:
+    from candleviewer.exchange.bybit.rest import BybitRestClient
+
+logger = structlog.get_logger(__name__)
+
+_MICROS_PER_MS = 1_000
+_SAMPLE_COUNT = 5
+"""Samples per measurement burst (Test plan: "offset maths incl. outlier
+rejection" needs more than one sample to have an outlier to reject)."""
+
+
+class ServerTimeFetcher(Protocol):
+    """Returns `(server_time_us, request_sent_monotonic_s, round_trip_s)` for
+    one `GET /v5/market/time` call. Implemented by a thin adapter over
+    `BybitRestClient.get_public` — kept as a narrow protocol here so this
+    module never imports `httpx`/`exchange.bybit` directly (module
+    boundaries, C-3.1) and stays unit-testable with a fake."""
+
+    async def __call__(self) -> tuple[int, float, float]: ...
+
+
+class ClockMeasurementUnavailableError(IngestionError):
+    """`GET /v5/market/time` failed on every sample in a burst. The last
+    known offset continues to be applied (scenario "Exchange time endpoint
+    unavailable") — this error is raised only to the caller that requested a
+    fresh measurement, never used to fall back to an uncorrected clock."""
+
+
+class ClockGuard:
+    """Owns the measured offset to Bybit server time.
+
+    `offset_us()` is the value injected into signed requests (E08-T02's
+    `clock_offset_ms_provider`, converted to ms at that boundary — this
+    class always deals in microseconds internally). `assert_healthy()`
+    raises `ClockDriftError` above `hard_threshold_ms` so E29 can refuse to
+    place orders; it never blocks trading itself (out of scope, ticket
+    body) — it only records the verdict.
+    """
+
+    def __init__(
+        self,
+        fetch_server_time: ServerTimeFetcher,
+        *,
+        warn_threshold_ms: int = 500,
+        hard_threshold_ms: int = 2_000,
+        resync_interval_s: float = 300.0,
+        max_offset_age_s: float = 900.0,
+        sample_count: int = _SAMPLE_COUNT,
+        clock: Callable[[], float] = time.monotonic,
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        random_fn: Callable[[], float] = random.random,
+    ) -> None:
+        if hard_threshold_ms <= warn_threshold_ms:
+            raise ValueError("hard_threshold_ms must exceed warn_threshold_ms")
+        self._fetch_server_time = fetch_server_time
+        self._warn_threshold_ms = warn_threshold_ms
+        self._hard_threshold_ms = hard_threshold_ms
+        self._resync_interval_s = resync_interval_s
+        self._max_offset_age_s = max_offset_age_s
+        self._sample_count = max(1, sample_count)
+        self._clock = clock
+        self._sleep = sleep
+        self._random = random_fn
+
+        self._offset_us: int = 0
+        self._last_measured_monotonic: float | None = None
+        self._consecutive_failures = 0
+        self._task: asyncio.Task[None] | None = None
+        self._stopping = False
+
+    # -- public read surface -------------------------------------------------
+
+    def offset_us(self) -> int:
+        """The last verified offset (server - local), in microseconds. Never
+        raises — before the first successful measurement this is `0`
+        (uncorrected), which is why `assert_healthy()` and the age metric
+        exist to guard trading on that state, not this accessor."""
+        return self._offset_us
+
+    def offset_age_s(self) -> float:
+        """Seconds since the last successful measurement, or `inf` if none
+        has ever completed (scenario "Exchange time endpoint unavailable":
+        the age must be exported and alarmed, never hidden)."""
+        if self._last_measured_monotonic is None:
+            return float("inf")
+        return max(0.0, self._clock() - self._last_measured_monotonic)
+
+    def assert_healthy(self) -> None:
+        """Raise `ClockDriftError` if the offset exceeds the hard threshold
+        or no measurement has ever succeeded. E29 calls this before order
+        placement (Story scenario "Hard drift blocks trading"); this class
+        never calls it itself — recording, not enforcing (statechart rule
+        C-2.21 applies by analogy: this guard records a fact, the caller
+        enforces it)."""
+        if self._last_measured_monotonic is None:
+            raise ClockDriftError("clock offset has never been measured")
+        offset_ms = self._offset_us / _MICROS_PER_MS
+        if abs(offset_ms) > self._hard_threshold_ms:
+            raise ClockDriftError(
+                f"clock offset {offset_ms:.1f} ms exceeds hard threshold "
+                f"{self._hard_threshold_ms} ms"
+            )
+
+    def health_severity(self) -> str:
+        """`ok` / `warn` / `critical` for the health surface (SCR-147),
+        matching the drift-alarm thresholds without raising."""
+        if self._last_measured_monotonic is None:
+            return "critical"
+        offset_ms = abs(self._offset_us / _MICROS_PER_MS)
+        if offset_ms > self._hard_threshold_ms:
+            return "critical"
+        if offset_ms > self._warn_threshold_ms:
+            return "warn"
+        return "ok"
+
+    def describe(self) -> str:
+        """Human-readable drift message (accessibility note, ticket body):
+        "Clock is 1.2 s ahead of the exchange" — never a bare severity dot."""
+        if self._last_measured_monotonic is None:
+            return "Clock offset has not been measured yet."
+        offset_ms = self._offset_us / _MICROS_PER_MS
+        direction = "ahead of" if offset_ms > 0 else "behind"
+        return f"Clock is {abs(offset_ms) / 1000:.2f} s {direction} the exchange."
+
+    # -- measurement ----------------------------------------------------
+
+    async def measure_once(self) -> int:
+        """Take one round-trip-corrected offset burst and update state.
+
+        Samples `self._sample_count` round trips, drops the single sample
+        with the largest round-trip time when there are enough samples for
+        that to leave a usable set (Test plan: "robust to a slow sample"),
+        and returns the median offset (microseconds) of what remains. On
+        total failure the last known offset is left untouched, its age
+        keeps advancing, and `ClockMeasurementUnavailableError` is raised
+        (scenario "Exchange time endpoint unavailable": never silently
+        fall back to an uncorrected local clock — falling back here means
+        *keeping* the last verified offset, not zeroing it).
+        """
+        samples: list[tuple[int, float]] = []  # (offset_us, rtt_s)
+        errors: list[Exception] = []
+        for _ in range(self._sample_count):
+            try:
+                server_time_us, sent_monotonic_s, rtt_s = await self._fetch_server_time()
+            except Exception as exc:
+                errors.append(exc)
+                continue
+            # offset = server_time - (t_send + rtt/2) — round-trip-corrected
+            # estimate (ticket body technical notes), all in microseconds.
+            local_mid_us = int((sent_monotonic_s + rtt_s / 2) * 1_000_000)
+            samples.append((server_time_us - local_mid_us, rtt_s))
+
+        if not samples:
+            clock_measurements_total.labels(result="failed").inc()
+            self._consecutive_failures += 1
+            last_error = errors[-1] if errors else "unknown"
+            raise ClockMeasurementUnavailableError(
+                f"all {self._sample_count} clock-time samples failed: {last_error}"
+            )
+
+        clean = self._discard_outlier(samples)
+        offsets = sorted(offset for offset, _ in clean)
+        median_offset_us = offsets[len(offsets) // 2]
+
+        self._offset_us = median_offset_us
+        self._last_measured_monotonic = self._clock()
+        self._consecutive_failures = 0
+        clock_measurements_total.labels(result="ok").inc()
+        bybit_clock_drift_ms.set(median_offset_us / _MICROS_PER_MS)
+        clock_offset_age_seconds.set(0.0)
+        self._log_if_drifted(median_offset_us)
+        return median_offset_us
+
+    @staticmethod
+    def _discard_outlier(samples: list[tuple[int, float]]) -> list[tuple[int, float]]:
+        """Drop the single largest-RTT sample when there are enough left to
+        still form a useful set — a lone slow request must not poison the
+        offset (scenario "Measurement is robust to a slow sample")."""
+        if len(samples) <= 2:
+            return samples
+        worst_index = max(range(len(samples)), key=lambda i: samples[i][1])
+        return [s for i, s in enumerate(samples) if i != worst_index]
+
+    def _log_if_drifted(self, offset_us: int) -> None:
+        offset_ms = offset_us / _MICROS_PER_MS
+        if abs(offset_ms) > self._hard_threshold_ms:
+            logger.error("clock_drift_critical", offset_ms=offset_ms, severity="critical")
+        elif abs(offset_ms) > self._warn_threshold_ms:
+            logger.warning("clock_drift_warn", offset_ms=offset_ms, severity="warn")
+        else:
+            logger.debug("clock_drift_ok", offset_ms=offset_ms, severity="ok")
+
+    # -- signature-failure fallback --------------------------------------
+
+    async def resync_after_signature_failure(self, *, reason: str = "signature_failure") -> int:
+        """Immediate re-measure trigger for the REST client's `10002` path
+        (Story scenario "Signature failure fallback"). This method owns the
+        measurement trigger only — the *single retry* of the failed request
+        is the REST client's own `clock_retry_used` guard (E08-T02); a
+        second consecutive `10002` must surface `ClockDriftError` rather
+        than looping, which this method supports by simply propagating
+        `ClockMeasurementUnavailableError`/results without retrying itself.
+        """
+        clock_resync_triggered_total.labels(reason=reason).inc()
+        return await self.measure_once()
+
+    # -- lifecycle (M6 `ingestion` conventions, 20-architecture.md §3) ---
+
+    async def start(self) -> None:
+        """Measure once synchronously (so `offset_us()` is meaningful before
+        the first request goes out) then start the periodic resync task.
+        Task failures never propagate — "failures never cancel the task"
+        (technical notes) — they are logged and retried after a jittered
+        interval."""
+        try:
+            await self.measure_once()
+        except ClockMeasurementUnavailableError:
+            logger.warning("clock_initial_measurement_failed")
+        self._stopping = False
+        self._task = asyncio.create_task(self._run_periodic(), name="clock-guard-resync")
+
+    async def stop(self) -> None:
+        self._stopping = True
+        if self._task is not None:
+            self._task.cancel()
+            try:
+                await self._task
+            except asyncio.CancelledError:
+                pass
+            self._task = None
+
+    async def _run_periodic(self) -> None:
+        while not self._stopping:
+            jitter = self._resync_interval_s * 0.1 * self._random()
+            try:
+                await self._sleep(self._resync_interval_s + jitter)
+            except asyncio.CancelledError:
+                return
+            if self._stopping:
+                return
+            try:
+                await self.measure_once()
+            except ClockMeasurementUnavailableError as exc:
+                logger.warning("clock_periodic_measurement_failed", error=str(exc))
+            except asyncio.CancelledError:
+                return
+            except Exception:
+                logger.exception("clock_periodic_measurement_unexpected_error")
+            clock_offset_age_seconds.set(self.offset_age_s())
+
+
+def rest_client_fetcher(client: BybitRestClient) -> ServerTimeFetcher:
+    """Adapt `BybitRestClient.get_public("/v5/market/time")` to
+    `ServerTimeFetcher`. Kept as a factory function (not a method on the
+    client) so the REST client itself never depends on this module — the
+    dependency direction is `ClockGuard` -> REST client, matching the
+    ticket's "offset is injected into the REST client rather than read from
+    a global" (technical notes)."""
+
+    async def _fetch() -> tuple[int, float, float]:
+        sent_monotonic_s = time.monotonic()
+        response = await client.get_public("/v5/market/time")
+        rtt_s = time.monotonic() - sent_monotonic_s
+        result = response.get("result", {})
+        # Bybit returns both a second-resolution and a nanosecond-resolution
+        # field (`timeSecond`, `timeNano`); prefer the nanosecond one for
+        # sub-millisecond precision, falling back to milliseconds (`time`)
+        # when a fixture or an older API surface omits it.
+        if "timeNano" in result:
+            server_time_us = int(result["timeNano"]) // 1_000
+        elif "timeSecond" in result:
+            server_time_us = int(result["timeSecond"]) * 1_000_000
+        elif "time" in result:
+            server_time_us = int(result["time"]) * 1_000
+        else:
+            raise ClockMeasurementUnavailableError(
+                f"/v5/market/time response had no usable time field: {result!r}"
+            )
+        return server_time_us, sent_monotonic_s, rtt_s
+
+    return _fetch

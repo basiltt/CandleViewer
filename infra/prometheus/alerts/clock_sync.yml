@@ -1,0 +1,40 @@
+groups:
+  - name: clock-sync
+    rules:
+      - alert: BybitClockDriftWarning
+        expr: abs(bybit_clock_drift_ms) > 500 and abs(bybit_clock_drift_ms) <= 2000
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Bybit clock offset drift is warning-level ({{ $value }} ms)"
+          description: >-
+            The measured offset to Bybit server time has exceeded 500 ms
+            (E08-S07 acceptance criterion "Drift alarm"). Trading is not
+            blocked yet. See docs/plan/runbooks/clock-sync.md.
+
+      - alert: BybitClockDriftCritical
+        expr: abs(bybit_clock_drift_ms) > 2000
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Bybit clock offset drift is critical ({{ $value }} ms)"
+          description: >-
+            The measured offset exceeds the hard threshold (2000 ms,
+            recv_window/2 per docs/plan/24-internal-schemas.md §14.3).
+            assert_healthy() now raises ClockDriftError; E29 must refuse to
+            place orders. See docs/plan/runbooks/clock-sync.md.
+
+      - alert: BybitClockOffsetStale
+        expr: clock_offset_age_seconds > 900
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Clock offset has not been re-measured in over 15 minutes"
+          description: >-
+            The last known offset is still being applied per the "Exchange
+            time endpoint unavailable" scenario, but its age must be
+            investigated — GET /v5/market/time may be failing repeatedly.
+            See docs/plan/runbooks/clock-sync.md.
