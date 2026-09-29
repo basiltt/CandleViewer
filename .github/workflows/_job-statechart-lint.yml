@@ -1,0 +1,40 @@
+name: _job-statechart-lint
+
+# E50-T11: standing CV statechart lint set (CV-LINT-*), CI-blocking per
+# `docs/plan/29-statechart-adoption-plan.md` §1.6. Runs `tools/lint_statecharts.py`
+# over `services/api/candleviewer/statechart/machines/*.machine.json` (JSON
+# rules) and `services/api/candleviewer/**` (AST rules), then the fixture
+# suite that proves each rule actually fires on its own bad fixture.
+
+on:
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+env:
+  PYTHONIOENCODING: utf-8
+
+jobs:
+  statechart-lint:
+    name: statechart-lint
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ fromJSON(vars.CV_CI_TIMEOUT_MINUTES || 20) }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.13"
+
+      - name: Install pytest (stdlib + pytest only; no network)
+        run: python -m pip install --quiet pytest
+
+      - name: Self-test - lint the lint module (Test plan Self-test)
+        run: python -m py_compile tools/lint_statecharts.py
+
+      - name: Run the full standing CV lint set (CI-blocking)
+        run: python tools/lint_statecharts.py
+
+      - name: Fixture suite — every rule rejects its own bad fixture
+        run: python -m pytest tests/lint_statecharts -q

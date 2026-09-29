@@ -1,0 +1,13 @@
+{
+  "strictConfig": true,
+  "onUnhandled": "defer",
+  "maxIterations": 500,
+  "id": "fixture_always_bad",
+  "initial": "child",
+  "states": {
+    "child": {
+      "invoke": { "src": "doWork" },
+      "always": { "target": "child" }
+    }
+  }
+}

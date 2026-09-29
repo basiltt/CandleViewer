@@ -1,0 +1,17 @@
+{
+  "strictConfig": true,
+  "onUnhandled": "defer",
+  "maxIterations": 500,
+  "id": "fixture_kill_ancestor_bad",
+  "initial": "parent",
+  "states": {
+    "parent": {
+      "initial": "invoking",
+      "states": {
+        "invoking": {
+          "invoke": { "src": "doWork" }
+        }
+      }
+    }
+  }
+}

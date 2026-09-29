@@ -1,0 +1,12 @@
+{
+  "id": "fixture_policy_bad",
+  "initial": "idle",
+  "states": {
+    "idle": {
+      "on": {
+        "GO": "running"
+      }
+    },
+    "running": {}
+  }
+}

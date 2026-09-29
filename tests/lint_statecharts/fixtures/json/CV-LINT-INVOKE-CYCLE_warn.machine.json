@@ -1,0 +1,22 @@
+{
+  "strictConfig": true,
+  "onUnhandled": "defer",
+  "maxIterations": 500,
+  "id": "fixture_invoke_cycle_warn",
+  "initial": "root",
+  "states": {
+    "root": {
+      "on": { "KILL": "stopped" },
+      "initial": "attempting",
+      "states": {
+        "attempting": {
+          "invoke": {
+            "src": "doWork",
+            "onError": { "target": "attempting" }
+          }
+        }
+      }
+    },
+    "stopped": {}
+  }
+}
