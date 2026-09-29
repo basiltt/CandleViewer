@@ -1,0 +1,3628 @@
+{
+  "$schema_note": "GENERATED - do not hand-edit. Regenerate with `python tools/gen/export_instrument_policy_corpus.py` (also run by `pnpm --filter @candleviewer/protocol generate`). Source of truth: services/api/candleviewer/exchange/policy.py.",
+  "violation_codes": [
+    "PRICE_NOT_TICK_MULTIPLE",
+    "QTY_NOT_LOT_MULTIPLE",
+    "QTY_BELOW_MIN",
+    "QTY_ABOVE_MAX",
+    "NOTIONAL_BELOW_MIN",
+    "SYMBOL_NOT_TRADING"
+  ],
+  "cases": [
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "50000.04",
+      "qty": "1.000",
+      "expected_rounded_price": "50000.0",
+      "expected_rounded_qty": "1.000",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "50000.0",
+      "qty": "0.0019",
+      "expected_rounded_price": "50000.0",
+      "expected_rounded_qty": "0.001",
+      "expected_violation_codes": ["QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "50000.0",
+      "qty": "150",
+      "expected_rounded_price": "50000.0",
+      "expected_rounded_qty": "150",
+      "expected_violation_codes": ["QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "1.0",
+      "qty": "0.001",
+      "expected_rounded_price": "1.0",
+      "expected_rounded_qty": "0.001",
+      "expected_violation_codes": ["NOTIONAL_BELOW_MIN"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "50000.0",
+      "qty": "0.001",
+      "expected_rounded_price": "50000.0",
+      "expected_rounded_qty": "0.000",
+      "expected_violation_codes": ["QTY_NOT_LOT_MULTIPLE", "QTY_BELOW_MIN"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "50000.0",
+      "qty": "1.000",
+      "expected_rounded_price": "50000.0",
+      "expected_rounded_qty": "1.000",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "47840.0522",
+      "qty": "177.5001",
+      "expected_rounded_price": "47840.05",
+      "expected_rounded_qty": "177.50",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "9980.0900",
+      "qty": "261.0500",
+      "expected_rounded_price": "9980.09",
+      "expected_rounded_qty": "261.05",
+      "expected_violation_codes": []
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "21140.0789",
+      "qty": "467.6500",
+      "expected_rounded_price": "21140.0",
+      "expected_rounded_qty": "467.649",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "2370.0976",
+      "qty": "114.4001",
+      "expected_rounded_price": "2370.10",
+      "expected_rounded_qty": "114.40",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "3930.0961",
+      "qty": "147.7501",
+      "expected_rounded_price": "3930.10",
+      "expected_rounded_qty": "147.75",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "7840.0922",
+      "qty": "394.2000",
+      "expected_rounded_price": "7840.09",
+      "expected_rounded_qty": "394.20",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "84410.0156",
+      "qty": "195.5001",
+      "expected_rounded_price": "84410.02",
+      "expected_rounded_qty": "195.50",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "11940.0881",
+      "qty": "205.8501",
+      "expected_rounded_price": "11940.1",
+      "expected_rounded_qty": "205.850",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "69620.0304",
+      "qty": "156.1501",
+      "expected_rounded_price": "69620.0",
+      "expected_rounded_qty": "156.150",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "42460.0575",
+      "qty": "298.3500",
+      "expected_rounded_price": "42460.1",
+      "expected_rounded_qty": "298.350",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "9460.0905",
+      "qty": "1.8501",
+      "expected_rounded_price": "9460.1",
+      "expected_rounded_qty": "1.850",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "19330.0807",
+      "qty": "272.7000",
+      "expected_rounded_price": "19330.0",
+      "expected_rounded_qty": "272.700",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "27200.0728",
+      "qty": "320.4500",
+      "expected_rounded_price": "27200.1",
+      "expected_rounded_qty": "320.450",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "9100.0909",
+      "qty": "132.2001",
+      "expected_rounded_price": "9100.0",
+      "expected_rounded_qty": "132.198",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "4950.0950",
+      "qty": "493.8500",
+      "expected_rounded_price": "4950.10",
+      "expected_rounded_qty": "493.85",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "47680.0523",
+      "qty": "475.0500",
+      "expected_rounded_price": "47680.0",
+      "expected_rounded_qty": "475.050",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "47230.0528",
+      "qty": "256.6000",
+      "expected_rounded_price": "47230.1",
+      "expected_rounded_qty": "256.600",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "18980.0810",
+      "qty": "473.3000",
+      "expected_rounded_price": "18980.0",
+      "expected_rounded_qty": "473.298",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "80990.0190",
+      "qty": "415.6000",
+      "expected_rounded_price": "80990.0",
+      "expected_rounded_qty": "415.600",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "95110.0049",
+      "qty": "218.3001",
+      "expected_rounded_price": "95110.0",
+      "expected_rounded_qty": "218.300",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "70610.0294",
+      "qty": "180.1001",
+      "expected_rounded_price": "70610.0",
+      "expected_rounded_qty": "180.100",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "71880.0281",
+      "qty": "173.2501",
+      "expected_rounded_price": "71880.0",
+      "expected_rounded_qty": "173.250",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "75470.0245",
+      "qty": "415.2500",
+      "expected_rounded_price": "75470.02",
+      "expected_rounded_qty": "415.25",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "49620.0504",
+      "qty": "338.3500",
+      "expected_rounded_price": "49620.1",
+      "expected_rounded_qty": "338.350",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "21170.0788",
+      "qty": "317.4000",
+      "expected_rounded_price": "21170.08",
+      "expected_rounded_qty": "317.40",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "16850.0832",
+      "qty": "149.5001",
+      "expected_rounded_price": "16850.1",
+      "expected_rounded_qty": "149.500",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "68430.0316",
+      "qty": "228.8001",
+      "expected_rounded_price": "68430.0",
+      "expected_rounded_qty": "228.800",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "48740.0513",
+      "qty": "58.5001",
+      "expected_rounded_price": "48740.0",
+      "expected_rounded_qty": "58.500",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "69370.0306",
+      "qty": "23.0501",
+      "expected_rounded_price": "69370.03",
+      "expected_rounded_qty": "23.05",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "30730.0693",
+      "qty": "274.0500",
+      "expected_rounded_price": "30730.0",
+      "expected_rounded_qty": "274.050",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "42260.0577",
+      "qty": "389.7500",
+      "expected_rounded_price": "42260.1",
+      "expected_rounded_qty": "389.750",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "68970.0310",
+      "qty": "440.9000",
+      "expected_rounded_price": "68970.0",
+      "expected_rounded_qty": "440.898",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "31290.0687",
+      "qty": "72.3001",
+      "expected_rounded_price": "31290.1",
+      "expected_rounded_qty": "72.300",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "95620.0044",
+      "qty": "303.0000",
+      "expected_rounded_price": "95620.0",
+      "expected_rounded_qty": "303.000",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "5440.0946",
+      "qty": "413.0000",
+      "expected_rounded_price": "5440.1",
+      "expected_rounded_qty": "413.000",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "72410.0276",
+      "qty": "295.3000",
+      "expected_rounded_price": "72410.0",
+      "expected_rounded_qty": "295.300",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "85990.0140",
+      "qty": "207.3501",
+      "expected_rounded_price": "85990.0",
+      "expected_rounded_qty": "207.350",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "44570.0554",
+      "qty": "223.8001",
+      "expected_rounded_price": "44570.0",
+      "expected_rounded_qty": "223.800",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "96490.0035",
+      "qty": "470.9000",
+      "expected_rounded_price": "96490.0",
+      "expected_rounded_qty": "470.900",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "78490.0215",
+      "qty": "34.8001",
+      "expected_rounded_price": "78490.02",
+      "expected_rounded_qty": "34.80",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "70790.0292",
+      "qty": "428.5000",
+      "expected_rounded_price": "70790.0",
+      "expected_rounded_qty": "428.499",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "78480.0215",
+      "qty": "150.1001",
+      "expected_rounded_price": "78480.0",
+      "expected_rounded_qty": "150.100",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "67980.0320",
+      "qty": "484.6500",
+      "expected_rounded_price": "67980.0",
+      "expected_rounded_qty": "484.650",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "13390.0866",
+      "qty": "495.1500",
+      "expected_rounded_price": "13390.09",
+      "expected_rounded_qty": "495.15",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "33160.0668",
+      "qty": "50.6501",
+      "expected_rounded_price": "33160.1",
+      "expected_rounded_qty": "50.650",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "97250.0028",
+      "qty": "354.1000",
+      "expected_rounded_price": "97250.0",
+      "expected_rounded_qty": "354.100",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "50630.0494",
+      "qty": "170.8001",
+      "expected_rounded_price": "50630.05",
+      "expected_rounded_qty": "170.80",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "60540.0395",
+      "qty": "41.1001",
+      "expected_rounded_price": "60540.0",
+      "expected_rounded_qty": "41.100",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "85170.0148",
+      "qty": "173.8501",
+      "expected_rounded_price": "85170.0",
+      "expected_rounded_qty": "173.850",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "31260.0687",
+      "qty": "119.8001",
+      "expected_rounded_price": "31260.0",
+      "expected_rounded_qty": "119.799",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "60030.0400",
+      "qty": "287.5500",
+      "expected_rounded_price": "60030.0",
+      "expected_rounded_qty": "287.550",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "80870.0191",
+      "qty": "327.6000",
+      "expected_rounded_price": "80870.0",
+      "expected_rounded_qty": "327.600",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "25210.0748",
+      "qty": "51.6501",
+      "expected_rounded_price": "25210.0",
+      "expected_rounded_qty": "51.648",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "83290.0167",
+      "qty": "77.0501",
+      "expected_rounded_price": "83290.0",
+      "expected_rounded_qty": "77.050",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "95700.0043",
+      "qty": "13.5501",
+      "expected_rounded_price": "95700.0",
+      "expected_rounded_qty": "13.550",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "8870.0911",
+      "qty": "5.1501",
+      "expected_rounded_price": "8870.0",
+      "expected_rounded_qty": "5.148",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "76470.0235",
+      "qty": "187.6001",
+      "expected_rounded_price": "76470.02",
+      "expected_rounded_qty": "187.60",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "27460.0725",
+      "qty": "140.7001",
+      "expected_rounded_price": "27460.0",
+      "expected_rounded_qty": "140.700",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "7510.0925",
+      "qty": "103.4501",
+      "expected_rounded_price": "7510.1",
+      "expected_rounded_qty": "103.450",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "83650.0164",
+      "qty": "145.7501",
+      "expected_rounded_price": "83650.0",
+      "expected_rounded_qty": "145.750",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "11600.0884",
+      "qty": "29.5501",
+      "expected_rounded_price": "11600.1",
+      "expected_rounded_qty": "29.550",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "7600.0924",
+      "qty": "335.9500",
+      "expected_rounded_price": "7600.09",
+      "expected_rounded_qty": "335.95",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "40580.0594",
+      "qty": "240.3001",
+      "expected_rounded_price": "40580.1",
+      "expected_rounded_qty": "240.300",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "70860.0291",
+      "qty": "333.8500",
+      "expected_rounded_price": "70860.0",
+      "expected_rounded_qty": "333.850",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "96710.0033",
+      "qty": "60.9501",
+      "expected_rounded_price": "96710.0",
+      "expected_rounded_qty": "60.950",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "6760.0932",
+      "qty": "403.3500",
+      "expected_rounded_price": "6760.0",
+      "expected_rounded_qty": "403.350",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "5510.0945",
+      "qty": "363.8000",
+      "expected_rounded_price": "5510.09",
+      "expected_rounded_qty": "363.80",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "53530.0465",
+      "qty": "166.6001",
+      "expected_rounded_price": "53530.0",
+      "expected_rounded_qty": "166.600",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "61180.0388",
+      "qty": "49.5001",
+      "expected_rounded_price": "61180.0",
+      "expected_rounded_qty": "49.500",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "96580.0034",
+      "qty": "176.4001",
+      "expected_rounded_price": "96580.00",
+      "expected_rounded_qty": "176.40",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "76790.0232",
+      "qty": "217.0001",
+      "expected_rounded_price": "76790.02",
+      "expected_rounded_qty": "217.00",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "59100.0409",
+      "qty": "431.6000",
+      "expected_rounded_price": "59100.04",
+      "expected_rounded_qty": "431.60",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "98950.0010",
+      "qty": "457.9000",
+      "expected_rounded_price": "98950.0",
+      "expected_rounded_qty": "457.900",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "29750.0702",
+      "qty": "121.3501",
+      "expected_rounded_price": "29750.1",
+      "expected_rounded_qty": "121.350",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "5190.0948",
+      "qty": "321.1500",
+      "expected_rounded_price": "5190.09",
+      "expected_rounded_qty": "321.15",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "19250.0808",
+      "qty": "325.1500",
+      "expected_rounded_price": "19250.0",
+      "expected_rounded_qty": "325.149",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "24770.0752",
+      "qty": "452.6000",
+      "expected_rounded_price": "24770.08",
+      "expected_rounded_qty": "452.60",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "5100.0949",
+      "qty": "65.1501",
+      "expected_rounded_price": "5100.0",
+      "expected_rounded_qty": "65.148",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "43380.0566",
+      "qty": "65.1501",
+      "expected_rounded_price": "43380.0",
+      "expected_rounded_qty": "65.148",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "6570.0934",
+      "qty": "36.0501",
+      "expected_rounded_price": "6570.0",
+      "expected_rounded_qty": "36.048",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "43080.0569",
+      "qty": "210.7501",
+      "expected_rounded_price": "43080.0",
+      "expected_rounded_qty": "210.750",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "32500.0675",
+      "qty": "81.7001",
+      "expected_rounded_price": "32500.0",
+      "expected_rounded_qty": "81.699",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "64570.0354",
+      "qty": "302.3500",
+      "expected_rounded_price": "64570.04",
+      "expected_rounded_qty": "302.35",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "61470.0385",
+      "qty": "105.9001",
+      "expected_rounded_price": "61470.0",
+      "expected_rounded_qty": "105.900",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "64040.0360",
+      "qty": "388.3500",
+      "expected_rounded_price": "64040.0",
+      "expected_rounded_qty": "388.350",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "56770.0432",
+      "qty": "108.6501",
+      "expected_rounded_price": "56770.0",
+      "expected_rounded_qty": "108.648",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "12070.0879",
+      "qty": "174.9001",
+      "expected_rounded_price": "12070.1",
+      "expected_rounded_qty": "174.900",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "39040.0610",
+      "qty": "447.3500",
+      "expected_rounded_price": "39040.06",
+      "expected_rounded_qty": "447.35",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "81630.0184",
+      "qty": "315.8500",
+      "expected_rounded_price": "81630.0",
+      "expected_rounded_qty": "315.850",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "35310.0647",
+      "qty": "462.0000",
+      "expected_rounded_price": "35310.06",
+      "expected_rounded_qty": "462.00",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "78780.0212",
+      "qty": "205.9001",
+      "expected_rounded_price": "78780.0",
+      "expected_rounded_qty": "205.899",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "69350.0306",
+      "qty": "192.2501",
+      "expected_rounded_price": "69350.0",
+      "expected_rounded_qty": "192.249",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "28360.0716",
+      "qty": "231.3001",
+      "expected_rounded_price": "28360.0",
+      "expected_rounded_qty": "231.300",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "45180.0548",
+      "qty": "319.4500",
+      "expected_rounded_price": "45180.1",
+      "expected_rounded_qty": "319.450",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "47540.0525",
+      "qty": "404.3500",
+      "expected_rounded_price": "47540.05",
+      "expected_rounded_qty": "404.35",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "66630.0334",
+      "qty": "256.7500",
+      "expected_rounded_price": "66630.0",
+      "expected_rounded_qty": "256.750",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "98760.0012",
+      "qty": "310.0500",
+      "expected_rounded_price": "98760.00",
+      "expected_rounded_qty": "310.05",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "9970.0900",
+      "qty": "152.2501",
+      "expected_rounded_price": "9970.1",
+      "expected_rounded_qty": "152.250",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "74670.0253",
+      "qty": "262.1000",
+      "expected_rounded_price": "74670.0",
+      "expected_rounded_qty": "262.100",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "91390.0086",
+      "qty": "22.6001",
+      "expected_rounded_price": "91390.0",
+      "expected_rounded_qty": "22.600",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "14770.0852",
+      "qty": "257.4000",
+      "expected_rounded_price": "14770.09",
+      "expected_rounded_qty": "257.40",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "42650.0574",
+      "qty": "0.2001",
+      "expected_rounded_price": "42650.0",
+      "expected_rounded_qty": "0.198",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "71150.0288",
+      "qty": "125.8501",
+      "expected_rounded_price": "71150.0",
+      "expected_rounded_qty": "125.850",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "53980.0460",
+      "qty": "161.5501",
+      "expected_rounded_price": "53980.0",
+      "expected_rounded_qty": "161.550",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "99290.0007",
+      "qty": "469.8000",
+      "expected_rounded_price": "99290.0",
+      "expected_rounded_qty": "469.800",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "66350.0336",
+      "qty": "253.5500",
+      "expected_rounded_price": "66350.0",
+      "expected_rounded_qty": "253.550",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "46290.0537",
+      "qty": "18.2501",
+      "expected_rounded_price": "46290.1",
+      "expected_rounded_qty": "18.250",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "54750.0452",
+      "qty": "174.0001",
+      "expected_rounded_price": "54750.0",
+      "expected_rounded_qty": "174.000",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "20090.0799",
+      "qty": "324.3500",
+      "expected_rounded_price": "20090.08",
+      "expected_rounded_qty": "324.35",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "86360.0136",
+      "qty": "424.4500",
+      "expected_rounded_price": "86360.0",
+      "expected_rounded_qty": "424.450",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "42620.0574",
+      "qty": "93.9501",
+      "expected_rounded_price": "42620.1",
+      "expected_rounded_qty": "93.950",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "56570.0434",
+      "qty": "449.6500",
+      "expected_rounded_price": "56570.0",
+      "expected_rounded_qty": "449.650",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "96040.0040",
+      "qty": "271.1000",
+      "expected_rounded_price": "96040.0",
+      "expected_rounded_qty": "271.098",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "97230.0028",
+      "qty": "193.5001",
+      "expected_rounded_price": "97230.0",
+      "expected_rounded_qty": "193.500",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "76270.0237",
+      "qty": "315.9000",
+      "expected_rounded_price": "76270.02",
+      "expected_rounded_qty": "315.90",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "31100.0689",
+      "qty": "433.5000",
+      "expected_rounded_price": "31100.1",
+      "expected_rounded_qty": "433.500",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "69860.0301",
+      "qty": "253.8500",
+      "expected_rounded_price": "69860.0",
+      "expected_rounded_qty": "253.850",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "10000.0900",
+      "qty": "175.7501",
+      "expected_rounded_price": "10000.1",
+      "expected_rounded_qty": "175.750",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "89450.0106",
+      "qty": "290.0500",
+      "expected_rounded_price": "89450.0",
+      "expected_rounded_qty": "290.050",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "13500.0865",
+      "qty": "402.7000",
+      "expected_rounded_price": "13500.09",
+      "expected_rounded_qty": "402.70",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "55320.0447",
+      "qty": "383.8500",
+      "expected_rounded_price": "55320.0",
+      "expected_rounded_qty": "383.850",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "77960.0220",
+      "qty": "405.5000",
+      "expected_rounded_price": "77960.0",
+      "expected_rounded_qty": "405.500",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "55950.0440",
+      "qty": "421.4000",
+      "expected_rounded_price": "55950.0",
+      "expected_rounded_qty": "421.398",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "59460.0405",
+      "qty": "28.1501",
+      "expected_rounded_price": "59460.0",
+      "expected_rounded_qty": "28.150",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "16130.0839",
+      "qty": "52.7501",
+      "expected_rounded_price": "16130.0",
+      "expected_rounded_qty": "52.749",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "72710.0273",
+      "qty": "178.1001",
+      "expected_rounded_price": "72710.0",
+      "expected_rounded_qty": "178.100",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "81220.0188",
+      "qty": "35.3001",
+      "expected_rounded_price": "81220.0",
+      "expected_rounded_qty": "35.300",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "2620.0974",
+      "qty": "187.8001",
+      "expected_rounded_price": "2620.0",
+      "expected_rounded_qty": "187.800",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "56880.0431",
+      "qty": "298.7500",
+      "expected_rounded_price": "56880.04",
+      "expected_rounded_qty": "298.75",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "59480.0405",
+      "qty": "386.6500",
+      "expected_rounded_price": "59480.0",
+      "expected_rounded_qty": "386.650",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "34170.0658",
+      "qty": "49.5501",
+      "expected_rounded_price": "34170.1",
+      "expected_rounded_qty": "49.550",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "59100.0409",
+      "qty": "314.2000",
+      "expected_rounded_price": "59100.04",
+      "expected_rounded_qty": "314.20",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "57160.0428",
+      "qty": "312.9500",
+      "expected_rounded_price": "57160.0",
+      "expected_rounded_qty": "312.950",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "63420.0366",
+      "qty": "97.5001",
+      "expected_rounded_price": "63420.0",
+      "expected_rounded_qty": "97.500",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "74260.0257",
+      "qty": "370.6500",
+      "expected_rounded_price": "74260.03",
+      "expected_rounded_qty": "370.65",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "64680.0353",
+      "qty": "74.4001",
+      "expected_rounded_price": "64680.0",
+      "expected_rounded_qty": "74.400",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "86240.0138",
+      "qty": "166.3001",
+      "expected_rounded_price": "86240.0",
+      "expected_rounded_qty": "166.300",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "13150.0868",
+      "qty": "87.9001",
+      "expected_rounded_price": "13150.09",
+      "expected_rounded_qty": "87.90",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "93290.0067",
+      "qty": "298.5500",
+      "expected_rounded_price": "93290.0",
+      "expected_rounded_qty": "298.550",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "57790.0422",
+      "qty": "206.3001",
+      "expected_rounded_price": "57790.0",
+      "expected_rounded_qty": "206.300",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "57480.0425",
+      "qty": "26.0001",
+      "expected_rounded_price": "57480.04",
+      "expected_rounded_qty": "26.00",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "44390.0556",
+      "qty": "114.4501",
+      "expected_rounded_price": "44390.0",
+      "expected_rounded_qty": "114.450",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "21120.0789",
+      "qty": "202.6001",
+      "expected_rounded_price": "21120.08",
+      "expected_rounded_qty": "202.60",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "78200.0218",
+      "qty": "416.9500",
+      "expected_rounded_price": "78200.02",
+      "expected_rounded_qty": "416.95",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "87120.0129",
+      "qty": "345.9000",
+      "expected_rounded_price": "87120.0",
+      "expected_rounded_qty": "345.900",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "11290.0887",
+      "qty": "83.4001",
+      "expected_rounded_price": "11290.0",
+      "expected_rounded_qty": "83.400",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "10560.0894",
+      "qty": "281.1500",
+      "expected_rounded_price": "10560.09",
+      "expected_rounded_qty": "281.15",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "91320.0087",
+      "qty": "145.9001",
+      "expected_rounded_price": "91320.0",
+      "expected_rounded_qty": "145.900",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "96500.0035",
+      "qty": "222.2001",
+      "expected_rounded_price": "96500.0",
+      "expected_rounded_qty": "222.198",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "64790.0352",
+      "qty": "22.3501",
+      "expected_rounded_price": "64790.0",
+      "expected_rounded_qty": "22.350",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "64220.0358",
+      "qty": "292.9500",
+      "expected_rounded_price": "64220.0",
+      "expected_rounded_qty": "292.950",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "72910.0271",
+      "qty": "182.1501",
+      "expected_rounded_price": "72910.03",
+      "expected_rounded_qty": "182.15",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "20210.0798",
+      "qty": "400.9500",
+      "expected_rounded_price": "20210.1",
+      "expected_rounded_qty": "400.950",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "49630.0504",
+      "qty": "174.5501",
+      "expected_rounded_price": "49630.1",
+      "expected_rounded_qty": "174.550",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "14280.0857",
+      "qty": "72.4501",
+      "expected_rounded_price": "14280.0",
+      "expected_rounded_qty": "72.450",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "88870.0111",
+      "qty": "65.4501",
+      "expected_rounded_price": "88870.0",
+      "expected_rounded_qty": "65.450",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "69330.0307",
+      "qty": "423.0500",
+      "expected_rounded_price": "69330.0",
+      "expected_rounded_qty": "423.048",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "34490.0655",
+      "qty": "109.3501",
+      "expected_rounded_price": "34490.0",
+      "expected_rounded_qty": "109.350",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "93480.0065",
+      "qty": "479.9500",
+      "expected_rounded_price": "93480.01",
+      "expected_rounded_qty": "479.95",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "62090.0379",
+      "qty": "126.4001",
+      "expected_rounded_price": "62090.0",
+      "expected_rounded_qty": "126.400",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "65040.0350",
+      "qty": "20.9501",
+      "expected_rounded_price": "65040.0",
+      "expected_rounded_qty": "20.950",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "74360.0256",
+      "qty": "354.7500",
+      "expected_rounded_price": "74360.0",
+      "expected_rounded_qty": "354.750",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "70130.0299",
+      "qty": "270.0000",
+      "expected_rounded_price": "70130.0",
+      "expected_rounded_qty": "270.000",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "12480.0875",
+      "qty": "51.2001",
+      "expected_rounded_price": "12480.1",
+      "expected_rounded_qty": "51.200",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "60750.0392",
+      "qty": "323.5000",
+      "expected_rounded_price": "60750.0",
+      "expected_rounded_qty": "323.500",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "71020.0290",
+      "qty": "445.6000",
+      "expected_rounded_price": "71020.03",
+      "expected_rounded_qty": "445.60",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "95370.0046",
+      "qty": "25.1501",
+      "expected_rounded_price": "95370.0",
+      "expected_rounded_qty": "25.150",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "72740.0273",
+      "qty": "403.3000",
+      "expected_rounded_price": "72740.0",
+      "expected_rounded_qty": "403.300",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "46270.0537",
+      "qty": "377.9000",
+      "expected_rounded_price": "46270.05",
+      "expected_rounded_qty": "377.90",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "95490.0045",
+      "qty": "391.7000",
+      "expected_rounded_price": "95490.0",
+      "expected_rounded_qty": "391.700",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "72440.0276",
+      "qty": "480.9500",
+      "expected_rounded_price": "72440.0",
+      "expected_rounded_qty": "480.950",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "43670.0563",
+      "qty": "418.0000",
+      "expected_rounded_price": "43670.1",
+      "expected_rounded_qty": "418.000",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "44490.0555",
+      "qty": "307.9500",
+      "expected_rounded_price": "44490.06",
+      "expected_rounded_qty": "307.95",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "56660.0433",
+      "qty": "69.3501",
+      "expected_rounded_price": "56660.04",
+      "expected_rounded_qty": "69.35",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "18320.0817",
+      "qty": "444.2500",
+      "expected_rounded_price": "18320.08",
+      "expected_rounded_qty": "444.25",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "21320.0787",
+      "qty": "392.7000",
+      "expected_rounded_price": "21320.0",
+      "expected_rounded_qty": "392.700",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "70550.0294",
+      "qty": "323.4500",
+      "expected_rounded_price": "70550.0",
+      "expected_rounded_qty": "323.450",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "3400.0966",
+      "qty": "49.6001",
+      "expected_rounded_price": "3400.10",
+      "expected_rounded_qty": "49.60",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "28030.0720",
+      "qty": "330.1000",
+      "expected_rounded_price": "28030.1",
+      "expected_rounded_qty": "330.100",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "13310.0867",
+      "qty": "385.3000",
+      "expected_rounded_price": "13310.09",
+      "expected_rounded_qty": "385.30",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "18190.0818",
+      "qty": "353.9000",
+      "expected_rounded_price": "18190.08",
+      "expected_rounded_qty": "353.90",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "37200.0628",
+      "qty": "184.1501",
+      "expected_rounded_price": "37200.0",
+      "expected_rounded_qty": "184.149",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "30290.0697",
+      "qty": "226.9001",
+      "expected_rounded_price": "30290.0",
+      "expected_rounded_qty": "226.899",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "65750.0342",
+      "qty": "416.6500",
+      "expected_rounded_price": "65750.0",
+      "expected_rounded_qty": "416.650",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "50420.0496",
+      "qty": "78.0001",
+      "expected_rounded_price": "50420.0",
+      "expected_rounded_qty": "78.000",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "31000.0690",
+      "qty": "83.3001",
+      "expected_rounded_price": "31000.1",
+      "expected_rounded_qty": "83.300",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "29100.0709",
+      "qty": "113.1501",
+      "expected_rounded_price": "29100.1",
+      "expected_rounded_qty": "113.150",
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "56300.0437",
+      "qty": "371.7500",
+      "expected_rounded_price": "56300.04",
+      "expected_rounded_qty": "371.75",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "11600.0884",
+      "qty": "128.3001",
+      "expected_rounded_price": "11600.0",
+      "expected_rounded_qty": "128.298",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "53150.0468",
+      "qty": "381.6000",
+      "expected_rounded_price": "53150.0",
+      "expected_rounded_qty": "381.600",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "4190.0958",
+      "qty": "98.4001",
+      "expected_rounded_price": "4190.10",
+      "expected_rounded_qty": "98.40",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "90690.0093",
+      "qty": "463.8000",
+      "expected_rounded_price": "90690.0",
+      "expected_rounded_qty": "463.800",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "64180.0358",
+      "qty": "246.1001",
+      "expected_rounded_price": "64180.0",
+      "expected_rounded_qty": "246.100",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "67670.0323",
+      "qty": "496.8000",
+      "expected_rounded_price": "67670.0",
+      "expected_rounded_qty": "496.800",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "94230.0058",
+      "qty": "222.0001",
+      "expected_rounded_price": "94230.0",
+      "expected_rounded_qty": "222.000",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "35610.0644",
+      "qty": "261.6000",
+      "expected_rounded_price": "35610.0",
+      "expected_rounded_qty": "261.600",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "ETHUSDT",
+        "status": "trading",
+        "tick_size": "0.01",
+        "qty_step": "0.01",
+        "min_order_qty": "0.01",
+        "max_order_qty": "1000",
+        "min_notional": "5"
+      },
+      "price": "20300.0797",
+      "qty": "93.7001",
+      "expected_rounded_price": "20300.08",
+      "expected_rounded_qty": "93.70",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "DELISTEDUSDT",
+        "status": "closed",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "77210.0228",
+      "qty": "499.3000",
+      "expected_rounded_price": "77210.0",
+      "expected_rounded_qty": "499.300",
+      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+    },
+    {
+      "instrument": {
+        "symbol": "BTCUSDT",
+        "status": "trading",
+        "tick_size": "0.1",
+        "qty_step": "0.001",
+        "min_order_qty": "0.001",
+        "max_order_qty": "100",
+        "min_notional": "5"
+      },
+      "price": "89350.0106",
+      "qty": "63.9001",
+      "expected_rounded_price": "89350.0",
+      "expected_rounded_qty": "63.900",
+      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+    },
+    {
+      "instrument": {
+        "symbol": "AWKWARDUSDT",
+        "status": "trading",
+        "tick_size": "0.5",
+        "qty_step": "0.003",
+        "min_order_qty": "0.001",
+        "max_order_qty": "10",
+        "min_notional": "1"
+      },
+      "price": "84810.0152",
+      "qty": "163.5001",
+      "expected_rounded_price": "84810.0",
+      "expected_rounded_qty": "163.500",
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
+    }
+  ]
+}

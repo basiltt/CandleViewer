@@ -4,14 +4,14 @@ Status: **binding**. Date: 2026-09-14. Owner: Architect + Backend lead. Scope: w
 
 This document is the single source of truth for every **internal** type in CandleViewer: what flows on the message bus, what the engines compute, what the OMS stores, what the rule engine executes, and what the exchange adapter port looks like. It sits between the wire protocol (`23-ws-protocol.md`), the REST surface (`22-api-openapi.yaml`), persistence (`21-database-schema.md`) and the renderer (`26-chart-engine-design.md`).
 
-| Doc | Relationship |
-|---|---|
-| `20-architecture.md` | Module boundaries; §9 there sketches the adapter port that §14 here specifies in full |
-| `21-database-schema.md` | Persisted shape of everything modelled here; enum labels are shared verbatim |
-| `22-api-openapi.yaml` | REST DTOs are serializations of these models (`model_dump(mode="json")`) |
-| `23-ws-protocol.md` | Wire framing of the events in §2 and aggregates in §3–§6 |
-| `26-chart-engine-design.md` | Renderer-side typed arrays fed from §3–§6 |
-| `27-adrs/ADR-0006` | OMS state machine decision; §8 is its normative expansion |
+| Doc                                        | Relationship                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `20-architecture.md`                       | Module boundaries; §9 there sketches the adapter port that §14 here specifies in full                                                                                                                                                                                                                                                                                                                                                                               |
+| `21-database-schema.md`                    | Persisted shape of everything modelled here; enum labels are shared verbatim                                                                                                                                                                                                                                                                                                                                                                                        |
+| `22-api-openapi.yaml`                      | REST DTOs are serializations of these models (`model_dump(mode="json")`)                                                                                                                                                                                                                                                                                                                                                                                            |
+| `23-ws-protocol.md`                        | Wire framing of the events in §2 and aggregates in §3–§6                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `26-chart-engine-design.md`                | Renderer-side typed arrays fed from §3–§6                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `27-adrs/ADR-0006`                         | OMS state machine decision; §8 is its normative expansion                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `docs/research/06`, `08`, `09`, `11`, `23` | Source research. Each has a short digest at `docs/research/digests/<n>-<slug>.digest.md` and a full document at `docs/research/<n>-<slug>.md`. **Citation convention used throughout this document: a bare citation such as "research 08 §11.3" always refers to the section numbering of the FULL document** (`docs/research/08-crypto-data-metrics.md`), because digests renumber and compress. Where a digest is meant, it is written explicitly as "digest 08". |
 
 ## 0. Table of contents
@@ -42,18 +42,18 @@ This document is the single source of truth for every **internal** type in Candl
 
 ### 1.1 Binding conventions
 
-| # | Rule | Rationale |
-|---|---|---|
-| C1 | All models are **pydantic v2** `BaseModel` with `model_config = ConfigDict(frozen=True, extra="forbid", populate_by_name=True)` unless explicitly marked mutable. | Immutability makes bus fan-out safe without copying; `extra="forbid"` turns an unexpected Bybit field into a loud test failure rather than silent data loss. |
-| C2 | **Money and quantity are `Decimal`** end-to-end on the OMS/accounting path. Never `float`. | Fee/PnL/qty arithmetic must be exact. |
-| C3 | **Analytics may use `float`/`numpy`** inside engines (footprint, profile, heatmap, indicators), but any value crossing into OMS, journal or audit is converted at the boundary via `Decimal(str(x)).quantize(...)`. | Analytics needs vectorised speed; accounting needs exactness. The boundary is explicit and tested. |
-| C4 | **Time is integer microseconds since Unix epoch (UTC)**, alias `TsUs = int`. Bybit millisecond fields are ×1000 at the adapter. `datetime` appears only in Postgres rows and human-facing strings. | Microseconds preserve trade order within a millisecond batch. |
-| C5 | **Prices are carried as `Decimal` and, where a grid or the renderer needs it, as integer ticks** (`price_ticks = round((price - price_origin) / tick_size)`). The integer form is derived, never authoritative. | Footprint/heatmap grids must key on an exact integer; floats produce phantom price levels. |
-| C6 | Every bus event carries `schema_version: int`, `event_id: UUID7`, `ts_event: TsUs` (exchange time), `ts_ingest: TsUs` (our receipt time). | Version lets consumers reject unknown shapes; the two timestamps give feed latency for free. |
-| C7 | Enum *values* are `snake_case` strings identical to the Postgres enum labels in `21-database-schema.md` §1.2. A rename is a migration plus a schema-version bump. | One vocabulary across DB, API, WS and code. |
-| C8 | Symbols are the exchange-native uppercase string. Internal identity is `InstrumentKey = (exchange, category, symbol)`; v1 is always `("bybit", "linear", …)`. | Keeps a future second exchange additive. |
-| C9 | Field naming is `snake_case`; the adapter owns the mapping from Bybit `camelCase`. No Bybit field name appears outside `candleviewer/exchange/bybit/`. | Single translation seam, lint-enforced (§17.4). |
-| C10 | Nothing is nullable "just in case". If a field is optional the doc states exactly when it is `None`. | `Optional` without a stated reason is a bug generator. |
+| #   | Rule                                                                                                                                                                                                                | Rationale                                                                                                                                                    |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| C1  | All models are **pydantic v2** `BaseModel` with `model_config = ConfigDict(frozen=True, extra="forbid", populate_by_name=True)` unless explicitly marked mutable.                                                   | Immutability makes bus fan-out safe without copying; `extra="forbid"` turns an unexpected Bybit field into a loud test failure rather than silent data loss. |
+| C2  | **Money and quantity are `Decimal`** end-to-end on the OMS/accounting path. Never `float`.                                                                                                                          | Fee/PnL/qty arithmetic must be exact.                                                                                                                        |
+| C3  | **Analytics may use `float`/`numpy`** inside engines (footprint, profile, heatmap, indicators), but any value crossing into OMS, journal or audit is converted at the boundary via `Decimal(str(x)).quantize(...)`. | Analytics needs vectorised speed; accounting needs exactness. The boundary is explicit and tested.                                                           |
+| C4  | **Time is integer microseconds since Unix epoch (UTC)**, alias `TsUs = int`. Bybit millisecond fields are ×1000 at the adapter. `datetime` appears only in Postgres rows and human-facing strings.                  | Microseconds preserve trade order within a millisecond batch.                                                                                                |
+| C5  | **Prices are carried as `Decimal` and, where a grid or the renderer needs it, as integer ticks** (`price_ticks = round((price - price_origin) / tick_size)`). The integer form is derived, never authoritative.     | Footprint/heatmap grids must key on an exact integer; floats produce phantom price levels.                                                                   |
+| C6  | Every bus event carries `schema_version: int`, `event_id: UUID7`, `ts_event: TsUs` (exchange time), `ts_ingest: TsUs` (our receipt time).                                                                           | Version lets consumers reject unknown shapes; the two timestamps give feed latency for free.                                                                 |
+| C7  | Enum _values_ are `snake_case` strings identical to the Postgres enum labels in `21-database-schema.md` §1.2. A rename is a migration plus a schema-version bump.                                                   | One vocabulary across DB, API, WS and code.                                                                                                                  |
+| C8  | Symbols are the exchange-native uppercase string. Internal identity is `InstrumentKey = (exchange, category, symbol)`; v1 is always `("bybit", "linear", …)`.                                                       | Keeps a future second exchange additive.                                                                                                                     |
+| C9  | Field naming is `snake_case`; the adapter owns the mapping from Bybit `camelCase`. No Bybit field name appears outside `candleviewer/exchange/bybit/`.                                                              | Single translation seam, lint-enforced (§17.4).                                                                                                              |
+| C10 | Nothing is nullable "just in case". If a field is optional the doc states exactly when it is `None`.                                                                                                                | `Optional` without a stated reason is a bug generator.                                                                                                       |
 
 ### 1.2 Primitive aliases
 
@@ -89,7 +89,7 @@ ExecutionMode = Literal["exchange", "paper", "replay"]    # internal only; never
 Side = Literal["buy", "sell"]
 ```
 
-**`Environment` and `ExecutionMode` are two axes, deliberately not one enum.** `Environment` says *which exchange account and credentials this belongs to*; `ExecutionMode` says *who filled it*. They are orthogonal: a paper fill during a replay of live-recorded data is `environment="live", execution_mode="replay"`, and collapsing that into a single `environment="replay"` would throw away the account the position is attributed to.
+**`Environment` and `ExecutionMode` are two axes, deliberately not one enum.** `Environment` says _which exchange account and credentials this belongs to_; `ExecutionMode` says _who filled it_. They are orthogonal: a paper fill during a replay of live-recorded data is `environment="live", execution_mode="replay"`, and collapsing that into a single `environment="replay"` would throw away the account the position is attributed to.
 
 `Environment` is the value that crosses the wire. It is identical in all three places — this Python literal, the OpenAPI `Environment` schema, and the Postgres `exchange_env` type — and contract test `enum_parity_environment` asserts that. `ExecutionMode` never crosses the wire under that name; it is persisted as the `is_paper` boolean (`21-database-schema.md` §3.3) and published on the WS as `is_paper` (`23-ws-protocol.md` §13.1), with `replay` distinguished by the frame's own `source: "replay"` marker rather than by a field on the entity.
 
@@ -132,10 +132,12 @@ class Instrument(BaseModel):
 
 **Precision rules** (`InstrumentPolicy`, unit-tested):
 
-1. `round_price(px, side, mode)` — `mode="conservative"` rounds a buy limit *down* and a sell limit *up* (never accidentally more aggressive); `"nearest"` for display; `"aggressive"` only for chase algos that explicitly intend to cross.
+1. `round_price(px, side, mode)` — `mode="conservative"` rounds a buy limit _down_ and a sell limit _up_ (never accidentally more aggressive); `"nearest"` for display; `"aggressive"` only for chase algos that explicitly intend to cross.
 2. `round_qty(q)` — always **floor** to `qty_step`. Rounding up can exceed available margin or a risk cap.
 3. `validate_order(px, qty)` raises `InstrumentFilterError` naming the specific violated filter (`min_order_qty`, `qty_step`, `min_notional`, `max_mkt_order_qty`, `price_scale`, `min_price`, `max_price`) — never a generic message, because the UI renders the filter name.
 4. A `metadata_version` bump invalidates cached footprint/profile aggregates for that symbol and schedules a rebuild from raw trades (§13.6).
+
+`E08-S02` implements the subset of the above scoped to `US-MKT-004`: `InstrumentPolicy.round_price(price, *, mode=PriceRoundMode.NEAREST)` (only `"nearest"`, `ROUND_HALF_EVEN`; the side-aware `conservative`/`aggressive` execution modes above are E29/OMS scope, not yet implemented), `round_qty(qty, *, mode=QtyRoundMode.DOWN)` (only `"down"`, matching rule 2 verbatim), and `validate(price, qty) -> list[FilterViolation]` — data, not an exception, so a caller (e.g. the order-ticket UI) can show every violated filter at once; `enforce(price, qty)` is the thin wrapper that raises `InstrumentFilterError` for OMS callers per rule 3. Violation codes (`services/api/candleviewer/exchange/policy.py::FilterViolationCode`, each with a `user_message` naming the exact limit): `PRICE_NOT_TICK_MULTIPLE`, `QTY_NOT_LOT_MULTIPLE`, `QTY_BELOW_MIN`, `QTY_ABOVE_MAX`, `NOTIONAL_BELOW_MIN`, `SYMBOL_NOT_TRADING`. The same rules are published to the web client as `@candleviewer/protocol`'s `policy` export (`packages/protocol/src/rules/policy.ts`, a hand-port proven identical to the Python source via the shared corpus at `packages/fixtures/golden/policy/corpus.json` — see that file's `$schema_note` and `tools/gen/export_instrument_policy_corpus.py`'s module docstring) plus a generated enum-value table (`packages/protocol/src/generated/policy/`, from `tools/gen/export_instrument_policy_rules.py`) so the two can never disagree on a violation code's spelling.
 
 ### 1.4 Base envelope
 
@@ -158,20 +160,21 @@ class MarketEvent(DomainEvent):
 
 ### 1.5 Decimal quantization table
 
-| Quantity | Quantization | Enforced in |
-|---|---|---|
-| Price | `instrument.tick_size` | `InstrumentPolicy.round_price` |
-| Quantity | `instrument.qty_step` | `InstrumentPolicy.round_qty` |
-| Notional / PnL / equity | 8 dp | `Money.q()` |
-| Fees | 8 dp, `ROUND_HALF_UP` | `FeeCalculator` |
-| Funding payments | 8 dp, `ROUND_HALF_UP` | `FundingCalculator` |
-| Percentages / ratios | 6 dp | display layer |
-| R-multiples | 4 dp | `MetricRegistry` |
+| Quantity                | Quantization           | Enforced in                                                 |
+| ----------------------- | ---------------------- | ----------------------------------------------------------- |
+| Price                   | `instrument.tick_size` | `InstrumentPolicy.round_price` (nearest, `ROUND_HALF_EVEN`) |
+| Quantity                | `instrument.qty_step`  | `InstrumentPolicy.round_qty` (down, `ROUND_DOWN`)           |
+| Notional / PnL / equity | 8 dp                   | `Money.q()`                                                 |
+| Fees                    | 8 dp, `ROUND_HALF_UP`  | `FeeCalculator`                                             |
+| Funding payments        | 8 dp, `ROUND_HALF_UP`  | `FundingCalculator`                                         |
+| Percentages / ratios    | 6 dp                   | display layer                                               |
+| R-multiples             | 4 dp                   | `MetricRegistry`                                            |
 
 ---
+
 ## 2. Normalized market-data events
 
-Eight event families. All are produced *only* by the exchange adapter (§14), all are immutable, all are recorded (§13), and all can be re-emitted byte-identically by the replay engine.
+Eight event families. All are produced _only_ by the exchange adapter (§14), all are immutable, all are recorded (§13), and all can be re-emitted byte-identically by the replay engine.
 
 ```mermaid
 flowchart LR
@@ -219,19 +222,19 @@ class TradeEvent(MarketEvent):
 
 **Bybit v5 mapping — `publicTrade.{symbol}`:**
 
-| Internal | Bybit | Transform | Notes |
-|---|---|---|---|
-| `ts_event` | `T` | `int(T) * 1000` | ms → µs |
-| `symbol` | `s` | identity | |
-| `side` | `S` | `"Buy"→"buy"`, `"Sell"→"sell"` | taker/aggressor side |
-| `qty` | `v` | `Decimal(v)` | base coin for linear |
-| `price` | `p` | `Decimal(p)` | |
-| `trade_id` | `i` | identity | |
-| `is_block_trade` | `BT` | `bool` | absent ⇒ `False` |
-| — | `L` | dropped | tick direction (`PlusTick`/`ZeroPlusTick`/…) — we derive direction from `S`; retained only in the raw recorder blob |
-| `notional` | — | `price * qty` | linear only; inverse would need `qty/price` (out of scope) |
-| `price_ticks` | — | computed | |
-| `seq` | — | ingest counter | not from exchange |
+| Internal         | Bybit | Transform                      | Notes                                                                                                               |
+| ---------------- | ----- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `ts_event`       | `T`   | `int(T) * 1000`                | ms → µs                                                                                                             |
+| `symbol`         | `s`   | identity                       |                                                                                                                     |
+| `side`           | `S`   | `"Buy"→"buy"`, `"Sell"→"sell"` | taker/aggressor side                                                                                                |
+| `qty`            | `v`   | `Decimal(v)`                   | base coin for linear                                                                                                |
+| `price`          | `p`   | `Decimal(p)`                   |                                                                                                                     |
+| `trade_id`       | `i`   | identity                       |                                                                                                                     |
+| `is_block_trade` | `BT`  | `bool`                         | absent ⇒ `False`                                                                                                    |
+| —                | `L`   | dropped                        | tick direction (`PlusTick`/`ZeroPlusTick`/…) — we derive direction from `S`; retained only in the raw recorder blob |
+| `notional`       | —     | `price * qty`                  | linear only; inverse would need `qty/price` (out of scope)                                                          |
+| `price_ticks`    | —     | computed                       |                                                                                                                     |
+| `seq`            | —     | ingest counter                 | not from exchange                                                                                                   |
 
 REST fallback `GET /v5/market/recent-trade` maps identically; **always pass `limit=1000`** (defaults are 60 for linear — research 08 §2). REST-sourced trades carry `source="backfill"`.
 
@@ -268,16 +271,16 @@ class BookDelta(MarketEvent):
 
 **Bybit mapping — `orderbook.{depth}.{symbol}`:**
 
-| Internal | Bybit | Transform |
-|---|---|---|
-| event type | `type` | `"snapshot"→BookSnapshot`, `"delta"→BookDelta` |
-| `bids` | `data.b` | `[[p, q], …]` → `BookLevel` |
-| `asks` | `data.a` | same |
-| `update_id` | `data.u` | monotonic per symbol; resets to 1 on a server-side reset, which is always accompanied by `type="snapshot"` |
-| `cross_seq` | `data.seq` | cross-topic ordering |
-| `ts_match` | `data.cts` | ms → µs |
-| `ts_event` | envelope `ts` | ms → µs |
-| `depth` | topic suffix | parsed from `orderbook.200.BTCUSDT` |
+| Internal    | Bybit         | Transform                                                                                                  |
+| ----------- | ------------- | ---------------------------------------------------------------------------------------------------------- |
+| event type  | `type`        | `"snapshot"→BookSnapshot`, `"delta"→BookDelta`                                                             |
+| `bids`      | `data.b`      | `[[p, q], …]` → `BookLevel`                                                                                |
+| `asks`      | `data.a`      | same                                                                                                       |
+| `update_id` | `data.u`      | monotonic per symbol; resets to 1 on a server-side reset, which is always accompanied by `type="snapshot"` |
+| `cross_seq` | `data.seq`    | cross-topic ordering                                                                                       |
+| `ts_match`  | `data.cts`    | ms → µs                                                                                                    |
+| `ts_event`  | envelope `ts` | ms → µs                                                                                                    |
+| `depth`     | topic suffix  | parsed from `orderbook.200.BTCUSDT`                                                                        |
 
 **Depth/cadence (linear, research 06 §9 / 11 §2.1):** 1 @ 10 ms, 50 @ 20 ms, 200 @ 100 ms, 500 @ 200 ms. v1 subscribes **200** for the heatmap/DOM and **1** for best-bid/ask ticks. Depth `1` is snapshot-only and is re-sent every 3 s even when unchanged (keepalive) — the book engine must not treat an unchanged depth-1 resend as a book event, or the heatmap will show phantom columns.
 
@@ -321,7 +324,7 @@ class TickerEvent(MarketEvent):
 
 **Mapping — `tickers.{symbol}` (~100 ms, delta-encoded for linear):** `lastPrice→last_price`, `markPrice→mark_price`, `indexPrice→index_price`, `bid1Price/bid1Size→bid1_price/bid1_qty`, `ask1Price/ask1Size→ask1_price/ask1_qty`, `openInterest→open_interest`, `openInterestValue→open_interest_value`, `turnover24h`, `volume24h`, `price24hPcnt`, `fundingRate`, `nextFundingTime` (ms→µs).
 
-**Critical edge case:** Bybit's linear ticker stream is a **delta** stream — absent fields mean *unchanged*, not *null*. The adapter keeps a per-symbol last-known ticker and emits a **fully-populated** `TickerEvent` with `is_delta=False` downstream, so no consumer ever implements merge logic. The raw delta is what the recorder stores.
+**Critical edge case:** Bybit's linear ticker stream is a **delta** stream — absent fields mean _unchanged_, not _null_. The adapter keeps a per-symbol last-known ticker and emits a **fully-populated** `TickerEvent` with `is_delta=False` downstream, so no consumer ever implements merge logic. The raw delta is what the recorder stores.
 
 ### 2.4 KlineEvent
 
@@ -387,38 +390,39 @@ class FundingEvent(MarketEvent):
 
 `annualized_rate = funding_rate * (365*24*60 / funding_interval_min)`. Worked example: interval 480 min ⇒ 1095 periods/yr ⇒ 0.01 % per period ≈ **10.95 %/yr**.
 
-Sources: live accruing rate from `tickers.{symbol}` (`fundingRate`, `nextFundingTime`) with `settled=False`; history from `GET /v5/market/funding/history` (`limit` 1–200, default 200) with `settled=True`. Bybit publishes no distinct "predicted" rate — `fundingRate` *is* the currently-accruing rate that will apply at `nextFundingTime` (research 08 §7, open Q #8). Intervals vary per symbol (8 h common; 1 h / 2 h / 4 h exist) — always read `instrument.funding_interval_min`.
+Sources: live accruing rate from `tickers.{symbol}` (`fundingRate`, `nextFundingTime`) with `settled=False`; history from `GET /v5/market/funding/history` (`limit` 1–200, default 200) with `settled=True`. Bybit publishes no distinct "predicted" rate — `fundingRate` _is_ the currently-accruing rate that will apply at `nextFundingTime` (research 08 §7, open Q #8). Intervals vary per symbol (8 h common; 1 h / 2 h / 4 h exist) — always read `instrument.funding_interval_min`.
 
 ### 2.8 Derived and control events
 
-| Event | Purpose | Key fields |
-|---|---|---|
-| `BestQuoteEvent` | L1 top-of-book for the ticket, DOM header and spread metric | `bid, bid_qty, ask, ask_qty, spread_ticks, spread_bps, mid` |
-| `BookDesyncEvent` | Book resync incident | `symbol, depth, prev_update_id, got_update_id, resync_count` |
-| `FeedHealthEvent` | Per-stream health, 1 Hz | `stream_kind, connected, last_msg_age_ms, latency_p50_ms, latency_p99_ms, msgs_per_s, dropped` |
-| `ClockSyncEvent` | Offset vs `GET /v5/market/time`, 60 s | `offset_ms, rtt_ms, drift_rate_ppm, action` (`ok`/`warn`/`block_trading`) |
-| `InstrumentUpdatedEvent` | Instrument metadata changed | `symbol, metadata_version, changed_fields[]` |
+| Event                    | Purpose                                                     | Key fields                                                                                     |
+| ------------------------ | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `BestQuoteEvent`         | L1 top-of-book for the ticket, DOM header and spread metric | `bid, bid_qty, ask, ask_qty, spread_ticks, spread_bps, mid`                                    |
+| `BookDesyncEvent`        | Book resync incident                                        | `symbol, depth, prev_update_id, got_update_id, resync_count`                                   |
+| `FeedHealthEvent`        | Per-stream health, 1 Hz                                     | `stream_kind, connected, last_msg_age_ms, latency_p50_ms, latency_p99_ms, msgs_per_s, dropped` |
+| `ClockSyncEvent`         | Offset vs `GET /v5/market/time`, 60 s                       | `offset_ms, rtt_ms, drift_rate_ppm, action` (`ok`/`warn`/`block_trading`)                      |
+| `InstrumentUpdatedEvent` | Instrument metadata changed                                 | `symbol, metadata_version, changed_fields[]`                                                   |
 
 `ClockSyncEvent.action == "block_trading"` when `abs(offset_ms) > 2000` (40 % of Bybit's 5000 ms default `recv_window`). Order entry is disabled system-wide until it clears; this is the pre-emptive form of Bybit error 10002 (research 11 §2.5 — WSL clocks drift badly after host sleep/resume).
 
 ### 2.9 Event catalogue summary
 
-| Event | Bybit source | Cadence | Recorded | Bus topic |
-|---|---|---|---|---|
-| `TradeEvent` | `publicTrade.{s}` / `recent-trade` | per match | yes (hot+cold) | `md.trade.{symbol}` |
-| `BookSnapshot` | `orderbook.{d}.{s}` type=snapshot | on subscribe/resync | yes | `md.book.{symbol}` |
-| `BookDelta` | `orderbook.{d}.{s}` type=delta | 20–200 ms | yes (deltas, not re-snapshots) | `md.book.{symbol}` |
-| `TickerEvent` | `tickers.{s}` | ~100 ms | yes (downsampled 1 Hz cold) | `md.ticker.{symbol}` |
-| `KlineEvent` | `kline.{i}.{s}` / REST | 1–60 s | yes | `md.kline.{symbol}.{interval}` |
-| `LiquidationEvent` | `allLiquidation.{s}` | ≤1 push/500 ms | yes | `md.liq.{symbol}` |
-| `OpenInterestEvent` | ticker / REST OI | 100 ms / 5 min | yes | `md.oi.{symbol}` |
-| `FundingEvent` | ticker / REST funding | 100 ms / settlement | yes | `md.funding.{symbol}` |
-| `BestQuoteEvent` | derived | on change | no (derivable) | `md.quote.{symbol}` |
-| `BookDesyncEvent` | derived | rare | yes | `sys.md.desync` |
-| `FeedHealthEvent` | derived | 1 Hz | metrics only | `sys.md.health` |
-| `ClockSyncEvent` | `GET /v5/market/time` | 60 s | metrics only | `sys.clock` |
+| Event               | Bybit source                       | Cadence             | Recorded                       | Bus topic                      |
+| ------------------- | ---------------------------------- | ------------------- | ------------------------------ | ------------------------------ |
+| `TradeEvent`        | `publicTrade.{s}` / `recent-trade` | per match           | yes (hot+cold)                 | `md.trade.{symbol}`            |
+| `BookSnapshot`      | `orderbook.{d}.{s}` type=snapshot  | on subscribe/resync | yes                            | `md.book.{symbol}`             |
+| `BookDelta`         | `orderbook.{d}.{s}` type=delta     | 20–200 ms           | yes (deltas, not re-snapshots) | `md.book.{symbol}`             |
+| `TickerEvent`       | `tickers.{s}`                      | ~100 ms             | yes (downsampled 1 Hz cold)    | `md.ticker.{symbol}`           |
+| `KlineEvent`        | `kline.{i}.{s}` / REST             | 1–60 s              | yes                            | `md.kline.{symbol}.{interval}` |
+| `LiquidationEvent`  | `allLiquidation.{s}`               | ≤1 push/500 ms      | yes                            | `md.liq.{symbol}`              |
+| `OpenInterestEvent` | ticker / REST OI                   | 100 ms / 5 min      | yes                            | `md.oi.{symbol}`               |
+| `FundingEvent`      | ticker / REST funding              | 100 ms / settlement | yes                            | `md.funding.{symbol}`          |
+| `BestQuoteEvent`    | derived                            | on change           | no (derivable)                 | `md.quote.{symbol}`            |
+| `BookDesyncEvent`   | derived                            | rare                | yes                            | `sys.md.desync`                |
+| `FeedHealthEvent`   | derived                            | 1 Hz                | metrics only                   | `sys.md.health`                |
+| `ClockSyncEvent`    | `GET /v5/market/time`              | 60 s                | metrics only                   | `sys.clock`                    |
 
 ---
+
 ## 3. Bar builders
 
 One `BarBuilder` protocol, six implementations. Every builder consumes `TradeEvent` only (never klines), so live and replay produce byte-identical bars. Bars are the substrate for footprint (§4), profiles (§5), indicators and the rule engine's `on_bar_close` trigger.
@@ -503,14 +507,14 @@ class BarUpdate(BaseModel):
 
 ### 3.4 Determinism and shared invariants
 
-| Invariant | Statement | Test |
-|---|---|---|
-| BI-1 | `sum(bar.volume for bar in bars) == sum(trade.qty for trade in trades)` for every builder (with volume-bar splitting). | Property test, 1 M synthetic trades |
-| BI-2 | `bar.delta == bar.buy_volume - bar.sell_volume` always. | Unit |
-| BI-3 | `min_delta <= delta <= max_delta` and both are attained on the intrabar path. | Property |
-| BI-4 | Replaying the same trade sequence twice yields identical `Bar` objects including `spec_hash`. | Golden-file test against a recorded fixture |
-| BI-5 | `restore(snapshot())` at any point yields the same final series as an uninterrupted run. | Property with random cut points |
-| BI-6 | `vwap == turnover / volume` to 8 dp, or `open` when `volume == 0`. | Unit |
+| Invariant | Statement                                                                                                              | Test                                        |
+| --------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| BI-1      | `sum(bar.volume for bar in bars) == sum(trade.qty for trade in trades)` for every builder (with volume-bar splitting). | Property test, 1 M synthetic trades         |
+| BI-2      | `bar.delta == bar.buy_volume - bar.sell_volume` always.                                                                | Unit                                        |
+| BI-3      | `min_delta <= delta <= max_delta` and both are attained on the intrabar path.                                          | Property                                    |
+| BI-4      | Replaying the same trade sequence twice yields identical `Bar` objects including `spec_hash`.                          | Golden-file test against a recorded fixture |
+| BI-5      | `restore(snapshot())` at any point yields the same final series as an uninterrupted run.                               | Property with random cut points             |
+| BI-6      | `vwap == turnover / volume` to 8 dp, or `open` when `volume == 0`.                                                     | Unit                                        |
 
 ### 3.5 Multi-spec efficiency
 
@@ -584,14 +588,14 @@ sell_imbalance(P) = bid_volume(P)     / ask_volume(P + tick)
 
 Flag `buy` at P when `buy_imbalance(P) >= ratio`; flag `sell` at P when `sell_imbalance(P) >= ratio`.
 
-| Parameter | Default | Range | Note |
-|---|---|---|---|
-| `ratio` | `3.0` (300 %) | 1.5–10.0 | Industry range 3×–5×; some platforms default 500 % |
-| `min_volume` | `0` | ≥0 | Cells below this are skipped entirely (noise filter) |
-| `diagonal_offset_ticks` | `1` | 1–5 | Must scale with `aggregation_ticks`: effective offset = `diagonal_offset_ticks * aggregation_ticks` |
-| `zero_policy` | `"treat_as_min"` | `"treat_as_min"` \| `"skip"` \| `"infinite"` | See below |
+| Parameter               | Default          | Range                                        | Note                                                                                                |
+| ----------------------- | ---------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `ratio`                 | `3.0` (300 %)    | 1.5–10.0                                     | Industry range 3×–5×; some platforms default 500 %                                                  |
+| `min_volume`            | `0`              | ≥0                                           | Cells below this are skipped entirely (noise filter)                                                |
+| `diagonal_offset_ticks` | `1`              | 1–5                                          | Must scale with `aggregation_ticks`: effective offset = `diagonal_offset_ticks * aggregation_ticks` |
+| `zero_policy`           | `"treat_as_min"` | `"treat_as_min"` \| `"skip"` \| `"infinite"` | See below                                                                                           |
 
-**Zero-denominator rule (the classic footprint bug).** When the comparison cell has zero volume the ratio is undefined. Defaults: `treat_as_min` substitutes `min_volume_floor = max(min_volume, smallest_qty_step)` in the denominator, so a genuinely one-sided level *does* flag but with a bounded ratio; `skip` never flags; `infinite` always flags. The default is `treat_as_min` with `min_volume` defaulting to `qty_step` when the user leaves it at 0 — this stops a single 1-contract print from manufacturing a 300 % imbalance. **Edge levels**: the lowest cell has no `P - tick` neighbour inside the bar and the highest has no `P + tick`; missing neighbours outside the bar's traded range are treated as zero volume and therefore obey `zero_policy`.
+**Zero-denominator rule (the classic footprint bug).** When the comparison cell has zero volume the ratio is undefined. Defaults: `treat_as_min` substitutes `min_volume_floor = max(min_volume, smallest_qty_step)` in the denominator, so a genuinely one-sided level _does_ flag but with a bounded ratio; `skip` never flags; `infinite` always flags. The default is `treat_as_min` with `min_volume` defaulting to `qty_step` when the user leaves it at 0 — this stops a single 1-contract print from manufacturing a 300 % imbalance. **Edge levels**: the lowest cell has no `P - tick` neighbour inside the bar and the highest has no `P + tick`; missing neighbours outside the bar's traded range are treated as zero volume and therefore obey `zero_policy`.
 
 ### 4.3 Stacked imbalance
 
@@ -601,11 +605,11 @@ def stacked(flags: list[ImbalanceFlag], min_stack: int = 3) -> list[ImbalanceFla
     # runs of length >= min_stack get stacked=True and a shared stack_id
 ```
 
-| Parameter | Default | Note |
-|---|---|---|
-| `min_stack` | `3` | Consecutive same-direction diagonal imbalances |
-| `allow_gaps` | `false` | When true, one untraded level may interrupt a run without breaking it |
-| `min_stack_volume` | `0` | Total volume across the run must reach this to qualify |
+| Parameter          | Default | Note                                                                  |
+| ------------------ | ------- | --------------------------------------------------------------------- |
+| `min_stack`        | `3`     | Consecutive same-direction diagonal imbalances                        |
+| `allow_gaps`       | `false` | When true, one untraded level may interrupt a run without breaking it |
+| `min_stack_volume` | `0`     | Total volume across the run must reach this to qualify                |
 
 Gaps: with `allow_gaps=false` (default) an untraded intermediate level breaks the run. With `allow_gaps=true` a single missing level is bridged but the bridged level is not itself flagged. Two adjacent runs of opposite direction never merge.
 
@@ -624,12 +628,12 @@ unfinished_low  = (bar.low_ticks == min_cell_ticks)
                   and cell(low).ask_volume >= min_side_volume
 ```
 
-| Parameter | Default | Note |
-|---|---|---|
-| `min_side_volume` | `qty_step` (i.e. "non-zero on both sides") | Raise to require significance |
-| `min_extreme_pct` | `0.0` | Optional: extreme cell volume as a fraction of the bar's max cell volume |
+| Parameter         | Default                                    | Note                                                                     |
+| ----------------- | ------------------------------------------ | ------------------------------------------------------------------------ |
+| `min_side_volume` | `qty_step` (i.e. "non-zero on both sides") | Raise to require significance                                            |
+| `min_extreme_pct` | `0.0`                                      | Optional: extreme cell volume as a fraction of the bar's max cell volume |
 
-Edge cases: a bar with exactly one traded level is **never** unfinished at both ends (we return `False` for both — it carries no auction information). A bar whose extreme cell is one-sided (only buyers at the high) is a *finished* auction — that is the textbook opposite signal and is exposed separately as `finished_auction_high/low`.
+Edge cases: a bar with exactly one traded level is **never** unfinished at both ends (we return `False` for both — it carries no auction information). A bar whose extreme cell is one-sided (only buyers at the high) is a _finished_ auction — that is the textbook opposite signal and is exposed separately as `finished_auction_high/low`.
 
 ### 4.5 Per-bar POC and value area
 
@@ -741,12 +745,12 @@ class VolumeProfile(BaseModel):
 
 **VWAP family** (research 08 §5) — all computed from trades, not bar typical prices:
 
-| Variant | Definition | Parameters |
-|---|---|---|
-| Session VWAP | `Σ(p·v)/Σv` from session anchor | `anchor_utc_min` (default 0; presets 00/08/16 UTC to match funding) |
-| Anchored VWAP | same, from a user-picked bar/time | `anchor_ts` |
-| Rolling VWAP | fixed trailing window, never resets | `window_bars` or `window_ms` |
-| SD bands | volume-weighted variance `σ² = Σ(v·(p−vwap)²)/Σv`, bands at `vwap ± kσ` | `k ∈ {1,2,3}`, up to 3 band pairs |
+| Variant       | Definition                                                              | Parameters                                                          |
+| ------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Session VWAP  | `Σ(p·v)/Σv` from session anchor                                         | `anchor_utc_min` (default 0; presets 00/08/16 UTC to match funding) |
+| Anchored VWAP | same, from a user-picked bar/time                                       | `anchor_ts`                                                         |
+| Rolling VWAP  | fixed trailing window, never resets                                     | `window_bars` or `window_ms`                                        |
+| SD bands      | volume-weighted variance `σ² = Σ(v·(p−vwap)²)/Σv`, bands at `vwap ± kσ` | `k ∈ {1,2,3}`, up to 3 band pairs                                   |
 
 Edge cases: VWAP with `Σv == 0` returns `None` (no line drawn, not zero). Anchored VWAP anchored to the future is rejected with a validation error. Rolling VWAP over `window_ms` uses a deque with O(1) amortized eviction; the running sums are `Decimal`-free (`float`) internally and quantized on emit, since a VWAP line is analytics, not accounting (C3).
 
@@ -796,13 +800,13 @@ class HeatmapGridSpec(BaseModel):
 
 ### 6.3 Edge cases
 
-| Case | Behaviour |
-|---|---|
-| Book resyncing | Columns produced during `Resyncing` are marked `estimated=True`, rendered at 40 % opacity with a hatch, and excluded from any rule-engine liquidity metric |
-| Price gap larger than the window | Window re-centres on the new mid; the intervening columns are emitted as empty (`samples=0`) rather than stretched |
-| `price_step_ticks` change | Re-bucketing is done from stored native-step columns when the stored step divides the new one; otherwise the range is rebuilt from recorded book deltas |
-| Very wide instrument range at deep zoom-out | `rows` cap forces `price_step_ticks` up via auto mode; the UI shows the effective step in the legend |
-| Missing column (engine stall) | Emitted with `samples=0`; the renderer draws a vertical grey stripe. `heatmap_missing_columns_total` alerts above 1 %/min |
+| Case                                        | Behaviour                                                                                                                                                  |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Book resyncing                              | Columns produced during `Resyncing` are marked `estimated=True`, rendered at 40 % opacity with a hatch, and excluded from any rule-engine liquidity metric |
+| Price gap larger than the window            | Window re-centres on the new mid; the intervening columns are emitted as empty (`samples=0`) rather than stretched                                         |
+| `price_step_ticks` change                   | Re-bucketing is done from stored native-step columns when the stored step divides the new one; otherwise the range is rebuilt from recorded book deltas    |
+| Very wide instrument range at deep zoom-out | `rows` cap forces `price_step_ticks` up via auto mode; the UI shows the effective step in the legend                                                       |
+| Missing column (engine stall)               | Emitted with `samples=0`; the renderer draws a vertical grey stripe. `heatmap_missing_columns_total` alerts above 1 %/min                                  |
 
 ### 6.4 Liquidation heatmap (realized)
 
@@ -839,70 +843,70 @@ class MetricDescriptor(BaseModel):
 
 **Order flow**
 
-| Name | Definition | Params (defaults) | Confidence |
-|---|---|---|---|
-| `delta` | Bar `buy_volume - sell_volume` | — | exact |
-| `cvd` | Running Σ signed volume from anchor | `anchor` (`session`\|`utc_day`\|`since_load`\|`custom_ts`) | exact |
-| `cvd_slope` | Least-squares slope of CVD over N bars | `n=10` | exact |
-| `min_delta`/`max_delta` | Intrabar delta extremes | — | exact |
-| `delta_divergence` | Price makes new N-bar extreme, CVD does not | `n=10`, `pivot_lookback=3` | estimated |
-| `cvd_divergence` | Pivot-based swing comparison price vs CVD | `n=10` | estimated |
-| `buy_sell_ratio` | `buy_volume / max(sell_volume, qty_step)` | — | exact |
-| `stacked_imbalance_zone` | Price is within a stacked-imbalance run from the last `n` bars | `n=20`, footprint config | exact |
-| `unfinished_auction_above`/`_below` | Nearest unfinished extreme within `n` bars | `n=50` | exact |
-| `absorption` | Large volume at a level with price failing to move `>= k` ticks | `min_volume_z=2.0`, `k=2` | estimated |
-| `exhaustion` | Bar extreme cell one-sided with volume < `pct` of bar max cell | `pct=0.25` | estimated |
-| `big_trade_notional` | Largest print notional in window | `window_ms=1000` | exact |
-| `big_trade_zscore` | Z-score of print size vs rolling mean | `window=500 trades`, `z_threshold=3.0` | exact |
-| `tape_speed` | Trades/second | `window_ms=1000` | exact |
-| `tape_speed_zscore` | Fast window vs baseline | `fast_ms=1000`, `base_ms=300000`, alert `>3.0` | exact |
-| `trade_cluster` | Prints within `window_ms` at same price/side treated as one aggressor | `window_ms=50` | estimated |
-| `iceberg_present_at_level` | Repeated resting-size refills at a level | `min_reload_count=3`, `size_tolerance_pct=0.2`, `window_ms=60000` | estimated |
-| `iceberg_executed_volume` | Volume traded through a detected iceberg level | same | estimated |
-| `stop_run_detected` | Aggressive sweep consuming a liquidity cluster then reversing | `cluster_min_z=2.0`, `follow_through_bars=2` | estimated |
-| `in_stop_hunt_zone` | Price within `k` ticks of a detected stop cluster | `k=5` | estimated |
-| `distance_to_liquidity_cluster` | Ticks to nearest heatmap cluster ≥ z | `z=2.0` | estimated |
+| Name                                | Definition                                                            | Params (defaults)                                                 | Confidence |
+| ----------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------- |
+| `delta`                             | Bar `buy_volume - sell_volume`                                        | —                                                                 | exact      |
+| `cvd`                               | Running Σ signed volume from anchor                                   | `anchor` (`session`\|`utc_day`\|`since_load`\|`custom_ts`)        | exact      |
+| `cvd_slope`                         | Least-squares slope of CVD over N bars                                | `n=10`                                                            | exact      |
+| `min_delta`/`max_delta`             | Intrabar delta extremes                                               | —                                                                 | exact      |
+| `delta_divergence`                  | Price makes new N-bar extreme, CVD does not                           | `n=10`, `pivot_lookback=3`                                        | estimated  |
+| `cvd_divergence`                    | Pivot-based swing comparison price vs CVD                             | `n=10`                                                            | estimated  |
+| `buy_sell_ratio`                    | `buy_volume / max(sell_volume, qty_step)`                             | —                                                                 | exact      |
+| `stacked_imbalance_zone`            | Price is within a stacked-imbalance run from the last `n` bars        | `n=20`, footprint config                                          | exact      |
+| `unfinished_auction_above`/`_below` | Nearest unfinished extreme within `n` bars                            | `n=50`                                                            | exact      |
+| `absorption`                        | Large volume at a level with price failing to move `>= k` ticks       | `min_volume_z=2.0`, `k=2`                                         | estimated  |
+| `exhaustion`                        | Bar extreme cell one-sided with volume < `pct` of bar max cell        | `pct=0.25`                                                        | estimated  |
+| `big_trade_notional`                | Largest print notional in window                                      | `window_ms=1000`                                                  | exact      |
+| `big_trade_zscore`                  | Z-score of print size vs rolling mean                                 | `window=500 trades`, `z_threshold=3.0`                            | exact      |
+| `tape_speed`                        | Trades/second                                                         | `window_ms=1000`                                                  | exact      |
+| `tape_speed_zscore`                 | Fast window vs baseline                                               | `fast_ms=1000`, `base_ms=300000`, alert `>3.0`                    | exact      |
+| `trade_cluster`                     | Prints within `window_ms` at same price/side treated as one aggressor | `window_ms=50`                                                    | estimated  |
+| `iceberg_present_at_level`          | Repeated resting-size refills at a level                              | `min_reload_count=3`, `size_tolerance_pct=0.2`, `window_ms=60000` | estimated  |
+| `iceberg_executed_volume`           | Volume traded through a detected iceberg level                        | same                                                              | estimated  |
+| `stop_run_detected`                 | Aggressive sweep consuming a liquidity cluster then reversing         | `cluster_min_z=2.0`, `follow_through_bars=2`                      | estimated  |
+| `in_stop_hunt_zone`                 | Price within `k` ticks of a detected stop cluster                     | `k=5`                                                             | estimated  |
+| `distance_to_liquidity_cluster`     | Ticks to nearest heatmap cluster ≥ z                                  | `z=2.0`                                                           | estimated  |
 
 **Book / microstructure**
 
-| Name | Definition | Params | Confidence |
-|---|---|---|---|
-| `spread_ticks`, `spread_bps` | `ask1 - bid1` | — | exact |
-| `mid` | `(bid1 + ask1)/2` | — | exact |
-| `microprice` | `(bid1*ask_qty + ask1*bid_qty)/(bid_qty+ask_qty)` | — | exact |
-| `dom_imbalance_ratio` | `Σbid_qty(n) / Σask_qty(n)` over top n levels | `n=10` | exact |
-| `book_pressure` | `(Σbid−Σask)/(Σbid+Σask)`, range −1..1 | `n=20` | exact |
-| `queue_position_estimate` | Same-side resting size ahead of our order | — | estimated |
-| `slippage_estimate` | Cost of walking the book for a given qty | `qty` | exact (given book) |
-| `book_staleness_ms` | Age of last applied book update | — | exact |
+| Name                         | Definition                                        | Params | Confidence         |
+| ---------------------------- | ------------------------------------------------- | ------ | ------------------ |
+| `spread_ticks`, `spread_bps` | `ask1 - bid1`                                     | —      | exact              |
+| `mid`                        | `(bid1 + ask1)/2`                                 | —      | exact              |
+| `microprice`                 | `(bid1*ask_qty + ask1*bid_qty)/(bid_qty+ask_qty)` | —      | exact              |
+| `dom_imbalance_ratio`        | `Σbid_qty(n) / Σask_qty(n)` over top n levels     | `n=10` | exact              |
+| `book_pressure`              | `(Σbid−Σask)/(Σbid+Σask)`, range −1..1            | `n=20` | exact              |
+| `queue_position_estimate`    | Same-side resting size ahead of our order         | —      | estimated          |
+| `slippage_estimate`          | Cost of walking the book for a given qty          | `qty`  | exact (given book) |
+| `book_staleness_ms`          | Age of last applied book update                   | —      | exact              |
 
 **Price / volatility / regime**
 
-| Name | Definition | Params | Confidence |
-|---|---|---|---|
-| `price` | Last trade price | `source=last\|mark\|index` | exact |
-| `atr` | Wilder ATR | `n=14` | exact |
-| `ema`, `sma`, `rsi` | Standard | `n` | exact |
-| `swing_high`/`swing_low` | Pivot with `n` bars either side | `n=5` | exact |
-| `realized_vol` | Close-close log-return stdev × √periods | `n=20` | exact |
-| `parkinson_vol` | `σ²=(1/(4N ln2))Σ[ln(H/L)]²` | `n=20` | exact |
-| `garman_klass_vol` | `σ²=(1/N)Σ[0.5(ln(H/L))²−(2ln2−1)(ln(C/O))²]` | `n=20` | exact |
-| `adx` | Wilder ADX | `n=14`; trending >25, ranging <20 | exact |
-| `hurst` | R/S analysis slope | `window=512`; >0.55 trend, <0.45 mean-revert | estimated |
-| `market_regime` | enum `trending\|ranging\|volatile\|mixed` from ADX+Hurst+ATR% | thresholds above | estimated |
+| Name                     | Definition                                                    | Params                                       | Confidence |
+| ------------------------ | ------------------------------------------------------------- | -------------------------------------------- | ---------- |
+| `price`                  | Last trade price                                              | `source=last\|mark\|index`                   | exact      |
+| `atr`                    | Wilder ATR                                                    | `n=14`                                       | exact      |
+| `ema`, `sma`, `rsi`      | Standard                                                      | `n`                                          | exact      |
+| `swing_high`/`swing_low` | Pivot with `n` bars either side                               | `n=5`                                        | exact      |
+| `realized_vol`           | Close-close log-return stdev × √periods                       | `n=20`                                       | exact      |
+| `parkinson_vol`          | `σ²=(1/(4N ln2))Σ[ln(H/L)]²`                                  | `n=20`                                       | exact      |
+| `garman_klass_vol`       | `σ²=(1/N)Σ[0.5(ln(H/L))²−(2ln2−1)(ln(C/O))²]`                 | `n=20`                                       | exact      |
+| `adx`                    | Wilder ADX                                                    | `n=14`; trending >25, ranging <20            | exact      |
+| `hurst`                  | R/S analysis slope                                            | `window=512`; >0.55 trend, <0.45 mean-revert | estimated  |
+| `market_regime`          | enum `trending\|ranging\|volatile\|mixed` from ADX+Hurst+ATR% | thresholds above                             | estimated  |
 
 Regime rule: `adx>25 and hurst>0.55 → trending`; `adx<20 and hurst<0.5 → ranging`; `atr_pct_of_price > volatile_threshold (default 0.02) → volatile` (evaluated first, it overrides); otherwise `mixed`.
 
 **Derivatives**
 
-| Name | Definition | Params |
-|---|---|---|
-| `open_interest`, `open_interest_value` | Latest OI | — |
-| `open_interest_delta` | `OI(close) − OI(open)` per bar | — |
-| `oi_price_quadrant` | enum `long_buildup\|short_covering\|short_buildup\|long_unwind` | — |
-| `funding_rate`, `funding_annualized`, `time_to_funding_ms` | §2.7 | — |
-| `basis`, `premium_pct` | `last − index`, `basis/index*100` | `source=last\|mark` |
-| `liquidation_notional` | Per-bar liquidated notional | `side=long\|short\|both` |
+| Name                                                       | Definition                                                      | Params                   |
+| ---------------------------------------------------------- | --------------------------------------------------------------- | ------------------------ |
+| `open_interest`, `open_interest_value`                     | Latest OI                                                       | —                        |
+| `open_interest_delta`                                      | `OI(close) − OI(open)` per bar                                  | —                        |
+| `oi_price_quadrant`                                        | enum `long_buildup\|short_covering\|short_buildup\|long_unwind` | —                        |
+| `funding_rate`, `funding_annualized`, `time_to_funding_ms` | §2.7                                                            | —                        |
+| `basis`, `premium_pct`                                     | `last − index`, `basis/index*100`                               | `source=last\|mark`      |
+| `liquidation_notional`                                     | Per-bar liquidated notional                                     | `side=long\|short\|both` |
 
 OI-price quadrant table (research 08 §6): price↑ OI↑ = long build-up; price↑ OI↓ = short covering; price↓ OI↑ = short build-up; price↓ OI↓ = long liquidation/unwind.
 
@@ -910,28 +914,28 @@ OI-price quadrant table (research 08 §6): price↑ OI↑ = long build-up; price
 
 These are the metrics backing the Deep-Stats row strip under the main chart (research 23 §2; DeepCharts "Deep Stats" / On-Candle Stats). Every row the strip can display is a first-class `MetricDescriptor` with `scope="symbol"`, `cadence="on_trade"` (live bar) recomputed authoritatively `on_bar_close`, `inputs=("trades",)`, `warmup_bars=0`, `deterministic=True`, `confidence="exact"` unless noted. They are derived entirely locally from `publicTrade.{symbol}` aggregated per bar — no REST dependency.
 
-| Row label (UI) | Metric name | Definition | Unit | Params | Confidence |
-|---|---|---|---|---|---|
-| Total Volume | `bar_volume` | `buy_volume + sell_volume` of the bar | qty | — | exact |
-| Total Notional | `bar_notional` | `Σ(px × qty)` of the bar | notional | — | exact |
-| Bid Volume | `bar_sell_volume` | Volume executed on the bid (aggressive sellers) | qty | — | exact |
-| Ask Volume | `bar_buy_volume` | Volume executed on the ask (aggressive buyers) | qty | — | exact |
-| Delta | `delta` | `buy_volume − sell_volume` | qty | — | exact |
-| Max Delta | `max_delta` | Highest value the intrabar running delta reached | qty | — | exact |
-| Min Delta | `min_delta` | Lowest value the intrabar running delta reached | qty | — | exact |
-| Delta % | `delta_pct` | `delta / max(bar_volume, qty_step) × 100`, range −100..100 | pct | — | exact |
-| Delta Divergence | `bar_delta_divergence` | Bar closes up with negative delta (or down with positive delta) | bool | — | exact |
-| Cumulative Delta | `cvd` | Running Σ signed volume from anchor (see Order flow table) | qty | `anchor` | exact |
-| CumΔ Change | `cvd_bar_change` | `cvd(close) − cvd(open)` for the bar (== `delta`, kept for row parity) | qty | — | exact |
-| # Trades | `bar_trade_count` | Number of prints in the bar | count | — | exact |
-| Avg Trade Size | `bar_avg_trade_size` | `bar_volume / max(bar_trade_count, 1)` | qty | — | exact |
-| Buy/Sell Trades | `bar_buy_trade_count` / `bar_sell_trade_count` | Print counts by aggressor | count | — | exact |
-| Speed | `tape_speed` | Trades/second over the bar's duration (see Order flow table) | count | `window_ms` | exact |
-| Volume Imbalance | `bar_volume_imbalance_ratio` | `bar_buy_volume / max(bar_sell_volume, qty_step)` | ratio | — | exact |
-| Bar POC | `bar_poc_price` | Price of the bar's highest-volume footprint cell (§4.5) | price | footprint config | exact |
-| Bar VA | `bar_vah_price` / `bar_val_price` | Intrabar value-area bounds (§4.5) | price | `va_pct=0.70` | exact |
-| OI Δ | `open_interest_delta` | Per-bar OI change (see Derivatives table) | qty | — | exact |
-| Range | `bar_range_ticks` | `(high − low)` in ticks | count | — | exact |
+| Row label (UI)   | Metric name                                    | Definition                                                             | Unit     | Params           | Confidence |
+| ---------------- | ---------------------------------------------- | ---------------------------------------------------------------------- | -------- | ---------------- | ---------- |
+| Total Volume     | `bar_volume`                                   | `buy_volume + sell_volume` of the bar                                  | qty      | —                | exact      |
+| Total Notional   | `bar_notional`                                 | `Σ(px × qty)` of the bar                                               | notional | —                | exact      |
+| Bid Volume       | `bar_sell_volume`                              | Volume executed on the bid (aggressive sellers)                        | qty      | —                | exact      |
+| Ask Volume       | `bar_buy_volume`                               | Volume executed on the ask (aggressive buyers)                         | qty      | —                | exact      |
+| Delta            | `delta`                                        | `buy_volume − sell_volume`                                             | qty      | —                | exact      |
+| Max Delta        | `max_delta`                                    | Highest value the intrabar running delta reached                       | qty      | —                | exact      |
+| Min Delta        | `min_delta`                                    | Lowest value the intrabar running delta reached                        | qty      | —                | exact      |
+| Delta %          | `delta_pct`                                    | `delta / max(bar_volume, qty_step) × 100`, range −100..100             | pct      | —                | exact      |
+| Delta Divergence | `bar_delta_divergence`                         | Bar closes up with negative delta (or down with positive delta)        | bool     | —                | exact      |
+| Cumulative Delta | `cvd`                                          | Running Σ signed volume from anchor (see Order flow table)             | qty      | `anchor`         | exact      |
+| CumΔ Change      | `cvd_bar_change`                               | `cvd(close) − cvd(open)` for the bar (== `delta`, kept for row parity) | qty      | —                | exact      |
+| # Trades         | `bar_trade_count`                              | Number of prints in the bar                                            | count    | —                | exact      |
+| Avg Trade Size   | `bar_avg_trade_size`                           | `bar_volume / max(bar_trade_count, 1)`                                 | qty      | —                | exact      |
+| Buy/Sell Trades  | `bar_buy_trade_count` / `bar_sell_trade_count` | Print counts by aggressor                                              | count    | —                | exact      |
+| Speed            | `tape_speed`                                   | Trades/second over the bar's duration (see Order flow table)           | count    | `window_ms`      | exact      |
+| Volume Imbalance | `bar_volume_imbalance_ratio`                   | `bar_buy_volume / max(bar_sell_volume, qty_step)`                      | ratio    | —                | exact      |
+| Bar POC          | `bar_poc_price`                                | Price of the bar's highest-volume footprint cell (§4.5)                | price    | footprint config | exact      |
+| Bar VA           | `bar_vah_price` / `bar_val_price`              | Intrabar value-area bounds (§4.5)                                      | price    | `va_pct=0.70`    | exact      |
+| OI Δ             | `open_interest_delta`                          | Per-bar OI change (see Derivatives table)                              | qty      | —                | exact      |
+| Range            | `bar_range_ticks`                              | `(high − low)` in ticks                                                | count    | —                | exact      |
 
 Row-strip presentation rules (colour thresholds, row ordering, sparkline toggles) are UI config, specified in `15-component-catalogue.md`; the metric values themselves are exactly the descriptors above so a rule, an alert and a Deep-Stats row always read the same number.
 
@@ -939,87 +943,87 @@ Row-strip presentation rules (colour thresholds, row ordering, sparkline toggles
 
 The imbalance tracker (brief feature) is a stateful, symbol-scoped panel listing live and historical footprint imbalance zones and their subsequent behaviour. Its metrics:
 
-| Name | Definition | Params | Confidence |
-|---|---|---|---|
-| `imbalance_zone_count` | Number of active (unmitigated) stacked-imbalance zones in the lookback | `n=50` bars | exact |
-| `nearest_imbalance_zone_distance` | Signed ticks from price to the nearest active zone edge | `n=50`, `side=above\|below\|both` | exact |
-| `imbalance_zone_side` | enum `buy\|sell\|none` of the nearest active zone | — | exact |
-| `imbalance_zone_strength` | Zone run length × mean cell ratio, z-scored over the lookback | `n=50` | exact |
-| `imbalance_zone_mitigated` | True once price has traded fully through the zone | — | exact |
-| `imbalance_zone_retest_count` | Times price re-entered the zone without full mitigation | — | exact |
-| `imbalance_hold_rate` | Fraction of the last `k` zones that held (price rejected) — the tracker's scoreboard | `k=20` | estimated |
-| `diagonal_imbalance_at_price` | Whether the current price's cell is diagonally imbalanced in the live bar (§4.2) | ratio threshold (default 3.0) | exact |
+| Name                              | Definition                                                                           | Params                            | Confidence |
+| --------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------- | ---------- |
+| `imbalance_zone_count`            | Number of active (unmitigated) stacked-imbalance zones in the lookback               | `n=50` bars                       | exact      |
+| `nearest_imbalance_zone_distance` | Signed ticks from price to the nearest active zone edge                              | `n=50`, `side=above\|below\|both` | exact      |
+| `imbalance_zone_side`             | enum `buy\|sell\|none` of the nearest active zone                                    | —                                 | exact      |
+| `imbalance_zone_strength`         | Zone run length × mean cell ratio, z-scored over the lookback                        | `n=50`                            | exact      |
+| `imbalance_zone_mitigated`        | True once price has traded fully through the zone                                    | —                                 | exact      |
+| `imbalance_zone_retest_count`     | Times price re-entered the zone without full mitigation                              | —                                 | exact      |
+| `imbalance_hold_rate`             | Fraction of the last `k` zones that held (price rejected) — the tracker's scoreboard | `k=20`                            | estimated  |
+| `diagonal_imbalance_at_price`     | Whether the current price's cell is diagonally imbalanced in the live bar (§4.2)     | ratio threshold (default 3.0)     | exact      |
 
 Zones are produced by the footprint engine (§4.3) and carry `(bar_id, price_lo_ticks, price_hi_ticks, side, run_len, created_at, mitigated_at)`. Zone lifetime is bounded by the footprint lookback window; expired zones leave the tracker and the metric set.
 
 **Profile / structure** (values published by §5; all `scope="symbol"`, `cadence="on_bar_close"`, `inputs=("trades",)`)
 
-| Name | Definition | Params | Confidence |
-|---|---|---|---|
-| `profile_poc` | POC price of the named profile period | `period_id` (`session`\|`day`\|`composite`\|`visible`\|custom) | exact |
-| `profile_vah` / `profile_val` | Value-area high/low of that period | `period_id`, `va_pct=0.70` | exact |
-| `profile_in_value_area` | Price is between VAL and VAH | `period_id` | exact |
-| `profile_hvn_distance` / `profile_lvn_distance` | Signed ticks to nearest HVN / LVN | `period_id`, `side` | exact |
-| `profile_single_print_present` | A single-print (one-TPO) range exists within `n` ticks | `n=20` | exact |
-| `naked_poc_distance` | Ticks to nearest untested prior-period POC | `lookback_periods=20` | exact |
-| `vwap` | Session/anchored/rolling VWAP value | `variant`, `anchor_ts`/`window` | exact |
-| `vwap_band_sigma` | Signed distance from VWAP in σ units | same + `k` | exact |
-| `developing_va_width` | `VAH − VAL` of the developing period, in ticks | `period_id` | exact |
+| Name                                            | Definition                                             | Params                                                         | Confidence |
+| ----------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------- | ---------- |
+| `profile_poc`                                   | POC price of the named profile period                  | `period_id` (`session`\|`day`\|`composite`\|`visible`\|custom) | exact      |
+| `profile_vah` / `profile_val`                   | Value-area high/low of that period                     | `period_id`, `va_pct=0.70`                                     | exact      |
+| `profile_in_value_area`                         | Price is between VAL and VAH                           | `period_id`                                                    | exact      |
+| `profile_hvn_distance` / `profile_lvn_distance` | Signed ticks to nearest HVN / LVN                      | `period_id`, `side`                                            | exact      |
+| `profile_single_print_present`                  | A single-print (one-TPO) range exists within `n` ticks | `n=20`                                                         | exact      |
+| `naked_poc_distance`                            | Ticks to nearest untested prior-period POC             | `lookback_periods=20`                                          | exact      |
+| `vwap`                                          | Session/anchored/rolling VWAP value                    | `variant`, `anchor_ts`/`window`                                | exact      |
+| `vwap_band_sigma`                               | Signed distance from VWAP in σ units                   | same + `k`                                                     | exact      |
+| `developing_va_width`                           | `VAH − VAL` of the developing period, in ticks         | `period_id`                                                    | exact      |
 
 **Heatmap / liquidity** (read the `HeatmapColumn` series of §6)
 
-| Name | Definition | Params | Confidence |
-|---|---|---|---|
-| `heatmap_cluster_z` | Z-score of a cell's resting size vs the visible-window non-zero distribution | `window_columns=600`, `side` | exact (estimated if any source column `estimated=True`) |
-| `distance_to_liquidity_cluster` | Ticks to nearest cell with `heatmap_cluster_z ≥ z` | `z=2.0`, `side` | estimated |
-| `liquidity_cluster_notional` | Notional resting at that cluster | `z=2.0` | estimated |
-| `liquidity_cluster_persistence_ms` | How long the cluster has survived across columns | `z=2.0` | estimated |
-| `liquidity_pulled` | Cluster disappeared without a matching traded volume (spoof-ish behaviour) | `z=2.0`, `tolerance_pct=0.1` | **estimated** |
-| `liquidation_cluster_distance` | Ticks to nearest realized-liquidation cluster (§6.4) | `half_life_ms=1_800_000` | estimated |
+| Name                               | Definition                                                                   | Params                       | Confidence                                              |
+| ---------------------------------- | ---------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------- |
+| `heatmap_cluster_z`                | Z-score of a cell's resting size vs the visible-window non-zero distribution | `window_columns=600`, `side` | exact (estimated if any source column `estimated=True`) |
+| `distance_to_liquidity_cluster`    | Ticks to nearest cell with `heatmap_cluster_z ≥ z`                           | `z=2.0`, `side`              | estimated                                               |
+| `liquidity_cluster_notional`       | Notional resting at that cluster                                             | `z=2.0`                      | estimated                                               |
+| `liquidity_cluster_persistence_ms` | How long the cluster has survived across columns                             | `z=2.0`                      | estimated                                               |
+| `liquidity_pulled`                 | Cluster disappeared without a matching traded volume (spoof-ish behaviour)   | `z=2.0`, `tolerance_pct=0.1` | **estimated**                                           |
+| `liquidation_cluster_distance`     | Ticks to nearest realized-liquidation cluster (§6.4)                         | `half_life_ms=1_800_000`     | estimated                                               |
 
 **Replay / session control** (`scope="global"`, only defined inside a replay session; `None` live)
 
-| Name | Definition | Confidence |
-|---|---|---|
-| `replay_position_ms` | Current virtual clock offset from the session start | exact |
-| `replay_speed` | Active playback multiplier | exact |
-| `replay_integrity_ok` | All required streams for the window passed §13.3 gap checks | exact |
+| Name                  | Definition                                                  | Confidence |
+| --------------------- | ----------------------------------------------------------- | ---------- |
+| `replay_position_ms`  | Current virtual clock offset from the session start         | exact      |
+| `replay_speed`        | Active playback multiplier                                  | exact      |
+| `replay_integrity_ok` | All required streams for the window passed §13.3 gap checks | exact      |
 
 **Position / account / risk**
 
-| Name | Definition |
-|---|---|
-| `position_open`, `position_side`, `position_qty`, `position_notional` | Current position |
-| `avg_entry_price`, `liq_price`, `unrealised_pnl`, `unrealised_pnl_pct` | From position state |
-| `unrealised_r_multiple` | `(mark − entry) / abs(entry − stop)`, signed by side; `None` when no stop |
-| `realised_pnl_today` | Sum of realized PnL since 00:00 UTC (account scope) |
-| `time_in_trade_ms` | `now − position_opened_at` |
-| `open_positions_count`, `open_orders_count` | Counts |
-| `account_equity`, `available_margin`, `margin_ratio`, `leverage` | Wallet/position |
-| `daily_loss_pct` | `realised_pnl_today / equity_at_day_start` |
-| `adl_risk_proxy` | `unrealised_pnl_pct × effective_leverage` (Bybit's documented ADL ranking basis) — `estimated` |
+| Name                                                                   | Definition                                                                                     |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `position_open`, `position_side`, `position_qty`, `position_notional`  | Current position                                                                               |
+| `avg_entry_price`, `liq_price`, `unrealised_pnl`, `unrealised_pnl_pct` | From position state                                                                            |
+| `unrealised_r_multiple`                                                | `(mark − entry) / abs(entry − stop)`, signed by side; `None` when no stop                      |
+| `realised_pnl_today`                                                   | Sum of realized PnL since 00:00 UTC (account scope)                                            |
+| `time_in_trade_ms`                                                     | `now − position_opened_at`                                                                     |
+| `open_positions_count`, `open_orders_count`                            | Counts                                                                                         |
+| `account_equity`, `available_margin`, `margin_ratio`, `leverage`       | Wallet/position                                                                                |
+| `daily_loss_pct`                                                       | `realised_pnl_today / equity_at_day_start`                                                     |
+| `adl_risk_proxy`                                                       | `unrealised_pnl_pct × effective_leverage` (Bybit's documented ADL ranking basis) — `estimated` |
 
 #### 7.2.1 Brief-feature → metric coverage check (binding)
 
 Every order-flow feature named in the planning brief must resolve to at least one descriptor above. This table is CI-checked: a test asserts each `metric_name` listed here exists in `MetricRegistry` with the stated confidence.
 
-| Brief feature | Backing metrics | Confidence |
-|---|---|---|
-| Footprint | `stacked_imbalance_zone`, `unfinished_auction_above/_below`, `bar_poc_price`, `bar_vah_price`, `bar_val_price`, `diagonal_imbalance_at_price` | exact |
-| Volume/delta profiles | `profile_poc`, `profile_vah`, `profile_val`, `profile_hvn_distance`, `profile_lvn_distance`, `profile_single_print_present`, `vwap`, `vwap_band_sigma` (§5) | exact |
-| Deep-Stats rows | Full Deep Stats table above (21 rows) | exact |
-| Big trades | `big_trade_notional`, `big_trade_zscore`, `trade_cluster` | exact / estimated |
-| CVD | `cvd`, `cvd_slope`, `cvd_bar_change`, `cvd_divergence`, `delta_divergence` | exact / estimated |
-| DOM liquidity heatmap | `distance_to_liquidity_cluster`, `dom_imbalance_ratio`, `book_pressure`, `heatmap_cluster_z`, `liquidation_notional` | exact |
-| Speed of tape | `tape_speed`, `tape_speed_zscore` | exact |
-| Imbalance tracker | Imbalance tracker table above (8 metrics) | exact / estimated |
-| Iceberg detector (*estimated*) | `iceberg_present_at_level`, `iceberg_executed_volume` | **estimated** |
-| Stop-run detector (*estimated*) | `stop_run_detected`, `in_stop_hunt_zone` | **estimated** |
-| Market regime | `market_regime`, `adx`, `hurst`, `atr`, `realized_vol`, `parkinson_vol`, `garman_klass_vol` | estimated / exact |
-| Tick replay | `replay_position_ms`, `replay_speed`, `replay_integrity_ok` (§13.7 control metrics) | exact |
-| Absorption / exhaustion | `absorption`, `exhaustion` | **estimated** |
-| Derivatives context | `open_interest`, `open_interest_delta`, `oi_price_quadrant`, `funding_rate`, `funding_annualized`, `basis`, `premium_pct` | exact / estimated |
-| Risk & journal | `unrealised_r_multiple`, `daily_loss_pct`, `realised_pnl_today`, `margin_ratio`, `adl_risk_proxy` | exact / estimated |
+| Brief feature                   | Backing metrics                                                                                                                                             | Confidence        |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| Footprint                       | `stacked_imbalance_zone`, `unfinished_auction_above/_below`, `bar_poc_price`, `bar_vah_price`, `bar_val_price`, `diagonal_imbalance_at_price`               | exact             |
+| Volume/delta profiles           | `profile_poc`, `profile_vah`, `profile_val`, `profile_hvn_distance`, `profile_lvn_distance`, `profile_single_print_present`, `vwap`, `vwap_band_sigma` (§5) | exact             |
+| Deep-Stats rows                 | Full Deep Stats table above (21 rows)                                                                                                                       | exact             |
+| Big trades                      | `big_trade_notional`, `big_trade_zscore`, `trade_cluster`                                                                                                   | exact / estimated |
+| CVD                             | `cvd`, `cvd_slope`, `cvd_bar_change`, `cvd_divergence`, `delta_divergence`                                                                                  | exact / estimated |
+| DOM liquidity heatmap           | `distance_to_liquidity_cluster`, `dom_imbalance_ratio`, `book_pressure`, `heatmap_cluster_z`, `liquidation_notional`                                        | exact             |
+| Speed of tape                   | `tape_speed`, `tape_speed_zscore`                                                                                                                           | exact             |
+| Imbalance tracker               | Imbalance tracker table above (8 metrics)                                                                                                                   | exact / estimated |
+| Iceberg detector (_estimated_)  | `iceberg_present_at_level`, `iceberg_executed_volume`                                                                                                       | **estimated**     |
+| Stop-run detector (_estimated_) | `stop_run_detected`, `in_stop_hunt_zone`                                                                                                                    | **estimated**     |
+| Market regime                   | `market_regime`, `adx`, `hurst`, `atr`, `realized_vol`, `parkinson_vol`, `garman_klass_vol`                                                                 | estimated / exact |
+| Tick replay                     | `replay_position_ms`, `replay_speed`, `replay_integrity_ok` (§13.7 control metrics)                                                                         | exact             |
+| Absorption / exhaustion         | `absorption`, `exhaustion`                                                                                                                                  | **estimated**     |
+| Derivatives context             | `open_interest`, `open_interest_delta`, `oi_price_quadrant`, `funding_rate`, `funding_annualized`, `basis`, `premium_pct`                                   | exact / estimated |
+| Risk & journal                  | `unrealised_r_multiple`, `daily_loss_pct`, `realised_pnl_today`, `margin_ratio`, `adl_risk_proxy`                                                           | exact / estimated |
 
 Heatmap-derived descriptors referenced above and specified in §6: `heatmap_cluster_z` = z-score of a heatmap cell's resting size against the visible-window distribution; `distance_to_liquidity_cluster` = ticks to the nearest cell with `heatmap_cluster_z ≥ z`. Both read the `HeatmapColumn` series and are `estimated` whenever any contributing column has `estimated=True`.
 
@@ -1030,6 +1034,7 @@ Heatmap-derived descriptors referenced above and specified in §6: `heatmap_clus
 - `deterministic=True` metrics must produce identical values in replay; a nightly job replays a recorded day and diffs every deterministic metric against the live-recorded values (tolerance 0 for exact, 1e-9 for float).
 
 ---
+
 ## 8. OMS
 
 Normative expansion of `27-adrs/ADR-0006`. The OMS is the only module allowed to talk to `TradingPort`.
@@ -1155,7 +1160,7 @@ class Position(BaseModel):
 
 ### 8.2 Order state machine
 
-> **Statechart contract:** [`28-statechart-catalogue.md` §B1](28-statechart-catalogue.md#b1--order) — the two-region `lifecycle` × `protection` chart, plus `quarantined` as the landing state for a faulted action. The contract is normative for the *behaviour*; this section remains the owner of the state enum, field types and persistence schema (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
+> **Statechart contract:** [`28-statechart-catalogue.md` §B1](28-statechart-catalogue.md#b1--order) — the two-region `lifecycle` × `protection` chart, plus `quarantined` as the landing state for a faulted action. The contract is normative for the _behaviour_; this section remains the owner of the state enum, field types and persistence schema (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
 
 ```mermaid
 stateDiagram-v2
@@ -1200,17 +1205,17 @@ stateDiagram-v2
 
 **Binding transition rules.**
 
-| # | Rule |
-|---|---|
-| S1 | `Unknown` is entered on **any** post-send transport failure. There is **no blind resubmission** from `Unknown` — resolution comes only from reconciliation (§8.5). |
-| S2 | An amend rejection leaves the prior order live and unchanged. The UI is told explicitly, because a user who believes a stop moved when it did not is in danger. |
-| S3 | A fill arriving for an order in `CancelPending` wins: cancel lost the race, state becomes `PartiallyFilled`/`Filled`. |
-| S4 | Executions are deduped by `exec_id`; a repeated `exec_id` never double-counts `filled_qty`. |
-| S5 | Out-of-order private-WS pushes are ordered by `(ts_exec, seq)`; a push describing a state older than `last_exchange_update` is ignored except for fills, which are always applied (they are additive and dedupe-protected). |
-| S6 | Terminal states are immutable. A post-terminal exchange push raises `ReconcileAnomaly`, is audited and alerted, and does not mutate the order. |
-| S7 | Postgres is authoritative. If Postgres is unavailable, order entry is blocked — we never accept an order we cannot durably record. |
-| S8 | Every transition writes an append-only `order_events` row before the in-memory state changes (write-ahead), so a crash mid-transition is recoverable. |
-| S9 | `untracked` is a distinct state for orders discovered on the exchange that we never created (manual Bybit-app order, or pre-existing). They are displayed, adoptable by the user, but never auto-managed by rules. |
+| #   | Rule                                                                                                                                                                                                                        |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1  | `Unknown` is entered on **any** post-send transport failure. There is **no blind resubmission** from `Unknown` — resolution comes only from reconciliation (§8.5).                                                          |
+| S2  | An amend rejection leaves the prior order live and unchanged. The UI is told explicitly, because a user who believes a stop moved when it did not is in danger.                                                             |
+| S3  | A fill arriving for an order in `CancelPending` wins: cancel lost the race, state becomes `PartiallyFilled`/`Filled`.                                                                                                       |
+| S4  | Executions are deduped by `exec_id`; a repeated `exec_id` never double-counts `filled_qty`.                                                                                                                                 |
+| S5  | Out-of-order private-WS pushes are ordered by `(ts_exec, seq)`; a push describing a state older than `last_exchange_update` is ignored except for fills, which are always applied (they are additive and dedupe-protected). |
+| S6  | Terminal states are immutable. A post-terminal exchange push raises `ReconcileAnomaly`, is audited and alerted, and does not mutate the order.                                                                              |
+| S7  | Postgres is authoritative. If Postgres is unavailable, order entry is blocked — we never accept an order we cannot durably record.                                                                                          |
+| S8  | Every transition writes an append-only `order_events` row before the in-memory state changes (write-ahead), so a crash mid-transition is recoverable.                                                                       |
+| S9  | `untracked` is a distinct state for orders discovered on the exchange that we never created (manual Bybit-app order, or pre-existing). They are displayed, adoptable by the user, but never auto-managed by rules.          |
 
 ### 8.3 Idempotency — `orderLinkId` scheme
 
@@ -1220,14 +1225,14 @@ Bybit deduplicates `orderLinkId` within its retention window, which makes it a g
 order_link_id = "{prefix}{env}-{group36}-{acct4}-{seq2}{suffix}"
 ```
 
-| Segment | Width | Content |
-|---|---|---|
-| `prefix` | 2 | `cv` — namespace, so a manual Bybit-app order is never confused with ours |
-| `env` | 1 | `l` live, `d` demo, `t` testnet, `p` paper |
-| `group36` | 22 | base62 of the trade-group UUID (122 bits → 21 chars, padded to 22) |
-| `acct4` | 4 | base62 of `crc32(account_id)` — stable per account |
-| `seq2` | 2 | base62 leg/child sequence, 0–3843 |
-| `suffix` | 2 | purpose tag: `en` entry, `sl` stop, `tp` take-profit, `sc` scale, `fl` flatten, `ac` algo child |
+| Segment   | Width | Content                                                                                         |
+| --------- | ----- | ----------------------------------------------------------------------------------------------- |
+| `prefix`  | 2     | `cv` — namespace, so a manual Bybit-app order is never confused with ours                       |
+| `env`     | 1     | `l` live, `d` demo, `t` testnet, `p` paper                                                      |
+| `group36` | 22    | base62 of the trade-group UUID (122 bits → 21 chars, padded to 22)                              |
+| `acct4`   | 4     | base62 of `crc32(account_id)` — stable per account                                              |
+| `seq2`    | 2     | base62 leg/child sequence, 0–3843                                                               |
+| `suffix`  | 2     | purpose tag: `en` entry, `sl` stop, `tp` take-profit, `sc` scale, `fl` flatten, `ac` algo child |
 
 Total `2+1+1+22+1+4+1+2+2 = 36` including three `-` separators. Example: `cvl-3KtQ8fZ1nR0aB7cD2eF9g-1a2B-0Ten`.
 
@@ -1287,7 +1292,7 @@ The synchronous REST response is an **accept acknowledgement, not a fill confirm
 
 ### 8.5 Reconciliation algorithm
 
-> **Statechart contract:** [`28-statechart-catalogue.md` §B19](28-statechart-catalogue.md#b19--reconciliation-job) — the fetch → diff → remediate → report pipeline, plus `stale_lockout`. The contract is normative for the *behaviour*; this section remains the owner of the algorithm, the Bybit endpoints used and the divergence taxonomy (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
+> **Statechart contract:** [`28-statechart-catalogue.md` §B19](28-statechart-catalogue.md#b19--reconciliation-job) — the fetch → diff → remediate → report pipeline, plus `stale_lockout`. The contract is normative for the _behaviour_; this section remains the owner of the algorithm, the Bybit endpoints used and the divergence taxonomy (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
 
 Runs: **on startup**, **on every private-WS reconnect**, **every 30 s**, and **on demand** from the admin screen.
 
@@ -1385,37 +1390,37 @@ class OmsErrorCode(StrEnum):
     EXCHANGE_UNKNOWN = "EXCHANGE_UNKNOWN"
 ```
 
-| Bybit retCode | Meaning | Internal | Retryable | OMS behaviour |
-|---|---|---|---|---|
-| `0` | OK | — | — | Proceed |
-| `10001` | Parameter error | `INSTRUMENT_FILTER` (or `DUPLICATE_CLIENT_ID` when the message names a duplicate `orderLinkId`) | no | Reject; the duplicate variant triggers success-after-lookup (§8.3 rule 3) |
-| `10002` | Request timestamp outside `recv_window` | `CLOCK_DRIFT` | no | **Block all order entry system-wide**, raise distinct alert, force a clock resync before resuming |
-| `10003` | Invalid API key | `AUTH_ERROR` | no | Mark key `invalid`, disable the account, alert owner |
-| `10004` | Sign error | `AUTH_ERROR` | no | Same |
-| `10005` | Permission denied for key scope | `PERMISSION_DENIED` | no | Disable trading on that account, alert |
-| `10006` | Too many visits (per-UID) | `RATE_LIMITED` | yes, with backoff | Feed the token bucket; requeue only if the order is still useful (§8.7) |
-| `10010` | Unmatched IP | `IP_NOT_ALLOWED` | no | Disable account, alert — IP allowlist is browser-only config since Feb 2026, so this needs a human |
-| `10016` | Internal server error | `SERVICE_UNAVAILABLE` | yes | Retry with backoff; after 3 attempts → `Unknown` |
-| `10018` | Exceeded IP rate limit | `RATE_LIMITED` | yes | Global IP-level backoff ≥10 min per Bybit guidance; all accounts throttled |
-| `10019` | Service restarting | `SERVICE_UNAVAILABLE` | yes | Reconnect on a fresh connection (WS trade) |
-| `10403` | WS-trade IP rate >3000 req/s | `RATE_LIMITED` | yes | Drop to REST transport, alert |
-| `10404` | Unknown op/category (WS trade) | `INSTRUMENT_FILTER` | no | Bug — reject and alert at `error` |
-| `10429` | System frequency protection | `RATE_LIMITED` | yes | Backoff |
-| `20006` | Duplicate reqId (WS trade) | `DUPLICATE_CLIENT_ID` | no | Success-after-lookup |
-| `110001` | Order does not exist | `ORDER_NOT_FOUND` | no | On cancel: treat as already-terminal, reconcile; on amend: reject |
-| `110003` | Order price exceeds limits | `PRICE_OUT_OF_BOUNDS` | no | Reject with the filter name |
-| `110004` | Insufficient wallet balance | `INSUFFICIENT_MARGIN` | no | Reject; leg-failure policy applies (§9.5) |
-| `110007` | Insufficient available balance | `INSUFFICIENT_MARGIN` | no | Same |
-| `110012`/`110014` | Insufficient margin / add-margin failure | `INSUFFICIENT_MARGIN` | no | Same |
-| `110017` | Reduce-only would increase position | `REDUCE_ONLY_VIOLATION` | no | Reject; re-derive the true position and refresh |
-| `110020` | Exceeds max open orders per symbol | `ORDER_CAP_EXCEEDED` | no | Reject; scaled/iceberg algos cap children at 450 to stay under Bybit's 500 |
-| `110025` | Position mode not modified / mismatch | `POSITION_MODE_MISMATCH` | no | **Hard error** — never auto-switch mode; alert and block the account until resolved |
-| `110043` | Leverage not modified | `LEVERAGE_ERROR` | no | Informational; treat as success if the current leverage already equals the target |
-| `110044` | Exceeds risk-limit tier | `RISK_LIMIT_EXCEEDED` | no | Reject; surface the tier and required margin |
-| `110072` | `orderLinkId` duplicate | `DUPLICATE_CLIENT_ID` | no | Success-after-lookup |
-| `110079` | Order processing / not yet final | `UNKNOWN_STATE` | yes | Poll then reconcile |
-| `170xxx` | Spot-specific | `EXCHANGE_UNKNOWN` | no | Should be unreachable (linear-only); alert as a bug |
-| any other non-zero | — | `EXCHANGE_UNKNOWN` | no | Reject, store `retCode` + `retMsg` verbatim, alert at `warning`, and open a ticket-worthy log entry |
+| Bybit retCode      | Meaning                                  | Internal                                                                                        | Retryable         | OMS behaviour                                                                                       |
+| ------------------ | ---------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------- |
+| `0`                | OK                                       | —                                                                                               | —                 | Proceed                                                                                             |
+| `10001`            | Parameter error                          | `INSTRUMENT_FILTER` (or `DUPLICATE_CLIENT_ID` when the message names a duplicate `orderLinkId`) | no                | Reject; the duplicate variant triggers success-after-lookup (§8.3 rule 3)                           |
+| `10002`            | Request timestamp outside `recv_window`  | `CLOCK_DRIFT`                                                                                   | no                | **Block all order entry system-wide**, raise distinct alert, force a clock resync before resuming   |
+| `10003`            | Invalid API key                          | `AUTH_ERROR`                                                                                    | no                | Mark key `invalid`, disable the account, alert owner                                                |
+| `10004`            | Sign error                               | `AUTH_ERROR`                                                                                    | no                | Same                                                                                                |
+| `10005`            | Permission denied for key scope          | `PERMISSION_DENIED`                                                                             | no                | Disable trading on that account, alert                                                              |
+| `10006`            | Too many visits (per-UID)                | `RATE_LIMITED`                                                                                  | yes, with backoff | Feed the token bucket; requeue only if the order is still useful (§8.7)                             |
+| `10010`            | Unmatched IP                             | `IP_NOT_ALLOWED`                                                                                | no                | Disable account, alert — IP allowlist is browser-only config since Feb 2026, so this needs a human  |
+| `10016`            | Internal server error                    | `SERVICE_UNAVAILABLE`                                                                           | yes               | Retry with backoff; after 3 attempts → `Unknown`                                                    |
+| `10018`            | Exceeded IP rate limit                   | `RATE_LIMITED`                                                                                  | yes               | Global IP-level backoff ≥10 min per Bybit guidance; all accounts throttled                          |
+| `10019`            | Service restarting                       | `SERVICE_UNAVAILABLE`                                                                           | yes               | Reconnect on a fresh connection (WS trade)                                                          |
+| `10403`            | WS-trade IP rate >3000 req/s             | `RATE_LIMITED`                                                                                  | yes               | Drop to REST transport, alert                                                                       |
+| `10404`            | Unknown op/category (WS trade)           | `INSTRUMENT_FILTER`                                                                             | no                | Bug — reject and alert at `error`                                                                   |
+| `10429`            | System frequency protection              | `RATE_LIMITED`                                                                                  | yes               | Backoff                                                                                             |
+| `20006`            | Duplicate reqId (WS trade)               | `DUPLICATE_CLIENT_ID`                                                                           | no                | Success-after-lookup                                                                                |
+| `110001`           | Order does not exist                     | `ORDER_NOT_FOUND`                                                                               | no                | On cancel: treat as already-terminal, reconcile; on amend: reject                                   |
+| `110003`           | Order price exceeds limits               | `PRICE_OUT_OF_BOUNDS`                                                                           | no                | Reject with the filter name                                                                         |
+| `110004`           | Insufficient wallet balance              | `INSUFFICIENT_MARGIN`                                                                           | no                | Reject; leg-failure policy applies (§9.5)                                                           |
+| `110007`           | Insufficient available balance           | `INSUFFICIENT_MARGIN`                                                                           | no                | Same                                                                                                |
+| `110012`/`110014`  | Insufficient margin / add-margin failure | `INSUFFICIENT_MARGIN`                                                                           | no                | Same                                                                                                |
+| `110017`           | Reduce-only would increase position      | `REDUCE_ONLY_VIOLATION`                                                                         | no                | Reject; re-derive the true position and refresh                                                     |
+| `110020`           | Exceeds max open orders per symbol       | `ORDER_CAP_EXCEEDED`                                                                            | no                | Reject; scaled/iceberg algos cap children at 450 to stay under Bybit's 500                          |
+| `110025`           | Position mode not modified / mismatch    | `POSITION_MODE_MISMATCH`                                                                        | no                | **Hard error** — never auto-switch mode; alert and block the account until resolved                 |
+| `110043`           | Leverage not modified                    | `LEVERAGE_ERROR`                                                                                | no                | Informational; treat as success if the current leverage already equals the target                   |
+| `110044`           | Exceeds risk-limit tier                  | `RISK_LIMIT_EXCEEDED`                                                                           | no                | Reject; surface the tier and required margin                                                        |
+| `110072`           | `orderLinkId` duplicate                  | `DUPLICATE_CLIENT_ID`                                                                           | no                | Success-after-lookup                                                                                |
+| `110079`           | Order processing / not yet final         | `UNKNOWN_STATE`                                                                                 | yes               | Poll then reconcile                                                                                 |
+| `170xxx`           | Spot-specific                            | `EXCHANGE_UNKNOWN`                                                                              | no                | Should be unreachable (linear-only); alert as a bug                                                 |
+| any other non-zero | —                                        | `EXCHANGE_UNKNOWN`                                                                              | no                | Reject, store `retCode` + `retMsg` verbatim, alert at `warning`, and open a ticket-worthy log entry |
 
 Transport-level: HTTP 403 → `IP_NOT_ALLOWED` (or geo-block); HTTP 429 → `RATE_LIMITED`; HTTP 5xx → `SERVICE_UNAVAILABLE`; `asyncio.TimeoutError`/connection reset after send → `TRANSPORT_ERROR` → order to `Unknown`.
 
@@ -1439,11 +1444,11 @@ class RateBudget(BaseModel):
 
 **Request priority classes.** Every outbound request carries `priority ∈ {critical, normal, background}`:
 
-| Priority | Used by | Bucket behaviour |
-|---|---|---|
-| `critical` | stop-loss attach, flatten, `all_or_none` unwind steps (§9.5.1), panic button, any reduce-only close | May draw from the reserve slice; preempts queued `normal` work for that UID; throttled only by the hard exchange limit |
-| `normal` | user entries, amends, TP ladder, group fan-out | Soft-throttled at 80 % of capacity to preserve headroom |
-| `background` | history backfill, reconciliation sweeps, OI/funding polls | Yields to everything; paused entirely while any unwind plan is `running` |
+| Priority     | Used by                                                                                             | Bucket behaviour                                                                                                       |
+| ------------ | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `critical`   | stop-loss attach, flatten, `all_or_none` unwind steps (§9.5.1), panic button, any reduce-only close | May draw from the reserve slice; preempts queued `normal` work for that UID; throttled only by the hard exchange limit |
+| `normal`     | user entries, amends, TP ladder, group fan-out                                                      | Soft-throttled at 80 % of capacity to preserve headroom                                                                |
+| `background` | history backfill, reconciliation sweeps, OI/funding polls                                           | Yields to everything; paused entirely while any unwind plan is `running`                                               |
 
 Queued items age with a **2 s priority boost** so no request starves behind a busier class; within a class, ties break by descending order notional.
 
@@ -1455,7 +1460,7 @@ Queued items age with a **2 s priority boost** so no request starves behind a bu
 
 ### 8.8 Safety invariant — native stop-loss
 
-> **Statechart contract:** [`28-statechart-catalogue.md` §B8](28-statechart-catalogue.md#b8--position-protection--native-sl-invariant) — the two-region `sl` × `watchdog` chart, in which `protected` is reachable **only** from an exchange read. The contract is normative for the *behaviour*; this section remains the owner of the invariant text, the deadline value and the Bybit request mapping (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
+> **Statechart contract:** [`28-statechart-catalogue.md` §B8](28-statechart-catalogue.md#b8--position-protection--native-sl-invariant) — the two-region `sl` × `watchdog` chart, in which `protected` is reachable **only** from an exchange read. The contract is normative for the _behaviour_; this section remains the owner of the invariant text, the deadline value and the Bybit request mapping (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
 
 Binding (owner decision; ADR-0008): **every position opened by CandleViewer carries a native exchange-side stop-loss**, regardless of any rule-engine or emulated stop on top. Emulated stops die with the backend; native stops live in Bybit's matching engine.
 
@@ -1469,25 +1474,25 @@ Binding (owner decision; ADR-0008): **every position opened by CandleViewer carr
 
 `PlaceOrderRequest` → `POST /v5/order/create`:
 
-| Internal | Bybit | Notes |
-|---|---|---|
-| `category` | `category` | always `"linear"` |
-| `symbol` | `symbol` | |
-| `side` | `side` | `"buy"→"Buy"` |
-| `order_type` | `orderType` | `"market"→"Market"`, `"limit"→"Limit"` |
-| `qty` | `qty` | string, floored to `qty_step` |
-| `price` | `price` | string, omitted for market |
-| `time_in_force` | `timeInForce` | `gtc→GTC`, `ioc→IOC`, `fok→FOK`, `post_only→PostOnly` |
-| `order_link_id` | `orderLinkId` | ≤36 chars |
-| `reduce_only` | `reduceOnly` | |
-| `close_on_trigger` | `closeOnTrigger` | |
-| `position_idx` | `positionIdx` | 0 one-way, 1 hedge-long, 2 hedge-short |
-| `trigger_price` | `triggerPrice` | conditional |
-| `trigger_by` | `triggerBy` | `last→LastPrice`, `mark→MarkPrice`, `index→IndexPrice` |
-| `trigger_direction` | `triggerDirection` | `rise→1`, `fall→2` |
-| `take_profit` / `stop_loss` | `takeProfit` / `stopLoss` | attached bracket |
+| Internal                          | Bybit                         | Notes                                                     |
+| --------------------------------- | ----------------------------- | --------------------------------------------------------- |
+| `category`                        | `category`                    | always `"linear"`                                         |
+| `symbol`                          | `symbol`                      |                                                           |
+| `side`                            | `side`                        | `"buy"→"Buy"`                                             |
+| `order_type`                      | `orderType`                   | `"market"→"Market"`, `"limit"→"Limit"`                    |
+| `qty`                             | `qty`                         | string, floored to `qty_step`                             |
+| `price`                           | `price`                       | string, omitted for market                                |
+| `time_in_force`                   | `timeInForce`                 | `gtc→GTC`, `ioc→IOC`, `fok→FOK`, `post_only→PostOnly`     |
+| `order_link_id`                   | `orderLinkId`                 | ≤36 chars                                                 |
+| `reduce_only`                     | `reduceOnly`                  |                                                           |
+| `close_on_trigger`                | `closeOnTrigger`              |                                                           |
+| `position_idx`                    | `positionIdx`                 | 0 one-way, 1 hedge-long, 2 hedge-short                    |
+| `trigger_price`                   | `triggerPrice`                | conditional                                               |
+| `trigger_by`                      | `triggerBy`                   | `last→LastPrice`, `mark→MarkPrice`, `index→IndexPrice`    |
+| `trigger_direction`               | `triggerDirection`            | `rise→1`, `fall→2`                                        |
+| `take_profit` / `stop_loss`       | `takeProfit` / `stopLoss`     | attached bracket                                          |
 | `tp_trigger_by` / `sl_trigger_by` | `tpTriggerBy` / `slTriggerBy` | SL defaults to `MarkPrice` (avoids wick-driven stop-outs) |
-| `tpsl_mode` | `tpslMode` | `full→Full`, `partial→Partial` |
+| `tpsl_mode`                       | `tpslMode`                    | `full→Full`, `partial→Partial`                            |
 
 `TradingStopRequest` → `POST /v5/position/trading-stop`: `take_profit→takeProfit`, `stop_loss→stopLoss` (`"0"` cancels), `trailing_distance→trailingStop` (**price distance, not percent** — a %-trailing UX must be translated client-side), `active_price→activePrice`, `tp_size`/`sl_size` (Partial mode, must match position size rules), `tp_limit_price`/`sl_limit_price`, `tp_order_type`/`sl_order_type`, `positionIdx`.
 
@@ -1666,7 +1671,7 @@ def size_leg(intent: OrderIntent, profile: AccountProfile,
     return LegSizing.ok(qty=qty, stop=stop, tps=resolve_tps(...), clamps=clamps)
 ```
 
-**9.3.1 Stop resolution.** `ticks` → `ref ± value*tick_size`; `percent` → `ref * (1 ∓ value)`; `atr` → `ref ∓ atr(period)*multiple`; `r_multiple` is invalid for the stop itself (it *defines* R) and raises a validation error at profile save time. Sign follows side (long: stop below). The resolved stop is rounded conservatively (further from entry, never closer) so the actual risk never exceeds the budget. If ATR is unavailable (warmup), the resolver falls back to `fallback_sl_offset_pct` and flags `stop_fallback=True` on the leg.
+**9.3.1 Stop resolution.** `ticks` → `ref ± value*tick_size`; `percent` → `ref * (1 ∓ value)`; `atr` → `ref ∓ atr(period)*multiple`; `r_multiple` is invalid for the stop itself (it _defines_ R) and raises a validation error at profile save time. Sign follows side (long: stop below). The resolved stop is rounded conservatively (further from entry, never closer) so the actual risk never exceeds the budget. If ATR is unavailable (warmup), the resolver falls back to `fallback_sl_offset_pct` and flags `stop_fallback=True` on the leg.
 
 **9.3.2 Clamp order** (deterministic, each recorded): `max_leverage_cap` → `max_position_pct_equity` → `max_position_notional` → remaining headroom under `max_daily_loss` → `inst.max_order_qty`/`max_mkt_order_qty` → available margin × 0.98. Applying clamps in a fixed order makes the resulting size explainable: the UI shows "reduced from 1.2 to 0.8 by max_position_notional".
 
@@ -1719,13 +1724,13 @@ Rules:
 
 ### 9.5 Leg failure policy
 
-> **Statechart contract:** [`28-statechart-catalogue.md` §B3](28-statechart-catalogue.md#b3--tradegroupleg) — the leg chart including the nested `unwinding` compound state (`cancel_children` → `close_position` → `verify_flat` → `verify_sl`). The contract is normative for the *behaviour*; this section remains the owner of the policy definitions, the leg model and the sizing inputs (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
+> **Statechart contract:** [`28-statechart-catalogue.md` §B3](28-statechart-catalogue.md#b3--tradegroupleg) — the leg chart including the nested `unwinding` compound state (`cancel_children` → `close_position` → `verify_flat` → `verify_sl`). The contract is normative for the _behaviour_; this section remains the owner of the policy definitions, the leg model and the sizing inputs (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
 
-| Policy | Behaviour | Default for |
-|---|---|---|
-| `best_effort` | Failed legs are recorded and reported; successful legs stay open. | Default for manual tickets |
-| `all_or_none` | If any leg fails to reach `open`, all successfully opened legs are **unwound** by reduce-only market orders and the group ends `failed`. | Opt-in; correlated strategies |
-| `abort_on_first` | Stop submitting further legs after the first failure; already-open legs stay open (no unwind). | Rule-originated groups |
+| Policy           | Behaviour                                                                                                                                | Default for                   |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `best_effort`    | Failed legs are recorded and reported; successful legs stay open.                                                                        | Default for manual tickets    |
+| `all_or_none`    | If any leg fails to reach `open`, all successfully opened legs are **unwound** by reduce-only market orders and the group ends `failed`. | Opt-in; correlated strategies |
+| `abort_on_first` | Stop submitting further legs after the first failure; already-open legs stay open (no unwind).                                           | Rule-originated groups        |
 
 #### 9.5.1 `all_or_none` compensating-unwind algorithm (normative)
 
@@ -1755,7 +1760,7 @@ class UnwindStep(BaseModel):
     finished_at: TsUs | None
 ```
 
-**Trigger condition.** The unwind starts only when the group's submission wave has *quiesced*: every leg is in a terminal submission state (`open`, `rejected`, `failed`, `skipped`) **or** `submit_timeout_ms` (default 10 000 ms) has elapsed for that leg. We never begin unwinding while a leg's `place_order` is still in flight with an unknown outcome — that is the classic double-exposure bug. A leg whose outcome is still unknown at quiesce time is force-resolved first by an `order_link_id` lookup (`GET /v5/order/realtime` then `/v5/order/history`, §8.5); only after it resolves to open-or-not does it enter the plan.
+**Trigger condition.** The unwind starts only when the group's submission wave has _quiesced_: every leg is in a terminal submission state (`open`, `rejected`, `failed`, `skipped`) **or** `submit_timeout_ms` (default 10 000 ms) has elapsed for that leg. We never begin unwinding while a leg's `place_order` is still in flight with an unknown outcome — that is the classic double-exposure bug. A leg whose outcome is still unknown at quiesce time is force-resolved first by an `order_link_id` lookup (`GET /v5/order/realtime` then `/v5/order/history`, §8.5); only after it resolves to open-or-not does it enter the plan.
 
 **Sequencing across accounts.**
 
@@ -1789,20 +1794,20 @@ verify_sl:       only reached on failure paths — assert a native SL still prot
 
 **Per-step failure handling.**
 
-| Failure | Handling |
-|---|---|
-| Transport error / timeout on cancel | Retry up to 3× with jittered backoff; then proceed to `close_position` anyway (reduce-only close is safe even with a live TP, and the TP itself is reduce-only so worst case is an earlier flat) |
-| Transport error / timeout on close | Retry up to 3× using the **same** `order_link_id`; between retries, look up by id to see whether the first attempt landed |
-| `INSUFFICIENT_MARGIN` on close | Impossible for reduce-only in UTA; if returned, escalate immediately to `unwind_incomplete` + `critical` alert |
-| Position already flat | `verify_flat` short-circuits, step `skipped`, not an error |
-| Position **larger** than expected (external/manual fill) | Close the **actual** exchange qty, not the expected qty; record `qty_drift` on the step and audit `order.adopted_untracked` |
-| Reduce-only rejected because side flipped | Re-read position, recompute side, retry once; if still inconsistent, mark incomplete |
-| Account API key revoked / auth failure mid-unwind | Step fails permanently; `critical` alert naming the account; residual position retains its native SL |
-| Deadline (`unwind_deadline_ms`) exceeded | Remaining steps stop being *initiated*; in-flight steps are allowed to finish; plan → `incomplete` |
+| Failure                                                  | Handling                                                                                                                                                                                         |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Transport error / timeout on cancel                      | Retry up to 3× with jittered backoff; then proceed to `close_position` anyway (reduce-only close is safe even with a live TP, and the TP itself is reduce-only so worst case is an earlier flat) |
+| Transport error / timeout on close                       | Retry up to 3× using the **same** `order_link_id`; between retries, look up by id to see whether the first attempt landed                                                                        |
+| `INSUFFICIENT_MARGIN` on close                           | Impossible for reduce-only in UTA; if returned, escalate immediately to `unwind_incomplete` + `critical` alert                                                                                   |
+| Position already flat                                    | `verify_flat` short-circuits, step `skipped`, not an error                                                                                                                                       |
+| Position **larger** than expected (external/manual fill) | Close the **actual** exchange qty, not the expected qty; record `qty_drift` on the step and audit `order.adopted_untracked`                                                                      |
+| Reduce-only rejected because side flipped                | Re-read position, recompute side, retry once; if still inconsistent, mark incomplete                                                                                                             |
+| Account API key revoked / auth failure mid-unwind        | Step fails permanently; `critical` alert naming the account; residual position retains its native SL                                                                                             |
+| Deadline (`unwind_deadline_ms`) exceeded                 | Remaining steps stop being _initiated_; in-flight steps are allowed to finish; plan → `incomplete`                                                                                               |
 
 **Terminal outcomes.** The plan is `completed` only when every account reached `verify_flat` with size 0. Otherwise the group ends `failed` with `unwind_incomplete=True`, a `critical` alert fires naming **each** account that is not flat and its residual qty, the group view shows a persistent red banner with a one-click "Retry unwind" (re-runs the persisted plan, skipping `done` steps), and — the invariant that overrides everything — **every residual position keeps its native SL.** We never leave a position unprotected in order to satisfy a policy, and we never loop retries unboundedly against a failing exchange.
 
-**Partial-success interaction.** Legs that were `partially_filled` are unwound at their exchange-reported position size (not `sized_qty`, not the local `filled_qty` accumulator) — this is the same authoritative read as above and is what makes the algorithm correct when a fill arrives *during* the unwind. A fill that lands after `close_position` was sent is caught by `verify_flat`, which re-issues one additional reduce-only close (max 2 close attempts per leg) before giving up.
+**Partial-success interaction.** Legs that were `partially_filled` are unwound at their exchange-reported position size (not `sized_qty`, not the local `filled_qty` accumulator) — this is the same authoritative read as above and is what makes the algorithm correct when a fill arrives _during_ the unwind. A fill that lands after `close_position` was sent is caught by `verify_flat`, which re-issues one additional reduce-only close (max 2 close attempts per leg) before giving up.
 
 **Observability.** Metrics: `unwind_plans_total{reason,outcome}`, `unwind_step_duration_ms{phase}`, `unwind_incomplete_total` (alerts at ≥1), `unwind_qty_drift_total`. Audit: one `trade_group.unwound` event for the plan plus one `position.closed` per leg, correlated by `unwind_id`.
 
@@ -1812,7 +1817,7 @@ verify_sl:       only reached on failure paths — assert a native SL still prot
 
 ### 9.6 Group lifecycle
 
-> **Statechart contract:** [`28-statechart-catalogue.md` §B2](28-statechart-catalogue.md#b2--tradegroup) — the supervisor chart in which group status is a pure function of the leg counters in context. The contract is normative for the *behaviour*; this section remains the owner of the group model, the policy enum and the persistence schema (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
+> **Statechart contract:** [`28-statechart-catalogue.md` §B2](28-statechart-catalogue.md#b2--tradegroup) — the supervisor chart in which group status is a pure function of the leg counters in context. The contract is normative for the _behaviour_; this section remains the owner of the group model, the policy enum and the persistence schema (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
 
 ```mermaid
 stateDiagram-v2
@@ -1836,6 +1841,7 @@ stateDiagram-v2
 Group-level actions fan out the same way as entries: **Close group** submits reduce-only market closes per leg; **Move stop** issues a `trading-stop` per leg with each leg's own price (offsets are per-profile, so the prices differ); **Cancel working orders** issues per-account cancels. Each fan-out action is itself audited as one action with N results.
 
 ---
+
 ## 10. Emulated order algorithms
 
 Bybit natively supports market/limit/post-only, conditional orders, attached TP/SL and server-side trailing stops. It does **not** expose OCO, iceberg (`displayQty`), TWAP or scaled orders through the public v5 API (research 09 §6). Those are emulated by the `AlgoSupervisor`, driven by `ExchangeCapabilities` (§14) rather than `if exchange == "bybit"`.
@@ -1897,7 +1903,7 @@ stateDiagram-v2
 
 ### 10.2 OCO (one-cancels-other)
 
-> **Statechart contract:** [`28-statechart-catalogue.md` §B4](28-statechart-catalogue.md#b4--emulatedalgo---oco) — the racing chart with `overshoot` as a named state for the genuine double-fill case. The contract is normative for the *behaviour*; this section remains the owner of the parameter model and the Bybit request mapping (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
+> **Statechart contract:** [`28-statechart-catalogue.md` §B4](28-statechart-catalogue.md#b4--emulatedalgo---oco) — the racing chart with `overshoot` as a named state for the genuine double-fill case. The contract is normative for the _behaviour_; this section remains the owner of the parameter model and the Bybit request mapping (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
 
 Bybit's OCO is UI-only and explicitly unavailable via API. We emulate by racing two orders and cancelling the loser.
 
@@ -1921,7 +1927,7 @@ Algorithm:
 
 ### 10.3 Iceberg
 
-> **Statechart contract:** [`28-statechart-catalogue.md` §B5](28-statechart-catalogue.md#b5--emulatedalgo---iceberg) — the slicing chart; slice counting routes through distinct states, and every deadline is an absolute `*_us` timestamp in context. The contract is normative for the *behaviour*; this section remains the owner of the parameter model (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
+> **Statechart contract:** [`28-statechart-catalogue.md` §B5](28-statechart-catalogue.md#b5--emulatedalgo---iceberg) — the slicing chart; slice counting routes through distinct states, and every deadline is an absolute `*_us` timestamp in context. The contract is normative for the _behaviour_; this section remains the owner of the parameter model (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
 
 ```python
 class IcebergParams(BaseModel):
@@ -1945,7 +1951,7 @@ Edge cases: (a) `post_only=True` slices rejected for crossing are retried once a
 
 ### 10.4 TWAP
 
-> **Statechart contract:** [`28-statechart-catalogue.md` §B6](28-statechart-catalogue.md#b6--emulatedalgo---twap) — the slice-schedule chart; `slice_deadlines_us` is precomputed in context and armed by the external `MonotonicScheduler`. The contract is normative for the *behaviour*; this section remains the owner of the parameter model (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
+> **Statechart contract:** [`28-statechart-catalogue.md` §B6](28-statechart-catalogue.md#b6--emulatedalgo---twap) — the slice-schedule chart; `slice_deadlines_us` is precomputed in context and armed by the external `MonotonicScheduler`. The contract is normative for the _behaviour_; this section remains the owner of the parameter model (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
 
 ```python
 class TwapParams(BaseModel):
@@ -1967,7 +1973,7 @@ Edge cases: a slice whose qty rounds below `min_order_qty` is skipped and its qu
 
 ### 10.5 Chase (pegged limit)
 
-> **Statechart contract:** [`28-statechart-catalogue.md` §B7](28-statechart-catalogue.md#b7--emulatedalgo---chase) — the reprice chart; the interval is a monotonic guard over `last_reprice_us`, never a timer, and the input is bounded to ≤10 Hz. The contract is normative for the *behaviour*; this section remains the owner of the parameter model (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
+> **Statechart contract:** [`28-statechart-catalogue.md` §B7](28-statechart-catalogue.md#b7--emulatedalgo---chase) — the reprice chart; the interval is a monotonic guard over `last_reprice_us`, never a timer, and the input is bounded to ≤10 Hz. The contract is normative for the _behaviour_; this section remains the owner of the parameter model (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
 
 ```python
 class ChaseParams(BaseModel):
@@ -2037,17 +2043,17 @@ class TrailSpec(BaseModel):
 
 ### 10.8 Capability-driven selection
 
-| Requirement | Native path (live) | Emulated path | Selector |
-|---|---|---|---|
-| Stop-loss / take-profit on a position | `trading-stop` | — | always native |
-| Fixed/percent trailing | `trading-stop.trailingStop` | — | `supports_native_trailing` |
-| Conditional entry | `order/create` + `triggerPrice` | — | `supports_native_conditional` |
-| OCO | — | §10.2 | `supports_native_oco == False` |
-| Iceberg | — | §10.3 | `supports_native_iceberg == False` |
-| TWAP | — | §10.4 | `supports_native_twap == False` |
-| Chase | — | §10.5 | `supports_native_chase == False` |
-| Scaled | batch create | §10.6 | always emulated; batch used as transport |
-| ATR/structure/MA trail | — | §10.7 + rule engine | always emulated |
+| Requirement                           | Native path (live)              | Emulated path       | Selector                                 |
+| ------------------------------------- | ------------------------------- | ------------------- | ---------------------------------------- |
+| Stop-loss / take-profit on a position | `trading-stop`                  | —                   | always native                            |
+| Fixed/percent trailing                | `trading-stop.trailingStop`     | —                   | `supports_native_trailing`               |
+| Conditional entry                     | `order/create` + `triggerPrice` | —                   | `supports_native_conditional`            |
+| OCO                                   | —                               | §10.2               | `supports_native_oco == False`           |
+| Iceberg                               | —                               | §10.3               | `supports_native_iceberg == False`       |
+| TWAP                                  | —                               | §10.4               | `supports_native_twap == False`          |
+| Chase                                 | —                               | §10.5               | `supports_native_chase == False`         |
+| Scaled                                | batch create                    | §10.6               | always emulated; batch used as transport |
+| ATR/structure/MA trail                | —                               | §10.7 + rule engine | always emulated                          |
 
 ---
 
@@ -2057,14 +2063,14 @@ Owner decision #11: **both** a form/condition-list editor and a visual node-grap
 
 ### 11.1 IR design principles
 
-| # | Principle |
-|---|---|
-| R1 | The IR is **data, not code**. No `eval`, no expression strings that get parsed at runtime, no user Python. This is a security boundary as much as a design choice. |
-| R2 | The IR is a **DAG of typed nodes** with a stable `id` per node. The form editor emits a restricted linear subset (a flat AND/OR tree); the node editor emits the general DAG. Any form-authored rule is a valid graph; a graph is downgradeable to form view only when it fits the subset, and the UI says so explicitly rather than silently mangling it. |
-| R3 | Evaluation is **pure**: conditions read a `MetricSnapshot` and produce booleans with no side effects. Only `actions` have effects, and only through the OMS. |
-| R4 | Every evaluation is **logged** — including no-ops — with the values of every metric that was read. Without this, a rule that fires wrongly is un-debuggable. |
-| R5 | Rules are **versioned and immutable once armed**. Editing an armed rule creates a new version; the old version's history stays intact. |
-| R6 | Every action is **idempotent or guarded** (`once`, dedupe key, cooldown), so a reconnect replay cannot double-fire. |
+| #   | Principle                                                                                                                                                                                                                                                                                                                                                  |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | The IR is **data, not code**. No `eval`, no expression strings that get parsed at runtime, no user Python. This is a security boundary as much as a design choice.                                                                                                                                                                                         |
+| R2  | The IR is a **DAG of typed nodes** with a stable `id` per node. The form editor emits a restricted linear subset (a flat AND/OR tree); the node editor emits the general DAG. Any form-authored rule is a valid graph; a graph is downgradeable to form view only when it fits the subset, and the UI says so explicitly rather than silently mangling it. |
+| R3  | Evaluation is **pure**: conditions read a `MetricSnapshot` and produce booleans with no side effects. Only `actions` have effects, and only through the OMS.                                                                                                                                                                                               |
+| R4  | Every evaluation is **logged** — including no-ops — with the values of every metric that was read. Without this, a rule that fires wrongly is un-debuggable.                                                                                                                                                                                               |
+| R5  | Rules are **versioned and immutable once armed**. Editing an armed rule creates a new version; the old version's history stays intact.                                                                                                                                                                                                                     |
+| R6  | Every action is **idempotent or guarded** (`once`, dedupe key, cooldown), so a reconnect replay cannot double-fire.                                                                                                                                                                                                                                        |
 
 ### 11.2 Rule IR — pydantic model
 
@@ -2193,29 +2199,51 @@ Both editors validate against this before save; the backend re-validates on `POS
   "$id": "https://candleviewer.local/schemas/rule-ir-v1.json",
   "title": "CandleViewer Rule IR",
   "type": "object",
-  "required": ["rule_id","version","name","enabled","mode","scope","trigger","conditions","actions","limits","ir_version"],
+  "required": [
+    "rule_id",
+    "version",
+    "name",
+    "enabled",
+    "mode",
+    "scope",
+    "trigger",
+    "conditions",
+    "actions",
+    "limits",
+    "ir_version"
+  ],
   "additionalProperties": false,
   "properties": {
-    "rule_id": {"type": "string", "format": "uuid"},
-    "version": {"type": "integer", "minimum": 1},
-    "ir_version": {"const": 1},
-    "name": {"type": "string", "minLength": 1, "maxLength": 120},
-    "description": {"type": "string", "maxLength": 2000},
-    "enabled": {"type": "boolean"},
-    "mode": {"enum": ["disabled","simulate","armed"]},
-    "editor": {"enum": ["form","graph"]},
-    "graph_layout": {"type": ["object","null"]},
+    "rule_id": { "type": "string", "format": "uuid" },
+    "version": { "type": "integer", "minimum": 1 },
+    "ir_version": { "const": 1 },
+    "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "description": { "type": "string", "maxLength": 2000 },
+    "enabled": { "type": "boolean" },
+    "mode": { "enum": ["disabled", "simulate", "armed"] },
+    "editor": { "enum": ["form", "graph"] },
+    "graph_layout": { "type": ["object", "null"] },
     "scope": {
       "type": "object",
       "required": ["level"],
       "additionalProperties": false,
       "properties": {
-        "level": {"enum": ["global","account","symbol","position","trade_group"]},
-        "account_ids": {"type": "array", "items": {"type": "string", "format": "uuid"}},
-        "symbols": {"type": "array", "items": {"type": "string", "pattern": "^[A-Z0-9]{4,20}$"}},
-        "applies_to": {"enum": ["open_positions","pending_orders","account","any"], "default": "any"},
-        "environments": {"type": "array", "items": {"enum": ["live","demo","testnet"]}, "default": ["demo"]},
-        "exclude_algo_children": {"type": "boolean", "default": true}
+        "level": { "enum": ["global", "account", "symbol", "position", "trade_group"] },
+        "account_ids": { "type": "array", "items": { "type": "string", "format": "uuid" } },
+        "symbols": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[A-Z0-9]{4,20}$" }
+        },
+        "applies_to": {
+          "enum": ["open_positions", "pending_orders", "account", "any"],
+          "default": "any"
+        },
+        "environments": {
+          "type": "array",
+          "items": { "enum": ["live", "demo", "testnet"] },
+          "default": ["demo"]
+        },
+        "exclude_algo_children": { "type": "boolean", "default": true }
       }
     },
     "trigger": {
@@ -2223,114 +2251,231 @@ Both editors validate against this before save; the backend re-validates on `POS
       "required": ["type"],
       "additionalProperties": false,
       "properties": {
-        "type": {"enum": ["on_price_update","on_bar_close","on_order_fill","on_position_open","on_position_close","on_position_update","on_timer","on_metric_change","on_signal","on_schedule","pre_trade_check","on_book_update","on_liquidation"]},
-        "timeframe": {"type": ["string","null"]},
-        "interval_ms": {"type": ["integer","null"], "minimum": 100},
-        "cron": {"type": ["string","null"]},
-        "metric": {"type": ["string","null"]},
-        "debounce_ms": {"type": "integer", "minimum": 0, "default": 0}
+        "type": {
+          "enum": [
+            "on_price_update",
+            "on_bar_close",
+            "on_order_fill",
+            "on_position_open",
+            "on_position_close",
+            "on_position_update",
+            "on_timer",
+            "on_metric_change",
+            "on_signal",
+            "on_schedule",
+            "pre_trade_check",
+            "on_book_update",
+            "on_liquidation"
+          ]
+        },
+        "timeframe": { "type": ["string", "null"] },
+        "interval_ms": { "type": ["integer", "null"], "minimum": 100 },
+        "cron": { "type": ["string", "null"] },
+        "metric": { "type": ["string", "null"] },
+        "debounce_ms": { "type": "integer", "minimum": 0, "default": 0 }
       },
       "allOf": [
-        {"if": {"properties": {"type": {"const": "on_timer"}}}, "then": {"required": ["interval_ms"]}},
-        {"if": {"properties": {"type": {"const": "on_bar_close"}}}, "then": {"required": ["timeframe"]}},
-        {"if": {"properties": {"type": {"const": "on_schedule"}}}, "then": {"required": ["cron"]}},
-        {"if": {"properties": {"type": {"const": "on_metric_change"}}}, "then": {"required": ["metric"]}}
+        {
+          "if": { "properties": { "type": { "const": "on_timer" } } },
+          "then": { "required": ["interval_ms"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "on_bar_close" } } },
+          "then": { "required": ["timeframe"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "on_schedule" } } },
+          "then": { "required": ["cron"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "on_metric_change" } } },
+          "then": { "required": ["metric"] }
+        }
       ]
     },
-    "conditions": {"$ref": "#/$defs/conditionNode"},
-    "actions": {"type": "array", "minItems": 1, "maxItems": 10, "items": {"$ref": "#/$defs/action"}},
-    "limits": {"$ref": "#/$defs/limits"}
+    "conditions": { "$ref": "#/$defs/conditionNode" },
+    "actions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": { "$ref": "#/$defs/action" }
+    },
+    "limits": { "$ref": "#/$defs/limits" }
   },
   "$defs": {
     "operand": {
       "oneOf": [
-        {"$ref": "#/$defs/metricRef"},
-        {"type": "object", "required": ["const"], "additionalProperties": false,
-         "properties": {"const": {"type": ["number","string","boolean"]}}},
-        {"$ref": "#/$defs/arithmetic"}
+        { "$ref": "#/$defs/metricRef" },
+        {
+          "type": "object",
+          "required": ["const"],
+          "additionalProperties": false,
+          "properties": { "const": { "type": ["number", "string", "boolean"] } }
+        },
+        { "$ref": "#/$defs/arithmetic" }
       ]
     },
     "metricRef": {
-      "type": "object", "required": ["metric"], "additionalProperties": false,
+      "type": "object",
+      "required": ["metric"],
+      "additionalProperties": false,
       "properties": {
-        "metric": {"type": "string", "pattern": "^[a-z][a-z0-9_]{1,48}$"},
-        "params": {"type": "object"},
-        "symbol": {"type": ["string","null"]},
-        "account_id": {"type": ["string","null"]},
-        "timeframe": {"type": ["string","null"]}
+        "metric": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,48}$" },
+        "params": { "type": "object" },
+        "symbol": { "type": ["string", "null"] },
+        "account_id": { "type": ["string", "null"] },
+        "timeframe": { "type": ["string", "null"] }
       }
     },
     "arithmetic": {
-      "type": "object", "required": ["node_id","op","operands"], "additionalProperties": false,
+      "type": "object",
+      "required": ["node_id", "op", "operands"],
+      "additionalProperties": false,
       "properties": {
-        "node_id": {"type": "string"},
-        "op": {"enum": ["add","sub","mul","div","abs","min","max","neg","pct_of"]},
-        "operands": {"type": "array", "minItems": 1, "maxItems": 8, "items": {"$ref": "#/$defs/operand"}}
+        "node_id": { "type": "string" },
+        "op": { "enum": ["add", "sub", "mul", "div", "abs", "min", "max", "neg", "pct_of"] },
+        "operands": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": { "$ref": "#/$defs/operand" }
+        }
       }
     },
     "conditionNode": {
       "oneOf": [
-        {"$ref": "#/$defs/comparison"},
-        {"$ref": "#/$defs/boolean"},
-        {"$ref": "#/$defs/temporal"}
+        { "$ref": "#/$defs/comparison" },
+        { "$ref": "#/$defs/boolean" },
+        { "$ref": "#/$defs/temporal" }
       ]
     },
     "comparison": {
-      "type": "object", "required": ["node_id","op","left"], "additionalProperties": false,
+      "type": "object",
+      "required": ["node_id", "op", "left"],
+      "additionalProperties": false,
       "properties": {
-        "node_id": {"type": "string"},
-        "op": {"enum": ["gt","gte","lt","lte","eq","neq","between","outside","crosses_above","crosses_below","changed","is_true","is_false","in_set","not_in_set"]},
-        "left": {"$ref": "#/$defs/operand"},
-        "right": {"$ref": "#/$defs/operand"},
-        "right2": {"$ref": "#/$defs/operand"},
-        "set_values": {"type": "array", "items": {"type": "string"}},
-        "tolerance": {"type": ["number","null"]}
+        "node_id": { "type": "string" },
+        "op": {
+          "enum": [
+            "gt",
+            "gte",
+            "lt",
+            "lte",
+            "eq",
+            "neq",
+            "between",
+            "outside",
+            "crosses_above",
+            "crosses_below",
+            "changed",
+            "is_true",
+            "is_false",
+            "in_set",
+            "not_in_set"
+          ]
+        },
+        "left": { "$ref": "#/$defs/operand" },
+        "right": { "$ref": "#/$defs/operand" },
+        "right2": { "$ref": "#/$defs/operand" },
+        "set_values": { "type": "array", "items": { "type": "string" } },
+        "tolerance": { "type": ["number", "null"] }
       }
     },
     "boolean": {
-      "type": "object", "required": ["node_id","op","children"], "additionalProperties": false,
+      "type": "object",
+      "required": ["node_id", "op", "children"],
+      "additionalProperties": false,
       "properties": {
-        "node_id": {"type": "string"},
-        "op": {"enum": ["all_of","any_of","none_of","n_of"]},
-        "children": {"type": "array", "minItems": 1, "maxItems": 32, "items": {"$ref": "#/$defs/conditionNode"}},
-        "n": {"type": ["integer","null"], "minimum": 1}
+        "node_id": { "type": "string" },
+        "op": { "enum": ["all_of", "any_of", "none_of", "n_of"] },
+        "children": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": { "$ref": "#/$defs/conditionNode" }
+        },
+        "n": { "type": ["integer", "null"], "minimum": 1 }
       }
     },
     "temporal": {
-      "type": "object", "required": ["node_id","op","child","window_ms"], "additionalProperties": false,
+      "type": "object",
+      "required": ["node_id", "op", "child", "window_ms"],
+      "additionalProperties": false,
       "properties": {
-        "node_id": {"type": "string"},
-        "op": {"enum": ["sustained_for","occurred_within","count_within","stable_for"]},
-        "child": {"$ref": "#/$defs/conditionNode"},
-        "window_ms": {"type": "integer", "minimum": 100, "maximum": 86400000},
-        "min_count": {"type": "integer", "minimum": 1, "default": 1}
+        "node_id": { "type": "string" },
+        "op": { "enum": ["sustained_for", "occurred_within", "count_within", "stable_for"] },
+        "child": { "$ref": "#/$defs/conditionNode" },
+        "window_ms": { "type": "integer", "minimum": 100, "maximum": 86400000 },
+        "min_count": { "type": "integer", "minimum": 1, "default": 1 }
       }
     },
     "action": {
-      "type": "object", "required": ["node_id","type","params"], "additionalProperties": false,
+      "type": "object",
+      "required": ["node_id", "type", "params"],
+      "additionalProperties": false,
       "properties": {
-        "node_id": {"type": "string"},
-        "type": {"enum": ["place_order","modify_stop_loss","modify_take_profit","cancel_order","cancel_all_orders","move_to_breakeven","scale_out","scale_in","flatten_position","flatten_all_positions","reverse_position","halt_new_orders","resume_new_orders","reduce_leverage","widen_stop","tighten_stop","arm_chase_limit","start_iceberg_slice","start_twap","send_notification","log_journal_tag","set_variable","emit_signal","pause_rule","enable_rule"]},
-        "params": {"type": "object"},
-        "on_error": {"enum": ["abort_remaining","continue","retry_once"], "default": "abort_remaining"},
-        "targets": {"enum": ["scope_accounts","originating_account","all_accounts"], "default": "scope_accounts"},
-        "dry_run_only": {"type": "boolean", "default": false}
+        "node_id": { "type": "string" },
+        "type": {
+          "enum": [
+            "place_order",
+            "modify_stop_loss",
+            "modify_take_profit",
+            "cancel_order",
+            "cancel_all_orders",
+            "move_to_breakeven",
+            "scale_out",
+            "scale_in",
+            "flatten_position",
+            "flatten_all_positions",
+            "reverse_position",
+            "halt_new_orders",
+            "resume_new_orders",
+            "reduce_leverage",
+            "widen_stop",
+            "tighten_stop",
+            "arm_chase_limit",
+            "start_iceberg_slice",
+            "start_twap",
+            "send_notification",
+            "log_journal_tag",
+            "set_variable",
+            "emit_signal",
+            "pause_rule",
+            "enable_rule"
+          ]
+        },
+        "params": { "type": "object" },
+        "on_error": {
+          "enum": ["abort_remaining", "continue", "retry_once"],
+          "default": "abort_remaining"
+        },
+        "targets": {
+          "enum": ["scope_accounts", "originating_account", "all_accounts"],
+          "default": "scope_accounts"
+        },
+        "dry_run_only": { "type": "boolean", "default": false }
       }
     },
     "limits": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "once": {"type": "boolean", "default": false},
-        "once_per": {"enum": ["position","day","group","rule_lifetime", null]},
-        "cooldown_ms": {"type": "integer", "minimum": 0, "default": 1000},
-        "max_fires_per_hour": {"type": "integer", "minimum": 1, "default": 60},
-        "max_fires_per_day": {"type": "integer", "minimum": 1, "default": 500},
-        "max_actions_per_fire": {"type": "integer", "minimum": 1, "maximum": 10, "default": 10},
-        "max_notional_per_fire": {"type": ["number","null"]},
-        "max_daily_notional": {"type": ["number","null"]},
-        "require_confirmation": {"type": "boolean", "default": false},
-        "evaluation_timeout_ms": {"type": "integer", "minimum": 10, "maximum": 5000, "default": 250},
-        "kill_switch_on_error_count": {"type": "integer", "minimum": 1, "default": 5}
+        "once": { "type": "boolean", "default": false },
+        "once_per": { "enum": ["position", "day", "group", "rule_lifetime", null] },
+        "cooldown_ms": { "type": "integer", "minimum": 0, "default": 1000 },
+        "max_fires_per_hour": { "type": "integer", "minimum": 1, "default": 60 },
+        "max_fires_per_day": { "type": "integer", "minimum": 1, "default": 500 },
+        "max_actions_per_fire": { "type": "integer", "minimum": 1, "maximum": 10, "default": 10 },
+        "max_notional_per_fire": { "type": ["number", "null"] },
+        "max_daily_notional": { "type": ["number", "null"] },
+        "require_confirmation": { "type": "boolean", "default": false },
+        "evaluation_timeout_ms": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 5000,
+          "default": 250
+        },
+        "kill_switch_on_error_count": { "type": "integer", "minimum": 1, "default": 5 }
       }
     }
   }
@@ -2358,22 +2503,22 @@ flowchart LR
 
 ### 11.5 Evaluation semantics
 
-> **Statechart contract:** [`28-statechart-catalogue.md` §B9](28-statechart-catalogue.md#b9--rule-instance-lifecycle-only) — the rule **lifecycle** only. Per-tick condition evaluation is a compiled Python predicate and **must never be a statechart** (MUSTNOT-01). The contract is normative for the *behaviour*; this section remains the owner of the IR, the evaluation rules E1–E13 and the vocabulary (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
+> **Statechart contract:** [`28-statechart-catalogue.md` §B9](28-statechart-catalogue.md#b9--rule-instance-lifecycle-only) — the rule **lifecycle** only. Per-tick condition evaluation is a compiled Python predicate and **must never be a statechart** (MUSTNOT-01). The contract is normative for the _behaviour_; this section remains the owner of the IR, the evaluation rules E1–E13 and the vocabulary (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
 
-| # | Rule |
-|---|---|
-| E1 | **Trigger-driven, never polled.** The engine subscribes to the bus; `on_timer`/`on_schedule` use a monotonic scheduler. A rule only evaluates when its trigger fires. |
-| E2 | **One `MetricSnapshot` per evaluation.** All metrics are read once into an immutable snapshot at evaluation start, so no condition can see a different market state than its sibling. |
-| E3 | **`None` is false.** A condition referencing an unavailable metric (warmup, no position, feed stale) evaluates to false and records `skipped_reason`. It never throws and never coerces to 0. |
-| E4 | **Short-circuit with full logging.** `all_of` short-circuits for speed, but the evaluation log records which children were *not* evaluated, so the trace is never misleading. |
-| E5 | **Deterministic order.** Children evaluate in array order; actions execute in array order. Same snapshot ⇒ same outcome, always (required for simulation parity). |
-| E6 | **Per-scope instances.** A symbol-scoped rule over 3 symbols is 3 independent instances with independent `once`/cooldown state. |
-| E7 | **Stale-data guard.** If any metric in the snapshot is older than `max_data_age_ms` (default 5 000, or 3× the stream cadence, whichever is larger), the evaluation is **skipped** with `skipped_reason="stale_data"` and counted. Rules must never act on a frozen feed. |
-| E8 | **Timeout.** An evaluation exceeding `evaluation_timeout_ms` is aborted, counted as an error, and contributes to `kill_switch_on_error_count`. |
-| E9 | **Actions are transactional per fire.** With `on_error="abort_remaining"` (default), a failed action stops the remaining actions in that fire; everything already done is recorded, nothing is rolled back (you cannot un-place a filled order), and the partial outcome is alerted. |
-| E10 | **Reconnect replay safety.** After a disconnect, the engine does not replay missed triggers. It re-evaluates current state once, and `once`/dedupe keys prevent duplicates. Missed-trigger counts are exposed as a metric. |
-| E11 | **No rule may act on another rule's algo children** (`exclude_algo_children`, default true). |
-| E12 | **Live requires explicit opt-in.** `scope.environments` defaults to `["demo"]`; adding `"live"` requires the `rules.arm_live` permission, a confirmation dialog, and produces a high-severity audit entry. |
+| #   | Rule                                                                                                                                                                                                                                                                                 |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| E1  | **Trigger-driven, never polled.** The engine subscribes to the bus; `on_timer`/`on_schedule` use a monotonic scheduler. A rule only evaluates when its trigger fires.                                                                                                                |
+| E2  | **One `MetricSnapshot` per evaluation.** All metrics are read once into an immutable snapshot at evaluation start, so no condition can see a different market state than its sibling.                                                                                                |
+| E3  | **`None` is false.** A condition referencing an unavailable metric (warmup, no position, feed stale) evaluates to false and records `skipped_reason`. It never throws and never coerces to 0.                                                                                        |
+| E4  | **Short-circuit with full logging.** `all_of` short-circuits for speed, but the evaluation log records which children were _not_ evaluated, so the trace is never misleading.                                                                                                        |
+| E5  | **Deterministic order.** Children evaluate in array order; actions execute in array order. Same snapshot ⇒ same outcome, always (required for simulation parity).                                                                                                                    |
+| E6  | **Per-scope instances.** A symbol-scoped rule over 3 symbols is 3 independent instances with independent `once`/cooldown state.                                                                                                                                                      |
+| E7  | **Stale-data guard.** If any metric in the snapshot is older than `max_data_age_ms` (default 5 000, or 3× the stream cadence, whichever is larger), the evaluation is **skipped** with `skipped_reason="stale_data"` and counted. Rules must never act on a frozen feed.             |
+| E8  | **Timeout.** An evaluation exceeding `evaluation_timeout_ms` is aborted, counted as an error, and contributes to `kill_switch_on_error_count`.                                                                                                                                       |
+| E9  | **Actions are transactional per fire.** With `on_error="abort_remaining"` (default), a failed action stops the remaining actions in that fire; everything already done is recorded, nothing is rolled back (you cannot un-place a filled order), and the partial outcome is alerted. |
+| E10 | **Reconnect replay safety.** After a disconnect, the engine does not replay missed triggers. It re-evaluates current state once, and `once`/dedupe keys prevent duplicates. Missed-trigger counts are exposed as a metric.                                                           |
+| E11 | **No rule may act on another rule's algo children** (`exclude_algo_children`, default true).                                                                                                                                                                                         |
+| E12 | **Live requires explicit opt-in.** `scope.environments` defaults to `["demo"]`; adding `"live"` requires the `rules.arm_live` permission, a confirmation dialog, and produces a high-severity audit entry.                                                                           |
 
 Evaluation pipeline per trigger:
 
@@ -2409,58 +2554,58 @@ flowchart TD
 
 **Actions** — the action list in §11.2. Parameter schemas per action type:
 
-| Action | Required params | Notes |
-|---|---|---|
-| `place_order` | `side`, `order_type`, `qty_mode`, `qty`\|`profile`, optional `price`, `stop_loss`, `take_profits`, `algo` | Goes through the full trade-group path, including sizing and native SL |
-| `modify_stop_loss` | `mode` (`absolute`\|`offset_from_entry`\|`offset_from_price`\|`atr`\|`structure`), `value`, `only_tighten` (default true) | `only_tighten=false` requires `rules.loosen_stop` permission |
-| `modify_take_profit` | same shape | |
-| `move_to_breakeven` | `offset_ticks` (default 2) | Never loosens |
-| `scale_out` | `qty_pct`\|`qty`, `order_type` | reduce-only enforced |
-| `scale_in` | `qty_pct`\|`qty`, subject to profile caps | |
-| `flatten_position` / `flatten_all_positions` | optional `symbols` | reduce-only market |
-| `cancel_order` / `cancel_all_orders` | optional `purpose` filter | |
-| `halt_new_orders` | `scope`, `until` (`next_utc_day`\|`duration_ms`\|`manual`) | Circuit breaker |
-| `reduce_leverage` | `target` or `by` | |
-| `arm_chase_limit` / `start_iceberg_slice` / `start_twap` | the matching `*Params` | §10 |
-| `send_notification` | `channel`, `severity`, `template`, `vars` | |
-| `log_journal_tag` | `tag`, optional `note` | Closes the rule↔outcome loop |
-| `set_variable` | `name`, `value`, `ttl_ms` | Rule-scoped variable store |
-| `emit_signal` | `signal_name`, `payload` | Chains rules |
-| `pause_rule` / `enable_rule` | `rule_id` | Cannot target itself except `pause_rule` (self-disable is allowed and useful) |
+| Action                                                   | Required params                                                                                                           | Notes                                                                         |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `place_order`                                            | `side`, `order_type`, `qty_mode`, `qty`\|`profile`, optional `price`, `stop_loss`, `take_profits`, `algo`                 | Goes through the full trade-group path, including sizing and native SL        |
+| `modify_stop_loss`                                       | `mode` (`absolute`\|`offset_from_entry`\|`offset_from_price`\|`atr`\|`structure`), `value`, `only_tighten` (default true) | `only_tighten=false` requires `rules.loosen_stop` permission                  |
+| `modify_take_profit`                                     | same shape                                                                                                                |                                                                               |
+| `move_to_breakeven`                                      | `offset_ticks` (default 2)                                                                                                | Never loosens                                                                 |
+| `scale_out`                                              | `qty_pct`\|`qty`, `order_type`                                                                                            | reduce-only enforced                                                          |
+| `scale_in`                                               | `qty_pct`\|`qty`, subject to profile caps                                                                                 |                                                                               |
+| `flatten_position` / `flatten_all_positions`             | optional `symbols`                                                                                                        | reduce-only market                                                            |
+| `cancel_order` / `cancel_all_orders`                     | optional `purpose` filter                                                                                                 |                                                                               |
+| `halt_new_orders`                                        | `scope`, `until` (`next_utc_day`\|`duration_ms`\|`manual`)                                                                | Circuit breaker                                                               |
+| `reduce_leverage`                                        | `target` or `by`                                                                                                          |                                                                               |
+| `arm_chase_limit` / `start_iceberg_slice` / `start_twap` | the matching `*Params`                                                                                                    | §10                                                                           |
+| `send_notification`                                      | `channel`, `severity`, `template`, `vars`                                                                                 |                                                                               |
+| `log_journal_tag`                                        | `tag`, optional `note`                                                                                                    | Closes the rule↔outcome loop                                                  |
+| `set_variable`                                           | `name`, `value`, `ttl_ms`                                                                                                 | Rule-scoped variable store                                                    |
+| `emit_signal`                                            | `signal_name`, `payload`                                                                                                  | Chains rules                                                                  |
+| `pause_rule` / `enable_rule`                             | `rule_id`                                                                                                                 | Cannot target itself except `pause_rule` (self-disable is allowed and useful) |
 
 ### 11.7 Safety limits and kill switches
 
-> **Statechart contract:** [`28-statechart-catalogue.md` §B18](28-statechart-catalogue.md#b18--killswitch) — the kill switch, and [§B20](28-statechart-catalogue.md#b20--risklockout) the risk lockout. Both **record and orchestrate only**: enforcement is a synchronous flag consulted by the `Validator` (MUSTNOT-05). The contract is normative for the *behaviour*; this section remains the owner of the limit definitions, scopes and the `until` semantics (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
+> **Statechart contract:** [`28-statechart-catalogue.md` §B18](28-statechart-catalogue.md#b18--killswitch) — the kill switch, and [§B20](28-statechart-catalogue.md#b20--risklockout) the risk lockout. Both **record and orchestrate only**: enforcement is a synchronous flag consulted by the `Validator` (MUSTNOT-05). The contract is normative for the _behaviour_; this section remains the owner of the limit definitions, scopes and the `until` semantics (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
 
-| Layer | Control |
-|---|---|
-| Per rule | `once`/`once_per`, `cooldown_ms`, `max_fires_per_hour`/`per_day`, `max_actions_per_fire`, `max_notional_per_fire`, `max_daily_notional`, `evaluation_timeout_ms` |
-| Per rule health | `kill_switch_on_error_count` consecutive errors → rule auto-disabled, `critical` alert, requires human re-arm |
-| Per account | Profile risk caps (§9.2) are enforced by the OMS **after** the rule engine, so no rule can exceed them |
-| Global | `rules_global_enabled` feature flag; a single **Panic** control in the UI disables every armed rule and (optionally) flattens everything |
-| Live gate | `scope.environments` must explicitly include `"live"`; guarded by permission + confirmation + audit |
-| New-rule gate | A newly created or edited rule **cannot be armed directly**. It must run in `simulate` for `min_simulation_fires` (default 5) or `min_simulation_hours` (default 24), whichever comes first, before `armed` is selectable. Overridable only by the owner, with an audited reason. |
-| Feedback-loop guard | Actions do not re-enter the same rule's trigger within `cooldown_ms`; a rule whose own action would re-trigger it is rejected at save time by static analysis |
-| Disconnect guard | While the private WS is disconnected or reconciliation is running, armed rules are **paused** (emulated stops cannot be trusted on stale state); the native SL keeps protecting positions, and the UI shows "rules paused — feed degraded" |
+| Layer               | Control                                                                                                                                                                                                                                                                           |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Per rule            | `once`/`once_per`, `cooldown_ms`, `max_fires_per_hour`/`per_day`, `max_actions_per_fire`, `max_notional_per_fire`, `max_daily_notional`, `evaluation_timeout_ms`                                                                                                                  |
+| Per rule health     | `kill_switch_on_error_count` consecutive errors → rule auto-disabled, `critical` alert, requires human re-arm                                                                                                                                                                     |
+| Per account         | Profile risk caps (§9.2) are enforced by the OMS **after** the rule engine, so no rule can exceed them                                                                                                                                                                            |
+| Global              | `rules_global_enabled` feature flag; a single **Panic** control in the UI disables every armed rule and (optionally) flattens everything                                                                                                                                          |
+| Live gate           | `scope.environments` must explicitly include `"live"`; guarded by permission + confirmation + audit                                                                                                                                                                               |
+| New-rule gate       | A newly created or edited rule **cannot be armed directly**. It must run in `simulate` for `min_simulation_fires` (default 5) or `min_simulation_hours` (default 24), whichever comes first, before `armed` is selectable. Overridable only by the owner, with an audited reason. |
+| Feedback-loop guard | Actions do not re-enter the same rule's trigger within `cooldown_ms`; a rule whose own action would re-trigger it is rejected at save time by static analysis                                                                                                                     |
+| Disconnect guard    | While the private WS is disconnected or reconciliation is running, armed rules are **paused** (emulated stops cannot be trusted on stale state); the native SL keeps protecting positions, and the UI shows "rules paused — feed degraded"                                        |
 
 ### 11.8 Built-in system rules
 
 Shipped, non-deletable, individually toggleable. They exist so the dangerous basics are correct out of the box rather than hand-built by every user.
 
-| Id | Purpose | Default |
-|---|---|---|
-| `sys.native_sl_watchdog` | Position without a native SL >10 s → attach fallback + critical alert | always on, cannot disable |
-| `sys.daily_loss_lockout` | `realised_pnl_today <= -max_daily_loss` → `halt_new_orders` until next UTC day + notify | on, per-profile threshold |
-| `sys.max_positions_guard` | `open_positions_count >= max_open_positions` → veto new entries (`pre_trade_check`) | on |
-| `sys.clock_drift_block` | `ClockSyncEvent.action == block_trading` → halt order entry | on, cannot disable |
-| `sys.stale_feed_block` | Book/trade feed stale >5 s → `pre_trade_check` veto | on |
-| `sys.breakeven_at_1r` | `unrealised_r_multiple >= 1` → `move_to_breakeven(2 ticks)`, `once_per=position` | off by default |
-| `sys.time_stop` | `time_in_trade_ms > max` and `unrealised_r < 0.2` → flatten + tag | off |
-| `sys.funding_flip_flatten` | Funding flips against the position beyond a bps threshold after a minimum hold → flatten + tag | off |
+| Id                         | Purpose                                                                                        | Default                   |
+| -------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------- |
+| `sys.native_sl_watchdog`   | Position without a native SL >10 s → attach fallback + critical alert                          | always on, cannot disable |
+| `sys.daily_loss_lockout`   | `realised_pnl_today <= -max_daily_loss` → `halt_new_orders` until next UTC day + notify        | on, per-profile threshold |
+| `sys.max_positions_guard`  | `open_positions_count >= max_open_positions` → veto new entries (`pre_trade_check`)            | on                        |
+| `sys.clock_drift_block`    | `ClockSyncEvent.action == block_trading` → halt order entry                                    | on, cannot disable        |
+| `sys.stale_feed_block`     | Book/trade feed stale >5 s → `pre_trade_check` veto                                            | on                        |
+| `sys.breakeven_at_1r`      | `unrealised_r_multiple >= 1` → `move_to_breakeven(2 ticks)`, `once_per=position`               | off by default            |
+| `sys.time_stop`            | `time_in_trade_ms > max` and `unrealised_r < 0.2` → flatten + tag                              | off                       |
+| `sys.funding_flip_flatten` | Funding flips against the position beyond a bps threshold after a minimum hold → flatten + tag | off                       |
 
 ### 11.9 Simulation mode
 
-`mode="simulate"` runs the full pipeline and records what *would* have happened, executing nothing. This is the mandatory on-ramp to `armed` (§11.7).
+`mode="simulate"` runs the full pipeline and records what _would_ have happened, executing nothing. This is the mandatory on-ramp to `armed` (§11.7).
 
 ```python
 class SimulatedAction(BaseModel):
@@ -2502,14 +2647,15 @@ class NodeTrace(BaseModel):
 Simulation also runs against **replay** (§13.7): point a rule at a recorded window and get the same `RuleEvent` stream you would have got live, because the metrics are deterministic and the engine reads the same bus. Simulation reports summarize fire count, hypothetical PnL (using the paper matcher's fill model, §12), max concurrent exposure, and every `blocked_by` that would have stopped an action.
 
 ---
+
 ## 12. Paper matcher
 
 Paper trading runs against **Bybit demo** (a real matching engine with its own UID, REST-only order entry, 7-day order retention) for realistic execution, **plus** a local `PaperMatcher` used for replay-based simulation, rule backtesting and instant what-if fills where demo cannot help (replay of a past day). Both present the identical `Order`/`Execution`/`Position` models, so every consumer above the OMS is environment-blind.
 
-| Path | Environment | Matching | Use |
-|---|---|---|---|
-| Bybit demo | `demo` | Bybit's real engine | Default paper trading; order entry **must** be REST (no WS trade on demo) |
-| Local matcher | `paper`, `replay` | `PaperMatcher` | Replay simulation, rule simulation reports, offline development |
+| Path          | Environment       | Matching            | Use                                                                       |
+| ------------- | ----------------- | ------------------- | ------------------------------------------------------------------------- |
+| Bybit demo    | `demo`            | Bybit's real engine | Default paper trading; order entry **must** be REST (no WS trade on demo) |
+| Local matcher | `paper`, `replay` | `PaperMatcher`      | Replay simulation, rule simulation reports, offline development           |
 
 ### 12.1 Fill model
 
@@ -2581,7 +2727,7 @@ The payment is recorded as an `Execution` with `exec_type="funding"`, `qty=0`, a
 
 ### 12.4 Margin, liquidation and ADL
 
-> **Statechart contract:** [`28-statechart-catalogue.md` §B15](28-statechart-catalogue.md#b15--paper-account-liquidation-fsm) — the paper-account liquidation FSM, edge-triggered on band change. The fill model, queue estimator and fee/funding arithmetic are **not** statecharts (MUSTNOT-01). The contract is normative for the *behaviour*; this section remains the owner of the margin formulae, the tier model and the ADL rules (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
+> **Statechart contract:** [`28-statechart-catalogue.md` §B15](28-statechart-catalogue.md#b15--paper-account-liquidation-fsm) — the paper-account liquidation FSM, edge-triggered on band change. The fill model, queue estimator and fee/funding arithmetic are **not** statecharts (MUSTNOT-01). The contract is normative for the _behaviour_; this section remains the owner of the margin formulae, the tier model and the ADL rules (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
 
 The simulator models cross/isolated margin using Bybit's tiered risk-limit data (`GET /v5/market/risk-limit`, fetched and version-tracked, never hardcoded):
 
@@ -2602,7 +2748,7 @@ Bybit offers no historical tick, L2 or footprint data beyond a tiny recent-trade
 
 ### 13.1 Recording policy model
 
-> **Statechart contract:** [`28-statechart-catalogue.md` §B11](28-statechart-catalogue.md#b11--recordingsession) — the recording chart, which adds `lingering` and expresses “an open position cannot stop recording” as a guard. The contract is normative for the *behaviour*; this section remains the owner of the policy model, the retention rules and the disk-budget thresholds (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
+> **Statechart contract:** [`28-statechart-catalogue.md` §B11](28-statechart-catalogue.md#b11--recordingsession) — the recording chart, which adds `lingering` and expresses “an open position cannot stop recording” as a guard. The contract is normative for the _behaviour_; this section remains the owner of the policy model, the retention rules and the disk-budget thresholds (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
 
 Per owner decision #4: the recorded-symbols list is **user-managed and empty by default**, plus automatic recording of any symbol with an open chart or open position.
 
@@ -2640,17 +2786,17 @@ class RecordingState(BaseModel):
 
 ### 13.2 What is recorded
 
-| Stream | Storage | Format | Notes |
-|---|---|---|---|
-| `trades` | QuestDB hot → Parquet cold | columnar, one row per trade | Full fidelity, never downsampled |
-| `orderbook_delta` | QuestDB hot → Parquet cold | one row per level change | **Store deltas, not re-snapshots** — the single biggest storage decision |
-| `orderbook_snapshot` | QuestDB + Parquet | full book | On subscribe, on resync, and every `snapshot_interval_s` — these are the seek anchors for replay |
-| `tickers` | QuestDB (full) → Parquet (1 Hz downsample) | | 100 ms live is far more than any analysis needs after a few days |
-| `klines` | QuestDB | | Cross-check only; our bars are built from trades |
-| `liquidations` | QuestDB + Parquet | one row per array element | Never one row per push |
-| `open_interest` | QuestDB | | Tick from ticker + REST history backfill |
-| `funding` | Postgres + QuestDB | | Low volume, high value |
-| raw frames | Parquet, zstd, 7-day retention | gzip'd JSON lines | Forensic only, secrets redacted, used to debug adapter mapping bugs |
+| Stream               | Storage                                    | Format                      | Notes                                                                                            |
+| -------------------- | ------------------------------------------ | --------------------------- | ------------------------------------------------------------------------------------------------ |
+| `trades`             | QuestDB hot → Parquet cold                 | columnar, one row per trade | Full fidelity, never downsampled                                                                 |
+| `orderbook_delta`    | QuestDB hot → Parquet cold                 | one row per level change    | **Store deltas, not re-snapshots** — the single biggest storage decision                         |
+| `orderbook_snapshot` | QuestDB + Parquet                          | full book                   | On subscribe, on resync, and every `snapshot_interval_s` — these are the seek anchors for replay |
+| `tickers`            | QuestDB (full) → Parquet (1 Hz downsample) |                             | 100 ms live is far more than any analysis needs after a few days                                 |
+| `klines`             | QuestDB                                    |                             | Cross-check only; our bars are built from trades                                                 |
+| `liquidations`       | QuestDB + Parquet                          | one row per array element   | Never one row per push                                                                           |
+| `open_interest`      | QuestDB                                    |                             | Tick from ticker + REST history backfill                                                         |
+| `funding`            | Postgres + QuestDB                         |                             | Low volume, high value                                                                           |
+| raw frames           | Parquet, zstd, 7-day retention             | gzip'd JSON lines           | Forensic only, secrets redacted, used to debug adapter mapping bugs                              |
 
 Planning-level sizing: ~0.5–0.75 GB/day/symbol compressed at 200-depth. **These numbers are estimates, not measurements** (research 08 open Q #5) — the recorder is instrumented from day one with `recorder_bytes_written_total{symbol,stream}` and the admin storage panel replaces the estimate with the real figure within the first week.
 
@@ -2714,7 +2860,7 @@ Derived data (bars, footprints, profiles) is a **cache over the trade tape**. An
 
 ### 13.7 Replay engine
 
-> **Statechart contract:** [`28-statechart-catalogue.md` §B12](28-statechart-catalogue.md#b12--replaysession) — the transport-control chart. The replayed **data** path never enters a statechart (MUSTNOT-01); parity is measured over delivered event sets. The contract is normative for the *behaviour*; this section remains the owner of the engine model, the determinism clauses and the coverage semantics (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
+> **Statechart contract:** [`28-statechart-catalogue.md` §B12](28-statechart-catalogue.md#b12--replaysession) — the transport-control chart. The replayed **data** path never enters a statechart (MUSTNOT-01); parity is measured over delivered event sets. The contract is normative for the _behaviour_; this section remains the owner of the engine model, the determinism clauses and the coverage semantics (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
 
 The replay engine re-emits recorded events onto the **same bus** with the **same types**, so every downstream module (book engine, bar builders, footprint, heatmap, metrics, rule engine, paper matcher, the WS protocol, the chart) runs unmodified. This is the tardis-machine pattern (research 11 §3) and it is the reason replay fidelity is structural rather than aspirational.
 
@@ -2740,7 +2886,7 @@ class ReplayBookmark(BaseModel):
     note: str | None
 ```
 
-**Seek algorithm.** (1) Find the latest `orderbook_snapshot` at or before the target (these exist every `snapshot_interval_s`, plus at every subscribe/resync). (2) Load it and rebuild the book. (3) Re-apply book deltas from the snapshot to the target. (4) Rebuild bar/footprint/profile state either from a persisted `BuilderState` checkpoint (written every 60 s) or by replaying trades from the enclosing session anchor. (5) Prime metric warmup by replaying `max(warmup_bars)` bars of history *before* the target so indicators are valid at t=0 rather than `None`. Seek is bounded at ≤2 s for any point in a recorded day, which is a performance gate in `06-performance-and-load-standard.md`.
+**Seek algorithm.** (1) Find the latest `orderbook_snapshot` at or before the target (these exist every `snapshot_interval_s`, plus at every subscribe/resync). (2) Load it and rebuild the book. (3) Re-apply book deltas from the snapshot to the target. (4) Rebuild bar/footprint/profile state either from a persisted `BuilderState` checkpoint (written every 60 s) or by replaying trades from the enclosing session anchor. (5) Prime metric warmup by replaying `max(warmup_bars)` bars of history _before_ the target so indicators are valid at t=0 rather than `None`. Seek is bounded at ≤2 s for any point in a recorded day, which is a performance gate in `06-performance-and-load-standard.md`.
 
 **Playback.** A monotonic scheduler emits events preserving inter-event deltas scaled by `speed`. `speed=0` is step mode: `step_event`, `step_ms(n)`, `step_bar`. At `speed=-1` events are emitted as fast as consumers accept (used for rule backtests). Backpressure from a slow consumer slows the clock rather than dropping events — replay must never lose data.
 
@@ -2848,7 +2994,7 @@ class ExchangeCapabilities(BaseModel):
 
 ### 14.2 Adapter rules (binding)
 
-> **Statechart contract:** [`28-statechart-catalogue.md` §B13](28-statechart-catalogue.md#b13--exchangeconnection-ws-reconnect--resync) — the WS connection lifecycle (connect → authenticate → subscribe → live → backoff), including `budget_blocked` for the connection-rate limit; and [§B14](28-statechart-catalogue.md#b14--book-health-fsm-data-path-excluded) the book **health** FSM. **The per-delta data path is never a statechart** (MUSTNOT-01): health publishes a plain bool/enum that hot paths read. The contract is normative for the *behaviour*; this section remains the owner of the adapter protocol and the Bybit specifics (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
+> **Statechart contract:** [`28-statechart-catalogue.md` §B13](28-statechart-catalogue.md#b13--exchangeconnection-ws-reconnect--resync) — the WS connection lifecycle (connect → authenticate → subscribe → live → backoff), including `budget_blocked` for the connection-rate limit; and [§B14](28-statechart-catalogue.md#b14--book-health-fsm-data-path-excluded) the book **health** FSM. **The per-delta data path is never a statechart** (MUSTNOT-01): health publishes a plain bool/enum that hot paths read. The contract is normative for the _behaviour_; this section remains the owner of the adapter protocol and the Bybit specifics (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
 
 1. All exchange error codes map to the internal taxonomy (§8.6). No `retCode` integer escapes the adapter package.
 2. `place_order` **must** be idempotent on `order_link_id`: the adapter re-sends the same id on retry and treats a duplicate rejection as success-after-lookup.
@@ -2863,40 +3009,40 @@ class ExchangeCapabilities(BaseModel):
 
 **Endpoints.** Base URLs are **configuration, never hardcoded** — Bybit operates regional hosts (`api.bybit.nl/.tr/.kz/.ae/.eu/.id`, `api.bytick.com`) and blocks US/Mainland-China IPs with 403.
 
-| Concern | Detail |
-|---|---|
-| Auth (REST) | Headers `X-BAPI-API-KEY`, `X-BAPI-TIMESTAMP` (ms), `X-BAPI-RECV-WINDOW` (default 5000, we use 5000 and fix clocks rather than widening), `X-BAPI-SIGN` = HMAC-SHA256 hex over `timestamp + api_key + recv_window + (queryString | jsonBody)` |
-| Auth (WS) | `{"op":"auth","args":[key, expires_ms, HMAC("GET/realtime"+expires)]}` |
-| Clock | `GET /v5/market/time` every 60 s; offset >2 s blocks trading (§2.8). NTP/chrony on the host is the primary fix; WSL drifts after host sleep |
-| Subscriptions | ≤10 topics per `subscribe` request, ≤~21 000 chars of args — the adapter chunks automatically |
-| Connections | ≤500 new connections/5 min/IP, ≤1000 concurrent/IP per category; exponential backoff with jitter, never reconnect churn |
-| Heartbeat | `{"op":"ping"}` every 20 s from a **dedicated task**, never inline in the message loop (GC or backpressure must not starve the ping) |
-| Private topics | Use the categorised form (`order.linear`, `position.linear`, `execution.linear`, `wallet`); all-in-one and categorised forms cannot be mixed in one subscribe |
-| Fills | Prefer `execution.fast` for latency, reconcile against `execution` for completeness; one message may bundle multiple fills |
-| Book | No checksum → drop-and-resubscribe on any `u` gap (§2.2) |
-| Kline | Gate "closed" on `confirm` |
-| Liquidations | `allLiquidation.{symbol}` only; legacy `liquidation` 404s |
-| Batch | 1–10 orders/request, linear supported, **partial success** — handle per-item `retCode` |
-| TP/SL | Always write both sides in one `trading-stop` call (one-sided writes break OCO pairing) |
-| Trailing | `trailingStop` is a **price distance**; `%`-trailing UX is translated client-side |
-| Position mode | Read `positionIdx` requirements at startup; a mismatch is a **hard startup error**, never an auto-switch |
-| UTA | Target UTA exclusively; single unified wallet; read margin mode at startup and cache |
-| SDK | `pybit` (official) pinned to an exact version; its WS-trade module is separate from the unified client. Raw payloads are validated against our models in contract tests before we trust the SDK's shapes |
+| Concern        | Detail                                                                                                                                                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Auth (REST)    | Headers `X-BAPI-API-KEY`, `X-BAPI-TIMESTAMP` (ms), `X-BAPI-RECV-WINDOW` (default 5000, we use 5000 and fix clocks rather than widening), `X-BAPI-SIGN` = HMAC-SHA256 hex over `timestamp + api_key + recv_window + (queryString | jsonBody)` |
+| Auth (WS)      | `{"op":"auth","args":[key, expires_ms, HMAC("GET/realtime"+expires)]}`                                                                                                                                                          |
+| Clock          | `GET /v5/market/time` every 60 s; offset >2 s blocks trading (§2.8). NTP/chrony on the host is the primary fix; WSL drifts after host sleep                                                                                     |
+| Subscriptions  | ≤10 topics per `subscribe` request, ≤~21 000 chars of args — the adapter chunks automatically                                                                                                                                   |
+| Connections    | ≤500 new connections/5 min/IP, ≤1000 concurrent/IP per category; exponential backoff with jitter, never reconnect churn                                                                                                         |
+| Heartbeat      | `{"op":"ping"}` every 20 s from a **dedicated task**, never inline in the message loop (GC or backpressure must not starve the ping)                                                                                            |
+| Private topics | Use the categorised form (`order.linear`, `position.linear`, `execution.linear`, `wallet`); all-in-one and categorised forms cannot be mixed in one subscribe                                                                   |
+| Fills          | Prefer `execution.fast` for latency, reconcile against `execution` for completeness; one message may bundle multiple fills                                                                                                      |
+| Book           | No checksum → drop-and-resubscribe on any `u` gap (§2.2)                                                                                                                                                                        |
+| Kline          | Gate "closed" on `confirm`                                                                                                                                                                                                      |
+| Liquidations   | `allLiquidation.{symbol}` only; legacy `liquidation` 404s                                                                                                                                                                       |
+| Batch          | 1–10 orders/request, linear supported, **partial success** — handle per-item `retCode`                                                                                                                                          |
+| TP/SL          | Always write both sides in one `trading-stop` call (one-sided writes break OCO pairing)                                                                                                                                         |
+| Trailing       | `trailingStop` is a **price distance**; `%`-trailing UX is translated client-side                                                                                                                                               |
+| Position mode  | Read `positionIdx` requirements at startup; a mismatch is a **hard startup error**, never an auto-switch                                                                                                                        |
+| UTA            | Target UTA exclusively; single unified wallet; read margin mode at startup and cache                                                                                                                                            |
+| SDK            | `pybit` (official) pinned to an exact version; its WS-trade module is separate from the unified client. Raw payloads are validated against our models in contract tests before we trust the SDK's shapes                        |
 
 **Environment differences.**
 
-| Aspect | live | demo | testnet |
-|---|---|---|---|
-| REST base | `api.bybit.com` | `api-demo.bybit.com` | `api-testnet.bybit.com` |
-| Public WS | `stream.bybit.com/v5/public/linear` | **mainnet public** (no demo public feed) | `stream-testnet…` |
-| Private WS | `stream.bybit.com/v5/private` | `stream-demo.bybit.com/v5/private` | `stream-testnet…/private` |
-| WS order entry | supported | **NOT supported — REST only** | supported |
-| Batch orders | yes | linear/option only | yes |
-| Order retention | long | **7 days** | long |
-| Rate limits | tier-dependent, raisable | fixed, non-upgradable | low |
-| Faucet | — | `POST /v5/account/demo-apply-money` | testnet faucet |
-| Purpose in CandleViewer | real trading (post pen-test, R4) | **paper trading** | connectivity smoke tests only |
-| Sub-account demo eligibility | n/a | **unverified** — empirical test required before per-manager demo UX is finalised (research 06 open Q #1) | n/a |
+| Aspect                       | live                                | demo                                                                                                     | testnet                       |
+| ---------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| REST base                    | `api.bybit.com`                     | `api-demo.bybit.com`                                                                                     | `api-testnet.bybit.com`       |
+| Public WS                    | `stream.bybit.com/v5/public/linear` | **mainnet public** (no demo public feed)                                                                 | `stream-testnet…`             |
+| Private WS                   | `stream.bybit.com/v5/private`       | `stream-demo.bybit.com/v5/private`                                                                       | `stream-testnet…/private`     |
+| WS order entry               | supported                           | **NOT supported — REST only**                                                                            | supported                     |
+| Batch orders                 | yes                                 | linear/option only                                                                                       | yes                           |
+| Order retention              | long                                | **7 days**                                                                                               | long                          |
+| Rate limits                  | tier-dependent, raisable            | fixed, non-upgradable                                                                                    | low                           |
+| Faucet                       | —                                   | `POST /v5/account/demo-apply-money`                                                                      | testnet faucet                |
+| Purpose in CandleViewer      | real trading (post pen-test, R4)    | **paper trading**                                                                                        | connectivity smoke tests only |
+| Sub-account demo eligibility | n/a                                 | **unverified** — empirical test required before per-manager demo UX is finalised (research 06 open Q #1) | n/a                           |
 
 `ExchangeCapabilities` is constructed per `(exchange, environment)` at startup, so "demo has no WS order entry" is a data fact the OMS reads, not a branch someone might forget.
 
@@ -2914,21 +3060,21 @@ class ReconCapabilities(BaseModel):
     unknown_order_grace_s: int                 # how long an unresolved order stays "unknown"
 ```
 
-| Aspect | live | demo | testnet |
-|---|---|---|---|
-| `order_history_retention_days` | `None` (long) | **7** | `None` (long) |
-| `private_ws_supported` | yes | yes (`stream-demo`) | yes (`stream-testnet`) |
-| `private_ws_stability` | `production` | `production` | **`best_effort`** — testnet is a shared sandbox with frequent maintenance windows, silent disconnects and occasional multi-minute stream outages |
-| `ws_order_entry` | yes | **no** | yes |
-| `execution_fast_topic` | yes | yes | yes, but may lag |
-| `full_sweep_interval_s` | 300 | 300 | **60** |
-| `unknown_order_grace_s` | 30 | 30 | **120** |
+| Aspect                         | live          | demo                | testnet                                                                                                                                          |
+| ------------------------------ | ------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `order_history_retention_days` | `None` (long) | **7**               | `None` (long)                                                                                                                                    |
+| `private_ws_supported`         | yes           | yes (`stream-demo`) | yes (`stream-testnet`)                                                                                                                           |
+| `private_ws_stability`         | `production`  | `production`        | **`best_effort`** — testnet is a shared sandbox with frequent maintenance windows, silent disconnects and occasional multi-minute stream outages |
+| `ws_order_entry`               | yes           | **no**              | yes                                                                                                                                              |
+| `execution_fast_topic`         | yes           | yes                 | yes, but may lag                                                                                                                                 |
+| `full_sweep_interval_s`        | 300           | 300                 | **60**                                                                                                                                           |
+| `unknown_order_grace_s`        | 30            | 30                  | **120**                                                                                                                                          |
 
 **How each environment changes the algorithm.**
 
 - **live** — the baseline of §8.5: WS `order`/`execution` is the primary truth, the 5-minute REST sweep is the backstop, and any order older than the retention window is irrelevant because retention is effectively unbounded.
 - **demo** — identical to live in mechanism, with two adjustments: (a) because order history is pruned after **7 days**, the "resolve an unknown order by id" step (§8.5 step 3) must treat a `/v5/order/history` miss on an order whose `created_at` is older than 7 days as **`expired_from_history`**, not as `unknown`; such orders are closed out against our own persisted record and flagged `authoritative_source="local"` in the journal rather than raising a divergence alert. (b) Because `ws_order_entry=False`, every submission is REST, so the reconciler never has to match a WS-ack-without-REST-response case.
-- **testnet** — testnet exists in CandleViewer **only for connectivity smoke tests** (see the table above and the brief); it never carries user positions, never runs rules, and is never selectable as a trading environment in the UI (enforced by `environment_allowlist` in §16.1). Its reconciliation differences are therefore about *tolerating a flaky sandbox without generating false alarms*, not about protecting capital:
+- **testnet** — testnet exists in CandleViewer **only for connectivity smoke tests** (see the table above and the brief); it never carries user positions, never runs rules, and is never selectable as a trading environment in the UI (enforced by `environment_allowlist` in §16.1). Its reconciliation differences are therefore about _tolerating a flaky sandbox without generating false alarms_, not about protecting capital:
   1. **Private WS is `best_effort`.** The reconciler does not treat a private-WS gap on testnet as a divergence. `FeedHealthEvent(degraded)` on a testnet private stream logs at `info` and raises **no** `critical` alert; the same event on live/demo pages the owner.
   2. **REST is the primary truth on testnet**, inverting the live precedence. The full sweep runs every **60 s** (not 300 s) precisely because the stream cannot be trusted, and the sweep result — not the WS-derived state — wins any conflict. On live and demo, a REST/WS conflict is resolved in favour of the newer `updated_at` and audited as `oms.reconcile`; on testnet the REST snapshot simply overwrites.
   3. **`unknown_order_grace_s` is 120 s** (vs 30 s) so a testnet outage does not immediately mark orders `unknown` and trigger the unknown-order workflow.
@@ -3017,13 +3163,14 @@ class RiskLimitTier(BaseModel):
 ```
 
 ---
+
 ## 15. Auth, RBAC and audit
 
 Access is Tailscale-only; there is no public exposure. RBAC is the second layer, and per-account Bybit key scoping (trade+read, **withdrawal always off**, IP whitelist) is the third. No single layer is trusted alone.
 
 ### 15.1 Identity model
 
-> **Statechart contract:** [`28-statechart-catalogue.md` §B16](28-statechart-catalogue.md#b16--authsession--step-up) — the two-region `auth` × `elevation` chart, in which `elevated_until` is derived from the elevation region rather than stored independently. The contract is normative for the *behaviour*; this section remains the owner of the identity model, the session fields and the RBAC matrix (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
+> **Statechart contract:** [`28-statechart-catalogue.md` §B16](28-statechart-catalogue.md#b16--authsession--step-up) — the two-region `auth` × `elevation` chart, in which `elevated_until` is derived from the elevation region rather than stored independently. The contract is normative for the _behaviour_; this section remains the owner of the identity model, the session fields and the RBAC matrix (`CONSTITUTION.md` §16.5). Governed by [`27-adrs/ADR-0016-statechart-runtime.md`](27-adrs/ADR-0016-statechart-runtime.md).
 
 ```python
 class User(BaseModel):
@@ -3121,22 +3268,22 @@ class Scope(StrEnum):
     GRANTED_ACCOUNTS = "granted_accounts"  # intersected with user_account_access
 ```
 
-| Permission group | owner | manager | viewer |
-|---|---|---|---|
-| `marketdata:read`, `instruments:read` | ✔ | ✔ | ✔ |
-| `replay:read`, `replay:write`, `recording:read` | ✔ | ✔ | ✔ (own sessions) |
-| `recording:write` | ✔ (step-up for purge/retention) | ✘ | ✘ |
-| `orders:read`, `positions:read`, `executions:read` | ✔ | ✔ (granted accounts) | ✔ (granted accounts) |
-| `orders:write`, `positions:write` | ✔ | ✔ (granted accounts with the `trade` mode, and only `allowed_symbols`) | ✘ |
-| `killswitch:write` | ✔ (step-up) | ✘ | ✘ |
-| `rules:read` | ✔ (all rules) | ✔ (own + bound accounts) | ✔ (own) |
-| `rules:write` | ✔ | ✔ (simulate/demo arming only) | ✘ |
-| `alerts:read`, `alerts:write`, `workspaces:*`, `settings:*` | ✔ | ✔ (own) | ✔ (own) |
-| `journal:read`, `journal:write` | ✔ | ✔ (own) | `journal:read` only, if granted |
-| `accounts:read` | ✔ | ✔ (granted accounts) | ✔ (granted accounts, masked balances) |
-| `accounts:write`, `keys:read`, `keys:manage`, `users:*`, `flags:write`, `backups:write`, `audit:export` | ✔ (step-up) | ✘ | ✘ |
-| `admin:read` | ✔ | ✘ | ✘ |
-| `audit:read` | ✔ (all, raw payloads) | ✔ (own actions only, redacted) | ✘ |
+| Permission group                                                                                        | owner                           | manager                                                                | viewer                                |
+| ------------------------------------------------------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------- | ------------------------------------- |
+| `marketdata:read`, `instruments:read`                                                                   | ✔                               | ✔                                                                      | ✔                                     |
+| `replay:read`, `replay:write`, `recording:read`                                                         | ✔                               | ✔                                                                      | ✔ (own sessions)                      |
+| `recording:write`                                                                                       | ✔ (step-up for purge/retention) | ✘                                                                      | ✘                                     |
+| `orders:read`, `positions:read`, `executions:read`                                                      | ✔                               | ✔ (granted accounts)                                                   | ✔ (granted accounts)                  |
+| `orders:write`, `positions:write`                                                                       | ✔                               | ✔ (granted accounts with the `trade` mode, and only `allowed_symbols`) | ✘                                     |
+| `killswitch:write`                                                                                      | ✔ (step-up)                     | ✘                                                                      | ✘                                     |
+| `rules:read`                                                                                            | ✔ (all rules)                   | ✔ (own + bound accounts)                                               | ✔ (own)                               |
+| `rules:write`                                                                                           | ✔                               | ✔ (simulate/demo arming only)                                          | ✘                                     |
+| `alerts:read`, `alerts:write`, `workspaces:*`, `settings:*`                                             | ✔                               | ✔ (own)                                                                | ✔ (own)                               |
+| `journal:read`, `journal:write`                                                                         | ✔                               | ✔ (own)                                                                | `journal:read` only, if granted       |
+| `accounts:read`                                                                                         | ✔                               | ✔ (granted accounts)                                                   | ✔ (granted accounts, masked balances) |
+| `accounts:write`, `keys:read`, `keys:manage`, `users:*`, `flags:write`, `backups:write`, `audit:export` | ✔ (step-up)                     | ✘                                                                      | ✘                                     |
+| `admin:read`                                                                                            | ✔                               | ✘                                                                      | ✘                                     |
+| `audit:read`                                                                                            | ✔ (all, raw payloads)           | ✔ (own actions only, redacted)                                         | ✘                                     |
 
 **Arming a rule against live is not a separate permission.** It is `rules:write` plus the environment leg of the check plus the `live_trading` flag, restricted to `owner` with an elevated session. The same applies to placing a live order: one `orders:write` permission, gated by environment — never two permissions for one decision.
 
@@ -3388,26 +3535,26 @@ Resolution order (first match wins): session override → user override → role
 
 **Registered v1 flags**
 
-| Key | Kind | Default | Kill switch | Purpose |
-|---|---|---|---|---|
-| `live_trading` | boolean | `false` | ✔ | Master gate for any live order. Off until the R4 pen-test gate passes |
-| `trading.enabled` | boolean | `true` | ✔ | Global halt of all order entry (demo included) |
-| `trading.trade_groups` | boolean | `true` | ✘ | Multi-account fan-out |
-| `trading.algos.oco` / `.iceberg` / `.twap` / `.chase` / `.scaled` | boolean | `false` | ✘ | Per-algo rollout |
-| `rules.enabled` | boolean | `true` | ✔ | Rule engine master switch |
-| `rules.arm_live` | boolean | `false` | ✔ | Allows a rule to include `live` in scope |
-| `rules.node_editor` | boolean | `true` | ✘ | Node-graph editor surface |
-| `chart.webgl_engine` | boolean | `true` | ✘ | Custom engine; off ⇒ Lightweight-Charts fallback path |
-| `chart.footprint` / `.heatmap` / `.profile` / `.tpo` | boolean | `true`/`true`/`true`/`false` | ✘ | Order-flow layers |
-| `metrics.iceberg_detector` / `.stop_run_detector` / `.absorption` | boolean | `false` | ✘ | Heuristics behind flags until thresholds are tuned |
-| `recorder.enabled` | boolean | `true` | ✔ | Emergency stop for ingestion writes |
-| `recorder.auto_record_on_chart_open` | boolean | `true` | ✘ | Owner decision #4 behaviour |
-| `replay.enabled` | boolean | `true` | ✘ | |
-| `paper.local_matcher` | boolean | `true` | ✘ | Local matcher vs demo-only |
-| `admin.feature_flags_ui` | boolean | `true` | ✘ | |
-| `ws.binary_framing` | boolean | `true` | ✘ | Binary vs JSON wire encoding |
-| `ui.density` | variant | `comfortable` | ✘ | `comfortable`\|`compact`\|`dense` |
-| `ui.colorblind_palette` | boolean | `false` | ✘ | Blue/orange liquidity palette |
+| Key                                                               | Kind    | Default                      | Kill switch | Purpose                                                               |
+| ----------------------------------------------------------------- | ------- | ---------------------------- | ----------- | --------------------------------------------------------------------- |
+| `live_trading`                                                    | boolean | `false`                      | ✔           | Master gate for any live order. Off until the R4 pen-test gate passes |
+| `trading.enabled`                                                 | boolean | `true`                       | ✔           | Global halt of all order entry (demo included)                        |
+| `trading.trade_groups`                                            | boolean | `true`                       | ✘           | Multi-account fan-out                                                 |
+| `trading.algos.oco` / `.iceberg` / `.twap` / `.chase` / `.scaled` | boolean | `false`                      | ✘           | Per-algo rollout                                                      |
+| `rules.enabled`                                                   | boolean | `true`                       | ✔           | Rule engine master switch                                             |
+| `rules.arm_live`                                                  | boolean | `false`                      | ✔           | Allows a rule to include `live` in scope                              |
+| `rules.node_editor`                                               | boolean | `true`                       | ✘           | Node-graph editor surface                                             |
+| `chart.webgl_engine`                                              | boolean | `true`                       | ✘           | Custom engine; off ⇒ Lightweight-Charts fallback path                 |
+| `chart.footprint` / `.heatmap` / `.profile` / `.tpo`              | boolean | `true`/`true`/`true`/`false` | ✘           | Order-flow layers                                                     |
+| `metrics.iceberg_detector` / `.stop_run_detector` / `.absorption` | boolean | `false`                      | ✘           | Heuristics behind flags until thresholds are tuned                    |
+| `recorder.enabled`                                                | boolean | `true`                       | ✔           | Emergency stop for ingestion writes                                   |
+| `recorder.auto_record_on_chart_open`                              | boolean | `true`                       | ✘           | Owner decision #4 behaviour                                           |
+| `replay.enabled`                                                  | boolean | `true`                       | ✘           |                                                                       |
+| `paper.local_matcher`                                             | boolean | `true`                       | ✘           | Local matcher vs demo-only                                            |
+| `admin.feature_flags_ui`                                          | boolean | `true`                       | ✘           |                                                                       |
+| `ws.binary_framing`                                               | boolean | `true`                       | ✘           | Binary vs JSON wire encoding                                          |
+| `ui.density`                                                      | variant | `comfortable`                | ✘           | `comfortable`\|`compact`\|`dense`                                     |
+| `ui.colorblind_palette`                                           | boolean | `false`                      | ✘           | Blue/orange liquidity palette                                         |
 
 Every flag change is audited with before/after and reason. Temporary flags without `expires_at` fail a CI lint. A flag past `expires_at` raises a weekly reminder to delete the flag and its dead branch.
 
@@ -3415,78 +3562,78 @@ Every flag change is audited with before/after and reason. Temporary flags witho
 
 The owner/admin screens live **inside the web app** (no separate admin application). This table is the complete inventory: every knob each admin screen exposes, the model field or flag behind it, whether it is editable at runtime, and the permission and audit action it requires. A screen may expose nothing that is not listed here; adding a knob means adding a row plus a test.
 
-| Admin screen | Knob (UI label) | Backing field / flag | Runtime editable | Permission | Audit action |
-|---|---|---|---|---|---|
-| **Users & roles** | Create/disable user | `User` rows | ✔ | `USER_MANAGE` | `user.created`, `user.disabled` |
-| | Assign role | `User.roles` | ✔ | `USER_MANAGE` | `user.role_assigned` |
-| | Require MFA for role | `AuthConfig.require_mfa_roles` | ✔ | `USER_MANAGE` | `config.changed` |
-| | Session absolute / idle lifetime | `AuthConfig.session_absolute_hours`, `.session_idle_minutes` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Refresh-token lifetime | `AuthConfig.refresh_days` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Step-up (elevated) window | `AuthConfig.elevated_minutes` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Lockout policy | `AuthConfig.max_failed_logins`, `.lockout_minutes` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Password policy | `AuthConfig.password_min_length` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Argon2 cost parameters | `AuthConfig.argon2_time_cost`, `.argon2_memory_kib` | ✘ (boot) | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Revoke session | — (action) | ✔ | `USER_MANAGE` | `auth.session_revoked` |
-| **Accounts & API keys** | Add/disable account | `Account` rows | ✔ | `ACCOUNT_MANAGE` | `account.created`, `account.disabled` |
-| | Environment for account | `Account.environment` + `environment_allowlist` | ✔ | `ACCOUNT_MANAGE` | `account.updated` |
-| | Add/rotate/revoke API key | key vault handle (`AccountRef.key_ref`) | ✔ | `APIKEY_MANAGE` + elevated | `apikey.added`, `apikey.rotated`, `apikey.revoked` |
-| | Key permission verification | — (action; asserts read/trade scopes, no withdrawal scope) | ✔ | `APIKEY_MANAGE` | `apikey.verify_failed` on failure |
-| | IP allowlist reminder | display only (Bybit-side setting) | n/a | `ACCOUNT_MANAGE` | — |
-| | Per-account profile (sizing, leverage, offsets) | `AccountProfile` (§9.2) | ✔ | `PROFILE_EDIT` | `profile.updated` |
-| **Risk caps** | Daily loss cap, max open positions, max notional, symbol allowlist, per-symbol cap | `RiskCaps` (§9.2) | ✔ | `RISK_CAP_EDIT` + elevated | `risk_cap.changed` |
-| | Fallback SL offset | `AccountProfile.fallback_sl_offset` | ✔ | `RISK_CAP_EDIT` | `profile.updated` |
-| | Panic / flatten-all | — (action) | ✔ | `PANIC_FLATTEN` + elevated | `panic.flatten_all` |
-| **Exchange & connectivity** | REST/WS base URLs (regional host) | `ExchangeConfig.rest_base_url`, `.ws_public_url`, `.ws_private_url`, `.ws_trade_url` | ✘ (boot) | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | `recv_window_ms` | `ExchangeConfig.recv_window_ms` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Clock-check interval / block threshold | `.clock_check_interval_s`, `.clock_block_threshold_ms` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | WS ping interval, reconnect backoff bounds | `.ws_ping_interval_s`, `.ws_reconnect_base_ms`, `.ws_reconnect_max_ms` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | HTTP timeout / retries | `.http_timeout_s`, `.http_max_retries` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Capability matrix (read-only view) | `ExchangeCapabilities` (§14.3) | ✘ | `SYSTEM_HEALTH_VIEW` | — |
-| **OMS & rate limits** | Reconcile interval, unknown-alert delay | `OmsConfig.reconcile_interval_s`, `.unknown_alert_after_s` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Protective reserve tokens / reserve fraction | `RateBudget.reserved_for_protective`, `.reserve_fraction` | ✔ | `RISK_CAP_EDIT` | `config.changed` |
-| | Native-SL deadline & watchdog interval | `OmsConfig.native_sl_deadline_ms`, `.native_sl_watchdog_interval_s` | ✔ | `RISK_CAP_EDIT` | `config.changed` |
-| | Max algo children | `OmsConfig.max_algo_children` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Unwind deadline | `unwind_deadline_ms` (§9.5.1) | ✔ | `RISK_CAP_EDIT` | `config.changed` |
-| | Force reconcile now | — (action) | ✔ | `SYSTEM_CONFIG_EDIT` | `oms.reconcile` |
-| **Recording & storage** | Recorder on/off | `recorder.enabled` flag | ✔ | `RECORDING_MANAGE` | `recording.started`, `recording.stopped` |
-| | Auto-record on chart open | `recorder.auto_record_on_chart_open` flag | ✔ | `RECORDING_MANAGE` | `flag.changed` |
-| | Per-symbol recording policy (streams, depth, retention) | `RecordingPolicy` (§13.1) | ✔ | `RECORDING_MANAGE` | `recording.started` |
-| | Default retention days | `RecorderConfig.default_retention_days` | ✔ | `RECORDING_MANAGE` | `config.changed` |
-| | Raw-frame retention | `.raw_frame_retention_days` | ✔ | `RECORDING_MANAGE` | `config.changed` |
-| | Book depth default | `.default_book_depth` | ✔ | `RECORDING_MANAGE` | `config.changed` |
-| | Snapshot interval, linger window | `.snapshot_interval_s`, `.linger_minutes` | ✔ | `RECORDING_MANAGE` | `config.changed` |
-| | Ring-buffer size, critical streams | `.ring_buffer_size`, `.critical_streams` | ✘ (boot) | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Min free disk % | `.min_free_disk_pct` | ✔ | `RECORDING_MANAGE` | `config.changed` |
-| | Run retention job now / preview deletions | — (action; dry-run first) | ✔ | `RECORDING_MANAGE` + elevated | `retention.deleted` |
-| | Parquet root, compression, row-group size, partitioning | `ParquetConfig.*` | ✘ (boot) | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | QuestDB batching | `QuestDbConfig.batch_rows`, `.flush_interval_ms`, `.max_pending_batches` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Trigger rebuild job | — (action, §13.6) | ✔ | `RECORDING_MANAGE` | `config.changed` |
-| **Engines & indicators** | Default bar specs | `EngineConfig.default_bar_specs` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Footprint config (imbalance ratio, stack length, aggregation, unfinished-auction rules) | `FootprintConfig` (§4.7) | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Heatmap grid spec (column ms, step, rows, aggregation, depth, trail, scale, clip percentile) | `HeatmapGridSpec` (§6.1) | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Profile developing interval, VA % | `EngineConfig.profile_developing_interval_ms`, `ProfileSpec.value_area_pct` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Max bars in memory, metric cache TTL | `.max_bars_in_memory`, `.metric_cache_ttl_ms` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Heuristic detector thresholds (iceberg, stop-run, absorption, regime) | `MetricDescriptor.params` overrides (§7.1) | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| **Rule engine admin** | Engine on/off, arm-live gate, node editor | `rules.enabled`, `rules.arm_live`, `rules.node_editor` flags | ✔ | `RULES_EDIT` + elevated for `arm_live` | `flag.changed` |
-| | Max armed rules, max data age, evaluation timeout | `RuleEngineConfig.max_armed_rules`, `.max_data_age_ms`, `.default_evaluation_timeout_ms` | ✔ | `RULES_EDIT` | `config.changed` |
-| | Simulation gate (min fires, min hours) | `.min_simulation_fires`, `.min_simulation_hours` | ✔ | `RULES_EDIT` | `config.changed` |
-| | Pause on degraded feed | `.pause_on_feed_degraded` | ✔ | `RULES_EDIT` | `config.changed` |
-| | Kill switch (disarm all rules) | — (action, §11.7) | ✔ | `RULES_EDIT` | `rule.kill_switched` |
-| **Paper trading** | Starting equity | `PaperConfig.starting_equity` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Fill model parameters | `FillModelConfig` (§12.1) | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Divergence check on/off | `.divergence_check_enabled` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Local matcher vs demo-only | `paper.local_matcher` flag | ✔ | `SYSTEM_CONFIG_EDIT` | `flag.changed` |
-| | Demo faucet top-up | — (action, `/v5/account/demo-apply-money`) | ✔ | `ACCOUNT_MANAGE` | `account.updated` |
-| **Feature flags** | Flag list, enable/disable, percentage, variant, overrides, expiry, owner | `FeatureFlag`, `FeatureFlagOverride` | ✔ | `FLAG_MANAGE`; kill-switch flags need elevated | `flag.changed` |
-| **Server & observability** | Bind host/port | `ServerConfig.bind_host`, `.bind_port` | ✘ (boot) | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | WS max connections, send-queue size, slow-consumer policy | `.ws_max_connections`, `.ws_send_queue_size`, `.ws_slow_consumer_policy` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Request timeout, CORS origins, trusted proxies | `.request_timeout_s`, `.cors_origins`, `.trusted_proxies` | ✘ (boot) | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Log level / format | `ObservabilityConfig.log_level`, `.log_format` | ✔ | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | Metrics & tracing toggles, OTLP endpoint, slow-query threshold | `.metrics_enabled`, `.metrics_port`, `.tracing_enabled`, `.otlp_endpoint`, `.slow_query_ms` | ✔ (except ports) | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| | DB pool sizes, statement timeout, `migrate_on_start` | `DatabaseConfig.*` | ✘ (boot) | `SYSTEM_CONFIG_EDIT` | `config.changed` |
-| **Backup & restore** | Create backup, list backups, restore, verify audit hash chain | — (actions) | ✔ | `BACKUP_MANAGE` + elevated for restore | `backup.created`, `backup.restored` |
-| **System health** | Feed health, clock offset, reconcile status, degraded-mode banner, shutdown/restart | read-only + `system.*` actions | ✔ | `SYSTEM_HEALTH_VIEW` | `system.degraded`, `system.shutdown`, `system.startup` |
-| **Audit log viewer** | Filter/search/export audit events | read-only | ✘ | `AUDIT_VIEW` | — (viewing is not audited; exporting is, as `config.changed`-class `audit.exported`) |
+| Admin screen                | Knob (UI label)                                                                              | Backing field / flag                                                                        | Runtime editable | Permission                                     | Audit action                                                                         |
+| --------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ---------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------ |
+| **Users & roles**           | Create/disable user                                                                          | `User` rows                                                                                 | ✔                | `USER_MANAGE`                                  | `user.created`, `user.disabled`                                                      |
+|                             | Assign role                                                                                  | `User.roles`                                                                                | ✔                | `USER_MANAGE`                                  | `user.role_assigned`                                                                 |
+|                             | Require MFA for role                                                                         | `AuthConfig.require_mfa_roles`                                                              | ✔                | `USER_MANAGE`                                  | `config.changed`                                                                     |
+|                             | Session absolute / idle lifetime                                                             | `AuthConfig.session_absolute_hours`, `.session_idle_minutes`                                | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Refresh-token lifetime                                                                       | `AuthConfig.refresh_days`                                                                   | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Step-up (elevated) window                                                                    | `AuthConfig.elevated_minutes`                                                               | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Lockout policy                                                                               | `AuthConfig.max_failed_logins`, `.lockout_minutes`                                          | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Password policy                                                                              | `AuthConfig.password_min_length`                                                            | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Argon2 cost parameters                                                                       | `AuthConfig.argon2_time_cost`, `.argon2_memory_kib`                                         | ✘ (boot)         | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Revoke session                                                                               | — (action)                                                                                  | ✔                | `USER_MANAGE`                                  | `auth.session_revoked`                                                               |
+| **Accounts & API keys**     | Add/disable account                                                                          | `Account` rows                                                                              | ✔                | `ACCOUNT_MANAGE`                               | `account.created`, `account.disabled`                                                |
+|                             | Environment for account                                                                      | `Account.environment` + `environment_allowlist`                                             | ✔                | `ACCOUNT_MANAGE`                               | `account.updated`                                                                    |
+|                             | Add/rotate/revoke API key                                                                    | key vault handle (`AccountRef.key_ref`)                                                     | ✔                | `APIKEY_MANAGE` + elevated                     | `apikey.added`, `apikey.rotated`, `apikey.revoked`                                   |
+|                             | Key permission verification                                                                  | — (action; asserts read/trade scopes, no withdrawal scope)                                  | ✔                | `APIKEY_MANAGE`                                | `apikey.verify_failed` on failure                                                    |
+|                             | IP allowlist reminder                                                                        | display only (Bybit-side setting)                                                           | n/a              | `ACCOUNT_MANAGE`                               | —                                                                                    |
+|                             | Per-account profile (sizing, leverage, offsets)                                              | `AccountProfile` (§9.2)                                                                     | ✔                | `PROFILE_EDIT`                                 | `profile.updated`                                                                    |
+| **Risk caps**               | Daily loss cap, max open positions, max notional, symbol allowlist, per-symbol cap           | `RiskCaps` (§9.2)                                                                           | ✔                | `RISK_CAP_EDIT` + elevated                     | `risk_cap.changed`                                                                   |
+|                             | Fallback SL offset                                                                           | `AccountProfile.fallback_sl_offset`                                                         | ✔                | `RISK_CAP_EDIT`                                | `profile.updated`                                                                    |
+|                             | Panic / flatten-all                                                                          | — (action)                                                                                  | ✔                | `PANIC_FLATTEN` + elevated                     | `panic.flatten_all`                                                                  |
+| **Exchange & connectivity** | REST/WS base URLs (regional host)                                                            | `ExchangeConfig.rest_base_url`, `.ws_public_url`, `.ws_private_url`, `.ws_trade_url`        | ✘ (boot)         | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | `recv_window_ms`                                                                             | `ExchangeConfig.recv_window_ms`                                                             | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Clock-check interval / block threshold                                                       | `.clock_check_interval_s`, `.clock_block_threshold_ms`                                      | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | WS ping interval, reconnect backoff bounds                                                   | `.ws_ping_interval_s`, `.ws_reconnect_base_ms`, `.ws_reconnect_max_ms`                      | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | HTTP timeout / retries                                                                       | `.http_timeout_s`, `.http_max_retries`                                                      | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Capability matrix (read-only view)                                                           | `ExchangeCapabilities` (§14.3)                                                              | ✘                | `SYSTEM_HEALTH_VIEW`                           | —                                                                                    |
+| **OMS & rate limits**       | Reconcile interval, unknown-alert delay                                                      | `OmsConfig.reconcile_interval_s`, `.unknown_alert_after_s`                                  | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Protective reserve tokens / reserve fraction                                                 | `RateBudget.reserved_for_protective`, `.reserve_fraction`                                   | ✔                | `RISK_CAP_EDIT`                                | `config.changed`                                                                     |
+|                             | Native-SL deadline & watchdog interval                                                       | `OmsConfig.native_sl_deadline_ms`, `.native_sl_watchdog_interval_s`                         | ✔                | `RISK_CAP_EDIT`                                | `config.changed`                                                                     |
+|                             | Max algo children                                                                            | `OmsConfig.max_algo_children`                                                               | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Unwind deadline                                                                              | `unwind_deadline_ms` (§9.5.1)                                                               | ✔                | `RISK_CAP_EDIT`                                | `config.changed`                                                                     |
+|                             | Force reconcile now                                                                          | — (action)                                                                                  | ✔                | `SYSTEM_CONFIG_EDIT`                           | `oms.reconcile`                                                                      |
+| **Recording & storage**     | Recorder on/off                                                                              | `recorder.enabled` flag                                                                     | ✔                | `RECORDING_MANAGE`                             | `recording.started`, `recording.stopped`                                             |
+|                             | Auto-record on chart open                                                                    | `recorder.auto_record_on_chart_open` flag                                                   | ✔                | `RECORDING_MANAGE`                             | `flag.changed`                                                                       |
+|                             | Per-symbol recording policy (streams, depth, retention)                                      | `RecordingPolicy` (§13.1)                                                                   | ✔                | `RECORDING_MANAGE`                             | `recording.started`                                                                  |
+|                             | Default retention days                                                                       | `RecorderConfig.default_retention_days`                                                     | ✔                | `RECORDING_MANAGE`                             | `config.changed`                                                                     |
+|                             | Raw-frame retention                                                                          | `.raw_frame_retention_days`                                                                 | ✔                | `RECORDING_MANAGE`                             | `config.changed`                                                                     |
+|                             | Book depth default                                                                           | `.default_book_depth`                                                                       | ✔                | `RECORDING_MANAGE`                             | `config.changed`                                                                     |
+|                             | Snapshot interval, linger window                                                             | `.snapshot_interval_s`, `.linger_minutes`                                                   | ✔                | `RECORDING_MANAGE`                             | `config.changed`                                                                     |
+|                             | Ring-buffer size, critical streams                                                           | `.ring_buffer_size`, `.critical_streams`                                                    | ✘ (boot)         | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Min free disk %                                                                              | `.min_free_disk_pct`                                                                        | ✔                | `RECORDING_MANAGE`                             | `config.changed`                                                                     |
+|                             | Run retention job now / preview deletions                                                    | — (action; dry-run first)                                                                   | ✔                | `RECORDING_MANAGE` + elevated                  | `retention.deleted`                                                                  |
+|                             | Parquet root, compression, row-group size, partitioning                                      | `ParquetConfig.*`                                                                           | ✘ (boot)         | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | QuestDB batching                                                                             | `QuestDbConfig.batch_rows`, `.flush_interval_ms`, `.max_pending_batches`                    | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Trigger rebuild job                                                                          | — (action, §13.6)                                                                           | ✔                | `RECORDING_MANAGE`                             | `config.changed`                                                                     |
+| **Engines & indicators**    | Default bar specs                                                                            | `EngineConfig.default_bar_specs`                                                            | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Footprint config (imbalance ratio, stack length, aggregation, unfinished-auction rules)      | `FootprintConfig` (§4.7)                                                                    | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Heatmap grid spec (column ms, step, rows, aggregation, depth, trail, scale, clip percentile) | `HeatmapGridSpec` (§6.1)                                                                    | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Profile developing interval, VA %                                                            | `EngineConfig.profile_developing_interval_ms`, `ProfileSpec.value_area_pct`                 | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Max bars in memory, metric cache TTL                                                         | `.max_bars_in_memory`, `.metric_cache_ttl_ms`                                               | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Heuristic detector thresholds (iceberg, stop-run, absorption, regime)                        | `MetricDescriptor.params` overrides (§7.1)                                                  | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+| **Rule engine admin**       | Engine on/off, arm-live gate, node editor                                                    | `rules.enabled`, `rules.arm_live`, `rules.node_editor` flags                                | ✔                | `RULES_EDIT` + elevated for `arm_live`         | `flag.changed`                                                                       |
+|                             | Max armed rules, max data age, evaluation timeout                                            | `RuleEngineConfig.max_armed_rules`, `.max_data_age_ms`, `.default_evaluation_timeout_ms`    | ✔                | `RULES_EDIT`                                   | `config.changed`                                                                     |
+|                             | Simulation gate (min fires, min hours)                                                       | `.min_simulation_fires`, `.min_simulation_hours`                                            | ✔                | `RULES_EDIT`                                   | `config.changed`                                                                     |
+|                             | Pause on degraded feed                                                                       | `.pause_on_feed_degraded`                                                                   | ✔                | `RULES_EDIT`                                   | `config.changed`                                                                     |
+|                             | Kill switch (disarm all rules)                                                               | — (action, §11.7)                                                                           | ✔                | `RULES_EDIT`                                   | `rule.kill_switched`                                                                 |
+| **Paper trading**           | Starting equity                                                                              | `PaperConfig.starting_equity`                                                               | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Fill model parameters                                                                        | `FillModelConfig` (§12.1)                                                                   | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Divergence check on/off                                                                      | `.divergence_check_enabled`                                                                 | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Local matcher vs demo-only                                                                   | `paper.local_matcher` flag                                                                  | ✔                | `SYSTEM_CONFIG_EDIT`                           | `flag.changed`                                                                       |
+|                             | Demo faucet top-up                                                                           | — (action, `/v5/account/demo-apply-money`)                                                  | ✔                | `ACCOUNT_MANAGE`                               | `account.updated`                                                                    |
+| **Feature flags**           | Flag list, enable/disable, percentage, variant, overrides, expiry, owner                     | `FeatureFlag`, `FeatureFlagOverride`                                                        | ✔                | `FLAG_MANAGE`; kill-switch flags need elevated | `flag.changed`                                                                       |
+| **Server & observability**  | Bind host/port                                                                               | `ServerConfig.bind_host`, `.bind_port`                                                      | ✘ (boot)         | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | WS max connections, send-queue size, slow-consumer policy                                    | `.ws_max_connections`, `.ws_send_queue_size`, `.ws_slow_consumer_policy`                    | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Request timeout, CORS origins, trusted proxies                                               | `.request_timeout_s`, `.cors_origins`, `.trusted_proxies`                                   | ✘ (boot)         | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Log level / format                                                                           | `ObservabilityConfig.log_level`, `.log_format`                                              | ✔                | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | Metrics & tracing toggles, OTLP endpoint, slow-query threshold                               | `.metrics_enabled`, `.metrics_port`, `.tracing_enabled`, `.otlp_endpoint`, `.slow_query_ms` | ✔ (except ports) | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+|                             | DB pool sizes, statement timeout, `migrate_on_start`                                         | `DatabaseConfig.*`                                                                          | ✘ (boot)         | `SYSTEM_CONFIG_EDIT`                           | `config.changed`                                                                     |
+| **Backup & restore**        | Create backup, list backups, restore, verify audit hash chain                                | — (actions)                                                                                 | ✔                | `BACKUP_MANAGE` + elevated for restore         | `backup.created`, `backup.restored`                                                  |
+| **System health**           | Feed health, clock offset, reconcile status, degraded-mode banner, shutdown/restart          | read-only + `system.*` actions                                                              | ✔                | `SYSTEM_HEALTH_VIEW`                           | `system.degraded`, `system.shutdown`, `system.startup`                               |
+| **Audit log viewer**        | Filter/search/export audit events                                                            | read-only                                                                                   | ✘                | `AUDIT_VIEW`                                   | — (viewing is not audited; exporting is, as `config.changed`-class `audit.exported`) |
 
 **Runtime-editable rule.** A field is runtime editable only if its model declares `json_schema_extra={"runtime_editable": True}`; the admin UI is generated from that metadata, so a field that is not marked cannot be edited at runtime even if someone adds a form control. Boot-only fields are shown read-only with an explanatory "requires restart" badge. A CI test asserts the set of `runtime_editable` fields exactly equals the ✔ rows above.
 
@@ -3498,15 +3645,15 @@ The owner/admin screens live **inside the web app** (no separate admin applicati
 
 ### 17.1 Versioning
 
-| Artefact | Version field | Compatibility rule |
-|---|---|---|
-| Bus events | `schema_version` | Additive fields bump minor and require a default; removals/renames bump `schema_version` and need a migration note |
-| Rule IR | `ir_version` | An IR upgrade ships a migration function `upgrade_v{n}_to_v{n+1}` plus a golden-file test per historical rule shape |
-| WS protocol | `protocol_version` (in `23-ws-protocol.md`) | Client and server negotiate at handshake; mismatch ⇒ explicit error, never best-effort |
-| REST API | URL `/api/v1` | Breaking changes ⇒ `/api/v2`; `v1` is supported for one release after `v2` ships |
-| Persisted aggregates | `algo_version` on footprint/profile rows | A bump triggers a rebuild job (§13.6) |
+| Artefact                      | Version field                                                       | Compatibility rule                                                                                                                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bus events                    | `schema_version`                                                    | Additive fields bump minor and require a default; removals/renames bump `schema_version` and need a migration note                                                                                   |
+| Rule IR                       | `ir_version`                                                        | An IR upgrade ships a migration function `upgrade_v{n}_to_v{n+1}` plus a golden-file test per historical rule shape                                                                                  |
+| WS protocol                   | `protocol_version` (in `23-ws-protocol.md`)                         | Client and server negotiate at handshake; mismatch ⇒ explicit error, never best-effort                                                                                                               |
+| REST API                      | URL `/api/v1`                                                       | Breaking changes ⇒ `/api/v2`; `v1` is supported for one release after `v2` ships                                                                                                                     |
+| Persisted aggregates          | `algo_version` on footprint/profile rows                            | A bump triggers a rebuild job (§13.6)                                                                                                                                                                |
 | Statechart charts / snapshots | `machine_hash`, `cv_schema_version`, `lib_snapshot_ver ≥ 3` (§17.6) | Chart change ⇒ version bump + registered upcaster + golden-snapshot test (MUST-12); runtime pinned `xstate-statemachine==0.9.1` exactly, bumped only after `run_gate.py` + contract suite (ADR-0016) |
-| Instrument metadata | `metadata_version` | A bump invalidates dependent caches |
+| Instrument metadata           | `metadata_version`                                                  | A bump invalidates dependent caches                                                                                                                                                                  |
 
 ### 17.2 Source of truth and code generation
 
@@ -3524,43 +3671,43 @@ A CI job regenerates all three and fails on any diff, so drift between this docu
 
 ### 17.4 Lint rules (CI-enforced)
 
-| Rule | Check |
-|---|---|
-| L1 | No Bybit field name (`orderLinkId`, `retCode`, `positionIdx`, `triggerBy`, …) outside `candleviewer/exchange/bybit/` |
-| L2 | No `if exchange ==` / `if environment ==` outside the adapter package — use `ExchangeCapabilities` |
-| L3 | No `float` annotation on any model field in `domain/oms.py`, `domain/accounting.py`, `domain/trade_group.py` |
-| L4 | Every `BaseModel` in `domain/` sets `extra="forbid"` |
-| L5 | No `eval`/`exec`/`compile` anywhere in the rule-engine package |
-| L6 | `LiquidationEvent.side` is read only inside the adapter; consumers use `liquidated_side` |
-| L7 | Every `Optional` field in `domain/` has a docstring or comment stating when it is `None` |
-| L8 | Every registered feature flag has an `owner`; temporary flags have `expires_at` |
+| Rule | Check                                                                                                                |
+| ---- | -------------------------------------------------------------------------------------------------------------------- |
+| L1   | No Bybit field name (`orderLinkId`, `retCode`, `positionIdx`, `triggerBy`, …) outside `candleviewer/exchange/bybit/` |
+| L2   | No `if exchange ==` / `if environment ==` outside the adapter package — use `ExchangeCapabilities`                   |
+| L3   | No `float` annotation on any model field in `domain/oms.py`, `domain/accounting.py`, `domain/trade_group.py`         |
+| L4   | Every `BaseModel` in `domain/` sets `extra="forbid"`                                                                 |
+| L5   | No `eval`/`exec`/`compile` anywhere in the rule-engine package                                                       |
+| L6   | `LiquidationEvent.side` is read only inside the adapter; consumers use `liquidated_side`                             |
+| L7   | Every `Optional` field in `domain/` has a docstring or comment stating when it is `None`                             |
+| L8   | Every registered feature flag has an `owner`; temporary flags have `expires_at`                                      |
 
 ### 17.5 Test obligations
 
-| Area | Obligation |
-|---|---|
-| Mapping | Contract tests for every Bybit payload → internal event, using recorded fixtures including malformed, partial and delta-ticker cases |
-| Bar builders | Property tests for BI-1…BI-6 (§3.4) over ≥1 M synthetic trades plus a recorded-day golden file |
-| Footprint | Unit tests for zero-denominator, edge levels, stacked gaps, unfinished auction, POC ties; golden file for a recorded hour |
-| Profile | VA algorithm tested in both `single_step` and `two_row_tpo` modes against a shared fixture |
-| OMS | Exhaustive state-transition matrix; chaos tests (kill mid-submit, drop private WS 60 s, inject 10002/10018, duplicate acks, out-of-order fills, reconnect storm) proving no duplicate position and no unmanaged order |
-| Idempotency | Property test: any retry schedule of the same logical order yields exactly one exchange order |
-| Trade groups | Sizing property tests per mode; all three leg-failure policies including unwind failure; partial-fill-as-success |
-| Unwind (§9.5.1) | Restart-mid-unwind resume test; per-account ordering assertion (cancel before close); concurrent unwind across 5 accounts with injected asymmetric latency and one rate-limited UID; fill-arrives-during-unwind; qty-drift adoption; deadline-exceeded → `incomplete` + SL still attached |
-| Metric coverage | CI test asserting every metric named in §7.2.1 exists in `MetricRegistry` with the declared confidence, and every Deep-Stats row label maps to a registered descriptor |
-| Environment behaviour | Reconciliation tests per environment from the `ReconCapabilities` matrix (§14.3), including demo 7-day history expiry and testnet `auto_remediate=False` |
-| Admin config | Test asserting the set of `runtime_editable` fields equals the ✔ rows of §16.3, and that every admin knob has a permission and an audit action in the closed vocabulary (§15.5) |
-| Algos | Deterministic simulation tests per algo including the chase self-chasing regression and OCO double-fill race |
-| Rule engine | IR round-trip (form↔graph) fuzz; evaluation determinism; every safety limit has a test that proves it blocks; kill-switch test |
-| Paper matcher | Queue-position unit tests; nightly divergence check vs demo fills (§12.5) |
-| Recorder/replay | Golden-file replay equality for bars, footprint, profile and deterministic metrics; seek-time performance gate ≤2 s |
-| Security | Redaction test over every secret-ish key name; audit hash-chain tamper test; RBAC matrix test covering every permission × role |
-| Statecharts | `tests/xstate_contract/` (blocking, <60 s): every B1–B20 chart built through `cv.statechart.factory` on the pinned library; golden state/action traces; drain→journal→snapshot→restore→replay-once round-trip (CV-C65′); `chain_trips`/`dropped_receipts` supervision; the four 2026-09-24 chart corrections (B8, B11, B16, B18) |
-| Coverage | ≥85 % line coverage on `domain/`, `oms/`, `rules/`, `engines/`, `exchange/` |
+| Area                  | Obligation                                                                                                                                                                                                                                                                                                                       |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mapping               | Contract tests for every Bybit payload → internal event, using recorded fixtures including malformed, partial and delta-ticker cases                                                                                                                                                                                             |
+| Bar builders          | Property tests for BI-1…BI-6 (§3.4) over ≥1 M synthetic trades plus a recorded-day golden file                                                                                                                                                                                                                                   |
+| Footprint             | Unit tests for zero-denominator, edge levels, stacked gaps, unfinished auction, POC ties; golden file for a recorded hour                                                                                                                                                                                                        |
+| Profile               | VA algorithm tested in both `single_step` and `two_row_tpo` modes against a shared fixture                                                                                                                                                                                                                                       |
+| OMS                   | Exhaustive state-transition matrix; chaos tests (kill mid-submit, drop private WS 60 s, inject 10002/10018, duplicate acks, out-of-order fills, reconnect storm) proving no duplicate position and no unmanaged order                                                                                                            |
+| Idempotency           | Property test: any retry schedule of the same logical order yields exactly one exchange order                                                                                                                                                                                                                                    |
+| Trade groups          | Sizing property tests per mode; all three leg-failure policies including unwind failure; partial-fill-as-success                                                                                                                                                                                                                 |
+| Unwind (§9.5.1)       | Restart-mid-unwind resume test; per-account ordering assertion (cancel before close); concurrent unwind across 5 accounts with injected asymmetric latency and one rate-limited UID; fill-arrives-during-unwind; qty-drift adoption; deadline-exceeded → `incomplete` + SL still attached                                        |
+| Metric coverage       | CI test asserting every metric named in §7.2.1 exists in `MetricRegistry` with the declared confidence, and every Deep-Stats row label maps to a registered descriptor                                                                                                                                                           |
+| Environment behaviour | Reconciliation tests per environment from the `ReconCapabilities` matrix (§14.3), including demo 7-day history expiry and testnet `auto_remediate=False`                                                                                                                                                                         |
+| Admin config          | Test asserting the set of `runtime_editable` fields equals the ✔ rows of §16.3, and that every admin knob has a permission and an audit action in the closed vocabulary (§15.5)                                                                                                                                                  |
+| Algos                 | Deterministic simulation tests per algo including the chase self-chasing regression and OCO double-fill race                                                                                                                                                                                                                     |
+| Rule engine           | IR round-trip (form↔graph) fuzz; evaluation determinism; every safety limit has a test that proves it blocks; kill-switch test                                                                                                                                                                                                   |
+| Paper matcher         | Queue-position unit tests; nightly divergence check vs demo fills (§12.5)                                                                                                                                                                                                                                                        |
+| Recorder/replay       | Golden-file replay equality for bars, footprint, profile and deterministic metrics; seek-time performance gate ≤2 s                                                                                                                                                                                                              |
+| Security              | Redaction test over every secret-ish key name; audit hash-chain tamper test; RBAC matrix test covering every permission × role                                                                                                                                                                                                   |
+| Statecharts           | `tests/xstate_contract/` (blocking, <60 s): every B1–B20 chart built through `cv.statechart.factory` on the pinned library; golden state/action traces; drain→journal→snapshot→restore→replay-once round-trip (CV-C65′); `chain_trips`/`dropped_receipts` supervision; the four 2026-09-24 chart corrections (B8, B11, B16, B18) |
+| Coverage              | ≥85 % line coverage on `domain/`, `oms/`, `rules/`, `engines/`, `exchange/`                                                                                                                                                                                                                                                      |
 
 ### 17.6 Statechart runtime persistence and exposure (`xstate-statemachine==0.9.1`)
 
-*Added 2026-09-24, when ADR-0016 was Accepted.* Every catalogue lifecycle (B1–B20, `28-statechart-catalogue.md`) runs on the pinned library through `cv.statechart.factory`. There is no shim. This section owns the persisted and published shapes the runtime produces. Behaviour is owned by `28`, and the component design by `20` §4.4 and `29` §1.
+_Added 2026-09-24, when ADR-0016 was Accepted._ Every catalogue lifecycle (B1–B20, `28-statechart-catalogue.md`) runs on the pinned library through `cv.statechart.factory`. There is no shim. This section owns the persisted and published shapes the runtime produces. Behaviour is owned by `28`, and the component design by `20` §4.4 and `29` §1.
 
 **Tables** (migration `E29-T12`):
 
@@ -3608,16 +3755,16 @@ A context carrying `_fault` is never written to `machine_snapshots`. Instead a q
 
 **WS projection, topic `machines.{entity}.state`** (owned here; framed per `23-ws-protocol.md`). It is published by the machine **on state entry** and is never produced by querying an interpreter (MUSTNOT-03):
 
-| Field | Type | Notes |
-|---|---|---|
-| `machine_kind` | string enum | catalogue `id` |
-| `entity_id` | uuid | RBAC-scoped per entity |
-| `state_ids` | string[] | active leaf configuration |
-| `tags` | string[] | e.g. `protected`, `naked`, `trading_blocked`, `critical` |
-| `published_enum` | string | the plain enum the owning section exposes (e.g. `OrderStatus`) |
-| `degraded` | bool | `chain_trips > 0` latch |
-| `machine_hash` | string | lets clients and the admin inspector match the Stately JSON |
-| `seq` | int | monotonic per entity; snapshot + delta semantics |
+| Field            | Type        | Notes                                                          |
+| ---------------- | ----------- | -------------------------------------------------------------- |
+| `machine_kind`   | string enum | catalogue `id`                                                 |
+| `entity_id`      | uuid        | RBAC-scoped per entity                                         |
+| `state_ids`      | string[]    | active leaf configuration                                      |
+| `tags`           | string[]    | e.g. `protected`, `naked`, `trading_blocked`, `critical`       |
+| `published_enum` | string      | the plain enum the owning section exposes (e.g. `OrderStatus`) |
+| `degraded`       | bool        | `chain_trips > 0` latch                                        |
+| `machine_hash`   | string      | lets clients and the admin inspector match the Stately JSON    |
+| `seq`            | int         | monotonic per entity; snapshot + delta semantics               |
 
 **Versioning.** `machine_hash` is fixed per chart. Changing a chart without a version bump and a registered upcaster with a golden-snapshot test fails CI (MUST-12). A no-op upcaster is forbidden (MUSTNOT-09). The library version is pinned exactly: a snapshot whose `lib_snapshot_ver` is below 3 is refused at restore.
 
@@ -3625,25 +3772,25 @@ A context carrying `_fault` is never written to `machine_snapshots`. Instead a q
 
 ## 18. Traceability matrix
 
-| Section | Owner decision / research source | Downstream consumers |
-|---|---|---|
-| §1 conventions | research 11 §2.5 (clock, precision) | all |
-| §2 market events | research 06 §4/§9, 08 §2–§9, 11 §2.1 | 21 §3 (QuestDB), 23 (WS topics), 26 (renderer) |
-| §3 bar builders | research 08 §2, 11 §3 (Nautilus aggregation) | 26 §3.3, rule engine `on_bar_close` |
-| §4 footprint | research 08 §3, 05 (DeepCharts) | 26 §4, 14-screens (footprint chart), rule metrics |
-| §5 profiles | research 08 §4–§5 | 26 §4, 14-screens (profile panels) |
-| §6 heatmap | research 05, 08 §11.3, owner decision #10 (green=bid) | 26 §3.8, DOM screens |
-| §7 metrics | research 08 §2–§17 (all), 09 §6b/§7, 23 §2 (Deep-Stats rows), 23 §9 (imbalance tracker), 23 §10 (market regime) | rule engine, alerts, journal, indicators UI |
-| §8 OMS | ADR-0006, research 06 §5/§11/§13/§19 | 21 (orders/executions), 22 (REST), 23 (oms topics) |
-| §9 trade groups | owner decision #5, research 09 §10 | 14-screens (ticket, group view), 21 (trade_groups) |
-| §10 algos | research 09 §2/§6 | ticket UI, rule actions |
-| §11 rule engine | owner decision #11, research 09 §4/§7 | both editors, 22 `/rules`, journal tags |
-| §12 paper matcher | research 09 §9 (NautilusTrader FillModel), 06 §2 (demo) | replay, rule simulation, journal |
-| §13 recorder/replay | owner decision #4, research 08 §1, 06 §15, 11 §3 | 21 (retention), admin storage screen, replay UI |
-| §14 adapter | 20-architecture §9, research 06 all, 11 §2 | OMS, ingestion, paper/live parity |
-| §15 auth/RBAC/audit | research 09 §10, brief (RBAC, append-only audit) | 21 (users/audit), admin screens, 04-security-program |
-| §16 config/flags | brief (release gates), 20-architecture §7, 23 §20–§21 (env switcher, admin screens) | deployment, admin screens, 07-release-and-prr |
-| §17 governance | brief (SDLC, testing strategy) | CI, 03-testing-strategy |
+| Section             | Owner decision / research source                                                                                | Downstream consumers                                 |
+| ------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| §1 conventions      | research 11 §2.5 (clock, precision)                                                                             | all                                                  |
+| §2 market events    | research 06 §4/§9, 08 §2–§9, 11 §2.1                                                                            | 21 §3 (QuestDB), 23 (WS topics), 26 (renderer)       |
+| §3 bar builders     | research 08 §2, 11 §3 (Nautilus aggregation)                                                                    | 26 §3.3, rule engine `on_bar_close`                  |
+| §4 footprint        | research 08 §3, 05 (DeepCharts)                                                                                 | 26 §4, 14-screens (footprint chart), rule metrics    |
+| §5 profiles         | research 08 §4–§5                                                                                               | 26 §4, 14-screens (profile panels)                   |
+| §6 heatmap          | research 05, 08 §11.3, owner decision #10 (green=bid)                                                           | 26 §3.8, DOM screens                                 |
+| §7 metrics          | research 08 §2–§17 (all), 09 §6b/§7, 23 §2 (Deep-Stats rows), 23 §9 (imbalance tracker), 23 §10 (market regime) | rule engine, alerts, journal, indicators UI          |
+| §8 OMS              | ADR-0006, research 06 §5/§11/§13/§19                                                                            | 21 (orders/executions), 22 (REST), 23 (oms topics)   |
+| §9 trade groups     | owner decision #5, research 09 §10                                                                              | 14-screens (ticket, group view), 21 (trade_groups)   |
+| §10 algos           | research 09 §2/§6                                                                                               | ticket UI, rule actions                              |
+| §11 rule engine     | owner decision #11, research 09 §4/§7                                                                           | both editors, 22 `/rules`, journal tags              |
+| §12 paper matcher   | research 09 §9 (NautilusTrader FillModel), 06 §2 (demo)                                                         | replay, rule simulation, journal                     |
+| §13 recorder/replay | owner decision #4, research 08 §1, 06 §15, 11 §3                                                                | 21 (retention), admin storage screen, replay UI      |
+| §14 adapter         | 20-architecture §9, research 06 all, 11 §2                                                                      | OMS, ingestion, paper/live parity                    |
+| §15 auth/RBAC/audit | research 09 §10, brief (RBAC, append-only audit)                                                                | 21 (users/audit), admin screens, 04-security-program |
+| §16 config/flags    | brief (release gates), 20-architecture §7, 23 §20–§21 (env switcher, admin screens)                             | deployment, admin screens, 07-release-and-prr        |
+| §17 governance      | brief (SDLC, testing strategy)                                                                                  | CI, 03-testing-strategy                              |
 
 ### Explicitly out of scope for v1 (stated so no one designs against it)
 
@@ -3661,14 +3808,14 @@ Every change below is a **contract change**: it alters a name, a shape or an enu
 
 The pass had to resolve the same concept being defined in several places. The following ownership rules are now binding; when two documents disagree, the owner wins and the other is regenerated.
 
-| Concern | Canonical source | Consumers |
-|---|---|---|
-| REST operations, paths, request/response shapes | `22-api-openapi.yaml` | 14 (screens), backend routers, generated TS/Python clients |
-| RBAC permission vocabulary (36 strings) and scope semantics | `22-api-openapi.yaml` `x-rbac` | 04 §7.2, 21 §10.1 seed, 24 §15.2 enum |
-| WS topics, options, framing, sequencing | `23-ws-protocol.md` §6 | 14 §0.4, chart engine, frontend stores |
-| Relational storage, column names, PG enums | `21-database-schema.md` | 22 schemas (via `x-db-enum`), 24 models |
-| Domain models, rule IR, OMS state machine, metric registry | `24-internal-schemas.md` | 22 (projection), rule editors, engine |
-| Error-code slugs | `22-api-openapi.yaml` `x-error-codes` | 23 §10.2 (partition of the same registry) |
+| Concern                                                     | Canonical source                      | Consumers                                                  |
+| ----------------------------------------------------------- | ------------------------------------- | ---------------------------------------------------------- |
+| REST operations, paths, request/response shapes             | `22-api-openapi.yaml`                 | 14 (screens), backend routers, generated TS/Python clients |
+| RBAC permission vocabulary (36 strings) and scope semantics | `22-api-openapi.yaml` `x-rbac`        | 04 §7.2, 21 §10.1 seed, 24 §15.2 enum                      |
+| WS topics, options, framing, sequencing                     | `23-ws-protocol.md` §6                | 14 §0.4, chart engine, frontend stores                     |
+| Relational storage, column names, PG enums                  | `21-database-schema.md`               | 22 schemas (via `x-db-enum`), 24 models                    |
+| Domain models, rule IR, OMS state machine, metric registry  | `24-internal-schemas.md`              | 22 (projection), rule editors, engine                      |
+| Error-code slugs                                            | `22-api-openapi.yaml` `x-error-codes` | 23 §10.2 (partition of the same registry)                  |
 
 ### 19.2 REST endpoint coverage (14 ↔ 22)
 
@@ -3676,38 +3823,38 @@ The pass had to resolve the same concept being defined in several places. The fo
 
 **Operations added to `22-api-openapi.yaml`** because the screens genuinely needed them and no equivalent existed:
 
-| Area | Added operations |
-|---|---|
-| Session identity | `getMe`, `getMyPreferences`, `updateMyPreferences`, `listMySessions`, `revokeMySession`, `getMyLimits`, `getMyKeymap` |
-| Auth | `authStepUp`, `authMfaRecovery` |
-| Onboarding | `getOnboardingChecklist`, `completeOnboarding`, `getInvite`, `setSessionEnvironment` |
-| Notifications | `listNotifications` |
-| Market selection | `listWatchlists`, `createWatchlist`, `updateWatchlist`, `deleteWatchlist`, `runScanner`, `listIndicators`, `listLayoutPresets`, `exportWorkspace` |
-| Trading transparency | `getOrderDiagnostics`, `previewTradeGroup`, `getRiskSummary`, `overrideRiskLockout` |
-| Order-flow transparency | `getDetectorConfig`, `setDetectorConfig`, `getDetectorMethodology`, `explainRegime`, `recomputeFootprint` |
-| Rules | `getRuleVocabulary`, `compileRule` |
-| Journal | `getJournalTradeContext` |
-| Admin | `getBuildInfo`, `getAdminOverview`, `getCapacity`, `listIncidents`, `getSecuritySummary`, `compactRecorder`, `purgeRecordedData`, `restoreBackup` |
+| Area                    | Added operations                                                                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Session identity        | `getMe`, `getMyPreferences`, `updateMyPreferences`, `listMySessions`, `revokeMySession`, `getMyLimits`, `getMyKeymap`                             |
+| Auth                    | `authStepUp`, `authMfaRecovery`                                                                                                                   |
+| Onboarding              | `getOnboardingChecklist`, `completeOnboarding`, `getInvite`, `setSessionEnvironment`                                                              |
+| Notifications           | `listNotifications`                                                                                                                               |
+| Market selection        | `listWatchlists`, `createWatchlist`, `updateWatchlist`, `deleteWatchlist`, `runScanner`, `listIndicators`, `listLayoutPresets`, `exportWorkspace` |
+| Trading transparency    | `getOrderDiagnostics`, `previewTradeGroup`, `getRiskSummary`, `overrideRiskLockout`                                                               |
+| Order-flow transparency | `getDetectorConfig`, `setDetectorConfig`, `getDetectorMethodology`, `explainRegime`, `recomputeFootprint`                                         |
+| Rules                   | `getRuleVocabulary`, `compileRule`                                                                                                                |
+| Journal                 | `getJournalTradeContext`                                                                                                                          |
+| Admin                   | `getBuildInfo`, `getAdminOverview`, `getCapacity`, `listIncidents`, `getSecuritySummary`, `compactRecorder`, `purgeRecordedData`, `restoreBackup` |
 
 **New component schemas** backing these: `Me`, `EffectiveLimits`, `OnboardingChecklist`, `Notification`, `Watchlist`, `WatchlistInput`, `ScannerRow`, `IndicatorDescriptor`, `LayoutPreset`, `WorkspaceBundle`, `OrderDiagnostics`, `TradeGroupPreview`, `RiskSummary`, `DetectorConfig`, `DetectorMethodology`, `RegimeExplanation`, `RuleVocabulary`, `JournalTradeContext`, `BuildInfo`, `AdminOverview`, `CapacityReport`, `Incident`, `SecuritySummary`.
 
 **71 references in `14-screens-catalogue.md` were rewritten** to the canonical spelling. These were aliases, not gaps — the screens had invented a parallel URL vocabulary. Representative corrections:
 
-| Doc 14 used | Canonical |
-|---|---|
+| Doc 14 used                                                                                      | Canonical                                                                                                                                |
+| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `/bars`, `/footprint`, `/profile`, `/cvd`, `/open-interest`, `/funding-history`, `/trades/stats` | `/market/bars`, `/market/footprint`, `/market/profile`, `/market/metrics`, `/market/open-interest`, `/market/funding`, `/market/metrics` |
-| `/symbols` | `/instruments` |
-| `/fills` | `/executions` |
-| `/accounts`, `/admin/accounts` | `/exchange-accounts` |
-| `/admin/users`, `/admin/users/{id}/assignments` | `/users`, `/users/{userId}/account-access` |
-| `/admin/flags`, `/features` | `/admin/feature-flags` |
-| `/audit`, `/system/health` | `/admin/audit`, `/admin/health` |
-| `/admin/recorder*`, `/recorder/symbols` | `/recording/*`, `/admin/recorder/*` |
-| `/algos`, `/algos/twap`, `/algos/scaled` | `/orders` with an `algo` block |
-| `/risk/freeze` | `/trading/kill-switch` |
-| `/positions/{symbol}:flatten`, `/positions/{id}/trading-stop`, `/positions/{id}/tp-ladder` | `/positions/{positionId}/close`, `/positions/{positionId}/tpsl` |
-| `/rules/{id}/fires`, `/rules/{id}/events`, `/rules/{id}/arm` | `/rules/{ruleId}/runs`, `/rules/runs/{runId}/events`, `/rules/{ruleId}/mode` |
-| colon-suffix verb forms (`:purge`, `:restore`, `:run`, `:apply-preset`) | path segments (`/purge`, `/restore`, …) |
+| `/symbols`                                                                                       | `/instruments`                                                                                                                           |
+| `/fills`                                                                                         | `/executions`                                                                                                                            |
+| `/accounts`, `/admin/accounts`                                                                   | `/exchange-accounts`                                                                                                                     |
+| `/admin/users`, `/admin/users/{id}/assignments`                                                  | `/users`, `/users/{userId}/account-access`                                                                                               |
+| `/admin/flags`, `/features`                                                                      | `/admin/feature-flags`                                                                                                                   |
+| `/audit`, `/system/health`                                                                       | `/admin/audit`, `/admin/health`                                                                                                          |
+| `/admin/recorder*`, `/recorder/symbols`                                                          | `/recording/*`, `/admin/recorder/*`                                                                                                      |
+| `/algos`, `/algos/twap`, `/algos/scaled`                                                         | `/orders` with an `algo` block                                                                                                           |
+| `/risk/freeze`                                                                                   | `/trading/kill-switch`                                                                                                                   |
+| `/positions/{symbol}:flatten`, `/positions/{id}/trading-stop`, `/positions/{id}/tp-ladder`       | `/positions/{positionId}/close`, `/positions/{positionId}/tpsl`                                                                          |
+| `/rules/{id}/fires`, `/rules/{id}/events`, `/rules/{id}/arm`                                     | `/rules/{ruleId}/runs`, `/rules/runs/{runId}/events`, `/rules/{ruleId}/mode`                                                             |
+| colon-suffix verb forms (`:purge`, `:restore`, `:run`, `:apply-preset`)                          | path segments (`/purge`, `/restore`, …)                                                                                                  |
 
 Nine verb corrections were also applied where doc 14 named the wrong method (e.g. `POST /auth/password` → `PUT`, `GET /admin/audit/verify` → `POST`, `PATCH /workspaces/{id}` → `PUT`, `POST /rules/{ruleId}/mode` → `PUT`).
 
@@ -3715,18 +3862,18 @@ Nine verb corrections were also applied where doc 14 named the wrong method (e.g
 
 Doc 14 used a per-entity topic vocabulary that the protocol does not implement. **86 topic references were rewritten** and §0.4 of doc 14 was replaced with an index that defers to `23-ws-protocol.md` §6.
 
-| Doc 14 used | Canonical | Why |
-|---|---|---|
-| `orders.{accountId}`, `executions.{accountId}`, `positions.{accountId}`, `wallet.{accountId}` | `orders`, `executions`, `positions`, `wallet` | Private topics are flat and scoped by the `exchange_account_ids` **option**, which the server intersects with the caller's grants. Per-account topics would multiply subscriptions and leak the account list into topic names. |
-| `tradegroup.{groupId}` | `trade_groups` | Same; also fixes the `tradegroup` / `trade_group` spelling split. |
-| `rules.{ruleId}`, `alerts.{userId}` | `rules`, `alerts` | Scoped by `rule_ids` / ownership. |
-| `cvd.{symbol}.{interval}`, `tapespeed.{symbol}`, `imbalance.{symbol}.{interval}`, `regime.{symbol}`, `detector.{symbol}` | `metrics.{symbol}` | One engine output family, one subscription, selected by the `metrics[]` option. Five topics for five columns of the same table was the original error. |
-| `system.health`, `risk.{scope}` | `system` | One auto-subscribed control topic carrying health, flags, kill-switch and risk/freeze transitions. |
-| `recorder.status` | `recorder` | Registry spelling. |
-| `book.{symbol}` | `book.{symbol}.{depth}` | Depth is part of state identity, not an option. |
-| `bars.{symbol}.{interval}`, `footprint.{symbol}.{interval}` | `bars.{symbol}.{bar_type}.{param}`, `footprint.{symbol}.{bar_type}.{param}` | `interval` cannot express tick/volume/range/renko/P&F bars. |
-| `profile.{symbol}.{periodId}` | `profile.{symbol}.{kind}` | `kind` ∈ {volume, delta, tpo}. |
-| `replay.{sessionId}` | *(removed)* | Replay re-uses the **same** market-data topics with `replay_session_id` on `sub` (§11). A separate topic family would have forced a second rendering path. |
+| Doc 14 used                                                                                                              | Canonical                                                                   | Why                                                                                                                                                                                                                            |
+| ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `orders.{accountId}`, `executions.{accountId}`, `positions.{accountId}`, `wallet.{accountId}`                            | `orders`, `executions`, `positions`, `wallet`                               | Private topics are flat and scoped by the `exchange_account_ids` **option**, which the server intersects with the caller's grants. Per-account topics would multiply subscriptions and leak the account list into topic names. |
+| `tradegroup.{groupId}`                                                                                                   | `trade_groups`                                                              | Same; also fixes the `tradegroup` / `trade_group` spelling split.                                                                                                                                                              |
+| `rules.{ruleId}`, `alerts.{userId}`                                                                                      | `rules`, `alerts`                                                           | Scoped by `rule_ids` / ownership.                                                                                                                                                                                              |
+| `cvd.{symbol}.{interval}`, `tapespeed.{symbol}`, `imbalance.{symbol}.{interval}`, `regime.{symbol}`, `detector.{symbol}` | `metrics.{symbol}`                                                          | One engine output family, one subscription, selected by the `metrics[]` option. Five topics for five columns of the same table was the original error.                                                                         |
+| `system.health`, `risk.{scope}`                                                                                          | `system`                                                                    | One auto-subscribed control topic carrying health, flags, kill-switch and risk/freeze transitions.                                                                                                                             |
+| `recorder.status`                                                                                                        | `recorder`                                                                  | Registry spelling.                                                                                                                                                                                                             |
+| `book.{symbol}`                                                                                                          | `book.{symbol}.{depth}`                                                     | Depth is part of state identity, not an option.                                                                                                                                                                                |
+| `bars.{symbol}.{interval}`, `footprint.{symbol}.{interval}`                                                              | `bars.{symbol}.{bar_type}.{param}`, `footprint.{symbol}.{bar_type}.{param}` | `interval` cannot express tick/volume/range/renko/P&F bars.                                                                                                                                                                    |
+| `profile.{symbol}.{periodId}`                                                                                            | `profile.{symbol}.{kind}`                                                   | `kind` ∈ {volume, delta, tpo}.                                                                                                                                                                                                 |
+| `replay.{sessionId}`                                                                                                     | _(removed)_                                                                 | Replay re-uses the **same** market-data topics with `replay_session_id` on `sub` (§11). A separate topic family would have forced a second rendering path.                                                                     |
 
 ### 19.4 Entity and field alignment
 
@@ -3734,7 +3881,7 @@ Doc 14 used a per-entity topic vocabulary that the protocol does not implement. 
 
 - Added to `TradeGroupLeg` and the WS leg payload: `trade_group_id`, `sequence_no`, `target_qty`, `avg_exit_price`, `native_sl_confirmed`, `native_sl_confirmed_at`, `risk_usd`, `fees_paid`, `submitted_at`, `closed_at`, `created_at`, `updated_at`.
 - Renamed `profile_id` → **`account_profile_id`** (matches the FK column).
-- Renamed leg `avg_fill_price` → **`avg_entry_price`** in the API and WS (matches the column). Note `Order.avg_fill_price` is *unchanged* — an order has one fill price, a leg has entry and exit; these are different fields and the similar names were previously hiding that.
+- Renamed leg `avg_fill_price` → **`avg_entry_price`** in the API and WS (matches the column). Note `Order.avg_fill_price` is _unchanged_ — an order has one fill price, a leg has entry and exit; these are different fields and the similar names were previously hiding that.
 - `LegError` documented as the serialised form of `rejection_code` / `rejection_message`.
 - `ResolvedLegParams` documented against the `resolved_leverage` / `resolved_sl_price` / `resolved_tp_price` columns and the `profile_snapshot` JSONB.
 
@@ -3750,15 +3897,15 @@ Doc 14 used a per-entity topic vocabulary that the protocol does not implement. 
 
 Docs 22 and 24 described **two structurally different IRs** for the same feature. Both editors and the engine must produce and consume one shape, so the OpenAPI projection was rewritten to match the authoritative pydantic model in §11.2.
 
-| Was (22) | Now | Reason |
-|---|---|---|
-| `when` / `then` / `else` | `conditions` / `actions` | §11.2 key names. |
-| `guards` | `limits` | §11.2 name; also avoids implying these are the only safety controls. |
-| `RuleExpr` (`const` / `var` / `fn,args` / `expr`) | `RuleOperand` (`RuleMetricRef` / `const` / `RuleArithmeticNode`) | The dotted-string `var: "position.r_multiple"` form was untypable and unvalidatable; `RuleMetricRef` binds to the metric registry (§7.2) with explicit `params`, `symbol`, `account_id`, `timeframe`. |
-| Condition tree of `all` / `any` / `none` / `fn,args` | `RuleComparisonNode` / `RuleBooleanNode` / `RuleTemporalNode`, each with a **`node_id`** | Without stable `node_id`s the node-graph editor cannot attach coordinates, so form↔graph round-tripping was impossible — the core requirement of owner decision #11. Also adds `n_of` and the temporal operators (`sustained_for`, `occurred_within`, `count_within`, `stable_for`), which doc 22 could not express at all. |
-| 14 action names (`set_stop_loss`, `close_position`, `emit_alert`, …) | The 25 action names of §11.2 (`modify_stop_loss`, `flatten_position`, `send_notification`, …) | One vocabulary. `widen_stop` is now explicitly called out as the only risk-increasing action and is gated separately. |
-| Trigger `on: trade|bar_close|…` + `throttle_ms` | `type: on_price_update|on_bar_close|…` + `debounce_ms`, with conditional `required` | §11.2 names, plus the `if`/`then` requirements that make `on_timer` without `interval_ms` invalid at schema level. |
-| `RuleIr` carried no identity | Documented as the **executable core only** | `id`, `name`, `mode`, `scope`, `editor`, `version` live on `Rule` / `RuleInput` and in the `rules` table. Keeping them out of the IR is what lets an IR be hashed and compared — two rules with the same logic now produce the same `ir_hash`. |
+| Was (22)                                                             | Now                                                                                           | Reason                                                                                                                                                                                                                                                                                                                      |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `when` / `then` / `else`                                             | `conditions` / `actions`                                                                      | §11.2 key names.                                                                                                                                                                                                                                                                                                            |
+| `guards`                                                             | `limits`                                                                                      | §11.2 name; also avoids implying these are the only safety controls.                                                                                                                                                                                                                                                        |
+| `RuleExpr` (`const` / `var` / `fn,args` / `expr`)                    | `RuleOperand` (`RuleMetricRef` / `const` / `RuleArithmeticNode`)                              | The dotted-string `var: "position.r_multiple"` form was untypable and unvalidatable; `RuleMetricRef` binds to the metric registry (§7.2) with explicit `params`, `symbol`, `account_id`, `timeframe`.                                                                                                                       |
+| Condition tree of `all` / `any` / `none` / `fn,args`                 | `RuleComparisonNode` / `RuleBooleanNode` / `RuleTemporalNode`, each with a **`node_id`**      | Without stable `node_id`s the node-graph editor cannot attach coordinates, so form↔graph round-tripping was impossible — the core requirement of owner decision #11. Also adds `n_of` and the temporal operators (`sustained_for`, `occurred_within`, `count_within`, `stable_for`), which doc 22 could not express at all. |
+| 14 action names (`set_stop_loss`, `close_position`, `emit_alert`, …) | The 25 action names of §11.2 (`modify_stop_loss`, `flatten_position`, `send_notification`, …) | One vocabulary. `widen_stop` is now explicitly called out as the only risk-increasing action and is gated separately.                                                                                                                                                                                                       |
+| Trigger `on: trade                                                   | bar_close                                                                                     | …`+`throttle_ms`                                                                                                                                                                                                                                                                                                            | `type: on_price_update | on_bar_close | …`+`debounce_ms`, with conditional `required` | §11.2 names, plus the `if`/`then` requirements that make `on_timer` without `interval_ms` invalid at schema level. |
+| `RuleIr` carried no identity                                         | Documented as the **executable core only**                                                    | `id`, `name`, `mode`, `scope`, `editor`, `version` live on `Rule` / `RuleInput` and in the `rules` table. Keeping them out of the IR is what lets an IR be hashed and compared — two rules with the same logic now produce the same `ir_hash`.                                                                              |
 
 `AlertConditionIr` was updated in step (`conditions`, no `actions`). All four rule and alert examples in doc 22 were rewritten to the new shape and **validate against their schemas**.
 
@@ -3777,20 +3924,20 @@ Collapsing them lost information: a paper fill during replay of live-recorded da
 
 Four documents described four **mutually disjoint** permission vocabularies:
 
-| Document | Was | Example |
-|---|---|---|
-| `22-api-openapi.yaml` | 36 `domain:action` strings on `x-rbac` | `orders:write` |
-| `21-database-schema.md` §10.1 | 38 dotted codes | `orders.submit.live` |
-| `24-internal-schemas.md` §15.2 | 28 enum members | `ORDER_PLACE_LIVE = "order.place_live"` |
-| `04-security-program.md` §7.3 | invented examples | `order.place.live` |
+| Document                       | Was                                    | Example                                 |
+| ------------------------------ | -------------------------------------- | --------------------------------------- |
+| `22-api-openapi.yaml`          | 36 `domain:action` strings on `x-rbac` | `orders:write`                          |
+| `21-database-schema.md` §10.1  | 38 dotted codes                        | `orders.submit.live`                    |
+| `24-internal-schemas.md` §15.2 | 28 enum members                        | `ORDER_PLACE_LIVE = "order.place_live"` |
+| `04-security-program.md` §7.3  | invented examples                      | `order.place.live`                      |
 
 No two matched, and the security matrix could not be implemented as written. **`22-api-openapi.yaml` is now canonical** (it is the only one mechanically bound to routes), and the other three were regenerated from it. All four now contain exactly the same 36 strings — verified mechanically.
 
-- **04 §7.2** rewritten: adds §7.2.0 (the vocabulary, the `scope` semantics, the "permission is necessary but never sufficient" 4-tuple rule), §7.2.1 (role → permission assignment), and a §7.2.2 capability matrix where **every row names the permission and the `operationId` that enforces it**. §7.3 now describes the enum as *generated* from `x-rbac`, not hand-maintained.
+- **04 §7.2** rewritten: adds §7.2.0 (the vocabulary, the `scope` semantics, the "permission is necessary but never sufficient" 4-tuple rule), §7.2.1 (role → permission assignment), and a §7.2.2 capability matrix where **every row names the permission and the `operationId` that enforces it**. §7.3 now describes the enum as _generated_ from `x-rbac`, not hand-maintained.
 - **21 §10.1** reseeded with the 36 strings and marked generated; three non-obvious assignments are explained (manager has no `keys:*` at all; viewer holds the four `scope: self` write permissions; live arming is not a separate permission).
 - **24 §15.2** enum regenerated, plus a `Scope` enum mirroring `x-rbac.scope`.
 
-**One capability was removed rather than reconciled.** Row 49 previously granted a Viewer "redacted metadata, granted accounts, if granted" access to the audit log. No such grant exists: `user_account_access` scopes *accounts*, not the audit log, and no audit operation is account-scoped. Rather than invent a grant type to justify the row, Viewer audit access is now **denied**, and the row says so. This is a deliberate narrowing of documented access, made so that §7.2 is implementable exactly as written.
+**One capability was removed rather than reconciled.** Row 49 previously granted a Viewer "redacted metadata, granted accounts, if granted" access to the audit log. No such grant exists: `user_account_access` scopes _accounts_, not the audit log, and no audit operation is account-scoped. Rather than invent a grant type to justify the row, Viewer audit access is now **denied**, and the row says so. This is a deliberate narrowing of documented access, made so that §7.2 is implementable exactly as written.
 
 ### 19.8 Enum parity
 
@@ -3803,33 +3950,33 @@ No two matched, and the security matrix could not be implemented as written. **`
 
 Mechanical checks, all passing at the close of the pass:
 
-| Check | Result |
-|---|---|
-| `22-api-openapi.yaml` parses as YAML | ✔ (155 paths, 224 schemas) |
-| Every internal `$ref` resolves | ✔ 0 broken |
-| No duplicate `operationId` | ✔ |
-| Every `VERB /api/v1/…` in doc 14 exists in doc 22 | ✔ 0 missing (was 102) |
-| Every WS topic in doc 14 exists in doc 23 §6 | ✔ 0 non-canonical (was 20 families) |
-| Permission sets in 04 / 21 / 22 / 24 are identical | ✔ 36 = 36 = 36 = 36 |
-| `x-db-enum` schemas match PG `CREATE TYPE` | ✔ 31/31 |
-| Every `examples:` block validates against its schema | ✔ 102/102 |
+| Check                                                | Result                              |
+| ---------------------------------------------------- | ----------------------------------- |
+| `22-api-openapi.yaml` parses as YAML                 | ✔ (155 paths, 224 schemas)          |
+| Every internal `$ref` resolves                       | ✔ 0 broken                          |
+| No duplicate `operationId`                           | ✔                                   |
+| Every `VERB /api/v1/…` in doc 14 exists in doc 22    | ✔ 0 missing (was 102)               |
+| Every WS topic in doc 14 exists in doc 23 §6         | ✔ 0 non-canonical (was 20 families) |
+| Permission sets in 04 / 21 / 22 / 24 are identical   | ✔ 36 = 36 = 36 = 36                 |
+| `x-db-enum` schemas match PG `CREATE TYPE`           | ✔ 31/31                             |
+| Every `examples:` block validates against its schema | ✔ 102/102                           |
 
 ### 19.10 Follow-up obligations for implementation
 
 These are contract-test obligations created by this pass; they belong in the CI gate described in §17.4 and should be ticketed alongside the first backend sprint.
 
-| Test id | Asserts |
-|---|---|
-| `rbac_vocabulary_single_source` | The 36 permissions in `x-rbac`, the 21 §10.1 seed and the 24 §15.2 enum are identical, and no route uses an unlisted permission. |
-| `rbac_matrix_fixture` | 04 §7.2.2 generates a fixture in which every row's `operationId` exists and carries the stated permission. |
-| `rule_ir_schema_parity` | The 22 `RuleIr` projection equals the JSON Schema generated from the 24 §11.2 pydantic models. |
-| `rule_ir_round_trip` | Compiling a rule's form model and its graph model yields the same `ir_hash` (`POST /rules/{ruleId}/compile`). |
-| `enum_parity_environment` | `Environment` is identical in 22, 24 and PG `exchange_env`, and `paper` appears in none of them. |
-| `enum_parity_<type>` | Each `x-db-enum` schema equals its PG type, minus any declared `x-db-enum-superset`. |
-| `screens_endpoint_coverage` | Every `VERB /api/v1/…` in doc 14 resolves to an operation in doc 22. |
-| `screens_topic_coverage` | Every WS topic named in doc 14 exists in the doc 23 §6 registry. |
-| `openapi_examples_valid` | Every `examples:` value validates against its schema. |
-| `native_sl_observable` | `TradeGroupLeg.native_sl_confirmed` is present on both the REST and WS leg shapes, and is `true` for every filled leg in the fan-out integration fixtures. |
+| Test id                         | Asserts                                                                                                                                                    |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `rbac_vocabulary_single_source` | The 36 permissions in `x-rbac`, the 21 §10.1 seed and the 24 §15.2 enum are identical, and no route uses an unlisted permission.                           |
+| `rbac_matrix_fixture`           | 04 §7.2.2 generates a fixture in which every row's `operationId` exists and carries the stated permission.                                                 |
+| `rule_ir_schema_parity`         | The 22 `RuleIr` projection equals the JSON Schema generated from the 24 §11.2 pydantic models.                                                             |
+| `rule_ir_round_trip`            | Compiling a rule's form model and its graph model yields the same `ir_hash` (`POST /rules/{ruleId}/compile`).                                              |
+| `enum_parity_environment`       | `Environment` is identical in 22, 24 and PG `exchange_env`, and `paper` appears in none of them.                                                           |
+| `enum_parity_<type>`            | Each `x-db-enum` schema equals its PG type, minus any declared `x-db-enum-superset`.                                                                       |
+| `screens_endpoint_coverage`     | Every `VERB /api/v1/…` in doc 14 resolves to an operation in doc 22.                                                                                       |
+| `screens_topic_coverage`        | Every WS topic named in doc 14 exists in the doc 23 §6 registry.                                                                                           |
+| `openapi_examples_valid`        | Every `examples:` value validates against its schema.                                                                                                      |
+| `native_sl_observable`          | `TradeGroupLeg.native_sl_confirmed` is present on both the REST and WS leg shapes, and is `true` for every filled leg in the fan-out integration fixtures. |
 
 ### 19.11 2026-09-24 — statechart runtime = `xstate-statemachine==0.9.1` (ADR-0016 Accepted)
 
