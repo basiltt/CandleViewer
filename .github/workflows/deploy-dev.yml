@@ -24,7 +24,7 @@ on:
     types: [completed]
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   # Only one dev deploy in flight; queue behind it rather than cancel, so a
@@ -75,6 +75,22 @@ jobs:
             --repository "${{ github.repository }}"
 
       - name: Commit the updated deployment ledger (auditability, ticket "Deployment records")
+        # C-4.1: `main` is protected (`enforce_admins: true`, 2 reviews,
+        # required checks) and this bot identity has no registered bypass
+        # in `.github/rulesets/bypass-register.md` — a direct
+        # `push origin HEAD:main` here both violates that rule and simply
+        # fails once `permissions.contents` is correctly scoped. Ledger
+        # commits instead land on a dedicated, unprotected
+        # `ops/deploy-ledger` ref that carries *only* `deployments/*` (the
+        # same "commit outside main's protection" shape the release
+        # workflow already uses for its changelog commit — see the
+        # bypass-register intro: pushing a ref that is not `main` is not a
+        # protection bypass). The `deploy-dev` concurrency group above
+        # serialises runs, so this workflow is always the ref's sole
+        # writer at any given time; a fresh checkout of the ref each run
+        # (rather than reusing the `head_sha` checkout, which has no
+        # relation to the ledger ref's history) keeps the push a normal
+        # fast-forward.
         if: always()
         run: |
           set -euo pipefail
@@ -82,11 +98,23 @@ jobs:
             echo "no ledger change to commit"
             exit 0
           fi
+          NEW_LEDGER="$(mktemp)"
+          cp deployments/ledger.jsonl "$NEW_LEDGER"
           git config user.name "candleviewer-ci[bot]"
           git config user.email "ci@users.noreply.github.com"
-          git add deployments/ledger.jsonl
+          git fetch origin ops/deploy-ledger || true
+          if git show-ref --verify --quiet refs/remotes/origin/ops/deploy-ledger; then
+            git checkout -B ops/deploy-ledger origin/ops/deploy-ledger
+          else
+            git checkout --orphan ops/deploy-ledger
+            git rm -rf --quiet . || true
+          fi
+          mkdir -p deployments
+          cp "$NEW_LEDGER" deployments/ledger.jsonl
+          cp "${GITHUB_WORKSPACE}/deployments/README.md" deployments/README.md 2>/dev/null || true
+          git add deployments/ledger.jsonl deployments/README.md
           git commit -m "chore(infra-devops): record dev deploy ${{ steps.digest.outputs.sha }} [skip ci]"
-          git push origin HEAD:main
+          git push origin HEAD:refs/heads/ops/deploy-ledger
 
       - name: Job summary
         if: always()

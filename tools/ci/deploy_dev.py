@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import time
@@ -128,20 +129,46 @@ def read_last_success_digest(
     return None
 
 
-def verify_signature(image_ref: str, digest: str, *, repository: str) -> None:
+# Only `main.yml`'s `build-scan-sign` job ever signs a fit-for-deploy image
+# (E03-T08). The identity regexp must therefore pin both the *workflow file*
+# and the *ref* it ran on — a bare `^https://github.com/{repo}/` prefix also
+# matches every other workflow in the repo (including one running on an
+# untrusted PR branch), since cosign's keyless SAN embeds
+# `https://github.com/{repo}/{workflow_path}@{ref}` and a regexp with no
+# anchor after `{repo}/` treats the workflow path as free text. Dev only
+# ever deploys what was built on `main`; staging additionally accepts a
+# `release/*` branch build (release promotion, `01-sdlc-and-branching.md`
+# §9) since `deploy-staging.yml`'s `push: branches: ["release/*"]` trigger
+# needs a matching signer identity.
+_SIGNER_WORKFLOW_PATH = ".github/workflows/main.yml"
+_ALLOWED_REF_PATTERNS: dict[str, str] = {
+    "dev": r"refs/heads/main",
+    "staging": r"refs/heads/main|refs/heads/release/[^@]+",
+}
+
+
+def verify_signature(
+    image_ref: str, digest: str, *, repository: str, environment: str = "dev"
+) -> None:
     """`cosign verify` the pushed image; raises CI-DEP-001 on any failure.
 
-    Uses the same keyless-OIDC identity constraints as `main.yml`'s own
-    verify step (`build-scan-sign` / CI-IMG-004) so a deploy never accepts
-    an image that workflow itself would not have signed.
+    Pins the keyless-OIDC identity to `main.yml`'s `build-scan-sign` job
+    running on an allowed ref for `environment` (never a PR branch or an
+    arbitrary workflow in this repo) so a deploy never accepts an image
+    that workflow itself would not have signed for this target.
     """
     full_ref = f"{image_ref}@{digest}"
+    ref_pattern = _ALLOWED_REF_PATTERNS.get(environment, _ALLOWED_REF_PATTERNS["dev"])
+    identity_regexp = (
+        rf"^https://github\.com/{re.escape(repository)}/{re.escape(_SIGNER_WORKFLOW_PATH)}"
+        rf"@(?:{ref_pattern})$"
+    )
     result = subprocess.run(
         [
             "cosign",
             "verify",
             "--certificate-identity-regexp",
-            rf"^https://github.com/{repository}/",
+            identity_regexp,
             "--certificate-oidc-issuer",
             "https://token.actions.githubusercontent.com",
             full_ref,
@@ -272,7 +299,7 @@ def deploy(
     """
     start = time.monotonic()
     try:
-        verify_signature(image_ref, digest, repository=repository)
+        verify_signature(image_ref, digest, repository=repository, environment=environment)
     except DeployError as exc:
         append_ledger(
             LedgerEntry(
@@ -378,7 +405,7 @@ def _auto_rollback(
     # truth for whichever entry produced `previous_digest`.
     start = time.monotonic()
     try:
-        verify_signature(image_ref, previous_digest, repository=repository)
+        verify_signature(image_ref, previous_digest, repository=repository, environment=environment)
         render_env_file(env_example, env_out, image_digest=previous_digest, git_sha="rollback")
         compose_up(compose_files)
         # Readiness-only wait; sha is not re-asserted because the rollback

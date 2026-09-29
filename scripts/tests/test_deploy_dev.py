@@ -52,6 +52,61 @@ def test_verify_signature_passes_on_success(monkeypatch: pytest.MonkeyPatch) -> 
     dd.verify_signature("ghcr.io/o/img", "sha256:" + "a" * 64, repository="o/r")  # no raise
 
 
+def test_verify_signature_pins_identity_to_signer_workflow_and_ref(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A bare `^https://github.com/{repo}/` prefix matches any workflow in the
+    repo (including a PR-branch run). The regexp passed to `cosign verify`
+    must pin `main.yml`'s job identity and an allowed ref for the target
+    environment."""
+    captured: dict = {}
+
+    def fake_run(cmd: list[str], **kwargs: object) -> SimpleNamespace:
+        captured["cmd"] = cmd
+        return SimpleNamespace(returncode=0, stderr="")
+
+    monkeypatch.setattr(dd.subprocess, "run", fake_run)
+
+    dd.verify_signature(
+        "ghcr.io/o/img", "sha256:" + "a" * 64, repository="o/r", environment="dev"
+    )
+    idx = captured["cmd"].index("--certificate-identity-regexp")
+    regexp = captured["cmd"][idx + 1]
+    assert r"\.github/workflows/main\.yml" in regexp
+    assert regexp.endswith(r"@(?:refs/heads/main)$")
+    # A build on a PR branch or a different workflow must not match.
+    import re as _re
+
+    signer_main = "https://github.com/o/r/.github/workflows/main.yml@refs/heads/main"
+    signer_pr = "https://github.com/o/r/.github/workflows/main.yml@refs/pull/9/merge"
+    other_workflow = "https://github.com/o/r/.github/workflows/deploy-dev.yml@refs/heads/main"
+    assert _re.match(regexp, signer_main)
+    assert not _re.match(regexp, signer_pr)
+    assert not _re.match(regexp, other_workflow)
+
+
+def test_verify_signature_staging_also_allows_release_branch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict = {}
+
+    def fake_run(cmd: list[str], **kwargs: object) -> SimpleNamespace:
+        captured["cmd"] = cmd
+        return SimpleNamespace(returncode=0, stderr="")
+
+    monkeypatch.setattr(dd.subprocess, "run", fake_run)
+
+    dd.verify_signature(
+        "ghcr.io/o/img", "sha256:" + "a" * 64, repository="o/r", environment="staging"
+    )
+    idx = captured["cmd"].index("--certificate-identity-regexp")
+    regexp = captured["cmd"][idx + 1]
+    import re as _re
+
+    signer_release = "https://github.com/o/r/.github/workflows/main.yml@refs/heads/release/1.2"
+    assert _re.match(regexp, signer_release)
+
+
 def test_smoke_test_matches_sha_immediately(monkeypatch: pytest.MonkeyPatch) -> None:
     calls = {"n": 0}
 

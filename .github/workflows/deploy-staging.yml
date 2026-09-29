@@ -33,7 +33,7 @@ on:
     branches: ["release/*"]
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: deploy-staging
@@ -66,19 +66,48 @@ jobs:
 
       - name: Resolve target digest/sha (forward deploy or rollback)
         id: target
+        # SR-140/CI-DEP guard: `inputs.*` are attacker-controllable
+        # workflow_dispatch strings on a self-hosted runner. Never
+        # interpolate them directly into `run:` (that is arbitrary shell
+        # injection the moment an input contains `` ` ``/`$(...)`/`;`);
+        # pass them through `env:` instead (safe — env values are never
+        # shell-expanded) and validate the digest shape before any
+        # further step can use it.
+        env:
+          IN_ROLLBACK_TO_DIGEST: ${{ inputs.rollback_to_digest }}
+          IN_DIGEST: ${{ inputs.digest }}
+          IN_SHA: ${{ inputs.sha }}
         run: |
           set -euo pipefail
-          if [ -n "${{ inputs.rollback_to_digest }}" ]; then
-            echo "digest=${{ inputs.rollback_to_digest }}" >> "$GITHUB_OUTPUT"
+          DIGEST_RE='^sha256:[0-9a-f]{64}$'
+          SHA_RE='^[0-9a-f]{7,40}$'
+          if [ -n "$IN_ROLLBACK_TO_DIGEST" ]; then
+            if ! [[ "$IN_ROLLBACK_TO_DIGEST" =~ $DIGEST_RE ]]; then
+              echo "::error::rollback_to_digest must match $DIGEST_RE" >&2
+              exit 1
+            fi
+            echo "digest=$IN_ROLLBACK_TO_DIGEST" >> "$GITHUB_OUTPUT"
             echo "sha=rollback" >> "$GITHUB_OUTPUT"
-          elif [ -n "${{ inputs.digest }}" ]; then
-            echo "digest=${{ inputs.digest }}" >> "$GITHUB_OUTPUT"
-            echo "sha=${{ inputs.sha }}" >> "$GITHUB_OUTPUT"
+          elif [ -n "$IN_DIGEST" ]; then
+            if ! [[ "$IN_DIGEST" =~ $DIGEST_RE ]]; then
+              echo "::error::digest must match $DIGEST_RE" >&2
+              exit 1
+            fi
+            if [ -n "$IN_SHA" ] && ! [[ "$IN_SHA" =~ $SHA_RE ]]; then
+              echo "::error::sha must be a hex git sha ($SHA_RE)" >&2
+              exit 1
+            fi
+            echo "digest=$IN_DIGEST" >> "$GITHUB_OUTPUT"
+            echo "sha=${IN_SHA:-unknown}" >> "$GITHUB_OUTPUT"
           else
             SHORT_SHA="$(git rev-parse --short=12 HEAD)"
             DIGEST="$(docker buildx imagetools inspect \
               "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev" --format '{{json .Manifest}}' \
               | python3 -c "import sys,json; print(json.load(sys.stdin)['digest'])")"
+            if ! [[ "$DIGEST" =~ $DIGEST_RE ]]; then
+              echo "::error::resolved digest '$DIGEST' failed shape validation" >&2
+              exit 1
+            fi
             echo "sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
             echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
           fi
@@ -104,6 +133,10 @@ jobs:
           fi
 
       - name: Commit the updated deployment ledger
+        # See deploy-dev.yml's equivalent step for the full rationale:
+        # `main` is protected (C-4.1) and has no registered bypass for
+        # this identity, so ledger commits land on the shared
+        # `ops/deploy-ledger` ref instead of `main`.
         if: always()
         run: |
           set -euo pipefail
@@ -111,11 +144,23 @@ jobs:
             echo "no ledger change to commit"
             exit 0
           fi
+          NEW_LEDGER="$(mktemp)"
+          cp deployments/ledger.jsonl "$NEW_LEDGER"
           git config user.name "candleviewer-ci[bot]"
           git config user.email "ci@users.noreply.github.com"
-          git add deployments/ledger.jsonl
+          git fetch origin ops/deploy-ledger || true
+          if git show-ref --verify --quiet refs/remotes/origin/ops/deploy-ledger; then
+            git checkout -B ops/deploy-ledger origin/ops/deploy-ledger
+          else
+            git checkout --orphan ops/deploy-ledger
+            git rm -rf --quiet . || true
+          fi
+          mkdir -p deployments
+          cp "$NEW_LEDGER" deployments/ledger.jsonl
+          cp "${GITHUB_WORKSPACE}/deployments/README.md" deployments/README.md 2>/dev/null || true
+          git add deployments/ledger.jsonl deployments/README.md
           git commit -m "chore(infra-devops): record staging deploy ${{ steps.target.outputs.sha }} [skip ci]"
-          git push origin HEAD:main
+          git push origin HEAD:refs/heads/ops/deploy-ledger
 
       - name: Job summary
         if: always()

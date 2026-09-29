@@ -3,7 +3,10 @@
 Append-only audit log of dev/staging deploy attempts (E03-T09 "Deployment
 records"). One JSON object per line, appended by `tools/ci/deploy_dev.py`
 and committed by `.github/workflows/deploy-dev.yml` /
-`deploy-staging.yml`. This is a stopgap for auditability until E04's
+`deploy-staging.yml` to the dedicated `ops/deploy-ledger` ref (never
+`main` — `main` is protected, C-4.1, and neither workflow has a
+registered bypass for it; see `.github/rulesets/bypass-register.md`).
+This is a stopgap for auditability until E04's
 observability stack lands a proper deploy-events store — do not build new
 tooling against this file's shape without checking `tools/ci/deploy_dev.py`
 first, since it is the single writer.
