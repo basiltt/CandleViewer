@@ -205,6 +205,7 @@
 /services/api/storage/migrations/       @CandleViewer/backend @CandleViewer/architecture @CandleViewer/security
 # future: E02/later scaffolding; directory does not exist yet.
 /services/api/storage/schemas/          @CandleViewer/backend @CandleViewer/architecture
+/backend/db/                            @CandleViewer/backend @CandleViewer/architecture
 # future: E02/later scaffolding; directory does not exist yet.
 /services/api/pyproject.toml            @CandleViewer/backend @CandleViewer/devsecops @CandleViewer/security
 
