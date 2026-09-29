@@ -36,6 +36,15 @@ from candleviewer.exchange.base.service import ExchangeBaseService
 from candleviewer.exchange.bybit.service import ExchangeBybitService
 from candleviewer.ingestion.service import IngestionService
 from candleviewer.journal.service import JournalService
+from candleviewer.net import (
+    BindingSelfCheck,
+    CidrAllowList,
+    MeshOnlyMiddleware,
+    MeshSelfCheckScheduler,
+    ReadOnlyGate,
+    net_binding_safe,
+    real_socket_enumerator,
+)
 from candleviewer.observability.service import ObservabilityService
 from candleviewer.oms.service import OmsService
 from candleviewer.orderflow.service import OrderflowService
@@ -89,6 +98,17 @@ class AppContext:
     observability: ObservabilityService
     ws: WsService
 
+    # E09-T04: Tailscale-only reachability guard (US-ONB-008). `oms` never
+    # imports `candleviewer.net` directly (outside its §3 allow-list); this
+    # is the one instance it is injected with, structurally typed as
+    # `oms.validator.ReadOnlyCheck` so no import edge is created.
+    oms_read_only_gate: ReadOnlyGate
+    # Owns the boot + hourly re-check loop (AC5, "drift after resume").
+    # `services/api/candleviewer/main.py`'s lifespan runs `run_once()` once
+    # at startup (the boot check) then `start()` for the hourly loop, and
+    # `stop()` on shutdown.
+    mesh_self_check: MeshSelfCheckScheduler
+
 
 def build_app_context(settings: Settings | None = None) -> AppContext:
     """Construct an `AppContext` with real scaffold modules, no I/O performed.
@@ -99,6 +119,16 @@ def build_app_context(settings: Settings | None = None) -> AppContext:
     fake-only per the acceptance criteria.
     """
     resolved = settings or get_settings()
+    read_only_gate = ReadOnlyGate()
+    mesh_self_check = MeshSelfCheckScheduler(
+        check=BindingSelfCheck(
+            address_enumerator=real_socket_enumerator(),
+            allow_list=CidrAllowList(list(resolved.mesh_cidrs)),
+        ),
+        read_only_gate=read_only_gate,
+        gauge=net_binding_safe,
+        interval_s=resolved.mesh_self_check_interval_s,
+    )
     return AppContext(
         settings=resolved,
         metrics=CollectorRegistry(),
@@ -125,6 +155,8 @@ def build_app_context(settings: Settings | None = None) -> AppContext:
         alerts=AlertsService(),
         observability=ObservabilityService(),
         ws=WsService(),
+        oms_read_only_gate=read_only_gate,
+        mesh_self_check=mesh_self_check,
     )
 
 
@@ -187,12 +219,27 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     build-info body. The module supervisor is *not* started here — that is
     driven by the ASGI lifespan in `services/api/main.py` (or a test's own
     fixture), keeping `create_app()` itself synchronous and side-effect-free.
+
+    E09-T04: `MeshOnlyMiddleware` is mounted here (not in the lifespan) so it
+    protects every request, including ones that arrive before the lifespan's
+    boot self-check has finished — a request is checked against the mesh
+    CIDR allow-list before authentication regardless of process readiness.
+    The audit sink stays the `NullAuditSink` default until the real M19
+    `audit` module implements a concrete `emit()` (tracked by that module's
+    own ticket); wiring a real sink here is a one-line change once it lands.
     """
     resolved = settings or get_settings()
     app = FastAPI(
         title="CandleViewer API",
         version=resolved.version,
     )
-    app.state.app_context = build_app_context(resolved)
-    app.include_router(make_health_router(resolved, app.state.app_context.metrics))
+    ctx = build_app_context(resolved)
+    app.state.app_context = ctx
+    app.add_middleware(
+        MeshOnlyMiddleware,
+        allow_list=CidrAllowList(list(resolved.mesh_cidrs)),
+        trusted_proxy_header=resolved.mesh_trusted_proxy_header,
+        trusted_proxy_address=resolved.mesh_trusted_proxy_address,
+    )
+    app.include_router(make_health_router(resolved, ctx.metrics))
     return app

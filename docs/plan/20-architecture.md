@@ -836,6 +836,42 @@ Resource baseline (2 symbols @200 depth): api 2 vCPU / 3 GB, QuestDB 2 vCPU / 4 
 
 WSL-specific hazards designed around from day one: clock drift after sleep/resume (chrony mandatory, ClockGuard alerts), no reliable headless keyring (KEK lives on the Windows side), `0.0.0.0` binding leak via portproxy (bind loopback only, verified by a `make audit-net` check in CI-on-host), and the machine sleeping while positions are open (watchdog + native SL floor make this survivable; the Admin health screen warns).
 
+**E09-T04 implementation note (mesh-only reachability guard):** `candleviewer.net` (`BindingSelfCheck`,
+`CidrAllowList`, `MeshOnlyMiddleware`, `ReadOnlyGate`, `MeshSelfCheckScheduler`) is wired into the
+composition root in `services/api/candleviewer/app.py` (`create_app()` mounts `MeshOnlyMiddleware`
+ahead of every route) and the ASGI lifespan in `services/api/candleviewer/main.py` (`_lifespan` runs
+the boot self-check synchronously before serving, then starts the hourly re-check via
+`MeshSelfCheckScheduler.start()`/`.stop()`). The OMS `Validator` (`services/api/candleviewer/oms/validator.py`)
+consults the same `ReadOnlyGate` instance through a structurally-typed `ReadOnlyCheck` protocol — `oms`
+never imports `candleviewer.net` directly, per its CONSTITUTION §3 allow-list. Allowed CIDRs are
+configured via `Settings.mesh_cidrs_csv` (comma-separated, parsed into `Settings.mesh_cidrs`); a trusted
+reverse proxy (if any) is configured via `Settings.mesh_trusted_proxy_header` /
+`Settings.mesh_trusted_proxy_address` — unset by default, so `X-Forwarded-For` and similar headers are
+always ignored and only the ASGI `scope["client"]` peer address is trusted. `make audit-net`
+(`tools/ci/audit_net.py`) runs the identical `BindingSelfCheck` against the host's real listening
+sockets — host-wide via `psutil.net_connections()` plus the Windows `netsh interface portproxy` table,
+catching a `portproxy` leak that neither the process's own sockets nor a per-process `psutil` scope can
+see — for CI-on-host.
+
+**Operator runbook — a tripped mesh-only guard:** if the Admin health screen (or `net_binding_safe`
+gauge) shows the read-only gate tripped with `net.public_binding_detected` or
+`net.off_mesh_binding_detected`, the app is intentionally serving read-only (no order placement) until
+the binding is fixed and the next hourly self-check (or a restart) clears it. Steps:
+
+1. Run `make audit-net` on the host to reproduce the exact set of offending addresses (same
+   `BindingSelfCheck` the running process used).
+2. On WSL: check `netsh interface portproxy show all` on the **Windows** side (not inside WSL) for a
+   stale rule forwarding a non-loopback Windows address into the WSL VM's IP; remove it with
+   `netsh interface portproxy delete v4tov4 listenaddress=<addr> listenport=<port>`. Re-run
+   `wsl --shutdown` + restart the compose stack if the WSL VM's IP changed.
+3. Confirm `docker-compose.yml`/`docker-compose.vps.yml` bind declarations for `cv-api`/`cv-web` are
+   still `127.0.0.1:<port>` (Phase 1) or the intended mesh-only interface (Phase 2), not `0.0.0.0`.
+4. If the binding is legitimately new (e.g. a new mesh subnet), update `Settings.mesh_cidrs_csv` in the
+   environment file rather than widening the check; do not disable the gate or the middleware.
+5. Once the underlying bind is fixed, either wait for the next hourly `MeshSelfCheckScheduler` pass or
+   restart the process to force an immediate boot self-check; the gate clears itself only on a fresh
+   passing check (never on a caught exception or manual override — there is no manual clear).
+
 ### 8.2 Phase 2 — always-on VPS / home server
 
 Identical compose topology. Migration = copy compose files + data volumes + restore Tailscale identity + re-point the Bybit IP allowlist to the new egress IP. Region selection must avoid geo-restricted origins (US / Mainland China IPs receive 403 from some Bybit REST hosts). Nothing about the application changes — this is the payoff of P7.

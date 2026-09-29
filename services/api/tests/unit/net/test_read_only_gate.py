@@ -49,3 +49,30 @@ def test_gate_clear_rejects_a_failing_check_result() -> None:
     with pytest.raises(ValueError):
         gate.clear(check_result=_FAILING)
     assert gate.is_read_only is True
+
+
+def test_gate_trip_survives_a_raising_listener_and_still_notifies_the_rest() -> None:
+    """A listener raising must not escape `trip()`/`clear()` (it would kill
+    the scheduler loop) and must not stop other listeners being notified;
+    the gate itself stays tripped (fail-closed) regardless."""
+    calls: list[bool] = []
+
+    def _bad_listener(tripped: bool, reason_code: str | None, reason_text: str | None) -> None:
+        raise RuntimeError("listener boom")
+
+    def _good_listener(tripped: bool, reason_code: str | None, reason_text: str | None) -> None:
+        calls.append(tripped)
+
+    gate = ReadOnlyGate()
+    gate.subscribe(_bad_listener)
+    gate.subscribe(_good_listener)
+
+    gate.trip(reason_code="x", reason_text="y")
+
+    assert gate.is_read_only is True
+    assert calls == [True]
+
+    gate.clear(check_result=_PASSING)
+
+    assert gate.is_read_only is False
+    assert calls == [True, False]

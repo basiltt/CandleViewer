@@ -12,11 +12,17 @@ by `net`, not duplicated).
 
 from __future__ import annotations
 
+import logging
 import threading
+from collections.abc import Callable
 from typing import TYPE_CHECKING
+
+_logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from .binding_check import BindingCheckResult
+
+GateListener = Callable[[bool, "str | None", "str | None"], None]
 
 
 class ReadOnlyGate:
@@ -25,6 +31,11 @@ class ReadOnlyGate:
     Defaults to writable (`tripped=False`). Once tripped it stays tripped
     until explicitly cleared by a fresh, passing self-check — never by
     catching an exception or by a request handler.
+
+    `subscribe()` lets the `system` WS topic (or any other consumer) observe
+    every trip/clear transition without polling `is_read_only`; this is what
+    lets the degraded-mode banner (CMP-092) be published the instant the
+    gate trips rather than on the next client poll.
     """
 
     def __init__(self) -> None:
@@ -32,12 +43,45 @@ class ReadOnlyGate:
         self._tripped = False
         self._reason_code: str | None = None
         self._reason_text: str | None = None
+        self._listeners: list[GateListener] = []
+
+    def subscribe(self, listener: GateListener) -> None:
+        """Register a callback invoked with `(is_read_only, reason_code,
+        reason_text)` on every `trip()`/`clear()` call. Invoked synchronously,
+        outside the internal lock, so a listener may itself call back into
+        this gate's read-only properties without deadlocking."""
+        with self._lock:
+            self._listeners.append(listener)
+
+    def _notify(self) -> None:
+        with self._lock:
+            tripped, reason_code, reason_text = (
+                self._tripped,
+                self._reason_code,
+                self._reason_text,
+            )
+            listeners = tuple(self._listeners)
+        for listener in listeners:
+            try:
+                listener(tripped, reason_code, reason_text)
+            except Exception:
+                # A misbehaving listener must never be able to crash the
+                # trip()/clear() caller (e.g. the scheduler loop) or prevent
+                # the other listeners from being notified. The gate's own
+                # state was already updated above, so this stays fail-closed
+                # regardless of listener behaviour.
+                _logger.exception(
+                    "net.read_only_gate: listener raised while handling tripped=%s reason_code=%s",
+                    tripped,
+                    reason_code,
+                )
 
     def trip(self, *, reason_code: str, reason_text: str) -> None:
         with self._lock:
             self._tripped = True
             self._reason_code = reason_code
             self._reason_text = reason_text
+        self._notify()
 
     def clear(self, *, check_result: BindingCheckResult) -> None:
         """Clear the gate, but only given a fresh, *passing* self-check.
@@ -57,6 +101,7 @@ class ReadOnlyGate:
             self._tripped = False
             self._reason_code = None
             self._reason_text = None
+        self._notify()
 
     @property
     def is_read_only(self) -> bool:

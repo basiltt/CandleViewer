@@ -35,7 +35,7 @@ def test_create_app_is_fast_and_touches_no_io() -> None:
 
 def test_healthz_returns_200_with_build_info() -> None:
     app = create_app(_fake_settings())
-    client = TestClient(app)
+    client = TestClient(app, client=("127.0.0.1", 50000))
     response = client.get("/healthz")
     assert response.status_code == 200
     body = response.json()
@@ -46,7 +46,7 @@ def test_healthz_returns_200_with_build_info() -> None:
 
 def test_readyz_returns_200_with_empty_checks_array() -> None:
     app = create_app(_fake_settings())
-    client = TestClient(app)
+    client = TestClient(app, client=("127.0.0.1", 50000))
     response = client.get("/readyz")
     assert response.status_code == 200
     body = response.json()
@@ -55,7 +55,7 @@ def test_readyz_returns_200_with_empty_checks_array() -> None:
 
 def test_healthz_does_not_leak_internal_hostnames_or_datastore_versions() -> None:
     app = create_app(_fake_settings())
-    client = TestClient(app)
+    client = TestClient(app, client=("127.0.0.1", 50000))
     body = client.get("/healthz").json()
     assert set(body.keys()) == {"git_sha", "version", "environment", "status"}
 
@@ -65,7 +65,7 @@ def test_metrics_returns_200_prometheus_exposition_format() -> None:
     # asserts the target this ticket wires prometheus.yml at actually exists
     # and returns the Prometheus text-exposition content type.
     app = create_app(_fake_settings())
-    client = TestClient(app)
+    client = TestClient(app, client=("127.0.0.1", 50000))
     response = client.get("/metrics")
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/plain")
@@ -80,3 +80,47 @@ async def test_supervisor_starts_storage_before_ws_and_stops_in_reverse() -> Non
     await supervisor.stop_all(grace_s=0.1)
     assert ctx.storage.health().status.value == "stopped"
     assert ctx.ws.health().status.value == "stopped"
+
+
+def test_build_app_context_wires_the_mesh_guard(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    # E09-T04 AC1/AC3/AC5: the guard must exist on `AppContext`, not merely
+    # in the `net` package unused — this is the "never wired in" regression.
+    ctx = build_app_context(_fake_settings())
+
+    assert ctx.oms_read_only_gate is not None
+    assert ctx.oms_read_only_gate.is_read_only is False
+    assert ctx.mesh_self_check is not None
+
+
+def test_create_app_mounts_the_mesh_only_middleware() -> None:
+    # E09-T04 AC1: a guard module built but never registered as ASGI
+    # middleware provides zero protection — assert it is actually mounted.
+    from candleviewer.net import MeshOnlyMiddleware
+
+    app = create_app(_fake_settings())
+
+    middleware_classes = [m.cls for m in app.user_middleware]
+    assert MeshOnlyMiddleware in middleware_classes
+
+
+async def test_oms_service_validator_is_bound_to_the_shared_read_only_gate() -> None:
+    # E09-T04 AC3: the OMS validator must consult the *same* gate instance
+    # the boot self-check trips, not a disconnected copy.
+    ctx = build_app_context(_fake_settings())
+    supervisor = Supervisor(ctx)
+    await supervisor.start_all()
+    try:
+        assert ctx.oms.validator is not None
+        ctx.oms.validator.assert_order_placement_allowed()  # not read-only yet
+
+        ctx.oms_read_only_gate.trip(reason_code="net.test", reason_text="test")
+
+        from candleviewer.oms.validator import OrderPlacementRefused
+
+        try:
+            ctx.oms.validator.assert_order_placement_allowed()
+            raise AssertionError("expected OrderPlacementRefused")
+        except OrderPlacementRefused:
+            pass
+    finally:
+        await supervisor.stop_all(grace_s=0.1)
