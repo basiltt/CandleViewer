@@ -1,7 +1,7 @@
 # CI/CD Runbook
 
-> Owner: `area/infra-devops`. Source of truth for pipeline *operation* — the
-> pipeline's *shape* is `docs/plan/27-adrs/ADR-0013-ci-pipeline.md` (binding
+> Owner: `area/infra-devops`. Source of truth for pipeline _operation_ — the
+> pipeline's _shape_ is `docs/plan/27-adrs/ADR-0013-ci-pipeline.md` (binding
 > rules 1–10); if this runbook and the ADR disagree, the ADR wins and this
 > file is a bug — fix it in the same PR. Required check names are owned by
 > `CONSTITUTION.md` C-9.1; this runbook does not restate that list.
@@ -76,6 +76,7 @@ any workflow or `tools/ci`/`scripts` source can emit must have a heading
 here, or the check fails the `governance` lane.
 
 ### CI-GATE-* — required-check resolver
+
 - **CI-GATE-001** (applicable lane not successful): open the failing lane's
   log linked from the job summary; fix the underlying failure, do not touch
   the resolver.
@@ -88,16 +89,18 @@ here, or the check fails the `governance` lane.
   GitHub shows for that release and keep the `# vX.Y.Z` comment.
 
 ### CI-JS-* — JS/TS lane
+
 - **CI-JS-001** (`.nvmrc` vs `package.json#engines.node` mismatch): update
   whichever one is stale so both name the same Node major/minor; re-run
   `node tools/ci/check-node-version.mjs` locally.
 
 ### CI-GEN-* — generated-code freshness (`packages/protocol`)
+
 - **CI-GEN-001** (drift): the working tree does not match `make gen`'s
   output. Run codegen locally, commit the regenerated files — never hand-edit
   `packages/protocol/src/generated`.
 - **CI-GEN-002** (untracked generated output): codegen produced files `git
-  diff` cannot see because they were never tracked. `git add` them in the
+diff` cannot see because they were never tracked. `git add` them in the
   same commit as the schema change that introduced them.
 - **CI-GEN-003** (non-deterministic generation): running the generator twice
   produced two different hashes. This is a generator bug (usually an
@@ -108,6 +111,7 @@ here, or the check fails the `governance` lane.
   the gate cannot pass on a generator that did not run.
 
 ### CI-CON-* — contract conformance
+
 - **CI-CON-001** (OpenAPI structural validity / server-route drift): a route,
   field or schema in `docs/plan/22-api-openapi.yaml` no longer matches the
   implementation the contract test exercises. Fix the contract-first: update
@@ -115,6 +119,7 @@ here, or the check fails the `governance` lane.
   client to paper over a real drift.
 
 ### CI-INT-* — integration lane fixtures
+
 - **CI-INT-001** (fixture unavailable): a fixture referenced by
   `services/api/tests/fixtures/bybit/**` (or its manifest) is missing on
   disk. Confirm it was committed (fixtures are never fetched over the
@@ -127,6 +132,7 @@ here, or the check fails the `governance` lane.
   restore the original fixture.
 
 ### CI-E2E-* / CI-A11Y-* — Playwright + accessibility
+
 - **CI-E2E-001** (Playwright suite failed after retry): a spec failed twice
   (not a single flake). Open the uploaded JSON reporter artifact for the
   failing shard; reproduce locally with `pnpm --filter @candleviewer/web e2e`.
@@ -143,6 +149,7 @@ here, or the check fails the `governance` lane.
   rule repo-wide to unblock one PR.
 
 ### CI-SEC-* — security scanning (`tools/ci/security_gate.py`)
+
 - **CI-SEC-001** (blocking finding): a CodeQL/Semgrep/Bandit/pip-audit/
   npm-audit/gitleaks finding has no accepted-risk entry. Fix the finding.
   Gitleaks findings never get an accepted-risk exception (see the gate's own
@@ -164,6 +171,7 @@ here, or the check fails the `governance` lane.
   setup problem before assuming the codebase is clean.
 
 ### CI-COV-* — coverage gate (`tools/ci/coverage_gate.py`)
+
 - **CI-COV-001** (below floor): measured coverage for a package is below its
   floor in `tools/ci/coverage-baselines.json` (services/api ≥85%/75% branch,
   chart-engine ≥85%, apps/web & packages/ui ≥80% — CONSTITUTION §9 #3). Add
@@ -177,10 +185,51 @@ here, or the check fails the `governance` lane.
   produced a coverage report for an applicable package left none. Check
   that lane's upload step; a silently-missing report must never pass.
 
+### CI-MIG-* — Alembic migration gate (`.github/workflows/_job-migrations.yml`,
+
+`tools/ci/migration_lint.py`, C-5.1–C-5.6)
+
+- **CI-MIG-000** (versions directory not found): the migration lint tool
+  could not locate the Alembic `versions/` directory at the expected path.
+  Check that the migration you added lives under the versions directory
+  named in `docs/plan/21-database-schema.md`, and that the path was not
+  moved without updating the lint tool's config.
+- **CI-MIG-001** (multiple Alembic heads): `alembic heads` returned more
+  than one head, meaning two migrations were parented off the same
+  revision. Rebase onto `main`, re-`down_revision` your migration onto the
+  new head so there is a single linear history (C-5.3), and re-run
+  `alembic heads` locally to confirm exactly one head remains.
+- **CI-MIG-002** (schema drift): `alembic check` found a mismatch between
+  the SQLAlchemy models and the migration chain's resulting schema. Either
+  a model changed without a matching migration, or a migration does not
+  fully capture the model change. Autogenerate a diff (`alembic revision
+--autogenerate`) and reconcile it into your migration by hand — never
+  hand-edit an already-applied migration (C-5.4).
+- **CI-MIG-003** (destructive operation without a `# cv:contract-phase:`
+  annotation): the expand/contract linter found a drop/rename/narrowing
+  operation with no phase annotation. Split the change into
+  expand → migrate → contract across separate releases (C-5.1), and
+  annotate the destructive statement with the phase comment the linter
+  expects once you are genuinely in the contract phase.
+- **CI-MIG-004** (upgrade-path failure): running the migration chain up
+  from the previous release tag's schema failed. Reproduce locally
+  (`alembic upgrade head` from a DB seeded at the previous tag) and fix the
+  migration; this is separate from the round-trip check in CI-COV/CI-INT
+  and exists specifically to catch assumptions about pre-existing data.
+- **CI-MIG-005** (`IF NOT EXISTS` used in a migration): a migration file
+  uses `IF NOT EXISTS`/`IF EXISTS` guards, which mask a wrong `down_revision`
+  or a genuinely missing prior migration instead of failing loudly. Remove
+  the guard and fix the actual ordering problem.
+- **CI-MIG-006** (informational, non-blocking): a migration touches a table
+  named in the audit-table list (C-5.7). This never fails the gate by
+  itself — it is a flag for the reviewer to confirm no `UPDATE`/`DELETE`
+  grant was added to an audit table.
+
 ### CI-IMG-* — container image supply chain (merge-to-main, `main.yml`)
+
 - **CI-IMG-001** (unpinned base image): a `FROM` line in a Dockerfile is not
   pinned by digest. Pin it (`docker pull`, then `docker inspect --format
-  '{{index .RepoDigests 0}}'`) and commit the `@sha256:...` reference.
+'{{index .RepoDigests 0}}'`) and commit the `@sha256:...` reference.
 - **CI-IMG-002** (root user): the built image runs as root. Add a non-root
   `USER` directive; verify locally with `docker run --rm <image> id`.
 - **CI-IMG-003** (Trivy High/Critical): a High/Critical CVE was found in the
@@ -196,6 +245,7 @@ here, or the check fails the `governance` lane.
   parse/tool error; the gate refuses to sign an image with no valid SBOM.
 
 ### CI-SPIKE-* — spike containment (`tools/ci/check_spike_containment.py`)
+
 - **CI-SPIKE-001** (throwaway prototype code reaching `main`): a path under
   a spike directory is present on a non-spike branch. Per C-4.5, spikes end
   in a written finding and are deleted — remove the prototype path from this
@@ -206,6 +256,7 @@ here, or the check fails the `governance` lane.
   Copy the needed code into its permanent home and update the import.
 
 ### CI-PROT-* — branch-protection governance (`scripts/check_bypass_register.py`)
+
 - **CI-PROT-004** (bypass register stale/empty/malformed): `.github/rulesets/bypass-register.md`
   has a row with a passed or too-far-future review date, is missing rows
   entirely, or is malformed. Add/update the row with a review date no more
@@ -213,6 +264,7 @@ here, or the check fails the `governance` lane.
   longer needed. See §5 for the break-glass procedure this register backs.
 
 ### CI-REL-* — release automation
+
 - **CI-REL-001** (unparseable changelog fragment / non-conventional PR
   title): the PR has neither a conventional-commit title nor a parseable
   `Changelog:` footer. Fix the title, or add a footer line matching the
@@ -231,6 +283,7 @@ here, or the check fails the `governance` lane.
   (`docs/plan/07-release-and-prr.md` §5) and let the checklist gate lift it.
 
 ### CI-DOC-* — documentation drift (this runbook's own gate)
+
 - **CI-DOC-001** (undocumented error code): `scripts/check_runbook_completeness.py`
   found a `CI-<FAMILY>-<NNN>` code emitted by a workflow or `tools/ci`/
   `scripts` source with no matching heading in this file. Add a subsection
@@ -354,10 +407,10 @@ section requires. Append a new dated entry here every time either exercise
 is re-run (e.g. after a significant pipeline change) — never overwrite a
 previous entry.
 
-| Date | Exercise | Result | Evidence |
-|---|---|---|---|
-| 2026-09-29 | Break-the-protocol (schema edit, no protocol regen) | Freshness gate failed with `CI-GEN-001` as expected; PR closed unmerged | See `docs/plan/backlog/E03-T15-validation/exercise-1-break-the-protocol.md` |
-| 2026-09-29 | Gate sweep (synthetic secret, prohibited licence, coverage drop, second Alembic head, unsigned image) | Each planted defect independently proven to block its owning gate | See `docs/plan/backlog/E03-T15-validation/exercise-2-gate-sweep.md` |
+| Date       | Exercise                                                                                              | Result                                                                  | Evidence                                                                    |
+| ---------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 2026-09-29 | Break-the-protocol (schema edit, no protocol regen)                                                   | Freshness gate failed with `CI-GEN-001` as expected; PR closed unmerged | See `docs/plan/backlog/E03-T15-validation/exercise-1-break-the-protocol.md` |
+| 2026-09-29 | Gate sweep (synthetic secret, prohibited licence, coverage drop, second Alembic head, unsigned image) | Each planted defect independently proven to block its owning gate       | See `docs/plan/backlog/E03-T15-validation/exercise-2-gate-sweep.md`         |
 
 ## 12. Benchmark manual-override procedure
 
