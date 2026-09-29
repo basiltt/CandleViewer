@@ -45,7 +45,7 @@ test = [
   "opentelemetry-sdk",
   "opentelemetry-api",
   "psutil",
-  "respx==0.21.1",
+  "respx==0.23.1",
 ]
 
 [build-system]
