@@ -76,6 +76,7 @@ select = ["E", "F", "I", "UP", "B", "S", "ASYNC", "RUF"]
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101"]
 "scripts/tests/**" = ["S101"]
+"benchmarks/questdb_hot_tier/tests/**" = ["S101"]
 # Migration bodies embed raw DDL/seed SQL as triple-quoted strings; wrapping
 # generated INSERT/CREATE statements at 100 cols hurts readability without
 # improving anything (E-4.16: seed rows come from a generator, not hand-tuning).
