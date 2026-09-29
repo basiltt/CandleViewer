@@ -208,6 +208,15 @@
 /services/api/storage/schemas/          @CandleViewer/backend @CandleViewer/architecture
 /backend/db/                            @CandleViewer/backend @CandleViewer/architecture
 # future: E02/later scaffolding; directory does not exist yet.
+
+# bugfix #1556 (E07-T02 / issue #168 defect 3): the *actual* Alembic/DB
+# package lives at `services/api/candleviewer/{db,migrations}` (not the
+# `services/api/storage/` placeholders above, which cover a later storage
+# epic). 21-database-schema.md §9.3 rule 13: "a migration PR requires the
+# data-owner code-owner approval in addition to the normal two approvals" —
+# these two entries are what makes that gate fire in practice.
+/services/api/candleviewer/db/          @CandleViewer/backend @CandleViewer/architecture @CandleViewer/security
+/services/api/candleviewer/migrations/  @CandleViewer/backend @CandleViewer/architecture @CandleViewer/security
 /services/api/pyproject.toml            @CandleViewer/backend @CandleViewer/devsecops @CandleViewer/security
 
 # ---------------------------------------------------------------------------

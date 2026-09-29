@@ -9,39 +9,81 @@
 -- make every *future* table automatically visible to `cv_app`/`cv_ro`
 -- without a per-migration grant statement.
 --
--- Run as a Postgres superuser (`psql -f infra/scripts/pg_bootstrap.sql`,
--- variables supplied via `-v owner_pw=... -v app_pw=... -v ro_pw=...` or
--- environment-substituted by the caller — never a value committed to this
--- file, C-12.2/SR-120..124). `\set` fallbacks below only cover local/dev
--- (`infra/compose/.env.example` CHANGE_ME placeholders); production values
--- are injected by the deploy pipeline's secret store, never this script.
+-- Run as a Postgres superuser (`psql -v ON_ERROR_STOP=1 -f
+-- infra/scripts/pg_bootstrap.sql`), with passwords supplied as `-v`
+-- overrides: `-v owner_pw='...' -v app_pw='...' -v ro_pw='...'`
+-- (C-12.2/SR-120..124 — never a value committed to this file). The `\if
+-- :{?owner_pw}` guards below are pure psql variable-existence checks (no
+-- backticks, no shell command substitution), so this parses and runs the
+-- same whether invoked interactively or non-interactively via `psql -f`
+-- (bug #1556 CI failure: backtick `\set var `echo ...`` substitution does
+-- not reliably reach the server the same way across invocation modes, and
+-- unconditionally overwrote any `-v`-supplied value). This script **fails
+-- closed** (C-12.2): if a caller omits an override, there is no weak
+-- fallback password — the block below forces a SQL error, which aborts the
+-- run under the required `-v ON_ERROR_STOP=1` invocation instead of silently
+-- creating `cv_owner`/`cv_app`/`cv_ro` with a guessable password. Production
+-- values are injected by the deploy pipeline's secret store as `-v`
+-- overrides; local/dev callers must pass their own `-v owner_pw=...` (see
+-- `infra/compose/.env.example` for the dev-only values to use, never
+-- committed here).
 --
 -- Safe to re-run: every statement below is guarded so a second invocation
 -- against an already-bootstrapped cluster is a no-op, not an error.
 
-\set owner_pw `echo "${CV_PG_OWNER_PASSWORD:-CHANGE_ME}"`
-\set app_pw `echo "${CV_PG_APP_PASSWORD:-CHANGE_ME}"`
-\set ro_pw `echo "${CV_PG_RO_PASSWORD:-CHANGE_ME}"`
+\if :{?owner_pw}
+\else
+  \warn 'pg_bootstrap.sql: owner_pw not supplied via -v — refusing to bootstrap with a default password (C-12.2)'
+  SELECT 1 / 0;
+\endif
+\if :{?app_pw}
+\else
+  \warn 'pg_bootstrap.sql: app_pw not supplied via -v — refusing to bootstrap with a default password (C-12.2)'
+  SELECT 1 / 0;
+\endif
+\if :{?ro_pw}
+\else
+  \warn 'pg_bootstrap.sql: ro_pw not supplied via -v — refusing to bootstrap with a default password (C-12.2)'
+  SELECT 1 / 0;
+\endif
 
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cv_owner') THEN
-    CREATE ROLE cv_owner LOGIN PASSWORD :'owner_pw';
-  END IF;
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cv_app') THEN
-    CREATE ROLE cv_app LOGIN PASSWORD :'app_pw';
-  END IF;
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cv_ro') THEN
-    CREATE ROLE cv_ro LOGIN PASSWORD :'ro_pw';
-  END IF;
-END
-$$;
+-- NOTE: role creation is expressed as three `SELECT ... \gexec` statements
+-- rather than a single `DO $$ ... $$` block. psql's `:'var'` interpolation
+-- is a client-side lexer pass that does not descend into dollar-quoted
+-- string bodies, so `PASSWORD :'owner_pw'` inside `DO $$ ... $$` is sent to
+-- the server byte-for-byte (including the literal colon), which the server
+-- then rejects with `syntax error at or near ":"` (bug #1556 CI failure).
+-- `\gexec` statements are plain top-level SQL, not dollar-quoted, so the
+-- substitution happens as intended before the generated `CREATE ROLE` text
+-- is sent back to the server for execution.
+SELECT format('CREATE ROLE cv_owner LOGIN PASSWORD %L', :'owner_pw')
+WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cv_owner')
+\gexec
+
+SELECT format('CREATE ROLE cv_app LOGIN PASSWORD %L', :'app_pw')
+WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cv_app')
+\gexec
+
+SELECT format('CREATE ROLE cv_ro LOGIN PASSWORD %L', :'ro_pw')
+WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cv_ro')
+\gexec
 
 SELECT 'CREATE DATABASE candleviewer OWNER cv_owner'
 WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'candleviewer')
 \gexec
 
+-- If `candleviewer` already existed (e.g. created by the CI service
+-- container's own POSTGRES_DB bootstrap, owned by that container's
+-- superuser) the CREATE DATABASE above is a no-op, so re-assert
+-- ownership here unconditionally — cv_owner must own the database it
+-- migrates, or the REVOKE/GRANT block below leaves it without CREATE
+-- on schema public (bug #1556 CI follow-up).
+ALTER DATABASE candleviewer OWNER TO cv_owner;
+
 \connect candleviewer
+
+-- Re-assert schema ownership too, for the same already-existed case.
+ALTER SCHEMA public OWNER TO cv_owner;
 
 -- `cv_app` never receives CREATE/ALTER/DROP on this database (§9.1: "the app
 -- role cv_app has no DDL privileges") — no GRANT of schema-level CREATE is

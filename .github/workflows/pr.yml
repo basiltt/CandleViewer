@@ -92,9 +92,13 @@ jobs:
               - 'packages/chart-engine/**'
               - 'packages/protocol/**'
             migrations:
-              - 'services/api/candleviewer/migrations/versions/**'
+              - 'services/api/candleviewer/migrations/**'
+              - 'services/api/candleviewer/db/**'
               - 'services/api/**/models.py'
               - 'services/api/alembic.ini'
+              - 'tools/ci/verify_migration_lockfile.py'
+              - 'infra/scripts/pg_bootstrap.sql'
+              - '.github/workflows/_job-migrations.yml'
 
   pin-check:
     name: pin-check (SR-132)
@@ -322,8 +326,10 @@ jobs:
   migrations:
     name: migrations
     needs: changed-paths
-    # E03-T10: single-head/drift/expand-contract/upgrade-path checks, only
-    # when a migration file or models.py under services/api actually changed.
+    # E03-T10 base gate (single-head/drift/expand-contract/upgrade-path) plus
+    # bugfix #1556 (E07-T02 / #168 defect 1) additions: timing budget,
+    # lockfile integrity, cv_app privilege matrix. Applicable whenever a
+    # migration revision file, models.py or the migration tooling changes.
     if: ${{ needs.changed-paths.outputs.migrations == 'true' }}
     uses: ./.github/workflows/_job-migrations.yml
 
@@ -409,11 +415,11 @@ jobs:
         env:
           FILTER_JS: ${{ needs.changed-paths.outputs.js }}
           FILTER_PY: ${{ needs.changed-paths.outputs.py }}
+          FILTER_MIGRATIONS: ${{ needs.changed-paths.outputs.migrations }}
           FILTER_PROTOCOL: ${{ needs.changed-paths.outputs.protocol }}
           FILTER_INFRA: ${{ needs.changed-paths.outputs.infra }}
           FILTER_E2E: ${{ needs.changed-paths.outputs.e2e }}
           FILTER_ENGINE: ${{ needs.changed-paths.outputs.engine }}
-          FILTER_MIGRATIONS: ${{ needs.changed-paths.outputs.migrations }}
           RESULT_CHANGED_PATHS: ${{ needs.changed-paths.result }}
           RESULT_PIN_CHECK: ${{ needs.pin-check.result }}
           RESULT_SPIKE_CONTAINMENT: ${{ needs.spike-containment.result }}
