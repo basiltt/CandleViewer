@@ -71,8 +71,7 @@ class ReadOnlyGate:
                 # state was already updated above, so this stays fail-closed
                 # regardless of listener behaviour.
                 _logger.exception(
-                    "net.read_only_gate: listener raised while handling "
-                    "tripped=%s reason_code=%s",
+                    "net.read_only_gate: listener raised while handling tripped=%s reason_code=%s",
                     tripped,
                     reason_code,
                 )
