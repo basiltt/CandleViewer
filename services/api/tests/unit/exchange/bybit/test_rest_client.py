@@ -31,8 +31,14 @@ def _config(*, max_retries: int = 2, **overrides: object) -> RestClientConfig:
     return RestClientConfig(base_url=BASE_URL, max_retries=max_retries, **overrides)  # type: ignore[arg-type]
 
 
-def _fresh_governor() -> TokenBucketGovernor:
-    return TokenBucketGovernor(default_capacity=1000.0, default_refill_per_s=1000.0)
+def _fresh_governor(*, clock: object = None) -> TokenBucketGovernor:
+    if clock is None:
+        return TokenBucketGovernor(default_capacity=1000.0, default_refill_per_s=1000.0)
+    return TokenBucketGovernor(
+        default_capacity=1000.0,
+        default_refill_per_s=1000.0,
+        clock=clock,  # type: ignore[arg-type]
+    )
 
 
 @pytest.mark.asyncio
@@ -367,7 +373,8 @@ async def test_10018_without_limit_status_header_drains_one_token() -> None:
     respx.get(f"{BASE_URL}/v5/market/kline").mock(
         return_value=httpx.Response(200, json={"retCode": 10018, "retMsg": "rate limited"})
     )
-    governor = _fresh_governor()
+    frozen_time = 1_000_000.0
+    governor = _fresh_governor(clock=lambda: frozen_time)
     client = BybitRestClient(_config(max_retries=0), governor=governor)
     try:
         before = governor.remaining("public", EndpointClass.MARKET_DATA)
@@ -376,6 +383,7 @@ async def test_10018_without_limit_status_header_drains_one_token() -> None:
         after = governor.remaining("public", EndpointClass.MARKET_DATA)
         # `acquire()` already consumed one token for the attempt itself;
         # the 10018 drain consumes a second, distinct token on top of that.
+        # The clock is frozen so no refill can happen between the two reads.
         assert after == pytest.approx(before - 2.0, abs=1e-6)
     finally:
         await client.aclose()
@@ -394,7 +402,7 @@ async def test_10018_with_limit_status_header_sets_bucket_to_remaining() -> None
             headers={"X-Bapi-Limit-Status": "7"},
         )
     )
-    governor = _fresh_governor()
+    governor = _fresh_governor(clock=lambda: 1_000_000.0)
     client = BybitRestClient(_config(max_retries=0), governor=governor)
     try:
         with pytest.raises(RateLimitError):
