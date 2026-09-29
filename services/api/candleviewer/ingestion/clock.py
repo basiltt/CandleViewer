@@ -50,11 +50,18 @@ rejection" needs more than one sample to have an outlier to reject)."""
 
 
 class ServerTimeFetcher(Protocol):
-    """Returns `(server_time_us, request_sent_monotonic_s, round_trip_s)` for
-    one `GET /v5/market/time` call. Implemented by a thin adapter over
-    `BybitRestClient.get_public` — kept as a narrow protocol here so this
-    module never imports `httpx`/`exchange.bybit` directly (module
-    boundaries, C-3.1) and stays unit-testable with a fake."""
+    """Returns `(server_time_us, request_sent_epoch_s, round_trip_s)` for
+    one `GET /v5/market/time` call. `request_sent_epoch_s` MUST be a
+    wall-clock (epoch) timestamp — e.g. `time.time()`/`time_ns()` — never a
+    `time.monotonic()` value, because it is compared directly against the
+    server's epoch time to compute the offset; monotonic time has an
+    arbitrary origin and would make the offset roughly the full epoch
+    value. `round_trip_s` may (and should) come from a monotonic clock,
+    since only the *difference* between two monotonic reads is meaningful.
+    Implemented by a thin adapter over `BybitRestClient.get_public` — kept
+    as a narrow protocol here so this module never imports
+    `httpx`/`exchange.bybit` directly (module boundaries, C-3.1) and stays
+    unit-testable with a fake."""
 
     async def __call__(self) -> tuple[int, float, float]: ...
 
@@ -63,7 +70,15 @@ class ClockMeasurementUnavailableError(IngestionError):
     """`GET /v5/market/time` failed on every sample in a burst. The last
     known offset continues to be applied (scenario "Exchange time endpoint
     unavailable") — this error is raised only to the caller that requested a
-    fresh measurement, never used to fall back to an uncorrected clock."""
+    fresh measurement, never used to fall back to an uncorrected clock.
+
+    The message embeds `str(exc)` from the last failed sample. `/v5/market/time`
+    is public and unsigned, so no request headers (API key, signature) are
+    ever attached to it, and `BybitRestClient` only surfaces
+    `TransportError`/`UnknownStateError` text (status code, path, body
+    snippet) here — never raw request headers (see review note,
+    `50-security.md`). Do not widen this fetcher to a signed endpoint
+    without re-auditing this message for leaking credentials."""
 
 
 class ClockGuard:
@@ -181,13 +196,15 @@ class ClockGuard:
         errors: list[Exception] = []
         for _ in range(self._sample_count):
             try:
-                server_time_us, sent_monotonic_s, rtt_s = await self._fetch_server_time()
+                server_time_us, sent_epoch_s, rtt_s = await self._fetch_server_time()
             except Exception as exc:
                 errors.append(exc)
                 continue
             # offset = server_time - (t_send + rtt/2) — round-trip-corrected
             # estimate (ticket body technical notes), all in microseconds.
-            local_mid_us = int((sent_monotonic_s + rtt_s / 2) * 1_000_000)
+            # `sent_epoch_s` MUST be wall-clock (epoch), never monotonic —
+            # see `ServerTimeFetcher` docstring.
+            local_mid_us = int((sent_epoch_s + rtt_s / 2) * 1_000_000)
             samples.append((server_time_us - local_mid_us, rtt_s))
 
         if not samples:
@@ -298,6 +315,7 @@ def rest_client_fetcher(client: BybitRestClient) -> ServerTimeFetcher:
     a global" (technical notes)."""
 
     async def _fetch() -> tuple[int, float, float]:
+        sent_epoch_s = time.time()
         sent_monotonic_s = time.monotonic()
         response = await client.get_public("/v5/market/time")
         rtt_s = time.monotonic() - sent_monotonic_s
@@ -316,6 +334,6 @@ def rest_client_fetcher(client: BybitRestClient) -> ServerTimeFetcher:
             raise ClockMeasurementUnavailableError(
                 f"/v5/market/time response had no usable time field: {result!r}"
             )
-        return server_time_us, sent_monotonic_s, rtt_s
+        return server_time_us, sent_epoch_s, rtt_s
 
     return _fetch

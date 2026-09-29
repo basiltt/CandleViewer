@@ -8,6 +8,8 @@ E08-T02)."""
 
 from __future__ import annotations
 
+import time
+
 import httpx
 import pytest
 import respx
@@ -71,6 +73,43 @@ async def test_rest_client_fetcher_falls_back_to_time_field_in_ms() -> None:
         guard = ClockGuard(rest_client_fetcher(client), sample_count=1)
         offset_us = await guard.measure_once()
         assert isinstance(offset_us, int)
+    finally:
+        await client.aclose()
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_rest_client_fetcher_offset_reflects_injected_skew_not_epoch() -> None:
+    """Regression test for the review finding that `rest_client_fetcher`
+    once sent `time.monotonic()` (arbitrary origin) as the "sent" timestamp
+    compared against the server's real epoch time — that bug makes the
+    computed offset roughly the size of the whole epoch (~1.7e9 s), which
+    would make `assert_healthy()` always raise. Here the mocked server time
+    is a real epoch value skewed by a known +250 ms from *now*, so a
+    correct implementation reports an offset within a tight tolerance of
+    250 ms, while the monotonic-origin bug would report an offset of
+    roughly `time.time() - time.monotonic()` (many years)."""
+    injected_skew_ms = 250
+    server_epoch_s = time.time() + injected_skew_ms / 1_000
+    respx.get(f"{BASE_URL}/v5/market/time").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "retCode": 0,
+                "retMsg": "OK",
+                "result": {"timeNano": str(int(server_epoch_s * 1_000_000_000))},
+            },
+        )
+    )
+    client = _client()
+    try:
+        guard = ClockGuard(rest_client_fetcher(client), sample_count=1)
+        offset_us = await guard.measure_once()
+        offset_ms = offset_us / 1_000
+        # Generous tolerance for test-runner scheduling jitter, but far
+        # tighter than the ~1.7e9-second error the monotonic-origin bug
+        # would produce.
+        assert abs(offset_ms - injected_skew_ms) < 2_000
     finally:
         await client.aclose()
 

@@ -32,12 +32,19 @@ async def _noop_sleep(_seconds: float) -> None:
     return None
 
 
+_REALISTIC_EPOCH_S = 1_735_000_000.0
+"""A plausible wall-clock `time.time()` value (~2024), used instead of `0`
+so a regression to sending `time.monotonic()` as the epoch timestamp would
+blow the offset up to ~1.7e9 seconds and fail these tests loudly."""
+
+
 def _fetcher_returning(
     *offsets_us: int, rtts: tuple[float, ...] | None = None
 ) -> ServerTimeFetcher:
-    """Build a `ServerTimeFetcher` returning one `(offset, monotonic, rtt)`
-    tuple per call, cycling if exhausted. `monotonic` is fixed at 0 in each
-    call for simplicity — only relative offset/rtt matter for these tests."""
+    """Build a `ServerTimeFetcher` returning one `(server_time_us,
+    sent_epoch_s, rtt_s)` tuple per call, cycling if exhausted.
+    `sent_epoch_s` is fixed at a realistic epoch value in each call — only
+    relative offset/rtt matter for these tests."""
     calls = {"i": 0}
     rtt_values = rtts if rtts is not None else tuple(0.01 for _ in offsets_us)
 
@@ -46,9 +53,9 @@ def _fetcher_returning(
         calls["i"] += 1
         offset_us = offsets_us[i]
         rtt_s = rtt_values[i]
-        sent_monotonic_s = 0.0
-        server_time_us = int((sent_monotonic_s + rtt_s / 2) * 1_000_000) + offset_us
-        return server_time_us, sent_monotonic_s, rtt_s
+        sent_epoch_s = _REALISTIC_EPOCH_S
+        server_time_us = int((sent_epoch_s + rtt_s / 2) * 1_000_000) + offset_us
+        return server_time_us, sent_epoch_s, rtt_s
 
     return _fetch
 
