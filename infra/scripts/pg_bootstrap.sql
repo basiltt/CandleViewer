@@ -9,19 +9,36 @@
 -- make every *future* table automatically visible to `cv_app`/`cv_ro`
 -- without a per-migration grant statement.
 --
--- Run as a Postgres superuser (`psql -f infra/scripts/pg_bootstrap.sql`,
--- variables supplied via `-v owner_pw=... -v app_pw=... -v ro_pw=...` or
--- environment-substituted by the caller — never a value committed to this
--- file, C-12.2/SR-120..124). `\set` fallbacks below only cover local/dev
--- (`infra/compose/.env.example` CHANGE_ME placeholders); production values
--- are injected by the deploy pipeline's secret store, never this script.
+-- Run as a Postgres superuser (`psql -v ON_ERROR_STOP=1 -f
+-- infra/scripts/pg_bootstrap.sql`), with passwords supplied as `-v`
+-- overrides: `-v owner_pw='...' -v app_pw='...' -v ro_pw='...'`
+-- (C-12.2/SR-120..124 — never a value committed to this file). The `\if
+-- :{?owner_pw}` guards below are pure psql variable-existence checks (no
+-- backticks, no shell command substitution), so this parses and runs the
+-- same whether invoked interactively or non-interactively via `psql -f`
+-- (bug #1556 CI failure: backtick `\set var `echo ...`` substitution does
+-- not reliably reach the server the same way across invocation modes, and
+-- unconditionally overwrote any `-v`-supplied value). If a caller omits an
+-- override, the local/dev-only `CHANGE_ME` fallback is used
+-- (`infra/compose/.env.example` placeholders); production values are
+-- injected by the deploy pipeline's secret store as `-v` overrides, never
+-- this script.
 --
 -- Safe to re-run: every statement below is guarded so a second invocation
 -- against an already-bootstrapped cluster is a no-op, not an error.
 
-\set owner_pw `echo "${CV_PG_OWNER_PASSWORD:-CHANGE_ME}"`
-\set app_pw `echo "${CV_PG_APP_PASSWORD:-CHANGE_ME}"`
-\set ro_pw `echo "${CV_PG_RO_PASSWORD:-CHANGE_ME}"`
+\if :{?owner_pw}
+\else
+  \set owner_pw 'CHANGE_ME'
+\endif
+\if :{?app_pw}
+\else
+  \set app_pw 'CHANGE_ME'
+\endif
+\if :{?ro_pw}
+\else
+  \set ro_pw 'CHANGE_ME'
+\endif
 
 -- NOTE: role creation is expressed as three `SELECT ... \gexec` statements
 -- rather than a single `DO $$ ... $$` block. psql's `:'var'` interpolation

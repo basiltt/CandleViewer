@@ -96,8 +96,8 @@ def _load_base_lockfile(base_ref: str, lockfile_path: Path) -> dict[str, dict[st
             f"{exc}"
         ) from exc
 
-    show = subprocess.run(  # noqa: S603
-        ["git", "show", f"{merge_base}:{lockfile_path.as_posix()}"],  # noqa: S607
+    show = subprocess.run(
+        ["git", "show", f"{merge_base}:{lockfile_path.as_posix()}"],
         capture_output=True,
         text=True,
         check=False,
