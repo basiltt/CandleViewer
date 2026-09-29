@@ -159,3 +159,20 @@ async def test_build_app_context_wires_a_system_topic_publisher_to_the_gate() ->
 
     payload = sub.get_nowait()
     assert payload["reason_code"] == "net.test"
+
+
+def test_create_app_mounts_the_admin_audit_router() -> None:
+    # QA defect #1596 blocker 1: `AuditQueryService`/`authorize()` existed
+    # but no `APIRouter` mounted `/admin/audit*` onto `create_app()`'s
+    # FastAPI instance.
+    app = create_app(_fake_settings())
+    paths: set[str | None] = set()
+    for route in app.routes:
+        original = getattr(route, "original_router", None)
+        if original is not None:
+            paths.update(getattr(r, "path", None) for r in original.routes)
+        else:
+            paths.add(getattr(route, "path", None))
+    assert "/admin/audit" in paths
+    assert "/admin/audit/verify" in paths
+    assert "/admin/audit/export" in paths

@@ -49,7 +49,7 @@ _ALLOWED_EXTRA_EXPORTS: dict[str, set[str]] = {
         "TimeRange",
         "UnitOfWork",
     },
-    "M23a": {"make_health_router", "make_auth_router"},
+    "M23a": {"make_health_router", "make_auth_router", "make_audit_router"},
     # E09-T02: the audit writer/query surface M21/M23 consume (C-3.3).
     "M19": {
         "AuditAccessDenied",

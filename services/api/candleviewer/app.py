@@ -27,7 +27,7 @@ from candleviewer.admin.wiring import (
     build_secrets_service,
 )
 from candleviewer.alerts.service import AlertsService
-from candleviewer.api import make_auth_router, make_health_router
+from candleviewer.api import make_audit_router, make_auth_router, make_health_router
 from candleviewer.auth.service import AuthService
 from candleviewer.bars.service import BarsService
 from candleviewer.book.service import BookService
@@ -259,4 +259,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         make_health_router(resolved, ctx.metrics, mesh_read_only_gate=ctx.oms_read_only_gate)
     )
     app.include_router(make_auth_router(ctx.auth, ctx.audit))
+    app.include_router(make_audit_router(ctx.audit))
     return app
