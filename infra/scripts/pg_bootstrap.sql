@@ -18,26 +18,33 @@
 -- same whether invoked interactively or non-interactively via `psql -f`
 -- (bug #1556 CI failure: backtick `\set var `echo ...`` substitution does
 -- not reliably reach the server the same way across invocation modes, and
--- unconditionally overwrote any `-v`-supplied value). If a caller omits an
--- override, the local/dev-only `CHANGE_ME` fallback is used
--- (`infra/compose/.env.example` placeholders); production values are
--- injected by the deploy pipeline's secret store as `-v` overrides, never
--- this script.
+-- unconditionally overwrote any `-v`-supplied value). This script **fails
+-- closed** (C-12.2): if a caller omits an override, there is no weak
+-- fallback password — the block below forces a SQL error, which aborts the
+-- run under the required `-v ON_ERROR_STOP=1` invocation instead of silently
+-- creating `cv_owner`/`cv_app`/`cv_ro` with a guessable password. Production
+-- values are injected by the deploy pipeline's secret store as `-v`
+-- overrides; local/dev callers must pass their own `-v owner_pw=...` (see
+-- `infra/compose/.env.example` for the dev-only values to use, never
+-- committed here).
 --
 -- Safe to re-run: every statement below is guarded so a second invocation
 -- against an already-bootstrapped cluster is a no-op, not an error.
 
 \if :{?owner_pw}
 \else
-  \set owner_pw 'CHANGE_ME'
+  \warn 'pg_bootstrap.sql: owner_pw not supplied via -v — refusing to bootstrap with a default password (C-12.2)'
+  SELECT 1 / 0;
 \endif
 \if :{?app_pw}
 \else
-  \set app_pw 'CHANGE_ME'
+  \warn 'pg_bootstrap.sql: app_pw not supplied via -v — refusing to bootstrap with a default password (C-12.2)'
+  SELECT 1 / 0;
 \endif
 \if :{?ro_pw}
 \else
-  \set ro_pw 'CHANGE_ME'
+  \warn 'pg_bootstrap.sql: ro_pw not supplied via -v — refusing to bootstrap with a default password (C-12.2)'
+  SELECT 1 / 0;
 \endif
 
 -- NOTE: role creation is expressed as three `SELECT ... \gexec` statements

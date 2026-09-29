@@ -70,8 +70,14 @@ def test_pg_bootstrap_sql_every_if_exists_guard_has_matching_endif() -> None:
     assert depth == 0, "unbalanced \\if / \\endif pairs in pg_bootstrap.sql"
 
 
-def test_pg_bootstrap_sql_declares_owner_app_ro_password_fallbacks() -> None:
+def test_pg_bootstrap_sql_fails_closed_when_password_omitted() -> None:
+    """C-12.2: no `-v` override must never fall back to a default/weak
+    password. Each guard must abort the run instead of `\\set`-ing a value."""
     text = _SQL_PATH.read_text(encoding="utf-8")
     for var in ("owner_pw", "app_pw", "ro_pw"):
         assert f":{{?{var}}}" in text, f"missing \\if :{{?{var}}} guard for {var}"
-        assert f"\\set {var} 'CHANGE_ME'" in text, f"missing CHANGE_ME fallback for {var}"
+        assert f"\\set {var} 'CHANGE_ME'" not in text, (
+            f"insecure CHANGE_ME fallback still present for {var} (C-12.2)"
+        )
+    assert "SELECT 1 / 0" in text, "missing fail-closed abort when a password is omitted"
+    assert "CHANGE_ME" not in text, "CHANGE_ME placeholder must not appear in the script"
