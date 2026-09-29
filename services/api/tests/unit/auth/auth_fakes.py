@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from candleviewer.auth.models import MfaMethodKind, UserRecord, UserStatus
 from candleviewer.auth.repository import UserRepository
@@ -30,12 +30,20 @@ class FakeUserRepository(UserRepository):
             update={"failed_login_count": 0, "locked_until": None}
         )
 
-    async def record_login_failure(self, user_id: str, *, lock_until: datetime | None) -> None:
+    async def record_login_failure(
+        self, user_id: str, *, lockout_threshold: int, lock_duration: timedelta, now: datetime
+    ) -> datetime | None:
+        # Single-threaded fake: the increment and the lock decision happen
+        # in one synchronous step (no `await` between read and write), which
+        # is the atomicity the real SQL statement must also provide.
         user = self.users[user_id]
-        update: dict[str, object] = {"failed_login_count": user.failed_login_count + 1}
+        new_count = user.failed_login_count + 1
+        lock_until = now + lock_duration if new_count >= lockout_threshold else None
+        update: dict[str, object] = {"failed_login_count": new_count}
         if lock_until is not None:
             update["locked_until"] = lock_until
         self.users[user_id] = user.model_copy(update=update)
+        return lock_until
 
     async def rehash_password(
         self, user_id: str, *, password_hash: str, algo_params: dict[str, int]

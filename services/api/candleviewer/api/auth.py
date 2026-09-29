@@ -93,6 +93,19 @@ def _problem(status_code: int, title: str, detail: str) -> JSONResponse:
     )
 
 
+def _redact_identifier(identifier: str) -> str:
+    """Best-effort redaction for the audit `actor_label` on a *failed*
+    login (C-12.6: "never log ... into an audit record" anything that
+    might be a credential). A failed attempt's identifier field may
+    actually hold a password the user pasted into the wrong box, so unlike
+    the success path (which audits the real, validated username) failure
+    audit records only ever get a short, truncated, non-reversible label —
+    enough to correlate repeated attempts, never enough to leak a secret."""
+    if not identifier:
+        return "(empty)"
+    return f"{identifier[:3]}***(len={len(identifier)})"
+
+
 def make_auth_router(
     auth_service: AuthServiceLike, audit_service: AuditServiceLike | None = None
 ) -> APIRouter:
@@ -111,7 +124,7 @@ def make_auth_router(
             await _audit(
                 audit_service,
                 "auth.login_failed",
-                actor_label=body.identifier,
+                actor_label=_redact_identifier(body.identifier),
                 actor_ip=source_ip,
                 outcome=AuditOutcome.FAILURE,
             )
@@ -120,7 +133,7 @@ def make_auth_router(
             await _audit(
                 audit_service,
                 "auth.login_failed",
-                actor_label=body.identifier,
+                actor_label=_redact_identifier(body.identifier),
                 actor_ip=source_ip,
                 outcome=AuditOutcome.DENIED,
             )
@@ -129,7 +142,7 @@ def make_auth_router(
             await _audit(
                 audit_service,
                 "auth.login_failed",
-                actor_label=body.identifier,
+                actor_label=_redact_identifier(body.identifier),
                 actor_ip=source_ip,
                 outcome=AuditOutcome.DENIED,
             )

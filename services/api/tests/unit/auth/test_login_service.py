@@ -39,7 +39,9 @@ def _service(repo: FakeUserRepository, *, clock: object = None) -> LoginService:
 async def test_successful_login_advances_to_mfa_challenge() -> None:
     repo = FakeUserRepository()
     hasher = Hasher(pepper="test-pepper")
-    repo.add(make_user(password_hash=hasher.hash(PASSWORD), mfa_methods=(MfaMethodKind.TOTP,)))
+    repo.add(
+        make_user(password_hash=await hasher.hash(PASSWORD), mfa_methods=(MfaMethodKind.TOTP,))
+    )
     service = LoginService(repo, hasher, per_ip_throttle=PerIpLoginThrottle(max_attempts=1000))
 
     result = await service.login(
@@ -55,7 +57,7 @@ async def test_successful_login_advances_to_mfa_challenge() -> None:
 async def test_wrong_password_raises_invalid_credentials_with_uniform_message() -> None:
     repo = FakeUserRepository()
     hasher = Hasher(pepper="test-pepper")
-    repo.add(make_user(password_hash=hasher.hash(PASSWORD)))
+    repo.add(make_user(password_hash=await hasher.hash(PASSWORD)))
     service = LoginService(repo, hasher, per_ip_throttle=PerIpLoginThrottle(max_attempts=1000))
 
     with pytest.raises(InvalidCredentials) as exc:
@@ -69,7 +71,7 @@ async def test_wrong_password_raises_invalid_credentials_with_uniform_message() 
 async def test_disabled_account_with_correct_password_raises_account_disabled() -> None:
     repo = FakeUserRepository()
     hasher = Hasher(pepper="test-pepper")
-    repo.add(make_user(password_hash=hasher.hash(PASSWORD), status=UserStatus.DISABLED))
+    repo.add(make_user(password_hash=await hasher.hash(PASSWORD), status=UserStatus.DISABLED))
     service = LoginService(repo, hasher, per_ip_throttle=PerIpLoginThrottle(max_attempts=1000))
 
     with pytest.raises(AccountDisabled):
@@ -83,7 +85,7 @@ async def test_lockout_after_five_failures_refuses_even_correct_password() -> No
     repo = FakeUserRepository()
     hasher = Hasher(pepper="test-pepper")
     box, clock = _clock_factory()
-    user = make_user(password_hash=hasher.hash(PASSWORD))
+    user = make_user(password_hash=await hasher.hash(PASSWORD))
     repo.add(user)
     service = _service(repo, clock=clock)
 
@@ -106,7 +108,7 @@ async def test_lockout_persists_and_expires_after_window() -> None:
     repo = FakeUserRepository()
     hasher = Hasher(pepper="test-pepper")
     box, clock = _clock_factory()
-    repo.add(make_user(password_hash=hasher.hash(PASSWORD)))
+    repo.add(make_user(password_hash=await hasher.hash(PASSWORD)))
     service = _service(repo, clock=clock)
 
     for _ in range(LOCKOUT_THRESHOLD):
@@ -127,7 +129,7 @@ async def test_lockout_persists_and_expires_after_window() -> None:
 async def test_unknown_user_indistinguishable_from_wrong_password() -> None:
     repo = FakeUserRepository()
     hasher = Hasher(pepper="test-pepper")
-    repo.add(make_user(password_hash=hasher.hash(PASSWORD)))
+    repo.add(make_user(password_hash=await hasher.hash(PASSWORD)))
     service = LoginService(repo, hasher, per_ip_throttle=PerIpLoginThrottle(max_attempts=1000))
 
     with pytest.raises(InvalidCredentials) as unknown_exc:
@@ -145,7 +147,7 @@ async def test_unknown_user_indistinguishable_from_wrong_password() -> None:
 async def test_unknown_user_timing_matches_wrong_password_within_tolerance() -> None:
     repo = FakeUserRepository()
     hasher = Hasher(pepper="test-pepper")
-    repo.add(make_user(password_hash=hasher.hash(PASSWORD)))
+    repo.add(make_user(password_hash=await hasher.hash(PASSWORD)))
     service = LoginService(repo, hasher, per_ip_throttle=PerIpLoginThrottle(max_attempts=1000))
 
     samples = 5
@@ -177,7 +179,7 @@ async def test_unknown_user_timing_matches_wrong_password_within_tolerance() -> 
 async def test_per_ip_throttle_blocks_independent_of_username() -> None:
     repo = FakeUserRepository()
     hasher = Hasher(pepper="test-pepper")
-    repo.add(make_user(password_hash=hasher.hash(PASSWORD)))
+    repo.add(make_user(password_hash=await hasher.hash(PASSWORD)))
     throttle = PerIpLoginThrottle(max_attempts=2, window_s=60.0)
     service = LoginService(repo, hasher, per_ip_throttle=throttle)
 
@@ -191,14 +193,14 @@ async def test_per_ip_throttle_blocks_independent_of_username() -> None:
         await service.login(
             LoginRequest(identifier="basiltt", password=PASSWORD), source_ip="10.9.9.9"
         )
-    assert "too many attempts" in str(exc.value)
+    assert str(exc.value) == "Username or password is incorrect"
 
 
 @pytest.mark.asyncio
 async def test_successful_login_resets_failed_count_and_lockout() -> None:
     repo = FakeUserRepository()
     hasher = Hasher(pepper="test-pepper")
-    user = make_user(password_hash=hasher.hash(PASSWORD), failed_login_count=3)
+    user = make_user(password_hash=await hasher.hash(PASSWORD), failed_login_count=3)
     repo.add(user)
     service = LoginService(repo, hasher, per_ip_throttle=PerIpLoginThrottle(max_attempts=1000))
 
@@ -214,7 +216,7 @@ async def test_stale_argon2_params_trigger_rehash_on_login() -> None:
     repo = FakeUserRepository()
     hasher = Hasher(pepper="test-pepper")
     stale_params = {"m": 8, "t": 1, "p": 1}
-    stale_hash = hasher.hash(PASSWORD, stale_params)
+    stale_hash = await hasher.hash(PASSWORD, stale_params)
     user = make_user(password_hash=stale_hash, algo_params=stale_params)
     repo.add(user)
     service = LoginService(repo, hasher, per_ip_throttle=PerIpLoginThrottle(max_attempts=1000))
@@ -224,4 +226,4 @@ async def test_stale_argon2_params_trigger_rehash_on_login() -> None:
     assert len(repo.rehash_calls) == 1
     stored = repo.users[str(user.id)]
     assert stored.password_hash != stale_hash
-    assert hasher.verify(stored.password_hash, PASSWORD) is True
+    assert await hasher.verify(stored.password_hash, PASSWORD) is True

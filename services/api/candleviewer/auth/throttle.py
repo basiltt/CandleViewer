@@ -24,11 +24,17 @@ class PerIpLoginThrottle:
     usernames were tried."""
 
     def __init__(
-        self, *, max_attempts: int = 20, window_s: float = 60.0, clock: Clock = time.monotonic
+        self,
+        *,
+        max_attempts: int = 20,
+        window_s: float = 60.0,
+        clock: Clock = time.monotonic,
+        max_tracked_ips: int = 10_000,
     ) -> None:
         self._max_attempts = max_attempts
         self._window_s = window_s
         self._clock = clock
+        self._max_tracked_ips = max_tracked_ips
         self._attempts: dict[str, deque[float]] = {}
 
     def is_blocked(self, source_ip: str) -> bool:
@@ -37,6 +43,15 @@ class PerIpLoginThrottle:
 
     def record_failure(self, source_ip: str) -> None:
         self._evict(source_ip)
+        if source_ip not in self._attempts and len(self._attempts) >= self._max_tracked_ips:
+            # Bounded map (C-2.18 "every queue/collection is bounded"): a
+            # single-process, in-memory dict keyed on attacker-controlled
+            # source IPs is otherwise an unbounded-memory DoS vector. Drop
+            # the oldest-first tracked IP (its window has already had the
+            # most time to empty naturally) rather than let the dict grow
+            # without limit.
+            oldest_ip = next(iter(self._attempts))
+            del self._attempts[oldest_ip]
         self._attempts.setdefault(source_ip, deque()).append(self._clock())
 
     def _evict(self, source_ip: str) -> None:

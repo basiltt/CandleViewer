@@ -19,6 +19,7 @@ mirroring how `AuditWriter` is handed a repository rather than importing
 
 from __future__ import annotations
 
+import asyncio
 import hmac
 
 from argon2 import PasswordHasher
@@ -61,29 +62,44 @@ class Hasher:
     def _peppered(self, password: str) -> str:
         return password + self._pepper
 
-    def hash(self, password: str, params: dict[str, int] | None = None) -> str:
-        """Hash `password` (plus pepper) with `params` (or the default)."""
-        hasher = _params_to_hasher(params) if params is not None else self._default_hasher
-        return hasher.hash(self._peppered(password))
+    async def hash(self, password: str, params: dict[str, int] | None = None) -> str:
+        """Hash `password` (plus pepper) with `params` (or the default).
 
-    def verify(self, password_hash: str, password: str) -> bool:
+        Argon2id hashing is deliberately CPU/memory heavy (tuned cost
+        parameters), so it must never run inline on the asyncio event loop
+        (C-2.18) — the actual work happens in a worker thread via
+        `asyncio.to_thread`."""
+        hasher = _params_to_hasher(params) if params is not None else self._default_hasher
+        peppered = self._peppered(password)
+        return await asyncio.to_thread(hasher.hash, peppered)
+
+    async def verify(self, password_hash: str, password: str) -> bool:
         """Constant-time-equivalent verify (argon2-cffi's C extension does
         the actual comparison; this wrapper just turns the library's
         exception-based API into a bool without ever branching on *why* it
-        failed, keeping the code path identical to the dummy-hash path)."""
+        failed, keeping the code path identical to the dummy-hash path).
+
+        Runs off the event loop (`asyncio.to_thread`) — same C-2.18 rationale
+        as `hash()`: Argon2id verification is deliberately slow and must
+        never block the loop, or a caller could stall the whole backend by
+        hammering `/auth/login` (see this module's PR review history)."""
+        peppered = self._peppered(password)
+        return await asyncio.to_thread(self._verify_sync, password_hash, peppered)
+
+    def _verify_sync(self, password_hash: str, peppered_password: str) -> bool:
         try:
-            self._default_hasher.verify(password_hash, self._peppered(password))
+            self._default_hasher.verify(password_hash, peppered_password)
         except VerifyMismatchError:
             return False
         except Exception:
             return False
         return True
 
-    def verify_dummy(self, password: str) -> bool:
+    async def verify_dummy(self, password: str) -> bool:
         """Run the same Argon2id verification work against `_DUMMY_HASH` so
         an unknown-identifier login takes the same CPU time as a real one.
         Always returns `False` (the dummy hash matches no real password)."""
-        return self.verify(_DUMMY_HASH, password)
+        return await self.verify(_DUMMY_HASH, password)
 
     def needs_rehash(self, password_hash: str, params: dict[str, int]) -> bool:
         """True when `password_hash`'s embedded parameters differ from

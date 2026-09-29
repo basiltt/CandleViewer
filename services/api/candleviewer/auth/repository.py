@@ -11,7 +11,7 @@ types — the composition root injects it into `AuthService(repository=...)`.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Protocol
 
 from candleviewer.auth.models import UserRecord
@@ -35,9 +35,23 @@ class UserRepository(Protocol):
         match on an active, unlocked account."""
         ...
 
-    async def record_login_failure(self, user_id: str, *, lock_until: datetime | None) -> None:
-        """Increment `failed_login_count` by 1; if `lock_until` is given,
-        also set `users.locked_until` (the fifth consecutive failure)."""
+    async def record_login_failure(
+        self, user_id: str, *, lockout_threshold: int, lock_duration: timedelta, now: datetime
+    ) -> datetime | None:
+        """Atomically increment `failed_login_count` by 1 and, if the new
+        count reaches `lockout_threshold`, set `users.locked_until = now +
+        lock_duration` in the same statement (e.g. a single `UPDATE ...
+        SET failed_login_count = failed_login_count + 1, locked_until =
+        CASE WHEN failed_login_count + 1 >= :threshold THEN :lock_until ELSE
+        locked_until END RETURNING locked_until`).
+
+        The increment-and-lock decision must happen in one atomic operation
+        here, never as a read-then-write round trip in the caller —
+        `LoginService` no longer computes `new_count` itself from a
+        (possibly stale) `UserRecord` snapshot, precisely so two concurrent
+        wrong-password attempts cannot both observe `failed_login_count - 1`
+        and race past the threshold. Returns the resulting `locked_until`
+        (or `None` if the account is not newly locked)."""
         ...
 
     async def rehash_password(

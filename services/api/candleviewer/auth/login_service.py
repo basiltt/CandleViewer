@@ -73,23 +73,32 @@ class LoginService:
         """
         if self._per_ip_throttle.is_blocked(source_ip):
             # Per-IP throttle failures are indistinguishable from a wrong
-            # password to the caller (no extra information leaked about
-            # *why* the request was refused).
-            raise InvalidCredentials("too many attempts from this source")
+            # password to the caller: same exception type *and* same
+            # message as every other `InvalidCredentials` raise in this
+            # method, so the response body never leaks which of the several
+            # failure reasons actually applied.
+            raise InvalidCredentials("Username or password is incorrect")
 
         user = await self._repository.find_by_identifier(request.identifier)
         if user is None:
             # Enumeration resistance: run the identical Argon2id work a real
             # user would incur, then fail exactly like a wrong password.
-            self._hasher.verify_dummy(request.password)
+            await self._hasher.verify_dummy(request.password)
             self._per_ip_throttle.record_failure(source_ip)
             raise InvalidCredentials("Username or password is incorrect")
 
         if user.locked_until is not None and user.locked_until > self._clock():
+            # Still run the full Argon2id verification (against the real
+            # hash) before reporting the lock, so a locked account's
+            # response takes the same wall-clock time and the same
+            # information shape as a wrong-password failure — this branch
+            # must not become a cheap, fast-fail oracle that confirms the
+            # account exists and is currently locked.
+            await self._hasher.verify(user.password_hash, request.password)
             remaining = int((user.locked_until - self._clock()).total_seconds())
             raise AccountLocked(max(remaining, 1))
 
-        password_ok = self._hasher.verify(user.password_hash, request.password)
+        password_ok = await self._hasher.verify(user.password_hash, request.password)
         if not password_ok:
             self._per_ip_throttle.record_failure(source_ip)
             await self._on_failure(user)
@@ -101,7 +110,7 @@ class LoginService:
             raise AccountDisabled("Account disabled - contact the owner")
 
         if self._hasher.needs_rehash(user.password_hash, DEFAULT_ARGON2_PARAMS):
-            new_hash = self._hasher.hash(request.password, DEFAULT_ARGON2_PARAMS)
+            new_hash = await self._hasher.hash(request.password, DEFAULT_ARGON2_PARAMS)
             await self._repository.rehash_password(
                 str(user.id), password_hash=new_hash, algo_params=DEFAULT_ARGON2_PARAMS
             )
@@ -130,6 +139,18 @@ class LoginService:
         )
 
     async def _on_failure(self, user: UserRecord) -> None:
-        new_count = user.failed_login_count + 1
-        lock_until = self._clock() + LOCKOUT_DURATION if new_count >= LOCKOUT_THRESHOLD else None
-        await self._repository.record_login_failure(str(user.id), lock_until=lock_until)
+        # The increment and the lock decision are one atomic repository
+        # operation (see `UserRepository.record_login_failure`) — this
+        # method never reads `user.failed_login_count` to compute the new
+        # count itself, because that snapshot can be stale under concurrent
+        # requests (two parallel wrong-password attempts both reading
+        # count=4 would each compute new_count=5 independently but only one
+        # UPDATE would actually observe count=4, silently losing a failure
+        # and letting an attacker get more than `LOCKOUT_THRESHOLD` guesses
+        # in before the account locks).
+        await self._repository.record_login_failure(
+            str(user.id),
+            lockout_threshold=LOCKOUT_THRESHOLD,
+            lock_duration=LOCKOUT_DURATION,
+            now=self._clock(),
+        )
