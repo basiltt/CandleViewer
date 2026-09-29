@@ -40,6 +40,9 @@ jobs:
       - name: Install check dependencies (PyYAML for GOV-004, pytest(-cov) for unit tests)
         run: python -m pip install --quiet -r scripts/requirements-ci.txt
 
+      - name: Create artefact output directory
+        run: mkdir -p gov-artifacts
+
       - name: Rule-reference link check (GOV-002)
         run: python scripts/check_rule_refs.py
 
@@ -66,6 +69,9 @@ jobs:
       - name: Required-check reconciliation (GOV-005)
         run: python scripts/check_required_check_reconciliation.py
 
+      - name: Markdownlint + relative-link resolution over governance docs (GOV-006)
+        run: python scripts/check_markdown_governance_docs.py
+
       - name: Canary self-test (deliberately-broken fixtures must fail)
         # The guard against a green check that no longer checks anything
         # (E01-Q02 acceptance scenario "the job proves it can still fail").
@@ -76,6 +82,23 @@ jobs:
           python -m pytest scripts/tests scripts/gh/tests -q
           --cov=scripts --cov-report=term-missing --cov-fail-under=85
 
+      - name: Generate CODEOWNERS ownership report (artefact)
+        if: always()
+        run: python scripts/check_codeowners_coverage.py --report > gov-artifacts/codeowners-ownership-report.txt
+        continue-on-error: true
+
+      - name: Generate backlog per-epic summary (artefact)
+        if: always()
+        run: python scripts/validate-backlog.py --summary > gov-artifacts/backlog-summary.txt
+        continue-on-error: true
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: governance-reports
+          path: gov-artifacts/
+          retention-days: 90
+
       - name: Job duration budget (<=60s, E01-Q02)
         if: always()
         run: |
@@ -85,6 +108,7 @@ jobs:
           echo "governance job duration: ${duration_ms}ms"
           echo "::notice title=governance job duration::${duration_ms}ms (budget 60000ms)"
           if [ "$duration_ms" -gt 60000 ]; then
-            echo "::warning title=governance job over budget::${duration_ms}ms exceeds the 60s budget (docs/plan/06-performance-and-load-standard.md); tracked as a defect against E01-Q02, not yet hard-enforced pending a CI-runner baseline"
+            echo "::error title=governance job over budget::${duration_ms}ms exceeds the 60s budget (docs/plan/06-performance-and-load-standard.md, E01-Q02 acceptance scenario 'the job is fast enough not to be the bottleneck')"
+            exit 1
           fi
 

@@ -109,6 +109,8 @@ def test_valid_backlog_exits_zero(tmp_path: Path) -> None:
     assert exit_code == 0
 
 
+# Regression: encodes E01-Q01 case 4.1 (originating case id) -- a ticket missing a
+# required field must be rejected with a field-pointer error.
 def test_missing_required_field_rejected_with_pointer(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -130,6 +132,8 @@ def test_missing_required_field_rejected_with_pointer(
     assert "perspective" in out.lower()
 
 
+# Regression: encodes E01-Q01 case 4.2 (originating case id) -- a blocked_by
+# pointing at a nonexistent key must be rejected.
 def test_dangling_dependency_rejected(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -149,6 +153,8 @@ def test_dangling_dependency_rejected(
     assert "E99-S42" in out
 
 
+# Regression: encodes E01-Q01 case 4.3 (originating case id) -- a dependency cycle
+# must be rejected with the cycle path shown.
 def test_dependency_cycle_reported_with_path(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -172,6 +178,8 @@ def test_dependency_cycle_reported_with_path(
     assert "E04-T01" in out and "E04-T02" in out
 
 
+# Regression: encodes E01-Q01 case 4.5 (originating case id) -- a design ticket must
+# be scheduled ahead of its consumer per the design-ahead rule.
 def test_design_ahead_rule_enforced(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -195,6 +203,8 @@ def test_design_ahead_rule_enforced(
     assert "E05-S01" in out and "E05-D01" in out
 
 
+# Regression: encodes E01-Q01 case 4.4 (originating case id) -- an out-of-Fibonacci
+# estimate on a Story must be rejected.
 def test_oversized_story_estimate_rejected(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -214,6 +224,8 @@ def test_oversized_story_estimate_rejected(
     assert "estimate" in out.lower()
 
 
+# Regression: encodes E01-Q01 case 4.6 (originating case id) -- malformed JSON must
+# exit 2 (internal error), distinct from a schema-violation exit 1.
 def test_malformed_json_exits_two(tmp_path: Path) -> None:
     _setup(tmp_path)
     backlog = tmp_path / "docs" / "plan" / "backlog"

@@ -13,6 +13,8 @@ from apply_branch_protection import Diff
 from check_branch_protection_drift import render_findings
 
 
+# Regression: encodes E01-Q01 case 1.10 (originating case id) -- drift between
+# live and desired branch-protection state must be detected and reported.
 def test_render_findings_text_reports_all_kinds() -> None:
     diff = Diff(added={"a": 1}, removed={"b": 2}, changed={"c": (3, 4)})
     text = render_findings(diff, as_json=False)
