@@ -14,6 +14,7 @@ docs/plan/22-api-openapi.yaml and docs/plan/20-architecture.md Sec.3).
 
 from __future__ import annotations
 
+from candleviewer.api.auth import make_auth_router
 from candleviewer.api.health import make_health_router
 
-__all__ = ["make_health_router"]
+__all__ = ["make_auth_router", "make_health_router"]
