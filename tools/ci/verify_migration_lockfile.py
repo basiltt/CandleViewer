@@ -19,12 +19,14 @@ import argparse
 import ast
 import hashlib
 import json
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 DEFAULT_LOCKFILE = Path("services/api/candleviewer/migrations/lockfile.json")
 DEFAULT_VERSIONS_DIR = Path("services/api/candleviewer/migrations/versions")
+DEFAULT_BASE_REF = "origin/main"
 
 RULE_9_MESSAGE = "migrations are forward-only in production"
 
@@ -59,6 +61,47 @@ def _sha256_of(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _load_base_lockfile(
+    base_ref: str, lockfile_path: Path
+) -> dict[str, dict[str, object]] | None:
+    """Return the `revisions` map from `lockfile_path` as it existed at the
+    merge-base with `base_ref`, or None if it cannot be determined (e.g. no
+    git repo, base_ref unavailable, or the file didn't exist yet at the base).
+
+    This is rule 9's real enforcement point: a PR that edits an already-locked
+    revision *and* rewrites its own sha256 in the same PR must still fail,
+    because comparing the lockfile only against the PR's own tree (as before)
+    makes such a self-consistent edit invisible.
+    """
+    try:
+        merge_base = subprocess.run(  # noqa: S603 -- fixed argv, no shell
+            ["git", "merge-base", "HEAD", base_ref],  # noqa: S607 -- literal `git`
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        show = subprocess.run(  # noqa: S603 -- fixed argv, no shell
+            [
+                "git",
+                "show",
+                f"{merge_base}:{lockfile_path.as_posix()}",
+            ],  # noqa: S607 -- literal `git`
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    try:
+        data = json.loads(show.stdout)
+    except json.JSONDecodeError:
+        return None
+    revisions = data.get("revisions")
+    if not isinstance(revisions, dict):
+        return None
+    return revisions
+
+
 def _extract_revision_ids(path: Path) -> tuple[str | None, str | None]:
     """Return (revision, down_revision) string literals from an Alembic
     version file's module-level assignments, without importing it."""
@@ -87,14 +130,17 @@ def _extract_revision_ids(path: Path) -> tuple[str | None, str | None]:
     return revision, down_revision
 
 
-def verify(lockfile_path: Path, versions_dir: Path, repo_root: Path) -> list[Violation]:
+def verify(
+    lockfile_path: Path,
+    versions_dir: Path,
+    repo_root: Path,
+    base_revisions: dict[str, dict[str, object]] | None = None,
+) -> list[Violation]:
     violations: list[Violation] = []
     revisions = _load_lockfile(lockfile_path)
 
     on_disk = {
-        f.stem: f
-        for f in sorted(versions_dir.glob("*.py"))
-        if f.name != "__init__.py"
+        f.stem: f for f in sorted(versions_dir.glob("*.py")) if f.name != "__init__.py"
     }
 
     # CI-MIG-LOCK-002: a versions/*.py file exists with no lockfile entry.
@@ -116,7 +162,9 @@ def verify(lockfile_path: Path, versions_dir: Path, repo_root: Path) -> list[Vio
         expected_sha = entry.get("sha256")
         expected_down = entry.get("down_revision")
         if not isinstance(rel_path, str) or not isinstance(expected_sha, str):
-            raise LockfileError(f"malformed lockfile entry for {rev_id!r} in {lockfile_path}")
+            raise LockfileError(
+                f"malformed lockfile entry for {rev_id!r} in {lockfile_path}"
+            )
 
         file_path = repo_root / rel_path
         if not file_path.is_file():
@@ -171,6 +219,44 @@ def verify(lockfile_path: Path, versions_dir: Path, repo_root: Path) -> list[Vio
                 )
             )
 
+    # CI-MIG-LOCK-006: the real rule-9 gate. Compare each already-recorded
+    # revision's sha256/down_revision against the merge-base lockfile, not
+    # just the PR's own tree — otherwise editing an applied revision *and*
+    # updating its own sha256 in the same PR is self-consistent and passes.
+    if base_revisions is not None:
+        for rev_id, base_entry in base_revisions.items():
+            base_sha = base_entry.get("sha256")
+            base_down = base_entry.get("down_revision")
+            current_entry = revisions.get(rev_id)
+            if current_entry is None:
+                violations.append(
+                    Violation(
+                        code="CI-MIG-LOCK-006",
+                        revision=rev_id,
+                        message=(
+                            f"{rev_id} was recorded in the base lockfile but is missing from "
+                            f"this PR's lockfile: {RULE_9_MESSAGE}."
+                        ),
+                    )
+                )
+                continue
+            if (
+                current_entry.get("sha256") != base_sha
+                or current_entry.get("down_revision") != base_down
+            ):
+                violations.append(
+                    Violation(
+                        code="CI-MIG-LOCK-006",
+                        revision=rev_id,
+                        message=(
+                            f"{rev_id}'s lockfile entry changed since the base branch "
+                            f"(base sha256={base_sha}, PR sha256={current_entry.get('sha256')}): "
+                            f"{RULE_9_MESSAGE}. Editing an applied revision's file and its own "
+                            "lockfile entry in the same PR is not permitted."
+                        ),
+                    )
+                )
+
     return violations
 
 
@@ -179,10 +265,22 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--lockfile", type=Path, default=DEFAULT_LOCKFILE)
     parser.add_argument("--versions-dir", type=Path, default=DEFAULT_VERSIONS_DIR)
     parser.add_argument("--repo-root", type=Path, default=Path("."))
+    parser.add_argument("--base-ref", default=DEFAULT_BASE_REF)
+    parser.add_argument(
+        "--no-base-check",
+        action="store_true",
+        help="Skip the merge-base comparison (rule 9 enforcement); local/offline use only.",
+    )
     args = parser.parse_args(argv)
 
+    base_revisions = None
+    if not args.no_base_check:
+        base_revisions = _load_base_lockfile(args.base_ref, args.lockfile)
+
     try:
-        violations = verify(args.lockfile, args.versions_dir, args.repo_root)
+        violations = verify(
+            args.lockfile, args.versions_dir, args.repo_root, base_revisions
+        )
     except LockfileError as exc:
         print(f"CI-MIG-LOCK-000 internal error: {exc}", file=sys.stderr)
         return 2
@@ -192,7 +290,9 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{v.code} [{v.revision}]: {v.message}", file=sys.stderr)
         return 1
 
-    print(f"OK: {len(_load_lockfile(args.lockfile))} revision(s) verified against {args.lockfile}")
+    print(
+        f"OK: {len(_load_lockfile(args.lockfile))} revision(s) verified against {args.lockfile}"
+    )
     return 0
 
 

@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from tools.ci import verify_migration_lockfile as gate
 
-_REV_0001 = '''\
+_REV_0001 = """\
 from __future__ import annotations
 
 revision: str = "0001_initial"
@@ -32,9 +32,9 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     pass
-'''
+"""
 
-_REV_0002 = '''\
+_REV_0002 = """\
 from __future__ import annotations
 
 revision: str = "0002_second"
@@ -47,7 +47,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     pass
-'''
+"""
 
 
 def _sha256(data: bytes) -> str:
@@ -93,7 +93,9 @@ def test_verify_edited_applied_revision_fails_rule_9(tmp_path: Path) -> None:
     """AC (#1556 defect 2 / ticket #168 negative check): editing an
     already-applied revision fails with the rule-9 message."""
     lockfile, versions_dir, repo_root = _make_repo(tmp_path)
-    (versions_dir / "0001_initial.py").write_text(_REV_0001 + "\n# tampered\n", encoding="utf-8")
+    (versions_dir / "0001_initial.py").write_text(
+        _REV_0001 + "\n# tampered\n", encoding="utf-8"
+    )
 
     violations = gate.verify(lockfile, versions_dir, repo_root)
 
@@ -110,7 +112,9 @@ def test_verify_new_revision_missing_lockfile_entry_fails(tmp_path: Path) -> Non
 
     violations = gate.verify(lockfile, versions_dir, repo_root)
 
-    assert any(v.code == "CI-MIG-LOCK-002" and v.revision == "0003_third" for v in violations)
+    assert any(
+        v.code == "CI-MIG-LOCK-002" and v.revision == "0003_third" for v in violations
+    )
 
 
 def test_verify_locked_revision_deleted_from_disk_fails(tmp_path: Path) -> None:
@@ -119,7 +123,9 @@ def test_verify_locked_revision_deleted_from_disk_fails(tmp_path: Path) -> None:
 
     violations = gate.verify(lockfile, versions_dir, repo_root)
 
-    assert any(v.code == "CI-MIG-LOCK-003" and v.revision == "0002_second" for v in violations)
+    assert any(
+        v.code == "CI-MIG-LOCK-003" and v.revision == "0002_second" for v in violations
+    )
 
 
 def test_verify_revision_id_mismatch_fails(tmp_path: Path) -> None:
@@ -153,7 +159,9 @@ def test_verify_down_revision_mismatch_fails(tmp_path: Path) -> None:
 
 def test_main_exits_nonzero_on_violation(tmp_path: Path, capsys, monkeypatch) -> None:
     lockfile, versions_dir, repo_root = _make_repo(tmp_path)
-    (versions_dir / "0001_initial.py").write_text(_REV_0001 + "\n# tampered\n", encoding="utf-8")
+    (versions_dir / "0001_initial.py").write_text(
+        _REV_0001 + "\n# tampered\n", encoding="utf-8"
+    )
 
     exit_code = gate.main(
         [
@@ -186,6 +194,59 @@ def test_main_exits_zero_on_clean_repo(tmp_path: Path) -> None:
     )
 
     assert exit_code == 0
+
+
+def test_verify_edit_and_own_lockfile_update_fails_against_base(tmp_path: Path) -> None:
+    """AC (#1556 QA follow-up): comparing the PR's own tree against itself
+    lets a PR tamper with an applied revision *and* rewrite its own sha256 in
+    the lockfile self-consistently. Rule 9 must still catch it by comparing
+    against the merge-base lockfile."""
+    lockfile, versions_dir, repo_root = _make_repo(tmp_path)
+    base_revisions = json.loads(lockfile.read_text(encoding="utf-8"))["revisions"]
+
+    tampered = _REV_0001 + "\n# tampered in the same PR\n"
+    (versions_dir / "0001_initial.py").write_text(tampered, encoding="utf-8")
+    lock_data = json.loads(lockfile.read_text(encoding="utf-8"))
+    lock_data["revisions"]["0001_initial"]["sha256"] = _sha256(tampered.encode("utf-8"))
+    lockfile.write_text(json.dumps(lock_data), encoding="utf-8")
+
+    # The self-consistent edit doesn't trip CI-MIG-LOCK-006 without a base to
+    # compare against — that's the exact gap this test guards...
+    violations_without_base = gate.verify(lockfile, versions_dir, repo_root)
+    assert not any(v.code == "CI-MIG-LOCK-006" for v in violations_without_base)
+
+    # ...but comparing against the merge-base lockfile catches it.
+    violations = gate.verify(lockfile, versions_dir, repo_root, base_revisions)
+    assert any(
+        v.code == "CI-MIG-LOCK-006" and v.revision == "0001_initial" for v in violations
+    )
+
+
+def test_verify_revision_removed_from_lockfile_fails_against_base(
+    tmp_path: Path,
+) -> None:
+    lockfile, versions_dir, repo_root = _make_repo(tmp_path)
+    base_revisions = json.loads(lockfile.read_text(encoding="utf-8"))["revisions"]
+
+    (versions_dir / "0002_second.py").unlink()
+    lock_data = json.loads(lockfile.read_text(encoding="utf-8"))
+    del lock_data["revisions"]["0002_second"]
+    lockfile.write_text(json.dumps(lock_data), encoding="utf-8")
+
+    violations = gate.verify(lockfile, versions_dir, repo_root, base_revisions)
+
+    assert any(
+        v.code == "CI-MIG-LOCK-006" and v.revision == "0002_second" for v in violations
+    )
+
+
+def test_verify_unchanged_repo_passes_against_base(tmp_path: Path) -> None:
+    lockfile, versions_dir, repo_root = _make_repo(tmp_path)
+    base_revisions = json.loads(lockfile.read_text(encoding="utf-8"))["revisions"]
+
+    violations = gate.verify(lockfile, versions_dir, repo_root, base_revisions)
+
+    assert violations == []
 
 
 def test_missing_lockfile_is_internal_error(tmp_path: Path) -> None:
