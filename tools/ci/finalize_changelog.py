@@ -16,9 +16,14 @@ above the new version heading.
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
-from tools.ci.update_changelog import (
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from tools.ci.update_changelog import (  # noqa: E402
     _CATEGORY_ORDER,
     _parse_existing_unreleased,
     _render_unreleased_section,

@@ -17,7 +17,11 @@ import argparse
 import sys
 from pathlib import Path
 
-from tools.ci.changelog_lib import check_changelog_fragment
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from tools.ci.changelog_lib import check_changelog_fragment  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -19,8 +19,12 @@ import json
 import sys
 from pathlib import Path
 
-from tools.ci.changelog_lib import build_changelog_update, parse_commit
-from tools.ci.release_semver import Version, compute_next_version
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from tools.ci.changelog_lib import build_changelog_update, parse_commit  # noqa: E402
+from tools.ci.release_semver import Version, compute_next_version  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:
