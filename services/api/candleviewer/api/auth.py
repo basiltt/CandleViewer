@@ -3,9 +3,10 @@
 Thin HTTP adapter over `candleviewer.auth.login_service.LoginService`:
 translates typed domain errors to the RFC 7807-shaped problem responses the
 ticket's acceptance criteria specify, and — when a live `AuditWriter` is
-injected — emits `auth.login`/`auth.login_failed` (both already registered
-in `candleviewer.audit.actions.AUDIT_ACTIONS`) per the Gherkin ("... is
-audited" / "the attempt is audited with the source IP"). `api` (M23) is on
+injected — emits `auth.login`/`auth.login_failed`/`auth.account_locked`
+(all already registered in `candleviewer.audit.actions.AUDIT_ACTIONS`) per
+the Gherkin ("... is audited" / "the attempt is audited with the source
+IP" / "auth.account_locked is audited"). `api` (M23) is on
 the allow-list to import `candleviewer.audit`; `auth` itself is not (see
 `auth/login_service.py`'s module docstring) — that boundary is exactly why
 the audit call lives in this router, not in `LoginService`. On the fake/CI
@@ -27,7 +28,7 @@ from typing import Protocol
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-from candleviewer.audit.models import AuditOutcome
+from candleviewer.audit.models import AuditOutcome, Severity
 from candleviewer.auth.errors import AccountDisabled, AccountLocked, InvalidCredentials
 from candleviewer.auth.models import LoginRequest, MfaChallengeResult
 
@@ -59,6 +60,7 @@ class AuditWriterLike(Protocol):
         actor_label: str,
         actor_ip: str | None = None,
         outcome: AuditOutcome = AuditOutcome.SUCCESS,
+        severity: Severity = Severity.INFO,
     ) -> None: ...
 
 
@@ -77,11 +79,12 @@ async def _audit(
     actor_label: str,
     actor_ip: str,
     outcome: AuditOutcome,
+    severity: Severity = Severity.INFO,
 ) -> None:
     if audit_service is None or not audit_service.is_active:
         return
     await audit_service.writer.emit(
-        action, actor_label=actor_label, actor_ip=actor_ip, outcome=outcome
+        action, actor_label=actor_label, actor_ip=actor_ip, outcome=outcome, severity=severity
     )
 
 
@@ -141,10 +144,11 @@ def make_auth_router(
         except AccountLocked as exc:
             await _audit(
                 audit_service,
-                "auth.login_failed",
+                "auth.account_locked",
                 actor_label=_redact_identifier(body.identifier),
                 actor_ip=source_ip,
                 outcome=AuditOutcome.DENIED,
+                severity=Severity.WARNING,
             )
             response = _problem(423, "Account locked", str(exc))
             response.headers["Retry-After"] = str(exc.retry_after_s)

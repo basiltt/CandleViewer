@@ -30,6 +30,7 @@ AUDIT_ACTIONS: frozenset[str] = frozenset(
     {
         "auth.login",
         "auth.login_failed",
+        "auth.account_locked",
         "auth.logout",
         "auth.refresh_reuse_detected",
         "auth.mfa_enroll",

@@ -142,7 +142,6 @@ omit = [
   "candleviewer/accounts/*",
   "candleviewer/admin/*",
   "candleviewer/alerts/*",
-  "candleviewer/auth/*",
   "candleviewer/bars/*",
   "candleviewer/book/*",
   "candleviewer/exchange/base/service.py",
