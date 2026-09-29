@@ -21,7 +21,7 @@
     "test": "vitest run",
     "test:cov": "vitest run --coverage",
     "build": "pnpm run build:tokens && tsup",
-    "build:tokens": "style-dictionary build --config style-dictionary.config.json",
+    "build:tokens": "node scripts/build-tokens.mjs",
     "size": "echo \"@candleviewer/ui: size-limit wired alongside E05 components\"",
     "storybook": "storybook dev -p 6006 -c .storybook",
     "storybook:build": "storybook build -c .storybook -o storybook-static"
