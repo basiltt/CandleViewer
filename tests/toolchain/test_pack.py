@@ -181,6 +181,59 @@ def test_agents_commands_passes_on_real_repo() -> None:
     assert pack.check_agents_commands(pack.REPO_ROOT) == []
 
 
+# --- Bug #1576 (E02-Q03-B1): runtime budget --------------------------------
+#
+# The pack blew its own 3-minute budget (measured 3m56s-4m11s) because
+# check_flaky_quarantine_age / check_coverage_omit_provenance walked the
+# *entire* tree with Path.rglob("...")/Path.glob("**/...") -- which descends
+# into every node_modules/.venv/.git directory before any per-path filter
+# runs -- and only filtered matched paths afterwards. `_walk_files` prunes
+# ignored directories at `os.walk` time instead, so it must never descend
+# into a pruned directory even when that directory holds millions of
+# matching-suffix files.
+
+
+def test_walk_files_prunes_ignored_directories(tmp_path: Path) -> None:
+    (tmp_path / "keep").mkdir()
+    (tmp_path / "keep" / "test_thing.py").write_text("def test_x(): pass\n", encoding="utf-8")
+
+    pruned = tmp_path / "node_modules" / "some_pkg"
+    pruned.mkdir(parents=True)
+    (pruned / "test_should_be_ignored.py").write_text("def test_y(): pass\n", encoding="utf-8")
+
+    also_pruned = tmp_path / ".venv" / "lib"
+    also_pruned.mkdir(parents=True)
+    (also_pruned / "test_should_be_ignored_too.py").write_text(
+        "def test_z(): pass\n", encoding="utf-8"
+    )
+
+    found = pack._walk_files(tmp_path, (".py",))
+    rel_names = {p.relative_to(tmp_path).as_posix() for p in found}
+    assert rel_names == {"keep/test_thing.py"}
+
+
+def test_walk_files_does_not_descend_into_pruned_directories(tmp_path: Path) -> None:
+    # A pruned directory containing a file pytest cannot read (permission-
+    # like sentinel via a directory named as a file suffix trap) must never
+    # be opened -- proving pruning happens at os.walk time, not via a
+    # post-hoc filter that still incurs the descend cost this bug reported.
+    import os
+
+    trap_dir = tmp_path / "node_modules" / ("x" * 40)
+    trap_dir.mkdir(parents=True)
+    for i in range(50):
+        (trap_dir / f"test_trap_{i}.py").write_text("def test_x(): pass\n", encoding="utf-8")
+
+    visited: list[str] = []
+    for dirpath, dirnames, _ in os.walk(tmp_path):
+        dirnames[:] = [d for d in dirnames if d not in pack._PRUNED_DIR_NAMES]
+        visited.append(dirpath)
+    assert not any("node_modules" in v for v in visited)
+
+    found = pack._walk_files(tmp_path, (".py",))
+    assert found == []
+
+
 # --- Runner / report -----------------------------------------------------------
 
 

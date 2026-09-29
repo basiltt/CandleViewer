@@ -37,6 +37,50 @@ PYTEST_FLAKY_RE = re.compile(r"@pytest\.mark\.flaky")
 VITEST_FLAKY_RE = re.compile(r"\b(?:it|test|describe)\.flaky\s*\(")
 QUARANTINE_WORKING_DAYS = 10
 
+# Directory names pruned outright while walking the tree for `check_*` scans
+# below. Bug #1576 (E02-Q03-B1): the previous `Path.rglob("**/*")` /
+# `Path.glob("**/pyproject.toml")` calls descended into every one of these
+# (node_modules across 8+ workspaces, .venv, .git) *before* the per-path
+# `part in {...}` filter ran, which is what pushed the pack past its own
+# 3-minute budget (measured 3m56s-4m11s). Pruning at directory-walk time
+# (`os.walk`, `topdown=True`, mutate `dirnames` in place) instead of
+# filtering matched paths after the fact is the fix — os.walk never
+# descends into a pruned directory in the first place.
+_PRUNED_DIR_NAMES = frozenset(
+    {
+        "node_modules",
+        ".venv",
+        "venv",
+        "__pycache__",
+        "dist",
+        "build",
+        ".git",
+        ".turbo",
+        ".pytest_cache",
+        ".mypy_cache",
+        ".ruff_cache",
+        "coverage",
+        ".next",
+        ".cache",
+    }
+)
+
+
+def _walk_files(repo_root: Path, suffixes: tuple[str, ...]) -> list[Path]:
+    """Yield every file under `repo_root` whose name ends with one of
+    `suffixes`, pruning `_PRUNED_DIR_NAMES` at directory-walk time so the
+    scan never descends into node_modules/.venv/.git/etc (see
+    `_PRUNED_DIR_NAMES` docstring above -- this is the E02-Q03-B1 fix)."""
+    import os
+
+    matches: list[Path] = []
+    for dirpath, dirnames, filenames in os.walk(repo_root):
+        dirnames[:] = [d for d in dirnames if d not in _PRUNED_DIR_NAMES]
+        for filename in filenames:
+            if filename.endswith(suffixes):
+                matches.append(Path(dirpath) / filename)
+    return matches
+
 
 @dataclass(frozen=True)
 class Violation:
@@ -297,11 +341,12 @@ def check_flaky_quarantine_age(repo_root: Path = REPO_ROOT) -> list[Violation]:
                         )
                     )
 
-    _scan(list(repo_root.rglob("test_*.py")), PYTEST_FLAKY_RE)
     _scan(
-        list(repo_root.rglob("*.test.ts"))
-        + list(repo_root.rglob("*.test.tsx"))
-        + list(repo_root.rglob("*.test.mjs")),
+        [p for p in _walk_files(repo_root, (".py",)) if p.name.startswith("test_")],
+        PYTEST_FLAKY_RE,
+    )
+    _scan(
+        _walk_files(repo_root, (".test.ts", ".test.tsx", ".test.mjs")),
         VITEST_FLAKY_RE,
     )
     return violations
@@ -335,9 +380,7 @@ def check_coverage_omit_provenance(repo_root: Path = REPO_ROOT) -> list[Violatio
     expiry. Guards against the decay the ticket's Context names: "a
     coverage `omit` entry is added and never removed"."""
     violations: list[Violation] = []
-    for pyproject in repo_root.glob("**/pyproject.toml"):
-        if any(part in {"node_modules", ".venv"} for part in pyproject.parts):
-            continue
+    for pyproject in _walk_files(repo_root, ("pyproject.toml",)):
         text = _read_text(pyproject)
         block = _omit_block_comment(text)
         if block is None:
