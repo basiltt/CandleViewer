@@ -166,3 +166,82 @@ def test_no_audit_service_wired_returns_503() -> None:
     client = TestClient(_app(None, _FakeResolver(_owner())))
     response = client.get("/admin/audit")
     assert response.status_code == 503
+
+
+def test_resolver_returning_none_returns_401_unauthorized() -> None:
+    """PR #1608 review finding 4: a *wired* resolver reporting "no verified
+    session" is 401, distinct from the "nothing wired at all" 501 case."""
+    service = _FakeAuditService()
+    client = TestClient(_app(service, _FakeResolver(None)))
+    response = client.get("/admin/audit")
+    assert response.status_code == 401
+
+
+def test_query_audit_log_passes_subject_type_through_to_query_service() -> None:
+    """PR #1608 review finding 5: `subject_type` used to be accepted and
+    silently dropped."""
+    service = _FakeAuditService()
+    client = TestClient(_app(service, _FakeResolver(_owner())))
+    response = client.get("/admin/audit", params={"subject_type": "order"})
+    assert response.status_code == 200
+    [call] = service.query_service.query_calls
+    assert call["subject_type"] == "order"
+
+
+def test_verify_audit_chain_rejects_unknown_body_field() -> None:
+    service = _FakeAuditService()
+    client = TestClient(_app(service, _FakeResolver(_owner())))
+    response = client.post("/admin/audit/verify", json={"unexpected": "x"})
+    assert response.status_code == 400
+
+
+def test_verify_audit_chain_rejects_from_id_greater_than_to_id() -> None:
+    service = _FakeAuditService()
+    client = TestClient(_app(service, _FakeResolver(_owner())))
+    response = client.post("/admin/audit/verify", json={"from_id": 10, "to_id": 5})
+    assert response.status_code == 400
+
+
+def test_verify_audit_chain_rejects_non_integer_from_id() -> None:
+    service = _FakeAuditService()
+    client = TestClient(_app(service, _FakeResolver(_owner())))
+    response = client.post("/admin/audit/verify", json={"from_id": "not-an-id"})
+    assert response.status_code == 400
+
+
+def test_export_audit_log_rejects_malformed_timestamp_with_400_not_500() -> None:
+    """PR #1608 review finding 3: a bad `from`/`to` string used to reach
+    `_parse_ts` and raise an unhandled `ValueError` (500)."""
+    service = _FakeAuditService()
+    client = TestClient(_app(service, _FakeResolver(_owner())))
+    response = client.post(
+        "/admin/audit/export", json={"from": "not-a-timestamp", "to": "2026-01-02T00:00:00Z"}
+    )
+    assert response.status_code == 400
+
+
+def test_export_audit_log_rejects_naive_datetime() -> None:
+    service = _FakeAuditService()
+    client = TestClient(_app(service, _FakeResolver(_owner())))
+    response = client.post(
+        "/admin/audit/export",
+        json={"from": "2026-01-01T00:00:00", "to": "2026-01-02T00:00:00"},
+    )
+    assert response.status_code == 400
+
+
+def test_export_audit_log_rejects_from_after_to() -> None:
+    service = _FakeAuditService()
+    client = TestClient(_app(service, _FakeResolver(_owner())))
+    response = client.post(
+        "/admin/audit/export",
+        json={"from": "2026-01-02T00:00:00Z", "to": "2026-01-01T00:00:00Z"},
+    )
+    assert response.status_code == 400
+
+
+def test_export_audit_log_rejects_missing_from() -> None:
+    service = _FakeAuditService()
+    client = TestClient(_app(service, _FakeResolver(_owner())))
+    response = client.post("/admin/audit/export", json={"to": "2026-01-02T00:00:00Z"})
+    assert response.status_code == 400

@@ -18,11 +18,13 @@ the M18 scaffold with no session verification). Per `x-rbac: {scope: none}`
 these routes fail closed rather than guess: a caller is resolved via an
 injected `PrincipalResolver` (structurally typed, mirrors `AuditServiceLike`
 in `api/auth.py`); the composition root wires a real one when M18 lands
-session verification. Until then `create_app()` passes `None`, and every
-request is refused with `501 Not Implemented` (never silently allowed) —
-this keeps the fail-closed default `authorize()` documents, while unblocking
-this bug's actual scope: the router exists, is mounted, and enforces
-`audit:read`/`audit:export` once a principal resolver is wired.
+session verification. Until then `create_app()` passes `None` for
+`principal_resolver`, and every request is refused with `501 Not
+Implemented` (never silently allowed) — no session-verification module
+exists yet to say yes or no. Once a resolver *is* wired (PR #1608 review
+finding 1: `app.py` now passes one) but it reports "no verified session"
+for a given request, that is a normal 401 per the resolver's own contract
+(finding 4) — `501` is reserved for the "nothing is wired at all" case.
 """
 
 from __future__ import annotations
@@ -32,9 +34,10 @@ from typing import Any, Protocol
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 
 from candleviewer.audit.access import AuditAccessDenied, AuditPrincipal, authorize
-from candleviewer.audit.models import AUDIT_QUERY_MAX_LIMIT
+from candleviewer.audit.models import AUDIT_QUERY_MAX_LIMIT, AuditExportRequest, AuditVerifyRequest
 
 
 class _Emitter(Protocol):
@@ -67,6 +70,7 @@ class AuditQueryServiceLike(Protocol):
         *,
         actor_user_id: str | None = None,
         actions: list[str] | None = None,
+        subject_type: str | None = None,
         severity: str | None = None,
         outcome: str | None = None,
         from_ts: datetime | None = None,
@@ -102,7 +106,12 @@ class PrincipalResolver(Protocol):
 
     Structurally typed so this router never imports a concrete session
     module; the composition root injects the real implementation once M18
-    exposes one. Returning `None` means "no verified session" (401)."""
+    exposes one. Returning `None` means "no verified session" (401) — a
+    resolver being wired at all vs. it finding no session are distinct
+    (PR #1608 review finding 4): a *missing* resolver (`make_audit_router`'s
+    own `principal_resolver=None` default) is `501`, since that means
+    session verification is not implemented yet, not that this particular
+    caller is unauthenticated."""
 
     def resolve(self, request: Request) -> AuditPrincipal | None: ...
 
@@ -129,11 +138,6 @@ def make_audit_router(
     """
     router = APIRouter(prefix="/admin/audit", tags=["admin"])
 
-    def _resolve(request: Request) -> AuditPrincipal | None:
-        if principal_resolver is None:
-            return None
-        return principal_resolver.resolve(request)
-
     class _HttpProblem(Exception):
         def __init__(self, response: JSONResponse) -> None:
             self.response = response
@@ -141,8 +145,7 @@ def make_audit_router(
     async def _authorize_or_raise(request: Request, operation: str) -> AuditServiceLike:
         if audit_service is None or not audit_service.is_active:
             raise _HttpProblem(_problem(503, "Service unavailable", "audit backend is not wired"))
-        principal = _resolve(request)
-        if principal is None:
+        if principal_resolver is None:
             raise _HttpProblem(
                 _problem(
                     501,
@@ -150,6 +153,11 @@ def make_audit_router(
                     "no principal resolver wired — session verification is out of this "
                     "ticket's scope",
                 )
+            )
+        principal = principal_resolver.resolve(request)
+        if principal is None:
+            raise _HttpProblem(
+                _problem(401, "Unauthorized", "no verified session for this request")
             )
         try:
             await authorize(principal, operation, audit_service.writer)
@@ -181,6 +189,7 @@ def make_audit_router(
         page = await service.query.query(
             actor_user_id=actor_user_id,
             actions=action,
+            subject_type=subject_type,
             severity=severity,
             outcome=outcome,
             from_ts=from_,
@@ -199,8 +208,11 @@ def make_audit_router(
             service = await _authorize_or_raise(request, "verify")
         except _HttpProblem as problem:
             return problem.response
-        body = body or {}
-        result = await service.query.verify(from_id=body.get("from_id"), to_id=body.get("to_id"))
+        try:
+            req = AuditVerifyRequest.model_validate(body or {})
+        except ValidationError as exc:
+            return _problem(400, "Bad request", str(exc))
+        result = await service.query.verify(from_id=req.from_id, to_id=req.to_id)
         return JSONResponse(status_code=200, content=_jsonable(result))
 
     @router.post("/export")
@@ -209,20 +221,14 @@ def make_audit_router(
             service = await _authorize_or_raise(request, "export")
         except _HttpProblem as problem:
             return problem.response
-        from_raw = body.get("from")
-        to_raw = body.get("to")
-        if from_raw is None or to_raw is None:
-            return _problem(400, "Bad request", "`from` and `to` are required")
-        result = await service.query.schedule_export(
-            from_ts=_parse_ts(from_raw), to_ts=_parse_ts(to_raw)
-        )
+        try:
+            req = AuditExportRequest.model_validate(body)
+        except ValidationError as exc:
+            return _problem(400, "Bad request", str(exc))
+        result = await service.query.schedule_export(from_ts=req.from_ts, to_ts=req.to_ts)
         return JSONResponse(status_code=202, content=_jsonable(result))
 
     return router
-
-
-def _parse_ts(value: str) -> datetime:
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
 def _jsonable(model: Any) -> dict[str, Any]:

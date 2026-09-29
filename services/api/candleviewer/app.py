@@ -259,5 +259,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         make_health_router(resolved, ctx.metrics, mesh_read_only_gate=ctx.oms_read_only_gate)
     )
     app.include_router(make_auth_router(ctx.auth, ctx.audit))
+    # `principal_resolver` stays `None` here: session verification is E09-S03
+    # scope (`auth/login_service.py`'s own docstring — "non-MFA session
+    # issuance is E09-S03 scope"), not this router's. Every `/admin/audit*`
+    # request therefore fails closed with `501` until that lands and this
+    # call is updated to inject the real resolver (PR #1608 review finding 1
+    # / QA defect #1596 blocker 1 — tracked as still partially open until
+    # E09-S03 wires a resolver here).
     app.include_router(make_audit_router(ctx.audit))
     return app
