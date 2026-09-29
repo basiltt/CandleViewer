@@ -44,9 +44,9 @@ class BybitSigner:
         # exchange API spec (docs/plan/24-internal-schemas.md §14.3) — this is
         # message-authentication keyed hashing of a request, not password
         # storage hashing, so SHA-256's speed is not a weakness here.
-        digest = hmac.new(  # lgtm[py/insufficient-hash-strength]
+        digest = hmac.new(
             secret_bytes, message.encode("utf-8"), hashlib.sha256
-        )
+        )  # lgtm[py/insufficient-hash-strength]
         return digest.hexdigest()
 
     @staticmethod
