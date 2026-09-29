@@ -90,8 +90,18 @@ async def run_migrations(executor: QuestDbExecutor, ddl_dir: Path) -> list[str]:
 def parse_ddl_file_statements(path: Path) -> list[str]:
     """Re-read a `.sql` file and return each `CREATE TABLE ... ;` statement
     verbatim (not the parsed `TableDef`) so the runner executes exactly what
-    is on disk, byte for byte, rather than a reconstruction."""
-    text = path.read_text(encoding="utf-8")
+    is on disk, byte for byte, rather than a reconstruction.
+
+    `--` line comments are stripped before the paren-depth scan below: a
+    comment containing an unbalanced `(` or `)` (e.g. a prose aside spanning
+    lines) would otherwise desynchronise the depth counter and corrupt
+    statement boundaries sent to QuestDB.
+    """
+    stripped_lines = []
+    for line in path.read_text(encoding="utf-8").splitlines(keepends=True):
+        idx = line.find("--")
+        stripped_lines.append(line if idx == -1 else line[:idx] + "\n")
+    text = "".join(stripped_lines)
     statements: list[str] = []
     depth = 0
     current: list[str] = []
