@@ -36,8 +36,8 @@
 /CODE_OF_CONDUCT.md                     @basiltt
 /LICENSE                                @basiltt
 /README.md                              @basiltt @CandleViewer/architecture
-# future: created when the release process starts emitting one (07-release-and-prr.md).
 /CHANGELOG.md                           @CandleViewer/devsecops @CandleViewer/architecture
+/version.txt                            @CandleViewer/devsecops @CandleViewer/architecture
 /Makefile                               @CandleViewer/devsecops @CandleViewer/architecture
 
 # ---------------------------------------------------------------------------

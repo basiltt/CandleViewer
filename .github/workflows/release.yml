@@ -56,8 +56,10 @@ jobs:
       next_version: ${{ steps.bump.outputs.next_version }}
     steps:
       - name: Refuse to run from a non-main/release/*/tag ref (SR-137)
+        env:
+          REF: ${{ github.ref }}
         run: |
-          ref="${{ github.ref }}"
+          ref="$REF"
           case "$ref" in
             refs/heads/release/*|refs/tags/v*) : ;;
             *) echo "release workflow refuses to run from ref: $ref" >&2; exit 1 ;;
@@ -131,22 +133,27 @@ jobs:
 
       - name: Finalise CHANGELOG.md Unreleased section under the new version heading
         id: finalize
+        env:
+          NEXT_VERSION: ${{ needs.compute-version.outputs.next_version }}
         run: |
           set -euo pipefail
-          version="${{ needs.compute-version.outputs.next_version }}"
+          version="$NEXT_VERSION"
           date="$(date -u +%Y-%m-%d)"
           python tools/ci/finalize_changelog.py --changelog CHANGELOG.md \
             --version "$version" --date "$date" --release-body-out release-body.md
           echo "$version" > version.txt
 
       - name: Commit finalised changelog + version.txt
+        env:
+          NEXT_VERSION: ${{ needs.compute-version.outputs.next_version }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
           git config user.name "candleviewer-release-bot"
           git config user.email "release-bot@users.noreply.github.com"
           git add CHANGELOG.md version.txt
-          git diff --cached --quiet || git commit -m "chore(infra-devops): finalise ${{ needs.compute-version.outputs.next_version }} changelog"
-          git push origin HEAD:${{ github.ref_name }}
+          git diff --cached --quiet || git commit -m "chore(infra-devops): finalise ${NEXT_VERSION} changelog"
+          git push origin "HEAD:${REF_NAME}"
 
       - name: Open the release-checklist issue (CI-REL-004)
         id: checklist
@@ -168,15 +175,18 @@ jobs:
       - name: Draft the GitHub Release (refuses to publish while PRR gate unchecked)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEXT_VERSION: ${{ needs.compute-version.outputs.next_version }}
+          COMMIT_SHA: ${{ github.sha }}
+          CHECKLIST_ISSUE_NUMBER: ${{ steps.checklist.outputs.issue_number }}
         run: |
           set -euo pipefail
-          version="${{ needs.compute-version.outputs.next_version }}"
+          version="$NEXT_VERSION"
           gh release create "v${version}" \
             --title "v${version}" \
             --notes-file release-body.md \
             --draft \
-            --target "${{ github.sha }}"
-          echo "Draft release v${version} created; publish only after the PRR gate item on issue #${{ steps.checklist.outputs.issue_number }} is checked (CI-REL-004)."
+            --target "$COMMIT_SHA"
+          echo "Draft release v${version} created; publish only after the PRR gate item on issue #${CHECKLIST_ISSUE_NUMBER} is checked (CI-REL-004)."
 
   build-sign-installer:
     name: build-sign-installer
@@ -232,4 +242,3 @@ jobs:
             exit 0
           fi
           gh release upload "v${version}" "${artefacts[@]}" --clobber
-
