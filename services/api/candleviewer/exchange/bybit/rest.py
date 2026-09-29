@@ -28,6 +28,7 @@ from candleviewer.exchange.base.errors import (
     ClockDriftError,
     RateLimitError,
     TransportError,
+    UnknownStateError,
 )
 from candleviewer.exchange.bybit.config import EndpointClass, RestClientConfig
 from candleviewer.exchange.bybit.mapping import map_ret_code
@@ -136,6 +137,7 @@ class BybitRestClient:
         policy (retry, alert, refuse to start) without this client owning
         that decision."""
         try:
+            await self._governor.acquire_ip_only()
             await self._client.request(
                 "GET", "/v5/market/time", timeout=self._config.connect_timeout_s
             )
@@ -174,9 +176,29 @@ class BybitRestClient:
         endpoint_class: EndpointClass = EndpointClass.ACCOUNT,
     ) -> dict[str, Any]:
         """Authenticated request. Raises `TypeError` if no signer was
-        configured — a signed call is never silently downgraded to public."""
+        configured — a signed call is never silently downgraded to public.
+
+        A POST/PUT to `EndpointClass.ORDER` **must** carry `orderLinkId` in
+        `body`: this client retries signed POSTs on transport errors and
+        5xx automatically, and that is only safe for order placement when
+        every attempt reuses the same client-generated id (C-2.10) so a
+        duplicate is recognised as "already accepted" rather than
+        resubmitted under a new id. This is enforced here, not merely
+        documented, because a future OMS caller forgetting it would
+        silently double-submit orders on a retried timeout."""
         if self._signer is None:
             raise TypeError("signed_request called without a configured BybitSigner")
+        if (
+            endpoint_class is EndpointClass.ORDER
+            and method.upper() in ("POST", "PUT")
+            and not (body and body.get("orderLinkId"))
+        ):
+            raise ValueError(
+                "signed_request: ORDER-class POST/PUT requires a non-empty "
+                "'orderLinkId' in body — this client retries automatically "
+                "and retries without a stable client id can double-submit "
+                "orders (C-2.10)"
+            )
         return await self._request(
             method, path, params=params, body=body, endpoint_class=endpoint_class, signed=True
         )
@@ -280,8 +302,32 @@ class BybitRestClient:
                 await self._backoff(attempt)
                 continue
 
-            data = response.json()
-            ret_code = int(data.get("retCode", 0))
+            is_http_error = response.status_code >= 400
+            if is_http_error:
+                bybit_rest_requests_total.labels(endpoint=path, result="4xx").inc()
+
+            try:
+                data = response.json()
+            except ValueError as exc:
+                bybit_rest_requests_total.labels(endpoint=path, result="error").inc()
+                exchange_errors_total.labels(**{"class": UnknownStateError.code.value}).inc()
+                raise UnknownStateError(
+                    f"{path} returned HTTP {response.status_code} with a " f"non-JSON body: {exc}"
+                ) from exc
+
+            # A missing `retCode`, or `retCode == 0` on an HTTP error status,
+            # is never treated as success — the raw body defaulted `retCode`
+            # to 0 previously, which failed open on a 4xx with an unusual
+            # body (review finding). HTTP status is now load-bearing.
+            has_ret_code = "retCode" in data
+            ret_code = int(data["retCode"]) if has_ret_code else -1
+            if not has_ret_code or (is_http_error and ret_code == 0):
+                bybit_rest_requests_total.labels(endpoint=path, result="error").inc()
+                exchange_errors_total.labels(**{"class": UnknownStateError.code.value}).inc()
+                raise UnknownStateError(
+                    f"{path} returned HTTP {response.status_code} with no "
+                    f"usable retCode: {data!r}"
+                )
             if ret_code == 0:
                 bybit_rest_requests_total.labels(endpoint=path, result="ok").inc()
                 return dict(data)
@@ -302,8 +348,7 @@ class BybitRestClient:
             if isinstance(error, RateLimitError):
                 bybit_rate_limited_total.labels(code=str(ret_code)).inc()
                 bybit_rest_requests_total.labels(endpoint=path, result="rate_limited").inc()
-                drain_amount = float(response.headers.get("X-Bapi-Limit-Status", 1) or 1)
-                self._governor.drain(self._uid, endpoint_class, drain_amount)
+                self._account_for_rate_limit(response, endpoint_class)
                 if error.retryable and attempt <= self._config.max_retries:
                     retry_after = error.retry_after_s or self._retry_after_default(attempt)
                     await self._sleep(retry_after)
@@ -327,6 +372,26 @@ class BybitRestClient:
         bybit_rate_limit_remaining.labels(uid=self._uid, endpoint_class=str(endpoint_class)).set(
             remaining
         )
+
+    def _account_for_rate_limit(
+        self, response: httpx.Response, endpoint_class: EndpointClass
+    ) -> None:
+        """Reconcile the local bucket after a rate-limited response.
+
+        `X-Bapi-Limit-Status` is the *remaining* budget, not the amount
+        consumed (review finding: draining by that header's value drained
+        the wrong quantity). `_observe_rate_headers` — called unconditionally
+        on every response, above — already sets the bucket's `tokens` to
+        that remaining value directly whenever the header is present, which
+        is the correct reconciliation. When the header is absent we still
+        know *some* budget was just consumed server-side that our own
+        accounting did not schedule, so fall back to draining one token as a
+        conservative, documented default (acceptance criterion 3's "drained
+        by the advertised amount" only applies when an amount is
+        advertised)."""
+        if response.headers.get("X-Bapi-Limit-Status") is not None:
+            return
+        self._governor.drain(self._uid, endpoint_class, 1.0)
 
     def _retry_after_default(self, attempt: int) -> float:
         base = min(2.0**attempt, 30.0)

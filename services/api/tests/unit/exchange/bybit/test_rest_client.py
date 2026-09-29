@@ -13,7 +13,12 @@ import pytest
 import respx
 from pydantic import SecretStr
 
-from candleviewer.exchange.base.errors import ClockDriftError, RateLimitError, TransportError
+from candleviewer.exchange.base.errors import (
+    ClockDriftError,
+    RateLimitError,
+    TransportError,
+    UnknownStateError,
+)
 from candleviewer.exchange.bybit.config import EndpointClass, RestClientConfig
 from candleviewer.exchange.bybit.rate_limit import TokenBucketGovernor
 from candleviewer.exchange.bybit.rest import BybitRestClient
@@ -245,3 +250,175 @@ async def test_signed_get_signs_the_wire_encoded_query_string() -> None:
         payload=expected_query,
     )
     assert sent_request.headers["X-BAPI-SIGN"] == expected_signature
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_4xx_with_no_ret_code_never_treated_as_success() -> None:
+    """Review finding: `retCode` defaulted to 0, so a 4xx with a JSON body
+    lacking `retCode` was treated as success. HTTP status must be
+    load-bearing, not merely the body."""
+    respx.get(f"{BASE_URL}/v5/market/kline").mock(
+        return_value=httpx.Response(400, json={"message": "bad request"})
+    )
+    client = BybitRestClient(_config(), governor=_fresh_governor())
+    try:
+        with pytest.raises(UnknownStateError):
+            await client.get_public("/v5/market/kline")
+    finally:
+        await client.aclose()
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_4xx_with_ret_code_zero_never_treated_as_success() -> None:
+    """A body that happens to carry `retCode: 0` alongside a 4xx status is
+    still not success (fail-open review finding)."""
+    respx.get(f"{BASE_URL}/v5/market/kline").mock(
+        return_value=httpx.Response(422, json={"retCode": 0, "retMsg": "OK"})
+    )
+    client = BybitRestClient(_config(), governor=_fresh_governor())
+    try:
+        with pytest.raises(UnknownStateError):
+            await client.get_public("/v5/market/kline")
+    finally:
+        await client.aclose()
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_4xx_with_mapped_ret_code_raises_mapped_error() -> None:
+    """A 4xx that does carry a real business `retCode` still maps through
+    the normal taxonomy (e.g. an auth failure delivered on a 401)."""
+    respx.get(f"{BASE_URL}/v5/account/wallet-balance").mock(
+        return_value=httpx.Response(401, json={"retCode": 10003, "retMsg": "invalid key"})
+    )
+    signer = BybitSigner(api_key="k", api_secret=SecretStr("s"))
+    client = BybitRestClient(_config(), signer=signer, governor=_fresh_governor())
+    try:
+        with pytest.raises(Exception) as exc_info:
+            await client.signed_request(
+                "GET", "/v5/account/wallet-balance", endpoint_class=EndpointClass.ACCOUNT
+            )
+        assert exc_info.value.__class__.__name__ == "AuthError"
+    finally:
+        await client.aclose()
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_non_json_body_raises_unknown_state_error() -> None:
+    """A non-JSON body must never propagate a raw `JSONDecodeError`."""
+    respx.get(f"{BASE_URL}/v5/market/kline").mock(
+        return_value=httpx.Response(200, content=b"not json")
+    )
+    client = BybitRestClient(_config(), governor=_fresh_governor())
+    try:
+        with pytest.raises(UnknownStateError):
+            await client.get_public("/v5/market/kline")
+    finally:
+        await client.aclose()
+
+
+@pytest.mark.asyncio
+async def test_order_class_post_without_order_link_id_is_rejected() -> None:
+    """C-2.10: signed POSTs are retried automatically, which is only safe
+    for order placement when every attempt reuses the same `orderLinkId`."""
+    signer = BybitSigner(api_key="k", api_secret=SecretStr("s"))
+    client = BybitRestClient(_config(), signer=signer, governor=_fresh_governor())
+    try:
+        with pytest.raises(ValueError):
+            await client.signed_request(
+                "POST",
+                "/v5/order/create",
+                body={"symbol": "BTCUSDT"},
+                endpoint_class=EndpointClass.ORDER,
+            )
+    finally:
+        await client.aclose()
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_order_class_post_with_order_link_id_is_accepted() -> None:
+    respx.post(f"{BASE_URL}/v5/order/create").mock(
+        return_value=httpx.Response(200, json={"retCode": 0, "retMsg": "OK", "result": {}})
+    )
+    signer = BybitSigner(api_key="k", api_secret=SecretStr("s"))
+    client = BybitRestClient(_config(), signer=signer, governor=_fresh_governor())
+    try:
+        result = await client.signed_request(
+            "POST",
+            "/v5/order/create",
+            body={"symbol": "BTCUSDT", "orderLinkId": "cv-1"},
+            endpoint_class=EndpointClass.ORDER,
+        )
+        assert result["retCode"] == 0
+    finally:
+        await client.aclose()
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_10018_without_limit_status_header_drains_one_token() -> None:
+    """`X-Bapi-Limit-Status` is the *remaining* count, not the amount
+    consumed (review finding). When the header is absent we still account
+    for a conservative single-token drain rather than doing nothing."""
+    respx.get(f"{BASE_URL}/v5/market/kline").mock(
+        return_value=httpx.Response(200, json={"retCode": 10018, "retMsg": "rate limited"})
+    )
+    governor = _fresh_governor()
+    client = BybitRestClient(_config(max_retries=0), governor=governor)
+    try:
+        before = governor.remaining("public", EndpointClass.MARKET_DATA)
+        with pytest.raises(RateLimitError):
+            await client.get_public("/v5/market/kline")
+        after = governor.remaining("public", EndpointClass.MARKET_DATA)
+        # `acquire()` already consumed one token for the attempt itself;
+        # the 10018 drain consumes a second, distinct token on top of that.
+        assert after == pytest.approx(before - 2.0, abs=1e-6)
+    finally:
+        await client.aclose()
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_10018_with_limit_status_header_sets_bucket_to_remaining() -> None:
+    """When the header *is* present, `_observe_rate_headers` already sets
+    the bucket to the server-reported remaining value directly — draining
+    on top of that would double-count (the original bug)."""
+    respx.get(f"{BASE_URL}/v5/market/kline").mock(
+        return_value=httpx.Response(
+            200,
+            json={"retCode": 10018, "retMsg": "rate limited"},
+            headers={"X-Bapi-Limit-Status": "7"},
+        )
+    )
+    governor = _fresh_governor()
+    client = BybitRestClient(_config(max_retries=0), governor=governor)
+    try:
+        with pytest.raises(RateLimitError):
+            await client.get_public("/v5/market/kline")
+        assert governor.remaining("public", EndpointClass.MARKET_DATA) == pytest.approx(
+            7.0, abs=1e-6
+        )
+    finally:
+        await client.aclose()
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_check_reachable_consumes_ip_wide_budget() -> None:
+    """Review finding: `check_reachable` skipped the IP-wide token bucket
+    entirely."""
+    respx.get(f"{BASE_URL}/v5/market/time").mock(
+        return_value=httpx.Response(200, json={"retCode": 0, "retMsg": "OK", "result": {}})
+    )
+    governor = TokenBucketGovernor(ip_budget_per_5s=1)
+    client = BybitRestClient(_config(), governor=governor)
+    try:
+        assert await client.check_reachable() is True
+        ip_tokens_after_one = governor._ip_bucket.tokens
+        assert ip_tokens_after_one == pytest.approx(0.0, abs=1e-6)
+    finally:
+        await client.aclose()

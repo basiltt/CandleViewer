@@ -89,6 +89,23 @@ class TokenBucketGovernor:
                     wait_s = deficit / target.refill_per_s if target.refill_per_s > 0 else 0.05
                     await asyncio.sleep(min(wait_s, 1.0))
 
+    async def acquire_ip_only(self) -> None:
+        """Wait for a spare token on the IP-wide bucket only, without
+        touching any per-UID/endpoint-class bucket. Used by unauthenticated,
+        unbudgeted-by-endpoint-class calls (e.g. the startup reachability
+        probe) that must still respect the IP-wide ceiling (C-12.7)."""
+        target = self._ip_bucket
+        async with target.lock:
+            while True:
+                now = self._now()
+                target._refill(now)
+                if target.tokens >= 1.0:
+                    target.tokens -= 1.0
+                    return
+                deficit = 1.0 - target.tokens
+                wait_s = deficit / target.refill_per_s if target.refill_per_s > 0 else 0.05
+                await asyncio.sleep(min(wait_s, 1.0))
+
     def remaining(self, uid: str, endpoint_class: EndpointClass) -> float:
         bucket = self._get_bucket(uid, endpoint_class)
         bucket._refill(self._now())
