@@ -24,13 +24,14 @@ _ADVISORY_LOCK_SQL = sa.text("SELECT pg_advisory_xact_lock(hashtext('audit_log')
 
 _INSERT_SQL = sa.text("""
     INSERT INTO audit_log
-        (actor_user_id, actor_label, actor_ip, session_id, action, object_kind,
+        (record_id, actor_user_id, actor_label, actor_ip, session_id, action, object_kind,
          object_id, object_label, outcome, severity, reason, before_state,
          after_state, request_id, env, event_ts)
     VALUES
-        (:actor_user_id, :actor_label, :actor_ip, :session_id, :action, :object_kind,
+        (:record_id, :actor_user_id, :actor_label, :actor_ip, :session_id, :action, :object_kind,
          :object_id, :object_label, :outcome, :severity, :reason,
          CAST(:before_state AS jsonb), CAST(:after_state AS jsonb), :request_id, :env, :event_ts)
+    ON CONFLICT (record_id) DO NOTHING
     """)
 
 _HEAD_SQL = sa.text("SELECT id, entry_hash FROM audit_log ORDER BY id DESC LIMIT 1")
@@ -38,21 +39,35 @@ _COUNT_SQL = sa.text("SELECT count(*) FROM audit_log")
 _ENTRY_HASH_SQL = sa.text("SELECT entry_hash FROM audit_log WHERE id = :id")
 
 #: Every hashed column is rendered to text *by Postgres*, with exactly the
-#: casts `audit_chain()` uses, so the Python verifier concatenates the same
-#: bytes the trigger hashed (driver-side types — `IPv4Address`, decoded
-#: jsonb dicts, tz-aware datetimes — would not round-trip byte-exactly).
-_VERIFY_COLUMNS = (
-    "id, prev_hash, entry_hash, actor_user_id::text AS actor_user_id, actor_label, "
+#: casts `audit_chain()` uses, so the Python verifier encodes the same bytes
+#: the trigger hashed (see `_VERIFY_BATCH_SQL`).
+
+#: Fixed statements (no string-built SQL — Semgrep/Bandit B608): every
+#: optional filter is a typed, bound parameter that is a no-op when NULL.
+_QUERY_PAGE_SQL = sa.text(
+    "SELECT id, event_ts, actor_user_id, action, object_kind, object_id, outcome, "
+    "severity, actor_ip, request_id, entry_hash, prev_hash FROM audit_log WHERE "
+    "(CAST(:actor_user_id AS uuid) IS NULL OR actor_user_id = CAST(:actor_user_id AS uuid)) "
+    "AND (CAST(:actions AS text[]) IS NULL OR action = ANY(CAST(:actions AS text[]))) "
+    "AND (CAST(:severity AS severity) IS NULL OR severity = CAST(:severity AS severity)) "
+    "AND (CAST(:outcome AS audit_outcome) IS NULL "
+    "OR outcome = CAST(:outcome AS audit_outcome)) "
+    "AND (CAST(:from_ts AS timestamptz) IS NULL OR event_ts >= CAST(:from_ts AS timestamptz)) "
+    "AND (CAST(:to_ts AS timestamptz) IS NULL OR event_ts <= CAST(:to_ts AS timestamptz)) "
+    "AND (CAST(:cursor AS bigint) IS NULL OR id < CAST(:cursor AS bigint)) "
+    "ORDER BY id DESC LIMIT :limit"
+)
+
+_VERIFY_BATCH_SQL = sa.text(
+    "SELECT id, prev_hash, entry_hash, actor_user_id::text AS actor_user_id, actor_label, "
     "actor_ip::text AS actor_ip, session_id::text AS session_id, action, object_kind, "
     "object_id, outcome::text AS outcome, severity::text AS severity, reason, "
     "before_state::text AS before_state, after_state::text AS after_state, "
     "request_id::text AS request_id, env::text AS env, "
-    "to_char(event_ts AT TIME ZONE 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.USOF') AS event_ts"
-)
-
-_QUERY_COLUMNS = (
-    "id, event_ts, actor_user_id, action, object_kind, object_id, outcome, "
-    "severity, actor_ip, request_id, entry_hash, prev_hash"
+    "to_char(event_ts AT TIME ZONE 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.USOF') AS event_ts "
+    "FROM audit_log WHERE id > :after_id "
+    "AND (CAST(:to_id AS bigint) IS NULL OR id <= CAST(:to_id AS bigint)) "
+    "ORDER BY id ASC LIMIT :limit"
 )
 
 _INSERT_CHECKPOINT_SQL = sa.text("""
@@ -85,6 +100,7 @@ class SqlAlchemyAuditRepository:
             await uow.session.execute(
                 _INSERT_SQL,
                 {
+                    "record_id": record["record_id"],
                     "actor_user_id": record.get("actor_user_id"),
                     "actor_label": record["actor_label"],
                     "actor_ip": record.get("actor_ip"),
@@ -117,39 +133,18 @@ class SqlAlchemyAuditRepository:
         cursor: int | None,
         limit: int,
     ) -> list[dict[str, Any]]:
-        clauses = ["1=1"]
-        params: dict[str, Any] = {"limit": limit}
-        if actor_user_id is not None:
-            clauses.append("actor_user_id = :actor_user_id")
-            params["actor_user_id"] = actor_user_id
-        if actions:
-            clauses.append("action = ANY(:actions)")
-            params["actions"] = actions
-        if severity is not None:
-            clauses.append("severity = :severity")
-            params["severity"] = severity
-        if outcome is not None:
-            clauses.append("outcome = :outcome")
-            params["outcome"] = outcome
-        if from_ts is not None:
-            clauses.append("event_ts >= :from_ts")
-            params["from_ts"] = from_ts
-        if to_ts is not None:
-            clauses.append("event_ts <= :to_ts")
-            params["to_ts"] = to_ts
-        if cursor is not None:
-            clauses.append("id < :cursor")
-            params["cursor"] = cursor
-
-        sql = sa.text(f"""
-            SELECT {_QUERY_COLUMNS}
-            FROM audit_log
-            WHERE {" AND ".join(clauses)}
-            ORDER BY id DESC
-            LIMIT :limit
-            """)  # noqa: S608 - clauses/columns are fixed constants, values are bound params
+        params: dict[str, Any] = {
+            "actor_user_id": actor_user_id,
+            "actions": actions or None,
+            "severity": severity,
+            "outcome": outcome,
+            "from_ts": from_ts,
+            "to_ts": to_ts,
+            "cursor": cursor,
+            "limit": limit,
+        }
         async with self._relational.unit_of_work() as uow:
-            result = await uow.session.execute(sql, params)
+            result = await uow.session.execute(_QUERY_PAGE_SQL, params)
             return [dict(row._mapping) for row in result]
 
     async def fetch_entry_hash(self, entry_id: int) -> str | None:
@@ -160,20 +155,9 @@ class SqlAlchemyAuditRepository:
     async def fetch_verify_batch(
         self, *, after_id: int, to_id: int | None, limit: int
     ) -> list[dict[str, Any]]:
-        clauses = ["id > :after_id"]
-        params: dict[str, Any] = {"after_id": after_id, "limit": limit}
-        if to_id is not None:
-            clauses.append("id <= :to_id")
-            params["to_id"] = to_id
-        sql = sa.text(f"""
-            SELECT {_VERIFY_COLUMNS}
-            FROM audit_log
-            WHERE {" AND ".join(clauses)}
-            ORDER BY id ASC
-            LIMIT :limit
-            """)  # noqa: S608 - clauses/columns are fixed constants, values are bound params
+        params = {"after_id": after_id, "to_id": to_id, "limit": limit}
         async with self._relational.unit_of_work() as uow:
-            result = await uow.session.execute(sql, params)
+            result = await uow.session.execute(_VERIFY_BATCH_SQL, params)
             return [dict(row._mapping) for row in result]
 
     async def read_head(self) -> tuple[int, str] | None:

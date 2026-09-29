@@ -16,16 +16,17 @@ cv_app, cv_ro` grant (defence-in-depth on top of the `pg_bootstrap.sql`
 backstop added by E07-T02, which only fires when the table already exists —
 this revision is the one that actually creates it); and `audit_checkpoints`.
 
-The canonical serialisation hashed by `audit_chain()` matches
-`21-database-schema.md` exactly (sorted-field concatenation order fixed by
-the SQL below, not by this migration) and must never change without a
-documented chain-break checkpoint (ticket "Technical notes / design").
+The canonical serialisation hashed by `audit_chain()` is a length-prefixed
+(`audit_field()`: NULL -> `-`, else `<len>:<value>`) concatenation in the
+fixed column order of `21-database-schema.md` Sec.3.10.1, so no two distinct
+rows share a hash input; it must never change without a documented
+chain-break checkpoint (ticket "Technical notes / design").
 
-Inserts are expected to be serialised by the writer taking
-`pg_advisory_xact_lock(hashtext('audit_log'))` for the duration of the
-insert (ticket "Technical notes"); this migration does not itself take that
-lock (DDL only, one-time), but documents the requirement for
-`candleviewer.audit.writer.AuditWriter`, the sole caller.
+`audit_chain()` itself takes `pg_advisory_xact_lock(hashtext('audit_log'))`,
+so every insert path serialises the chain (the writer also takes it; the
+lock is re-entrant within a transaction). TRUNCATE is refused by a statement
+trigger and revoked from `cv_app`/`cv_ro`. `downgrade()` refuses unless both
+tables are empty (C-5.7).
 
 Out of scope for this revision: `system_events`, `backups`, `outbox`
 (Sec.3.10.2-3.10.4) — those land with their owning epics.
@@ -49,7 +50,26 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    """Refuses to destroy audit history (C-5.7): only an *empty* `audit_log`
+    and `audit_checkpoints` may be dropped (enough for the CI empty-DB
+    round-trip, C-5.5). A populated deployment must fix forward; this is the
+    documented "impossible downgrade" of C-5.2 for a non-empty chain."""
+    conn = op.get_bind()
+    for table in ("audit_log", "audit_checkpoints"):
+        rows = conn.exec_driver_sql(_COUNT_SQL[table]).scalar()
+        if rows:
+            raise RuntimeError(
+                f"refusing to downgrade 0003_audit_log: {table} holds {rows} row(s); "
+                "audit history is never dropped (C-5.7, 60-database-migrations.md). "
+                "Fix forward with a new revision instead."
+            )
     op.execute(_DOWNGRADE_SQL)
+
+
+_COUNT_SQL = {
+    "audit_log": "SELECT count(*) FROM audit_log",
+    "audit_checkpoints": "SELECT count(*) FROM audit_checkpoints",
+}
 
 
 _UPGRADE_SQL = """
@@ -62,6 +82,7 @@ BEGIN RAISE EXCEPTION 'table % is append-only', TG_TABLE_NAME; END $BODY$;
 
 CREATE TABLE audit_log (
   id            bigserial PRIMARY KEY,
+  record_id     uuid NOT NULL UNIQUE,
   prev_hash     sha256_hex NOT NULL,
   entry_hash    sha256_hex NOT NULL UNIQUE,
   actor_user_id uuid REFERENCES users(id) ON DELETE SET NULL,
@@ -87,32 +108,51 @@ CREATE INDEX ix_audit_actor   ON audit_log (actor_user_id, event_ts DESC);
 CREATE INDEX ix_audit_action  ON audit_log (action, event_ts DESC);
 CREATE INDEX ix_audit_object  ON audit_log (object_kind, object_id, event_ts DESC);
 CREATE INDEX ix_audit_sev     ON audit_log (severity, event_ts DESC) WHERE severity IN ('error','critical');
+COMMENT ON COLUMN audit_log.record_id IS 'Writer-assigned idempotency key: WAL replay is ON CONFLICT (record_id) DO NOTHING';
 COMMENT ON COLUMN audit_log.actor_ip IS 'PII: purge on account erase / retention job';
 COMMENT ON COLUMN audit_log.before_state IS 'Redacted diff source — SECRET-classified fields must never appear here (candleviewer.audit.redact)';
 COMMENT ON COLUMN audit_log.after_state IS 'Redacted diff source — SECRET-classified fields must never appear here (candleviewer.audit.redact)';
 
+-- Length-prefixed canonical field: NULL -> '-', otherwise '<len>:<value>'.
+-- A prefix-free encoding, so no two distinct rows share a hash input
+-- (PR #1561 finding 8). Mirrored byte-for-byte by
+-- candleviewer.audit.query._canonical_field.
+CREATE FUNCTION audit_field(v text) RETURNS text LANGUAGE sql IMMUTABLE AS $BODY$
+  SELECT CASE WHEN v IS NULL THEN '-' ELSE length(v)::text || ':' || v END
+$BODY$;
+
+-- Takes the chain advisory lock itself, so *every* insert path (not only
+-- AuditWriter) serialises the read-previous-hash/write step; the lock is
+-- transaction-scoped and re-entrant for the writer, which also takes it.
 CREATE FUNCTION audit_chain() RETURNS trigger LANGUAGE plpgsql AS $BODY$
 DECLARE last_hash sha256_hex;
 BEGIN
+  PERFORM pg_advisory_xact_lock(hashtext('audit_log'));
   SELECT entry_hash INTO last_hash FROM audit_log ORDER BY id DESC LIMIT 1;
   NEW.prev_hash := COALESCE(last_hash, repeat('0',64));
   NEW.entry_hash := encode(digest(
-      NEW.prev_hash
-      || coalesce(NEW.actor_user_id::text,'') || NEW.actor_label
-      || coalesce(NEW.actor_ip::text,'') || coalesce(NEW.session_id::text,'')
-      || NEW.action || coalesce(NEW.object_kind,'') || coalesce(NEW.object_id,'')
-      || NEW.outcome::text || NEW.severity::text || coalesce(NEW.reason,'')
-      || coalesce(NEW.before_state::text,'') || coalesce(NEW.after_state::text,'')
-      || coalesce(NEW.request_id::text,'') || coalesce(NEW.env::text,'')
-      || to_char(NEW.event_ts AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.USOF'),
+      audit_field(NEW.prev_hash)
+      || audit_field(NEW.actor_user_id::text) || audit_field(NEW.actor_label)
+      || audit_field(NEW.actor_ip::text) || audit_field(NEW.session_id::text)
+      || audit_field(NEW.action) || audit_field(NEW.object_kind)
+      || audit_field(NEW.object_id) || audit_field(NEW.outcome::text)
+      || audit_field(NEW.severity::text) || audit_field(NEW.reason)
+      || audit_field(NEW.before_state::text) || audit_field(NEW.after_state::text)
+      || audit_field(NEW.request_id::text) || audit_field(NEW.env::text)
+      || audit_field(to_char(NEW.event_ts AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.USOF')),
     'sha256'), 'hex');
   RETURN NEW;
 END $BODY$;
+
+CREATE FUNCTION audit_refuse_truncate() RETURNS trigger LANGUAGE plpgsql AS $BODY$
+BEGIN RAISE EXCEPTION 'table % is append-only: TRUNCATE refused (C-5.7)', TG_TABLE_NAME; END $BODY$;
 
 CREATE TRIGGER trg_audit_chain BEFORE INSERT ON audit_log
   FOR EACH ROW EXECUTE FUNCTION audit_chain();
 CREATE TRIGGER trg_audit_append BEFORE UPDATE OR DELETE ON audit_log
   FOR EACH ROW EXECUTE FUNCTION forbid_mutation();
+CREATE TRIGGER trg_audit_no_truncate BEFORE TRUNCATE ON audit_log
+  FOR EACH STATEMENT EXECUTE FUNCTION audit_refuse_truncate();
 
 -- Guarded: `cv_app`/`cv_ro` are cluster roles created by
 -- `infra/scripts/pg_bootstrap.sql` (E07-T02), not by this migration. A
@@ -126,10 +166,10 @@ CREATE TRIGGER trg_audit_append BEFORE UPDATE OR DELETE ON audit_log
 DO $BODY$
 BEGIN
   IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'cv_app') THEN
-    EXECUTE 'REVOKE UPDATE, DELETE ON audit_log FROM cv_app';
+    EXECUTE 'REVOKE UPDATE, DELETE, TRUNCATE ON audit_log FROM cv_app';
   END IF;
   IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'cv_ro') THEN
-    EXECUTE 'REVOKE UPDATE, DELETE ON audit_log FROM cv_ro';
+    EXECUTE 'REVOKE UPDATE, DELETE, TRUNCATE ON audit_log FROM cv_ro';
   END IF;
 END
 $BODY$;
@@ -148,9 +188,12 @@ CREATE TABLE audit_checkpoints (
 
 _DOWNGRADE_SQL = """
 DROP TABLE IF EXISTS audit_checkpoints;
+DROP TRIGGER IF EXISTS trg_audit_no_truncate ON audit_log;
 DROP TRIGGER IF EXISTS trg_audit_append ON audit_log;
 DROP TRIGGER IF EXISTS trg_audit_chain ON audit_log;
+DROP FUNCTION IF EXISTS audit_refuse_truncate();
 DROP FUNCTION IF EXISTS audit_chain();
+DROP FUNCTION IF EXISTS audit_field(text);
 DROP TABLE IF EXISTS audit_log;
 DROP FUNCTION IF EXISTS forbid_mutation();
 DROP TYPE IF EXISTS severity;

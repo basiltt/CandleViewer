@@ -372,6 +372,7 @@ audit_log = Table(
     "audit_log",
     metadata,
     Column("id", BigInteger, primary_key=True),
+    Column("record_id", UUID(as_uuid=True), nullable=False, unique=True),
     Column("prev_hash", _sha256_hex, nullable=False),
     Column("entry_hash", _sha256_hex, nullable=False, unique=True),
     Column("actor_user_id", ForeignKey("users.id", ondelete="SET NULL")),
