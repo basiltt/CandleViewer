@@ -92,6 +92,49 @@ def test_parse_instrument_raises_on_non_decimal_tick_size() -> None:
         parse_instrument(raw, fetched_at_us=1)
 
 
+@pytest.mark.parametrize("bad_value", ["0", "-0.10", "NaN", "Infinity", "-Infinity"])
+def test_parse_instrument_rejects_non_positive_or_non_finite_tick_size(bad_value: str) -> None:
+    raw = _raw()
+    raw["priceFilter"]["tickSize"] = bad_value  # type: ignore[index]
+    with pytest.raises(InstrumentParseError, match="tickSize"):
+        parse_instrument(raw, fetched_at_us=1)
+
+
+@pytest.mark.parametrize("bad_value", ["0", "-0.001", "NaN", "Infinity"])
+def test_parse_instrument_rejects_non_positive_or_non_finite_qty_step(bad_value: str) -> None:
+    raw = _raw()
+    raw["lotSizeFilter"]["qtyStep"] = bad_value  # type: ignore[index]
+    with pytest.raises(InstrumentParseError, match="qtyStep"):
+        parse_instrument(raw, fetched_at_us=1)
+
+
+@pytest.mark.parametrize("bad_value", ["0", "-0.001", "NaN", "Infinity"])
+def test_parse_instrument_rejects_non_positive_or_non_finite_min_order_qty(bad_value: str) -> None:
+    raw = _raw()
+    raw["lotSizeFilter"]["minOrderQty"] = bad_value  # type: ignore[index]
+    with pytest.raises(InstrumentParseError, match="minOrderQty"):
+        parse_instrument(raw, fetched_at_us=1)
+
+
+def test_parse_instrument_rejects_non_finite_optional_decimal() -> None:
+    raw = _raw()
+    raw["priceFilter"]["minPrice"] = "Infinity"  # type: ignore[index]
+    with pytest.raises(InstrumentParseError, match="minPrice"):
+        parse_instrument(raw, fetched_at_us=1)
+
+
+def test_parse_instrument_raises_parse_error_on_non_integer_price_scale() -> None:
+    raw = _raw(priceScale="not-an-int")
+    with pytest.raises(InstrumentParseError, match="priceScale"):
+        parse_instrument(raw, fetched_at_us=1)
+
+
+def test_parse_instrument_raises_parse_error_on_non_integer_funding_interval() -> None:
+    raw = _raw(fundingInterval="not-an-int")
+    with pytest.raises(InstrumentParseError, match="fundingInterval"):
+        parse_instrument(raw, fetched_at_us=1)
+
+
 @given(
     tick=st.decimals(min_value="0.00000001", max_value="1000", places=8, allow_nan=False),
     qty=st.decimals(min_value="0.00000001", max_value="1000", places=8, allow_nan=False),

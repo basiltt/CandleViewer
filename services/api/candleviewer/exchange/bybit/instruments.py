@@ -28,14 +28,26 @@ class InstrumentParseError(ValueError):
     or just be skipped-and-logged; this module does not decide that policy."""
 
 
-def _decimal(raw: Mapping[str, Any], key: str) -> Decimal:
+def _decimal(raw: Mapping[str, Any], key: str, *, require_positive: bool = False) -> Decimal:
     value = raw.get(key)
     if value is None or value == "":
         raise InstrumentParseError(f"missing required field {key!r}")
     try:
-        return Decimal(str(value))
+        parsed = Decimal(str(value))
     except InvalidOperation as exc:
         raise InstrumentParseError(f"field {key!r} is not a valid decimal: {value!r}") from exc
+    if not parsed.is_finite():
+        raise InstrumentParseError(f"field {key!r} is not finite: {value!r}")
+    if require_positive and parsed <= 0:
+        raise InstrumentParseError(f"field {key!r} must be > 0: {value!r}")
+    return parsed
+
+
+def _int(raw: Mapping[str, Any], key: str, value: Any) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError) as exc:
+        raise InstrumentParseError(f"field {key!r} is not an integer: {value!r}") from exc
 
 
 def _optional_decimal(raw: Mapping[str, Any], key: str, default: Decimal) -> Decimal:
@@ -43,9 +55,12 @@ def _optional_decimal(raw: Mapping[str, Any], key: str, default: Decimal) -> Dec
     if value is None or value == "":
         return default
     try:
-        return Decimal(str(value))
+        parsed = Decimal(str(value))
     except InvalidOperation as exc:
         raise InstrumentParseError(f"field {key!r} is not a valid decimal: {value!r}") from exc
+    if not parsed.is_finite():
+        raise InstrumentParseError(f"field {key!r} is not finite: {value!r}")
+    return parsed
 
 
 def parse_instrument(raw: Mapping[str, Any], *, fetched_at_us: int) -> Instrument:
@@ -85,12 +100,12 @@ def parse_instrument(raw: Mapping[str, Any], *, fetched_at_us: int) -> Instrumen
         status=status,
         contract_type="linear_perpetual",
         launch_time=launch_time_ms * 1000,
-        tick_size=_decimal(price_filter, "tickSize"),
-        price_scale=int(raw.get("priceScale", 2)),
+        tick_size=_decimal(price_filter, "tickSize", require_positive=True),
+        price_scale=_int(raw, "priceScale", raw.get("priceScale", 2)),
         min_price=_optional_decimal(price_filter, "minPrice", Decimal(0)),
         max_price=_optional_decimal(price_filter, "maxPrice", Decimal(0)),
-        qty_step=_decimal(lot_size_filter, "qtyStep"),
-        min_order_qty=_decimal(lot_size_filter, "minOrderQty"),
+        qty_step=_decimal(lot_size_filter, "qtyStep", require_positive=True),
+        min_order_qty=_decimal(lot_size_filter, "minOrderQty", require_positive=True),
         max_order_qty=_decimal(lot_size_filter, "maxOrderQty"),
         max_mkt_order_qty=_optional_decimal(
             lot_size_filter, "maxMktOrderQty", _decimal(lot_size_filter, "maxOrderQty")
@@ -99,7 +114,9 @@ def parse_instrument(raw: Mapping[str, Any], *, fetched_at_us: int) -> Instrumen
         max_leverage=_decimal(leverage_filter, "maxLeverage"),
         min_leverage=_optional_decimal(leverage_filter, "minLeverage", Decimal(1)),
         leverage_step=_optional_decimal(leverage_filter, "leverageStep", Decimal("0.01")),
-        funding_interval_min=int(funding_cfg) if funding_cfg is not None else 480,
+        funding_interval_min=(
+            _int(raw, "fundingInterval", funding_cfg) if funding_cfg is not None else 480
+        ),
         upper_funding_rate=(
             _decimal(raw, "upperFundingRate")
             if raw.get("upperFundingRate") is not None
