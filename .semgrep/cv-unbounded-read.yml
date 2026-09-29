@@ -1,0 +1,23 @@
+rules:
+  - id: cv-unbounded-read
+    languages: [python]
+    severity: WARNING
+    message: >-
+      Reading a response body or WS frame without an explicit size bound
+      in the adapter/ingestion path risks an unbounded-memory DoS from a
+      malicious or malfunctioning peer (E08-X01 ingestion threats). Pass
+      an explicit byte-size limit (httpx `Response.aread(max_bytes=...)`
+      equivalent guard, or check `Content-Length`/frame length against a
+      configured cap before buffering).
+    metadata:
+      rule-id: cv-unbounded-read
+    pattern-either:
+      - pattern: $RESP.content
+      - pattern: $RESP.read()
+      - pattern: await $RESP.aread()
+      - pattern: await $WS.recv()
+    paths:
+      exclude:
+        - "**/test_*.py"
+        - "**/*_test.py"
+        - "**/conftest.py"

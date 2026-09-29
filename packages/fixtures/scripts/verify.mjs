@@ -22,6 +22,12 @@ const SECRET_PATTERNS = [
     name: "generic long hex/base64 secret-shaped field",
     re: /"(secret|token|password)"\s*:\s*"[A-Za-z0-9+/=_-]{16,}"/i,
   },
+  {
+    // E08-X03: Bybit v5 auth headers, captured verbatim by a recorder that
+    // did not redact them before the fixture was committed.
+    name: "Bybit X-BAPI-* auth header",
+    re: /X-BAPI-(API-KEY|SIGN)["']?\s*[:=]\s*["']?[A-Za-z0-9]{16,}/i,
+  },
 ];
 
 export function listFiles(dir) {

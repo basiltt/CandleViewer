@@ -1,0 +1,26 @@
+rules:
+  - id: cv-decimal-discipline
+    languages: [python]
+    severity: ERROR
+    message: >-
+      `float` used for a price or quantity variable/parameter in the
+      adapter, ingestion or policy modules. Money/price/qty must use
+      `Decimal` (CONSTITUTION C-2.x money rule, AGENTS.md §5.2) — a
+      correctness rule with security consequences for order validation
+      (E08-X03 ticket scope).
+    metadata:
+      rule-id: cv-decimal-discipline
+    patterns:
+      - pattern-either:
+          - pattern: "$VAR: float = $VALUE"
+          - pattern: |
+              def $FUNC(..., $VAR: float, ...):
+                  ...
+      - metavariable-regex:
+          metavariable: $VAR
+          regex: "(?i)^(price|qty|quantity|notional|order_size|position_size|tick_size|lot_size)$"
+    paths:
+      exclude:
+        - "**/test_*.py"
+        - "**/*_test.py"
+        - "**/conftest.py"

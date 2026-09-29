@@ -1,0 +1,40 @@
+rules:
+  - id: cv-broad-except-on-ingest
+    languages: [python]
+    severity: ERROR
+    message: >-
+      A bare `except Exception`/`except BaseException` that swallows the
+      error with `pass` (no re-raise, no logged traceback) on the ingestion
+      hot path turns a validation failure into a silent wrong-data bug
+      (E08-X03 ticket scope). Catch the specific exception type and either
+      re-raise, map it to a typed domain error, or at minimum log the full
+      traceback (`logger.exception(...)`) before continuing.
+    metadata:
+      rule-id: cv-broad-except-on-ingest
+    patterns:
+      - pattern-either:
+          - pattern: |
+              try:
+                  ...
+              except Exception:
+                  pass
+          - pattern: |
+              try:
+                  ...
+              except BaseException:
+                  pass
+          - pattern: |
+              try:
+                  ...
+              except Exception as $E:
+                  pass
+          - pattern: |
+              try:
+                  ...
+              except BaseException as $E:
+                  pass
+    paths:
+      exclude:
+        - "**/test_*.py"
+        - "**/*_test.py"
+        - "**/conftest.py"
