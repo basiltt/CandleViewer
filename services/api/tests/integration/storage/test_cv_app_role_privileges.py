@@ -60,6 +60,15 @@ def _psycopg_dsn(async_dsn: str, *, user: str | None = None, password: str | Non
     return dsn
 
 
+def _swap_user(async_dsn: str, *, user: str, password: str) -> str:
+    """Like `_psycopg_dsn` but keeps the `postgresql+asyncpg://` driver
+    prefix, for callers (e.g. `_alembic`, via `_alembic_sync_dsn`) that
+    still need to convert the driver themselves."""
+    import re
+
+    return re.sub(r"://[^@]+@", f"://{user}:{password}@", async_dsn)
+
+
 def _alembic(dsn: str, *args: str) -> None:
     subprocess.run(  # noqa: S603 -- fixed argv, literal alembic subcommands, no shell
         [sys.executable, "-m", "alembic", *args],
@@ -124,7 +133,16 @@ def cv_app_dsn(pg_dsn: str) -> str:
     # every migrated table ungranted and give a false-negative DDL-refusal
     # signal masked by a permission-denied-for-everything role.
     _bootstrap_roles(pg_dsn)
-    _alembic(pg_dsn, "upgrade", "head")
+    # Run alembic as `cv_owner`, the DDL role migrations use in production
+    # (21-database-schema.md Sec.1.1) and in the `migrations` CI job — not
+    # the testcontainers superuser — so `ALTER DEFAULT PRIVILEGES FOR ROLE
+    # cv_owner` actually applies to the tables these migrations create.
+    owner_dsn = _swap_user(
+        pg_dsn,
+        user="cv_owner",
+        password="cv_owner_test_pw",  # noqa: S106 -- test-only fixture credential, never real
+    )
+    _alembic(owner_dsn, "upgrade", "head")
     return _psycopg_dsn(
         pg_dsn,
         user="cv_app",

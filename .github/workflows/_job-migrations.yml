@@ -72,9 +72,6 @@ jobs:
         working-directory: .
         run: uv run --project services/api python tools/ci/verify_migration_lockfile.py --base-ref origin/${{ github.base_ref }}
 
-      - name: CV_PG_DSN for the service container (loopback only, CI-only creds)
-        run: echo "CV_PG_DSN=postgresql+asyncpg://cv:cv@localhost:5432/candleviewer" >> "$GITHUB_ENV"
-
       - name: Bootstrap cv_owner/cv_app/cv_ro roles and privileges (#1556)
         working-directory: .
         run: |
@@ -82,6 +79,9 @@ jobs:
             -v ON_ERROR_STOP=1 \
             -v owner_pw=cv_owner_ci_pw -v app_pw=cv_app_ci_pw -v ro_pw=cv_ro_ci_pw \
             -f infra/scripts/pg_bootstrap.sql
+
+      - name: CV_PG_DSN as cv_owner (migrations run as cv_owner, 21-database-schema.md Sec.1.1/L2875)
+        run: echo "CV_PG_DSN=postgresql+asyncpg://cv_owner:cv_owner_ci_pw@localhost:5432/candleviewer" >> "$GITHUB_ENV"
 
       - name: alembic heads — single linear history (CI-MIG-001)
         run: |
