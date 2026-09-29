@@ -27,6 +27,7 @@
     "gate:flaky-quarantine": "python tools/ci/flaky_quarantine_report.py --repo-root .",
     "gate:bundle-size-regression": "node scripts/check-bundle-size-regression.mjs",
     "gate:negative-tests": "node scripts/gate-negative-tests.mjs",
+    "test:toolchain": "python -m pytest tests/toolchain -q && python -m tests.toolchain.pack",
     "prepare": "husky"
   },
   "lint-staged": {

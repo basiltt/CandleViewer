@@ -13,6 +13,8 @@ coverage/
 .turbo/
 *.tsbuildinfo
 release/
+reports/toolchain-regression.json
+reports/flaky-quarantine.json
 playwright-report/
 test-results/
 
