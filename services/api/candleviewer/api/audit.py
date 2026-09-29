@@ -30,9 +30,9 @@ for a given request, that is a normal 401 per the resolver's own contract
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Protocol
+from typing import Annotated, Any, Protocol
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
@@ -173,7 +173,10 @@ def make_audit_router(
         subject_type: str | None = None,
         outcome: str | None = None,
         severity: str | None = None,
-        from_: datetime | None = None,
+        # `from` is a Python keyword; the OpenAPI contract (22-api-openapi.yaml) names
+        # the query parameter `from`, so alias it — without the alias `?from=` was
+        # silently ignored and the lower time bound dropped.
+        from_: Annotated[datetime | None, Query(alias="from")] = None,
         to: datetime | None = None,
         cursor: int | None = None,
         limit: int = 50,

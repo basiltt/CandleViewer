@@ -201,7 +201,7 @@ def test_query_audit_log_rejects_naive_from_ts_with_400_not_500() -> None:
     client = TestClient(_app(service, _FakeResolver(_owner())))
     response = client.get(
         "/admin/audit",
-        params={"from_": "2026-01-01T00:00:00", "to": "2026-01-02T00:00:00"},
+        params={"from": "2026-01-01T00:00:00", "to": "2026-01-02T00:00:00"},
     )
     assert response.status_code == 400
     assert response.json()["status"] == 400
@@ -212,7 +212,7 @@ def test_query_audit_log_rejects_from_after_to_with_400_not_500() -> None:
     client = TestClient(_app(service, _FakeResolver(_owner())))
     response = client.get(
         "/admin/audit",
-        params={"from_": "2026-01-02T00:00:00Z", "to": "2026-01-01T00:00:00Z"},
+        params={"from": "2026-01-02T00:00:00Z", "to": "2026-01-01T00:00:00Z"},
     )
     assert response.status_code == 400
 
@@ -274,3 +274,29 @@ def test_export_audit_log_rejects_missing_from() -> None:
     client = TestClient(_app(service, _FakeResolver(_owner())))
     response = client.post("/admin/audit/export", json={"to": "2026-01-02T00:00:00Z"})
     assert response.status_code == 400
+
+
+def test_query_audit_log_from_alias_matches_openapi_and_reaches_service() -> None:
+    """Security re-review of #1608 finding 1: the contract (22-api-openapi.yaml)
+    names the lower bound `from`; without `Query(alias="from")` a client's
+    `?from=` was silently ignored and the result set widened."""
+    service = _FakeAuditService()
+    client = TestClient(_app(service, _FakeResolver(_owner())))
+    response = client.get(
+        "/admin/audit",
+        params={"from": "2026-01-01T00:00:00+00:00", "to": "2026-01-02T00:00:00+00:00"},
+    )
+    assert response.status_code == 200
+    [call] = service.query_service.query_calls
+    assert call["from_ts"] is not None
+    assert call["from_ts"].isoformat().startswith("2026-01-01T00:00:00")
+
+
+def test_query_audit_log_ignores_python_name_from_underscore() -> None:
+    """`from_` is an implementation detail, not part of the contract."""
+    service = _FakeAuditService()
+    client = TestClient(_app(service, _FakeResolver(_owner())))
+    response = client.get("/admin/audit", params={"from_": "2026-01-01T00:00:00+00:00"})
+    assert response.status_code == 200
+    [call] = service.query_service.query_calls
+    assert call["from_ts"] is None
