@@ -27,16 +27,27 @@ from sqlalchemy import (
     CheckConstraint,
     Column,
     ForeignKey,
+    Index,
     Integer,
     MetaData,
     Numeric,
     SmallInteger,
-    String,
     Table,
+    Text,
     UniqueConstraint,
     text,
 )
-from sqlalchemy.dialects.postgresql import ARRAY, BYTEA, CITEXT, ENUM, INET, JSONB, TIMESTAMP, UUID
+from sqlalchemy.dialects.postgresql import (
+    ARRAY,
+    BYTEA,
+    CITEXT,
+    DOMAIN,
+    ENUM,
+    INET,
+    JSONB,
+    TIMESTAMP,
+    UUID,
+)
 
 #: §9.3 rule 12 — verbatim from `docs/plan/21-database-schema.md`.
 NAMING_CONVENTION = {
@@ -70,21 +81,38 @@ mfa_method_kind = ENUM(
     create_type=False,
 )
 
-#: The `sha256_hex` domain (`CREATE DOMAIN sha256_hex AS char(64) CHECK (...)`,
-#: revision 0001) has no first-class SQLAlchemy Core type; a fixed-length
-#: `String(64)` reflects the same on-wire shape for autogenerate comparison
-#: purposes (`compare_type=True` diffs the underlying column type, not the
-#: domain name, so this does not itself cause a drift failure).
-_sha256_hex = String(64)
+#: The `sha256_hex` DOMAIN (`CREATE DOMAIN sha256_hex AS char(64) CHECK (...)`,
+#: revision 0001) is modelled as a first-class `postgresql.DOMAIN` so
+#: `compare_type=True` diffs against the actual domain name/definition instead
+#: of a same-shaped-but-different `String(64)` (which `alembic check` reports
+#: as drift: DOMAIN vs. plain `character(64)`). `create_type=False` because the
+#: domain is created by the hand-written SQL in revision 0001, not by
+#: autogenerate/create_all.
+_sha256_hex = DOMAIN(
+    "sha256_hex",
+    Text(),
+    check="VALUE ~ '^[0-9a-f]{64}$'",
+    create_type=False,
+)
 
 users = Table(
     "users",
     metadata,
     Column("id", UUID(as_uuid=True), primary_key=True),
-    Column("email", CITEXT, nullable=False),
+    Column(
+        "email",
+        CITEXT,
+        nullable=False,
+        comment="PII: contact identifier; purge on account erase",
+    ),
     Column("username", CITEXT, nullable=False),
-    Column("display_name", String),
-    Column("password_hash", String, nullable=False),
+    Column("display_name", Text, comment="PII: purge on account erase"),
+    Column(
+        "password_hash",
+        Text,
+        nullable=False,
+        comment="SECRET: Argon2id digest; never logged, never returned by API",
+    ),
     Column(
         "password_algo_params",
         JSONB,
@@ -102,9 +130,9 @@ users = Table(
     Column("failed_login_count", Integer, nullable=False, server_default=text("0")),
     Column("locked_until", TIMESTAMP(timezone=True)),
     Column("last_login_at", TIMESTAMP(timezone=True)),
-    Column("last_login_ip", INET),
-    Column("timezone", String, nullable=False, server_default=text("'UTC'")),
-    Column("locale", String, nullable=False, server_default=text("'en-GB'")),
+    Column("last_login_ip", INET, comment="PII: purge on account erase"),
+    Column("timezone", Text, nullable=False, server_default=text("'UTC'")),
+    Column("locale", Text, nullable=False, server_default=text("'en-GB'")),
     Column("invited_by", ForeignKey("users.id", ondelete="SET NULL")),
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
@@ -113,29 +141,36 @@ users = Table(
     CheckConstraint("char_length(username) BETWEEN 3 AND 32", name="users_uname_len"),
     CheckConstraint("password_hash LIKE '$argon2id$%'", name="users_pwd_argon"),
     CheckConstraint("failed_login_count >= 0", name="users_fail_nonneg"),
+    Index("ux_users_email", "email", unique=True, postgresql_where=text("deleted_at IS NULL")),
+    Index(
+        "ux_users_username", "username", unique=True, postgresql_where=text("deleted_at IS NULL")
+    ),
+    Index("ix_users_status", "status", postgresql_where=text("deleted_at IS NULL")),
 )
 
 roles = Table(
     "roles",
     metadata,
     Column("id", UUID(as_uuid=True), primary_key=True),
-    Column("name", role_name, nullable=False, unique=True),
-    Column("description", String, nullable=False, server_default=text("''")),
+    Column("name", role_name, nullable=False),
+    Column("description", Text, nullable=False, server_default=text("''")),
     Column("is_system", Boolean, nullable=False, server_default=text("true")),
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    UniqueConstraint("name", name="roles_name_key"),
 )
 
 permissions = Table(
     "permissions",
     metadata,
     Column("id", UUID(as_uuid=True), primary_key=True),
-    Column("code", String, nullable=False, unique=True),
-    Column("domain", String, nullable=False),
-    Column("description", String, nullable=False, server_default=text("''")),
+    Column("code", Text, nullable=False),
+    Column("domain", Text, nullable=False),
+    Column("description", Text, nullable=False, server_default=text("''")),
     Column("is_dangerous", Boolean, nullable=False, server_default=text("false")),
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     CheckConstraint("code ~ '^[a-z0-9_]+:[a-z0-9_]+$'", name="permissions_code_fmt"),
+    UniqueConstraint("code", name="permissions_code_key"),
 )
 
 role_permissions = Table(
@@ -144,6 +179,7 @@ role_permissions = Table(
     Column("role_id", ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True),
     Column("permission_id", ForeignKey("permissions.id", ondelete="CASCADE"), primary_key=True),
     Column("granted_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Index("ix_role_permissions_perm", "permission_id"),
 )
 
 user_roles = Table(
@@ -155,6 +191,7 @@ user_roles = Table(
     Column("granted_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("expires_at", TIMESTAMP(timezone=True)),
     CheckConstraint("expires_at IS NULL OR expires_at > granted_at", name="user_roles_expiry"),
+    Index("ix_user_roles_role", "role_id"),
 )
 
 user_account_access = Table(
@@ -167,7 +204,7 @@ user_account_access = Table(
     Column("frozen", Boolean, nullable=False, server_default=text("false")),
     Column("frozen_at", TIMESTAMP(timezone=True)),
     Column("frozen_by", ForeignKey("users.id", ondelete="SET NULL")),
-    Column("frozen_reason", String),
+    Column("frozen_reason", Text),
     Column("max_daily_loss_usd", Numeric(38, 18)),
     Column("granted_by", ForeignKey("users.id", ondelete="SET NULL")),
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
@@ -177,6 +214,12 @@ user_account_access = Table(
     CheckConstraint(
         "max_daily_loss_usd IS NULL OR max_daily_loss_usd > 0", name="uaa_loss_positive"
     ),
+    Index("ix_uaa_account", "exchange_account_id", postgresql_where=text("can_trade")),
+    Index("ix_uaa_frozen", "exchange_account_id", postgresql_where=text("frozen")),
+    comment=(
+        "exchange_account_id has no FK yet: exchange_accounts is created by E27; "
+        "that migration adds fk_user_account_access_exchange_account_id_exchange_accounts."
+    ),
 )
 
 sessions = Table(
@@ -184,20 +227,32 @@ sessions = Table(
     metadata,
     Column("id", UUID(as_uuid=True), primary_key=True),
     Column("user_id", ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
-    Column("refresh_token_hash", _sha256_hex, nullable=False, unique=True),
+    Column(
+        "refresh_token_hash",
+        _sha256_hex,
+        nullable=False,
+        comment="SECRET: SHA-256 of the raw refresh token; raw token never stored",
+    ),
     Column("access_token_jti", UUID(as_uuid=True)),
     Column("issued_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("last_seen_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("expires_at", TIMESTAMP(timezone=True), nullable=False),
     Column("revoked_at", TIMESTAMP(timezone=True)),
-    Column("revoked_reason", String),
-    Column("ip", INET),
-    Column("user_agent", String),
-    Column("device_label", String),
+    Column("revoked_reason", Text),
+    Column("ip", INET, comment="PII: purge on account erase / retention job"),
+    Column("user_agent", Text, comment="PII: purge on account erase / retention job"),
+    Column("device_label", Text),
     Column("is_electron", Boolean, nullable=False, server_default=text("false")),
     Column("mfa_satisfied_at", TIMESTAMP(timezone=True)),
-    Column("tailscale_node", String),
+    Column(
+        "tailscale_node",
+        Text,
+        comment="PII-adjacent: node identity from Tailscale header",
+    ),
     CheckConstraint("expires_at > issued_at", name="sessions_expiry"),
+    UniqueConstraint("refresh_token_hash", name="sessions_refresh_token_hash_key"),
+    Index("ix_sessions_user_live", "user_id", postgresql_where=text("revoked_at IS NULL")),
+    Index("ix_sessions_expiry", "expires_at", postgresql_where=text("revoked_at IS NULL")),
 )
 
 sessions_rotation = Table(
@@ -208,9 +263,9 @@ sessions_rotation = Table(
         "next_session_id",
         ForeignKey("sessions.id", ondelete="CASCADE"),
         nullable=False,
-        unique=True,
     ),
     Column("rotated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    UniqueConstraint("next_session_id", name="sessions_rotation_next_session_id_key"),
 )
 
 mfa_methods = Table(
@@ -219,14 +274,18 @@ mfa_methods = Table(
     Column("id", UUID(as_uuid=True), primary_key=True),
     Column("user_id", ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
     Column("kind", mfa_method_kind, nullable=False),
-    Column("label", String, nullable=False, server_default=text("''")),
-    Column("secret_enc", BYTEA),
-    Column("secret_key_ref", String),
+    Column("label", Text, nullable=False, server_default=text("''")),
+    Column(
+        "secret_enc",
+        BYTEA,
+        comment="SECRET: envelope-encrypted TOTP seed; plaintext only in services/api/secrets/",
+    ),
+    Column("secret_key_ref", Text),
     Column("credential_id", BYTEA),
     Column("public_key", BYTEA),
     Column("sign_count", BigInteger, nullable=False, server_default=text("0")),
     Column("aaguid", UUID(as_uuid=True)),
-    Column("transports", ARRAY(String)),
+    Column("transports", ARRAY(Text)),
     Column("confirmed_at", TIMESTAMP(timezone=True)),
     Column("last_used_at", TIMESTAMP(timezone=True)),
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
@@ -237,6 +296,13 @@ mfa_methods = Table(
         "kind <> 'webauthn' OR (credential_id IS NOT NULL AND public_key IS NOT NULL)",
         name="mfa_wa_shape",
     ),
+    Index(
+        "ux_mfa_webauthn_cred",
+        "credential_id",
+        unique=True,
+        postgresql_where=text("credential_id IS NOT NULL"),
+    ),
+    Index("ix_mfa_user_active", "user_id", postgresql_where=text("revoked_at IS NULL")),
 )
 
 mfa_challenges = Table(
@@ -246,14 +312,20 @@ mfa_challenges = Table(
     Column("user_id", ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
     Column("session_id", ForeignKey("sessions.id", ondelete="CASCADE")),
     Column("kind", mfa_method_kind, nullable=False),
-    Column("nonce", BYTEA, nullable=False),
-    Column("purpose", String, nullable=False, server_default=text("'login'")),
+    Column("nonce", BYTEA, nullable=False, comment="SECRET: anti-replay challenge nonce"),
+    Column("purpose", Text, nullable=False, server_default=text("'login'")),
     Column("attempts", SmallInteger, nullable=False, server_default=text("0")),
     Column("satisfied_at", TIMESTAMP(timezone=True)),
     Column("expires_at", TIMESTAMP(timezone=True), nullable=False),
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     CheckConstraint("attempts BETWEEN 0 AND 10", name="mfa_ch_attempts"),
     CheckConstraint("purpose IN ('login','step_up','enroll')", name="mfa_ch_purpose"),
+    Index(
+        "ix_mfa_ch_user_open",
+        "user_id",
+        "expires_at",
+        postgresql_where=text("satisfied_at IS NULL"),
+    ),
 )
 
 recovery_codes = Table(
@@ -261,8 +333,14 @@ recovery_codes = Table(
     metadata,
     Column("id", UUID(as_uuid=True), primary_key=True),
     Column("user_id", ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
-    Column("code_hash", _sha256_hex, nullable=False),
+    Column(
+        "code_hash",
+        _sha256_hex,
+        nullable=False,
+        comment="SECRET: SHA-256 of the one-time recovery code",
+    ),
     Column("used_at", TIMESTAMP(timezone=True)),
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
-    UniqueConstraint("user_id", "code_hash"),
+    UniqueConstraint("user_id", "code_hash", name="recovery_codes_user_id_code_hash_key"),
+    Index("ix_recovery_unused", "user_id", postgresql_where=text("used_at IS NULL")),
 )
