@@ -34,6 +34,7 @@ class AuditRepository(Protocol):
         *,
         actor_user_id: str | None,
         actions: list[str] | None,
+        subject_type: str | None,
         severity: str | None,
         outcome: str | None,
         from_ts: datetime | None,
@@ -42,7 +43,8 @@ class AuditRepository(Protocol):
         limit: int,
     ) -> list[dict[str, Any]]:
         """Return up to `limit` rows ordered by `id DESC`, most recent
-        first, matching every supplied filter."""
+        first, matching every supplied filter (including `subject_type`,
+        the `object_kind` column)."""
         ...
 
     async def fetch_entry_hash(self, entry_id: int) -> str | None:

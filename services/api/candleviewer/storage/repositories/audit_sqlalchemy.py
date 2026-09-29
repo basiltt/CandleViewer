@@ -49,6 +49,7 @@ _QUERY_PAGE_SQL = sa.text(
     "severity, actor_ip, request_id, entry_hash, prev_hash FROM audit_log WHERE "
     "(CAST(:actor_user_id AS uuid) IS NULL OR actor_user_id = CAST(:actor_user_id AS uuid)) "
     "AND (CAST(:actions AS text[]) IS NULL OR action = ANY(CAST(:actions AS text[]))) "
+    "AND (CAST(:subject_type AS text) IS NULL OR object_kind = CAST(:subject_type AS text)) "
     "AND (CAST(:severity AS severity) IS NULL OR severity = CAST(:severity AS severity)) "
     "AND (CAST(:outcome AS audit_outcome) IS NULL "
     "OR outcome = CAST(:outcome AS audit_outcome)) "
@@ -126,6 +127,7 @@ class SqlAlchemyAuditRepository:
         *,
         actor_user_id: str | None,
         actions: list[str] | None,
+        subject_type: str | None,
         severity: str | None,
         outcome: str | None,
         from_ts: datetime | None,
@@ -136,6 +138,7 @@ class SqlAlchemyAuditRepository:
         params: dict[str, Any] = {
             "actor_user_id": actor_user_id,
             "actions": actions or None,
+            "subject_type": subject_type,
             "severity": severity,
             "outcome": outcome,
             "from_ts": from_ts,

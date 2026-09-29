@@ -59,6 +59,58 @@ async def test_query_filters_by_action_severity_outcome(
     assert page.items[0].severity is Severity.ERROR
 
 
+async def test_query_filters_by_subject_type(repo: FakeAuditRepository, clock: FakeClock) -> None:
+    """PR #1608 review finding 5: `subject_type` used to be accepted and
+    silently dropped instead of being passed to the repository."""
+    await repo.insert(
+        {
+            "record_id": "00000000-0000-4000-8000-000000000100",
+            "action": "order.place",
+            "actor_label": "u1",
+            "outcome": "success",
+            "severity": "info",
+            "object_kind": "order",
+            "object_id": "1",
+            "event_ts": clock().isoformat(),
+        }
+    )
+    await repo.insert(
+        {
+            "record_id": "00000000-0000-4000-8000-000000000101",
+            "action": "key.rotate",
+            "actor_label": "u1",
+            "outcome": "success",
+            "severity": "info",
+            "object_kind": "api_key",
+            "object_id": "2",
+            "event_ts": clock().isoformat(),
+        }
+    )
+    page = await AuditQueryService(repo).query(subject_type="order")
+    assert [e.subject_type for e in page.items] == ["order"]
+
+
+async def test_query_rejects_naive_from_ts(repo: FakeAuditRepository) -> None:
+    from datetime import datetime
+
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        await AuditQueryService(repo).query(from_ts=datetime(2026, 1, 1))
+
+
+async def test_query_rejects_from_ts_after_to_ts(repo: FakeAuditRepository) -> None:
+    from datetime import UTC, datetime
+
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        await AuditQueryService(repo).query(
+            from_ts=datetime(2026, 1, 2, tzinfo=UTC),
+            to_ts=datetime(2026, 1, 1, tzinfo=UTC),
+        )
+
+
 async def test_verify_empty_log_is_verified(repo: FakeAuditRepository) -> None:
     result = await AuditQueryService(repo).verify()
     assert result.verified and result.entries_checked == 0 and result.first_bad_id is None

@@ -11,9 +11,9 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from enum import StrEnum
-from typing import Any
+from typing import Any, Self
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class AuditOutcome(StrEnum):
@@ -91,18 +91,34 @@ AUDIT_QUERY_MAX_LIMIT = 1000
 
 class AuditQueryRequest(BaseModel):
     """Validated filter set for `AuditQueryService.query` — `limit` bounded
-    to 1..`AUDIT_QUERY_MAX_LIMIT`, unknown keys rejected."""
+    to 1..`AUDIT_QUERY_MAX_LIMIT`, unknown keys rejected. `from_ts`/`to_ts`
+    must be tz-aware UTC and `from_ts <= to_ts` (PR #1608 review finding 3:
+    previously a naive datetime or `from_ts > to_ts` was accepted silently)."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     actor_user_id: str | None = None
     actions: list[str] | None = None
+    subject_type: str | None = None
     severity: Severity | None = None
     outcome: AuditOutcome | None = None
     from_ts: datetime | None = None
     to_ts: datetime | None = None
     cursor: int | None = Field(default=None, ge=1)
     limit: int = Field(default=50, ge=1, le=AUDIT_QUERY_MAX_LIMIT)
+
+    @field_validator("from_ts", "to_ts")
+    @classmethod
+    def _tz_aware(cls, value: datetime | None) -> datetime | None:
+        if value is not None and value.tzinfo is None:
+            raise ValueError("must be a tz-aware (UTC) timestamp")
+        return value
+
+    @model_validator(mode="after")
+    def _range_ordered(self) -> Self:
+        if self.from_ts is not None and self.to_ts is not None and self.from_ts > self.to_ts:
+            raise ValueError("from_ts must be <= to_ts")
+        return self
 
 
 class AuditPage(BaseModel):
@@ -129,3 +145,46 @@ class ExportResult(BaseModel):
 
     job_id: uuid.UUID
     download_url: str | None = None
+
+
+class AuditVerifyRequest(BaseModel):
+    """Validated body for `POST /admin/audit/verify` (PR #1608 review
+    finding 3): unknown keys rejected, `from_id`/`to_id` type-checked as
+    positive ids rather than accepted as arbitrary `Any`."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    from_id: int | None = Field(default=None, ge=1)
+    to_id: int | None = Field(default=None, ge=1)
+
+    @model_validator(mode="after")
+    def _range_ordered(self) -> Self:
+        if self.from_id is not None and self.to_id is not None and self.from_id > self.to_id:
+            raise ValueError("from_id must be <= to_id")
+        return self
+
+
+class AuditExportRequest(BaseModel):
+    """Validated body for `POST /admin/audit/export` (PR #1608 review
+    finding 3): `from`/`to` must be tz-aware UTC timestamps with
+    `from_ts <= to_ts`, and a malformed value is rejected by pydantic (422)
+    rather than reaching `_parse_ts` and raising an unhandled `ValueError`
+    (500)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", populate_by_name=True)
+
+    from_ts: datetime = Field(alias="from")
+    to_ts: datetime = Field(alias="to")
+
+    @field_validator("from_ts", "to_ts")
+    @classmethod
+    def _tz_aware(cls, value: datetime) -> datetime:
+        if value.tzinfo is None:
+            raise ValueError("must be a tz-aware (UTC) timestamp")
+        return value
+
+    @model_validator(mode="after")
+    def _range_ordered(self) -> Self:
+        if self.from_ts > self.to_ts:
+            raise ValueError("`from` must be <= `to`")
+        return self

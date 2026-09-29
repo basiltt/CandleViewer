@@ -84,6 +84,7 @@ class AuditQueryService:
         *,
         actor_user_id: str | None = None,
         actions: list[str] | None = None,
+        subject_type: str | None = None,
         severity: str | None = None,
         outcome: str | None = None,
         from_ts: datetime | None = None,
@@ -93,11 +94,15 @@ class AuditQueryService:
     ) -> AuditPage:
         """`limit` is validated to 1..1000 by `AuditQueryRequest`
         (`extra="forbid"`); out-of-range values raise `ValidationError`
-        rather than issuing an unbounded query."""
+        rather than issuing an unbounded query. `subject_type` (the
+        `object_kind` column) is passed through to the repository — PR
+        #1608 review finding 5: it used to be accepted here and silently
+        dropped."""
         req = AuditQueryRequest.model_validate(
             {
                 "actor_user_id": actor_user_id,
                 "actions": actions,
+                "subject_type": subject_type,
                 "severity": severity,
                 "outcome": outcome,
                 "from_ts": from_ts,
@@ -110,6 +115,7 @@ class AuditQueryService:
         rows = await self._repository.query_page(
             actor_user_id=req.actor_user_id,
             actions=req.actions,
+            subject_type=req.subject_type,
             severity=None if req.severity is None else req.severity.value,
             outcome=None if req.outcome is None else req.outcome.value,
             from_ts=req.from_ts,

@@ -84,6 +84,8 @@ class FakeAuditRepository:
             out = [r for r in out if r["id"] < kw["cursor"]]
         if kw["actions"]:
             out = [r for r in out if r["action"] in kw["actions"]]
+        if kw.get("subject_type") is not None:
+            out = [r for r in out if r["object_kind"] == kw["subject_type"]]
         for key in ("severity", "outcome", "actor_user_id"):
             if kw[key] is not None:
                 out = [r for r in out if r[key] == kw[key]]
