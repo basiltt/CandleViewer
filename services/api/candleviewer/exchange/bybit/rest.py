@@ -128,6 +128,21 @@ class BybitRestClient:
             transport=transport,
         )
 
+    async def check_reachable(self) -> bool:
+        """Startup reachability probe for the configured `base_url` (ticket
+        brief: "startup reachability check for the configured base URL").
+        Calls the unauthenticated, unbudgeted server-time endpoint once and
+        returns `True`/`False` rather than raising, so a caller can decide
+        policy (retry, alert, refuse to start) without this client owning
+        that decision."""
+        try:
+            await self._client.request(
+                "GET", "/v5/market/time", timeout=self._config.connect_timeout_s
+            )
+            return True
+        except (TimeoutError, httpx.TransportError):
+            return False
+
     async def aclose(self) -> None:
         await self._client.aclose()
 
@@ -166,11 +181,26 @@ class BybitRestClient:
             method, path, params=params, body=body, endpoint_class=endpoint_class, signed=True
         )
 
-    def _payload_string(self, method: str, params: Mapping[str, Any] | None, body: Any) -> str:
+    def _query_params(self, params: Mapping[str, Any] | None) -> httpx.QueryParams | None:
+        if not params:
+            return None
+        return httpx.QueryParams(params)
+
+    def _payload_string(
+        self,
+        method: str,
+        query: httpx.QueryParams | None,
+        body: Any,
+    ) -> str:
         if method.upper() in ("GET", "DELETE"):
-            if not params:
+            if not query:
                 return ""
-            return "&".join(f"{k}={v}" for k, v in params.items())
+            # Sign the exact wire-encoded query string (Bybit v5 signing spec:
+            # the signature covers the URL-encoded query, not the raw repr of
+            # the params mapping) so a value needing encoding — spaces,
+            # `&`/`=`/unicode — can never desync the signature from what
+            # httpx actually sends and trigger a spurious 10004.
+            return str(query)
         return body if isinstance(body, str) else ("" if body is None else _json_dumps(body))
 
     async def _request(
@@ -189,7 +219,8 @@ class BybitRestClient:
             attempt += 1
             await self._governor.acquire(self._uid, endpoint_class)
             headers: dict[str, str] = {}
-            payload_str = self._payload_string(method, params, body)
+            query = self._query_params(params)
+            payload_str = self._payload_string(method, query, body)
             if signed:
                 if self._signer is None:
                     raise TypeError("signed request reached _request without a signer")
@@ -225,7 +256,7 @@ class BybitRestClient:
                 response = await self._client.request(
                     method,
                     path,
-                    params=params if method.upper() in ("GET", "DELETE") else None,
+                    params=query if method.upper() in ("GET", "DELETE") else None,
                     content=payload_str if method.upper() in ("POST", "PUT") else None,
                     headers=headers,
                 )

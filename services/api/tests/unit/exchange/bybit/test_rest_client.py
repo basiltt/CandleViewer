@@ -191,3 +191,57 @@ async def test_secrets_never_appear_in_debug_logs(caplog: pytest.LogCaptureFixtu
     assert "super-secret-value" not in log_text
     for record in caplog.records:
         assert "super-secret-value" not in repr(record.__dict__)
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_check_reachable_true_on_2xx() -> None:
+    respx.get(f"{BASE_URL}/v5/market/time").mock(
+        return_value=httpx.Response(200, json={"retCode": 0, "retMsg": "OK", "result": {}})
+    )
+    client = BybitRestClient(_config(), governor=_fresh_governor())
+    try:
+        assert await client.check_reachable() is True
+    finally:
+        await client.aclose()
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_check_reachable_false_on_transport_error() -> None:
+    respx.get(f"{BASE_URL}/v5/market/time").mock(side_effect=httpx.ConnectError("boom"))
+    client = BybitRestClient(_config(), governor=_fresh_governor())
+    try:
+        assert await client.check_reachable() is False
+    finally:
+        await client.aclose()
+
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_signed_get_signs_the_wire_encoded_query_string() -> None:
+    """A param value needing URL-encoding must not desync the signature
+    from what httpx actually sends (reviewer finding: `_payload_string` used
+    to sign an unencoded `&`.join, while httpx sends URL-encoded params)."""
+    route = respx.get(f"{BASE_URL}/v5/market/kline").mock(
+        return_value=httpx.Response(200, json={"retCode": 0, "retMsg": "OK", "result": {}})
+    )
+    signer = BybitSigner(api_key="k", api_secret=SecretStr("s"))
+    client = BybitRestClient(_config(), signer=signer, governor=_fresh_governor())
+    try:
+        await client.signed_request(
+            "GET", "/v5/market/kline", params={"symbol": "BTC USDT", "note": "a&b=c"}
+        )
+    finally:
+        await client.aclose()
+    sent_request = route.calls.last.request
+    expected_query = str(httpx.QueryParams({"symbol": "BTC USDT", "note": "a&b=c"}))
+    assert sent_request.url.query.decode() == expected_query
+    # The signature must have been computed over that same encoded string,
+    # not the raw `k=v` join — recompute and compare against the sent header.
+    expected_signature = signer.sign(
+        timestamp_ms=int(sent_request.headers["X-BAPI-TIMESTAMP"]),
+        recv_window_ms=int(sent_request.headers["X-BAPI-RECV-WINDOW"]),
+        payload=expected_query,
+    )
+    assert sent_request.headers["X-BAPI-SIGN"] == expected_signature
