@@ -50,6 +50,19 @@ _ALLOWED_EXTRA_EXPORTS: dict[str, set[str]] = {
         "UnitOfWork",
     },
     "M23a": {"make_health_router"},
+    # E09-T02: the audit writer/query surface M21/M23 consume (C-3.3).
+    "M19": {
+        "AuditAccessDenied",
+        "AuditEntry",
+        "AuditOutcome",
+        "AuditPage",
+        "AuditPrincipal",
+        "AuditQueryService",
+        "AuditWriter",
+        "ExportResult",
+        "Severity",
+        "VerifyResult",
+    },
     "M24": {"HealthReport", "HealthStatus"},
     # E08-T03: the bus's public pub/sub surface — `Bus`/`Subscription` are
     # not `*Service`/`*Error` by name but are the module's documented public

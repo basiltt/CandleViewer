@@ -1,0 +1,39 @@
+"""AuditService lifecycle: scaffold without a repository, wired with one."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
+
+import pytest
+from audit_fakes import FakeAuditRepository
+
+from candleviewer.audit.service import AuditService
+from candleviewer.observability.health import HealthStatus
+
+
+def _ctx(tmp_path: Path) -> Any:
+    return SimpleNamespace(settings=SimpleNamespace(audit_wal_path=str(tmp_path / "a.wal")))
+
+
+async def test_service_without_repository_is_inactive_scaffold(tmp_path: Path) -> None:
+    svc = AuditService()
+    assert svc.health().status is HealthStatus.STOPPED
+    await svc.start(_ctx(tmp_path))
+    assert not svc.is_active and svc.health().status is HealthStatus.OK
+    with pytest.raises(RuntimeError):
+        _ = svc.writer
+    with pytest.raises(RuntimeError):
+        _ = svc.query
+    await svc.stop(1)
+
+
+async def test_service_with_repository_wires_writer_and_query(tmp_path: Path) -> None:
+    svc = AuditService(FakeAuditRepository())
+    await svc.start(_ctx(tmp_path))
+    assert svc.is_active and svc.health().detail == ""
+    assert (await svc.query.verify()).verified
+    await svc.writer.emit("auth.login", actor_label="a")
+    await svc.stop(1)
+    assert not svc.is_active

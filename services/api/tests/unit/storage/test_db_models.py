@@ -30,6 +30,9 @@ def test_metadata_declares_every_table_from_0001() -> None:
         "mfa_methods",
         "mfa_challenges",
         "recovery_codes",
+        # E09-T02 (0003_audit_log)
+        "audit_log",
+        "audit_checkpoints",
     }
     actual = {t.name for t in metadata.sorted_tables}
     assert actual == expected
