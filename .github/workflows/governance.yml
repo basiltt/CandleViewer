@@ -72,6 +72,9 @@ jobs:
       - name: Markdownlint + relative-link resolution over governance docs (GOV-006)
         run: python scripts/check_markdown_governance_docs.py
 
+      - name: CI runbook completeness check (CI-DOC-001, E03-T15)
+        run: python scripts/check_runbook_completeness.py
+
       - name: Branch-protection bypass register check (CI-PROT-004, E03-T13)
         run: python scripts/check_bypass_register.py
 
