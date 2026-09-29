@@ -33,7 +33,11 @@ a bug to report.
 4. **Tests first, at the right level.** Unit for pure logic, integration for boundaries (with recorded
    Bybit fixtures — no live-exchange calls in CI), E2E only for user-visible critical paths (§13).
 5. **[Conventional Commits](https://www.conventionalcommits.org/)** with an allowed scope; `commitlint`
-   enforces it (§4.4).
+   enforces it (§4.4). This also feeds the changelog: your PR title must be a conventional-commit header,
+   or the PR body must include a `Changelog: <one-line user-facing summary>` footer — the
+   `changelog-fragment` check (`tools/ci/check_changelog_fragment.py`, CI-REL-001) fails otherwise, except
+   for PRs whose title is `chore:`/`ci:`/`docs:` (docs/plan/07-release-and-prr.md §3). A merge to `main`
+   with a usable fragment lands a bullet in `CHANGELOG.md`'s `Unreleased` section automatically.
 6. **Rebase, never merge** (`git pull --rebase origin main`). PRs land on `main` as a squash. `main` is
    protected: no direct pushes, no force-pushes (§4.5).
 7. **Keep it small.** ≤400 changed LOC preferred; >800 needs a `large-pr-approved` label with a written

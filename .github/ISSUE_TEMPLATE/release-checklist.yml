@@ -1,0 +1,60 @@
+name: Release checklist
+description: Release-train cut checklist (docs/plan/07-release-and-prr.md §4) — opened automatically by .github/workflows/release.yml
+title: "[Release]: vX.Y.Z checklist"
+labels: ["type/release", "priority/p1-high"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Auto-opened by the release workflow for a train cut. Never paste API keys, session
+        tokens, or exploit/PoC detail here — Security entries are general-description only
+        (`docs/plan/07-release-and-prr.md` §3); full detail stays in the internal finding tracker.
+        The release cannot be published as non-draft while the PRR gate item below is unchecked
+        (CI-REL-004).
+  - type: input
+    id: version
+    attributes:
+      label: Target version
+      placeholder: "0.3.0"
+    validations:
+      required: true
+  - type: checkboxes
+    id: pre-cut
+    attributes:
+      label: "§4.1 Pre-cut (on main, before branching release/*)"
+      options:
+        - label: All Epics/Stories targeted for this train are Done (board rollup 100% or explicit descope recorded)
+        - label: No open priority/p0-critical or priority/p1-high bugs against in-scope areas
+        - label: Full test pyramid green on main tip (unit, contract, integration, E2E, load/perf, security, a11y)
+        - label: "@demo-rest-only tagged E2E subset green against staging (demo); no WS order-entry frames asserted"
+        - label: Coverage thresholds met (>=85% backend/engine, >=80% frontend), no regression from previous release
+        - label: CHANGELOG.md Unreleased section reviewed for accuracy and completeness
+  - type: checkboxes
+    id: cut-soak
+    attributes:
+      label: "§4.2 Cut & soak"
+      options:
+        - label: release/<semver> branch cut from main
+        - label: Deployed to staging (demo)
+        - label: Soak period >=48h with synthetic + real demo-account traffic, dashboards checked daily
+        - label: Any soak bug fixed via PR merged to main and cherry-picked into release/<semver>
+        - label: Stakeholder/Owner demo performed against this staging build; acceptance recorded
+  - type: checkboxes
+    id: prr-gate
+    attributes:
+      label: "§4.3 PRR gate (CI-REL-004: release cannot be published non-draft until this is checked)"
+      options:
+        - label: Full PRR checklist (§5) executed and passed; sign-off recorded from Architect, DevSecOps, Security, QA lead
+        - label: "[R4 / Live-enablement scope only] Live-enablement gate (§6) passed"
+  - type: checkboxes
+    id: cut-to-prod
+    attributes:
+      label: "§4.4 Cut to prod"
+      options:
+        - label: Tag vX.Y.Z created from release/<semver> HEAD (signed commit)
+        - label: GitHub Release published with generated changelog
+        - label: Deployed to prod (live) using the same validated automation
+        - label: Feature flags for train-scoped functionality set to intended prod default
+        - label: Rollback procedure (§7) reconfirmed ready
+        - label: Post-release monitoring window opened (§8)
+        - label: main merged/rebased so it matches release/<semver> HEAD

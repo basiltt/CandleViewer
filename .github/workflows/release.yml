@@ -1,0 +1,235 @@
+name: release
+
+# E03-T11: release-train workflow (docs/plan/07-release-and-prr.md §2-§4;
+# ADR-0013 pipeline shape "release tag -> changelog -> Electron installers
+# (signed) -> release checklist + PRR gate").
+#
+# Triggers: a `release/*` branch push (cut), or a `vX.Y.Z` tag push
+# (publish). Computes the semver bump from commits since the last tag,
+# enforces the 1.0.0-explicit-declaration guard (CI-REL-002), finalises
+# CHANGELOG.md's Unreleased section under the new version heading, drafts
+# a GitHub Release from it, attaches the SBOM produced by `main.yml`
+# (E03-T08) if available, builds + signs the Electron installer, and opens
+# the release-checklist issue (CI-REL-004: the release stays a draft while
+# that issue's PRR-gate item is unchecked).
+#
+# Out of scope (ticket "Out of scope"): executing the PRR itself and the
+# Live-enablement gate (R4/E43/E44), Electron packaging *configuration*
+# (E10 — this workflow only calls `pnpm --filter @candleviewer/desktop
+# build:installer` and signs the output), deploying to prod (§4.4, a human
+# checklisted action).
+#
+# Security notes: refuses to run from a non-main/release/* ref (SR-137);
+# release tags require signed commits (branch protection, 04-security-
+# program.md §12.3).
+
+on:
+  push:
+    branches: ["release/*"]
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      RELEASE_ALLOW_1_0_0:
+        description: "Explicitly declare the first 1.0.0 (Live-enablement only)"
+        required: false
+        default: "false"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  compute-version:
+    name: compute-version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      bump: ${{ steps.bump.outputs.bump }}
+      next_version: ${{ steps.bump.outputs.next_version }}
+    steps:
+      - name: Refuse to run from a non-main/release/*/tag ref (SR-137)
+        run: |
+          ref="${{ github.ref }}"
+          case "$ref" in
+            refs/heads/release/*|refs/tags/v*) : ;;
+            *) echo "release workflow refuses to run from ref: $ref" >&2; exit 1 ;;
+          esac
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Collect commits since the last tag
+        run: |
+          set -euo pipefail
+          last_tag="$(git tag --list 'v*' --sort=-v:refname | head -n1 || true)"
+          range="${last_tag:+${last_tag}..}HEAD"
+          python - "$range" <<'PYEOF'
+          import json
+          import subprocess
+          import sys
+
+          range_ = sys.argv[1]
+          out = subprocess.run(
+              ["git", "log", range_, "--pretty=format:%H%x1f%B%x1e"],
+              capture_output=True, text=True, check=True,
+          ).stdout
+          commits = []
+          for chunk in out.split("\x1e"):
+              chunk = chunk.strip()
+              if not chunk:
+                  continue
+              sha, _, message = chunk.partition("\x1f")
+              commits.append({"sha": sha, "message": message})
+          with open("commits-since-tag.json", "w", encoding="utf-8") as fh:
+              json.dump(commits, fh)
+          PYEOF
+
+      - name: Compute next version (CI-REL-002 1.0.0 guard)
+        id: bump
+        env:
+          RELEASE_ALLOW_1_0_0: ${{ github.event.inputs.RELEASE_ALLOW_1_0_0 || 'false' }}
+        run: |
+          set -euo pipefail
+          args=(--commits-json commits-since-tag.json --current-version version.txt)
+          if [ "$RELEASE_ALLOW_1_0_0" = "true" ]; then
+            args+=(--allow-1-0-0)
+          fi
+          out="$(python tools/ci/compute_release_bump.py "${args[@]}")"
+          echo "$out"
+          echo "$out" | grep '^bump=' >> "$GITHUB_OUTPUT"
+          echo "$out" | grep '^next_version=' >> "$GITHUB_OUTPUT"
+
+  finalize-and-release:
+    name: finalize-and-release
+    needs: compute-version
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Finalise CHANGELOG.md Unreleased section under the new version heading
+        id: finalize
+        run: |
+          set -euo pipefail
+          version="${{ needs.compute-version.outputs.next_version }}"
+          date="$(date -u +%Y-%m-%d)"
+          python tools/ci/finalize_changelog.py --changelog CHANGELOG.md \
+            --version "$version" --date "$date" --release-body-out release-body.md
+          echo "$version" > version.txt
+
+      - name: Commit finalised changelog + version.txt
+        run: |
+          set -euo pipefail
+          git config user.name "candleviewer-release-bot"
+          git config user.email "release-bot@users.noreply.github.com"
+          git add CHANGELOG.md version.txt
+          git diff --cached --quiet || git commit -m "chore(infra-devops): finalise ${{ needs.compute-version.outputs.next_version }} changelog"
+          git push origin HEAD:${{ github.ref_name }}
+
+      - name: Open the release-checklist issue (CI-REL-004)
+        id: checklist
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.0.1
+        with:
+          script: |
+            const version = "${{ needs.compute-version.outputs.next_version }}";
+            const { data: issue } = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[Release]: v${version} checklist`,
+              labels: ["type/release", "priority/p1-high"],
+              body: `Release-train checklist for \`v${version}\` (docs/plan/07-release-and-prr.md §4). ` +
+                    "See .github/ISSUE_TEMPLATE/release-checklist.yml for the full item list. " +
+                    "This release stays a draft until the PRR-gate item on this issue is checked (CI-REL-004).",
+            });
+            core.setOutput("issue_number", issue.number);
+
+      - name: Draft the GitHub Release (refuses to publish while PRR gate unchecked)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="${{ needs.compute-version.outputs.next_version }}"
+          gh release create "v${version}" \
+            --title "v${version}" \
+            --notes-file release-body.md \
+            --draft \
+            --target "${{ github.sha }}"
+          echo "Draft release v${version} created; publish only after the PRR gate item on issue #${{ steps.checklist.outputs.issue_number }} is checked (CI-REL-004)."
+
+  build-sign-installer:
+    name: build-sign-installer
+    needs: [compute-version, finalize-and-release]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      id-token: write # keyless cosign signing (SR-137, matches main.yml's image-signing pattern)
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.ref }}
+
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: "20"
+
+      - name: Enable pnpm via corepack
+        run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+
+      - name: Install workspace deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the Electron installer (packaging config owned by E10)
+        run: pnpm --filter @candleviewer/desktop run build:installer
+
+      - uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9101 # v3.7.0
+
+      - name: Sign installer artefacts (keyless cosign, CI-REL-003 parity for release binaries)
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          artefacts=(apps/desktop/dist/*.exe apps/desktop/dist/*.dmg apps/desktop/dist/*.AppImage)
+          if [ ${#artefacts[@]} -eq 0 ]; then
+            echo "No installer artefacts produced (packaging config pending E10); skipping signing." >&2
+            exit 0
+          fi
+          for f in "${artefacts[@]}"; do
+            cosign sign-blob --yes --output-signature "${f}.sig" --output-certificate "${f}.pem" "$f"
+          done
+
+      - name: Attach signed installers to the draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          version="${{ needs.compute-version.outputs.next_version }}"
+          artefacts=(apps/desktop/dist/*.exe apps/desktop/dist/*.dmg apps/desktop/dist/*.AppImage apps/desktop/dist/*.sig apps/desktop/dist/*.pem)
+          if [ ${#artefacts[@]} -eq 0 ]; then
+            echo "No installer artefacts to attach." >&2
+            exit 0
+          fi
+          gh release upload "v${version}" "${artefacts[@]}" --clobber
+
