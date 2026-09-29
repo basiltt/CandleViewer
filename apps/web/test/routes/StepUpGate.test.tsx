@@ -1,0 +1,54 @@
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import { StepUpGate } from "../../src/routes/StepUpGate";
+import { resetMeClaims, getMeClaims } from "../../src/lib/auth/meCache";
+
+describe("StepUpGate", () => {
+  beforeEach(() => {
+    resetMeClaims();
+    vi.stubGlobal("fetch", vi.fn());
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("renders the TOTP re-entry form", () => {
+    render(
+      <MemoryRouter>
+        <StepUpGate redirectTo="/admin" />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByLabelText("Authenticator code")).toBeInTheDocument();
+  });
+
+  it("shows an error and does not record step-up on a failed code", async () => {
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: false });
+    render(
+      <MemoryRouter>
+        <StepUpGate redirectTo="/admin" />
+      </MemoryRouter>,
+    );
+    fireEvent.change(screen.getByLabelText("Authenticator code"), { target: { value: "000000" } });
+    fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
+    await waitFor(() => expect(screen.getByRole("alert")).toBeInTheDocument());
+    expect(getMeClaims().elevatedAt).toBeNull();
+  });
+
+  it("records elevatedAt on a successful code", async () => {
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: async () => ({ elevated_until: "2026-09-29T12:00:00Z" }),
+    });
+    render(
+      <MemoryRouter>
+        <StepUpGate redirectTo="/admin" />
+      </MemoryRouter>,
+    );
+    fireEvent.change(screen.getByLabelText("Authenticator code"), { target: { value: "123456" } });
+    fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
+    await waitFor(() => expect(getMeClaims().elevatedAt).toBe("2026-09-29T12:00:00Z"));
+  });
+});

@@ -1,10 +1,13 @@
-import { PlaceholderRoute } from "./routes/PlaceholderRoute";
+import { RouterProvider } from "react-router-dom";
+import { createRouteTree } from "./routes/tree";
 
 /**
- * Root application shell. E02-T04 ships a single placeholder route to prove
- * the build/test/e2e/a11y harness; the real route tree (12-sitemap.md),
- * auth/RBAC guards and env badge land in E10.
+ * Root application shell (E10-T01). Renders the React Router data router
+ * built from the route manifest (`docs/plan/12-sitemap.md` §2). The router
+ * instance is created once per app instance, not per render.
  */
+const router = createRouteTree();
+
 export function App(): JSX.Element {
-  return <PlaceholderRoute />;
+  return <RouterProvider router={router} />;
 }
