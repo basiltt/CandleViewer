@@ -29,7 +29,7 @@ jobs:
     timeout-minutes: ${{ fromJSON(vars.CV_CI_TIMEOUT_MINUTES || 20) }}
     services:
       postgres:
-        image: postgres:16.4@sha256:74d9d3d9c9b5c5e1c1f7f2b23fb03d5cc9f9634d7d2a6b1e2d6a5a3f8c2b5c4d
+        image: postgres:16.4@sha256:e62fbf9d3e2b49816a32c400ed2dba83e3b361e6833e624024309c35d334b412
         env:
           POSTGRES_USER: cv
           POSTGRES_PASSWORD: cv
