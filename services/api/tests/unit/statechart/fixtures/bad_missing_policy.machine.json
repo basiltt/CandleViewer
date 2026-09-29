@@ -1,0 +1,8 @@
+{
+  "id": "bad_missing_policy",
+  "initial": "idle",
+  "context": {},
+  "states": {
+    "idle": {"type": "final"}
+  }
+}

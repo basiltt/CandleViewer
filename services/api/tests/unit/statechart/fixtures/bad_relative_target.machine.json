@@ -1,0 +1,20 @@
+{
+  "id": "bad_relative_target",
+  "strictConfig": true,
+  "strict": true,
+  "strictTargets": true,
+  "onUnhandled": "defer",
+  "maxIterations": 50,
+  "initial": "idle",
+  "context": {},
+  "states": {
+    "idle": {
+      "on": {
+        "GO": {"target": ".child"}
+      },
+      "states": {
+        "child": {"type": "final"}
+      }
+    }
+  }
+}

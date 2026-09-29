@@ -1,0 +1,17 @@
+{
+  "id": "bad_unknown_target",
+  "strictConfig": true,
+  "strict": true,
+  "strictTargets": true,
+  "onUnhandled": "defer",
+  "maxIterations": 50,
+  "initial": "idle",
+  "context": {},
+  "states": {
+    "idle": {
+      "on": {
+        "GO": {"target": "#b01.nope"}
+      }
+    }
+  }
+}
