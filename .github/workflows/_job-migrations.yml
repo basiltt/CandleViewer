@@ -80,7 +80,7 @@ jobs:
         run: |
           PGPASSWORD=cv psql -h localhost -U cv -d candleviewer \
             -v ON_ERROR_STOP=1 \
-            -v owner_pw="'cv_owner_ci_pw'" -v app_pw="'cv_app_ci_pw'" -v ro_pw="'cv_ro_ci_pw'" \
+            -v owner_pw=cv_owner_ci_pw -v app_pw=cv_app_ci_pw -v ro_pw=cv_ro_ci_pw \
             -f infra/scripts/pg_bootstrap.sql
 
       - name: alembic heads — single linear history (CI-MIG-001)
@@ -107,6 +107,9 @@ jobs:
             echo "CI-MIG-TIMING-001: migration exceeded the 60s budget (${elapsed}s)" >&2
             exit 1
           fi
+
+      - name: alembic check — drift between models.py and head (CI-MIG-002)
+        run: uv run alembic check
 
       - name: Schema dump before round-trip (#1556)
         working-directory: .
