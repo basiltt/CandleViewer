@@ -1,0 +1,16 @@
+{
+  "strictConfig": true,
+  "onUnhandled": "defer",
+  "maxIterations": 500,
+  "id": "fixture_timer_bad",
+  "initial": "waiting",
+  "states": {
+    "waiting": {
+      "tags": ["x-hard-deadline"],
+      "after": {
+        "5": "timedOut"
+      }
+    },
+    "timedOut": {}
+  }
+}
