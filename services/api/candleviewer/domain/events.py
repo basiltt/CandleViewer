@@ -78,3 +78,16 @@ class MarketEvent(DomainEvent):
     exchange: Exchange = "bybit"
     category: Category = "linear"
     symbol: Symbol
+
+
+class InstrumentUpdatedEvent(DomainEvent):
+    """Published when a catalogue refresh detects a metadata change for an
+    existing symbol (§3.6 event table). `changed_fields` names every field
+    that differed from the immediately preceding `metadata_version` so a
+    consumer (E16/E18 rebuild scheduling, out of scope here) can decide
+    whether the change actually invalidates its cached aggregates rather
+    than rebuilding on every refresh."""
+
+    symbol: Symbol
+    metadata_version: int
+    changed_fields: tuple[str, ...]

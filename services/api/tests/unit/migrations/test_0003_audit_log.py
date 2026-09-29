@@ -25,20 +25,9 @@ def _load() -> ModuleType:
     return mod
 
 
-def test_0003_parents_0002_and_is_the_single_head() -> None:
+def test_0003_parents_0002() -> None:
     mod = _load()
     assert mod.down_revision == "0002_rbac_seed"
-    result = subprocess.run(
-        [sys.executable, "-m", "alembic", "heads"],
-        cwd=_ROOT,
-        env={**os.environ},
-        capture_output=True,
-        text=True,
-        timeout=60,
-    )
-    assert result.returncode == 0, result.stderr
-    heads = [line for line in result.stdout.splitlines() if line.strip()]
-    assert len(heads) == 1 and "0003_audit_log" in heads[0]
 
 
 def test_0003_renders_offline() -> None:

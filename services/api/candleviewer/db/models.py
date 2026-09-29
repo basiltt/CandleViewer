@@ -439,3 +439,109 @@ audit_checkpoints = Table(
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     UniqueConstraint("head_id", name="audit_checkpoints_head_id_key"),
 )
+
+#: `instruments` / `instrument_versions` (E08-S01, revision 0004_instruments).
+#: `symbol_code` and `exchange_code` are DDL-level DOMAIN/ENUM constructs
+#: created by 0004 itself (no earlier revision scoped them — see that
+#: revision's module docstring); modelled the same way `_sha256_hex` models
+#: the `sha256_hex` domain above, with `create_type=False` for both.
+symbol_code = DOMAIN(
+    "symbol_code",
+    Text(),
+    check="VALUE ~ '^[A-Z0-9]{4,20}$'",
+    create_type=False,
+)
+# nosemgrep: cv-adapter-isolation -- DB schema mirror of the 0004_instruments
+# DDL's `exchange_code` enum (E08-S01): this is the storage-layer value
+# domain, not adapter logic; C-1.3 scopes this whole product to that single
+# exchange, so the enum member is a schema fact, not leaked adapter vocab.
+exchange_code = ENUM(
+    "bybit",  # nosemgrep: cv-adapter-isolation
+    name="exchange_code",
+    metadata=metadata,
+    create_type=False,
+)
+
+instruments = Table(
+    "instruments",
+    metadata,
+    Column("symbol", symbol_code, primary_key=True),
+    # nosemgrep: cv-adapter-isolation -- see exchange_code above.
+    Column("exchange", exchange_code, nullable=False, server_default=text("'bybit'")),
+    Column("category", Text, nullable=False, server_default=text("'linear'")),
+    Column("base_coin", Text, nullable=False),
+    Column("quote_coin", Text, nullable=False, server_default=text("'USDT'")),
+    Column("settle_coin", Text, nullable=False, server_default=text("'USDT'")),
+    Column("status", Text, nullable=False),
+    Column("tick_size", Numeric(38, 18), nullable=False),
+    Column("qty_step", Numeric(38, 18), nullable=False),
+    Column("min_order_qty", Numeric(38, 18), nullable=False),
+    Column("max_order_qty", Numeric(38, 18), nullable=False),
+    Column("min_notional_value", Numeric(38, 18)),
+    Column("max_leverage", Numeric(10, 2), nullable=False),
+    Column("leverage_step", Numeric(10, 2), nullable=False, server_default=text("0.01")),
+    Column("price_scale", SmallInteger, nullable=False, server_default=text("2")),
+    Column("funding_interval_min", Integer, nullable=False, server_default=text("480")),
+    Column("launch_ts", TIMESTAMP(timezone=True)),
+    Column("delivery_ts", TIMESTAMP(timezone=True)),
+    Column("metadata_version", Integer, nullable=False, server_default=text("1")),
+    Column(
+        "raw",
+        JSONB,
+        nullable=False,
+        comment=(
+            "Full, unredacted instruments-info payload for this symbol, for "
+            "audit and forward-compat fields."
+        ),
+    ),
+    Column("refreshed_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("stale_since", TIMESTAMP(timezone=True)),
+    CheckConstraint("category = 'linear'", name="inst_cat"),
+    CheckConstraint("quote_coin = 'USDT'", name="inst_quote"),
+    CheckConstraint("tick_size > 0 AND qty_step > 0", name="inst_ticks"),
+    CheckConstraint("max_order_qty >= min_order_qty", name="inst_qty_rng"),
+    CheckConstraint("metadata_version >= 1", name="inst_version"),
+    Index("ix_instruments_status", "status"),
+)
+
+instrument_versions = Table(
+    "instrument_versions",
+    metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")),
+    Column(
+        "symbol",
+        symbol_code,
+        ForeignKey("instruments.symbol", ondelete="CASCADE"),
+        nullable=False,
+    ),
+    Column("metadata_version", Integer, nullable=False),
+    Column("tick_size", Numeric(38, 18), nullable=False),
+    Column("qty_step", Numeric(38, 18), nullable=False),
+    Column("min_order_qty", Numeric(38, 18), nullable=False),
+    Column("max_order_qty", Numeric(38, 18), nullable=False),
+    Column("min_notional_value", Numeric(38, 18)),
+    Column("max_leverage", Numeric(10, 2), nullable=False),
+    Column("leverage_step", Numeric(10, 2), nullable=False),
+    Column("price_scale", SmallInteger, nullable=False),
+    Column("funding_interval_min", Integer, nullable=False),
+    Column("status", Text, nullable=False),
+    Column(
+        "changed_fields",
+        ARRAY(Text),
+        nullable=False,
+        server_default=text("'{}'"),
+        comment=(
+            "Field names that differed from the immediately preceding version, "
+            "for InstrumentUpdatedEvent.changed_fields."
+        ),
+    ),
+    Column(
+        "raw",
+        JSONB,
+        nullable=False,
+    ),
+    Column("recorded_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    CheckConstraint("metadata_version >= 1", name="iv_version"),
+    UniqueConstraint("symbol", "metadata_version", name="iv_unique_version"),
+    Index("ix_instrument_versions_symbol", "symbol", text("metadata_version DESC")),
+)
