@@ -19,7 +19,7 @@
     },
     "0004_instruments": {
       "path": "services/api/candleviewer/migrations/versions/0004_instruments.py",
-      "sha256": "dcfa873e3ad76ea9005cc5aa27fe27ebb1a25dd653e936afc2d48995b6cd74df",
+      "sha256": "2781c465ff28713def7233bb526d5cb30c3b26b4b2b43c86870338158e20625d",
       "down_revision": "0003_audit_log"
     }
   }
