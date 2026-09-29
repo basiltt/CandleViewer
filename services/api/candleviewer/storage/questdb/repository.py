@@ -37,7 +37,7 @@ from candleviewer.storage.repositories.rows import (
     TradeRow,
 )
 
-#: A conservative default symbol allowlist check: Bybit USDT-perp symbols are
+#: A conservative default symbol allowlist check: venue USDT-perp symbols are
 #: uppercase alnum (e.g. `BTCUSDT`). The real per-account `instruments` cache
 #: (E08+) will inject a stricter, exchange-fed allowlist via
 #: `symbol_allowlist`; this regex is the floor every symbol must clear
