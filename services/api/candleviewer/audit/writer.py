@@ -24,6 +24,15 @@ retried; if it is still full (Postgres down long enough to fill it), or the
 WAL cannot be written at all (`OSError`), `emit()` raises
 `AuditUnavailable` and fires `on_alarm`. Callers MUST treat that as "refuse
 the audited action". No record that `emit()` accepted is ever discarded.
+
+Flusher death (PR #1561 N2) — fail closed, no in-process restart: if the
+flusher task raises (mid-WAL `AuditWalCorrupt`, an unexpected bug, or an
+insert that exhausted `max_insert_attempts`), `_running` goes False,
+`on_alarm` fires once and every later `emit()` raises `AuditUnavailable`.
+Chosen over bounded auto-restart because every failure that escapes the
+retry loop is deterministic (corruption or a poison record) — restarting
+would fail the same way. The WAL is untouched, so `start()` (after the
+cause is fixed) replays everything accepted so far.
 """
 
 from __future__ import annotations
@@ -82,6 +91,7 @@ class AuditWriter:
         on_alarm: AlarmCallback = None,
         clock: Clock = _utc_now,
         sleep: Sleeper = asyncio.sleep,
+        max_insert_attempts: int | None = None,
     ) -> None:
         self._repository = repository
         self._wal = AuditWal(_path(wal_path), max_bytes=max_wal_bytes)
@@ -101,6 +111,8 @@ class AuditWriter:
         self._write_errors_total = 0
         self._refused_total = 0
         self._inflight = False
+        self._max_insert_attempts = max_insert_attempts
+        self._failure: BaseException | None = None
 
     @property
     def written_total(self) -> int:
@@ -120,15 +132,22 @@ class AuditWriter:
         """Records accepted into the WAL by this process, not yet in Postgres."""
         return self._pending
 
+    @property
+    def failure(self) -> BaseException | None:
+        """Why the flusher died (None while healthy)."""
+        return self._failure
+
     async def start(self) -> None:
         """Start the flusher. It replays WAL backlog from a previous run
-        first, inside the task, so `start()` never blocks on Postgres."""
-        if self._task is not None:
+        first, inside the task, so `start()` never blocks on Postgres.
+        Also the recovery path after a fail-closed flusher death."""
+        if self._task is not None and not self._task.done():
             return
+        self._failure = None
         self._running = True
         self._idle.clear()
         self._wake.set()
-        self._task = asyncio.create_task(self._run(), name="audit-writer")
+        self._task = asyncio.create_task(self._supervised(), name="audit-writer")
         self._task.add_done_callback(_log_task_failure)
 
     async def flush(self, timeout_s: float) -> None:
@@ -139,6 +158,11 @@ class AuditWriter:
     async def stop(self, grace_s: float = 5.0) -> None:
         self._running = False
         if self._task is None:
+            return
+        if self._task.done():
+            # Flusher already died (fail-closed; `failure` holds the cause and
+            # the alarm has fired). Nothing to drain; the WAL keeps the backlog.
+            self._task = None
             return
         try:
             await self.flush(grace_s)
@@ -178,6 +202,9 @@ class AuditWriter:
         Raises `AuditWriterStopped` if not running, `UnknownAuditAction` for
         an unregistered action, and `AuditUnavailable` if the record could
         not be made durable — the caller must then refuse the action."""
+        if self._failure is not None:
+            self._refused_total += 1
+            raise AuditUnavailable(f"audit flusher failed: {type(self._failure).__name__}")
         if not self._running:
             raise AuditWriterStopped()
         validate_action(action)
@@ -228,6 +255,20 @@ class AuditWriter:
             await asyncio.to_thread(self._wal.compact)
             await asyncio.to_thread(self._wal.append, record)
 
+    async def _supervised(self) -> None:
+        try:
+            await self._run()
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            self._failure = exc
+            self._running = False
+            reason_text = f"audit flusher died: {type(exc).__name__}; emit() now fails closed"
+            logger.critical(reason_text)
+            if self._on_alarm is not None:
+                await self._on_alarm(reason_text)
+            raise
+
     async def _run(self) -> None:
         while True:
             await self._wake.wait()
@@ -253,7 +294,9 @@ class AuditWriter:
 
     async def _write_with_retry(self, record: dict[str, Any]) -> None:
         delay = self._retry_initial_delay_s
+        attempts = 0
         while True:
+            attempts += 1
             try:
                 await self._repository.insert(record)
                 return
@@ -261,6 +304,8 @@ class AuditWriter:
                 raise
             except Exception as exc:  # any driver error is retried; the record stays in the WAL
                 self._write_errors_total += 1
+                if self._max_insert_attempts is not None and attempts >= self._max_insert_attempts:
+                    raise
                 logger.warning(
                     "audit insert failed (%s), retrying in %.2fs", type(exc).__name__, delay
                 )

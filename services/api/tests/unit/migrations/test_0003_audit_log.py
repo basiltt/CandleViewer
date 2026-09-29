@@ -132,3 +132,20 @@ def test_0003_downgrade_proceeds_when_empty(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setattr(mod, "op", fake)
     mod.downgrade()
     assert fake.executed == [mod._DOWNGRADE_SQL]
+
+
+def test_0003_audit_checkpoints_are_append_only() -> None:
+    """PR #1561 N3: checkpoints get the same mutation/truncate guards and REVOKEs."""
+    mod = _load()
+    sql = mod._UPGRADE_SQL
+    for needle in (
+        "CREATE TRIGGER trg_audit_ckpt_append BEFORE UPDATE OR DELETE ON audit_checkpoints",
+        "CREATE TRIGGER trg_audit_ckpt_no_truncate BEFORE TRUNCATE ON audit_checkpoints",
+        "REVOKE UPDATE, DELETE, TRUNCATE ON audit_checkpoints FROM cv_app",
+        "REVOKE UPDATE, DELETE, TRUNCATE ON audit_checkpoints FROM cv_ro",
+    ):
+        assert needle in sql, needle
+    assert sql.index("CREATE TABLE audit_checkpoints") < sql.index("trg_audit_ckpt_append")
+    assert "DROP TRIGGER IF EXISTS trg_audit_ckpt_append ON audit_checkpoints" in (
+        mod._DOWNGRADE_SQL
+    )

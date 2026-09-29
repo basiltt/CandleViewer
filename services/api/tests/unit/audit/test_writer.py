@@ -15,6 +15,7 @@ from candleviewer.audit.actions import UnknownAuditAction
 from candleviewer.audit.models import ExchangeEnv
 from candleviewer.audit.query import AuditQueryService
 from candleviewer.audit.redact import REDACTION_MARKER
+from candleviewer.audit.wal import AuditWal
 from candleviewer.audit.writer import AuditUnavailable, AuditWriter, AuditWriterStopped
 
 
@@ -227,7 +228,7 @@ async def test_writer_replay_after_commit_before_cursor_is_idempotent(
     await w1.emit("auth.login", actor_label="a")
     await w1.stop(0.01)
     # Simulate a crash after the INSERT committed but before the cursor moved.
-    (record,) = [json.loads(x) for x in (tmp_path / "audit.wal").read_text().splitlines()]
+    ((_, record),) = list(AuditWal(tmp_path / "audit.wal").replay())
     repo.down = False
     await repo.insert(record)
     w2 = _writer(repo, tmp_path, clock)

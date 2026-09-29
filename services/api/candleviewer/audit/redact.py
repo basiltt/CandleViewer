@@ -21,6 +21,7 @@ matched case-insensitively and after stripping common separators, so
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from typing import Any
 
@@ -81,6 +82,7 @@ _PII_FIELD_NAMES: frozenset[str] = frozenset(
 #: deliberately absent — it is a timing parameter, not a secret.
 _SECRET_EXACT_NAMES: frozenset[str] = frozenset(
     {
+        "key",
         "authorization",
         "proxyauthorization",
         "cookie",
@@ -116,6 +118,16 @@ _SECRET_SUFFIXES: tuple[str, ...] = ("_key", "_secret", "_token", "_password")
 #: A field literally named `code` is a one-time code when it sits next to an
 #: OTP marker (`{"method": "totp", "code": "123456"}` / `{"totp": ..., "code": ...}`).
 _OTP_MARKERS: frozenset[str] = frozenset({"otp", "totp", "mfa"})
+
+#: Embedded-JSON handling (PR #1561 N4): a string value that parses as a JSON
+#: object/array (e.g. a logged request `body`) is redacted structurally and
+#: re-serialised. Bounded so hostile input cannot turn redaction into a DoS:
+#: nesting of embedded JSON strings is followed at most `_MAX_EMBED_DEPTH`
+#: levels, and strings over `_MAX_EMBED_BYTES` are replaced wholesale
+#: (fail closed: an oversized opaque blob might hide a secret).
+_MAX_EMBED_DEPTH = 4
+_MAX_EMBED_BYTES = 64 * 1024
+OVERSIZE_MARKER = "<redacted:oversize-json>"
 
 _NORMALISE_RE = re.compile(r"[^a-z0-9]")
 _CAMEL_RE = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
@@ -157,7 +169,7 @@ def redact(state: dict[str, Any] | None) -> dict[str, Any] | None:
     """
     if state is None:
         return None
-    return _redact_mapping(state)
+    return _redact_mapping(state, 0)
 
 
 def _has_otp_sibling(mapping: dict[str, Any]) -> bool:
@@ -170,7 +182,7 @@ def _has_otp_sibling(mapping: dict[str, Any]) -> bool:
     return False
 
 
-def _redact_mapping(mapping: dict[str, Any]) -> dict[str, Any]:
+def _redact_mapping(mapping: dict[str, Any], depth: int) -> dict[str, Any]:
     out: dict[str, Any] = {}
     otp_context = _has_otp_sibling(mapping)
     for key, value in mapping.items():
@@ -181,22 +193,37 @@ def _redact_mapping(mapping: dict[str, Any]) -> dict[str, Any]:
             out[key] = REDACTION_MARKER
         elif classification == "pii":
             out[key] = _hash_pii(value) if value is not None else None
-        elif isinstance(value, dict):
-            out[key] = _redact_mapping(value)
-        elif isinstance(value, list):
-            out[key] = _redact_sequence(value)
         else:
-            out[key] = value
+            out[key] = _redact_value(value, depth)
     return out
 
 
-def _redact_sequence(items: list[Any]) -> list[Any]:
-    redacted: list[Any] = []
-    for item in items:
-        if isinstance(item, dict):
-            redacted.append(_redact_mapping(item))
-        elif isinstance(item, list):
-            redacted.append(_redact_sequence(item))
-        else:
-            redacted.append(item)
-    return redacted
+def _redact_sequence(items: list[Any], depth: int) -> list[Any]:
+    return [_redact_value(item, depth) for item in items]
+
+
+def _redact_value(value: Any, depth: int) -> Any:
+    if isinstance(value, dict):
+        return _redact_mapping(value, depth)
+    if isinstance(value, list):
+        return _redact_sequence(value, depth)
+    if isinstance(value, str):
+        return _redact_embedded_json(value, depth)
+    return value
+
+
+def _redact_embedded_json(value: str, depth: int) -> str:
+    stripped = value.lstrip()
+    if not stripped or stripped[0] not in "{[":
+        return value
+    if len(value.encode("utf-8")) > _MAX_EMBED_BYTES:
+        return OVERSIZE_MARKER
+    try:
+        parsed = json.loads(value)
+    except ValueError:
+        return value
+    if not isinstance(parsed, dict | list):
+        return value
+    if depth >= _MAX_EMBED_DEPTH:
+        return OVERSIZE_MARKER
+    return json.dumps(_redact_value(parsed, depth + 1), separators=(",", ":"))

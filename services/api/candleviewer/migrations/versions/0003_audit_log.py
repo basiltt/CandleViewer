@@ -184,9 +184,27 @@ CREATE TABLE audit_checkpoints (
   created_at   timestamptz NOT NULL DEFAULT now(),
   UNIQUE (head_id)
 );
+-- Checkpoints are the off-chain anchor for tail-truncation detection, so
+-- they get the same append-only guards as audit_log (PR #1561 N3, C-5.7).
+CREATE TRIGGER trg_audit_ckpt_append BEFORE UPDATE OR DELETE ON audit_checkpoints
+  FOR EACH ROW EXECUTE FUNCTION forbid_mutation();
+CREATE TRIGGER trg_audit_ckpt_no_truncate BEFORE TRUNCATE ON audit_checkpoints
+  FOR EACH STATEMENT EXECUTE FUNCTION audit_refuse_truncate();
+DO $BODY$
+BEGIN
+  IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'cv_app') THEN
+    EXECUTE 'REVOKE UPDATE, DELETE, TRUNCATE ON audit_checkpoints FROM cv_app';
+  END IF;
+  IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'cv_ro') THEN
+    EXECUTE 'REVOKE UPDATE, DELETE, TRUNCATE ON audit_checkpoints FROM cv_ro';
+  END IF;
+END
+$BODY$;
 """
 
 _DOWNGRADE_SQL = """
+DROP TRIGGER IF EXISTS trg_audit_ckpt_no_truncate ON audit_checkpoints;
+DROP TRIGGER IF EXISTS trg_audit_ckpt_append ON audit_checkpoints;
 DROP TABLE IF EXISTS audit_checkpoints;
 DROP TRIGGER IF EXISTS trg_audit_no_truncate ON audit_log;
 DROP TRIGGER IF EXISTS trg_audit_append ON audit_log;
