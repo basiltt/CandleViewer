@@ -1153,8 +1153,10 @@ E02-X02 lands the first slice of this pack ahead of application code existing:
 `20-architecture.md` §2.2 B3 startup self-check), `cv-adapter-isolation`
 (C-2.2, generalises the ticket's "no `bybit` outside `exchange/bybit/`"
 scenario), `cv-raw-sql-string-interpolation`, `cv-secret-shaped-literal` and
-`cv-log-secret` above. Each rule has a `--test` fixture pair (positive +
-negative) under `.semgrep/tests/`. The remaining rules in the numbered list
+`cv-log-secret` above. Each rule has a fixture pair (positive + negative)
+under `.semgrep/tests/`, verified by `tools/ci/check_semgrep_rule_tests.py`
+(not `semgrep --test`, which hangs/misattributes matched lines against a
+directory config on some toolchains — see QA #1559). The remaining rules in the numbered list
 land with the application code they guard (route/OMS/rule-engine/Electron
 work does not exist yet). Run the whole pack locally with `pnpm security` /
 `make security` (`tools/ci/run_security_local.py`), which also runs

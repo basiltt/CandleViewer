@@ -69,7 +69,13 @@ def test_run_license_check_skips_when_venv_missing(tmp_path: Path) -> None:
     def fake_which(name: str) -> str | None:
         return "/usr/bin/pnpm" if name == "pnpm" else None
 
-    with patch("tools.ci.run_security_local._which", side_effect=fake_which):
+    # Use an isolated REPO_ROOT with no services/api/.venv so this test is not
+    # sensitive to whether the developer/CI machine happens to have a real
+    # backend venv checked out (regression for E02-X02-B1 defect #2).
+    with (
+        patch("tools.ci.run_security_local._which", side_effect=fake_which),
+        patch("tools.ci.run_security_local.REPO_ROOT", tmp_path),
+    ):
         result = run_license_check(tmp_path)
     assert result.status == "SKIPPED"
     assert ".venv" in result.detail
@@ -77,14 +83,13 @@ def test_run_license_check_skips_when_venv_missing(tmp_path: Path) -> None:
 
 def test_main_returns_zero_when_all_tools_skipped() -> None:
     skip = ToolResult("stub", "SKIPPED", "not installed")
-    with patch("tools.ci.run_security_local.run_semgrep", return_value=skip), patch(
-        "tools.ci.run_security_local.run_bandit", return_value=skip
-    ), patch("tools.ci.run_security_local.run_pip_audit", return_value=skip), patch(
-        "tools.ci.run_security_local.run_npm_audit", return_value=skip
-    ), patch(
-        "tools.ci.run_security_local.run_gitleaks", return_value=skip
-    ), patch(
-        "tools.ci.run_security_local.run_license_check", return_value=skip
+    with (
+        patch("tools.ci.run_security_local.run_semgrep", return_value=skip),
+        patch("tools.ci.run_security_local.run_bandit", return_value=skip),
+        patch("tools.ci.run_security_local.run_pip_audit", return_value=skip),
+        patch("tools.ci.run_security_local.run_npm_audit", return_value=skip),
+        patch("tools.ci.run_security_local.run_gitleaks", return_value=skip),
+        patch("tools.ci.run_security_local.run_license_check", return_value=skip),
     ):
         assert main([]) == 0
 
@@ -92,13 +97,12 @@ def test_main_returns_zero_when_all_tools_skipped() -> None:
 def test_main_returns_nonzero_when_any_tool_fails() -> None:
     ok = ToolResult("stub-ok", "PASS")
     bad = ToolResult("stub-bad", "FAIL", "CI-SEC-001: blocking finding")
-    with patch("tools.ci.run_security_local.run_semgrep", return_value=bad), patch(
-        "tools.ci.run_security_local.run_bandit", return_value=ok
-    ), patch("tools.ci.run_security_local.run_pip_audit", return_value=ok), patch(
-        "tools.ci.run_security_local.run_npm_audit", return_value=ok
-    ), patch(
-        "tools.ci.run_security_local.run_gitleaks", return_value=ok
-    ), patch(
-        "tools.ci.run_security_local.run_license_check", return_value=ok
+    with (
+        patch("tools.ci.run_security_local.run_semgrep", return_value=bad),
+        patch("tools.ci.run_security_local.run_bandit", return_value=ok),
+        patch("tools.ci.run_security_local.run_pip_audit", return_value=ok),
+        patch("tools.ci.run_security_local.run_npm_audit", return_value=ok),
+        patch("tools.ci.run_security_local.run_gitleaks", return_value=ok),
+        patch("tools.ci.run_security_local.run_license_check", return_value=ok),
     ):
         assert main([]) == 1

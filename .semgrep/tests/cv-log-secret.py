@@ -1,5 +1,5 @@
 """Fixtures for cv-log-secret.
-Run with: semgrep --test --config .semgrep/cv-log-secret.yml .semgrep/tests
+Run with: python tools/ci/check_semgrep_rule_tests.py (covers cv-log-secret)
 """
 import logging
 

@@ -1,5 +1,5 @@
 """Fixtures for cv-secret-shaped-literal.
-Run with: semgrep --test --config .semgrep/cv-secret-shaped-literal.yml .semgrep/tests
+Run with: python tools/ci/check_semgrep_rule_tests.py (covers cv-secret-shaped-literal)
 """
 
 

@@ -1,5 +1,5 @@
 """Positive/negative fixtures for cv-withdrawal-endpoint-ban.
-Run with: semgrep --test --config .semgrep/cv-withdrawal-endpoint-ban.yml .semgrep/tests
+Run with: python tools/ci/check_semgrep_rule_tests.py (covers cv-withdrawal-endpoint-ban)
 """
 
 
