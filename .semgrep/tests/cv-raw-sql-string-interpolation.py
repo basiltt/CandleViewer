@@ -1,5 +1,5 @@
 """Fixtures for cv-raw-sql-string-interpolation.
-Run with: semgrep --test --config .semgrep/cv-raw-sql-string-interpolation.yml .semgrep/tests
+Run with: python tools/ci/check_semgrep_rule_tests.py (covers cv-raw-sql-string-interpolation)
 """
 
 
@@ -20,4 +20,6 @@ def bad_concat(conn: object, account_id: str) -> None:
 
 
 def ok_parameterised(conn: object, account_id: str) -> None:
-    conn.execute("SELECT * FROM orders WHERE account_id = :account_id", {"account_id": account_id})  # ok: cv-raw-sql-string-interpolation
+    params = {"account_id": account_id}
+    query = "SELECT * FROM orders WHERE account_id = :account_id"
+    conn.execute(query, params)  # ok: cv-raw-sql-string-interpolation

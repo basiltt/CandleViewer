@@ -72,12 +72,13 @@ def run_semgrep(tmpdir: Path) -> ToolResult:
             "install via WSL/Linux/macOS or CI) -- rule pack lives at .semgrep/",
         )
     # Rule-pack self-test first: a rule that never fires on its own fixtures
-    # is worse than no rule (ticket "Technical notes / design").
-    test_proc = _run(["semgrep", "--test", "--config", ".semgrep", ".semgrep/tests"])
+    # is worse than no rule (ticket "Technical notes / design"). `semgrep
+    # --test` hangs/misattributes lines against a directory config on this
+    # toolchain (QA bug #1559 defects #1/#3), so the fixtures are checked via
+    # `semgrep scan --json` instead (tools/ci/check_semgrep_rule_tests.py).
+    test_proc = _run([sys.executable, "tools/ci/check_semgrep_rule_tests.py"])
     if test_proc.returncode != 0:
-        return ToolResult(
-            "semgrep (rule-tests)", "FAIL", test_proc.stdout + test_proc.stderr
-        )
+        return ToolResult("semgrep (rule-tests)", "FAIL", test_proc.stdout + test_proc.stderr)
 
     sarif = tmpdir / "semgrep.sarif"
     scan_proc = _run(
@@ -98,23 +99,17 @@ def run_semgrep(tmpdir: Path) -> ToolResult:
         ]
     )
     if scan_proc.returncode > 1:
-        return ToolResult(
-            "semgrep", "FAIL", f"engine error (exit {scan_proc.returncode})"
-        )
+        return ToolResult("semgrep", "FAIL", f"engine error (exit {scan_proc.returncode})")
     if not sarif.exists():
         return ToolResult("semgrep", "FAIL", "CI-SEC-005: no SARIF produced")
-    gate_proc = _run(
-        [sys.executable, str(GATE), "--tool", "semgrep", "--report", str(sarif)]
-    )
+    gate_proc = _run([sys.executable, str(GATE), "--tool", "semgrep", "--report", str(sarif)])
     status = "PASS" if gate_proc.returncode == 0 else "FAIL"
     return ToolResult("semgrep", status, gate_proc.stdout + gate_proc.stderr)
 
 
 def run_bandit(tmpdir: Path) -> ToolResult:
     if _which("bandit") is None:
-        return ToolResult(
-            "bandit", "SKIPPED", "bandit not installed (pip install bandit[sarif])"
-        )
+        return ToolResult("bandit", "SKIPPED", "bandit not installed (pip install bandit[sarif])")
     sarif = tmpdir / "bandit.sarif"
     _run(
         [
@@ -132,18 +127,14 @@ def run_bandit(tmpdir: Path) -> ToolResult:
     )
     if not sarif.exists():
         return ToolResult("bandit", "FAIL", "CI-SEC-005: no SARIF produced")
-    gate_proc = _run(
-        [sys.executable, str(GATE), "--tool", "bandit", "--report", str(sarif)]
-    )
+    gate_proc = _run([sys.executable, str(GATE), "--tool", "bandit", "--report", str(sarif)])
     status = "PASS" if gate_proc.returncode == 0 else "FAIL"
     return ToolResult("bandit", status, gate_proc.stdout + gate_proc.stderr)
 
 
 def run_pip_audit(tmpdir: Path) -> ToolResult:
     if _which("pip-audit") is None:
-        return ToolResult(
-            "pip-audit", "SKIPPED", "pip-audit not installed (pip install pip-audit)"
-        )
+        return ToolResult("pip-audit", "SKIPPED", "pip-audit not installed (pip install pip-audit)")
     if _which("uv") is None:
         return ToolResult(
             "pip-audit",
@@ -184,9 +175,7 @@ def run_pip_audit(tmpdir: Path) -> ToolResult:
     )
     if not report.exists():
         return ToolResult("pip-audit", "FAIL", "CI-SEC-005: no report produced")
-    gate_proc = _run(
-        [sys.executable, str(GATE), "--tool", "pip-audit", "--report", str(report)]
-    )
+    gate_proc = _run([sys.executable, str(GATE), "--tool", "pip-audit", "--report", str(report)])
     status = "PASS" if gate_proc.returncode == 0 else "FAIL"
     return ToolResult("pip-audit", status, gate_proc.stdout + gate_proc.stderr)
 
@@ -197,9 +186,7 @@ def run_npm_audit(tmpdir: Path) -> ToolResult:
     report = tmpdir / "npm-audit.json"
     proc = _run(["pnpm", "audit", "--json"])
     report.write_text(proc.stdout or "{}", encoding="utf-8")
-    gate_proc = _run(
-        [sys.executable, str(GATE), "--tool", "npm-audit", "--report", str(report)]
-    )
+    gate_proc = _run([sys.executable, str(GATE), "--tool", "npm-audit", "--report", str(report)])
     status = "PASS" if gate_proc.returncode == 0 else "FAIL"
     return ToolResult("npm-audit", status, gate_proc.stdout + gate_proc.stderr)
 
@@ -255,9 +242,7 @@ def run_gitleaks(tmpdir: Path) -> ToolResult:
         )
     if not report.exists():
         report.write_text("[]", encoding="utf-8")
-    gate_proc = _run(
-        [sys.executable, str(GATE), "--tool", "gitleaks", "--report", str(report)]
-    )
+    gate_proc = _run([sys.executable, str(GATE), "--tool", "gitleaks", "--report", str(report)])
     status = "PASS" if gate_proc.returncode == 0 else "FAIL"
     return ToolResult("gitleaks", status, gate_proc.stdout + gate_proc.stderr)
 
@@ -290,9 +275,7 @@ def run_license_check(tmpdir: Path) -> ToolResult:
         ]
     )
     if collect_proc.returncode != 0:
-        return ToolResult(
-            "license-check", "FAIL", collect_proc.stdout + collect_proc.stderr
-        )
+        return ToolResult("license-check", "FAIL", collect_proc.stdout + collect_proc.stderr)
     gate_proc = _run(
         [sys.executable, str(GATE), "--tool", "license-scan", "--report", str(combined)]
     )
