@@ -66,6 +66,10 @@ def _markdown_governance_docs_argv(fixture_dir: str) -> list[str]:
     return ["--repo-root", fixture_dir, "--docs", "CONTRIBUTING.md"]
 
 
+def _bypass_register_argv(fixture_dir: str) -> list[str]:
+    return ["--register", os.path.join(fixture_dir, "bypass-register.md")]
+
+
 CHECKERS: tuple[CheckerEntry, ...] = (
     CheckerEntry(
         "check_rule_refs",
@@ -104,6 +108,13 @@ CHECKERS: tuple[CheckerEntry, ...] = (
         os.path.join("scripts", "check_markdown_governance_docs.py"),
         lambda: _markdown_governance_docs_argv(
             os.path.join(FIXTURES_ROOT, "markdown_broken")
+        ),
+    ),
+    CheckerEntry(
+        "check_bypass_register",
+        os.path.join("scripts", "check_bypass_register.py"),
+        lambda: _bypass_register_argv(
+            os.path.join(FIXTURES_ROOT, "bypass_register_broken")
         ),
     ),
 )

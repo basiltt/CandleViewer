@@ -15,17 +15,18 @@
   "required_status_checks": {
     "strict": true,
     "contexts": [
-      "governance"
+      "governance",
+      "lint",
+      "typecheck",
+      "unit-frontend",
+      "unit-engine",
+      "contract",
+      "integration",
+      "architecture"
     ]
   },
   "x-pending-contexts": [
-    "lint",
-    "typecheck",
     "unit-backend",
-    "unit-engine",
-    "unit-frontend",
-    "contract",
-    "integration",
     "e2e-smoke",
     "a11y",
     "sast",
@@ -36,7 +37,6 @@
     "bundle-size",
     "engine-bench",
     "migrations",
-    "architecture",
     "generated-code-check",
     "pr-metadata"
   ],
@@ -45,8 +45,8 @@
     "grouping_strategy": "HEADGREEN",
     "check_response_timeout_minutes": 60,
     "minimum_group_size": 1,
-    "maximum_group_size": 5,
-    "max_entries_to_build": 5,
+    "maximum_group_size": 3,
+    "max_entries_to_build": 3,
     "wait_time_for_minimum_entries_to_merge_minutes": 5
   },
   "$note_pending": "x-pending-contexts is ignored by the GitHub API (an `x-` prefixed key is stripped before PUT) and read only by scripts/apply_branch_protection.py + scripts/check_branch_protection_drift.py + scripts/check_required_check_reconciliation.py. It lists every CONSTITUTION.md §9 check not yet in `required_status_checks.contexts` so the end state is visible from day 1. E03 graduates each one from here into `contexts` as its job first goes green on `main` (see Definition of Done checklist on E01-T08)."
