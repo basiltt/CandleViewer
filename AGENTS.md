@@ -290,7 +290,7 @@ the source of truth for ticket _content_.
 ### Root (pnpm workspace + Turborepo)
 
 | Task                                                                                       | Command                              |
-| ------------------------------------------------------------------------------------------ | ------------------------------------- |
+| ------------------------------------------------------------------------------------------ | ------------------------------------ |
 | Install                                                                                    | `pnpm install --frozen-lockfile`     |
 | Lint everything                                                                            | `pnpm lint`                          |
 | Fix lint/format                                                                            | `pnpm lint:fix` && `pnpm format`     |
@@ -308,6 +308,7 @@ the source of truth for ticket _content_.
 | Flaky-test quarantine report (C-9.3)                                                       | `pnpm gate:flaky-quarantine`         |
 | Bundle-size regression vs baseline (§9 #15, +5% rule)                                      | `pnpm gate:bundle-size-regression`   |
 | Negative-test harness: prove each gate above actually fails                                | `pnpm gate:negative-tests`           |
+| Toolchain regression pack: assert §9 gates/C-9.3/C-9.4 haven't decayed (E02-Q03, nightly)  | `pnpm test:toolchain`                |
 | Validate current branch name (C-4.4)                                                       | `pnpm check:branch-name`             |
 | Install local git hooks (commitlint/lint-staged/branch check)                              | `pnpm prepare`                       |
 
