@@ -1,0 +1,376 @@
+# CI/CD Runbook
+
+> Owner: `area/infra-devops`. Source of truth for pipeline *operation* — the
+> pipeline's *shape* is `docs/plan/27-adrs/ADR-0013-ci-pipeline.md` (binding
+> rules 1–10); if this runbook and the ADR disagree, the ADR wins and this
+> file is a bug — fix it in the same PR. Required check names are owned by
+> `CONSTITUTION.md` C-9.1; this runbook does not restate that list.
+
+## 1. Purpose
+
+This is the document a person who did **not** write the pipeline uses to:
+operate it day to day, understand what a red check means and how to fix it,
+rebuild a dev environment from nothing, respond to a leaked secret, and
+recover from a bad deploy. It exists because a pipeline only its author can
+operate is a bus-factor risk (`docs/plan/32-risk-register.md` R10), and
+because ADR-0013's own Validation section commits the team to running it,
+measuring it and periodically breaking it on purpose.
+
+## 2. Pipeline job map
+
+```
+PR opened/updated (.github/workflows/pr.yml)
+├─ changed-paths            → path filters feeding every conditional lane
+├─ pin-check (SR-132)       → tools/ci/check_action_pins.py            (CI-GATE-003)
+├─ spike-containment        → tools/ci/check_spike_containment.py      (CI-SPIKE-001/002)
+├─ commitlint / licence-header / docs-link  → always on
+├─ _job-js.yml    (js filter)        → node-version, lint, typecheck, unit, build (CI-JS-001)
+├─ _job-py.yml    (py filter)        → ruff, mypy --strict, pytest, architecture contract
+├─ _job-gen.yml   (always)           → generated-code freshness gate    (CI-GEN-001..004)
+├─ _job-contract.yml (protocol filter) → OpenAPI/WS conformance         (CI-CON-001)
+├─ _job-integration.yml (py filter)  → fixture-driven + DB integration  (CI-INT-001/002)
+├─ _job-e2e.yml   (e2e filter)       → Playwright web + axe-core        (CI-E2E-001/002, CI-A11Y-001)
+├─ _job-security.yml (always)        → CodeQL/Semgrep/Bandit/pip-audit/npm-audit/gitleaks/licence (CI-SEC-001..005)
+├─ _job-coverage.yml (always)        → per-package threshold + ratchet  (CI-COV-001..003)
+├─ _job-statechart-lint.yml (statechart filter) → machine_hashes.lock diff, contract tests
+├─ _job-engine-bench.yml (engine filter) → GPU benchmark vs baseline    (CI-BEN-001, stub pending E03-T14)
+└─ ci-required resolver (always)     → final merge gate                 (CI-GATE-001/002)
+
+merge to main (.github/workflows/main.yml)
+├─ dockerfile-pins        → digest-pin check                            (CI-IMG-001)
+├─ build-scan-sign        → non-root hardening, Trivy, SBOM, cosign      (CI-IMG-002..005)
+└─ (E03-T09 dev/staging deploy — see §7)
+
+scheduled (.github/workflows/governance*.yml, coverage-ratchet.yml)
+├─ governance             → bypass-register check                        (CI-PROT-004)
+├─ governance-drift       → break-glass / register staleness detection   (CI-PROT-004)
+└─ coverage-ratchet       → baseline-raise PR from merged coverage runs
+
+release tag (.github/workflows/release.yml)
+└─ compute-version → finalize-and-release → build-sign-installer         (CI-REL-001..004)
+```
+
+## 3. Reading the `ci-required` resolver summary
+
+`pr.yml`'s `ci-required` job is the only job branch protection actually
+requires; every lane above feeds it. Read its job summary top to bottom:
+
+- A lane with filter `false` and result `skipped` is **fine** — not
+  applicable to this diff.
+- A lane with filter `true` and result anything other than `success` is
+  **CI-GATE-001** — the PR is genuinely red on an applicable lane; go to
+  that lane's own log.
+- A lane with filter `true` and result `skipped` is **CI-GATE-002** —
+  "gate misconfiguration": the workflow itself is broken (a lane that
+  should have run did not). This is a pipeline bug, not a PR bug — do not
+  try to work around it; open an `infra-devops` issue.
+- `CI-GATE-003` on `pin-check` means an action reference in `.github/workflows/**`
+  is not pinned to a full commit SHA, or a workflow uses `pull_request_target`
+  unsafely. Fix the reference; do not add an exception.
+
+## 4. Triage recipes by error-code family
+
+Each subsection below is the canonical target of the runbook-completeness
+check (`scripts/check_runbook_completeness.py`, `CI-DOC-001`): every code
+any workflow or `tools/ci`/`scripts` source can emit must have a heading
+here, or the check fails the `governance` lane.
+
+### CI-GATE-* — required-check resolver
+- **CI-GATE-001** (applicable lane not successful): open the failing lane's
+  log linked from the job summary; fix the underlying failure, do not touch
+  the resolver.
+- **CI-GATE-002** (gate misconfiguration): a required lane was skipped while
+  its path filter said it applied. Compare `changed-paths` outputs against
+  the lane's `if:` condition in `pr.yml`; this is almost always a filter/if
+  mismatch introduced by an edit to `pr.yml` itself.
+- **CI-GATE-003** (unpinned action / unsafe trigger): `tools/ci/check_action_pins.py`
+  names the offending `uses:` line; replace the tag with the commit SHA
+  GitHub shows for that release and keep the `# vX.Y.Z` comment.
+
+### CI-JS-* — JS/TS lane
+- **CI-JS-001** (`.nvmrc` vs `package.json#engines.node` mismatch): update
+  whichever one is stale so both name the same Node major/minor; re-run
+  `node tools/ci/check-node-version.mjs` locally.
+
+### CI-GEN-* — generated-code freshness (`packages/protocol`)
+- **CI-GEN-001** (drift): the working tree does not match `make gen`'s
+  output. Run codegen locally, commit the regenerated files — never hand-edit
+  `packages/protocol/src/generated`.
+- **CI-GEN-002** (untracked generated output): codegen produced files `git
+  diff` cannot see because they were never tracked. `git add` them in the
+  same commit as the schema change that introduced them.
+- **CI-GEN-003** (non-deterministic generation): running the generator twice
+  produced two different hashes. This is a generator bug (usually an
+  unordered map/set iteration or a timestamp leaking into output) — file it
+  against the generator, do not silence the check.
+- **CI-GEN-004** (generator toolchain failure): the generator itself crashed
+  (missing dependency, schema syntax error). Fix the schema or toolchain;
+  the gate cannot pass on a generator that did not run.
+
+### CI-CON-* — contract conformance
+- **CI-CON-001** (OpenAPI structural validity / server-route drift): a route,
+  field or schema in `docs/plan/22-api-openapi.yaml` no longer matches the
+  implementation the contract test exercises. Fix the contract-first: update
+  the YAML, regenerate, then adjust the handler — never patch the generated
+  client to paper over a real drift.
+
+### CI-INT-* — integration lane fixtures
+- **CI-INT-001** (fixture unavailable): a fixture referenced by
+  `services/api/tests/fixtures/bybit/**` (or its manifest) is missing on
+  disk. Confirm it was committed (fixtures are never fetched over the
+  network in CI) and that `tools/ci/verify_fixture_manifest.py`'s manifest
+  entry path matches.
+- **CI-INT-002** (checksum mismatch): the fixture bytes on disk do not match
+  the manifest's recorded checksum — either a fixture was edited without
+  regenerating its checksum, or it was silently corrupted. Recompute and
+  commit the checksum only if the edit was deliberate and reviewed; otherwise
+  restore the original fixture.
+
+### CI-E2E-* / CI-A11Y-* — Playwright + accessibility
+- **CI-E2E-001** (Playwright suite failed after retry): a spec failed twice
+  (not a single flake). Open the uploaded JSON reporter artifact for the
+  failing shard; reproduce locally with `pnpm --filter @candleviewer/web e2e`.
+  If it fails intermittently across three runs in a week, quarantine per
+  §9 (flaky-test process) rather than re-running indefinitely.
+- **CI-E2E-002** (demo-REST-only tag matched zero specs): the
+  `@demo-rest-only` Playwright tag used to assert demo-environment orders
+  never go over WS matched no specs — either the tag was renamed/removed by
+  accident or the harness itself regressed. This must never silently pass;
+  restore the tag or the specs it should match.
+- **CI-A11Y-001** (new serious/critical axe-core violation): open the axe
+  report artifact, find the new violation's rule id and selector, fix the
+  markup (see `docs/plan/05-accessibility-standard.md`) — never suppress a
+  rule repo-wide to unblock one PR.
+
+### CI-SEC-* — security scanning (`tools/ci/security_gate.py`)
+- **CI-SEC-001** (blocking finding): a CodeQL/Semgrep/Bandit/pip-audit/
+  npm-audit/gitleaks finding has no accepted-risk entry. Fix the finding.
+  Gitleaks findings never get an accepted-risk exception (see the gate's own
+  comment) — rotate the secret per `SECURITY.md` / IR-02 (§6 below) instead.
+- **CI-SEC-002** (licence violation): a new dependency's licence is not on
+  `tools/ci/licenses-allowlist.json`. Either drop the dependency, find an
+  allowlisted alternative, or add the licence to the allowlist in its own
+  reviewed PR with a justification comment — never in the PR that needs it.
+- **CI-SEC-003** (LGPL needs approval): an LGPL-licensed dependency needs an
+  explicit CODEOWNER approval recorded in the PR description before the
+  gate will pass; tag the relevant CODEOWNER and wait for their review.
+- **CI-SEC-004** (accepted-risk expired): a previously accepted finding's
+  expiry date (C-12.3) has passed. Re-triage: either fix it now or renew the
+  acceptance with a fresh, shorter expiry and a note on why it is still
+  acceptable.
+- **CI-SEC-005** (scanner infrastructure failure): a scanner produced no
+  output at all (crashed, mis-configured, or a > 1 non-finding exit code).
+  This never passes by default — check the scanner's own step log for a
+  setup problem before assuming the codebase is clean.
+
+### CI-COV-* — coverage gate (`tools/ci/coverage_gate.py`)
+- **CI-COV-001** (below floor): measured coverage for a package is below its
+  floor in `tools/ci/coverage-baselines.json` (services/api ≥85%/75% branch,
+  chart-engine ≥85%, apps/web & packages/ui ≥80% — CONSTITUTION §9 #3). Add
+  tests; floors are never lowered to pass (C-9.4).
+- **CI-COV-002** (baseline regression): coverage dropped below the recorded
+  baseline minus tolerance even though it is still above the hard floor.
+  Add tests to recover the baseline, or — only when the drop is a deliberate,
+  reviewed removal of dead/duplicated tests — let the nightly
+  `coverage-ratchet` job open a baseline-raise PR reviewing the new number.
+- **CI-COV-003** (missing coverage artifact): a lane that should have
+  produced a coverage report for an applicable package left none. Check
+  that lane's upload step; a silently-missing report must never pass.
+
+### CI-IMG-* — container image supply chain (merge-to-main, `main.yml`)
+- **CI-IMG-001** (unpinned base image): a `FROM` line in a Dockerfile is not
+  pinned by digest. Pin it (`docker pull`, then `docker inspect --format
+  '{{index .RepoDigests 0}}'`) and commit the `@sha256:...` reference.
+- **CI-IMG-002** (root user): the built image runs as root. Add a non-root
+  `USER` directive; verify locally with `docker run --rm <image> id`.
+- **CI-IMG-003** (Trivy High/Critical): a High/Critical CVE was found in the
+  built image. Update the affected package/base image; if genuinely
+  unfixable short-term, this needs the same accepted-risk process as
+  CI-SEC-004, not a bypass.
+- **CI-IMG-004** (cosign verification failed): the pushed image's signature
+  did not verify against the expected keyless-OIDC identity. Treat as a
+  supply-chain incident — do not deploy the image; re-run the build from a
+  clean checkout and re-verify before investigating further.
+- **CI-IMG-005** (SBOM generation/validation failed): `syft`'s CycloneDX
+  output failed structural validation. Check the `syft` step log for a
+  parse/tool error; the gate refuses to sign an image with no valid SBOM.
+
+### CI-SPIKE-* — spike containment (`tools/ci/check_spike_containment.py`)
+- **CI-SPIKE-001** (throwaway prototype code reaching `main`): a path under
+  a spike directory is present on a non-spike branch. Per C-4.5, spikes end
+  in a written finding and are deleted — remove the prototype path from this
+  branch; if code from the spike is genuinely being promoted, move it
+  through a normal ticket, not by leaving the spike directory in place.
+- **CI-SPIKE-002** (promoted benchmark harness imports from a spike path):
+  a "real" benchmark still imports from the throwaway spike location.
+  Copy the needed code into its permanent home and update the import.
+
+### CI-PROT-* — branch-protection governance (`scripts/check_bypass_register.py`)
+- **CI-PROT-004** (bypass register stale/empty/malformed): `.github/rulesets/bypass-register.md`
+  has a row with a passed or too-far-future review date, is missing rows
+  entirely, or is malformed. Add/update the row with a review date no more
+  than one quarter (91 days) out, or remove a bypass actor that is no
+  longer needed. See §5 for the break-glass procedure this register backs.
+
+### CI-REL-* — release automation
+- **CI-REL-001** (unparseable changelog fragment / non-conventional PR
+  title): the PR has neither a conventional-commit title nor a parseable
+  `Changelog:` footer. Fix the title, or add a footer line matching the
+  format documented in `tools/ci/changelog_lib.py`'s docstring.
+- **CI-REL-002** (1.0.0-explicit-declaration guard): the computed next
+  version would cross into `1.0.0` without an explicit, reviewed
+  declaration commit. This is deliberate friction — open the declaration PR
+  named in the gate's error message first.
+- **CI-REL-003** (release-binary signing parity): the Electron installer
+  signing step did not produce a signature matching the image-signing
+  parity requirement. Check the cosign keyless step log for an OIDC/identity
+  mismatch.
+- **CI-REL-004** (PRR gate unchecked): the draft release stays a draft while
+  the PRR checklist item on the release-checklist issue is unchecked. This
+  is not a bug — do not publish manually; complete the PRR checklist
+  (`docs/plan/07-release-and-prr.md` §5) and let the checklist gate lift it.
+
+### CI-DOC-* — documentation drift (this runbook's own gate)
+- **CI-DOC-001** (undocumented error code): `scripts/check_runbook_completeness.py`
+  found a `CI-<FAMILY>-<NNN>` code emitted by a workflow or `tools/ci`/
+  `scripts` source with no matching heading in this file. Add a subsection
+  under §4 for the new code (copy the pattern above: what it means, how to
+  fix it) in the **same PR** that introduced the emitting code — this is
+  the mechanical enforcement of "a pipeline change ships with its own docs".
+
+## 5. Secret-exposure response
+
+A secret (API key, token, credential, signature) found in a commit, log,
+artifact or screenshot is an incident, not a cleanup task:
+
+1. **Rotate first, always** — per `SECURITY.md` / IR-02 (SR-143), rotating
+   the credential at the source (Bybit key management, the secrets store)
+   comes before any git-history surgery. A secret that was ever pushed is
+   assumed compromised even after a force-push or history rewrite.
+2. Follow `SECURITY.md`'s reporting path — never open a public issue
+   (C-12.13).
+3. If CI itself surfaced the leak (gitleaks, `CI-SEC-001`), the finding
+   never gets an accepted-risk exception (§4 CI-SEC-*) — the PR cannot merge
+   until the secret is gone from every commit in the branch and rotated.
+4. After rotation, `git filter-repo` (or equivalent) removal from history is
+   a follow-up hygiene step, not the fix — do it only after rotation is
+   confirmed, coordinating with `@basiltt` since it rewrites shared history.
+
+## 6. Quarterly action-pin and workflow-permission review (SR-132)
+
+A recurring review with no scheduled owner does not happen, so it is a
+GitHub issue template, not a calendar reminder someone might miss:
+
+- Template: `.github/ISSUE_TEMPLATE/quarterly-ci-review.yml` (added by this
+  ticket). Filing cadence: first business day of Jan/Apr/Jul/Oct.
+- Checklist covers: every `uses:` action reference is still pinned to a SHA
+  matching its documented tag (cross-check `.github/actions-pins.md`); every
+  workflow's `permissions:` block is least-privilege for what that workflow
+  actually does; the self-hosted GPU runner's isolation/ephemeral-workspace
+  posture (ADR-0013 risk note) is still correct; the bypass register (§4
+  CI-PROT-004) has no stale rows.
+- The **first occurrence is scheduled** for **2026-10-01** (a
+  `quarterly-ci-review`-labelled issue filed against `@CandleViewer/devsecops`,
+  tracked in the same GitHub Project as regular tickets).
+
+## 7. Dev environment rebuild from scratch (PRR-lite)
+
+For an engineer with repository access and no prior context. If a step
+below is found to be missing or wrong while actually following it, fix this
+section in the same sprint — do not just work around it and move on.
+
+1. Clone the repo; install the pinned toolchain: Node version from
+   `.nvmrc`, `pnpm` via `corepack enable`, Python 3.12/3.13 via `uv`
+   (`curl -LsSf https://astral.sh/uv/install.sh | sh` or the platform
+   equivalent), Docker (for Postgres/QuestDB/testcontainers-backed suites).
+2. `pnpm install --frozen-lockfile` at the repo root.
+3. `uv sync --project services/api` (installs the pinned Python deps from
+   `services/api/uv.lock`).
+4. Copy `.env.example` to `.env`; never fill in real exchange credentials —
+   local/dev defaults use fixture data and demo-only stubs, never a live key.
+5. Bring up the local stack: `docker compose -f infra/docker-compose.dev.yml up -d`
+   (Postgres, QuestDB — once `infra/` ships its compose file per its owning
+   epic; until then this step is N/A and the smoke test in step 6 is
+   frontend/backend-unit-only).
+6. Smoke test: `pnpm verify` (JS/TS lint+typecheck+unit) and, from
+   `services/api`, `uv run pytest -m "not exchange_smoke"`. Both must exit 0
+   on a fresh clone before the rebuild counts as done.
+7. Start the app locally per `AGENTS.md` §4's command table (owned there;
+   not restated here) once the relevant app-runner ticket has landed.
+
+## 8. Rollback of a bad dev/staging deploy
+
+- Dev and staging deploy from tagged, signed, SBOM'd images built by
+  `main.yml`'s `build-scan-sign` job (§2) — never from an untagged local
+  build.
+- To roll back: redeploy the previous known-good image tag (the tag before
+  the one that regressed); the previous digest is recorded in the
+  `image-supply-chain-evidence` artifact from that job's own run, and in the
+  SBOM-diff job summary.
+- Never roll back by editing the running container in place — always
+  redeploy a previously-built, previously-scanned image.
+- Production is a deliberate, checklisted action (ADR-0013 rule 8) and is
+  out of scope here; see `docs/plan/07-release-and-prr.md` §4 for the
+  release checklist and rollback procedure at that stage.
+- Full automated dev-deploy/staging-gate/rollback tooling is `E03-T09`'s
+  scope; this section documents the manual procedure until that ticket
+  lands its automation, per this ticket's dependency note.
+
+## 9. Flaky-test quarantine process
+
+- ADR-0013 binding rule 10: a job that fails then passes on retry is
+  recorded; three occurrences in a week auto-open a quarantine issue.
+- On a quarantine issue: mark the test `@flaky` (Python) or `.fixme`/skip
+  annotation with a linked issue (TypeScript/Playwright) within 24 hours
+  (C-9.3) — never silently delete a flaky test to make CI green.
+- The quarantine issue is `priority/p1-high`, assigned to the area owner of
+  the flaky test's package, and stays open until the root cause is fixed and
+  the test is un-quarantined in the same PR that fixes it.
+
+## 10. Weekly PR-feedback-time report
+
+- Job: `.github/workflows/ci-metrics-report.yml` (added by this ticket),
+  scheduled weekly (Monday 06:00 UTC) and runnable on demand
+  (`workflow_dispatch`).
+- Reads the `ci-metrics` artifacts (per-run wall-clock time from
+  PR-opened/updated to the `ci-required` resolver's conclusion, emitted by
+  `pr.yml` since `E03-T01`) for the trailing 7 days and publishes p50/p90 as
+  a job summary table.
+- **Rebalance trigger**: if p90 > 15 minutes (ADR-0013's target), the report
+  emits a `::warning::` annotation naming the rebalance instruction —
+  "review the job matrix's path filters and the slowest lane in this run;
+  either narrow that lane's trigger conditions or split it" — and opens (or
+  comments on) a standing `priority/p2-medium` `area/infra-devops` issue
+  tracking the rebalance so it is not lost.
+- Budget: the report job itself must complete in ≤60s (this ticket's own
+  Performance note); it fails loudly (not silently) if the `ci-metrics`
+  artifact for a given week is entirely absent, since a missing metric is
+  itself worth flagging, not treating as "zero incidents".
+
+## 11. ADR-0013 validation log
+
+Dated record of the two validation exercises the ADR's own Validation
+section requires. Append a new dated entry here every time either exercise
+is re-run (e.g. after a significant pipeline change) — never overwrite a
+previous entry.
+
+| Date | Exercise | Result | Evidence |
+|---|---|---|---|
+| 2026-09-29 | Break-the-protocol (schema edit, no protocol regen) | Freshness gate failed with `CI-GEN-001` as expected; PR closed unmerged | See `docs/plan/backlog/E03-T15-validation/exercise-1-break-the-protocol.md` |
+| 2026-09-29 | Gate sweep (synthetic secret, prohibited licence, coverage drop, second Alembic head, unsigned image) | Each planted defect independently proven to block its owning gate | See `docs/plan/backlog/E03-T15-validation/exercise-2-gate-sweep.md` |
+
+## 12. Benchmark manual-override procedure
+
+- The GPU benchmark lane (`_job-engine-bench.yml`, filled in by `E03-T14`)
+  compares against a pinned baseline on a pinned self-hosted runner
+  (ADR-0013 rule 4). If that runner is genuinely unavailable (hardware
+  failure, maintenance window):
+  1. The Architect records an explicit manual-override approval as a PR
+     comment naming the reason and expected restoration date.
+  2. The PR's benchmark check is treated as non-blocking only for that one
+     PR, never repo-wide and never by editing the workflow's `if:` condition.
+  3. The override is itself logged in this runbook's validation log (§11)
+     as a dated entry so overrides are visible history, not silent bypasses.
+- Baseline updates (as opposed to overrides) always need CODEOWNER approval
+  and a written justification per ADR-0013 rule 4 — never conflate "the
+  runner was down" with "the baseline should move".
