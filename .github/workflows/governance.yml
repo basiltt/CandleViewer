@@ -72,6 +72,9 @@ jobs:
       - name: Markdownlint + relative-link resolution over governance docs (GOV-006)
         run: python scripts/check_markdown_governance_docs.py
 
+      - name: Branch-protection bypass register check (CI-PROT-004, E03-T13)
+        run: python scripts/check_bypass_register.py
+
       - name: Canary self-test (deliberately-broken fixtures must fail)
         # The guard against a green check that no longer checks anything
         # (E01-Q02 acceptance scenario "the job proves it can still fail").

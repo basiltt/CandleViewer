@@ -30,6 +30,13 @@ jobs:
       - name: Required-check reconciliation (GOV-005)
         run: python scripts/check_required_check_reconciliation.py
 
+      - name: Register staleness (CI-PROT-004)
+        # Runs here too (not just in the PR-triggered governance.yml) so a
+        # review date that expires with no PR open is still caught, on the
+        # weekly schedule rather than only when a PR happens to touch this
+        # file.
+        run: python scripts/check_bypass_register.py
+
       - name: Branch protection drift check (GOV-005)
         id: drift
         env:
