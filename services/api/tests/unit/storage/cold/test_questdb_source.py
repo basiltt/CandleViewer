@@ -8,6 +8,7 @@ from candleviewer.storage.cold.observability import LoggingSystemEventSink
 from candleviewer.storage.cold.questdb_source import (
     QuestDbHotTierSource,
     UnsupportedExportStream,
+    _us_to_datetime,
 )
 from candleviewer.storage.models import StreamKind
 from tests.unit.storage.cold._helpers import DAY_START_US, day_range
@@ -38,7 +39,11 @@ async def test_iter_partition_pages_with_bound_params_and_order() -> None:
     assert [b.num_rows for b in batches] == [3, 3, 1]
     sql, params = conn.calls[0]
     assert "FROM trades" in sql and "ORDER BY ts, price" in sql and "BTCUSDT" not in sql
-    assert params[:3] == ("BTCUSDT", day_range().start_us, day_range().end_us)
+    assert params[:3] == (
+        "BTCUSDT",
+        _us_to_datetime(day_range().start_us),
+        _us_to_datetime(day_range().end_us),
+    )
     assert await src.count_partition("BTCUSDT", StreamKind.TRADES, day_range()) == 7
 
 

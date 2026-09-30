@@ -11,11 +11,21 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterator
+from datetime import UTC, datetime
 
 import pyarrow as pa
 
 from candleviewer.storage.models import StreamKind, TimeRange
 from candleviewer.storage.questdb.reader import PgWireConnection
+
+
+def _us_to_datetime(value_us: int) -> datetime:
+    """QuestDB's `TIMESTAMP` columns are bound over PGWire as `datetime`
+    (asyncpg's `timestamptz` codec rejects raw microsecond ints) — every
+    `ts` bind parameter here must go through this conversion, never the
+    bare `TimeRange` int."""
+    return datetime.fromtimestamp(value_us / 1_000_000, tz=UTC)
+
 
 #: Stream -> (QuestDB table, secondary sort column). Streams without a
 #: `price` column sort by `ts` only.
@@ -49,7 +59,9 @@ class QuestDbHotTierSource:
         table, _ = _table_for(stream)
         sql = f"SELECT count(*) AS n FROM {table} WHERE symbol = $1 AND ts >= $2 AND ts < $3"  # noqa: S608  # nosec B608 - table from _TABLES allowlist
         async with asyncio.timeout(self._timeout):
-            rows = await self._conn.fetch(sql, symbol, rng.start_us, rng.end_us)
+            rows = await self._conn.fetch(
+                sql, symbol, _us_to_datetime(rng.start_us), _us_to_datetime(rng.end_us)
+            )
         value = rows[0]["n"] if rows else 0
         return int(value) if isinstance(value, int) else int(str(value))
 
@@ -66,7 +78,12 @@ class QuestDbHotTierSource:
         while True:
             async with asyncio.timeout(self._timeout):
                 rows = await self._conn.fetch(
-                    sql, symbol, rng.start_us, rng.end_us, offset, offset + batch_rows
+                    sql,
+                    symbol,
+                    _us_to_datetime(rng.start_us),
+                    _us_to_datetime(rng.end_us),
+                    offset,
+                    offset + batch_rows,
                 )
             if not rows:
                 return
