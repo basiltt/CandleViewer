@@ -82,6 +82,7 @@ select = ["E", "F", "I", "UP", "B", "S", "ASYNC", "RUF"]
 "tests/**" = ["S101"]
 "tests/unit/auth/**" = ["S105", "S106", "RUF059"]
 "tests/unit/api/test_auth_router.py" = ["S105", "S106"]
+"tests/qa/test_e09_dryrun_group_a.py" = ["S105", "S106"]
 "scripts/tests/**" = ["S101"]
 "benchmarks/questdb_hot_tier/tests/**" = ["S101"]
 # Migration bodies embed raw DDL/seed SQL as triple-quoted strings; wrapping
