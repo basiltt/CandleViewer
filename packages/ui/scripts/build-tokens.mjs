@@ -75,7 +75,15 @@ function resolveTheme(merged) {
   return resolved;
 }
 
-async function main() {
+/**
+ * Loads and fully resolves all 3 themes from `tokens/*.tokens.json`
+ * (the design-token source of truth — never the Figma file). Exported so
+ * `tools/contrast/generate.mjs` (E05-T05) can consume the same resolved
+ * colour values the build itself produces, rather than re-parsing generated
+ * CSS/JSON output.
+ * @returns {Promise<Record<string, Record<string, unknown>>>}
+ */
+export async function loadResolvedThemes() {
   const primitives = await loadJson("primitives.tokens.json");
 
   const themeFiles = {
@@ -90,6 +98,11 @@ async function main() {
     const sets = [primitives, ...(await Promise.all(files.map((f) => loadJson(f))))];
     resolvedThemes[themeName] = resolveTheme(mergeSets(sets));
   }
+  return resolvedThemes;
+}
+
+async function main() {
+  const resolvedThemes = await loadResolvedThemes();
 
   checkThemeParity(resolvedThemes);
 
@@ -189,7 +202,13 @@ function logSummary(resolvedThemes) {
   }
 }
 
-main().catch((err) => {
-  console.error(err.stack ?? err.message ?? err);
-  process.exitCode = 1;
-});
+// Only run the build (and its process.exit-on-failure behaviour) when this
+// file is executed directly (`node scripts/build-tokens.mjs`), not when
+// `loadResolvedThemes` is imported by another module (E05-T05's contrast
+// gate).
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error(err.stack ?? err.message ?? err);
+    process.exitCode = 1;
+  });
+}

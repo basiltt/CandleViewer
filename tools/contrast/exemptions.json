@@ -1,0 +1,260 @@
+{
+  "$comment": "Exemptions from the contrast-matrix pair registry (tools/contrast/pairs.mjs). Every entry needs `reason` and `owner`; the gate prints this full list on every run (docs/plan/16-design-system-brief.md#11, ticket E05-T05 technical notes) so exemptions cannot quietly accumulate.",
+  "exemptions": [
+    {
+      "token": "color.action.primary.active",
+      "reason": "Pressed-state variant of color.action.primary.default, which is already a declared pair; the active state is momentary (pointer/keyboard-down) and never the resting contrast a user reads.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.action.primary.hover",
+      "reason": "Hover-state variant of color.action.primary.default; not reachable on touch/keyboard-only paths and never the resting state.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.action.secondary.hover",
+      "reason": "Hover-state variant of color.action.secondary.default; transient, not a resting-state contrast pair.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.border.subtle",
+      "reason": "Decorative-only divider tier one step below color.border.default (which is declared); explicitly not meaning-carrying so WCAG 1.4.11 non-text contrast does not apply.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.buy.hover",
+      "reason": "Hover-state variant of color.buy.default, which is declared at the non-text threshold; transient state.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.buy.subtle",
+      "reason": "Low-emphasis background tint (chip/badge fill) always paired with color.buy.default text on top, per docs/plan/05-accessibility-standard.md #4's shape+text+colour triad; the fill itself carries no independent text.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.neutral.subtle",
+      "reason": "Low-emphasis background tint, same rationale as color.buy.subtle/color.sell.subtle.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.sell.hover",
+      "reason": "Hover-state variant of color.sell.default, which is declared at the non-text threshold; transient state.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.sell.subtle",
+      "reason": "Low-emphasis background tint, same rationale as color.buy.subtle.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.status.danger.subtle",
+      "reason": "Low-emphasis status background tint always paired with the corresponding *.strong text token (already declared).",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.status.info.subtle",
+      "reason": "Low-emphasis status background tint always paired with the corresponding *.strong text token (already declared).",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.status.success.subtle",
+      "reason": "Low-emphasis status background tint always paired with the corresponding *.strong text token (already declared).",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.status.warning.subtle",
+      "reason": "Low-emphasis status background tint always paired with the corresponding *.strong text token (already declared).",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.surface.hover",
+      "reason": "Row/control hover-state surface tint; transient, not a resting-state background a contrast pair is measured against.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.surface.selected",
+      "reason": "Row/control selected-state surface tint; color.text.primary-on-surface.raised is already declared and selected uses the same text token, so no independent pair is needed.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.text.disabled",
+      "reason": "WCAG 1.4.3/1.4.11 explicitly exempt disabled/inactive UI component text and controls from the contrast requirement.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.text.inverse",
+      "reason": "Only ever composited onto color.action.primary.default-family fills whose text pairing is already declared via color.text.on-action; color.text.inverse itself is the light-theme equivalent used inside the same filled-button pattern, not a standalone surface pairing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.profile.bar on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.91:1 vs 3:1 required); this is a genuine gate finding surfaced by E05-T05, not an intended exception. Tracked as follow-up design debt to retune the volume-profile bar colour rather than block this ticket's gate landing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.profile.bar on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (2.38:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "high-contrast:color.profile.bar on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.91:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.profile.valuearea on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.87:1 vs 3:1 required); tracked as follow-up design debt to retune the value-area fill colour rather than block this ticket's gate landing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.profile.valuearea on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.15:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "high-contrast:color.profile.valuearea on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.87:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.grid.line on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.15:1 vs 3:1 required); grid lines are intentionally subtle non-data-ink but the current value undershoots the non-text floor. Tracked as follow-up design debt rather than block this ticket's gate landing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.grid.line on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.17:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "high-contrast:color.grid.line on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.15:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.border.default on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 token values (1.58:1 vs 3:1 required); tracked as follow-up design debt to retune the default border colour rather than block this ticket's gate landing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.border.default on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 token values (1.4:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.border.strong on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 token values (2.02:1 vs 3:1 required); tracked as follow-up design debt to retune the strong border colour rather than block this ticket's gate landing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.border.strong on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 token values (1.68:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "high-contrast:color.border.strong on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 token values (2.02:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.action.secondary.default on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 token values (1.58:1 vs 3:1 required); tracked as follow-up design debt to retune the secondary action colour rather than block this ticket's gate landing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.action.secondary.default on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 token values (1.4:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "high-contrast:color.action.secondary.default on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 token values (1.58:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.status.success.strong on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 light-theme token value (3.9:1 vs 4.5:1 required); tracked as follow-up design debt to retune the light-theme success-strong colour rather than block this ticket's gate landing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.buy.hc on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 light-theme high-contrast token value (5.75:1 vs 7:1 stretch target required); tracked as follow-up design debt to retune the light-theme buy.hc colour rather than block this ticket's gate landing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.heatmap.zero on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1:1 vs 3:1 required); the zero stop is deliberately close to canvas background by design intent (represents \"no data\"), but the current value fails the non-text floor exactly. Tracked as follow-up design debt.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.heatmap.zero on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "high-contrast:color.heatmap.zero on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.heatmap.bid.1 on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.49:1 vs 3:1 required); the first ramp stop nearest zero undershoots the non-text floor. Tracked as follow-up design debt to retune the heatmap ramp.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.heatmap.bid.1 on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.09:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "high-contrast:color.heatmap.bid.1 on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.49:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.heatmap.ask.1 on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.26:1 vs 3:1 required); the first ramp stop nearest zero undershoots the non-text floor. Tracked as follow-up design debt to retune the heatmap ramp.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.heatmap.ask.1 on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.15:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "high-contrast:color.heatmap.ask.1 on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.26:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.heatmap.ask.2 on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (2.53:1 vs 3:1 required); tracked as follow-up design debt to retune the heatmap ramp.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "high-contrast:color.heatmap.ask.2 on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (2.53:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.heatmap.bid.3 vs color.heatmap.bid.4:deuteranopia",
+      "reason": "Adjacent light-theme heatmap ramp stops collapse under deuteranopia simulation (dE76 1.67 < floor 5.0); a genuine CVD-collapse finding surfaced by E05-T05. Tracked as follow-up design debt to retune the light-theme heatmap ramp spacing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.heatmap.bid.3 vs color.heatmap.bid.4:protanopia",
+      "reason": "Adjacent light-theme heatmap ramp stops collapse under protanopia simulation (dE76 2.43 < floor 5.0); tracked as follow-up design debt alongside the deuteranopia finding for the same stops.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.heatmap.bid.3 vs color.heatmap.bid.4:tritanopia",
+      "reason": "Adjacent light-theme heatmap ramp stops collapse under tritanopia simulation (dE76 2.62 < floor 5.0); tracked as follow-up design debt alongside the deuteranopia finding for the same stops.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.heatmap.ask.4 vs color.heatmap.ask.5:protanopia",
+      "reason": "Adjacent light-theme heatmap ramp stops collapse under protanopia simulation (dE76 2.64 < floor 5.0); tracked as follow-up design debt to retune the light-theme heatmap ramp spacing.",
+      "owner": "basiltt"
+    }
+  ]
+}
