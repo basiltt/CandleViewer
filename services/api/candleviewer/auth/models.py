@@ -12,7 +12,7 @@ elsewhere).
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -227,3 +227,103 @@ class RecoveryCodesRegenerated(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     recovery_codes: tuple[str, ...]
+
+
+# -- E09-S03: session lifetime / idle lock / rotation -----------------------
+
+
+class SessionRecord(BaseModel):
+    """Row-shaped view of `sessions` columns `SessionService` touches
+    (`21-database-schema.md` §3.1.4)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    id: uuid.UUID
+    user_id: uuid.UUID
+    refresh_token_hash: str
+    access_token_jti: uuid.UUID | None
+    issued_at: datetime
+    last_seen_at: datetime
+    expires_at: datetime
+    revoked_at: datetime | None
+    revoked_reason: str | None
+    ip: str | None
+    user_agent: str | None
+    device_label: str | None
+    is_electron: bool
+    mfa_satisfied_at: datetime | None
+    idle_timeout_s: int = 900
+
+    @property
+    def is_revoked(self) -> bool:
+        return self.revoked_at is not None
+
+    def idle_deadline(self) -> datetime:
+        return self.last_seen_at + timedelta(seconds=self.idle_timeout_s)
+
+    def is_idle_locked(self, *, now: datetime) -> bool:
+        return not self.is_revoked and self.idle_deadline() <= now
+
+    def is_absolute_expired(self, *, now: datetime) -> bool:
+        return self.expires_at <= now
+
+
+class SessionView(BaseModel):
+    """`docs/plan/22-api-openapi.yaml` `UserSession` — the API-facing,
+    secret-free projection of `SessionRecord` for `GET /auth/sessions`
+    (SCR-112)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    id: uuid.UUID
+    device_name: str | None = None
+    ip: str | None = None
+    user_agent: str | None = None
+    created_at: datetime
+    last_seen_at: datetime
+    expires_at: datetime
+    current: bool = False
+
+
+class SessionIntrospection(BaseModel):
+    """`GET /auth/session` result the router projects into the OpenAPI
+    `SessionInfo` shape (identity/roles/permissions live outside this
+    module's scope — `auth` returns only what it owns: the session's own
+    liveness state)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    session_id: uuid.UUID
+    user_id: uuid.UUID
+    issued_at: datetime
+    expires_at: datetime
+    idle_deadline: datetime
+    mfa_satisfied_at: datetime | None = None
+
+
+class MintedSession(BaseModel):
+    """Result of minting a brand-new session (first login, or the head of
+    a fresh rotation family with no predecessor). Carries the *raw*
+    refresh token exactly once, at mint time — mirrors `MfaChallengeResult.
+    mfa_token`'s "never re-derives or re-exposes it" pattern; only
+    `refresh_token_hash` is ever persisted (`sessions.refresh_token_hash`,
+    "SECRET: raw token never stored")."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    session_id: uuid.UUID
+    access_token_jti: uuid.UUID
+    refresh_token: str
+    issued_at: datetime
+    expires_at: datetime
+
+
+class RefreshOutcome(BaseModel):
+    """`POST /auth/refresh` success outcome: the new session replacing the
+    presented one (ticket "every refresh issues a new `sessions` row ...
+    marks the old `revoked_reason='rotated'`, and links them")."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    minted: MintedSession
+    previous_session_id: uuid.UUID

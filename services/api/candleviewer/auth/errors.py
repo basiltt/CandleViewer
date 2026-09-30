@@ -91,3 +91,48 @@ class RecoveryCodeInvalid(AuthError):
 class RecoveryCodesExhausted(AuthError):
     """All recovery codes for this user are consumed (ticket "Recovery
     codes exhausted": "no session is created")."""
+
+
+class SessionNotFound(AuthError):
+    """No `sessions` row matches the presented refresh token hash — unknown
+    or already-purged token. Deliberately uniform with `SessionRevoked`
+    from the caller's point of view (both map to a 401 refresh failure);
+    kept distinct here only so `SessionService` callers can log/metric the
+    two cases differently."""
+
+
+class SessionRevoked(AuthError):
+    """The presented session/refresh token maps to a `sessions` row that is
+    already revoked (idle-locked sessions are NOT revoked - see
+    `SessionIdleLocked` - only terminal states: logout, admin revoke,
+    absolute expiry, or MFA lockout raise this)."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(f"session revoked: {reason}")
+        self.reason = reason
+
+
+class SessionIdleLocked(AuthError):
+    """The session's idle deadline has passed but its absolute lifetime has
+    not — ticket "Order entry is refused while locked": the server refuses
+    order-entry/refresh-like actions on this session id regardless of what
+    the client believes, without tearing the session down."""
+
+
+class UnlockPasswordInvalid(AuthError):
+    """`unlock()` was called with a password that failed verification. Kept
+    distinct from `SessionRevoked` (a wrong password does not, by itself,
+    revoke or otherwise change the session) so callers can render a normal
+    "wrong password" response instead of a session-death one. After
+    `MAX_UNLOCK_ATTEMPTS` consecutive failures against the same session,
+    `unlock()` revokes the session instead and raises `SessionRevoked`
+    (ticket "becomes a full sign-in") — this error is only raised for
+    attempts before that threshold."""
+
+
+class RefreshReuseDetected(AuthError):
+    """A refresh token that has already been rotated was presented again
+    (ticket "Refresh-token reuse kills the family"). The entire rotation
+    family has been revoked with `revoked_reason='rotation_reuse'` by the
+    time this is raised; callers must emit `auth.refresh_reuse_detected` at
+    severity `critical`."""

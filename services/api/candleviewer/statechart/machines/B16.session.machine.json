@@ -1,0 +1,123 @@
+{
+  "id": "session",
+  "strictConfig": true,
+  "maxIterations": 500,
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "defer",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "type": "parallel",
+  "on": {
+    "LOGOUT": { "target": "#session.elevation.dead" },
+    "IDLE_DEADLINE": { "target": "#session.elevation.dead" },
+    "ABSOLUTE_DEADLINE": { "target": "#session.elevation.dead" },
+    "REVOKE": { "target": "#session.elevation.dead" }
+  },
+  "context": {
+    "session_id": null,
+    "user_id": null,
+    "expires_at_us": 0,
+    "idle_expires_at_us": 0,
+    "refresh_expires_at_us": 0,
+    "elevated_until_us": null,
+    "mfa_satisfied": false,
+    "revoke_reason": null
+  },
+  "states": {
+    "auth": {
+      "initial": "pending_mfa",
+      "states": {
+        "pending_mfa": {
+          "on": {
+            "MFA_OK": {
+              "target": "#session.auth.active",
+              "actions": ["mark_mfa_satisfied"]
+            },
+            "MFA_FAILED": [
+              {
+                "target": "#session.auth.revoked",
+                "guard": "mfa_attempts_exhausted",
+                "actions": ["set_revoke_locked"]
+              },
+              {
+                "actions": ["bump_mfa_attempts", "audit_mfa_failed"]
+              }
+            ],
+            "MFA_TIMEOUT": {
+              "target": "#session.auth.revoked",
+              "actions": ["set_revoke_timeout"]
+            }
+          }
+        },
+        "active": {
+          "entry": ["stamp_idle_deadline", "audit_login"],
+          "on": {
+            "REQUEST": {
+              "target": "#session.auth.active",
+              "reenter": true,
+              "actions": ["stamp_idle_deadline"]
+            },
+            "IDLE_DEADLINE": {
+              "target": "#session.auth.revoked",
+              "actions": ["set_revoke_idle"]
+            },
+            "ABSOLUTE_DEADLINE": {
+              "target": "#session.auth.revoked",
+              "actions": ["set_revoke_expired"]
+            },
+            "REVOKE": {
+              "target": "#session.auth.revoked",
+              "actions": ["set_revoke_admin"]
+            },
+            "LOGOUT": {
+              "target": "#session.auth.revoked",
+              "actions": ["set_revoke_logout"]
+            }
+          }
+        },
+        "revoked": {
+          "type": "final",
+          "tags": ["terminal"],
+          "entry": ["audit_session_revoked", "broadcast_revocation"]
+        }
+      }
+    },
+    "elevation": {
+      "initial": "normal",
+      "states": {
+        "normal": {
+          "tags": ["not_elevated"],
+          "on": {
+            "STEP_UP_OK": {
+              "target": "#session.elevation.elevated",
+              "actions": ["stamp_elevated_until", "audit_step_up"]
+            },
+            "STEP_UP_FAILED": {
+              "actions": ["audit_step_up_failed"]
+            }
+          }
+        },
+        "elevated": {
+          "tags": ["elevated"],
+          "entry": ["schedule_elevation_deadline"],
+          "on": {
+            "ELEVATION_DEADLINE": {
+              "target": "#session.elevation.normal",
+              "actions": ["clear_elevated"]
+            },
+            "STEP_UP_OK": {
+              "target": "#session.elevation.elevated",
+              "reenter": true,
+              "actions": ["stamp_elevated_until", "audit_step_up"]
+            }
+          }
+        },
+        "dead": {
+          "type": "final"
+        }
+      }
+    }
+  }
+}
