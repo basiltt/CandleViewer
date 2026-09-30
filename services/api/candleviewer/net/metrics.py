@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from prometheus_client import Gauge
+from candleviewer.observability.metrics import Gauge
 
 net_binding_safe = Gauge(
     "net_binding_safe",

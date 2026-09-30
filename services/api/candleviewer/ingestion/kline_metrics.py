@@ -11,7 +11,7 @@ used for `clock.py` vs `instruments.py` in this package.
 
 from __future__ import annotations
 
-from prometheus_client import Counter, Gauge, Histogram
+from candleviewer.observability.metrics import Counter, Gauge, Histogram
 
 kline_backfill_pages_total = Counter(
     "kline_backfill_pages_total",

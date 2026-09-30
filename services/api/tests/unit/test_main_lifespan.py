@@ -81,6 +81,7 @@ def _fake_ctx() -> SimpleNamespace:
     ]
     modules = {name: _FakeModule() for name in module_names}
     return SimpleNamespace(
+        settings=SimpleNamespace(metrics_enabled=False),
         mesh_self_check=_FakeSelfCheck(),
         oms_read_only_gate=_FakeGate(),
         **modules,

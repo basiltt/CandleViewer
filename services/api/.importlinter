@@ -980,3 +980,219 @@ forbidden_modules =
     pyarrow
     questdb
 
+[importlinter:contract:forbidden-metrics-facade-M1]
+name = E04-T03 — M1 (config) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.settings
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M2]
+name = E04-T03 — M2 (secrets) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.secrets
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M3]
+name = E04-T03 — M3 (exchange.base) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.exchange.base
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M4]
+name = E04-T03 — M4 (exchange.bybit) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.exchange.bybit
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M5]
+name = E04-T03 — M5 (bus) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.bus
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M6]
+name = E04-T03 — M6 (ingestion) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.ingestion
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M7]
+name = E04-T03 — M7 (book) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.book
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M8]
+name = E04-T03 — M8 (bars) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.bars
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M9]
+name = E04-T03 — M9 (orderflow) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.orderflow
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M10]
+name = E04-T03 — M10 (storage) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.storage
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M11]
+name = E04-T03 — M11 (recorder) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.recorder
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M12]
+name = E04-T03 — M12 (replay) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.replay
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M13]
+name = E04-T03 — M13 (accounts) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.accounts
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M14]
+name = E04-T03 — M14 (oms) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.oms
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M15]
+name = E04-T03 — M15 (rules) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.rules
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M16]
+name = E04-T03 — M16 (paper) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.paper
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M17]
+name = E04-T03 — M17 (risk) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.risk
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M18]
+name = E04-T03 — M18 (auth) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.auth
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M19]
+name = E04-T03 — M19 (audit) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.audit
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M20]
+name = E04-T03 — M20 (journal) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.journal
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M21]
+name = E04-T03 — M21 (admin) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.admin
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M22]
+name = E04-T03 — M22 (alerts) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.alerts
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M23]
+name = E04-T03 — M23 (api) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.api
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+
+[importlinter:contract:forbidden-metrics-facade-M23b]
+name = E04-T03 — M23b (ws) must use the metrics facade, not prometheus_client
+type = forbidden
+source_modules =
+    candleviewer.ws
+forbidden_modules =
+    prometheus_client
+allow_indirect_imports = True
+

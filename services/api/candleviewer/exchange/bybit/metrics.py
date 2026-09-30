@@ -11,7 +11,7 @@ across every adapter, not a per-adapter duplicate.
 
 from __future__ import annotations
 
-from prometheus_client import Counter, Gauge, Histogram
+from candleviewer.observability.metrics import Counter, Gauge, Histogram
 
 bybit_rest_requests_total = Counter(
     "bybit_rest_requests_total",

@@ -159,6 +159,24 @@ def render(manifest: dict) -> str:
         lines.append(f"forbidden_modules =\n    {driver_forbidden_block}")
         lines.append("")
 
+    # E04-T03: only candleviewer.observability may import prometheus_client.
+    facade = cc["metrics_facade"]
+    facade_exempt = set(facade["exempt_modules"])
+    facade_block = "\n    ".join(facade["forbidden_packages"])
+    for m in modules:
+        if m["path"] in facade_exempt:
+            continue
+        lines.append(f"[importlinter:contract:forbidden-metrics-facade-{m['number']}]")
+        lines.append(
+            f"name = {facade['rule']} — {m['number']} ({m['name']}) must use the metrics "
+            "facade, not prometheus_client"
+        )
+        lines.append("type = forbidden")
+        lines.append(f"source_modules =\n    {m['path']}")
+        lines.append(f"forbidden_modules =\n    {facade_block}")
+        lines.append("allow_indirect_imports = True")
+        lines.append("")
+
     return "\n".join(lines) + "\n"
 
 

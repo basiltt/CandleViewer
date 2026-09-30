@@ -13,7 +13,7 @@ the Bybit-specific mapping table itself is out of scope for this ticket
 
 from __future__ import annotations
 
-from prometheus_client import Counter
+from candleviewer.observability.metrics import Counter
 
 from .errors import ExchangeError, OmsErrorCode, UnknownStateError
 

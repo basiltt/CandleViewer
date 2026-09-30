@@ -11,7 +11,8 @@ from __future__ import annotations
 from typing import Literal, Protocol
 
 import structlog
-from prometheus_client import Counter, Gauge, Histogram
+
+from candleviewer.observability.metrics import Counter, Gauge, Histogram
 
 Severity = Literal["INFO", "WARNING", "CRITICAL"]
 

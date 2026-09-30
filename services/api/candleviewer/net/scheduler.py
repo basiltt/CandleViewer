@@ -22,7 +22,7 @@ from candleviewer.observability.context import spawn
 from .binding_check import BindingSelfCheck, apply_self_check_result
 
 if TYPE_CHECKING:
-    from prometheus_client import Gauge
+    from candleviewer.observability.metrics import Gauge
 
     from .read_only_gate import ReadOnlyGate
 
