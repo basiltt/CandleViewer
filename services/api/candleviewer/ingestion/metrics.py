@@ -11,7 +11,7 @@ adapter is wired up behind `exchange/base/` today.
 
 from __future__ import annotations
 
-from prometheus_client import Counter, Gauge
+from candleviewer.observability.metrics import Counter, Gauge
 
 exchange_clock_drift_ms = Gauge(
     "exchange_clock_drift_ms",

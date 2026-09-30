@@ -21,11 +21,10 @@ from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Any
 
-from prometheus_client import CollectorRegistry, Counter
-
 from candleviewer.exchange.base import Ticker, Trade
 from candleviewer.ingestion.errors import IngestionError
 from candleviewer.observability.context import spawn
+from candleviewer.observability.metrics import CollectorRegistry, Counter
 
 # cv-semgrep: synthetic-feed-test-double — this module is a bounded test
 # double for local/CI development, never the live Bybit ingestion path.

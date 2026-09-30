@@ -27,6 +27,7 @@ from typing import Final, Literal, Protocol, cast
 
 import structlog
 from prometheus_client import (
+    CONTENT_TYPE_LATEST,
     CollectorRegistry,
     Counter,
     Enum,
@@ -35,8 +36,20 @@ from prometheus_client import (
     Histogram,
     PlatformCollector,
     ProcessCollector,
+    generate_latest,
 )
 from prometheus_client.metrics import MetricWrapperBase
+
+# Re-exported so modules outside `candleviewer.observability` never import
+# `prometheus_client` directly (import-linter contract, E04-T03).
+__all__ = [
+    "CONTENT_TYPE_LATEST",
+    "CollectorRegistry",
+    "Counter",
+    "Gauge",
+    "Histogram",
+    "generate_latest",
+]
 
 MetricKind = Literal["counter", "gauge", "histogram", "enum"]
 

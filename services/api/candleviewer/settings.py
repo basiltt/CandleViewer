@@ -75,6 +75,11 @@ class Settings(BaseSettings):
     bybit_api_key: SecretStr | None = None
     bybit_api_secret: SecretStr | None = None
 
+    # E04-T03: private-bind-only `/metrics` listener (`CV_METRICS_ENABLED`,
+    # `CV_METRICS_BIND`). Non-private hosts are refused at startup.
+    metrics_enabled: bool = True
+    metrics_bind: str = "127.0.0.1:9108"
+
     bind_host: str = "127.0.0.1"
     bind_port: int = 8080
 

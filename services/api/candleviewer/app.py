@@ -17,7 +17,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from fastapi import FastAPI
-from prometheus_client import CollectorRegistry
 
 from candleviewer.accounts.service import AccountsService
 from candleviewer.admin.service import AdminService
@@ -61,6 +60,7 @@ from candleviewer.net import (
 )
 from candleviewer.observability.correlation import CorrelationMiddleware
 from candleviewer.observability.log_level import LogLevelOverrides
+from candleviewer.observability.metrics import CollectorRegistry
 from candleviewer.observability.service import ObservabilityService
 from candleviewer.oms.service import OmsService
 from candleviewer.orderflow.service import OrderflowService

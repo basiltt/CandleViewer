@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING
 from .cidr import CidrAllowList
 
 if TYPE_CHECKING:
-    from prometheus_client import Gauge
+    from candleviewer.observability.metrics import Gauge
 
     from .read_only_gate import ReadOnlyGate
 

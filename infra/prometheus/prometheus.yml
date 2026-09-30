@@ -1,5 +1,5 @@
 global:
-  scrape_interval: 15s
+  scrape_interval: 10s
   evaluation_interval: 15s
 
 rule_files:
@@ -8,5 +8,6 @@ rule_files:
 scrape_configs:
   - job_name: candleviewer-api
     metrics_path: /metrics
+    # api binds its fixed private compose IP (see infra/compose/docker-compose.yml); public binds are refused
     static_configs:
-      - targets: ["api:8000"]
+      - targets: ["172.28.0.10:9108"]

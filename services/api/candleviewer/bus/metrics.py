@@ -5,7 +5,7 @@ section: `bus_published_total`, `bus_delivered_total`, `bus_conflated_total`,
 
 from __future__ import annotations
 
-from prometheus_client import Counter, Gauge
+from candleviewer.observability.metrics import Counter, Gauge
 
 bus_published_total = Counter(
     "bus_published_total",

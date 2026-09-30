@@ -20,9 +20,13 @@ from __future__ import annotations
 from typing import Protocol
 
 from fastapi import APIRouter, Response
-from prometheus_client import CONTENT_TYPE_LATEST, CollectorRegistry, generate_latest
 
 from candleviewer.api.models import LivenessResponse, ReadinessResponse
+from candleviewer.observability.metrics import (
+    CONTENT_TYPE_LATEST,
+    CollectorRegistry,
+    generate_latest,
+)
 from candleviewer.settings import Settings
 
 

@@ -298,6 +298,13 @@ rule = "ADR-0003"
 forbidden_packages = ["asyncpg", "psycopg", "sqlalchemy", "duckdb", "pyarrow", "questdb"]
 exempt_modules = ["candleviewer.storage"]
 
+[cross_cutting.metrics_facade]
+# E04-T03 / ADR-0014 section 1: modules use the `candleviewer.observability.metrics`
+# facade, never `prometheus_client` directly.
+rule = "E04-T03"
+forbidden_packages = ["prometheus_client"]
+exempt_modules = ["candleviewer.observability"]
+
 # Frontend module boundaries (§3 "Frontend module boundaries" table).
 # dependency-cruiser (`.dependency-cruiser.js`) reads this table; there is no
 # frontend import-linter equivalent, so this section is descriptive only —

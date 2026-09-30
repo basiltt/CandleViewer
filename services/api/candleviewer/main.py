@@ -22,6 +22,8 @@ from fastapi import FastAPI
 
 from candleviewer.app import AppContext, Supervisor, create_app
 from candleviewer.observability.logging import configure_logging
+from candleviewer.observability.metrics import Metrics
+from candleviewer.observability.metrics_server import MetricsRuntime
 from candleviewer.settings import Settings
 
 # E04-T01: logging must be configured before anything else logs a line, and
@@ -62,9 +64,22 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     overrides = getattr(app.state, "log_level_overrides", None)
     if overrides is not None:
         overrides.start()
+    metrics_runtime: MetricsRuntime | None = None
+    if ctx.settings.metrics_enabled:
+        metrics_runtime = MetricsRuntime(
+            Metrics(
+                ctx.settings.environment.value,
+                registry=ctx.metrics,
+                process_collectors=True,
+            ),
+            ctx.settings.metrics_bind,
+        )
+        metrics_runtime.start()
     try:
         yield
     finally:
+        if metrics_runtime is not None:
+            await metrics_runtime.stop()
         if overrides is not None:
             await overrides.stop()
         await ctx.mesh_self_check.stop()
