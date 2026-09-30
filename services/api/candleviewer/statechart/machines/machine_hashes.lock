@@ -1,7 +1,35 @@
 {
   "machines": {
+    "chase": {
+      "hash": "bc6436827867487a26c116ccbf41ca1d681aeb405faab1dbd565a6bf60eb280d",
+      "version": null
+    },
+    "iceberg": {
+      "hash": "aecfc7ca58b86bec0dfe9ff34009632ca2a6086f98686ebad3be6c9a77e88ede",
+      "version": null
+    },
+    "leg": {
+      "hash": "a7d8fb5d8c3e46a19ea85af406b2082032d8bf36d576f70760f077b337bb406a",
+      "version": null
+    },
+    "oco": {
+      "hash": "fd7edafda40fc1b25974fbd5ac49f8b274e2944de44323bdcee2e3c3f2c56850",
+      "version": null
+    },
+    "rule_instance": {
+      "hash": "a60ff42011cf5787771681651d841d0f72c06ebb4accb2c9ea7b60d2ff067cb2",
+      "version": null
+    },
     "session": {
       "hash": "2d45266da1d7d17a68cbe76c93fc33043ef7f4fb2f2062c260ec3f3955989ffc",
+      "version": null
+    },
+    "trade_group": {
+      "hash": "c54de416e173848558d862dc9295931befaa566247d4b8f50ebcf9766906e8d1",
+      "version": null
+    },
+    "twap": {
+      "hash": "c121934637d0f91163509161d7db728789851c9ba6f16279e065b609e6dd4fa4",
       "version": null
     }
   },

@@ -1,0 +1,248 @@
+{
+  "id": "chase",
+  "strictConfig": true,
+  "maxIterations": 500,
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "defer",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "on": {
+    "KILL": {
+      "target": "#chase.failed",
+      "actions": [
+        "audit_kill"
+      ]
+    }
+  },
+  "initial": "arming",
+  "context": {
+    "algo_id": null,
+    "arm_price": null,
+    "target_price": null,
+    "child_id": null,
+    "repricings": 0,
+    "max_repricings": 200,
+    "max_chase_ticks": 0,
+    "last_reprice_us": 0,
+    "reprice_interval_us": 200000,
+    "timeout_at_us": null,
+    "failure_count": 0
+  },
+  "states": {
+    "arming": {
+      "invoke": {
+        "id": "arm",
+        "src": "submit_initial_limit",
+        "onDone": {
+          "target": "#chase.working",
+          "actions": [
+            "record_child",
+            "stamp_arm_price"
+          ]
+        },
+        "onError": {
+          "target": "#chase.failed",
+          "actions": [
+            "map_error"
+          ]
+        }
+      }
+    },
+    "working": {
+      "on": {
+        "BOOK_TARGET_MOVED": [
+          {
+            "target": "#chase.bound_exceeded",
+            "guard": "beyond_max_chase_ticks"
+          },
+          {
+            "target": "#chase.bound_exceeded",
+            "guard": "repricings_exhausted"
+          },
+          {
+            "target": "#chase.repricing",
+            "guard": "drift_over_threshold_and_interval_elapsed_and_budget_ok"
+          },
+          {
+            "actions": [
+              "audit_guard_denied"
+            ]
+          }
+        ],
+        "CHILD_FILLED": {
+          "target": "#chase.completing",
+          "actions": [
+            "apply_fill"
+          ]
+        },
+        "CHILD_PARTIAL": {
+          "actions": [
+            "apply_fill"
+          ]
+        },
+        "TIMEOUT": {
+          "target": "#chase.timing_out"
+        },
+        "RATE_BUDGET_EXHAUSTED": {
+          "target": "#chase.paused"
+        },
+        "USER_PAUSE": {
+          "target": "#chase.paused"
+        },
+        "WS_DISCONNECT": [
+          {
+            "target": "#chase.paused",
+            "guard": "on_disconnect_is_freeze"
+          },
+          {
+            "actions": [
+              "audit_guard_denied"
+            ]
+          }
+        ],
+        "USER_CANCEL": {
+          "target": "#chase.cancelling"
+        }
+      }
+    },
+    "repricing": {
+      "entry": [
+        "compute_target_excluding_own_size",
+        "bump_repricings",
+        "stamp_last_reprice"
+      ],
+      "invoke": {
+        "id": "amend",
+        "src": "amend_child_price",
+        "onDone": {
+          "target": "#chase.working"
+        },
+        "onError": [
+          {
+            "target": "#chase.completing",
+            "guard": "error_is_order_not_found_after_fill"
+          },
+          {
+            "target": "#chase.failed",
+            "guard": "failures_exhausted"
+          },
+          {
+            "target": "#chase.working",
+            "actions": [
+              "bump_failure"
+            ]
+          }
+        ]
+      },
+      "on": {}
+    },
+    "bound_exceeded": {
+      "entry": [
+        "raise_warning_alert"
+      ],
+      "always": [
+        {
+          "target": "#chase.timing_out",
+          "guard": "on_timeout_is_market"
+        },
+        {
+          "target": "#chase.cancelling",
+          "guard": "on_timeout_is_cancel"
+        },
+        {
+          "target": "#chase.parked"
+        }
+      ]
+    },
+    "timing_out": {
+      "always": [
+        {
+          "target": "#chase.market_converting",
+          "guard": "on_timeout_is_market"
+        },
+        {
+          "target": "#chase.cancelling",
+          "guard": "on_timeout_is_cancel"
+        },
+        {
+          "target": "#chase.parked"
+        }
+      ]
+    },
+    "market_converting": {
+      "invoke": {
+        "id": "mkt",
+        "src": "convert_to_market",
+        "onDone": {
+          "target": "#chase.completing"
+        },
+        "onError": {
+          "target": "#chase.failed"
+        }
+      }
+    },
+    "parked": {
+      "tags": [
+        "left_working"
+      ],
+      "on": {
+        "CHILD_FILLED": {
+          "target": "#chase.completing"
+        },
+        "USER_CANCEL": {
+          "target": "#chase.cancelling"
+        }
+      }
+    },
+    "paused": {
+      "on": {
+        "RESUME": {
+          "target": "#chase.working"
+        },
+        "USER_CANCEL": {
+          "target": "#chase.cancelling"
+        }
+      }
+    },
+    "cancelling": {
+      "invoke": {
+        "id": "cx",
+        "src": "cancel_child",
+        "onDone": {
+          "target": "#chase.cancelled"
+        },
+        "onError": {
+          "target": "#chase.failed"
+        }
+      }
+    },
+    "completing": {
+      "on": {
+        "CHILDREN_TERMINAL": {
+          "target": "#chase.completed"
+        }
+      }
+    },
+    "completed": {
+      "type": "final",
+      "tags": [
+        "terminal"
+      ]
+    },
+    "cancelled": {
+      "type": "final",
+      "tags": [
+        "terminal"
+      ]
+    },
+    "failed": {
+      "type": "final",
+      "tags": [
+        "terminal",
+        "failure"
+      ]
+    }
+  }
+}

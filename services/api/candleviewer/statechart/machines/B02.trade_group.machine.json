@@ -1,0 +1,250 @@
+{
+  "id": "trade_group",
+  "strictConfig": true,
+  "maxIterations": 500,
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "defer",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "on": {
+    "KILL": {
+      "target": "#trade_group.failed",
+      "actions": [
+        "audit_kill"
+      ]
+    }
+  },
+  "initial": "draft",
+  "context": {
+    "group_id": null,
+    "policy": "best_effort",
+    "leg_ids": [],
+    "legs_open": 0,
+    "legs_failed": 0,
+    "legs_skipped": 0,
+    "legs_total": 0,
+    "quiesce_deadline_us": null,
+    "unwind_id": null,
+    "quiesced": false
+  },
+  "states": {
+    "draft": {
+      "on": {
+        "CONFIRM": {
+          "target": "#trade_group.submitting",
+          "actions": [
+            "reserve_rate_budget",
+            "launch_all_legs"
+          ]
+        },
+        "CANCEL": {
+          "target": "#trade_group.cancelled"
+        }
+      }
+    },
+    "submitting": {
+      "entry": [
+        "arm_quiesce_deadline"
+      ],
+      "on": {
+        "LEG_OPEN": {
+          "actions": [
+            "count_open",
+            {
+              "type": "raise",
+              "params": {
+                "event": {
+                  "type": "EVALUATE"
+                }
+              }
+            }
+          ]
+        },
+        "LEG_FAILED": [
+          {
+            "target": "#trade_group.aborting",
+            "guard": "policy_is_abort_on_first",
+            "actions": [
+              "count_failed"
+            ]
+          },
+          {
+            "actions": [
+              "count_failed",
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "EVALUATE"
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "LEG_SKIPPED": {
+          "actions": [
+            "count_skipped",
+            {
+              "type": "raise",
+              "params": {
+                "event": {
+                  "type": "EVALUATE"
+                }
+              }
+            }
+          ]
+        },
+        "QUIESCE_DEADLINE": {
+          "actions": [
+            "mark_quiesced",
+            "force_resolve_unknown_legs",
+            {
+              "type": "raise",
+              "params": {
+                "event": {
+                  "type": "EVALUATE"
+                }
+              }
+            }
+          ]
+        },
+        "EVALUATE": [
+          {
+            "target": "#trade_group.unwinding",
+            "guard": "policy_all_or_none_and_any_failed"
+          },
+          {
+            "target": "#trade_group.open",
+            "guard": "all_non_skipped_open"
+          },
+          {
+            "target": "#trade_group.failed",
+            "guard": "quiesced_and_zero_open"
+          },
+          {
+            "target": "#trade_group.partially_open",
+            "guard": "quiesced_and_some_open"
+          },
+          {
+            "actions": [
+              "audit_guard_denied"
+            ]
+          }
+        ]
+      }
+    },
+    "partially_open": {
+      "on": {
+        "LEG_OPEN": [
+          {
+            "target": "#trade_group.open",
+            "guard": "all_non_skipped_open",
+            "actions": [
+              "count_open"
+            ]
+          },
+          {
+            "target": "#trade_group.partially_open",
+            "reenter": true,
+            "actions": [
+              "count_open"
+            ]
+          }
+        ],
+        "CLOSE_GROUP": {
+          "target": "#trade_group.closing"
+        }
+      }
+    },
+    "open": {
+      "on": {
+        "CLOSE_GROUP": {
+          "target": "#trade_group.closing"
+        },
+        "ALL_LEGS_FLAT": {
+          "target": "#trade_group.closed"
+        }
+      }
+    },
+    "aborting": {
+      "entry": [
+        "stop_submitting_remaining_legs"
+      ],
+      "always": [
+        {
+          "target": "#trade_group.partially_open",
+          "guard": "some_open"
+        },
+        {
+          "target": "#trade_group.failed"
+        }
+      ]
+    },
+    "unwinding": {
+      "entry": [
+        "persist_unwind_plan"
+      ],
+      "invoke": {
+        "id": "unwind",
+        "src": "unwind_machine",
+        "onDone": [
+          {
+            "target": "#trade_group.failed",
+            "guard": "unwind_complete",
+            "actions": [
+              "mark_unwound"
+            ]
+          },
+          {
+            "target": "#trade_group.failed",
+            "actions": [
+              "mark_unwind_incomplete",
+              "raise_critical_alert"
+            ]
+          }
+        ],
+        "onError": {
+          "target": "#trade_group.failed",
+          "actions": [
+            "mark_unwind_incomplete",
+            "raise_critical_alert"
+          ]
+        }
+      }
+    },
+    "closing": {
+      "on": {
+        "ALL_LEGS_FLAT": {
+          "target": "#trade_group.closed"
+        },
+        "CLOSE_INCOMPLETE": {
+          "target": "#trade_group.failed",
+          "actions": [
+            "raise_critical_alert"
+          ]
+        }
+      }
+    },
+    "closed": {
+      "type": "final",
+      "tags": [
+        "terminal"
+      ]
+    },
+    "failed": {
+      "type": "final",
+      "tags": [
+        "terminal"
+      ]
+    },
+    "cancelled": {
+      "type": "final",
+      "tags": [
+        "terminal"
+      ]
+    }
+  }
+}

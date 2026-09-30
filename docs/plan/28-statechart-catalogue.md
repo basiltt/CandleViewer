@@ -1271,6 +1271,14 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
   "strictTargets": true,
   "strict": true,
   "spawnBlockingTimeout": 5000,
+  "on": {
+    "KILL": {
+      "target": "#trade_group.failed",
+      "actions": [
+        "audit_kill"
+      ]
+    }
+  },
   "initial": "draft",
   "context": {
     "group_id": null,
@@ -1382,6 +1390,11 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
           {
             "target": "#trade_group.partially_open",
             "guard": "quiesced_and_some_open"
+          },
+          {
+            "actions": [
+              "audit_guard_denied"
+            ]
           }
         ]
       }
@@ -1594,6 +1607,7 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 
 - **MUSTNOT-02 applies here specifically.** `reserve_rate_budget` on `submitting` is an *action that calls* the synchronous token-bucket governor. The governor itself is never a statechart: measured p50 35.2 ms per account as a chart against 0.148 us as a token bucket (~238,000x), and a 5-account atomic fan-out would burn ~175 ms of the 750 ms `CV_FANOUT_ADMIT_WAIT_MS` budget purely asking permission.
 - **Bound the actors.** MUSTNOT-08 caps concurrently invoked children at 200 per process; each costs two asyncio tasks, one polling at 200 Hz.
+- **Corrected 2026-10-01 (C-04 / C-07b class, E50-S01, `tools/lint_statecharts.py` CV-LINT-KILL-ANCESTOR / CV-LINT-FALLTHROUGH):** root `on.KILL` → existing `failed` with `audit_kill`, so every invoking state has a kill ancestor (C-04; no new guard, no new business transition); ordered unguarded `audit_guard_denied` arm (internal, B18 shape) appended after the guarded arms of `submitting.EVALUATE` so a guard-denied event is audited, never silently deferred (C-07b).
 
 ---
 
@@ -1624,6 +1638,14 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
   "strictTargets": true,
   "strict": true,
   "spawnBlockingTimeout": 5000,
+  "on": {
+    "KILL": {
+      "target": "#leg.error",
+      "actions": [
+        "audit_kill"
+      ]
+    }
+  },
   "initial": "pending",
   "context": {
     "leg_id": null,
@@ -1994,6 +2016,7 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 
 - `resolving` exists for the `ORDER_UNKNOWN` case and resolves by `orderLinkId` lookup (C-2.10), never by blind resubmission.
 - Retry loops route through a distinct intermediate state rather than an `always` self-target (A4 / LC-02).
+- **Corrected 2026-10-01 (C-04 / C-07b class, E50-S01, `tools/lint_statecharts.py` CV-LINT-KILL-ANCESTOR / CV-LINT-FALLTHROUGH):** root `on.KILL` → existing `error` with `audit_kill`, so every invoking state has a kill ancestor (C-04; no new guard, no new business transition); no guarded-only transitions, so no fall-through arm is needed.
 
 ---
 
@@ -2024,6 +2047,14 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
   "strictTargets": true,
   "strict": true,
   "spawnBlockingTimeout": 5000,
+  "on": {
+    "KILL": {
+      "target": "#oco.failed",
+      "actions": [
+        "audit_kill"
+      ]
+    }
+  },
   "initial": "arming",
   "context": {
     "algo_id": null,
@@ -2086,10 +2117,17 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
             ]
           }
         ],
-        "POSITION_FLAT": {
-          "target": "#oco.cancelling_all",
-          "guard": "cancel_on_position_flat"
-        },
+        "POSITION_FLAT": [
+          {
+            "target": "#oco.cancelling_all",
+            "guard": "cancel_on_position_flat"
+          },
+          {
+            "actions": [
+              "audit_guard_denied"
+            ]
+          }
+        ],
         "USER_CANCEL": {
           "target": "#oco.cancelling_all"
         }
@@ -2331,6 +2369,7 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 ### B4.8 Implementation notes
 
 - Timing-light: no in-machine timers at all, which is why this rates the cleanest of the four algos.
+- **Corrected 2026-10-01 (C-04 / C-07b class, E50-S01, `tools/lint_statecharts.py` CV-LINT-KILL-ANCESTOR / CV-LINT-FALLTHROUGH):** root `on.KILL` → existing `failed` with `audit_kill`, so every invoking state has a kill ancestor (C-04; no new guard, no new business transition); ordered unguarded `audit_guard_denied` arm (internal, B18 shape) appended after the guarded arms of `racing.POSITION_FLAT` so a guard-denied event is audited, never silently deferred (C-07b).
 
 ---
 
@@ -2361,6 +2400,14 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
   "strictTargets": true,
   "strict": true,
   "spawnBlockingTimeout": 5000,
+  "on": {
+    "KILL": {
+      "target": "#iceberg.failed",
+      "actions": [
+        "audit_kill"
+      ]
+    }
+  },
   "initial": "pending",
   "context": {
     "algo_id": null,
@@ -2447,17 +2494,31 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
         "USER_PAUSE": {
           "target": "#iceberg.paused"
         },
-        "WS_DISCONNECT": {
-          "target": "#iceberg.paused",
-          "guard": "on_disconnect_is_freeze"
-        },
+        "WS_DISCONNECT": [
+          {
+            "target": "#iceberg.paused",
+            "guard": "on_disconnect_is_freeze"
+          },
+          {
+            "actions": [
+              "audit_guard_denied"
+            ]
+          }
+        ],
         "USER_CANCEL": {
           "target": "#iceberg.cancelling"
         },
-        "POSITION_FLAT": {
-          "target": "#iceberg.cancelling",
-          "guard": "cancel_on_position_flat"
-        },
+        "POSITION_FLAT": [
+          {
+            "target": "#iceberg.cancelling",
+            "guard": "cancel_on_position_flat"
+          },
+          {
+            "actions": [
+              "audit_guard_denied"
+            ]
+          }
+        ],
         "MAX_DURATION": {
           "target": "#iceberg.cancelling"
         }
@@ -2675,6 +2736,7 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 ### B5.8 Implementation notes
 
 - `WS_DISCONNECT` is policy-driven via `on_disconnect_is_freeze`: freeze-and-pause or cancel, per the algo's configured disconnect policy (24 §10.1).
+- **Corrected 2026-10-01 (C-04 / C-07b class, E50-S01, `tools/lint_statecharts.py` CV-LINT-KILL-ANCESTOR / CV-LINT-FALLTHROUGH):** root `on.KILL` → existing `failed` with `audit_kill`, so every invoking state has a kill ancestor (C-04; no new guard, no new business transition); ordered unguarded `audit_guard_denied` arm (internal, B18 shape) appended after the guarded arms of `working.WS_DISCONNECT`, `working.POSITION_FLAT` so a guard-denied event is audited, never silently deferred (C-07b).
 
 ---
 
@@ -2705,6 +2767,14 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
   "strictTargets": true,
   "strict": true,
   "spawnBlockingTimeout": 5000,
+  "on": {
+    "KILL": {
+      "target": "#twap.failed",
+      "actions": [
+        "audit_kill"
+      ]
+    }
+  },
   "initial": "pending",
   "context": {
     "algo_id": null,
@@ -2758,10 +2828,17 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
         "USER_PAUSE": {
           "target": "#twap.paused"
         },
-        "WS_DISCONNECT": {
-          "target": "#twap.paused",
-          "guard": "on_disconnect_is_freeze"
-        },
+        "WS_DISCONNECT": [
+          {
+            "target": "#twap.paused",
+            "guard": "on_disconnect_is_freeze"
+          },
+          {
+            "actions": [
+              "audit_guard_denied"
+            ]
+          }
+        ],
         "USER_CANCEL": {
           "target": "#twap.cancelling"
         },
@@ -3008,6 +3085,8 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | **INV-B6-d** | `price_blocked` is a **state**, not a skipped slice: time spent blocked is visible and recorded as shortfall. |
 | **INV-B6-e** | Slice-interval error p95 `<= 100 ms` with 500 resident order machines (E33-S03 acceptance). |
 
+- **Corrected 2026-10-01 (C-04 / C-07b class, E50-S01, `tools/lint_statecharts.py` CV-LINT-KILL-ANCESTOR / CV-LINT-FALLTHROUGH):** root `on.KILL` → existing `failed` with `audit_kill`, so every invoking state has a kill ancestor (C-04; no new guard, no new business transition); ordered unguarded `audit_guard_denied` arm (internal, B18 shape) appended after the guarded arms of `armed.WS_DISCONNECT` so a guard-denied event is audited, never silently deferred (C-07b).
+
 ---
 
 ## B7 — EmulatedAlgo - Chase
@@ -3037,6 +3116,14 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
   "strictTargets": true,
   "strict": true,
   "spawnBlockingTimeout": 5000,
+  "on": {
+    "KILL": {
+      "target": "#chase.failed",
+      "actions": [
+        "audit_kill"
+      ]
+    }
+  },
   "initial": "arming",
   "context": {
     "algo_id": null,
@@ -3085,6 +3172,11 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
           {
             "target": "#chase.repricing",
             "guard": "drift_over_threshold_and_interval_elapsed_and_budget_ok"
+          },
+          {
+            "actions": [
+              "audit_guard_denied"
+            ]
           }
         ],
         "CHILD_FILLED": {
@@ -3107,10 +3199,17 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
         "USER_PAUSE": {
           "target": "#chase.paused"
         },
-        "WS_DISCONNECT": {
-          "target": "#chase.paused",
-          "guard": "on_disconnect_is_freeze"
-        },
+        "WS_DISCONNECT": [
+          {
+            "target": "#chase.paused",
+            "guard": "on_disconnect_is_freeze"
+          },
+          {
+            "actions": [
+              "audit_guard_denied"
+            ]
+          }
+        ],
         "USER_CANCEL": {
           "target": "#chase.cancelling"
         }
@@ -3354,6 +3453,7 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 ### B7.8 Implementation notes
 
 - This is the machine most at risk of being level-triggered by accident. The tracker is the boundary: it does the fast work in plain Python and emits a bounded event stream.
+- **Corrected 2026-10-01 (C-04 / C-07b class, E50-S01, `tools/lint_statecharts.py` CV-LINT-KILL-ANCESTOR / CV-LINT-FALLTHROUGH):** root `on.KILL` → existing `failed` with `audit_kill`, so every invoking state has a kill ancestor (C-04; no new guard, no new business transition); ordered unguarded `audit_guard_denied` arm (internal, B18 shape) appended after the guarded arms of `working.BOOK_TARGET_MOVED`, `working.WS_DISCONNECT` so a guard-denied event is audited, never silently deferred (C-07b).
 
 ---
 
@@ -3709,6 +3809,14 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
   "strictTargets": true,
   "strict": true,
   "spawnBlockingTimeout": 5000,
+  "on": {
+    "KILL": {
+      "target": "#rule_instance.kill_switched",
+      "actions": [
+        "audit_kill"
+      ]
+    }
+  },
   "initial": "draft",
   "context": {
     "rule_id": null,
@@ -3955,13 +4063,20 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
         "emit_kill_switch_audit"
       ],
       "on": {
-        "HUMAN_REARM": {
-          "target": "#rule_instance.armed",
-          "guard": "rearm_permitted_and_elevated",
-          "actions": [
-            "reset_consecutive_errors"
-          ]
-        }
+        "HUMAN_REARM": [
+          {
+            "target": "#rule_instance.armed",
+            "guard": "rearm_permitted_and_elevated",
+            "actions": [
+              "reset_consecutive_errors"
+            ]
+          },
+          {
+            "actions": [
+              "audit_guard_denied"
+            ]
+          }
+        ]
       }
     },
     "spent": {
@@ -3976,10 +4091,17 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
     },
     "disarmed": {
       "on": {
-        "ARM_REQUESTED": {
-          "target": "#rule_instance.armed",
-          "guard": "promotion_gate_satisfied_and_permitted"
-        }
+        "ARM_REQUESTED": [
+          {
+            "target": "#rule_instance.armed",
+            "guard": "promotion_gate_satisfied_and_permitted"
+          },
+          {
+            "actions": [
+              "audit_guard_denied"
+            ]
+          }
+        ]
       }
     }
   }
@@ -4105,6 +4227,7 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 ### B9.8 Implementation notes
 
 - `dispatch_actions_in_order` is an invoked service so that a partial dispatch surfaces as `onError` and lands the instance in `paused_degraded`, rather than as a raised action that would commit the transition anyway (LC-01).
+- **Corrected 2026-10-01 (C-04 / C-07b class, E50-S01, `tools/lint_statecharts.py` CV-LINT-KILL-ANCESTOR / CV-LINT-FALLTHROUGH):** root `on.KILL` → existing `kill_switched` with `audit_kill`, so every invoking state has a kill ancestor (C-04; no new guard, no new business transition); ordered unguarded `audit_guard_denied` arm (internal, B18 shape) appended after the guarded arms of `kill_switched.HUMAN_REARM`, `disarmed.ARM_REQUESTED` so a guard-denied event is audited, never silently deferred (C-07b).
 
 ---
 
@@ -6879,5 +7002,14 @@ There is no runtime switch. Every family runs on the pinned library from its fir
 
 > Regenerated by `tools/statechart/render_catalogue.py` from `services/api/candleviewer/statechart/machines/*.machine.json` via `candleviewer.statechart.registry`. Never hand-edit the table between the markers below — run `make gen` (or `python tools/statechart/render_catalogue.py`) instead; CI's `gen-check` job fails on drift.
 
-_No machines registered yet under `statechart/machines/`._
+| Machine id | States (top-level) | `machine_hash` |
+|---|---|---|
+| `chase` | 13 | `bc6436827867…` |
+| `iceberg` | 13 | `aecfc7ca58b8…` |
+| `leg` | 12 | `a7d8fb5d8c3e…` |
+| `oco` | 11 | `fd7edafda40f…` |
+| `rule_instance` | 11 | `a60ff42011cf…` |
+| `session` | 2 | `2d45266da1d7…` |
+| `trade_group` | 10 | `c54de416e173…` |
+| `twap` | 12 | `c121934637d0…` |
 <!-- END GENERATED: tools/statechart/render_catalogue.py -->
