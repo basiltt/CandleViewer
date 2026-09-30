@@ -1,0 +1,63 @@
+name: ci-gates
+
+# E03-Q01: monthly regression run of the highest-value negative CI-gate
+# fixtures (PLAN.md, Definition of Done item 4), so the gates the epic just
+# proved cannot silently rot between PRs. Scheduled, not PR-blocking — a red
+# run here means a gate has regressed since the last PR touched it, and
+# opens an issue the same way governance-drift.yml does (GOV-005 pattern).
+
+on:
+  schedule:
+    - cron: "0 7 1 * *" # first of every month, 07:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  ci-gates:
+    name: ci-gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.13"
+
+      - name: Install PyYAML (security_gate.py dependency)
+        run: pip install pyyaml
+
+      - name: Run the new E03-Q01 gate fixtures
+        run: python tests/ci-gates/run_fixtures.py
+
+      - name: Re-run the highest-value existing negative fixtures
+        # Protocol drift, planted secret, prohibited licence and two-heads
+        # are named explicitly in the ticket's Scope/Deliverables as the
+        # set that must be registered here so they cannot rot silently.
+        run: |
+          python -m pytest \
+            scripts/tests/test_security_gate.py \
+            scripts/tests/test_migration_lint.py \
+            scripts/tests/test_check_gen_freshness.py \
+            -q
+
+      - name: Open issue on regression
+        if: ${{ failure() }}
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.0.1
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: "ci-gates: monthly negative-fixture regression failed",
+              body:
+                "The scheduled `ci-gates` job (tests/ci-gates/PLAN.md, E03-Q01) found a " +
+                "CI gate that no longer fails on its proven negative fixture, or no " +
+                "longer passes its positive control. See the failed run for details.",
+              labels: ["priority/p0-critical", "qa"],
+            });
