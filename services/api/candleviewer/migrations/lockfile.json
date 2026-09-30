@@ -26,6 +26,11 @@
       "path": "services/api/candleviewer/migrations/versions/0005_mfa_totp_replay_guard.py",
       "sha256": "4b1c5aac075f707ffebaa849ba790361e449e5c9b3de1ba8a272598697c215d0",
       "down_revision": "0004_instruments"
+    },
+    "0006_admin_write_permission": {
+      "path": "services/api/candleviewer/migrations/versions/0006_admin_write_permission.py",
+      "sha256": "1578d6a95d846686efc41fd99e2964798c7b4e6fb4d22ea187ba7052cd58405c",
+      "down_revision": "0005_mfa_totp_replay_guard"
     }
   }
 }

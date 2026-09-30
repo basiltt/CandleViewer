@@ -10,6 +10,7 @@ suite is exercised by the `migrations` CI job.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -42,6 +43,17 @@ def _alembic(dsn: str, *args: str) -> None:
         env={**os.environ, "CV_PG_DSN": sync_dsn},
         check=True,
     )
+
+
+def _expected_counts() -> tuple[int, int, int]:
+    """(roles, permissions, role_permissions) derived from the generated seed."""
+    seed_path = _SERVICES_API_ROOT / "candleviewer" / "auth" / "rbac_seed.json"
+    seed = json.loads(seed_path.read_text(encoding="utf-8"))
+    n_perms = len(seed["permissions"])
+    grants = sum(
+        n_perms if codes == ["*"] else len(codes) for codes in seed["role_permissions"].values()
+    )
+    return len(seed["roles"]), n_perms, grants
 
 
 def _psycopg_dsn(async_dsn: str) -> str:
@@ -79,6 +91,7 @@ async def test_reseed_against_already_migrated_db_is_a_true_noop(pg_dsn: str) ->
     await _run_seed(pg_dsn)
     after = _counts(pg_dsn)
 
+    assert before == _expected_counts()
     assert after == before
 
 
@@ -90,4 +103,5 @@ async def test_seed_matches_0001s_own_role_permission_grants(pg_dsn: str) -> Non
     await _run_seed(pg_dsn)
     after = _counts(pg_dsn)
 
+    assert before == _expected_counts()
     assert after == before
