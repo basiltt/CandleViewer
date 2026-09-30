@@ -17,11 +17,13 @@ from __future__ import annotations
 from candleviewer.api.audit import make_audit_router
 from candleviewer.api.auth import make_auth_router
 from candleviewer.api.health import make_health_router
+from candleviewer.api.instruments import make_instruments_router
 from candleviewer.api.market import make_market_router
 
 __all__ = [
     "make_audit_router",
     "make_auth_router",
     "make_health_router",
+    "make_instruments_router",
     "make_market_router",
 ]

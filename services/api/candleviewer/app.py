@@ -31,14 +31,20 @@ from candleviewer.api import (
     make_audit_router,
     make_auth_router,
     make_health_router,
+    make_instruments_router,
     make_market_router,
 )
 from candleviewer.auth.service import AuthService
 from candleviewer.bars.service import BarsService
 from candleviewer.book.service import BookService
+from candleviewer.bus.models import Topic
 from candleviewer.bus.service import BusService
+from candleviewer.domain.events import InstrumentUpdatedEvent
 from candleviewer.exchange.base.service import ExchangeBaseService
+from candleviewer.exchange.bybit.instruments import make_instruments_info_fetcher
+from candleviewer.exchange.bybit.rest import BybitRestClient
 from candleviewer.exchange.bybit.service import ExchangeBybitService
+from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
 from candleviewer.ingestion.service import IngestionService
 from candleviewer.journal.service import JournalService
 from candleviewer.net import (
@@ -61,6 +67,12 @@ from candleviewer.replay.service import ReplayService
 from candleviewer.risk.service import RiskService
 from candleviewer.rules.service import RulesService
 from candleviewer.settings import Settings, get_settings
+from candleviewer.storage.repositories.instruments_sqlalchemy import (
+    SqlAlchemyInstrumentsRepository,
+)
+from candleviewer.storage.repositories.relational_sqlalchemy import (
+    SqlAlchemyRelationalRepository,
+)
 from candleviewer.storage.service import StorageService
 from candleviewer.ws.service import WsService
 
@@ -282,4 +294,33 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # unauthenticated read (C-12.4, PR #1626 review finding: this route was
     # previously reachable by any mesh caller with no RBAC check at all).
     app.include_router(make_market_router(lambda: ctx.storage.market_data))
+    # E08-S01-2: served from the scheduler's in-memory snapshot; `503` until
+    # `wire_instrument_catalogue()` attaches one (needs a real Postgres +
+    # Bybit REST client). Resolver `None` -> fail-closed `501` (see above).
+    app.include_router(make_instruments_router(lambda: ctx.ingestion.instruments))
     return app
+
+
+def wire_instrument_catalogue(
+    ctx: AppContext,
+    *,
+    rest_client: BybitRestClient,
+    relational: SqlAlchemyRelationalRepository,
+) -> InstrumentsRefreshScheduler:
+    """Compose the E08-S01-2 catalogue: Bybit `instruments-info` fetcher
+    (M4) + Postgres repository (M10) + bus publisher (M5) -> ingestion (M6)
+    scheduler. Only this composition root sees all four modules (C-3.1)."""
+    bus = ctx.bus.bus
+    env = ctx.settings.environment.value
+
+    async def _publish(event: InstrumentUpdatedEvent) -> None:
+        topic = Topic(env=env, domain="instruments", symbol=event.symbol, detail="updated")
+        await bus.publish(topic, event)
+
+    scheduler = InstrumentsRefreshScheduler(
+        fetch_instruments_info=make_instruments_info_fetcher(rest_client),
+        repository=SqlAlchemyInstrumentsRepository(relational),
+        publish=_publish,
+    )
+    ctx.ingestion.attach_instruments(scheduler)
+    return scheduler

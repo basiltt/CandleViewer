@@ -61,31 +61,31 @@ _MIN_BACKOFF_S = 1.0
 _MAX_BACKOFF_S = 30.0
 
 
-class InstrumentsInfoFetcher(Protocol):
-    """Returns the raw Bybit `instruments-info` (`category=linear`) list-item
-    payloads for one page. Implemented by a thin closure over
-    `BybitRestClient.get_public` (E08-T02) at the composition root, kept as
-    a narrow Protocol here so this module never imports `exchange.bybit`'s
-    REST transport directly."""
-
-    async def __call__(self) -> Sequence[Mapping[str, Any]]: ...
+#: Returns the raw `instruments-info` (`category=linear`) list items, all
+#: pages. Built by `exchange.bybit.instruments.make_instruments_info_fetcher`
+#: at the composition root so this module never imports the REST transport.
+InstrumentsInfoFetcher = Callable[[], Awaitable[Sequence[Mapping[str, Any]]]]
 
 
 class InstrumentsRepositoryLike(Protocol):
-    """Structural type for `candleviewer.storage.repositories.instruments.
-    InstrumentsRepository` (M10) — see this module's docstring for why this
-    is a local Protocol rather than an import."""
+    """Structural type for `candleviewer.storage.repositories.
+    instruments_sqlalchemy.SqlAlchemyInstrumentsRepository` (M10). Rows cross
+    the boundary as plain JSON-mode mappings (`Instrument.model_dump(mode=
+    "json")`) because M10 may depend on M1 only (C-3.1) and so cannot import
+    the domain model; this module re-validates them on load."""
 
-    async def upsert_snapshot(self, instruments: Sequence[Instrument]) -> None: ...
+    async def upsert_snapshot(self, rows: Sequence[Mapping[str, Any]]) -> None: ...
 
     async def record_version(
         self,
-        instrument: Instrument,
+        row: Mapping[str, Any],
         *,
         changed_fields: Sequence[str],
     ) -> None: ...
 
-    async def load_all(self) -> Sequence[Instrument]: ...
+    async def mark_stale(self, *, stale_since_us: int) -> None: ...
+
+    async def load_all(self) -> Sequence[Mapping[str, Any]]: ...
 
 
 class BusPublisherLike(Protocol):
@@ -124,6 +124,7 @@ class InstrumentsRefreshScheduler:
         now_us: Callable[[], int] = utc_now_us,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         random_fn: Callable[[], float] = random.random,
+        on_demand_cooldown_s: float = 60.0,
     ) -> None:
         self._fetch_instruments_info = fetch_instruments_info
         self._repository = repository
@@ -137,6 +138,8 @@ class InstrumentsRefreshScheduler:
         self._sleep = sleep
         self._random = random_fn
 
+        self._on_demand_cooldown_s = on_demand_cooldown_s
+        self._last_on_demand_us: int | None = None
         self._task: asyncio.Task[None] | None = None
         self._stopping = False
         self._refresh_lock = asyncio.Lock()
@@ -149,10 +152,12 @@ class InstrumentsRefreshScheduler:
         `refresh_now()` below), then perform the startup fetch, then
         schedule the periodic TTL refresh task."""
         try:
-            persisted = await self._repository.load_all()
-        except Exception:  # pragma: no cover - defensive, storage tier down
+            persisted = [
+                Instrument.model_validate(row) for row in await self._repository.load_all()
+            ]
+        except Exception:  # storage tier down or a row fails validation
             logger.warning("instruments_startup_load_failed")
-            persisted = ()
+            persisted = []
         if persisted:
             self.cache.swap(
                 CatalogueSnapshot(
@@ -183,6 +188,10 @@ class InstrumentsRefreshScheduler:
     # -- on-demand refresh (ticket "unknown symbol" + "Refresh does not ----
     # -- stall readers" scenarios) -------------------------------------------
 
+    def snapshot(self) -> CatalogueSnapshot | None:
+        """Current snapshot (O(1), no I/O) for readers such as the API."""
+        return self.cache.current()
+
     async def ensure_symbol(self, symbol: str) -> Instrument | None:
         """ "Refresh without restart" on-demand path: if `symbol` is not in
         the current snapshot, force one refresh and re-check. Returns the
@@ -191,6 +200,16 @@ class InstrumentsRefreshScheduler:
         current = self.cache.current()
         if current is not None and current.get(symbol) is not None:
             return current.get(symbol)
+        # Unknown-symbol lookups are caller-controlled: throttle the upstream
+        # fetch so a burst of bogus symbols cannot exhaust the REST budget.
+        now = self._now_us()
+        if (
+            self._last_on_demand_us is not None
+            and now - self._last_on_demand_us < self._on_demand_cooldown_s * 1_000_000
+        ):
+            instruments_refresh_total.labels(result="throttled").inc()
+            return None
+        self._last_on_demand_us = now
         try:
             await self.refresh_now()
         except InstrumentRefreshError:
@@ -222,7 +241,16 @@ class InstrumentsRefreshScheduler:
                     jitter = backoff * self._random()
                     await self._sleep(jitter)
         instruments_refresh_total.labels(result="error").inc()
-        self.cache.mark_stale(stale_since_us=self._now_us())
+        # Keep the *first* failure time: `stale_since` means "since when",
+        # so consecutive failures must not keep pushing it forward.
+        snap = self.cache.current()
+        prior = snap.stale_since_us if snap is not None else None
+        stale_since_us = prior if prior is not None else self._now_us()
+        self.cache.mark_stale(stale_since_us=stale_since_us)
+        try:
+            await self._repository.mark_stale(stale_since_us=stale_since_us)
+        except Exception:
+            logger.warning("instruments_mark_stale_persist_failed")
         logger.warning("instruments_refresh_failed", error=str(last_error))
         raise InstrumentRefreshError(
             f"instrument catalogue refresh failed after {self._max_retries} attempts"
@@ -248,7 +276,9 @@ class InstrumentsRefreshScheduler:
             versioned, changed_fields = next_version(previous, item)
             parsed[versioned.symbol] = versioned
             if changed_fields:
-                await self._repository.record_version(versioned, changed_fields=changed_fields)
+                await self._repository.record_version(
+                    versioned.model_dump(mode="json"), changed_fields=changed_fields
+                )
                 if self._publish is not None:
                     event = build_updated_event(
                         event_id=uuid4(),
@@ -271,7 +301,7 @@ class InstrumentsRefreshScheduler:
             for symbol, instrument in current.by_symbol.items():
                 parsed.setdefault(symbol, instrument)
 
-        await self._repository.upsert_snapshot(list(parsed.values()))
+        await self._repository.upsert_snapshot([i.model_dump(mode="json") for i in parsed.values()])
         self.cache.swap(CatalogueSnapshot(by_symbol=parsed, fetched_at_us=fetched_at_us))
         instruments_cache_age_seconds.set(0.0)
         instruments_catalogue_size.set(len(parsed))

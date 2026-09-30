@@ -7,9 +7,9 @@ this module returns; it never sees a raw Bybit field name.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from decimal import Decimal, InvalidOperation
-from typing import Any, Literal
+from typing import Any, Literal, Protocol
 
 from candleviewer.domain.events import Instrument
 
@@ -131,3 +131,48 @@ def parse_instrument(raw: Mapping[str, Any], *, fetched_at_us: int) -> Instrumen
         metadata_version=1,
         fetched_at=fetched_at_us,
     )
+
+
+class _PublicGetter(Protocol):
+    async def get_public(
+        self, path: str, *, params: Mapping[str, Any] | None = None
+    ) -> dict[str, Any]: ...
+
+
+_INSTRUMENTS_INFO_PATH = "/v5/market/instruments-info"
+_INSTRUMENTS_PAGE_LIMIT = 1000
+#: Hard bound on pages per refresh (bounded work, C-2.18): the linear
+#: catalogue is ~500 symbols, i.e. one page; 20 pages leaves ample headroom.
+_INSTRUMENTS_MAX_PAGES = 20
+
+
+def make_instruments_info_fetcher(
+    client: _PublicGetter,
+) -> Callable[[], Awaitable[Sequence[Mapping[str, Any]]]]:
+    """Adapt `BybitRestClient.get_public` (E08-T02) into the
+    `InstrumentsInfoFetcher` shape the ingestion refresh scheduler needs:
+    fetch every `category=linear` page (following `nextPageCursor`) and
+    return the raw list items. Kept here so the endpoint path and Bybit's
+    paging fields never leave the adapter (C-2.2)."""
+
+    async def _fetch() -> Sequence[Mapping[str, Any]]:
+        items: list[Mapping[str, Any]] = []
+        cursor: str | None = None
+        for _ in range(_INSTRUMENTS_MAX_PAGES):
+            params: dict[str, Any] = {"category": "linear", "limit": _INSTRUMENTS_PAGE_LIMIT}
+            if cursor:
+                params["cursor"] = cursor
+            response = await client.get_public(_INSTRUMENTS_INFO_PATH, params=params)
+            result = response.get("result") or {}
+            page = result.get("list") or []
+            if not isinstance(page, list):
+                raise InstrumentParseError("instruments-info result.list is not a list")
+            items.extend(p for p in page if isinstance(p, Mapping))
+            cursor = result.get("nextPageCursor") or None
+            if not cursor:
+                return items
+        raise InstrumentParseError(
+            f"instruments-info exceeded {_INSTRUMENTS_MAX_PAGES} pages; refusing unbounded paging"
+        )
+
+    return _fetch
