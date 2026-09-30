@@ -26,7 +26,6 @@ the injected `publish_revocation(session_id, reason)`; the ws gateway
 
 from __future__ import annotations
 
-import os
 import uuid
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
@@ -48,6 +47,7 @@ from candleviewer.auth.models import (
     SessionRecord,
     SessionView,
 )
+from candleviewer.auth.throttle import PerIpLoginThrottle
 
 REFRESH_COOKIE = "cv_refresh"
 REFRESH_COOKIE_PATH = "/api/v1/auth"
@@ -57,6 +57,8 @@ MAX_PAGE = 100
 
 
 class SessionServiceLike(Protocol):
+    async def peek_refresh(self, raw_refresh_token: str) -> SessionRecord | None: ...
+
     async def refresh(
         self,
         raw_refresh_token: str,
@@ -151,21 +153,25 @@ def _source_ip(request: Request) -> str | None:
     return request.client.host if request.client is not None else None
 
 
-def _allowed_origins() -> frozenset[str]:
-    """Configured allow-list (CV_ALLOWED_ORIGINS, comma separated, e.g.
-    `http://127.0.0.1:5173`). Empty => every cookie refresh is refused."""
-    raw = os.environ.get("CV_ALLOWED_ORIGINS", "")
-    return frozenset(o.strip().rstrip("/") for o in raw.split(",") if o.strip())
+# `/auth/refresh` budget (reuses the E09-S01 sliding-window throttle, one
+# instance per key space): at most REFRESH_MAX_PER_WINDOW refresh attempts per
+# source IP *and* per presented session within REFRESH_WINDOW_S seconds; the
+# next one is 429 + `Retry-After`. A legitimate client refreshes roughly once
+# per 12-minute access-token lifetime, so 10/min leaves wide headroom for
+# retries and multiple tabs while bounding token-guessing and rotation storms.
+REFRESH_MAX_PER_WINDOW = 10
+REFRESH_WINDOW_S = 60.0
 
 
-def _origin_ok(request: Request) -> bool:
+def _origin_ok(request: Request, allowed: frozenset[str]) -> bool:
     """CSRF guard for cookie-authenticated refresh: the Origin header must be
-    in the configured allow-list (never compared to the attacker-controllable
-    Host header). SameSite=Strict remains the primary defence."""
+    in the configured allow-list (`Settings.allowed_origins`, injected; empty
+    => refuse), never compared to the attacker-controllable Host header.
+    SameSite=Strict remains the primary defence."""
     origin = request.headers.get("origin")
     if origin is None:
         return False
-    return origin.rstrip("/") in _allowed_origins()
+    return origin.rstrip("/") in allowed
 
 
 def _set_refresh_cookie(response: Response, token: str, *, max_age: int) -> None:
@@ -223,8 +229,17 @@ def make_session_router(
     *,
     identity: IdentityProvider | None = None,
     publish_revocation: RevocationPublisher | None = None,
+    allowed_origins: frozenset[str] = frozenset(),
+    ip_throttle: PerIpLoginThrottle | None = None,
+    session_throttle: PerIpLoginThrottle | None = None,
 ) -> APIRouter:
     router = APIRouter(tags=["auth"])
+    by_ip = ip_throttle or PerIpLoginThrottle(
+        max_attempts=REFRESH_MAX_PER_WINDOW, window_s=REFRESH_WINDOW_S
+    )
+    by_session = session_throttle or PerIpLoginThrottle(
+        max_attempts=REFRESH_MAX_PER_WINDOW, window_s=REFRESH_WINDOW_S
+    )
 
     def _audit_ready() -> bool:
         return audit_service is not None and audit_service.is_active
@@ -237,6 +252,7 @@ def make_session_router(
         outcome: AuditOutcome = AuditOutcome.SUCCESS,
         severity: Severity = Severity.INFO,
         reason: str | None = None,
+        session_id: str | uuid.UUID | None = None,
     ) -> None:
         if audit_service is None or not audit_service.is_active:
             raise AuditUnavailableError
@@ -245,15 +261,24 @@ def make_session_router(
             actor_label=str(record.user_id) if record else "(unknown)",
             actor_user_id=record.user_id if record else None,
             actor_ip=ip,
-            session_id=record.id if record else None,
+            session_id=session_id if session_id is not None else (record.id if record else None),
             outcome=outcome,
             severity=severity,
             reason=reason,
         )
 
-    async def _propagate(record: SessionRecord, reason: str) -> None:
+    async def _propagate(session_id: str | uuid.UUID, reason: str) -> None:
         if publish_revocation is not None:
-            await publish_revocation(str(record.id), reason)
+            await publish_revocation(str(session_id), reason)
+
+    def _audit_down() -> JSONResponse:
+        # Write-ahead audit failed: nothing has been mutated yet (C-2.9).
+        return _problem(503, "Service unavailable", "audit sink not active")
+
+    def _throttled(retry_after: int) -> JSONResponse:
+        response = _problem(429, "Too many requests", "refresh rate limit exceeded")
+        response.headers["Retry-After"] = str(retry_after)
+        return response
 
     async def _authenticate(
         request: Request, *, allow_locked: bool = False
@@ -292,34 +317,66 @@ def make_session_router(
             body = parsed
         cookie_token = request.cookies.get(REFRESH_COOKIE)
         body_token = body.get("refresh_token")
-        if cookie_token is not None and not _origin_ok(request):
+        if cookie_token is not None and not _origin_ok(request, allowed_origins):
             return _problem(403, "Forbidden", "cross-origin refresh refused")
         presented = cookie_token or (body_token if isinstance(body_token, str) else None)
         if not presented:
             return _unauthorized("refresh_token_invalid")
         ip = _source_ip(request)
+        ip_key = ip or "(unknown)"
+        if by_ip.is_blocked(ip_key):
+            return _throttled(by_ip.retry_after_s(ip_key))
+        by_ip.record_failure(ip_key)  # counts every attempt, not only failures
+        presented_record = await auth_service.sessions.peek_refresh(presented)
+        if presented_record is None:
+            return _unauthorized("refresh_token_invalid")
+        session_key = str(presented_record.id)
+        if by_session.is_blocked(session_key):
+            return _throttled(by_session.retry_after_s(session_key))
+        by_session.record_failure(session_key)
+        # C-2.9 write-ahead: the audit record is written before `refresh()`
+        # rotates or revokes anything; if the sink is down we refuse (503)
+        # with no state change.
+        reuse = presented_record.revoked_reason == "rotated"
+        try:
+            if reuse:
+                await _audit(
+                    "auth.refresh_reuse_detected",
+                    record=presented_record,
+                    ip=ip,
+                    outcome=AuditOutcome.DENIED,
+                    severity=Severity.CRITICAL,
+                    reason="rotation_reuse",
+                )
+            elif not presented_record.is_revoked:
+                await _audit("auth.session_refreshed", record=presented_record, ip=ip)
+        except AuditUnavailableError:
+            return _audit_down()
         try:
             outcome = await auth_service.sessions.refresh(
                 presented, ip=ip, user_agent=request.headers.get("user-agent")
             )
-        except RefreshReuseDetected:
-            await _audit(
-                "auth.refresh_reuse_detected",
-                record=None,
-                ip=ip,
-                outcome=AuditOutcome.DENIED,
-                severity=Severity.CRITICAL,
-                reason="rotation_reuse",
-            )
+        except RefreshReuseDetected as exc:
+            if not reuse:
+                # Concurrent-refresh race detected inside the service; the
+                # intent record above is followed by the critical outcome.
+                await _audit(
+                    "auth.refresh_reuse_detected",
+                    record=presented_record,
+                    ip=ip,
+                    outcome=AuditOutcome.DENIED,
+                    severity=Severity.CRITICAL,
+                    reason="rotation_reuse",
+                )
+            # Same propagation helper as logout/revoke: every family member's
+            # sockets are closed with 4401 (US-ONB-009).
+            for sid in exc.revoked_session_ids:
+                await _propagate(sid, "session_revoked")
             return _unauthorized("refresh_token_invalid")
         except (SessionNotFound, SessionRevoked, SessionIdleLocked):
             return _unauthorized("refresh_token_invalid")
         minted = outcome.minted
-        record_user = await auth_service.sessions.authenticate_access_token(
-            minted.access_token, allow_locked=True
-        )
-        await _audit("auth.session_refreshed", record=record_user, ip=ip)
-        user = await identity.user(str(record_user.user_id))
+        user = await identity.user(str(presented_record.user_id))
         response = JSONResponse(
             status_code=200,
             content={
@@ -415,22 +472,30 @@ def make_session_router(
                 return _problem(422, "Unprocessable", "all_sessions must be boolean")
             all_sessions = flag
         ip = _source_ip(request)
+        # C-2.9 write-ahead: record the logout (and every targeted session)
+        # before revoking; audit down => 503, nothing revoked.
+        reason = "logout_all" if all_sessions else "logout"
+        try:
+            if all_sessions:
+                targets = [
+                    v.id for v in await auth_service.sessions.list_sessions(str(record.user_id))
+                ]
+            else:
+                targets = [record.id]
+            await _audit("auth.logout", record=record, ip=ip, reason=reason)
+            for sid in targets:
+                await _audit(
+                    "auth.session_revoked", record=record, ip=ip, reason=reason, session_id=sid
+                )
+        except AuditUnavailableError:
+            return _audit_down()
         if all_sessions:
-            revoked = await auth_service.sessions.revoke_all(
-                str(record.user_id), reason="logout_all"
-            )
+            revoked = await auth_service.sessions.revoke_all(str(record.user_id), reason=reason)
         else:
-            one = await auth_service.sessions.revoke(str(record.id), reason="logout")
+            one = await auth_service.sessions.revoke(str(record.id), reason=reason)
             revoked = (one,) if one is not None else ()
         for r in revoked:
-            await _audit(
-                "auth.session_revoked",
-                record=r,
-                ip=ip,
-                reason=r.revoked_reason,
-            )
-            await _propagate(r, "session_revoked")
-        await _audit("auth.logout", record=record, ip=ip)
+            await _propagate(r.id, "session_revoked")
         response = Response(status_code=204)
         _clear_refresh_cookie(response)
         return response
@@ -451,11 +516,19 @@ def make_session_router(
         )
         if str(session_id) not in {str(v.id) for v in own}:
             return _problem(404, "Not found", "no such session")
+        try:
+            await _audit(
+                "auth.session_revoked",
+                record=record,
+                ip=_source_ip(request),
+                reason="user_revoked",
+                session_id=session_id,
+            )
+        except AuditUnavailableError:
+            return _audit_down()
         revoked = await auth_service.sessions.revoke(str(session_id), reason="user_revoked")
         if revoked is not None:
-            ip = _source_ip(request)
-            await _audit("auth.session_revoked", record=revoked, ip=ip, reason="user_revoked")
-            await _propagate(revoked, "session_revoked")
+            await _propagate(revoked.id, "session_revoked")
         response = Response(status_code=204)
         if session_id == record.id:
             _clear_refresh_cookie(response)

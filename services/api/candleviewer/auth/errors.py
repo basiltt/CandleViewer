@@ -135,4 +135,9 @@ class RefreshReuseDetected(AuthError):
     (ticket "Refresh-token reuse kills the family"). The entire rotation
     family has been revoked with `revoked_reason='rotation_reuse'` by the
     time this is raised; callers must emit `auth.refresh_reuse_detected` at
-    severity `critical`."""
+    severity `critical` and push every id in `revoked_session_ids` to the
+    revocation publisher (WS close 4401, US-ONB-009)."""
+
+    def __init__(self, message: str, *, revoked_session_ids: tuple[str, ...] = ()) -> None:
+        super().__init__(message)
+        self.revoked_session_ids = revoked_session_ids

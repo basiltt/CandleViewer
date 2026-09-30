@@ -101,6 +101,11 @@ class Settings(BaseSettings):
     mesh_trusted_proxy_header: str | None = None
     mesh_trusted_proxy_address: str | None = None
 
+    # E09-S03: CSRF allow-list for cookie-authenticated `POST /auth/refresh`
+    # (`CV_ALLOWED_ORIGINS`, comma separated, e.g. "http://127.0.0.1:5173").
+    # Empty (default) fails closed: every cookie refresh is refused.
+    allowed_origins: str = ""
+
     pg_dsn: SecretStr = SecretStr("postgresql+asyncpg://cv:cv@localhost:5432/candleviewer")
     questdb_ilp: str = "questdb:9009"
     questdb_pg: str = "questdb:8812"
@@ -159,6 +164,13 @@ class Settings(BaseSettings):
     def mesh_cidrs(self) -> tuple[str, ...]:
         """`CV_MESH_CIDRS_CSV` split on commas, trimmed, empties dropped."""
         return tuple(part.strip() for part in self.mesh_cidrs_csv.split(",") if part.strip())
+
+    @property
+    def allowed_origin_set(self) -> frozenset[str]:
+        """`CV_ALLOWED_ORIGINS` split on commas, trimmed, trailing `/` dropped."""
+        return frozenset(
+            o.strip().rstrip("/") for o in self.allowed_origins.split(",") if o.strip()
+        )
 
     @field_validator("bind_host")
     @classmethod

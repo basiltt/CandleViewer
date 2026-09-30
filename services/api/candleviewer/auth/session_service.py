@@ -186,6 +186,12 @@ class SessionService:
 
     # -- refresh / rotation ----------------------------------------------
 
+    async def peek_refresh(self, raw_refresh_token: str) -> SessionRecord | None:
+        """Read-only lookup of the session a refresh token belongs to, so the
+        HTTP edge can write its audit record *ahead* of `refresh()` mutating
+        anything (C-2.9 write-ahead). Never changes state."""
+        return await self._repository.find_by_refresh_hash(_hash_refresh_token(raw_refresh_token))
+
     async def refresh(
         self,
         raw_refresh_token: str,
@@ -219,7 +225,8 @@ class SessionService:
             auth_refresh_reuse_total.inc()
             auth_session_revocations_total.labels(reason="rotation_reuse").inc(len(family))
             raise RefreshReuseDetected(
-                "refresh token reuse detected; entire session family revoked"
+                "refresh token reuse detected; entire session family revoked",
+                revoked_session_ids=tuple(str(m) for m in family),
             )
 
         if presented.is_revoked:

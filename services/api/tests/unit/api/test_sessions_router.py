@@ -16,6 +16,7 @@ from candleviewer.api.sessions import REFRESH_COOKIE, make_session_router
 from candleviewer.audit.models import AuditOutcome, Severity
 from candleviewer.auth.hashing import Hasher
 from candleviewer.auth.session_service import SessionService
+from candleviewer.auth.throttle import PerIpLoginThrottle
 from tests.unit.auth.session_fakes import FakeSessionRepository
 
 _NOW = datetime(2026, 9, 30, 12, 0, 0, tzinfo=UTC)
@@ -52,12 +53,20 @@ class _Identity:
 
 
 class _Env:
-    def __init__(self, *, identity: bool = True) -> None:
+    def __init__(
+        self,
+        *,
+        identity: bool = True,
+        origins: frozenset[str] = frozenset(),
+        throttle_max: int = 10,
+        audit: Any = None,
+    ) -> None:
         self.repo = FakeSessionRepository()
         self.svc = SessionService(
             self.repo, Hasher(pepper=os.urandom(16).hex()), clock=lambda: _NOW
         )
-        self.audit = _Audit()
+        self.audit = audit if audit is not None else _Audit()
+        self.t = 0.0
         self.revoked: list[tuple[str, str]] = []
 
         async def publish(sid: str, reason: str) -> None:
@@ -70,6 +79,13 @@ class _Env:
                 self.audit,
                 identity=_Identity() if identity else None,
                 publish_revocation=publish,
+                allowed_origins=origins,
+                ip_throttle=PerIpLoginThrottle(
+                    max_attempts=throttle_max, window_s=60.0, clock=lambda: self.t
+                ),
+                session_throttle=PerIpLoginThrottle(
+                    max_attempts=throttle_max, window_s=60.0, clock=lambda: self.t
+                ),
             ),
             prefix="/api/v1",
         )
@@ -146,10 +162,8 @@ async def test_cross_origin_cookie_refresh_is_refused(env: _Env) -> None:
     assert r.status_code == 403
 
 
-async def test_same_host_origin_not_on_allow_list_is_refused(
-    env: _Env, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setenv("CV_ALLOWED_ORIGINS", "http://app.example")
+async def test_same_host_origin_not_on_allow_list_is_refused() -> None:
+    env = _Env(origins=frozenset({"http://app.example"}))
     m = await env.mint(uuid.uuid4())
     r = env.client.post(
         "/api/v1/auth/refresh",

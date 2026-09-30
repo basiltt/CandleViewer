@@ -311,7 +311,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     revocation_hub = RevocationHub()
     app.state.revocation_hub = revocation_hub
     app.include_router(
-        make_session_router(ctx.auth, ctx.audit, publish_revocation=_hub_publisher(revocation_hub))
+        make_session_router(
+            ctx.auth,
+            ctx.audit,
+            publish_revocation=_hub_publisher(revocation_hub),
+            allowed_origins=resolved.allowed_origin_set,
+        )
     )
     # `principal_resolver` stays `None` here: session verification is E09-S03
     # scope (`auth/login_service.py`'s own docstring — "non-MFA session
