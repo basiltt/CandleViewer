@@ -1,0 +1,234 @@
+{
+  "id": "twap",
+  "strictConfig": true,
+  "maxIterations": 500,
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "defer",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "on": {
+    "KILL": {
+      "target": "#twap.failed",
+      "actions": [
+        "audit_kill"
+      ]
+    }
+  },
+  "initial": "pending",
+  "context": {
+    "algo_id": null,
+    "slices_total": 0,
+    "slices_done": 0,
+    "total_qty": "0",
+    "remaining_qty": "0",
+    "shortfall_qty": "0",
+    "slice_deadlines_us": [],
+    "end_at_us": null,
+    "catch_up": "next_slice",
+    "price_limit": null,
+    "failure_count": 0
+  },
+  "states": {
+    "pending": {
+      "entry": [
+        "precompute_all_slice_deadlines",
+        "register_deadlines_with_scheduler"
+      ],
+      "always": [
+        {
+          "target": "#twap.failed",
+          "guard": "preflight_invalid"
+        },
+        {
+          "target": "#twap.armed"
+        }
+      ]
+    },
+    "armed": {
+      "on": {
+        "SLICE_DUE": [
+          {
+            "target": "#twap.price_blocked",
+            "guard": "price_limit_breached"
+          },
+          {
+            "target": "#twap.submitting_slice"
+          }
+        ],
+        "DURATION_END": [
+          {
+            "target": "#twap.final_sweep",
+            "guard": "final_market_sweep_and_remaining"
+          },
+          {
+            "target": "#twap.completing"
+          }
+        ],
+        "USER_PAUSE": {
+          "target": "#twap.paused"
+        },
+        "WS_DISCONNECT": [
+          {
+            "target": "#twap.paused",
+            "guard": "on_disconnect_is_freeze"
+          },
+          {
+            "actions": [
+              "audit_guard_denied"
+            ]
+          }
+        ],
+        "USER_CANCEL": {
+          "target": "#twap.cancelling"
+        },
+        "MAX_DURATION": {
+          "target": "#twap.cancelling"
+        }
+      }
+    },
+    "submitting_slice": {
+      "entry": [
+        "compute_slice_qty_with_participation_cap",
+        "apply_catch_up",
+        "bump_slices_done"
+      ],
+      "always": [
+        {
+          "target": "#twap.armed",
+          "guard": "slice_qty_below_min_roll_forward"
+        }
+      ],
+      "invoke": {
+        "id": "slice",
+        "src": "submit_child",
+        "onDone": {
+          "target": "#twap.armed",
+          "actions": [
+            "record_child"
+          ]
+        },
+        "onError": [
+          {
+            "target": "#twap.failed",
+            "guard": "failures_exhausted"
+          },
+          {
+            "target": "#twap.armed",
+            "actions": [
+              "bump_failure",
+              "record_shortfall"
+            ]
+          }
+        ]
+      },
+      "on": {}
+    },
+    "price_blocked": {
+      "entry": [
+        "raise_price_limit_notice"
+      ],
+      "always": [
+        {
+          "target": "#twap.cancelling",
+          "guard": "abort_on_price_limit"
+        }
+      ],
+      "on": {
+        "PRICE_OK": {
+          "target": "#twap.armed"
+        },
+        "SLICE_DUE": {
+          "actions": [
+            "record_shortfall"
+          ]
+        },
+        "DURATION_END": {
+          "target": "#twap.completing"
+        },
+        "USER_CANCEL": {
+          "target": "#twap.cancelling"
+        }
+      }
+    },
+    "final_sweep": {
+      "invoke": {
+        "id": "sweep",
+        "src": "market_sweep_remainder",
+        "onDone": {
+          "target": "#twap.completing"
+        },
+        "onError": {
+          "target": "#twap.failed",
+          "actions": [
+            "raise_warning_alert"
+          ]
+        }
+      }
+    },
+    "paused": {
+      "on": {
+        "RESUME": {
+          "target": "#twap.reconciling"
+        },
+        "USER_CANCEL": {
+          "target": "#twap.cancelling"
+        }
+      }
+    },
+    "reconciling": {
+      "entry": [
+        "rearm_deadlines_from_context"
+      ],
+      "invoke": {
+        "id": "rec",
+        "src": "reconcile_children",
+        "onDone": {
+          "target": "#twap.armed"
+        },
+        "onError": {
+          "target": "#twap.failed"
+        }
+      }
+    },
+    "cancelling": {
+      "invoke": {
+        "id": "cx",
+        "src": "cancel_all_children",
+        "onDone": {
+          "target": "#twap.cancelled"
+        },
+        "onError": {
+          "target": "#twap.failed"
+        }
+      }
+    },
+    "completing": {
+      "on": {
+        "CHILDREN_TERMINAL": {
+          "target": "#twap.completed"
+        }
+      }
+    },
+    "completed": {
+      "type": "final",
+      "tags": [
+        "terminal"
+      ]
+    },
+    "cancelled": {
+      "type": "final",
+      "tags": [
+        "terminal"
+      ]
+    },
+    "failed": {
+      "type": "final",
+      "tags": [
+        "terminal",
+        "failure"
+      ]
+    }
+  }
+}
