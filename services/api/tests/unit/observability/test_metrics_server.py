@@ -45,7 +45,7 @@ def test_no_module_outside_observability_imports_prometheus_client() -> None:
     offenders = [
         str(p.relative_to(root))
         for p in root.rglob("*.py")
-        if "observability" not in p.parts[-2:-1] and pat.search(p.read_text(encoding="utf-8"))
+        if p.parent != root / "observability" and pat.search(p.read_text(encoding="utf-8"))
     ]
     assert offenders == []
 

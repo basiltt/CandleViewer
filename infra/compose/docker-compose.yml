@@ -12,6 +12,9 @@
 networks:
   cv-internal:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
 
 volumes:
   cv-postgres-data:
@@ -73,6 +76,8 @@ services:
       CV_FEED: ${CV_FEED:-synthetic}
       CV_BIND_HOST: 0.0.0.0
       CV_BIND_PORT: "8000"
+      # /metrics refuses public binds; bind the api's fixed private IP so prometheus can scrape it.
+      CV_METRICS_BIND: 172.28.0.10:9108
       CV_PG_DSN: ${CV_PG_DSN:-postgresql+asyncpg://cv:CHANGE_ME@postgres:5432/candleviewer}
       CV_QUESTDB_ILP: questdb:9009
       CV_QUESTDB_PG: questdb:8812
@@ -87,7 +92,9 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
-    networks: [cv-internal]
+    networks:
+      cv-internal:
+        ipv4_address: 172.28.0.10
 
   prometheus:
     image: prom/prometheus:v2.54.1@sha256:f6639335d34a77d9d9db382b92eeb7fc00934be8eae81dbc03b31cfe90411a94

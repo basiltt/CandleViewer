@@ -8,5 +8,6 @@ rule_files:
 scrape_configs:
   - job_name: candleviewer-api
     metrics_path: /metrics
+    # api binds its fixed private compose IP (see infra/compose/docker-compose.yml); public binds are refused
     static_configs:
-      - targets: ["api:9108"]
+      - targets: ["172.28.0.10:9108"]
