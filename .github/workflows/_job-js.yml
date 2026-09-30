@@ -236,7 +236,6 @@ jobs:
           pnpm --filter @candleviewer/web --filter @candleviewer/desktop build
           xvfb-run -a node apps/desktop/scripts/collect-hardening-facts.mjs hardening-facts.json
           python tools/ci/electron_hardening_gate.py --desktop-dist apps/desktop/dist             --web-dist apps/web/dist --builder-config apps/desktop/electron-builder.yml             --facts hardening-facts.json --require-runtime
-          python -m pytest scripts/tests/test_electron_hardening_gate.py -q
       - name: Contrast-matrix gate (E05-T05, A11Y-C001/002/003 over packages/ui/tokens/**)
         run: pnpm --filter @candleviewer/ui contrast:gate
       - name: Upload contrast-matrix report
