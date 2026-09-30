@@ -1,0 +1,28 @@
+rules:
+  - id: stepup-required
+    languages: [python]
+    severity: ERROR
+    message: >-
+      SR-025: this route performs a step-up-gated action but has no
+      require_step_up dependency. Add Depends(require_step_up(...)). Routes
+      legitimately outside SR-025 go in security/semgrep/auth/allowlist.yaml
+      (Security-owned).
+    metadata:
+      sr: SR-025
+    patterns:
+      - pattern-either:
+          - pattern: |
+              @$R.$M($P, ...)
+              async def $F(...):
+                  ...
+          - pattern: |
+              @$R.$M($P, ...)
+              def $F(...):
+                  ...
+      - metavariable-regex:
+          metavariable: $P
+          regex: "(?i)^[\"'].*(mfa/reset|api-keys|kill-switch|/roles|recovery-codes/regenerate|revoke-all|/password).*[\"']$"
+      - pattern-not-regex: "require_step_up"
+    paths:
+      exclude:
+        - "**/tests/**"

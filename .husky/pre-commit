@@ -2,3 +2,11 @@
 # pre-commit hook — lint-staged only (auto-fix + re-stage). Must stay fast
 # (budget: <=5s p95 on a 20-file diff, docs/plan/backlog E02-T07).
 npx --no-install lint-staged
+
+# E09-X03: block commits containing our token shapes / secrets (.gitleaks.toml). CI re-runs this
+# server-side; locally it runs when the gitleaks binary is installed.
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --redact --config .gitleaks.toml || exit 1
+else
+  echo "warning: gitleaks not installed; staged-secret scan skipped locally (CI will still block)" >&2
+fi

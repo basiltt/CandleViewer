@@ -1,0 +1,28 @@
+rules:
+  - id: cookie-flags
+    languages: [python]
+    severity: ERROR
+    message: >-
+      SR-012: cookie set without httponly=True, secure=True and
+      samesite="strict", or with an explicit domain= (must be host-only).
+    metadata:
+      sr: SR-012
+    patterns:
+      - pattern: $R.set_cookie(...)
+      - pattern-not: $R.set_cookie(..., httponly=True, ..., secure=True, ..., samesite="strict", ...)
+      - pattern-not: $R.set_cookie(..., secure=True, ..., httponly=True, ..., samesite="strict", ...)
+      - pattern-not: $R.set_cookie(..., samesite="strict", ..., httponly=True, ..., secure=True, ...)
+      - pattern-not: $R.set_cookie(..., samesite="strict", ..., secure=True, ..., httponly=True, ...)
+    paths:
+      exclude:
+        - "**/tests/**"
+  - id: cookie-flags-domain
+    languages: [python]
+    severity: ERROR
+    message: "SR-012: session cookie must be host-only; remove domain=."
+    metadata:
+      sr: SR-012
+    pattern: $R.set_cookie(..., domain=$D, ...)
+    paths:
+      exclude:
+        - "**/tests/**"

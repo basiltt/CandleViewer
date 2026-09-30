@@ -1,0 +1,27 @@
+rules:
+  - id: audit-write-required
+    languages: [python]
+    severity: ERROR
+    message: >-
+      C-2.9 / SR-112: a mutating route handler contains no audit call
+      (_audit(...), audit_*(...) or writer.emit(...)). Every state-changing
+      auth/account action writes an append-only audit record.
+    metadata:
+      sr: SR-112
+    patterns:
+      - pattern-either:
+          - pattern: |
+              @$R.$M(...)
+              async def $F(...):
+                  ...
+          - pattern: |
+              @$R.$M(...)
+              def $F(...):
+                  ...
+      - metavariable-regex:
+          metavariable: $M
+          regex: "^(post|put|patch|delete)$"
+      - pattern-not-regex: "(_audit\\(|audit_\\w+\\(|\\.emit\\()"
+    paths:
+      exclude:
+        - "**/tests/**"
