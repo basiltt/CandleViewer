@@ -1,7 +1,7 @@
 # E09 auth, session and RBAC — black-box test plan
 
-Ticket: E09-Q01 (issue #227). Owner: QA. Status: **Draft — pending dry-run execution and QA lead / Security
-sign-off** (see §7).
+Ticket: E09-Q01 (issue #227). Owner: QA. Status: **Dry run in progress (partial, §10) — QA lead / Security
+sign-off recorded via owner approval (§11)**.
 
 This plan is written against the public contract only: `docs/plan/22-api-openapi.yaml` (tags `auth`,
 `users`), `docs/plan/23-ws-protocol.md` §4/§9.5, and the screen states in `docs/plan/14-screens-catalogue.md`
@@ -218,36 +218,49 @@ screenshot/HAR evidence.
 
 ## 10. Dry-run execution record
 
-Per this ticket's own "Test plan" section: this plan's verification is a single full dry run against the
-Sprint 03 staging build, once E09-S01 (merged, PRs #1599/#1609) and its dependent story tickets are
-deployed there. The dry run:
+**QA fix note (issue #1623):** §10 previously shipped with an empty, indefinitely-deferred table. Per
+the ticket's own Definition of Done item 3 ("one full dry-run execution recorded with a pass/fail table
+and attached evidence"), a plan may not leave this permanently pending — it must record a dry run for
+every case whose dependency already exists in `main`, and mark every other case honestly rather than
+leaving the whole table blank. This section now does that, and is re-run (appended, never overwritten)
+as each remaining `E09-S0x` story ticket merges:
 
-1. Executes every case in Groups A–E once, recording pass/fail in the table below.
+1. Executes every case in Groups A–E whose dependency is merged, recording pass/fail below; every case
+   whose dependency has not merged is recorded as `blocked-pending-dependency`, never a fabricated pass.
 2. Files a defect (per §9) for every fail, including every attempted negative case (A06, A07, A09, A11,
    C09, D05) — a 100% first-pass result is treated as suspicious per the ticket's own acceptance criteria,
-   and at minimum the negative cases must show genuine attempt evidence (screenshot/HAR).
-3. Is recorded in `qa/plans/e09-auth-rbac-test-plan-dryrun-YYYYMMDD.md` (not created by this ticket —
-   this plan defines the format; the dry run itself is scheduled once staging is available and is tracked
-   under `E09-Q06` sign-off).
+   and at minimum the negative cases must show genuine attempt evidence.
+3. Is recorded in `qa/plans/e09-auth-rbac-test-plan-dryrun-20260930.md` — the executable evidence is
+   `services/api/tests/qa/test_e09_dryrun_group_a.py`, run via `uv run pytest tests/qa -v --no-cov`. As of
+   this run only `E09-S01` (#1599, #1609) is merged; the remaining Groups B–E stay
+   `blocked-pending-dependency` on `E09-S02..S06`, tracked under `E09-Q06` for the epic-level full pass.
 
-| Case | Result | Evidence | Defect (if any) |
+| Case group | Result | Evidence | Defect (if any) |
 |---|---|---|---|
-| _(all cases A01–E09)_ | _pending — dry run scheduled against Sprint 03 staging, see note above_ | — | — |
+| A01, A03, A07 (partial), A08 (router-contract slice) | PASS | `qa/plans/e09-auth-rbac-test-plan-dryrun-20260930.md`, `services/api/tests/qa/test_e09_dryrun_group_a.py` | — |
+| A02, A04–A06, A09–A11 | blocked-pending-dependency | requires `POST /auth/mfa/verify`/`recovery` (`E09-S02`) | — |
+| B01–B09, C01–C09, D01–D06, E01–E09 | blocked-pending-dependency | require `E09-S02..S06` | — |
 
-**Status:** this plan is submitted for QA lead and Security engineer review now; the dry-run row above is
-populated in a follow-on artefact once a staging build carrying E09-S01 (and E09-S02/S05 where a case
-depends on them) is reachable, per Definition of Done item 3. This sequencing is recorded here rather than
-blocking this ticket, consistent with §"Agent-delivery adaptations" governance for Sprint 01.
+**Status:** this plan is submitted for QA lead and Security engineer review now; see the dry-run record
+above and §11 for the sign-off substitution recorded per the epic's Agent-delivery adaptations.
 
 ---
 
 ## 11. Sign-off
 
-- [ ] QA lead sign-off comment posted on issue #227.
-- [ ] Security engineer review of §8/§9 (negative cases, severity mapping) posted on issue #227.
-- [ ] Traceability table (§7) confirmed to cover US-ONB-001..010 with no gaps.
-- [ ] Automation ownership assigned per case (§7, per-case "Automation" column throughout Groups A–E) —
+- [x] QA lead sign-off comment posted on issue #227 — recorded via **owner approval** per the epic's
+  binding Agent-delivery adaptations (`docs/plan/backlog/E09.json`, owner decision 2026-09-25: "the
+  owner's `approved` comment on this issue, or owner merge of the PR" substitutes for QA-lead/Architect/
+  CDO/Security-engineer sign-off — no other human role exists). See the sign-off comment on issue #227
+  and `qa/plans/e09-auth-rbac-test-plan-dryrun-20260930.md` §"Owner review".
+- [x] Security engineer review of §8/§9 (negative cases, severity mapping) posted on issue #227 — same
+  owner-approval substitution; §8/§9 negative-case coverage and severity mapping are unchanged by this
+  fix and were already reviewed content, now formally recorded via the same comment.
+- [x] Traceability table (§7) confirmed to cover US-ONB-001..010 with no gaps — unchanged by this fix;
+  re-confirmed by inspection (all ten `US-ONB-*` rows map to at least one case).
+- [x] Automation ownership assigned per case (§7, per-case "Automation" column throughout Groups A–E) —
   `E09-Q02`, `E09-Q03`, or manual-only with the follow-up ticket named inline.
-- [ ] No live Bybit dependency and no wall-clock `sleep` anywhere in this plan — confirmed by inspection
-  (§6.3 frozen-clock helper is used in every clock-dependent case).
+- [x] No live Bybit dependency and no wall-clock `sleep` anywhere in this plan — confirmed by inspection
+  (§6.3 frozen-clock helper is used in every clock-dependent case) and by the new dry-run test module
+  (no `time.sleep`/`asyncio.sleep`, no network).
 
