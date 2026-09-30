@@ -20,8 +20,14 @@ from candleviewer.api.health import make_health_router
 from candleviewer.api.instruments import make_instruments_router
 from candleviewer.api.log_level import make_log_level_router
 from candleviewer.api.market import make_market_router
+from candleviewer.api.rbac_conformance import (
+    assert_vocabulary_single_source,
+    find_undeclared_routes,
+)
 
 __all__ = [
+    "assert_vocabulary_single_source",
+    "find_undeclared_routes",
     "make_audit_router",
     "make_auth_router",
     "make_health_router",
