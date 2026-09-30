@@ -102,6 +102,21 @@ class Page(BaseModel):
     meta: PageMeta
 
 
+class InstrumentsPageMeta(PageMeta):
+    cache_age_s: Annotated[
+        float, Field(description="Seconds since this snapshot was last fetched from Bybit.")
+    ]
+    stale_since: Annotated[
+        AwareDatetime | None,
+        Field(description="When the cache started missing its refresh cadence; null if fresh."),
+    ]
+
+
+class CoverageHole(BaseModel):
+    start_us: Annotated[int, Field(description="Gap start, exchange epoch microseconds.")]
+    end_us: Annotated[int, Field(description="Gap end, exchange epoch microseconds.")]
+
+
 class DataMeta(PageMeta):
     sources: Annotated[
         list[Literal["questdb", "parquet", "postgres", "exchange_rest", "memory"]] | None,
@@ -109,6 +124,12 @@ class DataMeta(PageMeta):
     ] = None
     recording_started_at: AwareDatetime | None = None
     generated_at: AwareDatetime | None = None
+    coverage_holes: Annotated[
+        list[CoverageHole] | None,
+        Field(
+            description='Requested-range gaps the local cache has no bars for yet (QA defect #1622 blocker 1 / E08-S06 "Cache hit" scenario — `GET /market/klines` is cache-only until a live `KlineFetcher` lands, so it reports holes here instead of silently pretending the exchange was consulted).'
+        ),
+    ] = None
 
 
 class KlineInterval(
@@ -704,6 +725,14 @@ class Instrument(BaseModel):
         int | None, Field(description="Increments whenever Bybit changes the instrument metadata.")
     ] = None
     updated_at: AwareDatetime | None = None
+    delisted: Annotated[
+        bool | None,
+        Field(description="Derived: true when `status` is not `Trading` or `PreLaunch`."),
+    ] = None
+    status_reason: Annotated[
+        str | None,
+        Field(description="Human-readable explanation of `status`, for screen readers (#182)."),
+    ] = None
 
 
 class RiskLimitTier(BaseModel):
@@ -746,6 +775,10 @@ class InstrumentDetail(Instrument):
     risk_limit_tiers: list[RiskLimitTier] | None = None
     recorded: bool | None = None
     recording_started_at: AwareDatetime | None = None
+    stale_since: Annotated[
+        AwareDatetime | None,
+        Field(description="When this instrument's cache entry started missing refresh cadence."),
+    ] = None
 
 
 class Ticker(BaseModel):

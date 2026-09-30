@@ -4,11 +4,11 @@ Status: **Locked for implementation** · Date: 2026-09-14 · Owner: Architect + 
 
 This document is the single source of truth for CandleViewer persistence. It covers the three storage tiers decided in `docs/research/24-owner-decisions.md` §2:
 
-| Tier | Store | Role |
-|---|---|---|
-| Relational | **PostgreSQL 16** | Users, RBAC, sessions/MFA, exchange accounts & API keys, profiles, OMS mirror, trade groups, rules, alerts, journal, workspaces, settings, audit, ops |
-| Hot time-series | **QuestDB 8.x** | Live tape, L2 deltas/snapshots, tickers, klines, liquidations, OI/funding, derived bars, footprint cells, profiles, engine metrics |
-| Cold analytics | **Parquet on disk + DuckDB** | Archive beyond hot retention, replay source, batch analytics, journal/backtest scans |
+| Tier            | Store                        | Role                                                                                                                                                  |
+| --------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Relational      | **PostgreSQL 16**            | Users, RBAC, sessions/MFA, exchange accounts & API keys, profiles, OMS mirror, trade groups, rules, alerts, journal, workspaces, settings, audit, ops |
+| Hot time-series | **QuestDB 8.x**              | Live tape, L2 deltas/snapshots, tickers, klines, liquidations, OI/funding, derived bars, footprint cells, profiles, engine metrics                    |
+| Cold analytics  | **Parquet on disk + DuckDB** | Archive beyond hot retention, replay source, batch analytics, journal/backtest scans                                                                  |
 
 Conventions used throughout:
 
@@ -70,15 +70,15 @@ CREATE EXTENSION IF NOT EXISTS pg_stat_statements; -- perf work in 06-performanc
 
 Cluster settings that this schema assumes (documented in `infra/postgres/postgresql.conf`):
 
-| Setting | Value | Why |
-|---|---|---|
-| `timezone` | `UTC` | All `timestamptz` arithmetic deterministic |
-| `default_transaction_isolation` | `read committed` | OMS uses explicit row locks where needed |
-| `wal_level` | `replica` | PITR base backups (§8) |
-| `archive_mode` / `archive_command` | on / copy to `/var/backups/cv/wal` | PITR |
-| `statement_timeout` | `30s` (app role), `0` (migration role) | Protects API from runaway scans |
-| `idle_in_transaction_session_timeout` | `60s` | Prevents OMS lock leaks |
-| `lock_timeout` | `5s` (app role) | Fail fast rather than queue behind DDL |
+| Setting                               | Value                                  | Why                                        |
+| ------------------------------------- | -------------------------------------- | ------------------------------------------ |
+| `timezone`                            | `UTC`                                  | All `timestamptz` arithmetic deterministic |
+| `default_transaction_isolation`       | `read committed`                       | OMS uses explicit row locks where needed   |
+| `wal_level`                           | `replica`                              | PITR base backups (§8)                     |
+| `archive_mode` / `archive_command`    | on / copy to `/var/backups/cv/wal`     | PITR                                       |
+| `statement_timeout`                   | `30s` (app role), `0` (migration role) | Protects API from runaway scans            |
+| `idle_in_transaction_session_timeout` | `60s`                                  | Prevents OMS lock leaks                    |
+| `lock_timeout`                        | `5s` (app role)                        | Fail fast rather than queue behind DDL     |
 
 Roles & grants:
 
@@ -357,27 +357,27 @@ Every table below lists column name, type, nullability, default and constraints.
 
 #### 3.1.1 `users`
 
-| Column | Type | Null | Default | Constraints / notes |
-|---|---|---|---|---|
-| `id` | uuid | no | — | PK, uuid v7 |
-| `email` | citext | no | — | UNIQUE, email-format CHECK, **PII** |
-| `username` | citext | no | — | UNIQUE, length 3–32 |
-| `display_name` | text | yes | NULL | **PII** |
-| `password_hash` | text | no | — | Argon2id encoded string, **SECRET** |
-| `password_algo_params` | jsonb | no | `{"m":65536,"t":3,"p":4}` | Detects parameter drift → rehash on login |
-| `password_changed_at` | timestamptz | no | `now()` | Session invalidation cutoff |
-| `status` | user_status | no | `'invited'` | |
-| `mfa_required` | boolean | no | `true` | MFA mandatory for owner/manager |
-| `failed_login_count` | integer | no | `0` | `>= 0` |
-| `locked_until` | timestamptz | yes | NULL | Lockout 5 failures / 15 min |
-| `last_login_at` | timestamptz | yes | NULL | |
-| `last_login_ip` | inet | yes | NULL | **PII** |
-| `timezone` | text | no | `'UTC'` | IANA name |
-| `locale` | text | no | `'en-GB'` | |
-| `invited_by` | uuid | yes | NULL | FK → users(id) ON DELETE SET NULL |
-| `created_at` | timestamptz | no | `now()` | |
-| `updated_at` | timestamptz | no | `now()` | trigger `set_updated_at` |
-| `deleted_at` | timestamptz | yes | NULL | soft delete |
+| Column                 | Type        | Null | Default                   | Constraints / notes                       |
+| ---------------------- | ----------- | ---- | ------------------------- | ----------------------------------------- |
+| `id`                   | uuid        | no   | —                         | PK, uuid v7                               |
+| `email`                | citext      | no   | —                         | UNIQUE, email-format CHECK, **PII**       |
+| `username`             | citext      | no   | —                         | UNIQUE, length 3–32                       |
+| `display_name`         | text        | yes  | NULL                      | **PII**                                   |
+| `password_hash`        | text        | no   | —                         | Argon2id encoded string, **SECRET**       |
+| `password_algo_params` | jsonb       | no   | `{"m":65536,"t":3,"p":4}` | Detects parameter drift → rehash on login |
+| `password_changed_at`  | timestamptz | no   | `now()`                   | Session invalidation cutoff               |
+| `status`               | user_status | no   | `'invited'`               |                                           |
+| `mfa_required`         | boolean     | no   | `true`                    | MFA mandatory for owner/manager           |
+| `failed_login_count`   | integer     | no   | `0`                       | `>= 0`                                    |
+| `locked_until`         | timestamptz | yes  | NULL                      | Lockout 5 failures / 15 min               |
+| `last_login_at`        | timestamptz | yes  | NULL                      |                                           |
+| `last_login_ip`        | inet        | yes  | NULL                      | **PII**                                   |
+| `timezone`             | text        | no   | `'UTC'`                   | IANA name                                 |
+| `locale`               | text        | no   | `'en-GB'`                 |                                           |
+| `invited_by`           | uuid        | yes  | NULL                      | FK → users(id) ON DELETE SET NULL         |
+| `created_at`           | timestamptz | no   | `now()`                   |                                           |
+| `updated_at`           | timestamptz | no   | `now()`                   | trigger `set_updated_at`                  |
+| `deleted_at`           | timestamptz | yes  | NULL                      | soft delete                               |
 
 ```sql
 CREATE TABLE users (
@@ -483,23 +483,23 @@ CREATE INDEX ix_uaa_frozen  ON user_account_access (exchange_account_id) WHERE f
 
 #### 3.1.4 `sessions` and `sessions_rotation`
 
-| Column | Type | Null | Default | Notes |
-|---|---|---|---|---|
-| `id` | uuid | no | — | PK; JWT `sid` claim |
-| `user_id` | uuid | no | — | FK → users, CASCADE |
-| `refresh_token_hash` | sha256_hex | no | — | UNIQUE; **SECRET** (raw token never stored) |
-| `access_token_jti` | uuid | yes | NULL | Latest access token id for revocation |
-| `issued_at` | timestamptz | no | `now()` | |
-| `last_seen_at` | timestamptz | no | `now()` | Idle timeout 30 min |
-| `expires_at` | timestamptz | no | — | Absolute 12 h |
-| `revoked_at` | timestamptz | yes | NULL | |
-| `revoked_reason` | text | yes | NULL | logout / rotated / password_change / admin_revoke / mfa_reset / rotation_reuse |
-| `ip` | inet | yes | NULL | **PII** |
-| `user_agent` | text | yes | NULL | **PII** |
-| `device_label` | text | yes | NULL | User-named device |
-| `is_electron` | boolean | no | `false` | Shell policy & telemetry |
-| `mfa_satisfied_at` | timestamptz | yes | NULL | Step-up freshness window (15 min) |
-| `tailscale_node` | text | yes | NULL | Node identity from TS header, **PII-adjacent** |
+| Column               | Type        | Null | Default | Notes                                                                          |
+| -------------------- | ----------- | ---- | ------- | ------------------------------------------------------------------------------ |
+| `id`                 | uuid        | no   | —       | PK; JWT `sid` claim                                                            |
+| `user_id`            | uuid        | no   | —       | FK → users, CASCADE                                                            |
+| `refresh_token_hash` | sha256_hex  | no   | —       | UNIQUE; **SECRET** (raw token never stored)                                    |
+| `access_token_jti`   | uuid        | yes  | NULL    | Latest access token id for revocation                                          |
+| `issued_at`          | timestamptz | no   | `now()` |                                                                                |
+| `last_seen_at`       | timestamptz | no   | `now()` | Idle timeout 30 min                                                            |
+| `expires_at`         | timestamptz | no   | —       | Absolute 12 h                                                                  |
+| `revoked_at`         | timestamptz | yes  | NULL    |                                                                                |
+| `revoked_reason`     | text        | yes  | NULL    | logout / rotated / password_change / admin_revoke / mfa_reset / rotation_reuse |
+| `ip`                 | inet        | yes  | NULL    | **PII**                                                                        |
+| `user_agent`         | text        | yes  | NULL    | **PII**                                                                        |
+| `device_label`       | text        | yes  | NULL    | User-named device                                                              |
+| `is_electron`        | boolean     | no   | `false` | Shell policy & telemetry                                                       |
+| `mfa_satisfied_at`   | timestamptz | yes  | NULL    | Step-up freshness window (15 min)                                              |
+| `tailscale_node`     | text        | yes  | NULL    | Node identity from TS header, **PII-adjacent**                                 |
 
 ```sql
 CREATE TABLE sessions (
@@ -594,29 +594,29 @@ Policy: 10 single-use recovery codes per enrollment; regeneration hard-deletes u
 
 One row per Bybit UID/environment pair. Main account and sub-accounts live in the same table; sub-accounts point at their parent. Demo trading is a distinct Bybit sub-account with its own keys, so it is a **separate row** with `env='demo'` (never a flag on the live row).
 
-| Column | Type | Null | Default | Constraints / notes |
-|---|---|---|---|---|
-| `id` | uuid | no | — | PK |
-| `exchange` | exchange_code | no | `'bybit'` | Adapter selector |
-| `env` | exchange_env | no | — | live / demo / testnet |
-| `kind` | account_kind | no | — | main / sub |
-| `exchange_uid` | text | no | — | Bybit UID; UNIQUE with (exchange, env) |
-| `parent_account_id` | uuid | yes | NULL | FK self; NULL iff `kind='main'` |
-| `label` | text | no | — | Human name shown in UI, unique per env |
-| `colour_token` | text | no | `'accent.neutral'` | Design-system token for account chips |
-| `is_enabled` | boolean | no | `true` | Disabled accounts never receive fan-out legs |
-| `trading_enabled` | boolean | no | `false` | Must be explicitly armed by owner |
-| `position_mode` | text | no | `'one_way'` | `one_way` \| `hedge`; read from Bybit at startup |
-| `margin_mode` | text | no | `'cross'` | `cross` \| `isolated` \| `portfolio` |
-| `account_type` | text | no | `'UNIFIED'` | Bybit UTA; CHECK in ('UNIFIED') for v1 |
-| `quote_ccy` | text | no | `'USDT'` | v1 fixed |
-| `equity_cached_usd` | numeric(38,18) | yes | NULL | Last wallet-balance snapshot (display only) |
-| `equity_cached_at` | timestamptz | yes | NULL | |
-| `max_sub_accounts_hint` | smallint | no | `5` | Bybit cap (5, 20 w/ business KYC) surfaced in admin UI |
-| `last_reconciled_at` | timestamptz | yes | NULL | OMS reconciliation watermark |
-| `created_by` / `updated_by` | uuid | yes | NULL | FK users |
-| `created_at` / `updated_at` | timestamptz | no | `now()` | |
-| `deleted_at` | timestamptz | yes | NULL | Soft delete; blocks new legs, keeps history |
+| Column                      | Type           | Null | Default            | Constraints / notes                                    |
+| --------------------------- | -------------- | ---- | ------------------ | ------------------------------------------------------ |
+| `id`                        | uuid           | no   | —                  | PK                                                     |
+| `exchange`                  | exchange_code  | no   | `'bybit'`          | Adapter selector                                       |
+| `env`                       | exchange_env   | no   | —                  | live / demo / testnet                                  |
+| `kind`                      | account_kind   | no   | —                  | main / sub                                             |
+| `exchange_uid`              | text           | no   | —                  | Bybit UID; UNIQUE with (exchange, env)                 |
+| `parent_account_id`         | uuid           | yes  | NULL               | FK self; NULL iff `kind='main'`                        |
+| `label`                     | text           | no   | —                  | Human name shown in UI, unique per env                 |
+| `colour_token`              | text           | no   | `'accent.neutral'` | Design-system token for account chips                  |
+| `is_enabled`                | boolean        | no   | `true`             | Disabled accounts never receive fan-out legs           |
+| `trading_enabled`           | boolean        | no   | `false`            | Must be explicitly armed by owner                      |
+| `position_mode`             | text           | no   | `'one_way'`        | `one_way` \| `hedge`; read from Bybit at startup       |
+| `margin_mode`               | text           | no   | `'cross'`          | `cross` \| `isolated` \| `portfolio`                   |
+| `account_type`              | text           | no   | `'UNIFIED'`        | Bybit UTA; CHECK in ('UNIFIED') for v1                 |
+| `quote_ccy`                 | text           | no   | `'USDT'`           | v1 fixed                                               |
+| `equity_cached_usd`         | numeric(38,18) | yes  | NULL               | Last wallet-balance snapshot (display only)            |
+| `equity_cached_at`          | timestamptz    | yes  | NULL               |                                                        |
+| `max_sub_accounts_hint`     | smallint       | no   | `5`                | Bybit cap (5, 20 w/ business KYC) surfaced in admin UI |
+| `last_reconciled_at`        | timestamptz    | yes  | NULL               | OMS reconciliation watermark                           |
+| `created_by` / `updated_by` | uuid           | yes  | NULL               | FK users                                               |
+| `created_at` / `updated_at` | timestamptz    | no   | `now()`            |                                                        |
+| `deleted_at`                | timestamptz    | yes  | NULL               | Soft delete; blocks new legs, keeps history            |
 
 ```sql
 CREATE TABLE exchange_accounts (
@@ -663,35 +663,35 @@ Additional invariant, enforced by trigger `trg_ea_env_parent`: a sub-account's `
 
 Envelope encryption: a per-key **DEK** (AES-256-GCM) encrypts the credential; the DEK itself is wrapped by the **KEK** held outside the database (OS keyring / file with 0600 in the WSL deployment, KMS on VPS). Postgres stores only ciphertext + nonce + wrapped DEK reference. Withdrawal permission is **always OFF** — enforced by a CHECK against the permission snapshot.
 
-| Column | Type | Null | Default | Constraints / notes |
-|---|---|---|---|---|
-| `id` | uuid | no | — | PK |
-| `exchange_account_id` | uuid | no | — | FK → exchange_accounts, CASCADE |
-| `label` | text | no | — | Unique per account |
-| `key_id_enc` | bytea | no | — | **SECRET** ciphertext of the API key id |
-| `key_id_last4` | char(4) | no | — | Display-only tail, safe to show |
-| `secret_enc` | bytea | no | — | **SECRET** ciphertext of the API secret |
-| `enc_nonce` | bytea | no | — | 12-byte GCM nonce, unique per encryption |
-| `enc_alg` | text | no | `'AES-256-GCM'` | CHECK in ('AES-256-GCM') |
-| `dek_ref` | text | no | — | Keyring handle of the wrapped DEK |
-| `kek_version` | integer | no | `1` | Bumped on KEK rotation; drives re-wrap job |
-| `permission_snapshot` | jsonb | no | — | As reported by Bybit `/v5/user/query-api` at import/refresh |
-| `permission_snapshot_at` | timestamptz | no | `now()` | Freshness for admin UI ("checked 3 min ago") |
-| `can_trade` | boolean | no | `false` | Derived from snapshot, denormalised for fast gate |
-| `can_withdraw` | boolean | no | `false` | **CHECK (can_withdraw = false)** — hard invariant |
-| `can_transfer` | boolean | no | `false` | Sub-account transfer capability |
-| `read_only` | boolean | no | `false` | |
-| `ip_whitelist` | cidr[] | yes | NULL | As configured on Bybit (browser-only config since Feb 2026) |
-| `ip_whitelist_verified_at` | timestamptz | yes | NULL | Last time we compared to Bybit's reported list |
-| `status` | key_status | no | `'pending'` | |
-| `expires_at` | timestamptz | yes | NULL | Bybit key expiry if set |
-| `last_used_at` | timestamptz | yes | NULL | Updated at most 1/min (write amplification guard) |
-| `last_error_code` | text | yes | NULL | e.g. `10003`, `10018`, `10002` |
-| `last_error_at` | timestamptz | yes | NULL | |
-| `rotation_due_at` | timestamptz | yes | NULL | Policy: 90 days |
-| `created_by` / `updated_by` | uuid | yes | NULL | |
-| `created_at` / `updated_at` | timestamptz | no | `now()` | |
-| `revoked_at` | timestamptz | yes | NULL | |
+| Column                      | Type        | Null | Default         | Constraints / notes                                         |
+| --------------------------- | ----------- | ---- | --------------- | ----------------------------------------------------------- |
+| `id`                        | uuid        | no   | —               | PK                                                          |
+| `exchange_account_id`       | uuid        | no   | —               | FK → exchange_accounts, CASCADE                             |
+| `label`                     | text        | no   | —               | Unique per account                                          |
+| `key_id_enc`                | bytea       | no   | —               | **SECRET** ciphertext of the API key id                     |
+| `key_id_last4`              | char(4)     | no   | —               | Display-only tail, safe to show                             |
+| `secret_enc`                | bytea       | no   | —               | **SECRET** ciphertext of the API secret                     |
+| `enc_nonce`                 | bytea       | no   | —               | 12-byte GCM nonce, unique per encryption                    |
+| `enc_alg`                   | text        | no   | `'AES-256-GCM'` | CHECK in ('AES-256-GCM')                                    |
+| `dek_ref`                   | text        | no   | —               | Keyring handle of the wrapped DEK                           |
+| `kek_version`               | integer     | no   | `1`             | Bumped on KEK rotation; drives re-wrap job                  |
+| `permission_snapshot`       | jsonb       | no   | —               | As reported by Bybit `/v5/user/query-api` at import/refresh |
+| `permission_snapshot_at`    | timestamptz | no   | `now()`         | Freshness for admin UI ("checked 3 min ago")                |
+| `can_trade`                 | boolean     | no   | `false`         | Derived from snapshot, denormalised for fast gate           |
+| `can_withdraw`              | boolean     | no   | `false`         | **CHECK (can_withdraw = false)** — hard invariant           |
+| `can_transfer`              | boolean     | no   | `false`         | Sub-account transfer capability                             |
+| `read_only`                 | boolean     | no   | `false`         |                                                             |
+| `ip_whitelist`              | cidr[]      | yes  | NULL            | As configured on Bybit (browser-only config since Feb 2026) |
+| `ip_whitelist_verified_at`  | timestamptz | yes  | NULL            | Last time we compared to Bybit's reported list              |
+| `status`                    | key_status  | no   | `'pending'`     |                                                             |
+| `expires_at`                | timestamptz | yes  | NULL            | Bybit key expiry if set                                     |
+| `last_used_at`              | timestamptz | yes  | NULL            | Updated at most 1/min (write amplification guard)           |
+| `last_error_code`           | text        | yes  | NULL            | e.g. `10003`, `10018`, `10002`                              |
+| `last_error_at`             | timestamptz | yes  | NULL            |                                                             |
+| `rotation_due_at`           | timestamptz | yes  | NULL            | Policy: 90 days                                             |
+| `created_by` / `updated_by` | uuid        | yes  | NULL            |                                                             |
+| `created_at` / `updated_at` | timestamptz | no   | `now()`         |                                                             |
+| `revoked_at`                | timestamptz | yes  | NULL            |                                                             |
 
 ```sql
 CREATE TABLE api_keys (
@@ -748,7 +748,7 @@ COMMENT ON COLUMN api_keys.secret_enc IS 'SECRET: AES-256-GCM ciphertext; decryp
   "note": "cv-main-live",
   "readOnly": 0,
   "permissions": {
-    "ContractTrade": ["Order","Position"],
+    "ContractTrade": ["Order", "Position"],
     "Spot": [],
     "Wallet": ["AccountTransfer"],
     "Options": [],
@@ -800,36 +800,36 @@ CREATE INDEX ix_akr_open ON api_key_rotations (started_at) WHERE completed_at IS
 
 Per-account execution profile applied when a trade group fans out. Exactly one profile per account is `is_default`; alternates are selectable per ticket (e.g. "scalp" vs "swing").
 
-| Column | Type | Null | Default | Constraints |
-|---|---|---|---|---|
-| `id` | uuid | no | — | PK |
-| `exchange_account_id` | uuid | no | — | FK CASCADE |
-| `name` | text | no | — | Unique per account (case-insensitive) |
-| `is_default` | boolean | no | `false` | Partial-unique: one default per account |
-| `leverage` | numeric(10,2) | no | `1` | `CHECK (leverage BETWEEN 1 AND 100)` |
-| `sizing_mode` | sizing_mode | no | `'risk_based'` | |
-| `size_fixed_qty` | numeric(38,18) | yes | NULL | required iff `sizing_mode='fixed_qty'` |
-| `size_fixed_notional_usd` | numeric(38,18) | yes | NULL | required iff `fixed_notional` |
-| `size_pct_equity` | numeric(9,6) | yes | NULL | 0 < v ≤ 100, required iff `pct_equity` |
-| `risk_pct_equity` | numeric(9,6) | yes | NULL | 0 < v ≤ 100, required iff `risk_based` |
-| `sl_offset_value` | numeric(38,18) | no | `10` | > 0 |
-| `sl_offset_unit` | offset_unit | no | `'ticks'` | |
-| `tp_offset_value` | numeric(38,18) | yes | NULL | > 0 when set |
-| `tp_offset_unit` | offset_unit | yes | NULL | required iff tp value set |
-| `tp_ladder` | jsonb | yes | NULL | `[{"pct":25,"r":1},…]`, Σpct ≤ 100 |
-| `require_native_sl` | boolean | no | `true` | **Safety invariant (finding #21) — CHECK = true** |
-| `max_position_notional_usd` | numeric(38,18) | yes | NULL | > 0 |
-| `max_daily_loss_usd` | numeric(38,18) | yes | NULL | > 0; triggers lockout |
-| `max_open_positions` | smallint | yes | NULL | 1..50 |
-| `max_orders_per_minute` | smallint | no | `30` | Rate-limit budget per UID |
-| `allowed_symbols` | text[] | yes | NULL | NULL = all listed linear USDT perps |
-| `blocked_symbols` | text[] | yes | NULL | Applied after allow-list |
-| `reduce_only_default` | boolean | no | `false` | |
-| `time_in_force_default` | text | no | `'GTC'` | GTC/IOC/FOK/PostOnly |
-| `slippage_tolerance_bps` | integer | no | `10` | 0..1000, guards market orders |
-| `created_by`/`updated_by` | uuid | yes | NULL | |
-| `created_at`/`updated_at` | timestamptz | no | `now()` | |
-| `deleted_at` | timestamptz | yes | NULL | |
+| Column                      | Type           | Null | Default        | Constraints                                       |
+| --------------------------- | -------------- | ---- | -------------- | ------------------------------------------------- |
+| `id`                        | uuid           | no   | —              | PK                                                |
+| `exchange_account_id`       | uuid           | no   | —              | FK CASCADE                                        |
+| `name`                      | text           | no   | —              | Unique per account (case-insensitive)             |
+| `is_default`                | boolean        | no   | `false`        | Partial-unique: one default per account           |
+| `leverage`                  | numeric(10,2)  | no   | `1`            | `CHECK (leverage BETWEEN 1 AND 100)`              |
+| `sizing_mode`               | sizing_mode    | no   | `'risk_based'` |                                                   |
+| `size_fixed_qty`            | numeric(38,18) | yes  | NULL           | required iff `sizing_mode='fixed_qty'`            |
+| `size_fixed_notional_usd`   | numeric(38,18) | yes  | NULL           | required iff `fixed_notional`                     |
+| `size_pct_equity`           | numeric(9,6)   | yes  | NULL           | 0 < v ≤ 100, required iff `pct_equity`            |
+| `risk_pct_equity`           | numeric(9,6)   | yes  | NULL           | 0 < v ≤ 100, required iff `risk_based`            |
+| `sl_offset_value`           | numeric(38,18) | no   | `10`           | > 0                                               |
+| `sl_offset_unit`            | offset_unit    | no   | `'ticks'`      |                                                   |
+| `tp_offset_value`           | numeric(38,18) | yes  | NULL           | > 0 when set                                      |
+| `tp_offset_unit`            | offset_unit    | yes  | NULL           | required iff tp value set                         |
+| `tp_ladder`                 | jsonb          | yes  | NULL           | `[{"pct":25,"r":1},…]`, Σpct ≤ 100                |
+| `require_native_sl`         | boolean        | no   | `true`         | **Safety invariant (finding #21) — CHECK = true** |
+| `max_position_notional_usd` | numeric(38,18) | yes  | NULL           | > 0                                               |
+| `max_daily_loss_usd`        | numeric(38,18) | yes  | NULL           | > 0; triggers lockout                             |
+| `max_open_positions`        | smallint       | yes  | NULL           | 1..50                                             |
+| `max_orders_per_minute`     | smallint       | no   | `30`           | Rate-limit budget per UID                         |
+| `allowed_symbols`           | text[]         | yes  | NULL           | NULL = all listed linear USDT perps               |
+| `blocked_symbols`           | text[]         | yes  | NULL           | Applied after allow-list                          |
+| `reduce_only_default`       | boolean        | no   | `false`        |                                                   |
+| `time_in_force_default`     | text           | no   | `'GTC'`        | GTC/IOC/FOK/PostOnly                              |
+| `slippage_tolerance_bps`    | integer        | no   | `10`           | 0..1000, guards market orders                     |
+| `created_by`/`updated_by`   | uuid           | yes  | NULL           |                                                   |
+| `created_at`/`updated_at`   | timestamptz    | no   | `now()`        |                                                   |
+| `deleted_at`                | timestamptz    | yes  | NULL           |                                                   |
 
 ```sql
 CREATE TABLE account_profiles (
@@ -922,34 +922,34 @@ stateDiagram-v2
 
 A single ticket that fans out to N accounts. `client_group_ref` is the idempotency key from the UI — a re-submitted ticket with the same ref never creates a second group.
 
-| Column | Type | Null | Default | Constraints / notes |
-|---|---|---|---|---|
-| `id` | uuid | no | — | PK |
-| `client_group_ref` | text | no | — | UNIQUE; UI-generated ULID, idempotency key |
-| `env` | exchange_env | no | — | All legs must match this env (trigger-enforced) |
-| `symbol` | symbol_code | no | — | e.g. `BTCUSDT` |
-| `side` | text | no | — | CHECK in ('Buy','Sell') |
-| `status` | trade_group_status | no | `'draft'` | |
-| `algo` | algo_kind | no | `'none'` | bracket / scaled / twap / chase / iceberg / oco |
-| `algo_params` | jsonb | yes | NULL | Validated per `algo` by app-layer schema (doc 24) |
-| `intent_note` | text | yes | NULL | Free text captured at ticket time → journal |
-| `origin` | text | no | `'manual'` | manual / hotkey / dom_click / chart_click / rule / alert / replay_sim |
-| `origin_rule_id` | uuid | yes | NULL | FK → rules ON DELETE SET NULL |
-| `origin_rule_run_id` | uuid | yes | NULL | FK → rule_runs ON DELETE SET NULL |
-| `requested_qty_mode` | sizing_mode | no | `'risk_based'` | How the UI expressed the size |
-| `requested_qty_value` | numeric(38,18) | yes | NULL | Raw user input before per-account profile maths |
-| `entry_type` | text | no | `'Market'` | Market / Limit / Conditional |
-| `entry_price` | numeric(38,18) | yes | NULL | Required for Limit |
-| `trigger_price` | numeric(38,18) | yes | NULL | Required for Conditional |
-| `trigger_by` | text | yes | NULL | LastPrice / MarkPrice / IndexPrice |
-| `sl_price_hint` | numeric(38,18) | yes | NULL | Absolute SL as drawn on chart; profiles may override |
-| `tp_price_hint` | numeric(38,18) | yes | NULL | |
-| `is_paper` | boolean | no | `false` | True when env='demo' or replay simulation |
-| `submitted_at` | timestamptz | yes | NULL | First leg submit |
-| `opened_at` | timestamptz | yes | NULL | First fill |
-| `closed_at` | timestamptz | yes | NULL | All legs flat |
-| `created_by` | uuid | no | — | FK users RESTRICT — attribution is permanent |
-| `created_at`/`updated_at` | timestamptz | no | `now()` | |
+| Column                    | Type               | Null | Default        | Constraints / notes                                                   |
+| ------------------------- | ------------------ | ---- | -------------- | --------------------------------------------------------------------- |
+| `id`                      | uuid               | no   | —              | PK                                                                    |
+| `client_group_ref`        | text               | no   | —              | UNIQUE; UI-generated ULID, idempotency key                            |
+| `env`                     | exchange_env       | no   | —              | All legs must match this env (trigger-enforced)                       |
+| `symbol`                  | symbol_code        | no   | —              | e.g. `BTCUSDT`                                                        |
+| `side`                    | text               | no   | —              | CHECK in ('Buy','Sell')                                               |
+| `status`                  | trade_group_status | no   | `'draft'`      |                                                                       |
+| `algo`                    | algo_kind          | no   | `'none'`       | bracket / scaled / twap / chase / iceberg / oco                       |
+| `algo_params`             | jsonb              | yes  | NULL           | Validated per `algo` by app-layer schema (doc 24)                     |
+| `intent_note`             | text               | yes  | NULL           | Free text captured at ticket time → journal                           |
+| `origin`                  | text               | no   | `'manual'`     | manual / hotkey / dom_click / chart_click / rule / alert / replay_sim |
+| `origin_rule_id`          | uuid               | yes  | NULL           | FK → rules ON DELETE SET NULL                                         |
+| `origin_rule_run_id`      | uuid               | yes  | NULL           | FK → rule_runs ON DELETE SET NULL                                     |
+| `requested_qty_mode`      | sizing_mode        | no   | `'risk_based'` | How the UI expressed the size                                         |
+| `requested_qty_value`     | numeric(38,18)     | yes  | NULL           | Raw user input before per-account profile maths                       |
+| `entry_type`              | text               | no   | `'Market'`     | Market / Limit / Conditional                                          |
+| `entry_price`             | numeric(38,18)     | yes  | NULL           | Required for Limit                                                    |
+| `trigger_price`           | numeric(38,18)     | yes  | NULL           | Required for Conditional                                              |
+| `trigger_by`              | text               | yes  | NULL           | LastPrice / MarkPrice / IndexPrice                                    |
+| `sl_price_hint`           | numeric(38,18)     | yes  | NULL           | Absolute SL as drawn on chart; profiles may override                  |
+| `tp_price_hint`           | numeric(38,18)     | yes  | NULL           |                                                                       |
+| `is_paper`                | boolean            | no   | `false`        | True when env='demo' or replay simulation                             |
+| `submitted_at`            | timestamptz        | yes  | NULL           | First leg submit                                                      |
+| `opened_at`               | timestamptz        | yes  | NULL           | First fill                                                            |
+| `closed_at`               | timestamptz        | yes  | NULL           | All legs flat                                                         |
+| `created_by`              | uuid               | no   | —              | FK users RESTRICT — attribution is permanent                          |
+| `created_at`/`updated_at` | timestamptz        | no   | `now()`        |                                                                       |
 
 ```sql
 CREATE TABLE trade_groups (
@@ -1046,44 +1046,44 @@ CREATE INDEX ix_tgl_no_sl   ON trade_group_legs (trade_group_id) WHERE status IN
 
 Every order we ever intend to place gets a row **before** the network call, with a deterministic `order_link_id`. That makes submission idempotent and reconciliation total (anything at the exchange without a local row becomes `untracked` and is surfaced to the owner).
 
-| Column | Type | Null | Default | Constraints / notes |
-|---|---|---|---|---|
-| `id` | uuid | no | — | PK |
-| `trade_group_leg_id` | uuid | yes | NULL | NULL for orders adopted during reconciliation |
-| `exchange_account_id` | uuid | no | — | FK RESTRICT; denormalised for account-scoped queries |
-| `parent_order_id` | uuid | yes | NULL | FK self — algo children (TWAP slices, scaled rungs, OCO siblings) |
-| `oco_group_ref` | text | yes | NULL | Emulated OCO pairing key (Bybit has no API OCO) |
-| `order_link_id` | text | no | — | **UNIQUE**; `cv-<env>-<leg8>-<intent>-<seq>` ≤ 36 chars |
-| `exchange_order_id` | text | yes | NULL | Bybit `orderId`; UNIQUE per account when present |
-| `symbol` | symbol_code | no | — | |
-| `side` | text | no | — | Buy / Sell |
-| `intent` | order_intent | no | — | entry / stop_loss / take_profit / … |
-| `order_type` | text | no | — | Market / Limit |
-| `qty` | numeric(38,18) | no | — | > 0, already rounded to lot size |
-| `price` | numeric(38,18) | yes | NULL | Required for Limit |
-| `trigger_price` | numeric(38,18) | yes | NULL | Conditional / SL / TP |
-| `trigger_by` | text | yes | NULL | LastPrice / MarkPrice / IndexPrice |
-| `trigger_direction` | smallint | yes | NULL | 1 rise, 2 fall (Bybit) |
-| `time_in_force` | text | no | `'GTC'` | GTC/IOC/FOK/PostOnly |
-| `reduce_only` | boolean | no | `false` | |
-| `close_on_trigger` | boolean | no | `false` | |
-| `position_idx` | smallint | no | `0` | 0 one-way, 1 buy-hedge, 2 sell-hedge |
-| `state` | order_state | no | `'new'` | See state machine |
-| `cum_exec_qty` | numeric(38,18) | no | `0` | ≤ qty |
-| `cum_exec_value` | numeric(38,18) | no | `0` | Σ price·qty |
-| `avg_price` | numeric(38,18) | yes | NULL | Derived on fill |
-| `leaves_qty` | numeric(38,18) | no | generated | `qty - cum_exec_qty` (STORED generated column) |
-| `fee_paid` | numeric(38,18) | no | `0` | |
-| `reject_code` | text | yes | NULL | Bybit `retCode` |
-| `reject_message` | text | yes | NULL | |
-| `submit_attempts` | smallint | no | `0` | Retry counter, bounded |
-| `idempotency_state` | text | no | `'unsent'` | unsent/in_flight/acked/failed — crash-safe submit |
-| `created_ts` | timestamptz | no | `now()` | Local create |
-| `submitted_ts` | timestamptz | yes | NULL | |
-| `exchange_created_ts` | timestamptz | yes | NULL | Bybit `createdTime` |
-| `exchange_updated_ts` | timestamptz | yes | NULL | Bybit `updatedTime` — used for staleness compare |
-| `last_reconciled_at` | timestamptz | yes | NULL | |
-| `is_paper` | boolean | no | `false` | Paper-matcher orders never hit the network |
+| Column                | Type           | Null | Default    | Constraints / notes                                               |
+| --------------------- | -------------- | ---- | ---------- | ----------------------------------------------------------------- |
+| `id`                  | uuid           | no   | —          | PK                                                                |
+| `trade_group_leg_id`  | uuid           | yes  | NULL       | NULL for orders adopted during reconciliation                     |
+| `exchange_account_id` | uuid           | no   | —          | FK RESTRICT; denormalised for account-scoped queries              |
+| `parent_order_id`     | uuid           | yes  | NULL       | FK self — algo children (TWAP slices, scaled rungs, OCO siblings) |
+| `oco_group_ref`       | text           | yes  | NULL       | Emulated OCO pairing key (Bybit has no API OCO)                   |
+| `order_link_id`       | text           | no   | —          | **UNIQUE**; `cv-<env>-<leg8>-<intent>-<seq>` ≤ 36 chars           |
+| `exchange_order_id`   | text           | yes  | NULL       | Bybit `orderId`; UNIQUE per account when present                  |
+| `symbol`              | symbol_code    | no   | —          |                                                                   |
+| `side`                | text           | no   | —          | Buy / Sell                                                        |
+| `intent`              | order_intent   | no   | —          | entry / stop_loss / take_profit / …                               |
+| `order_type`          | text           | no   | —          | Market / Limit                                                    |
+| `qty`                 | numeric(38,18) | no   | —          | > 0, already rounded to lot size                                  |
+| `price`               | numeric(38,18) | yes  | NULL       | Required for Limit                                                |
+| `trigger_price`       | numeric(38,18) | yes  | NULL       | Conditional / SL / TP                                             |
+| `trigger_by`          | text           | yes  | NULL       | LastPrice / MarkPrice / IndexPrice                                |
+| `trigger_direction`   | smallint       | yes  | NULL       | 1 rise, 2 fall (Bybit)                                            |
+| `time_in_force`       | text           | no   | `'GTC'`    | GTC/IOC/FOK/PostOnly                                              |
+| `reduce_only`         | boolean        | no   | `false`    |                                                                   |
+| `close_on_trigger`    | boolean        | no   | `false`    |                                                                   |
+| `position_idx`        | smallint       | no   | `0`        | 0 one-way, 1 buy-hedge, 2 sell-hedge                              |
+| `state`               | order_state    | no   | `'new'`    | See state machine                                                 |
+| `cum_exec_qty`        | numeric(38,18) | no   | `0`        | ≤ qty                                                             |
+| `cum_exec_value`      | numeric(38,18) | no   | `0`        | Σ price·qty                                                       |
+| `avg_price`           | numeric(38,18) | yes  | NULL       | Derived on fill                                                   |
+| `leaves_qty`          | numeric(38,18) | no   | generated  | `qty - cum_exec_qty` (STORED generated column)                    |
+| `fee_paid`            | numeric(38,18) | no   | `0`        |                                                                   |
+| `reject_code`         | text           | yes  | NULL       | Bybit `retCode`                                                   |
+| `reject_message`      | text           | yes  | NULL       |                                                                   |
+| `submit_attempts`     | smallint       | no   | `0`        | Retry counter, bounded                                            |
+| `idempotency_state`   | text           | no   | `'unsent'` | unsent/in_flight/acked/failed — crash-safe submit                 |
+| `created_ts`          | timestamptz    | no   | `now()`    | Local create                                                      |
+| `submitted_ts`        | timestamptz    | yes  | NULL       |                                                                   |
+| `exchange_created_ts` | timestamptz    | yes  | NULL       | Bybit `createdTime`                                               |
+| `exchange_updated_ts` | timestamptz    | yes  | NULL       | Bybit `updatedTime` — used for staleness compare                  |
+| `last_reconciled_at`  | timestamptz    | yes  | NULL       |                                                                   |
+| `is_paper`            | boolean        | no   | `false`    | Paper-matcher orders never hit the network                        |
 
 ```sql
 CREATE TABLE orders (
@@ -1321,7 +1321,7 @@ Latest-balance reads use `SELECT DISTINCT ON (exchange_account_id) … ORDER BY 
 
 #### 3.3.9 `instruments` — cached symbol metadata
 
-Required for lot/tick rounding before any order is built. Refreshed from `/v5/market/instruments-info` at startup and every 6 h.
+Required for lot/tick rounding before any order is built. Refreshed from `/v5/market/instruments-info` at startup and every 12 h.
 
 ```sql
 CREATE TABLE instruments (
@@ -2056,28 +2056,28 @@ Resolution order: user override → role override → percentage rollout (hash o
 
 Append-only, tamper-evident. Each row's `entry_hash` = SHA-256 over the canonical serialisation of the row plus the previous row's hash, forming a chain. A daily job writes the head hash to `audit_checkpoints` and to an off-box file, so truncation of the tail is detectable.
 
-| Column | Type | Null | Default | Notes |
-|---|---|---|---|---|
-| `id` | bigserial | no | — | PK, chain order |
-| `record_id` | uuid | no | — | UNIQUE; writer-assigned idempotency key (WAL replay is `ON CONFLICT (record_id) DO NOTHING`) |
-| `prev_hash` | sha256_hex | no | — | Previous row's `entry_hash`; genesis = 64×`0` |
-| `entry_hash` | sha256_hex | no | — | UNIQUE; computed by trigger, never by the app |
-| `actor_user_id` | uuid | yes | NULL | NULL for system actions |
-| `actor_label` | text | no | — | Denormalised username/system name — survives user deletion |
-| `actor_ip` | inet | yes | NULL | **PII** |
-| `session_id` | uuid | yes | NULL | |
-| `action` | text | no | — | Dotted verb, e.g. `api_key.rotate`, `orders.submit`, `rules.arm` |
-| `object_kind` | text | yes | NULL | Table/domain name |
-| `object_id` | text | yes | NULL | Text so non-uuid keys work |
-| `object_label` | text | yes | NULL | Human name at the time |
-| `outcome` | audit_outcome | no | `'success'` | |
-| `severity` | severity | no | `'info'` | |
-| `reason` | text | yes | NULL | Denial reason / failure code |
-| `before_state` | jsonb | yes | NULL | Redacted diff source |
-| `after_state` | jsonb | yes | NULL | |
-| `request_id` | uuid | yes | NULL | Correlates to structured logs & traces |
-| `env` | exchange_env | yes | NULL | For trading actions |
-| `event_ts` | timestamptz | no | `now()` | |
+| Column          | Type          | Null | Default     | Notes                                                                                        |
+| --------------- | ------------- | ---- | ----------- | -------------------------------------------------------------------------------------------- |
+| `id`            | bigserial     | no   | —           | PK, chain order                                                                              |
+| `record_id`     | uuid          | no   | —           | UNIQUE; writer-assigned idempotency key (WAL replay is `ON CONFLICT (record_id) DO NOTHING`) |
+| `prev_hash`     | sha256_hex    | no   | —           | Previous row's `entry_hash`; genesis = 64×`0`                                                |
+| `entry_hash`    | sha256_hex    | no   | —           | UNIQUE; computed by trigger, never by the app                                                |
+| `actor_user_id` | uuid          | yes  | NULL        | NULL for system actions                                                                      |
+| `actor_label`   | text          | no   | —           | Denormalised username/system name — survives user deletion                                   |
+| `actor_ip`      | inet          | yes  | NULL        | **PII**                                                                                      |
+| `session_id`    | uuid          | yes  | NULL        |                                                                                              |
+| `action`        | text          | no   | —           | Dotted verb, e.g. `api_key.rotate`, `orders.submit`, `rules.arm`                             |
+| `object_kind`   | text          | yes  | NULL        | Table/domain name                                                                            |
+| `object_id`     | text          | yes  | NULL        | Text so non-uuid keys work                                                                   |
+| `object_label`  | text          | yes  | NULL        | Human name at the time                                                                       |
+| `outcome`       | audit_outcome | no   | `'success'` |                                                                                              |
+| `severity`      | severity      | no   | `'info'`    |                                                                                              |
+| `reason`        | text          | yes  | NULL        | Denial reason / failure code                                                                 |
+| `before_state`  | jsonb         | yes  | NULL        | Redacted diff source                                                                         |
+| `after_state`   | jsonb         | yes  | NULL        |                                                                                              |
+| `request_id`    | uuid          | yes  | NULL        | Correlates to structured logs & traces                                                       |
+| `env`           | exchange_env  | yes  | NULL        | For trading actions                                                                          |
+| `event_ts`      | timestamptz   | no   | `now()`     |                                                                                              |
 
 ```sql
 CREATE TABLE audit_log (
@@ -2169,14 +2169,14 @@ The writer's local WAL (buffer during a Postgres outage) stores self-validating 
 <crc32-hex8>
 `; a torn final frame is truncated before the next append, while a bad frame in the middle raises `AuditWalCorrupt` and the writer fails closed.
 
-Inserts into `audit_log` are **serialised** by an advisory lock (`pg_advisory_xact_lock(hashtext('audit_log'))`) taken by the writer *and* inside `audit_chain()` itself, so concurrent appends cannot fork the chain. The verifier job (`cv-audit-verify`) walks the chain nightly and raises a `critical` system event on any mismatch.
+Inserts into `audit_log` are **serialised** by an advisory lock (`pg_advisory_xact_lock(hashtext('audit_log'))`) taken by the writer _and_ inside `audit_chain()` itself, so concurrent appends cannot fork the chain. The verifier job (`cv-audit-verify`) walks the chain nightly and raises a `critical` system event on any mismatch.
 
 Actions that MUST be audited (non-exhaustive, enforced by a Semgrep rule on the service layer):
 `auth.login`, `auth.login_failed`, `auth.logout`, `auth.refresh_reuse_detected`, `auth.mfa_enroll`, `auth.mfa_reset`, `auth.password_change`, `users.create`, `users.disable`, `roles.grant`, `roles.revoke`, `accounts.create`, `accounts.enable_trading`, `api_key.import`, `api_key.rotate`, `api_key.revoke`, `api_key.reveal_attempt`, `profiles.update`, `orders.submit`, `orders.cancel`, `orders.amend`, `trade_group.submit`, `positions.flatten`, `risk.freeze_manager`, `risk.unfreeze_manager`, `rules.arm`, `rules.disarm`, `rules.version_create`, `alerts.create`, `recorder.start`, `recorder.stop`, `retention.change`, `retention.purge`, `flags.change`, `settings.change`, `backup.run`, `backup.restore`, `env.switch_live`.
 
 #### 3.10.2 `system_events`
 
-Operational/health events surfaced in the System Health screen; distinct from `audit_log` (which is about *who did what*).
+Operational/health events surfaced in the System Health screen; distinct from `audit_log` (which is about _who did what_).
 
 ```sql
 CREATE TABLE system_events (
@@ -2267,6 +2267,7 @@ Backoff schedule: `available_at = now() + least(2^attempts, 300) seconds`, dead-
 QuestDB 8.x, accessed over ILP (InfluxDB Line Protocol, TCP 9009) for writes and PGWire (8812) for reads. All tables are WAL-enabled, `PARTITION BY DAY` unless stated, with a `DEDUP UPSERT KEYS` clause so re-ingesting the same event (after a reconnect/backfill) is idempotent.
 
 Conventions:
+
 - `ts TIMESTAMP` is always the **designated timestamp** and always the exchange event time (`T`/`ts` from Bybit).
 - `recv_ts TIMESTAMP` is local receive time — never designated, used for latency analysis and gap forensics.
 - `symbol SYMBOL CAPACITY 256 CACHE` — QuestDB `SYMBOL` type (dictionary-encoded), not a string.
@@ -2467,14 +2468,14 @@ CREATE TABLE bars_time (
 
 Identical column set (differing only in `bar_param` semantics) for:
 
-| Table | `bar_param` examples | Close rule |
-|---|---|---|
-| `bars_time` | `1m`, `5m`, `1h`, `4h`, `1d` | wall-clock boundary |
-| `bars_tick` | `tick:100`, `tick:500`, `tick:1000` | N trades |
-| `bars_volume` | `vol:100`, `vol:1000` | N contracts traded |
-| `bars_range` | `range:10`, `range:20` (ticks) | high−low ≥ N ticks |
-| `bars_renko` | `renko:10` | brick size in ticks |
-| `bars_delta` | `delta:500` | |cumulative delta| ≥ N |
+| Table         | `bar_param` examples                | Close rule          |
+| ------------- | ----------------------------------- | ------------------- |
+| `bars_time`   | `1m`, `5m`, `1h`, `4h`, `1d`        | wall-clock boundary |
+| `bars_tick`   | `tick:100`, `tick:500`, `tick:1000` | N trades            |
+| `bars_volume` | `vol:100`, `vol:1000`               | N contracts traded  |
+| `bars_range`  | `range:10`, `range:20` (ticks)      | high−low ≥ N ticks  |
+| `bars_renko`  | `renko:10`                          | brick size in ticks |
+| `bars_delta`  | `delta:500`                         |                     | cumulative delta | ≥ N |
 
 `bars_renko` and `bars_range` additionally carry `open_source_ts` (the timestamp of the trade that opened the brick) because their bars are not time-aligned.
 
@@ -2600,17 +2601,17 @@ Prometheus remains the primary metrics path; `engine_metrics` exists so that per
 
 ### 4.14 QuestDB operational notes
 
-| Concern | Setting / practice |
-|---|---|
-| Write path | ILP over TCP, batched 5 000 rows or 100 ms, per-table buffers |
-| WAL | enabled on all tables (`WAL` keyword) for crash safety and concurrent writers |
-| Dedup | `DEDUP UPSERT KEYS` on every table — makes backfill/reconnect replays idempotent |
-| Out-of-order | `o3MaxLag=300s`, `maxUncommittedRows=500000` — Bybit can deliver slightly out of order across reconnects |
-| Symbol capacity | Set explicitly; a too-small capacity silently degrades to hash lookups |
-| Retention | `ALTER TABLE … DROP PARTITION` only after Parquet export confirms checksum |
-| Backup | `SNAPSHOT PREPARE` → filesystem snapshot/rsync → `SNAPSHOT COMPLETE` (§8) |
-| Read access | PGWire on 8812 with a read-only user; the API never issues DDL against QuestDB at runtime except the retention job |
-| Spike gate | Owner decision #2 requires a QuestDB-vs-TimescaleDB prototype on real footprint/replay queries before hard commit; the table shapes above are deliberately portable (no QuestDB-only types beyond `SYMBOL`) |
+| Concern         | Setting / practice                                                                                                                                                                                          |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Write path      | ILP over TCP, batched 5 000 rows or 100 ms, per-table buffers                                                                                                                                               |
+| WAL             | enabled on all tables (`WAL` keyword) for crash safety and concurrent writers                                                                                                                               |
+| Dedup           | `DEDUP UPSERT KEYS` on every table — makes backfill/reconnect replays idempotent                                                                                                                            |
+| Out-of-order    | `o3MaxLag=300s`, `maxUncommittedRows=500000` — Bybit can deliver slightly out of order across reconnects                                                                                                    |
+| Symbol capacity | Set explicitly; a too-small capacity silently degrades to hash lookups                                                                                                                                      |
+| Retention       | `ALTER TABLE … DROP PARTITION` only after Parquet export confirms checksum                                                                                                                                  |
+| Backup          | `SNAPSHOT PREPARE` → filesystem snapshot/rsync → `SNAPSHOT COMPLETE` (§8)                                                                                                                                   |
+| Read access     | PGWire on 8812 with a read-only user; the API never issues DDL against QuestDB at runtime except the retention job                                                                                          |
+| Spike gate      | Owner decision #2 requires a QuestDB-vs-TimescaleDB prototype on real footprint/replay queries before hard commit; the table shapes above are deliberately portable (no QuestDB-only types beyond `SYMBOL`) |
 
 ---
 
@@ -2646,20 +2647,20 @@ cold/
 
 ### 5.2 File format & schema rules
 
-| Property | Value | Rationale |
-|---|---|---|
-| Format | Parquet v2 | Page-level statistics, delta encodings |
-| Compression | **ZSTD level 6** | ~3–4× smaller than snappy on tick data; decompress still fast enough for replay |
-| Row-group size | 128 MiB target (≈1 M rows for trades, ≈4 M for deltas) | Balances predicate pushdown against memory |
-| Page size | 1 MiB | |
-| Sorting | Rows sorted by `ts` then `price` within each file | Enables min/max pruning and cheap merge on read |
-| Dictionary | Enabled on `symbol`, `side`, `action`, `tick_dir` | High-repetition low-cardinality |
-| Timestamps | `TIMESTAMP(isAdjustedToUTC=true, unit=MICROS)` | Matches QuestDB µs resolution exactly |
-| Decimals | Market data stays `DOUBLE`; OMS exports use `DECIMAL(38,18)` | Ledger-of-record fidelity for money |
-| Nulls | Market-data columns are non-null by contract; OMS exports allow nulls | |
-| Stats | `write_statistics=true` on `ts`, `price`, `notional`, `symbol` | Predicate pushdown for range and threshold scans |
-| File naming | `part-NNNN.parquet`, monotonically increasing per partition | Compaction rewrites to `part-0000` |
-| Checksums | SHA-256 of each file recorded in the manifest and in `backups.checksum_sha256` for the archive run | Corruption detection |
+| Property       | Value                                                                                              | Rationale                                                                       |
+| -------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Format         | Parquet v2                                                                                         | Page-level statistics, delta encodings                                          |
+| Compression    | **ZSTD level 6**                                                                                   | ~3–4× smaller than snappy on tick data; decompress still fast enough for replay |
+| Row-group size | 128 MiB target (≈1 M rows for trades, ≈4 M for deltas)                                             | Balances predicate pushdown against memory                                      |
+| Page size      | 1 MiB                                                                                              |                                                                                 |
+| Sorting        | Rows sorted by `ts` then `price` within each file                                                  | Enables min/max pruning and cheap merge on read                                 |
+| Dictionary     | Enabled on `symbol`, `side`, `action`, `tick_dir`                                                  | High-repetition low-cardinality                                                 |
+| Timestamps     | `TIMESTAMP(isAdjustedToUTC=true, unit=MICROS)`                                                     | Matches QuestDB µs resolution exactly                                           |
+| Decimals       | Market data stays `DOUBLE`; OMS exports use `DECIMAL(38,18)`                                       | Ledger-of-record fidelity for money                                             |
+| Nulls          | Market-data columns are non-null by contract; OMS exports allow nulls                              |                                                                                 |
+| Stats          | `write_statistics=true` on `ts`, `price`, `notional`, `symbol`                                     | Predicate pushdown for range and threshold scans                                |
+| File naming    | `part-NNNN.parquet`, monotonically increasing per partition                                        | Compaction rewrites to `part-0000`                                              |
+| Checksums      | SHA-256 of each file recorded in the manifest and in `backups.checksum_sha256` for the archive run | Corruption detection                                                            |
 
 Canonical schemas mirror the QuestDB DDL in §4 column-for-column, with these additions on every file: `_export_run_id STRING`, `_exported_at TIMESTAMP`, `_source STRING` (`'questdb'`/`'postgres'`). The exporter fails closed if a column set drift is detected against the registered schema in `cold/_manifests/schema-registry.json`.
 
@@ -2685,13 +2686,13 @@ Invariant: **no hot partition is ever dropped before its Parquet counterpart is 
 
 Small files kill DuckDB scan performance. The compactor runs weekly (Sundays 03:00 UTC):
 
-| Rule | Threshold |
-|---|---|
-| Merge target | One file per partition directory, ≤ 512 MiB; split beyond that |
-| Trigger | > 4 files in a partition, or any file < 16 MiB with siblings |
-| Method | Read all files in the partition → sort by `ts` → write `part-0000.parquet.tmp` → fsync → atomic rename → delete originals |
-| Safety | Row count and SHA-256 of the merged output recorded before deletion; manifest updated in the same step |
-| Idle guard | Skips any partition referenced by an active `replay_sessions` row |
+| Rule             | Threshold                                                                                                                                                                                    |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Merge target     | One file per partition directory, ≤ 512 MiB; split beyond that                                                                                                                               |
+| Trigger          | > 4 files in a partition, or any file < 16 MiB with siblings                                                                                                                                 |
+| Method           | Read all files in the partition → sort by `ts` → write `part-0000.parquet.tmp` → fsync → atomic rename → delete originals                                                                    |
+| Safety           | Row count and SHA-256 of the merged output recorded before deletion; manifest updated in the same step                                                                                       |
+| Idle guard       | Skips any partition referenced by an active `replay_sessions` row                                                                                                                            |
 | Cold-cold rollup | Partitions older than 180 days for `orderbook_deltas` and `heatmap_cells` are **downsampled** (deltas → 1 s book snapshots) rather than merged, per `retention_policies.action='downsample'` |
 
 ### 5.5 DuckDB views
@@ -2783,42 +2784,42 @@ Disk pressure: when free space on the data volume falls below 15 %, the reaper s
 
 Defaults seeded into `retention_policies` (scope `default`). "Hot" = QuestDB, "Cold" = Parquet, "Total" = data no longer exists after this.
 
-| Stream / table | Hot (QuestDB) | Cold (Parquet) | Total horizon | Action at hot expiry | Notes |
-|---|---|---|---|---|---|
-| `trades` | 30 d | 24 mo | 24 mo | archive_parquet | Owner default 30 d (decision #4) |
-| `orderbook_deltas` | 7 d | 180 d raw, then 1 s snapshots to 24 mo | 24 mo | archive_parquet → downsample | Largest stream by far |
-| `orderbook_snapshots` | 30 d | 24 mo | 24 mo | archive_parquet | Needed for replay seek |
-| `tickers` | 30 d | 24 mo | 24 mo | archive_parquet | |
-| `klines` | 90 d | forever | ∞ | archive_parquet | Tiny; keep for long-range charts |
-| `liquidations` | 90 d | forever | ∞ | archive_parquet | Irreplaceable (no REST history) |
-| `open_interest` | 90 d | forever | ∞ | archive_parquet | REST backfill exists but is coarse |
-| `funding_rates` | 365 d | forever | ∞ | archive_parquet | Tiny |
-| `bars_time` | 365 d | forever | ∞ | archive_parquet | |
-| `bars_tick/volume/range/renko/delta` | 90 d | 24 mo | 24 mo | archive_parquet | Rebuildable from `trades` while trades exist |
-| `footprint_cells` | 30 d | 12 mo | 12 mo | archive_parquet | Rebuildable from `trades` |
-| `profiles` | 90 d | 24 mo | 24 mo | archive_parquet | Rebuildable |
-| `orderflow_metrics` | 90 d | 24 mo | 24 mo | archive_parquet | |
-| `heatmap_cells` | 7 d | 90 d | 90 d | archive_parquet → downsample | Very large, low long-term value |
-| `engine_metrics` | 14 d | — | 14 d | drop | Prometheus is the long-term store |
-| **Pinned symbol (any stream)** | ∞ | ∞ | ∞ | pin | Overrides everything above |
-| `orders` (PG) | ∞ | — | ∞ | — | Ledger of record |
-| `order_events` (PG) | 24 mo live | 7 y | 7 y | archive_parquet | Monthly partitions detached |
-| `executions` (PG) | ∞ | 7 y mirror | ∞ | archive_parquet | Financial record |
-| `positions` (PG, current) | ∞ | — | ∞ | — | Single row per account/symbol |
-| `position_snapshots` (PG) | 90 d | 24 mo | 24 mo | archive_parquet | |
-| `wallet_balances` (PG) | 180 d | 7 y | 7 y | archive_parquet | |
-| `rule_runs` matched (PG) | 24 mo | 7 y | 7 y | archive_parquet | |
-| `rule_runs` unmatched/simulate (PG) | 7 d | — | 7 d | drop | Volume control |
-| `rule_events` (PG) | follows parent run | follows | follows | cascade | |
-| `alert_deliveries` (PG) | 180 d | 24 mo | 24 mo | archive_parquet | |
-| `journal_trades` (PG) | ∞ | 7 y mirror | ∞ | archive_parquet | User's own record |
-| `notes`, `drawings`, layouts, presets | ∞ | — | ∞ | — | Soft-deleted rows purged after 90 d |
-| `sessions` (PG) | 30 d after expiry | — | 30 d | drop | |
-| `mfa_challenges` (PG) | 24 h | — | 24 h | drop | |
-| `audit_log` (PG) | ∞ live 24 mo | 7 y | 7 y (min) | archive_parquet | Chain head checkpointed before any detach |
-| `system_events` (PG) | 180 d | 24 mo | 24 mo | archive_parquet | |
-| `outbox` processed (PG) | 7 d | — | 7 d | drop | Dead-lettered rows kept 90 d |
-| `backups` (PG) | ∞ | — | ∞ | — | Metadata only |
+| Stream / table                        | Hot (QuestDB)      | Cold (Parquet)                         | Total horizon | Action at hot expiry         | Notes                                        |
+| ------------------------------------- | ------------------ | -------------------------------------- | ------------- | ---------------------------- | -------------------------------------------- |
+| `trades`                              | 30 d               | 24 mo                                  | 24 mo         | archive_parquet              | Owner default 30 d (decision #4)             |
+| `orderbook_deltas`                    | 7 d                | 180 d raw, then 1 s snapshots to 24 mo | 24 mo         | archive_parquet → downsample | Largest stream by far                        |
+| `orderbook_snapshots`                 | 30 d               | 24 mo                                  | 24 mo         | archive_parquet              | Needed for replay seek                       |
+| `tickers`                             | 30 d               | 24 mo                                  | 24 mo         | archive_parquet              |                                              |
+| `klines`                              | 90 d               | forever                                | ∞             | archive_parquet              | Tiny; keep for long-range charts             |
+| `liquidations`                        | 90 d               | forever                                | ∞             | archive_parquet              | Irreplaceable (no REST history)              |
+| `open_interest`                       | 90 d               | forever                                | ∞             | archive_parquet              | REST backfill exists but is coarse           |
+| `funding_rates`                       | 365 d              | forever                                | ∞             | archive_parquet              | Tiny                                         |
+| `bars_time`                           | 365 d              | forever                                | ∞             | archive_parquet              |                                              |
+| `bars_tick/volume/range/renko/delta`  | 90 d               | 24 mo                                  | 24 mo         | archive_parquet              | Rebuildable from `trades` while trades exist |
+| `footprint_cells`                     | 30 d               | 12 mo                                  | 12 mo         | archive_parquet              | Rebuildable from `trades`                    |
+| `profiles`                            | 90 d               | 24 mo                                  | 24 mo         | archive_parquet              | Rebuildable                                  |
+| `orderflow_metrics`                   | 90 d               | 24 mo                                  | 24 mo         | archive_parquet              |                                              |
+| `heatmap_cells`                       | 7 d                | 90 d                                   | 90 d          | archive_parquet → downsample | Very large, low long-term value              |
+| `engine_metrics`                      | 14 d               | —                                      | 14 d          | drop                         | Prometheus is the long-term store            |
+| **Pinned symbol (any stream)**        | ∞                  | ∞                                      | ∞             | pin                          | Overrides everything above                   |
+| `orders` (PG)                         | ∞                  | —                                      | ∞             | —                            | Ledger of record                             |
+| `order_events` (PG)                   | 24 mo live         | 7 y                                    | 7 y           | archive_parquet              | Monthly partitions detached                  |
+| `executions` (PG)                     | ∞                  | 7 y mirror                             | ∞             | archive_parquet              | Financial record                             |
+| `positions` (PG, current)             | ∞                  | —                                      | ∞             | —                            | Single row per account/symbol                |
+| `position_snapshots` (PG)             | 90 d               | 24 mo                                  | 24 mo         | archive_parquet              |                                              |
+| `wallet_balances` (PG)                | 180 d              | 7 y                                    | 7 y           | archive_parquet              |                                              |
+| `rule_runs` matched (PG)              | 24 mo              | 7 y                                    | 7 y           | archive_parquet              |                                              |
+| `rule_runs` unmatched/simulate (PG)   | 7 d                | —                                      | 7 d           | drop                         | Volume control                               |
+| `rule_events` (PG)                    | follows parent run | follows                                | follows       | cascade                      |                                              |
+| `alert_deliveries` (PG)               | 180 d              | 24 mo                                  | 24 mo         | archive_parquet              |                                              |
+| `journal_trades` (PG)                 | ∞                  | 7 y mirror                             | ∞             | archive_parquet              | User's own record                            |
+| `notes`, `drawings`, layouts, presets | ∞                  | —                                      | ∞             | —                            | Soft-deleted rows purged after 90 d          |
+| `sessions` (PG)                       | 30 d after expiry  | —                                      | 30 d          | drop                         |                                              |
+| `mfa_challenges` (PG)                 | 24 h               | —                                      | 24 h          | drop                         |                                              |
+| `audit_log` (PG)                      | ∞ live 24 mo       | 7 y                                    | 7 y (min)     | archive_parquet              | Chain head checkpointed before any detach    |
+| `system_events` (PG)                  | 180 d              | 24 mo                                  | 24 mo         | archive_parquet              |                                              |
+| `outbox` processed (PG)               | 7 d                | —                                      | 7 d           | drop                         | Dead-lettered rows kept 90 d                 |
+| `backups` (PG)                        | ∞                  | —                                      | ∞             | —                            | Metadata only                                |
 
 Changing any retention value is a dangerous action: it requires the `retention.change` permission, writes an audit entry with before/after, and the UI shows the computed volume delta before confirmation.
 
@@ -2828,14 +2829,14 @@ Changing any retention value is a dangerous action: it requires the `retention.c
 
 ### 8.1 What is backed up
 
-| Asset | Method | Schedule | Retention of backups | RPO | RTO |
-|---|---|---|---|---|---|
-| Postgres (full) | `pg_basebackup -X stream -c fast` + WAL archiving | Daily 01:00 UTC full; WAL continuous | 14 dailies, 8 weeklies, 12 monthlies | ≤ 5 min (WAL) | ≤ 30 min |
-| Postgres (logical) | `pg_dump -Fc` per schema | Daily 01:30 UTC | 14 days | 24 h | ≤ 15 min (single table restore) |
-| QuestDB | `SNAPSHOT PREPARE` → filesystem/ZFS snapshot → rsync → `SNAPSHOT COMPLETE` | Daily 02:00 UTC | 7 days | 24 h | ≤ 60 min |
-| Parquet lake | rsync/restic to the backup volume, incremental, content-addressed | Daily 03:30 UTC after compaction | 30 days of restic snapshots | 24 h | hours (large) |
-| Secrets (KEK, audit signing key) | Manual, offline, encrypted, **never** in the repo or DB | On change | 3 generations | n/a | manual |
-| Config bundle (compose files, postgresql.conf, questdb.conf, launch scripts) | git + tarball into backups | On change + weekly | 12 weeks | n/a | minutes |
+| Asset                                                                        | Method                                                                     | Schedule                             | Retention of backups                 | RPO           | RTO                             |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------ | ------------------------------------ | ------------- | ------------------------------- |
+| Postgres (full)                                                              | `pg_basebackup -X stream -c fast` + WAL archiving                          | Daily 01:00 UTC full; WAL continuous | 14 dailies, 8 weeklies, 12 monthlies | ≤ 5 min (WAL) | ≤ 30 min                        |
+| Postgres (logical)                                                           | `pg_dump -Fc` per schema                                                   | Daily 01:30 UTC                      | 14 days                              | 24 h          | ≤ 15 min (single table restore) |
+| QuestDB                                                                      | `SNAPSHOT PREPARE` → filesystem/ZFS snapshot → rsync → `SNAPSHOT COMPLETE` | Daily 02:00 UTC                      | 7 days                               | 24 h          | ≤ 60 min                        |
+| Parquet lake                                                                 | rsync/restic to the backup volume, incremental, content-addressed          | Daily 03:30 UTC after compaction     | 30 days of restic snapshots          | 24 h          | hours (large)                   |
+| Secrets (KEK, audit signing key)                                             | Manual, offline, encrypted, **never** in the repo or DB                    | On change                            | 3 generations                        | n/a           | manual                          |
+| Config bundle (compose files, postgresql.conf, questdb.conf, launch scripts) | git + tarball into backups                                                 | On change + weekly                   | 12 weeks                             | n/a           | minutes                         |
 
 All backup artefacts are encrypted at rest (restic repository password / age recipient), and every run writes a `backups` row (§3.10.3). A failed or missing daily backup raises a `critical` system event and blocks the next release per the PRR gate in `07-release-and-prr.md`.
 
@@ -2955,22 +2956,22 @@ NAMING_CONVENTION = {
 
 ### 9.4 Revision plan for R0–R1
 
-| Revision | Contents |
-|---|---|
-| `0001_initial` | extensions, domains, enums, trigger functions, `users`, `roles`, `permissions`, `role_permissions`, `user_roles`, `sessions`, `sessions_rotation`, `mfa_*`, `recovery_codes` — **landed in E07-T02** as `0001_identity_rbac_sessions_mfa` |
-| `0002_rbac_seed` | seed roles, permissions, role_permissions, bootstrap owner — **landed in E07-T02** |
-| `0003_audit_log` | `audit_log` + hash-chain trigger, `audit_checkpoints` — **landed in E09-T02** (superseded the placeholder `0003_exchange_accounts` slot below; `exchange_accounts`/`user_account_access` remain future work under a later revision number) |
-| `0004_instruments` | `instruments`, `instrument_versions` (§3.3.9) — **landed in E08-S01** |
-| `0005_api_keys` | `api_keys`, `api_key_rotations`, withdrawal-off constraint |
-| `0005_profiles` | `account_profiles` + ladder trigger |
-| `0006_trading_core` | `trade_groups`, `trade_group_legs`, `orders`, `order_events`, `executions`, `positions`, `position_snapshots`, `wallet_balances` |
-| `0007_recorder` | `recorded_symbols`, `recording_sessions`, `recording_gaps`, `retention_policies`, `replay_sessions` |
-| `0008_rules` | `rules`, `rule_versions`, `rule_runs`, `rule_events` |
-| `0009_alerts` | `alerts`, `alert_deliveries`, `outbox` |
-| `0010_journal` | `journal_trades`, `journal_tags`, `journal_trade_tags`, `notes` |
-| `0011_workspace` | `workspaces`, `layouts`, `layout_panes`, `chart_templates`, `drawings`, `indicator_presets`, `hotkey_profiles` |
-| `0012_governance` | `settings`, `feature_flags`, `feature_flag_overrides`, `audit_log` + chain trigger, `audit_checkpoints`, `system_events`, `backups` |
-| `0013_partitioning` | convert `order_events` to monthly range partitions; attach initial partitions |
+| Revision            | Contents                                                                                                                                                                                                                                   |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `0001_initial`      | extensions, domains, enums, trigger functions, `users`, `roles`, `permissions`, `role_permissions`, `user_roles`, `sessions`, `sessions_rotation`, `mfa_*`, `recovery_codes` — **landed in E07-T02** as `0001_identity_rbac_sessions_mfa`  |
+| `0002_rbac_seed`    | seed roles, permissions, role_permissions, bootstrap owner — **landed in E07-T02**                                                                                                                                                         |
+| `0003_audit_log`    | `audit_log` + hash-chain trigger, `audit_checkpoints` — **landed in E09-T02** (superseded the placeholder `0003_exchange_accounts` slot below; `exchange_accounts`/`user_account_access` remain future work under a later revision number) |
+| `0004_instruments`  | `instruments`, `instrument_versions` (§3.3.9) — **landed in E08-S01**                                                                                                                                                                      |
+| `0005_api_keys`     | `api_keys`, `api_key_rotations`, withdrawal-off constraint                                                                                                                                                                                 |
+| `0005_profiles`     | `account_profiles` + ladder trigger                                                                                                                                                                                                        |
+| `0006_trading_core` | `trade_groups`, `trade_group_legs`, `orders`, `order_events`, `executions`, `positions`, `position_snapshots`, `wallet_balances`                                                                                                           |
+| `0007_recorder`     | `recorded_symbols`, `recording_sessions`, `recording_gaps`, `retention_policies`, `replay_sessions`                                                                                                                                        |
+| `0008_rules`        | `rules`, `rule_versions`, `rule_runs`, `rule_events`                                                                                                                                                                                       |
+| `0009_alerts`       | `alerts`, `alert_deliveries`, `outbox`                                                                                                                                                                                                     |
+| `0010_journal`      | `journal_trades`, `journal_tags`, `journal_trade_tags`, `notes`                                                                                                                                                                            |
+| `0011_workspace`    | `workspaces`, `layouts`, `layout_panes`, `chart_templates`, `drawings`, `indicator_presets`, `hotkey_profiles`                                                                                                                             |
+| `0012_governance`   | `settings`, `feature_flags`, `feature_flag_overrides`, `audit_log` + chain trigger, `audit_checkpoints`, `system_events`, `backups`                                                                                                        |
+| `0013_partitioning` | convert `order_events` to monthly range partitions; attach initial partitions                                                                                                                                                              |
 
 ---
 
@@ -2980,7 +2981,7 @@ Seeds are declarative YAML applied idempotently by `python -m candleviewer.db.se
 
 ### 10.1 Roles and permissions
 
-The permission vocabulary is **not defined here**. It is defined once by the `x-rbac` blocks in `22-api-openapi.yaml` (36 strings, listed in `04-security-program.md` §7.2.0) and seeded verbatim into this table. The seed file is *generated* by `tools/rbac/generate_seed.py` from the OpenAPI document, so the database can never drift from the routes; contract test `rbac_vocabulary_single_source` re-generates it in CI and fails on any diff.
+The permission vocabulary is **not defined here**. It is defined once by the `x-rbac` blocks in `22-api-openapi.yaml` (36 strings, listed in `04-security-program.md` §7.2.0) and seeded verbatim into this table. The seed file is _generated_ by `tools/rbac/generate_seed.py` from the OpenAPI document, so the database can never drift from the routes; contract test `rbac_vocabulary_single_source` re-generates it in CI and fails on any diff.
 
 ```yaml
 roles:
@@ -3077,16 +3078,16 @@ One `retention_policies` row per `stream_kind` with `scope='default'` matching �
 
 ### 10.4 Built-in chart templates (`owner_user_id = NULL`, `is_builtin = true`)
 
-| Name | Chart | Bar mode | Footprint | Notes |
-|---|---|---|---|---|
-| `Default Candles` | candle | time 1m | off | Neutral starting point |
-| `Footprint Bid/Ask` | candle | time 1m | cell=bid_ask, display=box, imbalance 300 % | Digest-23 default threshold |
-| `Footprint Delta` | candle | time 5m | cell=delta, display=profile | |
-| `Delta Volume` | delta_volume | time 1m | off | |
-| `Tick 500` | candle | tick:500 | cell=bid_ask | |
-| `Volume 1000` | candle | vol:1000 | cell=delta_total | |
-| `Range 20` | candle | range:20 | off | |
-| `Heatmap + DOM` | candle | time 1m | off, heatmap on (bid=green, ask=red, log scale, 60 s trail) | Owner decision #10 |
+| Name                | Chart        | Bar mode | Footprint                                                   | Notes                       |
+| ------------------- | ------------ | -------- | ----------------------------------------------------------- | --------------------------- |
+| `Default Candles`   | candle       | time 1m  | off                                                         | Neutral starting point      |
+| `Footprint Bid/Ask` | candle       | time 1m  | cell=bid_ask, display=box, imbalance 300 %                  | Digest-23 default threshold |
+| `Footprint Delta`   | candle       | time 5m  | cell=delta, display=profile                                 |                             |
+| `Delta Volume`      | delta_volume | time 1m  | off                                                         |                             |
+| `Tick 500`          | candle       | tick:500 | cell=bid_ask                                                |                             |
+| `Volume 1000`       | candle       | vol:1000 | cell=delta_total                                            |                             |
+| `Range 20`          | candle       | range:20 | off                                                         |                             |
+| `Heatmap + DOM`     | candle       | time 1m  | off, heatmap on (bid=green, ask=red, log scale, 60 s trail) | Owner decision #10          |
 
 ### 10.5 Built-in indicator presets
 
@@ -3094,44 +3095,44 @@ One `retention_policies` row per `stream_kind` with `scope='default'` matching �
 
 ### 10.6 Default hotkey profile (`CandleViewer Default`, `requires_arm = true`)
 
-| Action | Chord |
-|---|---|
-| `order.buy_market` | `B` |
-| `order.sell_market` | `S` |
-| `order.buy_bid` | `Shift+B` |
-| `order.sell_ask` | `Shift+S` |
-| `order.submit` | `Ctrl+Enter` |
-| `order.cancel_all_symbol` | `Esc` |
-| `order.flatten_symbol` | `Ctrl+Shift+F` |
-| `order.flatten_all` | `Ctrl+Alt+Shift+F` |
-| `order.reverse` | `Ctrl+R` |
-| `size.preset_1..5` | `1`–`5` |
-| `trading.arm_toggle` | `Ctrl+Shift+A` |
-| `layout.preset_1..9` | `Ctrl+1`–`Ctrl+9` |
-| `replay.play_pause` | `Space` |
-| `replay.step_bar_fwd` / `back` | `→` / `←` |
+| Action                          | Chord                 |
+| ------------------------------- | --------------------- |
+| `order.buy_market`              | `B`                   |
+| `order.sell_market`             | `S`                   |
+| `order.buy_bid`                 | `Shift+B`             |
+| `order.sell_ask`                | `Shift+S`             |
+| `order.submit`                  | `Ctrl+Enter`          |
+| `order.cancel_all_symbol`       | `Esc`                 |
+| `order.flatten_symbol`          | `Ctrl+Shift+F`        |
+| `order.flatten_all`             | `Ctrl+Alt+Shift+F`    |
+| `order.reverse`                 | `Ctrl+R`              |
+| `size.preset_1..5`              | `1`–`5`               |
+| `trading.arm_toggle`            | `Ctrl+Shift+A`        |
+| `layout.preset_1..9`            | `Ctrl+1`–`Ctrl+9`     |
+| `replay.play_pause`             | `Space`               |
+| `replay.step_bar_fwd` / `back`  | `→` / `←`             |
 | `replay.step_tick_fwd` / `back` | `Shift+→` / `Shift+←` |
-| `replay.jump_realtime` | `R` |
-| `chart.crosshair_sync_toggle` | `Ctrl+K` |
-| `symbol.search` | `Ctrl+P` |
+| `replay.jump_realtime`          | `R`                   |
+| `chart.crosshair_sync_toggle`   | `Ctrl+K`              |
+| `symbol.search`                 | `Ctrl+P`              |
 
 Env switching has **no** hotkey by design (digest 23: must be a deliberate click).
 
 ### 10.7 Feature flags
 
-| Key | Kind | Default | Purpose |
-|---|---|---|---|
-| `trading.live_enabled` | boolean | `false` | Master gate; flipped only after pen-test (R4) |
-| `trading.one_click` | boolean | `false` | Requires explicit arm |
-| `engine.webgl_v2` | boolean | `false` | Custom engine rollout |
-| `engine.fallback_lightweight_charts` | boolean | `false` | Spike-failure fallback path |
-| `rules.graph_editor` | boolean | `true` | Node-graph editor |
-| `rules.form_editor` | boolean | `true` | Form editor |
-| `algo.twap` / `algo.chase` / `algo.iceberg` / `algo.scaled` / `algo.oco` | boolean | `false` | Emulated algos, enabled per release |
-| `recorder.auto_record` | boolean | `true` | Chart/position auto-record |
-| `storage.cold_tier` | boolean | `true` | Parquet/DuckDB routing |
-| `killswitch.ingestion` | boolean | `false` | `is_killswitch=true` |
-| `killswitch.order_entry` | boolean | `false` | `is_killswitch=true` |
+| Key                                                                      | Kind    | Default | Purpose                                       |
+| ------------------------------------------------------------------------ | ------- | ------- | --------------------------------------------- |
+| `trading.live_enabled`                                                   | boolean | `false` | Master gate; flipped only after pen-test (R4) |
+| `trading.one_click`                                                      | boolean | `false` | Requires explicit arm                         |
+| `engine.webgl_v2`                                                        | boolean | `false` | Custom engine rollout                         |
+| `engine.fallback_lightweight_charts`                                     | boolean | `false` | Spike-failure fallback path                   |
+| `rules.graph_editor`                                                     | boolean | `true`  | Node-graph editor                             |
+| `rules.form_editor`                                                      | boolean | `true`  | Form editor                                   |
+| `algo.twap` / `algo.chase` / `algo.iceberg` / `algo.scaled` / `algo.oco` | boolean | `false` | Emulated algos, enabled per release           |
+| `recorder.auto_record`                                                   | boolean | `true`  | Chart/position auto-record                    |
+| `storage.cold_tier`                                                      | boolean | `true`  | Parquet/DuckDB routing                        |
+| `killswitch.ingestion`                                                   | boolean | `false` | `is_killswitch=true`                          |
+| `killswitch.order_entry`                                                 | boolean | `false` | `is_killswitch=true`                          |
 
 ### 10.8 Demo/dev fixtures (never in production)
 
@@ -3143,22 +3144,22 @@ Env switching has **no** hotkey by design (digest 23: must be a deliberate click
 
 ### 11.1 Per-symbol per-day raw volume (BTCUSDT-class liquidity, 200-depth book)
 
-| Stream | Msgs/day | Rows/day | Bytes/row (QuestDB, on disk) | Raw/day | ZSTD Parquet/day |
-|---|---:|---:|---:|---:|---:|
-| `trades` | ~2.5 M | 2.5 M | 64 | 160 MB | ~28 MB |
-| `orderbook_deltas` (200 @ 100 ms) | 864 k frames | ~190 M level-rows | 56 | 10.6 GB | ~620 MB |
-| `orderbook_snapshots` (exchange + 60 s forced) | ~1.5 k | 1.5 k | ~12 KB | 18 MB | ~4 MB |
-| `tickers` | 864 k | 864 k | 144 | 124 MB | ~14 MB |
-| `klines` (6 intervals) | ~10 k | 10 k | 72 | 0.7 MB | 0.2 MB |
-| `liquidations` | ~5 k | 5 k | 56 | 0.3 MB | 0.1 MB |
-| `open_interest` | 86 k | 86 k | 48 | 4 MB | 0.8 MB |
-| `funding_rates` | 3 | 3 | 48 | negligible | negligible |
-| `bars_*` (all families) | — | ~20 k | 176 | 3.5 MB | 0.7 MB |
-| `footprint_cells` | — | ~1.2 M | 96 | 115 MB | ~20 MB |
-| `profiles` | — | ~30 k | 104 | 3 MB | 0.6 MB |
-| `orderflow_metrics` (1 s) | — | 86 400 | 208 | 18 MB | 3 MB |
-| `heatmap_cells` (100 ms × 400 levels) | — | ~35 M | 64 | 2.2 GB | ~180 MB |
-| **Total hot** | | | | **≈ 13.2 GB/day/symbol** | **≈ 0.87 GB/day/symbol** |
+| Stream                                         |     Msgs/day |          Rows/day | Bytes/row (QuestDB, on disk) |                  Raw/day |         ZSTD Parquet/day |
+| ---------------------------------------------- | -----------: | ----------------: | ---------------------------: | -----------------------: | -----------------------: |
+| `trades`                                       |       ~2.5 M |             2.5 M |                           64 |                   160 MB |                   ~28 MB |
+| `orderbook_deltas` (200 @ 100 ms)              | 864 k frames | ~190 M level-rows |                           56 |                  10.6 GB |                  ~620 MB |
+| `orderbook_snapshots` (exchange + 60 s forced) |       ~1.5 k |             1.5 k |                       ~12 KB |                    18 MB |                    ~4 MB |
+| `tickers`                                      |        864 k |             864 k |                          144 |                   124 MB |                   ~14 MB |
+| `klines` (6 intervals)                         |        ~10 k |              10 k |                           72 |                   0.7 MB |                   0.2 MB |
+| `liquidations`                                 |         ~5 k |               5 k |                           56 |                   0.3 MB |                   0.1 MB |
+| `open_interest`                                |         86 k |              86 k |                           48 |                     4 MB |                   0.8 MB |
+| `funding_rates`                                |            3 |                 3 |                           48 |               negligible |               negligible |
+| `bars_*` (all families)                        |            — |             ~20 k |                          176 |                   3.5 MB |                   0.7 MB |
+| `footprint_cells`                              |            — |            ~1.2 M |                           96 |                   115 MB |                   ~20 MB |
+| `profiles`                                     |            — |             ~30 k |                          104 |                     3 MB |                   0.6 MB |
+| `orderflow_metrics` (1 s)                      |            — |            86 400 |                          208 |                    18 MB |                     3 MB |
+| `heatmap_cells` (100 ms × 400 levels)          |            — |             ~35 M |                           64 |                   2.2 GB |                  ~180 MB |
+| **Total hot**                                  |              |                   |                              | **≈ 13.2 GB/day/symbol** | **≈ 0.87 GB/day/symbol** |
 
 This matches the research estimate of ~0.5–0.75 GB/day/symbol compressed at 200-depth (owner decision #4 note); our figure is slightly higher because we additionally persist `heatmap_cells` and forced snapshots.
 
@@ -3166,43 +3167,43 @@ Reducing `orderbook_depth` to 50 cuts the delta and heatmap rows by roughly 4×,
 
 ### 11.2 Realistic deployment scenarios
 
-| Scenario | Symbols | Depth | Hot window | Hot disk | Cold/yr | Notes |
-|---|---:|---:|---|---:|---:|---|
-| Solo owner, 2 symbols | 2 | 200 | trades 30 d / deltas 7 d | ~220 GB | ~630 GB | Default posture |
-| Owner + 2 managers, 5 symbols | 5 | 200 | as default | ~550 GB | ~1.6 TB | Needs a 2 TB data volume |
-| Wide watch, 20 symbols | 20 | 50 | deltas 3 d | ~420 GB | ~1.8 TB | Depth 50 is mandatory at this width |
-| Pinned research set | 3 pinned | 200 | ∞ | grows ~40 GB/day | ∞ | UI must show the burn rate |
+| Scenario                      |  Symbols | Depth | Hot window               |         Hot disk | Cold/yr | Notes                               |
+| ----------------------------- | -------: | ----: | ------------------------ | ---------------: | ------: | ----------------------------------- |
+| Solo owner, 2 symbols         |        2 |   200 | trades 30 d / deltas 7 d |          ~220 GB | ~630 GB | Default posture                     |
+| Owner + 2 managers, 5 symbols |        5 |   200 | as default               |          ~550 GB | ~1.6 TB | Needs a 2 TB data volume            |
+| Wide watch, 20 symbols        |       20 |    50 | deltas 3 d               |          ~420 GB | ~1.8 TB | Depth 50 is mandatory at this width |
+| Pinned research set           | 3 pinned |   200 | ∞                        | grows ~40 GB/day |       ∞ | UI must show the burn rate          |
 
 Hot-disk formula used above: `Σ_symbols ( trades_GB·30 + deltas_GB·7 + heatmap_GB·7 + others_GB·30 )`.
 
 ### 11.3 Postgres sizing
 
-| Table | Rows/day (active use) | Row size | 1-yr size | Notes |
-|---|---:|---:|---:|---|
-| `orders` | 200 | ~400 B | 29 MB | Includes algo children |
-| `order_events` | 1 500 | ~900 B (jsonb payload) | 490 MB | Monthly partitions |
-| `executions` | 400 | ~350 B | 51 MB | |
-| `position_snapshots` | 4 000 (minute ticks × accounts) | 180 B | 263 MB | 90 d live → 65 MB |
-| `wallet_balances` | 1 500 | 200 B | 110 MB | |
-| `rule_runs` (persisted only) | 500 | 1.2 KB | 219 MB | Unmatched runs not persisted |
-| `rule_events` | 2 000 | 400 B | 292 MB | |
-| `alert_deliveries` | 200 | 500 B | 37 MB | |
-| `journal_trades` | 60 | 600 B | 13 MB | |
-| `audit_log` | 1 200 | 1 KB | 438 MB | |
-| `system_events` | 500 | 600 B | 110 MB | |
-| Config tables (users, layouts, drawings, presets, rules, templates) | — | — | < 100 MB | Bounded by human editing rate |
-| **Total** | | | **≈ 2.2 GB/yr** | Trivial next to the market-data tiers; index overhead ~40 % on top |
+| Table                                                               |           Rows/day (active use) |               Row size |       1-yr size | Notes                                                              |
+| ------------------------------------------------------------------- | ------------------------------: | ---------------------: | --------------: | ------------------------------------------------------------------ |
+| `orders`                                                            |                             200 |                 ~400 B |           29 MB | Includes algo children                                             |
+| `order_events`                                                      |                           1 500 | ~900 B (jsonb payload) |          490 MB | Monthly partitions                                                 |
+| `executions`                                                        |                             400 |                 ~350 B |           51 MB |                                                                    |
+| `position_snapshots`                                                | 4 000 (minute ticks × accounts) |                  180 B |          263 MB | 90 d live → 65 MB                                                  |
+| `wallet_balances`                                                   |                           1 500 |                  200 B |          110 MB |                                                                    |
+| `rule_runs` (persisted only)                                        |                             500 |                 1.2 KB |          219 MB | Unmatched runs not persisted                                       |
+| `rule_events`                                                       |                           2 000 |                  400 B |          292 MB |                                                                    |
+| `alert_deliveries`                                                  |                             200 |                  500 B |           37 MB |                                                                    |
+| `journal_trades`                                                    |                              60 |                  600 B |           13 MB |                                                                    |
+| `audit_log`                                                         |                           1 200 |                   1 KB |          438 MB |                                                                    |
+| `system_events`                                                     |                             500 |                  600 B |          110 MB |                                                                    |
+| Config tables (users, layouts, drawings, presets, rules, templates) |                               — |                      — |        < 100 MB | Bounded by human editing rate                                      |
+| **Total**                                                           |                                 |                        | **≈ 2.2 GB/yr** | Trivial next to the market-data tiers; index overhead ~40 % on top |
 
 Postgres therefore fits comfortably in a 50 GB volume for many years; the operational risk is **never** size, it is lock contention during migrations and the OMS hot path — which is why §9 caps migration duration.
 
 ### 11.4 Throughput budget
 
-| Path | Target | Notes |
-|---|---|---|
-| QuestDB ILP ingest | ≥ 600 k rows/s sustained (single node) | 5 symbols at 200-depth peak ≈ 25 k rows/s — 20× headroom |
-| Postgres OMS writes | ≤ 50 tx/s | Fan-out of 5 accounts × bracket of 3 orders = 15 rows + 15 events per ticket |
-| Parquet export | ≥ 200 MB/s write | Nightly window of 13 GB/symbol completes in minutes |
-| DuckDB replay scan | ≥ 1 GB/s from page cache | One hour of 200-depth deltas ≈ 26 MB compressed |
+| Path                | Target                                 | Notes                                                                        |
+| ------------------- | -------------------------------------- | ---------------------------------------------------------------------------- |
+| QuestDB ILP ingest  | ≥ 600 k rows/s sustained (single node) | 5 symbols at 200-depth peak ≈ 25 k rows/s — 20× headroom                     |
+| Postgres OMS writes | ≤ 50 tx/s                              | Fan-out of 5 accounts × bracket of 3 orders = 15 rows + 15 events per ticket |
+| Parquet export      | ≥ 200 MB/s write                       | Nightly window of 13 GB/symbol completes in minutes                          |
+| DuckDB replay scan  | ≥ 1 GB/s from page cache               | One hour of 200-depth deltas ≈ 26 MB compressed                              |
 
 ---
 
@@ -3210,37 +3211,38 @@ Postgres therefore fits comfortably in a 50 GB volume for many years; the operat
 
 Classification levels: **P0 public/internal** (no restriction), **P1 personal** (PII — access logged, purged on erase), **P2 sensitive personal** (PII + never in logs or exports), **S secret** (encrypted at rest, never returned by any API, never logged, redacted in audit diffs).
 
-| Table | Column | Class | Storage protection | Handling rule |
-|---|---|---|---|---|
-| `users` | `email` | P1 | plaintext | Redacted to `u***@d***` in logs; purged on erase |
-| `users` | `display_name` | P1 | plaintext | Same |
-| `users` | `username` | P1 | plaintext | Retained in `audit_log.actor_label` after erase (pseudonymised to `deleted-user-<id8>`) |
-| `users` | `password_hash` | S | Argon2id | Never selected outside the auth module; excluded from `SELECT *` via explicit column lists |
-| `users` | `last_login_ip` | P2 | plaintext | Purged at 90 d by the reaper |
-| `sessions` | `refresh_token_hash` | S | SHA-256 of token | Raw token exists only in the response body and the client |
-| `sessions` | `ip`, `user_agent`, `tailscale_node` | P2 | plaintext | Purged with the session row (30 d after expiry) |
-| `mfa_methods` | `secret_enc` | S | AES-256-GCM (envelope) | Decrypted only in the MFA verifier; never exported |
-| `mfa_methods` | `public_key`, `credential_id` | P1 | plaintext | Not secret, but identifying |
-| `mfa_challenges` | `nonce` | S | random bytes | 24 h TTL |
-| `recovery_codes` | `code_hash` | S | SHA-256 | Plaintext shown once at generation |
-| `api_keys` | `key_id_enc`, `secret_enc` | S | AES-256-GCM, DEK wrapped by external KEK | Only the credential broker may decrypt; every decryption writes `api_key.reveal_attempt`-class telemetry; **no API endpoint ever returns them** |
-| `api_keys` | `enc_nonce`, `dek_ref` | S | — | Useless alone but treated as secret |
-| `api_keys` | `key_id_last4` | P0 | plaintext | Safe display tail |
-| `api_keys` | `permission_snapshot` | P0 | jsonb | Contains no secret; `ips` sub-field is P1 |
-| `api_keys` | `ip_whitelist` | P1 | cidr[] | Network identifiers |
-| `alerts` | `webhook_url_enc`, `webhook_secret_enc` | S | AES-256-GCM | URLs can embed tokens — always encrypted |
-| `audit_log` | `actor_ip` | P2 | plaintext | Cannot be deleted (append-only); erase requests are satisfied by key destruction of the actor mapping, documented in `04-security-program.md` |
-| `audit_log` | `before_state`, `after_state` | P1/S mixed | jsonb | Writer redacts any key matching `secret|password|token|api_key|seed|nonce` to `"[redacted]"` before insert — enforced by a shared serializer and a unit test with a hostile fixture |
-| `notes` | `body`, `title` | P1 | plaintext | User content; exported on data-export request |
-| `journal_trades` | all P&L columns | P1 | plaintext | Financial personal data |
-| `exchange_accounts` | `exchange_uid`, `label` | P1 | plaintext | Account identifiers |
-| `positions`, `orders`, `executions`, `wallet_balances` | monetary columns | P1 | plaintext | Financial personal data; never sent to third parties |
-| `system_events` | `details` | P0 | jsonb | Same redaction serializer as audit |
-| `backups` | `encryption_ref` | S | keyring handle | |
-| `settings` | `value` where `is_secret` | S | AES-256-GCM | `is_secret=true` rows are returned masked by the API |
-| Everything else | — | P0 | — | |
+| Table                                                  | Column                                  | Class      | Storage protection                       | Handling rule                                                                                                                                   |
+| ------------------------------------------------------ | --------------------------------------- | ---------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `users`                                                | `email`                                 | P1         | plaintext                                | Redacted to `u***@d***` in logs; purged on erase                                                                                                |
+| `users`                                                | `display_name`                          | P1         | plaintext                                | Same                                                                                                                                            |
+| `users`                                                | `username`                              | P1         | plaintext                                | Retained in `audit_log.actor_label` after erase (pseudonymised to `deleted-user-<id8>`)                                                         |
+| `users`                                                | `password_hash`                         | S          | Argon2id                                 | Never selected outside the auth module; excluded from `SELECT *` via explicit column lists                                                      |
+| `users`                                                | `last_login_ip`                         | P2         | plaintext                                | Purged at 90 d by the reaper                                                                                                                    |
+| `sessions`                                             | `refresh_token_hash`                    | S          | SHA-256 of token                         | Raw token exists only in the response body and the client                                                                                       |
+| `sessions`                                             | `ip`, `user_agent`, `tailscale_node`    | P2         | plaintext                                | Purged with the session row (30 d after expiry)                                                                                                 |
+| `mfa_methods`                                          | `secret_enc`                            | S          | AES-256-GCM (envelope)                   | Decrypted only in the MFA verifier; never exported                                                                                              |
+| `mfa_methods`                                          | `public_key`, `credential_id`           | P1         | plaintext                                | Not secret, but identifying                                                                                                                     |
+| `mfa_challenges`                                       | `nonce`                                 | S          | random bytes                             | 24 h TTL                                                                                                                                        |
+| `recovery_codes`                                       | `code_hash`                             | S          | SHA-256                                  | Plaintext shown once at generation                                                                                                              |
+| `api_keys`                                             | `key_id_enc`, `secret_enc`              | S          | AES-256-GCM, DEK wrapped by external KEK | Only the credential broker may decrypt; every decryption writes `api_key.reveal_attempt`-class telemetry; **no API endpoint ever returns them** |
+| `api_keys`                                             | `enc_nonce`, `dek_ref`                  | S          | —                                        | Useless alone but treated as secret                                                                                                             |
+| `api_keys`                                             | `key_id_last4`                          | P0         | plaintext                                | Safe display tail                                                                                                                               |
+| `api_keys`                                             | `permission_snapshot`                   | P0         | jsonb                                    | Contains no secret; `ips` sub-field is P1                                                                                                       |
+| `api_keys`                                             | `ip_whitelist`                          | P1         | cidr[]                                   | Network identifiers                                                                                                                             |
+| `alerts`                                               | `webhook_url_enc`, `webhook_secret_enc` | S          | AES-256-GCM                              | URLs can embed tokens — always encrypted                                                                                                        |
+| `audit_log`                                            | `actor_ip`                              | P2         | plaintext                                | Cannot be deleted (append-only); erase requests are satisfied by key destruction of the actor mapping, documented in `04-security-program.md`   |
+| `audit_log`                                            | `before_state`, `after_state`           | P1/S mixed | jsonb                                    | Writer redacts any key matching `secret                                                                                                         | password | token | api_key | seed | nonce`to`"[redacted]"` before insert — enforced by a shared serializer and a unit test with a hostile fixture |
+| `notes`                                                | `body`, `title`                         | P1         | plaintext                                | User content; exported on data-export request                                                                                                   |
+| `journal_trades`                                       | all P&L columns                         | P1         | plaintext                                | Financial personal data                                                                                                                         |
+| `exchange_accounts`                                    | `exchange_uid`, `label`                 | P1         | plaintext                                | Account identifiers                                                                                                                             |
+| `positions`, `orders`, `executions`, `wallet_balances` | monetary columns                        | P1         | plaintext                                | Financial personal data; never sent to third parties                                                                                            |
+| `system_events`                                        | `details`                               | P0         | jsonb                                    | Same redaction serializer as audit                                                                                                              |
+| `backups`                                              | `encryption_ref`                        | S          | keyring handle                           |                                                                                                                                                 |
+| `settings`                                             | `value` where `is_secret`               | S          | AES-256-GCM                              | `is_secret=true` rows are returned masked by the API                                                                                            |
+| Everything else                                        | —                                       | P0         | —                                        |                                                                                                                                                 |
 
 Enforcement:
+
 - A CI check parses the migration DDL and asserts every column listed above carries a matching `COMMENT ON COLUMN` tag (`PII:` / `SECRET:`).
 - A Semgrep rule forbids `SELECT *` on `users`, `api_keys`, `mfa_methods`, `sessions`, `alerts` in application code.
 - The structured logger has a deny-list of field names; a unit test asserts that logging a model instance containing a secret field emits `[redacted]`.
@@ -3268,43 +3270,43 @@ Each row: the screen/job that issues the query, the query shape, the serving ind
 
 ### 13.1 Postgres
 
-| # | Caller | Query shape | Index used | Target |
-|---|---|---|---|---|
-| 1 | Login | `WHERE email = $1 AND deleted_at IS NULL` | `ux_users_email` | < 2 ms |
-| 2 | Every authenticated request | `WHERE id = $1 AND revoked_at IS NULL` on `sessions` | PK + `ix_sessions_user_live` | < 1 ms |
-| 3 | Session reaper | `WHERE expires_at < now() AND revoked_at IS NULL` | `ix_sessions_expiry` | < 50 ms |
-| 4 | RBAC resolution | join `user_roles` → `role_permissions` → `permissions` | PKs + `ix_role_permissions_perm` | < 3 ms (cached 60 s) |
-| 5 | Account switcher | `WHERE env = $1 AND is_enabled AND trading_enabled` | `ix_ea_tradeable` | < 2 ms |
-| 6 | Order ticket pre-flight | `account_profiles WHERE exchange_account_id = ANY($1) AND is_default` | `ux_ap_default` | < 2 ms |
-| 7 | Fan-out submit | insert legs + orders, then `WHERE order_link_id = $1` on retry | `ux_orders_link` | < 5 ms |
-| 8 | Positions & Orders screen | `orders WHERE exchange_account_id = ANY($1) AND state IN (open set)` | `ix_orders_open` (partial) | < 10 ms for 5 accounts |
-| 9 | Open positions grid | `positions WHERE exchange_account_id = ANY($1) AND size > 0` | `ix_pos_open` (partial) | < 5 ms |
-| 10 | **Safety monitor (1 s loop)** | open legs with `native_sl_confirmed = false` | `ix_tgl_no_sl` (partial) | < 2 ms |
-| 11 | **Safety monitor (1 s loop)** | open positions with `stop_loss IS NULL` | `ix_pos_no_sl` (partial) | < 2 ms |
-| 12 | Reconciliation | `orders WHERE exchange_account_id = $1 AND exchange_order_id = ANY($2)` | `ux_orders_exch_id` | < 10 ms for 200 ids |
-| 13 | Crash recovery | `orders WHERE idempotency_state = 'in_flight'` | `ix_orders_inflight` (partial) | < 2 ms |
-| 14 | Untracked review | `orders WHERE state = 'untracked'` | `ix_orders_untracked` (partial) | < 2 ms |
-| 15 | Order detail drawer | `order_events WHERE order_id = $1 ORDER BY event_ts` | `ix_oe_order_time` | < 5 ms |
-| 16 | Execution backfill | insert `ON CONFLICT (exchange_account_id, exec_id) DO NOTHING` | `ux_exec_id` | < 3 ms/row |
-| 17 | Journal list | `journal_trades ORDER BY opened_at DESC LIMIT 50` (+ symbol/account/outcome filters) | `ix_jt_time`, `ix_jt_symbol`, `ix_jt_account`, `ix_jt_outcome` | < 15 ms |
-| 18 | Tag filter | `journal_trade_tags WHERE journal_tag_id = $1` | `ix_jtt_tag` | < 5 ms |
-| 19 | Note search | `to_tsvector` match | `ix_notes_fts` (GIN) | < 30 ms |
-| 20 | Rule scheduler (per tick) | `rules WHERE mode <> 'disabled' ORDER BY priority` | `ix_rules_active` (partial) | < 1 ms (cached, invalidated on write) |
-| 21 | Rule run history | `rule_runs WHERE rule_id = $1 ORDER BY started_at DESC` | `ix_rr_rule_time` | < 10 ms |
-| 22 | Alert evaluator | `alerts WHERE enabled AND symbol = $1` | `ix_alerts_live` (partial) | < 2 ms |
-| 23 | Alert centre badge | unacked deliveries per user | `ix_ad_user_unack` (partial) | < 3 ms |
-| 24 | Outbox dispatcher | `WHERE processed_at IS NULL AND available_at <= now() ORDER BY available_at LIMIT 100` | `ix_outbox_ready` (partial) | < 5 ms |
-| 25 | Recorder decision loop | `layout_panes WHERE symbol IS NOT NULL` ∪ `positions WHERE size > 0` | `ix_lp_symbol`, `ix_pos_open` | < 5 ms |
-| 26 | Recorder status screen | `recording_sessions WHERE state IN (live set)` | `ix_recs_live` (partial) | < 3 ms |
-| 27 | Gap overlay on charts | `recording_gaps WHERE symbol = $1 AND gap_start < $3 AND gap_end > $2` | `ix_rg_symbol_time` | < 5 ms |
-| 28 | Drawings load per chart | `WHERE owner_user_id = $1 AND symbol = $2` | `ix_dr_user_symbol` (partial) | < 5 ms |
-| 29 | Layout restore | `layout_panes WHERE layout_id = $1 ORDER BY slot_index` | PK/unique `(layout_id, slot_index)` | < 3 ms |
-| 30 | Audit viewer | `ORDER BY event_ts DESC` + filters on actor/action/object | `ix_audit_time`, `ix_audit_actor`, `ix_audit_action`, `ix_audit_object` | < 20 ms |
-| 31 | Audit verifier | full scan by `id` | PK | minutes (nightly) |
-| 32 | System health | `system_events WHERE resolved_at IS NULL AND severity IN ('error','critical')` | `ix_se_sev_open` (partial) | < 5 ms |
-| 33 | Key rotation reminder | `api_keys WHERE rotation_due_at < now() AND status='active'` | `ix_api_keys_rotation` (partial) | < 2 ms |
-| 34 | KEK rotation job | `api_keys WHERE kek_version < $1` | `ix_api_keys_kek` | < 5 ms |
-| 35 | Risk dashboard | latest `wallet_balances` per account | `ix_wb_acct_time` + `DISTINCT ON` | < 10 ms |
+| #   | Caller                        | Query shape                                                                            | Index used                                                              | Target                                |
+| --- | ----------------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------- |
+| 1   | Login                         | `WHERE email = $1 AND deleted_at IS NULL`                                              | `ux_users_email`                                                        | < 2 ms                                |
+| 2   | Every authenticated request   | `WHERE id = $1 AND revoked_at IS NULL` on `sessions`                                   | PK + `ix_sessions_user_live`                                            | < 1 ms                                |
+| 3   | Session reaper                | `WHERE expires_at < now() AND revoked_at IS NULL`                                      | `ix_sessions_expiry`                                                    | < 50 ms                               |
+| 4   | RBAC resolution               | join `user_roles` → `role_permissions` → `permissions`                                 | PKs + `ix_role_permissions_perm`                                        | < 3 ms (cached 60 s)                  |
+| 5   | Account switcher              | `WHERE env = $1 AND is_enabled AND trading_enabled`                                    | `ix_ea_tradeable`                                                       | < 2 ms                                |
+| 6   | Order ticket pre-flight       | `account_profiles WHERE exchange_account_id = ANY($1) AND is_default`                  | `ux_ap_default`                                                         | < 2 ms                                |
+| 7   | Fan-out submit                | insert legs + orders, then `WHERE order_link_id = $1` on retry                         | `ux_orders_link`                                                        | < 5 ms                                |
+| 8   | Positions & Orders screen     | `orders WHERE exchange_account_id = ANY($1) AND state IN (open set)`                   | `ix_orders_open` (partial)                                              | < 10 ms for 5 accounts                |
+| 9   | Open positions grid           | `positions WHERE exchange_account_id = ANY($1) AND size > 0`                           | `ix_pos_open` (partial)                                                 | < 5 ms                                |
+| 10  | **Safety monitor (1 s loop)** | open legs with `native_sl_confirmed = false`                                           | `ix_tgl_no_sl` (partial)                                                | < 2 ms                                |
+| 11  | **Safety monitor (1 s loop)** | open positions with `stop_loss IS NULL`                                                | `ix_pos_no_sl` (partial)                                                | < 2 ms                                |
+| 12  | Reconciliation                | `orders WHERE exchange_account_id = $1 AND exchange_order_id = ANY($2)`                | `ux_orders_exch_id`                                                     | < 10 ms for 200 ids                   |
+| 13  | Crash recovery                | `orders WHERE idempotency_state = 'in_flight'`                                         | `ix_orders_inflight` (partial)                                          | < 2 ms                                |
+| 14  | Untracked review              | `orders WHERE state = 'untracked'`                                                     | `ix_orders_untracked` (partial)                                         | < 2 ms                                |
+| 15  | Order detail drawer           | `order_events WHERE order_id = $1 ORDER BY event_ts`                                   | `ix_oe_order_time`                                                      | < 5 ms                                |
+| 16  | Execution backfill            | insert `ON CONFLICT (exchange_account_id, exec_id) DO NOTHING`                         | `ux_exec_id`                                                            | < 3 ms/row                            |
+| 17  | Journal list                  | `journal_trades ORDER BY opened_at DESC LIMIT 50` (+ symbol/account/outcome filters)   | `ix_jt_time`, `ix_jt_symbol`, `ix_jt_account`, `ix_jt_outcome`          | < 15 ms                               |
+| 18  | Tag filter                    | `journal_trade_tags WHERE journal_tag_id = $1`                                         | `ix_jtt_tag`                                                            | < 5 ms                                |
+| 19  | Note search                   | `to_tsvector` match                                                                    | `ix_notes_fts` (GIN)                                                    | < 30 ms                               |
+| 20  | Rule scheduler (per tick)     | `rules WHERE mode <> 'disabled' ORDER BY priority`                                     | `ix_rules_active` (partial)                                             | < 1 ms (cached, invalidated on write) |
+| 21  | Rule run history              | `rule_runs WHERE rule_id = $1 ORDER BY started_at DESC`                                | `ix_rr_rule_time`                                                       | < 10 ms                               |
+| 22  | Alert evaluator               | `alerts WHERE enabled AND symbol = $1`                                                 | `ix_alerts_live` (partial)                                              | < 2 ms                                |
+| 23  | Alert centre badge            | unacked deliveries per user                                                            | `ix_ad_user_unack` (partial)                                            | < 3 ms                                |
+| 24  | Outbox dispatcher             | `WHERE processed_at IS NULL AND available_at <= now() ORDER BY available_at LIMIT 100` | `ix_outbox_ready` (partial)                                             | < 5 ms                                |
+| 25  | Recorder decision loop        | `layout_panes WHERE symbol IS NOT NULL` ∪ `positions WHERE size > 0`                   | `ix_lp_symbol`, `ix_pos_open`                                           | < 5 ms                                |
+| 26  | Recorder status screen        | `recording_sessions WHERE state IN (live set)`                                         | `ix_recs_live` (partial)                                                | < 3 ms                                |
+| 27  | Gap overlay on charts         | `recording_gaps WHERE symbol = $1 AND gap_start < $3 AND gap_end > $2`                 | `ix_rg_symbol_time`                                                     | < 5 ms                                |
+| 28  | Drawings load per chart       | `WHERE owner_user_id = $1 AND symbol = $2`                                             | `ix_dr_user_symbol` (partial)                                           | < 5 ms                                |
+| 29  | Layout restore                | `layout_panes WHERE layout_id = $1 ORDER BY slot_index`                                | PK/unique `(layout_id, slot_index)`                                     | < 3 ms                                |
+| 30  | Audit viewer                  | `ORDER BY event_ts DESC` + filters on actor/action/object                              | `ix_audit_time`, `ix_audit_actor`, `ix_audit_action`, `ix_audit_object` | < 20 ms                               |
+| 31  | Audit verifier                | full scan by `id`                                                                      | PK                                                                      | minutes (nightly)                     |
+| 32  | System health                 | `system_events WHERE resolved_at IS NULL AND severity IN ('error','critical')`         | `ix_se_sev_open` (partial)                                              | < 5 ms                                |
+| 33  | Key rotation reminder         | `api_keys WHERE rotation_due_at < now() AND status='active'`                           | `ix_api_keys_rotation` (partial)                                        | < 2 ms                                |
+| 34  | KEK rotation job              | `api_keys WHERE kek_version < $1`                                                      | `ix_api_keys_kek`                                                       | < 5 ms                                |
+| 35  | Risk dashboard                | latest `wallet_balances` per account                                                   | `ix_wb_acct_time` + `DISTINCT ON`                                       | < 10 ms                               |
 
 **Why partial indexes dominate:** the hot predicates in this system are almost all "the small live subset of a large historical table" (open orders, open positions, unacked alerts, unprocessed outbox, live recordings, in-flight submits). Partial indexes keep those indexes a few pages large and permanently cache-resident, which is what makes the 1 s safety loop and the per-tick rule scheduler affordable. Full indexes are reserved for time-ordered history browsing (`*_time` descending) where the planner needs a backwards scan.
 
@@ -3312,32 +3314,32 @@ Each row: the screen/job that issues the query, the query shape, the serving ind
 
 ### 13.2 QuestDB
 
-| # | Caller | Query shape | Serving structure | Target |
-|---|---|---|---|---|
-| 1 | Chart bootstrap | `bars_time WHERE symbol=$1 AND bar_param=$2 AND ts BETWEEN … ORDER BY ts` | designated timestamp + monthly partition pruning | < 100 ms for 100 k bars |
-| 2 | Footprint render | `footprint_cells WHERE symbol=$1 AND bar_family=$2 AND bar_param=$3 AND ts BETWEEN …` | daily partitions, `SYMBOL` filters | < 150 ms for 500 bars |
-| 3 | Live bar building | `trades WHERE symbol=$1 AND ts > $2 SAMPLE BY 1m` | designated ts | streaming, < 50 ms |
-| 4 | Big-trade bubbles | `trades WHERE symbol=$1 AND notional > $2 AND ts BETWEEN …` | precomputed `notional` column + partition pruning | < 80 ms |
-| 5 | Last price | `SELECT * FROM tickers LATEST ON ts PARTITION BY symbol` | `LATEST ON` | < 10 ms |
-| 6 | DOM heatmap trail | `heatmap_cells WHERE symbol=$1 AND ts > now()-60s` | hourly partitions | < 50 ms |
-| 7 | Replay seek | nearest `orderbook_snapshots WHERE symbol=$1 AND ts <= $2 ORDER BY ts DESC LIMIT 1`, then deltas forward | daily/hourly partitions | < 200 ms seek |
-| 8 | CVD pane | `orderflow_metrics WHERE symbol=$1 AND ts BETWEEN … SAMPLE BY $2` | daily partitions | < 60 ms |
-| 9 | Profile panel | `profiles WHERE symbol=$1 AND profile_kind=$2 AND period_ref=$3` | monthly partitions | < 40 ms |
-| 10 | OI/funding panes | `open_interest`/`funding_rates` range scan | monthly/yearly partitions | < 30 ms |
-| 11 | Trade↔book alignment | `ASOF JOIN` trades to tickers | designated ts on both | < 200 ms/hour of data |
-| 12 | Retention reaper | `DROP PARTITION WHERE ts < …` | partition metadata only | < 1 s |
+| #   | Caller               | Query shape                                                                                              | Serving structure                                 | Target                  |
+| --- | -------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ----------------------- |
+| 1   | Chart bootstrap      | `bars_time WHERE symbol=$1 AND bar_param=$2 AND ts BETWEEN … ORDER BY ts`                                | designated timestamp + monthly partition pruning  | < 100 ms for 100 k bars |
+| 2   | Footprint render     | `footprint_cells WHERE symbol=$1 AND bar_family=$2 AND bar_param=$3 AND ts BETWEEN …`                    | daily partitions, `SYMBOL` filters                | < 150 ms for 500 bars   |
+| 3   | Live bar building    | `trades WHERE symbol=$1 AND ts > $2 SAMPLE BY 1m`                                                        | designated ts                                     | streaming, < 50 ms      |
+| 4   | Big-trade bubbles    | `trades WHERE symbol=$1 AND notional > $2 AND ts BETWEEN …`                                              | precomputed `notional` column + partition pruning | < 80 ms                 |
+| 5   | Last price           | `SELECT * FROM tickers LATEST ON ts PARTITION BY symbol`                                                 | `LATEST ON`                                       | < 10 ms                 |
+| 6   | DOM heatmap trail    | `heatmap_cells WHERE symbol=$1 AND ts > now()-60s`                                                       | hourly partitions                                 | < 50 ms                 |
+| 7   | Replay seek          | nearest `orderbook_snapshots WHERE symbol=$1 AND ts <= $2 ORDER BY ts DESC LIMIT 1`, then deltas forward | daily/hourly partitions                           | < 200 ms seek           |
+| 8   | CVD pane             | `orderflow_metrics WHERE symbol=$1 AND ts BETWEEN … SAMPLE BY $2`                                        | daily partitions                                  | < 60 ms                 |
+| 9   | Profile panel        | `profiles WHERE symbol=$1 AND profile_kind=$2 AND period_ref=$3`                                         | monthly partitions                                | < 40 ms                 |
+| 10  | OI/funding panes     | `open_interest`/`funding_rates` range scan                                                               | monthly/yearly partitions                         | < 30 ms                 |
+| 11  | Trade↔book alignment | `ASOF JOIN` trades to tickers                                                                            | designated ts on both                             | < 200 ms/hour of data   |
+| 12  | Retention reaper     | `DROP PARTITION WHERE ts < …`                                                                            | partition metadata only                           | < 1 s                   |
 
 QuestDB has no secondary indexes in the Postgres sense; performance comes from (a) the designated timestamp giving ordered storage, (b) partition granularity matched to the query window and the retention unit, and (c) `SYMBOL` columns for equality filters. That is why `orderbook_deltas` and `heatmap_cells` are partitioned by **hour** (queried in minutes-to-hours windows, dropped hourly) while `bars_*` and `profiles` are partitioned by **month** (queried in months-long windows).
 
 ### 13.3 DuckDB / Parquet
 
-| Caller | Query shape | Pruning mechanism | Target |
-|---|---|---|---|
-| Cold replay | `orderbook_deltas` by symbol + hour | Hive partition dirs + row-group `ts` stats | < 500 ms/hour of data |
-| Journal analytics | `v_daily_pnl` over 12 months | Hive `ym=` partitions | < 1 s |
-| Backtest over recorded history | `trades` by symbol + date range | Hive `dt=` partitions, `ts` sort order | < 2 s/month |
-| Big-print research | `trades WHERE notional > x` | Row-group min/max on `notional` | < 1 s/month |
-| Audit export | `oms/audit_log` by month | Hive `ym=` | < 500 ms |
+| Caller                         | Query shape                         | Pruning mechanism                          | Target                |
+| ------------------------------ | ----------------------------------- | ------------------------------------------ | --------------------- |
+| Cold replay                    | `orderbook_deltas` by symbol + hour | Hive partition dirs + row-group `ts` stats | < 500 ms/hour of data |
+| Journal analytics              | `v_daily_pnl` over 12 months        | Hive `ym=` partitions                      | < 1 s                 |
+| Backtest over recorded history | `trades` by symbol + date range     | Hive `dt=` partitions, `ts` sort order     | < 2 s/month           |
+| Big-print research             | `trades WHERE notional > x`         | Row-group min/max on `notional`            | < 1 s/month           |
+| Audit export                   | `oms/audit_log` by month            | Hive `ym=`                                 | < 500 ms              |
 
 Because files are sorted by `ts` and statistics are written for `ts`, `price` and `notional`, most analytical scans touch a small fraction of row groups; this is the reason the compactor exists (unsorted small files defeat both mechanisms).
 
@@ -3347,16 +3349,16 @@ Because files are sorted by `ts` and statistics are written for `ts`, `price` an
 
 These are known-unknowns carried forward from research. Each has an owner, a resolution gate and a defined fallback — none of them block the schema being implemented as written.
 
-| # | Item | Why it is open | Gate | Fallback if it fails |
-|---|---|---|---|---|
-| 1 | QuestDB vs TimescaleDB for the hot tier | Vendor benchmarks disputed (research finding #19); owner decision #2 requires a prototype on real footprint/replay query shapes | **Resolved** — Spike S2 / E07-K01 (`docs/plan/spikes/S2-hot-tier.md`, `ADR-0022-hot-tier-questdb-vs-timescaledb.md`): QuestDB confirmed on all six shapes A-F, p95 well inside target on every shape (e.g. replay scan p95≈27 ms vs <200 ms target), faster than TimescaleDB throughout; measured ingest rate is `E07-S07`'s scope (real-container re-run), measured on-disk size ≈153.32 GB for the full unscaled 7-day/2-symbol dataset (arithmetic rollup over documented §11.1 bytes/row) | Tables in §4 are intentionally portable — swap `SYMBOL`→`text`, designated timestamp→Timescale hypertable time column, `DEDUP UPSERT KEYS`→unique index + `ON CONFLICT`. No application query rewrite beyond the storage adapter. Not needed: reversal path not triggered by this evidence. |
-| 2 | Bybit orderbook depth tiers/frequencies (200 vs 500, 100 ms vs 200 ms) | Digest 11 flags earlier figures as unconfirmed | Verified against primary docs during Sprint 02 ingestion work | `recorded_symbols.orderbook_depth` CHECK list is the single place to change |
-| 3 | Bybit REST public rate limit (~600 req/5 s) | Sourced from a mirror, not primary docs | Measured in Spike S-03 | Conservative local token bucket already assumed |
-| 4 | API-key IP allow-listing is browser-only (Feb 2026 change) | Cannot be automated | Admin UI documents manual step; `ip_whitelist_verified_at` records the last comparison | Manual verification workflow already modelled |
-| 5 | Iceberg/OCO/TWAP are not native REST primitives | Must be emulated client-side | `algo_kind` + `parent_order_id` + `oco_group_ref` already model emulation | None needed |
-| 6 | Node-graph library choice (React Flow vs Rete.js) | Owner decision #11 leaves it open | Frontend spike before Sprint 06 | `rule_versions.graph_layout` is presentation-only JSONB — library-agnostic by design |
-| 7 | Sub-account cap (5, or 20 with business KYC) | Account-dependent | Read at runtime; `max_sub_accounts_hint` surfaced in admin UI | Value is data, not schema |
-| 8 | 7-day demo order retention on Bybit | Demo history is short-lived | Journal/executions are mirrored locally, so local history outlives the exchange's | None needed |
-| 9 | Free-threaded Python / Rust hot path | May change how bar builders write | Profiling gate in R2 | Write path is behind a storage adapter interface |
+| #   | Item                                                                   | Why it is open                                                                                                                  | Gate                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Fallback if it fails                                                                                                                                                                                                                                                                        |
+| --- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | QuestDB vs TimescaleDB for the hot tier                                | Vendor benchmarks disputed (research finding #19); owner decision #2 requires a prototype on real footprint/replay query shapes | **Resolved** — Spike S2 / E07-K01 (`docs/plan/spikes/S2-hot-tier.md`, `ADR-0022-hot-tier-questdb-vs-timescaledb.md`): QuestDB confirmed on all six shapes A-F, p95 well inside target on every shape (e.g. replay scan p95≈27 ms vs <200 ms target), faster than TimescaleDB throughout; measured ingest rate is `E07-S07`'s scope (real-container re-run), measured on-disk size ≈153.32 GB for the full unscaled 7-day/2-symbol dataset (arithmetic rollup over documented §11.1 bytes/row) | Tables in §4 are intentionally portable — swap `SYMBOL`→`text`, designated timestamp→Timescale hypertable time column, `DEDUP UPSERT KEYS`→unique index + `ON CONFLICT`. No application query rewrite beyond the storage adapter. Not needed: reversal path not triggered by this evidence. |
+| 2   | Bybit orderbook depth tiers/frequencies (200 vs 500, 100 ms vs 200 ms) | Digest 11 flags earlier figures as unconfirmed                                                                                  | Verified against primary docs during Sprint 02 ingestion work                                                                                                                                                                                                                                                                                                                                                                                                                                 | `recorded_symbols.orderbook_depth` CHECK list is the single place to change                                                                                                                                                                                                                 |
+| 3   | Bybit REST public rate limit (~600 req/5 s)                            | Sourced from a mirror, not primary docs                                                                                         | Measured in Spike S-03                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Conservative local token bucket already assumed                                                                                                                                                                                                                                             |
+| 4   | API-key IP allow-listing is browser-only (Feb 2026 change)             | Cannot be automated                                                                                                             | Admin UI documents manual step; `ip_whitelist_verified_at` records the last comparison                                                                                                                                                                                                                                                                                                                                                                                                        | Manual verification workflow already modelled                                                                                                                                                                                                                                               |
+| 5   | Iceberg/OCO/TWAP are not native REST primitives                        | Must be emulated client-side                                                                                                    | `algo_kind` + `parent_order_id` + `oco_group_ref` already model emulation                                                                                                                                                                                                                                                                                                                                                                                                                     | None needed                                                                                                                                                                                                                                                                                 |
+| 6   | Node-graph library choice (React Flow vs Rete.js)                      | Owner decision #11 leaves it open                                                                                               | Frontend spike before Sprint 06                                                                                                                                                                                                                                                                                                                                                                                                                                                               | `rule_versions.graph_layout` is presentation-only JSONB — library-agnostic by design                                                                                                                                                                                                        |
+| 7   | Sub-account cap (5, or 20 with business KYC)                           | Account-dependent                                                                                                               | Read at runtime; `max_sub_accounts_hint` surfaced in admin UI                                                                                                                                                                                                                                                                                                                                                                                                                                 | Value is data, not schema                                                                                                                                                                                                                                                                   |
+| 8   | 7-day demo order retention on Bybit                                    | Demo history is short-lived                                                                                                     | Journal/executions are mirrored locally, so local history outlives the exchange's                                                                                                                                                                                                                                                                                                                                                                                                             | None needed                                                                                                                                                                                                                                                                                 |
+| 9   | Free-threaded Python / Rust hot path                                   | May change how bar builders write                                                                                               | Profiling gate in R2                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Write path is behind a storage adapter interface                                                                                                                                                                                                                                            |
 
 **Change control.** This document is the contract. Any change to a Postgres table, a QuestDB table, the Parquet schema or a retention default requires: (1) an ADR under `docs/plan/27-adrs/` when the change alters a locked decision; (2) an update to this file in the same PR as the migration; (3) data-owner code-owner approval; (4) a note in the release changelog when the change is user-visible (e.g. retention). Schema drift is detected in CI by comparing `alembic upgrade head` output against `models.py` (`alembic check`) and by diffing the live QuestDB `tables()` listing against `backend/db/questdb/*.sql`.
