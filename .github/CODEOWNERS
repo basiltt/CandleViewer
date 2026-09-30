@@ -222,6 +222,7 @@
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+/qa/plans/                              @CandleViewer/qa
 # future: E02/later scaffolding; directory does not exist yet.
 /tests/                                 @CandleViewer/qa
 # future: E02/later scaffolding; directory does not exist yet.
