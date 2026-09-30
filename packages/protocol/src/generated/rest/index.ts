@@ -4209,6 +4209,13 @@ export interface components {
       symbol?: components["schemas"]["Symbol"];
     };
     DataMeta: components["schemas"]["PageMeta"] & {
+      /** @description Requested-range gaps the local cache has no bars for yet (QA defect #1622 blocker 1 / E08-S06 "Cache hit" scenario — `GET /market/klines` is cache-only until a live `KlineFetcher` lands, so it reports holes here instead of silently pretending the exchange was consulted). */
+      coverage_holes?: {
+        /** @description Gap end, exchange epoch microseconds. */
+        end_us: number;
+        /** @description Gap start, exchange epoch microseconds. */
+        start_us: number;
+      }[];
       /** Format: date-time */
       generated_at?: string;
       /** Format: date-time */

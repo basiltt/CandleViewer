@@ -8551,6 +8551,19 @@ components:
               items: { type: string, enum: [questdb, parquet, postgres, exchange_rest, memory] }
             recording_started_at: { type: ["string", "null"], format: date-time }
             generated_at: { type: string, format: date-time }
+            coverage_holes:
+              type: array
+              description: >-
+                Requested-range gaps the local cache has no bars for yet (QA defect #1622
+                blocker 1 / E08-S06 "Cache hit" scenario — `GET /market/klines` is
+                cache-only until a live `KlineFetcher` lands, so it reports holes here
+                instead of silently pretending the exchange was consulted).
+              items:
+                type: object
+                required: [start_us, end_us]
+                properties:
+                  start_us: { type: integer, description: "Gap start, exchange epoch microseconds." }
+                  end_us: { type: integer, description: "Gap end, exchange epoch microseconds." }
 
     # === Enums (mirroring 21-database-schema.md) =============================
     UserStatus: { type: string, enum: [invited, active, disabled, locked], x-db-enum: user_status }
