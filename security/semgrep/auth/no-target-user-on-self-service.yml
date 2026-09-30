@@ -1,0 +1,36 @@
+rules:
+  - id: no-target-user-on-self-service
+    languages: [python]
+    severity: ERROR
+    message: >-
+      SR-026 (D5): a self-service route (/me...) accepts a user identifier.
+      Self-service acts on the authenticated principal only.
+    metadata:
+      sr: SR-026
+    patterns:
+      - pattern-either:
+          - pattern: |
+              @$R.$M($P, ...)
+              async def $F(..., $ID, ...):
+                  ...
+          - pattern: |
+              @$R.$M($P, ...)
+              async def $F(..., $ID: $T, ...):
+                  ...
+          - pattern: |
+              @$R.$M($P, ...)
+              def $F(..., $ID, ...):
+                  ...
+          - pattern: |
+              @$R.$M($P, ...)
+              def $F(..., $ID: $T, ...):
+                  ...
+      - metavariable-regex:
+          metavariable: $P
+          regex: "^[\"']/(me|self)(/.*)?[\"']$"
+      - metavariable-regex:
+          metavariable: $ID
+          regex: "^(user_id|target_user_id|uid|userId)$"
+    paths:
+      exclude:
+        - "**/tests/**"

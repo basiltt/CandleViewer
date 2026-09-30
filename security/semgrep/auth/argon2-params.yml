@@ -1,0 +1,28 @@
+rules:
+  - id: argon2-params
+    languages: [python]
+    severity: ERROR
+    message: >-
+      SR-011: Argon2id configured below the floor m=64MiB (65536 KiB), t=3,
+      p=4. Weakening password-hash cost is forbidden.
+    metadata:
+      sr: SR-011
+    pattern-either:
+      - patterns:
+          - pattern: PasswordHasher(..., memory_cost=$N, ...)
+          - metavariable-comparison:
+              metavariable: $N
+              comparison: $N < 65536
+      - patterns:
+          - pattern: PasswordHasher(..., time_cost=$N, ...)
+          - metavariable-comparison:
+              metavariable: $N
+              comparison: $N < 3
+      - patterns:
+          - pattern: PasswordHasher(..., parallelism=$N, ...)
+          - metavariable-comparison:
+              metavariable: $N
+              comparison: $N < 4
+    paths:
+      exclude:
+        - "**/tests/**"

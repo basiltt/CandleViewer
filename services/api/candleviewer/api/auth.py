@@ -398,7 +398,7 @@ def make_auth_router(
             },
         )
 
-    @router.post("/auth/mfa/enroll", status_code=201)
+    @router.post("/auth/mfa/enroll", status_code=201)  # nosem: audit-write-required reason=fail-closed-501-stub-no-mutation owner=@CandleViewer/security review=2026-12-31  # noqa: E501 -- suppression metadata must stay on the matched line  # fmt: skip
     async def mfa_enroll(
         body: MfaEnrollRequest,
         x_user_id: str | None = Header(default=None),
@@ -419,7 +419,7 @@ def make_auth_router(
             "enrolment requires session authentication (E09-S03); disabled until then",
         )
 
-    @router.post("/auth/mfa/enroll/confirm")
+    @router.post("/auth/mfa/enroll/confirm")  # nosem: audit-write-required reason=fail-closed-501-stub-no-mutation owner=@CandleViewer/security review=2026-12-31  # noqa: E501 -- suppression metadata must stay on the matched line  # fmt: skip
     async def mfa_enroll_confirm(
         body: MfaEnrollConfirmRequest,
         x_user_id: str | None = Header(default=None),

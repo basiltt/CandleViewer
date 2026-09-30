@@ -1,0 +1,22 @@
+rules:
+  - id: no-jwt-in-browser-storage
+    languages: [ts, js]
+    severity: ERROR
+    message: >-
+      ADR-0010 / SR-012: sessions are opaque and server-side. Never persist a
+      token, JWT or session value in localStorage or sessionStorage.
+    metadata:
+      sr: SR-012
+    patterns:
+      - pattern-either:
+          - pattern: localStorage.setItem($K, ...)
+          - pattern: sessionStorage.setItem($K, ...)
+          - pattern: window.localStorage.setItem($K, ...)
+          - pattern: window.sessionStorage.setItem($K, ...)
+      - metavariable-regex:
+          metavariable: $K
+          regex: "(?i).*(token|jwt|session|auth|refresh|bearer|credential).*"
+    paths:
+      exclude:
+        - "**/*.test.ts"
+        - "**/*.test.tsx"

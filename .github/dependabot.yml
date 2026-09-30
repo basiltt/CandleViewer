@@ -28,6 +28,8 @@ updates:
 
   # E03-T07: SCA coverage (CONSTITUTION §9 #11) for pip, npm and Docker base
   # images, mirroring the pip-audit / npm-audit / trivy CI jobs above.
+  # E09-X03: covers the auth dependency set (argon2-cffi Argon2 binding, pyotp/TOTP,
+  # starlette cookie/session middleware); crypto-relevant bumps get the `crypto` label.
   - package-ecosystem: "pip"
     directory: "/services/api"
     schedule:

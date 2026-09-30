@@ -94,7 +94,7 @@ class TokenBundle(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     access_token: str
-    token_type: str = "Bearer"  # noqa: S105 - not a secret, it's the RFC 6750 scheme name
+    token_type: str = "Bearer"  # noqa: S105 reason=RFC6750-scheme-name-not-a-secret owner=@CandleViewer/security review=2027-03-25
     expires_in: int
     refresh_expires_in: int | None = None
     refresh_token: str | None = None
