@@ -310,8 +310,9 @@ mfa_methods = Table(
         "last_accepted_time_step",
         BigInteger,
         comment=(
-            "TOTP replay guard (E09-S02, migration 0005): highest accepted "
-            "RFC 6238 time-step; NULL means no code accepted yet."
+            "Highest RFC 6238 time-step accepted so far for this method; a step <= this\n"
+            "   value is a replay and must be rejected (ticket E09-S02 \"Reused code is\n"
+            "   rejected\"). NULL means no code has ever been accepted."
         ),
     ),
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
