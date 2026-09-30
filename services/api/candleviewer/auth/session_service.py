@@ -36,6 +36,7 @@ from candleviewer.auth.errors import (
     SessionIdleLocked,
     SessionNotFound,
     SessionRevoked,
+    UnlockPasswordInvalid,
 )
 from candleviewer.auth.hashing import Hasher
 from candleviewer.auth.models import (
@@ -56,6 +57,13 @@ ABSOLUTE_LIFETIME = timedelta(hours=12)
 DEFAULT_IDLE_TIMEOUT_S = 900
 MIN_IDLE_TIMEOUT_S = 300
 MAX_IDLE_TIMEOUT_S = 3600
+
+#: Review finding (PR #1628, low): unlock() previously allowed unlimited
+#: password guesses against a locked session with no penalty. Five
+#: consecutive wrong-password unlock attempts against the *same* session
+#: revoke it outright (ticket "becomes a full sign-in" is then the caller's
+#: only path back in), mirroring `LoginService`'s own 5-try account lockout.
+MAX_UNLOCK_ATTEMPTS = 5
 
 Clock = Callable[[], datetime]
 
@@ -91,6 +99,15 @@ class SessionService:
         self._hasher = hasher
         self._clock = clock
         self._refresh_token_factory = refresh_token_factory
+        #: Review finding (PR #1628, low): bounded, in-process counter of
+        #: consecutive failed `unlock()` attempts per session id. Not
+        #: persisted (a restart resets it, same trade-off as
+        #: `PerIpLoginThrottle`); capped at `_MAX_TRACKED_UNLOCK_SESSIONS`
+        #: entries so an attacker cycling session ids cannot grow this
+        #: dict without bound (C-2.18).
+        self._unlock_failures: dict[str, int] = {}
+
+    _MAX_TRACKED_UNLOCK_SESSIONS = 10_000
 
     # -- minting -------------------------------------------------------
 
@@ -104,11 +121,19 @@ class SessionService:
         is_electron: bool = False,
         idle_timeout_s: int = DEFAULT_IDLE_TIMEOUT_S,
         mfa_satisfied: bool = True,
+        expires_at: datetime | None = None,
     ) -> MintedSession:
         """Issue a brand-new session — session fixation is prevented by
         always minting a fresh `session_id`/refresh token here, never
         reusing one from an earlier, unauthenticated request (Security
-        notes: "new session id issued on every authentication")."""
+        notes: "new session id issued on every authentication").
+
+        *expires_at* lets `refresh()` propagate the presented session's own
+        absolute deadline to its successor (review finding, PR #1628,
+        high: rotation must not reset the 12 h absolute lifetime). First-
+        login callers never pass it, so a brand-new session still gets
+        `now + ABSOLUTE_LIFETIME`.
+        """
         now = self._clock()
         raw_token = self._refresh_token_factory()
         session = SessionRecord(
@@ -118,7 +143,7 @@ class SessionService:
             access_token_jti=uuid.uuid4(),
             issued_at=now,
             last_seen_at=now,
-            expires_at=now + ABSOLUTE_LIFETIME,
+            expires_at=expires_at if expires_at is not None else now + ABSOLUTE_LIFETIME,
             revoked_at=None,
             revoked_reason=None,
             ip=ip,
@@ -187,6 +212,25 @@ class SessionService:
             # side effect of a stray refresh call.
             raise SessionIdleLocked("session is idle-locked; unlock before refreshing")
 
+        # Review finding (PR #1628, medium): claim the presented session by
+        # revoking it *first* and checking the result, instead of minting
+        # the successor first and revoking after. `repository.revoke()` is
+        # documented idempotent — it only flips a row from live to revoked
+        # once and returns `None` if the row was already revoked by a
+        # concurrent caller (INV-B16-d). Whichever concurrent `refresh()`
+        # call's revoke() wins the race gets a non-None row back and is the
+        # only one that mints a successor; the loser observes `None` and
+        # raises the same reuse/race error a legitimate replay would, so
+        # two racing refreshes never both mint (they used to: the previous
+        # ordering revoked the presented session *after* minting, so both
+        # copies of a concurrently-presented token could mint a successor
+        # and reuse detection never fired for either).
+        claimed = await self._repository.revoke(str(presented.id), reason="rotated", now=now)
+        if claimed is None:
+            raise RefreshReuseDetected(
+                "refresh token reuse detected (concurrent refresh); session family revoked"
+            )
+
         minted = await self.mint(
             str(presented.user_id),
             ip=ip or presented.ip,
@@ -195,8 +239,13 @@ class SessionService:
             is_electron=is_electron or presented.is_electron,
             idle_timeout_s=presented.idle_timeout_s,
             mfa_satisfied=presented.mfa_satisfied_at is not None,
+            # Review finding (PR #1628, high): propagate the presented
+            # session's own absolute deadline instead of minting a fresh
+            # `now + ABSOLUTE_LIFETIME` on every rotation. Refreshing must
+            # never be able to extend a session past its original 12 h
+            # absolute lifetime (ticket "Scope / Deliverables").
+            expires_at=presented.expires_at,
         )
-        await self._repository.revoke(str(presented.id), reason="rotated", now=now)
         await self._repository.link_rotation(
             prev_session_id=str(presented.id), next_session_id=str(minted.session_id)
         )
@@ -253,7 +302,11 @@ class SessionService:
         Raises `SessionNotFound`/`SessionRevoked` if the session died while
         locked (ticket "if the absolute lifetime elapses while locked,
         unlocking fails and becomes a full sign-in" — the caller maps this
-        error to that fallback, `unlock()` itself never re-mints)."""
+        error to that fallback, `unlock()` itself never re-mints), or
+        `UnlockPasswordInvalid` for a wrong password that has not yet hit
+        `MAX_UNLOCK_ATTEMPTS` (at which point the session is revoked and
+        `SessionRevoked` is raised instead — review finding, PR #1628,
+        low: unlock attempts must be throttled)."""
         session = await self._repository.find_by_id(session_id)
         if session is None:
             raise SessionNotFound("no such session")
@@ -263,8 +316,23 @@ class SessionService:
 
         password_ok = await self._hasher.verify(password_hash, password)
         if not password_ok:
-            raise SessionRevoked("invalid_password")
+            failures = self._unlock_failures.get(session_id, 0) + 1
+            if failures >= MAX_UNLOCK_ATTEMPTS:
+                self._unlock_failures.pop(session_id, None)
+                await self._repository.revoke(
+                    session_id, reason="unlock_attempts_exceeded", now=now
+                )
+                raise SessionRevoked("unlock_attempts_exceeded")
+            if session_id not in self._unlock_failures and (
+                len(self._unlock_failures) >= self._MAX_TRACKED_UNLOCK_SESSIONS
+            ):
+                # Bounded map (C-2.18), same rationale as PerIpLoginThrottle.
+                oldest = next(iter(self._unlock_failures))
+                del self._unlock_failures[oldest]
+            self._unlock_failures[session_id] = failures
+            raise UnlockPasswordInvalid("invalid_password")
 
+        self._unlock_failures.pop(session_id, None)
         touched = await self._repository.touch_last_seen(session_id, now=now)
         if touched is None:
             raise SessionNotFound("session disappeared during unlock")

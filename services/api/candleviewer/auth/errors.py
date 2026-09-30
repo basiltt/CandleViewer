@@ -119,6 +119,17 @@ class SessionIdleLocked(AuthError):
     the client believes, without tearing the session down."""
 
 
+class UnlockPasswordInvalid(AuthError):
+    """`unlock()` was called with a password that failed verification. Kept
+    distinct from `SessionRevoked` (a wrong password does not, by itself,
+    revoke or otherwise change the session) so callers can render a normal
+    "wrong password" response instead of a session-death one. After
+    `MAX_UNLOCK_ATTEMPTS` consecutive failures against the same session,
+    `unlock()` revokes the session instead and raises `SessionRevoked`
+    (ticket "becomes a full sign-in") — this error is only raised for
+    attempts before that threshold."""
+
+
 class RefreshReuseDetected(AuthError):
     """A refresh token that has already been rotated was presented again
     (ticket "Refresh-token reuse kills the family"). The entire rotation

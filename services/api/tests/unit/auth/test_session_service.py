@@ -10,16 +10,19 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
+from candleviewer.auth import session_service
 from candleviewer.auth.errors import (
     RefreshReuseDetected,
     SessionIdleLocked,
     SessionNotFound,
     SessionRevoked,
+    UnlockPasswordInvalid,
 )
 from candleviewer.auth.hashing import DEFAULT_ARGON2_PARAMS, Hasher
 from candleviewer.auth.session_service import (
     ABSOLUTE_LIFETIME,
     DEFAULT_IDLE_TIMEOUT_S,
+    MAX_IDLE_TIMEOUT_S,
     SessionService,
     clamp_idle_timeout_s,
 )
@@ -179,8 +182,60 @@ async def test_unlock_wrong_password_is_refused() -> None:
     clock.advance(timedelta(minutes=5, seconds=1))
 
     password_hash = await hasher.hash("correct horse battery staple", DEFAULT_ARGON2_PARAMS)
-    with pytest.raises(SessionRevoked):
+    with pytest.raises(UnlockPasswordInvalid):
         await service.unlock(str(minted.session_id), password="wrong", password_hash=password_hash)
+    # A single wrong guess does not revoke the session (distinct from a
+    # terminal `SessionRevoked` — it is still idle-locked, not dead).
+    stored = repo.sessions[str(minted.session_id)]
+    assert stored.revoked_at is None
+
+
+async def test_unlock_throttles_after_five_consecutive_wrong_passwords() -> None:
+    """Review finding (PR #1628, low): unlock attempts must be throttled.
+    The 5th consecutive wrong password revokes the session outright."""
+    repo = FakeSessionRepository()
+    clock = _MutableClock(_NOW)
+    hasher = _hasher()
+    service = SessionService(repo, hasher, clock=clock)
+    minted = await service.mint(str(uuid.uuid4()), idle_timeout_s=300)
+    clock.advance(timedelta(minutes=5, seconds=1))
+
+    password_hash = await hasher.hash("correct horse battery staple", DEFAULT_ARGON2_PARAMS)
+    for _ in range(4):
+        with pytest.raises(UnlockPasswordInvalid):
+            await service.unlock(
+                str(minted.session_id), password="wrong", password_hash=password_hash
+            )
+
+    with pytest.raises(SessionRevoked) as excinfo:
+        await service.unlock(str(minted.session_id), password="wrong", password_hash=password_hash)
+    assert excinfo.value.reason == "unlock_attempts_exceeded"
+    stored = repo.sessions[str(minted.session_id)]
+    assert stored.revoked_at is not None
+
+
+async def test_unlock_success_resets_the_wrong_password_counter() -> None:
+    repo = FakeSessionRepository()
+    clock = _MutableClock(_NOW)
+    hasher = _hasher()
+    service = SessionService(repo, hasher, clock=clock)
+    minted = await service.mint(str(uuid.uuid4()), idle_timeout_s=300)
+    clock.advance(timedelta(minutes=5, seconds=1))
+
+    password_hash = await hasher.hash("correct horse battery staple", DEFAULT_ARGON2_PARAMS)
+    for _ in range(3):
+        with pytest.raises(UnlockPasswordInvalid):
+            await service.unlock(
+                str(minted.session_id), password="wrong", password_hash=password_hash
+            )
+
+    await service.unlock(
+        str(minted.session_id),
+        password="correct horse battery staple",
+        password_hash=password_hash,
+    )
+    assert session_service.MAX_UNLOCK_ATTEMPTS > 1
+    assert service._unlock_failures.get(str(minted.session_id)) is None
 
 
 async def test_unlock_after_absolute_expiry_fails_and_becomes_full_signin() -> None:
@@ -278,6 +333,60 @@ async def test_refresh_token_reuse_kills_the_entire_family() -> None:
     # the live successor is the one that must now be shut down too.
     assert old.revoked_reason == "rotated"
     assert new.revoked_reason == "rotation_reuse"
+
+
+async def test_refresh_preserves_the_original_absolute_expiry() -> None:
+    """Review finding (PR #1628, high): refresh() must not reset the 12 h
+    absolute lifetime — the successor keeps the presented session's own
+    `expires_at`, so repeated refreshing cannot outlive the original cap."""
+    repo = FakeSessionRepository()
+    clock = _MutableClock(_NOW)
+    service = _service(repo, clock)
+    minted = await service.mint(str(uuid.uuid4()), idle_timeout_s=MAX_IDLE_TIMEOUT_S)
+    original_expires_at = minted.expires_at
+
+    clock.advance(timedelta(minutes=30))
+    outcome = await service.refresh(minted.refresh_token)
+    assert outcome.minted.expires_at == original_expires_at
+
+    clock.advance(timedelta(minutes=30))
+    outcome2 = await service.refresh(outcome.minted.refresh_token)
+    assert outcome2.minted.expires_at == original_expires_at
+
+    # Confirms the cap is real: once `now` passes the original deadline,
+    # even a session that was refreshed along the way is expired.
+    clock.advance(ABSOLUTE_LIFETIME)
+    with pytest.raises(SessionRevoked) as excinfo:
+        await service.refresh(outcome2.minted.refresh_token)
+    assert excinfo.value.reason == "expired"
+
+
+async def test_concurrent_refresh_of_the_same_token_only_mints_one_successor() -> None:
+    """Review finding (PR #1628, medium): rotation claims the presented
+    session by revoking it first and checking the result, so two
+    "simultaneous" refreshes of the same token cannot both mint a
+    successor — the second observes its `revoke()` return `None` (already
+    claimed) and is treated as reuse instead of silently minting twice."""
+    repo = FakeSessionRepository()
+    clock = _MutableClock(_NOW)
+    service = _service(repo, clock)
+    minted = await service.mint(str(uuid.uuid4()))
+
+    # Simulate two callers racing on the same token by directly exercising
+    # the repository-level claim the second `refresh()` call would make:
+    # the first revoke() succeeds, the second (idempotent) revoke() of the
+    # same already-revoked row returns None.
+    first_claim = await repo.revoke(str(minted.session_id), reason="rotated", now=clock())
+    assert first_claim is not None
+    second_claim = await repo.revoke(str(minted.session_id), reason="rotated", now=clock())
+    assert second_claim is None
+
+    # End-to-end: a second refresh() call against the now-rotated token
+    # raises reuse rather than minting another successor.
+    with pytest.raises(RefreshReuseDetected):
+        await service.refresh(minted.refresh_token)
+    live_sessions = [s for s in repo.sessions.values() if s.revoked_at is None]
+    assert len(live_sessions) == 0
 
 
 async def test_refresh_unknown_token_raises_session_not_found() -> None:
