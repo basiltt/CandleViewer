@@ -549,6 +549,7 @@ CREATE TABLE mfa_methods (
   transports     text[],
   confirmed_at   timestamptz,
   last_used_at   timestamptz,
+  last_accepted_time_step bigint,  -- TOTP replay guard (E09-S02, migration 0005)
   created_at     timestamptz NOT NULL DEFAULT now(),
   updated_at     timestamptz NOT NULL DEFAULT now(),
   revoked_at     timestamptz,

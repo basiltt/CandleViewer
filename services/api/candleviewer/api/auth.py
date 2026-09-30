@@ -1,18 +1,49 @@
-"""`POST /auth/login` (E09-S01, US-ONB-001).
+"""`POST /auth/login` (E09-S01, US-ONB-001) and the E09-S02 (US-ONB-002/003)
+MFA endpoints: `/auth/mfa/verify`, `/auth/mfa/enroll`,
+`/auth/mfa/enroll/confirm`, `/auth/mfa/recovery`.
 
-Thin HTTP adapter over `candleviewer.auth.login_service.LoginService`:
-translates typed domain errors to the RFC 7807-shaped problem responses the
-ticket's acceptance criteria specify, and — when a live `AuditWriter` is
-injected — emits `auth.login`/`auth.login_failed`/`auth.account_locked`
-(all already registered in `candleviewer.audit.actions.AUDIT_ACTIONS`) per
-the Gherkin ("... is audited" / "the attempt is audited with the source
-IP" / "auth.account_locked is audited"). `api` (M23) is on
-the allow-list to import `candleviewer.audit`; `auth` itself is not (see
+Thin HTTP adapter over `candleviewer.auth.login_service.LoginService` /
+`candleviewer.auth.mfa_service.MfaService`: translates typed domain errors
+to the RFC 7807-shaped problem responses the tickets' acceptance criteria
+specify, and — when a live `AuditWriter` is injected — emits the
+`auth.mfa_*` actions already registered in
+`candleviewer.audit.actions.AUDIT_ACTIONS`. `api` (M23) is on the allow-list
+to import `candleviewer.audit`; `auth` itself is not (see
 `auth/login_service.py`'s module docstring) — that boundary is exactly why
-the audit call lives in this router, not in `LoginService`. On the fake/CI
-default backend (`audit_writer=None`) the route still works; it just skips
-the audit call rather than failing the request (mirrors `AuthServiceLike`'s
-own optionality).
+the audit calls live in this router. On the fake/CI default backend
+(`audit_writer=None`) the routes still work; they just skip the audit call.
+
+**Deviation 1 (PR #1618 review finding 1 — security, blocking until
+resolved as below):** `/auth/mfa/enroll`, `/auth/mfa/enroll/confirm` and
+`/auth/mfa/recovery`'s regeneration sibling are `x-rbac scope: self` per
+`22-api-openapi.yaml`, which normally means "the authenticated caller,
+resolved from their session". Real session authentication (the
+`cv_refresh` cookie / bearer access token / RBAC middleware) is E09-S03
+scope, not yet merged, so there is today no way to verify that an
+`X-User-Id`/`X-Username` header actually belongs to the caller — trusting
+it would let anyone enrol (and read the one-time recovery codes for) any
+account, an MFA takeover. Per this repo's multi-agent protocol §5 this is
+not a "minor gap" (it touches security/money-adjacent identity), so rather
+than guessing at an undocumented trust boundary, `/auth/mfa/enroll` and
+`/auth/mfa/enroll/confirm` are **disabled** (`501 Not Implemented`) until
+E09-S03 wires real session/principal resolution — mirroring exactly how
+`api/audit.py`'s `principal_resolver=None` path already fails closed with
+`501` for the same reason (see that module's docstring). `/auth/login`,
+`/auth/mfa/verify` and `/auth/mfa/recovery`'s login path need no such
+header: they resolve the user from the `mfa_token` challenge alone,
+exactly like `/auth/login` needs no prior session — so those three stay
+enabled.
+
+**Deviation 2 (PR #1618 review finding 2 — acceptance criterion):** the
+ticket's "Valid code creates a session" scenario is not fully met by this
+PR: `/auth/mfa/verify` and the recovery-code login path in
+`/auth/mfa/recovery` both return `{"status": "authenticated"}` but mint no
+session (no `cv_refresh` cookie, no access token) — session/token minting
+is E09-S03 scope (`auth/login_service.py`'s own docstring: "non-MFA
+session issuance is E09-S03 scope"; the same boundary applies to the MFA
+leg). This PR closes E09-S02 exactly as scoped ("second factor,
+enrolment and recovery codes"); the end-to-end scenario is completed by
+E09-S03, which is already `blocked_by` this story and picks this up next.
 
 Source IP resolution intentionally does not trust `X-Forwarded-For` unless
 the deployment topology has a trusted reverse proxy configured elsewhere
@@ -25,12 +56,32 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 
 from candleviewer.audit.models import AuditOutcome, Severity
-from candleviewer.auth.errors import AccountDisabled, AccountLocked, InvalidCredentials
-from candleviewer.auth.models import LoginRequest, MfaChallengeResult
+from candleviewer.auth.errors import (
+    AccountDisabled,
+    AccountLocked,
+    InvalidCredentials,
+    MfaChallengeInvalid,
+    MfaChallengeLocked,
+    MfaCodeInvalid,
+    MfaCodeReused,
+    RecoveryCodeInvalid,
+    RecoveryCodesExhausted,
+)
+from candleviewer.auth.models import (
+    LoginRequest,
+    MfaChallengeResult,
+    MfaEnrollConfirmRequest,
+    MfaEnrollRequest,
+    MfaEnrollResult,
+    MfaMethodKind,
+    MfaRecoveryRequest,
+    MfaVerifiedResult,
+    MfaVerifyRequest,
+)
 
 
 class LoginServiceLike(Protocol):
@@ -41,12 +92,34 @@ class LoginServiceLike(Protocol):
     async def login(self, request: LoginRequest, *, source_ip: str) -> MfaChallengeResult: ...
 
 
+class MfaServiceLike(Protocol):
+    """Structural type for `candleviewer.auth.mfa_service.MfaService`."""
+
+    async def verify(self, request: MfaVerifyRequest) -> MfaVerifiedResult: ...
+
+    async def enroll(
+        self, user_id: str, request: MfaEnrollRequest, *, account_name: str
+    ) -> MfaEnrollResult: ...
+
+    async def confirm_enrollment(
+        self, user_id: str, *, method_id: str, code: str
+    ) -> tuple[MfaMethodKind, tuple[str, ...]]: ...
+
+    async def recover(self, mfa_token: str, recovery_code: str) -> MfaVerifiedResult: ...
+
+
 class AuthServiceLike(Protocol):
     @property
     def is_active(self) -> bool: ...
 
     @property
     def login(self) -> LoginServiceLike: ...
+
+    @property
+    def mfa_is_active(self) -> bool: ...
+
+    @property
+    def mfa(self) -> MfaServiceLike: ...
 
 
 class AuditWriterLike(Protocol):
@@ -153,8 +226,14 @@ def make_auth_router(
             response = _problem(423, "Account locked", str(exc))
             response.headers["Retry-After"] = str(exc.retry_after_s)
             return response
-        except NotImplementedError as exc:
-            return _problem(501, "Not implemented", str(exc))
+        except NotImplementedError:
+            # CodeQL py/stack-trace-exposure: never forward an exception's
+            # message (which may embed internal detail such as source
+            # locations) into an HTTP response body; this branch only ever
+            # fires for the deliberate, out-of-scope stub in
+            # `LoginService.login` (see its docstring), so a fixed,
+            # generic detail is all a caller needs.
+            return _problem(501, "Not implemented", "this login path is not yet available")
 
         await _audit(
             audit_service,
@@ -171,6 +250,128 @@ def make_auth_router(
                 "methods": list(result.methods),
                 "expires_in": result.expires_in,
             },
+        )
+
+    @router.post("/auth/mfa/verify")
+    async def mfa_verify(body: MfaVerifyRequest) -> JSONResponse:
+        if not auth_service.mfa_is_active:
+            return _problem(503, "Service unavailable", "mfa backend is not wired")
+        try:
+            result = await auth_service.mfa.verify(body)
+        except (MfaChallengeInvalid, MfaChallengeLocked, MfaCodeInvalid, MfaCodeReused):
+            await _audit(
+                audit_service,
+                "auth.mfa_failed",
+                actor_label="(mfa_token)",
+                actor_ip="unknown",
+                outcome=AuditOutcome.FAILURE,
+            )
+            # PR #1618 review finding 4 (low): `str(exc)` used to leak which
+            # of "locked" / "expired" / "reused" / "wrong code" applied,
+            # which is a free oracle for an unauthenticated caller (e.g.
+            # distinguishing "this code was already used" from "this code
+            # is simply wrong" narrows a brute-force search). A single
+            # generic detail is returned regardless of which of the four
+            # errors was raised; the distinct HTTP status/audit action
+            # still lets a legitimate, already-authenticated client tell
+            # locked apart from merely-wrong via the challenge-expiry UX
+            # (SCR-002's "locked after 5 tries" state), not via this text.
+            return _problem(401, "MFA verification failed", "invalid or expired code")
+
+        await _audit(
+            audit_service,
+            "auth.mfa_verified",
+            actor_label=str(result.user_id),
+            actor_ip="unknown",
+            outcome=AuditOutcome.SUCCESS,
+        )
+        return JSONResponse(status_code=200, content={"status": "authenticated"})
+
+    @router.post("/auth/mfa/recovery")
+    async def mfa_recovery(body: MfaRecoveryRequest) -> JSONResponse:
+        if not auth_service.mfa_is_active:
+            return _problem(503, "Service unavailable", "mfa backend is not wired")
+        try:
+            result = await auth_service.mfa.recover(body.mfa_token, body.recovery_code)
+        except RecoveryCodesExhausted as exc:
+            await _audit(
+                audit_service,
+                "auth.recovery_codes_exhausted",
+                actor_label="(mfa_token)",
+                actor_ip="unknown",
+                outcome=AuditOutcome.DENIED,
+                severity=Severity.ERROR,
+            )
+            return _problem(401, "Recovery codes exhausted", str(exc))
+        except (MfaChallengeInvalid, MfaChallengeLocked, RecoveryCodeInvalid):
+            await _audit(
+                audit_service,
+                "auth.mfa_failed",
+                actor_label="(mfa_token)",
+                actor_ip="unknown",
+                outcome=AuditOutcome.FAILURE,
+            )
+            # PR #1618 review finding 4 (low): same rationale as
+            # `mfa_verify` above — a uniform detail regardless of whether
+            # the challenge was invalid/expired/locked or the code was
+            # simply wrong, so an unauthenticated caller cannot use this
+            # response to narrow a brute-force search. `RecoveryCodesExhausted`
+            # stays a distinct branch above because the ticket's own
+            # Gherkin ("Recovery codes exhausted") requires a
+            # contact-the-owner message the UI must render differently.
+            return _problem(401, "Recovery failed", "invalid or expired code")
+
+        await _audit(
+            audit_service,
+            "auth.recovery_code_used",
+            actor_label=str(result.user_id),
+            actor_ip="unknown",
+            outcome=AuditOutcome.SUCCESS,
+            severity=Severity.WARNING,
+        )
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "authenticated",
+                "forced_totp_reenroll": result.forced_totp_reenroll,
+            },
+        )
+
+    @router.post("/auth/mfa/enroll", status_code=201)
+    async def mfa_enroll(
+        body: MfaEnrollRequest,
+        x_user_id: str | None = Header(default=None),
+        x_username: str | None = Header(default=None),
+    ) -> JSONResponse:
+        # PR #1618 review finding 1 (security, blocking): no session/RBAC
+        # middleware exists yet to verify `X-User-Id`/`X-Username` actually
+        # belong to the caller (E09-S03 scope). Trusting them would let any
+        # caller enrol MFA (and read the one-time recovery codes) for any
+        # account — an MFA takeover. This route fails closed with `501`
+        # (mirroring `api/audit.py`'s `principal_resolver=None` path) until
+        # E09-S03 lands a real principal resolver here. See the module
+        # docstring's "Deviation 1".
+        del x_user_id, x_username
+        return _problem(
+            501,
+            "Not implemented",
+            "enrolment requires session authentication (E09-S03); disabled until then",
+        )
+
+    @router.post("/auth/mfa/enroll/confirm")
+    async def mfa_enroll_confirm(
+        body: MfaEnrollConfirmRequest,
+        x_user_id: str | None = Header(default=None),
+    ) -> JSONResponse:
+        # Same rationale as `/auth/mfa/enroll` above (Deviation 1): trusting
+        # an unauthenticated `X-User-Id` here would let anyone confirm
+        # (and thereby activate) a TOTP method — and mint that account's
+        # recovery codes — for any user id. Disabled until E09-S03.
+        del x_user_id
+        return _problem(
+            501,
+            "Not implemented",
+            "enrolment confirmation requires session authentication (E09-S03); disabled until then",
         )
 
     return router

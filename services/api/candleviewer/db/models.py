@@ -306,6 +306,15 @@ mfa_methods = Table(
     Column("transports", ARRAY(Text)),
     Column("confirmed_at", TIMESTAMP(timezone=True)),
     Column("last_used_at", TIMESTAMP(timezone=True)),
+    Column(
+        "last_accepted_time_step",
+        BigInteger,
+        comment=(
+            "Highest RFC 6238 time-step accepted so far for this method; a step <= this\n"
+            '   value is a replay and must be rejected (ticket E09-S02 "Reused code is\n'
+            '   rejected"). NULL means no code has ever been accepted.'
+        ),
+    ),
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("revoked_at", TIMESTAMP(timezone=True)),

@@ -38,3 +38,56 @@ class AccountLocked(AuthError):
 
 class AuthServiceUnavailable(AuthError):
     """The auth module has not been started with a real repository."""
+
+
+class MfaChallengeInvalid(AuthError):
+    """The `mfa_token` does not correspond to an open, unexpired challenge —
+    unknown token, already-satisfied challenge, or an expired one (ticket
+    "expired-challenge (returns to SCR-001)"). Deliberately uniform: the
+    router must never reveal *which* of these applied."""
+
+
+class MfaChallengeLocked(AuthError):
+    """Five failed attempts against one challenge (ticket "locked after 5
+    tries" / `mfa_challenges.attempts CHECK BETWEEN 0 AND 10` with this
+    module enforcing the tighter 5-try business rule)."""
+
+
+class MfaCodeInvalid(AuthError):
+    """A syntactically valid TOTP/recovery code that did not verify.
+
+    Raised only when the surrounding challenge is still open (an already
+    exhausted challenge raises `MfaChallengeLocked` instead) — the caller
+    still owes the failure an `auth.mfa_failed` audit record with
+    `reason=invalid`."""
+
+
+class MfaCodeReused(AuthError):
+    """A TOTP code whose `time_step` was already accepted for this method
+    (ticket "Reused code is rejected" — replay protection)."""
+
+
+class MfaEnrollmentNotFound(AuthError):
+    """`method_id` does not exist, is not `pending`, or does not belong to
+    the authenticated user."""
+
+
+class MfaLastMethodProtected(AuthError):
+    """`DELETE /auth/mfa/methods/{methodId}` on the last active method while
+    `users.mfa_required` is set (ticket "Security notes": "the last
+    remaining method cannot be deleted while `users.mfa_required` is
+    set")."""
+
+
+class MfaReauthRequired(AuthError):
+    """`DELETE /auth/mfa/methods/{methodId}` without a valid
+    `X-Reauth-Password` header (ticket "Security notes")."""
+
+
+class RecoveryCodeInvalid(AuthError):
+    """An unknown or already-used recovery code."""
+
+
+class RecoveryCodesExhausted(AuthError):
+    """All recovery codes for this user are consumed (ticket "Recovery
+    codes exhausted": "no session is created")."""
