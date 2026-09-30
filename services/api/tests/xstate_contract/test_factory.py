@@ -109,15 +109,14 @@ async def test_event_schemas_validate_through_real_factory_path(
 
     from candleviewer.statechart import config as cfg
 
-    monkeypatch.setattr(cfg, "CV_EVENT_SCHEMAS", dict(cfg.CV_EVENT_SCHEMAS))
-    cfg.register_event_schemas(
+    monkeypatch.setitem(
+        cfg.CV_EVENT_SCHEMAS,
+        "GO",
         {
-            "GO": {
-                "type": "object",
-                "properties": {"n": {"type": "integer"}},
-                "additionalProperties": False,
-            }
-        }
+            "type": "object",
+            "properties": {"n": {"type": "integer"}},
+            "additionalProperties": False,
+        },
     )
     result = await build(
         "test.factory_min", clock=SimulatedClock(), lane="platform", registry=factory_registry
