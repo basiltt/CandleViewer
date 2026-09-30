@@ -18,6 +18,7 @@ class Permission(StrEnum):
 
     # admin
     ADMIN_READ = "admin:read"
+    ADMIN_WRITE = "admin:write"
     AUDIT_EXPORT = "audit:export"
     AUDIT_READ = "audit:read"
     BACKUPS_READ = "backups:read"

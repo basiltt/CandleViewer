@@ -87,7 +87,9 @@ def test_rbac_vocabulary_sets_are_identical(spec: dict) -> None:
     spec_codes = spec_permission_codes(spec)
     assert spec_codes == enum_permission_codes()
     assert spec_codes == seed_permission_codes()
-    assert len(spec_codes) == 36
+    # The invariant is the three-way equality above; a hard-coded count would
+    # break on every legitimately added permission (e.g. #1637 added admin:write).
+    assert len(spec_codes) >= 36
 
 
 def test_vocabulary_mismatch_names_the_diverging_codes() -> None:
