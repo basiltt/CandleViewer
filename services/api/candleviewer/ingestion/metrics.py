@@ -34,3 +34,22 @@ clock_resync_triggered_total = Counter(
     "Immediate clock resyncs triggered outside the periodic schedule, by reason.",
     ["reason"],
 )
+
+# --- E08-S01-2: instrument catalogue refresh -------------------------------
+
+instruments_refresh_total = Counter(
+    "instruments_refresh_total",
+    "Instrument catalogue refresh attempts, by result (ticket acceptance"
+    " criterion 'Refresh fails').",
+    ["result"],
+)
+
+instruments_cache_age_seconds = Gauge(
+    "instruments_cache_age_seconds",
+    "Seconds since the currently-served instrument catalogue snapshot was fetched.",
+)
+
+instruments_catalogue_size = Gauge(
+    "instruments_catalogue_size",
+    "Number of symbols in the currently-served instrument catalogue snapshot.",
+)

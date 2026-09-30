@@ -54,6 +54,7 @@ _ALLOWED_EXTRA_EXPORTS: dict[str, set[str]] = {
         "make_auth_router",
         "make_audit_router",
         "make_market_router",
+        "make_instruments_router",
     },
     # E09-T02: the audit writer/query surface M21/M23 consume (C-3.3).
     "M19": {

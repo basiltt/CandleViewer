@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from candleviewer.exchange.base import Ticker, Trade
+from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
 from candleviewer.ingestion.synthetic_feed import (
     SyntheticFeedGenerator,
     SyntheticFeedMetrics,
@@ -35,6 +36,13 @@ class IngestionService:
         self._started = False
         self.queue: asyncio.Queue[Trade | Ticker] | None = None
         self._generator: SyntheticFeedGenerator | None = None
+        #: E08-S01-2: the instrument catalogue scheduler, attached by the
+        #: composition root only when a real exchange + Postgres are wired.
+        self.instruments: InstrumentsRefreshScheduler | None = None
+
+    def attach_instruments(self, scheduler: InstrumentsRefreshScheduler) -> None:
+        """Hand this module ownership of the catalogue scheduler's lifecycle."""
+        self.instruments = scheduler
 
     async def start(self, ctx: AppContext) -> None:
         """Start the module.
@@ -57,10 +65,14 @@ class IngestionService:
                 rate_hz=settings.feed_rate_hz,
             )
             await self._generator.start()
+        if self.instruments is not None:
+            await self.instruments.start()
         self._started = True
 
     async def stop(self, grace_s: float) -> None:
         """Stop the module within `grace_s` seconds."""
+        if self.instruments is not None:
+            await self.instruments.stop(grace_s)
         if self._generator is not None:
             await self._generator.stop()
             self._generator = None
