@@ -436,7 +436,7 @@ def create_app(
         )
     )
     # `store=None` / no resolver: fails closed with 501 until session verification lands.
-    app.include_router(make_users_router(None, _LazyAuditEmitter(ctx.audit)))
+    app.include_router(make_users_router(None, _LazyAuditEmitter(ctx.audit), None, None))
     # `principal_resolver` stays `None` here: session verification is E09-S03
     # scope (`auth/login_service.py`'s own docstring — "non-MFA session
     # issuance is E09-S03 scope"), not this router's. Every `/admin/audit*`

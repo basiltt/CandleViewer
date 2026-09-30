@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 
 from candleviewer.api.users import make_users_router
 from candleviewer.auth.generated_permissions import Permission
+from candleviewer.auth.owner_floor import assert_owner_floor
 from candleviewer.auth.scopes import PrincipalSnapshot
 
 OWNER = uuid.uuid4()
@@ -32,11 +33,12 @@ class _Store:
     async def get_roles(self, user_id: uuid.UUID) -> frozenset[str] | None:
         return self.roles
 
-    async def count_active_owners(self) -> int:
-        return self.owners
-
-    async def set_roles(self, user_id: uuid.UUID, roles: frozenset[str]) -> None:
+    async def apply_roles(self, user_id: uuid.UUID, roles: frozenset[str]) -> bool:
+        assert_owner_floor(
+            current_roles=self.roles, new_roles=roles, active_owner_count=self.owners
+        )
         self.roles = roles
+        return True
 
 
 class _Resolver:
@@ -112,3 +114,24 @@ def test_put_roles_rejects_unknown_role() -> None:
         f"/users/{TARGET}/roles", json={"roles": ["root"]}
     )
     assert r.status_code == 400
+
+
+def test_put_roles_registry_pushes_permission_change_to_live_socket() -> None:
+    import asyncio
+
+    from candleviewer.ws.permissions import ConnectionAuthz, ConnectionRegistry
+
+    viewer = PrincipalSnapshot(TARGET, frozenset({"viewer"}), frozenset({Permission.ORDERS_WRITE}))
+    sent: list[dict[str, Any]] = []
+
+    async def send(frame: dict[str, Any]) -> None:
+        sent.append(frame)
+
+    async def resolve(uid: uuid.UUID) -> PrincipalSnapshot:
+        return PrincipalSnapshot(uid, frozenset({"viewer"}), frozenset())
+
+    reg = ConnectionRegistry(resolve, lambda: 1)
+    reg.register(ConnectionAuthz(viewer), send)
+    asyncio.run(reg.roles_changed(TARGET))
+    assert sent[0]["t"] == "permission_change"
+    assert sent[0]["p"]["permissions"] == []

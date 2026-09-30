@@ -125,3 +125,33 @@ class ConnectionAuthz:
                     }
                 )
         return frames
+
+
+class ConnectionRegistry:
+    """Live authenticated sockets; implements `PermissionChangeNotifier`.
+
+    The WS handler registers a `ConnectionAuthz` plus a `send` coroutine at
+    `auth_ok` (payload from `auth_ok_payload`), routes `sub` through
+    `ConnectionAuthz.subscribe` and unregisters on close.
+    """
+
+    def __init__(self, resolve: Any, clock_ms: Any) -> None:
+        self._resolve = resolve  # async (user_id) -> PrincipalSnapshot
+        self._clock_ms = clock_ms
+        self._conns: dict[uuid.UUID, list[tuple[ConnectionAuthz, Any]]] = {}
+
+    def register(self, authz: ConnectionAuthz, send: Any) -> None:
+        self._conns.setdefault(authz.principal.user_id, []).append((authz, send))
+
+    def unregister(self, authz: ConnectionAuthz) -> None:
+        entries = self._conns.get(authz.principal.user_id, [])
+        self._conns[authz.principal.user_id] = [e for e in entries if e[0] is not authz]
+
+    async def roles_changed(self, user_id: uuid.UUID) -> None:
+        entries = list(self._conns.get(user_id, ()))
+        if not entries:
+            return
+        snap = await self._resolve(user_id)
+        for authz, send in entries:
+            for frame in authz.apply_snapshot(snap, self._clock_ms()):
+                await send(frame)

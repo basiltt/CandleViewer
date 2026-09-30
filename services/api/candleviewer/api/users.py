@@ -15,7 +15,7 @@ from fastapi import APIRouter, Path, Request
 from fastapi.responses import JSONResponse
 
 from candleviewer.auth.generated_permissions import Permission, Scope
-from candleviewer.auth.owner_floor import OwnerFloorError, assert_owner_floor
+from candleviewer.auth.owner_floor import OwnerFloorError
 from candleviewer.auth.scopes import ForbiddenError, PrincipalSnapshot, enforce
 
 _SYSTEM_ROLES = frozenset({"owner", "manager", "viewer"})
@@ -32,9 +32,11 @@ class SnapshotResolver(Protocol):
 class UserRoleStore(Protocol):
     async def get_roles(self, user_id: uuid.UUID) -> frozenset[str] | None: ...
 
-    async def count_active_owners(self) -> int: ...
-
-    async def set_roles(self, user_id: uuid.UUID, roles: frozenset[str]) -> None: ...
+    async def apply_roles(self, user_id: uuid.UUID, roles: frozenset[str]) -> bool:
+        """Atomically (one transaction, owner rows locked) enforce the owner
+        floor via `assert_owner_floor` and write `roles`. Raises
+        `OwnerFloorError`; returns False if the user does not exist."""
+        ...
 
 
 class PermissionChangeNotifier(Protocol):
@@ -95,15 +97,8 @@ def make_users_router(
         current = await store.get_roles(user_id)
         if current is None:
             return _problem(404, "Not found", "user not found")
-        try:
-            assert_owner_floor(
-                current_roles=current,
-                new_roles=new_roles,
-                active_owner_count=await store.count_active_owners(),
-            )
-        except OwnerFloorError:
-            return _problem(409, "Conflict", "the last active owner cannot be demoted")
-        await store.set_roles(user_id, new_roles)
+        # `apply_roles` is the atomic owner-floor guard (no TOCTOU).
+        # Write-ahead audit (C-2.9): recorded before the change is applied.
         if emitter is not None:
             for action, changed in (
                 ("roles.grant", sorted(new_roles - current)),
@@ -118,6 +113,12 @@ def make_users_router(
                         object_id=str(user_id),
                         reason=",".join(changed),
                     )
+        try:
+            found = await store.apply_roles(user_id, new_roles)
+        except OwnerFloorError:
+            return _problem(409, "Conflict", "the last active owner cannot be demoted")
+        if not found:
+            return _problem(404, "Not found", "user not found")
         if notifier is not None:
             await notifier.roles_changed(user_id)
         return JSONResponse(
