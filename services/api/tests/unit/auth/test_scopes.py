@@ -56,6 +56,10 @@ def test_missing_permission_denies_by_default() -> None:
     result = decide(principal, Permission.ORDERS_WRITE)
     assert isinstance(result, Deny)
     assert result.reason == DenyReason.MISSING_PERMISSION
+    # PR #1629 review finding 2: the denial must name the permission and
+    # scope so the audited `rbac.denied` record can be built from it alone.
+    assert result.permission == Permission.ORDERS_WRITE
+    assert result.scope == Scope.NONE
 
 
 def test_scope_none_allows_on_permission_alone() -> None:
@@ -197,3 +201,17 @@ def test_role_permission_matrix(
     )
     result = decide(principal, permission)
     assert isinstance(result, expected)
+
+
+def test_custom_role_named_owner_is_rejected() -> None:
+    """PR #1629 review finding 3: `is_owner` matches the role name alone,
+    so a `PrincipalSnapshot` must never be constructible with a role
+    outside the DB's fixed `role_name` ENUM (`owner`/`manager`/`viewer`) —
+    a hypothetical custom role called "owner" cannot silently inherit the
+    owner floor's account-grant bypass."""
+    with pytest.raises(ValueError, match="unknown role"):
+        PrincipalSnapshot(
+            user_id=uuid.uuid4(),
+            roles=frozenset({"owner_impersonator"}),
+            permissions=frozenset({Permission.ORDERS_WRITE}),
+        )

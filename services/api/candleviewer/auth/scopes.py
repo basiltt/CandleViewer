@@ -21,8 +21,18 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from enum import StrEnum
+from typing import Any, Protocol
 
 from candleviewer.auth.generated_permissions import Permission, Scope
+
+#: Mirrors the database `role_name` ENUM (`'owner','manager','viewer'`,
+#: migration `0001_identity_rbac_sessions_mfa.py`) — the *only* three role
+#: names that can ever exist, enforced at the schema level, not just here.
+#: "Custom or user-defined roles" are out of scope for v1 (ticket "Out of
+#: scope"), so this set is exhaustive: a `roles` frozenset can only ever
+#: contain members of it, and nothing upstream can mint a role called
+#: "owner" that isn't the real system owner role.
+_SYSTEM_ROLES = frozenset({"owner", "manager", "viewer"})
 
 
 class DenyReason(StrEnum):
@@ -65,6 +75,16 @@ class PrincipalSnapshot:
     permissions: frozenset[Permission]
     account_grants: tuple[AccountGrant, ...] = field(default_factory=tuple)
 
+    def __post_init__(self) -> None:
+        # Defence in depth for the review finding that `is_owner` trusts the
+        # role name alone: the DB `role_name` ENUM is the real guarantee
+        # (no custom role can ever be named "owner"), but this snapshot is
+        # constructed from whatever the caller supplies, so re-assert the
+        # closed set here too rather than silently trusting it.
+        unknown = self.roles - _SYSTEM_ROLES
+        if unknown:
+            raise ValueError(f"unknown role(s) not in the system role_name ENUM: {sorted(unknown)}")
+
     @property
     def is_owner(self) -> bool:
         return "owner" in self.roles
@@ -85,9 +105,17 @@ class Allow:
 class Deny:
     """The decision was refused; `reason` is machine-readable only — never
     used to distinguish "object doesn't exist" from "object not yours" in
-    the HTTP response (ticket "Security notes")."""
+    the HTTP response (ticket "Security notes").
+
+    `permission`/`scope` echo the inputs `decide()` was called with, so a
+    caller can build the audited `rbac.denied` record and the ticket's own
+    acceptance criterion ("the denial names the permission and scope")
+    without threading those values through separately — `Deny` alone is a
+    complete, self-describing record of what was refused."""
 
     reason: DenyReason
+    permission: Permission
+    scope: Scope
 
 
 Decision = Allow | Deny
@@ -114,23 +142,105 @@ def decide(
       for owner means "all", per the ticket's own text).
     """
     if permission not in principal.permissions:
-        return Deny(DenyReason.MISSING_PERMISSION)
+        return Deny(DenyReason.MISSING_PERMISSION, permission=permission, scope=scope)
 
     if scope is not Scope.GRANTED_ACCOUNTS:
         return Allow()
 
     if exchange_account_id is None:
-        return Deny(DenyReason.OBJECT_REQUIRED)
+        return Deny(DenyReason.OBJECT_REQUIRED, permission=permission, scope=scope)
 
     if principal.is_owner:
         return Allow()
 
     grant = principal.grant_for(exchange_account_id)
     if grant is None or not grant.can_view:
-        return Deny(DenyReason.ACCOUNT_NOT_GRANTED)
+        return Deny(DenyReason.ACCOUNT_NOT_GRANTED, permission=permission, scope=scope)
     if grant.frozen:
-        return Deny(DenyReason.ACCOUNT_FROZEN)
+        return Deny(DenyReason.ACCOUNT_FROZEN, permission=permission, scope=scope)
     if requires_trade and not grant.can_trade:
-        return Deny(DenyReason.TRADING_NOT_GRANTED)
+        return Deny(DenyReason.TRADING_NOT_GRANTED, permission=permission, scope=scope)
 
     return Allow()
+
+
+class _AuditEmitter(Protocol):
+    """Structural subset of `AuditWriter.emit` (mirrors `api/audit.py`'s
+    `_Emitter`/`api/audit.py`'s `AuditWriterLike`) — this module never
+    imports a concrete audit backend, only the shape it needs."""
+
+    async def emit(
+        self,
+        action: str,
+        *,
+        actor_label: str,
+        actor_user_id: Any = None,
+        actor_ip: str | None = None,
+        session_id: Any = None,
+        object_kind: str | None = None,
+        object_id: str | None = None,
+        outcome: Any = ...,
+        severity: Any = ...,
+        reason: str | None = None,
+        request_id: Any = None,
+    ) -> None: ...
+
+
+class ForbiddenError(Exception):
+    """Raised by `require_permission`'s dependency callable when `decide()`
+    denies; the HTTP edge (composition root) maps this to the uniform
+    `forbidden` RFC 7807 body per ticket "403 semantics" — callers never
+    branch on `.deny.reason` for user-facing text, only for the audited
+    record and the machine-readable body field."""
+
+    def __init__(self, deny: Deny) -> None:
+        self.deny = deny
+        super().__init__(f"forbidden: {deny.reason.value} ({deny.permission.value})")
+
+
+async def enforce(
+    principal: PrincipalSnapshot,
+    permission: Permission,
+    *,
+    scope: Scope = Scope.NONE,
+    exchange_account_id: uuid.UUID | None = None,
+    requires_trade: bool = False,
+    emitter: _AuditEmitter | None = None,
+    actor_ip: str | None = None,
+    session_id: uuid.UUID | None = None,
+    request_id: uuid.UUID | None = None,
+) -> None:
+    """Runtime enforcement wrapper around `decide()`: on `Deny`, audits
+    `rbac.denied` (severity warning, naming the permission and scope —
+    ticket AC "the denial names the permission and scope and rbac.denied is
+    audited") and raises `ForbiddenError`; on `Allow`, returns normally.
+
+    This is the one call site FastAPI route dependencies and the WS
+    gateway's per-subscribe check are expected to use so every enforcement
+    point audits denials identically; `decide()` itself stays pure and
+    audit-free so it remains trivially unit-testable (ticket "Technical
+    notes": "a decision costs a set lookup, not a query").
+    """
+    decision = decide(
+        principal,
+        permission,
+        scope=scope,
+        exchange_account_id=exchange_account_id,
+        requires_trade=requires_trade,
+    )
+    if isinstance(decision, Allow):
+        return
+    if emitter is not None:
+        await emitter.emit(
+            "rbac.denied",
+            actor_label=str(principal.user_id),
+            actor_user_id=principal.user_id,
+            actor_ip=actor_ip,
+            session_id=session_id,
+            object_kind=str(exchange_account_id) if exchange_account_id else None,
+            outcome="denied",
+            severity="warning",
+            reason=f"{decision.reason.value}:{decision.permission.value}:{decision.scope.value}",
+            request_id=request_id,
+        )
+    raise ForbiddenError(decision)

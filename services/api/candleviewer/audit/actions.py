@@ -77,6 +77,7 @@ AUDIT_ACTIONS: frozenset[str] = frozenset(
         "admin.audit_verify",
         "admin.audit_export",
         "admin.audit_denied",
+        "rbac.denied",
     }
 )
 
