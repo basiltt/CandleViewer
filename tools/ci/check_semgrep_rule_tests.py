@@ -28,8 +28,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 RULES_DIR = REPO_ROOT / ".semgrep"
 TESTS_DIR = RULES_DIR / "tests"
 
-RULEID_RE = re.compile(r"#\s*ruleid:\s*([\w-]+)\s*$")
-OK_RE = re.compile(r"#\s*ok:\s*([\w-]+)\s*$")
+RULEID_RE = re.compile(r"(?:#|//)\s*ruleid:\s*([\w-]+)\s*$")
+OK_RE = re.compile(r"(?:#|//)\s*ok:\s*([\w-]+)\s*$")
 
 
 def expected_lines(fixture: Path, rule_id: str) -> tuple[set[int], set[int]]:
@@ -81,7 +81,12 @@ def main() -> int:
         return 1
     for rule_yaml in rule_yamls:
         rule_id = rule_yaml.stem
-        fixture = TESTS_DIR / f"{rule_id}.py"
+        # Fixture language follows the rule (.py default; .ts/.tsx for TypeScript rules, E10-X02).
+        fixture = next(
+            (TESTS_DIR / f"{rule_id}{ext}" for ext in (".py", ".ts", ".tsx")
+             if (TESTS_DIR / f"{rule_id}{ext}").exists()),
+            TESTS_DIR / f"{rule_id}.py",
+        )
         if not fixture.exists():
             failures.append(f"{rule_id}: missing fixture {fixture}")
             continue

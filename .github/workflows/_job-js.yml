@@ -230,6 +230,12 @@ jobs:
       - name: Record lane duration in job summary
         if: always()
         run: node tools/ci/write-turbo-summary.mjs build >> "$GITHUB_STEP_SUMMARY"
+      - name: Electron-hardening gate (E10-X02, SR-110..SR-119) - packaged build, weakened fixture must fail
+        run: |
+          set -euo pipefail
+          pnpm --filter @candleviewer/web --filter @candleviewer/desktop build
+          xvfb-run -a node apps/desktop/scripts/collect-hardening-facts.mjs hardening-facts.json
+          python tools/ci/electron_hardening_gate.py --desktop-dist apps/desktop/dist             --web-dist apps/web/dist --builder-config apps/desktop/electron-builder.yml             --facts hardening-facts.json --require-runtime
       - name: Contrast-matrix gate (E05-T05, A11Y-C001/002/003 over packages/ui/tokens/**)
         run: pnpm --filter @candleviewer/ui contrast:gate
       - name: Upload contrast-matrix report

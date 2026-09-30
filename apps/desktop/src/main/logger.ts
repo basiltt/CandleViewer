@@ -12,7 +12,9 @@ function logLine(record: Record<string, unknown>): void {
   const line = JSON.stringify({ ts: new Date().toISOString(), ...record });
   try {
     const logDir = app.getPath("userData");
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- logDir is Electron's app-controlled userData path, never renderer input
     fs.mkdirSync(logDir, { recursive: true });
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- same app-controlled userData dir + fixed file name
     fs.appendFileSync(path.join(logDir, "shell.log"), `${line}\n`, "utf8");
   } catch {
     // Best-effort logging only; never let a logging failure crash the shell.

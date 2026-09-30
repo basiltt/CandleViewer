@@ -23,16 +23,18 @@
   "devDependencies": {
     "@candleviewer/config": "workspace:*",
     "@candleviewer/web": "workspace:*",
+    "@playwright/test": "^1.49.1",
     "@types/node": "^22.10.2",
+    "@vitest/coverage-v8": "^2.1.8",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "esbuild": "^0.25.12",
+    "eslint": "^9.17.0",
+    "eslint-plugin-no-unsanitized": "^4.1.5",
+    "eslint-plugin-security": "^3.0.1",
+    "playwright": "^1.49.1",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.19.0",
-    "electron": "^33.2.1",
-    "esbuild": "^0.25.12",
-    "electron-builder": "^25.1.8",
-    "vitest": "^2.1.8",
-    "@vitest/coverage-v8": "^2.1.8",
-    "eslint": "^9.17.0",
-    "@playwright/test": "^1.49.1",
-    "playwright": "^1.49.1"
+    "vitest": "^2.1.8"
   }
 }

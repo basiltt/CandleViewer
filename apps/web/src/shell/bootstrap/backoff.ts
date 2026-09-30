@@ -22,7 +22,7 @@ const BACKOFF_TABLE: readonly BackoffStep[] = [
 /** Returns the nominal `{delayMs, jitterMs}` pair for a 1-indexed attempt number. */
 export function backoffStepFor(attempt: number): BackoffStep {
   const index = Math.min(Math.max(attempt, 1), BACKOFF_TABLE.length) - 1;
-  return BACKOFF_TABLE[index] as BackoffStep;
+  return BACKOFF_TABLE.at(index) as BackoffStep;
 }
 
 /**

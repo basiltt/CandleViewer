@@ -126,6 +126,9 @@ jobs:
         # setuptools>=81 dropped pkg_resources, which semgrep 1.99 imports.
         run: pip install "setuptools<81" "semgrep==1.99.0"
 
+      - name: Semgrep custom-rule fixture tests (incl. E10-X02 electron rules)
+        run: python tools/ci/check_semgrep_rule_tests.py
+
       - name: Run Semgrep (registry packs + .semgrep/ custom rules if present)
         run: |
           set -euo pipefail

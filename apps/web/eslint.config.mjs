@@ -1,6 +1,8 @@
 import tseslint from "typescript-eslint";
 import reactPlugin from "eslint-plugin-react";
 import reactHooksPlugin from "eslint-plugin-react-hooks";
+import security from "eslint-plugin-security";
+import noUnsanitized from "eslint-plugin-no-unsanitized";
 import baseConfig from "@candleviewer/config/eslint";
 
 /** @type {import("eslint").Linter.Config[]} */
@@ -32,6 +34,18 @@ export default tseslint.config(
     },
     settings: {
       react: { version: "18.3" },
+    },
+  },
+  // E10-X02 (SR-127): security + no-unsanitized on the shell modules, blocking at error level.
+  {
+    files: ["src/shell/**/*.{ts,tsx}", "src/routes/**/*.{ts,tsx}"],
+    plugins: { security, "no-unsanitized": noUnsanitized },
+    rules: {
+      ...Object.fromEntries(
+        Object.keys(security.configs.recommended.rules).map((rule) => [rule, "error"]),
+      ),
+      "no-unsanitized/method": "error",
+      "no-unsanitized/property": "error",
     },
   },
 );
