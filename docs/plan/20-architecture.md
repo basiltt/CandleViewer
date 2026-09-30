@@ -1205,6 +1205,8 @@ sequenceDiagram
 
 ### 12.1 Metrics (Prometheus, all with `env` label)
 
+The machine-readable catalogue is `services/api/candleviewer/observability/metrics_catalogue.py` (E04-T03): every row below is declared there with type, unit, labels, alert and owning epic; entries whose module has not shipped are `planned`. The `env` label is injected by the registry, never by call sites. Label values never carry emails, user names, order ids, tokens or exchange error text. `topic_staleness_seconds` is computed at scrape time from the last-update timestamp. `oms_rate_reject_total` and `bybit_rate_remaining` also serve SR-125 rate-limit rejections; `bybit_clock_drift_ms` covers clock drift, `disk_used_ratio` the disk high-watermark and `ws_resync_total` the WS desync rate.
+
 | Domain | Metric | Type | Purpose / alert |
 |---|---|---|---|
 | Runtime | `event_loop_lag_seconds` | histogram | p99 ≤ 50 ms; alert > 100 ms for 5 min |
@@ -1236,6 +1238,11 @@ sequenceDiagram
 | Rules | `rule_evaluations_total`, `rule_fires_total{rule_id}`, `rule_autodisarm_total` | counter | rule-storm detection |
 | Recorder | `recorder_rows_total{stream}`, `recorder_spill_bytes`, `disk_used_ratio` | counter/gauge | alert ratio > 0.8 |
 | Storage | `questdb_write_seconds`, `pg_pool_in_use`, `pg_query_seconds` | histogram/gauge | saturation |
+| Security (SR-125) | `auth_login_failures_total{method}`, `auth_lockouts_total`, `auth_stepup_failures_total`, `authz_denied_total{permission}` | counter | brute-force / privilege probing (E09) |
+| Security (SR-125) | `credential_verification_failures_total{reason}` | counter | key revoked or withdrawal permission on (E27) |
+| Security (SR-125) | `rule_circuit_breaker_trips_total` | counter | alert on any (E35) |
+| Security (SR-125) | `audit_chain_verification_failures_total`, `egress_ip_changes_total` | counter | page / alert on any (E43) |
+| Self | `metric_cardinality_breach_total{metric}`, `metrics_registry_series` | counter/gauge | a metric hit its `max_series`; new label values refused (E04-T03) |
 | Frontend (pushed) | `fe_frame_time_ms`, `fe_dropped_frames_total`, `fe_ws_decode_ms`, `fe_gpu_memory_mb` | histogram/counter | engine regressions in the field |
 
 ### 12.2 Logging

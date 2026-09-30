@@ -1,0 +1,157 @@
+"""Catalogue, exposition and fallback-snapshot tests (E04-T03)."""
+
+from __future__ import annotations
+
+import asyncio
+import hashlib
+import json
+import re
+
+import structlog
+from prometheus_client import generate_latest
+from prometheus_client.parser import text_string_to_metric_families
+
+from candleviewer.observability.metrics import DISALLOWED_LABEL_NAMES, Metrics
+from candleviewer.observability.metrics_catalogue import (
+    CATALOGUE,
+    FANOUT_BUCKETS,
+    LOOP_LAG_BUCKETS,
+    live_specs,
+    register_r0,
+)
+from candleviewer.observability.metrics_runtime import (
+    run_cardinality_check,
+    run_fallback_snapshots,
+    run_loop_lag_sampler,
+)
+
+_UNIT_SUFFIX = re.compile(r"_(seconds|bytes|total|depth|state|in_use|remaining)$")
+
+#: Golden: sha256 of the sorted (name, kind, labels, status, owner) catalogue.
+#: Changing it requires updating 20-architecture.md §12.1 and dashboards/alerts.
+GOLDEN_CATALOGUE_SHA256 = "83d181b5a6fd3241294f00b099302deee533a4bc7ef94ba5d9e25b9c613f121f"
+
+_KNOWN_EPICS = re.compile(r"^E\d{2}(-[A-Z]\d{2})?$")
+
+
+def _catalogue_digest() -> str:
+    rows = sorted((s.name, s.kind, list(s.labels), s.status, s.owner_epic) for s in CATALOGUE)
+    return hashlib.sha256(json.dumps(rows).encode()).hexdigest()
+
+
+def test_catalogue_golden_snapshot_unchanged() -> None:
+    assert _catalogue_digest() == GOLDEN_CATALOGUE_SHA256
+
+
+def test_catalogue_names_are_unique_and_documented() -> None:
+    names = [s.name for s in CATALOGUE]
+    assert len(names) == len(set(names))
+    for s in CATALOGUE:
+        assert s.help and s.alert and s.unit
+
+
+def test_catalogue_live_names_are_unit_suffixed() -> None:
+    for s in live_specs():
+        assert _UNIT_SUFFIX.search(s.name), s.name
+
+
+def test_catalogue_every_planned_entry_has_owning_epic() -> None:
+    for s in CATALOGUE:
+        if s.status == "planned":
+            assert _KNOWN_EPICS.match(s.owner_epic), s.name
+
+
+def test_catalogue_no_disallowed_label_names() -> None:
+    for s in CATALOGUE:
+        assert not {lbl.lower() for lbl in s.labels} & DISALLOWED_LABEL_NAMES, s.name
+
+
+def test_catalogue_architecture_doc_lists_every_metric() -> None:
+    from pathlib import Path
+
+    doc = next(
+        p / "docs/plan/20-architecture.md"
+        for p in Path(__file__).resolve().parents
+        if (p / "docs/plan/20-architecture.md").exists()
+    ).read_text(encoding="utf-8")
+    missing = [s.name for s in CATALOGUE if f"`{s.name}" not in doc]
+    assert missing == []
+
+
+def test_histogram_buckets_bracket_documented_budgets() -> None:
+    assert 0.05 in LOOP_LAG_BUCKETS and 0.1 in LOOP_LAG_BUCKETS
+    assert 0.02 in FANOUT_BUCKETS
+
+
+def test_exposition_parses_and_every_live_metric_present_with_env_and_help() -> None:
+    m = Metrics("demo", process_collectors=True)
+    r = register_r0(m)
+    r["ws_connection_state"].labels("public").set(1)
+    r["ws_messages_total"].labels("publicTrade").inc()
+    r["topic_staleness_seconds"].labels("orderbook.50").set(0.5)
+    r["ingest_queue_depth"].labels("normalize").set(3)
+    r["book_resync_total"].labels("BTCUSDT", "gap").inc()
+    r["engine_process_seconds"].labels("footprint").observe(0.001)
+    r["bybit_rate_remaining"].labels("order").set(10)
+    text = generate_latest(m.registry).decode()
+    families = {f.name: f for f in text_string_to_metric_families(text)}
+    for spec in live_specs():
+        family_name = spec.name.removesuffix("_total")
+        fam = families[family_name]
+        assert fam.documentation, spec.name
+        assert fam.samples and all(s.labels["env"] == "demo" for s in fam.samples), spec.name
+        assert f"# HELP {spec.name} " in text
+
+
+def test_labels_exercised_contain_no_personal_data() -> None:
+    m = Metrics("live")
+    register_r0(m)
+    text = generate_latest(m.registry).decode()
+    assert "@" not in text
+    for fam in text_string_to_metric_families(text):
+        for sample in fam.samples:
+            assert not set(sample.labels) & DISALLOWED_LABEL_NAMES
+
+
+async def _no_sleep(_: float) -> None:
+    await asyncio.sleep(0)
+
+
+def test_loop_lag_sampler_records_overshoot() -> None:
+    t = [0.0]
+
+    async def sleep(interval: float) -> None:
+        t[0] += interval + 0.12
+
+    m = Metrics("demo")
+    h = register_r0(m)["event_loop_lag_seconds"]
+    asyncio.run(run_loop_lag_sampler(h, lambda: t[0], sleep=sleep, iterations=3))
+    snap = m.snapshot(["event_loop_lag_seconds"])
+    assert snap["event_loop_lag_seconds_count"] == 3
+    assert abs(snap["event_loop_lag_seconds_sum"] - 0.36) < 1e-9
+
+
+def test_scrape_outage_of_10_minutes_leaves_two_fallback_snapshots() -> None:
+    m = Metrics("demo")
+    register_r0(m)["pg_pool_in_use"].child().set(4)
+    elapsed = [0.0]
+
+    async def sleep(interval: float) -> None:
+        elapsed[0] += interval
+
+    with structlog.testing.capture_logs() as logs:
+        asyncio.run(run_fallback_snapshots(m, sleep=sleep, iterations=2))
+    entries = [e for e in logs if e["event"] == "metrics_fallback_snapshot"]
+    assert elapsed[0] == 600.0 and len(entries) >= 2
+    assert entries[0]["metrics"]["pg_pool_in_use"] == 4.0
+
+
+def test_cardinality_check_logs_breached_metrics() -> None:
+    m = Metrics("demo")
+    c = m.counter("x_total", "h", ("k",), max_series=1)
+    c.labels("a")
+    c.labels("b")
+    with structlog.testing.capture_logs() as logs:
+        asyncio.run(run_cardinality_check(m, sleep=_no_sleep, iterations=1))
+    assert logs[-1]["event"] == "metric_cardinality_at_bound"
+    assert logs[-1]["metrics"] == ["x_total"]

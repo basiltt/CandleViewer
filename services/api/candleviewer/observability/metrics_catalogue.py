@@ -1,0 +1,648 @@
+"""The metric catalogue — every metric in `20-architecture.md` §12.1 (E04-T03).
+
+Metric names are a contract with dashboards (E04-S01) and alert rules
+(E04-T05), so every name is declared here even when its owning module ships
+later. `status="live"` entries are registered by `register_r0()` in every
+process; `status="planned"` entries record the owning epic that implements
+them and register no samples until then. SR-125 security metrics are declared
+here too, so E09/E27/E35/E43 have names to implement against.
+
+A golden snapshot test (`tests/unit/observability/test_metrics_catalogue.py`)
+fails on any unreviewed name/label change.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Final, Literal
+
+from candleviewer.observability.metrics import BoundedMetric, MetricKind, Metrics
+
+Status = Literal["live", "planned"]
+
+#: Loop lag: buckets straddle the 50 ms p99 target and the 100 ms alert
+#: threshold so each lands on its own bucket edge (06-performance §2).
+LOOP_LAG_BUCKETS: Final = (0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 1.0, 2.5)
+#: Fan-out: edges around the 20 ms p99 budget.
+FANOUT_BUCKETS: Final = (0.001, 0.0025, 0.005, 0.01, 0.015, 0.02, 0.03, 0.05, 0.1, 0.25)
+#: Per-engine CPU time per batch.
+ENGINE_BUCKETS: Final = (0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1)
+#: Storage round-trips.
+STORAGE_BUCKETS: Final = (0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 5.0)
+#: Order submit click→ack, p99 ≤ 500 ms.
+SUBMIT_BUCKETS: Final = (0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.75, 1.0, 2.0, 5.0)
+#: Statechart transition latency.
+TRANSITION_BUCKETS: Final = (0.00005, 0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01)
+
+
+@dataclass(frozen=True, slots=True)
+class MetricSpec:
+    name: str
+    kind: MetricKind
+    unit: str
+    labels: tuple[str, ...]
+    help: str
+    alert: str
+    status: Status
+    owner_epic: str
+    buckets: tuple[float, ...] | None = None
+    max_series: int = 200
+
+
+def _s(
+    name: str,
+    kind: MetricKind,
+    unit: str,
+    labels: tuple[str, ...],
+    help_text: str,
+    alert: str,
+    status: Status,
+    owner: str,
+    buckets: tuple[float, ...] | None = None,
+    max_series: int = 200,
+) -> MetricSpec:
+    return MetricSpec(
+        name, kind, unit, labels, help_text, alert, status, owner, buckets, max_series
+    )
+
+
+_L: Final[Status] = "live"
+_P: Final[Status] = "planned"
+
+CATALOGUE: Final[tuple[MetricSpec, ...]] = (
+    # --- Runtime / R0 live -------------------------------------------------
+    _s(
+        "event_loop_lag_seconds",
+        "histogram",
+        "seconds",
+        (),
+        "asyncio loop overshoot sampled every 100 ms.",
+        "p99 > 0.1 for 5m",
+        _L,
+        "E04",
+        LOOP_LAG_BUCKETS,
+    ),
+    _s(
+        "ws_connection_state",
+        "gauge",
+        "state",
+        ("socket",),
+        "Exchange socket state: 1 up, 0 down.",
+        "== 0 for 10s",
+        _L,
+        "E04",
+        max_series=16,
+    ),
+    _s(
+        "ws_messages_total",
+        "counter",
+        "messages",
+        ("topic",),
+        "Exchange WS messages received per topic.",
+        "throughput dashboard",
+        _L,
+        "E04",
+        max_series=64,
+    ),
+    _s(
+        "ws_message_bytes_total",
+        "counter",
+        "bytes",
+        (),
+        "Exchange WS payload bytes received.",
+        "cost sizing",
+        _L,
+        "E04",
+    ),
+    _s(
+        "topic_staleness_seconds",
+        "gauge",
+        "seconds",
+        ("topic",),
+        "Seconds since the topic last updated, computed at scrape time.",
+        "book > 2s, trades > 10s",
+        _L,
+        "E04",
+        max_series=64,
+    ),
+    _s(
+        "ingest_queue_depth",
+        "gauge",
+        "items",
+        ("stage",),
+        "Items waiting in each bounded ingestion queue.",
+        "saturation",
+        _L,
+        "E04",
+        max_series=16,
+    ),
+    _s(
+        "book_resync_total",
+        "counter",
+        "resyncs",
+        ("symbol", "reason"),
+        "Order-book resyncs from snapshot.",
+        "> 5/min",
+        _L,
+        "E04",
+        max_series=80,
+    ),
+    _s(
+        "engine_process_seconds",
+        "histogram",
+        "seconds",
+        ("engine",),
+        "CPU time per engine batch.",
+        "CPU budget per engine",
+        _L,
+        "E04",
+        ENGINE_BUCKETS,
+        max_series=16,
+    ),
+    _s(
+        "pg_pool_in_use",
+        "gauge",
+        "connections",
+        (),
+        "Postgres pool connections checked out.",
+        "saturation",
+        _L,
+        "E04",
+    ),
+    _s(
+        "pg_query_seconds",
+        "histogram",
+        "seconds",
+        (),
+        "Postgres query latency.",
+        "saturation",
+        _L,
+        "E04",
+        STORAGE_BUCKETS,
+    ),
+    _s(
+        "questdb_write_seconds",
+        "histogram",
+        "seconds",
+        (),
+        "QuestDB ILP write latency.",
+        "saturation",
+        _L,
+        "E04",
+        STORAGE_BUCKETS,
+    ),
+    _s(
+        "bybit_rate_remaining",
+        "gauge",
+        "requests",
+        ("endpoint_group",),
+        "Remaining per-UID Bybit rate budget per endpoint group (US-OBS-005).",
+        "budget health",
+        _L,
+        "E04",
+        max_series=16,
+    ),
+    _s(
+        "oms_rate_reject_total",
+        "counter",
+        "rejects",
+        (),
+        "Orders rejected by the rate-limit governor or exchange 10006/10018 (SR-125).",
+        "budget health",
+        _L,
+        "E04",
+    ),
+    # --- Statechart (E50) ---------------------------------------------------
+    _s(
+        "cv_machine_live_count",
+        "gauge",
+        "interpreters",
+        ("kind",),
+        "Live interpreters per machine family.",
+        "monotonic growth",
+        _P,
+        "E50",
+    ),
+    _s(
+        "cv_machine_deferred_depth",
+        "gauge",
+        "events",
+        ("kind",),
+        "Deferral-buffer depth.",
+        "> 0 for 5s",
+        _P,
+        "E50",
+    ),
+    _s(
+        "cv_machine_unhandled_events_total",
+        "counter",
+        "events",
+        ("kind", "event"),
+        "Events with no handler.",
+        "undeclared event name",
+        _P,
+        "E50",
+    ),
+    _s(
+        "cv_machine_quarantined_total",
+        "counter",
+        "transitions",
+        ("kind",),
+        "Faulted transitions.",
+        "page P1 on any",
+        _P,
+        "E50",
+    ),
+    _s(
+        "cv_machine_transition_seconds",
+        "histogram",
+        "seconds",
+        ("kind",),
+        "Transition latency.",
+        ">= 8000 ev/s aggregate",
+        _P,
+        "E50",
+        TRANSITION_BUCKETS,
+    ),
+    _s(
+        "cv_machine_chain_trips_total",
+        "counter",
+        "trips",
+        ("kind",),
+        "Runaway-chain latches (CV-C63).",
+        "page P1 on any",
+        _P,
+        "E50",
+    ),
+    _s(
+        "cv_machine_dropped_receipts_total",
+        "counter",
+        "receipts",
+        ("kind",),
+        "Dropped receipts (CV-C69).",
+        "alert on any",
+        _P,
+        "E50",
+    ),
+    _s(
+        "cv_machine_send_refused_total",
+        "counter",
+        "events",
+        ("kind", "reason"),
+        "Inbox overflow refusals.",
+        "order lane pages",
+        _P,
+        "E50",
+    ),
+    _s(
+        "cv_statechart_library_info",
+        "gauge",
+        "info",
+        ("version", "sha256"),
+        "Pinned xstate-statemachine build identity.",
+        "mismatch fails readiness",
+        _P,
+        "E50",
+        max_series=2,
+    ),
+    # --- Rules / gateway / OMS ---------------------------------------------
+    _s(
+        "cv_rule_prefilter_rejection_ratio",
+        "gauge",
+        "ratio",
+        (),
+        "Rule prefilter rejection ratio.",
+        "< 0.99 disables dispatch",
+        _P,
+        "E35",
+    ),
+    _s(
+        "ws_clients", "gauge", "clients", (), "Connected gateway WS clients.", "capacity", _P, "E17"
+    ),
+    _s(
+        "ws_topics_per_client",
+        "gauge",
+        "topics",
+        (),
+        "Max topics subscribed by a single client.",
+        "capacity",
+        _P,
+        "E17",
+    ),
+    _s(
+        "ws_conflated_total",
+        "counter",
+        "frames",
+        (),
+        "Frames conflated for slow clients.",
+        "client health",
+        _P,
+        "E17",
+    ),
+    _s(
+        "ws_resync_total",
+        "counter",
+        "resyncs",
+        (),
+        "Client resyncs (SR-125 WS desync rate).",
+        "client health",
+        _P,
+        "E17",
+    ),
+    _s(
+        "ws_slow_conn_total",
+        "counter",
+        "connections",
+        (),
+        "Slow-consumer disconnects.",
+        "client health",
+        _P,
+        "E17",
+    ),
+    _s(
+        "ws_fanout_latency_seconds",
+        "histogram",
+        "seconds",
+        (),
+        "Bus to socket fan-out latency.",
+        "p99 > 0.02",
+        _P,
+        "E17",
+        FANOUT_BUCKETS,
+    ),
+    _s(
+        "order_submit_seconds",
+        "histogram",
+        "seconds",
+        ("transport",),
+        "Order click-to-ack latency.",
+        "p99 > 0.5",
+        _P,
+        "E29",
+        SUBMIT_BUCKETS,
+    ),
+    _s(
+        "orders_total",
+        "counter",
+        "orders",
+        ("state",),
+        "Orders by terminal state.",
+        "reject rate",
+        _P,
+        "E29",
+    ),
+    _s(
+        "oms_unknown_orders",
+        "gauge",
+        "orders",
+        (),
+        "Orders on the exchange unknown to the OMS.",
+        "> 0 for 60s (page)",
+        _P,
+        "E45",
+    ),
+    _s(
+        "naked_position_alerts_total",
+        "counter",
+        "alerts",
+        (),
+        "Positions observed without a native SL.",
+        "page immediately",
+        _P,
+        "E32",
+    ),
+    _s(
+        "bybit_clock_drift_ms",
+        "gauge",
+        "milliseconds",
+        (),
+        "Local vs exchange clock drift (SR-125).",
+        "> 1500",
+        _P,
+        "E08",
+    ),
+    _s(
+        "rule_evaluations_total",
+        "counter",
+        "evaluations",
+        (),
+        "Rule evaluations.",
+        "rule storm",
+        _P,
+        "E35",
+    ),
+    _s(
+        "rule_fires_total",
+        "counter",
+        "fires",
+        ("rule_id",),
+        "Rule fires per rule.",
+        "rule storm",
+        _P,
+        "E35",
+        max_series=100,
+    ),
+    _s(
+        "rule_autodisarm_total",
+        "counter",
+        "disarms",
+        (),
+        "Rules auto-disarmed.",
+        "rule storm",
+        _P,
+        "E35",
+    ),
+    _s(
+        "recorder_rows_total",
+        "counter",
+        "rows",
+        ("stream",),
+        "Rows written by the recorder.",
+        "ingest rate",
+        _P,
+        "E16",
+    ),
+    _s(
+        "recorder_spill_bytes",
+        "gauge",
+        "bytes",
+        (),
+        "Recorder spill-file size.",
+        "spill growth",
+        _P,
+        "E16",
+    ),
+    _s(
+        "disk_used_ratio",
+        "gauge",
+        "ratio",
+        (),
+        "Data volume used ratio (SR-125 disk high-watermark).",
+        "> 0.8; page > 0.95",
+        _P,
+        "E16",
+    ),
+    # --- SR-125 security metrics (planned) ----------------------------------
+    _s(
+        "auth_login_failures_total",
+        "counter",
+        "failures",
+        ("method",),
+        "Failed logins.",
+        "brute force",
+        _P,
+        "E09",
+    ),
+    _s(
+        "auth_lockouts_total",
+        "counter",
+        "lockouts",
+        (),
+        "Account lockouts.",
+        "brute force",
+        _P,
+        "E09",
+    ),
+    _s(
+        "auth_stepup_failures_total",
+        "counter",
+        "failures",
+        (),
+        "Step-up (TOTP) failures.",
+        "credential attack",
+        _P,
+        "E09",
+    ),
+    _s(
+        "authz_denied_total",
+        "counter",
+        "denials",
+        ("permission",),
+        "Permission-check failures.",
+        "privilege probing",
+        _P,
+        "E09",
+    ),
+    _s(
+        "credential_verification_failures_total",
+        "counter",
+        "failures",
+        ("reason",),
+        "Exchange credential verification failures.",
+        "key revoked/withdrawal on",
+        _P,
+        "E27",
+    ),
+    _s(
+        "rule_circuit_breaker_trips_total",
+        "counter",
+        "trips",
+        (),
+        "Rule circuit-breaker trips.",
+        "alert on any",
+        _P,
+        "E35",
+    ),
+    _s(
+        "audit_chain_verification_failures_total",
+        "counter",
+        "failures",
+        (),
+        "Audit hash-chain verification failures.",
+        "page on any",
+        _P,
+        "E43",
+    ),
+    _s(
+        "egress_ip_changes_total",
+        "counter",
+        "changes",
+        (),
+        "Detected egress IP changes (Bybit key IP allow-list).",
+        "alert on any",
+        _P,
+        "E43",
+    ),
+    # --- Frontend (pushed; E04-T06 owns ingestion) --------------------------
+    _s(
+        "fe_frame_time_ms",
+        "histogram",
+        "milliseconds",
+        (),
+        "Frontend frame time.",
+        "engine regression",
+        _P,
+        "E04-T06",
+        (4.0, 8.0, 12.0, 16.0, 20.0, 33.0, 50.0, 100.0),
+    ),
+    _s(
+        "fe_dropped_frames_total",
+        "counter",
+        "frames",
+        (),
+        "Frontend dropped frames.",
+        "engine regression",
+        _P,
+        "E04-T06",
+    ),
+    _s(
+        "fe_ws_decode_ms",
+        "histogram",
+        "milliseconds",
+        (),
+        "Frontend WS decode time.",
+        "engine regression",
+        _P,
+        "E04-T06",
+        (0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0),
+    ),
+    _s(
+        "fe_gpu_memory_mb",
+        "gauge",
+        "megabytes",
+        (),
+        "Frontend GPU memory.",
+        "engine regression",
+        _P,
+        "E04-T06",
+    ),
+)
+
+#: Keys of the fallback snapshot written to the log every 5 min.
+SNAPSHOT_KEYS: Final[tuple[str, ...]] = (
+    "ws_connection_state",
+    "topic_staleness_seconds",
+    "ingest_queue_depth",
+    "pg_pool_in_use",
+    "bybit_rate_remaining",
+    "oms_rate_reject_total",
+    "ws_messages_total",
+    "metric_cardinality_breach_total",
+    "metrics_registry_series",
+)
+
+
+def live_specs() -> tuple[MetricSpec, ...]:
+    return tuple(s for s in CATALOGUE if s.status == "live")
+
+
+def register_r0(metrics: Metrics) -> dict[str, BoundedMetric]:
+    """Register every `live` catalogue entry on `metrics`; idempotent."""
+    out: dict[str, BoundedMetric] = {}
+    for spec in live_specs():
+        if spec.kind == "histogram" and spec.buckets is not None:
+            out[spec.name] = metrics.histogram(
+                spec.name, spec.help, spec.labels, buckets=spec.buckets, max_series=spec.max_series
+            )
+        elif spec.kind == "counter":
+            out[spec.name] = metrics.counter(
+                spec.name, spec.help, spec.labels, max_series=spec.max_series
+            )
+        else:
+            out[spec.name] = metrics.gauge(
+                spec.name, spec.help, spec.labels, max_series=spec.max_series
+            )
+        if not spec.labels:
+            # Pre-bind so label-less metrics export an env-labelled sample at once.
+            out[spec.name].child()
+    return out
