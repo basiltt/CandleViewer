@@ -80,6 +80,7 @@ async def test_runtime_serves_live_metrics_and_stops() -> None:
         await runtime.stop()
 
 
+@pytest.mark.perf
 def test_scrape_latency_under_50ms_at_max_cardinality() -> None:
     metrics = Metrics("dev", process_collectors=True)
     r0 = register_r0(metrics)
