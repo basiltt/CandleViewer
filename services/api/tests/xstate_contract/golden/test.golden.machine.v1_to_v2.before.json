@@ -1,0 +1,6 @@
+{
+  "_comment": "E50-T02 golden fixture: a persisted-snapshot context BEFORE an upcaster runs, keyed to test.golden.machine's v1 chart shape (services/api/tests/xstate_contract/test_golden_upcaster.py). Deliberately non-trivial (nested + list) so a shallow/no-op upcaster body is distinguishable from a real one on this exact payload, mirroring the ticket's 'no-op upcaster refused' acceptance criterion at the golden-snapshot level rather than only the generic probe in upcasters.py.",
+  "cv_probe_marker": "e50t02-golden-before",
+  "attempt_count": 1,
+  "nested": {"leg_ids": ["leg-1", "leg-2"], "filled_qty": "0"}
+}

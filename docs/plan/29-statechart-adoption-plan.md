@@ -132,6 +132,10 @@ async def restore(key, envelope) -> Interpreter:
   - **B11:** the R14-03 fix.
   - **B8 High:** the attempt counter B610-OC-CD03.
 - The registry loads each file and validates it against the schema, checks every target and walks all keys recursively. It then computes `machine_hash = sha256(canonical_json(chart))` and diffs it against `machine_hashes.lock`. A hash change without a version bump **and** a registered upcaster with a golden-snapshot test fails the build (MUST-12, MUSTNOT-09).
+  A lock entry with no recorded `version` (`None`) is treated as version `0` for this comparison: if the
+  chart's hash changed and it now declares any integer `version`, that counts as a version bump (there is
+  nothing to bump *from*). This only matters for a machine's first lock entry or one hand-edited to omit
+  `version`; every machine added via `/statechart-new` starts at `version: 1` in its JSON.
 - Charts are Stately-compatible. `registry.export_stately(key)` produces importable JSON for design review and for the admin inspector.
 
 ### 1.6 `tools/lint_statecharts.py`: the standing CV lint set

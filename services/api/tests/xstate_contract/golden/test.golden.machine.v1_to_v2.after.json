@@ -1,0 +1,7 @@
+{
+  "_comment": "E50-T02 golden fixture: the AFTER shape the registered upcaster in test_golden_upcaster.py must produce from the .before.json fixture. Renaming attempt_count -> attempt exercises a real field rename, the class of edit the ticket's upcaster-registry rule exists for.",
+  "cv_probe_marker": "e50t02-golden-before",
+  "attempt": 1,
+  "nested": {"leg_ids": ["leg-1", "leg-2"], "filled_qty": "0"},
+  "cv_upcasted_from": "v1"
+}
