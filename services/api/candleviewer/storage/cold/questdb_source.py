@@ -23,8 +23,14 @@ def _us_to_datetime(value_us: int) -> datetime:
     """QuestDB's `TIMESTAMP` columns are bound over PGWire as `datetime`
     (asyncpg's `timestamptz` codec rejects raw microsecond ints) — every
     `ts` bind parameter here must go through this conversion, never the
-    bare `TimeRange` int."""
-    return datetime.fromtimestamp(value_us / 1_000_000, tz=UTC)
+    bare `TimeRange` int. QuestDB reports its `TIMESTAMP` type as
+    PostgreSQL's tz-naive `timestamp` (not `timestamptz`) over PGWire, so
+    asyncpg's codec requires a naive `datetime` here — a tz-aware value
+    raises `DataError` ("can't subtract offset-naive and offset-aware
+    datetimes") deep in the codec. Convert to UTC first, then strip
+    `tzinfo`, so the wall-clock value still matches the UTC microseconds
+    QuestDB stores."""
+    return datetime.fromtimestamp(value_us / 1_000_000, tz=UTC).replace(tzinfo=None)
 
 
 #: Stream -> (QuestDB table, secondary sort column). Streams without a
