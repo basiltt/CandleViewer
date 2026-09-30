@@ -53,6 +53,17 @@ def build_read_trades(sym: str, rng: TimeRange) -> QueryBuilder:
     return QueryBuilder(sql, (sym, rng.start_us, rng.end_us))
 
 
+def build_read_klines(sym: str, interval: str, rng: TimeRange) -> QueryBuilder:
+    """E08-S06 cache read: `klines WHERE symbol=$1 AND interval=$2 AND ts
+    BETWEEN $3 AND $4 ORDER BY ts` — same three-property shape every other
+    builder here follows (symbol equality, two-sided ts bound, ts-ordered)."""
+    sql = (
+        "SELECT * FROM klines WHERE symbol = $1 AND interval = $2 "
+        "AND ts >= $3 AND ts < $4 ORDER BY ts"
+    )
+    return QueryBuilder(sql, (sym, interval, rng.start_us, rng.end_us))
+
+
 def build_read_big_trades(sym: str, rng: TimeRange, min_notional: float) -> QueryBuilder:
     """Shape #4 (big-trade bubbles): precomputed `notional` column."""
     sql = (

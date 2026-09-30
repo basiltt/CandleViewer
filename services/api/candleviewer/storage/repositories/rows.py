@@ -88,6 +88,26 @@ class BarRow:
 
 
 @dataclass(slots=True, frozen=True)
+class KlineRow:
+    """One exchange kline / cross-check bar (E08-S06, `docs/plan/
+    21-database-schema.md` §4.5). `confirmed=False` rows are the
+    in-progress bar and MUST NOT be treated as a closed candle by any
+    reader — mirrors `KlineEvent`'s own docstring."""
+
+    ts_us: int
+    symbol: str
+    interval: str
+    open: str
+    high: str
+    low: str
+    close: str
+    volume: str
+    turnover: str
+    confirmed: bool
+    source: str = "rest"
+
+
+@dataclass(slots=True, frozen=True)
 class OrderflowMetricRow:
     """One aggregated order-flow metric sample (CVD, imbalance, ...)."""
 
