@@ -5,11 +5,11 @@
 // weaker options is the realistic regression), plus the CSP header string the main process
 // builds (`dist/main/csp.js#buildCsp`, the exact function installCspHeader() uses).
 //
+import console from "node:console";
 // Usage: node scripts/collect-hardening-facts.mjs <out.json>
 import { writeFileSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { console } from "node:console";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { _electron as electron } from "@playwright/test";
 
