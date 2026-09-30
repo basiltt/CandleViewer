@@ -95,3 +95,50 @@ async def test_sync_engine_is_refused(factory_registry: Registry) -> None:
             registry=factory_registry,
             sync=True,
         )
+
+
+# --- #1649: event_schemas must be callable validators (xstate 0.9.1) -------
+
+
+async def test_event_schemas_validate_through_real_factory_path(
+    factory_registry: Registry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A registered schema accepts a canonical payload and rejects a
+    malformed one via the real interpreter (no pass-through validators)."""
+    from xstate_statemachine.exceptions import InvalidEventPayloadError
+
+    from candleviewer.statechart import config as cfg
+
+    monkeypatch.setattr(cfg, "CV_EVENT_SCHEMAS", dict(cfg.CV_EVENT_SCHEMAS))
+    cfg.register_event_schemas(
+        {
+            "GO": {
+                "type": "object",
+                "properties": {"n": {"type": "integer"}},
+                "additionalProperties": False,
+            }
+        }
+    )
+    result = await build(
+        "test.factory_min", clock=SimulatedClock(), lane="platform", registry=factory_registry
+    )
+    interp = result.interpreter
+    try:
+        with pytest.raises(InvalidEventPayloadError):
+            await interp.send("GO", n="not-an-int")
+        await interp.send("GO", n=1)
+    finally:
+        await interp.stop()
+
+
+def test_every_registered_event_schema_compiles_to_working_validator() -> None:
+    import candleviewer.statechart.bindings.b16_session  # noqa: F401
+    from candleviewer.statechart.config import CV_EVENT_SCHEMAS
+    from candleviewer.statechart.factory import _event_validators
+
+    validators = _event_validators(CV_EVENT_SCHEMAS)
+    assert set(validators) == set(CV_EVENT_SCHEMAS)
+    assert validators
+    for name, validate in validators.items():
+        assert validate.is_valid({}) or validate.iter_errors({}), name
+        assert not validate.is_valid("not-an-object"), name
