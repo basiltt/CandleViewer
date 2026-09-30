@@ -68,10 +68,16 @@ async def test_hot_to_cold_symbol_day_parity_and_duckdb_count(
 
         source = QuestDbHotTierSource(_AsyncpgExecutor(conn))
         rng = TimeRange(start_us=_START_US, end_us=_START_US + 86_400_000_000)
-        for _ in range(60):
+        # QuestDB WAL apply/dedup is asynchronous (same convergence wait as
+        # `test_questdb_hot_tier.py`'s dedup test) — under CI load 30s of
+        # polling was observed to be too short, leaving `count_partition` at
+        # 0 when the exporter runs; poll longer before asserting.
+        for _ in range(120):
             if await source.count_partition("BTCUSDT", StreamKind.TRADES, rng) == 2500:
                 break
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.0)
+        else:
+            raise AssertionError("WAL apply never reached 2500 rows within the poll budget")
 
         exporter = ColdExporter(DatasetRegistry(tmp_path), source, rows_per_group=1000)
         run = await exporter.export_partition("BTCUSDT", StreamKind.TRADES, rng)

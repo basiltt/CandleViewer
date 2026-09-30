@@ -13,8 +13,6 @@ from typing import Literal, Protocol
 import structlog
 from prometheus_client import Counter, Gauge, Histogram
 
-logger = structlog.get_logger(__name__)
-
 Severity = Literal["INFO", "WARNING", "CRITICAL"]
 
 storage_export_rows_total = Counter(
@@ -46,9 +44,19 @@ class SystemEventSink(Protocol):
 
 
 class LoggingSystemEventSink:
-    """Default sink: a structured log record at the matching level."""
+    """Default sink: a structured log record at the matching level.
+
+    Resolves a fresh `structlog` logger on every call rather than caching one
+    at import time: a module-level logger created before a test calls
+    `configure_logging()` (or after `structlog.reset_defaults()`) can be
+    bound to a stale processor chain under `cache_logger_on_first_use=True`,
+    silently dropping output. Re-resolving is cheap (`structlog` memoises the
+    underlying logger factory itself) and keeps this sink honest about
+    whatever configuration is active `at emit time`.
+    """
 
     async def emit(self, severity: Severity, code: str, detail: dict[str, str | int]) -> None:
+        logger = structlog.get_logger(__name__)
         if severity == "CRITICAL":
             logger.critical("system_event", code=code, **detail)
         elif severity == "WARNING":
