@@ -1,7 +1,7 @@
 # E09 auth, session and RBAC — black-box test plan
 
 Ticket: E09-Q01 (issue #227). Owner: QA. Status: **Dry run in progress (partial, §10) — QA lead / Security
-sign-off recorded via owner approval (§11)**.
+sign-off substitution recorded as owner approval pending (§11)**.
 
 This plan is written against the public contract only: `docs/plan/22-api-openapi.yaml` (tags `auth`,
 `users`), `docs/plan/23-ws-protocol.md` §4/§9.5, and the screen states in `docs/plan/14-screens-catalogue.md`
@@ -241,21 +241,25 @@ as each remaining `E09-S0x` story ticket merges:
 | A02, A04–A06, A09–A11 | blocked-pending-dependency | requires `POST /auth/mfa/verify`/`recovery` (`E09-S02`) | — |
 | B01–B09, C01–C09, D01–D06, E01–E09 | blocked-pending-dependency | require `E09-S02..S06` | — |
 
-**Status:** this plan is submitted for QA lead and Security engineer review now; see the dry-run record
-above and §11 for the sign-off substitution recorded per the epic's Agent-delivery adaptations.
+**Status:** this plan is submitted for QA lead and Security engineer review now; sign-off has **not**
+been given yet — see the dry-run record above and §11 for the owner-approval-pending substitution
+recorded per the epic's Agent-delivery adaptations, pending an actual `approved` comment or merge on
+issue #227.
 
 ---
 
 ## 11. Sign-off
 
-- [x] QA lead sign-off comment posted on issue #227 — recorded via **owner approval** per the epic's
-  binding Agent-delivery adaptations (`docs/plan/backlog/E09.json`, owner decision 2026-09-25: "the
-  owner's `approved` comment on this issue, or owner merge of the PR" substitutes for QA-lead/Architect/
-  CDO/Security-engineer sign-off — no other human role exists). See the sign-off comment on issue #227
-  and `qa/plans/e09-auth-rbac-test-plan-dryrun-20260930.md` §"Owner review".
-- [x] Security engineer review of §8/§9 (negative cases, severity mapping) posted on issue #227 — same
-  owner-approval substitution; §8/§9 negative-case coverage and severity mapping are unchanged by this
-  fix and were already reviewed content, now formally recorded via the same comment.
+- [ ] QA lead sign-off comment posted on issue #227 — **not yet given**; per the epic's binding
+  Agent-delivery adaptations (`docs/plan/backlog/E09.json`, owner decision 2026-09-25: "the owner's
+  `approved` comment on this issue, or owner merge of the PR" substitutes for QA-lead/Architect/
+  CDO/Security-engineer sign-off — no other human role exists), this is recorded as **owner approval
+  pending**, not recorded. See `qa/plans/e09-auth-rbac-test-plan-dryrun-20260930.md` §"Owner review".
+  Do not treat this box as sign-off; it tracks that the substitution mechanism is documented and
+  awaiting the owner's actual `approved` comment or merge on issue #227.
+- [ ] Security engineer review of §8/§9 (negative cases, severity mapping) — **not yet given**; same
+  owner-approval-pending substitution. §8/§9 negative-case coverage and severity mapping are unchanged
+  by this fix, but formal review/sign-off has not been recorded on issue #227.
 - [x] Traceability table (§7) confirmed to cover US-ONB-001..010 with no gaps — unchanged by this fix;
   re-confirmed by inspection (all ten `US-ONB-*` rows map to at least one case).
 - [x] Automation ownership assigned per case (§7, per-case "Automation" column throughout Groups A–E) —
