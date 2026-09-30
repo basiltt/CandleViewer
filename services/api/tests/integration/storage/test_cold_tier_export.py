@@ -8,7 +8,6 @@ paging over PGWire, and the R0 exit #6 DuckDB symbol-day query.
 
 from __future__ import annotations
 
-import asyncio
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -31,6 +30,7 @@ from tests.integration.storage.test_questdb_hot_tier import (
     _AsyncpgTcpIlpTransport,
     _connect,
     questdb_container,  # noqa: F401 -- pytest fixture re-export
+    wait_for_row_count,
 )
 
 pytestmark = pytest.mark.integration
@@ -68,16 +68,13 @@ async def test_hot_to_cold_symbol_day_parity_and_duckdb_count(
 
         source = QuestDbHotTierSource(_AsyncpgExecutor(conn))
         rng = TimeRange(start_us=_START_US, end_us=_START_US + 86_400_000_000)
-        # QuestDB WAL apply/dedup is asynchronous (same convergence wait as
-        # `test_questdb_hot_tier.py`'s dedup test) — under CI load 30s of
-        # polling was observed to be too short, leaving `count_partition` at
-        # 0 when the exporter runs; poll longer before asserting.
-        for _ in range(120):
-            if await source.count_partition("BTCUSDT", StreamKind.TRADES, rng) == 2500:
-                break
-            await asyncio.sleep(1.0)
-        else:
-            raise AssertionError("WAL apply never reached 2500 rows within the poll budget")
+        # Writer is flushed + stopped above (socket drained); WAL apply is
+        # still asynchronous, so wait on the table-wide count + writerTxn ==
+        # sequencerTxn (shared helper), then check the exporter's own
+        # symbol/range-filtered count separately so a filter bug is not
+        # misreported as a WAL-apply timeout.
+        await wait_for_row_count(conn, "trades", 2500)
+        assert await source.count_partition("BTCUSDT", StreamKind.TRADES, rng) == 2500
 
         exporter = ColdExporter(DatasetRegistry(tmp_path), source, rows_per_group=1000)
         run = await exporter.export_partition("BTCUSDT", StreamKind.TRADES, rng)

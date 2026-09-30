@@ -64,6 +64,41 @@ async def _wait_for_column(
     raise AssertionError(f"column {column!r} never appeared on {table!r}; last seen {sorted(seen)}")
 
 
+async def wait_for_row_count(
+    conn: asyncpg.Connection,
+    table: str,
+    expected: int,
+    *,
+    timeout_s: float = 60.0,
+    interval_s: float = 0.2,
+) -> None:
+    """Wait until QuestDB's WAL apply has made exactly `expected` rows of
+    `table` visible AND the table's writer has caught up with its sequencer.
+
+    ILP/TCP is fire-and-forget and WAL apply is asynchronous, so callers must
+    first `flush()`/`stop()` the `IlpWriter` (drains the socket) and then call
+    this. Bounded (`timeout_s`, C-2.18); on timeout raises AssertionError with
+    the last observed count and the `wal_tables()` row (suspended flag,
+    writerTxn vs sequencerTxn) so a rejected/suspended write is diagnosable.
+    """
+    count = -1
+    wal: dict[str, object] = {}
+    deadline = asyncio.get_running_loop().time() + timeout_s
+    while True:
+        count = int(await conn.fetchval(f"SELECT count() FROM {table}"))  # noqa: S608  # nosec B608 - test-owned literal table name
+        wal_rows = await conn.fetch("SELECT * FROM wal_tables() WHERE name = $1", table)
+        wal = dict(wal_rows[0]) if wal_rows else {}
+        caught_up = wal.get("writerTxn") == wal.get("sequencerTxn")
+        if count == expected and caught_up:
+            return
+        if asyncio.get_running_loop().time() >= deadline:
+            raise AssertionError(
+                f"{table}: expected {expected} rows after WAL apply, observed {count} "
+                f"after {timeout_s}s; wal_tables()={wal}"
+            )
+        await asyncio.sleep(interval_s)
+
+
 async def _connect(host: str, port: int) -> asyncpg.Connection:
     return await asyncpg.connect(
         host=host, port=port, user=_PGWIRE_USER, password=_PGWIRE_PASSWORD, database="qdb"
@@ -184,15 +219,8 @@ async def test_write_trades_dedup_replay_is_idempotent(
         await writer.flush("trades")
         await writer.stop()
 
-        # QuestDB WAL dedup is asynchronous; poll for convergence.
-        count = 0
-        for _ in range(30):
-            result = await conn.fetchval("SELECT count() FROM trades")
-            count = int(result)
-            if count == 10:
-                break
-            await asyncio.sleep(1.0)
-        assert count == 10
+        # QuestDB WAL apply/dedup is asynchronous; event-based bounded wait.
+        await wait_for_row_count(conn, "trades", 10)
     finally:
         await conn.close()
 
