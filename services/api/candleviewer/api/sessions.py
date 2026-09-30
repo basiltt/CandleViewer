@@ -155,7 +155,7 @@ def _origin_ok(request: Request) -> bool:
     primary defence; this is the ticket's belt-and-braces origin check)."""
     origin = request.headers.get("origin")
     if origin is None:
-        return True
+        return False
     host = request.headers.get("host", "")
     return origin.split("://", 1)[-1] == host
 
@@ -205,6 +205,10 @@ def _tokens(minted: MintedSession, *, include_refresh: bool) -> dict[str, Any]:
     }
 
 
+class AuditUnavailableError(RuntimeError):
+    """Audit sink not active: state-changing session actions fail closed (C-2.9)."""
+
+
 def make_session_router(
     auth_service: AuthServiceLike,
     audit_service: AuditServiceLike | None = None,
@@ -213,6 +217,9 @@ def make_session_router(
     publish_revocation: RevocationPublisher | None = None,
 ) -> APIRouter:
     router = APIRouter(tags=["auth"])
+
+    def _audit_ready() -> bool:
+        return audit_service is not None and audit_service.is_active
 
     async def _audit(
         action: str,
@@ -224,7 +231,7 @@ def make_session_router(
         reason: str | None = None,
     ) -> None:
         if audit_service is None or not audit_service.is_active:
-            return
+            raise AuditUnavailableError
         await audit_service.writer.emit(
             action,
             actor_label=str(record.user_id) if record else "(unknown)",
@@ -257,6 +264,8 @@ def make_session_router(
 
     @router.post("/auth/refresh")
     async def refresh(request: Request) -> Response:
+        if not _audit_ready():
+            return _problem(503, "Service unavailable", "audit sink not active")
         if not auth_service.sessions_is_active:
             return _problem(503, "Service unavailable", "session backend is not wired")
         if identity is None:
@@ -298,8 +307,6 @@ def make_session_router(
         except (SessionNotFound, SessionRevoked, SessionIdleLocked):
             return _unauthorized("refresh_token_invalid")
         minted = outcome.minted
-        user_id = str(uuid.UUID(str(minted.session_id)))  # validated uuid, for typing only
-        del user_id
         record_user = await auth_service.sessions.authenticate_access_token(
             minted.access_token, allow_locked=True
         )
@@ -381,6 +388,8 @@ def make_session_router(
 
     @router.post("/auth/logout")
     async def logout(request: Request) -> Response:
+        if not _audit_ready():
+            return _problem(503, "Service unavailable", "audit sink not active")
         if not auth_service.sessions_is_active:
             return _problem(503, "Service unavailable", "session backend is not wired")
         record = await _authenticate(request, allow_locked=True)
@@ -421,6 +430,8 @@ def make_session_router(
 
     @router.delete("/me/sessions/{session_id}")
     async def revoke_my_session(request: Request, session_id: uuid.UUID) -> Response:
+        if not _audit_ready():
+            return _problem(503, "Service unavailable", "audit sink not active")
         if not auth_service.sessions_is_active:
             return _problem(503, "Service unavailable", "session backend is not wired")
         record = await _authenticate(request, allow_locked=True)

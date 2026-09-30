@@ -77,7 +77,7 @@ class _Relational:
 
 def _repo(rows: list[SimpleNamespace]) -> tuple[SqlAlchemySessionRepository, _Relational]:
     rel = _Relational(rows)
-    return SqlAlchemySessionRepository(rel, dict), rel  # type: ignore[arg-type]
+    return SqlAlchemySessionRepository(rel, dict), rel  # type: ignore[arg-type]  # fake relational stub, structurally compatible
 
 
 def test_row_to_fields_strips_inet_mask_and_parses_uuids() -> None:
@@ -111,7 +111,7 @@ async def test_revoke_all_passes_except_session() -> None:
 
 
 async def test_family_walk_returns_ids_and_lookup_by_jti_is_bound() -> None:
-    repo, rel = _repo(
+    repo, _rel = _repo(
         [SimpleNamespace(_mapping={"id": "a"}), SimpleNamespace(_mapping={"id": "b"})]
     )
     assert await repo.walk_rotation_family("a") == ("a", "b")

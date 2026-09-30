@@ -1,4 +1,3 @@
-# ruff: noqa: S608  (f-strings interpolate only the static _COLUMNS constant; all values are bound params)
 """`SqlAlchemySessionRepository` — concrete Postgres implementation of
 `candleviewer.auth.session_repository.SessionRepository` (E09-S03, QA #1634).
 
@@ -41,26 +40,33 @@ _INSERT_SQL = sa.text("""
         CAST(:ip AS inet), :user_agent, :device_label, :is_electron, :mfa_satisfied_at,
         :idle_timeout_s)
     """)
-_BY_ID_SQL = sa.text(f"SELECT {_COLUMNS} FROM sessions WHERE id = CAST(:id AS uuid)")
-_BY_HASH_SQL = sa.text(f"SELECT {_COLUMNS} FROM sessions WHERE refresh_token_hash = :h")
-_BY_JTI_SQL = sa.text(f"SELECT {_COLUMNS} FROM sessions WHERE access_token_jti = CAST(:j AS uuid)")
-_LIVE_BY_USER_SQL = sa.text(
-    f"SELECT {_COLUMNS} FROM sessions WHERE user_id = CAST(:u AS uuid) "
+
+
+def _sql(template: str) -> sa.TextClause:
+    """Expand the static column-list placeholder (never caller data) into a statement."""
+    return sa.text(template.replace("@COLS@", _COLUMNS))
+
+
+_BY_ID_SQL = _sql("SELECT @COLS@ FROM sessions WHERE id = CAST(:id AS uuid)")
+_BY_HASH_SQL = _sql("SELECT @COLS@ FROM sessions WHERE refresh_token_hash = :h")
+_BY_JTI_SQL = _sql("SELECT @COLS@ FROM sessions WHERE access_token_jti = CAST(:j AS uuid)")
+_LIVE_BY_USER_SQL = _sql(
+    "SELECT @COLS@ FROM sessions WHERE user_id = CAST(:u AS uuid) "
     "AND revoked_at IS NULL ORDER BY issued_at DESC"
 )
-_TOUCH_SQL = sa.text(
-    f"UPDATE sessions SET last_seen_at = :now WHERE id = CAST(:id AS uuid) "
-    f"AND revoked_at IS NULL RETURNING {_COLUMNS}"
+_TOUCH_SQL = _sql(
+    "UPDATE sessions SET last_seen_at = :now WHERE id = CAST(:id AS uuid) "
+    "AND revoked_at IS NULL RETURNING @COLS@"
 )
-_REVOKE_SQL = sa.text(
-    f"UPDATE sessions SET revoked_at = :now, revoked_reason = :reason "
-    f"WHERE id = CAST(:id AS uuid) AND revoked_at IS NULL RETURNING {_COLUMNS}"
+_REVOKE_SQL = _sql(
+    "UPDATE sessions SET revoked_at = :now, revoked_reason = :reason "
+    "WHERE id = CAST(:id AS uuid) AND revoked_at IS NULL RETURNING @COLS@"
 )
-_REVOKE_ALL_SQL = sa.text(
-    f"UPDATE sessions SET revoked_at = :now, revoked_reason = :reason "
-    f"WHERE user_id = CAST(:u AS uuid) AND revoked_at IS NULL "
-    f"AND (CAST(:except_id AS uuid) IS NULL OR id <> CAST(:except_id AS uuid)) "
-    f"RETURNING {_COLUMNS}"
+_REVOKE_ALL_SQL = _sql(
+    "UPDATE sessions SET revoked_at = :now, revoked_reason = :reason "
+    "WHERE user_id = CAST(:u AS uuid) AND revoked_at IS NULL "
+    "AND (CAST(:except_id AS uuid) IS NULL OR id <> CAST(:except_id AS uuid)) "
+    "RETURNING @COLS@"
 )
 _LINK_SQL = sa.text(
     "INSERT INTO sessions_rotation (prev_session_id, next_session_id) "
