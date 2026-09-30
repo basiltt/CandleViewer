@@ -1279,10 +1279,12 @@ export interface paths {
     };
     /**
      * List tradable instruments (Bybit USDT linear perpetuals)
-     * @description Served from the locally cached `instruments-info` snapshot, refreshed every 6 h and on
+     * @description Served from the locally cached `instruments-info` snapshot, refreshed every 12 h and on
      *     demand. `category` is fixed to `linear` in v1; any other value is rejected with
      *     `unsupported_category`. Instrument metadata is version-tracked (`revision`) because
      *     tick size, leverage tiers and funding interval change occasionally (digest 08).
+     *     Response `meta` reports `cache_age_s` and `stale_since` so clients can surface a stale
+     *     banner if a refresh is overdue or failing.
      */
     get: operations["listInstruments"];
     put?: never;
@@ -4647,6 +4649,8 @@ export interface components {
       /** @example LinearPerpetual */
       contract_type?: string;
       copy_trading?: boolean;
+      /** @description Derived: true when `status` is not `Trading` or `PreLaunch`. */
+      delisted?: boolean;
       funding_interval_minutes?: number;
       /** Format: date-time */
       launch_time?: string;
@@ -4663,6 +4667,8 @@ export interface components {
       settle_coin?: string;
       /** @enum {string} */
       status?: "Trading" | "PreLaunch" | "Delivering" | "Closed";
+      /** @description Human-readable explanation of `status`, for screen readers (#182). */
+      status_reason?: string | null;
       symbol: components["schemas"]["Symbol"];
       tick_size: components["schemas"]["Decimal"];
       /** Format: date-time */
@@ -4679,6 +4685,21 @@ export interface components {
         risk_limit_value?: components["schemas"]["Decimal"];
         tier?: number;
       }[];
+      /**
+       * Format: date-time
+       * @description When this instrument's cache entry started missing refresh cadence.
+       */
+      stale_since?: string | null;
+    };
+    /** @description `PageMeta` extended with instrument-cache freshness so clients can show a stale banner. */
+    InstrumentsPageMeta: components["schemas"]["PageMeta"] & {
+      /** @description Seconds since this snapshot was last fetched from Bybit. */
+      cache_age_s: number;
+      /**
+       * Format: date-time
+       * @description When the cache started missing its refresh cadence; null if fresh.
+       */
+      stale_since: string | null;
     };
     Job: {
       error?: string | null;
@@ -9275,6 +9296,7 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["Page"] & {
             items?: components["schemas"]["Instrument"][];
+            meta?: components["schemas"]["InstrumentsPageMeta"];
           };
         };
       };
