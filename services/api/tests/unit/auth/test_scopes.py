@@ -62,6 +62,15 @@ def test_missing_permission_denies_by_default() -> None:
     assert result.scope == Scope.NONE
 
 
+def test_admin_write_denied_unless_role_holds_it() -> None:
+    # #1637 added admin:write (setLogLevelOverride); only owner is seeded with it.
+    for principal in (_manager(), _viewer()):
+        result = decide(principal, Permission.ADMIN_WRITE)
+        assert isinstance(result, Deny)
+        assert result.reason == DenyReason.MISSING_PERMISSION
+    assert isinstance(decide(_owner(), Permission.ADMIN_WRITE), Allow)
+
+
 def test_scope_none_allows_on_permission_alone() -> None:
     principal = _manager()
     result = decide(principal, Permission.ORDERS_READ, scope=Scope.NONE)

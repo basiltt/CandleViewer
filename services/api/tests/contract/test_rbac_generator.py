@@ -7,6 +7,7 @@ exercises the exact code path CI's `generated-code` check runs.
 
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -62,5 +63,6 @@ def test_generated_enum_imports_cleanly() -> None:
     import candleviewer.auth.generated_permissions as mod
 
     importlib.reload(mod)
-    assert len(list(mod.Permission)) == 36
+    seed = json.loads(SEED_PATH.read_text(encoding="utf-8"))
+    assert len(list(mod.Permission)) == len(seed["permissions"])
     assert {s.value for s in mod.Scope} == {"none", "self", "granted_accounts"}
