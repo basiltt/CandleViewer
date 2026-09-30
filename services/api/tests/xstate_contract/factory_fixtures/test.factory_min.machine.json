@@ -1,0 +1,21 @@
+{
+  "id": "test.factory_min",
+  "strictConfig": true,
+  "strict": true,
+  "strictTargets": true,
+  "onUnhandled": "defer",
+  "maxIterations": 50,
+  "initial": "idle",
+  "context": {},
+  "states": {
+    "idle": {
+      "entry": ["noop"],
+      "on": {
+        "GO": {"target": "#test.factory_min.done", "guard": "always_true"}
+      }
+    },
+    "done": {
+      "type": "final"
+    }
+  }
+}
