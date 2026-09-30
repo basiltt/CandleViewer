@@ -23,6 +23,7 @@ from candleviewer.storage.questdb.reader import (
     build_read_book_deltas,
     build_read_book_snapshot_at,
     build_read_footprint_cells,
+    build_read_klines,
     build_read_orderflow_metrics,
     build_read_trades,
 )
@@ -32,6 +33,7 @@ from candleviewer.storage.repositories.rows import (
     BookDeltaRow,
     BookSnapshotRow,
     FootprintCellRow,
+    KlineRow,
     OrderflowMetricRow,
     TickerRow,
     TradeRow,
@@ -157,6 +159,25 @@ class QuestDbMarketDataRepository:
             table = f"bars_{family}"
             await self._writer.write_rows(table, table_rows, "ts")
 
+    async def write_klines(self, rows: Sequence[KlineRow]) -> None:
+        payload = [
+            {
+                "ts": row.ts_us,
+                "symbol": row.symbol,
+                "interval": row.interval,
+                "open": float(row.open),
+                "high": float(row.high),
+                "low": float(row.low),
+                "close": float(row.close),
+                "volume": float(row.volume),
+                "turnover": float(row.turnover),
+                "confirmed": row.confirmed,
+                "source": row.source,
+            }
+            for row in rows
+        ]
+        await self._writer.write_rows("klines", payload, "ts")
+
     async def read_bars(
         self,
         sym: str,
@@ -178,6 +199,28 @@ class QuestDbMarketDataRepository:
                 low=str(r["low"]),
                 close=str(r["close"]),
                 volume=str(r["volume"]),
+            )
+            for r in rows
+        ]
+
+    async def read_klines(
+        self, sym: str, interval: str, rng: TimeRange, tier: TierHint = "auto"
+    ) -> list[KlineRow]:
+        self._check_symbol(sym)
+        rows = await self._reader.run(build_read_klines(sym, interval, rng))
+        return [
+            KlineRow(
+                ts_us=int(str(r["ts"])),
+                symbol=str(r["symbol"]),
+                interval=interval,
+                open=str(r["open"]),
+                high=str(r["high"]),
+                low=str(r["low"]),
+                close=str(r["close"]),
+                volume=str(r["volume"]),
+                turnover=str(r["turnover"]),
+                confirmed=bool(r["confirmed"]),
+                source=str(r["source"]),
             )
             for r in rows
         ]

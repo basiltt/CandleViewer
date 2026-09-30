@@ -22,6 +22,7 @@ from candleviewer.storage.repositories.rows import (
     BookDeltaRow,
     BookSnapshotRow,
     FootprintCellRow,
+    KlineRow,
     OrderflowMetricRow,
     TickerRow,
     TradeRow,
@@ -60,6 +61,14 @@ class MarketDataRepository(Protocol):
         """Append/upsert bars. Dedup key: `(symbol, family, param, ts_us)`."""
         ...
 
+    async def write_klines(self, rows: Sequence[KlineRow]) -> None:
+        """Append/upsert exchange klines (E08-S06). Dedup key:
+        `(symbol, interval, ts_us)` — a later write of the same key
+        overwrites the earlier one, which is how a `confirmed=False`
+        in-progress row is superseded by the final `confirmed=True` row
+        (`docs/plan/21-database-schema.md` §4.5)."""
+        ...
+
     async def read_bars(
         self,
         sym: str,
@@ -69,6 +78,17 @@ class MarketDataRepository(Protocol):
         tier: TierHint = "auto",
     ) -> list[BarRow]:
         """Read bars for `(sym, family, param)` within `rng`, ascending `ts_us`."""
+        ...
+
+    async def read_klines(
+        self,
+        sym: str,
+        interval: str,
+        rng: TimeRange,
+        tier: TierHint = "auto",
+    ) -> list[KlineRow]:
+        """Read klines for `(sym, interval)` within `rng`, ascending `ts_us`
+        (E08-S06 cache-first read path)."""
         ...
 
     async def read_trades(

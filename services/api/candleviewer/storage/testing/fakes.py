@@ -19,6 +19,7 @@ from candleviewer.storage.repositories.rows import (
     BookDeltaRow,
     BookSnapshotRow,
     FootprintCellRow,
+    KlineRow,
     OrderflowMetricRow,
     TickerRow,
     TradeRow,
@@ -38,6 +39,7 @@ class FakeMarketDataRepository:
         self._snapshots: dict[tuple[str, int], BookSnapshotRow] = {}
         self._tickers: dict[tuple[str, int], TickerRow] = {}
         self._bars: dict[tuple[str, str, str, int], BarRow] = {}
+        self._klines: dict[tuple[str, str, int], KlineRow] = {}
         self._orderflow: dict[tuple[str, str, int], OrderflowMetricRow] = {}
         self._footprint: dict[tuple[str, int, str], FootprintCellRow] = {}
 
@@ -60,6 +62,10 @@ class FakeMarketDataRepository:
         for row in rows:  # type: ignore[attr-defined]
             self._bars[(row.symbol, row.family, row.param, row.ts_us)] = row
 
+    async def write_klines(self, rows: object) -> None:
+        for row in rows:  # type: ignore[attr-defined]
+            self._klines[(row.symbol, row.interval, row.ts_us)] = row
+
     async def read_bars(
         self, sym: str, family: str, param: str, rng: TimeRange, tier: str = "auto"
     ) -> list[BarRow]:
@@ -67,6 +73,16 @@ class FakeMarketDataRepository:
             r
             for (s, f, p, _ts), r in self._bars.items()
             if s == sym and f == family and p == param and _in_range(r.ts_us, rng)
+        ]
+        return sorted(rows, key=lambda r: r.ts_us)
+
+    async def read_klines(
+        self, sym: str, interval: str, rng: TimeRange, tier: str = "auto"
+    ) -> list[KlineRow]:
+        rows = [
+            r
+            for (s, i, _ts), r in self._klines.items()
+            if s == sym and i == interval and _in_range(r.ts_us, rng)
         ]
         return sorted(rows, key=lambda r: r.ts_us)
 

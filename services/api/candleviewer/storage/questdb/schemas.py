@@ -36,6 +36,12 @@ TICKERS_SCHEMA = TableSchema(
     timestamp_field_columns=("next_funding_ts",),
 )
 
+KLINES_SCHEMA = TableSchema(
+    name="klines",
+    tag_columns=("symbol", "interval", "source"),
+    boolean_field_columns=("confirmed",),
+)
+
 _BAR_TAG_COLUMNS = ("symbol", "bar_param")
 _BAR_BOOL_COLUMNS = ("is_closed",)
 
@@ -82,6 +88,7 @@ ALL_SCHEMAS: dict[str, TableSchema] = {
     "orderbook_deltas": ORDERBOOK_DELTAS_SCHEMA,
     "orderbook_snapshots": ORDERBOOK_SNAPSHOTS_SCHEMA,
     "tickers": TICKERS_SCHEMA,
+    "klines": KLINES_SCHEMA,
     "footprint_cells": FOOTPRINT_CELLS_SCHEMA,
     "orderflow_metrics": ORDERFLOW_METRICS_SCHEMA,
     **{schema.name: schema for schema in BAR_SCHEMAS_BY_FAMILY.values()},
