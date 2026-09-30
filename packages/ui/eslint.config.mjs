@@ -8,7 +8,7 @@ import noRawDesignValues from "./eslint-rules/no-raw-design-values.mjs";
 export default tseslint.config(
   ...baseConfig,
   {
-    ignores: ["dist/**", "coverage/**", "storybook-static/**"],
+    ignores: ["dist/**", "coverage/**", "storybook-static/**", "build/**"],
   },
   ...tseslint.configs.recommended,
   {

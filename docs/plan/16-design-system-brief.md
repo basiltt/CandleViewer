@@ -2,7 +2,7 @@
 
 Date: 2026-09-14 · Owner: basiltt · Status: **Baseline for design & engineering — single source of truth for tokens, theming, motion, density, a11y, Figma, and handoff**
 
-Scope (locked, see `00-planning-brief.md` + `research/24-owner-decisions.md`): web app only — React + TypeScript, custom WebGL chart engine, Electron desktop shell primary. Dark-first, dense professional trading UI. Desktop-only (no responsive/mobile breakpoints; minimum viewport enforced, see §8). Brand-neutral: this brief defines the *system*, not a final brand skin — colours/logo can be swapped without restructuring tokens.
+Scope (locked, see `00-planning-brief.md` + `research/24-owner-decisions.md`): web app only — React + TypeScript, custom WebGL chart engine, Electron desktop shell primary. Dark-first, dense professional trading UI. Desktop-only (no responsive/mobile breakpoints; minimum viewport enforced, see §8). Brand-neutral: this brief defines the _system_, not a final brand skin — colours/logo can be swapped without restructuring tokens.
 
 Upstream: `15-component-catalogue.md` (every CMP-* references the token names defined here), `05-accessibility-standard.md` (binding contrast/motion/density requirements this brief must satisfy), `research/digests/10-frontend-tech.digest.md` (chassis/rendering stack), `research/24-owner-decisions.md` decision #10 (heatmap colour convention, configurable).
 Downstream: component implementation (Style Dictionary token build), Figma library, `26-chart-engine-design.md` (engine consumes colour/typography tokens for canvas rendering).
@@ -21,10 +21,10 @@ CandleViewer's UI serves one owner and a handful of account managers running a p
 
 1. **Legibility of numbers over decoration.** Every pixel spent on chrome is a pixel not spent on price/qty/PnL. Numeric density and scanning speed beat visual flourish. Monospaced tabular numerics everywhere numbers appear in a column.
 2. **Never lie by omission.** Estimated/heuristic values are always labelled `(estimated)`. Demo vs Live is never ambiguous. Disabled controls always say why. This is a safety-critical trading tool — the design system is a safety system as much as an aesthetic one.
-3. **Density is a mode, not a compromise.** The default working density is *compact*: professional traders want more information per screen, not more whitespace. Compact must still clear WCAG AA — density is achieved via information architecture and typographic scale, never via silently shrinking hit targets below the accessible minimum (see `05-accessibility-standard.md` §3.4.7 and §3 below).
+3. **Density is a mode, not a compromise.** The default working density is _compact_: professional traders want more information per screen, not more whitespace. Compact must still clear WCAG AA — density is achieved via information architecture and typographic scale, never via silently shrinking hit targets below the accessible minimum (see `05-accessibility-standard.md` §3.4.7 and §3 below).
 4. **Dark-first, not dark-only.** The primary working environment (multi-hour chart-watching sessions) is dark to reduce eye strain and let colour-coded signal (buy/sell, heatmap, alerts) pop. Light theme exists for admin/settings/daytime use and is a first-class token swap, not an afterthought.
 5. **Consistency over novelty.** One button, one input, one table, one dialog pattern reused everywhere (`15-component-catalogue.md`). A trading terminal's speed advantage comes from muscle memory — the system actively resists one-off bespoke controls per screen.
-6. **Keyboard and mouse are equally first-class.** Every mouse-driven interaction (chart drag, node-graph connect, drawing tool) ships a keyboard-operable equivalent, not as a compliance afterthought but because keyboard operation is also *faster* for a power user once learned (§9, `05-accessibility-standard.md` §3).
+6. **Keyboard and mouse are equally first-class.** Every mouse-driven interaction (chart drag, node-graph connect, drawing tool) ships a keyboard-operable equivalent, not as a compliance afterthought but because keyboard operation is also _faster_ for a power user once learned (§9, `05-accessibility-standard.md` §3).
 7. **The chart engine's visual language IS the design system's visual language.** Because everything (candles, footprint, heatmap, profiles, drawings) is fully custom WebGL, there is no separate "charting library skin" to reconcile — chart colours/typography draw from the exact same token set as the rest of the UI, so a themed screenshot of any panel looks native next to any other.
 
 ---
@@ -86,7 +86,7 @@ inventing a local variant (`02-definition-of-ready-done.md` §3.1).
 
 ### 2.3 Spacing
 
-- 4px base unit, scale `space.{0,1,2,3,4,6,8,12,16,24,32,48,64}` (px), i.e. 0/4/8/12/16/24/32/48/64/96/128/192/256 — a single geometric-ish scale shared by both density modes; density modes (§3) select *which* scale steps a given component's padding/gap tokens resolve to, rather than defining a second parallel scale, keeping the token count bounded.
+- 4px base unit, scale `space.{0,1,2,3,4,6,8,12,16,24,32,48,64}` (px), i.e. 0/4/8/12/16/24/32/48/64/96/128/192/256 — a single geometric-ish scale shared by both density modes; density modes (§3) select _which_ scale steps a given component's padding/gap tokens resolve to, rather than defining a second parallel scale, keeping the token count bounded.
 - Component-level spacing aliases (`space.button.paddingX`, `space.field.gap`, `space.row.height.compact/comfortable`) resolve to specific scale steps per density mode — this indirection is what makes CMP-* "density-aware" per the component catalogue's cross-cutting rule 2.
 
 ### 2.4 Radii
@@ -107,12 +107,12 @@ inventing a local variant (`02-definition-of-ready-done.md` §3.1).
 
 Two supported density modes, selectable globally (Settings → Appearance) and per-panel (DensityToggle, CMP-063):
 
-| Mode | Row height | Field height | Base spacing step | Default surfaces |
-|---|---|---|---|---|
-| **Compact** (default for trading surfaces) | 24px | 24px | `space.2` (8px) | Chart panels, DOM ladder, footprint, positions grid, order ticket, watchlist |
-| **Comfortable** (default for admin/onboarding/settings) | 32px | 32px | `space.3` (12px) | Admin screens, onboarding wizard, settings, journal analytics (reading-heavy, not scanning-heavy) |
+| Mode                                                    | Row height | Field height | Base spacing step | Default surfaces                                                                                  |
+| ------------------------------------------------------- | ---------- | ------------ | ----------------- | ------------------------------------------------------------------------------------------------- |
+| **Compact** (default for trading surfaces)              | 24px       | 24px         | `space.2` (8px)   | Chart panels, DOM ladder, footprint, positions grid, order ticket, watchlist                      |
+| **Comfortable** (default for admin/onboarding/settings) | 32px       | 32px         | `space.3` (12px)  | Admin screens, onboarding wizard, settings, journal analytics (reading-heavy, not scanning-heavy) |
 
-> **UX-research amendment (E05-D07, 2026-09-25):** row/field heights above are the *final, validated*
+> **UX-research amendment (E05-D07, 2026-09-25):** row/field heights above are the _final, validated_
 > values, revised down from an earlier 24/28px and 36/40px proposal to 24/24px and 32/32px to match the
 > `size.row.*` / `size.control.*` primitive tokens already shipped in `packages/ui/tokens/primitives.tokens.json`
 > (E05-D01). Compact remains exactly the WCAG 2.2 §2.5.8 minimum (24×24px); comfortable clears it with
@@ -120,6 +120,7 @@ Two supported density modes, selectable globally (Settings → Appearance) and p
 > `docs/research/density-legibility-cvd-e05-d07.md`.
 
 Rules:
+
 1. Density changes spacing-token resolution only — never component structure, never which information is shown. A component must render identically in both modes except for the spacing/row-height token values it resolves.
 2. Compact mode's minimum interactive target is **24×24px** per WCAG 2.2 §2.5.8 (Target Size Minimum). Where a compact-mode control (e.g. a DOM ladder row's inline buy/sell buttons) cannot reach 24px without breaking the row's information density, the **essential-exception** clause applies (dense financial-data UI is an explicitly cited AA exception category) — but only with a documented compensating control: adjacent spacing that prevents accidental mis-taps, and a larger click-tolerance zone than the visual glyph (invisible padding), never a shrink of the true minimum below what a pointer can reliably hit. This exception must be logged per-component in that component's Storybook a11y notes and reviewed by the Accessibility role at design sign-off (§13).
 3. Comfortable mode has no exceptions — it always meets the 24px (in practice 40-44px) minimum cleanly, which is precisely why it is the default for lower-frequency, higher-consequence flows like admin/key-management where a mis-click is costlier per action but less frequent overall.
@@ -192,12 +193,12 @@ These rules bind every chart-engine primitive (CMP-180..199) and every non-canva
 
 ## 9. Accessibility requirements
 
-This brief is a *design-time enforcement mechanism* for `05-accessibility-standard.md`, not a duplicate of it — the standard is binding; this section states what the design system specifically contributes:
+This brief is a _design-time enforcement mechanism_ for `05-accessibility-standard.md`, not a duplicate of it — the standard is binding; this section states what the design system specifically contributes:
 
 1. **Conformance target**: WCAG 2.2 AA baseline, AAA-stretch for buy/sell/critical contrast (§2.1) — inherited directly, not re-derived here.
 2. **Token-level enforcement**: no colour token may enter the shared palette without passing the automated contrast linter (checks every token pair that co-occurs in a real component — text-on-surface, chart-mark-on-canvas, heatmap-ramp-stop-on-canvas) and the CVD (colour-vision-deficiency) simulation pass. This gate lives in the token build pipeline (§11), not as a manual design-review step, so it can't be skipped under sprint pressure.
 3. **Component-level enforcement**: every CMP-* is delivered with its keyboard-interaction table and accessible-name/role table as part of its own Storybook + axe-addon test suite (`15-component-catalogue.md` §0.3 rule 4/7) — this is the Definition-of-Done for a design-system ticket, not a separate a11y ticket bolted on afterward.
-4. **Canvas/WebGL is the highest-risk area** (chart engine, footprint, heatmap, node-graph) and is governed by the three-layer strategy owned by `05-accessibility-standard.md` §6 (DOM-mirror, windowed accessibility tree, always-available non-spatial alternative view) — this brief's obligation is to ensure the *visual* design of every canvas primitive has a design-time-specified DOM-mirror equivalent (stated per component in `15-component-catalogue.md`), so a designer never ships a canvas mockup without its accessible-equivalent counterpart already sketched.
+4. **Canvas/WebGL is the highest-risk area** (chart engine, footprint, heatmap, node-graph) and is governed by the three-layer strategy owned by `05-accessibility-standard.md` §6 (DOM-mirror, windowed accessibility tree, always-available non-spatial alternative view) — this brief's obligation is to ensure the _visual_ design of every canvas primitive has a design-time-specified DOM-mirror equivalent (stated per component in `15-component-catalogue.md`), so a designer never ships a canvas mockup without its accessible-equivalent counterpart already sketched.
 5. **Motion/density/contrast** requirements are stated in §2, §3, §7 above and are binding equally to §1-8 of `05-accessibility-standard.md`.
 6. **Design sign-off is the enforcement checkpoint** (§13) — no screen or component moves to "Done" without the Accessibility role's explicit sign-off against the acceptance-criteria template in `05-accessibility-standard.md` §10, attached to the ticket.
 
@@ -234,9 +235,10 @@ This brief is a *design-time enforcement mechanism* for `05-accessibility-standa
   1. **CSS custom properties** output (`build/css/tokens.css`) — one file per theme mode (`tokens.dark.css`, `tokens.light.css`, `tokens.high-contrast.css`), each defining the full `--color-*`/`--space-*`/etc. custom-property set under a `[data-theme="dark"]` selector root; the app's theme switch (§4) is a single `data-theme` attribute change on `<html>`.
   2. **TypeScript token object** output (`build/ts/tokens.ts`) — typed `const tokens = {...} as const` plus generated `type ColorToken = keyof typeof tokens.color` etc., so component prop types (e.g. `NumericText`'s `format`/colour props) can be statically checked against real token names, catching typo'd token references at compile time rather than as a silent CSS custom-property miss at runtime.
   3. **Chart-engine uniform buffer** output (`build/engine/theme-uniforms.json`) — a flattened numeric-RGBA representation of every `color.chart.*`/`color.candle.*`/`color.footprint.*`/`color.heatmap.*`/`color.node.*` token, consumed directly by the WebGL renderer's shader uniforms (per `26-chart-engine-design.md`'s binding requirement in §4 above) — this is the one output format that exists specifically because the chart engine can't consume CSS custom properties directly inside a WebGL context.
-  4. **Contrast-matrix report** (`build/reports/contrast-matrix.json` + human-readable `.md`) — generated by the automated contrast-check script (§9.2, `05-accessibility-standard.md` §5.4) as part of the same build step; CI fails the token-file PR if any required pair drops below its threshold (4.5:1 text, 3:1 non-text/chart-ink, 7:1 buy/sell-hc).
+  4. **Contrast-matrix report** (`build/reports/contrast-matrix.json` + human-readable `.md`) — generated by the automated contrast-check script (§9.2, `05-accessibility-standard.md` §5.4) as part of the same build step; CI fails the token-file PR if any required pair drops below its threshold (4.5:1 text, 3:1 non-text/chart-ink, 7:1 buy/sell-hc). Implemented at `tools/contrast/generate.mjs` (E05-T05, run via `pnpm --filter @candleviewer/ui contrast:gate`, wired into the `js` CI lane's `build` job on `packages/ui/tokens/**`/`tools/contrast/**` changes) — see `05-accessibility-standard.md` §9 item 3 for the `A11Y-C001`/`A11Y-C002`/`A11Y-C003` error codes and the exemption policy.
   5. **Electron main-process JSON** output (`build/electron/tokens.main.json`) — a plain flattened key→value JSON (no CSS/TS syntax) consumed by the Electron main process for chrome that isn't rendered by the React renderer (native window title-bar colour, tray-icon theme, OS-level dark/light hint), so the main process never has to parse CSS or import TypeScript to know the current theme's surface colour.
-  - **Exact Style Dictionary config** (`style-dictionary.config.json`, top-level shape, illustrative of the real repo file): 
+  - **Exact Style Dictionary config** (`style-dictionary.config.json`, top-level shape, illustrative of the real repo file):
+
 ```json
 {
   "source": ["tokens/*.tokens.json"],
@@ -245,41 +247,65 @@ This brief is a *design-time enforcement mechanism* for `05-accessibility-standa
       "transformGroup": "css",
       "buildPath": "build/css/",
       "files": [
-        { "destination": "tokens.dark.css", "format": "css/variables", "filter": { "theme": "dark" }, "options": { "selector": "[data-theme=\"dark\"]" } },
-        { "destination": "tokens.light.css", "format": "css/variables", "filter": { "theme": "light" }, "options": { "selector": "[data-theme=\"light\"]" } },
-        { "destination": "tokens.high-contrast.css", "format": "css/variables", "filter": { "theme": "high-contrast" }, "options": { "selector": "[data-theme=\"high-contrast\"]" } }
+        {
+          "destination": "tokens.dark.css",
+          "format": "css/variables",
+          "filter": { "theme": "dark" },
+          "options": { "selector": "[data-theme=\"dark\"]" }
+        },
+        {
+          "destination": "tokens.light.css",
+          "format": "css/variables",
+          "filter": { "theme": "light" },
+          "options": { "selector": "[data-theme=\"light\"]" }
+        },
+        {
+          "destination": "tokens.high-contrast.css",
+          "format": "css/variables",
+          "filter": { "theme": "high-contrast" },
+          "options": { "selector": "[data-theme=\"high-contrast\"]" }
+        }
       ]
     },
     "ts": {
       "transformGroup": "js",
       "buildPath": "build/ts/",
-      "files": [ { "destination": "tokens.ts", "format": "typescript/es6-declarations" } ]
+      "files": [{ "destination": "tokens.ts", "format": "typescript/es6-declarations" }]
     },
     "engine": {
       "transformGroup": "js",
       "buildPath": "build/engine/",
-      "files": [ { "destination": "theme-uniforms.json", "format": "json/flat-rgba", "filter": { "category": "chart" } } ]
+      "files": [
+        {
+          "destination": "theme-uniforms.json",
+          "format": "json/flat-rgba",
+          "filter": { "category": "chart" }
+        }
+      ]
     },
     "electron": {
       "transformGroup": "js",
       "buildPath": "build/electron/",
-      "files": [ { "destination": "tokens.main.json", "format": "json/flat" } ]
+      "files": [{ "destination": "tokens.main.json", "format": "json/flat" }]
     }
   }
 }
 ```
-  This config is the binding contract for what "run the token build" produces; `json/flat-rgba` and `json/flat` are project-custom Style Dictionary formats registered in `tools/style-dictionary/formats/` (not built-in SD formats), documented alongside the config file itself so a new engineer can find both in one place.
+
+This config is the binding contract for what "run the token build" produces; `json/flat-rgba` and `json/flat` are project-custom Style Dictionary formats registered in `tools/style-dictionary/formats/` (not built-in SD formats), documented alongside the config file itself so a new engineer can find both in one place.
+
 - **Build-target summary** (every output artefact produced by one `style-dictionary build` run, one row per consumer):
 
-| Target | Output path | Format | Consumer |
-|---|---|---|---|
-| CSS vars (dark) | `build/css/tokens.dark.css` | `css/variables` | React app, `[data-theme="dark"]` |
-| CSS vars (light) | `build/css/tokens.light.css` | `css/variables` | React app, `[data-theme="light"]` |
-| CSS vars (high-contrast) | `build/css/tokens.high-contrast.css` | `css/variables` | React app, `[data-theme="high-contrast"]` |
-| TS token object | `build/ts/tokens.ts` | `typescript/es6-declarations` | React components, Storybook, type-checked imports |
-| Engine uniform buffer | `build/engine/theme-uniforms.json` | custom `json/flat-rgba` | WebGL chart-engine shader uniforms |
-| Electron main JSON | `build/electron/tokens.main.json` | custom `json/flat` | Electron main process (title-bar, tray icon, OS theme hint) |
-| Contrast report | `build/reports/contrast-matrix.json` + `.md` | custom `json`/`markdown` | CI gate + human review |
+| Target                   | Output path                                  | Format                        | Consumer                                                    |
+| ------------------------ | -------------------------------------------- | ----------------------------- | ----------------------------------------------------------- |
+| CSS vars (dark)          | `build/css/tokens.dark.css`                  | `css/variables`               | React app, `[data-theme="dark"]`                            |
+| CSS vars (light)         | `build/css/tokens.light.css`                 | `css/variables`               | React app, `[data-theme="light"]`                           |
+| CSS vars (high-contrast) | `build/css/tokens.high-contrast.css`         | `css/variables`               | React app, `[data-theme="high-contrast"]`                   |
+| TS token object          | `build/ts/tokens.ts`                         | `typescript/es6-declarations` | React components, Storybook, type-checked imports           |
+| Engine uniform buffer    | `build/engine/theme-uniforms.json`           | custom `json/flat-rgba`       | WebGL chart-engine shader uniforms                          |
+| Electron main JSON       | `build/electron/tokens.main.json`            | custom `json/flat`            | Electron main process (title-bar, tray icon, OS theme hint) |
+| Contrast report          | `build/reports/contrast-matrix.json` + `.md` | custom `json`/`markdown`      | CI gate + human review                                      |
+
 - **Versioning**: the `tokens/` directory is versioned independently (its own CHANGELOG, semver) from the component library, since a token-only change (e.g. re-tuning the heatmap ramp after a spike finding) should be shippable and reviewable without touching component code.
 - **Consumption contract**: React components import from the generated `build/ts/tokens.ts` (never hardcode a hex/px value); Storybook's theme-switch addon toggles the `data-theme` attribute using the generated CSS bundles for visual-regression parity across themes (`15-component-catalogue.md` §0.3 rule 7).
 - **Figma↔code sync direction**: tokens flow **design→code** as the primary direction (designer edits Figma Variables via the Tokens Studio plugin, exports to the `tokens/` JSON, opens a PR) with an occasional **code→design** reverse sync for engineering-driven token additions (e.g. a new chart-engine-only token discovered during the WebGL spike) re-imported into Figma Variables — both directions go through the same JSON files and the same PR/review process, so there is exactly one source of truth file format regardless of which side initiates a change.
@@ -294,12 +320,12 @@ Full rationale and open questions: `docs/design/E02/E02-D01.md`.
 file per theme (`semantic-dark.tokens.json` — source of truth, `semantic-light.tokens.json`,
 `semantic-high-contrast.tokens.json`), one Tier-3 file (`component.tokens.json`), one file per density
 mode (`density-compact.tokens.json`, `density-comfortable.tokens.json`), and `themes.json` declaring
-which files compose each named theme. A theme file re-maps the *same* Tier-2 names to different Tier-1
+which files compose each named theme. A theme file re-maps the _same_ Tier-2 names to different Tier-1
 references — it never introduces new token names. A density file overrides only spacing/sizing Tier-2
 tokens, never colour or typography; theme and density compose independently.
 
 **Naming edge case**: where a Tier-2 group needs both children and a base value (e.g. `color.buy` needs
-`.hover`/`.subtle`/`.hc` *and* a default), the base leaf is named `color.buy.default` — a token path
+`.hover`/`.subtle`/`.hc` _and_ a default), the base leaf is named `color.buy.default` — a token path
 cannot be both an object and a value.
 
 **Lint rule (Tier 1 isolation)**: a build-time lint step (`tools/style-dictionary/lint-tier1-refs.*`,
@@ -314,7 +340,7 @@ resolved (no `{alias}` left unresolved); every colour token relevant to the engi
 `color.sell.*`) is an object carrying both a hex string and normalised float RGBA:
 
 ```json
-{ "color.buy.default": { "hex": "#2EBD59", "rgba": [0.1804, 0.7412, 0.3490, 1.0] } }
+{ "color.buy.default": { "hex": "#2EBD59", "rgba": [0.1804, 0.7412, 0.349, 1.0] } }
 ```
 
 Spacing/typography tokens not needed for canvas rendering are excluded from this export (layout spacing
@@ -326,14 +352,14 @@ the host adapter loads the resolved uniform file for the active theme and calls 
 **Two worked examples** (Tier 1 → Tier 2 → every output, using the values already shipped in
 `packages/ui/tokens/primitives.tokens.json` / `semantic-dark.tokens.json` by E05-D01):
 
-| | `color.buy` | `space.field.gap` |
-|---|---|---|
-| Tier 1 | `palette.green.500 = "#2EBD59"` | `space.2 = "8"` |
-| Tier 2 | `color.buy.default = "{palette.green.500}"` (+ `.hover→palette.green.400 #4FC86F`, `.subtle→palette.green.900 #0E3D1F`, `.hc→palette.green.300 #6BD48A`) | `space.field.gap = "{space.2}"` |
-| CSS | `--color-buy-default: #2EBD59;` under `[data-theme="dark"]` | `--space-field-gap: 8px;` |
-| TS | `tokens.color.buy.default === "#2EBD59"` | `tokens.space.field.gap === "8"` |
-| Engine | `{ "hex": "#2EBD59", "rgba": [0.1804, 0.7412, 0.3490, 1.0] }` | not exported (colour/typography only) |
-| Contrast | `.default` ≥3:1 on `surface.canvas` (chart data-ink); `.hc` ≥7:1 (AAA stretch, high-contrast theme) | N/A |
+|          | `color.buy`                                                                                                                                              | `space.field.gap`                     |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| Tier 1   | `palette.green.500 = "#2EBD59"`                                                                                                                          | `space.2 = "8"`                       |
+| Tier 2   | `color.buy.default = "{palette.green.500}"` (+ `.hover→palette.green.400 #4FC86F`, `.subtle→palette.green.900 #0E3D1F`, `.hc→palette.green.300 #6BD48A`) | `space.field.gap = "{space.2}"`       |
+| CSS      | `--color-buy-default: #2EBD59;` under `[data-theme="dark"]`                                                                                              | `--space-field-gap: 8px;`             |
+| TS       | `tokens.color.buy.default === "#2EBD59"`                                                                                                                 | `tokens.space.field.gap === "8"`      |
+| Engine   | `{ "hex": "#2EBD59", "rgba": [0.1804, 0.7412, 0.3490, 1.0] }`                                                                                            | not exported (colour/typography only) |
+| Contrast | `.default` ≥3:1 on `surface.canvas` (chart data-ink); `.hc` ≥7:1 (AAA stretch, high-contrast theme)                                                      | N/A                                   |
 
 **Accessibility gate**: every semantic colour pair carries its stated minimum ratio per
 `05-accessibility-standard.md` §5 (4.5:1 body text / 3:1 large text / 3:1 non-text-UI / 3:1 chart
@@ -351,17 +377,20 @@ engine owner, frontend lead, accessibility specialist.
 Applied to every component ticket and every screen ticket before it can move to Status "Done" (feeds `02-definition-of-ready-done.md`'s design-specific DoD clause):
 
 **Tokens & visual**
+
 - [ ] Uses only published Tier-2/Tier-3 tokens — zero hardcoded hex/px values in the spec or the implementation.
 - [ ] Verified in all three themes (dark, light, high-contrast) at both density modes (compact, comfortable) — visual parity confirmed, no theme/density-specific layout breakage.
 - [ ] Passes the automated contrast-matrix check for every colour pair it introduces or touches.
 - [ ] CVD (colour-blindness) simulation reviewed for any new colour-carrying state.
 
 **Behaviour & states**
+
 - [ ] Every documented State (default/hover/focus/active/disabled/loading/error/empty) has a corresponding Figma variant and Storybook story.
 - [ ] Disabled states use the disabled-with-reason pattern (CMP-079), never a bare disabled control, for any RBAC/env-gated action.
 - [ ] Loading/empty/error states are explicitly designed, not left as "the same as default but greyed out."
 
 **Accessibility**
+
 - [ ] Keyboard-interaction table completed and matches an implemented, tested keyboard path (not aspirational).
 - [ ] Accessible-name/role table completed.
 - [ ] For any canvas/WebGL-adjacent component: DOM-mirror/windowed-tree/non-spatial-alternative strategy explicitly specified per `05-accessibility-standard.md` §6, not deferred to "engineering will figure it out."
@@ -370,11 +399,13 @@ Applied to every component ticket and every screen ticket before it can move to 
 - [ ] Accessibility role has signed off (§13).
 
 **Trading-specific safety**
+
 - [ ] Any component touching order placement, position modification, or rule arming states its confirm-gate variant (standard/typed/hold) explicitly and the keyboard-only path for that gate is tested.
 - [ ] Any heuristic/estimated value is chip-tagged and links to its methodology InfoPanel.
 - [ ] Demo/Live env context is visually unambiguous wherever the component can trigger a trading action.
 
 **Consistency**
+
 - [ ] Reuses an existing CMP-* rather than introducing a near-duplicate (checked against the catalogue index before a new ID is requested).
 - [ ] Storybook stories match the full Variants × States matrix stated in the catalogue entry.
 - [ ] Component or screen composes only published-library Figma components (no local detached overrides).
@@ -386,15 +417,19 @@ Applied to every component ticket and every screen ticket before it can move to 
 Per `00-planning-brief.md` §"Team & cadence": **design runs ahead of engineering by ≥2 sprints; no frontend screen work starts until its design ticket is Status "Done."** This section defines exactly what "Done" means for a design ticket, since that gate is the mechanism enforcing the whole design-ahead rule.
 
 ### 13.1 Design ticket lifecycle
+
 `Backlog → Ready → In Progress → In Review → In Test → Done` (same board/statuses as engineering tickets, per the project schema in `00-planning-brief.md` — design and engineering share one Kanban so dependency/blocking relationships between a design ticket and its downstream engineering ticket are visible in one place, not tracked in a separate design tool).
 
 ### 13.2 Definition of Ready (a design ticket may enter "In Progress")
+
 - Linked user story/stories (`11-user-stories.md`) with acceptance criteria exist.
 - Linked screen entry in `14-screens-catalogue.md` (or component entry in `15-component-catalogue.md`) exists with at least a draft purpose/data/interaction sketch.
 - Any research open-question blocking the design (e.g. an unresolved Bybit API behaviour) is either resolved or explicitly flagged as an assumption the design proceeds under.
 
 ### 13.3 Definition of Done (a design ticket may move to "Done," unblocking engineering)
+
 A design ticket is **Done** only when **all** of the following are true and attached to the ticket:
+
 1. **Figma artefact** complete: all states/variants for the screen or component, composed only from published-library components (§10, §12 consistency checklist).
 2. **Component catalogue / screen catalogue entry updated** to match the final Figma artefact exactly (this document and `15-component-catalogue.md`/`14-screens-catalogue.md` are living documents kept in lockstep with design output, not a one-time snapshot).
 3. **Accessibility role sign-off** attached: completed acceptance-criteria template (`05-accessibility-standard.md` §10) plus CVD-simulation review (§4.2 of that standard) — this is the specific, named gate the standard itself declares mandatory (§11.7 of `05-accessibility-standard.md`), restated here as the operational sign-off step.
@@ -404,22 +439,20 @@ A design ticket is **Done** only when **all** of the following are true and atta
 7. Ticket's linked downstream engineering ticket(s) are updated with a link to the now-final Figma artefact and catalogue entry, and are moved from "Backlog" to "Ready" (this is the literal unblocking action — engineering's own Definition of Ready, per `02-definition-of-ready-done.md`, requires this link to exist before an engineering ticket can start).
 
 ### 13.4 Spike-first exception
+
 Per `research/24-owner-decisions.md` §2 ("mandatory spikes before design sign-off"), four engineering spikes (WebGL engine core, QuestDB vs TimescaleDB, Bybit WS client, multi-account fan-out latency) must complete **before** the corresponding chart-engine-primitive (CMP-180..199) and trading-critical (CMP-100..139 fan-out-related) component designs can be marked Done — a design ticket in this category carries an explicit `blocked_by: SPIKE-*` dependency and cannot reach "Done" while its spike is open, since the spike's findings (e.g. actual achievable footprint-cell density) are load-bearing inputs to the component's final prop/API surface.
 
 ### 13.5 Change control after sign-off
-Once Done, a component/screen design is versioned like code: a change request re-opens the ticket (or opens a new linked ticket referencing the CMP-*/SCR-* ID), goes through the same §13.3 checklist again, and any already-in-progress engineering work is flagged for re-sync rather than silently diverging from an updated Figma artefact — the catalogue documents (`15-component-catalogue.md`, this file) are the arbitration source when Figma and shipped code disagree, pending the next sync PR.
+
+Once Done, a component/screen design is versioned like code: a change request re-opens the ticket (or opens a new linked ticket referencing the CMP-_/SCR-_ ID), goes through the same §13.3 checklist again, and any already-in-progress engineering work is flagged for re-sync rather than silently diverging from an updated Figma artefact — the catalogue documents (`15-component-catalogue.md`, this file) are the arbitration source when Figma and shipped code disagree, pending the next sync PR.
 
 ---
 
 ## 14. Cross-references
+
 - `15-component-catalogue.md` — every token named here is consumed by a CMP-* entry; the catalogue's "Tokens used" field is the enforcement checkpoint that no component invents its own ad-hoc styling.
 - `05-accessibility-standard.md` — binding a11y requirements this brief operationalises into tokens, density rules, and the sign-off gate (§13.3.3).
 - `14-screens-catalogue.md` — screens consume components per §10's Figma "Screens" file discipline; §0.4's WS/REST topic table is the data-contract reference for §13.3.5.
 - `26-chart-engine-design.md` — receives the theme-uniform token output (§11.2c) and the DOM-mirror/windowed-a11y binding constraints (§9.4).
 - `02-definition-of-ready-done.md` — this brief's §13.3 is the design-specific instantiation of that document's cross-discipline Definition of Done.
 - `research/24-owner-decisions.md` — heatmap colour convention (decision #10, §2.1 here) and mandatory pre-sign-off spikes (§13.4 here).
-
-
-
-
-

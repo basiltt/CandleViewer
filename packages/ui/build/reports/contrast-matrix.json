@@ -1,0 +1,3843 @@
+{
+  "generatedBy": "tools/contrast/generate.mjs",
+  "thresholds": {
+    "text": 4.5,
+    "nonText": 3,
+    "highContrast": 7
+  },
+  "summary": {
+    "pairChecks": 222,
+    "heatmapChecks": 33,
+    "cvdChecks": 81,
+    "byThemeThreshold": {
+      "dark": {
+        "text": 21,
+        "nonText": 52,
+        "highContrast": 2
+      },
+      "light": {
+        "text": 20,
+        "nonText": 53,
+        "highContrast": 1
+      },
+      "high-contrast": {
+        "text": 21,
+        "nonText": 53,
+        "highContrast": 2
+      }
+    }
+  },
+  "pairs": [
+    {
+      "theme": "dark",
+      "fg": "color.text.primary",
+      "bg": "color.surface.app",
+      "fgHex": "#E8EAED",
+      "bgHex": "#0B0E11",
+      "ratio": 16.06,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.text.primary",
+      "bg": "color.surface.canvas",
+      "fgHex": "#E8EAED",
+      "bgHex": "#11151A",
+      "ratio": 15.2,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.text.primary",
+      "bg": "color.surface.raised",
+      "fgHex": "#E8EAED",
+      "bgHex": "#161B22",
+      "ratio": 14.35,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.text.secondary",
+      "bg": "color.surface.app",
+      "fgHex": "#B1BAC4",
+      "bgHex": "#0B0E11",
+      "ratio": 9.85,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.text.secondary",
+      "bg": "color.surface.canvas",
+      "fgHex": "#B1BAC4",
+      "bgHex": "#11151A",
+      "ratio": 9.33,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.text.secondary",
+      "bg": "color.surface.raised",
+      "fgHex": "#B1BAC4",
+      "bgHex": "#161B22",
+      "ratio": 8.81,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.text.tertiary",
+      "bg": "color.surface.app",
+      "fgHex": "#8B949E",
+      "bgHex": "#0B0E11",
+      "ratio": 6.29,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.text.link",
+      "bg": "color.surface.app",
+      "fgHex": "#6EA1F5",
+      "bgHex": "#0B0E11",
+      "ratio": 7.45,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.text.on-action",
+      "bg": "color.action.primary.default",
+      "fgHex": "#FFFFFF",
+      "bgHex": "#2B6CE8",
+      "ratio": 4.76,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.axis.text",
+      "bg": "color.surface.canvas",
+      "fgHex": "#8B949E",
+      "bgHex": "#11151A",
+      "ratio": 5.96,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.focus.ring",
+      "bg": "color.surface.app",
+      "fgHex": "#6EA1F5",
+      "bgHex": "#0B0E11",
+      "ratio": 7.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.focus.ring",
+      "bg": "color.surface.canvas",
+      "fgHex": "#6EA1F5",
+      "bgHex": "#11151A",
+      "ratio": 7.05,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.focus.ring",
+      "bg": "color.surface.raised",
+      "fgHex": "#6EA1F5",
+      "bgHex": "#161B22",
+      "ratio": 6.66,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.focus.ring",
+      "bg": "color.surface.overlay",
+      "fgHex": "#6EA1F5",
+      "bgHex": "#1C222B",
+      "ratio": 6.15,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.focus.ring",
+      "bg": "color.surface.sunken",
+      "fgHex": "#6EA1F5",
+      "bgHex": "#000000",
+      "ratio": 8.08,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.buy.default",
+      "bg": "color.surface.app",
+      "fgHex": "#2EBD59",
+      "bgHex": "#0B0E11",
+      "ratio": 7.87,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.sell.default",
+      "bg": "color.surface.app",
+      "fgHex": "#E5484D",
+      "bgHex": "#0B0E11",
+      "ratio": 4.94,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.buy.default",
+      "bg": "color.surface.canvas",
+      "fgHex": "#2EBD59",
+      "bgHex": "#11151A",
+      "ratio": 7.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.sell.default",
+      "bg": "color.surface.canvas",
+      "fgHex": "#E5484D",
+      "bgHex": "#11151A",
+      "ratio": 4.68,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.buy.hc",
+      "bg": "color.surface.app",
+      "fgHex": "#6BD48A",
+      "bgHex": "#0B0E11",
+      "ratio": 10.51,
+      "threshold": 7,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.sell.hc",
+      "bg": "color.surface.app",
+      "fgHex": "#F08A8A",
+      "bgHex": "#0B0E11",
+      "ratio": 8.02,
+      "threshold": 7,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.candle.up",
+      "bg": "color.surface.canvas",
+      "fgHex": "#2EBD59",
+      "bgHex": "#11151A",
+      "ratio": 7.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.candle.down",
+      "bg": "color.surface.canvas",
+      "fgHex": "#E5484D",
+      "bgHex": "#11151A",
+      "ratio": 4.68,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.candle.wick",
+      "bg": "color.surface.canvas",
+      "fgHex": "#8B949E",
+      "bgHex": "#11151A",
+      "ratio": 5.96,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.footprint.bid",
+      "bg": "color.surface.canvas",
+      "fgHex": "#2EBD59",
+      "bgHex": "#11151A",
+      "ratio": 7.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.footprint.ask",
+      "bg": "color.surface.canvas",
+      "fgHex": "#E5484D",
+      "bgHex": "#11151A",
+      "ratio": 4.68,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.footprint.imbalance",
+      "bg": "color.surface.canvas",
+      "fgHex": "#F0B441",
+      "bgHex": "#11151A",
+      "ratio": 9.87,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.profile.bar",
+      "bg": "color.surface.canvas",
+      "fgHex": "#3D4650",
+      "bgHex": "#11151A",
+      "ratio": 1.91,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "dark",
+      "fg": "color.profile.poc",
+      "bg": "color.surface.canvas",
+      "fgHex": "#E8A317",
+      "bgHex": "#11151A",
+      "ratio": 8.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.profile.valuearea",
+      "bg": "color.surface.canvas",
+      "fgHex": "#173F8F",
+      "bgHex": "#11151A",
+      "ratio": 1.87,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "dark",
+      "fg": "color.grid.line",
+      "bg": "color.surface.canvas",
+      "fgHex": "#1C222B",
+      "bgHex": "#11151A",
+      "ratio": 1.15,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "dark",
+      "fg": "color.crosshair",
+      "bg": "color.surface.canvas",
+      "fgHex": "#B1BAC4",
+      "bgHex": "#11151A",
+      "ratio": 9.33,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.order.line",
+      "bg": "color.surface.canvas",
+      "fgHex": "#6EA1F5",
+      "bgHex": "#11151A",
+      "ratio": 7.05,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.position.entry",
+      "bg": "color.surface.canvas",
+      "fgHex": "#2B6CE8",
+      "bgHex": "#11151A",
+      "ratio": 3.85,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.position.sl",
+      "bg": "color.surface.canvas",
+      "fgHex": "#E5484D",
+      "bgHex": "#11151A",
+      "ratio": 4.68,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.position.tp",
+      "bg": "color.surface.canvas",
+      "fgHex": "#2EBD59",
+      "bgHex": "#11151A",
+      "ratio": 7.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.drawing.default",
+      "bg": "color.surface.canvas",
+      "fgHex": "#3FBFE0",
+      "bgHex": "#11151A",
+      "ratio": 8.5,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.drawing.selected",
+      "bg": "color.surface.canvas",
+      "fgHex": "#F0B441",
+      "bgHex": "#11151A",
+      "ratio": 9.87,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.node.trigger",
+      "bg": "color.surface.canvas",
+      "fgHex": "#E8A317",
+      "bgHex": "#11151A",
+      "ratio": 8.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.node.condition",
+      "bg": "color.surface.canvas",
+      "fgHex": "#1EA8CC",
+      "bgHex": "#11151A",
+      "ratio": 6.57,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.node.action",
+      "bg": "color.surface.canvas",
+      "fgHex": "#2EBD59",
+      "bgHex": "#11151A",
+      "ratio": 7.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.node.logic",
+      "bg": "color.surface.canvas",
+      "fgHex": "#8B5CF6",
+      "bgHex": "#11151A",
+      "ratio": 4.33,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.node.comment",
+      "bg": "color.surface.canvas",
+      "fgHex": "#586470",
+      "bgHex": "#11151A",
+      "ratio": 3.03,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.border.default",
+      "bg": "color.surface.app",
+      "fgHex": "#2E363E",
+      "bgHex": "#0B0E11",
+      "ratio": 1.58,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "dark",
+      "fg": "color.border.strong",
+      "bg": "color.surface.app",
+      "fgHex": "#3D4650",
+      "bgHex": "#0B0E11",
+      "ratio": 2.02,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "dark",
+      "fg": "color.status.success.default",
+      "bg": "color.surface.app",
+      "fgHex": "#2EBD59",
+      "bgHex": "#0B0E11",
+      "ratio": 7.87,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.status.warning.default",
+      "bg": "color.surface.app",
+      "fgHex": "#E8A317",
+      "bgHex": "#0B0E11",
+      "ratio": 8.92,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.status.danger.default",
+      "bg": "color.surface.app",
+      "fgHex": "#C93A3F",
+      "bgHex": "#0B0E11",
+      "ratio": 3.83,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.status.info.default",
+      "bg": "color.surface.app",
+      "fgHex": "#1EA8CC",
+      "bgHex": "#0B0E11",
+      "ratio": 6.94,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.status.success.strong",
+      "bg": "color.surface.app",
+      "fgHex": "#6BD48A",
+      "bgHex": "#0B0E11",
+      "ratio": 10.51,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.status.warning.strong",
+      "bg": "color.surface.app",
+      "fgHex": "#F5C86B",
+      "bgHex": "#0B0E11",
+      "ratio": 12.31,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.status.danger.strong",
+      "bg": "color.surface.app",
+      "fgHex": "#F0B441",
+      "bgHex": "#0B0E11",
+      "ratio": 10.42,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.status.info.strong",
+      "bg": "color.surface.app",
+      "fgHex": "#6ED0E8",
+      "bgHex": "#0B0E11",
+      "ratio": 10.92,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.env.demo",
+      "bg": "color.surface.app",
+      "fgHex": "#2B6CE8",
+      "bgHex": "#0B0E11",
+      "ratio": 4.07,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.env.live",
+      "bg": "color.surface.app",
+      "fgHex": "#E5484D",
+      "bgHex": "#0B0E11",
+      "ratio": 4.94,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.data-confidence.live.text",
+      "bg": "color.surface.app",
+      "fgHex": "#E8EAED",
+      "bgHex": "#0B0E11",
+      "ratio": 16.06,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.data-confidence.stale.text",
+      "bg": "color.data-confidence.stale.surface",
+      "fgHex": "#B1BAC4",
+      "bgHex": "#000000",
+      "ratio": 10.69,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.data-confidence.reconnecting.text",
+      "bg": "color.surface.app",
+      "fgHex": "#E8EAED",
+      "bgHex": "#0B0E11",
+      "ratio": 16.06,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.data-confidence.disconnected.text",
+      "bg": "color.surface.app",
+      "fgHex": "#E8EAED",
+      "bgHex": "#0B0E11",
+      "ratio": 16.06,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.data-confidence.resyncing.text",
+      "bg": "color.surface.app",
+      "fgHex": "#B1BAC4",
+      "bgHex": "#0B0E11",
+      "ratio": 9.85,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.data-confidence.gapped.text",
+      "bg": "color.surface.app",
+      "fgHex": "#B1BAC4",
+      "bgHex": "#0B0E11",
+      "ratio": 9.85,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.data-confidence.backfilling.text",
+      "bg": "color.surface.app",
+      "fgHex": "#B1BAC4",
+      "bgHex": "#0B0E11",
+      "ratio": 9.85,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.data-confidence.delisted.text",
+      "bg": "color.surface.app",
+      "fgHex": "#B1BAC4",
+      "bgHex": "#0B0E11",
+      "ratio": 9.85,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.data-confidence.live.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#E8EAED",
+      "bgHex": "#0B0E11",
+      "ratio": 16.06,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.data-confidence.stale.indicator",
+      "bg": "color.data-confidence.stale.surface",
+      "fgHex": "#F5C86B",
+      "bgHex": "#000000",
+      "ratio": 13.36,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.data-confidence.reconnecting.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#E8A317",
+      "bgHex": "#0B0E11",
+      "ratio": 8.92,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.data-confidence.disconnected.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#C93A3F",
+      "bgHex": "#0B0E11",
+      "ratio": 3.83,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.data-confidence.resyncing.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#6ED0E8",
+      "bgHex": "#0B0E11",
+      "ratio": 10.92,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.data-confidence.gapped.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#F5C86B",
+      "bgHex": "#0B0E11",
+      "ratio": 12.31,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.data-confidence.backfilling.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#6ED0E8",
+      "bgHex": "#0B0E11",
+      "ratio": 10.92,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.data-confidence.delisted.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#F0B441",
+      "bgHex": "#0B0E11",
+      "ratio": 10.42,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.action.primary.default",
+      "bg": "color.surface.app",
+      "fgHex": "#2B6CE8",
+      "bgHex": "#0B0E11",
+      "ratio": 4.07,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "fg": "color.action.secondary.default",
+      "bg": "color.surface.app",
+      "fgHex": "#2E363E",
+      "bgHex": "#0B0E11",
+      "ratio": 1.58,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "dark",
+      "fg": "color.neutral.default",
+      "bg": "color.surface.app",
+      "fgHex": "#8B949E",
+      "bgHex": "#0B0E11",
+      "ratio": 6.29,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.text.primary",
+      "bg": "color.surface.app",
+      "fgHex": "#14171A",
+      "bgHex": "#FFFFFF",
+      "ratio": 17.99,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.text.primary",
+      "bg": "color.surface.canvas",
+      "fgHex": "#14171A",
+      "bgHex": "#F6F7F9",
+      "ratio": 16.78,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.text.primary",
+      "bg": "color.surface.raised",
+      "fgHex": "#14171A",
+      "bgHex": "#EDEFF2",
+      "ratio": 15.62,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.text.secondary",
+      "bg": "color.surface.app",
+      "fgHex": "#3A4148",
+      "bgHex": "#FFFFFF",
+      "ratio": 10.35,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.text.secondary",
+      "bg": "color.surface.canvas",
+      "fgHex": "#3A4148",
+      "bgHex": "#F6F7F9",
+      "ratio": 9.65,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.text.secondary",
+      "bg": "color.surface.raised",
+      "fgHex": "#3A4148",
+      "bgHex": "#EDEFF2",
+      "ratio": 8.98,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.text.tertiary",
+      "bg": "color.surface.app",
+      "fgHex": "#525C66",
+      "bgHex": "#FFFFFF",
+      "ratio": 6.81,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.text.link",
+      "bg": "color.surface.app",
+      "fgHex": "#1F55BF",
+      "bgHex": "#FFFFFF",
+      "ratio": 6.75,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.text.on-action",
+      "bg": "color.action.primary.default",
+      "fgHex": "#FFFFFF",
+      "bgHex": "#2B6CE8",
+      "ratio": 4.76,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.axis.text",
+      "bg": "color.surface.canvas",
+      "fgHex": "#525C66",
+      "bgHex": "#F6F7F9",
+      "ratio": 6.36,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.focus.ring",
+      "bg": "color.surface.app",
+      "fgHex": "#1F55BF",
+      "bgHex": "#FFFFFF",
+      "ratio": 6.75,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.focus.ring",
+      "bg": "color.surface.canvas",
+      "fgHex": "#1F55BF",
+      "bgHex": "#F6F7F9",
+      "ratio": 6.3,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.focus.ring",
+      "bg": "color.surface.raised",
+      "fgHex": "#1F55BF",
+      "bgHex": "#EDEFF2",
+      "ratio": 5.86,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.focus.ring",
+      "bg": "color.surface.overlay",
+      "fgHex": "#1F55BF",
+      "bgHex": "#E3E6EA",
+      "ratio": 5.39,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.focus.ring",
+      "bg": "color.surface.sunken",
+      "fgHex": "#1F55BF",
+      "bgHex": "#D6DAE0",
+      "ratio": 4.81,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.buy.default",
+      "bg": "color.surface.app",
+      "fgHex": "#1C7A3C",
+      "bgHex": "#FFFFFF",
+      "ratio": 5.39,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.sell.default",
+      "bg": "color.surface.app",
+      "fgHex": "#C7373C",
+      "bgHex": "#FFFFFF",
+      "ratio": 5.2,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.buy.default",
+      "bg": "color.surface.canvas",
+      "fgHex": "#1C7A3C",
+      "bgHex": "#F6F7F9",
+      "ratio": 5.03,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.sell.default",
+      "bg": "color.surface.canvas",
+      "fgHex": "#C7373C",
+      "bgHex": "#F6F7F9",
+      "ratio": 4.85,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.buy.hc",
+      "bg": "color.surface.app",
+      "fgHex": "#1B7539",
+      "bgHex": "#FFFFFF",
+      "ratio": 5.75,
+      "threshold": 7,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "light",
+      "fg": "color.sell.hc",
+      "bg": "color.surface.app",
+      "fgHex": "#A02C30",
+      "bgHex": "#FFFFFF",
+      "ratio": 7.25,
+      "threshold": 7,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.candle.up",
+      "bg": "color.surface.canvas",
+      "fgHex": "#1C7A3C",
+      "bgHex": "#F6F7F9",
+      "ratio": 5.03,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.candle.down",
+      "bg": "color.surface.canvas",
+      "fgHex": "#C7373C",
+      "bgHex": "#F6F7F9",
+      "ratio": 4.85,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.candle.wick",
+      "bg": "color.surface.canvas",
+      "fgHex": "#525C66",
+      "bgHex": "#F6F7F9",
+      "ratio": 6.36,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.footprint.bid",
+      "bg": "color.surface.canvas",
+      "fgHex": "#1C7A3C",
+      "bgHex": "#F6F7F9",
+      "ratio": 5.03,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.footprint.ask",
+      "bg": "color.surface.canvas",
+      "fgHex": "#C7373C",
+      "bgHex": "#F6F7F9",
+      "ratio": 4.85,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.footprint.imbalance",
+      "bg": "color.surface.canvas",
+      "fgHex": "#B87F0A",
+      "bgHex": "#F6F7F9",
+      "ratio": 3.22,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.profile.bar",
+      "bg": "color.surface.canvas",
+      "fgHex": "#9AA3AE",
+      "bgHex": "#F6F7F9",
+      "ratio": 2.38,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "light",
+      "fg": "color.profile.poc",
+      "bg": "color.surface.canvas",
+      "fgHex": "#B87F0A",
+      "bgHex": "#F6F7F9",
+      "ratio": 3.22,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.profile.valuearea",
+      "bg": "color.surface.canvas",
+      "fgHex": "#DDE8FC",
+      "bgHex": "#F6F7F9",
+      "ratio": 1.15,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "light",
+      "fg": "color.grid.line",
+      "bg": "color.surface.canvas",
+      "fgHex": "#E3E6EA",
+      "bgHex": "#F6F7F9",
+      "ratio": 1.17,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "light",
+      "fg": "color.crosshair",
+      "bg": "color.surface.canvas",
+      "fgHex": "#3A4148",
+      "bgHex": "#F6F7F9",
+      "ratio": 9.65,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.order.line",
+      "bg": "color.surface.canvas",
+      "fgHex": "#1F55BF",
+      "bgHex": "#F6F7F9",
+      "ratio": 6.3,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.position.entry",
+      "bg": "color.surface.canvas",
+      "fgHex": "#2B6CE8",
+      "bgHex": "#F6F7F9",
+      "ratio": 4.44,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.position.sl",
+      "bg": "color.surface.canvas",
+      "fgHex": "#C7373C",
+      "bgHex": "#F6F7F9",
+      "ratio": 4.85,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.position.tp",
+      "bg": "color.surface.canvas",
+      "fgHex": "#1C7A3C",
+      "bgHex": "#F6F7F9",
+      "ratio": 5.03,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.drawing.default",
+      "bg": "color.surface.canvas",
+      "fgHex": "#178AA8",
+      "bgHex": "#F6F7F9",
+      "ratio": 3.74,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.drawing.selected",
+      "bg": "color.surface.canvas",
+      "fgHex": "#B87F0A",
+      "bgHex": "#F6F7F9",
+      "ratio": 3.22,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.node.trigger",
+      "bg": "color.surface.canvas",
+      "fgHex": "#B87F0A",
+      "bgHex": "#F6F7F9",
+      "ratio": 3.22,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.node.condition",
+      "bg": "color.surface.canvas",
+      "fgHex": "#178AA8",
+      "bgHex": "#F6F7F9",
+      "ratio": 3.74,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.node.action",
+      "bg": "color.surface.canvas",
+      "fgHex": "#1C7A3C",
+      "bgHex": "#F6F7F9",
+      "ratio": 5.03,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.node.logic",
+      "bg": "color.surface.canvas",
+      "fgHex": "#7040E0",
+      "bgHex": "#F6F7F9",
+      "ratio": 5.6,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.node.comment",
+      "bg": "color.surface.canvas",
+      "fgHex": "#707B87",
+      "bgHex": "#F6F7F9",
+      "ratio": 4.02,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.border.default",
+      "bg": "color.surface.app",
+      "fgHex": "#D6DAE0",
+      "bgHex": "#FFFFFF",
+      "ratio": 1.4,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "light",
+      "fg": "color.border.strong",
+      "bg": "color.surface.app",
+      "fgHex": "#C2C8D0",
+      "bgHex": "#FFFFFF",
+      "ratio": 1.68,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "light",
+      "fg": "color.status.success.default",
+      "bg": "color.surface.app",
+      "fgHex": "#1C7A3C",
+      "bgHex": "#FFFFFF",
+      "ratio": 5.39,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.status.warning.default",
+      "bg": "color.surface.app",
+      "fgHex": "#B87F0A",
+      "bgHex": "#FFFFFF",
+      "ratio": 3.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.status.danger.default",
+      "bg": "color.surface.app",
+      "fgHex": "#B87F0A",
+      "bgHex": "#FFFFFF",
+      "ratio": 3.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.status.info.default",
+      "bg": "color.surface.app",
+      "fgHex": "#178AA8",
+      "bgHex": "#FFFFFF",
+      "ratio": 4.01,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.status.success.strong",
+      "bg": "color.surface.app",
+      "fgHex": "#1E9448",
+      "bgHex": "#FFFFFF",
+      "ratio": 3.9,
+      "threshold": 4.5,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "light",
+      "fg": "color.status.warning.strong",
+      "bg": "color.surface.app",
+      "fgHex": "#9A6A05",
+      "bgHex": "#FFFFFF",
+      "ratio": 4.73,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.status.danger.strong",
+      "bg": "color.surface.app",
+      "fgHex": "#9A6A05",
+      "bgHex": "#FFFFFF",
+      "ratio": 4.73,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.status.info.strong",
+      "bg": "color.surface.app",
+      "fgHex": "#12798F",
+      "bgHex": "#FFFFFF",
+      "ratio": 5.05,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.env.demo",
+      "bg": "color.surface.app",
+      "fgHex": "#2B6CE8",
+      "bgHex": "#FFFFFF",
+      "ratio": 4.76,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.env.live",
+      "bg": "color.surface.app",
+      "fgHex": "#C7373C",
+      "bgHex": "#FFFFFF",
+      "ratio": 5.2,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.data-confidence.live.text",
+      "bg": "color.surface.app",
+      "fgHex": "#14171A",
+      "bgHex": "#FFFFFF",
+      "ratio": 17.99,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.data-confidence.stale.text",
+      "bg": "color.data-confidence.stale.surface",
+      "fgHex": "#3A4148",
+      "bgHex": "#D6DAE0",
+      "ratio": 7.37,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.data-confidence.reconnecting.text",
+      "bg": "color.surface.app",
+      "fgHex": "#14171A",
+      "bgHex": "#FFFFFF",
+      "ratio": 17.99,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.data-confidence.disconnected.text",
+      "bg": "color.surface.app",
+      "fgHex": "#14171A",
+      "bgHex": "#FFFFFF",
+      "ratio": 17.99,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.data-confidence.resyncing.text",
+      "bg": "color.surface.app",
+      "fgHex": "#3A4148",
+      "bgHex": "#FFFFFF",
+      "ratio": 10.35,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.data-confidence.gapped.text",
+      "bg": "color.surface.app",
+      "fgHex": "#3A4148",
+      "bgHex": "#FFFFFF",
+      "ratio": 10.35,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.data-confidence.backfilling.text",
+      "bg": "color.surface.app",
+      "fgHex": "#3A4148",
+      "bgHex": "#FFFFFF",
+      "ratio": 10.35,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.data-confidence.delisted.text",
+      "bg": "color.surface.app",
+      "fgHex": "#3A4148",
+      "bgHex": "#FFFFFF",
+      "ratio": 10.35,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.data-confidence.live.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#14171A",
+      "bgHex": "#FFFFFF",
+      "ratio": 17.99,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.data-confidence.stale.indicator",
+      "bg": "color.data-confidence.stale.surface",
+      "fgHex": "#9A6A05",
+      "bgHex": "#D6DAE0",
+      "ratio": 3.37,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.data-confidence.reconnecting.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#B87F0A",
+      "bgHex": "#FFFFFF",
+      "ratio": 3.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.data-confidence.disconnected.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#B87F0A",
+      "bgHex": "#FFFFFF",
+      "ratio": 3.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.data-confidence.resyncing.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#12798F",
+      "bgHex": "#FFFFFF",
+      "ratio": 5.05,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.data-confidence.gapped.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#9A6A05",
+      "bgHex": "#FFFFFF",
+      "ratio": 4.73,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.data-confidence.backfilling.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#12798F",
+      "bgHex": "#FFFFFF",
+      "ratio": 5.05,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.data-confidence.delisted.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#9A6A05",
+      "bgHex": "#FFFFFF",
+      "ratio": 4.73,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.action.primary.default",
+      "bg": "color.surface.app",
+      "fgHex": "#2B6CE8",
+      "bgHex": "#FFFFFF",
+      "ratio": 4.76,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "fg": "color.action.secondary.default",
+      "bg": "color.surface.app",
+      "fgHex": "#D6DAE0",
+      "bgHex": "#FFFFFF",
+      "ratio": 1.4,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "light",
+      "fg": "color.neutral.default",
+      "bg": "color.surface.app",
+      "fgHex": "#525C66",
+      "bgHex": "#FFFFFF",
+      "ratio": 6.81,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.text.primary",
+      "bg": "color.surface.app",
+      "fgHex": "#F6F8FA",
+      "bgHex": "#0B0E11",
+      "ratio": 18.18,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.text.primary",
+      "bg": "color.surface.canvas",
+      "fgHex": "#F6F8FA",
+      "bgHex": "#11151A",
+      "ratio": 17.21,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.text.primary",
+      "bg": "color.surface.raised",
+      "fgHex": "#F6F8FA",
+      "bgHex": "#161B22",
+      "ratio": 16.25,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.text.secondary",
+      "bg": "color.surface.app",
+      "fgHex": "#E8EAED",
+      "bgHex": "#0B0E11",
+      "ratio": 16.06,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.text.secondary",
+      "bg": "color.surface.canvas",
+      "fgHex": "#E8EAED",
+      "bgHex": "#11151A",
+      "ratio": 15.2,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.text.secondary",
+      "bg": "color.surface.raised",
+      "fgHex": "#E8EAED",
+      "bgHex": "#161B22",
+      "ratio": 14.35,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.text.tertiary",
+      "bg": "color.surface.app",
+      "fgHex": "#8B949E",
+      "bgHex": "#0B0E11",
+      "ratio": 6.29,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.text.link",
+      "bg": "color.surface.app",
+      "fgHex": "#6EA1F5",
+      "bgHex": "#0B0E11",
+      "ratio": 7.45,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.text.on-action",
+      "bg": "color.action.primary.default",
+      "fgHex": "#FFFFFF",
+      "bgHex": "#2B6CE8",
+      "ratio": 4.76,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.axis.text",
+      "bg": "color.surface.canvas",
+      "fgHex": "#8B949E",
+      "bgHex": "#11151A",
+      "ratio": 5.96,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.focus.ring",
+      "bg": "color.surface.app",
+      "fgHex": "#6EA1F5",
+      "bgHex": "#0B0E11",
+      "ratio": 7.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.focus.ring",
+      "bg": "color.surface.canvas",
+      "fgHex": "#6EA1F5",
+      "bgHex": "#11151A",
+      "ratio": 7.05,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.focus.ring",
+      "bg": "color.surface.raised",
+      "fgHex": "#6EA1F5",
+      "bgHex": "#161B22",
+      "ratio": 6.66,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.focus.ring",
+      "bg": "color.surface.overlay",
+      "fgHex": "#6EA1F5",
+      "bgHex": "#1C222B",
+      "ratio": 6.15,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.focus.ring",
+      "bg": "color.surface.sunken",
+      "fgHex": "#6EA1F5",
+      "bgHex": "#000000",
+      "ratio": 8.08,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.buy.default",
+      "bg": "color.surface.app",
+      "fgHex": "#6BD48A",
+      "bgHex": "#0B0E11",
+      "ratio": 10.51,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.sell.default",
+      "bg": "color.surface.app",
+      "fgHex": "#F08A8A",
+      "bgHex": "#0B0E11",
+      "ratio": 8.02,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.buy.default",
+      "bg": "color.surface.canvas",
+      "fgHex": "#6BD48A",
+      "bgHex": "#11151A",
+      "ratio": 9.96,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.sell.default",
+      "bg": "color.surface.canvas",
+      "fgHex": "#F08A8A",
+      "bgHex": "#11151A",
+      "ratio": 7.6,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.buy.hc",
+      "bg": "color.surface.app",
+      "fgHex": "#6BD48A",
+      "bgHex": "#0B0E11",
+      "ratio": 10.51,
+      "threshold": 7,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.sell.hc",
+      "bg": "color.surface.app",
+      "fgHex": "#F08A8A",
+      "bgHex": "#0B0E11",
+      "ratio": 8.02,
+      "threshold": 7,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.candle.up",
+      "bg": "color.surface.canvas",
+      "fgHex": "#2EBD59",
+      "bgHex": "#11151A",
+      "ratio": 7.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.candle.down",
+      "bg": "color.surface.canvas",
+      "fgHex": "#E5484D",
+      "bgHex": "#11151A",
+      "ratio": 4.68,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.candle.wick",
+      "bg": "color.surface.canvas",
+      "fgHex": "#8B949E",
+      "bgHex": "#11151A",
+      "ratio": 5.96,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.footprint.bid",
+      "bg": "color.surface.canvas",
+      "fgHex": "#2EBD59",
+      "bgHex": "#11151A",
+      "ratio": 7.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.footprint.ask",
+      "bg": "color.surface.canvas",
+      "fgHex": "#E5484D",
+      "bgHex": "#11151A",
+      "ratio": 4.68,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.footprint.imbalance",
+      "bg": "color.surface.canvas",
+      "fgHex": "#F0B441",
+      "bgHex": "#11151A",
+      "ratio": 9.87,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.profile.bar",
+      "bg": "color.surface.canvas",
+      "fgHex": "#3D4650",
+      "bgHex": "#11151A",
+      "ratio": 1.91,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.profile.poc",
+      "bg": "color.surface.canvas",
+      "fgHex": "#E8A317",
+      "bgHex": "#11151A",
+      "ratio": 8.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.profile.valuearea",
+      "bg": "color.surface.canvas",
+      "fgHex": "#173F8F",
+      "bgHex": "#11151A",
+      "ratio": 1.87,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.grid.line",
+      "bg": "color.surface.canvas",
+      "fgHex": "#1C222B",
+      "bgHex": "#11151A",
+      "ratio": 1.15,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.crosshair",
+      "bg": "color.surface.canvas",
+      "fgHex": "#B1BAC4",
+      "bgHex": "#11151A",
+      "ratio": 9.33,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.order.line",
+      "bg": "color.surface.canvas",
+      "fgHex": "#6EA1F5",
+      "bgHex": "#11151A",
+      "ratio": 7.05,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.position.entry",
+      "bg": "color.surface.canvas",
+      "fgHex": "#2B6CE8",
+      "bgHex": "#11151A",
+      "ratio": 3.85,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.position.sl",
+      "bg": "color.surface.canvas",
+      "fgHex": "#E5484D",
+      "bgHex": "#11151A",
+      "ratio": 4.68,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.position.tp",
+      "bg": "color.surface.canvas",
+      "fgHex": "#2EBD59",
+      "bgHex": "#11151A",
+      "ratio": 7.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.drawing.default",
+      "bg": "color.surface.canvas",
+      "fgHex": "#3FBFE0",
+      "bgHex": "#11151A",
+      "ratio": 8.5,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.drawing.selected",
+      "bg": "color.surface.canvas",
+      "fgHex": "#F0B441",
+      "bgHex": "#11151A",
+      "ratio": 9.87,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.node.trigger",
+      "bg": "color.surface.canvas",
+      "fgHex": "#E8A317",
+      "bgHex": "#11151A",
+      "ratio": 8.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.node.condition",
+      "bg": "color.surface.canvas",
+      "fgHex": "#1EA8CC",
+      "bgHex": "#11151A",
+      "ratio": 6.57,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.node.action",
+      "bg": "color.surface.canvas",
+      "fgHex": "#2EBD59",
+      "bgHex": "#11151A",
+      "ratio": 7.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.node.logic",
+      "bg": "color.surface.canvas",
+      "fgHex": "#8B5CF6",
+      "bgHex": "#11151A",
+      "ratio": 4.33,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.node.comment",
+      "bg": "color.surface.canvas",
+      "fgHex": "#586470",
+      "bgHex": "#11151A",
+      "ratio": 3.03,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.border.default",
+      "bg": "color.surface.app",
+      "fgHex": "#586470",
+      "bgHex": "#0B0E11",
+      "ratio": 3.2,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.border.strong",
+      "bg": "color.surface.app",
+      "fgHex": "#3D4650",
+      "bgHex": "#0B0E11",
+      "ratio": 2.02,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.status.success.default",
+      "bg": "color.surface.app",
+      "fgHex": "#2EBD59",
+      "bgHex": "#0B0E11",
+      "ratio": 7.87,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.status.warning.default",
+      "bg": "color.surface.app",
+      "fgHex": "#E8A317",
+      "bgHex": "#0B0E11",
+      "ratio": 8.92,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.status.danger.default",
+      "bg": "color.surface.app",
+      "fgHex": "#C93A3F",
+      "bgHex": "#0B0E11",
+      "ratio": 3.83,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.status.info.default",
+      "bg": "color.surface.app",
+      "fgHex": "#1EA8CC",
+      "bgHex": "#0B0E11",
+      "ratio": 6.94,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.status.success.strong",
+      "bg": "color.surface.app",
+      "fgHex": "#6BD48A",
+      "bgHex": "#0B0E11",
+      "ratio": 10.51,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.status.warning.strong",
+      "bg": "color.surface.app",
+      "fgHex": "#F5C86B",
+      "bgHex": "#0B0E11",
+      "ratio": 12.31,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.status.danger.strong",
+      "bg": "color.surface.app",
+      "fgHex": "#F0B441",
+      "bgHex": "#0B0E11",
+      "ratio": 10.42,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.status.info.strong",
+      "bg": "color.surface.app",
+      "fgHex": "#6ED0E8",
+      "bgHex": "#0B0E11",
+      "ratio": 10.92,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.env.demo",
+      "bg": "color.surface.app",
+      "fgHex": "#2B6CE8",
+      "bgHex": "#0B0E11",
+      "ratio": 4.07,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.env.live",
+      "bg": "color.surface.app",
+      "fgHex": "#E5484D",
+      "bgHex": "#0B0E11",
+      "ratio": 4.94,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.data-confidence.live.text",
+      "bg": "color.surface.app",
+      "fgHex": "#F6F8FA",
+      "bgHex": "#0B0E11",
+      "ratio": 18.18,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.data-confidence.stale.text",
+      "bg": "color.data-confidence.stale.surface",
+      "fgHex": "#E8EAED",
+      "bgHex": "#000000",
+      "ratio": 17.42,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.data-confidence.reconnecting.text",
+      "bg": "color.surface.app",
+      "fgHex": "#F6F8FA",
+      "bgHex": "#0B0E11",
+      "ratio": 18.18,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.data-confidence.disconnected.text",
+      "bg": "color.surface.app",
+      "fgHex": "#F6F8FA",
+      "bgHex": "#0B0E11",
+      "ratio": 18.18,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.data-confidence.resyncing.text",
+      "bg": "color.surface.app",
+      "fgHex": "#E8EAED",
+      "bgHex": "#0B0E11",
+      "ratio": 16.06,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.data-confidence.gapped.text",
+      "bg": "color.surface.app",
+      "fgHex": "#E8EAED",
+      "bgHex": "#0B0E11",
+      "ratio": 16.06,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.data-confidence.backfilling.text",
+      "bg": "color.surface.app",
+      "fgHex": "#E8EAED",
+      "bgHex": "#0B0E11",
+      "ratio": 16.06,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.data-confidence.delisted.text",
+      "bg": "color.surface.app",
+      "fgHex": "#E8EAED",
+      "bgHex": "#0B0E11",
+      "ratio": 16.06,
+      "threshold": 4.5,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.data-confidence.live.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#F6F8FA",
+      "bgHex": "#0B0E11",
+      "ratio": 18.18,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.data-confidence.stale.indicator",
+      "bg": "color.data-confidence.stale.surface",
+      "fgHex": "#F5C86B",
+      "bgHex": "#000000",
+      "ratio": 13.36,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.data-confidence.reconnecting.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#E8A317",
+      "bgHex": "#0B0E11",
+      "ratio": 8.92,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.data-confidence.disconnected.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#C93A3F",
+      "bgHex": "#0B0E11",
+      "ratio": 3.83,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.data-confidence.resyncing.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#6ED0E8",
+      "bgHex": "#0B0E11",
+      "ratio": 10.92,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.data-confidence.gapped.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#F5C86B",
+      "bgHex": "#0B0E11",
+      "ratio": 12.31,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.data-confidence.backfilling.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#6ED0E8",
+      "bgHex": "#0B0E11",
+      "ratio": 10.92,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.data-confidence.delisted.indicator",
+      "bg": "color.surface.app",
+      "fgHex": "#F0B441",
+      "bgHex": "#0B0E11",
+      "ratio": 10.42,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.action.primary.default",
+      "bg": "color.surface.app",
+      "fgHex": "#2B6CE8",
+      "bgHex": "#0B0E11",
+      "ratio": 4.07,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.action.secondary.default",
+      "bg": "color.surface.app",
+      "fgHex": "#2E363E",
+      "bgHex": "#0B0E11",
+      "ratio": 1.58,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "high-contrast",
+      "fg": "color.neutral.default",
+      "bg": "color.surface.app",
+      "fgHex": "#8B949E",
+      "bgHex": "#0B0E11",
+      "ratio": 6.29,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    }
+  ],
+  "heatmap": [
+    {
+      "theme": "dark",
+      "stop": "color.heatmap.zero",
+      "bg": "color.surface.canvas",
+      "ratio": 1,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "dark",
+      "stop": "color.heatmap.bid.1",
+      "bg": "color.surface.canvas",
+      "ratio": 1.49,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "dark",
+      "stop": "color.heatmap.bid.2",
+      "bg": "color.surface.canvas",
+      "ratio": 3.19,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "stop": "color.heatmap.bid.3",
+      "bg": "color.surface.canvas",
+      "ratio": 5,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "stop": "color.heatmap.bid.4",
+      "bg": "color.surface.canvas",
+      "ratio": 7.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "stop": "color.heatmap.bid.5",
+      "bg": "color.surface.canvas",
+      "ratio": 9.96,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "stop": "color.heatmap.ask.1",
+      "bg": "color.surface.canvas",
+      "ratio": 1.26,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "dark",
+      "stop": "color.heatmap.ask.2",
+      "bg": "color.surface.canvas",
+      "ratio": 2.53,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "dark",
+      "stop": "color.heatmap.ask.3",
+      "bg": "color.surface.canvas",
+      "ratio": 3.63,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "stop": "color.heatmap.ask.4",
+      "bg": "color.surface.canvas",
+      "ratio": 4.68,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "stop": "color.heatmap.ask.5",
+      "bg": "color.surface.canvas",
+      "ratio": 7.6,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "stop": "color.heatmap.zero",
+      "bg": "color.surface.canvas",
+      "ratio": 1,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "light",
+      "stop": "color.heatmap.bid.1",
+      "bg": "color.surface.canvas",
+      "ratio": 1.09,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "light",
+      "stop": "color.heatmap.bid.2",
+      "bg": "color.surface.canvas",
+      "ratio": 11.48,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "stop": "color.heatmap.bid.3",
+      "bg": "color.surface.canvas",
+      "ratio": 5.37,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "stop": "color.heatmap.bid.4",
+      "bg": "color.surface.canvas",
+      "ratio": 5.03,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "stop": "color.heatmap.bid.5",
+      "bg": "color.surface.canvas",
+      "ratio": 3.64,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "stop": "color.heatmap.ask.1",
+      "bg": "color.surface.canvas",
+      "ratio": 1.15,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "light",
+      "stop": "color.heatmap.ask.2",
+      "bg": "color.surface.canvas",
+      "ratio": 13.56,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "stop": "color.heatmap.ask.3",
+      "bg": "color.surface.canvas",
+      "ratio": 6.76,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "stop": "color.heatmap.ask.4",
+      "bg": "color.surface.canvas",
+      "ratio": 4.85,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "stop": "color.heatmap.ask.5",
+      "bg": "color.surface.canvas",
+      "ratio": 5.43,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "stop": "color.heatmap.zero",
+      "bg": "color.surface.canvas",
+      "ratio": 1,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "high-contrast",
+      "stop": "color.heatmap.bid.1",
+      "bg": "color.surface.canvas",
+      "ratio": 1.49,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "high-contrast",
+      "stop": "color.heatmap.bid.2",
+      "bg": "color.surface.canvas",
+      "ratio": 3.19,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "stop": "color.heatmap.bid.3",
+      "bg": "color.surface.canvas",
+      "ratio": 5,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "stop": "color.heatmap.bid.4",
+      "bg": "color.surface.canvas",
+      "ratio": 7.45,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "stop": "color.heatmap.bid.5",
+      "bg": "color.surface.canvas",
+      "ratio": 9.96,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "stop": "color.heatmap.ask.1",
+      "bg": "color.surface.canvas",
+      "ratio": 1.26,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "high-contrast",
+      "stop": "color.heatmap.ask.2",
+      "bg": "color.surface.canvas",
+      "ratio": 2.53,
+      "threshold": 3,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "high-contrast",
+      "stop": "color.heatmap.ask.3",
+      "bg": "color.surface.canvas",
+      "ratio": 3.63,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "stop": "color.heatmap.ask.4",
+      "bg": "color.surface.canvas",
+      "ratio": 4.68,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "stop": "color.heatmap.ask.5",
+      "bg": "color.surface.canvas",
+      "ratio": 7.6,
+      "threshold": 3,
+      "pass": true,
+      "exempt": false
+    }
+  ],
+  "cvd": [
+    {
+      "theme": "dark",
+      "kind": "buy-sell",
+      "a": "color.buy.default",
+      "b": "color.sell.default",
+      "deficiency": "deuteranopia",
+      "deltaE": 8.26,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "buy-sell",
+      "a": "color.buy.default",
+      "b": "color.sell.default",
+      "deficiency": "protanopia",
+      "deltaE": 41.16,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "buy-sell",
+      "a": "color.buy.default",
+      "b": "color.sell.default",
+      "deficiency": "tritanopia",
+      "deltaE": 134.56,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.1",
+      "b": "color.heatmap.bid.2",
+      "deficiency": "deuteranopia",
+      "deltaE": 23.39,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.1",
+      "b": "color.heatmap.bid.2",
+      "deficiency": "protanopia",
+      "deltaE": 25.8,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.1",
+      "b": "color.heatmap.bid.2",
+      "deficiency": "tritanopia",
+      "deltaE": 32.08,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.2",
+      "b": "color.heatmap.bid.3",
+      "deficiency": "deuteranopia",
+      "deltaE": 13.6,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.2",
+      "b": "color.heatmap.bid.3",
+      "deficiency": "protanopia",
+      "deltaE": 15.45,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.2",
+      "b": "color.heatmap.bid.3",
+      "deficiency": "tritanopia",
+      "deltaE": 18.69,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.3",
+      "b": "color.heatmap.bid.4",
+      "deficiency": "deuteranopia",
+      "deltaE": 13.74,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.3",
+      "b": "color.heatmap.bid.4",
+      "deficiency": "protanopia",
+      "deltaE": 15.56,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.3",
+      "b": "color.heatmap.bid.4",
+      "deficiency": "tritanopia",
+      "deltaE": 18.29,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.4",
+      "b": "color.heatmap.bid.5",
+      "deficiency": "deuteranopia",
+      "deltaE": 15.77,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.4",
+      "b": "color.heatmap.bid.5",
+      "deficiency": "protanopia",
+      "deltaE": 15.97,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.4",
+      "b": "color.heatmap.bid.5",
+      "deficiency": "tritanopia",
+      "deltaE": 19.73,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.1",
+      "b": "color.heatmap.ask.2",
+      "deficiency": "deuteranopia",
+      "deltaE": 26.86,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.1",
+      "b": "color.heatmap.ask.2",
+      "deficiency": "protanopia",
+      "deltaE": 18.07,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.1",
+      "b": "color.heatmap.ask.2",
+      "deficiency": "tritanopia",
+      "deltaE": 34.64,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.2",
+      "b": "color.heatmap.ask.3",
+      "deficiency": "deuteranopia",
+      "deltaE": 12.17,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.2",
+      "b": "color.heatmap.ask.3",
+      "deficiency": "protanopia",
+      "deltaE": 8.77,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.2",
+      "b": "color.heatmap.ask.3",
+      "deficiency": "tritanopia",
+      "deltaE": 15.45,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.3",
+      "b": "color.heatmap.ask.4",
+      "deficiency": "deuteranopia",
+      "deltaE": 7.69,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.3",
+      "b": "color.heatmap.ask.4",
+      "deficiency": "protanopia",
+      "deltaE": 7.05,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.3",
+      "b": "color.heatmap.ask.4",
+      "deficiency": "tritanopia",
+      "deltaE": 10.61,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.4",
+      "b": "color.heatmap.ask.5",
+      "deficiency": "deuteranopia",
+      "deltaE": 22.81,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.4",
+      "b": "color.heatmap.ask.5",
+      "deficiency": "protanopia",
+      "deltaE": 20.67,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "dark",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.4",
+      "b": "color.heatmap.ask.5",
+      "deficiency": "tritanopia",
+      "deltaE": 11.29,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "buy-sell",
+      "a": "color.buy.default",
+      "b": "color.sell.default",
+      "deficiency": "deuteranopia",
+      "deltaE": 16.14,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "buy-sell",
+      "a": "color.buy.default",
+      "b": "color.sell.default",
+      "deficiency": "protanopia",
+      "deltaE": 19.4,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "buy-sell",
+      "a": "color.buy.default",
+      "b": "color.sell.default",
+      "deficiency": "tritanopia",
+      "deltaE": 131.12,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.1",
+      "b": "color.heatmap.bid.2",
+      "deficiency": "deuteranopia",
+      "deltaE": 72.96,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.1",
+      "b": "color.heatmap.bid.2",
+      "deficiency": "protanopia",
+      "deltaE": 71.9,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.1",
+      "b": "color.heatmap.bid.2",
+      "deficiency": "tritanopia",
+      "deltaE": 76.29,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.2",
+      "b": "color.heatmap.bid.3",
+      "deficiency": "deuteranopia",
+      "deltaE": 23.39,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.2",
+      "b": "color.heatmap.bid.3",
+      "deficiency": "protanopia",
+      "deltaE": 25.8,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.2",
+      "b": "color.heatmap.bid.3",
+      "deficiency": "tritanopia",
+      "deltaE": 32.08,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.3",
+      "b": "color.heatmap.bid.4",
+      "deficiency": "deuteranopia",
+      "deltaE": 1.67,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.3",
+      "b": "color.heatmap.bid.4",
+      "deficiency": "protanopia",
+      "deltaE": 2.43,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.3",
+      "b": "color.heatmap.bid.4",
+      "deficiency": "tritanopia",
+      "deltaE": 2.62,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.4",
+      "b": "color.heatmap.bid.5",
+      "deficiency": "deuteranopia",
+      "deltaE": 9.85,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.4",
+      "b": "color.heatmap.bid.5",
+      "deficiency": "protanopia",
+      "deltaE": 11.28,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.4",
+      "b": "color.heatmap.bid.5",
+      "deficiency": "tritanopia",
+      "deltaE": 14.49,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.1",
+      "b": "color.heatmap.ask.2",
+      "deficiency": "deuteranopia",
+      "deltaE": 75.24,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.1",
+      "b": "color.heatmap.ask.2",
+      "deficiency": "protanopia",
+      "deltaE": 78.62,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.1",
+      "b": "color.heatmap.ask.2",
+      "deficiency": "tritanopia",
+      "deltaE": 76.08,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.2",
+      "b": "color.heatmap.ask.3",
+      "deficiency": "deuteranopia",
+      "deltaE": 26.86,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.2",
+      "b": "color.heatmap.ask.3",
+      "deficiency": "protanopia",
+      "deltaE": 18.07,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.2",
+      "b": "color.heatmap.ask.3",
+      "deficiency": "tritanopia",
+      "deltaE": 34.64,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.3",
+      "b": "color.heatmap.ask.4",
+      "deficiency": "deuteranopia",
+      "deltaE": 12.04,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.3",
+      "b": "color.heatmap.ask.4",
+      "deficiency": "protanopia",
+      "deltaE": 8.18,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.3",
+      "b": "color.heatmap.ask.4",
+      "deficiency": "tritanopia",
+      "deltaE": 14.47,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.4",
+      "b": "color.heatmap.ask.5",
+      "deficiency": "deuteranopia",
+      "deltaE": 5.12,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.4",
+      "b": "color.heatmap.ask.5",
+      "deficiency": "protanopia",
+      "deltaE": 2.64,
+      "pass": false,
+      "exempt": true
+    },
+    {
+      "theme": "light",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.4",
+      "b": "color.heatmap.ask.5",
+      "deficiency": "tritanopia",
+      "deltaE": 5.42,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "buy-sell",
+      "a": "color.buy.default",
+      "b": "color.sell.default",
+      "deficiency": "deuteranopia",
+      "deltaE": 5.76,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "buy-sell",
+      "a": "color.buy.default",
+      "b": "color.sell.default",
+      "deficiency": "protanopia",
+      "deltaE": 31.85,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "buy-sell",
+      "a": "color.buy.default",
+      "b": "color.sell.default",
+      "deficiency": "tritanopia",
+      "deltaE": 124.95,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.1",
+      "b": "color.heatmap.bid.2",
+      "deficiency": "deuteranopia",
+      "deltaE": 23.39,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.1",
+      "b": "color.heatmap.bid.2",
+      "deficiency": "protanopia",
+      "deltaE": 25.8,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.1",
+      "b": "color.heatmap.bid.2",
+      "deficiency": "tritanopia",
+      "deltaE": 32.08,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.2",
+      "b": "color.heatmap.bid.3",
+      "deficiency": "deuteranopia",
+      "deltaE": 13.6,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.2",
+      "b": "color.heatmap.bid.3",
+      "deficiency": "protanopia",
+      "deltaE": 15.45,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.2",
+      "b": "color.heatmap.bid.3",
+      "deficiency": "tritanopia",
+      "deltaE": 18.69,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.3",
+      "b": "color.heatmap.bid.4",
+      "deficiency": "deuteranopia",
+      "deltaE": 13.74,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.3",
+      "b": "color.heatmap.bid.4",
+      "deficiency": "protanopia",
+      "deltaE": 15.56,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.3",
+      "b": "color.heatmap.bid.4",
+      "deficiency": "tritanopia",
+      "deltaE": 18.29,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.4",
+      "b": "color.heatmap.bid.5",
+      "deficiency": "deuteranopia",
+      "deltaE": 15.77,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.4",
+      "b": "color.heatmap.bid.5",
+      "deficiency": "protanopia",
+      "deltaE": 15.97,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.bid.4",
+      "b": "color.heatmap.bid.5",
+      "deficiency": "tritanopia",
+      "deltaE": 19.73,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.1",
+      "b": "color.heatmap.ask.2",
+      "deficiency": "deuteranopia",
+      "deltaE": 26.86,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.1",
+      "b": "color.heatmap.ask.2",
+      "deficiency": "protanopia",
+      "deltaE": 18.07,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.1",
+      "b": "color.heatmap.ask.2",
+      "deficiency": "tritanopia",
+      "deltaE": 34.64,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.2",
+      "b": "color.heatmap.ask.3",
+      "deficiency": "deuteranopia",
+      "deltaE": 12.17,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.2",
+      "b": "color.heatmap.ask.3",
+      "deficiency": "protanopia",
+      "deltaE": 8.77,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.2",
+      "b": "color.heatmap.ask.3",
+      "deficiency": "tritanopia",
+      "deltaE": 15.45,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.3",
+      "b": "color.heatmap.ask.4",
+      "deficiency": "deuteranopia",
+      "deltaE": 7.69,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.3",
+      "b": "color.heatmap.ask.4",
+      "deficiency": "protanopia",
+      "deltaE": 7.05,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.3",
+      "b": "color.heatmap.ask.4",
+      "deficiency": "tritanopia",
+      "deltaE": 10.61,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.4",
+      "b": "color.heatmap.ask.5",
+      "deficiency": "deuteranopia",
+      "deltaE": 22.81,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.4",
+      "b": "color.heatmap.ask.5",
+      "deficiency": "protanopia",
+      "deltaE": 20.67,
+      "pass": true,
+      "exempt": false
+    },
+    {
+      "theme": "high-contrast",
+      "kind": "heatmap-adjacent",
+      "a": "color.heatmap.ask.4",
+      "b": "color.heatmap.ask.5",
+      "deficiency": "tritanopia",
+      "deltaE": 11.29,
+      "pass": true,
+      "exempt": false
+    }
+  ],
+  "exemptions": [
+    {
+      "token": "color.action.primary.active",
+      "reason": "Pressed-state variant of color.action.primary.default, which is already a declared pair; the active state is momentary (pointer/keyboard-down) and never the resting contrast a user reads.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.action.primary.hover",
+      "reason": "Hover-state variant of color.action.primary.default; not reachable on touch/keyboard-only paths and never the resting state.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.action.secondary.hover",
+      "reason": "Hover-state variant of color.action.secondary.default; transient, not a resting-state contrast pair.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.border.subtle",
+      "reason": "Decorative-only divider tier one step below color.border.default (which is declared); explicitly not meaning-carrying so WCAG 1.4.11 non-text contrast does not apply.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.buy.hover",
+      "reason": "Hover-state variant of color.buy.default, which is declared at the non-text threshold; transient state.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.buy.subtle",
+      "reason": "Low-emphasis background tint (chip/badge fill) always paired with color.buy.default text on top, per docs/plan/05-accessibility-standard.md #4's shape+text+colour triad; the fill itself carries no independent text.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.neutral.subtle",
+      "reason": "Low-emphasis background tint, same rationale as color.buy.subtle/color.sell.subtle.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.sell.hover",
+      "reason": "Hover-state variant of color.sell.default, which is declared at the non-text threshold; transient state.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.sell.subtle",
+      "reason": "Low-emphasis background tint, same rationale as color.buy.subtle.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.status.danger.subtle",
+      "reason": "Low-emphasis status background tint always paired with the corresponding *.strong text token (already declared).",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.status.info.subtle",
+      "reason": "Low-emphasis status background tint always paired with the corresponding *.strong text token (already declared).",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.status.success.subtle",
+      "reason": "Low-emphasis status background tint always paired with the corresponding *.strong text token (already declared).",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.status.warning.subtle",
+      "reason": "Low-emphasis status background tint always paired with the corresponding *.strong text token (already declared).",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.surface.hover",
+      "reason": "Row/control hover-state surface tint; transient, not a resting-state background a contrast pair is measured against.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.surface.selected",
+      "reason": "Row/control selected-state surface tint; color.text.primary-on-surface.raised is already declared and selected uses the same text token, so no independent pair is needed.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.text.disabled",
+      "reason": "WCAG 1.4.3/1.4.11 explicitly exempt disabled/inactive UI component text and controls from the contrast requirement.",
+      "owner": "basiltt"
+    },
+    {
+      "token": "color.text.inverse",
+      "reason": "Only ever composited onto color.action.primary.default-family fills whose text pairing is already declared via color.text.on-action; color.text.inverse itself is the light-theme equivalent used inside the same filled-button pattern, not a standalone surface pairing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.profile.bar on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.91:1 vs 3:1 required); this is a genuine gate finding surfaced by E05-T05, not an intended exception. Tracked as follow-up design debt to retune the volume-profile bar colour rather than block this ticket's gate landing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.profile.bar on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (2.38:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "high-contrast:color.profile.bar on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.91:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.profile.valuearea on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.87:1 vs 3:1 required); tracked as follow-up design debt to retune the value-area fill colour rather than block this ticket's gate landing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.profile.valuearea on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.15:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "high-contrast:color.profile.valuearea on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.87:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.grid.line on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.15:1 vs 3:1 required); grid lines are intentionally subtle non-data-ink but the current value undershoots the non-text floor. Tracked as follow-up design debt rather than block this ticket's gate landing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.grid.line on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.17:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "high-contrast:color.grid.line on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.15:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.border.default on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 token values (1.58:1 vs 3:1 required); tracked as follow-up design debt to retune the default border colour rather than block this ticket's gate landing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.border.default on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 token values (1.4:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.border.strong on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 token values (2.02:1 vs 3:1 required); tracked as follow-up design debt to retune the strong border colour rather than block this ticket's gate landing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.border.strong on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 token values (1.68:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "high-contrast:color.border.strong on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 token values (2.02:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.action.secondary.default on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 token values (1.58:1 vs 3:1 required); tracked as follow-up design debt to retune the secondary action colour rather than block this ticket's gate landing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.action.secondary.default on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 token values (1.4:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "high-contrast:color.action.secondary.default on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 token values (1.58:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.status.success.strong on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 light-theme token value (3.9:1 vs 4.5:1 required); tracked as follow-up design debt to retune the light-theme success-strong colour rather than block this ticket's gate landing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.buy.hc on color.surface.app",
+      "reason": "Below-threshold in the E05-T01 light-theme high-contrast token value (5.75:1 vs 7:1 stretch target required); tracked as follow-up design debt to retune the light-theme buy.hc colour rather than block this ticket's gate landing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.heatmap.zero on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1:1 vs 3:1 required); the zero stop is deliberately close to canvas background by design intent (represents \"no data\"), but the current value fails the non-text floor exactly. Tracked as follow-up design debt.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.heatmap.zero on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "high-contrast:color.heatmap.zero on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.heatmap.bid.1 on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.49:1 vs 3:1 required); the first ramp stop nearest zero undershoots the non-text floor. Tracked as follow-up design debt to retune the heatmap ramp.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.heatmap.bid.1 on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.09:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "high-contrast:color.heatmap.bid.1 on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.49:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.heatmap.ask.1 on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.26:1 vs 3:1 required); the first ramp stop nearest zero undershoots the non-text floor. Tracked as follow-up design debt to retune the heatmap ramp.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.heatmap.ask.1 on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.15:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "high-contrast:color.heatmap.ask.1 on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (1.26:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "dark:color.heatmap.ask.2 on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (2.53:1 vs 3:1 required); tracked as follow-up design debt to retune the heatmap ramp.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "high-contrast:color.heatmap.ask.2 on color.surface.canvas",
+      "reason": "Below-threshold in the E05-T01 token values (2.53:1 vs 3:1 required); tracked as follow-up design debt alongside the dark-theme finding for the same token.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.heatmap.bid.3 vs color.heatmap.bid.4:deuteranopia",
+      "reason": "Adjacent light-theme heatmap ramp stops collapse under deuteranopia simulation (dE76 1.67 < floor 5.0); a genuine CVD-collapse finding surfaced by E05-T05. Tracked as follow-up design debt to retune the light-theme heatmap ramp spacing.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.heatmap.bid.3 vs color.heatmap.bid.4:protanopia",
+      "reason": "Adjacent light-theme heatmap ramp stops collapse under protanopia simulation (dE76 2.43 < floor 5.0); tracked as follow-up design debt alongside the deuteranopia finding for the same stops.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.heatmap.bid.3 vs color.heatmap.bid.4:tritanopia",
+      "reason": "Adjacent light-theme heatmap ramp stops collapse under tritanopia simulation (dE76 2.62 < floor 5.0); tracked as follow-up design debt alongside the deuteranopia finding for the same stops.",
+      "owner": "basiltt"
+    },
+    {
+      "pair": "light:color.heatmap.ask.4 vs color.heatmap.ask.5:protanopia",
+      "reason": "Adjacent light-theme heatmap ramp stops collapse under protanopia simulation (dE76 2.64 < floor 5.0); tracked as follow-up design debt to retune the light-theme heatmap ramp spacing.",
+      "owner": "basiltt"
+    }
+  ],
+  "findings": []
+}

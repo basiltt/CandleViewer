@@ -57,6 +57,7 @@ jobs:
               - 'apps/web/**'
               - 'apps/desktop/**'
               - 'packages/ui/**'
+              - 'tools/contrast/**'
               - 'packages/config/**'
               - 'packages/fixtures/**'
               - 'package.json'

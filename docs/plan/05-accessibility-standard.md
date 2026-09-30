@@ -12,16 +12,16 @@ This document is the single source of truth for accessibility acceptance criteri
 - **Applies to**: every screen in `12-sitemap.md` — charting workspace, DOM/heatmap, order ticket, positions/orders, risk dashboard, rule builder, journal, watchlist, account/environment switcher, admin/users screens. Applies inside Electron (primary shell) and in a plain-browser dev target used for automated testing.
 - **Does not relax for "power-user" surfaces**: the DOM ladder, footprint grid and rule node-graph editor are dense, high-information-density surfaces; WCAG AA still applies — density is solved via information architecture (§4), not by exempting a screen.
 - **Exclusions (documented, not silent)**: raw WebGL canvas pixels are not natively accessible; every canvas-rendered data surface MUST have an accessible-equivalent mechanism per §5. This is the primary architectural risk this document manages.
-- **Legal/compliance framing**: this is an internal tool (owner + a few managers), not a public-facing product, so there is no external legal AA mandate. The bar is set at full AA anyway because (a) the owner may develop RSI/motor or vision conditions over the tool's long lifetime, (b) keyboard-first operation is also a *speed* requirement for trading (mouse-only trading is a latency and RSI risk), and (c) it is dramatically cheaper to build in from Sprint 01 than retrofit onto a bespoke WebGL engine later.
+- **Legal/compliance framing**: this is an internal tool (owner + a few managers), not a public-facing product, so there is no external legal AA mandate. The bar is set at full AA anyway because (a) the owner may develop RSI/motor or vision conditions over the tool's long lifetime, (b) keyboard-first operation is also a _speed_ requirement for trading (mouse-only trading is a latency and RSI risk), and (c) it is dramatically cheaper to build in from Sprint 01 than retrofit onto a bespoke WebGL engine later.
 
 ## 2. Principles mapped to trading UI (POUR)
 
-| WCAG principle | CandleViewer-specific interpretation |
-|---|---|
-| **Perceivable** | Buy/sell/long/short state is never colour-only (shape + text + colour). Dark theme meets contrast minimums. Canvas content has a text/DOM equivalent. Live-updating prices are announced via ARIA live regions without flooding the screen reader. |
-| **Operable** | Every trading action (submit order, cancel, flatten, arm/disarm rule, switch demo/live) is reachable and executable from keyboard alone, with visible focus, without incidental timing traps, and with confirm-before-destructive-action gates that are also keyboard-operable. |
-| **Understandable** | Consistent hotkey map across all views (single global layer, not per-view schemes — per `23-views-and-screens.digest.md`). Predictable focus order. Errors (rejected orders, WS disconnects) are announced in plain language, not just a colour change. |
-| **Robust** | Semantic HTML/ARIA for all chrome (panels, dialogs, menus, tables); custom WebGL surfaces expose parallel accessible representations that pass axe-core and screen-reader testing, not just visual review. |
+| WCAG principle     | CandleViewer-specific interpretation                                                                                                                                                                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Perceivable**    | Buy/sell/long/short state is never colour-only (shape + text + colour). Dark theme meets contrast minimums. Canvas content has a text/DOM equivalent. Live-updating prices are announced via ARIA live regions without flooding the screen reader.                              |
+| **Operable**       | Every trading action (submit order, cancel, flatten, arm/disarm rule, switch demo/live) is reachable and executable from keyboard alone, with visible focus, without incidental timing traps, and with confirm-before-destructive-action gates that are also keyboard-operable. |
+| **Understandable** | Consistent hotkey map across all views (single global layer, not per-view schemes — per `23-views-and-screens.digest.md`). Predictable focus order. Errors (rejected orders, WS disconnects) are announced in plain language, not just a colour change.                         |
+| **Robust**         | Semantic HTML/ARIA for all chrome (panels, dialogs, menus, tables); custom WebGL surfaces expose parallel accessible representations that pass axe-core and screen-reader testing, not just visual review.                                                                      |
 
 ## 3. Keyboard-first operation
 
@@ -39,52 +39,52 @@ This document is the single source of truth for accessibility acceptance criteri
 
 Research found no reusable default keymap (DeepCharts ships user-defined-only, TradingView differs per product) — CandleViewer defines its own defaults below. All are remappable per §3.1.3. Categories mirror the DeepCharts precedent (General / Chart / Drawing / Scroll / Trading) plus Navigation and A11y.
 
-| Category | Action | Default key | Notes |
-|---|---|---|---|
-| **Global / Navigation** | Command palette / search-anything | `Ctrl+K` | Opens searchable command list — critical a11y escape hatch when a hotkey is forgotten or remapped away |
-| | Switch workspace layout preset | `Ctrl+1`..`Ctrl+9` | Per View 11 |
-| | Toggle sidebar / panel focus cycle | `Ctrl+\` | Cycles focus between major regions (chart, DOM, order ticket, positions) — see §4.2 landmark model |
-| | Open Watchlist / symbol search | `/` | Only active when focus is not inside a text input |
-| | Toggle keyboard-hotkey cheat-sheet overlay | `Shift+/` (i.e. `?`) | Always available, shows current (possibly remapped) bindings |
-| | Escape / cancel current action | `Esc` | Universal cancel: closes dialogs, cancels in-progress order draft, exits drawing-tool mode |
-| **Chart** | Zoom in / out | `+` / `-` | |
-| | Pan left / right | `←` / `→` | Also moves crosshair by 1 bar when crosshair mode active |
-| | Jump to latest bar (resume live) | `End` | |
-| | Jump to oldest loaded bar | `Home` | |
-| | Cycle chart type | `Alt+C` | |
-| | Cycle timeframe | `Alt+↑` / `Alt+↓` | |
-| | Toggle footprint / heatmap / profile overlay | `F` / `H` / `P` | |
-| | Toggle data-table alternative view (§5.4) | `Alt+T` | Screen-reader / low-vision escape hatch, always available |
-| **Drawing** | Trendline / horizontal line / rectangle / Fibonacci | `Alt+1..4` | Enters drawing mode; arrow keys place points, `Enter` commits, `Esc` cancels |
-| | Delete selected drawing | `Delete`/`Backspace` | |
-| **Trading** | Buy market / Sell market | `B` / `S` | Only active when order ticket or chart-trading focus context is active, per view scoping in §3.1.2 |
-| | Size preset 1–5 | `1`..`5` | Context-scoped to trading views only (does not clash with `Ctrl+1..9` layouts, which require `Ctrl`) |
-| | Submit order | `Ctrl+Enter` | Two-key combo deliberately avoids accidental submit |
-| | Cancel focused order | `Esc` (when order row focused) | |
-| | Flatten all (this account) | `Ctrl+Shift+F` | Always shows confirm dialog (§3.1.4) |
-| | Toggle 1-click trading | `Ctrl+Shift+1` | Shows persistent armed indicator |
-| **DOM Ladder** | Zoom price step | `+` / `-` (ladder-focused) | |
-| | Place limit at focused row | `Enter` | |
-| | Place market (aggressive) at focused row | `Ctrl+Enter` | |
-| | Cancel all at focused row | `Ctrl+Delete` | |
-| **Replay** | Play/pause | `Space` | |
-| | Step bar | `←` / `→` | |
-| | Step tick | `Shift+←` / `Shift+→` | |
-| | Jump to real-time | `R` | |
-| **Rule builder (node graph)** | Add node | `Ctrl+Shift+N` | |
-| | Connect focused ports | `Enter` (after `Tab`-selecting source then target port) | Node-graph keyboard operability detailed in `14-screens-catalogue.md` |
-| | Delete focused node/edge | `Delete` | |
-| **Accessibility** | Increase/decrease UI text scale | `Ctrl+=` / `Ctrl+-` | Independent of browser zoom, affects density mode too (§4.1) |
-| | Toggle reduced-motion override | `Ctrl+Shift+M` | Session override on top of OS-level `prefers-reduced-motion` (§6) |
-| | Toggle high-contrast theme | `Ctrl+Shift+H` | |
+| Category                      | Action                                              | Default key                                             | Notes                                                                                                  |
+| ----------------------------- | --------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| **Global / Navigation**       | Command palette / search-anything                   | `Ctrl+K`                                                | Opens searchable command list — critical a11y escape hatch when a hotkey is forgotten or remapped away |
+|                               | Switch workspace layout preset                      | `Ctrl+1`..`Ctrl+9`                                      | Per View 11                                                                                            |
+|                               | Toggle sidebar / panel focus cycle                  | `Ctrl+\`                                                | Cycles focus between major regions (chart, DOM, order ticket, positions) — see §4.2 landmark model     |
+|                               | Open Watchlist / symbol search                      | `/`                                                     | Only active when focus is not inside a text input                                                      |
+|                               | Toggle keyboard-hotkey cheat-sheet overlay          | `Shift+/` (i.e. `?`)                                    | Always available, shows current (possibly remapped) bindings                                           |
+|                               | Escape / cancel current action                      | `Esc`                                                   | Universal cancel: closes dialogs, cancels in-progress order draft, exits drawing-tool mode             |
+| **Chart**                     | Zoom in / out                                       | `+` / `-`                                               |                                                                                                        |
+|                               | Pan left / right                                    | `←` / `→`                                               | Also moves crosshair by 1 bar when crosshair mode active                                               |
+|                               | Jump to latest bar (resume live)                    | `End`                                                   |                                                                                                        |
+|                               | Jump to oldest loaded bar                           | `Home`                                                  |                                                                                                        |
+|                               | Cycle chart type                                    | `Alt+C`                                                 |                                                                                                        |
+|                               | Cycle timeframe                                     | `Alt+↑` / `Alt+↓`                                       |                                                                                                        |
+|                               | Toggle footprint / heatmap / profile overlay        | `F` / `H` / `P`                                         |                                                                                                        |
+|                               | Toggle data-table alternative view (§5.4)           | `Alt+T`                                                 | Screen-reader / low-vision escape hatch, always available                                              |
+| **Drawing**                   | Trendline / horizontal line / rectangle / Fibonacci | `Alt+1..4`                                              | Enters drawing mode; arrow keys place points, `Enter` commits, `Esc` cancels                           |
+|                               | Delete selected drawing                             | `Delete`/`Backspace`                                    |                                                                                                        |
+| **Trading**                   | Buy market / Sell market                            | `B` / `S`                                               | Only active when order ticket or chart-trading focus context is active, per view scoping in §3.1.2     |
+|                               | Size preset 1–5                                     | `1`..`5`                                                | Context-scoped to trading views only (does not clash with `Ctrl+1..9` layouts, which require `Ctrl`)   |
+|                               | Submit order                                        | `Ctrl+Enter`                                            | Two-key combo deliberately avoids accidental submit                                                    |
+|                               | Cancel focused order                                | `Esc` (when order row focused)                          |                                                                                                        |
+|                               | Flatten all (this account)                          | `Ctrl+Shift+F`                                          | Always shows confirm dialog (§3.1.4)                                                                   |
+|                               | Toggle 1-click trading                              | `Ctrl+Shift+1`                                          | Shows persistent armed indicator                                                                       |
+| **DOM Ladder**                | Zoom price step                                     | `+` / `-` (ladder-focused)                              |                                                                                                        |
+|                               | Place limit at focused row                          | `Enter`                                                 |                                                                                                        |
+|                               | Place market (aggressive) at focused row            | `Ctrl+Enter`                                            |                                                                                                        |
+|                               | Cancel all at focused row                           | `Ctrl+Delete`                                           |                                                                                                        |
+| **Replay**                    | Play/pause                                          | `Space`                                                 |                                                                                                        |
+|                               | Step bar                                            | `←` / `→`                                               |                                                                                                        |
+|                               | Step tick                                           | `Shift+←` / `Shift+→`                                   |                                                                                                        |
+|                               | Jump to real-time                                   | `R`                                                     |                                                                                                        |
+| **Rule builder (node graph)** | Add node                                            | `Ctrl+Shift+N`                                          |                                                                                                        |
+|                               | Connect focused ports                               | `Enter` (after `Tab`-selecting source then target port) | Node-graph keyboard operability detailed in `14-screens-catalogue.md`                                  |
+|                               | Delete focused node/edge                            | `Delete`                                                |                                                                                                        |
+| **Accessibility**             | Increase/decrease UI text scale                     | `Ctrl+=` / `Ctrl+-`                                     | Independent of browser zoom, affects density mode too (§4.1)                                           |
+|                               | Toggle reduced-motion override                      | `Ctrl+Shift+M`                                          | Session override on top of OS-level `prefers-reduced-motion` (§6)                                      |
+|                               | Toggle high-contrast theme                          | `Ctrl+Shift+H`                                          |                                                                                                        |
 
 ### 3.3 Conflict resolution rules
 
 1. **Precedence order** when a user tries to bind an already-used key: (1) global/navigation bindings cannot be overridden by view-local bindings — the remap UI blocks this at save-time with an inline error; (2) trading-critical bindings (submit, cancel, flatten) cannot be bound to a single unmodified letter key without at least one modifier, to reduce accidental-trigger risk — enforced by the remap UI, not just documented; (3) view-local bindings may shadow each other only within mutually-exclusive focus contexts (e.g. `+`/`-` means "zoom chart" when chart has focus and "zoom ladder price step" when DOM ladder has focus — this is not a conflict because only one is active at a time, but the remap UI must show both bindings side-by-side when the user edits `+`/`-` so they understand the dual meaning).
-2. **Detection algorithm**: on every rebind attempt, compute the new key-combo's active focus-context set; if it intersects with an existing binding's focus-context set for a *different* action, block the save and show which existing action conflicts, with a one-click "swap" option.
+2. **Detection algorithm**: on every rebind attempt, compute the new key-combo's active focus-context set; if it intersects with an existing binding's focus-context set for a _different_ action, block the save and show which existing action conflicts, with a one-click "swap" option.
 3. **Reserved, non-remappable keys**: `Esc` (universal cancel) and `Ctrl+K` (command palette, the recovery mechanism if a user breaks their own hotkey config) are permanently reserved and excluded from the remap UI.
 4. **OS/Electron-reserved combos are blocklisted** (e.g. `Ctrl+W`, `Ctrl+Q`, `Alt+F4`, `Ctrl+N` if it would conflict with OS window management) — the remap UI filters these out of the pickable set entirely rather than allowing-then-failing silently.
-5. **Cross-account/hotkey-size-preset ambiguity**: when multiple trade-group accounts are targeted by one ticket, size-preset keys (`1`-`5`) apply to the *ticket's* configured per-account sizing rule, not a literal shared quantity — this is a UX/data-model concern documented here to prevent an a11y-adjacent "silent multi-account fat-finger" failure mode; the order-confirm dialog (keyboard operable) always lists the resolved per-account quantities before submit.
+5. **Cross-account/hotkey-size-preset ambiguity**: when multiple trade-group accounts are targeted by one ticket, size-preset keys (`1`-`5`) apply to the _ticket's_ configured per-account sizing rule, not a literal shared quantity — this is a UX/data-model concern documented here to prevent an a11y-adjacent "silent multi-account fat-finger" failure mode; the order-confirm dialog (keyboard operable) always lists the resolved per-account quantities before submit.
 6. **Tracking note — rule-builder node-graph keyboard spec**: the rule-engine's visual node-graph editor (drag-connect rule nodes/edges) will define its own keyboard interaction model (arrow-key node navigation, `Enter`/`Space` to connect, `Delete` to remove an edge) in `14-screens-catalogue.md` once that screen is specced. That spec MUST cross-link back to this §3.3's precedence/detection rules rather than defining an independent conflict-resolution scheme, to avoid duplication drift between the two documents; `14-screens-catalogue.md`'s node-graph section is required to open with an explicit "see `05-accessibility-standard.md` §3.3 for global conflict rules" pointer, and this file's §12 Cross-references entry for `14-screens-catalogue.md` (once added) must reciprocally reference this rule.
 
 ### 3.4 Focus management in dense layouts
@@ -104,7 +104,7 @@ CandleViewer screens are unusually dense (multi-pane chart + footprint + DOM hea
 
 ## 4. Colour-independence for buy/sell and all status signalling
 
-**Rule (non-negotiable, applies everywhere)**: colour is always a *reinforcing* channel, never the *only* channel, for: buy vs sell/long vs short, bid vs ask (heatmap), profit vs loss, order status (working/filled/rejected/cancelled), connection/health status, demo vs live, risk-limit breach severity, imbalance/delta sign.
+**Rule (non-negotiable, applies everywhere)**: colour is always a _reinforcing_ channel, never the _only_ channel, for: buy vs sell/long vs short, bid vs ask (heatmap), profit vs loss, order status (working/filled/rejected/cancelled), connection/health status, demo vs live, risk-limit breach severity, imbalance/delta sign.
 
 1. **Shape + text + colour triad**:
    - Buy/long: green fill/text AND an upward-pointing glyph (▲) AND the word "Buy"/"Long" in any tooltip, row label, or confirm dialog — never a bare colon-coloured number.
@@ -144,10 +144,10 @@ This is the highest-risk area: the chart engine, footprint grid, DOM heatmap, an
 ### 6.2 Layer 2 — ARIA live regions for streaming updates
 
 - **Price/position/order updates** are announced via `aria-live` regions, but with strict throttling/summarization to avoid "announcement flooding" at 10Hz+ tick rates (a screen reader reading every tick aloud is unusable):
-  - `aria-live="polite"` region for ambient updates (best bid/ask, mark price, unrealized P&L) — updated at a throttled cadence (default 1 update / 2s per field, user-configurable in Settings → Accessibility), always presenting the *latest* value rather than queuing every intermediate tick.
+  - `aria-live="polite"` region for ambient updates (best bid/ask, mark price, unrealized P&L) — updated at a throttled cadence (default 1 update / 2s per field, user-configurable in Settings → Accessibility), always presenting the _latest_ value rather than queuing every intermediate tick.
   - `aria-live="assertive"` (or `role="alert"`) reserved for discrete, low-frequency, high-importance events only: order filled, order rejected, position auto-flattened by risk engine, rule triggered, WS disconnected/reconnected, Demo/Live environment switch confirmed. These are never throttled/coalesced — each is announced once, in full.
   - A user-facing "Announcements" settings panel lets the user choose which event classes go to which live-region politeness level, and a master "reduce announcements" toggle for screen-reader users who prefer to poll the DOM mirror manually instead of ambient narration.
-- **Region hygiene**: live regions are pre-rendered empty containers on page load (per best practice) and only their *text content* is swapped, never the whole node destroyed/recreated, so screen readers reliably pick up updates.
+- **Region hygiene**: live regions are pre-rendered empty containers on page load (per best practice) and only their _text content_ is swapped, never the whole node destroyed/recreated, so screen readers reliably pick up updates.
 
 ### 6.3 Layer 3 — Data-table alternative for footprint/profile/heatmap
 
@@ -155,34 +155,34 @@ This is the highest-risk area: the chart engine, footprint grid, DOM heatmap, an
 
 **Footprint table** (one row per price level within the currently-focused bar):
 
-| Column | Content | Sortable | Notes |
-|---|---|---|---|
-| Price | Level price, formatted per instrument tick size | Yes (default: descending) | Row header (`<th scope="row">`) |
-| Bid vol | Resting/traded bid-side volume at level | Yes | |
-| Ask vol | Resting/traded ask-side volume at level | Yes | |
-| Delta | Ask vol − bid vol at level | Yes | Sign shown as text (`+`/`−`), never colour-only |
-| Imbalance flag | "Bid-stacked" / "Ask-stacked" / "—" (per the configured imbalance-ratio threshold, e.g. 300%) | Yes (groups flagged rows) | Text label, not icon-only |
-| Estimated badge | "(estimated)" footnote marker + reason (`iceberg`, `stop-run`, `order-count proxy`) or blank | Filter-only (see below) | Satisfies WCAG 1.3.1 for the heuristic-data caveat |
+| Column          | Content                                                                                       | Sortable                  | Notes                                              |
+| --------------- | --------------------------------------------------------------------------------------------- | ------------------------- | -------------------------------------------------- |
+| Price           | Level price, formatted per instrument tick size                                               | Yes (default: descending) | Row header (`<th scope="row">`)                    |
+| Bid vol         | Resting/traded bid-side volume at level                                                       | Yes                       |                                                    |
+| Ask vol         | Resting/traded ask-side volume at level                                                       | Yes                       |                                                    |
+| Delta           | Ask vol − bid vol at level                                                                    | Yes                       | Sign shown as text (`+`/`−`), never colour-only    |
+| Imbalance flag  | "Bid-stacked" / "Ask-stacked" / "—" (per the configured imbalance-ratio threshold, e.g. 300%) | Yes (groups flagged rows) | Text label, not icon-only                          |
+| Estimated badge | "(estimated)" footnote marker + reason (`iceberg`, `stop-run`, `order-count proxy`) or blank  | Filter-only (see below)   | Satisfies WCAG 1.3.1 for the heuristic-data caveat |
 
 **Profile table** (one row per price level within the currently-visible profile, e.g. Volume Profile / TPO):
 
-| Column | Content | Sortable | Notes |
-|---|---|---|---|
-| Price | Level price | Yes (default: descending) | Row header |
-| Volume | Total traded volume at level | Yes | |
-| Delta | Net delta at level | Yes | Text sign as above |
-| % of POC | Volume as % of the point-of-control level's volume | Yes | |
-| Value area | "In VA" / "Outside VA" | Filter-only | |
+| Column     | Content                                            | Sortable                  | Notes              |
+| ---------- | -------------------------------------------------- | ------------------------- | ------------------ |
+| Price      | Level price                                        | Yes (default: descending) | Row header         |
+| Volume     | Total traded volume at level                       | Yes                       |                    |
+| Delta      | Net delta at level                                 | Yes                       | Text sign as above |
+| % of POC   | Volume as % of the point-of-control level's volume | Yes                       |                    |
+| Value area | "In VA" / "Outside VA"                             | Filter-only               |                    |
 
 **DOM ladder table** (one row per price level of the currently-focused book, up to 200-depth):
 
-| Column | Content | Sortable | Notes |
-|---|---|---|---|
-| Price | Level price | Yes (default: best-bid/ask outward) | Row header |
-| Bid size | Resting bid size at level | Yes | |
-| Ask size | Resting ask size at level | Yes | |
-| Cumulative depth | Running total from best price to this level (bid or ask side) | Yes | |
-| My orders | Own working order(s) at this level, if any (size/side) | Filter-only ("My levels only" toggle) | |
+| Column           | Content                                                       | Sortable                              | Notes      |
+| ---------------- | ------------------------------------------------------------- | ------------------------------------- | ---------- |
+| Price            | Level price                                                   | Yes (default: best-bid/ask outward)   | Row header |
+| Bid size         | Resting bid size at level                                     | Yes                                   |            |
+| Ask size         | Resting ask size at level                                     | Yes                                   |            |
+| Cumulative depth | Running total from best price to this level (bid or ask side) | Yes                                   |            |
+| My orders        | Own working order(s) at this level, if any (size/side)        | Filter-only ("My levels only" toggle) |            |
 
 - **Sort behaviour**: clicking/activating (`Enter`/`Space`) a column header sorts ascending, then descending, then back to the surface's natural default order (tri-state), announced via `aria-sort` on the `<th>`; sort state persists while the table stays open but resets to default when the underlying bar/level focus changes (new focused unit = new default view, avoiding stale-sort confusion).
 - **Filter behaviour**: each table exposes a toolbar above the table (standard combobox/checkbox controls, keyboard-operable) for the filter-only columns above (e.g. "Show flagged rows only", "Show estimated rows only", "My levels only") — filters narrow rows shown, never remove columns, and the active-filter state is announced via a live region ("Showing 6 of 40 rows, filtered by: Bid-stacked").
@@ -214,12 +214,12 @@ This is the highest-risk area: the chart engine, footprint grid, DOM heatmap, an
 
 Combos are pinned versions, not "latest" floating targets, to keep results reproducible; the Accessibility role updates the pinned versions quarterly (or on a forcing NVDA/JAWS/VoiceOver major release) via a dated changelog entry in the regression checklist (§8.2 item 4).
 
-| # | Platform + OS version | Browser/shell (pinned) | Screen reader (pinned) | Priority | Cadence | Sign-off owner |
-|---|---|---|---|---|---|---|
-| 1 | Windows 11 23H2+ | Electron shell (production build, primary AT surface) | NVDA 2024.x (latest stable at freeze) | P0 — release blocker | Every release candidate (RC) and every PR touching an in-scope screen at design/dev handoff | Accessibility role (named individual in `24-owner-decisions.md` RACI); QA/SDET co-signs the RC checklist |
-| 2 | Windows 11 23H2+ | Electron shell (production build) | JAWS 2024.x (latest stable at freeze) | P1 — must fully pass before R4 (Live-enablement) release, spot-checked (smoke script only, §8.2 item 3 tasks 1-3) every release before that | Full pass: once per R4 gate + every 2 releases thereafter; smoke: every RC from R2 onward | Accessibility role signs full pass; QA/SDET runs and logs smoke checks |
-| 3 | Windows 11 23H2+ | Chromium (dev/CI headless + manual, matches Electron's Chromium version) | NVDA 2024.x | P0 — fast-iteration gate | Automated portion (axe/keyboard-E2E, §9) every PR; manual NVDA spot-check every sprint (not every PR) | Frontend a11y champion (delegate of Accessibility role) for the sprint spot-check |
-| 4 | macOS 14 Sonoma+ | Electron shell (production build) | VoiceOver (OS-bundled, version tracks macOS point release) | P1 — full pass before GA (R5); smoke script every release from R4 onward | Full pass: once before R5 GA; smoke: every release from R4 | Accessibility role signs full pass; owner (primary macOS user, per `24-owner-decisions.md`) does an informal usage check each release as a secondary signal, not a formal gate |
+| #   | Platform + OS version | Browser/shell (pinned)                                                   | Screen reader (pinned)                                     | Priority                                                                                                                                    | Cadence                                                                                               | Sign-off owner                                                                                                                                                                 |
+| --- | --------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Windows 11 23H2+      | Electron shell (production build, primary AT surface)                    | NVDA 2024.x (latest stable at freeze)                      | P0 — release blocker                                                                                                                        | Every release candidate (RC) and every PR touching an in-scope screen at design/dev handoff           | Accessibility role (named individual in `24-owner-decisions.md` RACI); QA/SDET co-signs the RC checklist                                                                       |
+| 2   | Windows 11 23H2+      | Electron shell (production build)                                        | JAWS 2024.x (latest stable at freeze)                      | P1 — must fully pass before R4 (Live-enablement) release, spot-checked (smoke script only, §8.2 item 3 tasks 1-3) every release before that | Full pass: once per R4 gate + every 2 releases thereafter; smoke: every RC from R2 onward             | Accessibility role signs full pass; QA/SDET runs and logs smoke checks                                                                                                         |
+| 3   | Windows 11 23H2+      | Chromium (dev/CI headless + manual, matches Electron's Chromium version) | NVDA 2024.x                                                | P0 — fast-iteration gate                                                                                                                    | Automated portion (axe/keyboard-E2E, §9) every PR; manual NVDA spot-check every sprint (not every PR) | Frontend a11y champion (delegate of Accessibility role) for the sprint spot-check                                                                                              |
+| 4   | macOS 14 Sonoma+      | Electron shell (production build)                                        | VoiceOver (OS-bundled, version tracks macOS point release) | P1 — full pass before GA (R5); smoke script every release from R4 onward                                                                    | Full pass: once before R5 GA; smoke: every release from R4                                            | Accessibility role signs full pass; owner (primary macOS user, per `24-owner-decisions.md`) does an informal usage check each release as a secondary signal, not a formal gate |
 
 (No mobile/Android screen readers in scope, per locked decision. Safari-direct or non-Electron-browser testing is out of scope — the shipped product surface is exclusively the Electron shell, so all P0/P1 gates test that shell; Chromium-headless (#3) exists only to give CI/dev fast feedback before a full Electron manual pass, not as an independent production target.)
 
@@ -246,7 +246,7 @@ Combos are pinned versions, not "latest" floating targets, to keep results repro
 
 1. **axe-core**: run against every screen's DOM (Playwright + `@axe-core/playwright`) in CI on every PR touching frontend code. Zero new "serious"/"critical" axe violations is a merge-blocking check; existing "moderate"/"minor" violations are tracked as backlog tickets with a burn-down target before R3 (Trading on demo).
 2. **Lighthouse Accessibility score ≥ 95** on every top-level screen (chart workspace, order ticket, positions, admin/users, journal, watchlist), run in CI against the built Electron-renderer web bundle in headless Chromium; a drop below 95 on any tracked screen fails the build. Score is tracked over time as a dashboard metric (ties into `06-performance-and-load-standard.md`'s CI regression-gate philosophy).
-3. **Colour-contrast token linter**: automated script (§5.4) validates every design-token colour pair used for text/UI-components/chart data-ink against the applicable WCAG ratio; runs on any token file change, part of the design-system package's own CI.
+3. **Colour-contrast token linter**: automated script (§5.4) validates every design-token colour pair used for text/UI-components/chart data-ink against the applicable WCAG ratio; runs on any token file change, part of the design-system package's own CI. Implemented by `tools/contrast/generate.mjs` (E05-T05): a declarative pair registry (`tools/contrast/pairs.mjs`) plus a CVD-collapse check emit three CI-gating error codes — `A11Y-C001` (below-threshold pair: measured ratio under the required 4.5:1/3:1/7:1 threshold), `A11Y-C002` (undeclared token: a `color.*` token with no pair-registry entry and no `tools/contrast/exemptions.json` exemption), `A11Y-C003` (CVD collapse: the buy/sell pair or adjacent heatmap ramp stops become indistinguishable, CIE76 dE below the JND floor, under simulated deuteranopia/protanopia/tritanopia). Exemptions require a written `reason` and `owner`, and the gate prints the full exemption list on every run. Output is `packages/ui/build/reports/contrast-matrix.json` + `.md`.
 4. **Keyboard-only E2E smoke test**: a Playwright suite that never dispatches a mouse event, driving the task script in §8.2 items 2–3 programmatically (submit an order, switch symbol, toggle table view, trigger the reduced-motion override) — catches keyboard-trap and focus-loss regressions on every PR without needing a human SR pass for every commit.
 5. **Motion/flash audit script**: automated check (frame-capture + luminance-delta analysis) run against the heatmap, big-trade-bubble, and price-flash components at a fixed representative high-tick-rate scenario, asserting flash rate stays below the 3/sec threshold (§7.3); run in CI on any change to those components' animation code, and manually spot-checked before each release.
 6. **Focus-order/landmark regression snapshot**: an automated snapshot test of the accessibility tree (Playwright `accessibility.snapshot()` or equivalent) per top-level screen, diffed on every PR — unintentional landmark/heading/label changes surface as a reviewable diff rather than silent regressions.

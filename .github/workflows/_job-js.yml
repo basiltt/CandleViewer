@@ -230,3 +230,15 @@ jobs:
       - name: Record lane duration in job summary
         if: always()
         run: node tools/ci/write-turbo-summary.mjs build >> "$GITHUB_STEP_SUMMARY"
+      - name: Contrast-matrix gate (E05-T05, A11Y-C001/002/003 over packages/ui/tokens/**)
+        run: pnpm --filter @candleviewer/ui contrast:gate
+      - name: Upload contrast-matrix report
+        if: always()
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: contrast-matrix
+          path: |
+            packages/ui/build/reports/contrast-matrix.json
+            packages/ui/build/reports/contrast-matrix.md
+          retention-days: 14
+          if-no-files-found: warn
