@@ -42,3 +42,16 @@ The Python side of this same contract pair (pydantic v2 models under
   runs `pnpm generate && git diff --exit-code` to catch drift in the TS output
   itself (`AGENTS.md` §4).
 - `pnpm --filter @candleviewer/protocol build` / `test` / `test:cov`.
+
+## WS schema bundle (E17-T01) - the one rule
+
+**Edit the Markdown (`docs/plan/23-ws-protocol.md`), never the bundle or anything generated.**
+
+- `ws-schemas.json` - deterministic bundle of every fenced `json` schema in sections 13-15,
+  keyed by `$id`; produced by `tools/contracts/extract_ws_schemas.py`.
+- `generated/ws_constants.py` - frame types, encodings and section 6 topic patterns for the
+  backend; produced by `tools/contracts/gen_ws_constants.py`. (TS types: `src/generated/ws/`.)
+- `make gen` regenerates all of it; `make contracts` runs the offline gates, including the
+  blocking `ws_message_schemas` gate (`tools/contracts/validate_ws_schemas.py --draft 2020-12`:
+  meta-validation, `$ref` closure inside the bundle, every section 12 example frame validates).
+  CI job `contract` runs `make contracts` and prints the schema and example counts.
