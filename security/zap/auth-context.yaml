@@ -12,11 +12,15 @@ env:
         - "${ZAP_TARGET}/v1/accounts/.*"
         - "${ZAP_TARGET}/v1/audit/.*"
       excludePaths:
-        # Genuinely destructive endpoints (reason in trailing comment).
-        - "${ZAP_TARGET}/v1/admin/kill-switch.*"      # would halt trading for the scan target
-        - "${ZAP_TARGET}/v1/auth/logout.*"            # ends the scanner's own session
-        - "${ZAP_TARGET}/v1/auth/sessions/revoke-all" # invalidates every session incl. scanner
-        - "${ZAP_TARGET}/v1/accounts/.*/keys/.*"      # key add/remove touches envelope-encrypted secrets
+        # Destructive, state-mutating endpoints only; every entry carries a `# reason:`.
+        # reason: kill switch mutation would halt trading on the scan target
+        - "${ZAP_TARGET}/v1/admin/kill-switch.*"
+        # reason: logout terminates the scanner's own session, silently de-authenticating the scan
+        - "${ZAP_TARGET}/v1/auth/logout.*"
+        # reason: revoke-all invalidates every session including the scanner's
+        - "${ZAP_TARGET}/v1/auth/sessions/revoke-all"
+        # reason: key add/delete mutates envelope-encrypted exchange credentials (irreversible)
+        - "${ZAP_TARGET}/v1/accounts/.*/keys/.*"
       authentication:
         method: script
         parameters:
