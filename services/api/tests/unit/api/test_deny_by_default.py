@@ -42,3 +42,22 @@ def test_real_app_builds_and_declared_routes_are_not_blanket_denied() -> None:
     declared = declared_operations(load_openapi_spec())
     assert ("PUT", "/users/{userId}/roles") in declared
     assert TestClient(app, client=("127.0.0.1", 50000)).get("/healthz").status_code == 200
+
+
+def test_unmatched_route_is_404_and_never_reaches_a_handler() -> None:
+    reached: list[str] = []
+
+    async def spy() -> None:
+        reached.append("dep")
+
+    app = FastAPI(dependencies=[Depends(make_deny_undeclared_dependency(set()))])
+
+    @app.get("/widgets")
+    async def widgets() -> dict[str, str]:
+        reached.append("handler")
+        return {}
+
+    resp = TestClient(app).get("/no-such-route")
+    assert resp.status_code == 404
+    assert reached == []
+    assert TestClient(create_app(), client=("127.0.0.1", 50000)).get("/nope").status_code == 404

@@ -29,9 +29,9 @@ from __future__ import annotations
 import uuid
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
-from typing import Any, Protocol
+from typing import Annotated, Any, Protocol
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Path, Query, Request
 from fastapi.responses import JSONResponse, Response
 
 from candleviewer.audit.models import AuditOutcome, Severity
@@ -500,8 +500,10 @@ def make_session_router(
         _clear_refresh_cookie(response)
         return response
 
-    @router.delete("/me/sessions/{session_id}")
-    async def revoke_my_session(request: Request, session_id: uuid.UUID) -> Response:
+    @router.delete("/me/sessions/{sessionId}")
+    async def revoke_my_session(
+        request: Request, session_id: Annotated[uuid.UUID, Path(alias="sessionId")]
+    ) -> Response:
         if not _audit_ready():
             return _problem(503, "Service unavailable", "audit sink not active")
         if not auth_service.sessions_is_active:

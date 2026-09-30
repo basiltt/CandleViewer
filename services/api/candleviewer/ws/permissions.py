@@ -155,3 +155,44 @@ class ConnectionRegistry:
         for authz, send in entries:
             for frame in authz.apply_snapshot(snap, self._clock_ms()):
                 await send(frame)
+
+
+Send = Any  # async (frame: dict) -> None
+
+
+async def open_connection(
+    registry: ConnectionRegistry, principal: PrincipalSnapshot, send: Send, **extra: Any
+) -> ConnectionAuthz:
+    """Gateway hook for a verified `auth`: registers the socket for
+    `permission_change` pushes and sends `auth_ok` with permissions/scope."""
+    authz = ConnectionAuthz(principal)
+    registry.register(authz, send)
+    await send({"t": "auth_ok", "p": auth_ok_payload(principal, **extra)})
+    return authz
+
+
+async def handle_sub(authz: ConnectionAuthz, frame: dict[str, Any], send: Send) -> None:
+    """Gateway hook for a `sub` frame: every topic is checked (§6.3); denied
+    topics get an `error` frame (`forbidden`) and are never subscribed."""
+    topics = (frame.get("p") or {}).get("topics") or []
+    for entry in topics:
+        ch = entry.get("ch") if isinstance(entry, dict) else entry
+        if not isinstance(ch, str):
+            continue
+        decision = authz.subscribe(ch)
+        if isinstance(decision, Deny):
+            await send(
+                {
+                    "t": "error",
+                    "id": frame.get("id"),
+                    "ch": ch,
+                    "p": {
+                        "code": "forbidden",
+                        "message": f"Missing permission {decision.permission.value}.",
+                    },
+                }
+            )
+
+
+def close_connection(registry: ConnectionRegistry, authz: ConnectionAuthz) -> None:
+    registry.unregister(authz)

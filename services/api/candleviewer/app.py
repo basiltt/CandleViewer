@@ -13,6 +13,8 @@ contracts and every later epic have a concrete injection point.
 
 from __future__ import annotations
 
+import time
+import uuid
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -51,7 +53,9 @@ from candleviewer.api.deny_by_default import (
     declared_operations,
     make_deny_undeclared_dependency,
 )
+from candleviewer.api.sessions import make_session_router
 from candleviewer.api.users import make_users_router
+from candleviewer.auth.scopes import PrincipalSnapshot
 from candleviewer.auth.service import AuthService
 from candleviewer.bars.service import BarsService
 from candleviewer.book.service import BookService
@@ -373,6 +377,15 @@ def _hub_publisher(hub: RevocationHub) -> Callable[[str, str], Awaitable[None]]:
 def _cached_spec() -> dict[str, Any]:
     """The 500 KB contract parse costs ~2 s; parse once per process."""
     return load_openapi_spec()
+
+
+async def _deny_all_snapshot(user_id: uuid.UUID) -> PrincipalSnapshot:
+    """Fail closed until the session/identity store (E09-S03) resolves real snapshots."""
+    return PrincipalSnapshot(user_id, frozenset(), frozenset())
+
+
+def _now_ms() -> int:
+    return int(time.time() * 1000)
 
 
 def create_app(

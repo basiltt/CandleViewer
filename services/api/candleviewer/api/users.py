@@ -15,7 +15,7 @@ from fastapi import APIRouter, Path, Request
 from fastapi.responses import JSONResponse
 
 from candleviewer.auth.generated_permissions import Permission, Scope
-from candleviewer.auth.owner_floor import OwnerFloorError
+from candleviewer.auth.owner_floor import OwnerFloorError, assert_owner_floor
 from candleviewer.auth.scopes import ForbiddenError, PrincipalSnapshot, enforce
 
 _SYSTEM_ROLES = frozenset({"owner", "manager", "viewer"})
@@ -31,6 +31,8 @@ class SnapshotResolver(Protocol):
 
 class UserRoleStore(Protocol):
     async def get_roles(self, user_id: uuid.UUID) -> frozenset[str] | None: ...
+
+    async def count_active_owners(self) -> int: ...
 
     async def apply_roles(self, user_id: uuid.UUID, roles: frozenset[str]) -> bool:
         """Atomically (one transaction, owner rows locked) enforce the owner
@@ -48,6 +50,25 @@ def _problem(status: int, title: str, detail: str) -> JSONResponse:
         status_code=status,
         content={"type": "about:blank", "title": title, "status": status, "detail": detail},
         media_type="application/problem+json",
+    )
+
+
+async def _audit(
+    emitter: _Emitter | None,
+    action: str,
+    principal: PrincipalSnapshot,
+    user_id: uuid.UUID,
+    reason: str,
+) -> None:
+    if emitter is None:
+        return
+    await emitter.emit(
+        action,
+        actor_label=str(principal.user_id),
+        actor_user_id=principal.user_id,
+        object_kind="user",
+        object_id=str(user_id),
+        reason=reason,
     )
 
 
@@ -97,28 +118,28 @@ def make_users_router(
         current = await store.get_roles(user_id)
         if current is None:
             return _problem(404, "Not found", "user not found")
-        # `apply_roles` is the atomic owner-floor guard (no TOCTOU).
-        # Write-ahead audit (C-2.9): recorded before the change is applied.
-        if emitter is not None:
-            for action, changed in (
-                ("roles.grant", sorted(new_roles - current)),
-                ("roles.revoke", sorted(current - new_roles)),
-            ):
-                if changed:
-                    await emitter.emit(
-                        action,
-                        actor_label=str(principal.user_id),
-                        actor_user_id=principal.user_id,
-                        object_kind="user",
-                        object_id=str(user_id),
-                        reason=",".join(changed),
-                    )
+        # Endpoint-level owner floor (defence in depth; `apply_roles` re-checks
+        # atomically under lock, so a concurrent demotion still cannot slip by).
         try:
+            assert_owner_floor(
+                current_roles=current,
+                new_roles=new_roles,
+                active_owner_count=await store.count_active_owners(),
+            )
             found = await store.apply_roles(user_id, new_roles)
         except OwnerFloorError:
+            await _audit(emitter, "rbac.denied", principal, user_id, "owner_floor")
             return _problem(409, "Conflict", "the last active owner cannot be demoted")
         if not found:
             return _problem(404, "Not found", "user not found")
+        # Audited only once the change is durable, so the log never shows a
+        # role change that did not happen; failures above are audited as denials.
+        for action, changed in (
+            ("roles.grant", sorted(new_roles - current)),
+            ("roles.revoke", sorted(current - new_roles)),
+        ):
+            if changed:
+                await _audit(emitter, action, principal, user_id, ",".join(changed))
         if notifier is not None:
             await notifier.roles_changed(user_id)
         return JSONResponse(

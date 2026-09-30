@@ -33,6 +33,9 @@ class _Store:
     async def get_roles(self, user_id: uuid.UUID) -> frozenset[str] | None:
         return self.roles
 
+    async def count_active_owners(self) -> int:
+        return self.owners
+
     async def apply_roles(self, user_id: uuid.UUID, roles: frozenset[str]) -> bool:
         assert_owner_floor(
             current_roles=self.roles, new_roles=roles, active_owner_count=self.owners
@@ -135,3 +138,81 @@ def test_put_roles_registry_pushes_permission_change_to_live_socket() -> None:
     asyncio.run(reg.roles_changed(TARGET))
     assert sent[0]["t"] == "permission_change"
     assert sent[0]["p"]["permissions"] == []
+
+
+def test_put_roles_endpoint_enforces_owner_floor_even_if_store_does_not() -> None:
+    """Contract: the endpoint guards the floor itself; a store that skips
+    the check (e.g. a naive implementation) cannot demote the last owner."""
+
+    class _NaiveStore(_Store):
+        async def apply_roles(self, user_id: uuid.UUID, roles: frozenset[str]) -> bool:
+            self.roles = roles
+            return True
+
+    store, em, n = _NaiveStore({"owner"}, 1), _Emitter(), _Notifier()
+    r = _client(store, _admin(), em, n).put(f"/users/{TARGET}/roles", json={"roles": ["viewer"]})
+    assert r.status_code == 409
+    assert store.roles == {"owner"}
+    assert n.users == []
+
+
+def test_put_roles_conflict_is_audited_and_no_role_change_audit_on_failure() -> None:
+    store, em, n = _Store({"owner"}, 1), _Emitter(), _Notifier()
+    _client(store, _admin(), em, n).put(f"/users/{TARGET}/roles", json={"roles": ["viewer"]})
+    actions = [c["action"] for c in em.calls]
+    assert actions == ["rbac.denied"]
+    assert "roles.grant" not in actions and "roles.revoke" not in actions
+
+
+def test_put_roles_missing_user_writes_no_role_audit() -> None:
+    class _Gone(_Store):
+        async def apply_roles(self, user_id: uuid.UUID, roles: frozenset[str]) -> bool:
+            return False
+
+    em = _Emitter()
+    r = _client(_Gone({"viewer"}, 1), _admin(), em, _Notifier()).put(
+        f"/users/{TARGET}/roles", json={"roles": ["manager"]}
+    )
+    assert r.status_code == 404
+    assert em.calls == []
+
+
+def test_ws_gateway_hooks_auth_ok_sub_check_and_live_permission_change() -> None:
+    import asyncio
+
+    from candleviewer.ws.permissions import (
+        ConnectionRegistry,
+        close_connection,
+        handle_sub,
+        open_connection,
+    )
+
+    viewer = PrincipalSnapshot(TARGET, frozenset({"viewer"}), frozenset({Permission.ORDERS_READ}))
+    sent: list[dict[str, Any]] = []
+
+    async def send(frame: dict[str, Any]) -> None:
+        sent.append(frame)
+
+    async def resolve(uid: uuid.UUID) -> PrincipalSnapshot:
+        return PrincipalSnapshot(uid, frozenset({"viewer"}), frozenset())
+
+    async def scenario() -> None:
+        reg = ConnectionRegistry(resolve, lambda: 1)
+        authz = await open_connection(reg, viewer, send)
+        assert sent[0]["t"] == "auth_ok" and sent[0]["p"]["permissions"] == ["orders:read"]
+        await handle_sub(
+            authz, {"id": "s", "p": {"topics": [{"ch": "orders.a"}, {"ch": "bars.X"}]}}, send
+        )
+        assert [f["ch"] for f in sent if f["t"] == "error"] == ["bars.X"]
+        sent.clear()
+        store = _Store({"viewer"}, 2)
+        app = FastAPI()
+        app.include_router(make_users_router(store, _Emitter(), _Resolver(_admin()), reg))
+        await reg.roles_changed(TARGET)
+        assert [f["t"] for f in sent] == ["permission_change", "revoked"]
+        close_connection(reg, authz)
+        sent.clear()
+        await reg.roles_changed(TARGET)
+        assert sent == []
+
+    asyncio.run(scenario())
