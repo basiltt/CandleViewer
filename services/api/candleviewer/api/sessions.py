@@ -26,8 +26,10 @@ the injected `publish_revocation(session_id, reason)`; the ws gateway
 
 from __future__ import annotations
 
+import os
 import uuid
 from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime
 from typing import Any, Protocol
 
 from fastapi import APIRouter, Query, Request
@@ -149,15 +151,21 @@ def _source_ip(request: Request) -> str | None:
     return request.client.host if request.client is not None else None
 
 
+def _allowed_origins() -> frozenset[str]:
+    """Configured allow-list (CV_ALLOWED_ORIGINS, comma separated, e.g.
+    `http://127.0.0.1:5173`). Empty => every cookie refresh is refused."""
+    raw = os.environ.get("CV_ALLOWED_ORIGINS", "")
+    return frozenset(o.strip().rstrip("/") for o in raw.split(",") if o.strip())
+
+
 def _origin_ok(request: Request) -> bool:
-    """CSRF guard for cookie-authenticated refresh: a browser-supplied Origin
-    must match the Host the request was sent to (SameSite=Strict is the
-    primary defence; this is the ticket's belt-and-braces origin check)."""
+    """CSRF guard for cookie-authenticated refresh: the Origin header must be
+    in the configured allow-list (never compared to the attacker-controllable
+    Host header). SameSite=Strict remains the primary defence."""
     origin = request.headers.get("origin")
     if origin is None:
         return False
-    host = request.headers.get("host", "")
-    return origin.split("://", 1)[-1] == host
+    return origin.rstrip("/") in _allowed_origins()
 
 
 def _set_refresh_cookie(response: Response, token: str, *, max_age: int) -> None:
@@ -335,7 +343,6 @@ def make_session_router(
                 501, "Not implemented", "identity provider not wired (E09-T03); disabled"
             )
         info = await identity.session_info(str(record.user_id))
-        from datetime import UTC, datetime
 
         return JSONResponse(
             {

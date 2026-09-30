@@ -146,6 +146,19 @@ async def test_cross_origin_cookie_refresh_is_refused(env: _Env) -> None:
     assert r.status_code == 403
 
 
+async def test_same_host_origin_not_on_allow_list_is_refused(
+    env: _Env, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("CV_ALLOWED_ORIGINS", "http://app.example")
+    m = await env.mint(uuid.uuid4())
+    r = env.client.post(
+        "/api/v1/auth/refresh",
+        cookies={REFRESH_COOKIE: m.refresh_token},
+        headers={"Origin": "http://testserver", "Host": "testserver"},
+    )
+    assert r.status_code == 403
+
+
 async def test_list_sessions_is_scoped_to_caller(env: _Env) -> None:
     me, other = uuid.uuid4(), uuid.uuid4()
     a = await env.mint(me)
