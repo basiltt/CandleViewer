@@ -28,6 +28,7 @@ Status values: `decided` (binding now), `proposed` (decision deadline stated ins
 | [ADR-0020](ADR-0020-session-access-token-and-revocation-model.md) | Session access-token format, WS re-auth cadence, and rotation-family revocation | **proposed** (owner approval pending, spike E09-K01) |
 | [ADR-0022](ADR-0022-hot-tier-questdb-vs-timescaledb.md) | Hot tier: QuestDB confirmed for all six query shapes (E07-T06) | **accepted-partial** (owner approval pending, spike E07-K01, corrected) |
 | [ADR-0023](ADR-0023-exchange-adapter-boundary.md) | Exchange-adapter boundary: port split, P3 enforcement, book invalidate-and-resync, depth-tier default, environment separation | **accepted** (owner approval pending) |
+| [ADR-0024](ADR-0024-design-token-architecture-and-theming.md) | Design-token architecture and theming strategy | decided |
 
 ## Writing a new ADR
 

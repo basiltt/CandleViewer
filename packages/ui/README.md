@@ -16,6 +16,11 @@ a11y addon; Style Dictionary token build. Depends only on
   build and diffing against a checked-in reference, not by committing the
   output — see "Build output policy" below).
 
+Architectural record: [`docs/plan/27-adrs/ADR-0024-design-token-architecture-and-theming.md`](../../docs/plan/27-adrs/ADR-0024-design-token-architecture-and-theming.md)
+records the tier model, theming/density decisions and the WebGL/Electron delivery
+formats below, plus the alternatives rejected (CSS-in-JS runtime theming,
+Tailwind-config-as-source, two parallel density scales, naive dark→light inversion).
+
 ## Token build (E05-T01)
 
 One `pnpm --filter @candleviewer/ui build:tokens` run produces six artefacts
