@@ -28,7 +28,7 @@ uv run pytest tests/qa/test_e09_dryrun_group_a.py -v --no-cov
 | E09-TC-A04 | blocked-pending-dependency | requires `POST /auth/mfa/verify` (`E09-S02`) | — |
 | E09-TC-A05 | blocked-pending-dependency | requires `POST /auth/mfa/verify` (`E09-S02`) | — |
 | E09-TC-A06 | blocked-pending-dependency | requires `POST /auth/mfa/verify` (`E09-S02`) | — |
-| E09-TC-A07 | PASS | `test_e09_tc_a07_unknown_user_and_wrong_password_are_indistinguishable` (status + body compared; timing-band comparison needs the real Argon2id/DB stack, `blocked-pending-dependency` for that half — no Docker available) | — |
+| E09-TC-A07 | PASS | `test_e09_tc_a07_unknown_user_and_wrong_password_are_indistinguishable` (drives the real `LoginService` over an in-memory `FakeUserRepository` — one identifier is genuinely unknown, the other is a real enrolled user with the wrong password — so the response equality actually exercises SR-014 rather than two canned fakes; timing-band comparison needs the real Argon2id/DB stack, `blocked-pending-dependency` for that half — no Docker available) | — |
 | E09-TC-A08 | PASS (router-contract slice only) | `test_e09_tc_a08_lockout_returns_423_with_retry_after`; the full 10-attempt sequence + Owner-alert assertion stays `manual-only` per the plan's own Automation column (`E09-Q02-lockout-automation`) | — |
 | E09-TC-A09 | blocked-pending-dependency | requires `POST /auth/mfa/verify` (`E09-S02`) | — |
 | E09-TC-A10 | blocked-pending-dependency | requires `POST /auth/mfa/verify` (`E09-S02`) | — |
@@ -39,7 +39,16 @@ uv run pytest tests/qa/test_e09_dryrun_group_a.py -v --no-cov
 | E09-TC-E01–E09 | blocked-pending-dependency | requires `E09-S05`/`E09-S06` (`/users`, `/invites`, `/onboarding`) | — |
 
 **Result.** 4 of 4 executable cases (A01, A03, A07 partial, A08 router-contract slice) PASS; 0 defects
-filed against `E09-S01`. This is consistent with the QA verification already on record for `E09-S01`
+filed against `E09-S01`. **Coverage caveat:** A03 and A08 as executed here only prove that the router
+maps `AccountDisabled`/`AccountLocked` to the correct HTTP response shape (a fake `AuthServiceLike`
+raises the exception directly) — neither case exercises the real lockout/disabled-account state
+machine (`LoginService`'s failure counting, the 5-failure threshold, or a real repository's disabled
+flag). That state-machine coverage already exists at the unit level
+(`tests/unit/auth/test_login_service.py::test_lockout_after_five_failures_refuses_even_correct_password`,
+`::test_disabled_account_with_correct_password_raises_account_disabled`) but is out of scope for this
+router-contract dry run; A08's own row already flags its full-sequence gap as `manual-only`
+(`E09-Q02-lockout-automation`) and that caveat is repeated here rather than left implicit in "4 of 4
+PASS". This is consistent with the QA verification already on record for `E09-S01`
 itself and does not by itself constitute the full-plan dry run — the remaining rows are re-run and this
 table is appended (never overwritten) as each dependent story ticket merges, per §10's original
 sequencing plan. The intent of DoD item 3 ("one full dry-run execution recorded with a pass/fail table

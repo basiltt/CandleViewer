@@ -25,12 +25,18 @@ fabricated pass.
 
 from __future__ import annotations
 
+import asyncio
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from candleviewer.api.auth import make_auth_router
-from candleviewer.auth.errors import AccountDisabled, AccountLocked, InvalidCredentials
+from candleviewer.auth.errors import AccountDisabled, AccountLocked
+from candleviewer.auth.hashing import Hasher
+from candleviewer.auth.login_service import LoginService
 from candleviewer.auth.models import LoginRequest, MfaChallengeResult, MfaMethodKind
+from candleviewer.auth.throttle import PerIpLoginThrottle
+from tests.unit.auth.auth_fakes import FakeUserRepository, make_user
 
 
 class _FakeLoginService:
@@ -80,7 +86,7 @@ def test_e09_tc_a01_correct_credentials_return_mfa_required_no_session() -> None
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "mfa_required"
-    assert "session" not in response.headers.get("set-cookie", "").lower()
+    assert "set-cookie" not in {k.lower() for k in response.headers}
 
 
 def test_e09_tc_a03_disabled_account_rejected_after_password_check() -> None:
@@ -93,15 +99,51 @@ def test_e09_tc_a03_disabled_account_rejected_after_password_check() -> None:
 
 def test_e09_tc_a07_unknown_user_and_wrong_password_are_indistinguishable() -> None:
     """E09-TC-A07: status and body shape must be identical for an unknown
-    identifier and a known identifier with the wrong password (SR-014)."""
-    unknown_client = _client(InvalidCredentials("Username or password is incorrect"))
-    wrong_password_client = _client(InvalidCredentials("Username or password is incorrect"))
+    identifier and a known identifier with the wrong password (SR-014).
 
-    unknown_response = unknown_client.post(
-        "/auth/login", json={"identifier": "unknown@example.test", "password": "x"}
+    Unlike the other Group A cases in this module (which double the router's
+    own black-box contract test and legitimately inject a canned outcome),
+    this case's entire point is that *the real `LoginService`* produces the
+    same `InvalidCredentials` for two genuinely different code paths
+    (unknown-identifier vs. known-identifier-wrong-password). Injecting the
+    same fake exception into two fakes would prove only that the router
+    forwards whatever it is given — it would not exercise SR-014 at all. So
+    this case wires the router to the real `LoginService` over an in-memory
+    `FakeUserRepository` (same fake `UserRepository` used by
+    `tests/unit/auth/test_login_service.py`), with one real enrolled user
+    and one identifier that does not exist."""
+
+    class _RealAuthService:
+        def __init__(self, login: LoginService) -> None:
+            self._login = login
+
+        @property
+        def is_active(self) -> bool:
+            return True
+
+        @property
+        def login(self) -> LoginService:
+            return self._login
+
+    repo = FakeUserRepository()
+    hasher = Hasher(pepper="test-pepper")
+    password_hash = asyncio.run(hasher.hash("correct-horse-battery-staple"))
+    repo.add(make_user(username="manager-with-grants", password_hash=password_hash))
+    login_service = LoginService(
+        repo, hasher, per_ip_throttle=PerIpLoginThrottle(max_attempts=1000)
     )
-    wrong_password_response = wrong_password_client.post(
-        "/auth/login", json={"identifier": "manager-with-grants", "password": "wrong"}
+
+    app = FastAPI()
+    app.include_router(make_auth_router(_RealAuthService(login_service)))
+    client = TestClient(app)
+
+    unknown_response = client.post(
+        "/auth/login",
+        json={"identifier": "unknown@example.test", "password": "x"},
+    )
+    wrong_password_response = client.post(
+        "/auth/login",
+        json={"identifier": "manager-with-grants", "password": "wrong"},
     )
 
     assert unknown_response.status_code == wrong_password_response.status_code == 401
