@@ -47,7 +47,7 @@ class _FakeMfaService:
             raise self._outcome
         return self._outcome
 
-    async def verify(self, request: MfaVerifyRequest, *, account_name: str) -> MfaVerifiedResult:
+    async def verify(self, request: MfaVerifyRequest) -> MfaVerifiedResult:
         result = self._resolve()
         assert isinstance(result, MfaVerifiedResult)
         return result

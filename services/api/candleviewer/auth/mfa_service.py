@@ -73,21 +73,23 @@ class MfaService:
         repository: MfaRepository,
         encryptor: TotpEncryptor,
         *,
+        recovery_code_key: bytes,
         clock: Clock = _utc_now,
         issuer: str = "CandleViewer",
     ) -> None:
         self._repository = repository
         self._encryptor = encryptor
+        # Server-side HMAC key for recovery-code hashes (PR #1618 security
+        # review, blocking 1); never logged or returned.
+        self._recovery_code_key = recovery_code_key
         self._clock = clock
         self._issuer = issuer
 
     # -- verification (login step 2) --------------------------------------
 
-    async def verify(self, request: MfaVerifyRequest, *, account_name: str) -> MfaVerifiedResult:
-        """`POST /auth/mfa/verify`. `account_name` (the username) is passed
-        in only for symmetry with `enroll()`'s `otpauth_uri` — verification
-        never needs it beyond that, since the challenge row already carries
-        `user_id`.
+    async def verify(self, request: MfaVerifyRequest) -> MfaVerifiedResult:
+        """`POST /auth/mfa/verify`. The challenge row already carries
+        `user_id`, so no account name is needed here.
 
         Raises `MfaChallengeInvalid`, `MfaChallengeLocked`, `MfaCodeInvalid`,
         or `MfaCodeReused`."""
@@ -221,7 +223,7 @@ class MfaService:
 
     async def _issue_recovery_codes(self, user_id: str) -> tuple[str, ...]:
         plaintext_codes = generate_recovery_codes()
-        hashes = tuple(hash_recovery_code(c) for c in plaintext_codes)
+        hashes = tuple(hash_recovery_code(c, key=self._recovery_code_key) for c in plaintext_codes)
         await self._repository.replace_recovery_codes(user_id, code_hashes=hashes)
         return tuple(plaintext_codes)
 
@@ -236,7 +238,7 @@ class MfaService:
         "constant-time against the hashed set") is delivered by hashing the
         candidate once and doing an equality-indexed lookup — the DB index
         lookup itself is not a timing side-channel on the *code value*
-        because it operates on the SHA-256 digest, not the code."""
+        because it operates on the keyed HMAC-SHA256 digest, not the code."""
         challenge = await self._open_challenge_or_raise(mfa_token, purpose="login")
         if await self._repository.count_unused_recovery_codes(str(challenge.user_id)) == 0:
             # Ticket "Recovery codes exhausted": "I am told to contact the
@@ -251,7 +253,7 @@ class MfaService:
             await self._record_failed_attempt(challenge)
             raise RecoveryCodesExhausted("all recovery codes have been used")
 
-        code_hash = hash_recovery_code(recovery_code)
+        code_hash = hash_recovery_code(recovery_code, key=self._recovery_code_key)
         code_id = await self._repository.find_unused_recovery_code(
             str(challenge.user_id), code_hash=code_hash
         )

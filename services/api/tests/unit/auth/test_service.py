@@ -126,8 +126,24 @@ async def test_auth_service_start_without_key_refuses_live_environment() -> None
     assert service.mfa_is_active is False
 
 
-async def test_auth_service_start_with_explicit_key_allows_live_environment() -> None:
+async def test_auth_service_start_without_recovery_key_refuses_live_environment() -> None:
+    """PR #1618 security review, blocking 1: the recovery-code HMAC key
+    follows the same live fail-fast rule as the TOTP key."""
     service = AuthService(mfa_repository=FakeMfaRepository(), totp_encryption_key=b"0" * 32)
+    ctx = _FakeAppContext(settings=_FakeSettings(environment=Environment.LIVE))
+
+    with pytest.raises(RuntimeError, match="recovery_code_hmac_key"):
+        await service.start(ctx=ctx)  # type: ignore[arg-type]
+
+    assert service.mfa_is_active is False
+
+
+async def test_auth_service_start_with_explicit_key_allows_live_environment() -> None:
+    service = AuthService(
+        mfa_repository=FakeMfaRepository(),
+        totp_encryption_key=b"0" * 32,
+        recovery_code_hmac_key=b"1" * 32,
+    )
     ctx = _FakeAppContext(settings=_FakeSettings(environment=Environment.LIVE))
 
     await service.start(ctx=ctx)  # type: ignore[arg-type]

@@ -95,9 +95,7 @@ class LoginServiceLike(Protocol):
 class MfaServiceLike(Protocol):
     """Structural type for `candleviewer.auth.mfa_service.MfaService`."""
 
-    async def verify(
-        self, request: MfaVerifyRequest, *, account_name: str
-    ) -> MfaVerifiedResult: ...
+    async def verify(self, request: MfaVerifyRequest) -> MfaVerifiedResult: ...
 
     async def enroll(
         self, user_id: str, request: MfaEnrollRequest, *, account_name: str
@@ -259,11 +257,7 @@ def make_auth_router(
         if not auth_service.mfa_is_active:
             return _problem(503, "Service unavailable", "mfa backend is not wired")
         try:
-            # `account_name` is not knowable from the challenge alone at
-            # this layer without a user lookup this router does not own;
-            # `MfaService.verify()` only needs it for `enroll()`'s
-            # `otpauth_uri`, so a placeholder is harmless here.
-            result = await auth_service.mfa.verify(body, account_name="")
+            result = await auth_service.mfa.verify(body)
         except (MfaChallengeInvalid, MfaChallengeLocked, MfaCodeInvalid, MfaCodeReused):
             await _audit(
                 audit_service,

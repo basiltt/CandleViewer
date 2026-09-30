@@ -43,12 +43,14 @@ class AuthService:
         pepper: str = "",
         mfa_repository: MfaRepository | None = None,
         totp_encryption_key: bytes | None = None,
+        recovery_code_hmac_key: bytes | None = None,
     ) -> None:
         self._started = False
         self._repository = repository
         self._pepper = pepper
         self._mfa_repository = mfa_repository
         self._totp_encryption_key = totp_encryption_key
+        self._recovery_code_hmac_key = recovery_code_hmac_key
         self._login: LoginService | None = None
         self._mfa: MfaService | None = None
 
@@ -103,7 +105,23 @@ class AuthService:
                         "seeds undecryptable after restart (see E27-T02, envelope.py)"
                     )
                 key = _process_local_key()
-            self._mfa = MfaService(self._mfa_repository, TotpEncryptor(key, key_ref=LOCAL_KEY_REF))
+            # Recovery-code HMAC key (PR #1618 security review, blocking 1):
+            # same custody boundary and same live fail-fast rule as the TOTP
+            # key above; tracked for real M2 wiring by E27-T02.
+            rc_key = self._recovery_code_hmac_key
+            if rc_key is None:
+                if ctx is not None and ctx.settings.environment is Environment.LIVE:
+                    raise RuntimeError(
+                        "AuthService: no recovery_code_hmac_key configured for a live "
+                        "environment; a process-local fallback key would make stored "
+                        "recovery codes unverifiable after restart (see E27-T02)"
+                    )
+                rc_key = _process_local_key()
+            self._mfa = MfaService(
+                self._mfa_repository,
+                TotpEncryptor(key, key_ref=LOCAL_KEY_REF),
+                recovery_code_key=rc_key,
+            )
         self._started = True
 
     async def stop(self, grace_s: float) -> None:

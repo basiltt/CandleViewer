@@ -32,6 +32,8 @@ from candleviewer.auth.totp import generate_code, time_step_for
 
 from .mfa_fakes import FakeMfaRepository
 
+_RC_KEY = b"k" * 32
+
 _NOW = datetime(2026, 9, 30, 12, 0, 0, tzinfo=UTC)
 
 
@@ -41,7 +43,7 @@ def _clock() -> datetime:
 
 def _service(repo: FakeMfaRepository) -> MfaService:
     key = os.urandom(32)
-    return MfaService(repo, TotpEncryptor(key), clock=_clock)
+    return MfaService(repo, TotpEncryptor(key), recovery_code_key=_RC_KEY, clock=_clock)
 
 
 async def _make_login_challenge(repo: FakeMfaRepository, user_id: uuid.UUID) -> str:
@@ -88,7 +90,6 @@ async def test_verify_valid_code_creates_a_session() -> None:
     code = generate_code(seed, step)
     result = await service.verify(
         MfaVerifyRequest(mfa_token=token, method=MfaMethodKind.TOTP, code=code),
-        account_name="alice",
     )
     assert result.user_id == user_id
 
@@ -103,14 +104,12 @@ async def test_verify_reused_code_is_rejected() -> None:
     code = generate_code(seed, time_step_for(_NOW.timestamp()))
     await service.verify(
         MfaVerifyRequest(mfa_token=token, method=MfaMethodKind.TOTP, code=code),
-        account_name="alice",
     )
 
     token2 = await _make_login_challenge(repo, user_id)
     with pytest.raises(MfaCodeReused):
         await service.verify(
             MfaVerifyRequest(mfa_token=token2, method=MfaMethodKind.TOTP, code=code),
-            account_name="alice",
         )
 
 
@@ -126,7 +125,6 @@ async def test_verify_tolerates_clock_drift_within_one_step() -> None:
     code = generate_code(seed, drifted_step)
     result = await service.verify(
         MfaVerifyRequest(mfa_token=token, method=MfaMethodKind.TOTP, code=code),
-        account_name="alice",
     )
     assert result.user_id == user_id
 
@@ -141,7 +139,6 @@ async def test_verify_wrong_code_raises_mfa_code_invalid() -> None:
     with pytest.raises(MfaCodeInvalid):
         await service.verify(
             MfaVerifyRequest(mfa_token=token, method=MfaMethodKind.TOTP, code="000000"),
-            account_name="alice",
         )
 
 
@@ -151,7 +148,6 @@ async def test_verify_unknown_token_raises_challenge_invalid() -> None:
     with pytest.raises(MfaChallengeInvalid):
         await service.verify(
             MfaVerifyRequest(mfa_token="nope", method=MfaMethodKind.TOTP, code="123456"),
-            account_name="alice",
         )
 
 
@@ -170,7 +166,6 @@ async def test_verify_expired_challenge_raises_challenge_invalid() -> None:
     with pytest.raises(MfaChallengeInvalid):
         await service.verify(
             MfaVerifyRequest(mfa_token=token, method=MfaMethodKind.TOTP, code="123456"),
-            account_name="alice",
         )
 
 
@@ -185,12 +180,10 @@ async def test_verify_locks_after_five_failed_attempts() -> None:
         with pytest.raises(MfaCodeInvalid):
             await service.verify(
                 MfaVerifyRequest(mfa_token=token, method=MfaMethodKind.TOTP, code="000000"),
-                account_name="alice",
             )
     with pytest.raises(MfaChallengeLocked):
         await service.verify(
             MfaVerifyRequest(mfa_token=token, method=MfaMethodKind.TOTP, code="000000"),
-            account_name="alice",
         )
 
 
@@ -243,7 +236,7 @@ async def test_recovery_code_use_forces_totp_reenrollment() -> None:
     await _enroll_and_confirm(service, repo, user_id)
     codes = generate_recovery_codes()
     await repo.replace_recovery_codes(
-        str(user_id), code_hashes=tuple(hash_recovery_code(c) for c in codes)
+        str(user_id), code_hashes=tuple(hash_recovery_code(c, key=_RC_KEY) for c in codes)
     )
     token = await _make_login_challenge(repo, user_id)
 
@@ -276,7 +269,7 @@ async def test_recover_rejects_invalid_recovery_code() -> None:
     await _enroll_and_confirm(service, repo, user_id)
     codes = generate_recovery_codes()
     await repo.replace_recovery_codes(
-        str(user_id), code_hashes=tuple(hash_recovery_code(c) for c in codes)
+        str(user_id), code_hashes=tuple(hash_recovery_code(c, key=_RC_KEY) for c in codes)
     )
     token = await _make_login_challenge(repo, user_id)
 
@@ -291,7 +284,7 @@ async def test_recover_rejects_already_used_recovery_code() -> None:
     await _enroll_and_confirm(service, repo, user_id)
     codes = generate_recovery_codes()
     await repo.replace_recovery_codes(
-        str(user_id), code_hashes=tuple(hash_recovery_code(c) for c in codes)
+        str(user_id), code_hashes=tuple(hash_recovery_code(c, key=_RC_KEY) for c in codes)
     )
     token = await _make_login_challenge(repo, user_id)
     await service.recover(token, codes[0])
