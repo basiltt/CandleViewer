@@ -16,9 +16,10 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from functools import lru_cache
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 
 from candleviewer.accounts.service import AccountsService
 from candleviewer.admin.service import AdminService
@@ -44,6 +45,13 @@ from candleviewer.auth.models import (
     SessionRecord,
     UserRecord,
 )
+from candleviewer.api.contract_conformance import load_openapi_spec
+from candleviewer.api.deny_by_default import (
+    assert_app_routes_declared,
+    declared_operations,
+    make_deny_undeclared_dependency,
+)
+from candleviewer.api.users import make_users_router
 from candleviewer.auth.service import AuthService
 from candleviewer.bars.service import BarsService
 from candleviewer.book.service import BookService
@@ -361,6 +369,12 @@ def _hub_publisher(hub: RevocationHub) -> Callable[[str, str], Awaitable[None]]:
     return _publish
 
 
+@lru_cache(maxsize=1)
+def _cached_spec() -> dict[str, Any]:
+    """The 500 KB contract parse costs ~2 s; parse once per process."""
+    return load_openapi_spec()
+
+
 def create_app(
     settings: Settings | None = None, *, auth_clock: Callable[[], datetime] | None = None
 ) -> FastAPI:
@@ -381,9 +395,11 @@ def create_app(
     own ticket); wiring a real sink here is a one-line change once it lands.
     """
     resolved = settings or get_settings()
+    spec = _cached_spec()
     app = FastAPI(
         title="CandleViewer API",
         version=resolved.version,
+        dependencies=[Depends(make_deny_undeclared_dependency(declared_operations(spec)))],
     )
     ctx = build_app_context(resolved, auth_clock=auth_clock)
     app.state.app_context = ctx
@@ -419,6 +435,8 @@ def create_app(
             allowed_origins=resolved.allowed_origin_set,
         )
     )
+    # `store=None` / no resolver: fails closed with 501 until session verification lands.
+    app.include_router(make_users_router(None, _LazyAuditEmitter(ctx.audit)))
     # `principal_resolver` stays `None` here: session verification is E09-S03
     # scope (`auth/login_service.py`'s own docstring — "non-MFA session
     # issuance is E09-S03 scope"), not this router's. Every `/admin/audit*`
@@ -442,6 +460,8 @@ def create_app(
     # exchange REST client). Resolver `None` -> fail-closed `501` (see above).
     app.include_router(make_instruments_router(lambda: ctx.ingestion.instruments))
     app.add_middleware(CorrelationMiddleware)
+    # E09-T03 / #1648: a served route without an RBAC declaration fails the build.
+    assert_app_routes_declared(app, spec)
     return app
 
 
