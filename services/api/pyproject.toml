@@ -17,6 +17,7 @@ dependencies = [
   "websockets>=12.0",
   "numpy>=1.26",
   "duckdb>=1.0",
+  "pyarrow>=17.0",
   "prometheus-client>=0.20",
   "structlog>=24.1",
   "orjson>=3.10",
@@ -121,6 +122,13 @@ ignore_missing_imports = true
 # lock helper (`candleviewer.migrations.boot`); re-check at each asyncpg bump
 # and drop this override once upstream ships types.
 module = ["asyncpg.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# pyarrow (E07-T04 cold tier) ships no py.typed marker or stubs (mypy:
+# "missing library stubs or py.typed marker"). Narrow to import resolution
+# only (no ignore_errors); drop once upstream ships types.
+module = ["pyarrow.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -126,6 +126,21 @@ async def test_flush_triggers_at_row_threshold() -> None:
 
 
 @pytest.mark.asyncio
+async def test_write_rows_designated_ts_not_emitted_as_field() -> None:
+    # Regression (PR #1630): `ts` was serialised both as a `ts=<n>i` LONG field
+    # and as the line timestamp; QuestDB used the field and stored 1970 dates.
+    transport = _FakeTransport()
+    writer = IlpWriter(transport, {"trades": TRADES_SCHEMA}, flush_rows=1)
+    await writer.start()
+    row = {"symbol": "BTCUSDT", "price": 1.0, "trade_id": "t", "ts": 1_700_000_000_000_000}
+    await writer.write_rows("trades", [row], "ts")
+    line = transport.written[0].decode()
+    assert " ts=" not in line and ",ts=" not in line
+    assert line.rstrip().endswith(" 1700000000000000000")
+    assert row["ts"] == 1_700_000_000_000_000  # caller's dict not mutated
+
+
+@pytest.mark.asyncio
 async def test_flush_does_not_trigger_below_threshold(monkeypatch: pytest.MonkeyPatch) -> None:
     transport = _FakeTransport()
     writer = IlpWriter(transport, {"trades": TRADES_SCHEMA}, flush_rows=100, flush_interval_s=100.0)

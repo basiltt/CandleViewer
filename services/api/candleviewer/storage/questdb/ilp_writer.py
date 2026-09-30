@@ -225,7 +225,12 @@ class IlpWriter:
                     buf = self._buffers.setdefault(table, _TableBuffer(schema=schema))
                     for row in rows:
                         ts_us = int(str(row[ts_us_key]))
-                        buf.rows.append((row, ts_us))
+                        # The designated timestamp travels only as the line's
+                        # trailing timestamp; also emitting it as a `ts=<n>i`
+                        # field overrides it with a LONG QuestDB reads at the
+                        # wrong precision (rows landed in 1970).
+                        fields = {k: v for k, v in row.items() if k != ts_us_key}
+                        buf.rows.append((fields, ts_us))
                     self._total_buffered += len(rows)
                     break
                 self._not_full.clear()
