@@ -19,7 +19,7 @@
       "cache": false
     },
     "typecheck": {
-      "dependsOn": ["^typecheck", "generate"],
+      "dependsOn": ["^typecheck", "^build", "generate"],
       "inputs": ["**/*.{ts,tsx}", "tsconfig*.json", "!**/*.md"],
       "outputs": []
     },
