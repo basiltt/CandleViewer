@@ -43,15 +43,27 @@ def mfa_attempts_exhausted(context: dict[str, Any], event: dict[str, Any]) -> bo
         return False
 
 
-async def mark_mfa_satisfied(context: dict[str, Any], event: dict[str, Any]) -> None:
+def _payload(event: Any) -> dict[str, Any]:
+    """The library hands actions an `Event` (payload on `.payload`), not a dict."""
+    payload = getattr(event, "payload", event)
+    return payload if isinstance(payload, dict) else {}
+
+
+async def mark_mfa_satisfied(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
     context["mfa_satisfied"] = True
 
 
-async def bump_mfa_attempts(context: dict[str, Any], event: dict[str, Any]) -> None:
+async def bump_mfa_attempts(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
     context["mfa_attempts"] = int(context.get("mfa_attempts", 0)) + 1
 
 
-async def audit_mfa_failed(context: dict[str, Any], event: dict[str, Any]) -> None:
+async def audit_mfa_failed(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
     """Audit emission is the caller's responsibility in every other M18
     module (`forbidden-M18`: `auth`/`statechart` may not import `audit`
     directly); this action is a no-op placeholder the audit plugin
@@ -60,49 +72,69 @@ async def audit_mfa_failed(context: dict[str, Any], event: dict[str, Any]) -> No
     return None
 
 
-async def set_revoke_locked(context: dict[str, Any], event: dict[str, Any]) -> None:
+async def set_revoke_locked(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
     context["revoke_reason"] = "locked"
 
 
-async def set_revoke_timeout(context: dict[str, Any], event: dict[str, Any]) -> None:
+async def set_revoke_timeout(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
     context["revoke_reason"] = "timeout"
 
 
-async def set_revoke_idle(context: dict[str, Any], event: dict[str, Any]) -> None:
+async def set_revoke_idle(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
     context["revoke_reason"] = "idle"
 
 
-async def set_revoke_expired(context: dict[str, Any], event: dict[str, Any]) -> None:
+async def set_revoke_expired(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
     context["revoke_reason"] = "expired"
 
 
-async def set_revoke_admin(context: dict[str, Any], event: dict[str, Any]) -> None:
+async def set_revoke_admin(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
     context["revoke_reason"] = "admin"
 
 
-async def set_revoke_logout(context: dict[str, Any], event: dict[str, Any]) -> None:
+async def set_revoke_logout(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
     context["revoke_reason"] = "logout"
 
 
-async def stamp_idle_deadline(context: dict[str, Any], event: dict[str, Any]) -> None:
+async def stamp_idle_deadline(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
     """Re-stamped on every `REQUEST` (ticket "idle timeout ... driven by
     `sessions.last_seen_at`") — the deadline value itself is computed by
     the caller and carried on the event payload (`event['idle_expires_at_
     us']`), never derived from a clock read in this binding."""
-    idle_expires_at_us = event.get("idle_expires_at_us")
+    idle_expires_at_us = _payload(event).get("idle_expires_at_us")
     if idle_expires_at_us is not None:
         context["idle_expires_at_us"] = idle_expires_at_us
 
 
-async def audit_login(context: dict[str, Any], event: dict[str, Any]) -> None:
+async def audit_login(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
     return None
 
 
-async def audit_session_revoked(context: dict[str, Any], event: dict[str, Any]) -> None:
+async def audit_session_revoked(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
     return None
 
 
-async def broadcast_revocation(context: dict[str, Any], event: dict[str, Any]) -> None:
+async def broadcast_revocation(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
     """Placeholder for the WS revocation-frame publish (E17 owns the
     transport itself; this action only marks that the chart reached the
     terminal `revoked` state so `SessionService` can react to the
@@ -111,25 +143,35 @@ async def broadcast_revocation(context: dict[str, Any], event: dict[str, Any]) -
     return None
 
 
-async def stamp_elevated_until(context: dict[str, Any], event: dict[str, Any]) -> None:
-    elevated_until_us = event.get("elevated_until_us")
+async def stamp_elevated_until(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
+    elevated_until_us = _payload(event).get("elevated_until_us")
     if elevated_until_us is not None:
         context["elevated_until_us"] = elevated_until_us
 
 
-async def audit_step_up(context: dict[str, Any], event: dict[str, Any]) -> None:
+async def audit_step_up(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
     return None
 
 
-async def audit_step_up_failed(context: dict[str, Any], event: dict[str, Any]) -> None:
+async def audit_step_up_failed(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
     return None
 
 
-async def clear_elevated(context: dict[str, Any], event: dict[str, Any]) -> None:
+async def clear_elevated(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
     context["elevated_until_us"] = None
 
 
-async def schedule_elevation_deadline(context: dict[str, Any], event: dict[str, Any]) -> None:
+async def schedule_elevation_deadline(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
     return None
 
 

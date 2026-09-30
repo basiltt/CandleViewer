@@ -8169,6 +8169,8 @@ export interface operations {
         };
       };
       401: components["responses"]["Unauthorized"];
+      429: components["responses"]["RateLimited"];
+      503: components["responses"]["ServiceUnavailable"];
     };
   };
   authGetSession: {

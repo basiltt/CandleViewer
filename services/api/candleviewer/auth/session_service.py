@@ -26,6 +26,7 @@ raises typed errors and returns typed results only.
 from __future__ import annotations
 
 import hashlib
+import hmac
 import secrets
 import uuid
 from collections.abc import Callable
@@ -39,6 +40,14 @@ from candleviewer.auth.errors import (
     UnlockPasswordInvalid,
 )
 from candleviewer.auth.hashing import Hasher
+from candleviewer.auth.metrics import (
+    auth_idle_locks_total,
+    auth_refresh_reuse_total,
+    auth_refresh_total,
+    auth_session_revocations_total,
+    auth_sessions_active,
+    normalise_reason,
+)
 from candleviewer.auth.models import (
     MintedSession,
     RefreshOutcome,
@@ -50,6 +59,9 @@ from candleviewer.auth.session_repository import SessionRepository
 
 #: Ticket "Scope / Deliverables": "12 h absolute lifetime".
 ABSOLUTE_LIFETIME = timedelta(hours=12)
+
+#: ADR-0020 decision 3: opaque access-token TTL (12 min).
+ACCESS_TOKEN_TTL = timedelta(minutes=12)
 
 #: Ticket: "5-60 min idle lock" — default 15 (per-user configurable,
 #: `sessions.idle_timeout_s` on the row, min/max enforced at the API edge
@@ -77,6 +89,13 @@ def _hash_refresh_token(token: str) -> str:
     raw token is never persisted, mirroring `LoginService._hash_mfa_
     token`'s identical rationale."""
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def hash_access_token(token: str) -> uuid.UUID:
+    """Opaque access handle -> the `sessions.access_token_jti` lookup value
+    (ADR-0020: hashed at rest, never plaintext). SHA-256 truncated to 128
+    bits, carried in the existing uuid column."""
+    return uuid.UUID(bytes=hashlib.sha256(token.encode("utf-8")).digest()[:16])
 
 
 def clamp_idle_timeout_s(idle_timeout_s: int) -> int:
@@ -136,11 +155,12 @@ class SessionService:
         """
         now = self._clock()
         raw_token = self._refresh_token_factory()
+        raw_access = secrets.token_urlsafe(32)
         session = SessionRecord(
             id=uuid.uuid4(),
             user_id=uuid.UUID(user_id),
             refresh_token_hash=_hash_refresh_token(raw_token),
-            access_token_jti=uuid.uuid4(),
+            access_token_jti=hash_access_token(raw_access),
             issued_at=now,
             last_seen_at=now,
             expires_at=expires_at if expires_at is not None else now + ABSOLUTE_LIFETIME,
@@ -154,15 +174,23 @@ class SessionService:
             idle_timeout_s=clamp_idle_timeout_s(idle_timeout_s),
         )
         created = await self._repository.create_session(session)
+        auth_sessions_active.inc()
         return MintedSession(
             session_id=created.id,
-            access_token_jti=created.access_token_jti or uuid.uuid4(),
+            access_token_jti=created.access_token_jti or hash_access_token(raw_access),
+            access_token=raw_access,
             refresh_token=raw_token,
             issued_at=created.issued_at,
             expires_at=created.expires_at,
         )
 
     # -- refresh / rotation ----------------------------------------------
+
+    async def peek_refresh(self, raw_refresh_token: str) -> SessionRecord | None:
+        """Read-only lookup of the session a refresh token belongs to, so the
+        HTTP edge can write its audit record *ahead* of `refresh()` mutating
+        anything (C-2.9 write-ahead). Never changes state."""
+        return await self._repository.find_by_refresh_hash(_hash_refresh_token(raw_refresh_token))
 
     async def refresh(
         self,
@@ -194,8 +222,11 @@ class SessionService:
             family = await self._repository.walk_rotation_family(str(presented.id))
             for member_id in family:
                 await self._repository.revoke(member_id, reason="rotation_reuse", now=now)
+            auth_refresh_reuse_total.inc()
+            auth_session_revocations_total.labels(reason="rotation_reuse").inc(len(family))
             raise RefreshReuseDetected(
-                "refresh token reuse detected; entire session family revoked"
+                "refresh token reuse detected; entire session family revoked",
+                revoked_session_ids=tuple(str(m) for m in family),
             )
 
         if presented.is_revoked:
@@ -249,6 +280,7 @@ class SessionService:
         await self._repository.link_rotation(
             prev_session_id=str(presented.id), next_session_id=str(minted.session_id)
         )
+        auth_refresh_total.inc()
         return RefreshOutcome(minted=minted, previous_session_id=presented.id)
 
     # -- per-request enforcement ------------------------------------------
@@ -275,9 +307,35 @@ class SessionService:
             raise SessionRevoked(session.revoked_reason or "revoked")
 
         if session.is_idle_locked(now=now):
+            auth_idle_locks_total.inc()
             raise SessionIdleLocked("session is idle-locked")
 
         return session
+
+    async def authenticate_access_token(
+        self, raw_access_token: str, *, touch: bool = False, allow_locked: bool = False
+    ) -> SessionRecord:
+        """Per-request authentication (ADR-0020): resolve the opaque bearer
+        handle to its session, refusing unknown, expired-token, revoked and
+        idle-locked sessions. Raises `SessionNotFound`, `SessionRevoked`,
+        `SessionIdleLocked`. *touch* re-stamps `last_seen_at` (activity)."""
+        jti = hash_access_token(raw_access_token)
+        found = await self._repository.find_by_access_token_jti(str(jti))
+        if found is None or not hmac.compare_digest(
+            found.access_token_jti.bytes if found.access_token_jti else b"", jti.bytes
+        ):
+            raise SessionNotFound("no session for this access token")
+        if self._clock() >= found.issued_at + ACCESS_TOKEN_TTL:
+            raise SessionNotFound("access token expired")
+        if allow_locked:
+            # Logout / revoke must work on an idle-locked session (the lock
+            # is cosmetic on the client; the server still lets the owner end it).
+            if found.is_revoked:
+                raise SessionRevoked(found.revoked_reason or "revoked")
+            return found
+        if touch:
+            return await self.touch(str(found.id))
+        return await self.require_active(str(found.id))
 
     async def touch(self, session_id: str) -> SessionRecord:
         """The `REQUEST` event on B16: re-stamp `last_seen_at`, extending
@@ -342,7 +400,11 @@ class SessionService:
 
     async def revoke(self, session_id: str, *, reason: str) -> SessionRecord | None:
         """Single-session revoke (SCR-112 per-row "revoke", or `LOGOUT`)."""
-        return await self._repository.revoke(session_id, reason=reason, now=self._clock())
+        revoked = await self._repository.revoke(session_id, reason=reason, now=self._clock())
+        if revoked is not None:
+            auth_sessions_active.dec()
+            auth_session_revocations_total.labels(reason=normalise_reason(reason)).inc()
+        return revoked
 
     async def revoke_all(
         self, user_id: str, *, reason: str, except_session_id: str | None = None
@@ -352,9 +414,12 @@ class SessionService:
         only applies to the *other-session* revoke path, but `/auth/
         password`'s "revokes all other sessions on success" reuses this
         same exclusion)."""
-        return await self._repository.revoke_all_for_user(
+        revoked = await self._repository.revoke_all_for_user(
             user_id, reason=reason, now=self._clock(), except_session_id=except_session_id
         )
+        auth_sessions_active.dec(len(revoked))
+        auth_session_revocations_total.labels(reason=normalise_reason(reason)).inc(len(revoked))
+        return revoked
 
     # -- read views ------------------------------------------------------
 

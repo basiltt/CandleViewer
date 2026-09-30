@@ -20,6 +20,7 @@ from candleviewer.auth.envelope import LOCAL_KEY_REF, TotpEncryptor
 from candleviewer.auth.hashing import Hasher
 from candleviewer.auth.login_service import LoginService
 from candleviewer.auth.mfa_service import MfaService
+from candleviewer.auth.session_service import SessionService
 from candleviewer.observability.health import HealthReport, HealthStatus
 from candleviewer.settings import Environment
 
@@ -27,6 +28,7 @@ if TYPE_CHECKING:
     from candleviewer.app import AppContext
     from candleviewer.auth.mfa_repository import MfaRepository
     from candleviewer.auth.repository import UserRepository
+    from candleviewer.auth.session_repository import SessionRepository
 
 
 class AuthService:
@@ -44,6 +46,7 @@ class AuthService:
         mfa_repository: MfaRepository | None = None,
         totp_encryption_key: bytes | None = None,
         recovery_code_hmac_key: bytes | None = None,
+        session_repository: SessionRepository | None = None,
     ) -> None:
         self._started = False
         self._repository = repository
@@ -51,6 +54,8 @@ class AuthService:
         self._mfa_repository = mfa_repository
         self._totp_encryption_key = totp_encryption_key
         self._recovery_code_hmac_key = recovery_code_hmac_key
+        self._session_repository = session_repository
+        self._sessions: SessionService | None = None
         self._login: LoginService | None = None
         self._mfa: MfaService | None = None
 
@@ -74,6 +79,16 @@ class AuthService:
             raise RuntimeError("AuthService.start() has not wired an MfaRepository")
         return self._mfa
 
+    @property
+    def sessions_is_active(self) -> bool:
+        return self._sessions is not None
+
+    @property
+    def sessions(self) -> SessionService:
+        if self._sessions is None:
+            raise RuntimeError("AuthService.start() has not wired a SessionRepository")
+        return self._sessions
+
     async def start(self, ctx: AppContext) -> None:
         """Start the module. Wires `LoginService`/`MfaService` only when a
         concrete repository was injected by the composition root;
@@ -83,6 +98,8 @@ class AuthService:
             self._login = LoginService(
                 self._repository, Hasher(pepper=self._pepper), mfa_repository=self._mfa_repository
             )
+        if self._session_repository is not None:
+            self._sessions = SessionService(self._session_repository, Hasher(pepper=self._pepper))
         if self._mfa_repository is not None:
             # `totp_encryption_key` stands in for the real M2 KEK wiring
             # (see `envelope.py`'s module docstring for why M18 cannot
@@ -128,6 +145,7 @@ class AuthService:
         """Stop the module within `grace_s` seconds. No-op scaffold."""
         self._login = None
         self._mfa = None
+        self._sessions = None
         self._started = False
 
     def health(self) -> HealthReport:

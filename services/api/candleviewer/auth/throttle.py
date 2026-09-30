@@ -11,6 +11,7 @@ the per-account lockout persists across restarts regardless.
 
 from __future__ import annotations
 
+import math
 import time
 from collections import deque
 from collections.abc import Callable
@@ -53,6 +54,14 @@ class PerIpLoginThrottle:
             oldest_ip = next(iter(self._attempts))
             del self._attempts[oldest_ip]
         self._attempts.setdefault(source_ip, deque()).append(self._clock())
+
+    def retry_after_s(self, source_ip: str) -> int:
+        """Whole seconds until the oldest counted attempt leaves the window
+        (the `Retry-After` value for a blocked key); 0 when not blocked."""
+        if not self.is_blocked(source_ip):
+            return 0
+        oldest = self._attempts[source_ip][0]
+        return max(1, math.ceil(oldest + self._window_s - self._clock()))
 
     def _evict(self, source_ip: str) -> None:
         bucket = self._attempts.get(source_ip)

@@ -27,6 +27,12 @@ class FakeSessionRepository:
                 return s
         return None
 
+    async def find_by_access_token_jti(self, access_token_jti: str) -> SessionRecord | None:
+        for s in self.sessions.values():
+            if str(s.access_token_jti) == access_token_jti:
+                return s
+        return None
+
     async def find_live_by_user(self, user_id: str) -> tuple[SessionRecord, ...]:
         return tuple(
             s for s in self.sessions.values() if str(s.user_id) == user_id and s.revoked_at is None

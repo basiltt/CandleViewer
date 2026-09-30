@@ -267,7 +267,18 @@ sessions = Table(
         Text,
         comment="PII-adjacent: node identity from Tailscale header",
     ),
+    Column(
+        "idle_timeout_s",
+        Integer,
+        nullable=False,
+        server_default=text("900"),
+        comment=(
+            "Per-session idle-lock timeout in seconds (5-60 min, default 15); "
+            "the idle deadline is last_seen_at + this."
+        ),
+    ),
     CheckConstraint("expires_at > issued_at", name="sessions_expiry"),
+    CheckConstraint("idle_timeout_s BETWEEN 300 AND 3600", name="sessions_idle_timeout_range"),
     UniqueConstraint("refresh_token_hash", name="sessions_refresh_token_hash_key"),
     Index("ix_sessions_user_live", "user_id", postgresql_where=text("revoked_at IS NULL")),
     Index("ix_sessions_expiry", "expires_at", postgresql_where=text("revoked_at IS NULL")),

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "E07-T02 / bugfix #1556: revision hash lock enforcing 21-database-schema.md \u00a79.3 rule 9 (\"migrations are forward-only in production\"). Each entry pins the SHA-256 of an applied revision file's bytes; `tools/ci/verify_migration_lockfile.py` (run by the `migrations` CI job) recomputes the digest of every file listed here and fails the build with the exact rule-9 message if any applied revision has been edited. Adding a *new* revision requires adding its entry here in the same PR; the checker also fails if a versions/*.py file exists on disk with no lockfile entry, or if the down_revision chain implied by revision ids does not match the file's actual `down_revision`.",
+  "description": "E07-T02 / bugfix #1556: revision hash lock enforcing 21-database-schema.md §9.3 rule 9 (\"migrations are forward-only in production\"). Each entry pins the SHA-256 of an applied revision file's bytes; `tools/ci/verify_migration_lockfile.py` (run by the `migrations` CI job) recomputes the digest of every file listed here and fails the build with the exact rule-9 message if any applied revision has been edited. Adding a *new* revision requires adding its entry here in the same PR; the checker also fails if a versions/*.py file exists on disk with no lockfile entry, or if the down_revision chain implied by revision ids does not match the file's actual `down_revision`.",
   "revisions": {
     "0001_identity_rbac_sessions_mfa": {
       "path": "services/api/candleviewer/migrations/versions/0001_identity_rbac_sessions_mfa.py",
@@ -31,6 +31,11 @@
       "path": "services/api/candleviewer/migrations/versions/0006_admin_write_permission.py",
       "sha256": "1578d6a95d846686efc41fd99e2964798c7b4e6fb4d22ea187ba7052cd58405c",
       "down_revision": "0005_mfa_totp_replay_guard"
+    },
+    "0007_sessions_idle_timeout": {
+      "path": "services/api/candleviewer/migrations/versions/0007_sessions_idle_timeout.py",
+      "sha256": "7fd7790d322f86201163a503d0c3140f8d4c9aaa0b6fb1599aa69488de4219ba",
+      "down_revision": "0006_admin_write_permission"
     }
   }
 }

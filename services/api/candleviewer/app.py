@@ -13,6 +13,7 @@ contracts and every later epic have a concrete injection point.
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -35,6 +36,7 @@ from candleviewer.api import (
     make_log_level_router,
     make_market_router,
 )
+from candleviewer.api.sessions import make_session_router
 from candleviewer.auth.service import AuthService
 from candleviewer.bars.service import BarsService
 from candleviewer.book.service import BookService
@@ -77,6 +79,7 @@ from candleviewer.storage.repositories.relational_sqlalchemy import (
     SqlAlchemyRelationalRepository,
 )
 from candleviewer.storage.service import StorageService
+from candleviewer.ws.revocation import RevocationHub
 from candleviewer.ws.service import WsService
 
 
@@ -255,6 +258,13 @@ class Supervisor:
             await module.stop(grace_s)
 
 
+def _hub_publisher(hub: RevocationHub) -> Callable[[str, str], Awaitable[None]]:
+    async def _publish(session_id: str, reason: str) -> None:
+        await hub.revoke(session_id, reason)
+
+    return _publish
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     """Build the FastAPI application without touching Postgres/QuestDB/network.
 
@@ -295,6 +305,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         make_health_router(resolved, ctx.metrics, mesh_read_only_gate=ctx.oms_read_only_gate)
     )
     app.include_router(make_auth_router(ctx.auth, ctx.audit))
+    # E09-S03: session routes; revocation is pushed to sockets via the hub
+    # (4401). Identity provider is E09-T03, so refresh/session return 501 and
+    # every route answers 503 until a session repository is wired.
+    revocation_hub = RevocationHub()
+    app.state.revocation_hub = revocation_hub
+    app.include_router(
+        make_session_router(
+            ctx.auth,
+            ctx.audit,
+            publish_revocation=_hub_publisher(revocation_hub),
+            allowed_origins=resolved.allowed_origin_set,
+        )
+    )
     # `principal_resolver` stays `None` here: session verification is E09-S03
     # scope (`auth/login_service.py`'s own docstring — "non-MFA session
     # issuance is E09-S03 scope"), not this router's. Every `/admin/audit*`
