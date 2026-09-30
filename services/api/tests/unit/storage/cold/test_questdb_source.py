@@ -25,8 +25,11 @@ class _FakeConn:
         self.calls.append((sql, params))
         if "count(*)" in sql:
             return [{"n": len(self.rows)}]
-        lo, hi = params[3], params[4]
-        assert isinstance(lo, int) and isinstance(hi, int)
+        # Paging bounds are inlined as SQL literals (QuestDB's PGWire LIMIT
+        # rejects bind params for them), so recover lo/hi from the SQL text.
+        limit_clause = sql.rsplit("LIMIT", 1)[1].strip()
+        lo_str, hi_str = limit_clause.split(",")
+        lo, hi = int(lo_str), int(hi_str)
         return self.rows[lo:hi]
 
 
