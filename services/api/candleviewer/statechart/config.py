@@ -76,7 +76,6 @@ def register_event_schemas(schemas: dict[str, dict[str, Any]]) -> None:
         existing = CV_EVENT_SCHEMAS.get(name)
         if existing is not None and existing != schema:
             raise ValueError(
-                f"event schema collision for '{name}': already registered "
-                "with a different schema"
+                f"event schema collision for '{name}': already registered with a different schema"
             )
         CV_EVENT_SCHEMAS[name] = schema
