@@ -14,7 +14,6 @@ from candleviewer.auth.errors import (
     AccountLocked,
     InvalidCredentials,
     MfaChallengeInvalid,
-    MfaEnrollmentNotFound,
     RecoveryCodesExhausted,
 )
 from candleviewer.auth.models import (
@@ -278,9 +277,13 @@ def test_mfa_recovery_exhausted_returns_401_and_audits_denied() -> None:
 
 
 # -- /auth/mfa/enroll --------------------------------------------------------
+# PR #1618 review finding 1: enrolment is disabled (`501`) until E09-S03
+# wires real session/principal resolution — trusting the client-supplied
+# `X-User-Id`/`X-Username` headers with no verification would let anyone
+# enrol (and read the one-time recovery codes for) any account.
 
 
-def test_mfa_enroll_returns_201_with_otpauth_uri() -> None:
+def test_mfa_enroll_disabled_returns_501_regardless_of_headers() -> None:
     method_id = uuid.uuid4()
     client = TestClient(
         _mfa_app(
@@ -297,30 +300,32 @@ def test_mfa_enroll_returns_201_with_otpauth_uri() -> None:
         json={"method": "totp", "label": "phone"},
         headers={"X-User-Id": str(uuid.uuid4()), "X-Username": "alice"},
     )
-    assert response.status_code == 201
-    assert response.json()["otpauth_uri"] == "otpauth://totp/x"
+    assert response.status_code == 501
+
+
+def test_mfa_enroll_disabled_even_without_headers() -> None:
+    client = TestClient(_mfa_app(None))
+    response = client.post("/auth/mfa/enroll", json={"method": "totp", "label": "phone"})
+    assert response.status_code == 501
 
 
 # -- /auth/mfa/enroll/confirm -------------------------------------------------
+# Same rationale as `/auth/mfa/enroll` above.
 
 
-def test_mfa_enroll_confirm_success_returns_recovery_codes() -> None:
+def test_mfa_enroll_confirm_disabled_returns_501_regardless_of_headers() -> None:
     client = TestClient(_mfa_app((MfaMethodKind.TOTP, ("7F2A-91BC-4DE0",))))
     response = client.post(
         "/auth/mfa/enroll/confirm",
         json={"method_id": str(uuid.uuid4()), "code": "123456"},
         headers={"X-User-Id": str(uuid.uuid4())},
     )
-    assert response.status_code == 200
-    body = response.json()
-    assert body["recovery_codes"] == ["7F2A-91BC-4DE0"]
+    assert response.status_code == 501
 
 
-def test_mfa_enroll_confirm_not_found_returns_422() -> None:
-    client = TestClient(_mfa_app(MfaEnrollmentNotFound("no pending enrolment")))
+def test_mfa_enroll_confirm_disabled_even_without_headers() -> None:
+    client = TestClient(_mfa_app(None))
     response = client.post(
-        "/auth/mfa/enroll/confirm",
-        json={"method_id": str(uuid.uuid4()), "code": "123456"},
-        headers={"X-User-Id": str(uuid.uuid4())},
+        "/auth/mfa/enroll/confirm", json={"method_id": str(uuid.uuid4()), "code": "123456"}
     )
-    assert response.status_code == 422
+    assert response.status_code == 501

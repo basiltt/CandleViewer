@@ -9,12 +9,25 @@ before `start()`, after `start()` with no repository (scaffold), after
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import pytest
 
 from candleviewer.auth.service import AuthService
 from candleviewer.observability.health import HealthStatus
+from candleviewer.settings import Environment
 from tests.unit.auth.auth_fakes import FakeUserRepository
 from tests.unit.auth.mfa_fakes import FakeMfaRepository
+
+
+@dataclass
+class _FakeSettings:
+    environment: Environment
+
+
+@dataclass
+class _FakeAppContext:
+    settings: _FakeSettings
 
 
 def test_auth_service_before_start_is_inactive_and_stopped() -> None:
@@ -87,3 +100,36 @@ async def test_auth_service_stop_clears_mfa_and_marks_inactive() -> None:
     await service.stop(grace_s=1.0)
 
     assert service.mfa_is_active is False
+
+
+async def test_auth_service_start_without_key_falls_back_in_demo() -> None:
+    """PR #1618 review finding 3: the process-local fallback key is fine
+    outside `live` (dev/demo/testnet) — it just wo not survive a restart."""
+    service = AuthService(mfa_repository=FakeMfaRepository())
+    ctx = _FakeAppContext(settings=_FakeSettings(environment=Environment.DEMO))
+
+    await service.start(ctx=ctx)  # type: ignore[arg-type]
+
+    assert service.mfa_is_active is True
+
+
+async def test_auth_service_start_without_key_refuses_live_environment() -> None:
+    """PR #1618 review finding 3: a `live`-configured process must never
+    silently run with an ephemeral, non-persisted TOTP encryption key —
+    seeds would become undecryptable after any restart."""
+    service = AuthService(mfa_repository=FakeMfaRepository())
+    ctx = _FakeAppContext(settings=_FakeSettings(environment=Environment.LIVE))
+
+    with pytest.raises(RuntimeError, match="totp_encryption_key"):
+        await service.start(ctx=ctx)  # type: ignore[arg-type]
+
+    assert service.mfa_is_active is False
+
+
+async def test_auth_service_start_with_explicit_key_allows_live_environment() -> None:
+    service = AuthService(mfa_repository=FakeMfaRepository(), totp_encryption_key=b"0" * 32)
+    ctx = _FakeAppContext(settings=_FakeSettings(environment=Environment.LIVE))
+
+    await service.start(ctx=ctx)  # type: ignore[arg-type]
+
+    assert service.mfa_is_active is True

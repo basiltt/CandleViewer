@@ -21,6 +21,7 @@ from candleviewer.auth.hashing import Hasher
 from candleviewer.auth.login_service import LoginService
 from candleviewer.auth.mfa_service import MfaService
 from candleviewer.observability.health import HealthReport, HealthStatus
+from candleviewer.settings import Environment
 
 if TYPE_CHECKING:
     from candleviewer.app import AppContext
@@ -83,12 +84,25 @@ class AuthService:
         if self._mfa_repository is not None:
             # `totp_encryption_key` stands in for the real M2 KEK wiring
             # (see `envelope.py`'s module docstring for why M18 cannot
-            # import `candleviewer.secrets` itself); a caller that omits it
-            # gets a fresh process-local key each start, which is fine for
-            # tests/dev but must be replaced before any real deployment —
-            # tracked as this ticket's own documented gap, same shape as
-            # `Hasher`'s `pepper=""` default.
-            key = self._totp_encryption_key or _process_local_key()
+            # import `candleviewer.secrets` itself). PR #1618 review finding
+            # 3: a process-local fallback key must never silently reach a
+            # live/demo deployment — it is not persisted, so seeds become
+            # undecryptable after any restart, and nothing stops it being
+            # reused outside dev. `E27-T02` (the M2 credential broker /
+            # KEK loader) is the tracked follow-up that replaces this key
+            # with a real `SecretsService`-resolved one; until it lands,
+            # the fallback is refused outside `Environment.DEMO`/`TESTNET`
+            # so a `live`-configured process fails fast at startup instead
+            # of quietly running with an ephemeral key.
+            key = self._totp_encryption_key
+            if key is None:
+                if ctx is not None and ctx.settings.environment is Environment.LIVE:
+                    raise RuntimeError(
+                        "AuthService: no totp_encryption_key configured for a live "
+                        "environment; a process-local fallback key would make TOTP "
+                        "seeds undecryptable after restart (see E27-T02, envelope.py)"
+                    )
+                key = _process_local_key()
             self._mfa = MfaService(self._mfa_repository, TotpEncryptor(key, key_ref=LOCAL_KEY_REF))
         self._started = True
 

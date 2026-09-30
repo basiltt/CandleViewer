@@ -197,7 +197,14 @@ class MfaService:
             raise MfaCodeInvalid("invalid TOTP code")
 
         confirmed = await self._repository.confirm_method(method_id, now=now)
-        await self._repository.record_time_step(method_id, time_step=accepted_step)
+        replay_ok = await self._repository.record_time_step(method_id, time_step=accepted_step)
+        if not replay_ok:
+            # Defensive (PR #1618 review finding 4): a pending method has no
+            # prior recorded step, so this should always be `True`; treat a
+            # `False` here as the same "already used" signal `verify()`
+            # gives, rather than silently confirming on a step the replay
+            # guard says was already consumed.
+            raise MfaCodeReused("this code has already been used")
 
         recovery_codes: tuple[str, ...] = ()
         if await self._repository.count_unused_recovery_codes(user_id) == 0:
@@ -228,7 +235,12 @@ class MfaService:
             # owner and no session is created" — distinct from a merely
             # wrong/reused code so the router can render the
             # contact-the-owner message (US-ONB-010 path) rather than the
-            # generic invalid-code message.
+            # generic invalid-code message. PR #1618 review finding 4: this
+            # still counts toward the challenge's attempt cap (same as a
+            # wrong code) so an attacker cannot probe "is this account's
+            # recovery pool exhausted" for free, outside the 5-attempt/
+            # `MfaChallengeLocked` budget every other guess is bound by.
+            await self._record_failed_attempt(challenge)
             raise RecoveryCodesExhausted("all recovery codes have been used")
 
         code_hash = hash_recovery_code(recovery_code)

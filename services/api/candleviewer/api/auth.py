@@ -13,19 +13,37 @@ to import `candleviewer.audit`; `auth` itself is not (see
 the audit calls live in this router. On the fake/CI default backend
 (`audit_writer=None`) the routes still work; they just skip the audit call.
 
-**Deviation (documented per this repo's multi-agent protocol §5, "minor
-gaps ... noted in the PR under Deviations"):** `/auth/mfa/enroll`,
-`/auth/mfa/enroll/confirm` and `/auth/mfa/recovery`'s regeneration sibling
-are `x-rbac scope: self` per `22-api-openapi.yaml`, which normally means
-"the authenticated caller, resolved from their session". Real session
-authentication (the `cv_refresh` cookie / bearer access token / RBAC
-middleware) is E09-S03 scope, not yet merged. Pending that, these three
-routes resolve the acting user from an `X-User-Id` header the composition
-root's own auth middleware will supply once E09-S03 lands (today, in
-tests, the caller passes it directly) — never from an unauthenticated
-request body field. `/auth/mfa/verify` and `/auth/mfa/recovery`'s login
-path need no such header: they resolve the user from the `mfa_token`
-challenge alone, exactly like `/auth/login` needs no prior session.
+**Deviation 1 (PR #1618 review finding 1 — security, blocking until
+resolved as below):** `/auth/mfa/enroll`, `/auth/mfa/enroll/confirm` and
+`/auth/mfa/recovery`'s regeneration sibling are `x-rbac scope: self` per
+`22-api-openapi.yaml`, which normally means "the authenticated caller,
+resolved from their session". Real session authentication (the
+`cv_refresh` cookie / bearer access token / RBAC middleware) is E09-S03
+scope, not yet merged, so there is today no way to verify that an
+`X-User-Id`/`X-Username` header actually belongs to the caller — trusting
+it would let anyone enrol (and read the one-time recovery codes for) any
+account, an MFA takeover. Per this repo's multi-agent protocol §5 this is
+not a "minor gap" (it touches security/money-adjacent identity), so rather
+than guessing at an undocumented trust boundary, `/auth/mfa/enroll` and
+`/auth/mfa/enroll/confirm` are **disabled** (`501 Not Implemented`) until
+E09-S03 wires real session/principal resolution — mirroring exactly how
+`api/audit.py`'s `principal_resolver=None` path already fails closed with
+`501` for the same reason (see that module's docstring). `/auth/login`,
+`/auth/mfa/verify` and `/auth/mfa/recovery`'s login path need no such
+header: they resolve the user from the `mfa_token` challenge alone,
+exactly like `/auth/login` needs no prior session — so those three stay
+enabled.
+
+**Deviation 2 (PR #1618 review finding 2 — acceptance criterion):** the
+ticket's "Valid code creates a session" scenario is not fully met by this
+PR: `/auth/mfa/verify` and the recovery-code login path in
+`/auth/mfa/recovery` both return `{"status": "authenticated"}` but mint no
+session (no `cv_refresh` cookie, no access token) — session/token minting
+is E09-S03 scope (`auth/login_service.py`'s own docstring: "non-MFA
+session issuance is E09-S03 scope"; the same boundary applies to the MFA
+leg). This PR closes E09-S02 exactly as scoped ("second factor,
+enrolment and recovery codes"); the end-to-end scenario is completed by
+E09-S03, which is already `blocked_by` this story and picks this up next.
 
 Source IP resolution intentionally does not trust `X-Forwarded-For` unless
 the deployment topology has a trusted reverse proxy configured elsewhere
@@ -50,7 +68,6 @@ from candleviewer.auth.errors import (
     MfaChallengeLocked,
     MfaCodeInvalid,
     MfaCodeReused,
-    MfaEnrollmentNotFound,
     RecoveryCodeInvalid,
     RecoveryCodesExhausted,
 )
@@ -304,51 +321,39 @@ def make_auth_router(
 
     @router.post("/auth/mfa/enroll", status_code=201)
     async def mfa_enroll(
-        body: MfaEnrollRequest, x_user_id: str = Header(...), x_username: str = Header(...)
+        body: MfaEnrollRequest,
+        x_user_id: str | None = Header(default=None),
+        x_username: str | None = Header(default=None),
     ) -> JSONResponse:
-        if not auth_service.mfa_is_active:
-            return _problem(503, "Service unavailable", "mfa backend is not wired")
-        result = await auth_service.mfa.enroll(x_user_id, body, account_name=x_username)
-        return JSONResponse(
-            status_code=201,
-            content={
-                "method_id": str(result.method_id),
-                "method": result.method,
-                "otpauth_uri": result.otpauth_uri,
-                "recovery_codes": list(result.recovery_codes),
-            },
+        # PR #1618 review finding 1 (security, blocking): no session/RBAC
+        # middleware exists yet to verify `X-User-Id`/`X-Username` actually
+        # belong to the caller (E09-S03 scope). Trusting them would let any
+        # caller enrol MFA (and read the one-time recovery codes) for any
+        # account — an MFA takeover. This route fails closed with `501`
+        # (mirroring `api/audit.py`'s `principal_resolver=None` path) until
+        # E09-S03 lands a real principal resolver here. See the module
+        # docstring's "Deviation 1".
+        del x_user_id, x_username
+        return _problem(
+            501,
+            "Not implemented",
+            "enrolment requires session authentication (E09-S03); disabled until then",
         )
 
     @router.post("/auth/mfa/enroll/confirm")
     async def mfa_enroll_confirm(
-        body: MfaEnrollConfirmRequest, x_user_id: str = Header(...)
+        body: MfaEnrollConfirmRequest,
+        x_user_id: str | None = Header(default=None),
     ) -> JSONResponse:
-        if not auth_service.mfa_is_active:
-            return _problem(503, "Service unavailable", "mfa backend is not wired")
-        try:
-            kind, recovery_codes = await auth_service.mfa.confirm_enrollment(
-                x_user_id, method_id=str(body.method_id), code=body.code
-            )
-        except MfaEnrollmentNotFound as exc:
-            return _problem(422, "Enrolment not found", str(exc))
-        except MfaCodeInvalid as exc:
-            return _problem(422, "Invalid code", str(exc))
-
-        await _audit(
-            audit_service,
-            "auth.mfa_enrolled",
-            actor_label=x_user_id,
-            actor_ip="unknown",
-            outcome=AuditOutcome.SUCCESS,
-        )
-        return JSONResponse(
-            status_code=200,
-            content={
-                "id": str(body.method_id),
-                "kind": kind,
-                "active": True,
-                "recovery_codes": list(recovery_codes),
-            },
+        # Same rationale as `/auth/mfa/enroll` above (Deviation 1): trusting
+        # an unauthenticated `X-User-Id` here would let anyone confirm
+        # (and thereby activate) a TOTP method — and mint that account's
+        # recovery codes — for any user id. Disabled until E09-S03.
+        del x_user_id
+        return _problem(
+            501,
+            "Not implemented",
+            "enrolment confirmation requires session authentication (E09-S03); disabled until then",
         )
 
     return router
