@@ -1,4 +1,9 @@
 {
-  "machines": {},
+  "machines": {
+    "session": {
+      "hash": "2d45266da1d7d17a68cbe76c93fc33043ef7f4fb2f2062c260ec3f3955989ffc",
+      "version": null
+    }
+  },
   "schema_version": 1
 }
