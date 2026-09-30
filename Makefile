@@ -1,4 +1,4 @@
-.PHONY: governance dev dev-down test gen gen-check up down reset arch security audit-net
+.PHONY: governance dev dev-down test gen gen-check up down reset arch security audit-net ci-gate-fixture
 
 # E02-T01: root convenience targets delegating to pnpm/uv (20-architecture.md
 # §5 Tooling). Thin wrappers only — the pnpm/turbo task graph and the uv/ruff
@@ -79,4 +79,12 @@ governance:
 # non-zero if anything is bound off-mesh.
 audit-net:
 	uv run --project services/api python tools/ci/audit_net.py
+
+# E03-Q01: regenerate/run the black-box CI-gate fixtures
+# (tests/ci-gates/PLAN.md). `ci-gate-fixture` with no NAME runs all of them;
+# `make ci-gate-fixture NAME=E03-GT-16b` runs just one case id, so a fixture
+# can be re-checked on demand as the gates it targets evolve, without a
+# long-lived scratch branch.
+ci-gate-fixture:
+	python tests/ci-gates/run_fixtures.py $(if $(NAME),--case $(NAME),)
 
