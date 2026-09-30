@@ -31,12 +31,14 @@ export function buildAllowList(
   invoke: (channel: string, ...args: unknown[]) => Promise<unknown>,
   allowedChannels: readonly string[] = ALLOWED_IPC_CHANNELS,
 ): Readonly<Record<string, (...args: unknown[]) => Promise<unknown>>> {
-  const built: Record<string, (...args: unknown[]) => Promise<unknown>> = {};
   for (const channel of channels) {
     if (!isChannelAllowed(channel, allowedChannels)) {
       throw new Error(`IPC channel "${channel}" is not on the allow-list`);
     }
-    built[channel] = (...args: unknown[]) => invoke(channel, ...args);
   }
-  return Object.freeze(built);
+  return Object.freeze(
+    Object.fromEntries(
+      channels.map((channel) => [channel, (...args: unknown[]) => invoke(channel, ...args)]),
+    ),
+  );
 }

@@ -1,0 +1,25 @@
+rules:
+  - id: cv-shell-dangerously-set-inner-html
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: >-
+      SR-127: dangerouslySetInnerHTML (and raw innerHTML/outerHTML/insertAdjacentHTML writes) are
+      banned in the app-shell modules. The shell renders trusted chrome around a trading
+      session; an HTML-injection sink there is an XSS-to-live-order path (STRIDE E1/O11).
+    metadata:
+      references:
+        - docs/plan/04-security-program.md#612-frontend-application-security-sr-127sr-129
+      rule-id: cv-shell-dangerously-set-inner-html
+      sr: SR-127
+    pattern-either:
+      - pattern: "<$EL ... dangerouslySetInnerHTML={...} ... />"
+      - pattern: "{..., dangerouslySetInnerHTML: ..., ...}"
+      - pattern: $X.innerHTML = $V
+      - pattern: $X.outerHTML = $V
+      - pattern: $X.insertAdjacentHTML(...)
+    paths:
+      include:
+        - "apps/web/src/shell/**"
+        - "apps/web/src/routes/**"
+        - "apps/desktop/**"
+        - "**/cv-shell-*"

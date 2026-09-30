@@ -1,0 +1,39 @@
+rules:
+  - id: cv-electron-unsafe-webprefs
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: >-
+      SR-110 (docs/plan/04-security-program.md section 6.11): every BrowserWindow must be created
+      by the single hardened factory (createMainWindow in apps/desktop/src/main/index.ts) with
+      contextIsolation:true, nodeIntegration:false, nodeIntegrationInWorker:false,
+      nodeIntegrationInSubFrames:false, sandbox:true, webSecurity:true,
+      allowRunningInsecureContent:false, experimentalFeatures:false and no enableRemoteModule.
+      This code either sets a deviating webPreference or builds a window outside the factory.
+    metadata:
+      references:
+        - docs/plan/04-security-program.md#611-electron-shell-hardening-sr-110sr-119
+      rule-id: cv-electron-unsafe-webprefs
+      sr: SR-110
+    patterns:
+      - pattern-either:
+          - pattern: "{..., contextIsolation: false, ...}"
+          - pattern: "{..., nodeIntegration: true, ...}"
+          - pattern: "{..., nodeIntegrationInWorker: true, ...}"
+          - pattern: "{..., nodeIntegrationInSubFrames: true, ...}"
+          - pattern: "{..., sandbox: false, ...}"
+          - pattern: "{..., webSecurity: false, ...}"
+          - pattern: "{..., allowRunningInsecureContent: true, ...}"
+          - pattern: "{..., experimentalFeatures: true, ...}"
+          - pattern: "{..., enableRemoteModule: $X, ...}"
+          - patterns:
+              - pattern: new BrowserWindow(...)
+              - pattern-not-inside: |
+                  function createMainWindow(...) {
+                    ...
+                  }
+    paths:
+      include:
+        - "apps/desktop/**"
+        - "**/cv-electron-*"
+      exclude:
+        - "apps/desktop/test/**"

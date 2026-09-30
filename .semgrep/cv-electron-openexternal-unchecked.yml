@@ -1,0 +1,25 @@
+rules:
+  - id: cv-electron-openexternal-unchecked
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: >-
+      SR-113: shell.openExternal must only run inside a branch guarded by the scheme+host
+      allow-list check isExternalLinkAllowed(url). An unguarded call lets a compromised renderer
+      hand the OS browser (or a protocol handler) an attacker-chosen URL.
+    metadata:
+      references:
+        - docs/plan/04-security-program.md#611-electron-shell-hardening-sr-110sr-119
+      rule-id: cv-electron-openexternal-unchecked
+      sr: SR-113
+    patterns:
+      - pattern: $SHELL.openExternal(...)
+      - pattern-not-inside: |
+          if (<... isExternalLinkAllowed(...) ...>) {
+            ...
+          }
+    paths:
+      include:
+        - "apps/desktop/**"
+        - "**/cv-electron-*"
+      exclude:
+        - "apps/desktop/test/**"
