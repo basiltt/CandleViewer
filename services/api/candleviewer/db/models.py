@@ -311,8 +311,8 @@ mfa_methods = Table(
         BigInteger,
         comment=(
             "Highest RFC 6238 time-step accepted so far for this method; a step <= this\n"
-            "   value is a replay and must be rejected (ticket E09-S02 \"Reused code is\n"
-            "   rejected\"). NULL means no code has ever been accepted."
+            '   value is a replay and must be rejected (ticket E09-S02 "Reused code is\n'
+            '   rejected"). NULL means no code has ever been accepted.'
         ),
     ),
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
