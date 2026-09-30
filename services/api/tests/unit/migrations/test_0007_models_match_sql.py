@@ -1,4 +1,4 @@
-"""`0006_sessions_idle_timeout`: `candleviewer.db.models` must mirror the hand-written
+"""`0007_sessions_idle_timeout`: `candleviewer.db.models` must mirror the hand-written
 SQL (column, default, range CHECK) or `alembic check` (CI-MIG-002) reports drift."""
 
 from __future__ import annotations
@@ -40,5 +40,5 @@ def test_rendered_sql_adds_idle_timeout_and_downgrade_reverses_it() -> None:
 
     up = render("upgrade", "head")
     assert "ALTER TABLE sessions ADD COLUMN idle_timeout_s integer NOT NULL DEFAULT 900" in up
-    down = render("downgrade", "0006_sessions_idle_timeout:0005_mfa_totp_replay_guard")
+    down = render("downgrade", "0007_sessions_idle_timeout:0006_admin_write_permission")
     assert "ALTER TABLE sessions DROP COLUMN idle_timeout_s" in down

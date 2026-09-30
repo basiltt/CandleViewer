@@ -6,7 +6,7 @@ Labels are closed sets (revocation `reason` is normalised by
 
 from __future__ import annotations
 
-from prometheus_client import Counter, Gauge, Histogram
+from candleviewer.observability.metrics import Counter, Gauge, Histogram
 
 auth_sessions_active = Gauge(
     "auth_sessions_active", "Live (unrevoked) sessions minted by this process."

@@ -786,6 +786,8 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/AuthenticatedResponse" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+        "503": { $ref: "#/components/responses/ServiceUnavailable" }
 
   /auth/logout:
     post:

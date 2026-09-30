@@ -14,7 +14,7 @@ from collections import defaultdict
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from prometheus_client import Counter, Histogram
+from candleviewer.observability.metrics import Counter, Histogram
 
 _log = logging.getLogger(__name__)
 CLOSE_TOKEN_EXPIRED = 4401

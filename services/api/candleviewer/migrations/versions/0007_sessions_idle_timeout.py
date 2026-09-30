@@ -1,7 +1,7 @@
 """sessions.idle_timeout_s: per-session idle-lock timeout (E09-S03)
 
-Revision ID: 0006_sessions_idle_timeout
-Revises: 0005_mfa_totp_replay_guard
+Revision ID: 0007_sessions_idle_timeout
+Revises: 0006_admin_write_permission
 Create Date: 2026-10-01
 
 `SessionRecord.idle_timeout_s` (5-60 min, default 15 per the E09-S03 ticket)
@@ -17,8 +17,8 @@ from collections.abc import Sequence
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "0006_sessions_idle_timeout"
-down_revision: str | None = "0005_mfa_totp_replay_guard"
+revision: str = "0007_sessions_idle_timeout"
+down_revision: str | None = "0006_admin_write_permission"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
