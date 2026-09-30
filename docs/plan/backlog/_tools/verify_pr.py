@@ -41,7 +41,8 @@ try:
         r = subprocess.run(["uv", "sync", "--frozen", "--quiet"], capture_output=True, text=True, cwd=api, env=env)
         if r.returncode: fails.append(f"uv sync: {(r.stderr or r.stdout).strip()[-300:]}")
         else:
-            r = subprocess.run(["uv", "run", "--frozen", "pytest", "-q", "-p", "no:cacheprovider", "-m", "not integration and not perf"]  # perf budgets are CI-enforced; the laptop runs several agents at once, capture_output=True, text=True, cwd=api, env=env)
+            # perf budgets are CI-enforced; the laptop runs several agents at once
+            r = subprocess.run(["uv", "run", "--frozen", "pytest", "-q", "-p", "no:cacheprovider", "-m", "not integration and not perf"], capture_output=True, text=True, cwd=api, env=env)
             tail = " | ".join((r.stdout or r.stderr).strip().splitlines()[-3:])
             print("pytest(services/api):", tail)
             if r.returncode not in (0, 5): fails.append(f"services/api pytest rc={r.returncode}: {tail[:300]}")
