@@ -114,6 +114,8 @@ async def restore(key, envelope) -> Interpreter:
 
 **Compaction and migration jobs** always `start()` before re-persisting (CV-C58).
 
+_Implemented (E50-T10):_ `persistence.Persister.persist` realises the snapshot block above with injected `SnapshotRepo` / `DrainJournal` / `PersistAudit` / seal callbacks (tables: `machine_snapshots`, `machine_drain_journal`, `24-internal-schemas.md` §17.6; migration E29-T12). A `_fault` context is refused and audited before anything is drained. `InMemoryDrainJournal` is the reference journal for the contract suite; restore + HMAC stay in E50-T49.
+
 
 ### 1.4 `gateway.py`: the only send path
 

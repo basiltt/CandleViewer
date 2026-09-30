@@ -1,0 +1,18 @@
+{
+  "id": "persist_min",
+  "strictConfig": true,
+  "strict": true,
+  "strictTargets": true,
+  "onUnhandled": "defer",
+  "maxIterations": 50,
+  "actionErrorPolicy": "rollback",
+  "initial": "idle",
+  "context": {"seen": []},
+  "states": {
+    "idle": {
+      "on": {
+        "PING": {"actions": ["record"]}
+      }
+    }
+  }
+}
