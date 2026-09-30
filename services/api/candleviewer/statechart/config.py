@@ -54,6 +54,19 @@ CV_START_TIMEOUT: Final[float] = 5.0
 #: explicitly (`registry`/`schema.py` requires the field to be present).
 CV_DEFAULT_MAX_ITERATIONS: Final[int] = 500
 
+#: Snapshot envelope version floor (E50-T02, 28-statechart-catalogue.md
+#: "Envelope version floor is 3 (v3 carries chain_trips)"). Every call to
+#: `Interpreter.from_snapshot(..., minimum_version=SNAPSHOT_V)` and every
+#: `seal(..., version=SNAPSHOT_V)` in `persistence.py` (E50-T10/T49) must
+#: use this constant rather than a literal `3`, so a future envelope-floor
+#: bump is a one-line change with every call site following automatically.
+#: The upstream library's own `SNAPSHOT_VERSION` (currently 3 in 0.9.1) is
+#: a *ceiling* on what this constant may be set to — `restore()` refuses a
+#: newer-than-library version outright — but this project pins its own
+#: floor independently so a future library bump does not silently lower
+#: our accepted minimum.
+SNAPSHOT_V: Final[int] = 3
+
 #: Event-name -> JSON-Schema map passed to `Interpreter(event_schemas=...)`
 #: (CV-C-strict unknown-event refusal). Populated per machine as B1-B20
 #: land (E50-T02..T?? bindings tickets); empty here is valid — an empty

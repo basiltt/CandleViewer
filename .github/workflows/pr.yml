@@ -250,6 +250,14 @@ jobs:
     if: ${{ needs.changed-paths.outputs.py == 'true' }}
     uses: ./.github/workflows/_job-statechart-lint.yml
 
+  machine-hash-lock:
+    name: machine-hash-lock
+    # E50-T02: blocking gate for machine_hashes.lock (MUST-12/MUSTNOT-09).
+    # Applies whenever backend/statechart Python changes.
+    needs: changed-paths
+    if: ${{ needs.changed-paths.outputs.py == 'true' }}
+    uses: ./.github/workflows/_job-machine-hash-lock.yml
+
   xstate-pin-attestation:
     name: xstate-pin-attestation
     # E50-T57: verify the xstate-statemachine==0.9.1 pin is exact and
@@ -394,6 +402,7 @@ jobs:
       - js
       - py
       - statechart-lint
+      - machine-hash-lock
       - xstate-pin-attestation
       - contract
       - integration
@@ -431,6 +440,7 @@ jobs:
           RESULT_JS: ${{ needs.js.result }}
           RESULT_PY: ${{ needs.py.result }}
           RESULT_STATECHART_LINT: ${{ needs.statechart-lint.result }}
+          RESULT_MACHINE_HASH_LOCK: ${{ needs.machine-hash-lock.result }}
           RESULT_XSTATE_PIN_ATTESTATION: ${{ needs.xstate-pin-attestation.result }}
           RESULT_CONTRACT: ${{ needs.contract.result }}
           RESULT_INTEGRATION: ${{ needs.integration.result }}
@@ -454,6 +464,7 @@ jobs:
               js: { applicable: isTrue(process.env.FILTER_JS), result: process.env.RESULT_JS },
               py: { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_PY },
               "statechart-lint": { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_STATECHART_LINT },
+              "machine-hash-lock": { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_MACHINE_HASH_LOCK },
               "xstate-pin-attestation": { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_XSTATE_PIN_ATTESTATION },
               contract: { applicable: isTrue(process.env.FILTER_PROTOCOL), result: process.env.RESULT_CONTRACT },
               integration: { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_INTEGRATION },
