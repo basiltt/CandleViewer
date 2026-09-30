@@ -1,0 +1,28 @@
+# E10-X02 — Security review of E10-T01..T04: findings record
+
+- Ticket: E10-X02 (issue #307); defect record #1656 (AC6 "Security review is recorded").
+- Reviewer: bugfix-r1 security-review pass (agent, static read). Method: source read of the
+  shipped surfaces against `04-security-program.md` §6.11 (SR-110..SR-119) / §6.11a and the E10-X01
+  threat model (`docs/security/threat-models/`), cross-checked with the existing unit tests.
+- Scope read: `apps/desktop/src/main/{index,csp,shellPort,updateChannel,keychain}.ts`,
+  `apps/desktop/src/preload/*`, `apps/web/index.html` (CSP meta), `apps/web/src/routes/guards.ts`.
+  T01 deep-link/route manifest and T04 bootstrap were reviewed only at the guard/trust-boundary
+  level; a deeper pass stays with the human security code-owner sign-off (separate DoD item).
+- Deviation (Agent-delivery adaptations): no dynamic/packaged-app run and no human sign-off in this
+  session; the security engineer sign-off comment on #307 remains a human action.
+
+## Findings
+
+| ID | Severity | SR ref | Affected | Finding | Disposition | Owner |
+|---|---|---|---|---|---|---|
+| F1 | Medium | SR-112 | `csp.ts`, `index.html` | `style-src 'unsafe-inline'`. SR-112 permits it only if the design system requires it. | Accepted-risk, time-boxed: revisit nonce/hashed styles when E05 fixes the styling method. Needs dated Owner sign-off. | @basiltt / security |
+| F2 | Medium | SR-112 | `index.html` | `frame-ancestors` (and `form-action`/`base-uri` enforcement varies) are not honoured in a `<meta>` CSP; under `file://` the header path never fires, so the packaged build relies on the meta for everything but frame-ancestors. Renderer cannot be framed by an external page (no http origin) so exposure is low. | Accepted; documented. The gate asserts both header and meta text. | security |
+| F3 | Low | SR-111 | `index.ts` `installIpcHandlers` | `ipcMain.handle` handlers do not validate `event.senderFrame`/sender origin. Channels take no arguments and return non-secret data, but the KEK handle channel is sensitive. | Open, tracked: add sender-origin validation before any channel gains arguments or a second window exists. | frontend / security |
+| F4 | Low | SR-113 | `index.ts` | Only `will-navigate` and `setWindowOpenHandler` are constrained; `will-redirect` and `<webview>` attachment are not explicitly denied. | Open, tracked: add `will-redirect` handler and `will-attach-webview` deny. | frontend |
+| F5 | Low | SR-110 | `index.ts` | Only `setPermissionRequestHandler` is set; `setPermissionCheckHandler` is not, so synchronous permission checks use Electron defaults. | Open, tracked. | frontend |
+| F6 | Info | SR-113/119 | `index.ts` | External allow-list includes `www.bybit.com`/`bybit.com` for OS-browser hand-off only (not a connect target); consistent with SR-119 (no renderer/main API contact). | No action. | — |
+| F7 | Info | SR-012/§7.3 | `guards.ts` | Route guards are client-side UX only; server-side RBAC remains authoritative; denial logs carry route id and reason only. | No action. | — |
+
+No Critical or High finding is open. Every finding above has a severity, an SR reference and an
+owner. F1 and F2 are accepted-risk pending the dated Owner sign-off; F3-F5 are to be filed as
+follow-up issues by the orchestrator (out of scope for this record-only change).
