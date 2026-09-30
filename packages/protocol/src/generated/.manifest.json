@@ -1,6 +1,6 @@
 {
   "index.ts": "2cc0e349d1959e5453a21f1f323f5112ad21b6a7124dc7cde8943acae74efa05",
   "policy/index.ts": "9288b6c4957efcb0e64e22962255f6ce270d486aec89cc88d5aa2517b5a3a233",
-  "rest/index.ts": "4feb1166f90b8f8023ec1a8059cc2da58104d65348b7133fdb20538a372a2256",
+  "rest/index.ts": "f1d58abefc91ee9bd9edd40d3513e2ccf3b3097800aa2930426762f2206124cb",
   "ws/index.ts": "fd6c12eb52cafb828baf44db208e2aed8cafb9c90e38b11ae8c0934bae1e613a"
 }
