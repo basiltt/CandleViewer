@@ -306,6 +306,14 @@ mfa_methods = Table(
     Column("transports", ARRAY(Text)),
     Column("confirmed_at", TIMESTAMP(timezone=True)),
     Column("last_used_at", TIMESTAMP(timezone=True)),
+    Column(
+        "last_accepted_time_step",
+        BigInteger,
+        comment=(
+            "TOTP replay guard (E09-S02, migration 0005): highest accepted "
+            "RFC 6238 time-step; NULL means no code accepted yet."
+        ),
+    ),
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("revoked_at", TIMESTAMP(timezone=True)),

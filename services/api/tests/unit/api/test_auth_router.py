@@ -2,13 +2,30 @@
 
 from __future__ import annotations
 
+import uuid
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from candleviewer.api.auth import make_auth_router
 from candleviewer.audit.models import AuditOutcome, Severity
-from candleviewer.auth.errors import AccountDisabled, AccountLocked, InvalidCredentials
-from candleviewer.auth.models import LoginRequest, MfaChallengeResult, MfaMethodKind
+from candleviewer.auth.errors import (
+    AccountDisabled,
+    AccountLocked,
+    InvalidCredentials,
+    MfaChallengeInvalid,
+    MfaEnrollmentNotFound,
+    RecoveryCodesExhausted,
+)
+from candleviewer.auth.models import (
+    LoginRequest,
+    MfaChallengeResult,
+    MfaEnrollRequest,
+    MfaEnrollResult,
+    MfaMethodKind,
+    MfaVerifiedResult,
+    MfaVerifyRequest,
+)
 
 
 class _FakeLoginService:
@@ -22,10 +39,53 @@ class _FakeLoginService:
         return self._outcome
 
 
+class _FakeMfaService:
+    def __init__(self, outcome: object) -> None:
+        self._outcome = outcome
+
+    def _resolve(self) -> object:
+        if isinstance(self._outcome, Exception):
+            raise self._outcome
+        return self._outcome
+
+    async def verify(self, request: MfaVerifyRequest, *, account_name: str) -> MfaVerifiedResult:
+        result = self._resolve()
+        assert isinstance(result, MfaVerifiedResult)
+        return result
+
+    async def enroll(
+        self, user_id: str, request: MfaEnrollRequest, *, account_name: str
+    ) -> MfaEnrollResult:
+        result = self._resolve()
+        assert isinstance(result, MfaEnrollResult)
+        return result
+
+    async def confirm_enrollment(
+        self, user_id: str, *, method_id: str, code: str
+    ) -> tuple[MfaMethodKind, tuple[str, ...]]:
+        result = self._resolve()
+        assert isinstance(result, tuple)
+        return result
+
+    async def recover(self, mfa_token: str, recovery_code: str) -> MfaVerifiedResult:
+        result = self._resolve()
+        assert isinstance(result, MfaVerifiedResult)
+        return result
+
+
 class _FakeAuthService:
-    def __init__(self, outcome: object, *, active: bool = True) -> None:
+    def __init__(
+        self,
+        outcome: object,
+        *,
+        active: bool = True,
+        mfa_outcome: object = None,
+        mfa_active: bool = True,
+    ) -> None:
         self._active = active
         self._login = _FakeLoginService(outcome)
+        self._mfa_active = mfa_active
+        self._mfa = _FakeMfaService(mfa_outcome)
 
     @property
     def is_active(self) -> bool:
@@ -35,10 +95,33 @@ class _FakeAuthService:
     def login(self) -> _FakeLoginService:
         return self._login
 
+    @property
+    def mfa_is_active(self) -> bool:
+        return self._mfa_active
+
+    @property
+    def mfa(self) -> _FakeMfaService:
+        return self._mfa
+
 
 def _app(outcome: object, *, active: bool = True) -> FastAPI:
     app = FastAPI()
     app.include_router(make_auth_router(_FakeAuthService(outcome, active=active)))
+    return app
+
+
+def _mfa_app(
+    mfa_outcome: object, *, mfa_active: bool = True, audit_service: object = None
+) -> FastAPI:
+    app = FastAPI()
+    app.include_router(
+        make_auth_router(
+            _FakeAuthService(
+                InvalidCredentials("n/a"), mfa_outcome=mfa_outcome, mfa_active=mfa_active
+            ),
+            audit_service=audit_service,  # type: ignore[arg-type]
+        )
+    )
     return app
 
 
@@ -132,3 +215,112 @@ def test_account_locked_emits_auth_account_locked_audit_action_with_warning_seve
     assert call["action"] == "auth.account_locked"
     assert call["outcome"] == AuditOutcome.DENIED
     assert call["severity"] == Severity.WARNING
+
+
+# -- /auth/mfa/verify ------------------------------------------------------
+
+
+def test_mfa_verify_success_returns_authenticated() -> None:
+    client = TestClient(_mfa_app(MfaVerifiedResult(user_id=uuid.uuid4())))
+    response = client.post(
+        "/auth/mfa/verify", json={"mfa_token": "tok", "method": "totp", "code": "123456"}
+    )
+    assert response.status_code == 200
+    assert response.json()["status"] == "authenticated"
+
+
+def test_mfa_verify_invalid_code_returns_401_and_audits_failure() -> None:
+    audit_service = _RecordingAuditService()
+    client = TestClient(
+        _mfa_app(MfaChallengeInvalid("no open challenge"), audit_service=audit_service)
+    )
+    response = client.post(
+        "/auth/mfa/verify", json={"mfa_token": "tok", "method": "totp", "code": "123456"}
+    )
+    assert response.status_code == 401
+    assert audit_service.writer.calls[0]["action"] == "auth.mfa_failed"
+
+
+def test_mfa_verify_inactive_backend_returns_503() -> None:
+    client = TestClient(_mfa_app(MfaVerifiedResult(user_id=uuid.uuid4()), mfa_active=False))
+    response = client.post(
+        "/auth/mfa/verify", json={"mfa_token": "tok", "method": "totp", "code": "123456"}
+    )
+    assert response.status_code == 503
+
+
+# -- /auth/mfa/recovery ------------------------------------------------------
+
+
+def test_mfa_recovery_success_returns_authenticated_and_forced_reenroll() -> None:
+    client = TestClient(
+        _mfa_app(MfaVerifiedResult(user_id=uuid.uuid4(), forced_totp_reenroll=True))
+    )
+    response = client.post(
+        "/auth/mfa/recovery", json={"mfa_token": "tok", "recovery_code": "7F2A-91BC-4DE0"}
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "authenticated"
+    assert body["forced_totp_reenroll"] is True
+
+
+def test_mfa_recovery_exhausted_returns_401_and_audits_denied() -> None:
+    audit_service = _RecordingAuditService()
+    client = TestClient(_mfa_app(RecoveryCodesExhausted("all used"), audit_service=audit_service))
+    response = client.post(
+        "/auth/mfa/recovery", json={"mfa_token": "tok", "recovery_code": "7F2A-91BC-4DE0"}
+    )
+    assert response.status_code == 401
+    call = audit_service.writer.calls[0]
+    assert call["action"] == "auth.recovery_codes_exhausted"
+    assert call["outcome"] == AuditOutcome.DENIED
+
+
+# -- /auth/mfa/enroll --------------------------------------------------------
+
+
+def test_mfa_enroll_returns_201_with_otpauth_uri() -> None:
+    method_id = uuid.uuid4()
+    client = TestClient(
+        _mfa_app(
+            MfaEnrollResult(
+                method_id=method_id,
+                method=MfaMethodKind.TOTP,
+                otpauth_uri="otpauth://totp/x",
+                secret_base32="ABC",
+            )
+        )
+    )
+    response = client.post(
+        "/auth/mfa/enroll",
+        json={"method": "totp", "label": "phone"},
+        headers={"X-User-Id": str(uuid.uuid4()), "X-Username": "alice"},
+    )
+    assert response.status_code == 201
+    assert response.json()["otpauth_uri"] == "otpauth://totp/x"
+
+
+# -- /auth/mfa/enroll/confirm -------------------------------------------------
+
+
+def test_mfa_enroll_confirm_success_returns_recovery_codes() -> None:
+    client = TestClient(_mfa_app((MfaMethodKind.TOTP, ("7F2A-91BC-4DE0",))))
+    response = client.post(
+        "/auth/mfa/enroll/confirm",
+        json={"method_id": str(uuid.uuid4()), "code": "123456"},
+        headers={"X-User-Id": str(uuid.uuid4())},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["recovery_codes"] == ["7F2A-91BC-4DE0"]
+
+
+def test_mfa_enroll_confirm_not_found_returns_422() -> None:
+    client = TestClient(_mfa_app(MfaEnrollmentNotFound("no pending enrolment")))
+    response = client.post(
+        "/auth/mfa/enroll/confirm",
+        json={"method_id": str(uuid.uuid4()), "code": "123456"},
+        headers={"X-User-Id": str(uuid.uuid4())},
+    )
+    assert response.status_code == 422

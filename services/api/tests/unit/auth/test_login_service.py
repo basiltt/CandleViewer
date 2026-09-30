@@ -14,6 +14,7 @@ from candleviewer.auth.login_service import LOCKOUT_THRESHOLD, LoginService
 from candleviewer.auth.models import LoginRequest, MfaMethodKind, UserStatus
 from candleviewer.auth.throttle import PerIpLoginThrottle
 from tests.unit.auth.auth_fakes import FakeUserRepository, make_user
+from tests.unit.auth.mfa_fakes import FakeMfaRepository
 
 PASSWORD = "correct-horse-battery-staple"
 
@@ -227,3 +228,32 @@ async def test_stale_argon2_params_trigger_rehash_on_login() -> None:
     stored = repo.users[str(user.id)]
     assert stored.password_hash != stale_hash
     assert await hasher.verify(stored.password_hash, PASSWORD) is True
+
+
+@pytest.mark.asyncio
+async def test_successful_login_persists_hashed_mfa_challenge_when_repository_injected() -> None:
+    """E09-S02: `MfaService.verify()`/`.recover()` must be able to look the
+    `mfa_token` challenge up by its hash, so `login()` must persist a
+    `mfa_challenges` row (never the token itself) when an `MfaRepository`
+    is wired in."""
+    repo = FakeUserRepository()
+    mfa_repo = FakeMfaRepository()
+    hasher = Hasher(pepper="test-pepper")
+    user = make_user(password_hash=await hasher.hash(PASSWORD), mfa_methods=(MfaMethodKind.TOTP,))
+    repo.add(user)
+    service = LoginService(
+        repo,
+        hasher,
+        per_ip_throttle=PerIpLoginThrottle(max_attempts=1000),
+        mfa_repository=mfa_repo,
+    )
+
+    result = await service.login(
+        LoginRequest(identifier="basiltt", password=PASSWORD), source_ip="10.0.0.1"
+    )
+
+    assert len(mfa_repo.challenges) == 1
+    challenge = next(iter(mfa_repo.challenges.values()))
+    assert challenge.purpose == "login"
+    assert challenge.mfa_token_hash != result.mfa_token
+    assert str(challenge.user_id) == str(user.id)

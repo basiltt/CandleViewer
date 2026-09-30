@@ -41,6 +41,46 @@ class LoginRequest(BaseModel):
     device_name: str | None = Field(default=None, max_length=120)
 
 
+class MfaVerifyRequest(BaseModel):
+    """`docs/plan/22-api-openapi.yaml` `MfaVerifyRequest` (webauthn fields
+    omitted — out of this ticket's scope)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    mfa_token: str = Field(min_length=1)
+    method: MfaMethodKind
+    code: str = Field(pattern=r"^[0-9A-Za-z-]{6,32}$")
+
+
+class MfaEnrollRequest(BaseModel):
+    """`docs/plan/22-api-openapi.yaml` `MfaEnrollRequest` (`webauthn` is
+    rejected — out of scope, see the ticket's "Out of scope")."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    method: MfaMethodKind
+    label: str = Field(default="", max_length=60)
+
+
+class MfaEnrollConfirmRequest(BaseModel):
+    """`docs/plan/22-api-openapi.yaml` `MfaEnrollConfirmRequest`."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    method_id: uuid.UUID
+    code: str = Field(min_length=6, max_length=32)
+
+
+class MfaRecoveryRequest(BaseModel):
+    """`docs/plan/22-api-openapi.yaml` `/auth/mfa/recovery` inline request
+    schema."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    mfa_token: str = Field(min_length=1)
+    recovery_code: str = Field(min_length=8, max_length=64)
+
+
 class TokenBundle(BaseModel):
     """`docs/plan/22-api-openapi.yaml` `TokenBundle`.
 
@@ -94,3 +134,96 @@ class UserRecord(BaseModel):
     failed_login_count: int
     locked_until: datetime | None
     mfa_methods: tuple[MfaMethodKind, ...] = ()
+
+
+class MfaMethodRecord(BaseModel):
+    """Row-shaped view of `mfa_methods` columns E09-S02 touches.
+
+    `secret_enc`/`secret_key_ref` are only ever populated for `kind=totp`
+    (`mfa_totp_shape` CHECK) and are never serialised back to an HTTP
+    response — see `auth/mfa_service.py`'s explicit note on this."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    id: uuid.UUID
+    user_id: uuid.UUID
+    kind: MfaMethodKind
+    label: str = ""
+    secret_enc: bytes | None = None
+    secret_key_ref: str | None = None
+    last_accepted_time_step: int | None = None
+    confirmed_at: datetime | None = None
+    last_used_at: datetime | None = None
+    created_at: datetime
+    revoked_at: datetime | None = None
+
+
+class MfaChallengeRecord(BaseModel):
+    """Row-shaped view of `mfa_challenges` (`purpose in
+    ('login','step_up','enroll')`)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    id: uuid.UUID
+    user_id: uuid.UUID
+    mfa_token_hash: str
+    purpose: str
+    attempts: int
+    satisfied_at: datetime | None
+    expires_at: datetime
+    created_at: datetime
+
+
+class MfaEnrollResult(BaseModel):
+    """`docs/plan/22-api-openapi.yaml` `MfaEnrollResponse`. `otpauth_uri` and
+    `recovery_codes` are returned exactly once, at enrolment — never
+    reconstructable afterwards (ticket "Secret handling": "returned to the
+    client exactly once ... and never again")."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    method_id: uuid.UUID
+    method: MfaMethodKind
+    otpauth_uri: str | None = None
+    secret_base32: str | None = None
+    recovery_codes: tuple[str, ...] = ()
+
+
+class MfaMethodView(BaseModel):
+    """`docs/plan/22-api-openapi.yaml` `MfaMethod` — the API-facing,
+    secret-free projection of `MfaMethodRecord` (SCR-112 security
+    settings)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    id: uuid.UUID
+    kind: MfaMethodKind
+    label: str | None
+    active: bool
+    created_at: datetime
+    last_used_at: datetime | None = None
+
+
+class MfaVerifiedResult(BaseModel):
+    """Successful `POST /auth/mfa/verify` or `/auth/mfa/recovery` outcome.
+
+    Mirrors `MfaChallengeResult`'s own documented boundary: minting a real
+    `TokenBundle`/session is E09-S03 scope, so `MfaService` returns this
+    typed marker instead of fabricating an unsigned token (see
+    `mfa_service.py`'s `verify`/`recovery` docstrings)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    user_id: uuid.UUID
+    forced_totp_reenroll: bool = False
+
+
+class RecoveryCodesRegenerated(BaseModel):
+    """`POST /auth/mfa/recovery`-adjacent regeneration result (ticket
+    "`POST /auth/mfa/recovery` regenerates codes ... and auditing
+    `auth.recovery_codes_regenerated`") — shown exactly once, like
+    enrolment's own codes."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    recovery_codes: tuple[str, ...]

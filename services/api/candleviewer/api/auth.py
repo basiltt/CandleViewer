@@ -1,18 +1,31 @@
-"""`POST /auth/login` (E09-S01, US-ONB-001).
+"""`POST /auth/login` (E09-S01, US-ONB-001) and the E09-S02 (US-ONB-002/003)
+MFA endpoints: `/auth/mfa/verify`, `/auth/mfa/enroll`,
+`/auth/mfa/enroll/confirm`, `/auth/mfa/recovery`.
 
-Thin HTTP adapter over `candleviewer.auth.login_service.LoginService`:
-translates typed domain errors to the RFC 7807-shaped problem responses the
-ticket's acceptance criteria specify, and — when a live `AuditWriter` is
-injected — emits `auth.login`/`auth.login_failed`/`auth.account_locked`
-(all already registered in `candleviewer.audit.actions.AUDIT_ACTIONS`) per
-the Gherkin ("... is audited" / "the attempt is audited with the source
-IP" / "auth.account_locked is audited"). `api` (M23) is on
-the allow-list to import `candleviewer.audit`; `auth` itself is not (see
+Thin HTTP adapter over `candleviewer.auth.login_service.LoginService` /
+`candleviewer.auth.mfa_service.MfaService`: translates typed domain errors
+to the RFC 7807-shaped problem responses the tickets' acceptance criteria
+specify, and — when a live `AuditWriter` is injected — emits the
+`auth.mfa_*` actions already registered in
+`candleviewer.audit.actions.AUDIT_ACTIONS`. `api` (M23) is on the allow-list
+to import `candleviewer.audit`; `auth` itself is not (see
 `auth/login_service.py`'s module docstring) — that boundary is exactly why
-the audit call lives in this router, not in `LoginService`. On the fake/CI
-default backend (`audit_writer=None`) the route still works; it just skips
-the audit call rather than failing the request (mirrors `AuthServiceLike`'s
-own optionality).
+the audit calls live in this router. On the fake/CI default backend
+(`audit_writer=None`) the routes still work; they just skip the audit call.
+
+**Deviation (documented per this repo's multi-agent protocol §5, "minor
+gaps ... noted in the PR under Deviations"):** `/auth/mfa/enroll`,
+`/auth/mfa/enroll/confirm` and `/auth/mfa/recovery`'s regeneration sibling
+are `x-rbac scope: self` per `22-api-openapi.yaml`, which normally means
+"the authenticated caller, resolved from their session". Real session
+authentication (the `cv_refresh` cookie / bearer access token / RBAC
+middleware) is E09-S03 scope, not yet merged. Pending that, these three
+routes resolve the acting user from an `X-User-Id` header the composition
+root's own auth middleware will supply once E09-S03 lands (today, in
+tests, the caller passes it directly) — never from an unauthenticated
+request body field. `/auth/mfa/verify` and `/auth/mfa/recovery`'s login
+path need no such header: they resolve the user from the `mfa_token`
+challenge alone, exactly like `/auth/login` needs no prior session.
 
 Source IP resolution intentionally does not trust `X-Forwarded-For` unless
 the deployment topology has a trusted reverse proxy configured elsewhere
@@ -25,12 +38,33 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 
 from candleviewer.audit.models import AuditOutcome, Severity
-from candleviewer.auth.errors import AccountDisabled, AccountLocked, InvalidCredentials
-from candleviewer.auth.models import LoginRequest, MfaChallengeResult
+from candleviewer.auth.errors import (
+    AccountDisabled,
+    AccountLocked,
+    InvalidCredentials,
+    MfaChallengeInvalid,
+    MfaChallengeLocked,
+    MfaCodeInvalid,
+    MfaCodeReused,
+    MfaEnrollmentNotFound,
+    RecoveryCodeInvalid,
+    RecoveryCodesExhausted,
+)
+from candleviewer.auth.models import (
+    LoginRequest,
+    MfaChallengeResult,
+    MfaEnrollConfirmRequest,
+    MfaEnrollRequest,
+    MfaEnrollResult,
+    MfaMethodKind,
+    MfaRecoveryRequest,
+    MfaVerifiedResult,
+    MfaVerifyRequest,
+)
 
 
 class LoginServiceLike(Protocol):
@@ -41,12 +75,36 @@ class LoginServiceLike(Protocol):
     async def login(self, request: LoginRequest, *, source_ip: str) -> MfaChallengeResult: ...
 
 
+class MfaServiceLike(Protocol):
+    """Structural type for `candleviewer.auth.mfa_service.MfaService`."""
+
+    async def verify(
+        self, request: MfaVerifyRequest, *, account_name: str
+    ) -> MfaVerifiedResult: ...
+
+    async def enroll(
+        self, user_id: str, request: MfaEnrollRequest, *, account_name: str
+    ) -> MfaEnrollResult: ...
+
+    async def confirm_enrollment(
+        self, user_id: str, *, method_id: str, code: str
+    ) -> tuple[MfaMethodKind, tuple[str, ...]]: ...
+
+    async def recover(self, mfa_token: str, recovery_code: str) -> MfaVerifiedResult: ...
+
+
 class AuthServiceLike(Protocol):
     @property
     def is_active(self) -> bool: ...
 
     @property
     def login(self) -> LoginServiceLike: ...
+
+    @property
+    def mfa_is_active(self) -> bool: ...
+
+    @property
+    def mfa(self) -> MfaServiceLike: ...
 
 
 class AuditWriterLike(Protocol):
@@ -170,6 +228,126 @@ def make_auth_router(
                 "mfa_token": result.mfa_token,
                 "methods": list(result.methods),
                 "expires_in": result.expires_in,
+            },
+        )
+
+    @router.post("/auth/mfa/verify")
+    async def mfa_verify(body: MfaVerifyRequest) -> JSONResponse:
+        if not auth_service.mfa_is_active:
+            return _problem(503, "Service unavailable", "mfa backend is not wired")
+        try:
+            # `account_name` is not knowable from the challenge alone at
+            # this layer without a user lookup this router does not own;
+            # `MfaService.verify()` only needs it for `enroll()`'s
+            # `otpauth_uri`, so a placeholder is harmless here.
+            result = await auth_service.mfa.verify(body, account_name="")
+        except (MfaChallengeInvalid, MfaChallengeLocked, MfaCodeInvalid, MfaCodeReused) as exc:
+            await _audit(
+                audit_service,
+                "auth.mfa_failed",
+                actor_label="(mfa_token)",
+                actor_ip="unknown",
+                outcome=AuditOutcome.FAILURE,
+            )
+            return _problem(401, "MFA verification failed", str(exc))
+
+        await _audit(
+            audit_service,
+            "auth.mfa_verified",
+            actor_label=str(result.user_id),
+            actor_ip="unknown",
+            outcome=AuditOutcome.SUCCESS,
+        )
+        return JSONResponse(status_code=200, content={"status": "authenticated"})
+
+    @router.post("/auth/mfa/recovery")
+    async def mfa_recovery(body: MfaRecoveryRequest) -> JSONResponse:
+        if not auth_service.mfa_is_active:
+            return _problem(503, "Service unavailable", "mfa backend is not wired")
+        try:
+            result = await auth_service.mfa.recover(body.mfa_token, body.recovery_code)
+        except RecoveryCodesExhausted as exc:
+            await _audit(
+                audit_service,
+                "auth.recovery_codes_exhausted",
+                actor_label="(mfa_token)",
+                actor_ip="unknown",
+                outcome=AuditOutcome.DENIED,
+                severity=Severity.ERROR,
+            )
+            return _problem(401, "Recovery codes exhausted", str(exc))
+        except (MfaChallengeInvalid, MfaChallengeLocked, RecoveryCodeInvalid) as exc:
+            await _audit(
+                audit_service,
+                "auth.mfa_failed",
+                actor_label="(mfa_token)",
+                actor_ip="unknown",
+                outcome=AuditOutcome.FAILURE,
+            )
+            return _problem(401, "Recovery failed", str(exc))
+
+        await _audit(
+            audit_service,
+            "auth.recovery_code_used",
+            actor_label=str(result.user_id),
+            actor_ip="unknown",
+            outcome=AuditOutcome.SUCCESS,
+            severity=Severity.WARNING,
+        )
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "authenticated",
+                "forced_totp_reenroll": result.forced_totp_reenroll,
+            },
+        )
+
+    @router.post("/auth/mfa/enroll", status_code=201)
+    async def mfa_enroll(
+        body: MfaEnrollRequest, x_user_id: str = Header(...), x_username: str = Header(...)
+    ) -> JSONResponse:
+        if not auth_service.mfa_is_active:
+            return _problem(503, "Service unavailable", "mfa backend is not wired")
+        result = await auth_service.mfa.enroll(x_user_id, body, account_name=x_username)
+        return JSONResponse(
+            status_code=201,
+            content={
+                "method_id": str(result.method_id),
+                "method": result.method,
+                "otpauth_uri": result.otpauth_uri,
+                "recovery_codes": list(result.recovery_codes),
+            },
+        )
+
+    @router.post("/auth/mfa/enroll/confirm")
+    async def mfa_enroll_confirm(
+        body: MfaEnrollConfirmRequest, x_user_id: str = Header(...)
+    ) -> JSONResponse:
+        if not auth_service.mfa_is_active:
+            return _problem(503, "Service unavailable", "mfa backend is not wired")
+        try:
+            kind, recovery_codes = await auth_service.mfa.confirm_enrollment(
+                x_user_id, method_id=str(body.method_id), code=body.code
+            )
+        except MfaEnrollmentNotFound as exc:
+            return _problem(422, "Enrolment not found", str(exc))
+        except MfaCodeInvalid as exc:
+            return _problem(422, "Invalid code", str(exc))
+
+        await _audit(
+            audit_service,
+            "auth.mfa_enrolled",
+            actor_label=x_user_id,
+            actor_ip="unknown",
+            outcome=AuditOutcome.SUCCESS,
+        )
+        return JSONResponse(
+            status_code=200,
+            content={
+                "id": str(body.method_id),
+                "kind": kind,
+                "active": True,
+                "recovery_codes": list(recovery_codes),
             },
         )
 

@@ -25,9 +25,11 @@ intact.
 
 from __future__ import annotations
 
+import hashlib
 import secrets
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 
 from candleviewer.auth.errors import AccountDisabled, AccountLocked, InvalidCredentials
 from candleviewer.auth.hashing import DEFAULT_ARGON2_PARAMS, Hasher
@@ -35,11 +37,26 @@ from candleviewer.auth.models import LoginRequest, MfaChallengeResult, UserRecor
 from candleviewer.auth.repository import UserRepository
 from candleviewer.auth.throttle import PerIpLoginThrottle
 
+if TYPE_CHECKING:
+    from candleviewer.auth.mfa_repository import MfaRepository
+
 #: Ticket "Scope / Deliverables": "5 failures -> 15 min lockout".
 LOCKOUT_THRESHOLD = 5
 LOCKOUT_DURATION = timedelta(minutes=15)
 
+#: E09-S02 "Technical notes": "expires_at 5 min" — the `mfa_challenges` row
+#: this service persists (when an `MfaRepository` is injected) so
+#: `MfaService.verify()`/`recover()` can look the opaque `mfa_token` up.
+MFA_CHALLENGE_TTL = timedelta(minutes=5)
+
 Clock = Callable[[], datetime]
+
+
+def _hash_mfa_token(token: str) -> str:
+    """Mirrors `mfa_service._hash_token` exactly — both sides of the two-
+    legged login must hash the same way for `find_open_challenge_by_token_
+    hash` to find what this service wrote."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
 def _utc_now() -> datetime:
@@ -55,12 +72,14 @@ class LoginService:
         per_ip_throttle: PerIpLoginThrottle | None = None,
         clock: Clock = _utc_now,
         mfa_token_factory: Callable[[], str] = lambda: secrets.token_urlsafe(32),
+        mfa_repository: MfaRepository | None = None,
     ) -> None:
         self._repository = repository
         self._hasher = hasher
         self._per_ip_throttle = per_ip_throttle or PerIpLoginThrottle()
         self._clock = clock
         self._mfa_token_factory = mfa_token_factory
+        self._mfa_repository = mfa_repository
 
     async def login(self, request: LoginRequest, *, source_ip: str) -> MfaChallengeResult:
         """Verify credentials and return the MFA challenge for step 2.
@@ -132,8 +151,25 @@ class LoginService:
                 "enrolled MFA method — see the ticket's Out of scope section"
             )
 
+        mfa_token = self._mfa_token_factory()
+        if self._mfa_repository is not None:
+            # E09-S02: persist the challenge so `MfaService.verify()` /
+            # `.recover()` can look up `mfa_token` (hashed — never stored in
+            # the clear, same rationale as `sessions.refresh_token_hash`).
+            # `mfa_repository` is `None` on the fake/CI-default backend
+            # (mirrors `UserRepository`'s own optionality in `AuthService`);
+            # the challenge row is skipped there and `MfaChallengeResult` is
+            # still returned so E09-S01's own tests keep passing unchanged.
+            now = self._clock()
+            await self._mfa_repository.create_challenge(
+                str(user.id),
+                purpose="login",
+                mfa_token_hash=_hash_mfa_token(mfa_token),
+                expires_at=now + MFA_CHALLENGE_TTL,
+            )
+
         return MfaChallengeResult(
-            mfa_token=self._mfa_token_factory(),
+            mfa_token=mfa_token,
             methods=user.mfa_methods,
             expires_in=300,
         )

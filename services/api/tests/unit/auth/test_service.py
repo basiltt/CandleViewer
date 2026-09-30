@@ -14,6 +14,7 @@ import pytest
 from candleviewer.auth.service import AuthService
 from candleviewer.observability.health import HealthStatus
 from tests.unit.auth.auth_fakes import FakeUserRepository
+from tests.unit.auth.mfa_fakes import FakeMfaRepository
 
 
 def test_auth_service_before_start_is_inactive_and_stopped() -> None:
@@ -58,3 +59,31 @@ async def test_auth_service_stop_clears_login_and_marks_stopped() -> None:
 
     assert service.is_active is False
     assert service.health().status is HealthStatus.STOPPED
+
+
+async def test_auth_service_start_without_mfa_repository_stays_scaffold() -> None:
+    service = AuthService()
+
+    await service.start(ctx=None)  # type: ignore[arg-type]
+
+    assert service.mfa_is_active is False
+    with pytest.raises(RuntimeError, match="has not wired an MfaRepository"):
+        _ = service.mfa
+
+
+async def test_auth_service_start_with_mfa_repository_wires_mfa_service() -> None:
+    service = AuthService(mfa_repository=FakeMfaRepository(), totp_encryption_key=b"0" * 32)
+
+    await service.start(ctx=None)  # type: ignore[arg-type]
+
+    assert service.mfa_is_active is True
+    assert service.mfa is not None
+
+
+async def test_auth_service_stop_clears_mfa_and_marks_inactive() -> None:
+    service = AuthService(mfa_repository=FakeMfaRepository(), totp_encryption_key=b"0" * 32)
+    await service.start(ctx=None)  # type: ignore[arg-type]
+
+    await service.stop(grace_s=1.0)
+
+    assert service.mfa_is_active is False
