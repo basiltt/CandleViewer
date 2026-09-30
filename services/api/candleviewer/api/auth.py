@@ -228,8 +228,14 @@ def make_auth_router(
             response = _problem(423, "Account locked", str(exc))
             response.headers["Retry-After"] = str(exc.retry_after_s)
             return response
-        except NotImplementedError as exc:
-            return _problem(501, "Not implemented", str(exc))
+        except NotImplementedError:
+            # CodeQL py/stack-trace-exposure: never forward an exception's
+            # message (which may embed internal detail such as source
+            # locations) into an HTTP response body; this branch only ever
+            # fires for the deliberate, out-of-scope stub in
+            # `LoginService.login` (see its docstring), so a fixed,
+            # generic detail is all a caller needs.
+            return _problem(501, "Not implemented", "this login path is not yet available")
 
         await _audit(
             audit_service,
