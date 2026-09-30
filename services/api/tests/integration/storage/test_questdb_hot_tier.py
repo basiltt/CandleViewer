@@ -45,6 +45,25 @@ _PGWIRE_USER = "admin"
 _PGWIRE_PASSWORD = "quest"  # noqa: S105 -- QuestDB OSS demo-container default, not a secret.
 
 
+async def _wait_for_column(
+    conn: asyncpg.Connection, table: str, column: str, *, attempts: int = 50
+) -> None:
+    """Poll QuestDB's `table_columns()` until `column` is visible on `table`.
+
+    Bounded (attempts x 100 ms = 5 s); raises AssertionError with the last seen
+    column set if the DDL never becomes visible, so a real regression in DDL
+    application still fails loudly instead of masquerading as drift-not-detected.
+    """
+    seen: set[str] = set()
+    for _ in range(attempts):
+        rows = await conn.fetch(f"SELECT \"column\" FROM table_columns('{table}')")  # noqa: S608  # nosec B608 - test-owned literal table name
+        seen = {str(r["column"]).lower() for r in rows}
+        if column in seen:
+            return
+        await asyncio.sleep(0.1)
+    raise AssertionError(f"column {column!r} never appeared on {table!r}; last seen {sorted(seen)}")
+
+
 async def _connect(host: str, port: int) -> asyncpg.Connection:
     return await asyncpg.connect(
         host=host, port=port, user=_PGWIRE_USER, password=_PGWIRE_PASSWORD, database="qdb"
@@ -188,6 +207,13 @@ async def test_schema_drift_detected_when_live_columns_differ(
         executor = _AsyncpgExecutor(conn)
         await run_migrations(executor, DDL_DIR)
         await conn.execute("ALTER TABLE trades ADD COLUMN unexpected_extra DOUBLE")
+        # QuestDB applies ALTER TABLE asynchronously (the writer thread commits
+        # the metadata change after the statement returns), so a follow-up
+        # `table_columns()` read can still see the old column set — observed as
+        # a "DID NOT RAISE StorageSchemaDrift" flake on unrelated PRs (#1603).
+        # Wait (bounded) until introspection reflects the new column before
+        # asserting; the drift check itself is unchanged.
+        await _wait_for_column(conn, "trades", "unexpected_extra")
         with pytest.raises(StorageSchemaDrift):
             await assert_no_schema_drift(executor, DDL_DIR)
     finally:
