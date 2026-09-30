@@ -76,20 +76,24 @@ class QuestDbHotTierSource:
     ) -> AsyncIterator[pa.Table]:
         table, secondary = _table_for(stream)
         order = "ts, price" if secondary else "ts"
-        sql = (
-            f"SELECT * FROM {table} WHERE symbol = $1 AND ts >= $2 AND ts < $3 "  # noqa: S608  # nosec B608 - table/order from _TABLES allowlist
-            f"ORDER BY {order} LIMIT $4, $5"
-        )
         offset = 0
         while True:
+            # QuestDB's PGWire `LIMIT lo, hi` does not accept bind parameters
+            # for the paging bounds (it rejects the prepared statement with
+            # "the server expects 3 arguments"), so `offset`/`offset +
+            # batch_rows` are inlined as literals here — both are ints this
+            # method computes itself (never user input), so there is no
+            # injection surface.
+            sql = (
+                f"SELECT * FROM {table} WHERE symbol = $1 AND ts >= $2 AND ts < $3 "  # noqa: S608  # nosec B608 - table/order from _TABLES allowlist
+                f"ORDER BY {order} LIMIT {offset}, {offset + batch_rows}"  # nosec B608 - int paging bounds, not user input
+            )
             async with asyncio.timeout(self._timeout):
                 rows = await self._conn.fetch(
                     sql,
                     symbol,
                     _us_to_datetime(rng.start_us),
                     _us_to_datetime(rng.end_us),
-                    offset,
-                    offset + batch_rows,
                 )
             if not rows:
                 return
