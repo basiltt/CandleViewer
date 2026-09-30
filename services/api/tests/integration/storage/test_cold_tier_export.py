@@ -74,7 +74,14 @@ async def test_hot_to_cold_symbol_day_parity_and_duckdb_count(
         # symbol/range-filtered count separately so a filter bug is not
         # misreported as a WAL-apply timeout.
         await wait_for_row_count(conn, "trades", 2500)
-        assert await source.count_partition("BTCUSDT", StreamKind.TRADES, rng) == 2500
+        n = await source.count_partition("BTCUSDT", StreamKind.TRADES, rng)
+        if n != 2500:
+            diag = await conn.fetchrow(
+                "SELECT min(ts) lo, max(ts) hi, count_distinct(symbol) syms, first(symbol) sym "
+                "FROM trades"
+            )
+            by_sym = await conn.fetchval("SELECT count() FROM trades WHERE symbol = $1", "BTCUSDT")
+            raise AssertionError(f"count_partition={n}; table={dict(diag or {})}; by_sym={by_sym}")
 
         exporter = ColdExporter(DatasetRegistry(tmp_path), source, rows_per_group=1000)
         run = await exporter.export_partition("BTCUSDT", StreamKind.TRADES, rng)
