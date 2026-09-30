@@ -14,6 +14,7 @@ contracts and every later epic have a concrete injection point.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from fastapi import FastAPI
 from prometheus_client import CollectorRegistry
@@ -32,6 +33,7 @@ from candleviewer.api import (
     make_auth_router,
     make_health_router,
     make_instruments_router,
+    make_log_level_router,
     make_market_router,
 )
 from candleviewer.auth.service import AuthService
@@ -57,6 +59,8 @@ from candleviewer.net import (
     real_socket_enumerator,
     register_system_topic_subscriber,
 )
+from candleviewer.observability.correlation import CorrelationMiddleware
+from candleviewer.observability.log_level import LogLevelOverrides
 from candleviewer.observability.service import ObservabilityService
 from candleviewer.oms.service import OmsService
 from candleviewer.orderflow.service import OrderflowService
@@ -131,6 +135,16 @@ class AppContext:
     # (`23-ws-protocol.md` §6) so the mandatory blocking banner is actually
     # published, not merely mechanically possible via `ReadOnlyGate.subscribe`.
     mesh_system_topic_publisher: SystemTopicPublisher
+
+
+class _LazyAuditEmitter:
+    """Resolves `audit.writer` per call: it only exists once `AuditService.start()` ran."""
+
+    def __init__(self, audit: AuditHandle) -> None:
+        self._audit = audit
+
+    async def emit(self, action: str, **kwargs: Any) -> None:
+        await self._audit.writer.emit(action, **kwargs)
 
 
 def build_app_context(settings: Settings | None = None) -> AppContext:
@@ -265,12 +279,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     ctx = build_app_context(resolved)
     app.state.app_context = ctx
+    # E04-T02: outermost (added last) so every request - even a mesh rejection -
+    # gets a correlation id and the X-Correlation-Id response header.
     app.add_middleware(
         MeshOnlyMiddleware,
         allow_list=CidrAllowList(list(resolved.mesh_cidrs)),
         trusted_proxy_header=resolved.mesh_trusted_proxy_header,
         trusted_proxy_address=resolved.mesh_trusted_proxy_address,
     )
+    overrides = LogLevelOverrides()
+    app.state.log_level_overrides = overrides
+    # `principal_resolver=None` -> fails closed with 501 until E09-S03 (as /admin/audit).
+    app.include_router(make_log_level_router(overrides, _LazyAuditEmitter(ctx.audit)))
     app.include_router(
         make_health_router(resolved, ctx.metrics, mesh_read_only_gate=ctx.oms_read_only_gate)
     )
@@ -297,6 +317,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # `wire_instrument_catalogue()` attaches one (needs a real Postgres +
     # exchange REST client). Resolver `None` -> fail-closed `501` (see above).
     app.include_router(make_instruments_router(lambda: ctx.ingestion.instruments))
+    app.add_middleware(CorrelationMiddleware)
     return app
 
 

@@ -25,6 +25,7 @@ from prometheus_client import CollectorRegistry, Counter
 
 from candleviewer.exchange.base import Ticker, Trade
 from candleviewer.ingestion.errors import IngestionError
+from candleviewer.observability.context import spawn
 
 # cv-semgrep: synthetic-feed-test-double — this module is a bounded test
 # double for local/CI development, never the live Bybit ingestion path.
@@ -172,7 +173,7 @@ class SyntheticFeedGenerator:
     async def start(self) -> None:
         """Start the background replay loop. Idempotent."""
         if self._task is None or self._task.done():
-            self._task = asyncio.create_task(self._run())
+            self._task = spawn(self._run(), name="synthetic-feed")
 
     async def stop(self) -> None:
         """Cancel the replay loop and await its (honoured) cancellation."""

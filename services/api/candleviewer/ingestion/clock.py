@@ -43,6 +43,7 @@ from candleviewer.ingestion.metrics import (
     clock_resync_triggered_total,
     exchange_clock_drift_ms,
 )
+from candleviewer.observability.context import spawn
 
 logger = structlog.get_logger(__name__)
 
@@ -278,7 +279,7 @@ class ClockGuard:
         except ClockMeasurementUnavailableError:
             logger.warning("clock_initial_measurement_failed")
         self._stopping = False
-        self._task = asyncio.create_task(self._run_periodic(), name="clock-guard-resync")
+        self._task = spawn(self._run_periodic(), name="clock-guard-resync")
 
     async def stop(self) -> None:
         self._stopping = True

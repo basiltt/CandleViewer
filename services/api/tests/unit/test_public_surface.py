@@ -55,6 +55,8 @@ _ALLOWED_EXTRA_EXPORTS: dict[str, set[str]] = {
         "make_audit_router",
         "make_market_router",
         "make_instruments_router",
+        # E04-T02: runtime log-level override router.
+        "make_log_level_router",
     },
     # E09-T02: the audit writer/query surface M21/M23 consume (C-3.3).
     "M19": {
@@ -78,6 +80,9 @@ _ALLOWED_EXTRA_EXPORTS: dict[str, set[str]] = {
         "RedactionFilter",
         "Secret",
         "configure_logging",
+        # E04-T02: correlation context.
+        "bind_context",
+        "spawn",
     },
     # E08-T03: the bus's public pub/sub surface — `Bus`/`Subscription` are
     # not `*Service`/`*Error` by name but are the module's documented public

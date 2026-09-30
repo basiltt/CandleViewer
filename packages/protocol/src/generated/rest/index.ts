@@ -294,6 +294,29 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/admin/log-level": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Temporarily raise or lower the log level for one subsystem
+     * @description Scoped to a closed set of subsystem logger namespaces (never the root logger). The override
+     *     self-reverts after `ttl_seconds` (default 900, max 3600) and is deliberately not persisted
+     *     across restarts. Audited as `settings.change`; a denied attempt is audited too. Cannot
+     *     enable body logging (that stays behind `CV_LOG_BODIES_UNTIL`).
+     */
+    put: operations["setLogLevelOverride"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/admin/overview": {
     parameters: {
       query?: never;
@@ -7494,6 +7517,46 @@ export interface operations {
         };
       };
       404: components["responses"]["NotFound"];
+    };
+  };
+  setLogLevelOverride: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          level: "debug" | "info" | "warning" | "error" | "critical";
+          /** @enum {string} */
+          subsystem: "ingestion" | "oms" | "rules" | "recorder" | "api" | "ws";
+          /** @default 900 */
+          ttl_seconds?: number;
+        };
+      };
+    };
+    responses: {
+      /** @description Override applied. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** @enum {string} */
+            level: "debug" | "info" | "warning" | "error" | "critical";
+            /** @enum {string} */
+            subsystem: "ingestion" | "oms" | "rules" | "recorder" | "api" | "ws";
+            ttl_seconds: number;
+          };
+        };
+      };
+      400: components["responses"]["BadRequest"];
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
     };
   };
   getAdminOverview: {

@@ -1,0 +1,22 @@
+rules:
+  - id: cv-bare-create-task
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Bare `asyncio.create_task` / `loop.create_task` / `asyncio.ensure_future`
+      in an application module. Use `candleviewer.observability.spawn(coro,
+      name=...)` so the correlation context (request_id, user_id, ...) is
+      carried explicitly across the hop (E04-T02, US-OBS-003). Thread offloads
+      must use `run_in_thread`, not a raw executor.
+    metadata:
+      rule-id: cv-bare-create-task
+    pattern-either:
+      - pattern: asyncio.create_task(...)
+      - pattern: asyncio.ensure_future(...)
+      - pattern: $LOOP.create_task(...)
+      - pattern: $LOOP.run_in_executor(...)
+    paths:
+      exclude:
+        - "**/test_*.py"
+        - "**/conftest.py"
+        - "**/observability/context.py"

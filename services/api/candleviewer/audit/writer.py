@@ -52,6 +52,7 @@ from candleviewer.audit.models import AuditEmission, AuditOutcome, ExchangeEnv, 
 from candleviewer.audit.redact import redact
 from candleviewer.audit.repository import AuditRepository
 from candleviewer.audit.wal import AuditWal, AuditWalFull
+from candleviewer.observability.context import spawn
 
 logger = logging.getLogger(__name__)
 
@@ -147,7 +148,7 @@ class AuditWriter:
         self._running = True
         self._idle.clear()
         self._wake.set()
-        self._task = asyncio.create_task(self._supervised(), name="audit-writer")
+        self._task = spawn(self._supervised(), name="audit-writer")
         self._task.add_done_callback(_log_task_failure)
 
     async def flush(self, timeout_s: float) -> None:

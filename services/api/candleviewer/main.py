@@ -59,9 +59,14 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     # Hourly re-check (AC5 "drift after resume is caught").
     ctx.mesh_self_check.start()
+    overrides = getattr(app.state, "log_level_overrides", None)
+    if overrides is not None:
+        overrides.start()
     try:
         yield
     finally:
+        if overrides is not None:
+            await overrides.stop()
         await ctx.mesh_self_check.stop()
         await supervisor.stop_all()
 

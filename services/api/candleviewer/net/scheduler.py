@@ -17,6 +17,8 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING
 
+from candleviewer.observability.context import spawn
+
 from .binding_check import BindingSelfCheck, apply_self_check_result
 
 if TYPE_CHECKING:
@@ -56,7 +58,7 @@ class MeshSelfCheckScheduler:
         """Start the supervised background loop. Idempotent."""
         if self._task is not None:
             return
-        self._task = asyncio.ensure_future(self._run_forever())
+        self._task = spawn(self._run_forever(), name="mesh-self-check")
 
     async def stop(self) -> None:
         """Cancel and await the background loop, honouring cancellation."""

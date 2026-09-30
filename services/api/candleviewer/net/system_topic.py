@@ -34,6 +34,7 @@ from typing import Protocol
 
 from candleviewer.bus.bus import Bus
 from candleviewer.bus.models import Topic
+from candleviewer.observability.context import spawn
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +70,7 @@ class SystemTopicPublisher:
             "read_only": is_read_only,
         }
         try:
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
         except RuntimeError:
             # No running event loop (e.g. a synchronous unit test driving the
             # gate directly outside asyncio) — nothing to schedule; the gate
@@ -84,7 +85,7 @@ class SystemTopicPublisher:
         # Kept referenced on `self._pending` (discarded on completion) so it
         # cannot be garbage-collected mid-flight — a bare `create_task()`
         # result with no reference is only a weak guarantee in CPython.
-        task = loop.create_task(self._publish(payload))
+        task = spawn(self._publish(payload), name="system-topic-publish")
         self._pending.add(task)
         task.add_done_callback(self._pending.discard)
 
