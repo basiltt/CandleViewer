@@ -33,6 +33,11 @@ class SessionRepository(Protocol):
         needs to find an already-`rotated` row, not just a live one."""
         ...
 
+    async def find_by_access_token_jti(self, access_token_jti: str) -> SessionRecord | None:
+        """Look up by `sessions.access_token_jti` (the hashed opaque access
+        handle, ADR-0020) — the per-request authentication path."""
+        ...
+
     async def find_live_by_user(self, user_id: str) -> tuple[SessionRecord, ...]:
         """`WHERE user_id = :id AND revoked_at IS NULL` (`ix_sessions_user_
         live`) — SCR-112's session list and sign-out-everywhere both read

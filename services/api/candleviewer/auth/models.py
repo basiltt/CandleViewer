@@ -313,6 +313,9 @@ class MintedSession(BaseModel):
 
     session_id: uuid.UUID
     access_token_jti: uuid.UUID
+    #: Raw opaque access-token handle (ADR-0020 option 1), returned once; only
+    #: a truncated SHA-256 of it is stored, in `sessions.access_token_jti`.
+    access_token: str = ""
     refresh_token: str
     issued_at: datetime
     expires_at: datetime

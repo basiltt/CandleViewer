@@ -20,6 +20,7 @@ import asyncio
 from dataclasses import dataclass
 from typing import Any
 
+import jsonschema
 from xstate_statemachine import (
     Interpreter,
     MachineLogic,
@@ -92,6 +93,12 @@ def _assert_async_engine_only(*, sync: bool) -> None:
         )
 
 
+def _event_validators(schemas: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """Adapt JSON-Schema dicts to the validator objects the library calls
+    (`schema.validate(payload)`); a bare dict is not callable (QA #1634)."""
+    return {name: jsonschema.Draft202012Validator(schema) for name, schema in schemas.items()}
+
+
 async def build(
     machine_key: str,
     *,
@@ -137,7 +144,7 @@ async def build(
         context_type=dict,
         logic=logic,
         strict_targets=True,
-        event_schemas=CV_EVENT_SCHEMAS,
+        event_schemas=_event_validators(CV_EVENT_SCHEMAS),
         strict_config=True,
     )
 
