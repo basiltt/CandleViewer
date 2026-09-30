@@ -128,6 +128,6 @@ class TestRedactionFilterRegressionGuard:
 
         assert _listener is not None
         handlers = list(_listener.handlers)
-        assert any(
-            any(isinstance(f, RedactionFilter) for f in h.filters) for h in handlers
-        ), "RedactionFilter must be attached to a handler reachable by the root logger"
+        assert any(any(isinstance(f, RedactionFilter) for f in h.filters) for h in handlers), (
+            "RedactionFilter must be attached to a handler reachable by the root logger"
+        )
