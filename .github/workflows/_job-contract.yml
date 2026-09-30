@@ -66,6 +66,11 @@ jobs:
       - name: WS schema conformance + protocol codec round-trip (packages/protocol)
         run: pnpm --filter @candleviewer/protocol test
 
+      - name: ws_message_schemas gate (E17-T01, 23-ws-protocol.md 16.5)
+        # Offline: bundle freshness, generated-constants freshness, meta-validation,
+        # $ref closure and every section 12 example frame. Prints schema/example counts.
+        run: make contracts
+
       - name: Schemathesis fuzz on /v1 (deferred — no /v1 route exists yet)
         run: |
           echo "No REST route beyond /healthz, /readyz, /metrics exists in R0 (services/api/candleviewer/app.py)."
