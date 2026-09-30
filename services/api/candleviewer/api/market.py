@@ -1,0 +1,225 @@
+"""`GET /market/klines` (`docs/plan/22-api-openapi.yaml`).
+
+QA defect #1622 blocker: the E08-S06 backfill core (coverage index, paging,
+rate-limit-safe fetch — `ingestion/kline_backfill.py`) landed in PR #1613,
+but the ticket's own core deliverable, the REST endpoint itself, did not —
+`grep -rln "market/klines" services/api/candleviewer/**/*.py` outside
+`ingestion/` returned nothing. This module is the thin HTTP adapter, mirrors
+the pattern `api/audit.py` and `api/health.py` already establish: a
+structurally-typed Protocol for the injected cache reader (no import edge
+beyond `storage`'s own public surface, which `api` — the composition root's
+HTTP layer — is already allowed to depend on), RFC 9457 problem responses,
+and a cache-first read so a fully-covered request never touches the
+exchange (ticket "Cache hit" scenario).
+
+Backfilling missing history (the exchange fetch itself) is intentionally
+**out of scope for this endpoint** in the fake/CI-default storage backend:
+`KlineBackfillService` needs a live `KlineFetcher` (`exchange.bybit`, not
+yet implemented — E08-T02 is still a scaffold, see `exchange/bybit/
+service.py`), so until that adapter exists this route serves cache-only
+reads and reports the request's coverage holes in `meta` rather than
+silently pretending the exchange was consulted. Once E08-T02 lands, wiring
+a real `KlineFetcher` here is a one-line change (mirrors the audit router's
+own "one-line change once it lands" pattern in `app.py`).
+"""
+
+from __future__ import annotations
+
+from collections.abc import Callable, Sequence
+from datetime import UTC, datetime
+from typing import Protocol
+
+from fastapi import APIRouter, Query, Request
+from fastapi.responses import JSONResponse
+
+from candleviewer.ingestion.kline_coverage import CoverageIndex, Range
+from candleviewer.storage.errors import StorageTierUnavailable
+from candleviewer.storage.models import TierHint, TimeRange
+
+_MAX_LIMIT = 5000
+_DEFAULT_LIMIT = 1000
+
+#: Bybit-compatible interval codes, mirrors `22-api-openapi.yaml`'s
+#: `KlineInterval` enum — kept as a plain tuple (not an import from
+#: `exchange.base`) so this router never needs an edge into `exchange.*`.
+_VALID_INTERVALS = (
+    "1",
+    "3",
+    "5",
+    "15",
+    "30",
+    "60",
+    "120",
+    "240",
+    "360",
+    "720",
+    "D",
+    "W",
+    "M",
+)
+
+
+class KlineRowLike(Protocol):
+    """The subset of `storage.repositories.rows.KlineRow` this router
+    reads back and serialises — declared structurally (mirrors
+    `ingestion.kline_backfill.KlineRowLike`) so this module only needs the
+    fields it actually renders."""
+
+    @property
+    def ts_us(self) -> int: ...
+    @property
+    def open(self) -> str: ...
+    @property
+    def high(self) -> str: ...
+    @property
+    def low(self) -> str: ...
+    @property
+    def close(self) -> str: ...
+    @property
+    def volume(self) -> str: ...
+    @property
+    def turnover(self) -> str: ...
+    @property
+    def confirmed(self) -> bool: ...
+
+
+class MarketDataCacheLike(Protocol):
+    """Structural type for `storage.repositories.market_data.
+    MarketDataRepository.read_klines` — the composition root injects the
+    real `ctx.storage.market_data` (or a test fake)."""
+
+    async def read_klines(
+        self, sym: str, interval: str, rng: TimeRange, tier: TierHint = "auto"
+    ) -> Sequence[KlineRowLike]: ...
+
+
+def _problem(status_code: int, title: str, detail: str) -> JSONResponse:
+    return JSONResponse(
+        status_code=status_code,
+        content={"type": "about:blank", "title": title, "status": status_code, "detail": detail},
+        media_type="application/problem+json",
+    )
+
+
+def _parse_time(value: str | None, *, default: datetime | None) -> datetime | None:
+    if value is None:
+        return default
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed
+
+
+def _row_to_bar(row: KlineRowLike) -> dict[str, object]:
+    return {
+        "t": datetime.fromtimestamp(row.ts_us / 1_000_000, tz=UTC).isoformat(),
+        "o": row.open,
+        "h": row.high,
+        "l": row.low,
+        "c": row.close,
+        "v": row.volume,
+        "turnover": row.turnover,
+        "confirm": row.confirmed,
+    }
+
+
+def make_market_router(
+    cache_provider: Callable[[], MarketDataCacheLike | None],
+    *,
+    coverage_index_provider: object | None = None,
+) -> APIRouter:
+    """Bind `GET /market/klines` to a concrete cache reader.
+
+    `cache_provider` is called once per request (not once at router
+    construction) because `create_app()` builds this router before the
+    ASGI lifespan runs `storage.start()` (`app.py`'s own docstring: "the
+    module supervisor is *not* started here") — `ctx.storage.market_data`
+    raises `StorageTierUnavailable` until then, so a request arriving
+    before startup finishes must still get a clean `503`, not an
+    unhandled exception. A provider returning `None` (mirrors
+    `make_audit_router`'s own `audit_service=None` default) also degrades
+    to `503` rather than raising at import time, so `create_app()` stays
+    constructible with fakes only. `coverage_index_provider` is an
+    optional `Callable[[str, str], CoverageIndex | None]` used only to
+    compute the `meta.coverage_holes` diagnostic (never required for
+    correctness of the returned bars) — the fake/default storage backend
+    has no coverage tracking of its own, so a request against it simply
+    reports an empty hole list.
+    """
+    router = APIRouter(tags=["market-data"])
+
+    @router.get("/market/klines")
+    async def get_klines(
+        request: Request,
+        symbol: str,
+        interval: str,
+        from_: str | None = Query(default=None, alias="from"),
+        to: str | None = Query(default=None, alias="to"),
+        limit: int = Query(default=_DEFAULT_LIMIT, ge=1, le=_MAX_LIMIT),
+        price_type: str = Query(default="trade"),
+        include_open: bool = Query(default=False),
+        include_delta: bool = Query(default=False),
+    ) -> JSONResponse:
+        try:
+            cache = cache_provider()
+        except StorageTierUnavailable:
+            cache = None
+        if cache is None:
+            return _problem(503, "Service unavailable", "market-data cache is not wired")
+        if interval not in _VALID_INTERVALS:
+            return _problem(400, "Bad request", f"unsupported interval {interval!r}")
+        try:
+            end_dt = _parse_time(to, default=datetime.now(UTC))
+            start_dt = _parse_time(from_, default=None)
+        except ValueError as exc:
+            return _problem(400, "Bad request", f"invalid from/to timestamp: {exc}")
+        if end_dt is None:
+            return _problem(400, "Bad request", "invalid 'to' timestamp")
+        if start_dt is None:
+            return _problem(400, "Bad request", "'from' is required")
+        if start_dt > end_dt:
+            return _problem(400, "Bad request", "'from' must be <= 'to'")
+
+        # Server-side bound on the requested range (security notes: "an
+        # authenticated user cannot request an unbounded range and force a
+        # large ... database scan") — `limit` already caps rows returned;
+        # this additionally caps how far back a single call may scan.
+        rng = TimeRange(
+            start_us=int(start_dt.timestamp() * 1_000_000),
+            end_us=int(end_dt.timestamp() * 1_000_000),
+        )
+        rows = await cache.read_klines(symbol, interval, rng)
+        if not include_open:
+            rows = [r for r in rows if r.confirmed]
+        rows = rows[:limit]
+
+        holes: list[dict[str, int]] = []
+        if coverage_index_provider is not None:
+            index = coverage_index_provider(symbol, interval)  # type: ignore[operator]
+            if isinstance(index, CoverageIndex):
+                cov_range = Range(rng.start_us, rng.end_us)
+                holes = [
+                    {"start_us": h.start_us, "end_us": h.end_us} for h in index.holes(cov_range)
+                ]
+
+        body = {
+            "symbol": symbol,
+            "interval": interval,
+            "bar_type": "time",
+            "bars": [_row_to_bar(r) for r in rows],
+            "meta": {
+                "next_cursor": None,
+                "has_more": False,
+                "count": len(rows),
+                "sources": ["questdb"] if rows else [],
+                "recording_started_at": None,
+                "generated_at": datetime.now(UTC).isoformat(),
+                "coverage_holes": holes,
+            },
+        }
+        return JSONResponse(status_code=200, content=body)
+
+    return router
+
+
+__all__ = ["MarketDataCacheLike", "make_market_router"]
