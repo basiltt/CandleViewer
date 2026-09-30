@@ -31,6 +31,8 @@ CandleViewer's UI serves one owner and a handful of account managers running a p
 
 ## 2. Token architecture
 
+> Architectural record: [`27-adrs/ADR-0024-design-token-architecture-and-theming.md`](27-adrs/ADR-0024-design-token-architecture-and-theming.md) records the binding decisions in this section and §11 (tier model, Style Dictionary build, theming-as-alias-repointing, density-as-alias-step, WebGL/Electron delivery formats) against the merged E05-T01 implementation, plus the alternatives explicitly rejected.
+
 Three-tier token model (industry-standard "global → alias → component" pattern), authored as source-of-truth JSON and compiled via Style Dictionary (§11):
 
 - **Tier 1 — Global/primitive tokens**: raw values, no semantic meaning (`palette.blue.500 = #2B6CE8`, `size.4 = 4px`). Never referenced directly by components.
@@ -224,6 +226,8 @@ This brief is a *design-time enforcement mechanism* for `05-accessibility-standa
 ---
 
 ## 11. Handoff spec: tokens JSON → code via Style Dictionary
+
+> Architectural record: [`27-adrs/ADR-0024-design-token-architecture-and-theming.md`](27-adrs/ADR-0024-design-token-architecture-and-theming.md) — see §2 above for the cross-link note.
 
 - **Source of truth**: a single `tokens/` directory of JSON files (one file per Tier-1 category: `color.tokens.json`, `typography.tokens.json`, `spacing.tokens.json`, `radius.tokens.json`, `elevation.tokens.json`, `motion.tokens.json`) using the [W3C Design Tokens Community Group format](https://design-tokens.github.io/community-group/format/) (`$value`/`$type`/`$description` keys) so the format is tool-agnostic and importable by both Figma's Variables (via a Tokens Studio-compatible plugin) and Style Dictionary.
 - **Build pipeline** (Style Dictionary, run in CI on every `tokens/` change):
