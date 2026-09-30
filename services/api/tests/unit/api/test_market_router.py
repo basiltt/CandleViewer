@@ -2,16 +2,22 @@
 #1622 blocker: "GET /market/klines REST endpoint (core ticket deliverable)
 not implemented" — `grep -rln "market/klines" services/api/candleviewer/
 **/*.py` outside `ingestion/` returned nothing before this fix, and no
-`APIRouter` served the route)."""
+`APIRouter` served the route).
+
+PR #1626 review: the first cut served every request unauthenticated
+despite `22-api-openapi.yaml`'s `x-rbac: {permissions: [marketdata:read]}`
+(C-12.4). `TestGetKlinesAuthorization` covers the fail-closed
+`PrincipalResolver` gate added in response to that finding, mirroring
+`test_audit_router.py`'s own resolver tests."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
-from candleviewer.api.market import make_market_router
+from candleviewer.api.market import MarketDataPrincipal, make_market_router
 from candleviewer.storage.errors import StorageTierUnavailable
 from candleviewer.storage.models import TimeRange
 
@@ -40,14 +46,29 @@ class _FakeCache:
         return [r for r in self.rows if rng.start_us <= r.ts_us < rng.end_us]
 
 
-def _app(cache: _FakeCache | None) -> FastAPI:
+class _FakeResolver:
+    def __init__(self, principal: MarketDataPrincipal | None) -> None:
+        self._principal = principal
+
+    def resolve(self, request: Request) -> MarketDataPrincipal | None:
+        return self._principal
+
+
+_AUTHORIZED = _FakeResolver(
+    MarketDataPrincipal(user_id="u1", permissions=frozenset({"marketdata:read"}))
+)
+
+
+def _app(cache: _FakeCache | None, *, resolver: _FakeResolver | None = _AUTHORIZED) -> FastAPI:
     app = FastAPI()
-    app.include_router(make_market_router(lambda: cache))
+    app.include_router(make_market_router(lambda: cache, principal_resolver=resolver))
     return app
 
 
-def _client(cache: _FakeCache | None) -> TestClient:
-    return TestClient(_app(cache), client=("127.0.0.1", 50000))
+def _client(
+    cache: _FakeCache | None, *, resolver: _FakeResolver | None = _AUTHORIZED
+) -> TestClient:
+    return TestClient(_app(cache, resolver=resolver), client=("127.0.0.1", 50000))
 
 
 class TestGetKlinesHappyPath:
@@ -138,7 +159,9 @@ class TestGetKlinesUnavailable:
             raise StorageTierUnavailable("storage.start() has not been called")
 
         app = FastAPI()
-        app.include_router(make_market_router(_raise))  # type: ignore[arg-type]
+        app.include_router(
+            make_market_router(_raise, principal_resolver=_AUTHORIZED)  # type: ignore[arg-type]
+        )
         client = TestClient(app, client=("127.0.0.1", 50000))
 
         resp = client.get(
@@ -146,3 +169,49 @@ class TestGetKlinesUnavailable:
             params={"symbol": "BTCUSDT", "interval": "1", "from": "1970-01-01T00:00:00Z"},
         )
         assert resp.status_code == 503
+
+
+class TestGetKlinesAuthorization:
+    """PR #1626 review finding: this route served every request
+    unauthenticated despite `x-rbac: {permissions: [marketdata:read]}`
+    (C-12.4). Mirrors `test_audit_router.py`'s own resolver tests."""
+
+    def test_no_principal_resolver_wired_is_501(self) -> None:
+        client = _client(_FakeCache(), resolver=None)
+        resp = client.get(
+            "/market/klines",
+            params={"symbol": "BTCUSDT", "interval": "1", "from": "1970-01-01T00:00:00Z"},
+        )
+        assert resp.status_code == 501
+
+    def test_no_verified_session_is_401(self) -> None:
+        client = _client(_FakeCache(), resolver=_FakeResolver(None))
+        resp = client.get(
+            "/market/klines",
+            params={"symbol": "BTCUSDT", "interval": "1", "from": "1970-01-01T00:00:00Z"},
+        )
+        assert resp.status_code == 401
+
+    def test_missing_permission_is_403(self) -> None:
+        principal = MarketDataPrincipal(user_id="u1", permissions=frozenset())
+        client = _client(_FakeCache(), resolver=_FakeResolver(principal))
+        resp = client.get(
+            "/market/klines",
+            params={"symbol": "BTCUSDT", "interval": "1", "from": "1970-01-01T00:00:00Z"},
+        )
+        assert resp.status_code == 403
+
+    def test_wildcard_permission_is_authorized(self) -> None:
+        principal = MarketDataPrincipal(user_id="owner", permissions=frozenset({"*"}))
+        cache = _FakeCache(rows=[_FakeRow(ts_us=0)])
+        client = _client(cache, resolver=_FakeResolver(principal))
+        resp = client.get(
+            "/market/klines",
+            params={
+                "symbol": "BTCUSDT",
+                "interval": "1",
+                "from": "1970-01-01T00:00:00Z",
+                "to": "1970-01-01T00:01:00Z",
+            },
+        )
+        assert resp.status_code == 200

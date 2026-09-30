@@ -276,6 +276,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # was missing entirely — cache-only reads today (`ctx.storage.
     # market_data`); backfilling from the exchange itself is wired once
     # E08-T02 lands a real `exchange.bybit` adapter (see `api/market.py`
-    # module docstring).
+    # module docstring). `principal_resolver` stays `None` for the same
+    # reason as `make_audit_router` above (no session-verification module
+    # wired yet) — every request fails closed with `501`, not with a silent
+    # unauthenticated read (C-12.4, PR #1626 review finding: this route was
+    # previously reachable by any mesh caller with no RBAC check at all).
     app.include_router(make_market_router(lambda: ctx.storage.market_data))
     return app

@@ -21,11 +21,26 @@ reads and reports the request's coverage holes in `meta` rather than
 silently pretending the exchange was consulted. Once E08-T02 lands, wiring
 a real `KlineFetcher` here is a one-line change (mirrors the audit router's
 own "one-line change once it lands" pattern in `app.py`).
+
+PR #1626 review (defect #1622 fixer pass): `22-api-openapi.yaml` declares
+`x-rbac: {permissions: [marketdata:read], scope: none}` for this route
+(C-12.4 — RBAC is enforced server-side, never just hidden in the UI); the
+first cut of this router served every request unauthenticated. This module
+now mirrors `api/audit.py`'s own fail-closed `_authorize_or_raise` pattern
+exactly: an injected, structurally-typed `PrincipalResolver` resolves the
+caller from the request, and the caller must hold `marketdata:read` or the
+request never reaches the cache. `principal_resolver=None` (no session
+module wired yet, same as `app.py`'s current `make_audit_router(ctx.audit)`
+call) degrades to `501`, not to "allow anyone" — there is a difference
+between "no session-verification module exists yet" and "this caller is
+unauthenticated", and only the resolver can tell those apart (mirrors
+`api/audit.py`'s own docstring on this point).
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Protocol
 
@@ -35,6 +50,8 @@ from fastapi.responses import JSONResponse
 from candleviewer.ingestion.kline_coverage import CoverageIndex, Range
 from candleviewer.storage.errors import StorageTierUnavailable
 from candleviewer.storage.models import TierHint, TimeRange
+
+_REQUIRED_PERMISSION = "marketdata:read"
 
 _MAX_LIMIT = 5000
 _DEFAULT_LIMIT = 1000
@@ -57,6 +74,44 @@ _VALID_INTERVALS = (
     "W",
     "M",
 )
+
+
+@dataclass(frozen=True, slots=True)
+class MarketDataPrincipal:
+    """The authenticated caller, as resolved server-side from the session
+    (mirrors `audit.access.AuditPrincipal` — the audit and market-data
+    surfaces share the same session concept but not the same permission
+    vocabulary, so this router keeps its own small principal type rather
+    than importing `audit`'s)."""
+
+    user_id: str
+    permissions: frozenset[str]
+
+    def has(self, permission: str) -> bool:
+        return "*" in self.permissions or permission in self.permissions
+
+
+class PrincipalResolver(Protocol):
+    """Resolves the authenticated caller for a `/market/klines` request.
+
+    Structurally typed so this router never imports a concrete session
+    module; the composition root injects the real implementation once one
+    exists. Returning `None` means "no verified session" (401) — mirrors
+    `api/audit.py`'s own `PrincipalResolver`, including the distinction
+    between a resolver that found no session (401) and no resolver being
+    wired at all (501, see `_authorize_or_raise` below)."""
+
+    def resolve(self, request: Request) -> MarketDataPrincipal | None: ...
+
+
+class CoverageIndexProvider(Protocol):
+    """`Callable[[str, str], CoverageIndex | None]` — declared as a Protocol
+    (not a bare `object`) so the router's own strict typing covers this
+    parameter the same way it covers `MarketDataCacheLike` and
+    `PrincipalResolver`, instead of relying on a runtime `isinstance` check
+    against the return value."""
+
+    def __call__(self, symbol: str, interval: str) -> CoverageIndex | None: ...
 
 
 class KlineRowLike(Protocol):
@@ -126,7 +181,8 @@ def _row_to_bar(row: KlineRowLike) -> dict[str, object]:
 def make_market_router(
     cache_provider: Callable[[], MarketDataCacheLike | None],
     *,
-    coverage_index_provider: object | None = None,
+    coverage_index_provider: CoverageIndexProvider | None = None,
+    principal_resolver: PrincipalResolver | None = None,
 ) -> APIRouter:
     """Bind `GET /market/klines` to a concrete cache reader.
 
@@ -145,8 +201,36 @@ def make_market_router(
     correctness of the returned bars) — the fake/default storage backend
     has no coverage tracking of its own, so a request against it simply
     reports an empty hole list.
+
+    `principal_resolver=None` (no session-verification module wired yet,
+    same posture as `make_audit_router`'s own default) makes every request
+    fail closed with `501` rather than silently serving unauthenticated
+    reads (C-12.4, PR #1626 review) — RBAC on this route ("marketdata:read")
+    is enforced here, server-side, never left to the UI to hide a button.
     """
     router = APIRouter(tags=["market-data"])
+
+    class _HttpProblem(Exception):
+        def __init__(self, response: JSONResponse) -> None:
+            self.response = response
+
+    def _authorize_or_raise(request: Request) -> None:
+        if principal_resolver is None:
+            raise _HttpProblem(
+                _problem(
+                    501,
+                    "Not implemented",
+                    "no principal resolver wired — session verification is out of this "
+                    "ticket's scope",
+                )
+            )
+        principal = principal_resolver.resolve(request)
+        if principal is None:
+            raise _HttpProblem(
+                _problem(401, "Unauthorized", "no verified session for this request")
+            )
+        if not principal.has(_REQUIRED_PERMISSION):
+            raise _HttpProblem(_problem(403, "Forbidden", f"requires {_REQUIRED_PERMISSION}"))
 
     @router.get("/market/klines")
     async def get_klines(
@@ -160,6 +244,10 @@ def make_market_router(
         include_open: bool = Query(default=False),
         include_delta: bool = Query(default=False),
     ) -> JSONResponse:
+        try:
+            _authorize_or_raise(request)
+        except _HttpProblem as problem:
+            return problem.response
         try:
             cache = cache_provider()
         except StorageTierUnavailable:
@@ -195,7 +283,7 @@ def make_market_router(
 
         holes: list[dict[str, int]] = []
         if coverage_index_provider is not None:
-            index = coverage_index_provider(symbol, interval)  # type: ignore[operator]
+            index = coverage_index_provider(symbol, interval)
             if isinstance(index, CoverageIndex):
                 cov_range = Range(rng.start_us, rng.end_us)
                 holes = [
@@ -222,4 +310,10 @@ def make_market_router(
     return router
 
 
-__all__ = ["MarketDataCacheLike", "make_market_router"]
+__all__ = [
+    "CoverageIndexProvider",
+    "MarketDataCacheLike",
+    "MarketDataPrincipal",
+    "PrincipalResolver",
+    "make_market_router",
+]
