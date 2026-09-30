@@ -123,9 +123,12 @@ class FakeMfaRepository:
         self.challenges[challenge_id] = challenge.model_copy(update={"attempts": new_count})
         return new_count
 
-    async def satisfy_challenge(self, challenge_id: str, *, now: datetime) -> None:
+    async def satisfy_challenge(self, challenge_id: str, *, now: datetime) -> bool:
         challenge = self.challenges[challenge_id]
+        if challenge.satisfied_at is not None:
+            return False
         self.challenges[challenge_id] = challenge.model_copy(update={"satisfied_at": now})
+        return True
 
     # -- recovery_codes ----------------------------------------------------
 
@@ -152,8 +155,12 @@ class FakeMfaRepository:
                 return code_id
         return None
 
-    async def consume_recovery_code(self, code_id: str, *, now: datetime) -> None:
-        self.recovery_codes[code_id]["used_at"] = now.isoformat()
+    async def consume_recovery_code(self, code_id: str, *, now: datetime) -> bool:
+        row = self.recovery_codes[code_id]
+        if row["used_at"] is not None:
+            return False
+        row["used_at"] = now.isoformat()
+        return True
 
     async def count_unused_recovery_codes(self, user_id: str) -> int:
         return sum(

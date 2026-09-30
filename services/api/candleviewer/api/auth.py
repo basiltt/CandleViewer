@@ -258,7 +258,7 @@ def make_auth_router(
             # `MfaService.verify()` only needs it for `enroll()`'s
             # `otpauth_uri`, so a placeholder is harmless here.
             result = await auth_service.mfa.verify(body, account_name="")
-        except (MfaChallengeInvalid, MfaChallengeLocked, MfaCodeInvalid, MfaCodeReused) as exc:
+        except (MfaChallengeInvalid, MfaChallengeLocked, MfaCodeInvalid, MfaCodeReused):
             await _audit(
                 audit_service,
                 "auth.mfa_failed",
@@ -266,7 +266,17 @@ def make_auth_router(
                 actor_ip="unknown",
                 outcome=AuditOutcome.FAILURE,
             )
-            return _problem(401, "MFA verification failed", str(exc))
+            # PR #1618 review finding 4 (low): `str(exc)` used to leak which
+            # of "locked" / "expired" / "reused" / "wrong code" applied,
+            # which is a free oracle for an unauthenticated caller (e.g.
+            # distinguishing "this code was already used" from "this code
+            # is simply wrong" narrows a brute-force search). A single
+            # generic detail is returned regardless of which of the four
+            # errors was raised; the distinct HTTP status/audit action
+            # still lets a legitimate, already-authenticated client tell
+            # locked apart from merely-wrong via the challenge-expiry UX
+            # (SCR-002's "locked after 5 tries" state), not via this text.
+            return _problem(401, "MFA verification failed", "invalid or expired code")
 
         await _audit(
             audit_service,
@@ -293,7 +303,7 @@ def make_auth_router(
                 severity=Severity.ERROR,
             )
             return _problem(401, "Recovery codes exhausted", str(exc))
-        except (MfaChallengeInvalid, MfaChallengeLocked, RecoveryCodeInvalid) as exc:
+        except (MfaChallengeInvalid, MfaChallengeLocked, RecoveryCodeInvalid):
             await _audit(
                 audit_service,
                 "auth.mfa_failed",
@@ -301,7 +311,15 @@ def make_auth_router(
                 actor_ip="unknown",
                 outcome=AuditOutcome.FAILURE,
             )
-            return _problem(401, "Recovery failed", str(exc))
+            # PR #1618 review finding 4 (low): same rationale as
+            # `mfa_verify` above — a uniform detail regardless of whether
+            # the challenge was invalid/expired/locked or the code was
+            # simply wrong, so an unauthenticated caller cannot use this
+            # response to narrow a brute-force search. `RecoveryCodesExhausted`
+            # stays a distinct branch above because the ticket's own
+            # Gherkin ("Recovery codes exhausted") requires a
+            # contact-the-owner message the UI must render differently.
+            return _problem(401, "Recovery failed", "invalid or expired code")
 
         await _audit(
             audit_service,

@@ -94,7 +94,16 @@ class MfaRepository(Protocol):
         (same atomicity rationale as `record_time_step`)."""
         ...
 
-    async def satisfy_challenge(self, challenge_id: str, *, now: datetime) -> None: ...
+    async def satisfy_challenge(self, challenge_id: str, *, now: datetime) -> bool:
+        """Conditional `UPDATE ... WHERE satisfied_at IS NULL`, stamping
+        `satisfied_at = now`, returning whether *this call* won the race.
+        PR #1618 review finding 2 (high): two concurrent requests racing
+        the same open challenge (e.g. the same valid TOTP code replayed a
+        few milliseconds apart, or a recovery-code request racing a TOTP
+        request) must not both be able to mint a session from one
+        challenge — the caller must treat `False` as `MfaChallengeInvalid`
+        rather than as success."""
+        ...
 
     # -- recovery_codes ------------------------------------------------------
 
@@ -109,8 +118,15 @@ class MfaRepository(Protocol):
         `None`."""
         ...
 
-    async def consume_recovery_code(self, code_id: str, *, now: datetime) -> None:
-        """Stamp `used_at = now`."""
+    async def consume_recovery_code(self, code_id: str, *, now: datetime) -> bool:
+        """Conditional `UPDATE ... WHERE used_at IS NULL`, stamping
+        `used_at = now`, returning whether *this call* won the race.
+        PR #1618 review finding 2 (high): `find_unused_recovery_code` then
+        `consume_recovery_code` is check-then-act; without this the code
+        is single-use only in appearance and two concurrent requests with
+        the same recovery code can both be accepted (and, worse, both go
+        on to try to satisfy the same challenge). The caller must treat
+        `False` as `RecoveryCodeInvalid`."""
         ...
 
     async def count_unused_recovery_codes(self, user_id: str) -> int: ...

@@ -129,7 +129,15 @@ class MfaService:
             raise MfaCodeReused("this code has already been used")
 
         await self._repository.touch_method_used(matched_method_id, now=now)
-        await self._repository.satisfy_challenge(str(challenge.id), now=now)
+        satisfied = await self._repository.satisfy_challenge(str(challenge.id), now=now)
+        if not satisfied:
+            # PR #1618 review finding 2 (high): another request already
+            # satisfied this same challenge (e.g. raced by a concurrent
+            # verify/recovery call) — the TOTP time-step replay guard above
+            # only protects the *code*, not the *challenge* row, so this
+            # second check is what actually stops one challenge minting
+            # two sessions.
+            raise MfaChallengeInvalid("challenge already satisfied")
         return MfaVerifiedResult(user_id=challenge.user_id)
 
     async def _open_challenge_or_raise(self, mfa_token: str, *, purpose: str) -> MfaChallengeRecord:
@@ -252,8 +260,23 @@ class MfaService:
             raise RecoveryCodeInvalid("invalid or already-used recovery code")
 
         now = self._clock()
-        await self._repository.consume_recovery_code(code_id, now=now)
-        await self._repository.satisfy_challenge(str(challenge.id), now=now)
+        consumed = await self._repository.consume_recovery_code(code_id, now=now)
+        if not consumed:
+            # PR #1618 review finding 2 (high): another concurrent request
+            # already consumed this exact code between the lookup above and
+            # this call (check-then-act race) — treat it as the same
+            # "invalid or already-used" outcome a straight replay gets, and
+            # do not go on to satisfy the challenge or force a session.
+            await self._record_failed_attempt(challenge)
+            raise RecoveryCodeInvalid("invalid or already-used recovery code")
+
+        satisfied = await self._repository.satisfy_challenge(str(challenge.id), now=now)
+        if not satisfied:
+            # Same challenge-level race guard as `verify()`: this code was
+            # validly consumed above, but the *challenge* had already been
+            # satisfied by a concurrent request racing it, so this call
+            # must not also mint a session.
+            raise MfaChallengeInvalid("challenge already satisfied")
 
         # Ticket "Recovery code use forces re-enrolment" (unconditional —
         # the OpenAPI note's "<3 remaining" threshold is a *login-response*
