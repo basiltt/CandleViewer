@@ -17,17 +17,22 @@ from candleviewer.statechart.errors import (
     UnknownKeyError,
     UnresolvedTargetError,
 )
+from candleviewer.statechart.factory import BuildResult, SyncInterpreterRefusedError, build, restore
 from candleviewer.statechart.registry import Registry, export_stately, machine_hash, validate
 
 __all__ = [
+    "BuildResult",
     "DuplicateMachineKeyError",
     "MachineNotFoundError",
     "MachineSchemaError",
     "Registry",
     "StatechartRegistryError",
+    "SyncInterpreterRefusedError",
     "UnknownKeyError",
     "UnresolvedTargetError",
+    "build",
     "export_stately",
     "machine_hash",
+    "restore",
     "validate",
 ]
