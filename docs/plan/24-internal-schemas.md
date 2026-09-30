@@ -3751,6 +3751,8 @@ CREATE TABLE machine_events (              -- append-only; CvAuditPlugin; order_
 );
 ```
 
+**Drain journal semantics** (E50-T10, `statechart/persistence.py`): `send_id` = first 32 hex of sha256 over canonical JSON `[machine_kind, entity_id, env, ordinal, persisted_event]`, so a retried append after a crash between journal and snapshot is a no-op on the PK. `lane` is `priority` for the first `len(priority_queue)` drained events. `receipt_error` is `InterpreterStoppedError` when a `send(wait=True)` waiter was failed by the drain; each such row is also audited (R14-02). `replay_once` re-enqueues rows in `ordinal` order via the restore hook (lane + engine provenance preserved) and stamps `replayed_at`; stamped rows are never replayed again. (The ticket text calls this table `statechart_drain_journal`; the name here, `machine_drain_journal`, is authoritative.)
+
 A context carrying `_fault` is never written to `machine_snapshots`. Instead a quarantine row goes to `machine_events` with `fault` set, and P1 pages (MUST-01). The order family writes `machine_events` **write-ahead**. The other families write it write-behind.
 
 **WS projection, topic `machines.{entity}.state`** (owned here; framed per `23-ws-protocol.md`). It is published by the machine **on state entry** and is never produced by querying an interpreter (MUSTNOT-03):
