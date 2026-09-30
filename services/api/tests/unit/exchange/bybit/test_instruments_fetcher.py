@@ -33,8 +33,10 @@ async def test_fetcher_follows_cursor_and_requests_linear() -> None:
             {"result": {"list": [{"symbol": "ETHUSDT"}], "nextPageCursor": ""}},
         ]
     )
-    items = await make_instruments_info_fetcher(client)()
-    assert [i["symbol"] for i in items] == ["BTCUSDT", "ETHUSDT"]
+    result = await make_instruments_info_fetcher(client)(lambda: 1)
+    # Bare `{"symbol": ...}` rows are malformed -> rejected, not raised.
+    assert result.instruments == ()
+    assert [r.symbol for r in result.rejected] == ["BTCUSDT", "ETHUSDT"]
     assert client.calls[0] == (
         "/v5/market/instruments-info",
         {"category": "linear", "limit": 1000},
@@ -45,11 +47,11 @@ async def test_fetcher_follows_cursor_and_requests_linear() -> None:
 async def test_fetcher_refuses_unbounded_paging() -> None:
     client = FakeClient([{"result": {"list": [], "nextPageCursor": "again"}}])
     with pytest.raises(InstrumentParseError):
-        await make_instruments_info_fetcher(client)()
+        await make_instruments_info_fetcher(client)(lambda: 1)
     assert len(client.calls) == 20
 
 
 async def test_fetcher_rejects_non_list_result() -> None:
     client = FakeClient([{"result": {"list": "nope"}}])
     with pytest.raises(InstrumentParseError):
-        await make_instruments_info_fetcher(client)()
+        await make_instruments_info_fetcher(client)(lambda: 1)

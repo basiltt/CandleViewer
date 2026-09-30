@@ -12,7 +12,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +20,8 @@ import psycopg
 import pytest
 from testcontainers.postgres import PostgresContainer
 
+from candleviewer.exchange.base.instruments import InstrumentsFetchResult
+from candleviewer.exchange.bybit.instruments import parse_instruments
 from candleviewer.ingestion.instruments_refresh import (
     InstrumentRefreshError,
     InstrumentsRefreshScheduler,
@@ -70,11 +72,11 @@ def pg_dsn() -> Iterator[str]:
 async def test_persist_version_stale_and_reload(pg_dsn: str) -> None:
     pages: list[Any] = [[_row()], [_row("0.50")], RuntimeError("down")]
 
-    async def fetch() -> Sequence[Mapping[str, Any]]:
+    async def fetch(now_us: Callable[[], int]) -> InstrumentsFetchResult:
         item = pages.pop(0) if len(pages) > 1 else pages[0]
         if isinstance(item, Exception):
             raise item
-        return list(item)
+        return parse_instruments(list(item), fetched_at_us=now_us())
 
     async def _nosleep(_: float) -> None:
         return None

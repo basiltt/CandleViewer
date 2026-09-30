@@ -7,11 +7,24 @@ this module returns; it never sees a raw Bybit field name.
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from decimal import Decimal, InvalidOperation
 from typing import Any, Literal, Protocol
 
 from candleviewer.domain.events import Instrument
+from candleviewer.exchange.base.instruments import (
+    InstrumentParseError,
+    InstrumentsFetcher,
+    InstrumentsFetchResult,
+    RejectedInstrument,
+)
+
+__all__ = [
+    "InstrumentParseError",
+    "make_instruments_info_fetcher",
+    "parse_instrument",
+    "parse_instruments",
+]
 
 _STATUS_MAP: dict[str, Literal["pre_launch", "trading", "delivering", "closed"]] = {
     "PreLaunch": "pre_launch",
@@ -19,13 +32,6 @@ _STATUS_MAP: dict[str, Literal["pre_launch", "trading", "delivering", "closed"]]
     "Delivering": "delivering",
     "Closed": "closed",
 }
-
-
-class InstrumentParseError(ValueError):
-    """A raw `instruments-info` list item is missing a required field or has
-    a value that cannot be coerced to the expected type. Raised per-item so
-    a caller can decide whether one bad row should fail the whole refresh
-    or just be skipped-and-logged; this module does not decide that policy."""
 
 
 def _decimal(raw: Mapping[str, Any], key: str, *, require_positive: bool = False) -> Decimal:
@@ -146,33 +152,56 @@ _INSTRUMENTS_PAGE_LIMIT = 1000
 _INSTRUMENTS_MAX_PAGES = 20
 
 
-def make_instruments_info_fetcher(
-    client: _PublicGetter,
-) -> Callable[[], Awaitable[Sequence[Mapping[str, Any]]]]:
-    """Adapt `BybitRestClient.get_public` (E08-T02) into the
-    `InstrumentsInfoFetcher` shape the ingestion refresh scheduler needs:
-    fetch every `category=linear` page (following `nextPageCursor`) and
-    return the raw list items. Kept here so the endpoint path and Bybit's
-    paging fields never leave the adapter (C-2.2)."""
+def parse_instruments(
+    raw_items: Sequence[Mapping[str, Any]], *, fetched_at_us: int
+) -> InstrumentsFetchResult:
+    """Parse every list item; malformed rows are collected as rejections
+    (never raised) so one bad row cannot fail the whole catalogue."""
+    parsed: list[Instrument] = []
+    rejected: list[RejectedInstrument] = []
+    for raw in raw_items:
+        try:
+            parsed.append(parse_instrument(raw, fetched_at_us=fetched_at_us))
+        except InstrumentParseError as exc:
+            symbol = raw.get("symbol")
+            rejected.append(
+                RejectedInstrument(
+                    symbol=symbol if isinstance(symbol, str) else None, reason=str(exc)
+                )
+            )
+    return InstrumentsFetchResult(instruments=tuple(parsed), rejected=tuple(rejected))
 
-    async def _fetch() -> Sequence[Mapping[str, Any]]:
-        items: list[Mapping[str, Any]] = []
-        cursor: str | None = None
-        for _ in range(_INSTRUMENTS_MAX_PAGES):
-            params: dict[str, Any] = {"category": "linear", "limit": _INSTRUMENTS_PAGE_LIMIT}
-            if cursor:
-                params["cursor"] = cursor
-            response = await client.get_public(_INSTRUMENTS_INFO_PATH, params=params)
-            result = response.get("result") or {}
-            page = result.get("list") or []
-            if not isinstance(page, list):
-                raise InstrumentParseError("instruments-info result.list is not a list")
-            items.extend(p for p in page if isinstance(p, Mapping))
-            cursor = result.get("nextPageCursor") or None
-            if not cursor:
-                return items
-        raise InstrumentParseError(
-            f"instruments-info exceeded {_INSTRUMENTS_MAX_PAGES} pages; refusing unbounded paging"
-        )
+
+async def _fetch_raw_pages(client: _PublicGetter) -> list[Mapping[str, Any]]:
+    items: list[Mapping[str, Any]] = []
+    cursor: str | None = None
+    for _ in range(_INSTRUMENTS_MAX_PAGES):
+        params: dict[str, Any] = {"category": "linear", "limit": _INSTRUMENTS_PAGE_LIMIT}
+        if cursor:
+            params["cursor"] = cursor
+        response = await client.get_public(_INSTRUMENTS_INFO_PATH, params=params)
+        result = response.get("result") or {}
+        page = result.get("list") or []
+        if not isinstance(page, list):
+            raise InstrumentParseError("instruments-info result.list is not a list")
+        items.extend(p for p in page if isinstance(p, Mapping))
+        cursor = result.get("nextPageCursor") or None
+        if not cursor:
+            return items
+    raise InstrumentParseError(
+        f"instruments-info exceeded {_INSTRUMENTS_MAX_PAGES} pages; refusing unbounded paging"
+    )
+
+
+def make_instruments_info_fetcher(client: _PublicGetter) -> InstrumentsFetcher:
+    """Adapt `BybitRestClient.get_public` (E08-T02) into the neutral
+    `exchange.base.instruments.InstrumentsFetcher` port: fetch every
+    `category=linear` page (following `nextPageCursor`) and parse it here, so
+    the endpoint path, paging fields and raw payload never leave the adapter
+    (C-2.2)."""
+
+    async def _fetch(now_us: Callable[[], int]) -> InstrumentsFetchResult:
+        raw_items = await _fetch_raw_pages(client)
+        return parse_instruments(raw_items, fetched_at_us=now_us())
 
     return _fetch

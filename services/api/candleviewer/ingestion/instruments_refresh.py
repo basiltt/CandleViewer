@@ -40,7 +40,7 @@ from uuid import uuid4
 import structlog
 
 from candleviewer.domain.events import Instrument
-from candleviewer.exchange.bybit.instruments import InstrumentParseError, parse_instrument
+from candleviewer.exchange.base.instruments import InstrumentsFetcher
 from candleviewer.ingestion.errors import IngestionError
 from candleviewer.ingestion.instruments import (
     CatalogueSnapshot,
@@ -61,10 +61,11 @@ _MIN_BACKOFF_S = 1.0
 _MAX_BACKOFF_S = 30.0
 
 
-#: Returns the raw `instruments-info` (`category=linear`) list items, all
-#: pages. Built by `exchange.bybit.instruments.make_instruments_info_fetcher`
-#: at the composition root so this module never imports the REST transport.
-InstrumentsInfoFetcher = Callable[[], Awaitable[Sequence[Mapping[str, Any]]]]
+#: Neutral fetcher port (`exchange.base.instruments.InstrumentsFetcher`):
+#: returns already-normalised `Instrument`s plus rejected rows. The concrete
+#: exchange adapter's fetcher is injected by the composition root, so this
+#: module never sees a raw exchange payload, the parser or the transport.
+InstrumentsInfoFetcher = InstrumentsFetcher
 
 
 class InstrumentsRepositoryLike(Protocol):
@@ -179,11 +180,17 @@ class InstrumentsRefreshScheduler:
         self._stopping = True
         if self._task is not None:
             self._task.cancel()
+            task, self._task = self._task, None
             try:
-                await asyncio.wait_for(asyncio.shield(self._task), timeout=grace_s)
-            except (asyncio.CancelledError, TimeoutError):
+                await asyncio.wait_for(asyncio.shield(task), timeout=grace_s)
+            except TimeoutError:
                 pass
-            self._task = None
+            except asyncio.CancelledError:
+                # The shield absorbs the *periodic task's* own cancellation;
+                # if the caller of `stop()` was cancelled, propagate it.
+                current = asyncio.current_task()
+                if current is not None and current.cancelling():
+                    raise
 
     # -- on-demand refresh (ticket "unknown symbol" + "Refresh does not ----
     # -- stall readers" scenarios) -------------------------------------------
@@ -257,21 +264,19 @@ class InstrumentsRefreshScheduler:
         ) from last_error
 
     async def _refresh_once(self) -> None:
-        raw_items = await self._fetch_instruments_info()
-        fetched_at_us = self._now_us()
+        result = await self._fetch_instruments_info(self._now_us)
+        fetched_at_us = max((i.fetched_at for i in result.instruments), default=self._now_us())
         current = self.cache.current()
 
+        for rejected in result.rejected:
+            logger.warning(
+                "instruments_refresh_skipped_row",
+                symbol=rejected.symbol,
+                error=rejected.reason,
+            )
+
         parsed: dict[str, Instrument] = {}
-        for raw in raw_items:
-            try:
-                item = parse_instrument(raw, fetched_at_us=fetched_at_us)
-            except InstrumentParseError as exc:
-                logger.warning(
-                    "instruments_refresh_skipped_row",
-                    symbol=raw.get("symbol"),
-                    error=str(exc),
-                )
-                continue
+        for item in result.instruments:
             previous = current.get(item.symbol) if current is not None else None
             versioned, changed_fields = next_version(previous, item)
             parsed[versioned.symbol] = versioned
@@ -290,12 +295,12 @@ class InstrumentsRefreshScheduler:
                     await self._publish(event)
 
         if not parsed:
-            raise InstrumentRefreshError("instruments-info returned zero parseable rows")
+            raise InstrumentRefreshError("instrument fetch returned zero parseable rows")
 
         # Symbols the cache already had that did not reappear in this fetch
         # keep their last-known record (never silently dropped mid-refresh —
-        # a transient short page must not make a symbol vanish); Bybit only
-        # ever *adds* symbols or flips `status` to `Closed`, so this is a
+        # a transient short page must not make a symbol vanish); the exchange
+        # normally only *adds* symbols or flips `status` to `Closed`, so this is a
         # defensive merge, not the normal path.
         if current is not None:
             for symbol, instrument in current.by_symbol.items():

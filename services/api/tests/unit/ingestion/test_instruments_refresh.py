@@ -7,12 +7,14 @@ from __future__ import annotations
 
 import asyncio
 import copy
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 import pytest
 
 from candleviewer.domain.events import InstrumentUpdatedEvent
+from candleviewer.exchange.base.instruments import InstrumentsFetchResult
+from candleviewer.exchange.bybit.instruments import parse_instruments
 from candleviewer.ingestion.instruments_refresh import (
     InstrumentRefreshError,
     InstrumentsRefreshScheduler,
@@ -97,11 +99,11 @@ def make(
     clock = clock or Clock()
     published: list[InstrumentUpdatedEvent] = []
 
-    async def fetch() -> Sequence[Mapping[str, Any]]:
+    async def fetch(now_us: Callable[[], int]) -> InstrumentsFetchResult:
         item = pages.pop(0) if len(pages) > 1 else pages[0]
         if isinstance(item, Exception):
             raise item
-        return list(item)
+        return parse_instruments(list(item), fetched_at_us=now_us())
 
     async def publish(event: Any) -> None:
         published.append(event)
@@ -219,3 +221,30 @@ async def test_zero_parseable_rows_is_an_error_not_an_empty_catalogue() -> None:
     with pytest.raises(InstrumentRefreshError):
         await sched.refresh_now()
     assert sched.snapshot().get("BTCUSDT") is not None  # type: ignore[union-attr]  # set above
+
+
+async def test_stop_propagates_cancellation_of_its_caller() -> None:
+    sched, _, _, _ = make([[raw()]])
+    await sched.start()
+
+    # Make the periodic task ignore cancel for a while so stop() is waiting.
+    blocker = asyncio.Event()
+
+    async def _stubborn() -> None:
+        try:
+            await blocker.wait()
+        except asyncio.CancelledError:
+            await blocker.wait()
+
+    sched._task.cancel()  # type: ignore[union-attr]  # replace the real loop
+    stubborn = asyncio.create_task(_stubborn())
+    sched._task = stubborn
+    await asyncio.sleep(0)
+    caller = asyncio.create_task(sched.stop(grace_s=1_000.0))
+    await asyncio.sleep(0)
+    await asyncio.sleep(0)
+    caller.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await caller
+    blocker.set()
+    await stubborn

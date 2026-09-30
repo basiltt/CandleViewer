@@ -40,9 +40,8 @@ from candleviewer.book.service import BookService
 from candleviewer.bus.models import Topic
 from candleviewer.bus.service import BusService
 from candleviewer.domain.events import InstrumentUpdatedEvent
+from candleviewer.exchange.base.instruments import InstrumentsFetcher
 from candleviewer.exchange.base.service import ExchangeBaseService
-from candleviewer.exchange.bybit.instruments import make_instruments_info_fetcher
-from candleviewer.exchange.bybit.rest import BybitRestClient
 from candleviewer.exchange.bybit.service import ExchangeBybitService
 from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
 from candleviewer.ingestion.service import IngestionService
@@ -296,7 +295,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(make_market_router(lambda: ctx.storage.market_data))
     # E08-S01-2: served from the scheduler's in-memory snapshot; `503` until
     # `wire_instrument_catalogue()` attaches one (needs a real Postgres +
-    # Bybit REST client). Resolver `None` -> fail-closed `501` (see above).
+    # exchange REST client). Resolver `None` -> fail-closed `501` (see above).
     app.include_router(make_instruments_router(lambda: ctx.ingestion.instruments))
     return app
 
@@ -304,12 +303,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 def wire_instrument_catalogue(
     ctx: AppContext,
     *,
-    rest_client: BybitRestClient,
+    fetch_instruments: InstrumentsFetcher,
     relational: SqlAlchemyRelationalRepository,
 ) -> InstrumentsRefreshScheduler:
-    """Compose the E08-S01-2 catalogue: Bybit `instruments-info` fetcher
-    (M4) + Postgres repository (M10) + bus publisher (M5) -> ingestion (M6)
-    scheduler. Only this composition root sees all four modules (C-3.1)."""
+    """Compose the E08-S01-2 catalogue: the exchange adapter's neutral
+    instruments fetcher (M4, built by the adapter and passed in as the
+    neutral `InstrumentsFetcher` port) + Postgres repository (M10) + bus
+    publisher (M5) -> ingestion (M6) scheduler. Only this composition root
+    sees all four modules (C-3.1)."""
     bus = ctx.bus.bus
     env = ctx.settings.environment.value
 
@@ -318,7 +319,7 @@ def wire_instrument_catalogue(
         await bus.publish(topic, event)
 
     scheduler = InstrumentsRefreshScheduler(
-        fetch_instruments_info=make_instruments_info_fetcher(rest_client),
+        fetch_instruments_info=fetch_instruments,
         repository=SqlAlchemyInstrumentsRepository(relational),
         publish=_publish,
     )
