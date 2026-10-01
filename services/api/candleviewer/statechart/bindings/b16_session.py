@@ -146,9 +146,17 @@ async def broadcast_revocation(
 async def stamp_elevated_until(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
-    elevated_until_us = _payload(event).get("elevated_until_us")
+    payload = _payload(event)
+    elevated_until_us = payload.get("elevated_until_us")
     if elevated_until_us is not None:
         context["elevated_until_us"] = elevated_until_us
+        action_class = payload.get("action_class")
+        # No-grace classes never open a window (ticket "No-grace list").
+        if action_class in NO_GRACE_ACTION_CLASSES:
+            return
+        if action_class in ACTION_CLASSES:
+            context.setdefault("elevated_classes", {})[action_class] = elevated_until_us
+    context["step_up_failures"] = 0
 
 
 async def audit_step_up(
@@ -167,9 +175,83 @@ async def clear_elevated(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
     context["elevated_until_us"] = None
+    context["elevated_classes"] = {}
 
 
 async def schedule_elevation_deadline(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
+    return None
+
+
+# -- E09-S04: step-up re-authentication (US-ONB-005) -------------------------
+
+#: Ticket: "a 5-minute grace per action class".
+STEP_UP_GRACE_US = 5 * 60 * 1_000_000
+#: Ticket: three invalid codes abandon the action and downgrade the session.
+STEP_UP_FAILURE_CAP = 3
+#: Ticket: the downgrade lasts 5 minutes.
+READONLY_DOWNGRADE_US = 5 * 60 * 1_000_000
+#: Ticket "No-grace list": a fresh code is *always* required for these.
+NO_GRACE_ACTION_CLASSES = frozenset({"live_enablement", "killswitch"})
+ACTION_CLASSES = frozenset({"keys", "users", "live_enablement", "killswitch", "risk_caps"})
+
+
+def grace_window_valid(context: dict[str, Any], event: dict[str, Any]) -> bool:
+    """Guard: is there an unexpired grace window for `event.action_class`?
+
+    False unconditionally for the no-grace list. Total: any malformed input
+    yields False (fail closed, catalogue A6)."""
+    try:
+        payload = _payload(event)
+        action_class = payload.get("action_class")
+        if action_class in NO_GRACE_ACTION_CLASSES or action_class not in ACTION_CLASSES:
+            return False
+        until = (context.get("elevated_classes") or {}).get(action_class)
+        now_us = payload.get("now_us")
+        return bool(until is not None and now_us is not None and int(now_us) < int(until))
+    except (TypeError, ValueError, AttributeError):
+        return False
+
+
+def step_up_strikes_exhausted(context: dict[str, Any], event: dict[str, Any]) -> bool:
+    """Guard: this failure is the third (`step_up_failures + 1 >= cap`)."""
+    try:
+        return bool(int(context.get("step_up_failures", 0)) + 1 >= STEP_UP_FAILURE_CAP)
+    except (TypeError, ValueError):
+        return False
+
+
+async def record_step_up_failure(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
+    context["step_up_failures"] = int(context.get("step_up_failures", 0)) + 1
+    if context["step_up_failures"] >= STEP_UP_FAILURE_CAP:
+        now_us = _payload(event).get("now_us")
+        if now_us is not None:
+            context["readonly_until_us"] = int(now_us) + READONLY_DOWNGRADE_US
+
+
+async def clear_step_up_failures(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
+    context["step_up_failures"] = 0
+    context["readonly_until_us"] = None
+
+
+async def audit_step_up_required(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
+    return None
+
+
+async def audit_grace_used(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
+    return None
+
+
+async def audit_readonly_downgrade(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
     return None
@@ -194,10 +276,17 @@ ACTIONS: dict[str, Callable[..., Awaitable[None]]] = {
     "audit_step_up_failed": audit_step_up_failed,
     "clear_elevated": clear_elevated,
     "schedule_elevation_deadline": schedule_elevation_deadline,
+    "record_step_up_failure": record_step_up_failure,
+    "clear_step_up_failures": clear_step_up_failures,
+    "audit_step_up_required": audit_step_up_required,
+    "audit_grace_used": audit_grace_used,
+    "audit_readonly_downgrade": audit_readonly_downgrade,
 }
 
 GUARDS: dict[str, Callable[..., bool]] = {
     "mfa_attempts_exhausted": mfa_attempts_exhausted,
+    "grace_window_valid": grace_window_valid,
+    "step_up_strikes_exhausted": step_up_strikes_exhausted,
 }
 
 SERVICES: dict[str, Callable[..., Awaitable[Any]]] = {}
@@ -222,5 +311,7 @@ register_event_schemas(
         "STEP_UP_OK": {"type": "object", "additionalProperties": True},
         "STEP_UP_FAILED": {"type": "object", "additionalProperties": True},
         "ELEVATION_DEADLINE": {"type": "object", "additionalProperties": True},
+        "ACTION_REQUEST": {"type": "object", "additionalProperties": True},
+        "READONLY_EXPIRED": {"type": "object", "additionalProperties": True},
     }
 )
