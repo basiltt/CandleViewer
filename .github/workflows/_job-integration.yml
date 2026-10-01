@@ -62,6 +62,32 @@ jobs:
         working-directory: services/api
         run: uv run pytest tests/integration -m integration --no-cov
 
+      - name: Grafana live render suite (E04-S01 AC1/AC2)
+        env:
+          GF_SECURITY_ADMIN_USER: admin
+          GF_SECURITY_ADMIN_PASSWORD: ci-only-${{ github.run_id }}
+          GRAFANA_URL: http://127.0.0.1:3001
+          PROM_STUB_PORT: "9090"
+          GRAFANA_CONTAINER: cv-grafana
+        run: |
+          # Image + digest copied from infra/compose/docker-compose.yml (verified by pin-check).
+          IMG=$(grep -m1 'image: grafana/grafana' infra/compose/docker-compose.yml | awk '{print $2}')
+          # Host network so Grafana's datasource proxy reaches the stub Prometheus on loopback.
+          # Provisioning + dashboards are mounted; "prometheus" resolves to loopback where the stub listens.
+          docker run -d --name cv-grafana --network host --add-host prometheus:127.0.0.1             -e GF_SERVER_HTTP_PORT=3001 -e GF_SECURITY_ADMIN_USER -e GF_SECURITY_ADMIN_PASSWORD             -v "$PWD/infra/grafana/provisioning:/etc/grafana/provisioning:ro"             -v "$PWD/infra/grafana/dashboards:/var/lib/grafana/dashboards:ro" "$IMG"
+          ok=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3001/api/health; then ok=1; break; fi
+            sleep 2
+          done
+          if [ "$ok" != 1 ]; then docker logs cv-grafana; echo "Grafana never became healthy"; exit 1; fi
+          cd services/api
+          uv run pytest ../../infra/grafana/tests/test_live_render.py -m integration --no-cov -p no:cacheprovider
+
+      - name: Remove Grafana container
+        if: always()
+        run: docker rm -f cv-grafana || true
+
       - name: Assert no live-exchange egress occurred
         if: always()
         run: |

@@ -68,6 +68,8 @@ jobs:
               - 'services/api/**'
               - 'tools/ci/**'
               - 'scripts/**/*.py'
+              - 'infra/grafana/**'
+              - 'infra/prometheus/**'
             engine:
               - 'packages/chart-engine/**'
             protocol:

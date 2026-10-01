@@ -1,0 +1,4 @@
+# Nightly Grafana dashboard snapshot export (E04-S01, ADR-0014). Install on the dev host:
+#   crontab infra/grafana/snapshot-export.cron   (or copy to /etc/cron.d/ with a user column)
+# Credentials come from the environment file, never this file. Local artefacts only.
+17 2 * * * cd /opt/candleviewer && set -a && . ./.env.local && set +a && python3 infra/grafana/snapshot_export.py >> artifacts/grafana-snapshots/export.log 2>&1
