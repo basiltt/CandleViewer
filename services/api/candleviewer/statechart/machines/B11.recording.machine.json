@@ -1,0 +1,208 @@
+{
+  "id": "recording",
+  "strictConfig": true,
+  "maxIterations": 500,
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "defer",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "on": {
+    "KILL": {
+      "target": "#recording.error",
+      "actions": [
+        "audit_kill"
+      ]
+    }
+  },
+  "initial": "idle",
+  "context": {
+    "symbol": null,
+    "reasons": [],
+    "streams": [],
+    "streams_healthy": {},
+    "gap_count_24h": 0,
+    "linger_until_us": null,
+    "error": null
+  },
+  "states": {
+    "idle": {
+      "on": {
+        "REASON_ADDED": {
+          "target": "#recording.starting",
+          "actions": [
+            "add_reason"
+          ]
+        }
+      }
+    },
+    "starting": {
+      "invoke": {
+        "id": "sub",
+        "src": "subscribe_streams",
+        "onDone": {
+          "target": "#recording.recording"
+        },
+        "onError": {
+          "target": "#recording.error",
+          "actions": [
+            "record_error"
+          ]
+        }
+      },
+      "on": {
+        "REASON_ADDED": {
+          "actions": [
+            "add_reason"
+          ]
+        },
+        "REASON_REMOVED": {
+          "actions": [
+            "remove_reason"
+          ]
+        }
+      }
+    },
+    "recording": {
+      "entry": [
+        "cancel_linger",
+        "emit_recording_metric"
+      ],
+      "on": {
+        "STREAM_UNHEALTHY": {
+          "target": "#recording.degraded",
+          "actions": [
+            "mark_stream_unhealthy"
+          ]
+        },
+        "REASON_ADDED": {
+          "actions": [
+            "add_reason"
+          ]
+        },
+        "REASON_REMOVED": [
+          {
+            "actions": [
+              "remove_reason"
+            ],
+            "guard": "reasons_remain"
+          },
+          {
+            "target": "#recording.lingering",
+            "actions": [
+              "remove_reason"
+            ]
+          }
+        ],
+        "GAP_DETECTED": {
+          "actions": [
+            "bump_gap_count",
+            "emit_gap_metric"
+          ]
+        }
+      }
+    },
+    "degraded": {
+      "tags": [
+        "degraded"
+      ],
+      "entry": [
+        "raise_degraded_alert"
+      ],
+      "on": {
+        "STREAM_HEALTHY": [
+          {
+            "target": "#recording.recording",
+            "guard": "all_streams_healthy",
+            "actions": [
+              "mark_stream_healthy"
+            ]
+          },
+          {
+            "actions": [
+              "mark_stream_healthy"
+            ]
+          }
+        ],
+        "REASON_REMOVED": [
+          {
+            "actions": [
+              "remove_reason"
+            ],
+            "guard": "reasons_remain"
+          },
+          {
+            "target": "#recording.lingering",
+            "actions": [
+              "remove_reason"
+            ]
+          }
+        ],
+        "GAP_DETECTED": {
+          "actions": [
+            "bump_gap_count",
+            "emit_gap_metric"
+          ]
+        }
+      }
+    },
+    "lingering": {
+      "entry": [
+        "schedule_linger_deadline"
+      ],
+      "on": {
+        "REASON_ADDED": {
+          "target": "#recording.recording",
+          "actions": [
+            "add_reason"
+          ]
+        },
+        "LINGER_DUE": [
+          {
+            "target": "#recording.recording",
+            "guard": "position_open_for_symbol"
+          },
+          {
+            "target": "#recording.stopping"
+          }
+        ]
+      }
+    },
+    "stopping": {
+      "invoke": {
+        "id": "unsub",
+        "src": "unsubscribe_and_flush",
+        "onDone": {
+          "target": "#recording.stopped"
+        },
+        "onError": {
+          "target": "#recording.error",
+          "actions": [
+            "record_error"
+          ]
+        }
+      }
+    },
+    "stopped": {
+      "on": {
+        "REASON_ADDED": {
+          "target": "#recording.starting",
+          "actions": [
+            "add_reason"
+          ]
+        }
+      }
+    },
+    "error": {
+      "tags": [
+        "error"
+      ],
+      "on": {
+        "RETRY": {
+          "target": "#recording.starting"
+        }
+      }
+    }
+  }
+}

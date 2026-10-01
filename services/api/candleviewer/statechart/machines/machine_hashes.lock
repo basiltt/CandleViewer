@@ -1,5 +1,13 @@
 {
   "machines": {
+    "alert": {
+      "hash": "33a921e4d2fd1cc02366f0f7f7b6a22cc1273d9e387049d8dd7a5a658601d1d3",
+      "version": null
+    },
+    "book": {
+      "hash": "a483e363f64e69f28559ce0e9d3c480e99d7289dbce026aea7a664ad342b8f8d",
+      "version": null
+    },
     "chase": {
       "hash": "bc6436827867487a26c116ccbf41ca1d681aeb405faab1dbd565a6bf60eb280d",
       "version": null
@@ -8,12 +16,40 @@
       "hash": "aecfc7ca58b86bec0dfe9ff34009632ca2a6086f98686ebad3be6c9a77e88ede",
       "version": null
     },
+    "kill_switch": {
+      "hash": "17b59ac925050940b6ae4c05cf34d6bab5f8345db7141157f106077b0e76dd40",
+      "version": null
+    },
     "leg": {
       "hash": "a7d8fb5d8c3e46a19ea85af406b2082032d8bf36d576f70760f077b337bb406a",
       "version": null
     },
+    "live_gate": {
+      "hash": "780accfd0086c18cff2ec4cd7a617d0c1f4b8adbcd2cc5366c16e9d485f4a9f1",
+      "version": null
+    },
     "oco": {
       "hash": "fd7edafda40fc1b25974fbd5ac49f8b274e2944de44323bdcee2e3c3f2c56850",
+      "version": null
+    },
+    "paper_account": {
+      "hash": "401363766fb6e94bd9b7b3fba839915d0fbbc81408b2c0d1c2ff47ff4044f1d9",
+      "version": null
+    },
+    "reconciliation": {
+      "hash": "b3a706bdf71d28608839e79a6da2ee2d983ba7661c9a55e76f50a935e87a22ee",
+      "version": null
+    },
+    "recording": {
+      "hash": "2b7174e42a14631ca0429a28322d046993f0456b8fb1e7254c703daef06b6dc7",
+      "version": null
+    },
+    "replay": {
+      "hash": "61dfccf1be3798287858298fc8ae9e8ec798512a835b895ea9adee7e4aac9c83",
+      "version": null
+    },
+    "risk_lockout": {
+      "hash": "08f11db6dab63f75b57b7694b7419b3e6e7d92588613af394df604cff57275e3",
       "version": null
     },
     "rule_instance": {
@@ -30,6 +66,10 @@
     },
     "twap": {
       "hash": "c121934637d0f91163509161d7db728789851c9ba6f16279e065b609e6dd4fa4",
+      "version": null
+    },
+    "ws_conn": {
+      "hash": "4103c8cba47ad6c6dd1ef72c44182fda1ebd48cf278d29f39b502b58a4ad9b64",
       "version": null
     }
   },

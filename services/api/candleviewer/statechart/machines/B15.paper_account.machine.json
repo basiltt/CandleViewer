@@ -1,0 +1,79 @@
+{
+  "id": "paper_account",
+  "strictConfig": true,
+  "maxIterations": 500,
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "defer",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "initial": "active",
+  "context": {
+    "account_id": null,
+    "equity": "0",
+    "maintenance_margin": "0",
+    "liq_price": null
+  },
+  "states": {
+    "active": {
+      "on": {
+        "MARK_UPDATE": [
+          {
+            "target": "#paper_account.liquidating",
+            "guard": "mark_crossed_liq_price"
+          },
+          {
+            "target": "#paper_account.margin_call",
+            "guard": "below_maintenance_margin"
+          },
+          {
+            "actions": [
+              "note_mark_no_change"
+            ]
+          }
+        ]
+      }
+    },
+    "margin_call": {
+      "tags": [
+        "warning"
+      ],
+      "entry": [
+        "emit_margin_warning"
+      ],
+      "on": {
+        "MARK_UPDATE": [
+          {
+            "target": "#paper_account.liquidating",
+            "guard": "mark_crossed_liq_price"
+          },
+          {
+            "target": "#paper_account.active",
+            "guard": "above_maintenance_margin"
+          },
+          {
+            "actions": [
+              "note_mark_no_change"
+            ]
+          }
+        ]
+      }
+    },
+    "liquidating": {
+      "entry": [
+        "apply_liquidation_haircut",
+        "write_liquidation_journal"
+      ],
+      "always": {
+        "target": "#paper_account.liquidated"
+      }
+    },
+    "liquidated": {
+      "type": "final",
+      "tags": [
+        "terminal"
+      ]
+    }
+  }
+}
