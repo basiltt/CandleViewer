@@ -173,3 +173,30 @@ class SessionReadOnly(AuthError):
 
 class UnknownActionClass(AuthError):
     """Step-up requested for an action class outside the closed set."""
+
+
+class InviteRejected(AuthError):
+    """An invite token that cannot be used (E09-S05). `reason` is one of
+    `unknown | expired | redeemed | revoked | enrollment_invalid` and is for
+    audit/metrics only - the HTTP edge renders one uniform 404 for all of
+    them so links cannot be probed."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(f"invite rejected: {reason}")
+        self.reason = reason
+
+
+class InviteConflict(AuthError):
+    """`POST /users`: the email or username already belongs to a user."""
+
+
+class InviteNotFound(AuthError):
+    """Re-issue/revoke for a user with no (pending) invite."""
+
+
+class PasswordPolicyViolation(AuthError):
+    """Redemption password failed the SR-028 policy; `reason` is user-safe."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.reason = reason

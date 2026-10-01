@@ -54,12 +54,14 @@ from candleviewer.api.deny_by_default import (
     declared_operations,
     make_deny_undeclared_dependency,
 )
+from candleviewer.api.invites import make_invites_router
 from candleviewer.api.sessions import make_session_router
 from candleviewer.api.step_up import make_read_only_guard, make_step_up_router
 from candleviewer.api.support_bundle import make_support_bundle_router
 from candleviewer.api.telemetry import SessionKeyResolver, make_telemetry_router
 from candleviewer.api.users import SnapshotResolver, UserRoleStore, make_users_router
 from candleviewer.auth.models import (
+    InviteRecord,
     MfaChallengeRecord,
     MfaMethodRecord,
     SessionRecord,
@@ -129,6 +131,7 @@ from candleviewer.storage.repositories.identity_sqlalchemy import SqlAlchemyIden
 from candleviewer.storage.repositories.instruments_sqlalchemy import (
     SqlAlchemyInstrumentsRepository,
 )
+from candleviewer.storage.repositories.invites_sqlalchemy import SqlAlchemyInviteRepository
 from candleviewer.storage.repositories.mfa_sqlalchemy import SqlAlchemyMfaRepository
 from candleviewer.storage.repositories.relational_sqlalchemy import (
     SqlAlchemyRelationalRepository,
@@ -263,6 +266,7 @@ def build_auth_service(
         recovery_code_hmac_key=rc_key,
         session_repository=SqlAlchemySessionRepository(relational, _record_factory(SessionRecord)),
         clock=clock,
+        invite_repository=SqlAlchemyInviteRepository(relational, _record_factory(InviteRecord)),
     )
 
 
@@ -599,6 +603,9 @@ def create_app(
         make_users_router(
             user_role_store, _LazyAuditEmitter(ctx.audit), principal_resolver, ws_registry
         )
+    )
+    app.include_router(
+        make_invites_router(ctx.auth, _LazyAuditEmitter(ctx.audit), principal_resolver)
     )
     # QA #1596: real session-backed resolver; without an identity provider
     # (fake backend) it stays `None` and every call fails closed with 501.

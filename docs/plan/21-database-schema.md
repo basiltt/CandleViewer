@@ -223,6 +223,10 @@ erDiagram
     }
 ```
 
+#### `user_invites` (E09-S05, migration 0010)
+
+One row per issued invitation. `token_hash` (sha256 hex of a 256-bit token, unique) is the only stored form of the token; `pending_password_hash` is a SECRET (Argon2id) parked after redemption step 1 and cleared on activation; `consumed_at`/`revoked_at` make the token single-use; `expires_at` = created + 72 h. `users.status` flips `invited` -> `active` only after the first TOTP code verifies.
+
 ### 2.2 Trading core
 
 ```mermaid

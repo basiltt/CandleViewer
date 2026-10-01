@@ -212,6 +212,34 @@ user_roles = Table(
     Index("ix_user_roles_role", "role_id"),
 )
 
+user_invites = Table(
+    "user_invites",
+    metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("user_id", ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("role", role_name, nullable=False),
+    Column(
+        "token_hash",
+        Text,
+        nullable=False,
+        comment="SECRET-DERIVED: sha256 hex of the one-time invite token",
+    ),
+    Column("invited_by", ForeignKey("users.id", ondelete="SET NULL")),
+    Column("expires_at", TIMESTAMP(timezone=True), nullable=False),
+    Column("consumed_at", TIMESTAMP(timezone=True)),
+    Column(
+        "pending_password_hash",
+        Text,
+        comment="SECRET: Argon2id digest held until TOTP enrolment completes",
+    ),
+    Column("revoked_at", TIMESTAMP(timezone=True)),
+    Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    CheckConstraint("char_length(token_hash) = 64", name="user_invites_hash_fmt"),
+    CheckConstraint("expires_at > created_at", name="user_invites_expiry"),
+    Index("ux_user_invites_token_hash", "token_hash", unique=True),
+    Index("ix_user_invites_user", "user_id"),
+)
+
 user_account_access = Table(
     "user_account_access",
     metadata,

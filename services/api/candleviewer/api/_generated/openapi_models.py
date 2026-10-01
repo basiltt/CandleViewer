@@ -4763,6 +4763,12 @@ class SessionInfo(BaseModel):
     allowed_environments: list[Literal["live", "demo", "testnet"]] | None = None
     kill_switch: KillSwitch | None = None
     server_time: AwareDatetime
+    step_up_expires_at: Annotated[
+        AwareDatetime | None,
+        Field(
+            description="Latest live step-up grace-window expiry on this session (E09-S04); null if none."
+        ),
+    ] = None
     clock_offset_ms: Annotated[
         int | None,
         Field(
