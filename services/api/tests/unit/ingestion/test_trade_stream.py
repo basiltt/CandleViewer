@@ -310,7 +310,7 @@ async def test_burst_5000_prints_per_second_no_loss_with_backpressure() -> None:
 
     h = Harness(maxsize=64)  # slow consumer: queue fills, reader must block, not drop
     h.stream.acquire("tape", "ETHUSDT")
-    full_before = _val(ingest_queue_full_total, **{"class": "md.trade"})
+    full_before = _val(ingest_queue_full_total, **{"class": "trade"})
     got: list[TradeEvent] = []
     total = 5000
 
@@ -331,7 +331,7 @@ async def test_burst_5000_prints_per_second_no_loss_with_backpressure() -> None:
         lat.append((time.perf_counter() - t0) / 50)
     await asyncio.wait_for(task, 10)
     assert len(got) == total and len({(e.symbol, e.trade_id) for e in got}) == total
-    assert _val(ingest_queue_full_total, **{"class": "md.trade"}) > full_before
+    assert _val(ingest_queue_full_total, **{"class": "trade"}) > full_before
     lat.sort()
     assert lat[int(len(lat) * 0.95)] < 0.020  # ingest->bus p95 budget per print
 
