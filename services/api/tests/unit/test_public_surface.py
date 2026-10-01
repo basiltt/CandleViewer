@@ -50,6 +50,7 @@ _ALLOWED_EXTRA_EXPORTS: dict[str, set[str]] = {
         "UnitOfWork",
     },
     "M23a": {
+        "make_health_report_router",
         "make_health_router",
         "make_auth_router",
         "make_audit_router",

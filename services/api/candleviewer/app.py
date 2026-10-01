@@ -35,6 +35,7 @@ from candleviewer.alerts.service import AlertsService
 from candleviewer.api import (
     make_audit_router,
     make_auth_router,
+    make_health_report_router,
     make_health_router,
     make_instruments_router,
     make_log_level_router,
@@ -79,6 +80,8 @@ from candleviewer.net import (
     register_system_topic_subscriber,
 )
 from candleviewer.observability.correlation import CorrelationMiddleware
+from candleviewer.observability.health_metrics import bind_health_metrics
+from candleviewer.observability.health_probes import HealthRegistry
 from candleviewer.observability.log_level import LogLevelOverrides
 from candleviewer.observability.metrics import CollectorRegistry
 from candleviewer.observability.service import ObservabilityService
@@ -453,6 +456,20 @@ def create_app(
     app.include_router(make_log_level_router(overrides, _LazyAuditEmitter(ctx.audit)))
     app.include_router(
         make_health_router(resolved, ctx.metrics, mesh_read_only_gate=ctx.oms_read_only_gate)
+    )
+    # E04-T04: cached component health. Unbuilt modules register `not_deployed`
+    # probes; the ticker is started/stopped by the lifespan (`app.state`).
+    health_registry = HealthRegistry()
+    health_registry.register_placeholders()
+    bind_health_metrics(health_registry, ctx.metrics, resolved)
+    app.state.health_registry = health_registry
+    app.include_router(
+        make_health_report_router(
+            health_registry,
+            version=resolved.version,
+            git_sha=resolved.git_sha,
+            environment=resolved.environment.value,
+        )
     )
     app.include_router(make_auth_router(ctx.auth, ctx.audit, identity=identity))
     # E09-S03: session routes; revocation is pushed to sockets via the hub

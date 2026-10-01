@@ -36,6 +36,11 @@
       "path": "services/api/candleviewer/migrations/versions/0007_sessions_idle_timeout.py",
       "sha256": "7fd7790d322f86201163a503d0c3140f8d4c9aaa0b6fb1599aa69488de4219ba",
       "down_revision": "0006_admin_write_permission"
+    },
+    "0008_system_events": {
+      "path": "services/api/candleviewer/migrations/versions/0008_system_events.py",
+      "sha256": "7cfa18f21d51f771c46117fa6b8d9bdf3f69615c7e480c187861ffb58a8a9dec",
+      "down_revision": "0007_sessions_idle_timeout"
     }
   }
 }

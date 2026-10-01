@@ -64,6 +64,9 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     overrides = getattr(app.state, "log_level_overrides", None)
     if overrides is not None:
         overrides.start()
+    health_registry = getattr(app.state, "health_registry", None)
+    if health_registry is not None:
+        health_registry.start()
     metrics_runtime: MetricsRuntime | None = None
     if ctx.settings.metrics_enabled:
         metrics_runtime = MetricsRuntime(
@@ -80,6 +83,8 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     finally:
         if metrics_runtime is not None:
             await metrics_runtime.stop()
+        if health_registry is not None:
+            await health_registry.stop()
         if overrides is not None:
             await overrides.stop()
         await ctx.mesh_self_check.stop()

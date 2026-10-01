@@ -1601,7 +1601,12 @@ class Symbol1(BaseModel):
 
 
 class RecordingStatus(BaseModel):
-    overall: Literal["healthy", "degraded", "warning", "down"] | None = None
+    overall: Annotated[
+        Literal["healthy", "degraded", "warning", "down", "not_deployed"] | None,
+        Field(
+            description="`not_deployed` = module not built yet; ranks as healthy for `overall`. Rank: down > warning > degraded > healthy."
+        ),
+    ] = None
     connections: list[Connection] | None = None
     symbols: list[Symbol1] | None = None
     ingest_rate_msgs_per_sec: int | None = None
@@ -3846,18 +3851,34 @@ class AuditEntry(BaseModel):
 
 class Component(BaseModel):
     name: str | None = None
-    state: Literal["healthy", "degraded", "warning", "down"] | None = None
+    state: Annotated[
+        Literal["healthy", "degraded", "warning", "down", "not_deployed"] | None,
+        Field(
+            description="`not_deployed` = module not built yet; ranks as healthy for `overall`. Rank: down > warning > degraded > healthy."
+        ),
+    ] = None
     latency_ms: int | None = None
+    latency_unit: Literal["ms"] | None = None
     detail: str | None = None
+    last_good_at: AwareDatetime | None = None
 
 
 class HealthReport(BaseModel):
-    overall: Literal["healthy", "degraded", "warning", "down"] | None = None
+    overall: Annotated[
+        Literal["healthy", "degraded", "warning", "down", "not_deployed"] | None,
+        Field(
+            description="`not_deployed` = module not built yet; ranks as healthy for `overall`. Rank: down > warning > degraded > healthy."
+        ),
+    ] = None
     version: str | None = None
     git_sha: str | None = None
+    environment: str | None = None
     uptime_seconds: int | None = None
     server_time: AwareDatetime | None = None
-    clock_offset_ms: int | None = None
+    clock_offset_ms: Annotated[
+        int | None,
+        Field(description="null until exchange time sync (E08) lands; never a fabricated 0."),
+    ] = None
     components: list[Component] | None = None
     alerts_active: int | None = None
 
