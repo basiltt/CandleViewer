@@ -1,0 +1,15 @@
+# E04-T05: two severities only (page|ticket) - ADR-0014 s6, 20-architecture s12.5.
+# Every rule needs annotations.runbook_url (CI: infra/alertmanager/check_alert_rules.py).
+groups:
+  - name: meta
+    interval: 30s
+    rules:
+      - alert: Watchdog
+        expr: vector(1)
+        for: 0m
+        labels:
+          severity: none
+          component: alerting
+        annotations:
+          summary: "Always-firing deadman switch; its absence means the pipeline is dead"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-watchdog"

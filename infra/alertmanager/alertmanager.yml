@@ -1,0 +1,77 @@
+# E04-T05 (US-OBS-004, SR-126). Two severities only: page | ticket.
+# Receivers use a webhook provider independent of the api container; the URL is
+# a secret read from a file injected at process start (CV_ALERT_PAGE_WEBHOOK_URL, CV_ALERT_TICKET_WEBHOOK_URL, CV_ALERT_DEADMAN_URL ->
+# /run/secrets/alert_webhook_url), never committed. Payloads carry component,
+# severity, threshold summary and runbook link only (no account/order ids).
+# Page and Ticket use separate webhook secrets (separate channels). Quiet hours: CV_ALERT_QUIET_HOURS (HH:MM-HH:MM UTC, default 22:00-07:00) is rendered into the
+# marked quiet_hours block by render_config.py (init container; Alertmanager does not expand env vars).
+# Page/Ticket bodies come from templates/cv.tmpl (alertname, component, env, runbook, occurrence count).
+global:
+  resolve_timeout: 5m
+
+templates:
+  - /etc/alertmanager/templates/*.tmpl
+
+route:
+  receiver: ticket
+  group_by: [alertname, component, env]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    # Watchdog: heartbeat only; delivered to a dead-man receiver, never to the owner inbox.
+    - matchers: [alertname = "Watchdog"]
+      receiver: deadman
+      group_wait: 0s
+      group_interval: 1m
+      repeat_interval: 5m
+    # Page: no mute_time_intervals -> bypasses quiet hours.
+    - matchers: [severity = "page"]
+      receiver: page
+      repeat_interval: 30m
+    # Ticket: held during quiet hours, released when the interval ends.
+    - matchers: [severity = "ticket"]
+      receiver: ticket
+      repeat_interval: 4h
+      mute_time_intervals: [quiet_hours]
+
+time_intervals:
+# BEGIN quiet_hours
+  - name: quiet_hours
+    time_intervals:
+      - times:
+          - start_time: "22:00"
+            end_time: "24:00"
+          - start_time: "00:00"
+            end_time: "07:00"
+# END quiet_hours
+
+inhibit_rules:
+  # A Postgres outage suppresses DB-dependent Tickets only. Security signals (auth, secrets,
+  # network/egress) are deliberately NOT inhibited so SR-125 stays visible during a DB outage.
+  - source_matchers: [alertname = "PostgresDown"]
+    target_matchers: [severity = "ticket", component =~ "storage|oms|rules|book|audit"]
+    equal: [env]
+  # A Page for a component suppresses its own Ticket-level sibling.
+  - source_matchers: [severity = "page"]
+    target_matchers: [severity = "ticket"]
+    equal: [component, env]
+
+receivers:
+  # Slack-compatible incoming webhook (Slack/Mattermost/Rocket.Chat), reachable without the api container.
+  - name: page
+    slack_configs:
+      - api_url_file: /run/secrets/alert_page_webhook_url
+        send_resolved: true
+        title: '{{ template "cv.title" . }}'
+        text: '{{ template "cv.body" . }}'
+  - name: ticket
+    slack_configs:
+      - api_url_file: /run/secrets/alert_ticket_webhook_url
+        send_resolved: true
+        title: '{{ template "cv.title" . }}'
+        text: '{{ template "cv.body" . }}'
+  - name: deadman
+    webhook_configs:
+      - url_file: /run/secrets/alert_deadman_url
+        send_resolved: false

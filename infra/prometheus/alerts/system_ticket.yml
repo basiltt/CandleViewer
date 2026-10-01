@@ -1,0 +1,132 @@
+# E04-T05: two severities only (page|ticket) - ADR-0014 s6, 20-architecture s12.5.
+# Every rule needs annotations.runbook_url (CI: infra/alertmanager/check_alert_rules.py).
+groups:
+  - name: system-ticket
+    interval: 30s
+    rules:
+      - alert: PublicWsDown
+        expr: min by (socket) (ws_connection_state{socket="public"}) == 0
+        for: 1m
+        labels:
+          severity: ticket
+          component: ingestion
+        annotations:
+          summary: "Public WS connection down over 60 s"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-publicwsdown"
+      - alert: BookResyncHigh
+        expr: sum(rate(book_resync_total[5m])) * 60 > 5
+        for: 5m
+        labels:
+          severity: ticket
+          component: book
+        annotations:
+          summary: "Order-book resync rate above 5 per minute"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-bookresynchigh"
+      - alert: EventLoopLagHigh
+        expr: histogram_quantile(0.99, sum by (le) (rate(event_loop_lag_seconds_bucket[5m]))) > 0.1
+        for: 5m
+        labels:
+          severity: ticket
+          component: runtime
+        annotations:
+          summary: "Event-loop lag p99 above 100 ms"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-eventlooplaghigh"
+      - alert: DiskHigh
+        expr: disk_used_ratio > 0.8 and disk_used_ratio <= 0.95
+        for: 5m
+        labels:
+          severity: ticket
+          component: storage
+        annotations:
+          summary: "Disk usage above 80 percent"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-diskhigh"
+      - alert: RuleAutodisarm
+        expr: increase(rule_autodisarm_total[15m]) > 0
+        for: 0m
+        labels:
+          severity: ticket
+          component: rules
+        annotations:
+          summary: "A rule was auto-disarmed"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-ruleautodisarm"
+      - alert: EnvMismatchAttempt
+        expr: increase(env_mismatch_attempts_total[15m]) > 0
+        for: 0m
+        labels:
+          severity: ticket
+          component: oms
+        annotations:
+          summary: "Demo/live mismatch attempt blocked"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-envmismatchattempt"
+      - alert: CredentialExpiryApproaching
+        expr: min(credential_expiry_days) < 14
+        for: 10m
+        labels:
+          severity: ticket
+          component: secrets
+        annotations:
+          summary: "Credential or certificate expiry within 14 days"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-credentialexpiryapproaching"
+      - alert: AuthLoginFailureSpike
+        expr: sum(increase(auth_login_failures_total[10m])) > 10
+        for: 0m
+        labels:
+          severity: ticket
+          component: auth
+        annotations:
+          summary: "Failed-login spike"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-authloginfailurespike"
+      - alert: AuthLockouts
+        expr: increase(auth_lockouts_total[10m]) > 0
+        for: 0m
+        labels:
+          severity: ticket
+          component: auth
+        annotations:
+          summary: "Account lockout occurred"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-authlockouts"
+      - alert: AuthzDeniedSpike
+        expr: sum(increase(authz_denied_total[10m])) > 20
+        for: 0m
+        labels:
+          severity: ticket
+          component: auth
+        annotations:
+          summary: "Permission-check failure spike"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-authzdeniedspike"
+      - alert: CredentialVerificationFailures
+        expr: increase(credential_verification_failures_total[1h]) > 0
+        for: 0m
+        labels:
+          severity: ticket
+          component: secrets
+        annotations:
+          summary: "Exchange credential verification failed"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-credentialverificationfailures"
+      - alert: OmsRateRejects
+        expr: increase(oms_rate_reject_total[10m]) > 0
+        for: 0m
+        labels:
+          severity: ticket
+          component: oms
+        annotations:
+          summary: "Rate-limit rejections in OMS"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-omsraterejects"
+      - alert: EgressIpChanged
+        expr: increase(egress_ip_changes_total[1h]) > 0
+        for: 0m
+        labels:
+          severity: ticket
+          component: network
+        annotations:
+          summary: "Egress IP changed"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-egressipchanged"
+      - alert: AlertmanagerNotificationsFailed
+        expr: increase(alertmanager_notifications_failed_total[10m]) > 0
+        for: 0m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Alertmanager failed to deliver notifications"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-alertmanagernotificationsfailed"

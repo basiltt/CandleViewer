@@ -1,4 +1,4 @@
-.PHONY: governance dev dev-down test gen gen-check contracts up down reset arch security audit-net ci-gate-fixture
+.PHONY: governance dev dev-down test gen gen-check contracts up down reset arch security audit-net ci-gate-fixture alert-drill alert-drill-stop
 
 # E02-T01: root convenience targets delegating to pnpm/uv (20-architecture.md
 # §5 Tooling). Thin wrappers only — the pnpm/turbo task graph and the uv/ruff
@@ -97,3 +97,10 @@ audit-net:
 ci-gate-fixture:
 	python tests/ci-gates/run_fixtures.py $(if $(NAME),--case $(NAME),)
 
+
+# E04-T05: fire the SyntheticAlert Page end to end (needs `make up`); stop with alert-drill-stop.
+alert-drill:
+	python infra/alertmanager/alert_drill.py fire
+
+alert-drill-stop:
+	python infra/alertmanager/alert_drill.py stop

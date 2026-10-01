@@ -5,8 +5,10 @@ groups:
         expr: abs(exchange_clock_drift_ms) > 500 and abs(exchange_clock_drift_ms) <= 2000
         for: 2m
         labels:
-          severity: warning
+          severity: ticket
+          component: clock
         annotations:
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-bybitclockdriftwarning"
           summary: "Bybit clock offset drift is warning-level ({{ $value }} ms)"
           description: >-
             The measured offset to Bybit server time has exceeded 500 ms
@@ -17,8 +19,10 @@ groups:
         expr: abs(exchange_clock_drift_ms) > 2000
         for: 1m
         labels:
-          severity: critical
+          severity: page
+          component: clock
         annotations:
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-bybitclockdriftcritical"
           summary: "Bybit clock offset drift is critical ({{ $value }} ms)"
           description: >-
             The measured offset exceeds the hard threshold (2000 ms,
@@ -30,8 +34,10 @@ groups:
         expr: clock_offset_age_seconds > 900
         for: 1m
         labels:
-          severity: warning
+          severity: ticket
+          component: clock
         annotations:
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-bybitclockoffsetstale"
           summary: "Clock offset has not been re-measured in over 15 minutes"
           description: >-
             The last known offset is still being applied per the "Exchange

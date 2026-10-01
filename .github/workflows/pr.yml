@@ -70,6 +70,7 @@ jobs:
               - 'scripts/**/*.py'
               - 'infra/grafana/**'
               - 'infra/prometheus/**'
+              - 'infra/alertmanager/**'
             engine:
               - 'packages/chart-engine/**'
             protocol:

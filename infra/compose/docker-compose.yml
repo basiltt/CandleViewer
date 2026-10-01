@@ -16,10 +16,21 @@ networks:
       config:
         - subnet: 172.28.0.0/24
 
+secrets:
+  # Webhook URLs are secret files supplied at start from the operator's env; never committed.
+  alert_page_webhook_url:
+    environment: CV_ALERT_PAGE_WEBHOOK_URL
+  alert_ticket_webhook_url:
+    environment: CV_ALERT_TICKET_WEBHOOK_URL
+  alert_deadman_url:
+    environment: CV_ALERT_DEADMAN_URL
+
 volumes:
   cv-postgres-data:
   cv-questdb-data:
   cv-grafana-data:
+  cv-alertmanager-data:
+  cv-alertmanager-config:
   cv-minio-data:
 
 # Base stack: no host port bindings live here except the loopback-explicit
@@ -104,10 +115,66 @@ services:
         condition: service_healthy
     volumes:
       - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../prometheus/alerts:/etc/prometheus/alerts:ro
     ports:
       - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9090/-/healthy || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [cv-internal]
+
+  # Renders alertmanager.yml with CV_ALERT_QUIET_HOURS (render_config.py; unit-tested) into a
+  # shared volume, then exits. Fails fast on a malformed window so Alertmanager never starts with it.
+  alertmanager-config:
+    image: python:3.12.7-alpine3.20@sha256:5049c050bdc68575a10bcb1885baa0689b6c15152d8a56a7e399fb49f783bf98
+    profiles: ["obs"]
+    environment:
+      CV_ALERT_QUIET_HOURS: ${CV_ALERT_QUIET_HOURS:-22:00-07:00}
+    command: ["python", "/src/render_config.py", "/src/alertmanager.yml", "/rendered/alertmanager.yml"]
+    volumes:
+      - ../alertmanager:/src:ro
+      - cv-alertmanager-config:/rendered
+    network_mode: none
+    # One-shot: healthy once the rendered config exists (alertmanager waits on successful exit).
+    healthcheck:
+      test: ["CMD", "test", "-s", "/rendered/alertmanager.yml"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0@sha256:e13b6ed5cb929eeaee733479dce55e10eb3bc2e9c4586c705a4e8da41e5eacf5
+    profiles: ["obs"]
+    # Private bind only. Webhook URLs are secret files injected at start, never in the repo.
+    depends_on:
+      alertmanager-config:
+        condition: service_completed_successfully
+    command: ["--config.file=/etc/alertmanager/rendered/alertmanager.yml", "--storage.path=/alertmanager"]
+    secrets: [alert_page_webhook_url, alert_ticket_webhook_url, alert_deadman_url]
+    volumes:
+      - cv-alertmanager-config:/etc/alertmanager/rendered:ro
+      - ../alertmanager/templates:/etc/alertmanager/templates:ro
+      - cv-alertmanager-data:/alertmanager
+    ports:
+      - "127.0.0.1:${ALERTMANAGER_PORT:-9093}:9093"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9093/-/healthy || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks: [cv-internal]
+
+  # Receives alert-drill pushes (cv_synthetic_alert); scraped by Prometheus. Digest = multi-arch index
+  # digest from https://hub.docker.com/v2/repositories/prom/pushgateway/tags/v1.9.0 (verified 2026-10-02).
+  pushgateway:
+    image: prom/pushgateway:v1.9.0@sha256:98a458415f8f5afcfd45622d289a0aa67063563bec0f90d598ebc76783571936
+    profiles: ["obs"]
+    ports:
+      - "127.0.0.1:${PUSHGATEWAY_PORT:-9091}:9091"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9091/-/healthy || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 12

@@ -1,0 +1,10 @@
+{{/* E04-T05 owner notification body. Page and Ticket are distinguishable in the title. */}}
+{{ define "cv.title" }}[{{ if eq .CommonLabels.severity "page" }}PAGE{{ else }}TICKET{{ end }}][{{ .Status | toUpper }}] {{ .GroupLabels.alertname }} ({{ .GroupLabels.component }}/{{ .GroupLabels.env }}){{ end }}
+
+{{ define "cv.body" }}Alert: {{ .GroupLabels.alertname }}
+Component: {{ .GroupLabels.component }}
+Env: {{ .GroupLabels.env }}
+Severity: {{ .CommonLabels.severity }}
+Occurrences: {{ len .Alerts }} ({{ len .Alerts.Firing }} firing, {{ len .Alerts.Resolved }} resolved)
+Summary: {{ .CommonAnnotations.summary }}
+Runbook: {{ .CommonAnnotations.runbook_url }}{{ end }}

@@ -63,6 +63,31 @@ jobs:
       - name: mypy --strict
         run: uv run mypy --strict candleviewer
 
+      - name: Alert rule runbook-link gate (E04-T05)
+        working-directory: .
+        run: python infra/alertmanager/check_alert_rules.py
+
+      - name: promtool check rules + rule unit tests, amtool check-config (E04-T05)
+        working-directory: .
+        run: |
+          # Digests mirror infra/compose/docker-compose.yml (C-12.3)
+          P=prom/prometheus:v2.54.1@sha256:f6639335d34a77d9d9db382b92eeb7fc00934be8eae81dbc03b31cfe90411a94
+          docker run --rm --entrypoint promtool -v "$PWD/infra/prometheus:/p:ro" $P check rules $(cd infra/prometheus && printf "/p/%s " alerts/*.yml)
+          docker run --rm --entrypoint promtool -v "$PWD/infra/prometheus:/p:ro" $P test rules /p/tests/system_alerts.test.yml
+          A=prom/alertmanager:v0.27.0@sha256:e13b6ed5cb929eeaee733479dce55e10eb3bc2e9c4586c705a4e8da41e5eacf5
+          AM="docker run --rm --entrypoint amtool -v $PWD/infra/alertmanager:/etc/alertmanager:ro $A"
+          $AM check-config /etc/alertmanager/alertmanager.yml
+          for r in "page severity=page" "ticket severity=ticket" "deadman alertname=Watchdog" "ticket severity=ticket component=auth"; do
+            set -- $r; recv=$1; shift
+            $AM config routes test --config.file=/etc/alertmanager/alertmanager.yml --verify.receivers=$recv "$@"
+          done
+          # Notification body render: occurrence count + required fields (E04-T05 AC grouping/page content)
+          out=$($AM template render --template.glob='/etc/alertmanager/templates/*.tmpl' --template.data=/etc/alertmanager/tests/data/grouped_page.json --template.text='{{ template "cv.title" . }} | {{ template "cv.body" . }}')
+          echo "$out"
+          for want in "[PAGE]" "Alert: OmsUnknownOrders" "Component: oms" "Env: dev" "Occurrences: 3" "Runbook: docs/plan/07-release-and-prr.md#alert-omsunknownorders"; do
+            printf '%s' "$out" | grep -qF -- "$want" || { echo "rendered notification missing: $want" >&2; exit 1; }
+          done
+
       - name: Grafana dashboard lint (E04-S01 AC3, metric names vs catalogue)
         working-directory: .
         run: python infra/grafana/lint_dashboards.py --strict

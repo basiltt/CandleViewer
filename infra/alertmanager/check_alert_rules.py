@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+"""E04-T05 CI gate: every alert rule has severity page|ticket (Watchdog excepted),
+a component label and a runbook_url whose anchor resolves in docs/plan/07-release-and-prr.md.
+"""
+
+from __future__ import annotations
+
+import re
+import sys
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+ROOT = Path(__file__).resolve().parents[2]
+ALERT_DIR = ROOT / "infra" / "prometheus" / "alerts"
+RUNBOOK = "docs/plan/07-release-and-prr.md"
+SEVERITIES = {"page", "ticket"}
+EXEMPT = {"Watchdog"}
+
+
+def anchors(text: str) -> set[str]:
+    out: set[str] = set()
+    for m in re.finditer(r'<a id="([^"]+)"', text):
+        out.add(m.group(1))
+    for m in re.finditer(r"^#{1,6}\s+(.*)$", text, re.MULTILINE):
+        slug = re.sub(r"[^a-z0-9 -]", "", m.group(1).strip().lower()).replace(" ", "-")
+        out.add(slug)
+    return out
+
+
+def check(alert_dir: Path = ALERT_DIR, runbook_text: str | None = None) -> list[str]:
+    if runbook_text is None:
+        runbook_text = (ROOT / RUNBOOK).read_text(encoding="utf-8")
+    known = anchors(runbook_text)
+    errors: list[str] = []
+    for f in sorted(alert_dir.glob("*.yml")):
+        doc: dict[str, Any] = yaml.safe_load(f.read_text(encoding="utf-8"))
+        for g in doc.get("groups", []):
+            for r in g.get("rules", []):
+                name = r.get("alert")
+                if name is None:
+                    continue
+                labels = r.get("labels") or {}
+                if name not in EXEMPT:
+                    if labels.get("severity") not in SEVERITIES:
+                        errors.append(f"{name}: severity must be page|ticket")
+                    if not labels.get("component"):
+                        errors.append(f"{name}: missing component label")
+                url = (r.get("annotations") or {}).get("runbook_url")
+                if not url:
+                    errors.append(f"{name}: missing annotations.runbook_url")
+                    continue
+                path, _, anchor = url.partition("#")
+                if path != RUNBOOK or anchor not in known:
+                    errors.append(f"{name}: runbook_url anchor not found: {url}")
+    return errors
+
+
+def main() -> int:
+    errs = check()
+    for e in errs:
+        print(f"ALERT-RULE-LINT: {e}", file=sys.stderr)
+    return 1 if errs else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
