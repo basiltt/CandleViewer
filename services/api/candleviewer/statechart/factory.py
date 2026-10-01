@@ -28,7 +28,7 @@ from xstate_statemachine import (
     PluginBase,
     create_machine,
 )
-from xstate_statemachine.clock import Clock
+from xstate_statemachine.clock import Clock, RealClock
 
 from candleviewer.statechart.bindings import load_binding_maps
 from candleviewer.statechart.config import (
@@ -75,6 +75,12 @@ class BuildResult:
 
     interpreter: Interpreter[Any]
     machine_hash: str
+
+
+def default_clock() -> Clock:
+    """Wall clock for callers outside `statechart/` that must not import the
+    runtime library to satisfy `build(clock=...)`."""
+    return RealClock()
 
 
 def _cv_bring_up(interp: Interpreter[Any]) -> None:

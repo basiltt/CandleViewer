@@ -8,7 +8,7 @@ import random
 
 import pytest
 
-from candleviewer.ingestion.connection import ConnectionManager, ConnectionState
+from candleviewer.ingestion.connection import ConnectionManager
 from candleviewer.ingestion.planner import DemandTracker, SubscriptionPlanner
 from candleviewer.ingestion.reconnect import ConnectionRateGuard, ReconnectPolicy
 from candleviewer.ingestion.watchdog import FeedHealthEvent, StalenessWatchdog, ping_loop
@@ -166,9 +166,9 @@ async def test_frozen_socket_is_recycled_and_resubscribed() -> None:
     )
     m.set_desired({"orderbook.50.BTCUSDT", "tickers.BTCUSDT"})
     await m.start()
-    for _ in range(200):
+    for _ in range(2000):
         await asyncio.sleep(0)
-        if len(socks) >= 2:
+        if len(socks) >= 2 and socks[1].sent:
             break
     assert len(socks) >= 2 and socks[0].closed
     assert any(h.state == "stale" for h in health)
@@ -176,7 +176,7 @@ async def test_frozen_socket_is_recycled_and_resubscribed() -> None:
     assert set(socks[1].sent[0]["args"]) == {"orderbook.50.BTCUSDT", "tickers.BTCUSDT"}  # type: ignore[call-overload]
     m.set_desired({"tickers.BTCUSDT"})
     await m.stop()
-    assert m.state() is ConnectionState.CLOSED
+    assert m.state() == "closed"
 
 
 async def test_factory_failure_backs_off_and_retries() -> None:
@@ -207,7 +207,7 @@ async def test_factory_failure_backs_off_and_retries() -> None:
     await m.start()
     for _ in range(100):
         await asyncio.sleep(0)
-        if m.state() is ConnectionState.OPEN:
+        if m.state() == "open":
             break
-    assert calls == 2 and m.state() is ConnectionState.OPEN
+    assert calls == 2 and m.state() == "open"
     await m.stop()

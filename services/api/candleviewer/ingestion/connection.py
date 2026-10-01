@@ -1,35 +1,46 @@
-"""`ConnectionManager`: one reader task per socket, dedicated ping task,
-staleness-driven recycling under backoff and the connection-rate guard (E08-T04).
+"""`ConnectionManager`: transport runtime for the B13 `ws_conn` statechart (E08-T04).
 
-Transport is injected (`SocketFactory`) so tests use a fake server. The B13
-`ws_conn` binding is still the E50-S02 stub; driving this lifecycle through
-`statechart.factory` is listed under the PR's Deviations.
+The lifecycle is the B13 chart, built through `statechart.factory` (ADR-0016).
+This class owns the sockets/tasks the chart's bindings
+(`bindings/b13_ws_conn.py`) drive, and is the only sender of chart events.
+Feed health (`FeedHealthEvent`) is published on the bus: `healthy` on entering
+`live`, `stale` on staleness, `degraded` while backing off, `resubscribing`
+while a re-established socket re-subscribes. Transport is injected
+(`SocketFactory`) so tests use a fake server.
 """
 
 from __future__ import annotations
 
 import asyncio
 import contextlib
+import itertools
 import json
 from collections.abc import Awaitable, Callable
-from enum import StrEnum
-from typing import Protocol
+from typing import Any, Protocol
 
 import structlog
 
+from candleviewer.bus.bus import Bus
+from candleviewer.bus.models import Topic
 from candleviewer.ingestion.planner import SubscriptionPlanner
 from candleviewer.ingestion.reconnect import ConnectionRateGuard, ReconnectPolicy
-from candleviewer.ingestion.watchdog import StalenessWatchdog, ping_loop
+from candleviewer.ingestion.watchdog import FeedHealthEvent, StalenessWatchdog, ping_loop
 from candleviewer.observability.context import spawn
+from candleviewer.statechart import build
+from candleviewer.statechart.bindings.b13_ws_conn import register_runtime, unregister_runtime
+from candleviewer.statechart.factory import default_clock
 
 logger = structlog.get_logger(__name__)
 
-
-class ConnectionState(StrEnum):
-    CONNECTING = "connecting"
-    OPEN = "open"
-    DEGRADED = "degraded"
-    CLOSED = "closed"
+_PHASE = {
+    "live": "open",
+    "connecting": "connecting",
+    "authenticating": "connecting",
+    "subscribing": "connecting",
+    "backing_off": "degraded",
+    "budget_blocked": "degraded",
+}
+_conn_ids = itertools.count(1)
 
 
 class Socket(Protocol):
@@ -43,6 +54,8 @@ Sleep = Callable[[float], Awaitable[None]]
 
 
 class ConnectionManager:
+    """Transport runtime for one B13 `ws_conn` interpreter."""
+
     def __init__(
         self,
         factory: SocketFactory,
@@ -55,6 +68,9 @@ class ConnectionManager:
         sleep: Sleep = asyncio.sleep,
         ping_interval_s: float = 20.0,
         check_interval_s: float = 0.5,
+        bus: Bus | None = None,
+        env: str = "live",
+        budget_recheck_s: float = 1.0,
     ) -> None:
         self._factory = factory
         self._planner = planner
@@ -65,89 +81,182 @@ class ConnectionManager:
         self._sleep = sleep
         self._ping_interval = ping_interval_s
         self._check_interval = check_interval_s
-        self._state = ConnectionState.CLOSED
+        self._bus = bus
+        self._env = env
+        self._recheck_s = budget_recheck_s
         self._desired: set[str] = set()
-        self._task: asyncio.Task[None] | None = None
-        self._attempt = 0
+        self._interp: Any = None
+        self._key = f"public-{next(_conn_ids)}"
+        self._sock: Socket | None = None
+        self._session: list[asyncio.Task[Any]] = []
+        self._timer: asyncio.Task[None] | None = None
+        self._was_live = False
+        self.attempt = 0
         self.opens = 0
 
-    def state(self) -> ConnectionState:
-        return self._state
+    # ---- public API -----------------------------------------------------
+    def state(self) -> str:
+        """Phase derived from the chart: open | connecting | degraded | closed."""
+        if self._interp is None:
+            return "closed"
+        for sid in self._interp.current_state_ids:
+            if (phase := _PHASE.get(sid.rsplit(".", 1)[-1])) is not None:
+                return phase
+        return "closed"
 
     def set_desired(self, topics: set[str]) -> None:
         for gone in self._desired - topics:
             self._watchdog.unwatch(gone)
         for new in topics - self._desired:
             self._watchdog.watch(new)
+        changed = self._desired != topics
         self._desired = set(topics)
+        if changed and self._interp is not None and self.state() == "open":
+            spawn(self._interp.send("TOPICS_CHANGED"), name="ws-topics-changed")
 
     async def start(self) -> None:
-        if self._task is None:
-            self._state = ConnectionState.CONNECTING
-            self._task = spawn(self._run(), name="ws-connection")
+        if self._interp is not None:
+            return
+        register_runtime(self._key, self)
+        result = await build(
+            "ws_conn",
+            ctx={"conn_key": self._key, "kind": "public"},
+            clock=default_clock(),
+            lane="platform",
+        )
+        self._interp = result.interpreter
+        await self._interp.send("CONNECT")
 
     async def stop(self) -> None:
-        task, self._task = self._task, None
-        if task is not None:
-            task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await task
-        self._state = ConnectionState.CLOSED
-
-    async def _run(self) -> None:
-        while True:
-            delay = self._guard.reserve()
-            if delay > 0:
-                self._state = ConnectionState.DEGRADED
-                await self._sleep(delay)
-            self._state = ConnectionState.CONNECTING
+        interp, self._interp = self._interp, None
+        self._cancel_timer()
+        if interp is not None:
+            ids = {sid.rsplit(".", 1)[-1] for sid in interp.current_state_ids}
+            event = "SHUTDOWN" if ids & {"live", "backing_off"} else "KILL"
             try:
-                await self._session()
-            except asyncio.CancelledError:
-                raise
-            except Exception:  # any transport failure -> backoff
-                logger.warning("ws_session_failed", attempt=self._attempt, exc_info=True)
-            self._state = ConnectionState.DEGRADED
-            self._attempt += 1
-            await self._sleep(self._policy.next_delay(self._attempt))
-
-    async def _session(self) -> None:
-        sock = await self._factory()
-        self.opens += 1
-        try:
-            for batch in self._planner.plan(self._desired):
-                await sock.send(json.dumps({"op": "subscribe", "args": list(batch.topics)}))
-            self._watchdog.reset()
-            self._state = ConnectionState.OPEN
-            self._attempt = 0
-
-            async def ping() -> None:
-                await sock.send(json.dumps({"op": "ping"}))
-
-            tasks = [
-                spawn(ping_loop(ping, self._sleep, interval_s=self._ping_interval), name="ws-ping"),
-                spawn(self._read(sock), name="ws-reader"),
-                spawn(self._watch(), name="ws-watchdog"),
-            ]
-            try:
-                done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+                await interp.send(event)
             finally:
-                for t in tasks:
-                    t.cancel()
-                await asyncio.gather(*tasks, return_exceptions=True)
-            for t in done:
-                if not t.cancelled() and (exc := t.exception()) is not None:
-                    raise exc
-        finally:
-            await sock.close()
+                await interp.stop()
+        await self.teardown_session()
+        unregister_runtime(self._key)
+
+    # ---- B13 runtime hooks (called by bindings/b13_ws_conn.py) ----------
+    def is_private(self) -> bool:
+        return False
+
+    def budget_exhausted(self) -> bool:
+        return self._guard.remaining() == 0
+
+    def bump_attempt(self) -> None:
+        self.attempt += 1
+
+    def reset_attempt(self) -> None:
+        self.attempt = 0
+
+    async def open_socket(self) -> None:
+        delay = self._guard.reserve()
+        if delay > 0:
+            await self._sleep(delay)
+        self._sock = await self._factory()
+        self.opens += 1
+
+    async def authenticate(self) -> None:  # public feed: never reached
+        return None
+
+    async def subscribe(self) -> None:
+        if self._was_live:
+            await self.emit_health("resubscribing")
+        sock = self._sock
+        if sock is None:
+            raise ConnectionError("no socket to subscribe on")
+        for batch in self._planner.plan(self._desired):
+            await sock.send(json.dumps({"op": "subscribe", "args": list(batch.topics)}))
+        self._watchdog.reset()
+
+    async def close_socket(self) -> None:
+        await self.teardown_session()
+
+    async def teardown_session(self) -> None:
+        tasks, self._session = self._session, []
+        current = asyncio.current_task()
+        for t in tasks:
+            if t is not current:
+                t.cancel()
+        await asyncio.gather(*(t for t in tasks if t is not current), return_exceptions=True)
+        sock, self._sock = self._sock, None
+        if sock is not None:
+            with contextlib.suppress(Exception):
+                await sock.close()
+
+    def start_session(self, interp: Any) -> None:
+        """Entered `live`: start reader/ping/watchdog; the supervisor turns the
+        first one to finish into a chart event (it never recycles by itself)."""
+        sock = self._sock
+        if sock is None:
+            return
+        self._was_live = True
+
+        async def ping() -> None:
+            await sock.send(json.dumps({"op": "ping"}))
+
+        workers = {
+            "ping": spawn(
+                ping_loop(ping, self._sleep, interval_s=self._ping_interval), name="ws-ping"
+            ),
+            "read": spawn(self._read(sock), name="ws-reader"),
+            "watch": spawn(self._watch(), name="ws-watchdog"),
+        }
+
+        async def supervise() -> None:
+            done, _ = await asyncio.wait(workers.values(), return_when=asyncio.FIRST_COMPLETED)
+            first = next(iter(done))
+            if first is workers["watch"] and not first.cancelled() and first.exception() is None:
+                await interp.send("TOPIC_STALE")
+            else:
+                await interp.send("SOCKET_CLOSED")
+
+        self._session = [*workers.values(), spawn(supervise(), name="ws-supervisor")]
+
+    def schedule_backoff(self, interp: Any) -> None:
+        async def fire() -> None:
+            await self._sleep(self._policy.next_delay(self.attempt))
+            await interp.send("BACKOFF_DUE")
+
+        self._cancel_timer()
+        self._timer = spawn(fire(), name="ws-backoff")
+
+    def schedule_budget_recheck(self, interp: Any) -> None:
+        async def fire() -> None:
+            await self._sleep(self._recheck_s)
+            await interp.send("BUDGET_RECHECK")
+            await interp.send("CONNECT")
+
+        self._cancel_timer()
+        self._timer = spawn(fire(), name="ws-budget-recheck")
+
+    async def emit_health(self, state: str) -> None:
+        for topic in sorted(self._desired) or ["*"]:
+            await self._publish(FeedHealthEvent(topic, state, 0.0))
+
+    # ---- internals ------------------------------------------------------
+    def _cancel_timer(self) -> None:
+        timer, self._timer = self._timer, None
+        if timer is not None and timer is not asyncio.current_task():
+            timer.cancel()
+
+    async def _publish(self, event: FeedHealthEvent) -> None:
+        if self._bus is not None:
+            await self._bus.publish(Topic(env=self._env, domain="health", detail="feed"), event)
 
     async def _read(self, sock: Socket) -> None:
         while True:
             self._on_message(await sock.recv())
 
     async def _watch(self) -> None:
-        """Returns (ending the session -> recycle) once any topic goes stale."""
+        """Returns once any topic goes stale (publishing `stale` on the bus)."""
         while True:
             await self._sleep(self._check_interval)
-            if self._watchdog.check():
+            if stale := self._watchdog.check():
+                for topic in stale:
+                    await self._publish(FeedHealthEvent(topic, "stale", 0.0))
                 return
