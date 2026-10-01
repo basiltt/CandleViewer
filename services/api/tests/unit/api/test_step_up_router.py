@@ -239,3 +239,36 @@ async def test_preview_with_position_store_needs_no_ack() -> None:
     prev = c.get(f"/users/{uuid.uuid4()}/mfa/reset-preview", headers=_H).json()
     assert prev["positions"] == "known" and prev["position_source"] == "oms"
     assert prev["requires_acknowledge_unknown_positions"] is False
+
+
+#: Exactly what the merged M-020 modal (apps/web/src/routes/StepUpGate.tsx) posts.
+def _modal_body(code: str) -> dict[str, str]:
+    return {"code": code}
+
+
+async def test_real_modal_payload_elevates_challenged_class_end_to_end() -> None:
+    c, em, seed, clock, _ = await _build()
+    uid = uuid.uuid4()
+    denied = c.put(f"/users/{uid}/roles", headers=_H)
+    assert denied.status_code == 403 and denied.json()["action_class"] == "users"
+    ok = c.post("/auth/step-up", headers=_H, json=_modal_body(_code(seed, clock)))
+    assert ok.status_code == 200 and ok.json()["action_class"] == "users"
+    expires = datetime.fromisoformat(ok.json()["step_up_expires_at"])
+    assert expires == clock.now + timedelta(minutes=5)
+    assert c.put(f"/users/{uid}/roles", headers=_H).status_code == 200
+    assert "auth.step_up_granted" in em.actions()
+
+
+async def test_code_only_without_pending_challenge_is_400() -> None:
+    c, _em, seed, clock, _ = await _build()
+    r = c.post("/auth/step-up", headers=_H, json=_modal_body(_code(seed, clock)))
+    assert r.status_code == 400
+
+
+async def test_client_action_class_mismatching_challenge_is_400() -> None:
+    c, _em, seed, clock, _ = await _build()
+    c.put(f"/users/{uuid.uuid4()}/roles", headers=_H)
+    r = c.post(
+        "/auth/step-up", headers=_H, json={"code": _code(seed, clock), "action_class": "keys"}
+    )
+    assert r.status_code == 400

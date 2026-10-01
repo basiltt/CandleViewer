@@ -49,6 +49,16 @@ ACTION_CLASSES = frozenset({"keys", "users", "live_enablement", "killswitch", "r
 NO_GRACE_ACTION_CLASSES = frozenset({"live_enablement", "killswitch"})
 #: `PositionStateProvider.source` when no position store exists yet.
 POSITION_SOURCE_NOT_DEPLOYED = "not_deployed"
+#: Key prefix (in `step_up_elevations`) of the challenge issued by the last 403.
+_PENDING = "pending:"
+
+
+def grace_expires_at(elevations: dict[str, datetime], now: datetime) -> datetime | None:
+    """Latest live grace-window expiry (excludes pending challenges and
+    one-shot grants) - the `step_up_expires_at` the dialog counts down."""
+    live = [v for k, v in elevations.items() if k in ACTION_CLASSES and v > now]
+    return max(live) if live else None
+
 
 Clock = Callable[[], datetime]
 
@@ -182,10 +192,42 @@ class StepUpService:
         single_use = action_class in NO_GRACE_ACTION_CLASSES
         # No-grace classes store a one-shot grant under "once:<class>" that a
         # handler consumes via `consume_single_use`; grace classes a window.
+        elevations = {k: v for k, v in elevations.items() if not k.startswith(_PENDING)}
         elevations[f"once:{action_class}" if single_use else action_class] = until
         await self._save(session_id, elevations=elevations, failures=0, readonly_until=None)
         auth_step_up_total.labels(action_class=action_class).inc()
         return StepUpGrant(action_class, until, single_use=single_use)
+
+    async def record_pending(self, session_id: str, action_class: str) -> None:
+        """Remember which action class the last 403 step_up_required challenged,
+        so `POST /auth/step-up` with only `{code}` (the merged M-020 modal)
+        elevates the class the server itself demanded. Server-side only."""
+        record = await self._live(session_id)
+        if record is None or action_class not in ACTION_CLASSES:
+            return
+        now = self._clock()
+        elevations = {
+            k: v
+            for k, v in record.step_up_elevations.items()
+            if v > now and not k.startswith(_PENDING)
+        }
+        elevations[_PENDING + action_class] = now + GRACE_WINDOW
+        await self._save(
+            session_id,
+            elevations=elevations,
+            failures=record.step_up_failures,
+            readonly_until=record.readonly_until,
+        )
+
+    async def pending_action_class(self, session_id: str) -> str | None:
+        record = await self._live(session_id)
+        if record is None:
+            return None
+        now = self._clock()
+        for key, until in record.step_up_elevations.items():
+            if key.startswith(_PENDING) and until > now:
+                return key[len(_PENDING) :]
+        return None
 
     async def _verify(self, user_id: str, code: str, now: datetime) -> bool:
         for method in await self._mfa.find_active_totp_methods(user_id):

@@ -7226,10 +7226,14 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [code, action_class]
+              required: [code]
               properties:
                 code: { type: string, pattern: "^[0-9]{6}$" }
                 action_class:
+                  description: >
+                    Optional cross-check. The server elevates the class its last
+                    `403 step_up_required` challenged on this session; a different
+                    value is `400`. Without a pending challenge it is required.
                   type: string
                   enum: [keys, users, live_enablement, killswitch, risk_caps]
       responses:
@@ -7244,6 +7248,10 @@ paths:
                   elevated_until: { type: string, format: date-time }
                   action_class: { type: string }
                   single_use: { type: boolean }
+                  step_up_expires_at:
+                    type: ["string", "null"]
+                    format: date-time
+                    description: End of the grace window shown in the dialog; null for no-grace classes.
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -9111,6 +9119,10 @@ components:
         allowed_environments: { type: array, items: { $ref: "#/components/schemas/Environment" } }
         kill_switch: { $ref: "#/components/schemas/KillSwitch" }
         server_time: { type: string, format: date-time }
+        step_up_expires_at:
+          type: ["string", "null"]
+          format: date-time
+          description: Latest live step-up grace-window expiry on this session (E09-S04); null if none.
         clock_offset_ms:
           {
             type: integer,

@@ -6430,6 +6430,11 @@ export interface components {
       permissions: string[];
       /** Format: date-time */
       server_time: string;
+      /**
+       * Format: date-time
+       * @description Latest live step-up grace-window expiry on this session (E09-S04); null if none.
+       */
+      step_up_expires_at?: string | null;
       user: components["schemas"]["User"];
     };
     SetFeatureFlagRequest: {
@@ -8322,8 +8327,11 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
-          /** @enum {string} */
-          action_class: "keys" | "users" | "live_enablement" | "killswitch" | "risk_caps";
+          /**
+           * @description Optional cross-check. The server elevates the class its last `403 step_up_required` challenged on this session; a different value is `400`. Without a pending challenge it is required.
+           * @enum {string}
+           */
+          action_class?: "keys" | "users" | "live_enablement" | "killswitch" | "risk_caps";
           code: string;
         };
       };
@@ -8340,6 +8348,11 @@ export interface operations {
             /** Format: date-time */
             elevated_until: string;
             single_use: boolean;
+            /**
+             * Format: date-time
+             * @description End of the grace window shown in the dialog; null for no-grace classes.
+             */
+            step_up_expires_at?: string | null;
           };
         };
       };

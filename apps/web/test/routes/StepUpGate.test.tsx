@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { StepUpGate } from "../../src/routes/StepUpGate";
 import { resetMeClaims, getMeClaims } from "../../src/lib/auth/meCache";
@@ -50,5 +50,55 @@ describe("StepUpGate", () => {
     fireEvent.change(screen.getByLabelText("Authenticator code"), { target: { value: "123456" } });
     fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
     await waitFor(() => expect(getMeClaims().elevatedAt).toBe("2026-09-29T12:00:00Z"));
+  });
+
+  it("posts only the code (server derives the challenged action class)", async () => {
+    const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
+    fetchMock.mockResolvedValue({ ok: false });
+    render(
+      <MemoryRouter>
+        <StepUpGate redirectTo="/admin" />
+      </MemoryRouter>,
+    );
+    fireEvent.change(screen.getByLabelText("Authenticator code"), { target: { value: "123456" } });
+    fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(JSON.parse(init.body as string)).toEqual({ code: "123456" });
+  });
+
+  it("renders the remaining grace window from step_up_expires_at and counts down", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      vi.setSystemTime(new Date("2026-09-29T12:00:00Z"));
+      (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          elevated_until: "2026-09-29T12:05:00Z",
+          step_up_expires_at: "2026-09-29T12:05:00Z",
+        }),
+      });
+      render(
+        <MemoryRouter>
+          <StepUpGate redirectTo="/admin" />
+        </MemoryRouter>,
+      );
+      fireEvent.change(screen.getByLabelText("Authenticator code"), {
+        target: { value: "123456" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: "Confirm" }));
+      const region = await screen.findByText("Grace window: 5:00 remaining");
+      expect(region).toHaveAttribute("aria-live", "polite");
+      act(() => {
+        vi.advanceTimersByTime(61_000);
+      });
+      expect(screen.getByText("Grace window: 3:59 remaining")).toBeInTheDocument();
+      act(() => {
+        vi.advanceTimersByTime(240_000);
+      });
+      expect(screen.getByTestId("step-up-grace")).toHaveTextContent("");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

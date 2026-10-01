@@ -113,6 +113,8 @@ async def require_elevation_for(
     except SessionReadOnly as exc:
         return readonly_problem(exc)
     except StepUpRequired as exc:
+        # Remember the challenged class server-side so the modal may post `{code}` only.
+        await auth.step_up.record_pending(session_id, action_class)
         return required_problem(exc)
     return None
 
@@ -249,10 +251,21 @@ def make_step_up_router(
             body = None
         code = body.get("code") if isinstance(body, dict) else None
         action_class = body.get("action_class") if isinstance(body, dict) else None
-        if not isinstance(code, str) or not isinstance(action_class, str):
+        if not isinstance(code, str) or (
+            action_class is not None and not isinstance(action_class, str)
+        ):
+            return _problem(400, "validation_failed", "Bad request", "code is required")
+        # The server decides the class: the one its last 403 challenged. A
+        # client-supplied value is only a cross-check (mismatch -> 400).
+        pending = await auth.step_up.pending_action_class(str(record.id))
+        if action_class is None:
+            action_class = pending
+        elif pending is not None and action_class != pending:
             return _problem(
-                400, "validation_failed", "Bad request", "code and action_class are required"
+                400, "validation_failed", "Bad request", "action_class does not match challenge"
             )
+        if action_class is None:
+            return _problem(400, "validation_failed", "Bad request", "no pending step-up challenge")
         try:
             grant = await auth.step_up.step_up(
                 str(record.user_id), str(record.id), action_class, code
@@ -303,6 +316,9 @@ def make_step_up_router(
                 "elevated_until": grant.elevated_until.isoformat(),
                 "action_class": grant.action_class,
                 "single_use": grant.single_use,
+                "step_up_expires_at": (
+                    None if grant.single_use else grant.elevated_until.isoformat()
+                ),
             },
         )
 
