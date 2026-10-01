@@ -30,7 +30,7 @@ _UNIT_SUFFIX = re.compile(r"_(seconds|bytes|total|depth|state|in_use|remaining|m
 
 #: Golden: sha256 of the sorted (name, kind, labels, status, owner) catalogue.
 #: Changing it requires updating 20-architecture.md §12.1 and dashboards/alerts.
-GOLDEN_CATALOGUE_SHA256 = "ec8f7e71f2241607525738d7f223a8cfba8c3855277f7c80090a9f456983fded"
+GOLDEN_CATALOGUE_SHA256 = "89d4d62893b1242434f3abe15ffacd215cc384fb9e5ae61eb81913f21c820b5a"
 
 _KNOWN_EPICS = re.compile(r"^E\d{2}(-[A-Z]\d{2})?$")
 
@@ -100,6 +100,7 @@ def test_exposition_parses_and_every_live_metric_present_with_env_and_help() -> 
         r[fe].labels("R-100").observe(1.0)
     r["fe_dropped_frames_total"].labels("R-100").inc()
     r["fe_gpu_memory_mb"].labels("R-100").set(64)
+    r["support_bundle_generations_total"].labels("ok").inc()
     text = generate_latest(m.registry).decode()
     families = {f.name: f for f in text_string_to_metric_families(text)}
     for spec in live_specs():

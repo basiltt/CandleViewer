@@ -59,6 +59,8 @@ _ALLOWED_EXTRA_EXPORTS: dict[str, set[str]] = {
         "make_ticker_router",
         # E04-T02: runtime log-level override router.
         "make_log_level_router",
+        # E04-S02: support-bundle router.
+        "make_support_bundle_router",
     },
     # E09-T02: the audit writer/query surface M21/M23 consume (C-3.3).
     "M19": {

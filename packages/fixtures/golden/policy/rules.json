@@ -8,6 +8,10 @@
     "NOTIONAL_BELOW_MIN",
     "SYMBOL_NOT_TRADING"
   ],
-  "price_round_modes": ["nearest"],
-  "qty_round_modes": ["down"]
+  "price_round_modes": [
+    "nearest"
+  ],
+  "qty_round_modes": [
+    "down"
+  ]
 }

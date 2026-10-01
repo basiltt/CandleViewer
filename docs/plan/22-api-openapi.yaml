@@ -6757,6 +6757,73 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "400": { $ref: "#/components/responses/BadRequest" }
 
+  /admin/support-bundle:
+    post:
+      tags: [admin]
+      operationId: createSupportBundle
+      summary: Generate a secret-scanned, size-capped diagnostic bundle (E04-S02)
+      description: |
+        Starts a background job (concurrency 1) that writes a zip to the local machine only; never
+        uploaded. Window max 24 h. The assembled bundle is secret-scanned before being moved into place;
+        a hit fails the job with `BUNDLE_SECRET_DETECTED` and leaves no archive. Capped (default 200 MB)
+        newest-first; the manifest states what was truncated. Audited as `health.diagnostics_exported`;
+        a denied attempt is audited too. Error codes: BUNDLE_SECRET_DETECTED, BUNDLE_WINDOW_TOO_LARGE,
+        BUNDLE_ALREADY_RUNNING, BUNDLE_DISK_INSUFFICIENT.
+      x-rbac: { permissions: [admin:read], scope: none }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [from, to]
+              properties:
+                from: { type: string, format: date-time }
+                to: { type: string, format: date-time }
+      responses:
+        "202":
+          description: Generation started.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [job_id]
+                properties:
+                  job_id: { type: string, format: uuid }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409":
+          description: A bundle is already being generated (BUNDLE_ALREADY_RUNNING).
+
+  /admin/support-bundle/{job_id}:
+    get:
+      tags: [admin]
+      operationId: getSupportBundle
+      summary: Support bundle job status and local download path
+      x-rbac: { permissions: [admin:read], scope: none }
+      parameters:
+        - { name: job_id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Job status.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, status]
+                properties:
+                  id: { type: string, format: uuid }
+                  status: { type: string, enum: [running, succeeded, failed] }
+                  error_code: { type: ["string", "null"] }
+                  download_path: { type: ["string", "null"], description: Local filesystem path. }
+                  size_bytes: { type: ["integer", "null"] }
+                  truncated: { type: boolean }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /telemetry/frontend:
     post:
       tags: [admin]

@@ -397,6 +397,48 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/admin/support-bundle": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Generate a secret-scanned, size-capped diagnostic bundle (E04-S02)
+     * @description Starts a background job (concurrency 1) that writes a zip to the local machine only; never
+     *     uploaded. Window max 24 h. The assembled bundle is secret-scanned before being moved into place;
+     *     a hit fails the job with `BUNDLE_SECRET_DETECTED` and leaves no archive. Capped (default 200 MB)
+     *     newest-first; the manifest states what was truncated. Audited as `health.diagnostics_exported`;
+     *     a denied attempt is audited too. Error codes: BUNDLE_SECRET_DETECTED, BUNDLE_WINDOW_TOO_LARGE,
+     *     BUNDLE_ALREADY_RUNNING, BUNDLE_DISK_INSUFFICIENT.
+     */
+    post: operations["createSupportBundle"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/admin/support-bundle/{job_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Support bundle job status and local download path */
+    get: operations["getSupportBundle"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/alerts": {
     parameters: {
       query?: never;
@@ -7765,6 +7807,83 @@ export interface operations {
           "application/json": components["schemas"]["SecuritySummary"];
         };
       };
+    };
+  };
+  createSupportBundle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          /** Format: date-time */
+          from: string;
+          /** Format: date-time */
+          to: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Generation started. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** Format: uuid */
+            job_id: string;
+          };
+        };
+      };
+      400: components["responses"]["BadRequest"];
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      /** @description A bundle is already being generated (BUNDLE_ALREADY_RUNNING). */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getSupportBundle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        job_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Job status. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            /** @description Local filesystem path. */
+            download_path?: string | null;
+            error_code?: string | null;
+            /** Format: uuid */
+            id: string;
+            size_bytes?: number | null;
+            /** @enum {string} */
+            status: "running" | "succeeded" | "failed";
+            truncated?: boolean;
+          };
+        };
+      };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      404: components["responses"]["NotFound"];
     };
   };
   listAlerts: {

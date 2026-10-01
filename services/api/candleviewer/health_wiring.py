@@ -10,9 +10,10 @@ import asyncio
 import logging
 import os
 import shutil
+from datetime import datetime
 from typing import Any, Protocol
 
-from sqlalchemy import insert, text
+from sqlalchemy import insert, select, text
 
 from candleviewer.bus.models import Topic
 from candleviewer.db.models import system_events
@@ -59,6 +60,38 @@ class PgSystemEventWriter:
                 )
             )
             await uow.commit()
+
+
+class PgSystemEventReader:
+    """Reads `system_events` rows in a window (E04-S02 support bundle), newest first."""
+
+    def __init__(self, repo: _UowFactory) -> None:
+        self._repo = repo
+
+    async def __call__(self, start: datetime, end: datetime) -> list[dict[str, Any]]:
+        async with self._repo.unit_of_work() as uow:
+            res = await uow.session.execute(
+                select(
+                    system_events.c.event_ts,
+                    system_events.c.component,
+                    system_events.c.kind,
+                    system_events.c.severity,
+                    system_events.c.message,
+                )
+                .where(system_events.c.event_ts.between(start, end))
+                .order_by(system_events.c.event_ts.desc())
+                .limit(5000)
+            )
+            return [
+                {
+                    "event_ts": r.event_ts.isoformat(),
+                    "component": r.component,
+                    "kind": r.kind,
+                    "severity": str(r.severity),
+                    "message": r.message,
+                }
+                for r in res
+            ]
 
 
 def _exchange_word(c: ComponentHealth | None) -> str:
