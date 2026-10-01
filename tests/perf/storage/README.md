@@ -1,0 +1,29 @@
+# Storage performance harness (E07-Q03)
+
+Run: `CV_ENV=test uv run --project services/api python tests/perf/storage/harness.py`
+(`--update-baseline` rewrites `baseline.json`; exits 1 and prints shape + delta when a warm p95 is >20 % over baseline).
+Unit tests: `CV_ENV=test uv run --project services/api pytest tests/perf/storage`.
+
+## R0 numbers (results.json, dev box, unrestricted CPU/mem)
+
+**Conditions: no docker/QuestDB.** Query shapes #1-#11 run on an in-process DuckDB *proxy* over a seeded 20 000-row
+dataset (regression baseline only; not comparable to section 13.2 targets). Ingest drives the real `IlpWriter`
+over a real loopback TCP socket into a sink that throttles reads (kernel buffers fill, `drain()` blocks).
+Cold samples run in a fresh subprocess + fresh DuckDB instance each (OS page cache cannot be dropped without root).
+
+| Measure | R0 value | Target |
+|---|---|---|
+| Ingest sustained (3 s) | ~45k rows/s, 140 000 sent = 140 000 received, 0 dropped | >=600k (QuestDB) / 25k realistic |
+| Ingest stress (throttled sink) | ~14.8k rows/s, backpressure onset recorded, 50 000 = 50 000, 0 dropped | never drop trades |
+| Real `Reaper.run()` loop lag (1200 partitions) | max 118 ms (threshold 50-100 ms): **over**; see PR note | 50-100 ms |
+| 24 h growth (seeded replay, trades+tickers+deltas, ZSTD Parquet) | 1.36 GB/day/symbol vs doc 0.66 for same streams | 0.5-0.75 total |
+
+Gate check: `test_baseline_gate_fires_on_deliberate_slowdown` injects a 50 ms slowdown and asserts regressions fire.
+Not run (needs docker / hours): 10-minute ingest, 12-month scans, reference 4 vCPU/8 GB profile -> nightly job.
+
+## Real-engine harness (CI `integration` job)
+
+`services/api/tests/integration/storage/test_storage_perf_harness.py` (`integration` + `perf`) drives the real
+`IlpWriter` and `Reaper` against QuestDB 8.1.1, writes `services/api/build/reports/storage-perf.json` (artifact
+`storage-perf`), and fails when a metric is >20 % and >25 ms over `baseline_integration.json`.
+"Cold" = fresh connection + untouched partition; the OS page cache is **not** dropped (no root in CI).

@@ -1,0 +1,24 @@
+name: perf-storage-nightly
+# Recorded-not-gating in R0 (30-release-roadmap 4.4): runs nightly, never on PRs.
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  storage-perf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CV_ENV: test
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - run: uv sync --project services/api
+      - run: uv run --project services/api python tests/perf/storage/harness.py --out results.json
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        if: always()
+        with:
+          name: storage-perf-results
+          path: results.json

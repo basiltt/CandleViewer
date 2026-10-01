@@ -162,6 +162,15 @@ jobs:
         if: always()
         run: docker rm -f cv-grafana || true
 
+      - name: Upload storage perf report (E07-Q03)
+        if: always()
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: storage-perf
+          path: services/api/build/reports/storage-perf.json
+          if-no-files-found: warn
+          retention-days: 30
+
       - name: Assert no live-exchange egress occurred
         if: always()
         run: |
