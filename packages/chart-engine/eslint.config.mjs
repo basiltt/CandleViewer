@@ -28,6 +28,8 @@ export default tseslint.config(
       "bench/scenes/scene-a.mjs",
       "bench/scenes/run-scene-b.mjs",
       "bench/scenes/scene-b.mjs",
+      "bench/scenes/run-scene-c.mjs",
+      "bench/scenes/scene-c.mjs",
       "bench/scenes/atlas.mjs",
     ],
     languageOptions: {
