@@ -63,7 +63,9 @@ groups:
         for: 60s
         labels:
           severity: ticket
+          component: latency
         annotations:
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-latencybudgetbreach"
           summary: >-
             Tick-to-paint p95 {{ $value | humanizeDuration }} > 250 ms; stage
             {{ with printf `topk(1, cv:latency_stage_share:ratio_5m{env="%s"})` $labels.env | query }}{{ (. | first).Labels.stage }}{{ else }}client (backend stages nominal){{ end }}
@@ -77,5 +79,7 @@ groups:
         for: 5m
         labels:
           severity: ticket
+          component: latency
         annotations:
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-ticktopaintslofastburn"
           summary: "Tick-to-paint SLO (p95 < 100 ms) burning error budget fast"

@@ -63,6 +63,10 @@ jobs:
       - name: mypy --strict
         run: uv run mypy --strict candleviewer
 
+      - name: Alert rule runbook-link gate (E04-T05)
+        working-directory: .
+        run: python infra/alertmanager/check_alert_rules.py
+
       - name: Grafana dashboard lint (E04-S01 AC3, metric names vs catalogue)
         working-directory: .
         run: python infra/grafana/lint_dashboards.py --strict

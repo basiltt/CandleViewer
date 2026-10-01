@@ -190,3 +190,238 @@ Rules:
 - **Feature-flag ramp**: newly shipped user-visible features default to off or owner-only in prod immediately post-release, then ramped to all managers over the following days once hypercare confirms stability — this is the default rollout pattern for any Story behind a flag, not just a contingency.
 - **Ongoing**: metrics from §5.1 feed the standing Grafana dashboards reviewed at each Sprint Review and each subsequent PRR, so trend regressions across releases (not just within one release) are caught; `32-risk-register.md` is updated whenever monitoring surfaces a new systemic risk (e.g., a recorder disk-growth trend approaching budget).
 - Post-release monitoring findings that indicate a design or architecture gap are fed back into Refinement as new Epics/Tasks/Bugs — this is the explicit loop-closing step connecting release operations back into the sprint-planning cycle described in `01-sdlc-and-branching.md`.
+
+## 9. Alert runbooks (E04-T05)
+
+Every Prometheus alert in `infra/prometheus/alerts/` links to its section here (CI: `infra/alertmanager/check_alert_rules.py`). Two severities only: **Page** (act now, bypasses quiet hours) and **Ticket** (next working session). Payloads carry component, severity and this link only. Procedures are expanded by E04-T07; each section states the first diagnostic step.
+
+<a id="alert-bybitclockdriftwarning"></a>
+### BybitClockDriftWarning
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-bybitclockdriftcritical"></a>
+### BybitClockDriftCritical
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-bybitclockoffsetstale"></a>
+### BybitClockOffsetStale
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-latencybudgetbreach"></a>
+### LatencyBudgetBreach
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-ticktopaintslofastburn"></a>
+### TickToPaintSloFastBurn
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-watchdog"></a>
+### Watchdog
+
+Always firing by design. If the deadman notification stops arriving, the Prometheus -> Alertmanager -> webhook pipeline is dead: check `docker compose logs alertmanager prometheus` and the webhook provider status.
+
+<a id="alert-expectedmetricmissingnakedpositionalertstotal"></a>
+### ExpectedMetricMissingNakedPositionAlertsTotal
+
+The named metric is not being emitted by any running module. Check the owning module is deployed and `/metrics` on the api exposes it; compare with `metrics_catalogue.py`. Until the emitter lands this Ticket is expected.
+
+<a id="alert-expectedmetricmissingomsunknownorders"></a>
+### ExpectedMetricMissingOmsUnknownOrders
+
+The named metric is not being emitted by any running module. Check the owning module is deployed and `/metrics` on the api exposes it; compare with `metrics_catalogue.py`. Until the emitter lands this Ticket is expected.
+
+<a id="alert-expectedmetricmissingpgup"></a>
+### ExpectedMetricMissingPgUp
+
+The named metric is not being emitted by any running module. Check the owning module is deployed and `/metrics` on the api exposes it; compare with `metrics_catalogue.py`. Until the emitter lands this Ticket is expected.
+
+<a id="alert-expectedmetricmissingbybitclockdriftms"></a>
+### ExpectedMetricMissingBybitClockDriftMs
+
+The named metric is not being emitted by any running module. Check the owning module is deployed and `/metrics` on the api exposes it; compare with `metrics_catalogue.py`. Until the emitter lands this Ticket is expected.
+
+<a id="alert-expectedmetricmissingdiskusedratio"></a>
+### ExpectedMetricMissingDiskUsedRatio
+
+The named metric is not being emitted by any running module. Check the owning module is deployed and `/metrics` on the api exposes it; compare with `metrics_catalogue.py`. Until the emitter lands this Ticket is expected.
+
+<a id="alert-expectedmetricmissingauditchainverificationfailurestotal"></a>
+### ExpectedMetricMissingAuditChainVerificationFailuresTotal
+
+The named metric is not being emitted by any running module. Check the owning module is deployed and `/metrics` on the api exposes it; compare with `metrics_catalogue.py`. Until the emitter lands this Ticket is expected.
+
+<a id="alert-expectedmetricmissingwsconnectionstate"></a>
+### ExpectedMetricMissingWsConnectionState
+
+The named metric is not being emitted by any running module. Check the owning module is deployed and `/metrics` on the api exposes it; compare with `metrics_catalogue.py`. Until the emitter lands this Ticket is expected.
+
+<a id="alert-expectedmetricmissingbookresynctotal"></a>
+### ExpectedMetricMissingBookResyncTotal
+
+The named metric is not being emitted by any running module. Check the owning module is deployed and `/metrics` on the api exposes it; compare with `metrics_catalogue.py`. Until the emitter lands this Ticket is expected.
+
+<a id="alert-expectedmetricmissingeventlooplagsecondsbucket"></a>
+### ExpectedMetricMissingEventLoopLagSecondsBucket
+
+The named metric is not being emitted by any running module. Check the owning module is deployed and `/metrics` on the api exposes it; compare with `metrics_catalogue.py`. Until the emitter lands this Ticket is expected.
+
+<a id="alert-expectedmetricmissingruleautodisarmtotal"></a>
+### ExpectedMetricMissingRuleAutodisarmTotal
+
+The named metric is not being emitted by any running module. Check the owning module is deployed and `/metrics` on the api exposes it; compare with `metrics_catalogue.py`. Until the emitter lands this Ticket is expected.
+
+<a id="alert-expectedmetricmissingenvmismatchattemptstotal"></a>
+### ExpectedMetricMissingEnvMismatchAttemptsTotal
+
+The named metric is not being emitted by any running module. Check the owning module is deployed and `/metrics` on the api exposes it; compare with `metrics_catalogue.py`. Until the emitter lands this Ticket is expected.
+
+<a id="alert-expectedmetricmissingcredentialexpirydays"></a>
+### ExpectedMetricMissingCredentialExpiryDays
+
+The named metric is not being emitted by any running module. Check the owning module is deployed and `/metrics` on the api exposes it; compare with `metrics_catalogue.py`. Until the emitter lands this Ticket is expected.
+
+<a id="alert-expectedmetricmissingauthloginfailurestotal"></a>
+### ExpectedMetricMissingAuthLoginFailuresTotal
+
+The named metric is not being emitted by any running module. Check the owning module is deployed and `/metrics` on the api exposes it; compare with `metrics_catalogue.py`. Until the emitter lands this Ticket is expected.
+
+<a id="alert-expectedmetricmissingauthlockoutstotal"></a>
+### ExpectedMetricMissingAuthLockoutsTotal
+
+The named metric is not being emitted by any running module. Check the owning module is deployed and `/metrics` on the api exposes it; compare with `metrics_catalogue.py`. Until the emitter lands this Ticket is expected.
+
+<a id="alert-expectedmetricmissingauthzdeniedtotal"></a>
+### ExpectedMetricMissingAuthzDeniedTotal
+
+The named metric is not being emitted by any running module. Check the owning module is deployed and `/metrics` on the api exposes it; compare with `metrics_catalogue.py`. Until the emitter lands this Ticket is expected.
+
+<a id="alert-expectedmetricmissingcredentialverificationfailurestotal"></a>
+### ExpectedMetricMissingCredentialVerificationFailuresTotal
+
+The named metric is not being emitted by any running module. Check the owning module is deployed and `/metrics` on the api exposes it; compare with `metrics_catalogue.py`. Until the emitter lands this Ticket is expected.
+
+<a id="alert-expectedmetricmissingomsraterejecttotal"></a>
+### ExpectedMetricMissingOmsRateRejectTotal
+
+The named metric is not being emitted by any running module. Check the owning module is deployed and `/metrics` on the api exposes it; compare with `metrics_catalogue.py`. Until the emitter lands this Ticket is expected.
+
+<a id="alert-expectedmetricmissingegressipchangestotal"></a>
+### ExpectedMetricMissingEgressIpChangesTotal
+
+The named metric is not being emitted by any running module. Check the owning module is deployed and `/metrics` on the api exposes it; compare with `metrics_catalogue.py`. Until the emitter lands this Ticket is expected.
+
+<a id="alert-nakedpositiondetected"></a>
+### NakedPositionDetected
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-omsunknownorders"></a>
+### OmsUnknownOrders
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-postgresdown"></a>
+### PostgresDown
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-clockdriftblockingtrading"></a>
+### ClockDriftBlockingTrading
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-diskcritical"></a>
+### DiskCritical
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-auditchainverificationfailed"></a>
+### AuditChainVerificationFailed
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-syntheticalert"></a>
+### SyntheticAlert
+
+Fired deliberately by `make alert-drill`. Confirm the Page arrives on the owner's out-of-band channel within 60 s with component `alerting` and this link, then resolve with `make alert-drill-stop`.
+
+<a id="alert-publicwsdown"></a>
+### PublicWsDown
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-bookresynchigh"></a>
+### BookResyncHigh
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-eventlooplaghigh"></a>
+### EventLoopLagHigh
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-diskhigh"></a>
+### DiskHigh
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-ruleautodisarm"></a>
+### RuleAutodisarm
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-envmismatchattempt"></a>
+### EnvMismatchAttempt
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-credentialexpiryapproaching"></a>
+### CredentialExpiryApproaching
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-authloginfailurespike"></a>
+### AuthLoginFailureSpike
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-authlockouts"></a>
+### AuthLockouts
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-authzdeniedspike"></a>
+### AuthzDeniedSpike
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-credentialverificationfailures"></a>
+### CredentialVerificationFailures
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-omsraterejects"></a>
+### OmsRateRejects
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-egressipchanged"></a>
+### EgressIpChanged
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-alertmanagernotificationsfailed"></a>
+### AlertmanagerNotificationsFailed
+
+Open the Grafana dashboard for this component, confirm the condition with the rule expression in `infra/prometheus/alerts/`, check recent deploys and logs by traceId, and escalate per section 5.2 if unresolved.
+
+<a id="alert-expectedmetricmissing"></a>
+### ExpectedMetricMissing (all `ExpectedMetricMissing*` guards)
+
+The `absent()` guard for a catalogued metric fired: no running module emits it. Identify the metric from the alert name, confirm the owning epic has landed (`metrics_catalogue.py`), and check the api `/metrics` endpoint. Expected until the emitting module ships.
+

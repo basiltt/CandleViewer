@@ -1,0 +1,69 @@
+# E04-T05: two severities only (page|ticket) - ADR-0014 s6, 20-architecture s12.5.
+# Every rule needs annotations.runbook_url (CI: infra/alertmanager/check_alert_rules.py).
+groups:
+  - name: system-page
+    interval: 30s
+    rules:
+      - alert: NakedPositionDetected
+        expr: increase(naked_position_alerts_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: page
+          component: oms
+        annotations:
+          summary: "A position was detected without a native stop-loss"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-nakedpositiondetected"
+      - alert: OmsUnknownOrders
+        expr: oms_unknown_orders > 0
+        for: 1m
+        labels:
+          severity: page
+          component: oms
+        annotations:
+          summary: "OMS holds orders in an unknown state"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-omsunknownorders"
+      - alert: PostgresDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: page
+          component: postgres
+        annotations:
+          summary: "Postgres is down"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-postgresdown"
+      - alert: ClockDriftBlockingTrading
+        expr: abs(bybit_clock_drift_ms) > 1500
+        for: 1m
+        labels:
+          severity: page
+          component: clock
+        annotations:
+          summary: "Clock drift is blocking order entry"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-clockdriftblockingtrading"
+      - alert: DiskCritical
+        expr: disk_used_ratio > 0.95
+        for: 2m
+        labels:
+          severity: page
+          component: storage
+        annotations:
+          summary: "Disk usage above 95 percent"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-diskcritical"
+      - alert: AuditChainVerificationFailed
+        expr: increase(audit_chain_verification_failures_total[10m]) > 0
+        for: 0m
+        labels:
+          severity: page
+          component: audit
+        annotations:
+          summary: "Audit chain verification failed"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-auditchainverificationfailed"
+      - alert: SyntheticAlert
+        expr: cv_synthetic_alert == 1
+        for: 1m
+        labels:
+          severity: page
+          component: alerting
+        annotations:
+          summary: "Synthetic drill alert (alert-drill)"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-syntheticalert"

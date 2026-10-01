@@ -1,0 +1,168 @@
+# E04-T05: two severities only (page|ticket) - ADR-0014 s6, 20-architecture s12.5.
+# Every rule needs annotations.runbook_url (CI: infra/alertmanager/check_alert_rules.py).
+groups:
+  - name: metric-absent-guards
+    interval: 30s
+    rules:
+      - alert: ExpectedMetricMissingNakedPositionAlertsTotal
+        expr: absent(naked_position_alerts_total)
+        for: 15m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Expected metric naked_position_alerts_total is not emitted"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-expectedmetricmissing"
+      - alert: ExpectedMetricMissingOmsUnknownOrders
+        expr: absent(oms_unknown_orders)
+        for: 15m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Expected metric oms_unknown_orders is not emitted"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-expectedmetricmissing"
+      - alert: ExpectedMetricMissingPgUp
+        expr: absent(pg_up)
+        for: 15m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Expected metric pg_up is not emitted"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-expectedmetricmissing"
+      - alert: ExpectedMetricMissingBybitClockDriftMs
+        expr: absent(bybit_clock_drift_ms)
+        for: 15m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Expected metric bybit_clock_drift_ms is not emitted"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-expectedmetricmissing"
+      - alert: ExpectedMetricMissingDiskUsedRatio
+        expr: absent(disk_used_ratio)
+        for: 15m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Expected metric disk_used_ratio is not emitted"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-expectedmetricmissing"
+      - alert: ExpectedMetricMissingAuditChainVerificationFailuresTotal
+        expr: absent(audit_chain_verification_failures_total)
+        for: 15m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Expected metric audit_chain_verification_failures_total is not emitted"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-expectedmetricmissing"
+      - alert: ExpectedMetricMissingWsConnectionState
+        expr: absent(ws_connection_state)
+        for: 15m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Expected metric ws_connection_state is not emitted"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-expectedmetricmissing"
+      - alert: ExpectedMetricMissingBookResyncTotal
+        expr: absent(book_resync_total)
+        for: 15m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Expected metric book_resync_total is not emitted"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-expectedmetricmissing"
+      - alert: ExpectedMetricMissingEventLoopLagSecondsBucket
+        expr: absent(event_loop_lag_seconds_bucket)
+        for: 15m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Expected metric event_loop_lag_seconds_bucket is not emitted"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-expectedmetricmissing"
+      - alert: ExpectedMetricMissingRuleAutodisarmTotal
+        expr: absent(rule_autodisarm_total)
+        for: 15m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Expected metric rule_autodisarm_total is not emitted"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-expectedmetricmissing"
+      - alert: ExpectedMetricMissingEnvMismatchAttemptsTotal
+        expr: absent(env_mismatch_attempts_total)
+        for: 15m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Expected metric env_mismatch_attempts_total is not emitted"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-expectedmetricmissing"
+      - alert: ExpectedMetricMissingCredentialExpiryDays
+        expr: absent(credential_expiry_days)
+        for: 15m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Expected metric credential_expiry_days is not emitted"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-expectedmetricmissing"
+      - alert: ExpectedMetricMissingAuthLoginFailuresTotal
+        expr: absent(auth_login_failures_total)
+        for: 15m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Expected metric auth_login_failures_total is not emitted"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-expectedmetricmissing"
+      - alert: ExpectedMetricMissingAuthLockoutsTotal
+        expr: absent(auth_lockouts_total)
+        for: 15m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Expected metric auth_lockouts_total is not emitted"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-expectedmetricmissing"
+      - alert: ExpectedMetricMissingAuthzDeniedTotal
+        expr: absent(authz_denied_total)
+        for: 15m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Expected metric authz_denied_total is not emitted"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-expectedmetricmissing"
+      - alert: ExpectedMetricMissingCredentialVerificationFailuresTotal
+        expr: absent(credential_verification_failures_total)
+        for: 15m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Expected metric credential_verification_failures_total is not emitted"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-expectedmetricmissing"
+      - alert: ExpectedMetricMissingOmsRateRejectTotal
+        expr: absent(oms_rate_reject_total)
+        for: 15m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Expected metric oms_rate_reject_total is not emitted"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-expectedmetricmissing"
+      - alert: ExpectedMetricMissingEgressIpChangesTotal
+        expr: absent(egress_ip_changes_total)
+        for: 15m
+        labels:
+          severity: ticket
+          component: alerting
+        annotations:
+          summary: "Expected metric egress_ip_changes_total is not emitted"
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-expectedmetricmissing"

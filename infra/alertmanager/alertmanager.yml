@@ -1,0 +1,66 @@
+# E04-T05 (US-OBS-004, SR-126). Two severities only: page | ticket.
+# Receivers use a webhook provider independent of the api container; the URL is
+# a secret read from a file injected at process start (CV_ALERT_WEBHOOK_URL ->
+# /run/secrets/alert_webhook_url), never committed. Payloads carry component,
+# severity, threshold summary and runbook link only (no account/order ids).
+# Quiet hours: edit the time_intervals below (CV_ALERT_QUIET_HOURS documents the window).
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: ticket
+  group_by: [alertname, component, env]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    # Watchdog: heartbeat only; delivered to a dead-man receiver, never to the owner inbox.
+    - matchers: [alertname = "Watchdog"]
+      receiver: deadman
+      group_wait: 0s
+      group_interval: 1m
+      repeat_interval: 5m
+    # Page: no mute_time_intervals -> bypasses quiet hours.
+    - matchers: [severity = "page"]
+      receiver: page
+      repeat_interval: 30m
+    # Ticket: held during quiet hours, released when the interval ends.
+    - matchers: [severity = "ticket"]
+      receiver: ticket
+      repeat_interval: 4h
+      mute_time_intervals: [quiet_hours]
+
+time_intervals:
+  - name: quiet_hours
+    time_intervals:
+      - times:
+          - start_time: "22:00"
+            end_time: "24:00"
+          - start_time: "00:00"
+            end_time: "07:00"
+
+inhibit_rules:
+  # A Postgres outage suppresses dependent Tickets (storage/auth/oms/rules/book symptoms).
+  - source_matchers: [alertname = "PostgresDown"]
+    target_matchers: [severity = "ticket"]
+    equal: [env]
+  # A Page for a component suppresses its own Ticket-level sibling.
+  - source_matchers: [severity = "page"]
+    target_matchers: [severity = "ticket"]
+    equal: [component, env]
+
+receivers:
+  - name: page
+    webhook_configs:
+      - url_file: /run/secrets/alert_webhook_url
+        send_resolved: true
+        max_alerts: 20
+  - name: ticket
+    webhook_configs:
+      - url_file: /run/secrets/alert_webhook_url
+        send_resolved: true
+        max_alerts: 20
+  - name: deadman
+    webhook_configs:
+      - url_file: /run/secrets/alert_deadman_url
+        send_resolved: false

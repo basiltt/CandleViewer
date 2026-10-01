@@ -1,0 +1,154 @@
+"""E04-T05: alert rules, routing config and lint-gate contract tests (no network)."""
+
+from __future__ import annotations
+
+import importlib.util
+from pathlib import Path
+from types import ModuleType
+from typing import Any
+
+import pytest
+import yaml
+
+HERE = Path(__file__).resolve().parents[1]
+INFRA = HERE.parent
+
+
+def _load(name: str) -> ModuleType:
+    spec = importlib.util.spec_from_file_location(name, HERE / f"{name}.py")
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+lint = _load("check_alert_rules")
+AM: dict[str, Any] = yaml.safe_load(
+    (HERE / "alertmanager.yml").read_text(encoding="utf-8")
+)
+
+
+def _rules() -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for f in (INFRA / "prometheus" / "alerts").glob("*.yml"):
+        for g in yaml.safe_load(f.read_text(encoding="utf-8"))["groups"]:
+            out += [r for r in g["rules"] if "alert" in r]
+    return out
+
+
+def _bad_rule(tmp_path: Path, labels: str, annotations: str) -> list[str]:
+    (tmp_path / "x.yml").write_text(
+        "groups:\n- name: g\n  rules:\n  - alert: Bad\n    expr: up == 0\n"
+        f"    labels: {labels}\n    annotations: {annotations}\n",
+        encoding="utf-8",
+    )
+    result: list[str] = lint.check(tmp_path, "# x")
+    return result
+
+
+def test_repo_rules_pass_runbook_lint() -> None:
+    assert lint.check() == []
+
+
+def test_missing_runbook_fails_naming_rule(tmp_path: Path) -> None:
+    assert _bad_rule(tmp_path, "{severity: page, component: c}", "{}") == [
+        "Bad: missing annotations.runbook_url"
+    ]
+
+
+def test_bad_anchor_and_severity_fail(tmp_path: Path) -> None:
+    errs = _bad_rule(
+        tmp_path,
+        "{severity: warning, component: c}",
+        "{runbook_url: 'docs/plan/07-release-and-prr.md#nope'}",
+    )
+    assert any("severity" in e for e in errs) and any("anchor" in e for e in errs)
+
+
+def test_only_two_severities() -> None:
+    sev = {r["labels"]["severity"] for r in _rules()}
+    assert sev <= {"page", "ticket", "none"}
+    assert {r["alert"] for r in _rules() if r["labels"]["severity"] == "none"} == {
+        "Watchdog"
+    }
+
+
+def test_required_rules_present() -> None:
+    names = {r["alert"] for r in _rules()}
+    required = {
+        "NakedPositionDetected",
+        "OmsUnknownOrders",
+        "PostgresDown",
+        "DiskCritical",
+        "DiskHigh",
+        "Watchdog",
+        "AlertmanagerNotificationsFailed",
+        "SyntheticAlert",
+        "AuditChainVerificationFailed",
+        "EgressIpChanged",
+    }
+    assert required <= names
+
+
+def test_oms_unknown_orders_for_60s() -> None:
+    r = next(r for r in _rules() if r["alert"] == "OmsUnknownOrders")
+    assert r["for"] == "1m"
+
+
+def test_absent_guards_are_ticket() -> None:
+    guards = [r for r in _rules() if r["alert"].startswith("ExpectedMetricMissing")]
+    assert guards and all(g["expr"].startswith("absent(") for g in guards)
+    assert all(g["labels"]["severity"] == "ticket" for g in guards)
+
+
+def test_promtool_cases_cover_every_new_page_rule() -> None:
+    doc = yaml.safe_load(
+        (INFRA / "prometheus" / "tests" / "system_alerts.test.yml").read_text(
+            encoding="utf-8"
+        )
+    )
+    covered = {a["alertname"] for t in doc["tests"] for a in t["alert_rule_test"]}
+    page = {r["alert"] for r in _rules() if r["labels"]["severity"] == "page"}
+    assert page - {"BybitClockDriftCritical"} <= covered
+
+
+def test_grouping_and_repeat_intervals() -> None:
+    r = AM["route"]
+    assert r["group_by"] == ["alertname", "component", "env"]
+    assert (r["group_wait"], r["group_interval"], r["repeat_interval"]) == (
+        "30s",
+        "5m",
+        "4h",
+    )
+    by = {x["matchers"][0]: x for x in r["routes"]}
+    assert by['severity = "page"']["repeat_interval"] == "30m"
+
+
+def test_page_bypasses_quiet_hours_ticket_muted() -> None:
+    by = {x["matchers"][0]: x for x in AM["route"]["routes"]}
+    assert "mute_time_intervals" not in by['severity = "page"']
+    assert by['severity = "ticket"']["mute_time_intervals"] == ["quiet_hours"]
+    assert {t["name"] for t in AM["time_intervals"]} == {"quiet_hours"}
+
+
+def test_receivers_exist_and_no_inline_secret() -> None:
+    recv = {r["name"] for r in AM["receivers"]}
+    assert all(x["receiver"] in recv for x in AM["route"]["routes"])
+    text = (HERE / "alertmanager.yml").read_text(encoding="utf-8")
+    assert "http://" not in text and "https://" not in text
+    assert text.count("url_file:") == 3
+
+
+def test_postgres_inhibits_tickets() -> None:
+    assert any(
+        r["source_matchers"] == ['alertname = "PostgresDown"']
+        and r["target_matchers"] == ['severity = "ticket"']
+        for r in AM["inhibit_rules"]
+    )
+
+
+def test_alert_drill_refuses_public_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    m = _load("alert_drill")
+    monkeypatch.setenv("CV_ALERT_DRILL_PUSH_URL", "http://evil.example.com")
+    assert m.main(["fire"]) == 2
+    assert m.build_request("http://127.0.0.1:9091", 1).data == b"cv_synthetic_alert 1\n"
