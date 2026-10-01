@@ -1,9 +1,9 @@
 # E04-T05 (US-OBS-004, SR-126). Two severities only: page | ticket.
 # Receivers use a webhook provider independent of the api container; the URL is
-# a secret read from a file injected at process start (CV_ALERT_WEBHOOK_URL ->
+# a secret read from a file injected at process start (CV_ALERT_PAGE_WEBHOOK_URL, CV_ALERT_TICKET_WEBHOOK_URL, CV_ALERT_DEADMAN_URL ->
 # /run/secrets/alert_webhook_url), never committed. Payloads carry component,
 # severity, threshold summary and runbook link only (no account/order ids).
-# Page and Ticket use separate webhook secrets (separate channels). Quiet hours: edit the time_intervals below (CV_ALERT_QUIET_HOURS documents the window).
+# Page and Ticket use separate webhook secrets (separate channels). Quiet hours: edit the time_intervals below (Alertmanager does not expand env vars, so the window is a fixed file value).
 global:
   resolve_timeout: 5m
 

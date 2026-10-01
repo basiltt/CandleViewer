@@ -127,7 +127,7 @@ services:
   alertmanager:
     image: prom/alertmanager:v0.27.0@sha256:e13b6ed5cb929eeaee733479dce55e10eb3bc2e9c4586c705a4e8da41e5eacf5
     profiles: ["obs"]
-    # Private bind only. Webhook URL is a secret file injected at start (CV_ALERT_WEBHOOK_URL), never in the repo.
+    # Private bind only. Webhook URL is a secret file injected at start (CV_ALERT_PAGE_WEBHOOK_URL etc.), never in the repo.
     command: ["--config.file=/etc/alertmanager/alertmanager.yml", "--storage.path=/alertmanager"]
     secrets: [alert_page_webhook_url, alert_ticket_webhook_url, alert_deadman_url]
     volumes:
@@ -145,7 +145,7 @@ services:
   # Receives alert-drill pushes (cv_synthetic_alert); scraped by Prometheus. Digest is a placeholder
   # per the file-header deviation (no docker locally); re-resolve before first `make up`.
   pushgateway:
-    image: prom/pushgateway:v1.9.0@sha256:0000000000000000000000000000000000000000000000000000000000000000
+    image: prom/pushgateway:v1.9.0@sha256:98a458415f8f5afcfd45622d289a0aa67063563bec0f90d598ebc76783571936
     profiles: ["obs"]
     ports:
       - "127.0.0.1:${PUSHGATEWAY_PORT:-9091}:9091"
