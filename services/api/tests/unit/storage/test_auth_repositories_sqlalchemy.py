@@ -129,13 +129,108 @@ def test_build_auth_service_live_without_keys_refuses() -> None:
         build_auth_service(Settings(storage_backend="real", environment=Environment.LIVE))
 
 
-def test_seeder_refuses_outside_testnet() -> None:
+@pytest.mark.parametrize("env", ["live", "demo"])
+@pytest.mark.parametrize("allow_no_mfa", [False, True])
+def test_seeder_refuses_outside_testnet(env: str, allow_no_mfa: bool) -> None:
     from scripts.seed_fixture_user import check_environment
 
-    for env in ("live", "demo"):
-        with pytest.raises(SystemExit):
-            check_environment(env)
+    with pytest.raises(SystemExit, match=r"C-2\.11"):
+        check_environment(env, allow_no_mfa=allow_no_mfa)
+
+
+def test_seeder_accepts_testnet() -> None:
+    from scripts.seed_fixture_user import check_environment
+
     check_environment("testnet")
+    check_environment("testnet", allow_no_mfa=True)
+
+
+@pytest.mark.parametrize("env", ["live", "demo"])
+def test_seeder_main_allow_no_mfa_refused_outside_testnet(
+    env: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from scripts import seed_fixture_user
+
+    monkeypatch.setenv("CV_ENVIRONMENT", env)
+    called: list[object] = []
+    monkeypatch.setattr(seed_fixture_user, "seed", lambda *a, **k: called.append(a))
+    with pytest.raises(SystemExit, match="MFA-less"):
+        seed_fixture_user.main(["--allow-no-mfa"])
+    assert called == []
+
+
+def test_seeder_main_default_seeds_with_mfa_required(monkeypatch: pytest.MonkeyPatch) -> None:
+    from scripts import seed_fixture_user
+
+    for k, v in {
+        "CV_ENVIRONMENT": "testnet",
+        "CV_PG_DSN": "postgresql+asyncpg://x/y",
+        "CV_SEED_USERNAME": "u",
+        "CV_SEED_PASSWORD": "p",
+    }.items():
+        monkeypatch.setenv(k, v)
+    seen: dict[str, object] = {}
+
+    async def fake_seed(*args: object, allow_no_mfa: bool = False) -> None:
+        seen["allow_no_mfa"] = allow_no_mfa
+
+    monkeypatch.setattr(seed_fixture_user, "seed", fake_seed)
+    assert seed_fixture_user.main([]) == 0
+    assert seen == {"allow_no_mfa": False}
+
+
+@pytest.mark.parametrize("env", [Environment.DEMO, Environment.TESTNET])
+def test_build_auth_service_fake_backend_scaffold_all_inactive(env: Environment) -> None:
+    svc = build_auth_service(Settings(environment=env))
+    assert svc.is_active is False and svc.mfa_is_active is False
+    assert svc.sessions_is_active is False
+    assert svc._repository is None and svc._mfa_repository is None
+    assert svc._session_repository is None
+
+
+def test_build_auth_service_live_fake_backend_with_keys_still_scaffold() -> None:
+    """Live + fake backend: keys are validated (fail closed), and the result
+    stays an inert scaffold, never a half-wired service."""
+    from pydantic import SecretStr
+
+    svc = build_auth_service(
+        Settings(
+            environment=Environment.LIVE,
+            auth_totp_key_hex=SecretStr("11" * 32),
+            auth_recovery_hmac_key_hex=SecretStr("22" * 32),
+            auth_pepper=SecretStr("pepper"),
+        )
+    )
+    assert svc.is_active is False and svc._repository is None
+
+
+def test_build_auth_service_live_fake_backend_empty_pepper_refuses() -> None:
+    from pydantic import SecretStr
+
+    with pytest.raises(ValueError, match="CV_AUTH_PEPPER"):
+        build_auth_service(
+            Settings(
+                environment=Environment.LIVE,
+                auth_totp_key_hex=SecretStr("11" * 32),
+                auth_recovery_hmac_key_hex=SecretStr("22" * 32),
+            )
+        )
+
+
+def test_build_auth_service_non_hex_key_refuses() -> None:
+    from pydantic import SecretStr
+
+    with pytest.raises(ValueError, match="hex-encoded"):
+        build_auth_service(_real_settings(auth_recovery_hmac_key_hex=SecretStr("zz" * 32)))
+
+
+def test_identity_and_audit_wiring_follow_storage_backend() -> None:
+    from candleviewer.app import _build_audit, build_identity_provider
+
+    assert build_identity_provider(Settings()) is None
+    assert _build_audit(Settings())._repository is None
+    assert build_identity_provider(_real_settings()) is not None
+    assert _build_audit(_real_settings())._repository is not None
 
 
 def test_build_auth_service_live_fake_backend_still_refuses() -> None:

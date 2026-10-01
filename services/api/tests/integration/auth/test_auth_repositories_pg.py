@@ -53,14 +53,14 @@ def _rec(model: Any) -> Callable[..., Any]:
     return lambda **f: model.model_validate(f)
 
 
-async def test_login_lockout_rehash_and_audit_free_round_trip(pg_dsn: str) -> None:
+async def test_login_lockout_and_reset_round_trip(pg_dsn: str) -> None:
     await seed(pg_dsn, "alice", "correct horse battery")
     rel = SqlAlchemyRelationalRepository(pg_dsn)
     users = SqlAlchemyUserRepository(rel, _rec(UserRecord), clock=lambda: _NOW)
     try:
         user = await users.find_by_identifier("ALICE")
         assert user is not None and user.status == "active"
-        assert await Hasher(pepper="").verify("correct horse battery", user.password_hash)
+        assert await Hasher(pepper="").verify(user.password_hash, "correct horse battery")
         locked = None
         for _ in range(5):
             locked = await users.record_login_failure(

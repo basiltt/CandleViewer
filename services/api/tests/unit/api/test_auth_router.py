@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -24,6 +26,7 @@ from candleviewer.auth.models import (
     MfaMethodKind,
     MfaVerifiedResult,
     MfaVerifyRequest,
+    MintedSession,
 )
 
 
@@ -102,6 +105,51 @@ class _FakeAuthService:
     def mfa(self) -> _FakeMfaService:
         return self._mfa
 
+    sessions_is_active = False
+
+    @property
+    def sessions(self) -> _FakeMinter:
+        return _FakeMinter()
+
+
+class _FakeMinter:
+    def __init__(self) -> None:
+        self.minted_for: list[str] = []
+
+    async def mint(
+        self, user_id: str, *, ip: str | None = None, user_agent: str | None = None
+    ) -> MintedSession:
+        self.minted_for.append(user_id)
+        now = datetime(2026, 10, 1, tzinfo=UTC)
+        return MintedSession(
+            session_id=uuid.uuid4(),
+            access_token_jti=uuid.uuid4(),
+            access_token="acc",
+            refresh_token="ref",
+            issued_at=now,
+            expires_at=now + timedelta(hours=12),
+        )
+
+
+class _MintingAuthService(_FakeAuthService):
+    sessions_is_active = True
+
+    def __init__(self, mfa_outcome: object) -> None:
+        super().__init__(InvalidCredentials("n/a"), mfa_outcome=mfa_outcome)
+        self.minter = _FakeMinter()
+
+    @property
+    def sessions(self) -> _FakeMinter:
+        return self.minter
+
+
+class _FakeIdentity:
+    async def user(self, user_id: str) -> dict[str, Any]:
+        return {"id": user_id, "roles": ["owner"]}
+
+    async def session_info(self, user_id: str) -> dict[str, Any]:
+        return {"permissions": [], "account_scope": []}
+
 
 def _app(outcome: object, *, active: bool = True) -> FastAPI:
     app = FastAPI()
@@ -136,6 +184,7 @@ class _RecordingAuditWriter:
         actor_ip: str | None = None,
         outcome: AuditOutcome = AuditOutcome.SUCCESS,
         severity: Severity = Severity.INFO,
+        **_extra: object,
     ) -> None:
         self.calls.append(
             {
@@ -329,3 +378,32 @@ def test_mfa_enroll_confirm_disabled_even_without_headers() -> None:
         "/auth/mfa/enroll/confirm", json={"method_id": str(uuid.uuid4()), "code": "123456"}
     )
     assert response.status_code == 501
+
+
+def test_mfa_verify_with_session_backend_mints_session_and_sets_cookie() -> None:
+    uid = uuid.uuid4()
+    auth = _MintingAuthService(MfaVerifiedResult(user_id=uid))
+    audit_service = _RecordingAuditService()
+    app = FastAPI()
+    app.include_router(
+        make_auth_router(
+            auth,
+            audit_service=audit_service,
+            identity=_FakeIdentity(),
+        )
+    )
+    response = TestClient(app).post(
+        "/auth/mfa/verify", json={"mfa_token": "tok", "method": "totp", "code": "123456"}
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["tokens"]["access_token"] == "acc"
+    assert body["tokens"]["refresh_token"] is None
+    assert body["user"]["roles"] == ["owner"]
+    cookie = response.headers["set-cookie"].lower()
+    assert "cv_refresh=ref" in cookie and "httponly" in cookie and "samesite=strict" in cookie
+    assert auth.minter.minted_for == [str(uid)]
+    assert [c["action"] for c in audit_service.writer.calls] == [
+        "auth.mfa_verified",
+        "auth.session_created",
+    ]

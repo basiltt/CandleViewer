@@ -79,6 +79,8 @@ from candleviewer.replay.service import ReplayService
 from candleviewer.risk.service import RiskService
 from candleviewer.rules.service import RulesService
 from candleviewer.settings import Environment, Settings, get_settings
+from candleviewer.storage.repositories.audit_sqlalchemy import SqlAlchemyAuditRepository
+from candleviewer.storage.repositories.identity_sqlalchemy import SqlAlchemyIdentityProvider
 from candleviewer.storage.repositories.instruments_sqlalchemy import (
     SqlAlchemyInstrumentsRepository,
 )
@@ -174,7 +176,9 @@ def _decode_key(name: str, secret: Any) -> bytes | None:
     return key
 
 
-def build_auth_service(settings: Settings) -> AuthService:
+def build_auth_service(
+    settings: Settings, *, clock: Callable[[], datetime] | None = None
+) -> AuthService:
     """QA #1658: wire `AuthService` to Postgres when `storage_backend="real"`
     (no I/O at construction: the engine connects lazily). With the fake
     backend it stays the no-op scaffold so `create_app()` needs no database.
@@ -201,7 +205,7 @@ def build_auth_service(settings: Settings) -> AuthService:
     relational = SqlAlchemyRelationalRepository(settings.pg_dsn.get_secret_value(), "auth")
     return AuthService(
         SqlAlchemyUserRepository(
-            relational, _record_factory(UserRecord), clock=lambda: datetime.now(UTC)
+            relational, _record_factory(UserRecord), clock=clock or (lambda: datetime.now(UTC))
         ),
         pepper=settings.auth_pepper.get_secret_value(),
         mfa_repository=SqlAlchemyMfaRepository(
@@ -210,6 +214,29 @@ def build_auth_service(settings: Settings) -> AuthService:
         totp_encryption_key=totp_key,
         recovery_code_hmac_key=rc_key,
         session_repository=SqlAlchemySessionRepository(relational, _record_factory(SessionRecord)),
+        clock=clock,
+    )
+
+
+def build_identity_provider(settings: Settings) -> SqlAlchemyIdentityProvider | None:
+    """QA #1658: the SQL `User`/permissions read path for `/auth/session` and
+    the post-MFA `AuthenticatedResponse`; `None` (routes fail closed with 501)
+    on the fake backend."""
+    if settings.storage_backend != "real":
+        return None
+    return SqlAlchemyIdentityProvider(
+        SqlAlchemyRelationalRepository(settings.pg_dsn.get_secret_value(), "identity")
+    )
+
+
+def _build_audit(settings: Settings) -> AuditHandle:
+    """QA #1658 (C-2.9): the real hash-chained audit sink on the real backend."""
+    if settings.storage_backend != "real":
+        return build_audit_service()
+    return build_audit_service(
+        SqlAlchemyAuditRepository(
+            SqlAlchemyRelationalRepository(settings.pg_dsn.get_secret_value(), "audit")
+        )
     )
 
 
@@ -217,7 +244,9 @@ def _record_factory(model: Any) -> Callable[..., Any]:
     return lambda **fields: model.model_validate(fields)
 
 
-def build_app_context(settings: Settings | None = None) -> AppContext:
+def build_app_context(
+    settings: Settings | None = None, *, auth_clock: Callable[[], datetime] | None = None
+) -> AppContext:
     """Construct an `AppContext` with real scaffold modules, no I/O performed.
 
     Every field is a live instance of its module's scaffold `service.py` —
@@ -261,8 +290,8 @@ def build_app_context(settings: Settings | None = None) -> AppContext:
         rules=RulesService(),
         paper=PaperService(),
         risk=RiskService(),
-        auth=build_auth_service(resolved),
-        audit=build_audit_service(),
+        auth=build_auth_service(resolved, clock=auth_clock),
+        audit=_build_audit(resolved),
         journal=JournalService(),
         admin=AdminService(),
         alerts=AlertsService(),
@@ -332,7 +361,9 @@ def _hub_publisher(hub: RevocationHub) -> Callable[[str, str], Awaitable[None]]:
     return _publish
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None, *, auth_clock: Callable[[], datetime] | None = None
+) -> FastAPI:
     """Build the FastAPI application without touching Postgres/QuestDB/network.
 
     Per E02-T05 acceptance criterion 3: constructing the app with fakes-only
@@ -354,8 +385,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         title="CandleViewer API",
         version=resolved.version,
     )
-    ctx = build_app_context(resolved)
+    ctx = build_app_context(resolved, auth_clock=auth_clock)
     app.state.app_context = ctx
+    identity = build_identity_provider(resolved)
+    app.state.identity_provider = identity
     # E04-T02: outermost (added last) so every request - even a mesh rejection -
     # gets a correlation id and the X-Correlation-Id response header.
     app.add_middleware(
@@ -371,7 +404,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(
         make_health_router(resolved, ctx.metrics, mesh_read_only_gate=ctx.oms_read_only_gate)
     )
-    app.include_router(make_auth_router(ctx.auth, ctx.audit))
+    app.include_router(make_auth_router(ctx.auth, ctx.audit, identity=identity))
     # E09-S03: session routes; revocation is pushed to sockets via the hub
     # (4401). Identity provider is E09-T03, so refresh/session return 501 and
     # every route answers 503 until a session repository is wired.
@@ -381,6 +414,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         make_session_router(
             ctx.auth,
             ctx.audit,
+            identity=identity,
             publish_revocation=_hub_publisher(revocation_hub),
             allowed_origins=resolved.allowed_origin_set,
         )
