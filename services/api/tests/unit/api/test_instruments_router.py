@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import time
 
+import pytest
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
@@ -148,6 +149,7 @@ def test_invalid_symbol_is_400() -> None:
     assert _client(FakeReader(_snap())).get("/instruments/bad-sym").status_code == 400
 
 
+@pytest.mark.perf
 async def test_list_p95_under_50ms_from_snapshot() -> None:
     """Handler-level latency (the route coroutine awaited directly, so the
     number reflects snapshot filtering + serialisation, not TestClient's

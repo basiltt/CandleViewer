@@ -9,8 +9,15 @@ containing `gitSha`, `version` and `environment`.
 from __future__ import annotations
 
 import asyncio
+import builtins
+import importlib
+import socket
 import time
+from pathlib import Path
+from typing import Any, NoReturn
 
+import httpx
+import pytest
 from fastapi.testclient import TestClient
 
 from candleviewer.app import Supervisor, build_app_context, create_app
@@ -21,16 +28,44 @@ def _fake_settings() -> Settings:
     return Settings(environment=Environment.DEMO, git_sha="deadbeef", version="9.9.9")
 
 
-def test_create_app_is_fast_and_touches_no_io() -> None:
-    # Warm up module imports first (Python import machinery, not create_app()
-    # construction cost, dominates a genuinely cold first call in test runs).
+def test_create_app_touches_no_io(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Structural no-IO check (C-13.7): any socket/DB/HTTP/file access raises."""
+
+    def _boom(*_a: object, **_k: object) -> NoReturn:
+        raise AssertionError("create_app() performed I/O")
+
+    create_app(_fake_settings())  # warm imports before patching open()
+    monkeypatch.setattr(socket.socket, "connect", _boom)
+    monkeypatch.setattr(httpx.Client, "send", _boom)
+    monkeypatch.setattr(httpx.AsyncClient, "send", _boom)
+    for mod_name in ("asyncpg", "psycopg"):
+        try:
+            mod = importlib.import_module(mod_name)
+        except ImportError:
+            continue
+        monkeypatch.setattr(mod, "connect", _boom)
+
+    real_open = builtins.open
+    allowed = str(tmp_path)
+
+    def _guarded_open(file: Any, *args: Any, **kwargs: Any) -> Any:
+        if isinstance(file, int) or str(file).startswith(allowed):
+            return real_open(file, *args, **kwargs)
+        raise AssertionError(f"create_app() opened {file!r}")
+
+    monkeypatch.setattr(builtins, "open", _guarded_open)
+    assert create_app(_fake_settings()) is not None
+
+
+@pytest.mark.perf
+def test_create_app_under_200ms() -> None:
+    # Warm up module imports first (import machinery dominates a cold call).
     create_app(_fake_settings())
     started = time.perf_counter()
     app = create_app(_fake_settings())
     elapsed_ms = (time.perf_counter() - started) * 1000
     assert app is not None
-    # 06-performance-and-load-standard.md-adjacent budget from this ticket's
-    # own "Performance notes": create_app() cold construction <=200 ms.
+    # Ticket "Performance notes" budget (C-13.9): create_app() <=200 ms.
     assert elapsed_ms < 200
 
 

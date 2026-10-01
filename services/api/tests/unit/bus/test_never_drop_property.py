@@ -39,7 +39,11 @@ async def _run(n_events: int, stall_positions: set[int], maxsize: int) -> list[i
     maxsize=st.integers(min_value=1, max_value=8),
     data=st.data(),
 )
-@settings(max_examples=30, suppress_health_check=[HealthCheck.function_scoped_fixture])
+@settings(
+    max_examples=30,
+    deadline=None,
+    suppress_health_check=[HealthCheck.function_scoped_fixture],
+)
 def test_never_drop_stream_is_prefix_preserving_under_any_stall_pattern(
     n_events: int, maxsize: int, data: st.DataObject
 ) -> None:

@@ -144,6 +144,40 @@ async def test_unknown_user_indistinguishable_from_wrong_password() -> None:
     assert str(unknown_exc.value) == str(wrong_exc.value)
 
 
+class _RecordingHasher(Hasher):
+    def __init__(self) -> None:
+        super().__init__(pepper="test-pepper")
+        self.verify_calls = 0
+
+    async def verify(self, password_hash: str, password: str) -> bool:
+        self.verify_calls += 1
+        return await super().verify(password_hash, password)
+
+
+@pytest.mark.asyncio
+async def test_unknown_user_path_runs_exactly_one_hash_verification() -> None:
+    """Structural timing-equalisation check (C-13.7): the unknown-user path
+    does the same single Argon2 verify as a wrong password."""
+    repo = FakeUserRepository()
+    hasher = _RecordingHasher()
+    repo.add(make_user(password_hash=await hasher.hash(PASSWORD)))
+    service = LoginService(repo, hasher, per_ip_throttle=PerIpLoginThrottle(max_attempts=1000))
+
+    with pytest.raises(InvalidCredentials):
+        await service.login(
+            LoginRequest(identifier="no-such-user", password="x"), source_ip="10.1.0.1"
+        )
+    assert hasher.verify_calls == 1
+
+    hasher.verify_calls = 0
+    with pytest.raises(InvalidCredentials):
+        await service.login(
+            LoginRequest(identifier="basiltt", password="wrong"), source_ip="10.2.0.1"
+        )
+    assert hasher.verify_calls == 1
+
+
+@pytest.mark.perf
 @pytest.mark.asyncio
 async def test_unknown_user_timing_matches_wrong_password_within_tolerance() -> None:
     repo = FakeUserRepository()
