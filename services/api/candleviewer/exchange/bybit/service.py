@@ -19,6 +19,11 @@ from candleviewer.exchange.bybit.public_ws import (
 )
 from candleviewer.exchange.bybit.rest import BybitRestClient
 from candleviewer.exchange.bybit.ticker import parse_ticker_frame, ticker_topic
+from candleviewer.exchange.bybit.trades import (
+    parse_trade_frame,
+    recent_trades_fetcher,
+    trade_topic,
+)
 from candleviewer.observability.health import HealthReport, HealthStatus
 
 if TYPE_CHECKING:
@@ -36,6 +41,10 @@ class ExchangeBybitService:
     #: E08-S03: ticker topic naming + frame parser, injected into ingestion.
     ticker_topic = staticmethod(ticker_topic)
     parse_ticker_frame = staticmethod(parse_ticker_frame)
+    #: E08-S04: tape topic naming, frame parser and REST gap-backfill fetcher.
+    trade_topic = staticmethod(trade_topic)
+    parse_trade_frame = staticmethod(parse_trade_frame)
+    recent_trades_fetcher = staticmethod(recent_trades_fetcher)
 
     @staticmethod
     def public_socket_factory(

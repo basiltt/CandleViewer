@@ -84,3 +84,39 @@ ticker_writes_dropped_total = Counter(
     "ticker_writes_dropped_total",
     "Ticker rows dropped from the bounded write-behind queue (oldest first).",
 )
+
+# --- E08-S04: trade tape ----------------------------------------------------
+
+trade_duplicates_suppressed_total = Counter(
+    "trade_duplicates_suppressed_total",
+    "Trade prints suppressed because their trade id was already ingested.",
+    ["symbol"],
+)
+
+trade_gaps_total = Counter(
+    "trade_gaps_total",
+    "Tape gap windows recorded (reconnect), by whether backfill recovered them.",
+    ["symbol", "recovered"],
+)
+
+trade_backfill_rows_total = Counter(
+    "trade_backfill_rows_total",
+    "Rows returned by the REST recent-trade gap backfill, by result.",
+    ["result"],
+)
+
+trade_prints_rejected_total = Counter(
+    "trade_prints_rejected_total",
+    "Malformed/hostile trade frames rejected before the dedupe ring.",
+)
+
+questdb_write_queue_depth = Gauge(
+    "questdb_write_queue_depth",
+    "Rows waiting in a bounded QuestDB write-behind queue, by table.",
+    ["table"],
+)
+
+trade_writes_dropped_total = Counter(
+    "trade_writes_dropped_total",
+    "Trade rows dropped from the bounded write-behind queue (oldest first).",
+)
