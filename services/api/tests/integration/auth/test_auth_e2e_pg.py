@@ -228,10 +228,8 @@ async def test_audit_rows_for_login_failure_totp_failure_success_and_logout(
         "auth.session_revoked",
     } <= set(actions)
     created = next(x for x in by_user if x["action"] == "auth.session_created")
-    assert (
-        created["before_state"] is None
-        and created["after_state"]["session_id"] == created["session_id"]
-    )
+    assert created["before_state"] is None and created["session_id"] is not None
+    assert created["after_state"] == {"mfa_method": "totp", "mfa_satisfied": True}
     logout = next(x for x in by_user if x["action"] == "auth.logout")
     assert logout["actor_user_id"] == user_id and logout["reason"] == "logout"
     assert logout["outcome"] == "success" and logout["actor_ip"] == "127.0.0.1"

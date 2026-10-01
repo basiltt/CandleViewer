@@ -335,7 +335,7 @@ def make_auth_router(
                 actor_ip=_client_ip(request),
                 session_id=minted.session_id,
                 outcome=AuditOutcome.SUCCESS,
-                after_state={"session_id": str(minted.session_id)},
+                after_state={"mfa_method": "totp", "mfa_satisfied": True},
             )
         response = JSONResponse(
             status_code=200,
