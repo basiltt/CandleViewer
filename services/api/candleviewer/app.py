@@ -13,12 +13,15 @@ contracts and every later epic have a concrete injection point.
 
 from __future__ import annotations
 
+import time
+import uuid
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from functools import lru_cache
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 
 from candleviewer.accounts.service import AccountsService
 from candleviewer.admin.service import AdminService
@@ -37,13 +40,21 @@ from candleviewer.api import (
     make_log_level_router,
     make_market_router,
 )
+from candleviewer.api.contract_conformance import load_openapi_spec
+from candleviewer.api.deny_by_default import (
+    assert_app_routes_declared,
+    declared_operations,
+    make_deny_undeclared_dependency,
+)
 from candleviewer.api.sessions import make_session_router
+from candleviewer.api.users import SnapshotResolver, UserRoleStore, make_users_router
 from candleviewer.auth.models import (
     MfaChallengeRecord,
     MfaMethodRecord,
     SessionRecord,
     UserRecord,
 )
+from candleviewer.auth.scopes import PrincipalSnapshot
 from candleviewer.auth.service import AuthService
 from candleviewer.bars.service import BarsService
 from candleviewer.book.service import BookService
@@ -93,6 +104,8 @@ from candleviewer.storage.repositories.sessions_sqlalchemy import (
 )
 from candleviewer.storage.repositories.users_sqlalchemy import SqlAlchemyUserRepository
 from candleviewer.storage.service import StorageService
+from candleviewer.ws.gateway import Authenticate, make_ws_router
+from candleviewer.ws.permissions import ConnectionRegistry
 from candleviewer.ws.revocation import RevocationHub
 from candleviewer.ws.service import WsService
 
@@ -361,8 +374,43 @@ def _hub_publisher(hub: RevocationHub) -> Callable[[str, str], Awaitable[None]]:
     return _publish
 
 
+@lru_cache(maxsize=1)
+def _cached_spec() -> dict[str, Any]:
+    """The 500 KB contract parse costs ~2 s; parse once per process."""
+    return load_openapi_spec()
+
+
+async def _deny_all_snapshot(user_id: uuid.UUID) -> PrincipalSnapshot:
+    """Fail closed until the session/identity store (E09-S03) resolves real snapshots."""
+    return PrincipalSnapshot(user_id, frozenset(), frozenset())
+
+
+def _now_ms() -> int:
+    return int(time.time() * 1000)
+
+
+def _session_authenticator(ctx: AppContext) -> Authenticate:
+    """Opaque bearer token -> (session_id, user_id) via the session service;
+    raises (fail closed) while no session repository is wired."""
+
+    async def _authenticate(token: str) -> tuple[str, uuid.UUID]:
+        record = await ctx.auth.sessions.authenticate_access_token(token)
+        return str(record.id), record.user_id
+
+    return _authenticate
+
+
+SnapshotLoader = Callable[[uuid.UUID], Awaitable[PrincipalSnapshot]]
+
+
 def create_app(
-    settings: Settings | None = None, *, auth_clock: Callable[[], datetime] | None = None
+    settings: Settings | None = None,
+    *,
+    snapshot_loader: SnapshotLoader | None = None,
+    user_role_store: UserRoleStore | None = None,
+    principal_resolver: SnapshotResolver | None = None,
+    ws_authenticate: Authenticate | None = None,
+    auth_clock: Callable[[], datetime] | None = None,
 ) -> FastAPI:
     """Build the FastAPI application without touching Postgres/QuestDB/network.
 
@@ -381,9 +429,11 @@ def create_app(
     own ticket); wiring a real sink here is a one-line change once it lands.
     """
     resolved = settings or get_settings()
+    spec = _cached_spec()
     app = FastAPI(
         title="CandleViewer API",
         version=resolved.version,
+        dependencies=[Depends(make_deny_undeclared_dependency(declared_operations(spec)))],
     )
     ctx = build_app_context(resolved, auth_clock=auth_clock)
     app.state.app_context = ctx
@@ -419,6 +469,25 @@ def create_app(
             allowed_origins=resolved.allowed_origin_set,
         )
     )
+    # QA #1648 d1: live WS gateway. Role changes (`PUT /users/{id}/roles`)
+    # notify the registry, which pushes `permission_change` and revokes
+    # now-forbidden subscriptions. Snapshots fail closed (no permissions)
+    # until the identity store is injected.
+    ws_registry = ConnectionRegistry(snapshot_loader or _deny_all_snapshot, _now_ms)
+    app.state.ws_registry = ws_registry
+    app.include_router(
+        make_ws_router(
+            authenticate=ws_authenticate or _session_authenticator(ctx),
+            registry=ws_registry,
+            revocation_hub=revocation_hub,
+        )
+    )
+    # Audit emitter + notifier are mandatory; store/resolver `None` -> 501.
+    app.include_router(
+        make_users_router(
+            user_role_store, _LazyAuditEmitter(ctx.audit), principal_resolver, ws_registry
+        )
+    )
     # `principal_resolver` stays `None` here: session verification is E09-S03
     # scope (`auth/login_service.py`'s own docstring — "non-MFA session
     # issuance is E09-S03 scope"), not this router's. Every `/admin/audit*`
@@ -442,6 +511,8 @@ def create_app(
     # exchange REST client). Resolver `None` -> fail-closed `501` (see above).
     app.include_router(make_instruments_router(lambda: ctx.ingestion.instruments))
     app.add_middleware(CorrelationMiddleware)
+    # E09-T03 / #1648: a served route without an RBAC declaration fails the build.
+    assert_app_routes_declared(app, spec)
     return app
 
 
