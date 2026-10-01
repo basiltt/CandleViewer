@@ -53,3 +53,34 @@ instruments_catalogue_size = Gauge(
     "instruments_catalogue_size",
     "Number of symbols in the currently-served instrument catalogue snapshot.",
 )
+
+# --- E08-S03: live ticker stream -------------------------------------------
+
+ingest_events_total = Counter(
+    "ingest_events_total",
+    "Normalised market events ingested, by stream and symbol.",
+    ["stream", "symbol"],
+)
+
+ws_topic_staleness_seconds = Gauge(
+    "ws_topic_staleness_seconds",
+    "Seconds since the last message on an upstream topic.",
+    ["topic"],
+)
+
+ticker_merge_incomplete_total = Counter(
+    "ticker_merge_incomplete_total",
+    "Ticker deltas held because the merged state was not yet complete.",
+    ["symbol"],
+)
+
+ingest_lag_seconds = Gauge(
+    "ingest_lag_seconds",
+    "Latest ingest lag (local ingest time minus exchange event time), by stream.",
+    ["stream"],
+)
+
+ticker_writes_dropped_total = Counter(
+    "ticker_writes_dropped_total",
+    "Ticker rows dropped from the bounded write-behind queue (oldest first).",
+)

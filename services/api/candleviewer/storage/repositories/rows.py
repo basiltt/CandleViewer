@@ -64,6 +64,10 @@ class TickerRow:
     index_price: str
     funding_rate: str
     open_interest: str
+    bid1_price: str | None = None
+    bid1_size: str | None = None
+    ask1_price: str | None = None
+    ask1_size: str | None = None
 
 
 @dataclass(slots=True, frozen=True)

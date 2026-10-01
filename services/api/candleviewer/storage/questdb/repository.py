@@ -123,8 +123,9 @@ class QuestDbMarketDataRepository:
         await self._writer.write_rows("orderbook_snapshots", payload, "ts")
 
     async def write_tickers(self, rows: Sequence[TickerRow]) -> None:
-        payload = [
-            {
+        payload: list[dict[str, object]] = []
+        for row in rows:
+            item: dict[str, object] = {
                 "ts": row.ts_us,
                 "symbol": row.symbol,
                 "last_price": float(row.last_price),
@@ -133,8 +134,11 @@ class QuestDbMarketDataRepository:
                 "funding_rate": float(row.funding_rate),
                 "open_interest": float(row.open_interest),
             }
-            for row in rows
-        ]
+            for col in ("bid1_price", "bid1_size", "ask1_price", "ask1_size"):
+                val = getattr(row, col)
+                if val is not None:
+                    item[col] = float(val)
+            payload.append(item)
         await self._writer.write_rows("tickers", payload, "ts")
 
     async def write_bars(self, rows: Sequence[BarRow]) -> None:
