@@ -25,11 +25,12 @@ from candleviewer.observability.metrics_runtime import (
     run_loop_lag_sampler,
 )
 
-_UNIT_SUFFIX = re.compile(r"_(seconds|bytes|total|depth|state|in_use|remaining)$")
+#: `_ms`/`_mb`: frontend-pushed names fixed by 20-architecture.md §12.1 (E04-T06).
+_UNIT_SUFFIX = re.compile(r"_(seconds|bytes|total|depth|state|in_use|remaining|ms|mb)$")
 
 #: Golden: sha256 of the sorted (name, kind, labels, status, owner) catalogue.
 #: Changing it requires updating 20-architecture.md §12.1 and dashboards/alerts.
-GOLDEN_CATALOGUE_SHA256 = "9d6eea60b093a6866a82bc0bb563456ff203e8bc69429890f6ef22db36bef5b8"
+GOLDEN_CATALOGUE_SHA256 = "ec8f7e71f2241607525738d7f223a8cfba8c3855277f7c80090a9f456983fded"
 
 _KNOWN_EPICS = re.compile(r"^E\d{2}(-[A-Z]\d{2})?$")
 
@@ -93,6 +94,12 @@ def test_exposition_parses_and_every_live_metric_present_with_env_and_help() -> 
     r["book_resync_total"].labels("BTCUSDT", "gap").inc()
     r["engine_process_seconds"].labels("footprint").observe(0.001)
     r["bybit_rate_remaining"].labels("order").set(10)
+    r["ingest_stage_seconds"].labels("parse").observe(0.002)
+    r["telemetry_rejected_total"].labels("invalid").inc()
+    for fe in ("fe_frame_time_ms", "fe_ws_decode_ms"):
+        r[fe].labels("R-100").observe(1.0)
+    r["fe_dropped_frames_total"].labels("R-100").inc()
+    r["fe_gpu_memory_mb"].labels("R-100").set(64)
     text = generate_latest(m.registry).decode()
     families = {f.name: f for f in text_string_to_metric_families(text)}
     for spec in live_specs():

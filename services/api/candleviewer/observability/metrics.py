@@ -288,10 +288,19 @@ class Metrics:
             registry=self.registry,
         )
         self._series_gauge.labels(env).set_function(self.total_series)
+        self._process_collectors = False
         if process_collectors:
-            ProcessCollector(registry=self.registry)
-            GCCollector(registry=self.registry)
-            PlatformCollector(registry=self.registry)
+            self.add_process_collectors()
+
+    def add_process_collectors(self) -> None:
+        """Register process/GC/platform collectors once (reads `/proc`, so
+        `create_app()` defers this to the lifespan; E04-T06)."""
+        if self._process_collectors:
+            return
+        self._process_collectors = True
+        ProcessCollector(registry=self.registry)
+        GCCollector(registry=self.registry)
+        PlatformCollector(registry=self.registry)
 
     # -- factories -------------------------------------------------------
 
