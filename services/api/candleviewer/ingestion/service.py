@@ -60,6 +60,9 @@ class IngestionService:
         self.clock_offset_ms: Callable[[], int | None] = lambda: 0
         self.clock: ClockGuard | None = None
         self._closers: list[Callable[[], Awaitable[None]]] = []
+        #: E08-S03: ticker demand/merge/publish, attached with the public WS.
+        self.tickers: TickerStream | None = None
+        self._pump: asyncio.Task[None] | None = None
 
     def attach_latency(
         self, recorder: StageRecorder, clock_offset_ms: Callable[[], int | None] | None = None
@@ -84,9 +87,6 @@ class IngestionService:
     def _ws_clock_offset_ms(self) -> int | None:
         # Real exchange frames: unmeasured offset => exchange stage unavailable.
         return self.clock.offset_ms_or_none() if self.clock is not None else None
-        #: E08-S03: ticker demand/merge/publish, attached with the public WS.
-        self.tickers: TickerStream | None = None
-        self._pump: asyncio.Task[None] | None = None
 
     def offer_frame(self, frame: str) -> None:
         """Reader callback: never blocks the read loop (drop-newest on full)."""
