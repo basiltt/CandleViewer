@@ -11,6 +11,7 @@ The type aliases let `app` annotate its fields without a direct import edge.
 
 from __future__ import annotations
 
+from candleviewer.audit.repository import AuditRepository
 from candleviewer.audit.service import AuditService
 from candleviewer.secrets.service import SecretsService
 
@@ -23,6 +24,8 @@ def build_secrets_service() -> SecretsHandle:
     return SecretsService()
 
 
-def build_audit_service() -> AuditHandle:
-    """Construct the M19 scaffold. No I/O."""
-    return AuditService()
+def build_audit_service(repository: AuditRepository | None = None) -> AuditHandle:
+    """Construct M19. No I/O. With a repository (storage_backend=real, QA
+    #1658) `start()` wires the real WAL-backed `AuditWriter`; without one it
+    stays the scaffold."""
+    return AuditService(repository)

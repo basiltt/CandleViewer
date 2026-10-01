@@ -14,6 +14,8 @@ can persist the `mfa_challenges` row the two-legged login flow shares.
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from candleviewer.auth.envelope import LOCAL_KEY_REF, TotpEncryptor
@@ -47,8 +49,12 @@ class AuthService:
         totp_encryption_key: bytes | None = None,
         recovery_code_hmac_key: bytes | None = None,
         session_repository: SessionRepository | None = None,
+        clock: Callable[[], datetime] | None = None,
     ) -> None:
         self._started = False
+        #: One injected clock for login/MFA/session (QA #1658: the e2e test
+        #: fixes time so TOTP codes and session deadlines are deterministic).
+        self._clock = clock or _utc_now
         self._repository = repository
         self._pepper = pepper
         self._mfa_repository = mfa_repository
@@ -96,10 +102,15 @@ class AuthService:
         driver (ADR-0003 import-linter contract)."""
         if self._repository is not None:
             self._login = LoginService(
-                self._repository, Hasher(pepper=self._pepper), mfa_repository=self._mfa_repository
+                self._repository,
+                Hasher(pepper=self._pepper),
+                mfa_repository=self._mfa_repository,
+                clock=self._clock,
             )
         if self._session_repository is not None:
-            self._sessions = SessionService(self._session_repository, Hasher(pepper=self._pepper))
+            self._sessions = SessionService(
+                self._session_repository, Hasher(pepper=self._pepper), clock=self._clock
+            )
         if self._mfa_repository is not None:
             # `totp_encryption_key` stands in for the real M2 KEK wiring
             # (see `envelope.py`'s module docstring for why M18 cannot
@@ -138,6 +149,7 @@ class AuthService:
                 self._mfa_repository,
                 TotpEncryptor(key, key_ref=LOCAL_KEY_REF),
                 recovery_code_key=rc_key,
+                clock=self._clock,
             )
         self._started = True
 
@@ -153,6 +165,10 @@ class AuthService:
         status = HealthStatus.OK if self._started else HealthStatus.STOPPED
         detail = "" if self.is_active else "scaffold module — no repository wired"
         return HealthReport(module="auth", status=status, detail=detail)
+
+
+def _utc_now() -> datetime:
+    return datetime.now(UTC)
 
 
 def _process_local_key() -> bytes:

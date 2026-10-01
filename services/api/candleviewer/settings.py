@@ -120,6 +120,14 @@ class Settings(BaseSettings):
     # error the storage service surfaces via `StorageTierUnavailable`.
     storage_backend: Literal["fake", "real"] = "fake"
 
+    # QA #1658: auth key material (hex, 32 bytes each) resolved by the
+    # composition root until E27-T02's M2 KEK loader lands. Required when
+    # `storage_backend="real"` and environment is live (AuthService also
+    # refuses a live start without them).
+    auth_totp_key_hex: SecretStr | None = None
+    auth_recovery_hmac_key_hex: SecretStr | None = None
+    auth_pepper: SecretStr = SecretStr("")
+
     # E03-T10: bounds `pg_advisory_lock` acquisition in the boot-time
     # migration runner (`candleviewer.migrations.boot`). A deadlocked
     # migration in another process turns into a clear `CI-DEP-004` error at

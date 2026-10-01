@@ -564,7 +564,7 @@ CREATE TABLE mfa_challenges (
   user_id      uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   session_id   uuid REFERENCES sessions(id) ON DELETE CASCADE,
   kind         mfa_method_kind NOT NULL,
-  nonce        bytea NOT NULL,                 -- SECRET: anti-replay challenge
+  nonce        bytea NOT NULL,                 -- SECRET: UTF-8 hex SHA-256 of the bearer mfa_token (see note)
   purpose      text NOT NULL DEFAULT 'login',  -- login | step_up | enroll
   attempts     smallint NOT NULL DEFAULT 0,
   satisfied_at timestamptz,
@@ -585,6 +585,14 @@ CREATE TABLE recovery_codes (
 );
 CREATE INDEX ix_recovery_unused ON recovery_codes (user_id) WHERE used_at IS NULL;
 ```
+
+> **`mfa_challenges.nonce` usage (QA #1658, `storage/repositories/mfa_sqlalchemy.py`).** The column
+> holds `convert_to(sha256_hex(mfa_token), 'UTF8')`: the lower-case hex SHA-256 digest of the opaque
+> bearer `mfa_token` returned by `POST /auth/login`, stored as its UTF-8 bytes. The raw token is
+> never persisted; lookups hash the presented token and compare by equality. C-5.9 class **S**
+> (a token-equivalent digest), 24 h TTL — see the classification table. No rename: `0001` is
+> merged (C-5.4) and the semantics fit "anti-replay challenge".
+
 
 Policy: 10 single-use recovery codes per enrollment; regeneration hard-deletes unused codes and writes `auth.recovery_codes_regenerated`. Expired `mfa_challenges` are deleted nightly (retention 24 h).
 
@@ -3226,7 +3234,7 @@ Classification levels: **P0 public/internal** (no restriction), **P1 personal** 
 | `sessions`                                             | `ip`, `user_agent`, `tailscale_node`    | P2         | plaintext                                | Purged with the session row (30 d after expiry)                                                                                                 |
 | `mfa_methods`                                          | `secret_enc`                            | S          | AES-256-GCM (envelope)                   | Decrypted only in the MFA verifier; never exported                                                                                              |
 | `mfa_methods`                                          | `public_key`, `credential_id`           | P1         | plaintext                                | Not secret, but identifying                                                                                                                     |
-| `mfa_challenges`                                       | `nonce`                                 | S          | random bytes                             | 24 h TTL                                                                                                                                        |
+| `mfa_challenges`                                       | `nonce`                                 | S          | SHA-256 hex digest of `mfa_token` (UTF-8 bytes) | 24 h TTL; raw token never stored                                                                                                                                        |
 | `recovery_codes`                                       | `code_hash`                             | S          | SHA-256                                  | Plaintext shown once at generation                                                                                                              |
 | `api_keys`                                             | `key_id_enc`, `secret_enc`              | S          | AES-256-GCM, DEK wrapped by external KEK | Only the credential broker may decrypt; every decryption writes `api_key.reveal_attempt`-class telemetry; **no API endpoint ever returns them** |
 | `api_keys`                                             | `enc_nonce`, `dek_ref`                  | S          | —                                        | Useless alone but treated as secret                                                                                                             |

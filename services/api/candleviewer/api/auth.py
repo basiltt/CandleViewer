@@ -54,11 +54,18 @@ is correct for CandleViewer's binding model (`127.0.0.1`/Tailscale — see
 
 from __future__ import annotations
 
-from typing import Protocol
+import uuid
+from typing import Any, Protocol
 
 from fastapi import APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 
+from candleviewer.api.sessions import (
+    REFRESH_EXPIRES_IN_S,
+    IdentityProvider,
+    _set_refresh_cookie,
+    _tokens,
+)
 from candleviewer.audit.models import AuditOutcome, Severity
 from candleviewer.auth.errors import (
     AccountDisabled,
@@ -81,6 +88,7 @@ from candleviewer.auth.models import (
     MfaRecoveryRequest,
     MfaVerifiedResult,
     MfaVerifyRequest,
+    MintedSession,
 )
 
 
@@ -108,9 +116,21 @@ class MfaServiceLike(Protocol):
     async def recover(self, mfa_token: str, recovery_code: str) -> MfaVerifiedResult: ...
 
 
+class SessionMinterLike(Protocol):
+    async def mint(
+        self, user_id: str, *, ip: str | None = None, user_agent: str | None = None
+    ) -> MintedSession: ...
+
+
 class AuthServiceLike(Protocol):
     @property
     def is_active(self) -> bool: ...
+
+    @property
+    def sessions_is_active(self) -> bool: ...
+
+    @property
+    def sessions(self) -> SessionMinterLike: ...
 
     @property
     def login(self) -> LoginServiceLike: ...
@@ -134,6 +154,9 @@ class AuditWriterLike(Protocol):
         actor_ip: str | None = None,
         outcome: AuditOutcome = AuditOutcome.SUCCESS,
         severity: Severity = Severity.INFO,
+        actor_user_id: str | uuid.UUID | None = None,
+        session_id: str | uuid.UUID | None = None,
+        after_state: dict[str, Any] | None = None,
     ) -> None: ...
 
 
@@ -150,7 +173,7 @@ async def _audit(
     action: str,
     *,
     actor_label: str,
-    actor_ip: str,
+    actor_ip: str | None,
     outcome: AuditOutcome,
     severity: Severity = Severity.INFO,
 ) -> None:
@@ -169,6 +192,12 @@ def _problem(status_code: int, title: str, detail: str) -> JSONResponse:
     )
 
 
+def _client_ip(request: Request) -> str | None:
+    """Peer address for `audit_log.actor_ip` (an `inet` column): `None`, never
+    a placeholder string, when unknown (QA #1658: "unknown" broke the real sink)."""
+    return request.client.host if request.client is not None else None
+
+
 def _redact_identifier(identifier: str) -> str:
     """Best-effort redaction for the audit `actor_label` on a *failed*
     login (C-12.6: "never log ... into an audit record" anything that
@@ -183,7 +212,10 @@ def _redact_identifier(identifier: str) -> str:
 
 
 def make_auth_router(
-    auth_service: AuthServiceLike, audit_service: AuditServiceLike | None = None
+    auth_service: AuthServiceLike,
+    audit_service: AuditServiceLike | None = None,
+    *,
+    identity: IdentityProvider | None = None,
 ) -> APIRouter:
     """Bind `/auth/login` to a concrete `AuthService` instance."""
     router = APIRouter(tags=["auth"])
@@ -194,6 +226,7 @@ def make_auth_router(
             return _problem(503, "Service unavailable", "auth backend is not wired")
 
         source_ip = request.client.host if request.client is not None else "unknown"
+        audit_ip = _client_ip(request)
         try:
             result = await auth_service.login.login(body, source_ip=source_ip)
         except InvalidCredentials as exc:
@@ -201,7 +234,7 @@ def make_auth_router(
                 audit_service,
                 "auth.login_failed",
                 actor_label=_redact_identifier(body.identifier),
-                actor_ip=source_ip,
+                actor_ip=audit_ip,
                 outcome=AuditOutcome.FAILURE,
             )
             return _problem(401, "Invalid credentials", str(exc))
@@ -210,7 +243,7 @@ def make_auth_router(
                 audit_service,
                 "auth.login_failed",
                 actor_label=_redact_identifier(body.identifier),
-                actor_ip=source_ip,
+                actor_ip=audit_ip,
                 outcome=AuditOutcome.DENIED,
             )
             return _problem(403, "Account disabled", str(exc))
@@ -219,7 +252,7 @@ def make_auth_router(
                 audit_service,
                 "auth.account_locked",
                 actor_label=_redact_identifier(body.identifier),
-                actor_ip=source_ip,
+                actor_ip=audit_ip,
                 outcome=AuditOutcome.DENIED,
                 severity=Severity.WARNING,
             )
@@ -239,7 +272,7 @@ def make_auth_router(
             audit_service,
             "auth.login",
             actor_label=body.identifier,
-            actor_ip=source_ip,
+            actor_ip=audit_ip,
             outcome=AuditOutcome.SUCCESS,
         )
         return JSONResponse(
@@ -253,7 +286,7 @@ def make_auth_router(
         )
 
     @router.post("/auth/mfa/verify")
-    async def mfa_verify(body: MfaVerifyRequest) -> JSONResponse:
+    async def mfa_verify(request: Request, body: MfaVerifyRequest) -> JSONResponse:
         if not auth_service.mfa_is_active:
             return _problem(503, "Service unavailable", "mfa backend is not wired")
         try:
@@ -263,7 +296,7 @@ def make_auth_router(
                 audit_service,
                 "auth.mfa_failed",
                 actor_label="(mfa_token)",
-                actor_ip="unknown",
+                actor_ip=_client_ip(request),
                 outcome=AuditOutcome.FAILURE,
             )
             # PR #1618 review finding 4 (low): `str(exc)` used to leak which
@@ -282,13 +315,41 @@ def make_auth_router(
             audit_service,
             "auth.mfa_verified",
             actor_label=str(result.user_id),
-            actor_ip="unknown",
+            actor_ip=_client_ip(request),
             outcome=AuditOutcome.SUCCESS,
         )
-        return JSONResponse(status_code=200, content={"status": "authenticated"})
+        if identity is None or not auth_service.sessions_is_active:
+            # No session backend wired (fake/CI default): E09-S02 behaviour.
+            return JSONResponse(status_code=200, content={"status": "authenticated"})
+        # QA #1658: second factor satisfied -> mint the session (ADR-0020),
+        # set the `cv_refresh` cookie and return `AuthenticatedResponse`.
+        source_ip = request.client.host if request.client is not None else None
+        minted = await auth_service.sessions.mint(
+            str(result.user_id), ip=source_ip, user_agent=request.headers.get("user-agent")
+        )
+        if audit_service is not None and audit_service.is_active:
+            await audit_service.writer.emit(
+                "auth.session_created",
+                actor_label=str(result.user_id),
+                actor_user_id=result.user_id,
+                actor_ip=_client_ip(request),
+                session_id=minted.session_id,
+                outcome=AuditOutcome.SUCCESS,
+                after_state={"mfa_method": "totp", "mfa_satisfied": True},
+            )
+        response = JSONResponse(
+            status_code=200,
+            content={
+                "status": "authenticated",
+                "tokens": _tokens(minted, include_refresh=False),
+                "user": await identity.user(str(result.user_id)),
+            },
+        )
+        _set_refresh_cookie(response, minted.refresh_token, max_age=REFRESH_EXPIRES_IN_S)
+        return response
 
     @router.post("/auth/mfa/recovery")
-    async def mfa_recovery(body: MfaRecoveryRequest) -> JSONResponse:
+    async def mfa_recovery(request: Request, body: MfaRecoveryRequest) -> JSONResponse:
         if not auth_service.mfa_is_active:
             return _problem(503, "Service unavailable", "mfa backend is not wired")
         try:
@@ -298,7 +359,7 @@ def make_auth_router(
                 audit_service,
                 "auth.recovery_codes_exhausted",
                 actor_label="(mfa_token)",
-                actor_ip="unknown",
+                actor_ip=_client_ip(request),
                 outcome=AuditOutcome.DENIED,
                 severity=Severity.ERROR,
             )
@@ -308,7 +369,7 @@ def make_auth_router(
                 audit_service,
                 "auth.mfa_failed",
                 actor_label="(mfa_token)",
-                actor_ip="unknown",
+                actor_ip=_client_ip(request),
                 outcome=AuditOutcome.FAILURE,
             )
             # PR #1618 review finding 4 (low): same rationale as
@@ -325,7 +386,7 @@ def make_auth_router(
             audit_service,
             "auth.recovery_code_used",
             actor_label=str(result.user_id),
-            actor_ip="unknown",
+            actor_ip=_client_ip(request),
             outcome=AuditOutcome.SUCCESS,
             severity=Severity.WARNING,
         )

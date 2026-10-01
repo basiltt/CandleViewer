@@ -1472,7 +1472,7 @@ An exception is a time-boxed, owner-approved deviation from a MUST requirement o
 
 | Exception id | Requirement/finding | Reason | Compensating control | Approved by | Expires | Tracking ticket |
 |---|---|---|---|---|---|---|
-| *(none open)* | — | — | — | — | — | — |
+| EX-01 | C-12 / SR TOTP-for-every-user: `scripts/seed_fixture_user.py --allow-no-mfa` seeds a fixture owner with `mfa_required=false` | ZAP authenticated scan (#1639) and E2E cannot complete a TOTP step | Opt-in flag only (default seeds `mfa_required=true`); refused unless `CV_ENVIRONMENT=testnet`; writes `users.create`/`roles.grant` audit rows; disposable CI databases only | **Pending** @basiltt + security reviewer (requested by #1658) | 2026-12-31 | #1658 (follow-up: ZAP TOTP step, #1639) |
 
 ---
 
