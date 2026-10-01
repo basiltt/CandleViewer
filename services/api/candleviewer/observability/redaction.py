@@ -62,12 +62,18 @@ _MAX_DEPTH: Final[int] = 6
 _JWT_RE = r"[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}"
 _BYBIT_KEY_RE = r"\b[A-Za-z0-9]{18,36}\b"
 _TOTP_RE = r"\b\d{6}\b"
-_VALUE_PATTERN = re.compile(f"(?P<jwt>{_JWT_RE})|(?P<bybit>{_BYBIT_KEY_RE})|(?P<totp>{_TOTP_RE})")
+#: `secrets.token_urlsafe(32)` invite token (43 chars; sits in URL path `/invites/<token>`; C-12.6).
+_INVITE_SHAPE_RE = r"(?<![A-Za-z0-9_-])[A-Za-z0-9_-]{43}(?![A-Za-z0-9_-])"
+_VALUE_PATTERN = re.compile(
+    f"(?P<jwt>{_JWT_RE})|(?P<bybit>{_BYBIT_KEY_RE})|(?P<invite>{_INVITE_SHAPE_RE})"
+    f"|(?P<totp>{_TOTP_RE})"
+)
 
 _REASON_BY_GROUP: Final[dict[str, str]] = {
     "jwt": "jwt-shape",
     "bybit": "key-shape",
     "totp": "totp-shape",
+    "invite": "invite-token-shape",
 }
 
 

@@ -156,3 +156,13 @@ def test_third_party_style_record_dict_is_redacted() -> None:
     record = {"url": "https://api.bybit.com/x", "headers": {"Authorization": "Bearer CANARY-18"}}
     out = _redact_mapping(record)
     assert "CANARY-18" not in str(out)
+
+
+def test_invite_token_in_url_path_is_redacted() -> None:
+    import secrets
+
+    from candleviewer.observability.redaction import _redact_str_value
+
+    token = secrets.token_urlsafe(32)
+    out = _redact_str_value(f"POST /invites/{token}/confirm 200")
+    assert token not in out

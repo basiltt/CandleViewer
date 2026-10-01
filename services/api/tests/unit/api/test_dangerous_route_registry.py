@@ -71,6 +71,8 @@ def test_future_unregistered_dangerous_route_is_flagged(method: str, path: str) 
     [
         ("PUT", "/users/u/roles", "users"),
         ("POST", "/users", "users"),
+        ("POST", "/users/u/invite", "users"),
+        ("DELETE", "/users/u/invite", "users"),
         ("POST", "/users/u/mfa/reset", "users"),
         ("POST", "/exchange-accounts/a/keys", "keys"),
         ("POST", "/exchange-accounts/a/keys/k/rotate", "keys"),
@@ -88,3 +90,22 @@ def test_safe_reads_are_not_gated() -> None:
     assert dangerous_action_class("GET", "/users/u/mfa/reset-preview") is None
     assert dangerous_action_class("GET", "/exchange-accounts/a/keys") is None
     assert len(DANGEROUS_ROUTES) >= 7
+
+
+def test_invites_router_write_routes_are_gated() -> None:
+    """The default create_app() does not mount the invite router, so build it
+    directly and assert every owner write route is registered (review finding)."""
+    from candleviewer.api.invites import make_invites_router
+
+    class _Auth:  # route registration only; never called
+        invites_is_active = False
+
+    router = make_invites_router(_Auth(), object(), lambda *_a, **_k: None)  # type: ignore[arg-type]  # registration-only stub
+    missing = [
+        (m, r.path)
+        for r in router.routes
+        if isinstance(r, APIRoute) and DANGEROUS_PATH_PATTERN.match(r.path)
+        for m in r.methods & _WRITE
+        if _ungated(m, r.path)
+    ]
+    assert missing == []
