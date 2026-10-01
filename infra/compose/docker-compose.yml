@@ -136,6 +136,10 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       - >-
+        for v in "$${CV_ALERT_QUIET_START}" "$${CV_ALERT_QUIET_END}"; do
+        echo "$$v" | grep -Eq '^([01][0-9]|2[0-3]):[0-5][0-9]$$' || { echo "invalid quiet-hours time: $$v (HH:MM)" >&2; exit 1; };
+        done &&
+        [ "$$(echo "$${CV_ALERT_QUIET_START}" | tr -d :)" -gt "$$(echo "$${CV_ALERT_QUIET_END}" | tr -d :)" ] || { echo "CV_ALERT_QUIET_START must be later than CV_ALERT_QUIET_END (window wraps midnight)" >&2; exit 1; } &&
         sed -e "s/\"22:00\"/\"$${CV_ALERT_QUIET_START}\"/" -e "s/\"07:00\"/\"$${CV_ALERT_QUIET_END}\"/"
         /etc/alertmanager/alertmanager.yml > /tmp/alertmanager.yml &&
         exec /bin/alertmanager --config.file=/tmp/alertmanager.yml --storage.path=/alertmanager
