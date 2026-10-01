@@ -9,8 +9,11 @@ the statechart records and this synchronous code enforces: the check in
 migration 0009) - the brief's "stored on the session row keyed by action
 class with its own expiry". Never a token claim, so a client cannot forge or
 replay it on another session; it survives a process restart and dies with
-the session (revoked rows are never updated and carry no elevation). Audit
-emission is the router's job (`auth` may not import `audit`).
+the session (revoked rows are never updated and carry no elevation).
+
+After each enforcement decision is persisted, the matching B16 event is sent
+to the session's chart (`SessionChart`); the chart's audit actions write the
+step-up audit records (`auth` itself may not import `audit`).
 """
 
 from __future__ import annotations
@@ -35,6 +38,7 @@ from candleviewer.auth.metrics import (
 )
 from candleviewer.auth.mfa_repository import MfaRepository
 from candleviewer.auth.models import SessionRecord
+from candleviewer.auth.session_chart import SessionChart, to_us
 from candleviewer.auth.session_repository import SessionRepository
 from candleviewer.auth.totp import verify_code
 
@@ -123,11 +127,33 @@ class StepUpService:
         encryptor: Decrypter,
         *,
         clock: Clock = _utc_now,
+        chart: SessionChart | None = None,
     ) -> None:
+        self._chart = chart if chart is not None else SessionChart()
         self._mfa = mfa_repository
         self._sessions = session_repository
         self._encryptor = encryptor
         self._clock = clock
+
+    @property
+    def chart(self) -> SessionChart:
+        return self._chart
+
+    async def _record(
+        self, record: SessionRecord, now: datetime, event: str, **payload: object
+    ) -> None:
+        """Record *event* on B16 after enforcement; first closes a grace
+        window the row says has lapsed (`ELEVATION_DEADLINE`)."""
+        sid = str(record.id)
+        live = any(k in ACTION_CLASSES and v > now for k, v in record.step_up_elevations.items())
+        await self._chart.record(record, now, "REQUEST", replay=True)  # ensure built
+        if self._chart.in_state(sid, "elevated") and not live:
+            await self._chart.record(record, now, "ELEVATION_DEADLINE")
+        if event != "REQUEST":
+            await self._chart.record(record, now, event, **payload)
+
+    async def stop(self) -> None:
+        await self._chart.stop()
 
     async def _live(self, session_id: str) -> SessionRecord | None:
         record = await self._sessions.find_by_id(session_id)
@@ -155,11 +181,15 @@ class StepUpService:
         record = await self._live(session_id)
         if record is None or record.readonly_until is None:
             return
-        if self._clock() < record.readonly_until:
+        now = self._clock()
+        if now < record.readonly_until:
             raise SessionReadOnly(record.readonly_until)
         await self._save(
             session_id, elevations=dict(record.step_up_elevations), failures=0, readonly_until=None
         )
+        await self._chart.record(record, now, "REQUEST", replay=True)
+        if self._chart.in_state(str(record.id), "readonly_downgrade"):
+            await self._chart.record(record, now, "READONLY_EXPIRED")
 
     # -- step-up -----------------------------------------------------------
 
@@ -183,9 +213,15 @@ class StepUpService:
                 await self._save(
                     session_id, elevations={}, failures=FAILURE_CAP, readonly_until=until
                 )
+                await self._record(
+                    record, now, "STEP_UP_FAILED", action_class=action_class, now_us=to_us(now)
+                )
                 raise SessionReadOnly(until)
             await self._save(
                 session_id, elevations=elevations, failures=failures, readonly_until=None
+            )
+            await self._record(
+                record, now, "STEP_UP_FAILED", action_class=action_class, now_us=to_us(now)
             )
             raise StepUpCodeInvalid(FAILURE_CAP - failures)
         until = now + GRACE_WINDOW
@@ -195,6 +231,13 @@ class StepUpService:
         elevations = {k: v for k, v in elevations.items() if not k.startswith(_PENDING)}
         elevations[f"once:{action_class}" if single_use else action_class] = until
         await self._save(session_id, elevations=elevations, failures=0, readonly_until=None)
+        await self._record(
+            record,
+            now,
+            "STEP_UP_OK",
+            action_class=action_class,
+            elevated_until_us=to_us(until),
+        )
         auth_step_up_total.labels(action_class=action_class).inc()
         return StepUpGrant(action_class, until, single_use=single_use)
 
@@ -217,6 +260,10 @@ class StepUpService:
             elevations=elevations,
             failures=record.step_up_failures,
             readonly_until=record.readonly_until,
+        )
+        # Challenge issued (the 403 is decided): B16 audits `step_up_required`.
+        await self._record(
+            record, now, "ACTION_REQUEST", action_class=action_class, now_us=to_us(now)
         )
 
     async def pending_action_class(self, session_id: str) -> str | None:
@@ -279,6 +326,12 @@ class StepUpService:
             raise StepUpRequired(action_class)
         if await self.remaining_grace(session_id, action_class) is None:
             raise StepUpRequired(action_class)
+        record = await self._live(session_id)
+        if record is not None:  # allowed under grace: B16 audits `grace_used`
+            now = self._clock()
+            await self._record(
+                record, now, "ACTION_REQUEST", action_class=action_class, now_us=to_us(now)
+            )
 
     # -- owner TOTP reset ----------------------------------------------------
 
@@ -315,5 +368,7 @@ class StepUpService:
         revoked = await self._sessions.revoke_all_for_user(
             target_user_id, reason="mfa_reset_by_owner", now=now
         )
+        for gone in revoked:  # revoked by the row update above; B16 records it
+            await self._chart.revoke(gone, now, "mfa_reset_by_owner")
         auth_mfa_resets_total.inc()
         return ResetResult(uuid.UUID(target_user_id), len(methods), len(revoked))

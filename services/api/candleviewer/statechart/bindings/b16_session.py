@@ -18,10 +18,87 @@ an invoked async operation.
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from typing import Any
+from typing import Any, Protocol
 
 from candleviewer.statechart.bindings import register_binding_module
 from candleviewer.statechart.config import register_event_schemas
+
+
+class AuditSink(Protocol):
+    """The M19 audit emitter, injected by the composition root (`statechart`
+    and `auth` may not import `audit`; C-3.3). Same `emit` shape as
+    `AuditWriter.emit`."""
+
+    async def emit(self, action: str, **kwargs: Any) -> None: ...
+
+
+class B16AuditSinkMissingError(RuntimeError):
+    """An audit action ran with no sink wired: fail loud (C-2.9), never skip."""
+
+
+_SINK: list[AuditSink] = []
+
+
+def set_audit_sink(sink: AuditSink | None) -> None:
+    """Install (or clear, with `None`) the process-wide B16 audit sink."""
+    _SINK.clear()
+    if sink is not None:
+        _SINK.append(sink)
+
+
+def _identity(context: dict[str, Any]) -> tuple[str | None, str | None]:
+    inp = context.get("input")
+    src = inp if isinstance(inp, dict) else context
+    sid, uid = src.get("session_id"), src.get("user_id")
+    return (None if sid is None else str(sid)), (None if uid is None else str(uid))
+
+
+def elevation_view(context: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "elevated_classes": sorted((context.get("elevated_classes") or {}).keys()),
+        "step_up_failures": int(context.get("step_up_failures", 0) or 0),
+        "readonly_until_us": context.get("readonly_until_us"),
+        "revoke_reason": context.get("revoke_reason"),
+    }
+
+
+async def _emit(
+    context: dict[str, Any],
+    event: Any,
+    action: str,
+    *,
+    outcome: str = "success",
+    severity: str = "info",
+    reason: str | None = None,
+) -> None:
+    """Write one audit record for this transition (C-2.9, C-12.8): actor,
+    session, before/after elevation state. `replay=True` events (chart
+    hydration from the persisted `sessions` row) were audited when they
+    first happened and are not re-recorded."""
+    payload = _payload(event)
+    if payload.get("replay"):
+        return
+    if not _SINK:
+        raise B16AuditSinkMissingError(f"B16 {action}: no audit sink wired")
+    sid, uid = _identity(context)
+    before = payload.get("before")
+    await _SINK[0].emit(
+        action,
+        actor_label=uid or "system",
+        actor_user_id=uid,
+        session_id=sid,
+        outcome=outcome,
+        severity=severity,
+        reason=reason,
+        before_state=before if isinstance(before, dict) else None,
+        after_state=elevation_view(context),
+    )
+
+
+def _cls(event: Any) -> str | None:
+    value = _payload(event).get("action_class")
+    return value if isinstance(value, str) else None
+
 
 #: Ticket "Technical notes" / catalogue B16.4: five failed MFA attempts on
 #: one session's `pending_mfa` leg locks it (mirrors `MfaService`'s own
@@ -64,12 +141,8 @@ async def bump_mfa_attempts(
 async def audit_mfa_failed(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
-    """Audit emission is the caller's responsibility in every other M18
-    module (`forbidden-M18`: `auth`/`statechart` may not import `audit`
-    directly); this action is a no-op placeholder the audit plugin
-    (`CvAuditPlugin`, E50-T60) observes via the interpreter's own action
-    trace rather than a direct call out of this binding."""
-    return None
+    """`auth.mfa_failed` through the injected sink (no `audit` import)."""
+    await _emit(context, event, "auth.mfa_failed", outcome="failure", severity="warning")
 
 
 async def set_revoke_locked(
@@ -123,13 +196,20 @@ async def stamp_idle_deadline(
 async def audit_login(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
-    return None
+    await _emit(context, event, "auth.login")
 
 
 async def audit_session_revoked(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
-    return None
+    reason = _payload(event).get("reason") or context.get("revoke_reason")
+    await _emit(
+        context,
+        event,
+        "auth.session_revoked",
+        severity="warning",
+        reason=None if reason is None else str(reason),
+    )
 
 
 async def broadcast_revocation(
@@ -162,13 +242,21 @@ async def stamp_elevated_until(
 async def audit_step_up(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
-    return None
+    await _emit(context, event, "auth.step_up_granted", reason=_cls(event))
 
 
 async def audit_step_up_failed(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
-    return None
+    remaining = max(STEP_UP_FAILURE_CAP - int(context.get("step_up_failures", 0) or 0), 0)
+    await _emit(
+        context,
+        event,
+        "auth.step_up_failed",
+        outcome="failure",
+        severity="error",
+        reason=f"{_cls(event)}:remaining={remaining}",
+    )
 
 
 async def clear_elevated(
@@ -242,19 +330,33 @@ async def clear_step_up_failures(
 async def audit_step_up_required(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
-    return None
+    await _emit(
+        context,
+        event,
+        "auth.step_up_required",
+        outcome="denied",
+        severity="warning",
+        reason=_cls(event),
+    )
 
 
 async def audit_grace_used(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
-    return None
+    await _emit(context, event, "auth.step_up_grace_used", reason=_cls(event))
 
 
 async def audit_readonly_downgrade(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
-    return None
+    await _emit(
+        context,
+        event,
+        "auth.session_readonly_downgrade",
+        outcome="denied",
+        severity="error",
+        reason=_cls(event),
+    )
 
 
 ACTIONS: dict[str, Callable[..., Awaitable[None]]] = {

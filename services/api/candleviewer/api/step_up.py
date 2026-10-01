@@ -21,7 +21,7 @@ from typing import Annotated, Any, Protocol
 from fastapi import APIRouter, Path, Request
 from fastapi.responses import JSONResponse, Response
 
-from candleviewer.audit.models import AuditOutcome, Severity
+from candleviewer.audit.models import Severity
 from candleviewer.auth.errors import (
     AuthError,
     SessionReadOnly,
@@ -56,6 +56,10 @@ class _AuthLike(Protocol):
 
     @property
     def sessions_is_active(self) -> bool: ...
+
+
+class _UserLookup(Protocol):
+    async def get_roles(self, user_id: uuid.UUID) -> frozenset[str] | None: ...
 
 
 class _Resolver(Protocol):
@@ -185,18 +189,9 @@ def make_read_only_guard(
                     action_class = dangerous_action_class(request.method, request.url.path)
                     if action_class is not None:
                         # E09-T03 decision point: dangerous route, no elevation -> 403.
+                        # `auth.step_up_required` is written by B16 (`ACTION_REQUEST`).
                         denied = await require_elevation_for(auth, str(record.id), action_class)
                         if denied is not None:
-                            if emitter is not None:
-                                await emitter.emit(
-                                    "auth.step_up_required",
-                                    actor_label=str(record.user_id),
-                                    actor_user_id=record.user_id,
-                                    session_id=record.id,
-                                    outcome=AuditOutcome.DENIED,
-                                    severity=Severity.WARNING,
-                                    reason=action_class,
-                                )
                             return denied
                 except SessionReadOnly as exc:
                     return readonly_problem(exc)
@@ -213,6 +208,7 @@ def make_step_up_router(
     *,
     principal_resolver: _Resolver | None = None,
     positions: PositionStateProvider | None = None,
+    users: _UserLookup | None = None,
 ) -> APIRouter:
     if emitter is None:
         raise TypeError("make_step_up_router: audit emitter is required")
@@ -277,14 +273,9 @@ def make_step_up_router(
                 "Bad request",
                 f"action_class must be one of {sorted(ACTION_CLASSES)}",
             )
+        # Step-up granted / failed / read-only downgrade are audited by the B16
+        # chart's actions (`StepUpService` records each decision on it).
         except StepUpCodeInvalid as exc:
-            await _audit(
-                "auth.step_up_failed",
-                record,
-                outcome=AuditOutcome.FAILURE,
-                severity=Severity.ERROR,
-                reason=f"{action_class}:remaining={exc.failures_remaining}",
-            )
             return _problem(
                 401,
                 "mfa_invalid",
@@ -293,23 +284,7 @@ def make_step_up_router(
                 failures_remaining=exc.failures_remaining,
             )
         except SessionReadOnly as exc:
-            # Third strike: the failing attempt itself is audited, then the downgrade.
-            await _audit(
-                "auth.step_up_failed",
-                record,
-                outcome=AuditOutcome.FAILURE,
-                severity=Severity.ERROR,
-                reason=f"{action_class}:remaining=0",
-            )
-            await _audit(
-                "auth.session_readonly_downgrade",
-                record,
-                outcome=AuditOutcome.DENIED,
-                severity=Severity.ERROR,
-                reason=action_class,
-            )
             return readonly_problem(exc)
-        await _audit("auth.step_up_granted", record, reason=action_class)
         return JSONResponse(
             status_code=200,
             content={
@@ -321,6 +296,14 @@ def make_step_up_router(
                 ),
             },
         )
+
+    async def _unknown_user(user_id: uuid.UUID) -> JSONResponse | None:
+        """404 for a target that does not exist (never a 200 no-op reset)."""
+        if users is None:
+            return _problem(501, "not_implemented", "Not implemented", "no user store")
+        if await users.get_roles(user_id) is None:
+            return _problem(404, "not_found", "Not found", "user not found")
+        return None
 
     async def _owner(request: Request, record: SessionRecord) -> JSONResponse | None:
         if principal_resolver is None:
@@ -352,6 +335,9 @@ def make_step_up_router(
         denied = await _owner(request, got)
         if denied is not None:
             return denied
+        missing = await _unknown_user(user_id)
+        if missing is not None:
+            return missing
         if positions is None:
             return _problem(501, "not_implemented", "Not implemented", "no position provider")
         preview = await auth.step_up.preview_reset(str(user_id), positions)
@@ -377,17 +363,11 @@ def make_step_up_router(
         denied = await _owner(request, record)
         if denied is not None:
             return denied
+        missing = await _unknown_user(user_id)
+        if missing is not None:
+            return missing
         gate = await require_elevation_for(auth, str(record.id), "users")
-        if gate is not None:
-            await _audit(
-                "auth.step_up_required",
-                record,
-                outcome=AuditOutcome.DENIED,
-                severity=Severity.WARNING,
-                reason="users",
-                object_kind="user",
-                object_id=str(user_id),
-            )
+        if gate is not None:  # audited by B16 (`ACTION_REQUEST`)
             return gate
         if positions is None:
             return _problem(501, "not_implemented", "Not implemented", "no position provider")

@@ -42,6 +42,7 @@ AUDIT_ACTIONS: frozenset[str] = frozenset(
         "auth.step_up_granted",
         "auth.step_up_failed",
         "auth.step_up_required",
+        "auth.step_up_grace_used",
         "auth.session_readonly_downgrade",
         "auth.mfa_reset_by_owner",
         "auth.mfa_verified",

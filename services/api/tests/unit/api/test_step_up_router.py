@@ -20,6 +20,7 @@ from candleviewer.auth.models import MfaEnrollRequest, MfaMethodKind, SessionRec
 from candleviewer.auth.scopes import PrincipalSnapshot
 from candleviewer.auth.step_up import StepUpService
 from candleviewer.auth.totp import generate_code, time_step_for
+from candleviewer.statechart.bindings import b16_session
 from tests.unit.auth.mfa_fakes import FakeMfaRepository
 from tests.unit.auth.session_fakes import FakeSessionRepository
 
@@ -61,6 +62,15 @@ class _Auth:
     def __init__(self, step_up: StepUpService, sessions: _Sessions) -> None:
         self.step_up = step_up
         self.sessions = sessions
+
+
+#: The one target id the fake user store does not know (finding 4: 404).
+_MISSING = uuid.UUID(int=404)
+
+
+class _Users:
+    async def get_roles(self, user_id: uuid.UUID) -> frozenset[str] | None:
+        return None if user_id == _MISSING else frozenset({"manager"})
 
 
 class _Resolver:
@@ -114,6 +124,7 @@ async def _build(
     svc = StepUpService(repo, rows, enc, clock=clock)
     auth = _Auth(svc, _Sessions({"tok": record}))
     emitter = _Emitter()
+    b16_session.set_audit_sink(emitter)  # B16 chart audits land with the router's
     snap = PrincipalSnapshot(
         user_id=user,
         roles=frozenset({"owner" if owner_role else "viewer"}),
@@ -126,6 +137,7 @@ async def _build(
             emitter,
             principal_resolver=_Resolver(snap),
             positions=positions or _Positions(),
+            users=_Users(),
         )
     )
     app.middleware("http")(make_read_only_guard(auth, emitter))
@@ -272,3 +284,17 @@ async def test_client_action_class_mismatching_challenge_is_400() -> None:
         "/auth/step-up", headers=_H, json={"code": _code(seed, clock), "action_class": "keys"}
     )
     assert r.status_code == 400
+
+
+# -- PR #1674 finding 4: unknown target user -----------------------------------
+
+
+async def test_reset_unknown_user_is_404_not_200() -> None:
+    c, em, seed, clock, _ = await _build()
+    c.post("/auth/step-up", headers=_H, json={"code": _code(seed, clock), "action_class": "users"})
+    r = c.post(
+        f"/users/{_MISSING}/mfa/reset", headers=_H, json={"acknowledge_unknown_positions": True}
+    )
+    assert r.status_code == 404 and r.json()["code"] == "not_found"
+    assert "auth.mfa_reset_by_owner" not in em.actions()
+    assert c.get(f"/users/{_MISSING}/mfa/reset-preview", headers=_H).status_code == 404

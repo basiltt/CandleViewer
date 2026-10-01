@@ -110,6 +110,7 @@ from candleviewer.replay.service import ReplayService
 from candleviewer.risk.service import RiskService
 from candleviewer.rules.service import RulesService
 from candleviewer.settings import Environment, Settings, get_settings
+from candleviewer.statechart.bindings.b16_session import set_audit_sink as set_b16_audit_sink
 from candleviewer.statechart.gateway import GatewayOverloadedError
 from candleviewer.storage.repositories.audit_sqlalchemy import SqlAlchemyAuditRepository
 from candleviewer.storage.repositories.identity_sqlalchemy import SqlAlchemyIdentityProvider
@@ -574,8 +575,11 @@ def create_app(
             _LazyAuditEmitter(ctx.audit),
             principal_resolver=principal_resolver,
             positions=_NoPositionStore(),
+            users=user_role_store,
         )
     )
+    # B16 audit actions write through the M19 emitter (PR #1674 finding 3).
+    set_b16_audit_sink(_LazyAuditEmitter(ctx.audit))
     app.middleware("http")(make_read_only_guard(ctx.auth, _LazyAuditEmitter(ctx.audit)))
     # Audit emitter + notifier are mandatory; store/resolver `None` -> 501.
     app.include_router(

@@ -179,6 +179,8 @@ class AuthService:
         """Stop the module within `grace_s` seconds. No-op scaffold."""
         self._login = None
         self._mfa = None
+        if self._step_up is not None:
+            await self._step_up.stop()
         self._step_up = None
         self._sessions = None
         self._started = False

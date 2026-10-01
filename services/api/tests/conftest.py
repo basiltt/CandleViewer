@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from dataclasses import dataclass
+from typing import Any
 
 import pytest
 
@@ -34,3 +35,28 @@ class FakeAppContext:
 @pytest.fixture
 def app_context() -> Iterator[FakeAppContext]:
     yield FakeAppContext()
+
+
+class RecordingAuditSink:
+    """In-memory B16 audit sink (the M19 writer stands in for it in prod)."""
+
+    def __init__(self) -> None:
+        self.calls: list[dict[str, Any]] = []
+
+    async def emit(self, action: str, **kwargs: Any) -> None:
+        self.calls.append({"action": action, **kwargs})
+
+    def actions(self) -> list[str]:
+        return [c["action"] for c in self.calls]
+
+
+@pytest.fixture(autouse=True)
+def b16_audit() -> Iterator[RecordingAuditSink]:
+    """Every test gets a fresh B16 audit sink; a test that needs the
+    "no sink wired" path clears it itself."""
+    from candleviewer.statechart.bindings import b16_session
+
+    sink = RecordingAuditSink()
+    b16_session.set_audit_sink(sink)
+    yield sink
+    b16_session.set_audit_sink(None)
