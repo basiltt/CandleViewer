@@ -128,3 +128,10 @@ reversal path, if ever triggered, is a known-quantity schema translation, not a 
   covering ingest throughput, on-disk size, and the out-of-order/DEDUP correctness scenario against each
   engine's real WAL/dedup implementation. Files against area/backend-platform, blocked_by none (E02-T08
   already merged).
+
+## Addendum - R0 storage perf baseline (E07-Q03)
+
+`tests/perf/storage/` (see its README) records warm/cold p50/p95/p99 for shapes #1-#11, ILP writer ingest,
+export, compaction and loop lag. R0 numbers are from a DuckDB proxy / in-memory ILP transport (no docker), so they
+are regression baselines, not engine verdicts; this ADR's K01 decision is unchanged. Compaction of 200 small
+Parquet files cut scan time 77.4 ms -> 8.6 ms (9x). Authoritative QuestDB numbers await the compose-stack nightly run.

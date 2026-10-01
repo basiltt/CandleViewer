@@ -1,0 +1,7 @@
+{
+  "_note": "E07-Q03 real-engine gate (QuestDB 8.1.1 on the GitHub ubuntu-latest runner). Seeded generously before the first CI measurement; tighten from build/reports/storage-perf.json with CODEOWNER approval. Gate: >20% AND >25 ms absolute over these values fails.",
+  "metrics_ms": {
+    "reaper_lag_max_ms": 150.0,
+    "query_warm_p95_ms": 100.0
+  }
+}
