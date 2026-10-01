@@ -233,3 +233,52 @@ def test_make_users_router_requires_audit_emitter_and_notifier() -> None:
         make_users_router(None, None, None, _Notifier())  # type: ignore[arg-type]  # the point
     with pytest.raises(TypeError, match="required"):
         make_users_router(None, _Emitter(), None, None)  # type: ignore[arg-type]  # the point
+
+
+def test_put_roles_non_json_body_is_400() -> None:
+    em = _Emitter()
+    r = _client(_Store({"viewer"}, 1), _admin(), em, _Notifier()).put(
+        f"/users/{TARGET}/roles", content=b"{not json", headers={"content-type": "application/json"}
+    )
+    assert r.status_code == 400
+    assert em.calls == []
+
+
+def test_put_roles_unknown_user_is_404_before_any_change() -> None:
+    class _Unknown(_Store):
+        async def get_roles(self, user_id: uuid.UUID) -> frozenset[str] | None:
+            return None
+
+    em, n = _Emitter(), _Notifier()
+    r = _client(_Unknown({"viewer"}, 1), _admin(), em, n).put(
+        f"/users/{TARGET}/roles", json={"roles": ["manager"]}
+    )
+    assert r.status_code == 404
+    assert em.calls == [] and n.users == []
+
+
+def test_put_roles_audit_records_before_and_after_role_sets() -> None:
+    store, em, n = _Store({"viewer", "manager"}, 1), _Emitter(), _Notifier()
+    r = _client(store, _admin(), em, n).put(
+        f"/users/{TARGET}/roles", json={"roles": ["manager", "owner"]}
+    )
+    assert r.status_code == 200
+    by_action = {c["action"]: c for c in em.calls}
+    assert set(by_action) == {"roles.grant", "roles.revoke"}
+    for call in by_action.values():
+        assert call["before_state"] == {"roles": ["manager", "viewer"]}
+        assert call["after_state"] == {"roles": ["manager", "owner"]}
+    assert by_action["roles.grant"]["reason"] == "owner"
+    assert by_action["roles.revoke"]["reason"] == "viewer"
+
+
+def test_put_roles_owner_floor_denial_records_before_and_requested_roles() -> None:
+    store, em = _Store({"owner"}, 1), _Emitter()
+    r = _client(store, _admin(), em, _Notifier()).put(
+        f"/users/{TARGET}/roles", json={"roles": ["viewer"]}
+    )
+    assert r.status_code == 409
+    (call,) = em.calls
+    assert call["reason"] == "owner_floor"
+    assert call["before_state"] == {"roles": ["owner"]}
+    assert call["after_state"] == {"roles": ["viewer"]}

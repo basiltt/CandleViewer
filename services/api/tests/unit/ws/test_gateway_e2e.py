@@ -118,6 +118,9 @@ def test_ws_e2e_permissions_sub_check_and_live_role_change(env: tuple[TestClient
         assert (revoked["t"], revoked["ch"]) == ("revoked", "orders")
         assert _sub(ws, "orders", [ACC])["error"]["code"] == "forbidden"
     assert {a["action"] for a in w.audit} >= {"roles.grant", "roles.revoke"}
+    for rec in w.audit:
+        assert rec["before_state"] == {"roles": ["manager"]}
+        assert rec["after_state"] == {"roles": ["viewer"]}
 
 
 def test_ws_e2e_bad_token_closes_4401_and_frames_before_auth_refused(
@@ -142,6 +145,8 @@ def test_ws_e2e_last_owner_demotion_409_is_audited(env: tuple[TestClient, _World
     assert r.status_code == 409
     assert [a["action"] for a in w.audit] == ["rbac.denied"]
     assert w.audit[0]["reason"] == "owner_floor"
+    assert w.audit[0]["before_state"] == {"roles": ["owner"]}
+    assert w.audit[0]["after_state"] == {"roles": ["viewer"]}
 
 
 def test_ws_e2e_session_revocation_closes_socket(env: tuple[TestClient, _World]) -> None:

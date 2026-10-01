@@ -11,18 +11,29 @@ Wires the authorisation building blocks onto a real socket:
 - Anything else before `auth_ok` -> `err not_authenticated`; a failed `auth`
   -> `bye auth_failed` + close 4401 (fail closed).
 
+Resource bounds (C-2.18) live in `candleviewer.ws.limits` together with the
+overflow policy: inbound size checked before `json.loads` (1009), auth
+deadline (`bye auth_timeout` + 4401), subscription caps, bounded fan-out.
+
 Transport only: no business logic, no data fan-out (owned by E17).
 """
 
 from __future__ import annotations
 
 import asyncio
+import json
 import uuid
 from collections.abc import Awaitable, Callable
 from typing import Any
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
+from candleviewer.ws.limits import (
+    AUTH_TIMEOUT_S,
+    CLOSE_SLOW_CONSUMER,
+    CLOSE_TOO_BIG,
+    MAX_INBOUND_FRAME_BYTES,
+)
 from candleviewer.ws.permissions import (
     ConnectionAuthz,
     ConnectionRegistry,
@@ -43,6 +54,8 @@ def make_ws_router(
     authenticate: Authenticate,
     registry: ConnectionRegistry,
     revocation_hub: RevocationHub,
+    auth_timeout_s: float = AUTH_TIMEOUT_S,
+    max_frame_bytes: int = MAX_INBOUND_FRAME_BYTES,
 ) -> APIRouter:
     router = APIRouter()
 
@@ -59,11 +72,42 @@ def make_ws_router(
             await send(frame)
             await ws.close(code=code)
 
+        async def evict() -> None:
+            await closer(bye_frame("slow_consumer"), CLOSE_SLOW_CONSUMER)
+
+        async def receive() -> Any:
+            """One inbound frame; `None` after closing 1009 when oversized.
+            Size is checked on the raw payload BEFORE any JSON decoding."""
+            msg = await ws.receive()
+            if msg.get("type") == "websocket.disconnect":
+                raise WebSocketDisconnect(int(msg.get("code") or 1000))
+            raw: str | bytes = msg.get("text") or msg.get("bytes") or ""
+            size = len(raw.encode()) if isinstance(raw, str) else len(raw)
+            if size > max_frame_bytes:
+                await ws.close(code=CLOSE_TOO_BIG)
+                return None
+            try:
+                return json.loads(raw)
+            except ValueError:
+                return []  # malformed -> ignored like any non-object frame
+
         authz: ConnectionAuthz | None = None
         session_id: str | None = None
+        loop = asyncio.get_running_loop()
+        auth_deadline = loop.time() + auth_timeout_s
         try:
             while True:
-                frame = await ws.receive_json()
+                if authz is None:
+                    try:
+                        async with asyncio.timeout_at(auth_deadline):
+                            frame = await receive()
+                    except TimeoutError:
+                        await closer(bye_frame("auth_timeout"), CLOSE_TOKEN_EXPIRED)
+                        return
+                else:
+                    frame = await receive()
+                if frame is None:
+                    return
                 if not isinstance(frame, dict):
                     continue
                 kind = frame.get("t")
@@ -74,7 +118,8 @@ def make_ws_router(
                         {"t": "welcome", "id": frame.get("id"), "p": {"auth_required": True}}
                     )
                 elif kind == "auth" and authz is None:
-                    token = (frame.get("p") or {}).get("access_token")
+                    body = frame.get("p")
+                    token = body.get("access_token") if isinstance(body, dict) else None
                     try:
                         if not isinstance(token, str):
                             raise ValueError("missing access_token")
@@ -84,7 +129,9 @@ def make_ws_router(
                         return
                     principal = await registry.resolve(user_id)
                     revocation_hub.register(session_id, closer)
-                    authz = await open_connection(registry, principal, send, session_id=session_id)
+                    authz = await open_connection(
+                        registry, principal, send, close=evict, session_id=session_id
+                    )
                 elif authz is None:
                     await send(
                         {"t": "err", "id": frame.get("id"), "p": {"code": "not_authenticated"}}

@@ -59,7 +59,12 @@ async def _audit(
     principal: PrincipalSnapshot,
     user_id: uuid.UUID,
     reason: str,
+    *,
+    before: frozenset[str],
+    after: frozenset[str],
 ) -> None:
+    """C-12.8: every record carries the role set before and after (for a
+    denial, `after` is the *requested* set that was refused)."""
     await emitter.emit(
         action,
         actor_label=str(principal.user_id),
@@ -67,6 +72,8 @@ async def _audit(
         object_kind="user",
         object_id=str(user_id),
         reason=reason,
+        before_state={"roles": sorted(before)},
+        after_state={"roles": sorted(after)},
     )
 
 
@@ -131,7 +138,15 @@ def make_users_router(
             )
             found = await store.apply_roles(user_id, new_roles)
         except OwnerFloorError:
-            await _audit(emitter, "rbac.denied", principal, user_id, "owner_floor")
+            await _audit(
+                emitter,
+                "rbac.denied",
+                principal,
+                user_id,
+                "owner_floor",
+                before=current,
+                after=new_roles,
+            )
             return _problem(409, "Conflict", "the last active owner cannot be demoted")
         if not found:
             return _problem(404, "Not found", "user not found")
@@ -142,7 +157,15 @@ def make_users_router(
             ("roles.revoke", sorted(current - new_roles)),
         ):
             if changed:
-                await _audit(emitter, action, principal, user_id, ",".join(changed))
+                await _audit(
+                    emitter,
+                    action,
+                    principal,
+                    user_id,
+                    ",".join(changed),
+                    before=current,
+                    after=new_roles,
+                )
         await notifier.roles_changed(user_id)
         return JSONResponse(
             status_code=200, content={"id": str(user_id), "roles": sorted(new_roles)}

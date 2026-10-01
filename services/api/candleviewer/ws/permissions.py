@@ -12,6 +12,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import uuid
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
@@ -19,6 +21,11 @@ from typing import Any
 
 from candleviewer.auth.generated_permissions import Permission, Scope
 from candleviewer.auth.scopes import Allow, Deny, DenyReason, PrincipalSnapshot, decide
+from candleviewer.ws.limits import (
+    FANOUT_SEND_TIMEOUT_S,
+    MAX_SUBSCRIPTIONS,
+    MAX_TOPICS_PER_SUB,
+)
 
 #: §6.3 topic family -> (permission, scope). `system` is implicit (no check).
 TOPIC_PERMISSIONS: dict[str, tuple[Permission, Scope]] = {
@@ -98,9 +105,16 @@ class ConnectionAuthz:
     def topics(self) -> set[str]:
         return {topic for topic, _ in self.subs}
 
+    def at_capacity(self, needed: int = 1) -> bool:
+        """True when adding `needed` new subscriptions would exceed the
+        per-connection cap (C-2.18, `limits.MAX_SUBSCRIPTIONS`)."""
+        return len(self.subs) + needed > MAX_SUBSCRIPTIONS
+
     def subscribe(
         self, topic: str, *, exchange_account_id: uuid.UUID | None = None
     ) -> Allow | Deny | None:
+        if (topic, exchange_account_id) not in self.subs and self.at_capacity():
+            return Deny(DenyReason.MISSING_PERMISSION, Permission.MARKETDATA_READ, Scope.NONE)
         decision = check_subscribe(self.principal, topic, exchange_account_id=exchange_account_id)
         if decision is None or isinstance(decision, Allow):
             self.subs.add((topic, exchange_account_id))
@@ -157,10 +171,12 @@ class ConnectionRegistry:
     ) -> None:
         self._resolve = resolve
         self._clock_ms = clock_ms
-        self._conns: dict[uuid.UUID, list[tuple[ConnectionAuthz, Any]]] = {}
+        self._conns: dict[uuid.UUID, list[tuple[ConnectionAuthz, Any, Any]]] = {}
+        self.send_timeout_s = FANOUT_SEND_TIMEOUT_S
 
-    def register(self, authz: ConnectionAuthz, send: Any) -> None:
-        self._conns.setdefault(authz.principal.user_id, []).append((authz, send))
+    def register(self, authz: ConnectionAuthz, send: Any, close: Any = None) -> None:
+        """`close` (async, no args) is called to evict a stalled socket."""
+        self._conns.setdefault(authz.principal.user_id, []).append((authz, send, close))
 
     def unregister(self, authz: ConnectionAuthz) -> None:
         entries = self._conns.get(authz.principal.user_id, [])
@@ -176,21 +192,38 @@ class ConnectionRegistry:
         if not entries:
             return
         snap = await self._resolve(user_id)
-        for authz, send in entries:
-            for frame in authz.apply_snapshot(snap, self._clock_ms()):
-                await send(frame)
+        for authz, send, close in entries:
+            # Subscriptions are dropped synchronously here, before any I/O.
+            frames = authz.apply_snapshot(snap, self._clock_ms())
+            try:
+                async with asyncio.timeout(self.send_timeout_s):
+                    for frame in frames:
+                        await send(frame)
+            except (TimeoutError, OSError, RuntimeError):
+                # C-2.18: a stalled/broken client must not block the role
+                # change or the other sockets -> evict it.
+                self.unregister(authz)
+                if close is not None:
+                    with contextlib.suppress(Exception):
+                        async with asyncio.timeout(self.send_timeout_s):
+                            await close()
 
 
 Send = Any  # async (frame: dict) -> None
 
 
 async def open_connection(
-    registry: ConnectionRegistry, principal: PrincipalSnapshot, send: Send, **extra: Any
+    registry: ConnectionRegistry,
+    principal: PrincipalSnapshot,
+    send: Send,
+    *,
+    close: Any = None,
+    **extra: Any,
 ) -> ConnectionAuthz:
     """Gateway hook for a verified `auth`: registers the socket for
     `permission_change` pushes and sends `auth_ok` with permissions/scope."""
     authz = ConnectionAuthz(principal)
-    registry.register(authz, send)
+    registry.register(authz, send, close)
     await send({"t": "auth_ok", "p": auth_ok_payload(principal, **extra)})
     return authz
 
@@ -218,6 +251,10 @@ def _sub_result(ch: str, decisions: list[Allow | Deny | None]) -> dict[str, Any]
     return {"ch": ch, "ok": False, "error": {"code": code, "message": f"Not permitted: {ch}."}}
 
 
+def _limit_result(ch: str, code: str) -> dict[str, Any]:
+    return {"ch": ch, "ok": False, "error": {"code": code, "message": f"Limit reached: {ch}."}}
+
+
 async def handle_sub(authz: ConnectionAuthz, frame: dict[str, Any], send: Send) -> None:
     """Gateway hook for a `sub` frame: every topic (and every account id in
     `opts.exchange_account_ids`) is checked against permission AND account
@@ -225,15 +262,24 @@ async def handle_sub(authz: ConnectionAuthz, frame: dict[str, Any], send: Send) 
     only subscribed when every requested account is allowed."""
     topics = (frame.get("p") or {}).get("topics") or []
     results: list[dict[str, Any]] = []
-    for entry in topics:
+    if not isinstance(topics, list):
+        topics = []
+    for index, entry in enumerate(topics):
         ch = entry.get("ch") if isinstance(entry, dict) else entry
         if not isinstance(ch, str):
+            continue
+        if index >= MAX_TOPICS_PER_SUB:
+            results.append(_limit_result(ch, "too_many_topics"))
             continue
         accounts = _account_ids(entry)
         if accounts is None:
             results.append(
                 {"ch": ch, "ok": False, "error": {"code": "bad_request", "message": "bad opts"}}
             )
+            continue
+        new = sum((ch, a) not in authz.subs for a in accounts)
+        if authz.at_capacity(new):
+            results.append(_limit_result(ch, "subscription_limit"))
             continue
         decisions = [check_subscribe(authz.principal, ch, exchange_account_id=a) for a in accounts]
         result = _sub_result(ch, decisions)
