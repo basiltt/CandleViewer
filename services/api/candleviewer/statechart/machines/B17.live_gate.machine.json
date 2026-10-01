@@ -1,0 +1,115 @@
+{
+  "id": "live_gate",
+  "strictConfig": true,
+  "maxIterations": 500,
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "defer",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "initial": "locked",
+  "context": {
+    "evidence": {
+      "pentest_passed": false,
+      "key_audit_passed": false,
+      "env_separation_verified": false,
+      "runbooks_signed": false
+    },
+    "enabled_by": null,
+    "enabled_at_us": null,
+    "disable_reason": null,
+    "eligible_user_ids": []
+  },
+  "states": {
+    "locked": {
+      "tags": [
+        "live_blocked"
+      ],
+      "on": {
+        "EVIDENCE_RECORDED": [
+          {
+            "target": "#live_gate.eligible",
+            "guard": "all_evidence_present",
+            "actions": [
+              "record_evidence"
+            ]
+          },
+          {
+            "actions": [
+              "record_evidence"
+            ]
+          }
+        ]
+      }
+    },
+    "eligible": {
+      "tags": [
+        "live_blocked"
+      ],
+      "on": {
+        "EVIDENCE_INVALIDATED": {
+          "target": "#live_gate.locked",
+          "actions": [
+            "clear_evidence_item"
+          ]
+        },
+        "ENABLE_REQUESTED": [
+          {
+            "target": "#live_gate.enabled",
+            "guard": "owner_and_elevated_and_evidence_still_valid",
+            "actions": [
+              "record_enable",
+              "audit_live_enabled"
+            ]
+          },
+          {
+            "actions": [
+              "audit_enable_denied"
+            ]
+          }
+        ]
+      }
+    },
+    "enabled": {
+      "tags": [
+        "live_allowed"
+      ],
+      "entry": [
+        "broadcast_live_enabled",
+        "enable_live_visual_language"
+      ],
+      "on": {
+        "DISABLE_REQUESTED": [
+          {
+            "target": "#live_gate.eligible",
+            "guard": "owner_and_elevated",
+            "actions": [
+              "record_disable",
+              "audit_live_disabled"
+            ]
+          },
+          {
+            "actions": [
+              "audit_disable_denied"
+            ]
+          }
+        ],
+        "EVIDENCE_INVALIDATED": {
+          "target": "#live_gate.locked",
+          "actions": [
+            "clear_evidence_item",
+            "raise_critical_alert"
+          ]
+        },
+        "EMERGENCY_DISABLE": {
+          "target": "#live_gate.locked",
+          "actions": [
+            "record_disable",
+            "raise_critical_alert"
+          ]
+        }
+      }
+    }
+  }
+}

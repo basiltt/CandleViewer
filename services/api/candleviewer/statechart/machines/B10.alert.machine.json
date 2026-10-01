@@ -1,0 +1,160 @@
+{
+  "id": "alert",
+  "strictConfig": true,
+  "maxIterations": 500,
+  "actionErrorPolicy": "rollback",
+  "onUnhandled": "defer",
+  "guardErrorPolicy": "raise",
+  "strictTargets": true,
+  "strict": true,
+  "spawnBlockingTimeout": 5000,
+  "on": {
+    "KILL": {
+      "target": "#alert.disabled",
+      "actions": [
+        "audit_kill"
+      ]
+    }
+  },
+  "initial": "armed",
+  "context": {
+    "alert_id": null,
+    "severity": "info",
+    "storm_count": 0,
+    "suppressed_until_us": null,
+    "delivery_attempts": 0,
+    "max_delivery_attempts": 5,
+    "channels": [],
+    "delivered_channels": []
+  },
+  "states": {
+    "armed": {
+      "on": {
+        "CONDITION_MET": [
+          {
+            "target": "#alert.suppressed",
+            "guard": "in_storm_window"
+          },
+          {
+            "target": "#alert.firing"
+          }
+        ],
+        "DISABLE": {
+          "target": "#alert.disabled"
+        }
+      }
+    },
+    "suppressed": {
+      "entry": [
+        "bump_storm_count",
+        "emit_suppression_metric"
+      ],
+      "on": {
+        "SUPPRESSION_EXPIRED": {
+          "target": "#alert.armed"
+        },
+        "DISABLE": {
+          "target": "#alert.disabled"
+        }
+      }
+    },
+    "firing": {
+      "entry": [
+        "persist_fired_row",
+        "stamp_storm_window"
+      ],
+      "invoke": {
+        "id": "deliver",
+        "src": "dispatch_to_channels",
+        "onDone": [
+          {
+            "target": "#alert.delivered",
+            "guard": "all_channels_ok"
+          },
+          {
+            "target": "#alert.partially_delivered"
+          }
+        ],
+        "onError": [
+          {
+            "target": "#alert.retrying",
+            "guard": "delivery_attempts_left"
+          },
+          {
+            "target": "#alert.delivery_failed"
+          }
+        ]
+      }
+    },
+    "retrying": {
+      "entry": [
+        "bump_delivery_attempts",
+        "schedule_backoff_deadline"
+      ],
+      "on": {
+        "RETRY_DUE": {
+          "target": "#alert.firing"
+        },
+        "ACK": {
+          "target": "#alert.acknowledged"
+        }
+      }
+    },
+    "delivered": {
+      "on": {
+        "ACK": {
+          "target": "#alert.acknowledged"
+        },
+        "RESOLVE": {
+          "target": "#alert.resolved"
+        }
+      }
+    },
+    "partially_delivered": {
+      "tags": [
+        "degraded"
+      ],
+      "on": {
+        "ACK": {
+          "target": "#alert.acknowledged"
+        },
+        "RESOLVE": {
+          "target": "#alert.resolved"
+        }
+      }
+    },
+    "delivery_failed": {
+      "tags": [
+        "degraded"
+      ],
+      "entry": [
+        "emit_delivery_failure_metric"
+      ],
+      "on": {
+        "ACK": {
+          "target": "#alert.acknowledged"
+        }
+      }
+    },
+    "acknowledged": {
+      "on": {
+        "RESOLVE": {
+          "target": "#alert.resolved"
+        }
+      }
+    },
+    "resolved": {
+      "type": "final",
+      "tags": [
+        "terminal"
+      ]
+    },
+    "disabled": {
+      "on": {
+        "ENABLE": {
+          "target": "#alert.armed"
+        }
+      }
+    }
+  }
+}

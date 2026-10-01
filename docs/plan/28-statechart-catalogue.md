@@ -399,7 +399,7 @@ Only the first two vary, and only by machine role:
 |---|---|---|
 | `actionErrorPolicy: "fail"` **re-permitted (CV-C31 retired, 2026-09-20)** | B8, B17, B18, B20, **and any order-path state carrying an `invoke` with a raisable entry action (CV-C31′)** | #145 verified on both engines: halts with `status="stopped"` and a cleared configuration, retains `TransitionFailedError`, round-trips through a snapshot, and the halted blob is refused by `from_snapshot` with `InvalidConfigError`. R5-12 (reverts to source, bricks the interpreter) is dead. Pair with an explicit `halted` state entered from `on_transition_failed` — **these states are still missing (C-07, `E50-T16`)**. |
 | `actionErrorPolicy: "rollback"` | all others | Restore context and configuration; the transition never half-commits. **Not safe on a state that carries an `invoke` and can raise in an entry action** — upstream R6-03 makes that an unbounded, silent re-invocation loop on the async engine. |
-| `onUnhandled: "error"` | B13 `ws_conn`, B14 `book` — **no longer B18** | Control machines have a closed event vocabulary; an unexpected event is a bug, not backlog. **Removed from B18 (C-07b):** a guard-denied `RELEASE` is terminal under this policy, i.e. the kill switch is bricked by a wrong button press. Note also R6-08: the kill is visible via `status`/`.error`/`on_error` but the caller's `Receipt` is byte-identical to a no-op. |
+| `onUnhandled: "error"` | **none** — removed from B13 `ws_conn` and B14 `book` (E50-S02, 2026-10-01: the §1.3c mandatory block is unconditional, `CV-LINT-POLICY`); **no longer B18** | Control machines have a closed event vocabulary; an unexpected event is a bug, not backlog. **Removed from B18 (C-07b):** a guard-denied `RELEASE` is terminal under this policy, i.e. the kill switch is bricked by a wrong button press. Note also R6-08: the kill is visible via `status`/`.error`/`on_error` but the caller's `Receipt` is byte-identical to a no-op. |
 | `onUnhandled: "defer"` | all others | An event arriving before its handler is armed is held at the **head** of the queue and replayed in order. |
 
 Three consequences that shape how the machines below are written:
@@ -4258,6 +4258,14 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
   "strictTargets": true,
   "strict": true,
   "spawnBlockingTimeout": 5000,
+  "on": {
+    "KILL": {
+      "target": "#alert.disabled",
+      "actions": [
+        "audit_kill"
+      ]
+    }
+  },
   "initial": "armed",
   "context": {
     "alert_id": null,
@@ -4477,6 +4485,8 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 
 - Backoff deadlines go to the external scheduler for restore-survivability, even though seconds of lateness would be tolerable here.
 
+- **Corrected 2026-10-01 (E50-S02, `tools/lint_statecharts.py` CV-LINT-KILL-ANCESTOR):** root `on.KILL` → existing `disabled` with `audit_kill`, so the invoking `firing` state has a kill ancestor (C-04; no new state, no new guard).
+
 ---
 
 ## B11 — RecordingSession
@@ -4506,6 +4516,14 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
   "strictTargets": true,
   "strict": true,
   "spawnBlockingTimeout": 5000,
+  "on": {
+    "KILL": {
+      "target": "#recording.error",
+      "actions": [
+        "audit_kill"
+      ]
+    }
+  },
   "initial": "idle",
   "context": {
     "symbol": null,
@@ -4781,6 +4799,8 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 - `lingering` must also appear in the recorder status API and the admin panel (E16).
 - **Corrected 2026-09-24 (R14-03 / R13-15 / R13-16, proven in `docs/research/xstate/battle-v0.9.1/contracts/g2_b11_fix.py` on both engines):** (1) `all_streams_healthy` and `reasons_remain` are event-aware (see B11.5) — without this B11 was a one-way trip into `degraded`; (2) `degraded` now handles `GAP_DETECTED` — previously root `onUnhandled: "defer"` swallowed gap telemetry exactly while degraded. Contract test: the G2 script lands in `stopped` with `gap_count_24h == 1`, both services run, `chain_trips == 0`.
 
+- **Corrected 2026-10-01 (E50-S02, `tools/lint_statecharts.py` CV-LINT-KILL-ANCESTOR):** root `on.KILL` → existing `error` with `audit_kill` (C-04); `starting`/`stopping` now have a kill ancestor.
+
 ---
 
 ## B12 — ReplaySession
@@ -4810,6 +4830,14 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
   "strictTargets": true,
   "strict": true,
   "spawnBlockingTimeout": 5000,
+  "on": {
+    "KILL": {
+      "target": "#replay.error",
+      "actions": [
+        "audit_kill"
+      ]
+    }
+  },
   "initial": "created",
   "context": {
     "session_id": null,
@@ -5045,6 +5073,8 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | **INV-B12-d** | `coverage_gaps` are surfaced to the consumer as explicit gaps, never interpolated (C-2.14). |
 | **INV-B12-e** | `destroyed` releases the paper account and the source handles exactly once. |
 
+- **Corrected 2026-10-01 (E50-S02, `tools/lint_statecharts.py` CV-LINT-KILL-ANCESTOR):** root `on.KILL` → existing `error` with `audit_kill` (C-04); `buffering`/`stepping` now have a kill ancestor.
+
 ---
 
 ## B13 — ExchangeConnection (WS reconnect / resync)
@@ -5069,11 +5099,19 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 {
   "id": "ws_conn",
   "actionErrorPolicy": "rollback",
-  "onUnhandled": "error",
+  "onUnhandled": "defer",
   "guardErrorPolicy": "raise",
   "strictTargets": true,
   "strict": true,
   "spawnBlockingTimeout": 5000,
+  "on": {
+    "KILL": {
+      "target": "#ws_conn.closed",
+      "actions": [
+        "audit_kill"
+      ]
+    }
+  },
   "initial": "disconnected",
   "context": {
     "env": null,
@@ -5338,6 +5376,8 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 
 - This machine consumes the shared `SafeInterpreter`/`MachineGateway` utility (E29-T11) rather than its own interpreter handling.
 
+- **Corrected 2026-10-01 (E50-S02, `tools/lint_statecharts.py` CV-LINT-POLICY / CV-LINT-KILL-ANCESTOR):** `onUnhandled` `"error"` → `"defer"` (R13-14 class: the mandatory block §1.3c is unconditional; an unexpected event is surfaced by `CvErrorHooks` on the control lane, not by bricking the interpreter); root `on.KILL` → existing final `closed` with `audit_kill` (C-04).
+
 ---
 
 ## B14 — Book health FSM (data path excluded)
@@ -5362,7 +5402,7 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 {
   "id": "book",
   "actionErrorPolicy": "rollback",
-  "onUnhandled": "error",
+  "onUnhandled": "defer",
   "guardErrorPolicy": "raise",
   "strictTargets": true,
   "strict": true,
@@ -5510,6 +5550,8 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 
 - If a future reader is tempted to "just add an internal transition" for delta application because the contract names the action - that is precisely the failure MUSTNOT-01 exists to prevent.
 
+- **Corrected 2026-10-01 (E50-S02, `tools/lint_statecharts.py` CV-LINT-POLICY):** `onUnhandled` `"error"` → `"defer"` (same rationale as B13); no invoking state, so no KILL arm is needed.
+
 ---
 
 ## B15 — Paper-account liquidation FSM
@@ -5557,6 +5599,11 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
           {
             "target": "#paper_account.margin_call",
             "guard": "below_maintenance_margin"
+          },
+          {
+            "actions": [
+              "note_mark_no_change"
+            ]
           }
         ]
       }
@@ -5577,6 +5624,11 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
           {
             "target": "#paper_account.active",
             "guard": "above_maintenance_margin"
+          },
+          {
+            "actions": [
+              "note_mark_no_change"
+            ]
           }
         ]
       }
@@ -5645,6 +5697,8 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | **INV-B15-b** | The liquidated state is terminal; the account is not silently revived by a favourable mark. |
 | **INV-B15-c** | `write_liquidation_journal` runs before the terminal transition settles, so a liquidation is always journalled. |
 | **INV-B15-d** | Paper and live use the same OMS code path; only the matcher differs (E38 demo/live parity). |
+
+- **Corrected 2026-10-01 (E50-S02, `tools/lint_statecharts.py` CV-LINT-FALLTHROUGH):** ordered unguarded `note_mark_no_change` arm appended after the guarded `MARK_UPDATE` arms in `active` and `margin_call` (C-07b): a mark that crosses no threshold is an expected no-op, recorded rather than deferred.
 
 ---
 
@@ -6013,14 +6067,21 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
         "enable_live_visual_language"
       ],
       "on": {
-        "DISABLE_REQUESTED": {
-          "target": "#live_gate.eligible",
-          "guard": "owner_and_elevated",
-          "actions": [
-            "record_disable",
-            "audit_live_disabled"
-          ]
-        },
+        "DISABLE_REQUESTED": [
+          {
+            "target": "#live_gate.eligible",
+            "guard": "owner_and_elevated",
+            "actions": [
+              "record_disable",
+              "audit_live_disabled"
+            ]
+          },
+          {
+            "actions": [
+              "audit_disable_denied"
+            ]
+          }
+        ],
         "EVIDENCE_INVALIDATED": {
           "target": "#live_gate.locked",
           "actions": [
@@ -6101,6 +6162,8 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 
 - Default is OFF, structurally: R0-R3 have no live code path at all (30 §11.3 rule 3).
 
+- **Corrected 2026-10-01 (E50-S02, `tools/lint_statecharts.py` CV-LINT-FALLTHROUGH):** ordered unguarded `audit_disable_denied` arm appended after the guarded `enabled.DISABLE_REQUESTED` arm (C-07b, B18 shape).
+
 ---
 
 ## B18 — KillSwitch
@@ -6130,6 +6193,15 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
   "strictTargets": true,
   "strict": true,
   "spawnBlockingTimeout": 5000,
+  "on": {
+    "KILL": {
+      "target": "#kill_switch.engaged_incomplete",
+      "actions": [
+        "block_new_orders_immediately",
+        "audit_kill"
+      ]
+    }
+  },
   "initial": "clear",
   "context": {
     "scope": "global",
@@ -6257,10 +6329,17 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
         "RETRY_FLATTEN": {
           "target": "#kill_switch.flattening"
         },
-        "RELEASE": {
-          "target": "#kill_switch.clear",
-          "guard": "owner_and_elevated_and_acknowledged_residual"
-        }
+        "RELEASE": [
+          {
+            "target": "#kill_switch.clear",
+            "guard": "owner_and_elevated_and_acknowledged_residual"
+          },
+          {
+            "actions": [
+              "audit_release_denied"
+            ]
+          }
+        ]
       }
     }
   }
@@ -6337,6 +6416,8 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 
 > **Corrected 2026-09-24 (C-07b / R13-14 / R14-03, proven in `g4_c04_c07b.py` on both engines):** under the former root `onUnhandled: "error"`, a guard-denied `RELEASE` made the kill switch fatal and permanently bricked. Fix = `"defer"` + an ordered unguarded audit arm after the guarded `RELEASE`.
 
+- **Corrected 2026-10-01 (E50-S02, `tools/lint_statecharts.py` CV-LINT-FALLTHROUGH / CV-LINT-KILL-ANCESTOR):** ordered unguarded `audit_release_denied` arm added to `engaged_incomplete.RELEASE` (mirrors `engaged`, C-07b); root `on.KILL` → existing `engaged_incomplete` (trading blocked, owner paged) with `block_new_orders_immediately` + `audit_kill` — fail-safe: a kill can never release the switch (C-04).
+
 ---
 
 ## B19 — Reconciliation job
@@ -6366,6 +6447,14 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
   "strictTargets": true,
   "strict": true,
   "spawnBlockingTimeout": 5000,
+  "on": {
+    "KILL": {
+      "target": "#reconciliation.stale_lockout",
+      "actions": [
+        "audit_kill"
+      ]
+    }
+  },
   "initial": "idle",
   "context": {
     "account_id": null,
@@ -6640,6 +6729,8 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | **INV-B19-d** | `auto_remediate` is a **context value**, not a separate machine - capabilities drive behaviour, not conditionals (24 §14.3). |
 | **INV-B19-e** | A crash during fetching is re-driven on restore by re-sending the triggering event; a machine parked mid-fetch with no live service is a silent hang, and is the single most consequential consequence of static restore (LC-19). E45-T06/T07 chaos-test exactly this. |
 | **INV-B19-f** | Every sweep persists a report, whether or not divergences were found. |
+
+- **Corrected 2026-10-01 (E50-S02, `tools/lint_statecharts.py` CV-LINT-KILL-ANCESTOR):** root `on.KILL` → existing `stale_lockout` (account locked for new orders, owner paged) with `audit_kill` — fail-safe, never back to `idle` (C-04).
 
 ---
 
@@ -7004,12 +7095,22 @@ There is no runtime switch. Every family runs on the pinned library from its fir
 
 | Machine id | States (top-level) | `machine_hash` |
 |---|---|---|
+| `alert` | 10 | `33a921e4d2fd…` |
+| `book` | 4 | `a483e363f64e…` |
 | `chase` | 13 | `bc6436827867…` |
 | `iceberg` | 13 | `aecfc7ca58b8…` |
+| `kill_switch` | 6 | `17b59ac92505…` |
 | `leg` | 12 | `a7d8fb5d8c3e…` |
+| `live_gate` | 3 | `780accfd0086…` |
 | `oco` | 11 | `fd7edafda40f…` |
+| `paper_account` | 4 | `401363766fb6…` |
+| `reconciliation` | 8 | `b3a706bdf71d…` |
+| `recording` | 8 | `2b7174e42a14…` |
+| `replay` | 8 | `61dfccf1be37…` |
+| `risk_lockout` | 3 | `08f11db6dab6…` |
 | `rule_instance` | 11 | `a60ff42011cf…` |
 | `session` | 2 | `2d45266da1d7…` |
 | `trade_group` | 10 | `c54de416e173…` |
 | `twap` | 12 | `c121934637d0…` |
+| `ws_conn` | 9 | `4103c8cba47a…` |
 <!-- END GENERATED: tools/statechart/render_catalogue.py -->
