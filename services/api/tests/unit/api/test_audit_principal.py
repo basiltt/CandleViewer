@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 from candleviewer.api.audit import make_audit_router
 from candleviewer.api.audit_principal import SessionAuditPrincipalResolver
-from candleviewer.auth.errors import SessionNotFound
+from candleviewer.auth.errors import SessionIdleLocked, SessionNotFound, SessionRevoked
 from tests.unit.api.test_audit_router import _FakeAuditService
 
 _OWNER = uuid.uuid4()
@@ -65,3 +65,63 @@ def test_audit_query_owner_is_200() -> None:
     client, _ = _client()
     r = client.get("/admin/audit", headers={"Authorization": "Bearer owner-tok"})
     assert r.status_code == 200
+
+
+def test_verify_and_export_without_token_are_401() -> None:
+    client, _ = _client()
+    assert client.post("/admin/audit/verify", json={}).status_code == 401
+    assert client.post("/admin/audit/export", json={}).status_code == 401
+
+
+def test_verify_and_export_manager_are_403() -> None:
+    client, _ = _client()
+    h = {"Authorization": "Bearer mgr-tok"}
+    assert client.post("/admin/audit/verify", json={}, headers=h).status_code == 403
+    assert client.post("/admin/audit/export", json={}, headers=h).status_code == 403
+
+
+def test_verify_owner_is_authorized() -> None:
+    client, _ = _client()
+    r = client.post("/admin/audit/verify", json={}, headers={"Authorization": "Bearer owner-tok"})
+    assert r.status_code not in (401, 403, 501)
+
+
+def _resolver_client(sessions: Any, identity: Any) -> TestClient:
+    app = FastAPI()
+    resolver = SessionAuditPrincipalResolver(lambda: sessions, identity)
+    app.include_router(make_audit_router(_FakeAuditService(), resolver))
+    return TestClient(app)
+
+
+def _raising_sessions(exc: Exception) -> Any:
+    class _S:
+        async def authenticate_access_token(self, token: str, *, touch: bool = False) -> Any:
+            raise exc
+
+    return _S()
+
+
+def test_revoked_session_is_401() -> None:
+    c = _resolver_client(_raising_sessions(SessionRevoked("x")), _Identity())
+    assert c.get("/admin/audit", headers={"Authorization": "Bearer t"}).status_code == 401
+
+
+def test_idle_locked_session_is_401() -> None:
+    c = _resolver_client(_raising_sessions(SessionIdleLocked("x")), _Identity())
+    assert c.get("/admin/audit", headers={"Authorization": "Bearer t"}).status_code == 401
+
+
+def test_non_active_user_is_401() -> None:
+    class _Disabled(_Identity):
+        async def user(self, user_id: str) -> dict[str, Any]:
+            return {"username": "o", "status": "disabled"}
+
+    c = _resolver_client(_Sessions(), _Disabled())
+    assert c.get("/admin/audit", headers={"Authorization": "Bearer owner-tok"}).status_code == 401
+
+
+def test_app_without_identity_provider_fails_closed_501() -> None:
+    app = FastAPI()
+    app.include_router(make_audit_router(_FakeAuditService(), None))
+    r = TestClient(app).get("/admin/audit", headers={"Authorization": "Bearer owner-tok"})
+    assert r.status_code == 501
