@@ -11,9 +11,15 @@ Owns the shutdown path of every catalogue machine
     repo.write_snapshot(...)
     stop()
 
-`drain_pending()` is called only here (CV-LINT-DRAIN). Restore + HMAC
-(`open_sealed`, `from_snapshot`) is E50-T49; this module exposes
-`DrainJournal.replay_once()` which that restore calls after `start()`.
+`drain_pending()` is called only here (CV-LINT-DRAIN).
+
+Restore (E50-T49, 29 §1.3) is `Restorer.restore`: `open_sealed` (HMAC-SHA256
+over chart bytes + blob, CV-C53) -> `from_snapshot(minimum_version=3,
+expected_machine_hash=, plugins=)` (CV-C52, MUST-12, R13-W1) -> pre-start
+asserts (C45'', C60, C27', C54) -> `_cv_bring_up` -> bounded `start()` ->
+`journal.replay_once` -> `chain_trips` latch (C63). Any refusal writes a
+quarantine row and fires a P1 alert; a tampered blob is never loaded.
+`from_snapshot(` appears only in this module (CV-LINT-RESTORE).
 
 Storage and audit are injected Protocols: `statechart` may not import
 `audit` or `storage` directly (import-linter, forbidden-M18), and the
@@ -24,16 +30,22 @@ journal ships here for tests and for the contract suite.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
+import hmac
 import json
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal, Protocol
 
-from xstate_statemachine import Interpreter
+from xstate_statemachine import Interpreter, PluginBase, XStateMachineError
+from xstate_statemachine.clock import Clock
 from xstate_statemachine.events import persist_event, restore_event
 
-from candleviewer.statechart.config import SNAPSHOT_V
+from candleviewer.statechart import factory
+from candleviewer.statechart.config import CV_START_TIMEOUT, SNAPSHOT_V, Lane
+from candleviewer.statechart.registry import Registry
+from candleviewer.statechart.schema import canonical_json
 
 JournalLane = Literal["priority", "inbox"]
 
@@ -224,3 +236,255 @@ class Persister:
             ),
         )
         await interp.stop()
+
+
+# ---------------------------------------------------------------------------
+# Restore + HMAC envelope (E50-T49, 29 §1.3, CV-C52/C53/C54/C60/C27'/C45''/C63)
+# ---------------------------------------------------------------------------
+
+
+class RestoreRefusedError(RuntimeError):
+    """A sealed snapshot was refused; it is quarantined, never loaded."""
+
+    def __init__(self, key: MachineKey, reason: str) -> None:
+        super().__init__(f"restore({key.machine_kind}/{key.entity_id}): {reason}")
+        self.key = key
+        self.reason = reason
+
+
+@dataclass(frozen=True, slots=True)
+class Seal:
+    """HMAC-SHA256 tag over `chart bytes || blob` plus the KMS key id."""
+
+    key_id: str
+    tag: str
+
+
+class HmacKeys(Protocol):
+    """KMS facade (ADR-0009): HMAC keys rotated by `key_id`. Key bytes never
+    leave this callable's result and are never logged."""
+
+    def current(self) -> str: ...
+
+    def key(self, key_id: str) -> bytes: ...
+
+
+class RestoreAudit(Protocol):
+    async def quarantine(self, key: MachineKey, envelope: SealedSnapshot, reason: str) -> None: ...
+
+
+class Pager(Protocol):
+    async def page(self, key: MachineKey, severity: str, message: str) -> None: ...
+
+
+def _mac_input(
+    chart: dict[str, Any], snapshot: dict[str, Any], machine_hash: str, version: int
+) -> bytes:
+    # Length-prefixed parts so no byte shift can move data between fields.
+    parts = [
+        canonical_json(chart),
+        canonical_json(snapshot),
+        machine_hash.encode("utf-8"),
+        str(version).encode("ascii"),
+    ]
+    return b"".join(len(p).to_bytes(8, "big") + p for p in parts)
+
+
+def seal(
+    keys: HmacKeys,
+    chart: dict[str, Any],
+    snapshot: dict[str, Any],
+    machine_hash: str,
+    version: int,
+) -> Seal:
+    """CV-C53: HMAC-SHA256 over chart bytes + blob, `key_id=KMS.current()`."""
+    if version < SNAPSHOT_V:
+        raise ValueError(f"seal version {version} < {SNAPSHOT_V} (CV-C53)")
+    key_id = keys.current()
+    tag = hmac.new(
+        keys.key(key_id), _mac_input(chart, snapshot, machine_hash, version), hashlib.sha256
+    )
+    return Seal(key_id=key_id, tag=tag.hexdigest())
+
+
+def open_sealed(
+    keys: HmacKeys,
+    chart: dict[str, Any],
+    envelope: SealedSnapshot,
+    *,
+    expected_machine_hash: str,
+) -> dict[str, Any]:
+    """Verify an envelope; returns the blob or raises `ValueError(reason)`."""
+    if envelope.version < SNAPSHOT_V:
+        raise ValueError(f"envelope version {envelope.version} < {SNAPSHOT_V} (CV-C52)")
+    if envelope.machine_hash != expected_machine_hash:
+        raise ValueError("envelope machine_hash does not match registry (MUST-12)")
+    s = envelope.seal
+    if not isinstance(s, Seal):
+        raise ValueError("envelope carries no HMAC seal (CV-C53)")
+    try:
+        secret = keys.key(s.key_id)
+    except KeyError:
+        raise ValueError("unknown HMAC key_id (CV-C53)") from None
+    want = hmac.new(
+        secret,
+        _mac_input(chart, envelope.snapshot, envelope.machine_hash, envelope.version),
+        hashlib.sha256,
+    ).hexdigest()
+    if not hmac.compare_digest(want, s.tag):
+        raise ValueError("bad HMAC (CV-C53)")
+    return envelope.snapshot
+
+
+class DegradedLatchError(RuntimeError):
+    """An order-path command was refused: the machine is chain-trip latched
+    (CV-C63) until an operator acknowledges it (E42)."""
+
+
+class ChainTripLatch:
+    """Degraded-admission latch for restored machines with `chain_trips > 0`.
+
+    Reads stay served; `admit_command` refuses order-path commands. The
+    gateway (E50-T15) consults this synchronously before any send (C-2.21).
+    Acknowledgement UI is E42; `acknowledge` is its backend hook.
+    """
+
+    def __init__(self) -> None:
+        self._latched: dict[MachineKey, str] = {}
+
+    def latch(self, key: MachineKey, reason: str) -> None:
+        self._latched[key] = reason
+
+    def is_latched(self, key: MachineKey) -> bool:
+        return key in self._latched
+
+    def admit_command(self, key: MachineKey) -> None:
+        reason = self._latched.get(key)
+        if reason is not None:
+            raise DegradedLatchError(
+                f"{key.machine_kind}/{key.entity_id} is degraded (chain_trips latch, "
+                f"CV-C63): {reason}; order-path commands refused until acknowledged"
+            )
+
+    def acknowledge(self, key: MachineKey) -> None:
+        self._latched.pop(key, None)
+
+
+@dataclass(frozen=True, slots=True)
+class RestoreResult:
+    interpreter: Interpreter[Any]
+    machine_hash: str
+    replayed: int
+    degraded: bool
+
+
+def reconcile_counts(blob: dict[str, Any], interp: Interpreter[Any]) -> None:
+    """CV-C54: persisted vs admitted record counts must agree before start().
+
+    A record refused at restore (e.g. an event a chart upgrade undeclared)
+    must never vanish silently.
+    """
+    persisted = len(blob.get("pending_events") or [])
+    admitted = len(interp.pending_events)
+    if persisted != admitted:
+        raise ValueError(f"pending_events persisted={persisted} admitted={admitted} (CV-C54)")
+    p_def = len(blob.get("deferred") or [])
+    a_def = len(interp._deferred_events)
+    if p_def != a_def:
+        raise ValueError(f"deferred persisted={p_def} admitted={a_def} (CV-C54)")
+    p_sched = len(blob.get("scheduled_sends") or [])
+    a_sched = len(interp._restored_self_sends)
+    if p_sched != a_sched:
+        raise ValueError(f"scheduled_sends persisted={p_sched} admitted={a_sched} (CV-C54)")
+
+
+def _pre_start_checks(blob: dict[str, Any], interp: Interpreter[Any]) -> None:
+    if interp.last_transition_ok is None or interp.last_error is not None:
+        raise ValueError(
+            f"restore recorded an error before start(): {interp.last_error!r} (CV-C45'', CV-C60)"
+        )
+    state_ids = set(blob.get("state_ids") or [])
+    configuration = {n.id for n in interp._active_state_nodes}
+    if not state_ids <= configuration:
+        raise ValueError(
+            f"state_ids {sorted(state_ids - configuration)} not in configuration (CV-C27')"
+        )
+    reconcile_counts(blob, interp)
+
+
+#: Plugin factory: fresh instances per restore (CvErrorHooks, CvMetricsPlugin,
+#: CvAuditPlugin — E50-T60). Passed via `from_snapshot(plugins=)` (R13-W1).
+PluginsFactory = Callable[[], Sequence[PluginBase[Any]]]
+
+
+@dataclass(slots=True)
+class Restorer:
+    """The only path from sealed bytes to a live machine (29 §1.3)."""
+
+    registry: Registry
+    keys: HmacKeys
+    journal: DrainJournal
+    audit: RestoreAudit
+    pager: Pager
+    latch: ChainTripLatch
+    plugins: PluginsFactory
+    clock: Clock
+    lane: Lane
+
+    async def _refuse(
+        self, key: MachineKey, envelope: SealedSnapshot, reason: str
+    ) -> RestoreRefusedError:
+        await self.audit.quarantine(key, envelope, reason)
+        await self.pager.page(key, "P1", f"snapshot refused: {reason}")
+        return RestoreRefusedError(key, reason)
+
+    async def restore(self, key: MachineKey, envelope: SealedSnapshot) -> RestoreResult:
+        chart = self.registry.get(key.machine_kind)
+        expected = self.registry.hash(key.machine_kind)
+        try:
+            blob = open_sealed(self.keys, chart, envelope, expected_machine_hash=expected)
+        except ValueError as exc:
+            raise await self._refuse(key, envelope, str(exc)) from None
+
+        machine = factory.make_machine(key.machine_kind, chart)
+        try:
+            interp: Interpreter[Any] = Interpreter.from_snapshot(
+                json.dumps(blob),
+                machine,
+                clock=self.clock,
+                minimum_version=SNAPSHOT_V,
+                expected_machine_hash=machine.structure_hash,
+                plugins=list(self.plugins()),
+            )
+            factory.apply_lane_config(interp, self.lane)
+            _pre_start_checks(blob, interp)
+        except (XStateMachineError, ValueError) as exc:
+            raise await self._refuse(key, envelope, f"{type(exc).__name__}: {exc}") from None
+
+        factory._cv_bring_up(interp)
+        try:
+            await asyncio.wait_for(interp.start(), CV_START_TIMEOUT)
+        except TimeoutError as exc:
+            raise TimeoutError(
+                f"restore({key.machine_kind}) start() did not settle within "
+                f"{CV_START_TIMEOUT}s (CV-C56)"
+            ) from exc
+        replayed = await self.journal.replay_once(key, interp)
+
+        degraded = interp.chain_trips > 0  # CV-C63: read the count, not last_error
+        if degraded:
+            reason = f"chain_trips={interp.chain_trips}: {interp.last_chain_error}"
+            self.latch.latch(key, reason)
+            await self.pager.page(key, "P1", f"restored degraded ({reason})")
+        return RestoreResult(
+            interpreter=interp, machine_hash=expected, replayed=replayed, degraded=degraded
+        )
+
+
+def hmac_sealer(keys: HmacKeys, chart: dict[str, Any]) -> Sealer:
+    """Adapt `seal()` to `Persister.seal` for one chart."""
+
+    async def _seal(snapshot: dict[str, Any], machine_hash: str, version: int) -> Seal:
+        return seal(keys, chart, snapshot, machine_hash, version)
+
+    return _seal
