@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from candleviewer.observability.metrics import Counter
 from candleviewer.ws._generated.error_codes import ERROR_META, WS_ERROR_CODES, ErrorCode
+
+cv_ws_errors_total = Counter(
+    "cv_ws_errors_total", "WS err frames built, by catalogue code.", ["code"]
+)
 
 
 class WsError(Exception):
@@ -37,6 +42,7 @@ def build_ws_error(
         raise UnknownErrorCode(f"error code {code!r} is not in the WS catalogue") from None
     if known not in WS_ERROR_CODES:
         raise UnknownErrorCode(f"error code {code!r} is REST-only, not legal on the WS")
+    cv_ws_errors_total.labels(code).inc()
     payload: dict[str, Any] = {
         "code": code,
         "retryable": ERROR_META[known].retryable,
