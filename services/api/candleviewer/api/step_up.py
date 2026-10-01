@@ -137,6 +137,9 @@ DANGEROUS_ROUTES: tuple[tuple[str, re.Pattern[str], str], ...] = (
     ("POST", re.compile(r"^/exchange-accounts/[^/]+/keys$"), "keys"),
     ("POST", re.compile(r"^/exchange-accounts/[^/]+/keys/[^/]+/rotate$"), "keys"),
     ("DELETE", re.compile(r"^/exchange-accounts/[^/]+/keys/[^/]+$"), "keys"),
+    # reveal-scope has no contract path yet (E27); pre-registered under the keys prefix.
+    ("POST", re.compile(r"^/exchange-accounts/[^/]+/keys/[^/]+/reveal-scope$"), "keys"),
+    ("GET", re.compile(r"^/exchange-accounts/[^/]+/keys/[^/]+/reveal-scope$"), "keys"),
     ("POST", re.compile(r"^/risk/lockouts/[^/]+/override$"), "risk_caps"),
 )
 
@@ -176,7 +179,10 @@ def make_read_only_guard(
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         if (
-            request.method not in _SAFE_METHODS
+            (
+                request.method not in _SAFE_METHODS
+                or dangerous_action_class(request.method, request.url.path)
+            )
             and request.url.path not in _WRITE_EXEMPT_PATHS
             and auth.step_up_is_active
             and auth.sessions_is_active

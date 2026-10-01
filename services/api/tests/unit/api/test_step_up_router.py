@@ -146,6 +146,18 @@ async def _build(
     async def roles(uid: str) -> dict[str, bool]:
         return {"ok": True}
 
+    @app.post("/exchange-accounts/{aid}/keys/{kid}/rotate")
+    async def rotate(aid: str, kid: str) -> dict[str, bool]:
+        return {"ok": True}
+
+    @app.delete("/exchange-accounts/{aid}/keys/{kid}")
+    async def revoke(aid: str, kid: str) -> dict[str, bool]:
+        return {"ok": True}
+
+    @app.post("/exchange-accounts/{aid}/keys/{kid}/reveal-scope")
+    async def reveal(aid: str, kid: str) -> dict[str, bool]:
+        return {"ok": True}
+
     @app.post("/orders")
     async def orders() -> dict[str, bool]:
         return {"ok": True}
@@ -298,3 +310,47 @@ async def test_reset_unknown_user_is_404_not_200() -> None:
     assert r.status_code == 404 and r.json()["code"] == "not_found"
     assert "auth.mfa_reset_by_owner" not in em.actions()
     assert c.get(f"/users/{_MISSING}/mfa/reset-preview", headers=_H).status_code == 404
+
+
+_KEY_ACTIONS = [
+    ("POST", "/exchange-accounts/a1/keys/k1/rotate"),
+    ("DELETE", "/exchange-accounts/a1/keys/k1"),
+    ("POST", "/exchange-accounts/a1/keys/k1/reveal-scope"),
+]
+
+
+async def test_rotate_revoke_reveal_scope_need_step_up_then_share_grace_window() -> None:
+    """AC 1+2: each keys action is 403 without a fresh code; after one step-up
+    a second keys action inside the window passes with no new code."""
+    c, _em, seed, clock, _ = await _build()
+    for method, path in _KEY_ACTIONS:
+        r = c.request(method, path, headers=_H)
+        assert r.status_code == 403 and r.json()["code"] == "step_up_required", path
+        assert r.json()["action_class"] == "keys"
+    ok = c.post("/auth/step-up", headers=_H, json={"code": _code(seed, clock)})
+    assert ok.status_code == 200 and ok.json()["step_up_expires_at"] is not None
+    clock.now += timedelta(minutes=3)
+    for method, path in _KEY_ACTIONS:
+        assert c.request(method, path, headers=_H).status_code == 200, path
+    clock.now += timedelta(minutes=3)
+    assert c.post(_KEY_ACTIONS[0][1], headers=_H).status_code == 403
+
+
+async def test_reset_never_calls_oms_cancel_or_flatten() -> None:
+    """AC 5: reset with open positions touches only the read-only position
+    count; a strict OMS mock proves no cancel/flatten is reachable."""
+
+    class _StrictOms:
+        def __getattr__(self, name: str) -> Any:
+            raise AssertionError(f"OMS must not be called during reset: {name}")
+
+    class _CountOnly(_Positions):
+        oms = _StrictOms()
+
+    c, _em, seed, clock, _ = await _build(positions=_CountOnly())
+    c.post("/auth/step-up", headers=_H, json={"code": _code(seed, clock), "action_class": "users"})
+    target = uuid.uuid4()
+    assert (
+        c.get(f"/users/{target}/mfa/reset-preview", headers=_H).json()["open_position_count"] == 2
+    )
+    assert c.post(f"/users/{target}/mfa/reset", headers=_H).status_code == 200

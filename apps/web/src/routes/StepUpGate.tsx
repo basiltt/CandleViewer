@@ -31,6 +31,7 @@ export function StepUpGate({ redirectTo }: StepUpGateProps): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [expiresAt, setExpiresAt] = useState<string | null>(getStepUpExpiresAt);
+  const [granted, setGranted] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const remaining = remainingSeconds(expiresAt, now);
   const windowLive = remaining > 0;
@@ -62,7 +63,8 @@ export function StepUpGate({ redirectTo }: StepUpGateProps): JSX.Element {
       recordStepUp(body.elevated_until, expires);
       setExpiresAt(expires);
       setNow(Date.now());
-      navigate(redirectTo, { replace: true });
+      // Stay open so the grace window is visible; the user continues explicitly.
+      setGranted(true);
     } finally {
       setSubmitting(false);
     }
@@ -73,8 +75,17 @@ export function StepUpGate({ redirectTo }: StepUpGateProps): JSX.Element {
       <h1 id="step-up-title">Confirm it&apos;s you</h1>
       <p>Enter your authenticator code to continue to the Admin area.</p>
       <p aria-live="polite" data-testid="step-up-grace">
-        {remaining > 0 ? `Grace window: ${formatRemaining(remaining)} remaining` : ""}
+        {remaining > 0
+          ? `Grace window: ${formatRemaining(remaining)} remaining`
+          : granted && expiresAt === null
+            ? "Single-use confirmation: no grace window for this action."
+            : ""}
       </p>
+      {granted ? (
+        <button type="button" onClick={() => navigate(redirectTo, { replace: true })}>
+          Continue
+        </button>
+      ) : null}
       <form onSubmit={(event) => void onSubmit(event)}>
         <label htmlFor="step-up-code">Authenticator code</label>
         <input
@@ -86,7 +97,7 @@ export function StepUpGate({ redirectTo }: StepUpGateProps): JSX.Element {
           onChange={(event) => setCode(event.target.value)}
         />
         {error ? <p role="alert">{error}</p> : null}
-        <button type="submit" disabled={submitting || code.length === 0}>
+        <button type="submit" disabled={submitting || granted || code.length === 0}>
           Confirm
         </button>
       </form>
