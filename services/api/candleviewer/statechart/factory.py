@@ -30,6 +30,7 @@ from xstate_statemachine import (
     create_machine,
 )
 from xstate_statemachine.clock import Clock, RealClock
+from xstate_statemachine.events import re_mint as re_mint
 
 from candleviewer.statechart.bindings import load_binding_maps
 from candleviewer.statechart.config import (
@@ -58,6 +59,9 @@ _default_registry: Registry | None = None
 #: Re-exported for `gateway.py` (E50-T15), which may not import the runtime
 #: itself (CV-LINT-IMPORT) but must map an inbox refusal to 503 + page.
 InboxFullError = QueueOverflowError
+
+#: `re_mint` is re-exported for `gateway.cv_re_mint` only (CV-C68, CV-LINT-REMINT):
+#: nothing else may call it.
 
 
 def _get_default_registry() -> Registry:
