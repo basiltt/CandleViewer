@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import FastAPI
@@ -37,6 +38,12 @@ from candleviewer.api import (
     make_market_router,
 )
 from candleviewer.api.sessions import make_session_router
+from candleviewer.auth.models import (
+    MfaChallengeRecord,
+    MfaMethodRecord,
+    SessionRecord,
+    UserRecord,
+)
 from candleviewer.auth.service import AuthService
 from candleviewer.bars.service import BarsService
 from candleviewer.book.service import BookService
@@ -71,13 +78,18 @@ from candleviewer.recorder.service import RecorderService
 from candleviewer.replay.service import ReplayService
 from candleviewer.risk.service import RiskService
 from candleviewer.rules.service import RulesService
-from candleviewer.settings import Settings, get_settings
+from candleviewer.settings import Environment, Settings, get_settings
 from candleviewer.storage.repositories.instruments_sqlalchemy import (
     SqlAlchemyInstrumentsRepository,
 )
+from candleviewer.storage.repositories.mfa_sqlalchemy import SqlAlchemyMfaRepository
 from candleviewer.storage.repositories.relational_sqlalchemy import (
     SqlAlchemyRelationalRepository,
 )
+from candleviewer.storage.repositories.sessions_sqlalchemy import (
+    SqlAlchemySessionRepository,
+)
+from candleviewer.storage.repositories.users_sqlalchemy import SqlAlchemyUserRepository
 from candleviewer.storage.service import StorageService
 from candleviewer.ws.revocation import RevocationHub
 from candleviewer.ws.service import WsService
@@ -150,6 +162,39 @@ class _LazyAuditEmitter:
         await self._audit.writer.emit(action, **kwargs)
 
 
+def build_auth_service(settings: Settings) -> AuthService:
+    """QA #1658: wire `AuthService` to Postgres when `storage_backend="real"`
+    (no I/O at construction: the engine connects lazily). With the fake
+    backend it stays the no-op scaffold so `create_app()` needs no database.
+    Live refuses to start without the key material."""
+    if settings.storage_backend != "real":
+        return AuthService()
+    totp = settings.auth_totp_key_hex
+    rc = settings.auth_recovery_hmac_key_hex
+    if settings.environment is Environment.LIVE and (totp is None or rc is None):
+        raise ValueError(
+            "live requires CV_AUTH_TOTP_KEY_HEX and CV_AUTH_RECOVERY_HMAC_KEY_HEX; "
+            "refusing to start auth without them"
+        )
+    relational = SqlAlchemyRelationalRepository(settings.pg_dsn.get_secret_value(), "auth")
+    return AuthService(
+        SqlAlchemyUserRepository(
+            relational, _record_factory(UserRecord), clock=lambda: datetime.now(UTC)
+        ),
+        pepper=settings.auth_pepper.get_secret_value(),
+        mfa_repository=SqlAlchemyMfaRepository(
+            relational, _record_factory(MfaMethodRecord), _record_factory(MfaChallengeRecord)
+        ),
+        totp_encryption_key=bytes.fromhex(totp.get_secret_value()) if totp else None,
+        recovery_code_hmac_key=bytes.fromhex(rc.get_secret_value()) if rc else None,
+        session_repository=SqlAlchemySessionRepository(relational, _record_factory(SessionRecord)),
+    )
+
+
+def _record_factory(model: Any) -> Callable[..., Any]:
+    return lambda **fields: model.model_validate(fields)
+
+
 def build_app_context(settings: Settings | None = None) -> AppContext:
     """Construct an `AppContext` with real scaffold modules, no I/O performed.
 
@@ -194,7 +239,7 @@ def build_app_context(settings: Settings | None = None) -> AppContext:
         rules=RulesService(),
         paper=PaperService(),
         risk=RiskService(),
-        auth=AuthService(),
+        auth=build_auth_service(resolved),
         audit=build_audit_service(),
         journal=JournalService(),
         admin=AdminService(),
