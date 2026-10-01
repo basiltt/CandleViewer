@@ -53,7 +53,8 @@ try:
                 failed = [ln[len("FAILED "):].split(" - ")[0].strip() for ln in lines if ln.startswith("FAILED ")]
                 errors = [ln for ln in lines if ln.startswith("ERROR ")]
                 if failed and not errors and len(failed) <= 5:
-                    r2 = subprocess.run(["uv", "run", "--frozen", "pytest", "-q", "-p", "no:cacheprovider", *failed], capture_output=True, text=True, cwd=api, env=env)
+                    # --no-cov: the 85% floor would fail a one-test run (coverage is judged by the full run + CI)
+                    r2 = subprocess.run(["uv", "run", "--frozen", "pytest", "-q", "-p", "no:cacheprovider", "--no-cov", *failed], capture_output=True, text=True, cwd=api, env=env)
                     tail2 = " | ".join((r2.stdout or r2.stderr).strip().splitlines()[-2:])
                     print(f"pytest(services/api) isolated rerun of {len(failed)} failure(s):", tail2)
                     if r2.returncode == 0:
