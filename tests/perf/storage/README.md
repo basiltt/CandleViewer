@@ -27,3 +27,10 @@ Not run (needs docker / hours): 10-minute ingest, 12-month scans, reference 4 vC
 `IlpWriter` and `Reaper` against QuestDB 8.1.1, writes `services/api/build/reports/storage-perf.json` (artifact
 `storage-perf`), and fails when a metric is >20 % and >25 ms over `baseline_integration.json`.
 "Cold" = fresh connection + untouched partition; the OS page cache is **not** dropped (no root in CI).
+
+## Nightly (`perf-storage-nightly.yml`)
+
+Runs both harnesses (DuckDB shapes + real-QuestDB testcontainers suite; docker is available on `ubuntu-latest`) and
+uploads `results.json` + `storage-perf.json`. Any failure (incl. the >20 % baseline gate) opens a `perf` issue (AC2).
+The 24 h growth figure and the 4 vCPU / 8 GB profile remain **unmeasured** until a nightly run yields non-quantized
+numbers (follow-up on #274); this PR does not claim them. Not run locally: no docker.
