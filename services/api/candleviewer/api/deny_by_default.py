@@ -11,12 +11,17 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, WebSocketException
+from starlette.requests import HTTPConnection
 
 from candleviewer.api.contract_conformance import NON_CONTRACT_ROUTES
 
 #: Operational endpoints intentionally outside the REST contract and public.
 PUBLIC_OPERATIONAL_ROUTES = NON_CONTRACT_ROUTES | frozenset({"/healthz", "/readyz", "/metrics"})
+
+#: WebSocket routes (`23-ws-protocol.md`): authenticated in-band (`auth`
+#: frame) with per-topic RBAC; any other WS path is refused (1008).
+DECLARED_WS_ROUTES = frozenset({"/ws"})
 
 _METHODS = frozenset({"get", "put", "post", "delete", "patch", "options", "head"})
 
@@ -77,12 +82,16 @@ def assert_app_routes_declared(app: FastAPI, spec: dict[str, Any]) -> None:
 
 
 def make_deny_undeclared_dependency(declared: set[tuple[str, str]]) -> Any:
-    async def deny_undeclared_dependency(request: Request) -> None:
+    async def deny_undeclared_dependency(request: HTTPConnection) -> None:
         route = request.scope.get("route")
         path = getattr(route, "path", None)
+        if request.scope["type"] == "websocket":
+            if path not in DECLARED_WS_ROUTES:
+                raise WebSocketException(code=1008, reason="forbidden")
+            return
         if path is None or path in PUBLIC_OPERATIONAL_ROUTES:
             return
-        if (request.method.upper(), path) not in declared:
+        if (str(request.scope["method"]).upper(), path) not in declared:
             raise HTTPException(status_code=403, detail="forbidden")
 
     return deny_undeclared_dependency

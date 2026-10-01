@@ -40,13 +40,6 @@ from candleviewer.api import (
     make_log_level_router,
     make_market_router,
 )
-from candleviewer.api.sessions import make_session_router
-from candleviewer.auth.models import (
-    MfaChallengeRecord,
-    MfaMethodRecord,
-    SessionRecord,
-    UserRecord,
-)
 from candleviewer.api.contract_conformance import load_openapi_spec
 from candleviewer.api.deny_by_default import (
     assert_app_routes_declared,
@@ -54,7 +47,13 @@ from candleviewer.api.deny_by_default import (
     make_deny_undeclared_dependency,
 )
 from candleviewer.api.sessions import make_session_router
-from candleviewer.api.users import make_users_router
+from candleviewer.api.users import SnapshotResolver, UserRoleStore, make_users_router
+from candleviewer.auth.models import (
+    MfaChallengeRecord,
+    MfaMethodRecord,
+    SessionRecord,
+    UserRecord,
+)
 from candleviewer.auth.scopes import PrincipalSnapshot
 from candleviewer.auth.service import AuthService
 from candleviewer.bars.service import BarsService
@@ -105,6 +104,8 @@ from candleviewer.storage.repositories.sessions_sqlalchemy import (
 )
 from candleviewer.storage.repositories.users_sqlalchemy import SqlAlchemyUserRepository
 from candleviewer.storage.service import StorageService
+from candleviewer.ws.gateway import Authenticate, make_ws_router
+from candleviewer.ws.permissions import ConnectionRegistry
 from candleviewer.ws.revocation import RevocationHub
 from candleviewer.ws.service import WsService
 
@@ -388,8 +389,28 @@ def _now_ms() -> int:
     return int(time.time() * 1000)
 
 
+def _session_authenticator(ctx: AppContext) -> Authenticate:
+    """Opaque bearer token -> (session_id, user_id) via the session service;
+    raises (fail closed) while no session repository is wired."""
+
+    async def _authenticate(token: str) -> tuple[str, uuid.UUID]:
+        record = await ctx.auth.sessions.authenticate_access_token(token)
+        return str(record.id), record.user_id
+
+    return _authenticate
+
+
+SnapshotLoader = Callable[[uuid.UUID], Awaitable[PrincipalSnapshot]]
+
+
 def create_app(
-    settings: Settings | None = None, *, auth_clock: Callable[[], datetime] | None = None
+    settings: Settings | None = None,
+    *,
+    snapshot_loader: SnapshotLoader | None = None,
+    user_role_store: UserRoleStore | None = None,
+    principal_resolver: SnapshotResolver | None = None,
+    ws_authenticate: Authenticate | None = None,
+    auth_clock: Callable[[], datetime] | None = None,
 ) -> FastAPI:
     """Build the FastAPI application without touching Postgres/QuestDB/network.
 
@@ -448,8 +469,25 @@ def create_app(
             allowed_origins=resolved.allowed_origin_set,
         )
     )
-    # `store=None` / no resolver: fails closed with 501 until session verification lands.
-    app.include_router(make_users_router(None, _LazyAuditEmitter(ctx.audit), None, None))
+    # QA #1648 d1: live WS gateway. Role changes (`PUT /users/{id}/roles`)
+    # notify the registry, which pushes `permission_change` and revokes
+    # now-forbidden subscriptions. Snapshots fail closed (no permissions)
+    # until the identity store is injected.
+    ws_registry = ConnectionRegistry(snapshot_loader or _deny_all_snapshot, _now_ms)
+    app.state.ws_registry = ws_registry
+    app.include_router(
+        make_ws_router(
+            authenticate=ws_authenticate or _session_authenticator(ctx),
+            registry=ws_registry,
+            revocation_hub=revocation_hub,
+        )
+    )
+    # Audit emitter + notifier are mandatory; store/resolver `None` -> 501.
+    app.include_router(
+        make_users_router(
+            user_role_store, _LazyAuditEmitter(ctx.audit), principal_resolver, ws_registry
+        )
+    )
     # `principal_resolver` stays `None` here: session verification is E09-S03
     # scope (`auth/login_service.py`'s own docstring — "non-MFA session
     # issuance is E09-S03 scope"), not this router's. Every `/admin/audit*`

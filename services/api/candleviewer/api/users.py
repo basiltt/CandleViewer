@@ -2,8 +2,8 @@
 
 Enforces `users:write`, the owner-floor guard at API level, audits the
 change, and notifies the WS layer so a downgrade takes effect on live
-sockets. `principal_resolver=None` / `store=None` fail closed with 501
-(same pattern as `api/audit.py`) until session verification is wired.
+sockets. `principal_resolver=None` / `store=None` fail closed with 501;
+the audit emitter and notifier are required (TypeError at wiring time).
 """
 
 from __future__ import annotations
@@ -54,14 +54,12 @@ def _problem(status: int, title: str, detail: str) -> JSONResponse:
 
 
 async def _audit(
-    emitter: _Emitter | None,
+    emitter: _Emitter,
     action: str,
     principal: PrincipalSnapshot,
     user_id: uuid.UUID,
     reason: str,
 ) -> None:
-    if emitter is None:
-        return
     await emitter.emit(
         action,
         actor_label=str(principal.user_id),
@@ -74,10 +72,15 @@ async def _audit(
 
 def make_users_router(
     store: UserRoleStore | None,
-    emitter: _Emitter | None,
-    principal_resolver: SnapshotResolver | None = None,
-    notifier: PermissionChangeNotifier | None = None,
+    emitter: _Emitter,
+    principal_resolver: SnapshotResolver | None,
+    notifier: PermissionChangeNotifier,
 ) -> APIRouter:
+    """`emitter` and `notifier` are mandatory: a role change without an
+    audit record (C-2.9) or without a live-socket re-evaluation is refused
+    at wiring time, not silently skipped."""
+    if emitter is None or notifier is None:
+        raise TypeError("make_users_router: audit emitter and notifier are required")
     router = APIRouter()
 
     @router.put("/users/{userId}/roles")
@@ -140,8 +143,7 @@ def make_users_router(
         ):
             if changed:
                 await _audit(emitter, action, principal, user_id, ",".join(changed))
-        if notifier is not None:
-            await notifier.roles_changed(user_id)
+        await notifier.roles_changed(user_id)
         return JSONResponse(
             status_code=200, content={"id": str(user_id), "roles": sorted(new_roles)}
         )

@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 from candleviewer.api.users import make_users_router
 from candleviewer.auth.generated_permissions import Permission
 from candleviewer.auth.owner_floor import assert_owner_floor
-from candleviewer.auth.scopes import PrincipalSnapshot
+from candleviewer.auth.scopes import AccountGrant, PrincipalSnapshot
 
 OWNER = uuid.uuid4()
 TARGET = uuid.uuid4()
@@ -108,7 +108,7 @@ def test_put_roles_unauthenticated_is_401_and_unwired_is_501() -> None:
         == 401
     )
     app = FastAPI()
-    app.include_router(make_users_router(None, em))
+    app.include_router(make_users_router(None, em, None, n))
     assert TestClient(app).put(f"/users/{TARGET}/roles", json={"roles": ["x"]}).status_code == 501
 
 
@@ -200,10 +200,18 @@ def test_ws_gateway_hooks_auth_ok_sub_check_and_live_permission_change() -> None
         reg = ConnectionRegistry(resolve, lambda: 1)
         authz = await open_connection(reg, viewer, send)
         assert sent[0]["t"] == "auth_ok" and sent[0]["p"]["permissions"] == ["orders:read"]
-        await handle_sub(
-            authz, {"id": "s", "p": {"topics": [{"ch": "orders.a"}, {"ch": "bars.X"}]}}, send
+        acc = str(uuid.uuid4())
+        orders = {"ch": "orders", "opts": {"exchange_account_ids": [acc]}}
+        viewer_grants = PrincipalSnapshot(
+            TARGET,
+            frozenset({"viewer"}),
+            frozenset({Permission.ORDERS_READ}),
+            (AccountGrant(uuid.UUID(acc), True, False, False),),
         )
-        assert [f["ch"] for f in sent if f["t"] == "error"] == ["bars.X"]
+        authz.principal = viewer_grants
+        await handle_sub(authz, {"id": "s", "p": {"topics": [orders, {"ch": "bars.X"}]}}, send)
+        res = sent[-1]["p"]["results"]
+        assert [(r["ch"], r["ok"]) for r in res] == [("orders", True), ("bars.X", False)]
         sent.clear()
         store = _Store({"viewer"}, 2)
         app = FastAPI()
@@ -216,3 +224,12 @@ def test_ws_gateway_hooks_auth_ok_sub_check_and_live_permission_change() -> None
         assert sent == []
 
     asyncio.run(scenario())
+
+
+def test_make_users_router_requires_audit_emitter_and_notifier() -> None:
+    import pytest
+
+    with pytest.raises(TypeError, match="required"):
+        make_users_router(None, None, None, _Notifier())  # type: ignore[arg-type]  # the point
+    with pytest.raises(TypeError, match="required"):
+        make_users_router(None, _Emitter(), None, None)  # type: ignore[arg-type]  # the point

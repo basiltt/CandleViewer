@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -79,10 +80,9 @@ def check_subscribe(
     if entry is None:
         return Deny(DenyReason.MISSING_PERMISSION, Permission.MARKETDATA_READ, Scope.NONE)
     permission, scope = entry
-    if scope is Scope.GRANTED_ACCOUNTS and exchange_account_id is None:
-        # Account-less subscribe: permission alone decides; the gateway
-        # narrows the stream to granted accounts (§6.3 "scope narrowing").
-        scope = Scope.NONE
+    # Account-scoped families REQUIRE an account id: `decide()` denies a
+    # GRANTED_ACCOUNTS check without one (OBJECT_REQUIRED), so an
+    # account-less `orders`/`positions`/... sub fails closed (#1654 IDOR).
     return decide(principal, permission, scope=scope, exchange_account_id=exchange_account_id)
 
 
@@ -91,13 +91,23 @@ class ConnectionAuthz:
     """Authorisation state of one authenticated WS connection."""
 
     principal: PrincipalSnapshot
-    topics: set[str] = field(default_factory=set)
+    #: Live subscriptions as (topic, account id or None for unscoped topics).
+    subs: set[tuple[str, uuid.UUID | None]] = field(default_factory=set)
 
-    def subscribe(self, topic: str, **kw: Any) -> Allow | Deny | None:
-        decision = check_subscribe(self.principal, topic, **kw)
+    @property
+    def topics(self) -> set[str]:
+        return {topic for topic, _ in self.subs}
+
+    def subscribe(
+        self, topic: str, *, exchange_account_id: uuid.UUID | None = None
+    ) -> Allow | Deny | None:
+        decision = check_subscribe(self.principal, topic, exchange_account_id=exchange_account_id)
         if decision is None or isinstance(decision, Allow):
-            self.topics.add(topic)
+            self.subs.add((topic, exchange_account_id))
         return decision
+
+    def unsubscribe(self, topic: str) -> None:
+        self.subs = {s for s in self.subs if s[0] != topic}
 
     def may_submit_order(self) -> bool:
         return isinstance(decide(self.principal, Permission.ORDERS_WRITE), Allow)
@@ -109,21 +119,26 @@ class ConnectionAuthz:
         frames: list[dict[str, Any]] = [
             {"t": "permission_change", "ts": now_ms, "p": auth_ok_payload(new)}
         ]
-        for topic in sorted(self.topics):
-            decision = check_subscribe(new, topic)
+        revoked: dict[str, Deny] = {}
+        for topic, account in sorted(self.subs, key=lambda s: (s[0], str(s[1]))):
+            # Re-validate WITH the account id so a lost grant revokes too.
+            decision = check_subscribe(new, topic, exchange_account_id=account)
             if isinstance(decision, Deny):
-                self.topics.discard(topic)
-                frames.append(
-                    {
-                        "t": "revoked",
-                        "ch": topic,
-                        "ts": now_ms,
-                        "p": {
-                            "reason": "permission_revoked",
-                            "message": f"Permission {decision.permission.value} was withdrawn.",
-                        },
-                    }
-                )
+                revoked.setdefault(topic, decision)
+        for topic, deny in revoked.items():
+            self.unsubscribe(topic)
+            missing_perm = deny.reason is DenyReason.MISSING_PERMISSION
+            frames.append(
+                {
+                    "t": "revoked",
+                    "ch": topic,
+                    "ts": now_ms,
+                    "p": {
+                        "reason": "permission_revoked" if missing_perm else "account_scope_changed",
+                        "message": f"Access to {topic} was withdrawn.",
+                    },
+                }
+            )
         return frames
 
 
@@ -135,8 +150,12 @@ class ConnectionRegistry:
     `ConnectionAuthz.subscribe` and unregisters on close.
     """
 
-    def __init__(self, resolve: Any, clock_ms: Any) -> None:
-        self._resolve = resolve  # async (user_id) -> PrincipalSnapshot
+    def __init__(
+        self,
+        resolve: Callable[[uuid.UUID], Awaitable[PrincipalSnapshot]],
+        clock_ms: Callable[[], int],
+    ) -> None:
+        self._resolve = resolve
         self._clock_ms = clock_ms
         self._conns: dict[uuid.UUID, list[tuple[ConnectionAuthz, Any]]] = {}
 
@@ -147,7 +166,12 @@ class ConnectionRegistry:
         entries = self._conns.get(authz.principal.user_id, [])
         self._conns[authz.principal.user_id] = [e for e in entries if e[0] is not authz]
 
+    async def resolve(self, user_id: uuid.UUID) -> PrincipalSnapshot:
+        return await self._resolve(user_id)
+
     async def roles_changed(self, user_id: uuid.UUID) -> None:
+        """Role/grant change: push `permission_change` and drop now-forbidden
+        subscriptions on every live socket of `user_id`."""
         entries = list(self._conns.get(user_id, ()))
         if not entries:
             return
@@ -171,27 +195,53 @@ async def open_connection(
     return authz
 
 
+def _account_ids(entry: Any) -> list[uuid.UUID | None] | None:
+    """`opts.exchange_account_ids` of a topic entry (§5.1); `[None]` when
+    absent, `None` when malformed (rejected, fail closed)."""
+    opts = entry.get("opts") if isinstance(entry, dict) else None
+    raw = (opts or {}).get("exchange_account_ids") if isinstance(opts, dict) else None
+    if raw is None:
+        return [None]
+    if not isinstance(raw, list) or not raw:
+        return None
+    try:
+        return [uuid.UUID(str(a)) for a in raw]
+    except ValueError:
+        return None
+
+
+def _sub_result(ch: str, decisions: list[Allow | Deny | None]) -> dict[str, Any]:
+    deny = next((d for d in decisions if isinstance(d, Deny)), None)
+    if deny is None:
+        return {"ch": ch, "ok": True}
+    code = "forbidden" if deny.reason is DenyReason.MISSING_PERMISSION else "account_scope_denied"
+    return {"ch": ch, "ok": False, "error": {"code": code, "message": f"Not permitted: {ch}."}}
+
+
 async def handle_sub(authz: ConnectionAuthz, frame: dict[str, Any], send: Send) -> None:
-    """Gateway hook for a `sub` frame: every topic is checked (§6.3); denied
-    topics get an `error` frame (`forbidden`) and are never subscribed."""
+    """Gateway hook for a `sub` frame: every topic (and every account id in
+    `opts.exchange_account_ids`) is checked against permission AND account
+    scope (§6.3); one `sub_ok` with a per-topic result (§5.2). A topic is
+    only subscribed when every requested account is allowed."""
     topics = (frame.get("p") or {}).get("topics") or []
+    results: list[dict[str, Any]] = []
     for entry in topics:
         ch = entry.get("ch") if isinstance(entry, dict) else entry
         if not isinstance(ch, str):
             continue
-        decision = authz.subscribe(ch)
-        if isinstance(decision, Deny):
-            await send(
-                {
-                    "t": "error",
-                    "id": frame.get("id"),
-                    "ch": ch,
-                    "p": {
-                        "code": "forbidden",
-                        "message": f"Missing permission {decision.permission.value}.",
-                    },
-                }
+        accounts = _account_ids(entry)
+        if accounts is None:
+            results.append(
+                {"ch": ch, "ok": False, "error": {"code": "bad_request", "message": "bad opts"}}
             )
+            continue
+        decisions = [check_subscribe(authz.principal, ch, exchange_account_id=a) for a in accounts]
+        result = _sub_result(ch, decisions)
+        if result["ok"]:
+            for a in accounts:
+                authz.subscribe(ch, exchange_account_id=a)
+        results.append(result)
+    await send({"t": "sub_ok", "id": frame.get("id"), "p": {"results": results}})
 
 
 def close_connection(registry: ConnectionRegistry, authz: ConnectionAuthz) -> None:
