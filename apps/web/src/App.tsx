@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
+import { startTelemetry } from "./lib/telemetry/aggregator";
 import { createRouteTree } from "./routes/tree";
 
 /**
@@ -9,5 +11,7 @@ import { createRouteTree } from "./routes/tree";
 const router = createRouteTree();
 
 export function App(): JSX.Element {
+  // E04-T06: frontend telemetry push loop lives exactly as long as the app.
+  useEffect(() => startTelemetry().stop, []);
   return <RouterProvider router={router} />;
 }

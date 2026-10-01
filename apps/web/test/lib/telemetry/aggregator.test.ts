@@ -6,6 +6,8 @@ import {
   TelemetryAggregator,
   fetchTransport,
   type TelemetryPayload,
+  TELEMETRY_PATH,
+  startTelemetry,
   type Transport,
 } from "../../../src/lib/telemetry/aggregator";
 import { throttleIndicator, toLatencyIndicator } from "../../../src/lib/telemetry/latencyIndicator";
@@ -139,5 +141,24 @@ describe("latency indicator contract", () => {
       t += 100;
     }
     expect(emit).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("startTelemetry", () => {
+  it("posts one bounded payload per interval to the contract path and stops cleanly", async () => {
+    vi.useFakeTimers();
+    const sent: unknown[] = [];
+    const { aggregator, stop } = startTelemetry(async (p) => {
+      sent.push(p);
+    });
+    aggregator.recordFrame(10);
+    await vi.advanceTimersByTimeAsync(PUSH_INTERVAL_MS);
+    expect(sent).toHaveLength(1);
+    stop();
+    aggregator.recordFrame(10);
+    await vi.advanceTimersByTimeAsync(PUSH_INTERVAL_MS * 3);
+    expect(sent).toHaveLength(1);
+    expect(TELEMETRY_PATH).toBe("/telemetry/frontend");
+    vi.useRealTimers();
   });
 });

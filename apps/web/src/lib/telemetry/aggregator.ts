@@ -9,6 +9,8 @@
  * against a degraded backend. Memory is O(buckets): a fixed set of counters.
  */
 
+import type { generated } from "@candleviewer/protocol";
+
 /** Bucket edges in ms; must match `22-api-openapi.yaml` FrontendTelemetry. */
 export const FRAME_EDGES_MS = [4, 8, 12, 16, 20, 33, 50, 100] as const;
 export const DECODE_EDGES_MS = [0.1, 0.25, 0.5, 1, 2, 4, 5, 10] as const;
@@ -16,14 +18,9 @@ export const PUSH_INTERVAL_MS = 10_000;
 /** Server-side per-bucket cap per window; we clamp to it. */
 const MAX_COUNT = 2400;
 
-export interface TelemetryPayload {
-  readonly screen: string;
-  readonly engine_version: string;
-  readonly fe_frame_time_ms: { readonly counts: number[] };
-  readonly fe_ws_decode_ms: { readonly counts: number[] };
-  readonly fe_dropped_frames_total: number;
-  readonly fe_gpu_memory_mb?: number;
-}
+/** The generated `postFrontendTelemetry` request body (`packages/protocol`). */
+export type TelemetryPayload =
+  generated.rest.operations["postFrontendTelemetry"]["requestBody"]["content"]["application/json"];
 
 export type Transport = (payload: TelemetryPayload) => Promise<unknown>;
 
@@ -131,7 +128,7 @@ export function fetchTransport(baseUrl = "/api/v1"): Transport {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 5_000);
     try {
-      const res = await fetch(`${baseUrl}/telemetry/frontend`, {
+      const res = await fetch(`${baseUrl}${TELEMETRY_PATH}`, {
         method: "POST",
         credentials: "include",
         headers: { "content-type": "application/json" },
@@ -145,4 +142,20 @@ export function fetchTransport(baseUrl = "/api/v1"): Transport {
       clearTimeout(timer);
     }
   };
+}
+
+/** Generated-contract path for `postFrontendTelemetry`. */
+export const TELEMETRY_PATH: keyof generated.rest.paths = "/telemetry/frontend";
+
+/**
+ * App-level start (called once from `App` on mount): one aggregator, one
+ * bounded 10 s push loop (the only network rate). Returns the teardown.
+ */
+export function startTelemetry(
+  transport: Transport = fetchTransport(),
+  engineVersion = "0.1.0",
+): { readonly aggregator: TelemetryAggregator; stop(): void } {
+  const aggregator = new TelemetryAggregator(transport, engineVersion);
+  const stop = aggregator.start();
+  return { aggregator, stop };
 }
