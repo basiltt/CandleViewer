@@ -71,8 +71,17 @@ class _Resolver:
 
 
 class _Positions:
-    async def open_position_count(self, user_id: str) -> int:
+    source = "oms"
+
+    async def open_position_count(self, user_id: str) -> int | None:
         return 2
+
+
+class _NoStore:
+    source = "not_deployed"
+
+    async def open_position_count(self, user_id: str) -> int | None:
+        return None
 
 
 def _record(user: uuid.UUID) -> SessionRecord:
@@ -85,7 +94,9 @@ def _record(user: uuid.UUID) -> SessionRecord:
     )  # fmt: skip
 
 
-async def _build(owner_role: bool = True) -> tuple[TestClient, _Emitter, bytes, _Clock, uuid.UUID]:
+async def _build(
+    owner_role: bool = True, positions: Any = None
+) -> tuple[TestClient, _Emitter, bytes, _Clock, uuid.UUID]:
     clock, repo, enc = _Clock(), FakeMfaRepository(), TotpEncryptor(os.urandom(32))
     mfa = MfaService(repo, enc, recovery_code_key=b"k" * 32, clock=clock)
     user = uuid.uuid4()
@@ -97,8 +108,10 @@ async def _build(owner_role: bool = True) -> tuple[TestClient, _Emitter, bytes, 
         str(user), method_id=str(res.method_id),
         code=generate_code(seed, time_step_for(_T0.timestamp()) - 1),
     )  # fmt: skip
-    svc = StepUpService(repo, FakeSessionRepository(), enc, clock=clock)
-    auth = _Auth(svc, _Sessions({"tok": _record(user)}))
+    record, rows = _record(user), FakeSessionRepository()
+    await rows.create_session(record)  # step-up state persists on this row
+    svc = StepUpService(repo, rows, enc, clock=clock)
+    auth = _Auth(svc, _Sessions({"tok": record}))
     emitter = _Emitter()
     snap = PrincipalSnapshot(
         user_id=user,
@@ -108,7 +121,10 @@ async def _build(owner_role: bool = True) -> tuple[TestClient, _Emitter, bytes, 
     app = FastAPI()
     app.include_router(
         make_step_up_router(
-            auth, emitter, principal_resolver=_Resolver(snap), positions=_Positions()
+            auth,
+            emitter,
+            principal_resolver=_Resolver(snap),
+            positions=positions or _Positions(),
         )
     )
     app.middleware("http")(make_read_only_guard(auth, emitter))
@@ -192,3 +208,28 @@ async def test_dangerous_route_is_403_without_elevation_then_passes() -> None:
     assert c.put(f"/users/{uid}/roles", headers=_H).status_code == 200
     clock.now += timedelta(minutes=5, seconds=1)
     assert c.put(f"/users/{uid}/roles", headers=_H).status_code == 403
+
+
+async def test_preview_without_position_store_is_unavailable_and_reset_needs_ack() -> None:
+    c, em, seed, clock, _ = await _build(positions=_NoStore())
+    c.post("/auth/step-up", headers=_H, json={"code": _code(seed, clock), "action_class": "users"})
+    target = uuid.uuid4()
+    prev = c.get(f"/users/{target}/mfa/reset-preview", headers=_H).json()
+    assert prev["open_position_count"] is None and prev["positions"] == "unavailable"
+    assert prev["position_source"] == "not_deployed"
+    assert prev["requires_acknowledge_unknown_positions"] is True
+    r = c.post(f"/users/{target}/mfa/reset", headers=_H)
+    assert r.status_code == 409 and r.json()["code"] == "positions_unknown"
+    assert "auth.mfa_reset_by_owner" not in em.actions()
+    ok = c.post(
+        f"/users/{target}/mfa/reset", headers=_H, json={"acknowledge_unknown_positions": True}
+    )
+    assert ok.status_code == 200 and "auth.mfa_reset_by_owner" in em.actions()
+
+
+async def test_preview_with_position_store_needs_no_ack() -> None:
+    c, _em, seed, clock, _ = await _build()
+    c.post("/auth/step-up", headers=_H, json={"code": _code(seed, clock), "action_class": "users"})
+    prev = c.get(f"/users/{uuid.uuid4()}/mfa/reset-preview", headers=_H).json()
+    assert prev["positions"] == "known" and prev["position_source"] == "oms"
+    assert prev["requires_acknowledge_unknown_positions"] is False

@@ -57,6 +57,18 @@ class SessionRepository(Protocol):
         revoked or does not exist."""
         ...
 
+    async def save_step_up_state(
+        self,
+        session_id: str,
+        *,
+        elevations: dict[str, datetime],
+        failures: int,
+        readonly_until: datetime | None,
+    ) -> SessionRecord | None:
+        """E09-S04: persist the step-up state on the session row iff it is
+        not revoked. Returns the updated row, or `None` if revoked/absent."""
+        ...
+
     async def revoke_all_for_user(
         self, user_id: str, *, reason: str, now: datetime, except_session_id: str | None = None
     ) -> tuple[SessionRecord, ...]:

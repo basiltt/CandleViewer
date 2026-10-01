@@ -186,6 +186,10 @@ x-error-codes:
     status: 403
     title: Session is read-only for 5 minutes after three invalid step-up codes
     retryable: false
+  - code: positions_unknown
+    status: 409
+    title: Open-position state is unavailable; resend with acknowledge_unknown_positions=true
+    retryable: false
   - code: forbidden
     status: 403
     title: Authenticated but lacking the required permission
@@ -7259,10 +7263,26 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [target_user_id, open_position_count, message]
+                required:
+                  [
+                    target_user_id,
+                    open_position_count,
+                    positions,
+                    position_source,
+                    requires_acknowledge_unknown_positions,
+                    message,
+                  ]
                 properties:
                   target_user_id: { type: string, format: uuid }
-                  open_position_count: { type: integer, minimum: 0 }
+                  open_position_count:
+                    type: [integer, "null"]
+                    minimum: 0
+                    description: Null when the position state is unknown - never a fabricated 0.
+                  positions: { type: string, enum: [known, unavailable] }
+                  position_source:
+                    type: string
+                    description: Backing store; `not_deployed` until the OMS position store lands.
+                  requires_acknowledge_unknown_positions: { type: boolean }
                   message: { type: string }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
@@ -7276,8 +7296,18 @@ paths:
       description: >
         Revokes the target's TOTP methods and all their sessions. Does not cancel orders or
         flatten positions and reveals no secret. Self-reset is refused. Audited as
-        `auth.mfa_reset_by_owner`.
+        `auth.mfa_reset_by_owner`. When the position state is unavailable the request must carry
+        `acknowledge_unknown_positions: true`, otherwise `409 positions_unknown`.
       x-rbac: { permissions: [users:write], scope: none }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                acknowledge_unknown_positions: { type: boolean, default: false }
       responses:
         "200":
           description: Reset.
@@ -7292,6 +7322,7 @@ paths:
                   sessions_revoked: { type: integer }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
 
   /auth/mfa/recovery:
     post:

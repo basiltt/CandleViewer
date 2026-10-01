@@ -109,7 +109,7 @@ async def require_elevation_for(
     """The `is_dangerous` decision-point hook (E09-T03 routes call this):
     None when elevated, else the 403 problem to return."""
     try:
-        auth.step_up.require_elevation(session_id, action_class)
+        await auth.step_up.require_elevation(session_id, action_class)
     except SessionReadOnly as exc:
         return readonly_problem(exc)
     except StepUpRequired as exc:
@@ -118,10 +118,37 @@ async def require_elevation_for(
 
 
 #: `is_dangerous` routes (permissions seeded `is_dangerous=true`) -> the
-#: step-up action class that must be elevated. Method + path regex.
+#: step-up action class that must be elevated. Method + path regex. Paths are
+#: the `22-api-openapi.yaml` contract; entries for routes that later epics
+#: implement (E27 keys, E44/E39 risk) are pre-registered so they are gated the
+#: moment they are mounted. `tests/unit/api/test_dangerous_route_registry.py`
+#: fails if any mounted route matching `DANGEROUS_PATH_PATTERN` is missing here
+#: or in `HANDLER_GATED_ROUTES`.
 DANGEROUS_ROUTES: tuple[tuple[str, re.Pattern[str], str], ...] = (
+    ("POST", re.compile(r"^/users$"), "users"),  # invite
     ("PUT", re.compile(r"^/users/[^/]+/roles$"), "users"),
     ("POST", re.compile(r"^/users/[^/]+/mfa/reset$"), "users"),
+    ("POST", re.compile(r"^/exchange-accounts/[^/]+/keys$"), "keys"),
+    ("POST", re.compile(r"^/exchange-accounts/[^/]+/keys/[^/]+/rotate$"), "keys"),
+    ("DELETE", re.compile(r"^/exchange-accounts/[^/]+/keys/[^/]+$"), "keys"),
+    ("POST", re.compile(r"^/risk/lockouts/[^/]+/override$"), "risk_caps"),
+)
+
+#: No-grace classes cannot be gated by path alone: kill-switch *engage* must
+#: never wait for a code (emergency stop) and switching *to demo* is not
+#: dangerous, so only the handler (body-aware) knows. Each entry is a
+#: declaration that the handler demands a fresh code for its dangerous
+#: branch; the owning epic must add a test proving it.
+HANDLER_GATED_ROUTES: tuple[tuple[str, str, str], ...] = (
+    ("POST", "/trading/kill-switch", "killswitch"),  # E39: release only
+    ("POST", "/session/environment", "live_enablement"),  # E44: to live only
+)
+
+#: Mounted write routes whose path matches this must be in one of the two
+#: registries above (deny-by-default for future tickets).
+DANGEROUS_PATH_PATTERN = re.compile(
+    r"^/(admin/)?(users|exchange-accounts/[^/]+/keys|keys|live|kill|trading/kill-switch"
+    r"|session/environment|risk/lockouts)(/|$)"
 )
 
 
@@ -152,7 +179,7 @@ def make_read_only_guard(
             if token is not None:
                 try:
                     record = await auth.sessions.authenticate_access_token(token)
-                    auth.step_up.assert_writable(str(record.id))
+                    await auth.step_up.assert_writable(str(record.id))
                     action_class = dangerous_action_class(request.method, request.url.path)
                     if action_class is not None:
                         # E09-T03 decision point: dangerous route, no elevation -> 403.
@@ -308,6 +335,9 @@ def make_step_up_router(
             {
                 "target_user_id": str(preview.target_user_id),
                 "open_position_count": preview.open_position_count,
+                "positions": "known" if preview.positions_known else "unavailable",
+                "position_source": preview.position_source,
+                "requires_acknowledge_unknown_positions": not preview.positions_known,
                 "message": preview.message,
             }
         )
@@ -335,6 +365,26 @@ def make_step_up_router(
                 object_id=str(user_id),
             )
             return gate
+        if positions is None:
+            return _problem(501, "not_implemented", "Not implemented", "no position provider")
+        preview = await auth.step_up.preview_reset(str(user_id), positions)
+        if not preview.positions_known:
+            # Unknown position state is never shown as 0: the owner must
+            # acknowledge it explicitly before the reset proceeds.
+            try:
+                body = await request.json()
+            except ValueError:
+                body = None
+            ack = isinstance(body, dict) and body.get("acknowledge_unknown_positions") is True
+            if not ack:
+                return _problem(
+                    409,
+                    "positions_unknown",
+                    "Open-position state unavailable",
+                    preview.message,
+                    position_source=preview.position_source,
+                    requires_acknowledge_unknown_positions=True,
+                )
         try:
             result = await auth.step_up.reset_totp(
                 actor_session_id=str(record.id),

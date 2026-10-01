@@ -54,6 +54,27 @@ class FakeSessionRepository:
         self.sessions[session_id] = updated
         return updated
 
+    async def save_step_up_state(
+        self,
+        session_id: str,
+        *,
+        elevations: dict[str, datetime],
+        failures: int,
+        readonly_until: datetime | None,
+    ) -> SessionRecord | None:
+        session = self.sessions.get(session_id)
+        if session is None or session.revoked_at is not None:
+            return None
+        updated = session.model_copy(
+            update={
+                "step_up_elevations": dict(elevations),
+                "step_up_failures": failures,
+                "readonly_until": readonly_until,
+            }
+        )
+        self.sessions[session_id] = updated
+        return updated
+
     async def revoke_all_for_user(
         self, user_id: str, *, reason: str, now: datetime, except_session_id: str | None = None
     ) -> tuple[SessionRecord, ...]:

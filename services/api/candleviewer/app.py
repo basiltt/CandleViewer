@@ -439,13 +439,17 @@ async def gateway_overloaded_handler(_request: Request, exc: Exception) -> JSONR
     )
 
 
-class _OmsPositions:
-    """Open-position read model for the reset preview. The OMS position
-    store (M-oms) has not landed (`oms/service.py` is a scaffold), so there
-    are no open positions to report yet; swap for the OMS read model then."""
+class _NoPositionStore:
+    """Open-position provider for the reset preview while no position store
+    exists on main (`oms/` is a scaffold; `positions` lands with
+    `0006_trading_core`). Reports the state as unknown - never 0 - so the
+    preview says so and the reset demands `acknowledge_unknown_positions`.
+    Replace with the OMS read model when it lands."""
 
-    async def open_position_count(self, user_id: str) -> int:
-        return 0
+    source = "not_deployed"
+
+    async def open_position_count(self, user_id: str) -> int | None:
+        return None
 
 
 def create_app(
@@ -569,7 +573,7 @@ def create_app(
             ctx.auth,
             _LazyAuditEmitter(ctx.audit),
             principal_resolver=principal_resolver,
-            positions=_OmsPositions(),
+            positions=_NoPositionStore(),
         )
     )
     app.middleware("http")(make_read_only_guard(ctx.auth, _LazyAuditEmitter(ctx.audit)))

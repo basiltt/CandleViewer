@@ -750,8 +750,8 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Elevate the current session by re-presenting MFA
-     * @description Grants `elevated_until = now + 15 min` on the current session (24-internal-schemas.md section 15.2). Endpoints that require elevation return `403` with `type: step_up_required` until this succeeds. Always audited.
+     * Elevate the current session for one action class by re-presenting TOTP
+     * @description Grants a **5-minute** server-side grace for `action_class` on the current session (24-internal-schemas.md section 15.2/15.3; the ticket value of 5 minutes supersedes the earlier 15). `live_enablement` and `killswitch` are no-grace classes: the response is `single_use: true` and no window is opened. Three consecutive invalid codes downgrade the session to read-only for 5 minutes (`403 session_read_only` on every write). Endpoints that require elevation return `403` with `code: step_up_required` until this succeeds. Always audited (`auth.step_up_granted`, `auth.step_up_failed`, `auth.session_readonly_downgrade`).
      */
     post: operations["authStepUp"];
     delete?: never;
@@ -3390,6 +3390,47 @@ export interface paths {
      * @description This is the isolation boundary between managers. Changes take effect on the next request; existing WS subscriptions for revoked accounts are force-closed with an `unsubscribed` frame (see 23-ws-protocol.md §9).
      */
     put: operations["setUserAccountAccess"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/users/{userId}/mfa/reset": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: components["parameters"]["UserId"];
+      };
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Owner-initiated TOTP reset (owner, step-up `users`)
+     * @description Revokes the target's TOTP methods and all their sessions. Does not cancel orders or flatten positions and reveals no secret. Self-reset is refused. Audited as `auth.mfa_reset_by_owner`. When the position state is unavailable the request must carry `acknowledge_unknown_positions: true`, otherwise `409 positions_unknown`.
+     */
+    post: operations["resetUserMfa"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/users/{userId}/mfa/reset-preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: components["parameters"]["UserId"];
+      };
+      cookie?: never;
+    };
+    /** Show the target's open-position state before an owner TOTP reset */
+    get: operations["previewMfaReset"];
+    put?: never;
     post?: never;
     delete?: never;
     options?: never;
@@ -8280,23 +8321,31 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["MfaVerifyRequest"];
+        "application/json": {
+          /** @enum {string} */
+          action_class: "keys" | "users" | "live_enablement" | "killswitch" | "risk_caps";
+          code: string;
+        };
       };
     };
     responses: {
-      /** @description Session elevated. */
+      /** @description Elevated. */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "application/json": {
+            action_class: string;
             /** Format: date-time */
             elevated_until: string;
+            single_use: boolean;
           };
         };
       };
+      400: components["responses"]["BadRequest"];
       401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
       429: components["responses"]["RateLimited"];
     };
   };
@@ -12723,6 +12772,78 @@ export interface operations {
       };
       403: components["responses"]["Forbidden"];
       404: components["responses"]["NotFound"];
+    };
+  };
+  resetUserMfa: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: components["parameters"]["UserId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "application/json": {
+          /** @default false */
+          acknowledge_unknown_positions?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Reset. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            methods_revoked: number;
+            sessions_revoked: number;
+            /** Format: uuid */
+            target_user_id: string;
+          };
+        };
+      };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      409: components["responses"]["Conflict"];
+    };
+  };
+  previewMfaReset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: components["parameters"]["UserId"];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Preview. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            message: string;
+            /** @description Null when the position state is unknown - never a fabricated 0. */
+            open_position_count: number | null;
+            /** @description Backing store; `not_deployed` until the OMS position store lands. */
+            position_source: string;
+            /** @enum {string} */
+            positions: "known" | "unavailable";
+            requires_acknowledge_unknown_positions: boolean;
+            /** Format: uuid */
+            target_user_id: string;
+          };
+        };
+      };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
     };
   };
   setUserRoles: {

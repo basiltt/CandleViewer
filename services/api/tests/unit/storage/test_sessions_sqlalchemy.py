@@ -34,6 +34,9 @@ def _row(**over: Any) -> SimpleNamespace:
         "is_electron": False,
         "mfa_satisfied_at": None,
         "idle_timeout_s": 900,
+        "step_up_elevations": "{}",
+        "step_up_failures": 0,
+        "readonly_until": None,
     }
     m.update(over)
     return SimpleNamespace(_mapping=m)
@@ -118,3 +121,17 @@ async def test_family_walk_returns_ids_and_lookup_by_jti_is_bound() -> None:
     repo2, rel2 = _repo([_row()])
     await repo2.find_by_access_token_jti("jti")
     assert rel2.session.calls[0][1] == {"j": "jti"}
+
+
+async def test_save_step_up_state_is_conditional_and_round_trips_elevations() -> None:
+    until = datetime(2026, 9, 30, 0, 5, tzinfo=UTC)
+    stored = '{"keys": "2026-09-30T00:05:00+00:00"}'
+    repo, rel = _repo([_row(step_up_elevations=stored, step_up_failures=1)])
+    got = await repo.save_step_up_state(
+        "sid", elevations={"keys": until}, failures=1, readonly_until=None
+    )
+    sql, params = rel.session.calls[0]
+    assert "revoked_at IS NULL" in sql and "RETURNING" in sql
+    assert params["elevations"] == stored
+    assert got["step_up_elevations"] == {"keys": until}
+    assert got["step_up_failures"] == 1

@@ -253,6 +253,10 @@ class SessionRecord(BaseModel):
     is_electron: bool
     mfa_satisfied_at: datetime | None
     idle_timeout_s: int = 900
+    #: E09-S04 step-up state, persisted on the row (migration 0009).
+    step_up_elevations: dict[str, datetime] = Field(default_factory=dict)
+    step_up_failures: int = 0
+    readonly_until: datetime | None = None
 
     @property
     def is_revoked(self) -> bool:
