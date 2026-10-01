@@ -2,6 +2,55 @@
 
 from __future__ import annotations
 
+from typing import Any
+
+from candleviewer.ws._generated.error_codes import ERROR_META, WS_ERROR_CODES, ErrorCode
+
 
 class WsError(Exception):
     """Base exception for the M23 `ws` module."""
+
+
+class UnknownErrorCode(WsError):
+    """An error code outside the generated 23-ws-protocol.md 10.2 catalogue was emitted (S10)."""
+
+
+def build_ws_error(
+    code: str,
+    *,
+    id: str | None = None,
+    ch: str | None = None,
+    message: str | None = None,
+    field: str | None = None,
+    request_id: str | None = None,
+    close: bool = False,
+) -> dict[str, Any]:
+    """The one sanctioned ``err`` frame builder (requirement S10).
+
+    Raises ``UnknownErrorCode`` for a code that is not in the generated WS catalogue.
+    ``internal_error`` never carries a message (only ``request_id``): no exception text,
+    stack trace or SQL can reach a client through this path.
+    """
+    try:
+        known = ErrorCode(code)
+    except ValueError:
+        raise UnknownErrorCode(f"error code {code!r} is not in the WS catalogue") from None
+    if known not in WS_ERROR_CODES:
+        raise UnknownErrorCode(f"error code {code!r} is REST-only, not legal on the WS")
+    payload: dict[str, Any] = {
+        "code": code,
+        "retryable": ERROR_META[known].retryable,
+        "close": close,
+    }
+    if message is not None and known is not ErrorCode.INTERNAL_ERROR:
+        payload["message"] = message
+    if field is not None:
+        payload["field"] = field
+    if request_id is not None:
+        payload["request_id"] = request_id
+    frame: dict[str, Any] = {"t": "err", "p": payload}
+    if id is not None:
+        frame["id"] = id
+    if ch is not None:
+        frame["ch"] = ch
+    return frame
