@@ -54,7 +54,9 @@ async def test_concurrent_consume_has_exactly_one_winner(pg_dsn: str) -> None:
     rel = SqlAlchemyRelationalRepository(pg_dsn)
     repo = SqlAlchemyInviteRepository(rel, lambda **f: InviteRecord.model_validate(f))
     try:
-        users = SqlAlchemyUserRepository(rel, lambda **f: UserRecord.model_validate(f))
+        users = SqlAlchemyUserRepository(
+            rel, lambda **f: UserRecord.model_validate(f), clock=lambda: datetime.now(UTC)
+        )
         owner = await users.find_by_identifier("owner1")
         assert owner is not None
         by = owner.id
