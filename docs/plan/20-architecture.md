@@ -1218,6 +1218,8 @@ The machine-readable catalogue is `services/api/candleviewer/observability/metri
 | Statechart | `cv_machine_transition_seconds{kind}` | histogram | transition latency; feeds the ≥ 8,000 ev/s aggregate budget |
 | Statechart | `cv_machine_chain_trips_total{kind}` | counter | runaway-chain latches (`chain_trips > 0`, CV-C63); **pages P1**, entity latched degraded |
 | Statechart | `cv_machine_dropped_receipts_total{kind}` | counter | receipts dropped (`dropped_receipts`/`on_receipt_dropped`, CV-C69); alert on any |
+| Statechart | `cv_machine_transitions_total{kind}` | counter | committed transitions per family (`CvMetricsPlugin`, E50-T60) |
+| Statechart | `cv_machine_timer_handles{kind}` | gauge | live `after:` timer handles per family; alert on monotonic growth (leaked timers) |
 | Statechart | `cv_machine_send_refused_total{kind,reason}` | counter | inbox `overflow_policy="refuse"` refusals; order lane pages |
 | Statechart | `cv_statechart_library_info{version,sha256}` | gauge | pinned `xstate-statemachine` build identity (always `0.9.1`); a mismatch with the lock fails readiness |
 | Rule engine | `cv_rule_prefilter_rejection_ratio` | gauge | must hold ≥ 0.99; below that, rule dispatch is disabled and alerts (the budget is shared with the OMS) |

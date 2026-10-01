@@ -116,6 +116,8 @@ async def restore(key, envelope) -> Interpreter:
 
 _Implemented (E50-T10):_ `persistence.Persister.persist` realises the snapshot block above with injected `SnapshotRepo` / `DrainJournal` / `PersistAudit` / seal callbacks (tables: `machine_snapshots`, `machine_drain_journal`, `24-internal-schemas.md` §17.6; migration E29-T12). A `_fault` context is refused and audited before anything is drained. `InMemoryDrainJournal` is the reference journal for the contract suite; restore + HMAC stay in E50-T49.
 
+_Implemented (E50-T49):_ `persistence.Restorer.restore` realises the restore block above. `seal`/`open_sealed` compute HMAC-SHA256 over length-prefixed `canonical_json(chart) || canonical_json(blob) || machine_hash || version`, keyed by `HmacKeys.current()` and verified by the envelope's `key_id` (rotation-safe). Any refusal (bad HMAC, unknown key id, registry `machine_hash` mismatch, version < 3, library `Snapshot*Error`, a C45''/C60/C27'/C54 pre-start check) writes a quarantine row via `RestoreAudit` and pages P1; the blob is never loaded. `chain_trips > 0` sets `ChainTripLatch` (reads served, `admit_command` refuses) and pages. `factory.make_machine`/`apply_lane_config` are shared so a restored interpreter carries the same mandatory config as `build()`. The KMS-backed `HmacKeys`, Postgres quarantine sink and gateway consultation of the latch are wired by their owning tickets (E29-T12, E50-T15, E42).
+
 
 ### 1.4 `gateway.py`: the only send path
 
