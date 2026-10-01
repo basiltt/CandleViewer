@@ -38,6 +38,7 @@ class StalenessWatchdog:
     @staticmethod
     def _kind(topic: str) -> str:
         head = topic.split(".", 1)[0]
+        # nosemgrep: cv-bybit-vocabulary-leak -- planner topic heads, E08-T05 moves mapping
         return {"orderbook": "book", "publicTrade": "trade", "tickers": "ticker"}.get(head, head)
 
     def watch(self, topic: str) -> None:

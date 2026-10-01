@@ -43,6 +43,9 @@ _PHASE = {
 _conn_ids = itertools.count(1)
 
 
+MAX_FRAME_BYTES = 1_048_576  # explicit cap on a single WS frame (E08-X01)
+
+
 class Socket(Protocol):
     async def send(self, frame: str) -> None: ...
     async def recv(self) -> str: ...
@@ -250,7 +253,10 @@ class ConnectionManager:
 
     async def _read(self, sock: Socket) -> None:
         while True:
-            self._on_message(await sock.recv())
+            frame = await sock.recv()
+            if len(frame) > MAX_FRAME_BYTES:
+                raise ValueError("ws frame exceeds MAX_FRAME_BYTES")
+            self._on_message(frame)
 
     async def _watch(self) -> None:
         """Returns once any topic goes stale (publishing `stale` on the bus)."""
