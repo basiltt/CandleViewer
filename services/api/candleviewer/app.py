@@ -21,7 +21,8 @@ from datetime import UTC, datetime
 from functools import lru_cache
 from typing import Any
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from candleviewer.accounts.service import AccountsService
 from candleviewer.admin.service import AdminService
@@ -103,6 +104,7 @@ from candleviewer.replay.service import ReplayService
 from candleviewer.risk.service import RiskService
 from candleviewer.rules.service import RulesService
 from candleviewer.settings import Environment, Settings, get_settings
+from candleviewer.statechart.gateway import GatewayOverloadedError
 from candleviewer.storage.repositories.audit_sqlalchemy import SqlAlchemyAuditRepository
 from candleviewer.storage.repositories.identity_sqlalchemy import SqlAlchemyIdentityProvider
 from candleviewer.storage.repositories.instruments_sqlalchemy import (
@@ -416,6 +418,21 @@ def _session_authenticator(ctx: AppContext) -> Authenticate:
 SnapshotLoader = Callable[[uuid.UUID], Awaitable[PrincipalSnapshot]]
 
 
+async def gateway_overloaded_handler(_request: Request, exc: Exception) -> JSONResponse:
+    """Map a refused statechart inbox to RFC 7807 HTTP 503 (E50-T15, CV-C33)."""
+    return JSONResponse(
+        status_code=GatewayOverloadedError.status_code,
+        content={
+            "type": "about:blank",
+            "title": "Service Unavailable",
+            "status": GatewayOverloadedError.status_code,
+            "detail": str(exc),
+        },
+        headers={"Retry-After": "1"},
+        media_type="application/problem+json",
+    )
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -448,6 +465,7 @@ def create_app(
         version=resolved.version,
         dependencies=[Depends(make_deny_undeclared_dependency(declared_operations(spec)))],
     )
+    app.add_exception_handler(GatewayOverloadedError, gateway_overloaded_handler)
     ctx = build_app_context(resolved, auth_clock=auth_clock)
     app.state.app_context = ctx
     if resolved.ingestion_ws_enabled:

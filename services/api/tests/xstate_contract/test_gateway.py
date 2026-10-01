@@ -275,3 +275,26 @@ def test_priority_true_fails_cv_lint_priority() -> None:
     assert rules == ["CV-LINT-PRIORITY"]
     gateway_src = REPO / "services/api/candleviewer/statechart/gateway.py"
     assert lint_statecharts.lint_python_file(gateway_src) == []
+
+
+def test_overloaded_error_maps_to_http_503_problem_response() -> None:
+    """AC1 through the real app wiring: create_app registers the 503 handler."""
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from candleviewer.app import create_app, gateway_overloaded_handler
+
+    assert GatewayOverloadedError in create_app().exception_handlers
+
+    app = FastAPI()
+    app.add_exception_handler(GatewayOverloadedError, gateway_overloaded_handler)
+
+    @app.get("/boom")
+    async def boom() -> None:
+        raise GatewayOverloadedError("m1", "order")
+
+    resp = TestClient(app).get("/boom")
+    assert resp.status_code == 503
+    assert resp.headers["content-type"].startswith("application/problem+json")
+    assert resp.json()["status"] == 503
+    assert resp.headers["retry-after"] == "1"
