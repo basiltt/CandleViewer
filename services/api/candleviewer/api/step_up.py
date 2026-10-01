@@ -269,7 +269,7 @@ def make_step_up_router(
                 "auth.step_up_failed",
                 record,
                 outcome=AuditOutcome.FAILURE,
-                severity=Severity.WARNING,
+                severity=Severity.ERROR,
                 reason=f"{action_class}:remaining={exc.failures_remaining}",
             )
             return _problem(
@@ -280,11 +280,19 @@ def make_step_up_router(
                 failures_remaining=exc.failures_remaining,
             )
         except SessionReadOnly as exc:
+            # Third strike: the failing attempt itself is audited, then the downgrade.
+            await _audit(
+                "auth.step_up_failed",
+                record,
+                outcome=AuditOutcome.FAILURE,
+                severity=Severity.ERROR,
+                reason=f"{action_class}:remaining=0",
+            )
             await _audit(
                 "auth.session_readonly_downgrade",
                 record,
                 outcome=AuditOutcome.DENIED,
-                severity=Severity.WARNING,
+                severity=Severity.ERROR,
                 reason=action_class,
             )
             return readonly_problem(exc)
@@ -396,6 +404,7 @@ def make_step_up_router(
         await _audit(
             "auth.mfa_reset_by_owner",
             record,
+            severity=Severity.CRITICAL,
             object_kind="user",
             object_id=str(user_id),
             after_state={

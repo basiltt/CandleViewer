@@ -180,8 +180,9 @@ class StepUpService:
             raise StepUpCodeInvalid(FAILURE_CAP - failures)
         until = now + GRACE_WINDOW
         single_use = action_class in NO_GRACE_ACTION_CLASSES
-        if not single_use:
-            elevations[action_class] = until
+        # No-grace classes store a one-shot grant under "once:<class>" that a
+        # handler consumes via `consume_single_use`; grace classes a window.
+        elevations[f"once:{action_class}" if single_use else action_class] = until
         await self._save(session_id, elevations=elevations, failures=0, readonly_until=None)
         auth_step_up_total.labels(action_class=action_class).inc()
         return StepUpGrant(action_class, until, single_use=single_use)
@@ -208,6 +209,24 @@ class StepUpService:
         if until is None or until <= now:
             return None
         return until - now
+
+    async def consume_single_use(self, session_id: str, action_class: str) -> None:
+        """Handler-side check for no-grace classes: succeeds once per fresh
+        step-up code, then the one-shot grant is gone."""
+        await self.assert_writable(session_id)
+        record = await self._live(session_id)
+        key = f"once:{action_class}"
+        now = self._clock()
+        until = record.step_up_elevations.get(key) if record else None
+        if record is None or until is None or until <= now:
+            raise StepUpRequired(action_class)
+        remaining = {k: v for k, v in record.step_up_elevations.items() if k != key and v > now}
+        await self._save(
+            session_id,
+            elevations=remaining,
+            failures=record.step_up_failures,
+            readonly_until=None,
+        )
 
     async def require_elevation(self, session_id: str, action_class: str) -> None:
         """Server-side gate for `is_dangerous` routes (the E09-T03 decision

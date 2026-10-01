@@ -11,6 +11,7 @@ from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
 from candleviewer.api.step_up import make_read_only_guard, make_step_up_router
+from candleviewer.audit.models import Severity
 from candleviewer.auth.envelope import TotpEncryptor
 from candleviewer.auth.errors import SessionNotFound
 from candleviewer.auth.generated_permissions import Permission
@@ -167,6 +168,8 @@ async def test_step_up_then_owner_reset_reveals_nothing_and_audits() -> None:
     assert r.status_code == 200
     assert set(r.json()) == {"target_user_id", "methods_revoked", "sessions_revoked"}
     assert "auth.step_up_granted" in em.actions() and "auth.mfa_reset_by_owner" in em.actions()
+    reset = next(c for c in em.calls if c["action"] == "auth.mfa_reset_by_owner")
+    assert reset["severity"] == Severity.CRITICAL
 
 
 async def test_non_owner_cannot_reset() -> None:
@@ -183,8 +186,11 @@ async def test_three_failures_make_session_read_only_on_write_routes() -> None:
     assert r.status_code == 403 and r.json()["code"] == "session_read_only"
     assert c.post("/orders", headers=_H).json()["code"] == "session_read_only"
     assert c.post("/orders").status_code == 200  # no token: guard defers to the route
-    assert em.actions().count("auth.step_up_failed") == 2
+    assert em.actions().count("auth.step_up_failed") == 3
     assert "auth.session_readonly_downgrade" in em.actions()
+    for call in em.calls:
+        if call["action"] in ("auth.step_up_failed", "auth.session_readonly_downgrade"):
+            assert call["severity"] == Severity.ERROR
     clock.now += timedelta(minutes=5, seconds=1)
     assert c.post("/orders", headers=_H).status_code == 200
 

@@ -104,6 +104,9 @@ async def test_grace_never_applies_to_no_grace_classes(cls: str) -> None:
     assert grant.single_use
     with pytest.raises(StepUpRequired):
         await svc.require_elevation("s1", cls)
+    await svc.consume_single_use("s1", cls)  # one-shot grant honoured once
+    with pytest.raises(StepUpRequired):
+        await svc.consume_single_use("s1", cls)
 
 
 async def test_three_failures_downgrade_to_readonly_for_five_minutes() -> None:
