@@ -34,6 +34,7 @@ export const ROUTE_MANIFEST: readonly ManifestEntry[] = [
   { id: "R-006", path: "/login/2fa/enroll", access: PUBLIC, owner: "E09" },
   { id: "R-007", path: "/login/change-password", access: PUBLIC, owner: "E09" },
   { id: "R-008", path: "/onboarding", access: ALL, owner: "E09" },
+  { id: "R-009", path: "/invite/:inviteToken", access: PUBLIC, owner: null },
 
   // Trading Terminal
   { id: "R-100", path: "/terminal", access: ALL, owner: "E15" },
@@ -98,7 +99,7 @@ export const ROUTE_MANIFEST: readonly ManifestEntry[] = [
   { id: "R-300", path: "/admin", access: ADMIN, owner: "E18" },
   { id: "R-301", path: "/admin/users", access: ADMIN, owner: "E18" },
   { id: "R-302", path: "/admin/users/:userId", access: ADMIN, owner: "E18" },
-  { id: "R-303", path: "/admin/users/new", access: ADMIN, owner: "E18" },
+  { id: "R-303", path: "/admin/users/new", access: ADMIN, owner: null },
   { id: "R-310", path: "/admin/accounts", access: ADMIN, owner: "E18" },
   { id: "R-311", path: "/admin/accounts/:accountId", access: ADMIN, owner: "E18" },
   { id: "R-312", path: "/admin/accounts/new", access: ADMIN, owner: "E18" },

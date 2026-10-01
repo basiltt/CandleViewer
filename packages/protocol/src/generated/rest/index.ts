@@ -1433,7 +1433,33 @@ export interface paths {
      */
     get: operations["getInvite"];
     put?: never;
-    post?: never;
+    /**
+     * Set the password and start TOTP enrolment (unauthenticated)
+     * @description Consumes the single-use token and parks the password hash; the account stays `invited` until `confirmInvite`. The body carries only `password` - a `role`/`roles` field is refused with `403` and audited (role immutability). Unknown, expired, redeemed and revoked tokens all return the same `404`.
+     */
+    post: operations["redeemInvite"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/invites/{inviteToken}/confirm": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        inviteToken: string;
+      };
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Verify the first TOTP code and activate the account (unauthenticated)
+     * @description Activates the account and returns the one-time recovery codes. No session is minted.
+     */
+    post: operations["confirmInvite"];
     delete?: never;
     options?: never;
     head?: never;
@@ -3439,6 +3465,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/users/{userId}/invite": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Revoke open invites and mint a new link (shown once) */
+    post: operations["reissueInvite"];
+    /** Revoke the pending invitation */
+    delete: operations["revokeInvite"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/users/{userId}/mfa/reset": {
     parameters: {
       query?: never;
@@ -3492,6 +3538,23 @@ export interface paths {
     get?: never;
     /** Replace a user's role set */
     put: operations["setUserRoles"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/users/invites": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List pending invitations */
+    get: operations["listPendingInvites"];
+    put?: never;
     post?: never;
     delete?: never;
     options?: never;
@@ -9698,6 +9761,123 @@ export interface operations {
         };
       };
       404: components["responses"]["NotFound"];
+      /** @description Too many invalid attempts from this address. */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  redeemInvite: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        inviteToken: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          password: string;
+        };
+      };
+    };
+    responses: {
+      /** @description TOTP enrolment started. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            method_id: string;
+            otpauth_uri: string;
+            secret_base32: string;
+          };
+        };
+      };
+      /** @description A role field was supplied; the invited role cannot be changed. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["NotFound"];
+      /** @description Password violates the policy. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too many invalid attempts from this address. */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  confirmInvite: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        inviteToken: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          code: string;
+          method_id: string;
+        };
+      };
+    };
+    responses: {
+      /** @description Account active. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            recovery_codes: string[];
+            role: components["schemas"]["RoleName"];
+            /** @enum {string} */
+            status: "active";
+          };
+        };
+      };
+      /** @description A role field was supplied. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["NotFound"];
+      /** @description Invalid TOTP code. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Too many invalid attempts from this address. */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
   getJournalAnalytics: {
@@ -12906,6 +13086,48 @@ export interface operations {
       404: components["responses"]["NotFound"];
     };
   };
+  reissueInvite: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description New invitation with one-time link. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
+  revokeInvite: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Revoked. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components["responses"]["NotFound"];
+    };
+  };
   resetUserMfa: {
     parameters: {
       query?: never;
@@ -13006,6 +13228,28 @@ export interface operations {
       };
       403: components["responses"]["Forbidden"];
       409: components["responses"]["Conflict"];
+    };
+  };
+  listPendingInvites: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Pending invitations (no tokens). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            items: Record<string, never>[];
+          };
+        };
+      };
     };
   };
   listWatchlists: {

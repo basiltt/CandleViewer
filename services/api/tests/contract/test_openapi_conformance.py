@@ -80,3 +80,28 @@ def test_openapi_spec_path_is_where_this_test_expects() -> None:
 
     assert OPENAPI_SPEC_PATH.name == "22-api-openapi.yaml"
     assert Path(OPENAPI_SPEC_PATH).is_file()
+
+
+_INVITE_OPS = [
+    ("/users", "post"),
+    ("/users/invites", "get"),
+    ("/users/{userId}/invite", "post"),
+    ("/users/{userId}/invite", "delete"),
+    ("/invites/{inviteToken}", "get"),
+    ("/invites/{inviteToken}", "post"),
+    ("/invites/{inviteToken}/confirm", "post"),
+]
+
+
+@pytest.mark.parametrize(("path", "method"), _INVITE_OPS)
+def test_invite_operations_declared_in_spec(spec: dict, path: str, method: str) -> None:
+    """E09-S05: every invite route is declared in the OpenAPI contract."""
+    assert method in spec["paths"][path]
+
+
+def test_invite_redeem_bodies_forbid_extra_fields(spec: dict) -> None:
+    """Role immutability is part of the contract: no free-form invitee body."""
+    for path in ("/invites/{inviteToken}", "/invites/{inviteToken}/confirm"):
+        schema = spec["paths"][path]["post"]["requestBody"]["content"]["application/json"]["schema"]
+        assert schema["additionalProperties"] is False
+        assert "role" not in schema["properties"]
