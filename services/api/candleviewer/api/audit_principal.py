@@ -1,0 +1,66 @@
+"""Session-backed `PrincipalResolver` for `/admin/audit*` (QA #1596).
+
+Bearer token -> `SessionService.authenticate_access_token` -> the SQL identity
+read path for username + permission codes. Every failure (no/unknown/expired/
+revoked/idle-locked token, unknown or non-active user) resolves to `None`,
+which the router maps to 401. Permissions are read server-side per request
+(C-12.4); nothing is trusted from the client.
+"""
+
+from __future__ import annotations
+
+import uuid
+from collections.abc import Callable
+from typing import Any, Protocol
+
+from fastapi import Request
+
+from candleviewer.audit.access import AuditPrincipal
+from candleviewer.auth.errors import SessionIdleLocked, SessionNotFound, SessionRevoked
+
+
+class _Sessions(Protocol):
+    async def authenticate_access_token(
+        self, raw_access_token: str, *, touch: bool = ...
+    ) -> Any: ...
+
+
+class _Identity(Protocol):
+    async def user(self, user_id: str) -> dict[str, Any]: ...
+
+    async def session_info(self, user_id: str) -> dict[str, Any]: ...
+
+
+class SessionAuditPrincipalResolver:
+    def __init__(self, sessions: Callable[[], _Sessions], identity: _Identity) -> None:
+        # Lazy: `AuthService.sessions` only exists after `start()` (lifespan).
+        self._sessions = sessions
+        self._identity = identity
+
+    async def resolve(self, request: Request) -> AuditPrincipal | None:
+        header = request.headers.get("authorization", "")
+        scheme, _, token = header.partition(" ")
+        token = token.strip()
+        if scheme.lower() != "bearer" or not token:
+            return None
+        try:
+            record = await self._sessions().authenticate_access_token(token, touch=True)
+            user = await self._identity.user(str(record.user_id))
+            info = await self._identity.session_info(str(record.user_id))
+        except (RuntimeError, SessionNotFound, SessionRevoked, SessionIdleLocked, LookupError):
+            return None
+        if user.get("status") != "active":
+            return None
+        rid = request.headers.get("x-request-id")
+        try:
+            request_id = uuid.UUID(rid) if rid else None
+        except ValueError:
+            request_id = None
+        return AuditPrincipal(
+            user_id=record.user_id,
+            username=str(user["username"]),
+            permissions=frozenset(str(p) for p in info.get("permissions", ())),
+            session_id=record.id,
+            ip=request.client.host if request.client is not None else None,
+            request_id=request_id,
+        )

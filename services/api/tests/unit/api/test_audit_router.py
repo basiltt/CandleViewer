@@ -74,7 +74,7 @@ class _FakeResolver:
     def __init__(self, principal: AuditPrincipal | None) -> None:
         self._principal = principal
 
-    def resolve(self, request: Request) -> AuditPrincipal | None:
+    async def resolve(self, request: Request) -> AuditPrincipal | None:
         return self._principal
 
 
