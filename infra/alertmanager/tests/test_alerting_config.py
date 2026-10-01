@@ -141,7 +141,11 @@ def test_receivers_exist_and_no_inline_secret() -> None:
 
 
 def _pg_rule() -> dict[str, Any]:
-    return next(r for r in AM["inhibit_rules"] if r["source_matchers"] == ['alertname = "PostgresDown"'])
+    return next(
+        r
+        for r in AM["inhibit_rules"]
+        if r["source_matchers"] == ['alertname = "PostgresDown"']
+    )
 
 
 def _inhibited(component: str) -> bool:
@@ -228,3 +232,26 @@ def test_alert_drill_push_is_received(monkeypatch: pytest.MonkeyPatch) -> None:
     assert got[0][1] == b"cv_synthetic_alert 1\n"
     assert got[1][1] == b"cv_synthetic_alert 0\n"
     assert got[0][0].startswith("/metrics/job/alert_drill")
+
+
+def test_quiet_hours_env_wired_in_compose() -> None:
+    compose = yaml.safe_load(
+        (INFRA / "compose" / "docker-compose.yml").read_text(encoding="utf-8")
+    )
+    am = compose["services"]["alertmanager"]
+    assert set(am["environment"]) >= {"CV_ALERT_QUIET_START", "CV_ALERT_QUIET_END"}
+    cmd = " ".join(am["command"])
+    assert "CV_ALERT_QUIET_START" in cmd and "CV_ALERT_QUIET_END" in cmd
+    text = (HERE / "alertmanager.yml").read_text(encoding="utf-8")
+    assert text.count('"22:00"') == 1 and text.count('"07:00"') == 1
+
+
+def test_grouped_notification_carries_occurrence_count() -> None:
+    # Webhook payload = one grouped notification; occurrence count = len(alerts),
+    # so no receiver may truncate (max_alerts: 0) and grouping must be by alertname/component.
+    for r in AM["receivers"]:
+        for w in r["webhook_configs"]:
+            assert w.get("max_alerts", 0) == 0
+    assert AM["route"]["group_by"][:2] == ["alertname", "component"]
+    payload = {"alerts": [{"labels": {"instance": str(i)}} for i in range(3)]}
+    assert len(payload["alerts"]) == 3

@@ -128,7 +128,17 @@ services:
     image: prom/alertmanager:v0.27.0@sha256:e13b6ed5cb929eeaee733479dce55e10eb3bc2e9c4586c705a4e8da41e5eacf5
     profiles: ["obs"]
     # Private bind only. Webhook URL is a secret file injected at start (CV_ALERT_PAGE_WEBHOOK_URL etc.), never in the repo.
-    command: ["--config.file=/etc/alertmanager/alertmanager.yml", "--storage.path=/alertmanager"]
+    # CV_ALERT_QUIET_START / CV_ALERT_QUIET_END (HH:MM, default 22:00/07:00) are substituted into the
+    # quiet_hours interval at start (Alertmanager does not expand env vars itself).
+    environment:
+      CV_ALERT_QUIET_START: ${CV_ALERT_QUIET_START:-22:00}
+      CV_ALERT_QUIET_END: ${CV_ALERT_QUIET_END:-07:00}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        sed -e "s/\"22:00\"/\"$${CV_ALERT_QUIET_START}\"/" -e "s/\"07:00\"/\"$${CV_ALERT_QUIET_END}\"/"
+        /etc/alertmanager/alertmanager.yml > /tmp/alertmanager.yml &&
+        exec /bin/alertmanager --config.file=/tmp/alertmanager.yml --storage.path=/alertmanager
     secrets: [alert_page_webhook_url, alert_ticket_webhook_url, alert_deadman_url]
     volumes:
       - ../alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro

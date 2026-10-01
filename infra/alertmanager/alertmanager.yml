@@ -3,7 +3,7 @@
 # a secret read from a file injected at process start (CV_ALERT_PAGE_WEBHOOK_URL, CV_ALERT_TICKET_WEBHOOK_URL, CV_ALERT_DEADMAN_URL ->
 # /run/secrets/alert_webhook_url), never committed. Payloads carry component,
 # severity, threshold summary and runbook link only (no account/order ids).
-# Page and Ticket use separate webhook secrets (separate channels). Quiet hours: edit the time_intervals below (Alertmanager does not expand env vars, so the window is a fixed file value).
+# Page and Ticket use separate webhook secrets (separate channels). Quiet hours: CV_ALERT_QUIET_START/CV_ALERT_QUIET_END (default 22:00/07:00) are sed-substituted over the quoted start/end times below by the compose entrypoint (Alertmanager does not expand env vars). Keep those two literals unique.
 global:
   resolve_timeout: 5m
 
