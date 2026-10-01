@@ -4104,8 +4104,11 @@ export interface components {
       qty?: components["schemas"]["Decimal"];
       time_in_force?: components["schemas"]["TimeInForce"];
     };
-    /** @enum {string} */
-    ComponentState: "healthy" | "degraded" | "warning" | "down";
+    /**
+     * @description `not_deployed` = module not built yet; ranks as healthy for `overall`. Rank: down > warning > degraded > healthy.
+     * @enum {string}
+     */
+    ComponentState: "healthy" | "degraded" | "warning" | "down" | "not_deployed";
     CreateApiKeyRequest: {
       /** Format: password */
       api_key: string;
@@ -4532,13 +4535,19 @@ export interface components {
     };
     HealthReport: {
       alerts_active?: number;
-      clock_offset_ms?: number;
+      /** @description null until exchange time sync (E08) lands; never a fabricated 0. */
+      clock_offset_ms?: number | null;
       components?: {
         detail?: string;
+        /** Format: date-time */
+        last_good_at?: string | null;
         latency_ms?: number;
+        /** @constant */
+        latency_unit?: "ms";
         name?: string;
         state?: components["schemas"]["ComponentState"];
       }[];
+      environment?: string;
       git_sha?: string;
       overall?: components["schemas"]["ComponentState"];
       /** Format: date-time */
