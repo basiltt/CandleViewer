@@ -50,6 +50,7 @@ from candleviewer.api.deny_by_default import (
     make_deny_undeclared_dependency,
 )
 from candleviewer.api.sessions import make_session_router
+from candleviewer.api.step_up import make_read_only_guard, make_step_up_router
 from candleviewer.api.telemetry import SessionKeyResolver, make_telemetry_router
 from candleviewer.api.users import SnapshotResolver, UserRoleStore, make_users_router
 from candleviewer.auth.models import (
@@ -553,6 +554,13 @@ def create_app(
             revocation_hub=revocation_hub,
         )
     )
+    # E09-S04: step-up, owner TOTP reset and the read-only write guard.
+    app.include_router(
+        make_step_up_router(
+            ctx.auth, _LazyAuditEmitter(ctx.audit), principal_resolver=principal_resolver
+        )
+    )
+    app.middleware("http")(make_read_only_guard(ctx.auth))
     # Audit emitter + notifier are mandatory; store/resolver `None` -> 501.
     app.include_router(
         make_users_router(
