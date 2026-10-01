@@ -99,6 +99,15 @@ def labels_of(name: str) -> dict[str, str]:
     raise KeyError(name)
 
 
+def annotations_of(name: str) -> dict[str, str]:
+    for f in sorted((PROM / "alerts").glob("system_*.yml")):
+        for g in yaml.safe_load(f.read_text(encoding="utf-8"))["groups"]:
+            for r in g["rules"]:
+                if r["alert"] == name:
+                    return {k: str(v) for k, v in r.get("annotations", {}).items()}
+    raise KeyError(name)
+
+
 def build() -> dict[str, Any]:
     tests: list[dict[str, Any]] = []
     for name, (series, fire, ok, at, extra) in SPEC.items():
@@ -111,7 +120,7 @@ def build() -> dict[str, Any]:
                     {
                         "eval_time": at,
                         "alertname": name,
-                        "exp_alerts": [{"exp_labels": exp}],
+                        "exp_alerts": [{"exp_labels": exp, "exp_annotations": annotations_of(name)}],
                     }
                 ],
             }

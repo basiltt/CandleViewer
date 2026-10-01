@@ -15,6 +15,9 @@ tests:
     - exp_labels:
         severity: page
         component: oms
+      exp_annotations:
+        summary: A position was detected without a native stop-loss
+        runbook_url: docs/plan/07-release-and-prr.md#alert-nakedpositiondetected
 - interval: 1m
   input_series:
   - series: naked_position_alerts_total
@@ -34,6 +37,9 @@ tests:
     - exp_labels:
         severity: page
         component: oms
+      exp_annotations:
+        summary: OMS holds orders in an unknown state
+        runbook_url: docs/plan/07-release-and-prr.md#alert-omsunknownorders
 - interval: 1m
   input_series:
   - series: oms_unknown_orders
@@ -53,6 +59,9 @@ tests:
     - exp_labels:
         severity: page
         component: postgres
+      exp_annotations:
+        summary: Postgres is down
+        runbook_url: docs/plan/07-release-and-prr.md#alert-postgresdown
 - interval: 1m
   input_series:
   - series: pg_up
@@ -72,6 +81,9 @@ tests:
     - exp_labels:
         severity: page
         component: clock
+      exp_annotations:
+        summary: Clock drift is blocking order entry
+        runbook_url: docs/plan/07-release-and-prr.md#alert-clockdriftblockingtrading
 - interval: 1m
   input_series:
   - series: bybit_clock_drift_ms
@@ -91,6 +103,9 @@ tests:
     - exp_labels:
         severity: page
         component: storage
+      exp_annotations:
+        summary: Disk usage above 95 percent
+        runbook_url: docs/plan/07-release-and-prr.md#alert-diskcritical
 - interval: 1m
   input_series:
   - series: disk_used_ratio
@@ -110,6 +125,9 @@ tests:
     - exp_labels:
         severity: page
         component: audit
+      exp_annotations:
+        summary: Audit chain verification failed
+        runbook_url: docs/plan/07-release-and-prr.md#alert-auditchainverificationfailed
 - interval: 1m
   input_series:
   - series: audit_chain_verification_failures_total
@@ -129,6 +147,9 @@ tests:
     - exp_labels:
         severity: page
         component: alerting
+      exp_annotations:
+        summary: Synthetic drill alert (alert-drill)
+        runbook_url: docs/plan/07-release-and-prr.md#alert-syntheticalert
 - interval: 1m
   input_series:
   - series: cv_synthetic_alert
@@ -149,6 +170,9 @@ tests:
         severity: ticket
         component: ingestion
         socket: public
+      exp_annotations:
+        summary: Public WS connection down over 60 s
+        runbook_url: docs/plan/07-release-and-prr.md#alert-publicwsdown
 - interval: 1m
   input_series:
   - series: ws_connection_state{socket="public"}
@@ -168,6 +192,9 @@ tests:
     - exp_labels:
         severity: ticket
         component: storage
+      exp_annotations:
+        summary: Disk usage above 80 percent
+        runbook_url: docs/plan/07-release-and-prr.md#alert-diskhigh
 - interval: 1m
   input_series:
   - series: disk_used_ratio
@@ -187,6 +214,9 @@ tests:
     - exp_labels:
         severity: ticket
         component: rules
+      exp_annotations:
+        summary: A rule was auto-disarmed
+        runbook_url: docs/plan/07-release-and-prr.md#alert-ruleautodisarm
 - interval: 1m
   input_series:
   - series: rule_autodisarm_total
@@ -206,6 +236,9 @@ tests:
     - exp_labels:
         severity: ticket
         component: oms
+      exp_annotations:
+        summary: Demo/live mismatch attempt blocked
+        runbook_url: docs/plan/07-release-and-prr.md#alert-envmismatchattempt
 - interval: 1m
   input_series:
   - series: env_mismatch_attempts_total
@@ -225,6 +258,9 @@ tests:
     - exp_labels:
         severity: ticket
         component: secrets
+      exp_annotations:
+        summary: Credential or certificate expiry within 14 days
+        runbook_url: docs/plan/07-release-and-prr.md#alert-credentialexpiryapproaching
 - interval: 1m
   input_series:
   - series: credential_expiry_days
@@ -244,6 +280,9 @@ tests:
     - exp_labels:
         severity: ticket
         component: auth
+      exp_annotations:
+        summary: Account lockout occurred
+        runbook_url: docs/plan/07-release-and-prr.md#alert-authlockouts
 - interval: 1m
   input_series:
   - series: auth_lockouts_total
@@ -263,6 +302,9 @@ tests:
     - exp_labels:
         severity: ticket
         component: secrets
+      exp_annotations:
+        summary: Exchange credential verification failed
+        runbook_url: docs/plan/07-release-and-prr.md#alert-credentialverificationfailures
 - interval: 1m
   input_series:
   - series: credential_verification_failures_total
@@ -282,6 +324,9 @@ tests:
     - exp_labels:
         severity: ticket
         component: oms
+      exp_annotations:
+        summary: Rate-limit rejections in OMS
+        runbook_url: docs/plan/07-release-and-prr.md#alert-omsraterejects
 - interval: 1m
   input_series:
   - series: oms_rate_reject_total
@@ -301,6 +346,9 @@ tests:
     - exp_labels:
         severity: ticket
         component: network
+      exp_annotations:
+        summary: Egress IP changed
+        runbook_url: docs/plan/07-release-and-prr.md#alert-egressipchanged
 - interval: 1m
   input_series:
   - series: egress_ip_changes_total
@@ -320,6 +368,9 @@ tests:
     - exp_labels:
         severity: ticket
         component: alerting
+      exp_annotations:
+        summary: Alertmanager failed to deliver notifications
+        runbook_url: docs/plan/07-release-and-prr.md#alert-alertmanagernotificationsfailed
 - interval: 1m
   input_series:
   - series: alertmanager_notifications_failed_total
