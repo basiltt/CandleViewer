@@ -123,6 +123,9 @@
 /apps/desktop/src/main/                 @CandleViewer/devsecops @CandleViewer/security
 # future: E02/later scaffolding; directory does not exist yet.
 /apps/desktop/src/preload/              @CandleViewer/security @CandleViewer/frontend
+/apps/desktop/src/main/csp.ts           @CandleViewer/security @CandleViewer/devsecops
+/apps/web/index.html                    @CandleViewer/security @CandleViewer/frontend
+/tools/ci/electron_hardening_*          @CandleViewer/security @CandleViewer/devsecops
 
 # ---------------------------------------------------------------------------
 # Shared packages
