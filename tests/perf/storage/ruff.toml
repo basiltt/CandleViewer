@@ -1,0 +1,10 @@
+# tests/perf lives outside services/api, so services/api's per-file-ignores do
+# not apply. Inherit that config; relax only rules that are false positives for
+# an offline benchmark harness:
+#   S101 pytest asserts; S311 seeded RNG for reproducible datasets (not crypto);
+#   S603/S607 the harness re-invokes its own interpreter for cold samples;
+#   S608 SQL built only from harness-owned literals / temp paths, never input.
+extend = "../../../services/api/pyproject.toml"
+
+[lint.per-file-ignores]
+"**" = ["S101", "S311", "S603", "S607", "S608"]
