@@ -123,7 +123,7 @@ async def _audit_rows(dsn: str, user_marker: str) -> list[dict[str, Any]]:
             rows = await conn.execute(
                 sa.text(
                     "SELECT action, actor_label, actor_user_id::text AS actor_user_id, "
-                    "actor_ip::text AS actor_ip, outcome::text AS outcome, reason, "
+                    "host(actor_ip) AS actor_ip, outcome::text AS outcome, reason, "
                     "object_id, before_state, after_state, session_id::text AS session_id "
                     "FROM audit_log WHERE actor_label LIKE :m OR actor_user_id::text = :m "
                     "OR object_id = :m ORDER BY id"
