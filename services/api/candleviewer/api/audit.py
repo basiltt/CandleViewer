@@ -113,7 +113,7 @@ class PrincipalResolver(Protocol):
     session verification is not implemented yet, not that this particular
     caller is unauthenticated."""
 
-    def resolve(self, request: Request) -> AuditPrincipal | None: ...
+    async def resolve(self, request: Request) -> AuditPrincipal | None: ...
 
 
 def _problem(status_code: int, title: str, detail: str) -> JSONResponse:
@@ -154,7 +154,7 @@ def make_audit_router(
                     "ticket's scope",
                 )
             )
-        principal = principal_resolver.resolve(request)
+        principal = await principal_resolver.resolve(request)
         if principal is None:
             raise _HttpProblem(
                 _problem(401, "Unauthorized", "no verified session for this request")

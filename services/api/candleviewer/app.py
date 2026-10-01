@@ -41,6 +41,7 @@ from candleviewer.api import (
     make_log_level_router,
     make_market_router,
 )
+from candleviewer.api.audit_principal import SessionAuditPrincipalResolver
 from candleviewer.api.contract_conformance import load_openapi_spec
 from candleviewer.api.deny_by_default import (
     assert_app_routes_declared,
@@ -529,14 +530,14 @@ def create_app(
             user_role_store, _LazyAuditEmitter(ctx.audit), principal_resolver, ws_registry
         )
     )
-    # `principal_resolver` stays `None` here: session verification is E09-S03
-    # scope (`auth/login_service.py`'s own docstring — "non-MFA session
-    # issuance is E09-S03 scope"), not this router's. Every `/admin/audit*`
-    # request therefore fails closed with `501` until that lands and this
-    # call is updated to inject the real resolver (PR #1608 review finding 1
-    # / QA defect #1596 blocker 1 — tracked as still partially open until
-    # E09-S03 wires a resolver here).
-    app.include_router(make_audit_router(ctx.audit))
+    # QA #1596: real session-backed resolver; without an identity provider
+    # (fake backend) it stays `None` and every call fails closed with 501.
+    audit_resolver = (
+        SessionAuditPrincipalResolver(lambda: ctx.auth.sessions, identity)
+        if identity is not None
+        else None
+    )
+    app.include_router(make_audit_router(ctx.audit, audit_resolver))
     # QA defect #1622 blocker: `/market/klines` (E08-S06 core deliverable)
     # was missing entirely — cache-only reads today (`ctx.storage.
     # market_data`); backfilling from the exchange itself is wired once
