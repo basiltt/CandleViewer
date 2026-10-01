@@ -65,6 +65,11 @@ from candleviewer.domain.events import InstrumentUpdatedEvent
 from candleviewer.exchange.base.instruments import InstrumentsFetcher
 from candleviewer.exchange.base.service import ExchangeBaseService
 from candleviewer.exchange.bybit.service import ExchangeBybitService
+from candleviewer.health_wiring import (
+    HealthSystemPublisher,
+    PgSystemEventWriter,
+    register_real_probes,
+)
 from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
 from candleviewer.ingestion.service import IngestionService
 from candleviewer.journal.service import JournalService
@@ -82,11 +87,6 @@ from candleviewer.net import (
 from candleviewer.observability.correlation import CorrelationMiddleware
 from candleviewer.observability.health_metrics import bind_health_metrics
 from candleviewer.observability.health_probes import HealthRegistry
-from candleviewer.observability.health_wiring import (
-    HealthSystemPublisher,
-    PgSystemEventWriter,
-    register_real_probes,
-)
 from candleviewer.observability.log_level import LogLevelOverrides
 from candleviewer.observability.metrics import CollectorRegistry
 from candleviewer.observability.service import ObservabilityService

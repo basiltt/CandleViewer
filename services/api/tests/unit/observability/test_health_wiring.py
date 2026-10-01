@@ -6,15 +6,15 @@ from datetime import UTC, datetime
 from typing import Any
 
 from candleviewer.bus.models import Topic
+from candleviewer.health_wiring import (
+    HealthSystemPublisher,
+    PgSystemEventWriter,
+    register_real_probes,
+)
 from candleviewer.observability.health_probes import (
     ComponentState,
     HealthRegistry,
     SystemEvent,
-)
-from candleviewer.observability.health_wiring import (
-    HealthSystemPublisher,
-    PgSystemEventWriter,
-    register_real_probes,
 )
 
 
