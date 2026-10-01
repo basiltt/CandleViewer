@@ -416,6 +416,11 @@ async def test_storage_growth_fixture_replay_10min_extrapolated_24h(
                 "sum(table_partitions().diskSize) delta; linear x144 to 24 h"
             ),
             "replay_wall_s": round(replay_s, 2),
+            # diskSize counts preallocated column pages (16 MiB append pages): at this row
+            # count the delta is allocation, not data. Flag it rather than publish it.
+            "allocation_quantized": any(
+                int(str(v["disk_bytes_window"])) % (16 * 1024 * 1024) == 0 for v in streams.values()
+            ),
             "streams": streams,
             "measured_on": datetime.now(UTC).date().isoformat(),
             "limitations": (

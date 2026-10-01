@@ -16,7 +16,7 @@ Cold samples run in a fresh subprocess + fresh DuckDB instance each (OS page cac
 | Ingest sustained (3 s) | ~45k rows/s, 140 000 sent = 140 000 received, 0 dropped | >=600k (QuestDB) / 25k realistic |
 | Ingest stress (throttled sink) | ~14.8k rows/s, backpressure onset recorded, 50 000 = 50 000, 0 dropped | never drop trades |
 | Real `Reaper.run()` loop lag (1200 partitions) | max 118 ms (threshold 50-100 ms): **over**; see PR note | 50-100 ms |
-| 24 h growth (seeded replay, trades+tickers+deltas, ZSTD Parquet) | 1.36 GB/day/symbol vs doc 0.66 for same streams | 0.5-0.75 total |
+| 24 h growth | **not measured**: CI QuestDB diskSize deltas are 16 MiB page-allocation multiples (see 21-database-schema 11.1 note); R0 proxy figure withdrawn | 0.5-0.75 total |
 
 Gate check: `test_baseline_gate_fires_on_deliberate_slowdown` injects a 50 ms slowdown and asserts regressions fire.
 Not run (needs docker / hours): 10-minute ingest, 12-month scans, reference 4 vCPU/8 GB profile -> nightly job.
