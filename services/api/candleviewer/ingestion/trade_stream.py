@@ -187,6 +187,9 @@ class TradeStream:
     def is_listed(self, symbol: str) -> bool:
         return self._is_listed(symbol)
 
+    def tick_size(self, symbol: str) -> Decimal | None:
+        return self._tick_size(symbol)
+
     def recent(self, symbol: str) -> list[TradeEvent]:
         return list(self._recent.get(symbol, ()))
 
