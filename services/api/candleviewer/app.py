@@ -93,8 +93,10 @@ from candleviewer.net import (
 from candleviewer.observability.correlation import CorrelationMiddleware
 from candleviewer.observability.health_metrics import bind_health_metrics
 from candleviewer.observability.health_probes import HealthRegistry
+from candleviewer.observability.latency import StageRecorder
 from candleviewer.observability.log_level import LogLevelOverrides
 from candleviewer.observability.metrics import CollectorRegistry, Metrics
+from candleviewer.observability.metrics_catalogue import register_r0
 from candleviewer.observability.service import ObservabilityService
 from candleviewer.observability.telemetry import SessionRateLimiter, TelemetrySink
 from candleviewer.oms.service import OmsService
@@ -552,6 +554,13 @@ def create_app(
     # Process collectors read /proc; the lifespan adds them (no I/O here).
     metrics_facade = Metrics(resolved.environment.value, registry=ctx.metrics)
     app.state.metrics_facade = metrics_facade
+    # E04-T06: per-stage tick latency on the real ingestion publish path.
+    # Offset = ClockGuard's measured exchange-local offset (E08 wires it via
+    # `ctx.ingestion.clock_offset_ms`); the synthetic feed reports 0.
+    register_r0(metrics_facade)  # idempotent; the lifespan reuses this facade
+    ctx.ingestion.attach_latency(
+        StageRecorder(metrics_facade.get("ingest_stage_seconds"), resolved.telemetry_sample_n)
+    )
     app.include_router(
         make_telemetry_router(
             TelemetrySink(metrics_facade),

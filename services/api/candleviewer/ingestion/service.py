@@ -10,6 +10,7 @@ E08 lands.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -22,6 +23,7 @@ from candleviewer.ingestion.synthetic_feed import (
     load_sample_records,
 )
 from candleviewer.observability.health import HealthReport, HealthStatus
+from candleviewer.observability.latency import StageRecorder
 from candleviewer.settings import FeedMode
 
 if TYPE_CHECKING:
@@ -49,6 +51,18 @@ class IngestionService:
         self.ws: ConnectionManager | None = None
         self.ws_frames: asyncio.Queue[str] = asyncio.Queue(maxsize=WS_FRAME_QUEUE_MAXSIZE)
         self.ws_frames_dropped = 0
+        #: E04-T06: stage-latency recorder + exchange clock-offset provider
+        #: (ClockGuard's offset in ms once E08 wires it; None = unmeasured).
+        self.latency: StageRecorder | None = None
+        self.clock_offset_ms: Callable[[], int | None] = lambda: 0
+
+    def attach_latency(
+        self, recorder: StageRecorder, clock_offset_ms: Callable[[], int | None] | None = None
+    ) -> None:
+        """Wire the per-stage latency recorder into the publish path."""
+        self.latency = recorder
+        if clock_offset_ms is not None:
+            self.clock_offset_ms = clock_offset_ms
 
     def offer_frame(self, frame: str) -> None:
         """Reader callback: never blocks the read loop (drop-newest on full)."""
@@ -84,6 +98,8 @@ class IngestionService:
                 queue=self.queue,
                 metrics=metrics,
                 rate_hz=settings.feed_rate_hz,
+                latency=self.latency,
+                clock_offset_ms=lambda: self.clock_offset_ms(),
             )
             await self._generator.start()
         if self.instruments is not None:
