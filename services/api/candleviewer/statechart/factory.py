@@ -26,6 +26,7 @@ from xstate_statemachine import (
     MachineNode,
     OverflowPolicy,
     PluginBase,
+    QueueOverflowError,
     create_machine,
 )
 from xstate_statemachine.clock import Clock, RealClock
@@ -53,6 +54,10 @@ if TYPE_CHECKING:
 #: default one is never eagerly loaded (and never touched) unless a caller
 #: actually asks for it.
 _default_registry: Registry | None = None
+
+#: Re-exported for `gateway.py` (E50-T15), which may not import the runtime
+#: itself (CV-LINT-IMPORT) but must map an inbox refusal to 503 + page.
+InboxFullError = QueueOverflowError
 
 
 def _get_default_registry() -> Registry:
