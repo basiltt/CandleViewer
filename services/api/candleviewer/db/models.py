@@ -565,3 +565,41 @@ instrument_versions = Table(
     UniqueConstraint("symbol", "metadata_version", name="iv_unique_version"),
     Index("ix_instrument_versions_symbol", "symbol", text("metadata_version DESC")),
 )
+
+#: `system_events` (E04-T04, revision 0008_system_events).
+system_events = Table(
+    "system_events",
+    metadata,
+    Column("id", BigInteger, primary_key=True),
+    Column("component", Text, nullable=False),
+    Column("kind", Text, nullable=False),
+    Column("severity", severity, nullable=False, server_default=text("'info'")),
+    Column("symbol", symbol_code),
+    Column("exchange_account_id", UUID(as_uuid=True)),
+    Column("message", Text, nullable=False),
+    Column("details", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
+    Column("ret_code", Text),
+    Column("correlation_id", UUID(as_uuid=True)),
+    Column("resolved_at", TIMESTAMP(timezone=True)),
+    Column("resolved_by", ForeignKey("users.id", ondelete="SET NULL")),
+    Column("event_ts", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    CheckConstraint(
+        "component IN ('ingestion','book_engine','bars','orderflow','oms','rules','recorder',"
+        "'replay','api','ws','db','exchange','auth','backup')",
+        name="se_component",
+    ),
+    Index("ix_se_time", text("event_ts DESC")),
+    Index(
+        "ix_se_sev_open",
+        "severity",
+        text("event_ts DESC"),
+        postgresql_where=text("resolved_at IS NULL"),
+    ),
+    Index("ix_se_component", "component", text("event_ts DESC")),
+    Index(
+        "ix_se_symbol",
+        "symbol",
+        text("event_ts DESC"),
+        postgresql_where=text("symbol IS NOT NULL"),
+    ),
+)

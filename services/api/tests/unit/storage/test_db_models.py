@@ -36,6 +36,8 @@ def test_metadata_declares_every_table_from_0001() -> None:
         # E08-S01 (0004_instruments)
         "instruments",
         "instrument_versions",
+        # E04-T04 (0008_system_events)
+        "system_events",
     }
     actual = {t.name for t in metadata.sorted_tables}
     assert actual == expected
