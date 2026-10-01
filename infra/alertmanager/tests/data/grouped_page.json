@@ -1,0 +1,13 @@
+{
+  "receiver": "page",
+  "status": "firing",
+  "alerts": [
+    {"status": "firing", "labels": {"alertname": "OmsUnknownOrders", "component": "oms", "env": "dev", "severity": "page", "instance": "a"}, "annotations": {"summary": "Unknown orders", "runbook_url": "docs/plan/07-release-and-prr.md#alert-omsunknownorders"}, "startsAt": "2026-10-01T00:00:00Z", "endsAt": "0001-01-01T00:00:00Z"},
+    {"status": "firing", "labels": {"alertname": "OmsUnknownOrders", "component": "oms", "env": "dev", "severity": "page", "instance": "b"}, "annotations": {"summary": "Unknown orders", "runbook_url": "docs/plan/07-release-and-prr.md#alert-omsunknownorders"}, "startsAt": "2026-10-01T00:01:00Z", "endsAt": "0001-01-01T00:00:00Z"},
+    {"status": "firing", "labels": {"alertname": "OmsUnknownOrders", "component": "oms", "env": "dev", "severity": "page", "instance": "c"}, "annotations": {"summary": "Unknown orders", "runbook_url": "docs/plan/07-release-and-prr.md#alert-omsunknownorders"}, "startsAt": "2026-10-01T00:02:00Z", "endsAt": "0001-01-01T00:00:00Z"}
+  ],
+  "groupLabels": {"alertname": "OmsUnknownOrders", "component": "oms", "env": "dev"},
+  "commonLabels": {"alertname": "OmsUnknownOrders", "component": "oms", "env": "dev", "severity": "page"},
+  "commonAnnotations": {"summary": "Unknown orders", "runbook_url": "docs/plan/07-release-and-prr.md#alert-omsunknownorders"},
+  "externalURL": "http://127.0.0.1:9093"
+}

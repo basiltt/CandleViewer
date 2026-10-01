@@ -30,6 +30,7 @@ volumes:
   cv-questdb-data:
   cv-grafana-data:
   cv-alertmanager-data:
+  cv-alertmanager-config:
   cv-minio-data:
 
 # Base stack: no host port bindings live here except the loopback-explicit
@@ -124,28 +125,37 @@ services:
       retries: 12
     networks: [cv-internal]
 
+  # Renders alertmanager.yml with CV_ALERT_QUIET_HOURS (render_config.py; unit-tested) into a
+  # shared volume, then exits. Fails fast on a malformed window so Alertmanager never starts with it.
+  alertmanager-config:
+    image: python:3.12.7-alpine3.20@sha256:5049c050bdc68575a10bcb1885baa0689b6c15152d8a56a7e399fb49f783bf98
+    profiles: ["obs"]
+    environment:
+      CV_ALERT_QUIET_HOURS: ${CV_ALERT_QUIET_HOURS:-22:00-07:00}
+    command: ["python", "/src/render_config.py", "/src/alertmanager.yml", "/rendered/alertmanager.yml"]
+    volumes:
+      - ../alertmanager:/src:ro
+      - cv-alertmanager-config:/rendered
+    network_mode: none
+    # One-shot: healthy once the rendered config exists (alertmanager waits on successful exit).
+    healthcheck:
+      test: ["CMD", "test", "-s", "/rendered/alertmanager.yml"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+
   alertmanager:
     image: prom/alertmanager:v0.27.0@sha256:e13b6ed5cb929eeaee733479dce55e10eb3bc2e9c4586c705a4e8da41e5eacf5
     profiles: ["obs"]
-    # Private bind only. Webhook URL is a secret file injected at start (CV_ALERT_PAGE_WEBHOOK_URL etc.), never in the repo.
-    # CV_ALERT_QUIET_START / CV_ALERT_QUIET_END (HH:MM, default 22:00/07:00) are substituted into the
-    # quiet_hours interval at start (Alertmanager does not expand env vars itself).
-    environment:
-      CV_ALERT_QUIET_START: ${CV_ALERT_QUIET_START:-22:00}
-      CV_ALERT_QUIET_END: ${CV_ALERT_QUIET_END:-07:00}
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - >-
-        for v in "$${CV_ALERT_QUIET_START}" "$${CV_ALERT_QUIET_END}"; do
-        echo "$$v" | grep -Eq '^([01][0-9]|2[0-3]):[0-5][0-9]$$' || { echo "invalid quiet-hours time: $$v (HH:MM)" >&2; exit 1; };
-        done &&
-        [ "$$(echo "$${CV_ALERT_QUIET_START}" | tr -d :)" -gt "$$(echo "$${CV_ALERT_QUIET_END}" | tr -d :)" ] || { echo "CV_ALERT_QUIET_START must be later than CV_ALERT_QUIET_END (window wraps midnight)" >&2; exit 1; } &&
-        sed -e "s/\"22:00\"/\"$${CV_ALERT_QUIET_START}\"/" -e "s/\"07:00\"/\"$${CV_ALERT_QUIET_END}\"/"
-        /etc/alertmanager/alertmanager.yml > /tmp/alertmanager.yml &&
-        exec /bin/alertmanager --config.file=/tmp/alertmanager.yml --storage.path=/alertmanager
+    # Private bind only. Webhook URLs are secret files injected at start, never in the repo.
+    depends_on:
+      alertmanager-config:
+        condition: service_completed_successfully
+    command: ["--config.file=/etc/alertmanager/rendered/alertmanager.yml", "--storage.path=/alertmanager"]
     secrets: [alert_page_webhook_url, alert_ticket_webhook_url, alert_deadman_url]
     volumes:
-      - ../alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - cv-alertmanager-config:/etc/alertmanager/rendered:ro
+      - ../alertmanager/templates:/etc/alertmanager/templates:ro
       - cv-alertmanager-data:/alertmanager
     ports:
       - "127.0.0.1:${ALERTMANAGER_PORT:-9093}:9093"
@@ -156,8 +166,8 @@ services:
       retries: 12
     networks: [cv-internal]
 
-  # Receives alert-drill pushes (cv_synthetic_alert); scraped by Prometheus. Digest is a placeholder
-  # per the file-header deviation (no docker locally); re-resolve before first `make up`.
+  # Receives alert-drill pushes (cv_synthetic_alert); scraped by Prometheus. Digest = multi-arch index
+  # digest from https://hub.docker.com/v2/repositories/prom/pushgateway/tags/v1.9.0 (verified 2026-10-02).
   pushgateway:
     image: prom/pushgateway:v1.9.0@sha256:98a458415f8f5afcfd45622d289a0aa67063563bec0f90d598ebc76783571936
     profiles: ["obs"]

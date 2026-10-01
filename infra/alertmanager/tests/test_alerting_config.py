@@ -178,10 +178,11 @@ def test_alert_drill_refuses_public_url(monkeypatch: pytest.MonkeyPatch) -> None
 
 
 def test_grouped_notifications_never_truncated_and_page_ticket_distinct() -> None:
-    recv = {r["name"]: r["webhook_configs"][0] for r in AM["receivers"]}
-    # occurrence count == len(alerts) of the grouped payload, so never truncate it
-    assert recv["page"]["max_alerts"] == 0 and recv["ticket"]["max_alerts"] == 0
-    assert recv["page"]["url_file"] != recv["ticket"]["url_file"]
+    recv = {r["name"]: r["slack_configs"][0] for r in AM["receivers"] if "slack_configs" in r}
+    assert recv["page"]["api_url_file"] != recv["ticket"]["api_url_file"]
+    for r in recv.values():
+        assert r["title"] == '{{ template "cv.title" . }}' and r["text"] == '{{ template "cv.body" . }}'
+    assert "max_alerts" not in str(AM["receivers"])  # nothing truncates a grouped notification
 
 
 def test_compose_wires_secrets_pushgateway_and_scrape() -> None:
@@ -232,26 +233,3 @@ def test_alert_drill_push_is_received(monkeypatch: pytest.MonkeyPatch) -> None:
     assert got[0][1] == b"cv_synthetic_alert 1\n"
     assert got[1][1] == b"cv_synthetic_alert 0\n"
     assert got[0][0].startswith("/metrics/job/alert_drill")
-
-
-def test_quiet_hours_env_wired_in_compose() -> None:
-    compose = yaml.safe_load(
-        (INFRA / "compose" / "docker-compose.yml").read_text(encoding="utf-8")
-    )
-    am = compose["services"]["alertmanager"]
-    assert set(am["environment"]) >= {"CV_ALERT_QUIET_START", "CV_ALERT_QUIET_END"}
-    cmd = " ".join(am["command"])
-    assert "CV_ALERT_QUIET_START" in cmd and "CV_ALERT_QUIET_END" in cmd
-    text = (HERE / "alertmanager.yml").read_text(encoding="utf-8")
-    assert text.count('"22:00"') == 1 and text.count('"07:00"') == 1
-
-
-def test_grouped_notification_carries_occurrence_count() -> None:
-    # Webhook payload = one grouped notification; occurrence count = len(alerts),
-    # so no receiver may truncate (max_alerts: 0) and grouping must be by alertname/component.
-    for r in AM["receivers"]:
-        for w in r["webhook_configs"]:
-            assert w.get("max_alerts", 0) == 0
-    assert AM["route"]["group_by"][:2] == ["alertname", "component"]
-    payload = {"alerts": [{"labels": {"instance": str(i)}} for i in range(3)]}
-    assert len(payload["alerts"]) == 3

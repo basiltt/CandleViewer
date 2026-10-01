@@ -3,9 +3,14 @@
 # a secret read from a file injected at process start (CV_ALERT_PAGE_WEBHOOK_URL, CV_ALERT_TICKET_WEBHOOK_URL, CV_ALERT_DEADMAN_URL ->
 # /run/secrets/alert_webhook_url), never committed. Payloads carry component,
 # severity, threshold summary and runbook link only (no account/order ids).
-# Page and Ticket use separate webhook secrets (separate channels). Quiet hours: CV_ALERT_QUIET_START/CV_ALERT_QUIET_END (default 22:00/07:00) are sed-substituted over the quoted start/end times below by the compose entrypoint (Alertmanager does not expand env vars). Keep those two literals unique.
+# Page and Ticket use separate webhook secrets (separate channels). Quiet hours: CV_ALERT_QUIET_HOURS (HH:MM-HH:MM UTC, default 22:00-07:00) is rendered into the
+# marked quiet_hours block by render_config.py (init container; Alertmanager does not expand env vars).
+# Page/Ticket bodies come from templates/cv.tmpl (alertname, component, env, runbook, occurrence count).
 global:
   resolve_timeout: 5m
+
+templates:
+  - /etc/alertmanager/templates/*.tmpl
 
 route:
   receiver: ticket
@@ -31,6 +36,7 @@ route:
       mute_time_intervals: [quiet_hours]
 
 time_intervals:
+# BEGIN quiet_hours
   - name: quiet_hours
     time_intervals:
       - times:
@@ -38,6 +44,7 @@ time_intervals:
             end_time: "24:00"
           - start_time: "00:00"
             end_time: "07:00"
+# END quiet_hours
 
 inhibit_rules:
   # A Postgres outage suppresses DB-dependent Tickets only. Security signals (auth, secrets,
@@ -51,16 +58,19 @@ inhibit_rules:
     equal: [component, env]
 
 receivers:
+  # Slack-compatible incoming webhook (Slack/Mattermost/Rocket.Chat), reachable without the api container.
   - name: page
-    webhook_configs:
-      - url_file: /run/secrets/alert_page_webhook_url
+    slack_configs:
+      - api_url_file: /run/secrets/alert_page_webhook_url
         send_resolved: true
-        max_alerts: 0  # 0 = never truncate; occurrence count = len(alerts) in the grouped payload
+        title: '{{ template "cv.title" . }}'
+        text: '{{ template "cv.body" . }}'
   - name: ticket
-    webhook_configs:
-      - url_file: /run/secrets/alert_ticket_webhook_url
+    slack_configs:
+      - api_url_file: /run/secrets/alert_ticket_webhook_url
         send_resolved: true
-        max_alerts: 0  # 0 = never truncate; occurrence count = len(alerts) in the grouped payload
+        title: '{{ template "cv.title" . }}'
+        text: '{{ template "cv.body" . }}'
   - name: deadman
     webhook_configs:
       - url_file: /run/secrets/alert_deadman_url
