@@ -32,7 +32,7 @@ from typing import Any, Final, Protocol
 import structlog
 
 from candleviewer.statechart.config import Lane
-from candleviewer.statechart.factory import InboxFullError
+from candleviewer.statechart.factory import InboxFullError, re_mint
 from candleviewer.statechart.plugins._base import LogPager, Pager, Severity
 
 logger = structlog.get_logger("candleviewer.statechart.gateway")
@@ -97,6 +97,35 @@ def receipt_is_conclusive(receipt: Any) -> bool:
     if receipt is None or getattr(receipt, "deferred", False):
         return False
     return bool(receipt.changed) or receipt.error is not None
+
+
+#: CV-C68 (R14-01 containment): the only fields `cv_re_mint` may change.
+RE_MINT_ALLOWED_FIELDS: Final = frozenset({"data", "error", "fired_at", "scheduled_for"})
+
+
+class ReMintForbiddenError(GatewayError):
+    """`cv_re_mint` was asked to override `type`/`src` (or any non-payload
+    field), which would forge engine provenance (CV-C68, R14-01)."""
+
+
+#: Spec name (E50-T56 ticket / CV-C68).
+ReMintForbidden = ReMintForbiddenError
+
+
+def cv_re_mint(ev: Any, **payload: Any) -> Any:
+    """Payload-only wrapper over the library's `re_mint` (CV-C68).
+
+    Accepts only `data`, `error`, `fired_at`, `scheduled_for`; anything else
+    (notably `type`, `src`) raises `ReMintForbiddenError` before the library
+    is called, so event type and provenance are always preserved. Remove when
+    upstream R14-01 closes and the pin moves via an ADR-0016 amendment.
+    """
+    bad = sorted(set(payload) - RE_MINT_ALLOWED_FIELDS)
+    if bad:
+        raise ReMintForbiddenError(
+            f"cv_re_mint may only change {sorted(RE_MINT_ALLOWED_FIELDS)}; refused {bad} (CV-C68)"
+        )
+    return re_mint(ev, **payload)
 
 
 Event = str | Mapping[str, Any]
@@ -195,7 +224,10 @@ __all__ = [
     "GatewayError",
     "GatewayOverloadedError",
     "LoopAffinityError",
+    "ReMintForbidden",
+    "ReMintForbiddenError",
     "SystemEventRefusedError",
     "UnknownMachineError",
+    "cv_re_mint",
     "receipt_is_conclusive",
 ]
