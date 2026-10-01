@@ -13,6 +13,8 @@ from candleviewer.storage.errors import (
     StorageError,
     StorageExportVerifyFailed,
     StorageRetentionBlockedByPin,
+    StorageRetentionBlockedByReplay,
+    StorageRetentionBlockedUnverified,
     StorageSchemaDrift,
     StorageTierUnavailable,
 )
@@ -25,6 +27,8 @@ def test_error_codes_are_stable_and_unique() -> None:
         StorageExportVerifyFailed: "STORAGE_EXPORT_VERIFY_FAILED",
         StorageSchemaDrift: "STORAGE_SCHEMA_DRIFT",
         StorageRetentionBlockedByPin: "STORAGE_RETENTION_BLOCKED_BY_PIN",
+        StorageRetentionBlockedUnverified: "STORAGE_RETENTION_BLOCKED_UNVERIFIED",
+        StorageRetentionBlockedByReplay: "STORAGE_RETENTION_BLOCKED_REPLAY",
         StorageDiskCritical: "STORAGE_DISK_CRITICAL",
     }
     assert len(set(ERROR_CODES.values())) == len(ERROR_CODES)

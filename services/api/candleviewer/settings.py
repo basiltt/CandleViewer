@@ -161,6 +161,11 @@ class Settings(BaseSettings):
     recorder_retention_days: int = 30
     recorder_hot_days: int = 7
     disk_cap_gb: int = 500
+    # E07-T05: retention scheduler flag (off by default) and cron expressions.
+    retention_enabled: bool = False
+    retention_cron: str = "0 3 * * *"
+    export_cron: str = "15 2 * * *"
+    compact_cron: str = "0 3 * * 0"
     order_rate_per_uid: int = 8
     native_sl_deadline_ms: int = 3000
     killswitch_on_disconnect_s: int = 30
