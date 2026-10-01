@@ -21,6 +21,16 @@ auth_refresh_reuse_total = Counter(
 auth_idle_locks_total = Counter(
     "auth_idle_locks_total", "Requests refused because the session was idle-locked."
 )
+auth_step_up_total = Counter(
+    "auth_step_up_total", "Successful step-up re-authentications.", ["action_class"]
+)
+auth_step_up_failures_total = Counter(
+    "auth_step_up_failures_total", "Failed step-up code verifications.", ["action_class"]
+)
+auth_readonly_downgrades_total = Counter(
+    "auth_readonly_downgrades_total", "Sessions downgraded to read-only after repeated failures."
+)
+auth_mfa_resets_total = Counter("auth_mfa_resets_total", "Owner TOTP resets performed.")
 auth_revocation_latency_seconds = Histogram(
     "auth_revocation_latency_seconds",
     "Seconds from session revocation to its WebSocket connection being closed.",

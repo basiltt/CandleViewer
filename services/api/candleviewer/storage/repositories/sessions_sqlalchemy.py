@@ -12,6 +12,7 @@ the first revocation reason immutable (INV-B16-d).
 
 from __future__ import annotations
 
+import json
 import uuid
 from collections.abc import Callable
 from datetime import datetime
@@ -28,7 +29,8 @@ _COLUMNS = (
     "id::text AS id, user_id::text AS user_id, refresh_token_hash, "
     "access_token_jti::text AS access_token_jti, issued_at, last_seen_at, expires_at, "
     "revoked_at, revoked_reason, ip::text AS ip, user_agent, device_label, is_electron, "
-    "mfa_satisfied_at, idle_timeout_s"
+    "mfa_satisfied_at, idle_timeout_s, step_up_elevations::text AS step_up_elevations, "
+    "step_up_failures, readonly_until"
 )
 
 _INSERT_SQL = sa.text("""
@@ -68,6 +70,11 @@ _REVOKE_ALL_SQL = _sql(
     "AND (CAST(:except_id AS uuid) IS NULL OR id <> CAST(:except_id AS uuid)) "
     "RETURNING @COLS@"
 )
+_STEP_UP_SQL = _sql(
+    "UPDATE sessions SET step_up_elevations = CAST(:elevations AS jsonb), "
+    "step_up_failures = :failures, readonly_until = :readonly_until "
+    "WHERE id = CAST(:id AS uuid) AND revoked_at IS NULL RETURNING @COLS@"
+)
 _LINK_SQL = sa.text(
     "INSERT INTO sessions_rotation (prev_session_id, next_session_id) "
     "VALUES (CAST(:prev AS uuid), CAST(:next AS uuid))"
@@ -104,6 +111,12 @@ def row_to_fields(row: Any) -> dict[str, Any]:
         is_electron=m["is_electron"],
         mfa_satisfied_at=m["mfa_satisfied_at"],
         idle_timeout_s=m["idle_timeout_s"],
+        step_up_elevations={
+            k: datetime.fromisoformat(v)
+            for k, v in json.loads(m["step_up_elevations"] or "{}").items()
+        },
+        step_up_failures=m["step_up_failures"],
+        readonly_until=m["readonly_until"],
     )
 
 
@@ -177,6 +190,25 @@ class SqlAlchemySessionRepository:
         return await self._many(
             _REVOKE_ALL_SQL,
             {"u": user_id, "reason": reason, "now": now, "except_id": except_session_id},
+        )
+
+    async def save_step_up_state(
+        self,
+        session_id: str,
+        *,
+        elevations: dict[str, datetime],
+        failures: int,
+        readonly_until: datetime | None,
+    ) -> Any:
+        payload = json.dumps({k: v.isoformat() for k, v in elevations.items()})
+        return await self._one(
+            _STEP_UP_SQL,
+            {
+                "id": session_id,
+                "elevations": payload,
+                "failures": failures,
+                "readonly_until": readonly_until,
+            },
         )
 
     async def link_rotation(self, *, prev_session_id: str, next_session_id: str) -> None:

@@ -1,0 +1,280 @@
+"""Unit tests for `StepUpService` (E09-S04); names map to Gherkin scenarios."""
+
+from __future__ import annotations
+
+import os
+import uuid
+from datetime import UTC, datetime, timedelta
+
+import pytest
+
+from candleviewer.auth.envelope import TotpEncryptor
+from candleviewer.auth.errors import (
+    SessionReadOnly,
+    StepUpCodeInvalid,
+    StepUpRequired,
+    UnknownActionClass,
+)
+from candleviewer.auth.mfa_service import MfaService
+from candleviewer.auth.models import MfaEnrollRequest, MfaMethodKind, SessionRecord
+from candleviewer.auth.step_up import StepUpService
+from candleviewer.auth.totp import generate_code, time_step_for
+
+from .mfa_fakes import FakeMfaRepository
+from .session_fakes import FakeSessionRepository
+
+_RC_KEY = b"k" * 32
+_T0 = datetime(2026, 9, 30, 12, 0, 0, tzinfo=UTC)
+
+
+class _Clock:
+    def __init__(self) -> None:
+        self.now = _T0
+
+    def __call__(self) -> datetime:
+        return self.now
+
+
+class _Positions:
+    source = "oms"
+
+    def __init__(self, count: int) -> None:
+        self.count = count
+
+    async def open_position_count(self, user_id: str) -> int | None:
+        return self.count
+
+
+class _NoStore:
+    source = "not_deployed"
+
+    async def open_position_count(self, user_id: str) -> int | None:
+        return None
+
+
+async def _setup() -> tuple[StepUpService, _Clock, bytes, uuid.UUID, FakeSessionRepository]:
+    clock = _Clock()
+    repo = FakeMfaRepository()
+    enc = TotpEncryptor(os.urandom(32))
+    mfa = MfaService(repo, enc, recovery_code_key=_RC_KEY, clock=clock)
+    user = uuid.uuid4()
+    res = await mfa.enroll(
+        str(user), MfaEnrollRequest(method=MfaMethodKind.TOTP, label=""), account_name="o"
+    )
+    seed = enc.decrypt(repo.methods[str(res.method_id)].secret_enc)  # type: ignore[arg-type]
+    code = generate_code(seed, time_step_for(_T0.timestamp()) - 1)
+    await mfa.confirm_enrollment(str(user), method_id=str(res.method_id), code=code)
+    sessions = FakeSessionRepository()
+    for alias in ("s1", "s2", "o1"):  # the actor's own live session rows
+        sessions.sessions[alias] = _session(user)
+    return StepUpService(repo, sessions, enc, clock=clock), clock, seed, user, sessions
+
+
+def _code(seed: bytes, clock: _Clock) -> str:
+    return generate_code(seed, time_step_for(clock.now.timestamp()))
+
+
+async def test_dangerous_action_requires_step_up() -> None:
+    svc, *_ = await _setup()
+    with pytest.raises(StepUpRequired):
+        await svc.require_elevation("s1", "keys")
+
+
+async def test_grace_window_within_action_class() -> None:
+    svc, clock, seed, user, _ = await _setup()
+    await svc.step_up(str(user), "s1", "keys", _code(seed, clock))
+    clock.now += timedelta(minutes=3)
+    await svc.require_elevation("s1", "keys")
+    assert await svc.remaining_grace("s1", "keys") == timedelta(minutes=2)
+    with pytest.raises(StepUpRequired):  # other class gets no grace
+        await svc.require_elevation("s1", "users")
+    clock.now += timedelta(minutes=3)
+    with pytest.raises(StepUpRequired):
+        await svc.require_elevation("s1", "keys")
+
+
+@pytest.mark.parametrize("cls", ["live_enablement", "killswitch"])
+async def test_grace_never_applies_to_no_grace_classes(cls: str) -> None:
+    svc, clock, seed, user, _ = await _setup()
+    await svc.step_up(str(user), "s1", "keys", _code(seed, clock))
+    with pytest.raises(StepUpRequired):
+        await svc.require_elevation("s1", cls)
+    clock.now += timedelta(minutes=1)
+    grant = await svc.step_up(str(user), "s1", cls, _code(seed, clock))
+    assert grant.single_use
+    with pytest.raises(StepUpRequired):
+        await svc.require_elevation("s1", cls)
+    await svc.consume_single_use("s1", cls)  # one-shot grant honoured once
+    with pytest.raises(StepUpRequired):
+        await svc.consume_single_use("s1", cls)
+
+
+async def test_three_failures_downgrade_to_readonly_for_five_minutes() -> None:
+    svc, clock, seed, user, _ = await _setup()
+    await svc.step_up(str(user), "s1", "keys", _code(seed, clock))
+    with pytest.raises(StepUpCodeInvalid) as e1:
+        await svc.step_up(str(user), "s1", "keys", "000000")
+    assert e1.value.failures_remaining == 2
+    with pytest.raises(StepUpCodeInvalid):
+        await svc.step_up(str(user), "s1", "keys", "000000")
+    with pytest.raises(SessionReadOnly):
+        await svc.step_up(str(user), "s1", "keys", "000000")
+    with pytest.raises(SessionReadOnly):
+        await svc.assert_writable("s1")
+    with pytest.raises(SessionReadOnly):  # elevation wiped by the downgrade
+        await svc.require_elevation("s1", "keys")
+    clock.now += timedelta(minutes=5)
+    await svc.assert_writable("s1")
+
+
+async def test_replayed_code_is_rejected() -> None:
+    svc, clock, seed, user, _ = await _setup()
+    code = _code(seed, clock)
+    await svc.step_up(str(user), "s1", "keys", code)
+    with pytest.raises(StepUpCodeInvalid):
+        await svc.step_up(str(user), "s2", "keys", code)
+
+
+async def test_elevation_is_bound_to_session_id() -> None:
+    svc, clock, seed, user, _ = await _setup()
+    await svc.step_up(str(user), "s1", "keys", _code(seed, clock))
+    with pytest.raises(StepUpRequired):
+        await svc.require_elevation("s2", "keys")
+
+
+async def test_unknown_action_class_rejected() -> None:
+    svc, clock, seed, user, _ = await _setup()
+    with pytest.raises(UnknownActionClass):
+        await svc.step_up(str(user), "s1", "bogus", _code(seed, clock))
+    with pytest.raises(StepUpRequired):
+        await svc.require_elevation("s1", "bogus")
+
+
+def _session(user: uuid.UUID) -> SessionRecord:
+    return SessionRecord(
+        id=uuid.uuid4(),
+        user_id=user,
+        refresh_token_hash=uuid.uuid4().hex,
+        access_token_jti=None,
+        issued_at=_T0,
+        last_seen_at=_T0,
+        expires_at=_T0 + timedelta(hours=12),
+        revoked_at=None,
+        revoked_reason=None,
+        ip=None,
+        user_agent=None,
+        device_label=None,
+        is_electron=False,
+        mfa_satisfied_at=_T0,
+    )
+
+
+async def test_owner_reset_revokes_sessions_without_oms_effects_or_secret() -> None:
+    svc, clock, seed, owner, sessions = await _setup()
+    target = uuid.uuid4()
+    s = _session(target)
+    await sessions.create_session(s)
+    positions = _Positions(3)
+    preview = await svc.preview_reset(str(target), positions)
+    assert preview.open_position_count == 3
+    assert "NOT cancel" in preview.message
+    with pytest.raises(StepUpRequired):  # reset itself needs fresh step-up
+        await svc.reset_totp(
+            actor_session_id="o1", actor_user_id=str(owner), target_user_id=str(target)
+        )
+    await svc.step_up(str(owner), "o1", "users", _code(seed, clock))
+    result = await svc.reset_totp(
+        actor_session_id="o1", actor_user_id=str(owner), target_user_id=str(target)
+    )
+    assert result.sessions_revoked == 1
+    assert sessions.sessions[str(s.id)].revoked_at is not None
+    assert not hasattr(result, "secret") and not hasattr(result, "recovery_codes")
+    assert positions.count == 3  # read-only provider; no OMS mutation API exists
+
+
+async def test_owner_cannot_reset_self() -> None:
+    svc, clock, seed, owner, _ = await _setup()
+    await svc.step_up(str(owner), "o1", "users", _code(seed, clock))
+    with pytest.raises(StepUpRequired):
+        await svc.reset_totp(
+            actor_session_id="o1", actor_user_id=str(owner), target_user_id=str(owner)
+        )
+
+
+async def test_preview_with_no_position_store_reports_unknown_not_zero() -> None:
+    svc, *_ = await _setup()
+    preview = await svc.preview_reset(str(uuid.uuid4()), _NoStore())
+    assert preview.open_position_count is None
+    assert not preview.positions_known
+    assert preview.position_source == "not_deployed"
+    assert "UNAVAILABLE" in preview.message and "0 open" not in preview.message
+
+
+async def test_preview_with_real_store_reports_count() -> None:
+    svc, *_ = await _setup()
+    preview = await svc.preview_reset(str(uuid.uuid4()), _Positions(2))
+    assert preview.positions_known and preview.open_position_count == 2
+    assert preview.position_source == "oms"
+
+
+async def test_elevation_persists_on_session_row_across_restart() -> None:
+    svc, clock, seed, user, sessions = await _setup()
+    await svc.step_up(str(user), "s1", "keys", _code(seed, clock))
+    assert "keys" in sessions.sessions["s1"].step_up_elevations
+    # Process restart: a brand-new service over the same session store.
+    rebuilt = StepUpService(FakeMfaRepository(), sessions, svc._encryptor, clock=clock)
+    clock.now += timedelta(minutes=4)
+    await rebuilt.require_elevation("s1", "keys")
+    clock.now += timedelta(minutes=2)  # past the 5-minute expiry
+    with pytest.raises(StepUpRequired):
+        await rebuilt.require_elevation("s1", "keys")
+
+
+async def test_strikes_and_readonly_persist_across_restart() -> None:
+    svc, clock, seed, user, sessions = await _setup()
+    for _ in range(2):
+        with pytest.raises(StepUpCodeInvalid):
+            await svc.step_up(str(user), "s1", "keys", "000000")
+    rebuilt = StepUpService(svc._mfa, sessions, svc._encryptor, clock=clock)
+    with pytest.raises(SessionReadOnly):  # third strike counted after restart
+        await rebuilt.step_up(str(user), "s1", "keys", "000000")
+    again = StepUpService(svc._mfa, sessions, svc._encryptor, clock=clock)
+    with pytest.raises(SessionReadOnly):
+        await again.assert_writable("s1")
+
+
+async def test_elevation_is_revoked_with_the_session() -> None:
+    svc, clock, seed, user, sessions = await _setup()
+    await svc.step_up(str(user), "s1", "keys", _code(seed, clock))
+    await sessions.revoke("s1", reason="logout", now=clock.now)
+    with pytest.raises(StepUpRequired):
+        await svc.require_elevation("s1", "keys")
+
+
+def _sample(name: str, **labels: str) -> float:
+    from prometheus_client import REGISTRY
+
+    return REGISTRY.get_sample_value(name, labels) or 0.0
+
+
+async def test_step_up_and_reset_metrics_are_emitted() -> None:
+    svc, clock, seed, owner, sessions = await _setup()
+    ok0 = _sample("auth_step_up_total", action_class="users")
+    bad0 = _sample("auth_step_up_failures_total", action_class="keys")
+    ro0 = _sample("auth_readonly_downgrades_total")
+    rs0 = _sample("auth_mfa_resets_total")
+    await svc.step_up(str(owner), "o1", "users", _code(seed, clock))
+    assert _sample("auth_step_up_total", action_class="users") == ok0 + 1
+    for _ in range(2):
+        with pytest.raises(StepUpCodeInvalid):
+            await svc.step_up(str(owner), "s1", "keys", "000000")
+    with pytest.raises(SessionReadOnly):
+        await svc.step_up(str(owner), "s1", "keys", "000000")
+    assert _sample("auth_step_up_failures_total", action_class="keys") == bad0 + 3
+    assert _sample("auth_readonly_downgrades_total") == ro0 + 1
+    target = uuid.uuid4()
+    await sessions.create_session(_session(target))
+    await svc.reset_totp(
+        actor_session_id="o1", actor_user_id=str(owner), target_user_id=str(target)
+    )
+    assert _sample("auth_mfa_resets_total") == rs0 + 1

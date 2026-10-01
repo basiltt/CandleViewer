@@ -23,6 +23,7 @@ from candleviewer.auth.hashing import Hasher
 from candleviewer.auth.login_service import LoginService
 from candleviewer.auth.mfa_service import MfaService
 from candleviewer.auth.session_service import SessionService
+from candleviewer.auth.step_up import StepUpService
 from candleviewer.observability.health import HealthReport, HealthStatus
 from candleviewer.settings import Environment
 
@@ -64,6 +65,7 @@ class AuthService:
         self._sessions: SessionService | None = None
         self._login: LoginService | None = None
         self._mfa: MfaService | None = None
+        self._step_up: StepUpService | None = None
 
     @property
     def is_active(self) -> bool:
@@ -84,6 +86,16 @@ class AuthService:
         if self._mfa is None:
             raise RuntimeError("AuthService.start() has not wired an MfaRepository")
         return self._mfa
+
+    @property
+    def step_up_is_active(self) -> bool:
+        return self._step_up is not None
+
+    @property
+    def step_up(self) -> StepUpService:
+        if self._step_up is None:
+            raise RuntimeError("AuthService.start() has not wired step-up")
+        return self._step_up
 
     @property
     def sessions_is_active(self) -> bool:
@@ -145,18 +157,31 @@ class AuthService:
                         "recovery codes unverifiable after restart (see E27-T02)"
                     )
                 rc_key = _process_local_key()
+            encryptor = TotpEncryptor(key, key_ref=LOCAL_KEY_REF)
             self._mfa = MfaService(
                 self._mfa_repository,
-                TotpEncryptor(key, key_ref=LOCAL_KEY_REF),
+                encryptor,
                 recovery_code_key=rc_key,
                 clock=self._clock,
             )
+            if self._session_repository is not None:
+                # E09-S04: one process-wide instance (per-session state is
+                # in-memory, matching the B16 per-process interpreter).
+                self._step_up = StepUpService(
+                    self._mfa_repository,
+                    self._session_repository,
+                    encryptor,
+                    clock=self._clock,
+                )
         self._started = True
 
     async def stop(self, grace_s: float) -> None:
         """Stop the module within `grace_s` seconds. No-op scaffold."""
         self._login = None
         self._mfa = None
+        if self._step_up is not None:
+            await self._step_up.stop()
+        self._step_up = None
         self._sessions = None
         self._started = False
 

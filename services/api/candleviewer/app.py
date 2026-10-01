@@ -51,6 +51,7 @@ from candleviewer.api.deny_by_default import (
     make_deny_undeclared_dependency,
 )
 from candleviewer.api.sessions import make_session_router
+from candleviewer.api.step_up import make_read_only_guard, make_step_up_router
 from candleviewer.api.telemetry import SessionKeyResolver, make_telemetry_router
 from candleviewer.api.users import SnapshotResolver, UserRoleStore, make_users_router
 from candleviewer.auth.models import (
@@ -112,6 +113,7 @@ from candleviewer.replay.service import ReplayService
 from candleviewer.risk.service import RiskService
 from candleviewer.rules.service import RulesService
 from candleviewer.settings import Environment, Settings, get_settings
+from candleviewer.statechart.bindings.b16_session import set_audit_sink as set_b16_audit_sink
 from candleviewer.statechart.gateway import GatewayOverloadedError
 from candleviewer.storage.repositories.audit_sqlalchemy import SqlAlchemyAuditRepository
 from candleviewer.storage.repositories.identity_sqlalchemy import SqlAlchemyIdentityProvider
@@ -442,6 +444,19 @@ async def gateway_overloaded_handler(_request: Request, exc: Exception) -> JSONR
     )
 
 
+class _NoPositionStore:
+    """Open-position provider for the reset preview while no position store
+    exists on main (`oms/` is a scaffold; `positions` lands with
+    `0006_trading_core`). Reports the state as unknown - never 0 - so the
+    preview says so and the reset demands `acknowledge_unknown_positions`.
+    Replace with the OMS read model when it lands."""
+
+    source = "not_deployed"
+
+    async def open_position_count(self, user_id: str) -> int | None:
+        return None
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -557,6 +572,19 @@ def create_app(
             revocation_hub=revocation_hub,
         )
     )
+    # E09-S04: step-up, owner TOTP reset and the read-only write guard.
+    app.include_router(
+        make_step_up_router(
+            ctx.auth,
+            _LazyAuditEmitter(ctx.audit),
+            principal_resolver=principal_resolver,
+            positions=_NoPositionStore(),
+            users=user_role_store,
+        )
+    )
+    # B16 audit actions write through the M19 emitter (PR #1674 finding 3).
+    set_b16_audit_sink(_LazyAuditEmitter(ctx.audit))
+    app.middleware("http")(make_read_only_guard(ctx.auth, _LazyAuditEmitter(ctx.audit)))
     # Audit emitter + notifier are mandatory; store/resolver `None` -> 501.
     app.include_router(
         make_users_router(

@@ -277,8 +277,33 @@ sessions = Table(
             "the idle deadline is last_seen_at + this."
         ),
     ),
+    Column(
+        "step_up_elevations",
+        JSONB,
+        nullable=False,
+        server_default=text("'{}'::jsonb"),
+        comment=(
+            'Step-up elevation per action class: {"<action_class>": '
+            '"<expiry ISO-8601 UTC>"} (E09-S04).'
+        ),
+    ),
+    Column(
+        "step_up_failures",
+        SmallInteger,
+        nullable=False,
+        server_default=text("0"),
+        comment="Consecutive invalid step-up codes; 3 triggers the read-only downgrade (E09-S04).",
+    ),
+    Column(
+        "readonly_until",
+        TIMESTAMP(timezone=True),
+        comment=(
+            "Read-only downgrade expiry after 3 failed step-up codes (E09-S04); NULL = writable."
+        ),
+    ),
     CheckConstraint("expires_at > issued_at", name="sessions_expiry"),
     CheckConstraint("idle_timeout_s BETWEEN 300 AND 3600", name="sessions_idle_timeout_range"),
+    CheckConstraint("step_up_failures BETWEEN 0 AND 3", name="sessions_step_up_failures_range"),
     UniqueConstraint("refresh_token_hash", name="sessions_refresh_token_hash_key"),
     Index("ix_sessions_user_live", "user_id", postgresql_where=text("revoked_at IS NULL")),
     Index("ix_sessions_expiry", "expires_at", postgresql_where=text("revoked_at IS NULL")),

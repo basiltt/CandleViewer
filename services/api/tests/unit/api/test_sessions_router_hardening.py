@@ -188,3 +188,21 @@ async def test_session_list_and_logout_edge_inputs() -> None:
     assert r.status_code == 204
     assert "max-age=0" in r.headers["set-cookie"].lower()
     assert env.revoked == [(str(m.session_id), "session_revoked")]
+
+
+async def test_session_info_exposes_step_up_expires_at() -> None:
+    from datetime import UTC, datetime, timedelta
+
+    env = _Env()
+    m = await env.mint(uuid.uuid4())
+    h = _h(m.access_token)
+    assert env.client.get("/api/v1/auth/session", headers=h).json()["step_up_expires_at"] is None
+    until = datetime.now(UTC) + timedelta(minutes=4)
+    await env.repo.save_step_up_state(
+        str(m.session_id),
+        elevations={"users": until, "pending:keys": until + timedelta(minutes=1)},
+        failures=0,
+        readonly_until=None,
+    )
+    body = env.client.get("/api/v1/auth/session", headers=h).json()
+    assert datetime.fromisoformat(body["step_up_expires_at"]) == until

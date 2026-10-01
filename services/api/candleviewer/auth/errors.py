@@ -141,3 +141,35 @@ class RefreshReuseDetected(AuthError):
     def __init__(self, message: str, *, revoked_session_ids: tuple[str, ...] = ()) -> None:
         super().__init__(message)
         self.revoked_session_ids = revoked_session_ids
+
+
+class StepUpRequired(AuthError):
+    """A dangerous action was attempted without a live server-side elevation
+    for its action class (E09-S04). The HTTP edge renders 403
+    step_up_required and audits the attempt."""
+
+    def __init__(self, action_class: str) -> None:
+        super().__init__(f"step-up required for action class {action_class!r}")
+        self.action_class = action_class
+
+
+class StepUpCodeInvalid(AuthError):
+    """Step-up TOTP code wrong or replayed; failures_remaining strikes are
+    left before the session is downgraded to read-only."""
+
+    def __init__(self, failures_remaining: int) -> None:
+        super().__init__("invalid step-up code")
+        self.failures_remaining = failures_remaining
+
+
+class SessionReadOnly(AuthError):
+    """Session is in the 5-minute read-only downgrade after three failed
+    step-up codes; every write route must refuse (E09-S04)."""
+
+    def __init__(self, until: object = None) -> None:
+        super().__init__("session is read-only after repeated step-up failures")
+        self.until = until
+
+
+class UnknownActionClass(AuthError):
+    """Step-up requested for an action class outside the closed set."""

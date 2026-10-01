@@ -178,6 +178,18 @@ x-error-codes:
     status: 401
     title: Refresh token unknown, rotated away, or revoked (possible reuse attack)
     retryable: false
+  - code: step_up_required
+    status: 403
+    title: A dangerous action needs a live step-up elevation for its action class
+    retryable: false
+  - code: session_read_only
+    status: 403
+    title: Session is read-only for 5 minutes after three invalid step-up codes
+    retryable: false
+  - code: positions_unknown
+    status: 409
+    title: Open-position state is unavailable; resend with acknowledge_unknown_positions=true
+    retryable: false
   - code: forbidden
     status: 403
     title: Authenticated but lacking the required permission
@@ -7196,29 +7208,129 @@ paths:
     post:
       tags: [auth]
       operationId: authStepUp
-      summary: Elevate the current session by re-presenting MFA
+      summary: Elevate the current session for one action class by re-presenting TOTP
       description: >
-        Grants `elevated_until = now + 15 min` on the current session
-        (24-internal-schemas.md section 15.2). Endpoints that require elevation return
-        `403` with `type: step_up_required` until this succeeds. Always audited.
+        Grants a **5-minute** server-side grace for `action_class` on the current session
+        (24-internal-schemas.md section 15.2/15.3; the ticket value of 5 minutes supersedes the
+        earlier 15). `live_enablement` and `killswitch` are no-grace classes: the response is
+        `single_use: true` and no window is opened. Three consecutive invalid codes downgrade the
+        session to read-only for 5 minutes (`403 session_read_only` on every write). Endpoints
+        that require elevation return `403` with `code: step_up_required` until this
+        succeeds. Always audited (`auth.step_up_granted`, `auth.step_up_failed`,
+        `auth.session_readonly_downgrade`).
       x-rbac: { permissions: [], scope: self }
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/MfaVerifyRequest" }
+            schema:
+              type: object
+              additionalProperties: false
+              required: [code]
+              properties:
+                code: { type: string, pattern: "^[0-9]{6}$" }
+                action_class:
+                  description: >
+                    Optional cross-check. The server elevates the class its last
+                    `403 step_up_required` challenged on this session; a different
+                    value is `400`. Without a pending challenge it is required.
+                  type: string
+                  enum: [keys, users, live_enablement, killswitch, risk_caps]
       responses:
         "200":
-          description: Session elevated.
+          description: Elevated.
           content:
             application/json:
               schema:
                 type: object
-                required: [elevated_until]
+                required: [elevated_until, action_class, single_use]
                 properties:
                   elevated_until: { type: string, format: date-time }
+                  action_class: { type: string }
+                  single_use: { type: boolean }
+                  step_up_expires_at:
+                    type: ["string", "null"]
+                    format: date-time
+                    description: End of the grace window shown in the dialog; null for no-grace classes.
+        "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/RateLimited" }
+
+  /users/{userId}/mfa/reset-preview:
+    parameters: [{ $ref: "#/components/parameters/UserId" }]
+    get:
+      tags: [users]
+      operationId: previewMfaReset
+      summary: Show the target's open-position state before an owner TOTP reset
+      x-rbac: { permissions: [users:write], scope: none }
+      responses:
+        "200":
+          description: Preview.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  [
+                    target_user_id,
+                    open_position_count,
+                    positions,
+                    position_source,
+                    requires_acknowledge_unknown_positions,
+                    message,
+                  ]
+                properties:
+                  target_user_id: { type: string, format: uuid }
+                  open_position_count:
+                    type: [integer, "null"]
+                    minimum: 0
+                    description: Null when the position state is unknown - never a fabricated 0.
+                  positions: { type: string, enum: [known, unavailable] }
+                  position_source:
+                    type: string
+                    description: Backing store; `not_deployed` until the OMS position store lands.
+                  requires_acknowledge_unknown_positions: { type: boolean }
+                  message: { type: string }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /users/{userId}/mfa/reset:
+    parameters: [{ $ref: "#/components/parameters/UserId" }]
+    post:
+      tags: [users]
+      operationId: resetUserMfa
+      summary: Owner-initiated TOTP reset (owner, step-up `users`)
+      description: >
+        Revokes the target's TOTP methods and all their sessions. Does not cancel orders or
+        flatten positions and reveals no secret. Self-reset is refused. Audited as
+        `auth.mfa_reset_by_owner`. When the position state is unavailable the request must carry
+        `acknowledge_unknown_positions: true`, otherwise `409 positions_unknown`.
+      x-rbac: { permissions: [users:write], scope: none }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                acknowledge_unknown_positions: { type: boolean, default: false }
+      responses:
+        "200":
+          description: Reset.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [target_user_id, methods_revoked, sessions_revoked]
+                properties:
+                  target_user_id: { type: string, format: uuid }
+                  methods_revoked: { type: integer }
+                  sessions_revoked: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
 
   /auth/mfa/recovery:
     post:
@@ -9007,6 +9119,10 @@ components:
         allowed_environments: { type: array, items: { $ref: "#/components/schemas/Environment" } }
         kill_switch: { $ref: "#/components/schemas/KillSwitch" }
         server_time: { type: string, format: date-time }
+        step_up_expires_at:
+          type: ["string", "null"]
+          format: date-time
+          description: Latest live step-up grace-window expiry on this session (E09-S04); null if none.
         clock_offset_ms:
           {
             type: integer,

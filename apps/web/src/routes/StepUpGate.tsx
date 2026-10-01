@@ -1,6 +1,18 @@
-import { useState, type FormEvent, type JSX } from "react";
+import { useEffect, useState, type FormEvent, type JSX } from "react";
 import { useNavigate } from "react-router-dom";
-import { recordStepUp } from "../lib/auth/meCache";
+import { getStepUpExpiresAt, recordStepUp } from "../lib/auth/meCache";
+
+function remainingSeconds(expiresAt: string | null, nowMs: number): number {
+  if (!expiresAt) return 0;
+  const ms = Date.parse(expiresAt) - nowMs;
+  return Number.isNaN(ms) || ms <= 0 ? 0 : Math.ceil(ms / 1000);
+}
+
+function formatRemaining(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
 
 export interface StepUpGateProps {
   /** Path (+ query) to return to once step-up succeeds. */
@@ -18,6 +30,17 @@ export function StepUpGate({ redirectTo }: StepUpGateProps): JSX.Element {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [expiresAt, setExpiresAt] = useState<string | null>(getStepUpExpiresAt);
+  const [granted, setGranted] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+  const remaining = remainingSeconds(expiresAt, now);
+  const windowLive = remaining > 0;
+
+  useEffect(() => {
+    if (!windowLive) return undefined;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [windowLive]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -33,9 +56,15 @@ export function StepUpGate({ redirectTo }: StepUpGateProps): JSX.Element {
         setError("That code did not work. Try again.");
         return;
       }
-      const body: { elevated_until: string } = await response.json();
-      recordStepUp(body.elevated_until);
-      navigate(redirectTo, { replace: true });
+      // Server elevates the class its last 403 challenged; the body carries only the code.
+      const body: { elevated_until: string; step_up_expires_at?: string | null } =
+        await response.json();
+      const expires = body.step_up_expires_at ?? null;
+      recordStepUp(body.elevated_until, expires);
+      setExpiresAt(expires);
+      setNow(Date.now());
+      // Stay open so the grace window is visible; the user continues explicitly.
+      setGranted(true);
     } finally {
       setSubmitting(false);
     }
@@ -45,6 +74,18 @@ export function StepUpGate({ redirectTo }: StepUpGateProps): JSX.Element {
     <div role="dialog" aria-modal="true" aria-labelledby="step-up-title">
       <h1 id="step-up-title">Confirm it&apos;s you</h1>
       <p>Enter your authenticator code to continue to the Admin area.</p>
+      <p aria-live="polite" data-testid="step-up-grace">
+        {remaining > 0
+          ? `Grace window: ${formatRemaining(remaining)} remaining`
+          : granted && expiresAt === null
+            ? "Single-use confirmation: no grace window for this action."
+            : ""}
+      </p>
+      {granted ? (
+        <button type="button" onClick={() => navigate(redirectTo, { replace: true })}>
+          Continue
+        </button>
+      ) : null}
       <form onSubmit={(event) => void onSubmit(event)}>
         <label htmlFor="step-up-code">Authenticator code</label>
         <input
@@ -56,7 +97,7 @@ export function StepUpGate({ redirectTo }: StepUpGateProps): JSX.Element {
           onChange={(event) => setCode(event.target.value)}
         />
         {error ? <p role="alert">{error}</p> : null}
-        <button type="submit" disabled={submitting || code.length === 0}>
+        <button type="submit" disabled={submitting || granted || code.length === 0}>
           Confirm
         </button>
       </form>

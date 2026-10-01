@@ -18,10 +18,87 @@ an invoked async operation.
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from typing import Any
+from typing import Any, Protocol
 
 from candleviewer.statechart.bindings import register_binding_module
 from candleviewer.statechart.config import register_event_schemas
+
+
+class AuditSink(Protocol):
+    """The M19 audit emitter, injected by the composition root (`statechart`
+    and `auth` may not import `audit`; C-3.3). Same `emit` shape as
+    `AuditWriter.emit`."""
+
+    async def emit(self, action: str, **kwargs: Any) -> None: ...
+
+
+class B16AuditSinkMissingError(RuntimeError):
+    """An audit action ran with no sink wired: fail loud (C-2.9), never skip."""
+
+
+_SINK: list[AuditSink] = []
+
+
+def set_audit_sink(sink: AuditSink | None) -> None:
+    """Install (or clear, with `None`) the process-wide B16 audit sink."""
+    _SINK.clear()
+    if sink is not None:
+        _SINK.append(sink)
+
+
+def _identity(context: dict[str, Any]) -> tuple[str | None, str | None]:
+    inp = context.get("input")
+    src = inp if isinstance(inp, dict) else context
+    sid, uid = src.get("session_id"), src.get("user_id")
+    return (None if sid is None else str(sid)), (None if uid is None else str(uid))
+
+
+def elevation_view(context: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "elevated_classes": sorted((context.get("elevated_classes") or {}).keys()),
+        "step_up_failures": int(context.get("step_up_failures", 0) or 0),
+        "readonly_until_us": context.get("readonly_until_us"),
+        "revoke_reason": context.get("revoke_reason"),
+    }
+
+
+async def _emit(
+    context: dict[str, Any],
+    event: Any,
+    action: str,
+    *,
+    outcome: str = "success",
+    severity: str = "info",
+    reason: str | None = None,
+) -> None:
+    """Write one audit record for this transition (C-2.9, C-12.8): actor,
+    session, before/after elevation state. `replay=True` events (chart
+    hydration from the persisted `sessions` row) were audited when they
+    first happened and are not re-recorded."""
+    payload = _payload(event)
+    if payload.get("replay"):
+        return
+    if not _SINK:
+        raise B16AuditSinkMissingError(f"B16 {action}: no audit sink wired")
+    sid, uid = _identity(context)
+    before = payload.get("before")
+    await _SINK[0].emit(
+        action,
+        actor_label=uid or "system",
+        actor_user_id=uid,
+        session_id=sid,
+        outcome=outcome,
+        severity=severity,
+        reason=reason,
+        before_state=before if isinstance(before, dict) else None,
+        after_state=elevation_view(context),
+    )
+
+
+def _cls(event: Any) -> str | None:
+    value = _payload(event).get("action_class")
+    return value if isinstance(value, str) else None
+
 
 #: Ticket "Technical notes" / catalogue B16.4: five failed MFA attempts on
 #: one session's `pending_mfa` leg locks it (mirrors `MfaService`'s own
@@ -64,12 +141,8 @@ async def bump_mfa_attempts(
 async def audit_mfa_failed(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
-    """Audit emission is the caller's responsibility in every other M18
-    module (`forbidden-M18`: `auth`/`statechart` may not import `audit`
-    directly); this action is a no-op placeholder the audit plugin
-    (`CvAuditPlugin`, E50-T60) observes via the interpreter's own action
-    trace rather than a direct call out of this binding."""
-    return None
+    """`auth.mfa_failed` through the injected sink (no `audit` import)."""
+    await _emit(context, event, "auth.mfa_failed", outcome="failure", severity="warning")
 
 
 async def set_revoke_locked(
@@ -123,13 +196,20 @@ async def stamp_idle_deadline(
 async def audit_login(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
-    return None
+    await _emit(context, event, "auth.login")
 
 
 async def audit_session_revoked(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
-    return None
+    reason = _payload(event).get("reason") or context.get("revoke_reason")
+    await _emit(
+        context,
+        event,
+        "auth.session_revoked",
+        severity="warning",
+        reason=None if reason is None else str(reason),
+    )
 
 
 async def broadcast_revocation(
@@ -146,33 +226,137 @@ async def broadcast_revocation(
 async def stamp_elevated_until(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
-    elevated_until_us = _payload(event).get("elevated_until_us")
+    payload = _payload(event)
+    elevated_until_us = payload.get("elevated_until_us")
     if elevated_until_us is not None:
         context["elevated_until_us"] = elevated_until_us
+        action_class = payload.get("action_class")
+        # No-grace classes never open a window (ticket "No-grace list").
+        if action_class in NO_GRACE_ACTION_CLASSES:
+            return
+        if action_class in ACTION_CLASSES:
+            context.setdefault("elevated_classes", {})[action_class] = elevated_until_us
+    context["step_up_failures"] = 0
 
 
 async def audit_step_up(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
-    return None
+    await _emit(context, event, "auth.step_up_granted", reason=_cls(event))
 
 
 async def audit_step_up_failed(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
-    return None
+    remaining = max(STEP_UP_FAILURE_CAP - int(context.get("step_up_failures", 0) or 0), 0)
+    await _emit(
+        context,
+        event,
+        "auth.step_up_failed",
+        outcome="failure",
+        severity="error",
+        reason=f"{_cls(event)}:remaining={remaining}",
+    )
 
 
 async def clear_elevated(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
     context["elevated_until_us"] = None
+    context["elevated_classes"] = {}
 
 
 async def schedule_elevation_deadline(
     _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
 ) -> None:
     return None
+
+
+# -- E09-S04: step-up re-authentication (US-ONB-005) -------------------------
+
+#: Ticket: "a 5-minute grace per action class".
+STEP_UP_GRACE_US = 5 * 60 * 1_000_000
+#: Ticket: three invalid codes abandon the action and downgrade the session.
+STEP_UP_FAILURE_CAP = 3
+#: Ticket: the downgrade lasts 5 minutes.
+READONLY_DOWNGRADE_US = 5 * 60 * 1_000_000
+#: Ticket "No-grace list": a fresh code is *always* required for these.
+NO_GRACE_ACTION_CLASSES = frozenset({"live_enablement", "killswitch"})
+ACTION_CLASSES = frozenset({"keys", "users", "live_enablement", "killswitch", "risk_caps"})
+
+
+def grace_window_valid(context: dict[str, Any], event: dict[str, Any]) -> bool:
+    """Guard: is there an unexpired grace window for `event.action_class`?
+
+    False unconditionally for the no-grace list. Total: any malformed input
+    yields False (fail closed, catalogue A6)."""
+    try:
+        payload = _payload(event)
+        action_class = payload.get("action_class")
+        if action_class in NO_GRACE_ACTION_CLASSES or action_class not in ACTION_CLASSES:
+            return False
+        until = (context.get("elevated_classes") or {}).get(action_class)
+        now_us = payload.get("now_us")
+        return bool(until is not None and now_us is not None and int(now_us) < int(until))
+    except (TypeError, ValueError, AttributeError):
+        return False
+
+
+def step_up_strikes_exhausted(context: dict[str, Any], event: dict[str, Any]) -> bool:
+    """Guard: this failure is the third (`step_up_failures + 1 >= cap`)."""
+    try:
+        return bool(int(context.get("step_up_failures", 0)) + 1 >= STEP_UP_FAILURE_CAP)
+    except (TypeError, ValueError):
+        return False
+
+
+async def record_step_up_failure(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
+    context["step_up_failures"] = int(context.get("step_up_failures", 0)) + 1
+    if context["step_up_failures"] >= STEP_UP_FAILURE_CAP:
+        now_us = _payload(event).get("now_us")
+        if now_us is not None:
+            context["readonly_until_us"] = int(now_us) + READONLY_DOWNGRADE_US
+
+
+async def clear_step_up_failures(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
+    context["step_up_failures"] = 0
+    context["readonly_until_us"] = None
+
+
+async def audit_step_up_required(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
+    await _emit(
+        context,
+        event,
+        "auth.step_up_required",
+        outcome="denied",
+        severity="warning",
+        reason=_cls(event),
+    )
+
+
+async def audit_grace_used(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
+    await _emit(context, event, "auth.step_up_grace_used", reason=_cls(event))
+
+
+async def audit_readonly_downgrade(
+    _interp: Any, context: dict[str, Any], event: dict[str, Any], _action_def: Any
+) -> None:
+    await _emit(
+        context,
+        event,
+        "auth.session_readonly_downgrade",
+        outcome="denied",
+        severity="error",
+        reason=_cls(event),
+    )
 
 
 ACTIONS: dict[str, Callable[..., Awaitable[None]]] = {
@@ -194,10 +378,17 @@ ACTIONS: dict[str, Callable[..., Awaitable[None]]] = {
     "audit_step_up_failed": audit_step_up_failed,
     "clear_elevated": clear_elevated,
     "schedule_elevation_deadline": schedule_elevation_deadline,
+    "record_step_up_failure": record_step_up_failure,
+    "clear_step_up_failures": clear_step_up_failures,
+    "audit_step_up_required": audit_step_up_required,
+    "audit_grace_used": audit_grace_used,
+    "audit_readonly_downgrade": audit_readonly_downgrade,
 }
 
 GUARDS: dict[str, Callable[..., bool]] = {
     "mfa_attempts_exhausted": mfa_attempts_exhausted,
+    "grace_window_valid": grace_window_valid,
+    "step_up_strikes_exhausted": step_up_strikes_exhausted,
 }
 
 SERVICES: dict[str, Callable[..., Awaitable[Any]]] = {}
@@ -222,5 +413,7 @@ register_event_schemas(
         "STEP_UP_OK": {"type": "object", "additionalProperties": True},
         "STEP_UP_FAILED": {"type": "object", "additionalProperties": True},
         "ELEVATION_DEADLINE": {"type": "object", "additionalProperties": True},
+        "ACTION_REQUEST": {"type": "object", "additionalProperties": True},
+        "READONLY_EXPIRED": {"type": "object", "additionalProperties": True},
     }
 )

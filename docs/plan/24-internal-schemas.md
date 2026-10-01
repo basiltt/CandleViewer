@@ -3291,7 +3291,7 @@ class Scope(StrEnum):
 
 **Authorization is a 4-tuple check** on every trading request: `(permission, account_id ∈ granted accounts, symbol ∈ allowed_symbols, environment enabled)`. All four must pass, and for the capabilities marked `(step-up)` in `04-security-program.md` §7.2.2 the session must additionally be elevated. The check lives in one `authorize()` function; endpoints never hand-roll it.
 
-**Step-up authentication** (re-enter MFA via `POST /auth/step-up`, grants `elevated_until = now + 15 min`) is required for: enabling live trading, adding/rotating an API key, editing a risk cap or per-account profile, arming a live rule, assigning roles or account grants, purging recorded data, exporting the audit log, restoring a backup, clearing a risk lockout, and panic-flatten-all.
+**Step-up authentication** (re-enter MFA via `POST /auth/step-up`, grants a per-action-class 5-minute grace (`live_enablement`/`killswitch`: none, fresh code each time)) is required for: enabling live trading, adding/rotating an API key, editing a risk cap or per-account profile, arming a live rule, assigning roles or account grants, purging recorded data, exporting the audit log, restoring a backup, clearing a risk lockout, and panic-flatten-all.
 
 ### 15.3 API key handling
 

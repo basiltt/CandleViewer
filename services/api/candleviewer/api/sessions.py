@@ -47,6 +47,7 @@ from candleviewer.auth.models import (
     SessionRecord,
     SessionView,
 )
+from candleviewer.auth.step_up import grace_expires_at
 from candleviewer.auth.throttle import PerIpLoginThrottle
 
 REFRESH_COOKIE = "cv_refresh"
@@ -128,6 +129,10 @@ class AuditServiceLike(Protocol):
 
 RevocationPublisher = Callable[[str, str], Awaitable[None]]
 Clock = Callable[[], Any]
+
+
+def _iso(value: datetime | None) -> str | None:
+    return None if value is None else value.isoformat()
 
 
 def _problem(status_code: int, title: str, detail: str) -> JSONResponse:
@@ -406,6 +411,9 @@ def make_session_router(
                 **info,
                 "user": await identity.user(str(record.user_id)),
                 "server_time": datetime.now(UTC).isoformat(),
+                "step_up_expires_at": _iso(
+                    grace_expires_at(record.step_up_elevations, datetime.now(UTC))
+                ),
                 "session": {
                     "id": str(record.id),
                     "issued_at": record.issued_at.isoformat(),

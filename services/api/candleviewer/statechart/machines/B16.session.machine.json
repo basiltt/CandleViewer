@@ -1,5 +1,6 @@
 {
   "id": "session",
+  "version": 1,
   "strictConfig": true,
   "maxIterations": 500,
   "actionErrorPolicy": "rollback",
@@ -10,10 +11,18 @@
   "spawnBlockingTimeout": 5000,
   "type": "parallel",
   "on": {
-    "LOGOUT": { "target": "#session.elevation.dead" },
-    "IDLE_DEADLINE": { "target": "#session.elevation.dead" },
-    "ABSOLUTE_DEADLINE": { "target": "#session.elevation.dead" },
-    "REVOKE": { "target": "#session.elevation.dead" }
+    "LOGOUT": {
+      "target": "#session.elevation.dead"
+    },
+    "IDLE_DEADLINE": {
+      "target": "#session.elevation.dead"
+    },
+    "ABSOLUTE_DEADLINE": {
+      "target": "#session.elevation.dead"
+    },
+    "REVOKE": {
+      "target": "#session.elevation.dead"
+    }
   },
   "context": {
     "session_id": null,
@@ -23,7 +32,10 @@
     "refresh_expires_at_us": 0,
     "elevated_until_us": null,
     "mfa_satisfied": false,
-    "revoke_reason": null
+    "revoke_reason": null,
+    "elevated_classes": {},
+    "step_up_failures": 0,
+    "readonly_until_us": null
   },
   "states": {
     "auth": {
@@ -33,54 +45,81 @@
           "on": {
             "MFA_OK": {
               "target": "#session.auth.active",
-              "actions": ["mark_mfa_satisfied"]
+              "actions": [
+                "mark_mfa_satisfied"
+              ]
             },
             "MFA_FAILED": [
               {
                 "target": "#session.auth.revoked",
                 "guard": "mfa_attempts_exhausted",
-                "actions": ["set_revoke_locked"]
+                "actions": [
+                  "set_revoke_locked"
+                ]
               },
               {
-                "actions": ["bump_mfa_attempts", "audit_mfa_failed"]
+                "actions": [
+                  "bump_mfa_attempts",
+                  "audit_mfa_failed"
+                ]
               }
             ],
             "MFA_TIMEOUT": {
               "target": "#session.auth.revoked",
-              "actions": ["set_revoke_timeout"]
+              "actions": [
+                "set_revoke_timeout"
+              ]
             }
           }
         },
         "active": {
-          "entry": ["stamp_idle_deadline", "audit_login"],
+          "entry": [
+            "stamp_idle_deadline",
+            "audit_login"
+          ],
           "on": {
             "REQUEST": {
               "target": "#session.auth.active",
               "reenter": true,
-              "actions": ["stamp_idle_deadline"]
+              "actions": [
+                "stamp_idle_deadline"
+              ]
             },
             "IDLE_DEADLINE": {
               "target": "#session.auth.revoked",
-              "actions": ["set_revoke_idle"]
+              "actions": [
+                "set_revoke_idle"
+              ]
             },
             "ABSOLUTE_DEADLINE": {
               "target": "#session.auth.revoked",
-              "actions": ["set_revoke_expired"]
+              "actions": [
+                "set_revoke_expired"
+              ]
             },
             "REVOKE": {
               "target": "#session.auth.revoked",
-              "actions": ["set_revoke_admin"]
+              "actions": [
+                "set_revoke_admin"
+              ]
             },
             "LOGOUT": {
               "target": "#session.auth.revoked",
-              "actions": ["set_revoke_logout"]
+              "actions": [
+                "set_revoke_logout"
+              ]
             }
           }
         },
         "revoked": {
           "type": "final",
-          "tags": ["terminal"],
-          "entry": ["audit_session_revoked", "broadcast_revocation"]
+          "tags": [
+            "terminal"
+          ],
+          "entry": [
+            "audit_session_revoked",
+            "broadcast_revocation"
+          ]
         }
       }
     },
@@ -88,34 +127,115 @@
       "initial": "normal",
       "states": {
         "normal": {
-          "tags": ["not_elevated"],
+          "tags": [
+            "not_elevated"
+          ],
           "on": {
             "STEP_UP_OK": {
               "target": "#session.elevation.elevated",
-              "actions": ["stamp_elevated_until", "audit_step_up"]
+              "actions": [
+                "stamp_elevated_until",
+                "audit_step_up"
+              ]
             },
-            "STEP_UP_FAILED": {
-              "actions": ["audit_step_up_failed"]
-            }
+            "STEP_UP_FAILED": [
+              {
+                "target": "#session.elevation.readonly_downgrade",
+                "guard": "step_up_strikes_exhausted",
+                "actions": [
+                  "record_step_up_failure",
+                  "audit_step_up_failed",
+                  "audit_readonly_downgrade"
+                ]
+              },
+              {
+                "actions": [
+                  "record_step_up_failure",
+                  "audit_step_up_failed"
+                ]
+              }
+            ],
+            "ACTION_REQUEST": [
+              {
+                "actions": [
+                  "audit_step_up_required"
+                ]
+              }
+            ]
           }
         },
         "elevated": {
-          "tags": ["elevated"],
-          "entry": ["schedule_elevation_deadline"],
+          "tags": [
+            "elevated"
+          ],
+          "entry": [
+            "schedule_elevation_deadline"
+          ],
           "on": {
             "ELEVATION_DEADLINE": {
               "target": "#session.elevation.normal",
-              "actions": ["clear_elevated"]
+              "actions": [
+                "clear_elevated"
+              ]
             },
             "STEP_UP_OK": {
               "target": "#session.elevation.elevated",
               "reenter": true,
-              "actions": ["stamp_elevated_until", "audit_step_up"]
-            }
+              "actions": [
+                "stamp_elevated_until",
+                "audit_step_up"
+              ]
+            },
+            "STEP_UP_FAILED": [
+              {
+                "target": "#session.elevation.readonly_downgrade",
+                "guard": "step_up_strikes_exhausted",
+                "actions": [
+                  "record_step_up_failure",
+                  "audit_step_up_failed",
+                  "audit_readonly_downgrade"
+                ]
+              },
+              {
+                "actions": [
+                  "record_step_up_failure",
+                  "audit_step_up_failed"
+                ]
+              }
+            ],
+            "ACTION_REQUEST": [
+              {
+                "guard": "grace_window_valid",
+                "actions": [
+                  "audit_grace_used"
+                ]
+              },
+              {
+                "actions": [
+                  "audit_step_up_required"
+                ]
+              }
+            ]
           }
         },
         "dead": {
           "type": "final"
+        },
+        "readonly_downgrade": {
+          "tags": [
+            "readonly"
+          ],
+          "entry": [
+            "clear_elevated"
+          ],
+          "on": {
+            "READONLY_EXPIRED": {
+              "target": "#session.elevation.normal",
+              "actions": [
+                "clear_step_up_failures"
+              ]
+            }
+          }
         }
       }
     }
