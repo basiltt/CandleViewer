@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from candleviewer.exchange.base import Ticker, Trade
+from candleviewer.ingestion.clock import ClockGuard
 from candleviewer.ingestion.connection import ConnectionManager
 from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
 from candleviewer.ingestion.synthetic_feed import (
@@ -55,6 +56,7 @@ class IngestionService:
         #: (ClockGuard's offset in ms once E08 wires it; None = unmeasured).
         self.latency: StageRecorder | None = None
         self.clock_offset_ms: Callable[[], int | None] = lambda: 0
+        self.clock: ClockGuard | None = None
 
     def attach_latency(
         self, recorder: StageRecorder, clock_offset_ms: Callable[[], int | None] | None = None
@@ -63,6 +65,18 @@ class IngestionService:
         self.latency = recorder
         if clock_offset_ms is not None:
             self.clock_offset_ms = clock_offset_ms
+        if self.ws is not None:
+            self.ws.attach_latency(recorder, self._ws_clock_offset_ms)
+
+    def attach_clock(self, guard: ClockGuard) -> None:
+        """E04-T06: ClockGuard's measured exchange-local offset (REST
+        `/v5/market/time`) feeds every `on_event`/`record` call."""
+        self.clock = guard
+        self.clock_offset_ms = guard.offset_ms_or_none
+
+    def _ws_clock_offset_ms(self) -> int | None:
+        # Real exchange frames: unmeasured offset => exchange stage unavailable.
+        return self.clock.offset_ms_or_none() if self.clock is not None else None
 
     def offer_frame(self, frame: str) -> None:
         """Reader callback: never blocks the read loop (drop-newest on full)."""

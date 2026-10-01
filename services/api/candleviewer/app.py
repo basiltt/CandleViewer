@@ -72,6 +72,7 @@ from candleviewer.health_wiring import (
     PgSystemEventWriter,
     register_real_probes,
 )
+from candleviewer.ingestion.clock import ClockGuard, ServerTimeFetcher
 from candleviewer.ingestion.connection import MAX_FRAME_BYTES, ConnectionManager
 from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
 from candleviewer.ingestion.planner import SubscriptionPlanner
@@ -637,3 +638,12 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
     )
     ctx.ingestion.attach_ws(manager)
     return manager
+
+
+def wire_clock_offset(ctx: AppContext, fetch_server_time: ServerTimeFetcher) -> ClockGuard:
+    """E04-T06: compose ClockGuard over the adapter's REST server-time fetcher
+    (`rest_client_fetcher`); its offset corrects the exchange latency stage.
+    The guard's periodic task is started by whoever owns the REST client."""
+    guard = ClockGuard(fetch_server_time)
+    ctx.ingestion.attach_clock(guard)
+    return guard

@@ -101,7 +101,7 @@ ENV_LABEL: Final[str] = "env"
 
 DEFAULT_MAX_SERIES: Final[int] = 200
 
-_log = structlog.get_logger("candleviewer.observability.metrics")
+_LOGGER_NAME = "candleviewer.observability.metrics"
 
 
 class MetricsError(ValueError):
@@ -424,7 +424,10 @@ class Metrics:
         if not metric._breached:
             metric._breached = True
             # Label values are not logged: they are the disclosure surface.
-            _log.error(
+            # Resolved per call (rare path): a module-level logger cached under
+            # `cache_logger_on_first_use=True` keeps a stale processor chain
+            # after `configure_logging()` runs (see storage/cold/observability).
+            structlog.get_logger(_LOGGER_NAME).error(
                 "metric_cardinality_breach",
                 metric=metric.name,
                 max_series=metric._max_series,

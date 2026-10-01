@@ -156,6 +156,17 @@ class StageRecorder:
         self._sampler = EndToEndSampler(sample_n)
         self._children = {stage: histogram.labels(stage) for stage in STAGES}
 
+    def sample(self) -> bool:
+        """1-in-N gate for callers that build `StageStamps` only when sampled
+        (keeps the unsampled hot path allocation-free, C-2.20)."""
+        return self._sampler.should_sample()
+
+    def record(self, stamps: StageStamps, clock_offset_ms: int | None) -> None:
+        """Observe an already-sampled event (pair with `sample()`)."""
+        for stage, value in stage_durations(stamps, clock_offset_ms).items():
+            if value is not None:
+                self._children[stage].observe(value)
+
     def on_event(self, stamps: StageStamps, clock_offset_ms: int | None) -> bool:
         """Returns True when the event was sampled (caller then forwards
         `t_received` to the client for e2e pairing)."""
