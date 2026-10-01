@@ -19,6 +19,8 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Protocol, runtime_checkable
 
+from candleviewer.observability.context import spawn
+
 
 class ComponentState(StrEnum):
     """Machine-readable state word. Rank: down > warning > degraded > healthy.
@@ -263,7 +265,7 @@ class HealthRegistry:
 
     def start(self, interval_s: float = 1.0) -> None:
         if self._task is None:
-            self._task = asyncio.get_running_loop().create_task(self._loop(interval_s))
+            self._task = spawn(self._loop(interval_s), name="health-probe-ticker")
 
     async def stop(self) -> None:
         task, self._task = self._task, None
