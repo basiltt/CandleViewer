@@ -6,6 +6,7 @@ on:
   workflow_dispatch: {}
 permissions:
   contents: read
+  issues: write
 jobs:
   storage-perf:
     runs-on: ubuntu-latest
@@ -16,9 +17,22 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
       - run: uv sync --project services/api
-      - run: uv run --project services/api python tests/perf/storage/harness.py --out results.json
+      - name: Proxy harness (DuckDB shapes, regression gate)
+        run: uv run --project services/api python tests/perf/storage/harness.py --out results.json
+      - name: Real-engine harness (QuestDB 8.1.1 via testcontainers; docker is preinstalled on ubuntu-latest)
+        id: real
+        working-directory: services/api
+        run: uv run pytest tests/integration/storage/test_storage_perf_harness.py -m "integration and perf" -p no:randomly
+      - name: Open ticket on >20% regression
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --title "perf: storage nightly regression >20% ($(date -u +%F))"             --label perf --label area/backend-platform             --body "storage-perf-nightly failed the 20% baseline gate (or errored). Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID. Artifact: storage-perf-results."
       - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         if: always()
         with:
           name: storage-perf-results
-          path: results.json
+          path: |
+            results.json
+            services/api/build/reports/storage-perf.json
