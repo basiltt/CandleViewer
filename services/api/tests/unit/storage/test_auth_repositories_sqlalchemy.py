@@ -106,8 +106,20 @@ def test_build_auth_service_fake_backend_is_scaffold() -> None:
     assert build_auth_service(Settings()).is_active is False
 
 
+def _real_settings(**over: Any) -> Settings:
+    from pydantic import SecretStr
+
+    base: dict[str, Any] = {
+        "storage_backend": "real",
+        "auth_totp_key_hex": SecretStr("11" * 32),
+        "auth_recovery_hmac_key_hex": SecretStr("22" * 32),
+        "auth_pepper": SecretStr("pepper"),
+    }
+    return Settings(**{**base, **over})
+
+
 def test_build_auth_service_real_backend_wires_repositories() -> None:
-    svc = build_auth_service(Settings(storage_backend="real"))
+    svc = build_auth_service(_real_settings())
     assert svc._repository is not None and svc._mfa_repository is not None
     assert svc._session_repository is not None
 
@@ -149,9 +161,16 @@ def test_build_auth_service_wrong_key_length_refuses() -> None:
     from pydantic import SecretStr
 
     with pytest.raises(ValueError, match="32 bytes"):
-        build_auth_service(Settings(storage_backend="real", auth_totp_key_hex=SecretStr("11" * 16)))
+        build_auth_service(_real_settings(auth_totp_key_hex=SecretStr("11" * 16)))
 
 
-def test_build_auth_service_non_live_missing_keys_warns(caplog: pytest.LogCaptureFixture) -> None:
-    build_auth_service(Settings(storage_backend="real"))
-    assert "auth_mfa_disabled" in caplog.text
+def test_build_auth_service_non_live_real_missing_keys_refuses() -> None:
+    with pytest.raises(ValueError, match="CV_AUTH_TOTP_KEY_HEX"):
+        build_auth_service(Settings(storage_backend="real"))
+
+
+def test_build_auth_service_non_live_real_empty_pepper_refuses() -> None:
+    from pydantic import SecretStr
+
+    with pytest.raises(ValueError, match="CV_AUTH_PEPPER"):
+        build_auth_service(_real_settings(auth_pepper=SecretStr("")))

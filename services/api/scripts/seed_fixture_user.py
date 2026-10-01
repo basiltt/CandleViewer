@@ -3,6 +3,10 @@
 Env-driven: CV_SEED_USERNAME, CV_SEED_PASSWORD, CV_PG_DSN. Refuses to run in
 live/demo (C-2.11): only `CV_ENVIRONMENT=testnet` is accepted. Never prints
 the password. Parameterised SQL only.
+
+TEST-ONLY: seeds an owner with mfa_required=false so ZAP/E2E can log in without
+TOTP. Never use outside testnet fixtures; `check_environment` rejects live/demo
+(covered by test_seeder_refuses_outside_testnet).
 """
 
 from __future__ import annotations

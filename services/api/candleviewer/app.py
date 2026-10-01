@@ -13,7 +13,6 @@ contracts and every later epic have a concrete injection point.
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -180,26 +179,25 @@ def build_auth_service(settings: Settings) -> AuthService:
     (no I/O at construction: the engine connects lazily). With the fake
     backend it stays the no-op scaffold so `create_app()` needs no database.
     Live refuses to start (any backend) without pepper + key material."""
-    live = settings.environment is Environment.LIVE
     totp = settings.auth_totp_key_hex
     rc = settings.auth_recovery_hmac_key_hex
     pepper = settings.auth_pepper.get_secret_value()
-    if live:
+    real = settings.storage_backend == "real"
+    if settings.environment is Environment.LIVE or real:
         if totp is None or rc is None:
             raise ValueError(
-                "live requires CV_AUTH_TOTP_KEY_HEX and CV_AUTH_RECOVERY_HMAC_KEY_HEX; "
-                "refusing to start auth without them"
+                "CV_AUTH_TOTP_KEY_HEX and CV_AUTH_RECOVERY_HMAC_KEY_HEX are required "
+                "(live or storage_backend=real); refusing to start auth (C-12 TOTP)"
             )
         if not pepper:
-            raise ValueError("live requires a non-empty CV_AUTH_PEPPER; refusing to start auth")
+            raise ValueError(
+                "a non-empty CV_AUTH_PEPPER is required (live or storage_backend=real); "
+                "refusing to start auth"
+            )
     totp_key = _decode_key("CV_AUTH_TOTP_KEY_HEX", totp)
     rc_key = _decode_key("CV_AUTH_RECOVERY_HMAC_KEY_HEX", rc)
-    if settings.storage_backend != "real":
+    if not real:
         return AuthService()
-    if totp_key is None or rc_key is None:
-        logging.getLogger(__name__).warning(
-            "auth_mfa_disabled: TOTP/recovery keys not configured (non-live); MFA is disabled"
-        )
     relational = SqlAlchemyRelationalRepository(settings.pg_dsn.get_secret_value(), "auth")
     return AuthService(
         SqlAlchemyUserRepository(
