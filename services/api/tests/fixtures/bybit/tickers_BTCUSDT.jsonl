@@ -1,0 +1,3 @@
+{"topic":"tickers.BTCUSDT","type":"snapshot","ts":1700000000100,"cs":1,"data":{"symbol":"BTCUSDT","lastPrice":"63120.50","markPrice":"63118.90","indexPrice":"63125.10","bid1Price":"63120.40","bid1Size":"12.501","ask1Price":"63120.60","ask1Size":"9.870","price24hPcnt":"0.0182","volume24h":"48122.331","turnover24h":"3041228811.42","openInterest":"61204.113","openInterestValue":"3862500000.00","fundingRate":"0.0001","nextFundingTime":"1700006400000"}}
+{"topic":"tickers.BTCUSDT","type":"delta","ts":1700000000200,"cs":2,"data":{"symbol":"BTCUSDT","lastPrice":"63121.00"}}
+{"topic":"tickers.BTCUSDT","type":"delta","ts":1700000000300,"cs":3,"data":{"symbol":"BTCUSDT","bid1Price":"63121.00","bid1Size":"0","fundingRate":"0"}}

@@ -2378,6 +2378,8 @@ CREATE TABLE tickers (
 
 Bybit throttles tickers to ~100 ms and sends **delta** ticker frames; the ingester merges deltas against the last full state before writing, so every row is a complete snapshot (essential for `ASOF JOIN` correctness).
 
+> **R0 (E08-S03):** the write-behind persists `ts`, `symbol`, `last/mark/index`, best bid/ask (`bid1_*`, `ask1_*`), `funding_rate`, `open_interest` via `MarketDataRepository.write_tickers`. Queue is bounded (1024, drop-oldest, `ticker_writes_dropped_total`).
+
 ### 4.5 `klines` — exchange klines (cross-check only)
 
 ```sql

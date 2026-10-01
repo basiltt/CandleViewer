@@ -23,6 +23,8 @@ from candleviewer.ingestion.synthetic_feed import (
     SyntheticFeedMetrics,
     load_sample_records,
 )
+from candleviewer.ingestion.ticker_stream import TickerStream
+from candleviewer.observability.context import spawn
 from candleviewer.observability.health import HealthReport, HealthStatus
 from candleviewer.observability.latency import StageRecorder
 from candleviewer.settings import FeedMode
@@ -82,6 +84,9 @@ class IngestionService:
     def _ws_clock_offset_ms(self) -> int | None:
         # Real exchange frames: unmeasured offset => exchange stage unavailable.
         return self.clock.offset_ms_or_none() if self.clock is not None else None
+        #: E08-S03: ticker demand/merge/publish, attached with the public WS.
+        self.tickers: TickerStream | None = None
+        self._pump: asyncio.Task[None] | None = None
 
     def offer_frame(self, frame: str) -> None:
         """Reader callback: never blocks the read loop (drop-newest on full)."""
@@ -93,6 +98,14 @@ class IngestionService:
     def attach_ws(self, manager: ConnectionManager) -> None:
         """Hand this module ownership of the public WS connection lifecycle."""
         self.ws = manager
+
+    def attach_tickers(self, stream: TickerStream) -> None:
+        self.tickers = stream
+
+    async def _pump_frames(self, stream: TickerStream) -> None:
+        """Drain the bounded raw-frame queue into the ticker stream."""
+        while True:
+            await stream.handle_frame(await self.ws_frames.get())
 
     def attach_instruments(self, scheduler: InstrumentsRefreshScheduler) -> None:
         """Hand this module ownership of the catalogue scheduler's lifecycle."""
@@ -127,10 +140,19 @@ class IngestionService:
             await self.clock.start()
         if self.ws is not None:
             await self.ws.start()
+        if self.tickers is not None:
+            await self.tickers.start()
+            self._pump = spawn(self._pump_frames(self.tickers), name="ticker-frame-pump")
         self._started = True
 
     async def stop(self, grace_s: float) -> None:
         """Stop the module within `grace_s` seconds."""
+        pump, self._pump = self._pump, None
+        if pump is not None:
+            pump.cancel()
+            await asyncio.gather(pump, return_exceptions=True)
+        if self.tickers is not None:
+            await self.tickers.stop()
         if self.ws is not None:
             async with asyncio.timeout(grace_s):
                 await self.ws.stop()

@@ -18,6 +18,7 @@ from candleviewer.exchange.bybit.public_ws import (
     topic_kind,
 )
 from candleviewer.exchange.bybit.rest import BybitRestClient
+from candleviewer.exchange.bybit.ticker import parse_ticker_frame, ticker_topic
 from candleviewer.observability.health import HealthReport, HealthStatus
 
 if TYPE_CHECKING:
@@ -32,6 +33,9 @@ class ExchangeBybitService:
 
     #: E08-T04: venue topic -> neutral stream kind, for ingestion's watchdog.
     topic_kind = staticmethod(topic_kind)
+    #: E08-S03: ticker topic naming + frame parser, injected into ingestion.
+    ticker_topic = staticmethod(ticker_topic)
+    parse_ticker_frame = staticmethod(parse_ticker_frame)
 
     @staticmethod
     def public_socket_factory(

@@ -41,6 +41,7 @@ from candleviewer.api import (
     make_instruments_router,
     make_log_level_router,
     make_market_router,
+    make_ticker_router,
 )
 from candleviewer.api.audit_principal import SessionAuditPrincipalResolver
 from candleviewer.api.contract_conformance import load_openapi_spec
@@ -66,6 +67,7 @@ from candleviewer.bus.models import Topic
 from candleviewer.bus.service import BusService
 from candleviewer.domain.events import InstrumentUpdatedEvent
 from candleviewer.exchange.base.instruments import InstrumentsFetcher
+from candleviewer.exchange.base.models import TickerEvent
 from candleviewer.exchange.base.service import ExchangeBaseService
 from candleviewer.exchange.bybit.service import ExchangeBybitService
 from candleviewer.health_wiring import (
@@ -79,6 +81,7 @@ from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshSchedul
 from candleviewer.ingestion.planner import SubscriptionPlanner
 from candleviewer.ingestion.reconnect import ConnectionRateGuard, ReconnectPolicy
 from candleviewer.ingestion.service import IngestionService
+from candleviewer.ingestion.ticker_stream import TickerStream
 from candleviewer.ingestion.watchdog import StalenessWatchdog
 from candleviewer.journal.service import JournalService
 from candleviewer.net import (
@@ -119,6 +122,7 @@ from candleviewer.storage.repositories.mfa_sqlalchemy import SqlAlchemyMfaReposi
 from candleviewer.storage.repositories.relational_sqlalchemy import (
     SqlAlchemyRelationalRepository,
 )
+from candleviewer.storage.repositories.rows import TickerRow
 from candleviewer.storage.repositories.sessions_sqlalchemy import (
     SqlAlchemySessionRepository,
 )
@@ -602,6 +606,10 @@ def create_app(
     # `wire_instrument_catalogue()` attaches one (needs a real Postgres +
     # exchange REST client). Resolver `None` -> fail-closed `501` (see above).
     app.include_router(make_instruments_router(lambda: ctx.ingestion.instruments))
+    # E08-S03: merged ticker snapshot; session-backed resolver (501 only without identity).
+    app.include_router(
+        make_ticker_router(lambda: ctx.ingestion.tickers, principal_resolver=audit_resolver)
+    )
     app.add_middleware(CorrelationMiddleware)
     # E09-T03 / #1648: a served route without an RBAC declaration fails the build.
     assert_app_routes_declared(app, spec)
@@ -644,10 +652,11 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
     env = ctx.settings.environment.value
     clock = time.monotonic
     adapter = ctx.exchange_bybit
+    watchdog = StalenessWatchdog(clock, lambda _e: None, kind_of=adapter.topic_kind)
     manager = ConnectionManager(
         adapter.public_socket_factory(env, max_frame_bytes=MAX_FRAME_BYTES),
         SubscriptionPlanner(),
-        StalenessWatchdog(clock, lambda _e: None, kind_of=adapter.topic_kind),
+        watchdog,
         ReconnectPolicy(),
         ConnectionRateGuard(clock),
         ctx.ingestion.offer_frame,
@@ -662,6 +671,50 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
     rest = adapter.public_rest_client(env)
     wire_clock_offset(ctx, rest_client_fetcher(rest))
     ctx.ingestion.attach_closer(rest.aclose)
+
+    def _is_listed(symbol: str) -> bool:
+        # Only catalogue symbols may become topics (E08-S03 security note).
+        scheduler = ctx.ingestion.instruments
+        snap = scheduler.snapshot() if scheduler is not None else None
+        inst = snap.get(symbol) if snap is not None else None
+        return inst is not None and inst.status == "trading"
+
+    class _TickerWriter:
+        """Write-behind to the hot tier incl. best bid/ask (21-database-schema.md `tickers`)."""
+
+        async def write_ticker(self, event: TickerEvent) -> None:
+            zero = "0"
+            await ctx.storage.market_data.write_tickers(
+                [
+                    TickerRow(
+                        ts_us=event.ts_event,
+                        symbol=event.symbol,
+                        last_price=str(event.last_price or zero),
+                        mark_price=str(event.mark_price or zero),
+                        index_price=str(event.index_price or zero),
+                        funding_rate=str(event.funding_rate or zero),
+                        open_interest=str(event.open_interest or zero),
+                        bid1_price=None if event.bid1_price is None else str(event.bid1_price),
+                        bid1_size=None if event.bid1_qty is None else str(event.bid1_qty),
+                        ask1_price=None if event.ask1_price is None else str(event.ask1_price),
+                        ask1_size=None if event.ask1_qty is None else str(event.ask1_qty),
+                    )
+                ]
+            )
+
+    ctx.ingestion.attach_tickers(
+        TickerStream(
+            bus=ctx.bus.bus,
+            env=env,
+            set_desired=manager.set_desired,
+            parse_frame=adapter.parse_ticker_frame,
+            topic_for=adapter.ticker_topic,
+            is_listed=_is_listed,
+            touch=watchdog.touch,
+            clock=clock,
+            writer=_TickerWriter(),
+        )
+    )
     return manager
 
 
