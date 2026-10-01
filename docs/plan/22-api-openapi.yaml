@@ -8799,7 +8799,10 @@ components:
       }
     BackupStatus:
       { type: string, enum: [running, ok, failed, verified, restored], x-db-enum: backup_status }
-    ComponentState: { type: string, enum: [healthy, degraded, warning, down] }
+    ComponentState:
+      type: string
+      enum: [healthy, degraded, warning, down, not_deployed]
+      description: "`not_deployed` = module not built yet; ranks as healthy for `overall`. Rank: down > warning > degraded > healthy."
     KlineInterval:
       type: string
       enum: ["1", "3", "5", "15", "30", "60", "120", "240", "360", "720", "D", "W", "M"]
@@ -11484,9 +11487,10 @@ components:
         overall: { $ref: "#/components/schemas/ComponentState" }
         version: { type: string }
         git_sha: { type: string }
+        environment: { type: string }
         uptime_seconds: { type: integer }
         server_time: { type: string, format: date-time }
-        clock_offset_ms: { type: integer }
+        clock_offset_ms: { type: ["integer", "null"], description: "null until exchange time sync (E08) lands; never a fabricated 0." }
         components:
           type: array
           items:
@@ -11495,7 +11499,9 @@ components:
               name: { type: string }
               state: { $ref: "#/components/schemas/ComponentState" }
               latency_ms: { type: integer }
+              latency_unit: { type: string, const: ms }
               detail: { type: string }
+              last_good_at: { type: ["string", "null"], format: date-time }
         alerts_active: { type: integer }
     FeatureFlag:
       type: object
