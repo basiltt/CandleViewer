@@ -2305,6 +2305,8 @@ CREATE TABLE trades (
 
 Typical queries: `SAMPLE BY` for bar building, `WHERE notional > x` for big-trade bubbles, `LATEST ON ts PARTITION BY symbol` for last price.
 
+**E08-S04 write-behind:** `TradeStream` writes batches of ≤500 rows from a bounded (8 192) drop-oldest queue that never blocks the WS reader (`trade_writes_dropped_total`, `questdb_write_queue_depth{table="trades"}`); the writer currently fills `ts, symbol, side ('buy'|'sell', lower-case taker side), price, size, notional, trade_id` — `recv_ts`, `tick_dir`, `is_block`, `seq` stay null until E16 extends `TradeRow`. Re-ingest after a gap backfill is idempotent via the `DEDUP UPSERT KEYS`.
+
 ### 4.2 `orderbook_deltas`
 
 One row per price level per update (Bybit sends arrays; the ingester explodes them). `u` is Bybit's update id, `seq` its cross-sequence — both retained because gap detection relies on `u` monotonicity within a snapshot epoch.

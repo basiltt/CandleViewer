@@ -24,6 +24,7 @@ from candleviewer.ingestion.synthetic_feed import (
     load_sample_records,
 )
 from candleviewer.ingestion.ticker_stream import TickerStream
+from candleviewer.ingestion.trade_stream import TradeStream
 from candleviewer.observability.context import spawn
 from candleviewer.observability.health import HealthReport, HealthStatus
 from candleviewer.observability.latency import StageRecorder
@@ -62,6 +63,8 @@ class IngestionService:
         self._closers: list[Callable[[], Awaitable[None]]] = []
         #: E08-S03: ticker demand/merge/publish, attached with the public WS.
         self.tickers: TickerStream | None = None
+        #: E08-S04: trade tape, attached with the public WS.
+        self.trades: TradeStream | None = None
         self._pump: asyncio.Task[None] | None = None
 
     def attach_latency(
@@ -94,6 +97,8 @@ class IngestionService:
             self.ws_frames.put_nowait(frame)
         except asyncio.QueueFull:
             self.ws_frames_dropped += 1
+            if self.trades is not None:  # a lost frame may hold prints: never hide it
+                self.trades.mark_gap("frame_loss")
 
     def attach_ws(self, manager: ConnectionManager) -> None:
         """Hand this module ownership of the public WS connection lifecycle."""
@@ -102,10 +107,18 @@ class IngestionService:
     def attach_tickers(self, stream: TickerStream) -> None:
         self.tickers = stream
 
-    async def _pump_frames(self, stream: TickerStream) -> None:
-        """Drain the bounded raw-frame queue into the ticker stream."""
+    def attach_trades(self, stream: TradeStream) -> None:
+        self.trades = stream
+
+    async def _pump_frames(self) -> None:
+        """Drain the bounded raw-frame queue into the ticker and trade streams
+        (each parser ignores frames for topics it does not own)."""
         while True:
-            await stream.handle_frame(await self.ws_frames.get())
+            frame = await self.ws_frames.get()
+            if self.trades is not None:
+                await self.trades.handle_frame(frame)
+            if self.tickers is not None:
+                await self.tickers.handle_frame(frame)
 
     def attach_instruments(self, scheduler: InstrumentsRefreshScheduler) -> None:
         """Hand this module ownership of the catalogue scheduler's lifecycle."""
@@ -142,7 +155,10 @@ class IngestionService:
             await self.ws.start()
         if self.tickers is not None:
             await self.tickers.start()
-            self._pump = spawn(self._pump_frames(self.tickers), name="ticker-frame-pump")
+        if self.trades is not None:
+            await self.trades.start()
+        if self.tickers is not None or self.trades is not None:
+            self._pump = spawn(self._pump_frames(), name="ws-frame-pump")
         self._started = True
 
     async def stop(self, grace_s: float) -> None:
@@ -153,6 +169,8 @@ class IngestionService:
             await asyncio.gather(pump, return_exceptions=True)
         if self.tickers is not None:
             await self.tickers.stop()
+        if self.trades is not None:
+            await self.trades.stop()
         if self.ws is not None:
             async with asyncio.timeout(grace_s):
                 await self.ws.stop()

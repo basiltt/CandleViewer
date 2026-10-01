@@ -67,6 +67,10 @@ class Subscription:
         return self.queue.qsize()
 
 
+# Ingest-class label values the tickets/dashboards name (E08-S04: class="trade").
+_QUEUE_FULL_CLASS = {"md.trade": "trade"}
+
+
 class Bus:
     """The in-process pub/sub bus (M5). One instance per process, injected
     into `AppContext` and every module that needs to publish or subscribe."""
@@ -130,7 +134,9 @@ class Bus:
     async def _deliver(self, sub: Subscription, topic: Topic, event: Any) -> None:
         if sub.policy is QueuePolicy.NEVER_DROP:
             if sub.queue.full():
-                ingest_queue_full_total.labels(**{"class": topic.topic_class}).inc()
+                ingest_queue_full_total.labels(
+                    **{"class": _QUEUE_FULL_CLASS.get(topic.topic_class, topic.topic_class)}
+                ).inc()
                 self._pending_never_drop += 1
                 try:
                     await sub.queue.put(event)

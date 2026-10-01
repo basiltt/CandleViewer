@@ -16,9 +16,10 @@ from __future__ import annotations
 import os
 import time
 import uuid
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -44,6 +45,7 @@ from candleviewer.api import (
     make_log_level_router,
     make_market_router,
     make_ticker_router,
+    make_trades_router,
 )
 from candleviewer.api.audit_principal import SessionAuditPrincipalResolver
 from candleviewer.api.contract_conformance import load_openapi_spec
@@ -71,7 +73,7 @@ from candleviewer.bus.models import Topic
 from candleviewer.bus.service import BusService
 from candleviewer.domain.events import InstrumentUpdatedEvent
 from candleviewer.exchange.base.instruments import InstrumentsFetcher
-from candleviewer.exchange.base.models import TickerEvent
+from candleviewer.exchange.base.models import TickerEvent, TradeEvent
 from candleviewer.exchange.base.service import ExchangeBaseService
 from candleviewer.exchange.bybit.service import ExchangeBybitService
 from candleviewer.health_wiring import (
@@ -87,6 +89,7 @@ from candleviewer.ingestion.planner import SubscriptionPlanner
 from candleviewer.ingestion.reconnect import ConnectionRateGuard, ReconnectPolicy
 from candleviewer.ingestion.service import IngestionService
 from candleviewer.ingestion.ticker_stream import TickerStream
+from candleviewer.ingestion.trade_stream import TradeStream
 from candleviewer.ingestion.watchdog import StalenessWatchdog
 from candleviewer.journal.service import JournalService
 from candleviewer.net import (
@@ -130,7 +133,7 @@ from candleviewer.storage.repositories.mfa_sqlalchemy import SqlAlchemyMfaReposi
 from candleviewer.storage.repositories.relational_sqlalchemy import (
     SqlAlchemyRelationalRepository,
 )
-from candleviewer.storage.repositories.rows import TickerRow
+from candleviewer.storage.repositories.rows import TickerRow, TradeRow
 from candleviewer.storage.repositories.sessions_sqlalchemy import (
     SqlAlchemySessionRepository,
 )
@@ -664,6 +667,10 @@ def create_app(
     app.include_router(
         make_ticker_router(lambda: ctx.ingestion.tickers, principal_resolver=audit_resolver)
     )
+    # E08-S04: in-memory hot tape (newest-first); same resolver/fail-closed rules.
+    app.include_router(
+        make_trades_router(lambda: ctx.ingestion.trades, principal_resolver=audit_resolver)
+    )
     app.add_middleware(CorrelationMiddleware)
     # E09-T03 / #1648: a served route without an RBAC declaration fails the build.
     assert_app_routes_declared(app, spec)
@@ -756,11 +763,57 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
                 ]
             )
 
+    # Each stream owns a slice of the upstream topic set; the socket gets the union.
+    demand: dict[str, set[str]] = {}
+
+    def _set_desired(stream: str, topics: set[str]) -> None:
+        demand[stream] = set(topics)
+        manager.set_desired(set().union(*demand.values()))
+
+    class _TradeWriter:
+        """Batched write-behind to the hot tier (21-database-schema.md `trades`)."""
+
+        async def write_trades(self, events: Sequence[TradeEvent]) -> None:
+            await ctx.storage.market_data.write_trades(
+                [
+                    TradeRow(
+                        ts_us=e.ts_event,
+                        symbol=e.symbol,
+                        price=str(e.price),
+                        qty=str(e.qty),
+                        side=e.side,
+                        trade_id=e.trade_id,
+                    )
+                    for e in events
+                ]
+            )
+
+    def _tick_size(symbol: str) -> Decimal | None:
+        scheduler = ctx.ingestion.instruments
+        snap = scheduler.snapshot() if scheduler is not None else None
+        inst = snap.get(symbol) if snap is not None else None
+        return None if inst is None else inst.tick_size
+
+    ctx.ingestion.attach_trades(
+        TradeStream(
+            bus=ctx.bus.bus,
+            env=env,
+            set_desired=lambda topics: _set_desired("trade", topics),
+            parse_frame=adapter.parse_trade_frame,
+            topic_for=adapter.trade_topic,
+            is_listed=_is_listed,
+            touch=watchdog.touch,
+            fetch_recent=adapter.recent_trades_fetcher(rest.get_public),
+            tick_size=_tick_size,
+            clock=clock,
+            writer=_TradeWriter(),
+        )
+    )
     ctx.ingestion.attach_tickers(
         TickerStream(
             bus=ctx.bus.bus,
             env=env,
-            set_desired=manager.set_desired,
+            set_desired=lambda topics: _set_desired("ticker", topics),
             parse_frame=adapter.parse_ticker_frame,
             topic_for=adapter.ticker_topic,
             is_listed=_is_listed,
