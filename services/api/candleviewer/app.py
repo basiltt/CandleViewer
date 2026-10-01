@@ -13,6 +13,7 @@ contracts and every later epic have a concrete injection point.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -162,19 +163,42 @@ class _LazyAuditEmitter:
         await self._audit.writer.emit(action, **kwargs)
 
 
+def _decode_key(name: str, secret: Any) -> bytes | None:
+    if secret is None:
+        return None
+    try:
+        key = bytes.fromhex(secret.get_secret_value())
+    except ValueError as exc:
+        raise ValueError(f"{name} must be hex-encoded") from exc
+    if len(key) != 32:
+        raise ValueError(f"{name} must decode to exactly 32 bytes, got {len(key)}")
+    return key
+
+
 def build_auth_service(settings: Settings) -> AuthService:
     """QA #1658: wire `AuthService` to Postgres when `storage_backend="real"`
     (no I/O at construction: the engine connects lazily). With the fake
     backend it stays the no-op scaffold so `create_app()` needs no database.
-    Live refuses to start without the key material."""
-    if settings.storage_backend != "real":
-        return AuthService()
+    Live refuses to start (any backend) without pepper + key material."""
+    live = settings.environment is Environment.LIVE
     totp = settings.auth_totp_key_hex
     rc = settings.auth_recovery_hmac_key_hex
-    if settings.environment is Environment.LIVE and (totp is None or rc is None):
-        raise ValueError(
-            "live requires CV_AUTH_TOTP_KEY_HEX and CV_AUTH_RECOVERY_HMAC_KEY_HEX; "
-            "refusing to start auth without them"
+    pepper = settings.auth_pepper.get_secret_value()
+    if live:
+        if totp is None or rc is None:
+            raise ValueError(
+                "live requires CV_AUTH_TOTP_KEY_HEX and CV_AUTH_RECOVERY_HMAC_KEY_HEX; "
+                "refusing to start auth without them"
+            )
+        if not pepper:
+            raise ValueError("live requires a non-empty CV_AUTH_PEPPER; refusing to start auth")
+    totp_key = _decode_key("CV_AUTH_TOTP_KEY_HEX", totp)
+    rc_key = _decode_key("CV_AUTH_RECOVERY_HMAC_KEY_HEX", rc)
+    if settings.storage_backend != "real":
+        return AuthService()
+    if totp_key is None or rc_key is None:
+        logging.getLogger(__name__).warning(
+            "auth_mfa_disabled: TOTP/recovery keys not configured (non-live); MFA is disabled"
         )
     relational = SqlAlchemyRelationalRepository(settings.pg_dsn.get_secret_value(), "auth")
     return AuthService(
@@ -185,8 +209,8 @@ def build_auth_service(settings: Settings) -> AuthService:
         mfa_repository=SqlAlchemyMfaRepository(
             relational, _record_factory(MfaMethodRecord), _record_factory(MfaChallengeRecord)
         ),
-        totp_encryption_key=bytes.fromhex(totp.get_secret_value()) if totp else None,
-        recovery_code_hmac_key=bytes.fromhex(rc.get_secret_value()) if rc else None,
+        totp_encryption_key=totp_key,
+        recovery_code_hmac_key=rc_key,
         session_repository=SqlAlchemySessionRepository(relational, _record_factory(SessionRecord)),
     )
 

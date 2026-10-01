@@ -124,3 +124,34 @@ def test_seeder_refuses_outside_testnet() -> None:
         with pytest.raises(SystemExit):
             check_environment(env)
     check_environment("testnet")
+
+
+def test_build_auth_service_live_fake_backend_still_refuses() -> None:
+    with pytest.raises(ValueError, match="CV_AUTH_TOTP_KEY_HEX"):
+        build_auth_service(Settings(environment=Environment.LIVE))
+
+
+def test_build_auth_service_live_empty_pepper_refuses() -> None:
+    from pydantic import SecretStr
+
+    with pytest.raises(ValueError, match="CV_AUTH_PEPPER"):
+        build_auth_service(
+            Settings(
+                storage_backend="real",
+                environment=Environment.LIVE,
+                auth_totp_key_hex=SecretStr("11" * 32),
+                auth_recovery_hmac_key_hex=SecretStr("22" * 32),
+            )
+        )
+
+
+def test_build_auth_service_wrong_key_length_refuses() -> None:
+    from pydantic import SecretStr
+
+    with pytest.raises(ValueError, match="32 bytes"):
+        build_auth_service(Settings(storage_backend="real", auth_totp_key_hex=SecretStr("11" * 16)))
+
+
+def test_build_auth_service_non_live_missing_keys_warns(caplog: pytest.LogCaptureFixture) -> None:
+    build_auth_service(Settings(storage_backend="real"))
+    assert "auth_mfa_disabled" in caplog.text
