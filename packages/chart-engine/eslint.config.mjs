@@ -22,7 +22,14 @@ export default tseslint.config(
     },
   },
   {
-    files: ["bench/run-bench.mjs", "bench/scenes/run-scene-a.mjs", "bench/scenes/scene-a.mjs"],
+    files: [
+      "bench/run-bench.mjs",
+      "bench/scenes/run-scene-a.mjs",
+      "bench/scenes/scene-a.mjs",
+      "bench/scenes/run-scene-b.mjs",
+      "bench/scenes/scene-b.mjs",
+      "bench/scenes/atlas.mjs",
+    ],
     languageOptions: {
       globals: { ...globals.node },
     },
