@@ -3,7 +3,7 @@
 # a secret read from a file injected at process start (CV_ALERT_WEBHOOK_URL ->
 # /run/secrets/alert_webhook_url), never committed. Payloads carry component,
 # severity, threshold summary and runbook link only (no account/order ids).
-# Quiet hours: edit the time_intervals below (CV_ALERT_QUIET_HOURS documents the window).
+# Page and Ticket use separate webhook secrets (separate channels). Quiet hours: edit the time_intervals below (CV_ALERT_QUIET_HOURS documents the window).
 global:
   resolve_timeout: 5m
 
@@ -52,14 +52,14 @@ inhibit_rules:
 receivers:
   - name: page
     webhook_configs:
-      - url_file: /run/secrets/alert_webhook_url
+      - url_file: /run/secrets/alert_page_webhook_url
         send_resolved: true
-        max_alerts: 20
+        max_alerts: 0  # 0 = never truncate; occurrence count = len(alerts) in the grouped payload
   - name: ticket
     webhook_configs:
-      - url_file: /run/secrets/alert_webhook_url
+      - url_file: /run/secrets/alert_ticket_webhook_url
         send_resolved: true
-        max_alerts: 20
+        max_alerts: 0  # 0 = never truncate; occurrence count = len(alerts) in the grouped payload
   - name: deadman
     webhook_configs:
       - url_file: /run/secrets/alert_deadman_url

@@ -16,3 +16,7 @@ scrape_configs:
     # api binds its fixed private compose IP (see infra/compose/docker-compose.yml); public binds are refused
     static_configs:
       - targets: ["172.28.0.10:9108"]
+  - job_name: pushgateway
+    honor_labels: true
+    static_configs:
+      - targets: ["pushgateway:9091"]

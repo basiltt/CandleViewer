@@ -137,6 +137,7 @@ def test_receivers_exist_and_no_inline_secret() -> None:
     text = (HERE / "alertmanager.yml").read_text(encoding="utf-8")
     assert "http://" not in text and "https://" not in text
     assert text.count("url_file:") == 3
+    assert "alert_page_webhook_url" in text and "alert_ticket_webhook_url" in text
 
 
 def test_postgres_inhibits_tickets() -> None:
@@ -152,3 +153,60 @@ def test_alert_drill_refuses_public_url(monkeypatch: pytest.MonkeyPatch) -> None
     monkeypatch.setenv("CV_ALERT_DRILL_PUSH_URL", "http://evil.example.com")
     assert m.main(["fire"]) == 2
     assert m.build_request("http://127.0.0.1:9091", 1).data == b"cv_synthetic_alert 1\n"
+
+
+def test_grouped_notifications_never_truncated_and_page_ticket_distinct() -> None:
+    recv = {r["name"]: r["webhook_configs"][0] for r in AM["receivers"]}
+    # occurrence count == len(alerts) of the grouped payload, so never truncate it
+    assert recv["page"]["max_alerts"] == 0 and recv["ticket"]["max_alerts"] == 0
+    assert recv["page"]["url_file"] != recv["ticket"]["url_file"]
+
+
+def test_compose_wires_secrets_pushgateway_and_scrape() -> None:
+    dc = yaml.safe_load(
+        (INFRA / "compose" / "docker-compose.yml").read_text(encoding="utf-8")
+    )
+    for name in (
+        "alert_page_webhook_url",
+        "alert_ticket_webhook_url",
+        "alert_deadman_url",
+    ):
+        assert (
+            name in dc["secrets"] and name in dc["services"]["alertmanager"]["secrets"]
+        )
+    assert "pushgateway" in dc["services"]
+    prom = yaml.safe_load(
+        (INFRA / "prometheus" / "prometheus.yml").read_text(encoding="utf-8")
+    )
+    assert any(
+        "pushgateway:9091" in j["static_configs"][0]["targets"]
+        for j in prom["scrape_configs"]
+    )
+
+
+def test_alert_drill_push_is_received(monkeypatch: pytest.MonkeyPatch) -> None:
+    import http.server
+    import threading
+
+    got: list[tuple[str, bytes]] = []
+
+    class H(http.server.BaseHTTPRequestHandler):
+        def do_PUT(self) -> None:
+            got.append(
+                (self.path, self.rfile.read(int(self.headers["Content-Length"])))
+            )
+            self.send_response(200)
+            self.end_headers()
+
+        def log_message(self, *a: object) -> None:
+            pass
+
+    srv = http.server.HTTPServer(("127.0.0.1", 0), H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    monkeypatch.setenv("CV_ALERT_DRILL_PUSH_URL", f"http://127.0.0.1:{srv.server_port}")
+    m = _load("alert_drill")
+    assert m.main(["fire"]) == 0 and m.main(["stop"]) == 0
+    srv.shutdown()
+    assert got[0][1] == b"cv_synthetic_alert 1\n"
+    assert got[1][1] == b"cv_synthetic_alert 0\n"
+    assert got[0][0].startswith("/metrics/job/alert_drill")
