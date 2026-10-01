@@ -1,0 +1,273 @@
+"""`ConnectionManager`: transport runtime for the B13 `ws_conn` statechart (E08-T04).
+
+The lifecycle is the B13 chart, built through `statechart.factory` (ADR-0016).
+This class owns the sockets/tasks the chart's bindings
+(`bindings/b13_ws_conn.py`) drive, and is the only sender of chart events.
+Feed health (`FeedHealthEvent`) is published on the bus: `healthy` on entering
+`live`, `stale` on staleness, `degraded` while backing off, `resubscribing`
+while a re-established socket re-subscribes. Transport is injected
+(`SocketFactory`) so tests use a fake server.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import contextlib
+import itertools
+import json
+from collections.abc import Awaitable, Callable
+from typing import Any, Protocol
+
+import structlog
+
+from candleviewer.bus.bus import Bus
+from candleviewer.bus.models import Topic
+from candleviewer.ingestion.planner import SubscriptionPlanner
+from candleviewer.ingestion.reconnect import ConnectionRateGuard, ReconnectPolicy
+from candleviewer.ingestion.watchdog import FeedHealthEvent, StalenessWatchdog, ping_loop
+from candleviewer.observability.context import spawn
+from candleviewer.statechart import build
+from candleviewer.statechart.bindings.b13_ws_conn import register_runtime, unregister_runtime
+from candleviewer.statechart.factory import default_clock
+
+logger = structlog.get_logger(__name__)
+
+#: Plain enum published by the B13 chart's entry actions (INV-B13-d, C-2.20):
+#: hot paths read `ConnectionManager.state()`; nothing queries the interpreter.
+PHASE_CLOSED, PHASE_CONNECTING, PHASE_OPEN, PHASE_DEGRADED = (
+    "closed",
+    "connecting",
+    "open",
+    "degraded",
+)
+_conn_ids = itertools.count(1)
+
+
+MAX_FRAME_BYTES = 1_048_576  # explicit cap on a single WS frame (E08-X01)
+
+
+class Socket(Protocol):
+    async def send(self, frame: str) -> None: ...
+    async def recv(self, max_bytes: int) -> str: ...
+    async def close(self) -> None: ...
+
+
+SocketFactory = Callable[[], Awaitable[Socket]]
+Sleep = Callable[[float], Awaitable[None]]
+
+
+class ConnectionManager:
+    """Transport runtime for one B13 `ws_conn` interpreter."""
+
+    def __init__(
+        self,
+        factory: SocketFactory,
+        planner: SubscriptionPlanner,
+        watchdog: StalenessWatchdog,
+        policy: ReconnectPolicy,
+        guard: ConnectionRateGuard,
+        on_message: Callable[[str], None],
+        *,
+        sleep: Sleep = asyncio.sleep,
+        ping_interval_s: float = 20.0,
+        check_interval_s: float = 0.5,
+        bus: Bus | None = None,
+        env: str = "live",
+        budget_recheck_s: float = 1.0,
+    ) -> None:
+        self._factory = factory
+        self._planner = planner
+        self._watchdog = watchdog
+        self._policy = policy
+        self._guard = guard
+        self._on_message = on_message
+        self._sleep = sleep
+        self._ping_interval = ping_interval_s
+        self._check_interval = check_interval_s
+        self._bus = bus
+        self._env = env
+        self._recheck_s = budget_recheck_s
+        self._desired: set[str] = set()
+        self._interp: Any = None
+        self._key = f"public-{next(_conn_ids)}"
+        self._sock: Socket | None = None
+        self._session: list[asyncio.Task[Any]] = []
+        self._timer: asyncio.Task[None] | None = None
+        self._was_live = False
+        self._phase = PHASE_CLOSED
+        self.attempt = 0
+        self.opens = 0
+
+    # ---- public API -----------------------------------------------------
+    def state(self) -> str:
+        """Phase published on chart state entry: open | connecting | degraded | closed."""
+        return self._phase
+
+    def set_desired(self, topics: set[str]) -> None:
+        for gone in self._desired - topics:
+            self._watchdog.unwatch(gone)
+        for new in topics - self._desired:
+            self._watchdog.watch(new)
+        changed = self._desired != topics
+        self._desired = set(topics)
+        if changed and self._interp is not None and self.state() == "open":
+            spawn(self._interp.send("TOPICS_CHANGED"), name="ws-topics-changed")
+
+    async def start(self) -> None:
+        if self._interp is not None:
+            return
+        register_runtime(self._key, self)
+        result = await build(
+            "ws_conn",
+            ctx={"conn_key": self._key, "kind": "public"},
+            clock=default_clock(),
+            lane="platform",
+        )
+        self._interp = result.interpreter
+        await self._interp.send("CONNECT")
+
+    async def stop(self) -> None:
+        interp, self._interp = self._interp, None
+        self._cancel_timer()
+        if interp is not None:
+            ids = {sid.rsplit(".", 1)[-1] for sid in interp.current_state_ids}
+            event = "SHUTDOWN" if ids & {"live", "backing_off"} else "KILL"
+            try:
+                await interp.send(event)
+            finally:
+                await interp.stop()
+        await self.teardown_session()
+        self._phase = PHASE_CLOSED
+        unregister_runtime(self._key)
+
+    # ---- B13 runtime hooks (called by bindings/b13_ws_conn.py) ----------
+    def is_private(self) -> bool:
+        return False
+
+    def budget_exhausted(self) -> bool:
+        return self._guard.remaining() == 0
+
+    def bump_attempt(self) -> None:  # entry of `connecting`
+        self.attempt += 1
+        self._phase = PHASE_CONNECTING
+
+    def reset_attempt(self) -> None:
+        self.attempt = 0
+
+    async def open_socket(self) -> None:
+        delay = self._guard.reserve()
+        if delay > 0:
+            await self._sleep(delay)
+        self._sock = await self._factory()
+        self.opens += 1
+
+    async def authenticate(self) -> None:  # public feed: never reached
+        return None
+
+    async def subscribe(self) -> None:
+        self._phase = PHASE_CONNECTING
+        if self._was_live:
+            await self.emit_health("resubscribing")
+        sock = self._sock
+        if sock is None:
+            raise ConnectionError("no socket to subscribe on")
+        for batch in self._planner.plan(self._desired):
+            await sock.send(json.dumps({"op": "subscribe", "args": list(batch.topics)}))
+        self._watchdog.reset()
+
+    async def close_socket(self) -> None:
+        await self.teardown_session()
+
+    async def teardown_session(self) -> None:
+        tasks, self._session = self._session, []
+        current = asyncio.current_task()
+        for t in tasks:
+            if t is not current:
+                t.cancel()
+        await asyncio.gather(*(t for t in tasks if t is not current), return_exceptions=True)
+        sock, self._sock = self._sock, None
+        if sock is not None:
+            with contextlib.suppress(Exception):
+                await sock.close()
+
+    def start_session(self, interp: Any) -> None:
+        """Entered `live`: start reader/ping/watchdog; the supervisor turns the
+        first one to finish into a chart event (it never recycles by itself)."""
+        sock = self._sock
+        if sock is None:
+            return
+        self._was_live = True
+
+        async def ping() -> None:
+            await sock.send(json.dumps({"op": "ping"}))
+
+        workers = {
+            "ping": spawn(
+                ping_loop(ping, self._sleep, interval_s=self._ping_interval), name="ws-ping"
+            ),
+            "read": spawn(self._read(sock), name="ws-reader"),
+            "watch": spawn(self._watch(), name="ws-watchdog"),
+        }
+
+        async def supervise() -> None:
+            done, _ = await asyncio.wait(workers.values(), return_when=asyncio.FIRST_COMPLETED)
+            first = next(iter(done))
+            if first is workers["watch"] and not first.cancelled() and first.exception() is None:
+                await interp.send("TOPIC_STALE")
+            else:
+                await interp.send("SOCKET_CLOSED")
+
+        self._session = [*workers.values(), spawn(supervise(), name="ws-supervisor")]
+
+    def schedule_backoff(self, interp: Any) -> None:
+        async def fire() -> None:
+            await self._sleep(self._policy.next_delay(self.attempt))
+            await interp.send("BACKOFF_DUE")
+
+        self._cancel_timer()
+        self._timer = spawn(fire(), name="ws-backoff")
+
+    def schedule_budget_recheck(self, interp: Any) -> None:  # entry of `budget_blocked`
+        self._phase = PHASE_DEGRADED
+
+        async def fire() -> None:
+            await self._sleep(self._recheck_s)
+            await interp.send("BUDGET_RECHECK")
+            await interp.send("CONNECT")
+
+        self._cancel_timer()
+        self._timer = spawn(fire(), name="ws-budget-recheck")
+
+    async def emit_health(self, state: str) -> None:
+        if state == "healthy":
+            self._phase = PHASE_OPEN
+        elif state == "degraded":
+            self._phase = PHASE_DEGRADED
+        for topic in sorted(self._desired) or ["*"]:
+            await self._publish(FeedHealthEvent(topic, state, 0.0))
+
+    # ---- internals ------------------------------------------------------
+    def _cancel_timer(self) -> None:
+        timer, self._timer = self._timer, None
+        if timer is not None and timer is not asyncio.current_task():
+            timer.cancel()
+
+    async def _publish(self, event: FeedHealthEvent) -> None:
+        if self._bus is not None:
+            await self._bus.publish(Topic(env=self._env, domain="health", detail="feed"), event)
+
+    async def _read(self, sock: Socket) -> None:
+        while True:
+            frame = await sock.recv(MAX_FRAME_BYTES)
+            if len(frame) > MAX_FRAME_BYTES:
+                raise ValueError("ws frame exceeds MAX_FRAME_BYTES")
+            self._on_message(frame)
+
+    async def _watch(self) -> None:
+        """Returns once any topic goes stale (publishing `stale` on the bus)."""
+        while True:
+            await self._sleep(self._check_interval)
+            if stale := self._watchdog.check():
+                for topic in stale:
+                    await self._publish(FeedHealthEvent(topic, "stale", 0.0))
+                return

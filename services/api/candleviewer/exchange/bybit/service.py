@@ -8,8 +8,14 @@ module, but it does no real work until its owning epic lands.
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
 
+from candleviewer.exchange.bybit.public_ws import (
+    PublicSocket,
+    public_socket_factory,
+    topic_kind,
+)
 from candleviewer.observability.health import HealthReport, HealthStatus
 
 if TYPE_CHECKING:
@@ -21,6 +27,16 @@ class ExchangeBybitService:
 
     def __init__(self) -> None:
         self._started = False
+
+    #: E08-T04: venue topic -> neutral stream kind, for ingestion's watchdog.
+    topic_kind = staticmethod(topic_kind)
+
+    @staticmethod
+    def public_socket_factory(
+        env: str, *, max_frame_bytes: int
+    ) -> Callable[[], Awaitable[PublicSocket]]:
+        """E08-T04: unauthenticated public-stream socket factory for `env`."""
+        return public_socket_factory(env, max_frame_bytes=max_frame_bytes)
 
     async def start(self, ctx: AppContext) -> None:
         """Start the module. No-op until the owning epic implements it."""
