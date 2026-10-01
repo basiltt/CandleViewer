@@ -1,0 +1,146 @@
+"""Composition helpers for E04-T04 health: event writer, WS publisher, real probes.
+
+QA #1668. Kept out of `health_probes` so that module stays I/O-free. Probe
+`detail` strings never include DSNs, hosts or raw exception text.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+import shutil
+from typing import Any, Protocol
+
+from sqlalchemy import insert, text
+
+from candleviewer.bus.models import Topic
+from candleviewer.db.models import system_events
+from candleviewer.observability.health_probes import (
+    CallableProbe,
+    ComponentHealth,
+    ComponentState,
+    HealthRegistry,
+    HealthSnapshot,
+    ProbeResult,
+    SystemEvent,
+)
+
+logger = logging.getLogger(__name__)
+
+_DISK_WARN = 0.90
+_DISK_DOWN = 0.97
+
+
+class _UowFactory(Protocol):
+    def unit_of_work(self) -> Any: ...
+
+
+class _Publisher(Protocol):
+    async def publish(self, topic: Topic, event: Any) -> None: ...
+
+
+class PgSystemEventWriter:
+    """Persists one `system_events` row per component state transition."""
+
+    def __init__(self, repo: _UowFactory) -> None:
+        self._repo = repo
+
+    async def write(self, event: SystemEvent) -> None:
+        async with self._repo.unit_of_work() as uow:
+            await uow.session.execute(
+                insert(system_events).values(
+                    component=event.component,
+                    kind=event.kind,
+                    severity=event.severity,
+                    message=event.message,
+                    details=dict(event.details),
+                    correlation_id=event.correlation_id,
+                )
+            )
+            await uow.commit()
+
+
+def _exchange_word(c: ComponentHealth | None) -> str:
+    if c is None or c.state is ComponentState.NOT_DEPLOYED:
+        return "not_deployed"
+    return "connected" if c.state is ComponentState.HEALTHY else c.state.value
+
+
+class HealthSystemPublisher:
+    """Publishes the `health`/`exchange` block to `{env}.system` per snapshot."""
+
+    def __init__(self, bus: _Publisher, env: str) -> None:
+        self._bus = bus
+        self._topic = Topic(env=env, domain="system")
+
+    async def __call__(self, snap: HealthSnapshot) -> None:
+        by_name = {c.name: c for c in snap.components}
+        payload: dict[str, object] = {
+            "kind": "health",
+            "health": snap.overall.value,
+            "exchange": {
+                "public_ws": _exchange_word(by_name.get("bybit_public_ws")),
+                "private_ws": _exchange_word(by_name.get("bybit_private_ws")),
+                "rest": _exchange_word(by_name.get("bybit_rest")),
+            },
+            # None until E08 time sync lands; never a fabricated 0.
+            "clock_offset_ms": None,
+        }
+        await self._bus.publish(self._topic, payload)
+
+
+def register_real_probes(
+    registry: HealthRegistry,
+    *,
+    pg_repo: _UowFactory,
+    questdb_host: str,
+    questdb_port: int,
+    parquet_root: str,
+    disk_path: str,
+) -> None:
+    """Replace placeholders for postgres/questdb/parquet_store/disk."""
+
+    async def postgres() -> ProbeResult:
+        try:
+            async with pg_repo.unit_of_work() as uow:
+                await uow.session.execute(text("SELECT 1"))
+        except Exception:
+            return ProbeResult(ComponentState.DOWN, "postgres unreachable")
+        return ProbeResult(ComponentState.HEALTHY)
+
+    async def questdb() -> ProbeResult:
+        try:
+            _r, w = await asyncio.wait_for(
+                asyncio.open_connection(questdb_host, questdb_port), timeout=1.0
+            )
+        except Exception:
+            return ProbeResult(ComponentState.DOWN, "questdb unreachable")
+        w.close()
+        return ProbeResult(ComponentState.HEALTHY)
+
+    async def parquet() -> ProbeResult:
+        ok = await asyncio.to_thread(lambda: __import__("os").path.isdir(parquet_root))
+        if not ok:
+            return ProbeResult(ComponentState.DOWN, "parquet root missing")
+        return ProbeResult(ComponentState.HEALTHY)
+
+    async def disk() -> ProbeResult:
+        try:
+            u = await asyncio.to_thread(shutil.disk_usage, disk_path)
+        except OSError:
+            return ProbeResult(ComponentState.DOWN, "disk path unavailable")
+        ratio = u.used / u.total if u.total else 1.0
+        detail = f"used {ratio * 100:.0f}%"
+        if ratio >= _DISK_DOWN:
+            return ProbeResult(ComponentState.DOWN, detail)
+        if ratio >= _DISK_WARN:
+            return ProbeResult(ComponentState.WARNING, detail)
+        return ProbeResult(ComponentState.HEALTHY, detail)
+
+    for name, fn in (
+        ("postgres", postgres),
+        ("questdb", questdb),
+        ("parquet_store", parquet),
+        ("disk", disk),
+    ):
+        registry.register(CallableProbe(name, fn, timeout=1.5))

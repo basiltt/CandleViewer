@@ -82,6 +82,11 @@ from candleviewer.net import (
 from candleviewer.observability.correlation import CorrelationMiddleware
 from candleviewer.observability.health_metrics import bind_health_metrics
 from candleviewer.observability.health_probes import HealthRegistry
+from candleviewer.observability.health_wiring import (
+    HealthSystemPublisher,
+    PgSystemEventWriter,
+    register_real_probes,
+)
 from candleviewer.observability.log_level import LogLevelOverrides
 from candleviewer.observability.metrics import CollectorRegistry
 from candleviewer.observability.service import ObservabilityService
@@ -459,8 +464,26 @@ def create_app(
     )
     # E04-T04: cached component health. Unbuilt modules register `not_deployed`
     # probes; the ticker is started/stopped by the lifespan (`app.state`).
-    health_registry = HealthRegistry()
+    health_pg = (
+        SqlAlchemyRelationalRepository(resolved.pg_dsn.get_secret_value(), "health")
+        if resolved.storage_backend == "real"
+        else None
+    )
+    health_registry = HealthRegistry(
+        events=PgSystemEventWriter(health_pg) if health_pg is not None else None,
+        on_snapshot=HealthSystemPublisher(ctx.bus.bus, resolved.environment.value),
+    )
     health_registry.register_placeholders()
+    if health_pg is not None:
+        q_host, _, q_port = resolved.questdb_pg.partition(":")
+        register_real_probes(
+            health_registry,
+            pg_repo=health_pg,
+            questdb_host=q_host,
+            questdb_port=int(q_port or 8812),
+            parquet_root=resolved.parquet_root,
+            disk_path=".",
+        )
     bind_health_metrics(health_registry, ctx.metrics, resolved)
     app.state.health_registry = health_registry
     app.include_router(
