@@ -246,3 +246,32 @@ async def test_elevation_is_revoked_with_the_session() -> None:
     await sessions.revoke("s1", reason="logout", now=clock.now)
     with pytest.raises(StepUpRequired):
         await svc.require_elevation("s1", "keys")
+
+
+def _sample(name: str, **labels: str) -> float:
+    from prometheus_client import REGISTRY
+
+    return REGISTRY.get_sample_value(name, labels) or 0.0
+
+
+async def test_step_up_and_reset_metrics_are_emitted() -> None:
+    svc, clock, seed, owner, sessions = await _setup()
+    ok0 = _sample("auth_step_up_total", action_class="users")
+    bad0 = _sample("auth_step_up_failures_total", action_class="keys")
+    ro0 = _sample("auth_readonly_downgrades_total")
+    rs0 = _sample("auth_mfa_resets_total")
+    await svc.step_up(str(owner), "o1", "users", _code(seed, clock))
+    assert _sample("auth_step_up_total", action_class="users") == ok0 + 1
+    for _ in range(2):
+        with pytest.raises(StepUpCodeInvalid):
+            await svc.step_up(str(owner), "s1", "keys", "000000")
+    with pytest.raises(SessionReadOnly):
+        await svc.step_up(str(owner), "s1", "keys", "000000")
+    assert _sample("auth_step_up_failures_total", action_class="keys") == bad0 + 3
+    assert _sample("auth_readonly_downgrades_total") == ro0 + 1
+    target = uuid.uuid4()
+    await sessions.create_session(_session(target))
+    await svc.reset_totp(
+        actor_session_id="o1", actor_user_id=str(owner), target_user_id=str(target)
+    )
+    assert _sample("auth_mfa_resets_total") == rs0 + 1

@@ -27,6 +27,12 @@ from candleviewer.auth.errors import (
     StepUpRequired,
     UnknownActionClass,
 )
+from candleviewer.auth.metrics import (
+    auth_mfa_resets_total,
+    auth_readonly_downgrades_total,
+    auth_step_up_failures_total,
+    auth_step_up_total,
+)
 from candleviewer.auth.mfa_repository import MfaRepository
 from candleviewer.auth.models import SessionRecord
 from candleviewer.auth.session_repository import SessionRepository
@@ -159,9 +165,11 @@ class StepUpService:
         now = self._clock()
         elevations = {k: v for k, v in record.step_up_elevations.items() if v > now}
         if not await self._verify(user_id, code, now):
+            auth_step_up_failures_total.labels(action_class=action_class).inc()
             failures = record.step_up_failures + 1
             if failures >= FAILURE_CAP:
                 until = now + READONLY_WINDOW
+                auth_readonly_downgrades_total.inc()
                 await self._save(
                     session_id, elevations={}, failures=FAILURE_CAP, readonly_until=until
                 )
@@ -175,6 +183,7 @@ class StepUpService:
         if not single_use:
             elevations[action_class] = until
         await self._save(session_id, elevations=elevations, failures=0, readonly_until=None)
+        auth_step_up_total.labels(action_class=action_class).inc()
         return StepUpGrant(action_class, until, single_use=single_use)
 
     async def _verify(self, user_id: str, code: str, now: datetime) -> bool:
@@ -245,4 +254,5 @@ class StepUpService:
         revoked = await self._sessions.revoke_all_for_user(
             target_user_id, reason="mfa_reset_by_owner", now=now
         )
+        auth_mfa_resets_total.inc()
         return ResetResult(uuid.UUID(target_user_id), len(methods), len(revoked))
