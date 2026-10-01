@@ -8,7 +8,9 @@ groups:
         expr: increase(support_bundle_generations_total{result="secret_detected"}[15m]) > 0
         labels:
           severity: ticket
+          component: secrets
         annotations:
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-supportbundlesecretdetected"
           summary: "Support bundle generation aborted: secret detected"
           description: >-
             The bundle scan found secret-shaped content and failed closed.

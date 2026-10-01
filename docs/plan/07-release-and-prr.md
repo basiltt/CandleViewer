@@ -425,3 +425,8 @@ Open the Grafana dashboard for this component, confirm the condition with the ru
 
 The `absent()` guard for a catalogued metric fired: no running module emits it. Identify the metric from the alert name, confirm the owning epic has landed (`metrics_catalogue.py`), and check the api `/metrics` endpoint. Expected until the emitting module ships.
 
+
+<a id="alert-supportbundlesecretdetected"></a>
+### SupportBundleSecretDetected
+
+The bundle secret scan failed closed: the redaction filter missed a secret upstream (SR-124). Find and fix the leak source; do not merely retry. See `infra/prometheus/alerts/support_bundle.yml`.

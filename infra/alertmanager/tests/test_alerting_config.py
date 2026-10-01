@@ -140,12 +140,30 @@ def test_receivers_exist_and_no_inline_secret() -> None:
     assert "alert_page_webhook_url" in text and "alert_ticket_webhook_url" in text
 
 
-def test_postgres_inhibits_tickets() -> None:
-    assert any(
-        r["source_matchers"] == ['alertname = "PostgresDown"']
-        and r["target_matchers"] == ['severity = "ticket"']
-        for r in AM["inhibit_rules"]
-    )
+def _pg_rule() -> dict[str, Any]:
+    return next(r for r in AM["inhibit_rules"] if r["source_matchers"] == ['alertname = "PostgresDown"'])
+
+
+def _inhibited(component: str) -> bool:
+    import re
+
+    labels = {"severity": "ticket", "component": component}
+    for m in _pg_rule()["target_matchers"]:
+        k, op, v = re.match(r'(\w+)\s*(=~|=)\s*"?([^"]*)"?$', m).groups()  # type: ignore[union-attr]
+        ok = re.fullmatch(v, labels.get(k, "")) if op == "=~" else labels.get(k) == v
+        if not ok:
+            return False
+    return True
+
+
+def test_postgres_inhibits_db_dependent_tickets() -> None:
+    for c in ("storage", "oms", "rules", "book", "audit"):
+        assert _inhibited(c), c
+
+
+def test_postgres_does_not_inhibit_security_tickets() -> None:
+    for c in ("auth", "secrets", "network", "clock"):
+        assert not _inhibited(c), c
 
 
 def test_alert_drill_refuses_public_url(monkeypatch: pytest.MonkeyPatch) -> None:
