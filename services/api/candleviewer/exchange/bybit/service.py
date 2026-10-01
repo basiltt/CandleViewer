@@ -11,11 +11,13 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
 
+from candleviewer.exchange.bybit.config import RestClientConfig
 from candleviewer.exchange.bybit.public_ws import (
     PublicSocket,
     public_socket_factory,
     topic_kind,
 )
+from candleviewer.exchange.bybit.rest import BybitRestClient
 from candleviewer.observability.health import HealthReport, HealthStatus
 
 if TYPE_CHECKING:
@@ -37,6 +39,13 @@ class ExchangeBybitService:
     ) -> Callable[[], Awaitable[PublicSocket]]:
         """E08-T04: unauthenticated public-stream socket factory for `env`."""
         return public_socket_factory(env, max_frame_bytes=max_frame_bytes)
+
+    @staticmethod
+    def public_rest_client(env: str) -> BybitRestClient:
+        """E04-T06: credential-less public REST client (server-time probe).
+        Public data always uses the live host (demo has no public feed)."""
+        base = "https://api-testnet.bybit.com" if env == "testnet" else "https://api.bybit.com"
+        return BybitRestClient(RestClientConfig(base_url=base))
 
     async def start(self, ctx: AppContext) -> None:
         """Start the module. No-op until the owning epic implements it."""

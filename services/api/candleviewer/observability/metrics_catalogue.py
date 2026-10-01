@@ -16,23 +16,73 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final, Literal
 
+from candleviewer.observability.latency import E2E_BUCKETS, STAGE_BUCKETS
 from candleviewer.observability.metrics import BoundedMetric, MetricKind, Metrics
 
 Status = Literal["live", "planned"]
 
 #: Loop lag: buckets straddle the 50 ms p99 target and the 100 ms alert
 #: threshold so each lands on its own bucket edge (06-performance §2).
-LOOP_LAG_BUCKETS: Final = (0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 1.0, 2.5)
+LOOP_LAG_BUCKETS: Final = (
+    0.001,
+    0.005,
+    0.01,
+    0.025,
+    0.05,
+    0.075,
+    0.1,
+    0.25,
+    0.5,
+    1.0,
+    2.5,
+)
 #: Fan-out: edges around the 20 ms p99 budget.
 FANOUT_BUCKETS: Final = (0.001, 0.0025, 0.005, 0.01, 0.015, 0.02, 0.03, 0.05, 0.1, 0.25)
 #: Per-engine CPU time per batch.
-ENGINE_BUCKETS: Final = (0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1)
+ENGINE_BUCKETS: Final = (
+    0.0001,
+    0.00025,
+    0.0005,
+    0.001,
+    0.0025,
+    0.005,
+    0.01,
+    0.025,
+    0.05,
+    0.1,
+)
 #: Storage round-trips.
-STORAGE_BUCKETS: Final = (0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 5.0)
+STORAGE_BUCKETS: Final = (
+    0.001,
+    0.0025,
+    0.005,
+    0.01,
+    0.025,
+    0.05,
+    0.1,
+    0.25,
+    0.5,
+    1.0,
+    5.0,
+)
 #: Order submit click→ack, p99 ≤ 500 ms.
 SUBMIT_BUCKETS: Final = (0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.75, 1.0, 2.0, 5.0)
 #: Statechart transition latency.
-TRANSITION_BUCKETS: Final = (0.00005, 0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01)
+TRANSITION_BUCKETS: Final = (
+    0.00005,
+    0.0001,
+    0.00025,
+    0.0005,
+    0.001,
+    0.0025,
+    0.005,
+    0.01,
+)
+#: `screen` label cap for pushed frontend series (keeps /metrics < 50 ms).
+FE_SCREEN_MAX_SERIES: Final = 8
+#: Frontend pushed histograms (client pre-buckets on the same edges).
+FE_FRAME_BUCKETS: Final = (4.0, 8.0, 12.0, 16.0, 20.0, 33.0, 50.0, 100.0)
+FE_DECODE_BUCKETS: Final = (0.1, 0.25, 0.5, 1.0, 2.0, 4.0, 5.0, 10.0)
 
 
 @dataclass(frozen=True, slots=True)
@@ -337,7 +387,14 @@ CATALOGUE: Final[tuple[MetricSpec, ...]] = (
         "E35",
     ),
     _s(
-        "ws_clients", "gauge", "clients", (), "Connected gateway WS clients.", "capacity", _P, "E17"
+        "ws_clients",
+        "gauge",
+        "clients",
+        (),
+        "Connected gateway WS clients.",
+        "capacity",
+        _P,
+        "E17",
     ),
     _s(
         "ws_topics_per_client",
@@ -583,48 +640,87 @@ CATALOGUE: Final[tuple[MetricSpec, ...]] = (
         _P,
         "E43",
     ),
-    # --- Frontend (pushed; E04-T06 owns ingestion) --------------------------
+    # --- Latency budget (E04-T06, US-OBS-002) -------------------------------
+    _s(
+        "ingest_stage_seconds",
+        "histogram",
+        "seconds",
+        ("stage",),
+        "Per-stage tick latency (exchange|parse|derive|fanout); attribution only.",
+        "LatencyBudgetBreach names the stage",
+        _L,
+        "E04",
+        STAGE_BUCKETS,
+        max_series=4,
+    ),
+    _s(
+        "e2e_tick_to_paint_seconds",
+        "histogram",
+        "seconds",
+        (),
+        "Paired 1-in-N tick receipt to client paint (budget #3).",
+        "p95 > 0.25 for 60s",
+        _L,
+        "E04",
+        E2E_BUCKETS,
+    ),
+    _s(
+        "telemetry_rejected_total",
+        "counter",
+        "payloads",
+        ("reason",),
+        "Frontend telemetry payloads rejected, by closed reason.",
+        "abuse / client bug",
+        _L,
+        "E04",
+        max_series=4,
+    ),
+    # --- Frontend (pushed; ingested by E04-T06) ------------------------------
     _s(
         "fe_frame_time_ms",
         "histogram",
         "milliseconds",
-        (),
+        ("screen",),
         "Frontend frame time.",
         "engine regression",
-        _P,
-        "E04-T06",
-        (4.0, 8.0, 12.0, 16.0, 20.0, 33.0, 50.0, 100.0),
+        _L,
+        "E04",
+        FE_FRAME_BUCKETS,
+        max_series=FE_SCREEN_MAX_SERIES,
     ),
     _s(
         "fe_dropped_frames_total",
         "counter",
         "frames",
-        (),
+        ("screen",),
         "Frontend dropped frames.",
         "engine regression",
-        _P,
-        "E04-T06",
+        _L,
+        "E04",
+        max_series=FE_SCREEN_MAX_SERIES,
     ),
     _s(
         "fe_ws_decode_ms",
         "histogram",
         "milliseconds",
-        (),
+        ("screen",),
         "Frontend WS decode time.",
-        "engine regression",
-        _P,
-        "E04-T06",
-        (0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0),
+        "p95 > 4",
+        _L,
+        "E04",
+        FE_DECODE_BUCKETS,
+        max_series=FE_SCREEN_MAX_SERIES,
     ),
     _s(
         "fe_gpu_memory_mb",
         "gauge",
         "megabytes",
-        (),
+        ("screen",),
         "Frontend GPU memory.",
         "engine regression",
-        _P,
-        "E04-T06",
+        _L,
+        "E04",
+        max_series=FE_SCREEN_MAX_SERIES,
     ),
 )
 
@@ -652,7 +748,11 @@ def register_r0(metrics: Metrics) -> dict[str, BoundedMetric]:
     for spec in live_specs():
         if spec.kind == "histogram" and spec.buckets is not None:
             out[spec.name] = metrics.histogram(
-                spec.name, spec.help, spec.labels, buckets=spec.buckets, max_series=spec.max_series
+                spec.name,
+                spec.help,
+                spec.labels,
+                buckets=spec.buckets,
+                max_series=spec.max_series,
             )
         elif spec.kind == "counter":
             out[spec.name] = metrics.counter(

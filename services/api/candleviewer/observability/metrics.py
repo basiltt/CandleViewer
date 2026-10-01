@@ -101,7 +101,7 @@ ENV_LABEL: Final[str] = "env"
 
 DEFAULT_MAX_SERIES: Final[int] = 200
 
-_log = structlog.get_logger("candleviewer.observability.metrics")
+_LOGGER_NAME = "candleviewer.observability.metrics"
 
 
 class MetricsError(ValueError):
@@ -288,10 +288,19 @@ class Metrics:
             registry=self.registry,
         )
         self._series_gauge.labels(env).set_function(self.total_series)
+        self._process_collectors = False
         if process_collectors:
-            ProcessCollector(registry=self.registry)
-            GCCollector(registry=self.registry)
-            PlatformCollector(registry=self.registry)
+            self.add_process_collectors()
+
+    def add_process_collectors(self) -> None:
+        """Register process/GC/platform collectors once (reads `/proc`, so
+        `create_app()` defers this to the lifespan; E04-T06)."""
+        if self._process_collectors:
+            return
+        self._process_collectors = True
+        ProcessCollector(registry=self.registry)
+        GCCollector(registry=self.registry)
+        PlatformCollector(registry=self.registry)
 
     # -- factories -------------------------------------------------------
 
@@ -415,7 +424,10 @@ class Metrics:
         if not metric._breached:
             metric._breached = True
             # Label values are not logged: they are the disclosure surface.
-            _log.error(
+            # Resolved per call (rare path): a module-level logger cached under
+            # `cache_logger_on_first_use=True` keeps a stale processor chain
+            # after `configure_logging()` runs (see storage/cold/observability).
+            structlog.get_logger(_LOGGER_NAME).error(
                 "metric_cardinality_breach",
                 metric=metric.name,
                 max_series=metric._max_series,

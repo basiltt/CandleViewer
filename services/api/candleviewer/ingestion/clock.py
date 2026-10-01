@@ -137,6 +137,14 @@ class ClockGuard:
         exist to guard trading on that state, not this accessor."""
         return self._offset_us
 
+    def offset_ms_or_none(self) -> int | None:
+        """E04-T06 latency provider: `exchange - local` in ms, or `None` before
+        the first successful measurement (exchange stage then unavailable,
+        never a skew-dominated number)."""
+        if self._last_measured_monotonic is None:
+            return None
+        return self._offset_us // _MICROS_PER_MS
+
     def offset_age_s(self) -> float:
         """Seconds since the last successful measurement, or `inf` if none
         has ever completed (scenario "Exchange time endpoint unavailable":

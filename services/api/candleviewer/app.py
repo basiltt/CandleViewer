@@ -50,6 +50,7 @@ from candleviewer.api.deny_by_default import (
     make_deny_undeclared_dependency,
 )
 from candleviewer.api.sessions import make_session_router
+from candleviewer.api.telemetry import SessionKeyResolver, make_telemetry_router
 from candleviewer.api.users import SnapshotResolver, UserRoleStore, make_users_router
 from candleviewer.auth.models import (
     MfaChallengeRecord,
@@ -72,6 +73,7 @@ from candleviewer.health_wiring import (
     PgSystemEventWriter,
     register_real_probes,
 )
+from candleviewer.ingestion.clock import ClockGuard, ServerTimeFetcher, rest_client_fetcher
 from candleviewer.ingestion.connection import MAX_FRAME_BYTES, ConnectionManager
 from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
 from candleviewer.ingestion.planner import SubscriptionPlanner
@@ -93,9 +95,12 @@ from candleviewer.net import (
 from candleviewer.observability.correlation import CorrelationMiddleware
 from candleviewer.observability.health_metrics import bind_health_metrics
 from candleviewer.observability.health_probes import HealthRegistry
+from candleviewer.observability.latency import StageRecorder
 from candleviewer.observability.log_level import LogLevelOverrides
-from candleviewer.observability.metrics import CollectorRegistry
+from candleviewer.observability.metrics import CollectorRegistry, Metrics
+from candleviewer.observability.metrics_catalogue import register_r0
 from candleviewer.observability.service import ObservabilityService
+from candleviewer.observability.telemetry import SessionRateLimiter, TelemetrySink
 from candleviewer.oms.service import OmsService
 from candleviewer.orderflow.service import OrderflowService
 from candleviewer.paper.service import PaperService
@@ -562,6 +567,27 @@ def create_app(
         else None
     )
     app.include_router(make_audit_router(ctx.audit, audit_resolver))
+    # E04-T06: frontend telemetry push. One facade per process on ctx.metrics
+    # (the lifespan's MetricsRuntime reuses it). Session-authenticated via the
+    # same session resolver; `None` (fake backend) fails closed with 501.
+    # Process collectors read /proc; the lifespan adds them (no I/O here).
+    metrics_facade = Metrics(resolved.environment.value, registry=ctx.metrics)
+    app.state.metrics_facade = metrics_facade
+    # E04-T06: per-stage tick latency on the real ingestion publish path.
+    # Offset = ClockGuard's measured exchange-local offset (E08 wires it via
+    # `ctx.ingestion.clock_offset_ms`); the synthetic feed reports 0.
+    register_r0(metrics_facade)  # idempotent; the lifespan reuses this facade
+    ctx.ingestion.attach_latency(
+        StageRecorder(metrics_facade.get("ingest_stage_seconds"), resolved.telemetry_sample_n)
+    )
+    app.include_router(
+        make_telemetry_router(
+            TelemetrySink(metrics_facade),
+            SessionRateLimiter(time.monotonic),
+            SessionKeyResolver(audit_resolver) if audit_resolver is not None else None,
+            enabled=resolved.telemetry_enabled,
+        )
+    )
     # QA defect #1622 blocker: `/market/klines` (E08-S06 core deliverable)
     # was missing entirely — cache-only reads today (`ctx.storage.
     # market_data`); backfilling from the exchange itself is wired once
@@ -629,4 +655,20 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
         env=env,
     )
     ctx.ingestion.attach_ws(manager)
+    # E04-T06: measure the exchange clock offset (public /v5/market/time, no
+    # credentials) so the exchange latency stage is available; started and
+    # stopped with ingestion. Public data always uses the live host (demo has
+    # no separate public feed).
+    rest = adapter.public_rest_client(env)
+    wire_clock_offset(ctx, rest_client_fetcher(rest))
+    ctx.ingestion.attach_closer(rest.aclose)
     return manager
+
+
+def wire_clock_offset(ctx: AppContext, fetch_server_time: ServerTimeFetcher) -> ClockGuard:
+    """E04-T06: compose ClockGuard over the adapter's REST server-time fetcher
+    (`rest_client_fetcher`); its offset corrects the exchange latency stage.
+    The guard's periodic task is started by whoever owns the REST client."""
+    guard = ClockGuard(fetch_server_time)
+    ctx.ingestion.attach_clock(guard)
+    return guard

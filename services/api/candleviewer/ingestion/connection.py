@@ -15,6 +15,7 @@ import asyncio
 import contextlib
 import itertools
 import json
+import time
 from collections.abc import Awaitable, Callable
 from typing import Any, Protocol
 
@@ -26,6 +27,7 @@ from candleviewer.ingestion.planner import SubscriptionPlanner
 from candleviewer.ingestion.reconnect import ConnectionRateGuard, ReconnectPolicy
 from candleviewer.ingestion.watchdog import FeedHealthEvent, StalenessWatchdog, ping_loop
 from candleviewer.observability.context import spawn
+from candleviewer.observability.latency import StageRecorder, StageStamps
 from candleviewer.statechart import build
 from candleviewer.statechart.bindings.b13_ws_conn import register_runtime, unregister_runtime
 from candleviewer.statechart.factory import default_clock
@@ -74,6 +76,9 @@ class ConnectionManager:
         bus: Bus | None = None,
         env: str = "live",
         budget_recheck_s: float = 1.0,
+        latency: StageRecorder | None = None,
+        clock_offset_ms: Callable[[], int | None] = lambda: None,
+        now_ms: Callable[[], int] = lambda: time.time_ns() // 1_000_000,
     ) -> None:
         self._factory = factory
         self._planner = planner
@@ -87,6 +92,9 @@ class ConnectionManager:
         self._bus = bus
         self._env = env
         self._recheck_s = budget_recheck_s
+        self._latency = latency
+        self._clock_offset_ms = clock_offset_ms
+        self._now_ms = now_ms
         self._desired: set[str] = set()
         self._interp: Any = None
         self._key = f"public-{next(_conn_ids)}"
@@ -139,6 +147,13 @@ class ConnectionManager:
         await self.teardown_session()
         self._phase = PHASE_CLOSED
         unregister_runtime(self._key)
+
+    def attach_latency(
+        self, recorder: StageRecorder, clock_offset_ms: Callable[[], int | None]
+    ) -> None:
+        """E04-T06: record receive/decode/publish stages on sampled frames."""
+        self._latency = recorder
+        self._clock_offset_ms = clock_offset_ms
 
     # ---- B13 runtime hooks (called by bindings/b13_ws_conn.py) ----------
     def is_private(self) -> bool:
@@ -261,7 +276,33 @@ class ConnectionManager:
             frame = await sock.recv(MAX_FRAME_BYTES)
             if len(frame) > MAX_FRAME_BYTES:
                 raise ValueError("ws frame exceeds MAX_FRAME_BYTES")
-            self._on_message(frame)
+            rec = self._latency
+            if rec is None or not rec.sample():
+                self._on_message(frame)  # unsampled: no stamps, no allocation
+                continue
+            self._record_sampled(rec, frame)
+
+    def _record_sampled(self, rec: StageRecorder, frame: str) -> None:
+        """E04-T06: stage stamps for a 1-in-N sampled frame only.
+
+        receive -> decode (`ts` extracted) -> hand-off to the bounded ingestion
+        queue (the publish boundary). Exchange stage uses the injected
+        ClockGuard offset; `None` (unmeasured) leaves it unavailable."""
+        t_recv = self._now_ms()
+        t_exchange = t_recv
+        try:
+            ts = json.loads(frame).get("ts")
+            if isinstance(ts, int):
+                t_exchange = ts
+        except (ValueError, AttributeError):
+            pass
+        t_parsed = self._now_ms()
+        self._on_message(frame)
+        t_emitted = self._now_ms()
+        rec.record(
+            StageStamps(t_exchange, t_recv, t_parsed, t_parsed, t_emitted),
+            self._clock_offset_ms(),
+        )
 
     async def _watch(self) -> None:
         """Returns once any topic goes stale (publishing `stale` on the bus)."""

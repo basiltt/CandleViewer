@@ -69,14 +69,17 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
         health_registry.start()
     metrics_runtime: MetricsRuntime | None = None
     if ctx.settings.metrics_enabled:
-        metrics_runtime = MetricsRuntime(
-            Metrics(
+        # E04-T06: create_app() owns the single facade (telemetry series hang
+        # off it); fall back for apps built without one.
+        facade = getattr(app.state, "metrics_facade", None)
+        if facade is None:
+            facade = Metrics(
                 ctx.settings.environment.value,
                 registry=ctx.metrics,
                 process_collectors=True,
-            ),
-            ctx.settings.metrics_bind,
-        )
+            )
+        facade.add_process_collectors()
+        metrics_runtime = MetricsRuntime(facade, ctx.settings.metrics_bind)
         metrics_runtime.start()
     try:
         yield

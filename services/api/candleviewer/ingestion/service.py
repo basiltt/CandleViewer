@@ -10,10 +10,12 @@ E08 lands.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from candleviewer.exchange.base import Ticker, Trade
+from candleviewer.ingestion.clock import ClockGuard
 from candleviewer.ingestion.connection import ConnectionManager
 from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
 from candleviewer.ingestion.synthetic_feed import (
@@ -22,6 +24,7 @@ from candleviewer.ingestion.synthetic_feed import (
     load_sample_records,
 )
 from candleviewer.observability.health import HealthReport, HealthStatus
+from candleviewer.observability.latency import StageRecorder
 from candleviewer.settings import FeedMode
 
 if TYPE_CHECKING:
@@ -49,6 +52,36 @@ class IngestionService:
         self.ws: ConnectionManager | None = None
         self.ws_frames: asyncio.Queue[str] = asyncio.Queue(maxsize=WS_FRAME_QUEUE_MAXSIZE)
         self.ws_frames_dropped = 0
+        #: E04-T06: stage-latency recorder + exchange clock-offset provider
+        #: (ClockGuard's offset in ms once E08 wires it; None = unmeasured).
+        self.latency: StageRecorder | None = None
+        self.clock_offset_ms: Callable[[], int | None] = lambda: 0
+        self.clock: ClockGuard | None = None
+        self._closers: list[Callable[[], Awaitable[None]]] = []
+
+    def attach_latency(
+        self, recorder: StageRecorder, clock_offset_ms: Callable[[], int | None] | None = None
+    ) -> None:
+        """Wire the per-stage latency recorder into the publish path."""
+        self.latency = recorder
+        if clock_offset_ms is not None:
+            self.clock_offset_ms = clock_offset_ms
+        if self.ws is not None:
+            self.ws.attach_latency(recorder, self._ws_clock_offset_ms)
+
+    def attach_clock(self, guard: ClockGuard) -> None:
+        """E04-T06: ClockGuard's measured exchange-local offset (REST
+        `/v5/market/time`) feeds every `on_event`/`record` call."""
+        self.clock = guard
+        self.clock_offset_ms = guard.offset_ms_or_none
+
+    def attach_closer(self, closer: Callable[[], Awaitable[None]]) -> None:
+        """Resource (e.g. the clock REST client) to close on `stop()`."""
+        self._closers.append(closer)
+
+    def _ws_clock_offset_ms(self) -> int | None:
+        # Real exchange frames: unmeasured offset => exchange stage unavailable.
+        return self.clock.offset_ms_or_none() if self.clock is not None else None
 
     def offer_frame(self, frame: str) -> None:
         """Reader callback: never blocks the read loop (drop-newest on full)."""
@@ -84,10 +117,14 @@ class IngestionService:
                 queue=self.queue,
                 metrics=metrics,
                 rate_hz=settings.feed_rate_hz,
+                latency=self.latency,
+                clock_offset_ms=lambda: self.clock_offset_ms(),
             )
             await self._generator.start()
         if self.instruments is not None:
             await self.instruments.start()
+        if self.clock is not None:
+            await self.clock.start()
         if self.ws is not None:
             await self.ws.start()
         self._started = True
@@ -97,6 +134,11 @@ class IngestionService:
         if self.ws is not None:
             async with asyncio.timeout(grace_s):
                 await self.ws.stop()
+        if self.clock is not None:
+            await self.clock.stop()
+        for close in self._closers:
+            await close()
+        self._closers.clear()
         if self.instruments is not None:
             await self.instruments.stop(grace_s)
         if self._generator is not None:

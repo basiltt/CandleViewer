@@ -80,6 +80,14 @@ class Settings(BaseSettings):
     metrics_enabled: bool = True
     metrics_bind: str = "127.0.0.1:9108"
 
+    # E04-T06: latency instrumentation + frontend telemetry push
+    # (`CV_TELEMETRY_ENABLED`, `CV_TELEMETRY_SAMPLE_N`) and OpenTelemetry spans
+    # on the ADR-0014 §5 paths only (`CV_OTEL_ENABLED`, `CV_OTEL_ENDPOINT`).
+    telemetry_enabled: bool = True
+    telemetry_sample_n: int = Field(default=100, ge=1)
+    otel_enabled: bool = False
+    otel_endpoint: str | None = None
+
     bind_host: str = "127.0.0.1"
     bind_port: int = 8080
 

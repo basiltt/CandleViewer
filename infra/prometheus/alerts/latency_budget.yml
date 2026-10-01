@@ -1,0 +1,81 @@
+# E04-T06 (US-OBS-002): latency-budget recording rules and breach alert.
+# Budgets: docs/plan/06-performance-and-load-standard.md §2 (#3, #6) and §5.1.
+# Recorded names are a contract with E04-S01 dashboards and E04-T05 alerts —
+# asserted stable by infra/scripts/tests/test_latency_rules.py.
+# Percentiles do not sum: the e2e p95 is measured directly
+# (e2e_tick_to_paint_seconds, paired 1-in-N); stage series are attribution.
+groups:
+  - name: latency-budget-recording
+    interval: 15s
+    rules:
+      # Per-stage percentiles (stage = exchange|parse|derive|fanout).
+      - record: cv:ingest_stage_seconds:p50_5m
+        expr: histogram_quantile(0.50, sum by (env, stage, le) (rate(ingest_stage_seconds_bucket[5m])))
+      - record: cv:ingest_stage_seconds:p95_5m
+        expr: histogram_quantile(0.95, sum by (env, stage, le) (rate(ingest_stage_seconds_bucket[5m])))
+      - record: cv:ingest_stage_seconds:p99_5m
+        expr: histogram_quantile(0.99, sum by (env, stage, le) (rate(ingest_stage_seconds_bucket[5m])))
+      # Mean stage cost: the only stage statistic that legitimately sums.
+      - record: cv:ingest_stage_seconds:mean_5m
+        expr: sum by (env, stage) (rate(ingest_stage_seconds_sum[5m])) / sum by (env, stage) (rate(ingest_stage_seconds_count[5m]))
+      # Client stages (decode, paint) from pushed frontend telemetry (ms).
+      - record: cv:fe_ws_decode_ms:p95_5m
+        expr: histogram_quantile(0.95, sum by (env, le) (rate(fe_ws_decode_ms_bucket[5m])))
+      - record: cv:fe_frame_time_ms:p95_5m
+        expr: histogram_quantile(0.95, sum by (env, le) (rate(fe_frame_time_ms_bucket[5m])))
+      # End-to-end, directly measured.
+      - record: cv:e2e_tick_to_paint_seconds:p50_5m
+        expr: histogram_quantile(0.50, sum by (env, le) (rate(e2e_tick_to_paint_seconds_bucket[5m])))
+      - record: cv:e2e_tick_to_paint_seconds:p95_1m
+        expr: histogram_quantile(0.95, sum by (env, le) (rate(e2e_tick_to_paint_seconds_bucket[1m])))
+      - record: cv:e2e_tick_to_paint_seconds:p95_5m
+        expr: histogram_quantile(0.95, sum by (env, le) (rate(e2e_tick_to_paint_seconds_bucket[5m])))
+      - record: cv:e2e_tick_to_paint_seconds:p99_5m
+        expr: histogram_quantile(0.99, sum by (env, le) (rate(e2e_tick_to_paint_seconds_bucket[5m])))
+      # Worst stage by mean share of the backend budget (for alert annotation).
+      - record: cv:latency_stage_share:ratio_5m
+        expr: cv:ingest_stage_seconds:mean_5m / on (env) group_left sum by (env) (cv:ingest_stage_seconds:mean_5m)
+
+  - name: latency-budget-slo
+    interval: 30s
+    rules:
+      # SLO burn rates (ADR-0014 §8): bad-event ratio / error budget.
+      # Budget #3: 95% of ticks paint < 100 ms -> error budget 5%.
+      - record: cv:slo_tick_to_paint:burn_rate_1h
+        expr: (1 - (sum by (env) (rate(e2e_tick_to_paint_seconds_bucket{le="0.1"}[1h])) / sum by (env) (rate(e2e_tick_to_paint_seconds_count[1h])))) / 0.05
+      - record: cv:slo_tick_to_paint:burn_rate_6h
+        expr: (1 - (sum by (env) (rate(e2e_tick_to_paint_seconds_bucket{le="0.1"}[6h])) / sum by (env) (rate(e2e_tick_to_paint_seconds_count[6h])))) / 0.05
+      # Budget #6: 95% of fan-outs within the 20 ms backend envelope.
+      - record: cv:slo_backend_fanout:burn_rate_1h
+        expr: (1 - (sum by (env) (rate(ingest_stage_seconds_bucket{stage="fanout",le="0.02"}[1h])) / sum by (env) (rate(ingest_stage_seconds_count{stage="fanout"}[1h])))) / 0.05
+      - record: cv:slo_backend_fanout:burn_rate_6h
+        expr: (1 - (sum by (env) (rate(ingest_stage_seconds_bucket{stage="fanout",le="0.02"}[6h])) / sum by (env) (rate(ingest_stage_seconds_count{stage="fanout"}[6h])))) / 0.05
+      # WS frame decode p95 <= 4 ms (frontend).
+      - record: cv:slo_fe_decode:burn_rate_1h
+        expr: (1 - (sum by (env) (rate(fe_ws_decode_ms_bucket{le="4"}[1h])) / sum by (env) (rate(fe_ws_decode_ms_count[1h])))) / 0.05
+
+  - name: latency-budget-alerts
+    rules:
+      - alert: LatencyBudgetBreach
+        # p95 > 250 ms sustained 60 s; the annotation names the stage with the
+        # largest share, computed from the per-stage histograms.
+        expr: cv:e2e_tick_to_paint_seconds:p95_1m > 0.25
+        for: 60s
+        labels:
+          severity: ticket
+        annotations:
+          summary: >-
+            Tick-to-paint p95 {{ $value | humanizeDuration }} > 250 ms; stage
+            {{ with printf `topk(1, cv:latency_stage_share:ratio_5m{env="%s"})` $labels.env | query }}{{ (. | first).Labels.stage }}{{ else }}client (backend stages nominal){{ end }}
+            consumed the budget
+          description: >-
+            US-OBS-002. Stage shares come from ingest_stage_seconds; if no
+            backend stage dominates, check cv:fe_ws_decode_ms:p95_5m and
+            cv:fe_frame_time_ms:p95_5m. See docs/plan/06-performance-and-load-standard.md §5.1.
+      - alert: TickToPaintSloFastBurn
+        expr: cv:slo_tick_to_paint:burn_rate_1h > 14.4 and cv:slo_tick_to_paint:burn_rate_6h > 6
+        for: 5m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "Tick-to-paint SLO (p95 < 100 ms) burning error budget fast"

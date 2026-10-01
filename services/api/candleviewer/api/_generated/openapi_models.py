@@ -46,6 +46,35 @@ class Symbol(RootModel[str]):
     ]
 
 
+class Count(RootModel[int]):
+    root: Annotated[int, Field(ge=0, le=2400)]
+
+
+class TelemetryBucketCounts(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    counts: Annotated[list[Count], Field(max_length=9)]
+
+
+class FrontendTelemetry(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    screen: Annotated[str, Field(description="Sitemap route id.", pattern="^R-[0-9]{3}$")]
+    engine_version: Annotated[str, Field(pattern="^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,4}$")]
+    fe_frame_time_ms: Annotated[
+        TelemetryBucketCounts,
+        Field(description="Edges ms: 4, 8, 12, 16, 20, 33, 50, 100, +Inf (9 slots)."),
+    ]
+    fe_ws_decode_ms: Annotated[
+        TelemetryBucketCounts,
+        Field(description="Edges ms: 0.1, 0.25, 0.5, 1, 2, 4, 5, 10, +Inf (9 slots)."),
+    ]
+    fe_dropped_frames_total: Annotated[int, Field(ge=0, le=2400)]
+    fe_gpu_memory_mb: Annotated[float | None, Field(ge=0.0, le=65536.0)] = None
+
+
 class Error(BaseModel):
     field: str | None = None
     rule: str | None = None

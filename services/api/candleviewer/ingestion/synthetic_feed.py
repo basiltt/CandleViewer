@@ -17,13 +17,15 @@ from __future__ import annotations
 import asyncio
 import json
 import random
-from collections.abc import AsyncIterator
+import time
+from collections.abc import AsyncIterator, Callable
 from pathlib import Path
 from typing import Any
 
 from candleviewer.exchange.base import Ticker, Trade
 from candleviewer.ingestion.errors import IngestionError
 from candleviewer.observability.context import spawn
+from candleviewer.observability.latency import StageRecorder, StageStamps
 from candleviewer.observability.metrics import CollectorRegistry, Counter
 
 # cv-semgrep: synthetic-feed-test-double — this module is a bounded test
@@ -135,6 +137,9 @@ class SyntheticFeedGenerator:
         rate_hz: float,
         *,
         rng: random.Random | None = None,
+        latency: StageRecorder | None = None,
+        clock_offset_ms: Callable[[], int | None] = lambda: 0,
+        now_ms: Callable[[], int] = lambda: time.time_ns() // 1_000_000,
     ) -> None:
         if rate_hz <= 0:
             raise SyntheticFeedError("synthetic feed rate_hz must be > 0")
@@ -144,6 +149,12 @@ class SyntheticFeedGenerator:
         self._rate_hz = rate_hz
         self._rng = rng or random.Random()  # noqa: S311 - jitter timing only, never security
         self._task: asyncio.Task[None] | None = None
+        # E04-T06: per-stage latency on the real publish path. The synthetic
+        # source has no exchange clock, so its offset provider defaults to 0
+        # (the live feed passes ClockGuard's offset instead).
+        self._latency = latency
+        self._clock_offset_ms = clock_offset_ms
+        self._now_ms = now_ms
 
     def _interval_s(self) -> float:
         """Period between publishes, with +/-20% jitter (never exactly periodic)."""
@@ -153,12 +164,20 @@ class SyntheticFeedGenerator:
 
     async def _publish_one(self, record: Trade | Ticker) -> None:
         event_type = type(record).__name__.lower()
+        t_recv = self._now_ms()
         try:
             self._queue.put_nowait(record)
         except asyncio.QueueFull:
             self._metrics.dropped_total.labels(event_type=event_type).inc()
             return
         self._metrics.published_total.labels(event_type=event_type).inc()
+        if self._latency is not None:
+            # Synthetic events are exchange-stamped on receipt and have no
+            # parse/derive work; fan-out (queue hand-off) is the real cost.
+            self._latency.on_event(
+                StageStamps(t_recv, t_recv, t_recv, t_recv, self._now_ms()),
+                self._clock_offset_ms(),
+            )
 
     async def _run(self) -> None:
         index = 0

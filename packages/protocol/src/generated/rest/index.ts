@@ -3138,6 +3138,31 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/telemetry/frontend": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Push one aggregated frontend performance sample (E04-T06)
+     * @description ADR-0014 §2 field telemetry. One pre-bucketed payload per 10 s per session (never raw samples);
+     *     the server adds bucket counts into `fe_*` histograms labelled only by `screen`, a sitemap route id
+     *     (closed `R-nnn` pattern, capped at 8 series). Bodies over 4096 bytes, unknown fields and wrong types are
+     *     rejected with 400; more than one push per 10 s (burst 2) per session is rejected with 429. Every
+     *     rejection increments `telemetry_rejected_total{reason}` and is never logged verbatim. No symbol,
+     *     account or free-form string is accepted (threat A-17).
+     */
+    post: operations["postFrontendTelemetry"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/trade-groups": {
     parameters: {
       query?: never;
@@ -4532,6 +4557,17 @@ export interface components {
       price_grouping?: number;
       symbol: components["schemas"]["Symbol"];
       tick_size?: components["schemas"]["Decimal"];
+    };
+    FrontendTelemetry: {
+      engine_version: string;
+      fe_dropped_frames_total: number;
+      /** @description Edges ms: 4, 8, 12, 16, 20, 33, 50, 100, +Inf (9 slots). */
+      fe_frame_time_ms: components["schemas"]["TelemetryBucketCounts"];
+      fe_gpu_memory_mb?: number;
+      /** @description Edges ms: 0.1, 0.25, 0.5, 1, 2, 4, 5, 10, +Inf (9 slots). */
+      fe_ws_decode_ms: components["schemas"]["TelemetryBucketCounts"];
+      /** @description Sitemap route id. */
+      screen: string;
     };
     HealthReport: {
       alerts_active?: number;
@@ -6562,6 +6598,10 @@ export interface components {
      * @example SOLUSDT
      */
     Symbol: string;
+    /** @description Non-cumulative counts per bucket edge plus a trailing `+Inf` slot. */
+    TelemetryBucketCounts: {
+      counts: number[];
+    };
     Ticker: {
       ask1_price?: components["schemas"]["Decimal"];
       ask1_size?: components["schemas"]["Decimal"];
@@ -12223,6 +12263,31 @@ export interface operations {
           "application/json": components["schemas"]["BuildInfo"];
         };
       };
+    };
+  };
+  postFrontendTelemetry: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["FrontendTelemetry"];
+      };
+    };
+    responses: {
+      /** @description Accepted and aggregated. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components["responses"]["BadRequest"];
+      401: components["responses"]["Unauthorized"];
+      429: components["responses"]["RateLimited"];
     };
   };
   listTradeGroups: {
