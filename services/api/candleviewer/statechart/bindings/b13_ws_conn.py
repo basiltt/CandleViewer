@@ -82,6 +82,13 @@ async def emit_feed_degraded(interp: Any, context: dict[str, Any], *_a: object) 
         await rt.emit_health("degraded")
 
 
+async def raise_conn_budget_alert(interp: Any, context: dict[str, Any], *_a: object) -> None:
+    """Entering `budget_blocked`: a reconnect storm hit the connection-rate
+    budget — report the feed as `degraded` (E08-T04 AC "reconnect storms")."""
+    if (rt := _rt(context)) is not None:
+        await rt.emit_health("degraded")
+
+
 async def compute_jittered_backoff(interp: Any, context: dict[str, Any], *_a: object) -> None:
     """Entering `backing_off`: tear the dead session down (socket + tasks)."""
     if (rt := _rt(context)) is not None:
@@ -141,7 +148,7 @@ ACTIONS: dict[str, Callable[..., Awaitable[None]]] = {
     "emit_feed_degraded": emit_feed_degraded,
     "emit_feed_healthy": emit_feed_healthy,
     "notify_dependents_degraded": _noop_action,  # dependents consume FeedHealthEvent on the bus
-    "raise_conn_budget_alert": _noop_action,
+    "raise_conn_budget_alert": raise_conn_budget_alert,
     "rearm_pong_deadline": _noop_action,
     "record_auth_error": _noop_action,
     "record_conn_error": _noop_action,

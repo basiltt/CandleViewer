@@ -32,14 +32,14 @@ from candleviewer.statechart.factory import default_clock
 
 logger = structlog.get_logger(__name__)
 
-_PHASE = {
-    "live": "open",
-    "connecting": "connecting",
-    "authenticating": "connecting",
-    "subscribing": "connecting",
-    "backing_off": "degraded",
-    "budget_blocked": "degraded",
-}
+#: Plain enum published by the B13 chart's entry actions (INV-B13-d, C-2.20):
+#: hot paths read `ConnectionManager.state()`; nothing queries the interpreter.
+PHASE_CLOSED, PHASE_CONNECTING, PHASE_OPEN, PHASE_DEGRADED = (
+    "closed",
+    "connecting",
+    "open",
+    "degraded",
+)
 _conn_ids = itertools.count(1)
 
 
@@ -48,7 +48,7 @@ MAX_FRAME_BYTES = 1_048_576  # explicit cap on a single WS frame (E08-X01)
 
 class Socket(Protocol):
     async def send(self, frame: str) -> None: ...
-    async def recv(self) -> str: ...
+    async def recv(self, max_bytes: int) -> str: ...
     async def close(self) -> None: ...
 
 
@@ -94,18 +94,14 @@ class ConnectionManager:
         self._session: list[asyncio.Task[Any]] = []
         self._timer: asyncio.Task[None] | None = None
         self._was_live = False
+        self._phase = PHASE_CLOSED
         self.attempt = 0
         self.opens = 0
 
     # ---- public API -----------------------------------------------------
     def state(self) -> str:
-        """Phase derived from the chart: open | connecting | degraded | closed."""
-        if self._interp is None:
-            return "closed"
-        for sid in self._interp.current_state_ids:
-            if (phase := _PHASE.get(sid.rsplit(".", 1)[-1])) is not None:
-                return phase
-        return "closed"
+        """Phase published on chart state entry: open | connecting | degraded | closed."""
+        return self._phase
 
     def set_desired(self, topics: set[str]) -> None:
         for gone in self._desired - topics:
@@ -141,6 +137,7 @@ class ConnectionManager:
             finally:
                 await interp.stop()
         await self.teardown_session()
+        self._phase = PHASE_CLOSED
         unregister_runtime(self._key)
 
     # ---- B13 runtime hooks (called by bindings/b13_ws_conn.py) ----------
@@ -150,8 +147,9 @@ class ConnectionManager:
     def budget_exhausted(self) -> bool:
         return self._guard.remaining() == 0
 
-    def bump_attempt(self) -> None:
+    def bump_attempt(self) -> None:  # entry of `connecting`
         self.attempt += 1
+        self._phase = PHASE_CONNECTING
 
     def reset_attempt(self) -> None:
         self.attempt = 0
@@ -167,6 +165,7 @@ class ConnectionManager:
         return None
 
     async def subscribe(self) -> None:
+        self._phase = PHASE_CONNECTING
         if self._was_live:
             await self.emit_health("resubscribing")
         sock = self._sock
@@ -228,7 +227,9 @@ class ConnectionManager:
         self._cancel_timer()
         self._timer = spawn(fire(), name="ws-backoff")
 
-    def schedule_budget_recheck(self, interp: Any) -> None:
+    def schedule_budget_recheck(self, interp: Any) -> None:  # entry of `budget_blocked`
+        self._phase = PHASE_DEGRADED
+
         async def fire() -> None:
             await self._sleep(self._recheck_s)
             await interp.send("BUDGET_RECHECK")
@@ -238,6 +239,10 @@ class ConnectionManager:
         self._timer = spawn(fire(), name="ws-budget-recheck")
 
     async def emit_health(self, state: str) -> None:
+        if state == "healthy":
+            self._phase = PHASE_OPEN
+        elif state == "degraded":
+            self._phase = PHASE_DEGRADED
         for topic in sorted(self._desired) or ["*"]:
             await self._publish(FeedHealthEvent(topic, state, 0.0))
 
@@ -253,7 +258,7 @@ class ConnectionManager:
 
     async def _read(self, sock: Socket) -> None:
         while True:
-            frame = await sock.recv()
+            frame = await sock.recv(MAX_FRAME_BYTES)
             if len(frame) > MAX_FRAME_BYTES:
                 raise ValueError("ws frame exceeds MAX_FRAME_BYTES")
             self._on_message(frame)

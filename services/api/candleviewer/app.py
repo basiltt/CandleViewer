@@ -64,14 +64,19 @@ from candleviewer.bus.service import BusService
 from candleviewer.domain.events import InstrumentUpdatedEvent
 from candleviewer.exchange.base.instruments import InstrumentsFetcher
 from candleviewer.exchange.base.service import ExchangeBaseService
+from candleviewer.exchange.bybit.public_ws import public_socket_factory, topic_kind
 from candleviewer.exchange.bybit.service import ExchangeBybitService
 from candleviewer.health_wiring import (
     HealthSystemPublisher,
     PgSystemEventWriter,
     register_real_probes,
 )
+from candleviewer.ingestion.connection import MAX_FRAME_BYTES, ConnectionManager
 from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
+from candleviewer.ingestion.planner import SubscriptionPlanner
+from candleviewer.ingestion.reconnect import ConnectionRateGuard, ReconnectPolicy
 from candleviewer.ingestion.service import IngestionService
+from candleviewer.ingestion.watchdog import StalenessWatchdog
 from candleviewer.journal.service import JournalService
 from candleviewer.net import (
     BindingSelfCheck,
@@ -445,6 +450,8 @@ def create_app(
     )
     ctx = build_app_context(resolved, auth_clock=auth_clock)
     app.state.app_context = ctx
+    if resolved.ingestion_ws_enabled:
+        wire_public_ws(ctx)
     identity = build_identity_provider(resolved)
     app.state.identity_provider = identity
     # E04-T02: outermost (added last) so every request - even a mesh rejection -
@@ -582,3 +589,25 @@ def wire_instrument_catalogue(
     )
     ctx.ingestion.attach_instruments(scheduler)
     return scheduler
+
+
+def wire_public_ws(ctx: AppContext) -> ConnectionManager:
+    """E08-T04 (flag `ingestion_ws_enabled`, default off — C-4.13): compose the
+    public WS skeleton. The Bybit adapter (M4) supplies the socket factory and
+    topic vocabulary; ingestion (M6) owns the connection lifecycle and is
+    started/stopped by the module supervisor (tracked tasks, bounded frame
+    queue — C-2.18). Public stream only: no credentials are involved."""
+    env = ctx.settings.environment.value
+    clock = time.monotonic
+    manager = ConnectionManager(
+        public_socket_factory(env, max_frame_bytes=MAX_FRAME_BYTES),
+        SubscriptionPlanner(),
+        StalenessWatchdog(clock, lambda _e: None, kind_of=topic_kind),
+        ReconnectPolicy(),
+        ConnectionRateGuard(clock),
+        ctx.ingestion.offer_frame,
+        bus=ctx.bus.bus,
+        env=env,
+    )
+    ctx.ingestion.attach_ws(manager)
+    return manager

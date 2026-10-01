@@ -22,24 +22,28 @@ class FeedHealthEvent:
     last_msg_age_s: float
 
 
+def _default_kind(topic: str) -> str:
+    """Venue-neutral fallback: the topic's first dotted segment."""
+    return topic.split(".", 1)[0]
+
+
 class StalenessWatchdog:
     def __init__(
         self,
         clock: Callable[[], float],
         on_health: Callable[[FeedHealthEvent], None],
         limits: dict[str, float] | None = None,
+        *,
+        kind_of: Callable[[str], str] | None = None,
     ) -> None:
         self._clock = clock
+        # Exchange-specific topic -> stream-kind mapping is injected by the
+        # composition root (C-2.2: venue vocabulary stays in exchange/<venue>/).
+        self._kind = kind_of or _default_kind
         self._on_health = on_health
         self._limits = limits or STALENESS_S
         self._last: dict[str, float] = {}
         self._stale: set[str] = set()
-
-    @staticmethod
-    def _kind(topic: str) -> str:
-        head = topic.split(".", 1)[0]
-        # nosemgrep: cv-bybit-vocabulary-leak -- planner topic heads, E08-T05 moves mapping
-        return {"orderbook": "book", "publicTrade": "trade", "tickers": "ticker"}.get(head, head)
 
     def watch(self, topic: str) -> None:
         self._last[topic] = self._clock()

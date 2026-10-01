@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from candleviewer.exchange.base import Ticker, Trade
+from candleviewer.ingestion.connection import ConnectionManager
 from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
 from candleviewer.ingestion.synthetic_feed import (
     SyntheticFeedGenerator,
@@ -27,6 +28,10 @@ if TYPE_CHECKING:
     from candleviewer.app import AppContext
 
 _QUEUE_MAXSIZE = 256
+#: E08-T04: bounded raw-frame buffer between the WS reader and parsers (C-2.18).
+#: Overflow policy: drop-newest and count (`ws_frames_dropped`); the
+#: staleness watchdog recycles the socket if consumers fall behind for long.
+WS_FRAME_QUEUE_MAXSIZE = 4096
 
 
 class IngestionService:
@@ -39,6 +44,22 @@ class IngestionService:
         #: E08-S01-2: the instrument catalogue scheduler, attached by the
         #: composition root only when a real exchange + Postgres are wired.
         self.instruments: InstrumentsRefreshScheduler | None = None
+        #: E08-T04: public WS connection, attached only when
+        #: `ingestion_ws_enabled` is on (composition root, `create_app`).
+        self.ws: ConnectionManager | None = None
+        self.ws_frames: asyncio.Queue[str] = asyncio.Queue(maxsize=WS_FRAME_QUEUE_MAXSIZE)
+        self.ws_frames_dropped = 0
+
+    def offer_frame(self, frame: str) -> None:
+        """Reader callback: never blocks the read loop (drop-newest on full)."""
+        try:
+            self.ws_frames.put_nowait(frame)
+        except asyncio.QueueFull:
+            self.ws_frames_dropped += 1
+
+    def attach_ws(self, manager: ConnectionManager) -> None:
+        """Hand this module ownership of the public WS connection lifecycle."""
+        self.ws = manager
 
     def attach_instruments(self, scheduler: InstrumentsRefreshScheduler) -> None:
         """Hand this module ownership of the catalogue scheduler's lifecycle."""
@@ -67,10 +88,15 @@ class IngestionService:
             await self._generator.start()
         if self.instruments is not None:
             await self.instruments.start()
+        if self.ws is not None:
+            await self.ws.start()
         self._started = True
 
     async def stop(self, grace_s: float) -> None:
         """Stop the module within `grace_s` seconds."""
+        if self.ws is not None:
+            async with asyncio.timeout(grace_s):
+                await self.ws.stop()
         if self.instruments is not None:
             await self.instruments.stop(grace_s)
         if self._generator is not None:

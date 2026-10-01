@@ -42,7 +42,7 @@ class _Sock:
     async def send(self, frame: str) -> None:
         self.sent.append(json.loads(frame))
 
-    async def recv(self) -> str:
+    async def recv(self, max_bytes: int) -> str:
         item = await self.q.get()
         if item == "DROP":
             raise ConnectionResetError("server dropped")

@@ -161,6 +161,9 @@ class Settings(BaseSettings):
     recorder_retention_days: int = 30
     recorder_hot_days: int = 7
     disk_cap_gb: int = 500
+    # E08-T04: public WS ingestion skeleton flag (C-4.13: off by default;
+    # removal tracked by E08-T05). Public data only — no credentials.
+    ingestion_ws_enabled: bool = False
     # E07-T05: retention scheduler flag (off by default) and cron expressions.
     retention_enabled: bool = False
     retention_cron: str = "0 3 * * *"

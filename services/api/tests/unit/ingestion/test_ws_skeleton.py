@@ -8,6 +8,7 @@ import random
 
 import pytest
 
+from candleviewer.exchange.bybit.public_ws import topic_kind
 from candleviewer.ingestion.connection import ConnectionManager
 from candleviewer.ingestion.planner import DemandTracker, SubscriptionPlanner
 from candleviewer.ingestion.reconnect import ConnectionRateGuard, ReconnectPolicy
@@ -92,7 +93,7 @@ def test_rate_guard_caps_600_attempts() -> None:
 def test_watchdog_stale_after_2s_book() -> None:
     clk = Clock()
     events: list[FeedHealthEvent] = []
-    w = StalenessWatchdog(clk, events.append)
+    w = StalenessWatchdog(clk, events.append, kind_of=topic_kind)
     w.watch("orderbook.50.BTCUSDT")
     clk.t = 1.9
     assert w.check() == []
@@ -133,7 +134,7 @@ class FakeSocket:
     async def send(self, frame: str) -> None:
         self.sent.append(json.loads(frame))
 
-    async def recv(self) -> str:
+    async def recv(self, max_bytes: int) -> str:
         return await self._q.get()
 
     async def close(self) -> None:
@@ -154,7 +155,7 @@ async def test_frozen_socket_is_recycled_and_resubscribed() -> None:
         clk.t += s
         await asyncio.sleep(0)
 
-    w = StalenessWatchdog(clk, health.append)
+    w = StalenessWatchdog(clk, health.append, kind_of=topic_kind)
     m = ConnectionManager(
         factory,
         SubscriptionPlanner(),
