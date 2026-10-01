@@ -6797,14 +6797,14 @@ paths:
         "409":
           description: A bundle is already being generated (BUNDLE_ALREADY_RUNNING).
 
-  /admin/support-bundle/{id}:
+  /admin/support-bundle/{job_id}:
     get:
       tags: [admin]
       operationId: getSupportBundle
       summary: Support bundle job status and local download path
       x-rbac: { permissions: [admin:read], scope: none }
       parameters:
-        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: job_id, in: path, required: true, schema: { type: string, format: uuid } }
       responses:
         "200":
           description: Job status.

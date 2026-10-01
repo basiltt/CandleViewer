@@ -121,6 +121,40 @@ _P: Final[Status] = "planned"
 
 CATALOGUE: Final[tuple[MetricSpec, ...]] = (
     # --- Runtime / R0 live -------------------------------------------------
+    # --- Support bundle (E04-S02) -------------------------------------------
+    _s(
+        "support_bundle_generations_total",
+        "counter",
+        "generations",
+        ("result",),
+        "Support bundle generations by result (ok/error/timeout/secret_detected).",
+        'result="secret_detected" > 0 (ticket)',
+        _L,
+        "E04",
+        max_series=8,
+    ),
+    _s(
+        "support_bundle_duration_seconds",
+        "histogram",
+        "seconds",
+        (),
+        "Wall time to generate a support bundle.",
+        "n/a",
+        _L,
+        "E04",
+        (1.0, 5.0, 15.0, 30.0, 60.0, 120.0),
+    ),
+    _s(
+        "support_bundle_bytes",
+        "histogram",
+        "bytes",
+        (),
+        "Size of a generated support bundle.",
+        "n/a",
+        _L,
+        "E04",
+        (1e5, 1e6, 1e7, 5e7, 1e8, 2e8),
+    ),
     _s(
         "event_loop_lag_seconds",
         "histogram",

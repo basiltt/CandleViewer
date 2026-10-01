@@ -23,7 +23,9 @@
       "qty": "1.000",
       "expected_rounded_price": "50000.0",
       "expected_rounded_qty": "1.000",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -39,7 +41,9 @@
       "qty": "0.0019",
       "expected_rounded_price": "50000.0",
       "expected_rounded_qty": "0.001",
-      "expected_violation_codes": ["QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -55,7 +59,9 @@
       "qty": "150",
       "expected_rounded_price": "50000.0",
       "expected_rounded_qty": "150",
-      "expected_violation_codes": ["QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -71,7 +77,9 @@
       "qty": "0.001",
       "expected_rounded_price": "1.0",
       "expected_rounded_qty": "0.001",
-      "expected_violation_codes": ["NOTIONAL_BELOW_MIN"]
+      "expected_violation_codes": [
+        "NOTIONAL_BELOW_MIN"
+      ]
     },
     {
       "instrument": {
@@ -87,7 +95,10 @@
       "qty": "0.001",
       "expected_rounded_price": "50000.0",
       "expected_rounded_qty": "0.000",
-      "expected_violation_codes": ["QTY_NOT_LOT_MULTIPLE", "QTY_BELOW_MIN"]
+      "expected_violation_codes": [
+        "QTY_NOT_LOT_MULTIPLE",
+        "QTY_BELOW_MIN"
+      ]
     },
     {
       "instrument": {
@@ -103,7 +114,9 @@
       "qty": "1.000",
       "expected_rounded_price": "50000.0",
       "expected_rounded_qty": "1.000",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING"
+      ]
     },
     {
       "instrument": {
@@ -119,7 +132,10 @@
       "qty": "177.5001",
       "expected_rounded_price": "47840.05",
       "expected_rounded_qty": "177.50",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -171,7 +187,10 @@
       "qty": "114.4001",
       "expected_rounded_price": "2370.10",
       "expected_rounded_qty": "114.40",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -187,7 +206,10 @@
       "qty": "147.7501",
       "expected_rounded_price": "3930.10",
       "expected_rounded_qty": "147.75",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -203,7 +225,9 @@
       "qty": "394.2000",
       "expected_rounded_price": "7840.09",
       "expected_rounded_qty": "394.20",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -219,7 +243,10 @@
       "qty": "195.5001",
       "expected_rounded_price": "84410.02",
       "expected_rounded_qty": "195.50",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -275,7 +302,11 @@
       "qty": "298.3500",
       "expected_rounded_price": "42460.1",
       "expected_rounded_qty": "298.350",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -291,7 +322,10 @@
       "qty": "1.8501",
       "expected_rounded_price": "9460.1",
       "expected_rounded_qty": "1.850",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -307,7 +341,10 @@
       "qty": "272.7000",
       "expected_rounded_price": "19330.0",
       "expected_rounded_qty": "272.700",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -323,7 +360,10 @@
       "qty": "320.4500",
       "expected_rounded_price": "27200.1",
       "expected_rounded_qty": "320.450",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -359,7 +399,9 @@
       "qty": "493.8500",
       "expected_rounded_price": "4950.10",
       "expected_rounded_qty": "493.85",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -375,7 +417,10 @@
       "qty": "475.0500",
       "expected_rounded_price": "47680.0",
       "expected_rounded_qty": "475.050",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -391,7 +436,10 @@
       "qty": "256.6000",
       "expected_rounded_price": "47230.1",
       "expected_rounded_qty": "256.600",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -427,7 +475,11 @@
       "qty": "415.6000",
       "expected_rounded_price": "80990.0",
       "expected_rounded_qty": "415.600",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -504,7 +556,9 @@
       "qty": "415.2500",
       "expected_rounded_price": "75470.02",
       "expected_rounded_qty": "415.25",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -520,7 +574,10 @@
       "qty": "338.3500",
       "expected_rounded_price": "49620.1",
       "expected_rounded_qty": "338.350",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -536,7 +593,9 @@
       "qty": "317.4000",
       "expected_rounded_price": "21170.08",
       "expected_rounded_qty": "317.40",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -613,7 +672,10 @@
       "qty": "23.0501",
       "expected_rounded_price": "69370.03",
       "expected_rounded_qty": "23.05",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -629,7 +691,10 @@
       "qty": "274.0500",
       "expected_rounded_price": "30730.0",
       "expected_rounded_qty": "274.050",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -645,7 +710,11 @@
       "qty": "389.7500",
       "expected_rounded_price": "42260.1",
       "expected_rounded_qty": "389.750",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -701,7 +770,11 @@
       "qty": "303.0000",
       "expected_rounded_price": "95620.0",
       "expected_rounded_qty": "303.000",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -717,7 +790,10 @@
       "qty": "413.0000",
       "expected_rounded_price": "5440.1",
       "expected_rounded_qty": "413.000",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -733,7 +809,10 @@
       "qty": "295.3000",
       "expected_rounded_price": "72410.0",
       "expected_rounded_qty": "295.300",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -789,7 +868,11 @@
       "qty": "470.9000",
       "expected_rounded_price": "96490.0",
       "expected_rounded_qty": "470.900",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -805,7 +888,10 @@
       "qty": "34.8001",
       "expected_rounded_price": "78490.02",
       "expected_rounded_qty": "34.80",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -862,7 +948,11 @@
       "qty": "484.6500",
       "expected_rounded_price": "67980.0",
       "expected_rounded_qty": "484.650",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -878,7 +968,9 @@
       "qty": "495.1500",
       "expected_rounded_price": "13390.09",
       "expected_rounded_qty": "495.15",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -894,7 +986,10 @@
       "qty": "50.6501",
       "expected_rounded_price": "33160.1",
       "expected_rounded_qty": "50.650",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -910,7 +1005,10 @@
       "qty": "354.1000",
       "expected_rounded_price": "97250.0",
       "expected_rounded_qty": "354.100",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -926,7 +1024,10 @@
       "qty": "170.8001",
       "expected_rounded_price": "50630.05",
       "expected_rounded_qty": "170.80",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1002,7 +1103,11 @@
       "qty": "287.5500",
       "expected_rounded_price": "60030.0",
       "expected_rounded_qty": "287.550",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -1018,7 +1123,11 @@
       "qty": "327.6000",
       "expected_rounded_price": "80870.0",
       "expected_rounded_qty": "327.600",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -1054,7 +1163,10 @@
       "qty": "77.0501",
       "expected_rounded_price": "83290.0",
       "expected_rounded_qty": "77.050",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1070,7 +1182,10 @@
       "qty": "13.5501",
       "expected_rounded_price": "95700.0",
       "expected_rounded_qty": "13.550",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1086,7 +1201,10 @@
       "qty": "5.1501",
       "expected_rounded_price": "8870.0",
       "expected_rounded_qty": "5.148",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1102,7 +1220,10 @@
       "qty": "187.6001",
       "expected_rounded_price": "76470.02",
       "expected_rounded_qty": "187.60",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1178,7 +1299,10 @@
       "qty": "29.5501",
       "expected_rounded_price": "11600.1",
       "expected_rounded_qty": "29.550",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1194,7 +1318,9 @@
       "qty": "335.9500",
       "expected_rounded_price": "7600.09",
       "expected_rounded_qty": "335.95",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1231,7 +1357,10 @@
       "qty": "333.8500",
       "expected_rounded_price": "70860.0",
       "expected_rounded_qty": "333.850",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -1267,7 +1396,10 @@
       "qty": "403.3500",
       "expected_rounded_price": "6760.0",
       "expected_rounded_qty": "403.350",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -1283,7 +1415,9 @@
       "qty": "363.8000",
       "expected_rounded_price": "5510.09",
       "expected_rounded_qty": "363.80",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1320,7 +1454,10 @@
       "qty": "49.5001",
       "expected_rounded_price": "61180.0",
       "expected_rounded_qty": "49.500",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1336,7 +1473,10 @@
       "qty": "176.4001",
       "expected_rounded_price": "96580.00",
       "expected_rounded_qty": "176.40",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1352,7 +1492,10 @@
       "qty": "217.0001",
       "expected_rounded_price": "76790.02",
       "expected_rounded_qty": "217.00",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1368,7 +1511,9 @@
       "qty": "431.6000",
       "expected_rounded_price": "59100.04",
       "expected_rounded_qty": "431.60",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1384,7 +1529,11 @@
       "qty": "457.9000",
       "expected_rounded_price": "98950.0",
       "expected_rounded_qty": "457.900",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -1421,7 +1570,9 @@
       "qty": "321.1500",
       "expected_rounded_price": "5190.09",
       "expected_rounded_qty": "321.15",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1457,7 +1608,9 @@
       "qty": "452.6000",
       "expected_rounded_price": "24770.08",
       "expected_rounded_qty": "452.60",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1573,7 +1726,9 @@
       "qty": "302.3500",
       "expected_rounded_price": "64570.04",
       "expected_rounded_qty": "302.35",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1610,7 +1765,11 @@
       "qty": "388.3500",
       "expected_rounded_price": "64040.0",
       "expected_rounded_qty": "388.350",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -1666,7 +1825,9 @@
       "qty": "447.3500",
       "expected_rounded_price": "39040.06",
       "expected_rounded_qty": "447.35",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1682,7 +1843,11 @@
       "qty": "315.8500",
       "expected_rounded_price": "81630.0",
       "expected_rounded_qty": "315.850",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -1698,7 +1863,9 @@
       "qty": "462.0000",
       "expected_rounded_price": "35310.06",
       "expected_rounded_qty": "462.00",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1774,7 +1941,11 @@
       "qty": "319.4500",
       "expected_rounded_price": "45180.1",
       "expected_rounded_qty": "319.450",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -1790,7 +1961,9 @@
       "qty": "404.3500",
       "expected_rounded_price": "47540.05",
       "expected_rounded_qty": "404.35",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1806,7 +1979,10 @@
       "qty": "256.7500",
       "expected_rounded_price": "66630.0",
       "expected_rounded_qty": "256.750",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -1822,7 +1998,9 @@
       "qty": "310.0500",
       "expected_rounded_price": "98760.00",
       "expected_rounded_qty": "310.05",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1858,7 +2036,11 @@
       "qty": "262.1000",
       "expected_rounded_price": "74670.0",
       "expected_rounded_qty": "262.100",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -1874,7 +2056,10 @@
       "qty": "22.6001",
       "expected_rounded_price": "91390.0",
       "expected_rounded_qty": "22.600",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1890,7 +2075,9 @@
       "qty": "257.4000",
       "expected_rounded_price": "14770.09",
       "expected_rounded_qty": "257.40",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1906,7 +2093,10 @@
       "qty": "0.2001",
       "expected_rounded_price": "42650.0",
       "expected_rounded_qty": "0.198",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -1963,7 +2153,11 @@
       "qty": "469.8000",
       "expected_rounded_price": "99290.0",
       "expected_rounded_qty": "469.800",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -1979,7 +2173,10 @@
       "qty": "253.5500",
       "expected_rounded_price": "66350.0",
       "expected_rounded_qty": "253.550",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -1995,7 +2192,10 @@
       "qty": "18.2501",
       "expected_rounded_price": "46290.1",
       "expected_rounded_qty": "18.250",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -2032,7 +2232,9 @@
       "qty": "324.3500",
       "expected_rounded_price": "20090.08",
       "expected_rounded_qty": "324.35",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -2048,7 +2250,10 @@
       "qty": "424.4500",
       "expected_rounded_price": "86360.0",
       "expected_rounded_qty": "424.450",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -2084,7 +2289,11 @@
       "qty": "449.6500",
       "expected_rounded_price": "56570.0",
       "expected_rounded_qty": "449.650",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -2140,7 +2349,9 @@
       "qty": "315.9000",
       "expected_rounded_price": "76270.02",
       "expected_rounded_qty": "315.90",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -2156,7 +2367,10 @@
       "qty": "433.5000",
       "expected_rounded_price": "31100.1",
       "expected_rounded_qty": "433.500",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -2172,7 +2386,11 @@
       "qty": "253.8500",
       "expected_rounded_price": "69860.0",
       "expected_rounded_qty": "253.850",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -2209,7 +2427,11 @@
       "qty": "290.0500",
       "expected_rounded_price": "89450.0",
       "expected_rounded_qty": "290.050",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -2225,7 +2447,9 @@
       "qty": "402.7000",
       "expected_rounded_price": "13500.09",
       "expected_rounded_qty": "402.70",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -2241,7 +2465,10 @@
       "qty": "383.8500",
       "expected_rounded_price": "55320.0",
       "expected_rounded_qty": "383.850",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -2257,7 +2484,10 @@
       "qty": "405.5000",
       "expected_rounded_price": "77960.0",
       "expected_rounded_qty": "405.500",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -2393,7 +2623,9 @@
       "qty": "298.7500",
       "expected_rounded_price": "56880.04",
       "expected_rounded_qty": "298.75",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -2409,7 +2641,11 @@
       "qty": "386.6500",
       "expected_rounded_price": "59480.0",
       "expected_rounded_qty": "386.650",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -2445,7 +2681,9 @@
       "qty": "314.2000",
       "expected_rounded_price": "59100.04",
       "expected_rounded_qty": "314.20",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -2461,7 +2699,10 @@
       "qty": "312.9500",
       "expected_rounded_price": "57160.0",
       "expected_rounded_qty": "312.950",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -2497,7 +2738,9 @@
       "qty": "370.6500",
       "expected_rounded_price": "74260.03",
       "expected_rounded_qty": "370.65",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -2553,7 +2796,10 @@
       "qty": "87.9001",
       "expected_rounded_price": "13150.09",
       "expected_rounded_qty": "87.90",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -2569,7 +2815,10 @@
       "qty": "298.5500",
       "expected_rounded_price": "93290.0",
       "expected_rounded_qty": "298.550",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -2605,7 +2854,10 @@
       "qty": "26.0001",
       "expected_rounded_price": "57480.04",
       "expected_rounded_qty": "26.00",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -2641,7 +2893,10 @@
       "qty": "202.6001",
       "expected_rounded_price": "21120.08",
       "expected_rounded_qty": "202.60",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -2657,7 +2912,9 @@
       "qty": "416.9500",
       "expected_rounded_price": "78200.02",
       "expected_rounded_qty": "416.95",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -2673,7 +2930,11 @@
       "qty": "345.9000",
       "expected_rounded_price": "87120.0",
       "expected_rounded_qty": "345.900",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -2709,7 +2970,9 @@
       "qty": "281.1500",
       "expected_rounded_price": "10560.09",
       "expected_rounded_qty": "281.15",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -2765,7 +3028,10 @@
       "qty": "22.3501",
       "expected_rounded_price": "64790.0",
       "expected_rounded_qty": "22.350",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -2781,7 +3047,10 @@
       "qty": "292.9500",
       "expected_rounded_price": "64220.0",
       "expected_rounded_qty": "292.950",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -2797,7 +3066,10 @@
       "qty": "182.1501",
       "expected_rounded_price": "72910.03",
       "expected_rounded_qty": "182.15",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -2813,7 +3085,10 @@
       "qty": "400.9500",
       "expected_rounded_price": "20210.1",
       "expected_rounded_qty": "400.950",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -2869,7 +3144,10 @@
       "qty": "65.4501",
       "expected_rounded_price": "88870.0",
       "expected_rounded_qty": "65.450",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -2925,7 +3203,9 @@
       "qty": "479.9500",
       "expected_rounded_price": "93480.01",
       "expected_rounded_qty": "479.95",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -2961,7 +3241,10 @@
       "qty": "20.9501",
       "expected_rounded_price": "65040.0",
       "expected_rounded_qty": "20.950",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -2977,7 +3260,10 @@
       "qty": "354.7500",
       "expected_rounded_price": "74360.0",
       "expected_rounded_qty": "354.750",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -2993,7 +3279,10 @@
       "qty": "270.0000",
       "expected_rounded_price": "70130.0",
       "expected_rounded_qty": "270.000",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -3029,7 +3318,11 @@
       "qty": "323.5000",
       "expected_rounded_price": "60750.0",
       "expected_rounded_qty": "323.500",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -3045,7 +3338,9 @@
       "qty": "445.6000",
       "expected_rounded_price": "71020.03",
       "expected_rounded_qty": "445.60",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -3081,7 +3376,10 @@
       "qty": "403.3000",
       "expected_rounded_price": "72740.0",
       "expected_rounded_qty": "403.300",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -3097,7 +3395,9 @@
       "qty": "377.9000",
       "expected_rounded_price": "46270.05",
       "expected_rounded_qty": "377.90",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -3113,7 +3413,10 @@
       "qty": "391.7000",
       "expected_rounded_price": "95490.0",
       "expected_rounded_qty": "391.700",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -3129,7 +3432,10 @@
       "qty": "480.9500",
       "expected_rounded_price": "72440.0",
       "expected_rounded_qty": "480.950",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -3145,7 +3451,11 @@
       "qty": "418.0000",
       "expected_rounded_price": "43670.1",
       "expected_rounded_qty": "418.000",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -3161,7 +3471,9 @@
       "qty": "307.9500",
       "expected_rounded_price": "44490.06",
       "expected_rounded_qty": "307.95",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -3177,7 +3489,10 @@
       "qty": "69.3501",
       "expected_rounded_price": "56660.04",
       "expected_rounded_qty": "69.35",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -3193,7 +3508,9 @@
       "qty": "444.2500",
       "expected_rounded_price": "18320.08",
       "expected_rounded_qty": "444.25",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -3209,7 +3526,10 @@
       "qty": "392.7000",
       "expected_rounded_price": "21320.0",
       "expected_rounded_qty": "392.700",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -3225,7 +3545,10 @@
       "qty": "323.4500",
       "expected_rounded_price": "70550.0",
       "expected_rounded_qty": "323.450",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -3241,7 +3564,10 @@
       "qty": "49.6001",
       "expected_rounded_price": "3400.10",
       "expected_rounded_qty": "49.60",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -3257,7 +3583,10 @@
       "qty": "330.1000",
       "expected_rounded_price": "28030.1",
       "expected_rounded_qty": "330.100",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -3273,7 +3602,9 @@
       "qty": "385.3000",
       "expected_rounded_price": "13310.09",
       "expected_rounded_qty": "385.30",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -3289,7 +3620,9 @@
       "qty": "353.9000",
       "expected_rounded_price": "18190.08",
       "expected_rounded_qty": "353.90",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -3345,7 +3678,11 @@
       "qty": "416.6500",
       "expected_rounded_price": "65750.0",
       "expected_rounded_qty": "416.650",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -3361,7 +3698,10 @@
       "qty": "78.0001",
       "expected_rounded_price": "50420.0",
       "expected_rounded_qty": "78.000",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -3377,7 +3717,10 @@
       "qty": "83.3001",
       "expected_rounded_price": "31000.1",
       "expected_rounded_qty": "83.300",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -3414,7 +3757,9 @@
       "qty": "371.7500",
       "expected_rounded_price": "56300.04",
       "expected_rounded_qty": "371.75",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -3450,7 +3795,11 @@
       "qty": "381.6000",
       "expected_rounded_price": "53150.0",
       "expected_rounded_qty": "381.600",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -3466,7 +3815,10 @@
       "qty": "98.4001",
       "expected_rounded_price": "4190.10",
       "expected_rounded_qty": "98.40",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -3482,7 +3834,10 @@
       "qty": "463.8000",
       "expected_rounded_price": "90690.0",
       "expected_rounded_qty": "463.800",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -3518,7 +3873,10 @@
       "qty": "496.8000",
       "expected_rounded_price": "67670.0",
       "expected_rounded_qty": "496.800",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -3554,7 +3912,10 @@
       "qty": "261.6000",
       "expected_rounded_price": "35610.0",
       "expected_rounded_qty": "261.600",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -3570,7 +3931,10 @@
       "qty": "93.7001",
       "expected_rounded_price": "20300.08",
       "expected_rounded_qty": "93.70",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {
@@ -3586,7 +3950,11 @@
       "qty": "499.3000",
       "expected_rounded_price": "77210.0",
       "expected_rounded_qty": "499.300",
-      "expected_violation_codes": ["SYMBOL_NOT_TRADING", "PRICE_NOT_TICK_MULTIPLE", "QTY_ABOVE_MAX"]
+      "expected_violation_codes": [
+        "SYMBOL_NOT_TRADING",
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_ABOVE_MAX"
+      ]
     },
     {
       "instrument": {
@@ -3602,7 +3970,10 @@
       "qty": "63.9001",
       "expected_rounded_price": "89350.0",
       "expected_rounded_qty": "63.900",
-      "expected_violation_codes": ["PRICE_NOT_TICK_MULTIPLE", "QTY_NOT_LOT_MULTIPLE"]
+      "expected_violation_codes": [
+        "PRICE_NOT_TICK_MULTIPLE",
+        "QTY_NOT_LOT_MULTIPLE"
+      ]
     },
     {
       "instrument": {

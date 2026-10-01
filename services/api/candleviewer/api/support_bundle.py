@@ -31,7 +31,7 @@ class _Emitter(Protocol):
 
 
 class _PrincipalResolver(Protocol):
-    def resolve(self, request: Request) -> AuditPrincipal | None: ...
+    async def resolve(self, request: Request) -> AuditPrincipal | None: ...
 
 
 class SupportBundleRequest(BaseModel):
@@ -74,7 +74,7 @@ def make_support_bundle_router(
     async def create(request: Request) -> JSONResponse:
         if principal_resolver is None:
             return _problem(501, "Not implemented", "no principal resolver wired")
-        principal = principal_resolver.resolve(request)
+        principal = await principal_resolver.resolve(request)
         if principal is None:
             return _problem(401, "Unauthorized", "no verified session for this request")
         if audit is None:
@@ -133,7 +133,7 @@ def make_support_bundle_router(
     async def status(job_id: str, request: Request) -> JSONResponse:
         if principal_resolver is None:
             return _problem(501, "Not implemented", "no principal resolver wired")
-        principal = principal_resolver.resolve(request)
+        principal = await principal_resolver.resolve(request)
         if principal is None:
             return _problem(401, "Unauthorized", "no verified session for this request")
         if not principal.has(ADMIN_READ):

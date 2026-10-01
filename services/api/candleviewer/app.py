@@ -13,12 +13,14 @@ contracts and every later epic have a concrete injection point.
 
 from __future__ import annotations
 
+import os
 import time
 import uuid
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 from fastapi import Depends, FastAPI, Request
@@ -52,6 +54,7 @@ from candleviewer.api.deny_by_default import (
 )
 from candleviewer.api.sessions import make_session_router
 from candleviewer.api.step_up import make_read_only_guard, make_step_up_router
+from candleviewer.api.support_bundle import make_support_bundle_router
 from candleviewer.api.telemetry import SessionKeyResolver, make_telemetry_router
 from candleviewer.api.users import SnapshotResolver, UserRoleStore, make_users_router
 from candleviewer.auth.models import (
@@ -73,6 +76,7 @@ from candleviewer.exchange.base.service import ExchangeBaseService
 from candleviewer.exchange.bybit.service import ExchangeBybitService
 from candleviewer.health_wiring import (
     HealthSystemPublisher,
+    PgSystemEventReader,
     PgSystemEventWriter,
     register_real_probes,
 )
@@ -104,6 +108,8 @@ from candleviewer.observability.log_level import LogLevelOverrides
 from candleviewer.observability.metrics import CollectorRegistry, Metrics
 from candleviewer.observability.metrics_catalogue import register_r0
 from candleviewer.observability.service import ObservabilityService
+from candleviewer.observability.support_bundle import filter_config
+from candleviewer.observability.support_bundle_wiring import build_support_bundle_service
 from candleviewer.observability.telemetry import SessionRateLimiter, TelemetrySink
 from candleviewer.oms.service import OmsService
 from candleviewer.orderflow.service import OrderflowService
@@ -619,6 +625,26 @@ def create_app(
             SessionKeyResolver(audit_resolver) if audit_resolver is not None else None,
             enabled=resolved.telemetry_enabled,
         )
+    )
+    # E04-S02: support bundle. Real collectors (log ring, /metrics registry,
+    # health snapshot, system_events); RBAC via the session resolver, `None`
+    # (fake backend) fails closed with 501.
+    support_bundle = build_support_bundle_service(
+        registry=ctx.metrics,
+        metrics=metrics_facade,
+        health=health_registry,
+        events_query=PgSystemEventReader(health_pg) if health_pg is not None else None,
+        config=filter_config(os.environ),
+        build_info={
+            "version": resolved.version,
+            "git_sha": resolved.git_sha,
+            "environment": resolved.environment.value,
+        },
+        out_dir=Path(resolved.parquet_root).parent / "support_bundles",
+    )
+    app.state.support_bundle = support_bundle
+    app.include_router(
+        make_support_bundle_router(support_bundle, _LazyAuditEmitter(ctx.audit), audit_resolver)
     )
     # QA defect #1622 blocker: `/market/klines` (E08-S06 core deliverable)
     # was missing entirely — cache-only reads today (`ctx.storage.

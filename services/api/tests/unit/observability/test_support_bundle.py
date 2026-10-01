@@ -173,7 +173,7 @@ class _Resolver:
             else AuditPrincipal(uuid.uuid4(), "own", frozenset(perms), request_id=uuid.uuid4())
         )
 
-    def resolve(self, request: Any) -> AuditPrincipal | None:
+    async def resolve(self, request: Any) -> AuditPrincipal | None:
         return self.p
 
 

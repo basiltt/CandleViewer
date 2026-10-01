@@ -1,0 +1,16 @@
+# E04-S02 (US-OBS-007): a secret-scan hit in a support bundle means the
+# redaction filter failed somewhere upstream (SR-124, threat K1). Investigate;
+# do not merely retry.
+groups:
+  - name: support-bundle
+    rules:
+      - alert: SupportBundleSecretDetected
+        expr: increase(support_bundle_generations_total{result="secret_detected"}[15m]) > 0
+        labels:
+          severity: ticket
+        annotations:
+          summary: "Support bundle generation aborted: secret detected"
+          description: >-
+            The bundle scan found secret-shaped content and failed closed.
+            The redaction filter missed it at the source; find and fix the
+            leak. See docs/plan/04-security-program.md SR-124.
