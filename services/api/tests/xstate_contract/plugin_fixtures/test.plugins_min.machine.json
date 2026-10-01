@@ -1,0 +1,26 @@
+{
+  "id": "test.plugins_min",
+  "strictConfig": true,
+  "strict": true,
+  "strictTargets": true,
+  "onUnhandled": "defer",
+  "actionErrorPolicy": "rollback",
+  "maxIterations": 5,
+  "initial": "idle",
+  "context": {},
+  "states": {
+    "idle": {
+      "on": {
+        "GO": {"target": "#test.plugins_min.busy", "actions": ["probe"]},
+        "FAIL": {"target": "#test.plugins_min.busy", "actions": ["boom"]},
+        "PING": {"actions": ["ping_self"]},
+        "DROP": {"actions": ["drop_receipt"]},
+        "NOOP": {"actions": []}
+      }
+    },
+    "busy": {
+      "after": {"60000": {"target": "#test.plugins_min.idle"}},
+      "on": {"BACK": {"target": "#test.plugins_min.idle"}}
+    }
+  }
+}
