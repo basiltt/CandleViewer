@@ -7,23 +7,23 @@ may call `create_machine`, `Interpreter` or `SyncInterpreter`
 mandatory config block from `28-statechart-catalogue.md` §1.3c
 unconditionally — no caller kwarg can opt out of any part of it.
 
-Persistence (snapshot/HMAC/drain-journal restore, E50-T10/T49) and plugin
-bodies (CvErrorHooks/CvMetricsPlugin/CvAuditPlugin, E50-T60) are out of
-scope here; `restore()` accepts a `plugins` sequence so those tickets can
-wire themselves in without touching this module's construction logic, and
-ships with stub-safe defaults (`()`  ->  no extra plugins) until then.
+Restore (snapshot/HMAC/drain-journal, E50-T49) lives in
+`persistence.Restorer`, which reuses `make_machine` / `apply_lane_config` /
+`_cv_bring_up` from here. Plugin bodies (CvErrorHooks/CvMetricsPlugin/
+CvAuditPlugin) are E50-T60.
 """
 
 from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import jsonschema
 from xstate_statemachine import (
     Interpreter,
     MachineLogic,
+    MachineNode,
     OverflowPolicy,
     PluginBase,
     create_machine,
@@ -39,6 +39,14 @@ from candleviewer.statechart.config import (
     Lane,
 )
 from candleviewer.statechart.registry import Registry
+
+if TYPE_CHECKING:
+    from candleviewer.statechart.persistence import (
+        MachineKey,
+        Restorer,
+        RestoreResult,
+        SealedSnapshot,
+    )
 
 #: Lazily constructed default registry (`machines/*.machine.json` under the
 #: package). Tests inject their own via `build(..., registry=...)` so the
@@ -78,7 +86,7 @@ def _cv_bring_up(interp: Interpreter[Any]) -> None:
     `build()` and `restore()` before `start()`.
 
     Currently a no-op placeholder: no bring-up work is registered yet
-    (plugins land in E50-T60, persistence bring-up in E50-T10/T49). It
+    (plugins land in E50-T60). It
     exists now so both call sites route through one place and never grow
     a second one later.
     """
@@ -97,6 +105,40 @@ def _event_validators(schemas: dict[str, dict[str, Any]]) -> dict[str, Any]:
     """Adapt JSON-Schema dicts to the validator objects the library calls
     (`schema.validate(payload)`); a bare dict is not callable (QA #1634)."""
     return {name: jsonschema.Draft202012Validator(schema) for name, schema in schemas.items()}
+
+
+def make_machine(machine_key: str, chart: dict[str, Any]) -> MachineNode[Any]:
+    """`create_machine` with the mandatory config block (§1.3c). Shared by
+    `build()` and `persistence.Restorer` so a restored machine is constructed
+    exactly like a fresh one (E50-T49)."""
+    maps = load_binding_maps(machine_key)
+    logic: MachineLogic[Any] = MachineLogic(
+        actions=maps.actions,
+        guards=maps.guards,
+        services=maps.services,
+        strict=True,
+    )
+    return create_machine(
+        chart,
+        context_type=dict,
+        logic=logic,
+        strict_targets=True,
+        event_schemas=_event_validators(CV_EVENT_SCHEMAS),
+        strict_config=True,
+    )
+
+
+def apply_lane_config(interp: Interpreter[Any], lane: Lane) -> None:
+    """Re-apply the per-lane interpreter settings to a restored interpreter.
+
+    `Interpreter.from_snapshot` constructs `cls(machine, clock=clock)` only,
+    so the inbox bound, `refuse` overflow policy, `strict` and service pool
+    must be set before `start()` (E50-T49; same values as `build()`).
+    """
+    interp._max_queue_size = CV_INBOX_BOUND[lane]
+    interp._overflow_policy = OverflowPolicy.RAISE
+    interp.strict = True
+    interp._service_pool_size = CV_SERVICE_POOL[lane]
 
 
 async def build(
@@ -131,22 +173,7 @@ async def build(
     chart = reg.get(machine_key)
     chart_hash = reg.hash(machine_key)
 
-    maps = load_binding_maps(machine_key)
-    logic: MachineLogic[Any] = MachineLogic(
-        actions=maps.actions,
-        guards=maps.guards,
-        services=maps.services,
-        strict=True,
-    )
-
-    machine = create_machine(
-        chart,
-        context_type=dict,
-        logic=logic,
-        strict_targets=True,
-        event_schemas=_event_validators(CV_EVENT_SCHEMAS),
-        strict_config=True,
-    )
+    machine = make_machine(machine_key, chart)
 
     interp: Interpreter[Any] = Interpreter(
         machine,
@@ -178,31 +205,11 @@ async def build(
     return BuildResult(interpreter=interp, machine_hash=chart_hash)
 
 
-async def restore(
-    machine_key: str,
-    blob: str,
-    *,
-    clock: Clock,
-    lane: Lane,
-    plugins: tuple[PluginBase[Any], ...] = (),
-    registry: Registry | None = None,
-    minimum_version: int = 3,
-) -> BuildResult:
-    """Restore an `Interpreter` for *machine_key* from a persisted snapshot
-    *blob* (29-statechart-adoption-plan.md §1.3, CV-C52/CV-C60/CV-C66').
+async def restore(restorer: Restorer, key: MachineKey, envelope: SealedSnapshot) -> RestoreResult:
+    """Restore a machine from a sealed snapshot (29 §1.3, E50-T49).
 
-    Snapshot persistence — the HMAC envelope, tamper quarantine and
-    drain-journal replay — is `statechart/persistence.py`'s job
-    (E50-T10/T49, explicitly out of scope here) and is also the *only*
-    module `from_snapshot()` may be called from (CV-LINT-RESTORE,
-    CV-C52); this function is a thin, typed delegation point so callers
-    write `factory.restore(...)` and never reach into `persistence`
-    directly, but it cannot itself call `from_snapshot` before that
-    module exists. Raises `NotImplementedError` until E50-T10/T49 lands
-    and wires the delegation.
+    Thin delegation point: `from_snapshot` may only be called from
+    `statechart/persistence.py` (CV-LINT-RESTORE), so the work lives in
+    `persistence.Restorer.restore`.
     """
-    raise NotImplementedError(
-        "candleviewer.statechart.factory.restore() delegates to "
-        "statechart.persistence.restore(), which lands in E50-T10/T49; "
-        "not yet available"
-    )
+    return await restorer.restore(key, envelope)
