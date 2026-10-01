@@ -21,8 +21,8 @@ from candleviewer.api.health_report import make_health_report_router
 from candleviewer.api.instruments import make_instruments_router
 from candleviewer.api.log_level import make_log_level_router
 from candleviewer.api.market import make_market_router
-from candleviewer.api.ticker import make_ticker_router
 from candleviewer.api.support_bundle import make_support_bundle_router
+from candleviewer.api.ticker import make_ticker_router
 
 __all__ = [
     "make_audit_router",
@@ -32,6 +32,6 @@ __all__ = [
     "make_instruments_router",
     "make_log_level_router",
     "make_market_router",
-    "make_ticker_router",
     "make_support_bundle_router",
+    "make_ticker_router",
 ]
