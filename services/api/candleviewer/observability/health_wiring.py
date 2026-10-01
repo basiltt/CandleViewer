@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import shutil
 from typing import Any, Protocol
 
@@ -99,6 +100,8 @@ def register_real_probes(
     disk_path: str,
 ) -> None:
     """Replace placeholders for postgres/questdb/parquet_store/disk."""
+    # Resolved once: a CWD-relative probe would measure whichever volume the CWD is on.
+    abs_disk_path = os.path.abspath(disk_path)
 
     async def postgres() -> ProbeResult:
         try:
@@ -119,14 +122,14 @@ def register_real_probes(
         return ProbeResult(ComponentState.HEALTHY)
 
     async def parquet() -> ProbeResult:
-        ok = await asyncio.to_thread(lambda: __import__("os").path.isdir(parquet_root))
+        ok = await asyncio.to_thread(lambda: os.path.isdir(parquet_root))
         if not ok:
             return ProbeResult(ComponentState.DOWN, "parquet root missing")
         return ProbeResult(ComponentState.HEALTHY)
 
     async def disk() -> ProbeResult:
         try:
-            u = await asyncio.to_thread(shutil.disk_usage, disk_path)
+            u = await asyncio.to_thread(shutil.disk_usage, abs_disk_path)
         except OSError:
             return ProbeResult(ComponentState.DOWN, "disk path unavailable")
         ratio = u.used / u.total if u.total else 1.0

@@ -469,6 +469,7 @@ def create_app(
         if resolved.storage_backend == "real"
         else None
     )
+    app.state.health_pg = health_pg
     health_registry = HealthRegistry(
         events=PgSystemEventWriter(health_pg) if health_pg is not None else None,
         on_snapshot=HealthSystemPublisher(ctx.bus.bus, resolved.environment.value),
@@ -482,7 +483,7 @@ def create_app(
             questdb_host=q_host,
             questdb_port=int(q_port or 8812),
             parquet_root=resolved.parquet_root,
-            disk_path=".",
+            disk_path=resolved.parquet_root,
         )
     bind_health_metrics(health_registry, ctx.metrics, resolved)
     app.state.health_registry = health_registry

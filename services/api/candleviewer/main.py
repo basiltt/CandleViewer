@@ -85,6 +85,9 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
             await metrics_runtime.stop()
         if health_registry is not None:
             await health_registry.stop()
+        health_pg = getattr(app.state, "health_pg", None)
+        if health_pg is not None:
+            await health_pg.dispose()
         if overrides is not None:
             await overrides.stop()
         await ctx.mesh_self_check.stop()

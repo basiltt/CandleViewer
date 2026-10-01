@@ -85,7 +85,7 @@ async def test_transition_writes_event_and_publishes_snapshot() -> None:
         name = "bybit_public_ws"
         timeout = 1.0
 
-        async def check(self):  # type: ignore[no-untyped-def]
+        async def check(self):  # type: ignore[no-untyped-def]  # nested probe stub; protocol-typed at registration
             from candleviewer.observability.health_probes import ProbeResult
 
             return ProbeResult(state["s"])
@@ -102,7 +102,7 @@ async def test_transition_writes_event_and_publishes_snapshot() -> None:
     topic, payload = bus.sent[1]
     assert topic.domain == "system"
     assert payload["kind"] == "health" and payload["health"] == "down"
-    assert payload["exchange"]["public_ws"] == "down"  # type: ignore[index]
+    assert payload["exchange"]["public_ws"] == "down"  # type: ignore[index]  # payload is dict[str, object]; test narrows by key
 
 
 async def test_real_probes_replace_placeholders_and_report_failure(tmp_path: Any) -> None:
@@ -123,3 +123,18 @@ async def test_real_probes_replace_placeholders_and_report_failure(tmp_path: Any
     assert st["parquet_store"] is ComponentState.HEALTHY
     assert st["disk"] in (ComponentState.HEALTHY, ComponentState.WARNING, ComponentState.DOWN)
     assert st["oms"] is ComponentState.NOT_DEPLOYED
+
+
+async def test_disk_probe_uses_absolute_path(tmp_path: Any) -> None:
+    reg = HealthRegistry()
+    register_real_probes(
+        reg,
+        pg_repo=object(),  # type: ignore[arg-type]  # unused by the disk probe under test
+        questdb_host="127.0.0.1",
+        questdb_port=1,
+        parquet_root=str(tmp_path),
+        disk_path=".",
+    )
+    await reg.refresh()
+    disk = next(c for c in reg.snapshot().components if c.name == "disk")
+    assert disk.state is not ComponentState.DOWN
