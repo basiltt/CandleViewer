@@ -63,6 +63,10 @@ jobs:
       - name: mypy --strict
         run: uv run mypy --strict candleviewer
 
+      - name: Grafana dashboard lint (E04-S01 AC3, metric names vs catalogue)
+        working-directory: .
+        run: python infra/grafana/lint_dashboards.py --strict
+
       - name: Architecture contract (import-linter, ADR-0004)
         id: architecture
         run: uv run lint-imports

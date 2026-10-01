@@ -122,9 +122,11 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:?set in infra/compose/.env}
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
     volumes:
       - cv-grafana-data:/var/lib/grafana
       - ../grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../grafana/dashboards:/var/lib/grafana/dashboards:ro
     ports:
       - "127.0.0.1:${GRAFANA_PORT:-3001}:3000"
     healthcheck:

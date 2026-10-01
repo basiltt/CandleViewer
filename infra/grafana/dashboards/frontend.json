@@ -1,0 +1,457 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "cv-prometheus"
+        },
+        "enable": true,
+        "expr": "changes(build_info{env=\"$env\"}[$__rate_interval]) > 0",
+        "iconColor": "#0072B2",
+        "name": "Deploys",
+        "tagKeys": "version,commit",
+        "titleFormat": "deploy"
+      }
+    ]
+  },
+  "editable": false,
+  "panels": [
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "## CV / Frontend - env = **$env**",
+        "mode": "markdown"
+      },
+      "title": "Environment",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 2,
+      "panels": [],
+      "title": "Getting worse? (SLO burn)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cv-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0072B2",
+                "value": null
+              },
+              {
+                "color": "#E69F00",
+                "value": 16
+              },
+              {
+                "color": "#D55E00",
+                "value": 33
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 4
+      },
+      "id": 3,
+      "maxDataPoints": 500,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(fe_frame_time_ms_bucket{env=\"$env\"}[$__rate_interval])))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Frame time p95 (budget 16 ms)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cv-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0072B2",
+                "value": null
+              },
+              {
+                "color": "#E69F00",
+                "value": 1
+              },
+              {
+                "color": "#D55E00",
+                "value": 2.5
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 4
+      },
+      "id": 4,
+      "maxDataPoints": 500,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(fe_ws_decode_ms_bucket{env=\"$env\"}[$__rate_interval]))) / 2",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "WS decode p95 / budget (2 ms)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cv-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0072B2",
+                "value": null
+              },
+              {
+                "color": "#E69F00",
+                "value": 1
+              },
+              {
+                "color": "#D55E00",
+                "value": 2
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 4
+      },
+      "id": 5,
+      "maxDataPoints": 500,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(fe_frame_time_ms_bucket{env=\"$env\"}[$__rate_interval]))) / 16",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Frame time p95 / budget (16 ms)",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      },
+      "id": 6,
+      "panels": [],
+      "title": "Rendering",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cv-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0072B2",
+                "value": null
+              },
+              {
+                "color": "#E69F00",
+                "value": 16
+              },
+              {
+                "color": "#D55E00",
+                "value": 33
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "id": 7,
+      "maxDataPoints": 500,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(fe_frame_time_ms_bucket{env=\"$env\"}[$__rate_interval])))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Frame time p95",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cv-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0072B2",
+                "value": null
+              },
+              {
+                "color": "#E69F00",
+                "value": 1
+              },
+              {
+                "color": "#D55E00",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "id": 8,
+      "maxDataPoints": 500,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "rate(fe_dropped_frames_total{env=\"$env\"}[$__rate_interval])",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Dropped frames/s",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cv-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0072B2",
+                "value": null
+              },
+              {
+                "color": "#E69F00",
+                "value": 2
+              },
+              {
+                "color": "#D55E00",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
+      "id": 9,
+      "maxDataPoints": 500,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(fe_ws_decode_ms_bucket{env=\"$env\"}[$__rate_interval])))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "WS decode p95",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cv-prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0072B2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "decmbytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "id": 10,
+      "maxDataPoints": 500,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "fe_gpu_memory_mb{env=\"$env\"}",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "GPU memory",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": [
+    "candleviewer",
+    "frontend"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "demo",
+          "value": "demo"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "cv-prometheus"
+        },
+        "includeAll": false,
+        "label": "env",
+        "multi": false,
+        "name": "env",
+        "query": {
+          "query": "label_values(build_info, env)",
+          "refId": "env"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timezone": "utc",
+  "title": "CV / Frontend",
+  "uid": "cv-frontend"
+}
