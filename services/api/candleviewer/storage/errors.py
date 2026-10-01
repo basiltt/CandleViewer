@@ -47,6 +47,18 @@ class StorageRetentionBlockedByPin(StorageError):
     code = "STORAGE_RETENTION_BLOCKED_BY_PIN"
 
 
+class StorageRetentionBlockedUnverified(StorageError):
+    """A hot partition may not be dropped: its cold export is missing or unverified (Sec.5.3)."""
+
+    code = "STORAGE_RETENTION_BLOCKED_UNVERIFIED"
+
+
+class StorageRetentionBlockedByReplay(StorageError):
+    """A partition is referenced by an active `replay_sessions` row."""
+
+    code = "STORAGE_RETENTION_BLOCKED_REPLAY"
+
+
 class StorageDiskCritical(StorageError):
     """Free disk fell below the configured critical threshold for a tier."""
 
@@ -62,5 +74,7 @@ ERROR_CODES: dict[type[StorageError], str] = {
     StorageExportVerifyFailed: StorageExportVerifyFailed.code,
     StorageSchemaDrift: StorageSchemaDrift.code,
     StorageRetentionBlockedByPin: StorageRetentionBlockedByPin.code,
+    StorageRetentionBlockedUnverified: StorageRetentionBlockedUnverified.code,
+    StorageRetentionBlockedByReplay: StorageRetentionBlockedByReplay.code,
     StorageDiskCritical: StorageDiskCritical.code,
 }

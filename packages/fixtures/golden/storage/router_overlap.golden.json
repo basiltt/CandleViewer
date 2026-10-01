@@ -1,0 +1,18 @@
+{
+  "_note": "Synthetic overlap fixture for the tier router straddle merge (E07-T05). ts in microseconds. Rows 3-4 exist in both tiers (seam); cold copy of 4 is stale (size 1) and hot wins.",
+  "stream": "trades",
+  "symbol": "BTCUSDT",
+  "cold": [
+    {"ts": 1000, "symbol": "BTCUSDT", "trade_id": "t1", "size": 1},
+    {"ts": 2000, "symbol": "BTCUSDT", "trade_id": "t2", "size": 1},
+    {"ts": 3000, "symbol": "BTCUSDT", "trade_id": "t3", "size": 1},
+    {"ts": 4000, "symbol": "BTCUSDT", "trade_id": "t4", "size": 1}
+  ],
+  "hot": [
+    {"ts": 3000, "symbol": "BTCUSDT", "trade_id": "t3", "size": 1},
+    {"ts": 4000, "symbol": "BTCUSDT", "trade_id": "t4", "size": 2},
+    {"ts": 5000, "symbol": "BTCUSDT", "trade_id": "t5", "size": 1}
+  ],
+  "expected_ids": ["t1", "t2", "t3", "t4", "t5"],
+  "expected_t4_size": 2
+}

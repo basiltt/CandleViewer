@@ -1,0 +1,114 @@
+"""`source_tier=auto` query router (E07-T05, `21-database-schema.md` Sec.5.5).
+
+Boundary maths: the hot window holds `ts >= boundary` where
+`boundary = now_us - hot_retention_us(stream)`. `TimeRange` is
+start-inclusive / end-exclusive, so a range is *entirely hot* iff
+`start >= boundary` and *entirely cold* iff `end <= boundary`; anything else
+straddles and is merged (hot wins ties — freshest after a dedup upsert).
+"""
+
+from __future__ import annotations
+
+import asyncio
+import time
+from collections.abc import Awaitable, Callable, Mapping, Sequence
+from dataclasses import dataclass
+from typing import Any, Literal
+
+from candleviewer.observability.metrics import Counter
+from candleviewer.storage.models import StreamKind, TierHint, TimeRange
+from candleviewer.storage.natural_keys import NATURAL_KEY
+
+ServedBy = Literal["hot", "cold", "both"]
+Reader = Callable[[str, TimeRange], Awaitable[Sequence[Any]]]
+
+storage_router_queries_total = Counter(
+    "storage_router_queries_total", "Router reads by serving tier.", ["tier"]
+)
+storage_router_merge_rows_total = Counter(
+    "storage_router_merge_rows_total", "Rows emitted by straddle merges."
+)
+
+_US_PER_DAY = 86_400_000_000
+
+
+@dataclass(frozen=True, slots=True)
+class RoutedRows:
+    """Rows plus which tier(s) served them (the OpenAPI read contract)."""
+
+    rows: list[Any]
+    tier: ServedBy
+
+
+def _field(row: Any, name: str) -> Any:
+    if isinstance(row, Mapping):
+        if name in row:
+            return row[name]
+        if name == "ts" and "ts_us" in row:
+            return row["ts_us"]
+        raise KeyError(name)
+    if hasattr(row, name):
+        return getattr(row, name)
+    if name == "ts":
+        return row.ts_us
+    raise AttributeError(name)
+
+
+def dedup_merge(
+    cold_rows: Sequence[Any], hot_rows: Sequence[Any], key: tuple[str, ...]
+) -> list[Any]:
+    """Merge by `ts` (ascending), dedup on `key`; the hot row wins ties."""
+    merged: dict[tuple[Any, ...], Any] = {}
+    for row in cold_rows:
+        merged[tuple(_field(row, k) for k in key)] = row
+    for row in hot_rows:  # inserted last => overrides the cold twin
+        merged[tuple(_field(row, k) for k in key)] = row
+    return sorted(merged.values(), key=lambda r: _field(r, "ts"))
+
+
+class TierRouter:
+    """Resolves `hot | cold | auto` and merges once, here (never at call sites)."""
+
+    def __init__(
+        self,
+        hot: Mapping[StreamKind, Reader],
+        cold: Mapping[StreamKind, Reader],
+        hot_retention_days: Callable[[StreamKind], int],
+        *,
+        clock_us: Callable[[], int] = lambda: time.time_ns() // 1000,
+    ) -> None:
+        self._hot = hot
+        self._cold = cold
+        self._hot_days = hot_retention_days
+        self._clock_us = clock_us
+
+    def boundary_us(self, stream: StreamKind) -> int:
+        return self._clock_us() - self._hot_days(stream) * _US_PER_DAY
+
+    def resolve(self, stream: StreamKind, rng: TimeRange, tier: TierHint = "auto") -> ServedBy:
+        if tier == "hot":
+            return "hot"
+        if tier == "cold":
+            return "cold"
+        boundary = self.boundary_us(stream)
+        if rng.start_us >= boundary:
+            return "hot"
+        if rng.end_us <= boundary:
+            return "cold"
+        return "both"
+
+    async def read(
+        self, stream: StreamKind, sym: str, rng: TimeRange, tier: TierHint = "auto"
+    ) -> RoutedRows:
+        served = self.resolve(stream, rng, tier)
+        storage_router_queries_total.labels(tier=served).inc()
+        if served == "hot":
+            return RoutedRows(list(await self._hot[stream](sym, rng)), "hot")
+        if served == "cold":
+            return RoutedRows(list(await self._cold[stream](sym, rng)), "cold")
+        hot_rows, cold_rows = await asyncio.gather(
+            self._hot[stream](sym, rng), self._cold[stream](sym, rng)
+        )
+        rows = dedup_merge(cold_rows, hot_rows, NATURAL_KEY[stream])
+        storage_router_merge_rows_total.inc(len(rows))
+        return RoutedRows(rows, "both")

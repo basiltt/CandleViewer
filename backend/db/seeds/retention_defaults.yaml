@@ -1,0 +1,18 @@
+# Default retention policies (21-database-schema.md Sec.7). hot_days = QuestDB window,
+# cold_days = Parquet horizon (null = forever). Scope: global default; per-symbol rows
+# in `retention_policies` override these most-specific-first.
+version: 1
+defaults:
+  - { stream: trades, hot_days: 30, cold_days: 730, action: archive_parquet }
+  - { stream: orderbook_delta, hot_days: 7, cold_days: 730, action: archive_parquet }
+  - { stream: orderbook_snapshot, hot_days: 30, cold_days: 730, action: archive_parquet }
+  - { stream: tickers, hot_days: 30, cold_days: 730, action: archive_parquet }
+  - { stream: klines, hot_days: 90, cold_days: null, action: archive_parquet }
+  - { stream: liquidations, hot_days: 90, cold_days: null, action: archive_parquet }
+  - { stream: open_interest, hot_days: 90, cold_days: null, action: archive_parquet }
+  - { stream: funding_rates, hot_days: 365, cold_days: null, action: archive_parquet }
+  - { stream: bars, hot_days: 90, cold_days: 730, action: archive_parquet }
+  - { stream: footprint_cells, hot_days: 30, cold_days: 365, action: archive_parquet }
+  - { stream: profiles, hot_days: 90, cold_days: 730, action: archive_parquet }
+  - { stream: orderflow_metrics, hot_days: 90, cold_days: 730, action: archive_parquet }
+  - { stream: heatmap_cells, hot_days: 7, cold_days: 90, action: archive_parquet }
