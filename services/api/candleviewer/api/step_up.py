@@ -13,6 +13,7 @@ call; `make_read_only_guard` is the middleware refusing every write during the
 
 from __future__ import annotations
 
+import re
 import uuid
 from collections.abc import Awaitable, Callable
 from typing import Annotated, Any, Protocol
@@ -116,8 +117,24 @@ async def require_elevation_for(
     return None
 
 
+#: `is_dangerous` routes (permissions seeded `is_dangerous=true`) -> the
+#: step-up action class that must be elevated. Method + path regex.
+DANGEROUS_ROUTES: tuple[tuple[str, re.Pattern[str], str], ...] = (
+    ("PUT", re.compile(r"^/users/[^/]+/roles$"), "users"),
+    ("POST", re.compile(r"^/users/[^/]+/mfa/reset$"), "users"),
+)
+
+
+def dangerous_action_class(method: str, path: str) -> str | None:
+    for m, pattern, action_class in DANGEROUS_ROUTES:
+        if method == m and pattern.match(path):
+            return action_class
+    return None
+
+
 def make_read_only_guard(
     auth: _AuthLike,
+    emitter: _Emitter | None = None,
 ) -> Callable[[Request, Callable[[Request], Awaitable[Response]]], Awaitable[Response]]:
     """HTTP middleware body: refuse every write from a session in the
     read-only downgrade (enforced on all write routes, not just step-up)."""
@@ -136,6 +153,22 @@ def make_read_only_guard(
                 try:
                     record = await auth.sessions.authenticate_access_token(token)
                     auth.step_up.assert_writable(str(record.id))
+                    action_class = dangerous_action_class(request.method, request.url.path)
+                    if action_class is not None:
+                        # E09-T03 decision point: dangerous route, no elevation -> 403.
+                        denied = await require_elevation_for(auth, str(record.id), action_class)
+                        if denied is not None:
+                            if emitter is not None:
+                                await emitter.emit(
+                                    "auth.step_up_required",
+                                    actor_label=str(record.user_id),
+                                    actor_user_id=record.user_id,
+                                    session_id=record.id,
+                                    outcome=AuditOutcome.DENIED,
+                                    severity=Severity.WARNING,
+                                    reason=action_class,
+                                )
+                            return denied
                 except SessionReadOnly as exc:
                     return readonly_problem(exc)
                 except AuthError:

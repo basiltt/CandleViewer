@@ -111,7 +111,11 @@ async def _build(owner_role: bool = True) -> tuple[TestClient, _Emitter, bytes, 
             auth, emitter, principal_resolver=_Resolver(snap), positions=_Positions()
         )
     )
-    app.middleware("http")(make_read_only_guard(auth))
+    app.middleware("http")(make_read_only_guard(auth, emitter))
+
+    @app.put("/users/{uid}/roles")
+    async def roles(uid: str) -> dict[str, bool]:
+        return {"ok": True}
 
     @app.post("/orders")
     async def orders() -> dict[str, bool]:
@@ -176,3 +180,15 @@ async def test_step_up_rejects_unauthenticated_and_bad_class() -> None:
         c.post("/auth/step-up", headers=_H, json={"code": "1", "action_class": "x"}).status_code
         == 400
     )
+
+
+async def test_dangerous_route_is_403_without_elevation_then_passes() -> None:
+    c, em, seed, clock, _ = await _build()
+    uid = uuid.uuid4()
+    r = c.put(f"/users/{uid}/roles", headers=_H)
+    assert r.status_code == 403 and r.json()["code"] == "step_up_required"
+    assert "auth.step_up_required" in em.actions()
+    c.post("/auth/step-up", headers=_H, json={"code": _code(seed, clock), "action_class": "users"})
+    assert c.put(f"/users/{uid}/roles", headers=_H).status_code == 200
+    clock.now += timedelta(minutes=5, seconds=1)
+    assert c.put(f"/users/{uid}/roles", headers=_H).status_code == 403

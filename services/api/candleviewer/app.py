@@ -439,6 +439,15 @@ async def gateway_overloaded_handler(_request: Request, exc: Exception) -> JSONR
     )
 
 
+class _OmsPositions:
+    """Open-position read model for the reset preview. The OMS position
+    store (M-oms) has not landed (`oms/service.py` is a scaffold), so there
+    are no open positions to report yet; swap for the OMS read model then."""
+
+    async def open_position_count(self, user_id: str) -> int:
+        return 0
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -557,10 +566,13 @@ def create_app(
     # E09-S04: step-up, owner TOTP reset and the read-only write guard.
     app.include_router(
         make_step_up_router(
-            ctx.auth, _LazyAuditEmitter(ctx.audit), principal_resolver=principal_resolver
+            ctx.auth,
+            _LazyAuditEmitter(ctx.audit),
+            principal_resolver=principal_resolver,
+            positions=_OmsPositions(),
         )
     )
-    app.middleware("http")(make_read_only_guard(ctx.auth))
+    app.middleware("http")(make_read_only_guard(ctx.auth, _LazyAuditEmitter(ctx.audit)))
     # Audit emitter + notifier are mandatory; store/resolver `None` -> 501.
     app.include_router(
         make_users_router(
