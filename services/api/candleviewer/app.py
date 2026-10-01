@@ -66,8 +66,6 @@ from candleviewer.bus.service import BusService
 from candleviewer.domain.events import InstrumentUpdatedEvent
 from candleviewer.exchange.base.instruments import InstrumentsFetcher
 from candleviewer.exchange.base.service import ExchangeBaseService
-from candleviewer.exchange.bybit.config import RestClientConfig
-from candleviewer.exchange.bybit.rest import BybitRestClient
 from candleviewer.exchange.bybit.service import ExchangeBybitService
 from candleviewer.health_wiring import (
     HealthSystemPublisher,
@@ -619,13 +617,6 @@ def wire_instrument_catalogue(
     return scheduler
 
 
-_PUBLIC_REST_BASE = {
-    "live": "https://api.bybit.com",
-    "demo": "https://api.bybit.com",
-    "testnet": "https://api-testnet.bybit.com",
-}
-
-
 def wire_public_ws(ctx: AppContext) -> ConnectionManager:
     """E08-T04 (flag `ingestion_ws_enabled`, default off — C-4.13): compose the
     public WS skeleton. The exchange adapter (M4) supplies the socket factory and
@@ -650,8 +641,7 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
     # credentials) so the exchange latency stage is available; started and
     # stopped with ingestion. Public data always uses the live host (demo has
     # no separate public feed).
-    base = _PUBLIC_REST_BASE.get(env, _PUBLIC_REST_BASE["live"])
-    rest = BybitRestClient(RestClientConfig(base_url=base))
+    rest = adapter.public_rest_client(env)
     wire_clock_offset(ctx, rest_client_fetcher(rest))
     ctx.ingestion.attach_closer(rest.aclose)
     return manager
