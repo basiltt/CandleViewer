@@ -104,6 +104,8 @@ API surface for this domain: `GET /exchange-accounts/{accountId}/profiles`, `POS
 
 ### 2.4 MKT — Market data & symbols (9 stories)
 
+Black-box test plan (E08-Q01): [`qa/plans/e08-market-data-test-plan.md`](../../qa/plans/e08-market-data-test-plan.md) — case ↔ story table in its §9, checked by `scripts/check_e08_test_plan.py`.
+
 API surface for this domain: `GET /instruments`, `GET /instruments/{symbol}`, `POST /instruments/refresh`, `GET /instruments/{symbol}/ticker`, `GET /market/klines`, `GET /market/bars`, `GET /market/trades`, `GET /market/orderbook`, `GET /market/data-coverage`.
 
 | Story | Pri | Screens | Components | Flows | FM |
