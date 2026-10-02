@@ -132,6 +132,9 @@ jobs:
             echo "no @demo-rest-only specs registered yet (mandatory from R3 per the ticket) — skipping"
           fi
 
+      - name: Observability security checks (E04-X02 SR-124/126)
+        run: python3 infra/scripts/obs_security_checks.py ${LOG_DIRS:-}
+
       - name: Commit the updated deployment ledger
         # See deploy-dev.yml's equivalent step for the full rationale:
         # `main` is protected (C-4.1) and has no registered bypass for

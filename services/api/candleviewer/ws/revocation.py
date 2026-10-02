@@ -16,6 +16,7 @@ from typing import Any
 
 from candleviewer.observability.metrics import Counter, Histogram
 
+# nosemgrep: cv-obs-no-direct-getlogger -- legacy stdlib logger; migrate to cv.obs logger (#1716)
 _log = logging.getLogger(__name__)
 CLOSE_TOKEN_EXPIRED = 4401
 

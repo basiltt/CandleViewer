@@ -1,0 +1,26 @@
+rules:
+  - id: cv-obs-metric-label-allowlist
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Metric label name not on the approved allow-list (SR-125, E04-X02).
+      New label names change series cardinality and may leak identifiers:
+      add the name to `.semgrep/cv-obs-metric-label-allowlist.yml` in a
+      PR reviewed by devsecops, with a bounded-value justification.
+    metadata:
+      rule-id: cv-obs-metric-label-allowlist
+    patterns:
+      - pattern-either:
+          - pattern: _s($N, $K, $U, (..., "$LABEL", ...), ...)
+          - pattern: $R.counter($N, $H, (..., "$LABEL", ...), ...)
+          - pattern: $R.gauge($N, $H, (..., "$LABEL", ...), ...)
+          - pattern: $R.histogram($N, $H, (..., "$LABEL", ...), ...)
+      - metavariable-regex:
+          metavariable: $LABEL
+          regex: '^(?!(endpoint_group|engine|event|kind|method|permission|reason|result|rule_id|screen|sha256|socket|stage|state|stream|symbol|topic|transport|version)$).*$'
+    paths:
+      include:
+        - "services/api/candleviewer/**"
+        - ".semgrep/tests/**"
+      exclude:
+        - "services/**/tests/**"

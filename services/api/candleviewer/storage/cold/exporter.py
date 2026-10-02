@@ -89,6 +89,7 @@ def _fire_hook(name: str) -> None:
 async def _off_loop[T](fn: Callable[..., T], *args: object, **kwargs: object) -> T:
     """`asyncio.to_thread`, but on cancellation wait for the worker thread to
     finish before re-raising, so cleanup never races a still-running write."""
+    # nosemgrep: cv-bare-create-task -- owned+awaited; migrate to cv.obs.spawn (#1716)
     fut = asyncio.ensure_future(asyncio.to_thread(fn, *args, **kwargs))
     try:
         return await asyncio.shield(fut)

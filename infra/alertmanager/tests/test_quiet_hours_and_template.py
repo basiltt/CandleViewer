@@ -132,11 +132,12 @@ FIXTURE = json.loads(
 
 def test_page_template_has_required_fields_and_occurrence_count() -> None:
     body = TMPL[TMPL.index('{{ define "cv.body" }}') :]
+    # Every interpolated field is piped through reReplaceAll redaction (E04-X02 AC5).
     for field in (
-        "Alert: {{ .GroupLabels.alertname }}",
-        "Component: {{ .GroupLabels.component }}",
-        "Env: {{ .GroupLabels.env }}",
-        "Runbook: {{ .CommonAnnotations.runbook_url }}",
+        "Alert: {{ .GroupLabels.alertname | reReplaceAll",
+        "Component: {{ .GroupLabels.component | reReplaceAll",
+        "Env: {{ .GroupLabels.env | reReplaceAll",
+        "Runbook: {{ .CommonAnnotations.runbook_url | reReplaceAll",
         "Occurrences: {{ len .Alerts }}",
     ):
         assert field in body
