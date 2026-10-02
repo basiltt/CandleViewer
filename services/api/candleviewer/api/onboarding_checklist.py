@@ -34,6 +34,7 @@ ACTION_ROUTES: Final[Mapping[str, str]] = {
     "demo_session": "/settings/accounts",
 }
 BYBIT_KEY_RESTRICTION: Final = (
+    # nosemgrep: cv-adapter-isolation -- user-facing copy mandated by US-ONB-007 (E09-S06, #233)
     "Bybit blocks API-key creation for 48 hours after a sub-account is created."
 )
 _COMING_SOON: Final = "Coming soon in this environment."

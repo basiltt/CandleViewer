@@ -540,6 +540,7 @@ def _build_onboarding_router(
             return StepResult("pending", "No sub-account is bound to you yet.")
 
         async def api_key(u: Any) -> StepResult:
+            # nosemgrep: cv-adapter-isolation -- US-ONB-007 comment (E09-S06, #233)
             # Real probe: Bybit blocks key creation for 48 h after the sub-account
             # binding (US-ONB-007). Key inventory itself ships with E27.
             bound_at = await store.latest_binding_at(u)
