@@ -207,3 +207,21 @@ async def test_drop_failure_does_not_abort_run() -> None:
     env.drop = flaky  # type: ignore[method-assign]  # justified: failure injection
     await env.reaper().run()
     assert any("drop:B" in e for e in env.log)
+
+
+async def test_apply_twice_same_report_writes_single_purge_audit() -> None:
+    env = Env([part("A", 40)])
+    r = env.reaper()
+    report = await r.dry_run()
+    await r.apply(report)
+    await r.apply(report)
+    assert [a for a, _ in env.audits].count("retention.purge") == 1
+    assert [e for e in env.log if e.startswith("drop")] == [f"drop:A:{NOW_US - 40 * DAY}"]
+
+
+async def test_two_reapers_same_report_single_purge_audit() -> None:
+    env = Env([part("A", 40)])
+    report = await env.reaper().dry_run()
+    await env.reaper().apply(report)
+    await env.reaper().apply(report)
+    assert [a for a, _ in env.audits].count("retention.purge") == 1
