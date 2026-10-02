@@ -8,12 +8,12 @@ Threats verified: K1, U5, D3, asset A-17 (`docs/plan/04-security-program.md`).
 ## 1. Automated controls delivered in this PR
 | Control | Where | Proof |
 |---|---|---|
-| Ban direct `logging.getLogger()` (SR-121) | `.semgrep/cv-obs-no-direct-getlogger.yml` | fixture + repo scan; 9 legacy sites carry `nosemgrep` (follow-up #1716) |
+| Ban direct `logging.getLogger()` (SR-121) | `.semgrep/cv-obs-no-direct-getlogger.yml` | fixture + repo scan; 9 legacy sites carry `nosemgrep` (follow-up #1720) |
 | Ban `print()` | `.semgrep/cv-obs-no-print.yml` | fixture |
 | Ban `prometheus_client` outside `observability/` | `.semgrep/cv-obs-no-prometheus-import.yml` | fixture |
 | Secret-named variable in f-string/%-log | `.semgrep/cv-obs-log-secret-fstring.yml` | fixture |
 | Metric label allow-list | `.semgrep/cv-obs-metric-label-allowlist.yml` | fixture |
-| Bare `create_task` ban outside `cv.obs` | `.semgrep/cv-bare-create-task.yml` (E04-T02, scope: `observability/**` exempt) | repo scan = 0 findings; 2 sites carry `nosemgrep` -> #1716 |
+| Bare `create_task` ban outside `cv.obs` | `.semgrep/cv-bare-create-task.yml` (E04-T02, scope: `observability/**` exempt) | repo scan = 0 findings; 2 sites carry `nosemgrep` -> #1720 |
 | Permissions / log-artefact / webhook-secret / gitleaks-infra checks | `infra/scripts/obs_security_checks.py` | pytest |
 | Scheduled ZAP baseline | `.github/workflows/dast-observability-weekly.yml` | not run locally: no docker |
 
@@ -72,7 +72,7 @@ section 2 is executed on staging.
 - ZAP (AC4): no target exists, so no run and no findings; nothing is triaged or accepted-risk-listed
   (no entry is fabricated). **Owner waiver requested on the PR/#258** for cases 2 and the first ZAP
   run, deferred to first `deploy-staging`.
-- The 9 `getLogger` nosemgrep suppressions now each carry a reason comment referencing #1716
+- The 9 `getLogger` nosemgrep suppressions now each carry a reason comment referencing #1720
   (the 2 `create_task` ones already did).
 
 ## 7. Abuse-case execution record (review round 4, in-process `create_app()` + fakes)
@@ -106,3 +106,21 @@ Tests (`services/api/tests/security/test_e04_alert_payload.py`): redaction rules
 - AC4 (ZAP baseline): `dast-observability-weekly.yml` first run pending; findings triage to follow the first run.
 - AC5: payload inspected via template unit tests; a live Page capture needs the staging drill.
 - 9 `nosemgrep` suppressions: tracked in #1720.
+
+## 9. Review round 5 — honest status, deviations, follow-ups
+**Not met in the authoring environment (no docker, no staging, no ZAP target); no result is claimed:**
+- AC1: abuse cases 1-7 are executed in-process through the real `create_app()` wiring (section 7) and PASS. Staging re-runs
+  (outside-network refusal for `/metrics`/Grafana/Prometheus/Alertmanager, incident list, support bundle, log-level override)
+  are deferred to the first `deploy-staging`. No p0/p1 Bug was filed because none was observed. **Owner exception requested on #258**;
+  ticket must stay out of Done until the staging record is appended here.
+- AC3: gitleaks fail-on-token test (`test_gitleaks_catches_deliberate_infra_secret`) runs in CI where the binary exists; the
+  `security / gitleaks` job is green on this PR (no leak in infra/). A dedicated failing-run link is not available because
+  pushing a deliberate secret to a shared branch is not done; the test creates it in a temp repo instead.
+- AC4: ZAP baseline not run (no target, no docker). No triage and no accepted-risk entry were fabricated. First scheduled run of
+  `dast-observability-weekly.yml` after `deploy-staging` produces the triage.
+- AC5: template redaction + offline render asserted; live Page capture needs the staging drill.
+
+**Deviations (PR body):**
+- `.semgrep/cv-bare-create-task.yml` exclude widened from `observability/context.py` to `**/observability/**`; the ticket bans bare
+  `create_task` only outside `cv.obs`, so the whole package is the sanctioned location.
+- `nosemgrep` on 9 legacy `getLogger` sites + 2 `create_task` sites are tracked by #1716 (migration) and #1720 (removal).
