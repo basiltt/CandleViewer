@@ -1,0 +1,32 @@
+{
+  "synthetic": true,
+  "params": {
+    "tiers": [
+      10,
+      25,
+      50,
+      100
+    ],
+    "mmr": 0.005,
+    "n_ticks": 40,
+    "m_min": 60
+  },
+  "results": {
+    "a_oi_buckets": {
+      "hit_rate": 0.0417,
+      "false_positive_rate": 0.9583,
+      "zones": 504
+    },
+    "b_realised_hist": {
+      "hit_rate": 0.1365,
+      "false_positive_rate": 0.8635,
+      "zones": 315
+    },
+    "chance": {
+      "hit_rate": 0.0833,
+      "false_positive_rate": 0.9167,
+      "zones": 504
+    }
+  },
+  "cost_ms_per_update_method_a_pure_python": 0.00206
+}
