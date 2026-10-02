@@ -13,6 +13,7 @@ contracts and every later epic have a concrete injection point.
 
 from __future__ import annotations
 
+import asyncio
 import os
 import time
 import uuid
@@ -522,10 +523,11 @@ def _build_onboarding_router(
             SqlAlchemyRelationalRepository(settings.pg_dsn.get_secret_value(), "onboarding")
         )
     if store is not None:
-        gate = ctx.oms_read_only_gate
 
         async def tailscale(_u: Any) -> StepResult:
-            if gate.is_read_only:
+            # Run the E09-T04 binding self-check itself (read-only; no gate mutation).
+            result = await asyncio.to_thread(ctx.mesh_self_check.check.run)
+            if not result.safe:
                 return StepResult("blocked", "The mesh-only network check is failing.")
             return StepResult("ok")
 
@@ -540,8 +542,7 @@ def _build_onboarding_router(
             return StepResult("pending", "No sub-account is bound to you yet.")
 
         async def api_key(u: Any) -> StepResult:
-            # nosemgrep: cv-adapter-isolation -- US-ONB-007 comment (E09-S06, #233)
-            # Real probe: Bybit blocks key creation for 48 h after the sub-account
+            # Real probe: The exchange blocks key creation for 48 h after the sub-account
             # binding (US-ONB-007). Key inventory itself ships with E27.
             bound_at = await store.latest_binding_at(u)
             if bound_at is None:
@@ -551,7 +552,8 @@ def _build_onboarding_router(
             restricted = bybit_key_restriction(bound_at, datetime.now(UTC))
             if restricted is not None:
                 return restricted
-            return StepResult("not_applicable", "API-key inventory is not yet available.")
+            # Key inventory (E27) has not shipped: stay pending, never satisfied.
+            return StepResult("pending", "API-key inventory is coming soon.")
 
         probes = {
             "tailscale": tailscale,
@@ -560,18 +562,10 @@ def _build_onboarding_router(
             "api_key": api_key,
         }
 
-    # Honest probes: no limits store (E39) nor session environment field (E27)
-    # exists on main, so these report `not_applicable` (satisfied, shown as
-    # "not yet available") instead of a permanent `pending`.
-    async def profile_limits(_u: Any) -> StepResult:
-        return StepResult("not_applicable", "Risk limits are not yet available.")
-
-    async def demo_session(_u: Any) -> StepResult:
-        return StepResult("not_applicable", "Demo sessions are not yet available.")
-
-    probes["profile_limits"] = profile_limits
-    probes["demo_session"] = demo_session
-    flags: dict[str, bool] = {}
+    # Steps whose owning epics (E39 limits, E27 demo sessions) have not shipped have
+    # no probe and are switched off in the flag table: they render `pending`
+    # ("coming soon") and keep the card incomplete/undismissable until they ship.
+    flags: dict[str, bool] = {"profile_limits": False, "demo_session": False}
     return make_onboarding_router(
         store, principal_resolver, probes, flags, metrics, _LazyAuditEmitter(ctx.audit)
     )

@@ -76,13 +76,13 @@ def test_new_manager_to_completion_dismiss_persist_and_tamper() -> None:
     c = _client(store, w)
     first = _states(c)
     assert first["totp"] == "pending" and first["sub_account"] == "pending"
-    assert first["profile_limits"] == first["demo_session"] == "not_applicable"
+    assert first["profile_limits"] == first["demo_session"] == "pending"
     assert c.get("/onboarding/checklist", headers=H).json()["complete"] is False
     assert c.post("/onboarding/checklist/dismiss", headers=H).status_code == 409
 
     store.totp.add(MGR)  # real actions: enrol TOTP, get an account assigned
     store.bound[MGR] = datetime.now(UTC) - timedelta(days=3)
-    assert _states(c)["api_key"] == "not_applicable"  # no key inventory on main yet
+    assert _states(c)["api_key"] == "pending"  # no key inventory on main yet
 
     # Tamper: forging step state / another user's completion -> 403 + audit.
     forged = c.post(
@@ -96,10 +96,9 @@ def test_new_manager_to_completion_dismiss_persist_and_tamper() -> None:
     assert c.post("/onboarding/checklist/dismiss", headers={}).status_code == 401
 
     # Completion is reachable; dismiss persists across a rebuilt app.
-    assert c.get("/onboarding/checklist", headers=H).json()["complete"] is True
-    assert c.post("/onboarding/checklist/dismiss", headers=H).status_code == 204
-    c3 = _client(store, w)
-    assert c3.get("/onboarding/checklist", headers=H).json()["dismissed"] is True
+    # Unshipped steps keep the card incomplete: it cannot be dismissed yet.
+    assert c.get("/onboarding/checklist", headers=H).json()["complete"] is False
+    assert c.post("/onboarding/checklist/dismiss", headers=H).status_code == 409
 
 
 def test_dismissal_persists_across_app_rebuild_and_is_per_user() -> None:
@@ -111,6 +110,4 @@ def test_dismissal_persists_across_app_rebuild_and_is_per_user() -> None:
     assert body["dismissed"] is False  # dismissal only counts while complete
     other = c2.get("/onboarding/checklist", headers={"Authorization": "Bearer other"}).json()
     assert other["dismissed"] is False
-    assert any(
-        i["key"] == "profile_limits" and i["state"] == "not_applicable" for i in body["items"]
-    )
+    assert any(i["key"] == "profile_limits" and i["state"] == "pending" for i in body["items"])

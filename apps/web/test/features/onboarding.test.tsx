@@ -28,7 +28,7 @@ describe("SetupChecklistCard", () => {
     const at = new Date(Date.now() + 3 * 3_600_000).toISOString();
     const items = KEYS.map((k) =>
       k === "api_key"
-        ? item(k, "blocked", { reason: "Bybit blocks keys", unblock_at: at })
+        ? item(k, "blocked", { reason: "Exchange blocks keys", unblock_at: at })
         : item(k, "ok"),
     );
     const body = { complete: false, dismissed: false, items };

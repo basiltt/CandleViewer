@@ -54,6 +54,11 @@ class MeshSelfCheckScheduler:
         self._interval_s = interval_s
         self._task: asyncio.Task[None] | None = None
 
+    @property
+    def check(self) -> BindingSelfCheck:
+        """The self-check this scheduler runs (read-only probe access)."""
+        return self._check
+
     def start(self) -> None:
         """Start the supervised background loop. Idempotent."""
         if self._task is not None:
