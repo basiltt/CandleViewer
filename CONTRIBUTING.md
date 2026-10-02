@@ -17,6 +17,7 @@ so the bar for changes is high and the rules are explicit.
 | `.github/PULL_REQUEST_TEMPLATE.md`       | The checklist your PR must satisfy.                                                                                                                                                                                                                                                                |
 | `.github/CODEOWNERS`                     | Who must review what.                                                                                                                                                                                                                                                                              |
 | **[`docs/ci-runbook.md`](docs/ci-runbook.md)** | Operating manual for the CI/CD pipeline: job map, `ci-required` resolver, per-error-code triage recipes, dev-environment rebuild, secret-exposure and bad-deploy response, flaky-test quarantine, weekly PR-feedback-time metrics.                                                        |
+| **[`docs/plan/observability-contract.md`](docs/plan/observability-contract.md)** | One-page contract for module authors: registering metrics, permitted labels, probes and getting an alert approved. |
 
 If anything below appears to conflict with the Constitution, **the Constitution wins** and the conflict is
 a bug to report.
