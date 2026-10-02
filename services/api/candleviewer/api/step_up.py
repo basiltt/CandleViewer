@@ -132,6 +132,8 @@ async def require_elevation_for(
 #: or in `HANDLER_GATED_ROUTES`.
 DANGEROUS_ROUTES: tuple[tuple[str, re.Pattern[str], str], ...] = (
     ("POST", re.compile(r"^/users$"), "users"),  # invite
+    ("POST", re.compile(r"^/users/[^/]+/invite$"), "users"),  # reissue mints a new token
+    ("DELETE", re.compile(r"^/users/[^/]+/invite$"), "users"),  # revoke
     ("PUT", re.compile(r"^/users/[^/]+/roles$"), "users"),
     ("POST", re.compile(r"^/users/[^/]+/mfa/reset$"), "users"),
     ("POST", re.compile(r"^/exchange-accounts/[^/]+/keys$"), "keys"),

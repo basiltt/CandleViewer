@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 
 from candleviewer.auth.envelope import LOCAL_KEY_REF, TotpEncryptor
 from candleviewer.auth.hashing import Hasher
+from candleviewer.auth.invite_service import InviteService
 from candleviewer.auth.login_service import LoginService
 from candleviewer.auth.mfa_service import MfaService
 from candleviewer.auth.session_service import SessionService
@@ -29,6 +30,7 @@ from candleviewer.settings import Environment
 
 if TYPE_CHECKING:
     from candleviewer.app import AppContext
+    from candleviewer.auth.invite_repository import InviteRepository
     from candleviewer.auth.mfa_repository import MfaRepository
     from candleviewer.auth.repository import UserRepository
     from candleviewer.auth.session_repository import SessionRepository
@@ -51,8 +53,11 @@ class AuthService:
         recovery_code_hmac_key: bytes | None = None,
         session_repository: SessionRepository | None = None,
         clock: Callable[[], datetime] | None = None,
+        invite_repository: InviteRepository | None = None,
     ) -> None:
         self._started = False
+        self._invite_repository = invite_repository
+        self._invites: InviteService | None = None
         #: One injected clock for login/MFA/session (QA #1658: the e2e test
         #: fixes time so TOTP codes and session deadlines are deterministic).
         self._clock = clock or _utc_now
@@ -96,6 +101,16 @@ class AuthService:
         if self._step_up is None:
             raise RuntimeError("AuthService.start() has not wired step-up")
         return self._step_up
+
+    @property
+    def invites_is_active(self) -> bool:
+        return self._invites is not None
+
+    @property
+    def invites(self) -> InviteService:
+        if self._invites is None:
+            raise RuntimeError("AuthService.start() has not wired invites")
+        return self._invites
 
     @property
     def sessions_is_active(self) -> bool:
@@ -164,6 +179,13 @@ class AuthService:
                 recovery_code_key=rc_key,
                 clock=self._clock,
             )
+            if self._invite_repository is not None:
+                self._invites = InviteService(
+                    self._invite_repository,
+                    Hasher(pepper=self._pepper),
+                    self._mfa,
+                    clock=self._clock,
+                )
             if self._session_repository is not None:
                 # E09-S04: one process-wide instance (per-session state is
                 # in-memory, matching the B16 per-process interpreter).
@@ -179,6 +201,7 @@ class AuthService:
         """Stop the module within `grace_s` seconds. No-op scaffold."""
         self._login = None
         self._mfa = None
+        self._invites = None
         if self._step_up is not None:
             await self._step_up.stop()
         self._step_up = None

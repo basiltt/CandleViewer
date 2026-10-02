@@ -57,3 +57,17 @@ _KNOWN_REASONS = frozenset(
 def normalise_reason(reason: str | None) -> str:
     """Clamp a free-form revocation reason to the closed label set."""
     return reason if reason in _KNOWN_REASONS else "other"
+
+
+users_invites_created_total = Counter(
+    "users_invites_created_total", "Invites minted (incl. re-issues), by role.", ["role"]
+)
+users_invites_redeemed_total = Counter(
+    "users_invites_redeemed_total", "Invites fully redeemed (account activated)."
+)
+users_invites_rejected_total = Counter(
+    "users_invites_rejected_total", "Invite uses refused, by reason.", ["reason"]
+)
+users_invites_pending = Gauge(
+    "users_invites_pending", "Open (unconsumed, unrevoked) invites seen by this process."
+)

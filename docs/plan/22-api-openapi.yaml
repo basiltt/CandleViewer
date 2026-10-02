@@ -7484,6 +7484,124 @@ paths:
                   role: { $ref: "#/components/schemas/RoleName" }
                   expires_at: { type: string, format: date-time }
         "404": { $ref: "#/components/responses/NotFound" }
+        "429": { description: Too many invalid attempts from this address. }
+    post:
+      tags: [users]
+      operationId: redeemInvite
+      summary: Set the password and start TOTP enrolment (unauthenticated)
+      description: >
+        Consumes the single-use token and parks the password hash; the account stays `invited`
+        until `confirmInvite`. The body carries only `password` - a `role`/`roles` field is
+        refused with `403` and audited (role immutability). Unknown, expired, redeemed and
+        revoked tokens all return the same `404`.
+      x-rbac: { permissions: [], scope: none }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              additionalProperties: false
+              properties:
+                password: { type: string, minLength: 12, maxLength: 512 }
+      responses:
+        "200":
+          description: TOTP enrolment started.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [method_id, otpauth_uri, secret_base32]
+                properties:
+                  method_id: { type: string }
+                  otpauth_uri: { type: string }
+                  secret_base32: { type: string }
+        "403": { description: A role field was supplied; the invited role cannot be changed. }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { description: Password violates the policy. }
+        "429": { description: Too many invalid attempts from this address. }
+
+  /invites/{inviteToken}/confirm:
+    parameters:
+      - name: inviteToken
+        in: path
+        required: true
+        schema: { type: string, minLength: 16, maxLength: 128 }
+    post:
+      tags: [users]
+      operationId: confirmInvite
+      summary: Verify the first TOTP code and activate the account (unauthenticated)
+      description: >
+        Activates the account and returns the one-time recovery codes. No session is minted.
+      x-rbac: { permissions: [], scope: none }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method_id, code]
+              additionalProperties: false
+              properties:
+                method_id: { type: string }
+                code: { type: string }
+      responses:
+        "200":
+          description: Account active.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, role, recovery_codes]
+                properties:
+                  status: { type: string, enum: [active] }
+                  role: { $ref: "#/components/schemas/RoleName" }
+                  recovery_codes: { type: array, items: { type: string } }
+        "403": { description: A role field was supplied. }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { description: Invalid TOTP code. }
+        "429": { description: Too many invalid attempts from this address. }
+
+  /users/invites:
+    get:
+      tags: [users]
+      operationId: listPendingInvites
+      summary: List pending invitations
+      x-rbac: { permissions: [users:write], scope: none }
+      responses:
+        "200":
+          description: Pending invitations (no tokens).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { type: object } }
+
+  /users/{userId}/invite:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [users]
+      operationId: reissueInvite
+      summary: Revoke open invites and mint a new link (shown once)
+      x-rbac: { permissions: [users:write], scope: none }
+      responses:
+        "201": { description: New invitation with one-time link. }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [users]
+      operationId: revokeInvite
+      summary: Revoke the pending invitation
+      x-rbac: { permissions: [users:write], scope: none }
+      responses:
+        "200": { description: Revoked. }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /session/environment:
     post:

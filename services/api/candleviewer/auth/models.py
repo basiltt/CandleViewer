@@ -334,3 +334,83 @@ class RefreshOutcome(BaseModel):
 
     minted: MintedSession
     previous_session_id: uuid.UUID
+
+
+class InviteRole(StrEnum):
+    """Roles an invite may carry. `owner` is deliberately absent: an owner is
+    never created by invitation (E09-S05 "Role immutability")."""
+
+    MANAGER = "manager"
+    VIEWER = "viewer"
+
+
+class InviteCreateRequest(BaseModel):
+    """`POST /users` body (`CreateUserRequest`). `account_access` must be
+    empty: a new user starts with zero bindings (E27/E39 grant them)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    username: str = Field(min_length=3, max_length=32, pattern=r"^[a-zA-Z0-9._-]+$")
+    email: str = Field(min_length=3, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    display_name: str | None = Field(default=None, max_length=80)
+    roles: tuple[InviteRole, ...] = Field(min_length=1, max_length=1)
+    mfa_required: bool = True
+    account_access: tuple[dict[str, object], ...] = Field(default=(), max_length=0)
+
+
+class InviteRecord(BaseModel):
+    """Row-shaped join of `user_invites` and its `users` row.
+
+    `pending_password_hash` is a SECRET and is never serialised to a response."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    id: uuid.UUID
+    user_id: uuid.UUID
+    role: str
+    username: str
+    email: str
+    display_name: str | None = None
+    user_status: UserStatus = UserStatus.INVITED
+    expires_at: datetime
+    consumed_at: datetime | None = None
+    revoked_at: datetime | None = None
+    created_at: datetime
+    pending_password_hash: str | None = Field(default=None, repr=False)
+
+
+class InviteView(BaseModel):
+    """`GET /invites/{token}`: the minimum needed to render the form."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    display_name: str
+    role: str
+    expires_at: datetime
+
+
+class CreatedInvite(BaseModel):
+    """Result of creating/re-issuing an invite. `token` is the raw one-time
+    token: returned once to the owner, never stored or logged."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    user_id: uuid.UUID
+    username: str
+    email: str
+    display_name: str | None
+    role: str
+    token: str = Field(repr=False)
+    expires_at: datetime
+    created_at: datetime
+
+
+class EnrollmentStart(BaseModel):
+    """Redemption step 1 result: the invitee's TOTP enrolment material (the
+    invite token itself continues to identify the redemption)."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    method_id: uuid.UUID
+    otpauth_uri: str | None = None
+    secret_base32: str | None = None
