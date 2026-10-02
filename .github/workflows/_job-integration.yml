@@ -60,7 +60,29 @@ jobs:
 
       - name: Postgres/QuestDB-backed integration suite (testcontainers, needs Docker)
         working-directory: services/api
-        run: uv run pytest tests/integration -m integration --no-cov
+        run: uv run pytest tests/integration -m integration --no-cov -rA
+
+      - name: Upload restore-drill report (E07-X02 SR-093)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: restore-drill-report
+          path: services/api/build/reports/restore-drill.json
+          if-no-files-found: error
+
+      - name: SR-047 runtime listener probe on the compose data stores (E07-X02)
+        env:
+          # CI-only throwaway; the stores hold no data and bind loopback only.
+          POSTGRES_PASSWORD: ci-only-${{ github.run_id }}
+          CV_LISTENER_PROBE: "1"
+        run: |
+          docker compose -f infra/compose/docker-compose.yml --profile core up -d --wait postgres questdb
+          cd services/api
+          uv run pytest tests/integration/security/test_sr047_listener_probe.py -m integration --no-cov -s -p no:cacheprovider
+
+      - name: Stop compose data stores
+        if: always()
+        run: docker compose -f infra/compose/docker-compose.yml --profile core down -v || true
 
       - name: Grafana live render suite (E04-S01 AC1/AC2)
         env:
