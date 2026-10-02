@@ -173,3 +173,43 @@ jobs:
           echo "Network guard (services/api/tests/_ci_network_guard.py) denies any non-loopback"
           echo "connect() for the whole run; a test reaching api.bybit.com raises NetworkGuardViolation"
           echo "and fails this job rather than silently succeeding."
+
+  # E42-K01 (#888) audit query-plan spike: 10 M synthetic audit_log rows on a
+  # testcontainers Postgres 16, EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) per index
+  # candidate, 10k-row write batches, GIN CREATE INDEX CONCURRENTLY. Long-running,
+  # so it is opt-in: only on PRs labelled `run-audit-spike` (or manual dispatch).
+  # Not a required check; it publishes the numbers the spike/ADR-0025 cite.
+  audit-query-plan:
+    name: audit-query-plan
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'run-audit-spike') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 200
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.9.x"
+          enable-cache: true
+          cache-dependency-glob: "services/api/uv.lock"
+          python-version: "3.12"
+
+      - name: uv sync --frozen --all-groups
+        working-directory: services/api
+        run: uv sync --frozen --all-groups
+
+      - name: Audit query-plan measurement (10 M rows)
+        working-directory: services/api
+        env:
+          CV_AUDIT_SPIKE: "1"
+          CV_AUDIT_SPIKE_ROWS: "10000000"
+        run: uv run pytest tests/integration/audit/test_query_plan_spike.py -m "integration and perf" --no-cov -rA -s -p no:randomly
+
+      - name: Upload audit query-plan report (E42-K01)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: audit-query-plan-report
+          path: services/api/build/reports/audit-query-plan.json
+          if-no-files-found: error

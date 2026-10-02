@@ -560,6 +560,15 @@ Not a new `RSK-nnn` entry (no new risk was identified; this is reference evidenc
 > is the preventive gate, the board reopen-guard is a secondary detective net, and the weekly
 > `governance-drift` job closes the remaining silent-failure gap (see ADR-0017 §Observability).
 
+### RSK-052 · Audit full-text search exceeds the 2 s budget if query dispatch picks the wrong form
+
+`Risk: R7` · Category **Technical** · L 3 · I 3 · **Score 9 — Medium** · Owner **Backend lead** · Epics E42 · Status **Open**
+
+- **Description** — Introduced by the E42-K01 spike (`docs/plan/spikes/E42-K01.md`, ADR-0025). CI measurement at 10 M rows (run 37011721464): no single query form meets 2 s for both selective tokens (need CTE+GIN, 31 ms; otherwise 30-36 s) and common tokens (need the keyset walk, 1.6 ms; the CTE form takes 3.4 s).
+- **Mitigation** — GIN index (#1710) plus selectivity-aware dispatch on the planner row estimate (#1711), with a statement timeout as a backstop.
+- **Trigger** — Any audit search p95 > 2 s in the perf run, or audit_log > 10 M rows without partitioning.
+- **Contingency** — Force a time window for full text; monthly range partitioning on `event_ts` if audit_log grows well past 10 M rows.
+
 ---
 
 ## 10. Register summary
@@ -568,10 +577,10 @@ Not a new `RSK-nnn` entry (no new risk was identified; this is reference evidenc
 | -------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Critical (15–25)** | 7      | RSK-001, RSK-004, RSK-010, RSK-013, RSK-014, RSK-031, RSK-037                                                                                                                               |
 | **High (10–14)**     | 20     | RSK-002, RSK-011, RSK-016, RSK-017, RSK-018, RSK-019, RSK-020, RSK-022, RSK-023, RSK-026, RSK-028, RSK-029, RSK-032, RSK-036, RSK-039, RSK-041, RSK-043, RSK-046, RSK-047, RSK-049 |
-| **Medium (5–9)**     | 19     | RSK-003, RSK-005, RSK-012, RSK-015, RSK-021, RSK-024, RSK-025, RSK-027, RSK-030, RSK-033, RSK-034, RSK-035, RSK-038, RSK-040, RSK-042, RSK-044, RSK-048, RSK-050, RSK-051                            |
-| **Total entries**    | **46** | RSK-001 … RSK-051 (non-contiguous numbering, grouped by category block; numbers are never reused)                                                                                           |
+| **Medium (5–9)**     | 20     | RSK-003, RSK-005, RSK-012, RSK-015, RSK-021, RSK-024, RSK-025, RSK-027, RSK-030, RSK-033, RSK-034, RSK-035, RSK-038, RSK-040, RSK-042, RSK-044, RSK-048, RSK-050, RSK-051, RSK-052                            |
+| **Total entries**    | **47** | RSK-001 … RSK-052 (non-contiguous numbering, grouped by category block; numbers are never reused)                                                                                           |
 
-Band arithmetic: 7 Critical + 20 High + 19 Medium = **46**, equal to the 46 `### RSK-nnn` entries in §3–§9. There are no Low-band entries: anything that scored ≤4 during drafting was not carried into the register as a tracked risk (see §10.1.2). RSK-012 moved High->Medium in an earlier PR (E07-K01 spike evidence, partial retirement); its narrative was corrected in this PR after QA bug #1562 found the spike's original shape-B result was not reproducible (see §4 entry) — the band/score is unchanged, only the evidence text.
+Band arithmetic: 7 Critical + 20 High + 20 Medium = **47**, equal to the 47 `### RSK-nnn` entries in §3–§9. There are no Low-band entries: anything that scored ≤4 during drafting was not carried into the register as a tracked risk (see §10.1.2). RSK-012 moved High->Medium in an earlier PR (E07-K01 spike evidence, partial retirement); its narrative was corrected in this PR after QA bug #1562 found the spike's original shape-B result was not reproducible (see §4 entry) — the band/score is unchanged, only the evidence text.
 
 #### 10.0.1 ID allocation — which numbers exist and which never will
 
@@ -595,35 +604,35 @@ IDs are assigned in **category blocks of ten** so a reader can infer a risk's fa
 
 ### 10.1 Risks by category
 
-Each of the 46 entries appears in **exactly one** category row below — the categories are a partition, not overlapping tags. IDs are listed in ascending order so a reader can verify membership by scanning.
+Each of the 47 entries appears in **exactly one** category row below — the categories are a partition, not overlapping tags. IDs are listed in ascending order so a reader can verify membership by scanning.
 
 | Category                                                                            | Count  | IDs (ascending)                                                               |
 | ----------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------- |
-| Technical (rendering, market data, storage, concurrency, quality-of-rendering a11y) | 15     | RSK-001, 002, 003, 004, 005, 010, 011, 012, 017, 026, 027, 028, 040, 044, 050 |
+| Technical (rendering, market data, storage, concurrency, quality-of-rendering a11y) | 16     | RSK-001, 002, 003, 004, 005, 010, 011, 012, 017, 026, 027, 028, 040, 044, 050, 052 |
 | Security                                                                            | 10     | RSK-016, 018, 019, 020, 021, 022, 029, 030, 043, 051                          |
 | Vendor/Bybit                                                                        | 6      | RSK-013, 014, 015, 023, 024, 025                                              |
 | Schedule                                                                            | 5      | RSK-031, 032, 033, 036, 039                                                   |
 | Team                                                                                | 4      | RSK-037, 038, 041, 042                                                        |
 | Operational                                                                         | 3      | RSK-046, 047, 048                                                             |
 | Scope & compliance                                                                  | 3      | RSK-034, 035, 049                                                             |
-| **Total**                                                                           | **46** | —                                                                             |
+| **Total**                                                                           | **47** | —                                                                             |
 
 #### 10.1.1 Numeric reconciliation (auditor's check)
 
-This subsection exists so an auditor does not have to re-derive the arithmetic. Three independent partitions of the same 46 entries are published in this document; all three were checked to sum to 46 with **no ID appearing twice within a partition and no ID missing from any partition**:
+This subsection exists so an auditor does not have to re-derive the arithmetic. Three independent partitions of the same 47 entries are published in this document; all three were checked to sum to 47 with **no ID appearing twice within a partition and no ID missing from any partition**:
 
 | Partition                  | Rows                     | Sum                                    | Duplicates within the partition | Entries not covered |
 | -------------------------- | ------------------------ | -------------------------------------- | ------------------------------- | ------------------- |
-| Score band (§10)           | 3 (Critical/High/Medium) | 7 + 21 + 18 = **46**                   | none                            | none                |
-| Category (§10.1)           | 7                        | 15 + 10 + 6 + 5 + 4 + 3 + 3 = **46**   | none                            | none                |
-| `Risk` field value (§10.2) | 15 (R1–R15)              | 5+2+6+2+2+4+3+2+4+2+2+3+4+3+2 = **46** | none                            | none                |
+| Score band (§10)           | 3 (Critical/High/Medium) | 7 + 21 + 19 = **47**                   | none                            | none                |
+| Category (§10.1)           | 7                        | 16 + 10 + 6 + 5 + 4 + 3 + 3 = **47**   | none                            | none                |
+| `Risk` field value (§10.2) | 15 (R1–R15)              | 5+2+6+2+2+4+3+2+4+2+2+3+4+3+2 = **47** | none                            | none                |
 
 Two specific double-count traps, explicitly cleared:
 
 1. **RSK-001…005 (rendering)** are counted **once**, inside the Technical category row (which totals 15: five rendering + ten non-rendering). They are _not_ additionally counted anywhere else in §10.1. Their appearance in §10.3 ("Risks gating each release train") is a **gating reference, not a count** — §10.3 is deliberately non-exhaustive and deliberately repeats IDs across trains (e.g. RSK-013/014 gate both R3 and R4), so §10.3 must never be summed. A note to that effect is repeated at the head of §10.3.
 2. **RSK-026 and RSK-044** sit in the Technical category (disk exhaustion is a storage-technical risk; colour-encoding failure is scored as a rendering/technical defect class) while simultaneously carrying `Risk` field values R7 and R10 respectively in §10.2. Category and `Risk` field are **two different axes**; an entry has exactly one of each. Reading a `Risk` value as a category, or vice versa, is the only way to produce an off-by-one here.
 
-The invariant to preserve on every edit: **count of `### RSK-nnn` headings in §3–§9 == 46 == sum of §10 bands == sum of §10.1 categories == sum of §10.2 `Risk` values.** Any PR that adds or retires a risk must update all four places in the same commit; the risk-register review at each train boundary (§1.3) re-checks this equality out loud.
+The invariant to preserve on every edit: **count of `### RSK-nnn` headings in §3–§9 == 47 == sum of §10 bands == sum of §10.1 categories == sum of §10.2 `Risk` values.** Any PR that adds or retires a risk must update all four places in the same commit; the risk-register review at each train boundary (§1.3) re-checks this equality out loud.
 
 #### 10.1.2 Why there is no Low band
 
@@ -631,7 +640,7 @@ Candidate risks that scored ≤4 (L×I) during drafting were resolved one of thr
 
 ### 10.2 Risks by `Risk` field value
 
-This is the second of the three partitions reconciled in §10.1.1. Each of the 46 entries carries **exactly one** `Risk` field value, and the counts below sum to 46. Note that `Risk` value ≠ Category: e.g. RSK-026 is Category _Technical_ but `Risk` value _R7_.
+This is the second of the three partitions reconciled in §10.1.1. Each of the 47 entries carries **exactly one** `Risk` field value, and the counts below sum to 47. Note that `Risk` value ≠ Category: e.g. RSK-026 is Category _Technical_ but `Risk` value _R7_.
 
 | Value                           | Count  | IDs                              |
 | ------------------------------- | ------ | -------------------------------- |
@@ -641,7 +650,7 @@ This is the second of the three partitions reconciled in §10.1.1. Each of the 4
 | R4 Order-execution safety       | 2      | RSK-016, 017                     |
 | R5 Credential & key security    | 2      | RSK-018, 019                     |
 | R6 AuthN/AuthZ                  | 4      | RSK-020, 021, 022, 043           |
-| R7 Data persistence & retention | 3      | RSK-012, 026, 027                |
+| R7 Data persistence & retention | 4      | RSK-012, 026, 027, 052           |
 | R8 Concurrency & state machines | 2      | RSK-028, 050                     |
 | R9 Schedule & capacity          | 4      | RSK-031, 032, 033, 039           |
 | R10 Accessibility               | 2      | RSK-040, 044                     |
@@ -650,7 +659,7 @@ This is the second of the three partitions reconciled in §10.1.1. Each of the 4
 | R13 Team & knowledge            | 4      | RSK-037, 038, 041, 042           |
 | R14 Operability                 | 3      | RSK-046, 047, 048                |
 | R15 Legal & compliance          | 2      | RSK-030, 035                     |
-| **Total**                       | **46** | —                                |
+| **Total**                       | **47** | —                                |
 
 ### 10.3 Risks gating each release train
 
