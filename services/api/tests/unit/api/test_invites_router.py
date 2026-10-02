@@ -146,3 +146,13 @@ async def test_revoke_and_reissue_invalidate_old_link() -> None:
     assert c.delete(f"/users/{uid}/invite", headers=_H).status_code == 200
     assert c.get(f"/invites/{tok}").status_code == 404
     assert c.delete(f"/users/{uuid.uuid4()}/invite", headers=_H).status_code == 404
+
+
+async def test_brute_force_token_guessing_trips_429_even_for_valid_token() -> None:
+    c, _, seed, clock, _, _ = await _setup()
+    tok = await _invite(c, seed, clock)
+    bad = "A" * 43
+    codes = [c.get(f"/invites/{bad}").status_code for _ in range(10)]
+    assert set(codes) == {404}
+    assert c.get(f"/invites/{bad}").status_code == 429
+    assert c.get(f"/invites/{tok}").status_code == 429

@@ -295,3 +295,24 @@ async def test_abandoned_enrolment_cannot_sign_in_through_real_login() -> None:
             await login.login(
                 LoginRequest(identifier=row.username, password=pw or "x" * 12), source_ip="2.2.2.2"
             )
+
+
+def _sample(metric: Any, **labels: str) -> float:
+    return float(metric.labels(**labels)._value.get()) if labels else float(metric._value.get())
+
+
+async def test_invite_metrics_count_created_redeemed_rejected() -> None:
+    from candleviewer.auth import metrics as m
+
+    created0 = _sample(m.users_invites_created_total, role="viewer")
+    redeemed0 = _sample(m.users_invites_redeemed_total)
+    rejected0 = _sample(m.users_invites_rejected_total, reason="unknown")
+    svc, _, _ = _make()
+    inv = await svc.create(_req(), invited_by=uuid.uuid4())
+    assert _sample(m.users_invites_created_total, role="viewer") == created0 + 1
+    await svc.begin_redemption(inv.token, password=GOOD_PW, source_ip="2.2.2.2")
+    await svc.complete_redemption(inv.token, method_id="m", code="123456", source_ip="2.2.2.2")
+    assert _sample(m.users_invites_redeemed_total) == redeemed0 + 1
+    with pytest.raises(InviteRejected):
+        await svc.inspect("z" * 40, source_ip="2.2.2.2")
+    assert _sample(m.users_invites_rejected_total, reason="unknown") == rejected0 + 1
