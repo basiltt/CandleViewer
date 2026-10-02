@@ -1,10 +1,13 @@
-{{/* E04-T05 owner notification body. Page and Ticket are distinguishable in the title. */}}
-{{ define "cv.title" }}[{{ if eq .CommonLabels.severity "page" }}PAGE{{ else }}TICKET{{ end }}][{{ .Status | toUpper }}] {{ .GroupLabels.alertname }} ({{ .GroupLabels.component }}/{{ .GroupLabels.env }}){{ end }}
+{{/* E04-T05 owner notification body. Page and Ticket are distinguishable in the title.
+     E04-X02 AC5: every interpolated label/annotation is piped through reReplaceAll so a
+     secret-shaped value (JWT, key=value credential, 18+ char key-like token) never reaches
+     the payload. Alert names and runbook anchors only get the JWT + key=value rules. */}}
+{{ define "cv.title" }}[{{ if eq .CommonLabels.severity "page" }}PAGE{{ else }}TICKET{{ end }}][{{ .Status | toUpper }}] {{ .GroupLabels.alertname | reReplaceAll `[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}` "[redacted]" | reReplaceAll `(?i)(secret|token|password|api[_-]?key|signature)[=:]\S+` "[redacted]" }} ({{ .GroupLabels.component | reReplaceAll `[A-Za-z0-9_.=:-]{18,}` "[redacted]" }}/{{ .GroupLabels.env | reReplaceAll `[A-Za-z0-9_.=:-]{18,}` "[redacted]" }}){{ end }}
 
-{{ define "cv.body" }}Alert: {{ .GroupLabels.alertname }}
-Component: {{ .GroupLabels.component }}
-Env: {{ .GroupLabels.env }}
-Severity: {{ .CommonLabels.severity }}
+{{ define "cv.body" }}Alert: {{ .GroupLabels.alertname | reReplaceAll `[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}` "[redacted]" | reReplaceAll `(?i)(secret|token|password|api[_-]?key|signature)[=:]\S+` "[redacted]" }}
+Component: {{ .GroupLabels.component | reReplaceAll `[A-Za-z0-9_.=:-]{18,}` "[redacted]" }}
+Env: {{ .GroupLabels.env | reReplaceAll `[A-Za-z0-9_.=:-]{18,}` "[redacted]" }}
+Severity: {{ .CommonLabels.severity | reReplaceAll `[A-Za-z0-9_.=:-]{18,}` "[redacted]" }}
 Occurrences: {{ len .Alerts }} ({{ len .Alerts.Firing }} firing, {{ len .Alerts.Resolved }} resolved)
-Summary: {{ .CommonAnnotations.summary }}
-Runbook: {{ .CommonAnnotations.runbook_url }}{{ end }}
+Summary: {{ .CommonAnnotations.summary | reReplaceAll `[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}` "[redacted]" | reReplaceAll `(?i)(secret|token|password|api[_-]?key|signature)[=:]\S+` "[redacted]" | reReplaceAll `\b[A-Za-z0-9]{18,64}\b` "[redacted]" }}
+Runbook: {{ .CommonAnnotations.runbook_url | reReplaceAll `[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}` "[redacted]" | reReplaceAll `(?i)(secret|token|password|api[_-]?key|signature)[=:]\S+` "[redacted]" }}{{ end }}

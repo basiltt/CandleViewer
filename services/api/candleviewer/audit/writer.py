@@ -54,6 +54,7 @@ from candleviewer.audit.repository import AuditRepository
 from candleviewer.audit.wal import AuditWal, AuditWalFull
 from candleviewer.observability.context import spawn
 
+# nosemgrep: cv-obs-no-direct-getlogger -- legacy stdlib logger; migrate to cv.obs logger (#1716)
 logger = logging.getLogger(__name__)
 
 AlarmCallback = Callable[[str], Awaitable[None]] | None

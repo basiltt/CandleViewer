@@ -17,6 +17,7 @@ import threading
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
+# nosemgrep: cv-obs-no-direct-getlogger -- legacy stdlib logger; migrate to cv.obs logger (#1716)
 _logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:

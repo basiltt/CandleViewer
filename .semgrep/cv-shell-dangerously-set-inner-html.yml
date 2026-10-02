@@ -21,5 +21,8 @@ rules:
       include:
         - "apps/web/src/shell/**"
         - "apps/web/src/routes/**"
+        - "apps/web/src/features/**"
+        - "apps/web/src/lib/**"
+        - "packages/ui/src/**"
         - "apps/desktop/**"
         - "**/cv-shell-*"
