@@ -1,4 +1,4 @@
-.PHONY: governance dev dev-down test gen gen-check contracts up down reset arch security audit-net ci-gate-fixture alert-drill alert-drill-stop
+.PHONY: audit-bench governance dev dev-down test gen gen-check contracts up down reset arch security audit-net ci-gate-fixture alert-drill alert-drill-stop
 
 # E02-T01: root convenience targets delegating to pnpm/uv (20-architecture.md
 # §5 Tooling). Thin wrappers only — the pnpm/turbo task graph and the uv/ruff
@@ -106,3 +106,9 @@ alert-drill:
 
 alert-drill-stop:
 	python infra/alertmanager/alert_drill.py stop
+
+# E42-K01: audit_log index-strategy spike. Authoritative measurement is the CI job
+# `integration / audit-query-plan` (label a PR `run-audit-spike` or dispatch CI; ~27 min at 10 M rows;
+# CV_AUDIT_SPIKE_ROWS overrides size). Locally it needs Postgres via CV_TEST_PG_DSN; see docs/plan/spikes/E42-K01.md.
+audit-bench:
+	cd services/api && uv run pytest tests/integration/audit/test_query_plan_spike.py -m "integration and perf" --no-cov -rA -s -p no:randomly
