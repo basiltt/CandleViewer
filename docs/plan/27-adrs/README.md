@@ -30,6 +30,7 @@ Status values: `decided` (binding now), `proposed` (decision deadline stated ins
 | [ADR-0023](ADR-0023-exchange-adapter-boundary.md) | Exchange-adapter boundary: port split, P3 enforcement, book invalidate-and-resync, depth-tier default, environment separation | **accepted** (owner approval pending) |
 | [ADR-0024](ADR-0024-design-token-architecture-and-theming.md) | Design-token architecture and theming strategy | decided |
 | [ADR-0025](ADR-0025-audit-query-and-index-strategy.md) | Audit query and index strategy (E42-K01) | **proposed** (measured at 10 M rows; owner approval pending; no write-latency budget named) |
+| [ADR-0026](ADR-0026-rule-ir-canonicalisation.md) | Rule IR canonicalisation and round-trip fuzz strategy (E35-K01) | **proposed** (owner approval pending) |
 
 ## Writing a new ADR
 

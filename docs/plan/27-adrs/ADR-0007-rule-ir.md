@@ -77,3 +77,7 @@ Negative / risks:
 - Property test: for every rule in the fixture corpus, `to_graph(compile(form)) → compile → IR` equals the original IR, and symmetrically from the graph side.
 - Golden tests: each documented example rule (break-even after 1R, ATR trailing, cancel-if-spread-too-wide, daily-loss lockout) evaluated against recorded fixtures produces the expected action plan.
 - Safety tests: no compiled rule can produce an action plan that removes a native SL or widens a stop without `allow_widen` plus Owner role.
+
+## Related
+
+- [ADR-0026](ADR-0026-rule-ir-canonicalisation.md) - canonical form, `ir_hash`, `node_id` handling and fuzz strategy (E35-K01).
