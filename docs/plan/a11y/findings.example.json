@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "build": "EXAMPLE-NOT-A-REAL-FINDING",
+  "findings": [
+    {
+      "id": "A11Y-F-0001",
+      "screenId": "SCR-152",
+      "state": "disconnected",
+      "componentId": "none",
+      "wcagSc": "4.1.3",
+      "level": "AA",
+      "severity": "serious",
+      "reproduction": "Illustrative schema example only: drop the WS mock; reconnect overlay appears without a status role.",
+      "detection": { "source": "manual", "tool": "nvda", "heuristic": true },
+      "owningTicket": "unassigned",
+      "status": "open"
+    }
+  ]
+}

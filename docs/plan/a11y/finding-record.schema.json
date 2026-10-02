@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://candleviewer.local/schemas/a11y-finding-record.schema.json",
+  "title": "A11y audit findings file (E47-K01)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "build", "findings"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "build": { "type": "string", "minLength": 1, "description": "Demo-environment build id the sweep ran against" },
+    "findings": { "type": "array", "items": { "$ref": "#/$defs/finding" } }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "screenId", "state", "componentId", "wcagSc", "level", "severity",
+        "reproduction", "detection", "owningTicket", "status"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^A11Y-F-[0-9]{4}$" },
+        "screenId": { "type": "string", "pattern": "^SCR-[0-9]{3}$" },
+        "state": { "type": "string", "minLength": 1, "description": "Screen state, e.g. populated, empty, error" },
+        "componentId": { "type": "string", "pattern": "^CMP-[A-Z0-9-]+$|^none$" },
+        "wcagSc": { "type": "string", "pattern": "^[1-4][.][0-9]+[.][0-9]+$" },
+        "level": { "enum": ["A", "AA"] },
+        "severity": { "enum": ["blocker", "serious", "moderate", "minor"] },
+        "reproduction": { "type": "string", "minLength": 1 },
+        "detection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source"],
+          "properties": {
+            "source": { "enum": ["automated", "manual"] },
+            "tool": { "type": "string", "description": "axe-core, keyboard-e2e, nvda, ..." },
+            "heuristic": { "type": "boolean" }
+          }
+        },
+        "owningTicket": { "type": "string", "pattern": "^E[0-9]{2}-[A-Z][0-9]{2}$|^unassigned$" },
+        "status": { "enum": ["open", "in-progress", "fixed", "verified", "wont-fix"] }
+      }
+    }
+  }
+}
