@@ -10,6 +10,7 @@ decision — is enforced simply by this module never calling a drop.
 from __future__ import annotations
 
 import asyncio
+import os
 import re
 import time
 import uuid
@@ -54,6 +55,24 @@ _PART_RE = re.compile(r"^part-(\d{4})\.parquet$")
 #: Default wall-clock bound for one partition export (C-2.18: every external
 #: await is bounded). A symbol-day of trades at >=200 MB/s is far below this.
 DEFAULT_EXPORT_TIMEOUT_S = 1800.0
+
+
+AFTER_PARQUET_WRITE = "AFTER_PARQUET_WRITE"
+AFTER_CHECKSUM = "AFTER_CHECKSUM"
+AFTER_MANIFEST = "AFTER_MANIFEST"
+
+# Test-only crash breakpoints (E07-Q04): a chaos test registers a callable that
+# raises/kills at the exact Sec.5.3 instruction boundary. Inert unless
+# CV_ENV=test, so production can never trigger one.
+_TEST_HOOKS: dict[str, Callable[[], None]] = {}
+
+
+def _fire_hook(name: str) -> None:
+    if os.environ.get("CV_ENV") != "test":
+        return
+    hook = _TEST_HOOKS.get(name)
+    if hook is not None:
+        hook()
 
 
 async def _off_loop[T](fn: Callable[..., T], *args: object, **kwargs: object) -> T:
@@ -217,6 +236,7 @@ class ColdExporter:
                     f"{rel_dir}: exported {written} rows, source COUNT(*) {source_count}"
                 )
             row_count = await _off_loop(writer.commit)
+            _fire_hook(AFTER_PARQUET_WRITE)
         except BaseException as exc:
             if writer is not None:
                 await _off_loop(writer.abort)
@@ -231,6 +251,7 @@ class ColdExporter:
             raise
 
         file_sha = await asyncio.to_thread(sha256_of, dest)
+        _fire_hook(AFTER_CHECKSUM)
         entry = ManifestEntry(
             file=file_name,
             sha256=file_sha,
@@ -242,6 +263,7 @@ class ColdExporter:
             range_end_us=rng.end_us,
         )
         await asyncio.to_thread(store.append_reconciled, paths.partition_dir, paths.root, entry)
+        _fire_hook(AFTER_MANIFEST)
         storage_export_rows_total.labels(stream=stream.value, result="ok").inc(row_count)
         storage_export_bytes_total.labels(stream=stream.value).inc(dest.stat().st_size)
         logger.info("cold_export_done", partition=rel_dir, file=file_name, rows=row_count)
