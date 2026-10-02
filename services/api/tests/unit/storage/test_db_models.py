@@ -36,7 +36,7 @@ def test_metadata_declares_every_table_from_0001() -> None:
         # E08-S01 (0004_instruments)
         "instruments",
         "instrument_versions",
-        # E09-S06 (0011_onboarding_dismissals)
+        # E09-S06 (0012_onboarding_dismissals)
         "onboarding_dismissals",
         # E09-S05 (0010_user_invites)
         "user_invites",

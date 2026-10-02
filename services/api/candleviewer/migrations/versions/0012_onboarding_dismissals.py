@@ -1,7 +1,7 @@
 """onboarding_dismissals: per-user checklist dismissal flag (E09-S06)
 
-Revision ID: 0011_onboarding_dismissals
-Revises: 0010_user_invites
+Revision ID: 0012_onboarding_dismissals
+Revises: 0011_recorder
 Create Date: 2026-10-02
 
 Purely additive (C-5.1). Server-side so a dismissed checklist stays gone on
@@ -14,8 +14,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = "0011_onboarding_dismissals"
-down_revision: str | None = "0010_user_invites"
+revision: str = "0012_onboarding_dismissals"
+down_revision: str | None = "0011_recorder"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
