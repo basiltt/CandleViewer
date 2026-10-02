@@ -68,7 +68,7 @@ async def test_concurrent_consume_has_exactly_one_winner(pg_dsn: str) -> None:
             username="racer",
             display_name=None,
             role="viewer",
-            placeholder_password_hash="x",  # noqa: S106 - placeholder, not a credential
+            placeholder_password_hash="$argon2id$x",  # noqa: S106 - placeholder, not a credential
             invited_by=by,
             token_hash=th,
             expires_at=_NOW + timedelta(hours=72),
