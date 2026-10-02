@@ -26,6 +26,7 @@ gen:
 	uv run --project services/api python tools/statechart/render_catalogue.py
 	uv run --project services/api python tools/contracts/extract_ws_schemas.py
 	uv run --project services/api python tools/contracts/gen_ws_constants.py
+	uv run --project services/api python tools/errorcodes/generate.py
 
 # E17-T01: offline WS contract gates (23-ws-protocol.md 16.5): bundle freshness,
 # constants freshness and the blocking `ws_message_schemas` gate.
@@ -33,6 +34,7 @@ contracts:
 	uv run --project services/api python tools/contracts/extract_ws_schemas.py --check
 	uv run --project services/api python tools/contracts/gen_ws_constants.py --check
 	uv run --project services/api python tools/contracts/validate_ws_schemas.py --draft 2020-12
+	uv run --project services/api python tools/contracts/check_error_registry.py
 
 # E03-T05: generated-code freshness gate (ADR-0013 binding rule 3). Runs
 # `make gen` twice to assert determinism (CI-GEN-003), then fails on any

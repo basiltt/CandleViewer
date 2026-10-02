@@ -1,9 +1,18 @@
+import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { vitestPreset } from "@candleviewer/config/vitest";
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      "@candleviewer/protocol": resolve(
+        import.meta.dirname,
+        "../../packages/protocol/src/index.ts",
+      ),
+    },
+  },
   test: {
     ...vitestPreset.test,
     environment: "jsdom",

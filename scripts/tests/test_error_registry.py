@@ -1,0 +1,115 @@
+"""E17-T05: tests for tools/errorcodes + the error_registry_single_source gate."""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import pytest
+
+REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO))
+
+from tools.contracts import check_error_registry as gate
+from tools.errorcodes import generate
+
+MD = (REPO / "docs" / "plan" / "23-ws-protocol.md").read_text(encoding="utf-8")
+YAML = generate.OPENAPI.read_text(encoding="utf-8")
+FRESH = generate.render_all(YAML)
+
+MINI = """
+x-error-codes:
+  - {code: Not_Found, status: 404, title: t, retryable: false}
+  - {code: forbidden, status: 403, title: t, retryable: false, surface: [rest, ws]}
+x-error-codes-ws:
+  - {code: unknown_topic, scope: topic, retryable: false, title: t, rest_analogue: not_found}
+"""
+ROW_F = "| `forbidden` | topic | no | = | x |"
+ROW_U = "| `unknown_topic` | topic | no | `not_found` | x |"
+MINI_MD = f"""### 10.2 Catalogue
+
+| Code | Scope | `retryable` | REST | Meaning |
+| --- | --- | --- | --- | --- |
+{ROW_F}
+{ROW_U}
+
+### 10.3 next
+"""
+
+
+def test_repo_registry_passes_gate() -> None:
+    assert gate.check(MD, YAML, FRESH) == []
+
+
+def test_generator_normalises_case_and_emits_metadata() -> None:
+    entries = generate.load_registry(MINI)
+    assert [e["code"] for e in entries] == ["not_found", "forbidden", "unknown_topic"]
+    py = generate.render_py(entries)
+    assert 'UNKNOWN_TOPIC = "unknown_topic"' in py and "DO NOT EDIT" in py
+    assert 'restAnalogue: "not_found"' in generate.render_ts(entries)
+
+
+def test_duplicate_code_rejected() -> None:
+    with pytest.raises(generate.RegistryError, match="duplicate"):
+        generate.load_registry(MINI.replace("unknown_topic", "forbidden"))
+
+
+def test_ws_code_without_scope_rejected() -> None:
+    with pytest.raises(generate.RegistryError, match="scope"):
+        generate.load_registry(MINI.replace("scope: topic, ", ""))
+
+
+def test_malformed_registry_rejected() -> None:
+    with pytest.raises(generate.RegistryError):
+        generate.load_registry("a: 1")
+
+
+def test_minimal_fixture_passes() -> None:
+    assert gate.check(MINI_MD, MINI, generate.render_all(MINI)) == []
+
+
+def test_orphan_in_markdown_fails_naming_code() -> None:
+    md = MINI_MD.replace(ROW_U, "| `extra_code` | topic | no | - | x |\n" + ROW_U)
+    assert any("extra_code" in e for e in gate.check(md, MINI, generate.render_all(MINI)))
+
+
+def test_orphan_in_registry_fails_naming_code() -> None:
+    md = MINI_MD.replace(ROW_U + "\n", "")
+    assert any("unknown_topic" in e for e in gate.check(md, MINI, generate.render_all(MINI)))
+
+
+def test_dangling_rest_analogue_names_both() -> None:
+    bad = MINI.replace("rest_analogue: not_found", "rest_analogue: nope")
+    errs = gate.check(MINI_MD, bad, generate.render_all(bad))
+    assert any("unknown_topic" in e and "nope" in e for e in errs)
+
+
+def test_hand_edited_generated_file_fails() -> None:
+    tampered = dict(FRESH)
+    tampered[generate.OUT_TS] += "// hand edit\n"
+    assert any("byte-identical" in e for e in gate.check(MD, YAML, tampered))
+
+
+def test_missing_generated_file_fails() -> None:
+    assert any("byte-identical" in e for e in gate.check(MD, YAML, {}))
+
+
+@pytest.mark.parametrize("row", ["| `x` | only | three |", "| not-backticked | a | b | c | d |"])
+def test_malformed_row_fails_not_skipped(row: str) -> None:
+    with pytest.raises(ValueError):
+        gate.parse_md_codes(MINI_MD.replace(ROW_F, row))
+
+
+def test_duplicate_md_row_fails() -> None:
+    with pytest.raises(ValueError, match="duplicate"):
+        gate.parse_md_codes(MINI_MD.replace(ROW_U, ROW_F))
+
+
+def test_missing_section_fails() -> None:
+    with pytest.raises(ValueError, match="not found"):
+        gate.parse_md_codes("# nothing")
+
+
+def test_committed_files_match_regeneration() -> None:
+    assert generate.main(["--check"]) == 0
+    assert gate.main() == 0

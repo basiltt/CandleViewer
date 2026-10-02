@@ -12,6 +12,7 @@
  * (`docs/plan/ws-schema.json`) independent of a live server.
  */
 import type { generated } from "@candleviewer/protocol";
+import { handleWsError } from "../../lib/ws/errorHandler.js";
 import { backoffDelayWithJitter } from "./backoff.js";
 import { ReachabilityTracker } from "./reachability.js";
 
@@ -136,6 +137,17 @@ export class SystemSocket {
     try {
       envelope = JSON.parse(data) as Envelope;
     } catch {
+      return;
+    }
+    if (envelope.t === "err") {
+      // E17-T05: every err frame goes through the single 10.3 mapping, whatever the channel.
+      const p = envelope.p as { code?: unknown; message?: unknown } | undefined;
+      if (p && typeof p.code === "string") {
+        handleWsError({
+          t: "err",
+          p: { code: p.code, ...(typeof p.message === "string" ? { message: p.message } : {}) },
+        });
+      }
       return;
     }
     if (envelope.ch !== "system") return;

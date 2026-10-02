@@ -28,6 +28,7 @@ from typing import Any
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
+from candleviewer.ws.errors import build_ws_error
 from candleviewer.ws.limits import (
     AUTH_TIMEOUT_S,
     CLOSE_SLOW_CONSUMER,
@@ -133,9 +134,7 @@ def make_ws_router(
                         registry, principal, send, close=evict, session_id=session_id
                     )
                 elif authz is None:
-                    await send(
-                        {"t": "err", "id": frame.get("id"), "p": {"code": "not_authenticated"}}
-                    )
+                    await send(build_ws_error("not_authenticated", id=frame.get("id")))
                 elif kind == "sub":
                     await handle_sub(authz, frame, send)
                 elif kind == "unsub":

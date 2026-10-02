@@ -1,0 +1,18 @@
+rules:
+  - id: cv-ad-hoc-ws-error-frame
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Ad hoc WS error frame. Build `err` frames only via
+      `candleviewer.ws.errors.build_ws_error` so the code is validated against the
+      generated registry (E17-T05, 23-ws-protocol.md 10.2).
+    metadata:
+      rule-id: cv-ad-hoc-ws-error-frame
+    pattern-either:
+      - pattern: '{"t": "err", ...}'
+      - pattern: '{"type": "err", ...}'
+    paths:
+      exclude:
+        - "**/test_*.py"
+        - "**/conftest.py"
+        - "**/ws/errors.py"
