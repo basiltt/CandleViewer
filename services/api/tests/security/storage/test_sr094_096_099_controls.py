@@ -68,3 +68,43 @@ async def test_sr099_dry_run_deletes_nothing() -> None:
     await env.reaper().dry_run()
     assert not any(e.startswith("drop") for e in env.log)
     assert NOW_US > DAY
+
+
+async def test_sr094_weekly_scrub_quarantines_and_stamps_last_run(tmp_path: Path) -> None:
+    from datetime import UTC, datetime
+
+    from candleviewer.storage.cold.observability import storage_scrub_last_run_timestamp_seconds
+    from candleviewer.storage.cold.scrub import SCRUB_INTERVAL_SECONDS, scrub_all
+
+    sink = RecordingSink()
+    registry = DatasetRegistry(tmp_path)
+    repo = ParquetColdTierRepository(registry, FakeHotSource(trades_table(5)), events=sink)
+    await repo.export_partition("BTCUSDT", StreamKind.TRADES, day_range())
+    f = tmp_path / "trades" / "symbol=BTCUSDT" / "dt=2026-10-17" / "part-0000.parquet"
+    assert await scrub_all(registry, sink) == 0
+    data = bytearray(f.read_bytes())
+    data[len(data) // 2] ^= 0x01
+    f.write_bytes(bytes(data))
+    now = datetime(2026, 10, 25, tzinfo=UTC)
+    assert await scrub_all(registry, sink, lambda: now) == 1
+    assert sink.events[-1][:2] == ("CRITICAL", "STORAGE_COLD_FILE_QUARANTINED")
+    assert not f.exists()
+    assert storage_scrub_last_run_timestamp_seconds._value.get() == now.timestamp()
+    assert SCRUB_INTERVAL_SECONDS == 604800
+
+
+async def test_sr094_weekly_loop_runs_then_sleeps_one_week(tmp_path: Path) -> None:
+    from candleviewer.storage.cold.scrub import run_weekly_scrub
+
+    slept: list[float] = []
+
+    class Stop(Exception):
+        pass
+
+    async def fake_sleep(s: float) -> None:
+        slept.append(s)
+        raise Stop
+
+    with pytest.raises(Stop):
+        await run_weekly_scrub(DatasetRegistry(tmp_path), RecordingSink(), sleep=fake_sleep)
+    assert slept == [604800]

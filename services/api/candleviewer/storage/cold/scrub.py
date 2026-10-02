@@ -10,17 +10,21 @@ then receives `StorageExportVerifyFailed` — the Protocol's contract.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime
 
 import pyarrow.parquet as pq
 import structlog
 
-from candleviewer.storage.cold.layout import ColdPaths
+from candleviewer.storage.cold.layout import ColdPaths, DatasetRegistry, stream_dir_name
 from candleviewer.storage.cold.manifest import ManifestStore, sha256_of
 from candleviewer.storage.cold.observability import (
     SystemEventSink,
+    storage_scrub_last_run_timestamp_seconds,
     storage_scrub_mismatches_total,
 )
 from candleviewer.storage.errors import StorageExportVerifyFailed
+from candleviewer.storage.models import StreamKind
 
 logger = structlog.get_logger(__name__)
 
@@ -67,3 +71,45 @@ async def verify_partition(paths: ColdPaths, events: SystemEventSink) -> bool:
         },
     )
     raise StorageExportVerifyFailed(f"{rel_dir}/{file_name}: {reason} mismatch; quarantined")
+
+
+SCRUB_INTERVAL_SECONDS = 7 * 24 * 3600
+
+
+async def scrub_all(
+    registry: DatasetRegistry,
+    events: SystemEventSink,
+    clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+) -> int:
+    """Weekly scrub (SR-094): verify every manifested partition of every
+    registered stream/symbol. Mismatches are quarantined + alerted by
+    `verify_partition`; the sweep continues. Stamps the last-run gauge when
+    done and returns the number of partitions with a mismatch."""
+    bad = 0
+    for stream in StreamKind:
+        base = registry.root / "_manifests" / stream_dir_name(stream)
+        if not base.is_dir():
+            continue
+        symbols = sorted(d.name.split("=", 1)[1] for d in base.glob("symbol=*") if d.is_dir())
+        for symbol in symbols:
+            for paths in registry.manifested_partitions(stream, symbol):
+                try:
+                    await verify_partition(paths, events)
+                except StorageExportVerifyFailed:
+                    bad += 1
+    storage_scrub_last_run_timestamp_seconds.set(clock().timestamp())
+    return bad
+
+
+async def run_weekly_scrub(
+    registry: DatasetRegistry,
+    events: SystemEventSink,
+    *,
+    interval_s: float = SCRUB_INTERVAL_SECONDS,
+    sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+    clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+) -> None:
+    """Supervisor-owned loop: scrub, then sleep `interval_s`; honours cancellation."""
+    while True:
+        await scrub_all(registry, events, clock)
+        await sleep(interval_s)
