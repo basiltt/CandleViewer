@@ -2,9 +2,9 @@ import { useEffect, useState, type FormEvent, type JSX } from "react";
 import { useParams } from "react-router-dom";
 import { inviteApi, type EnrollStart, type InviteView } from "./inviteApi";
 
-type Phase = "loading" | "invalid" | "password" | "totp" | "done";
+type Phase = "loading" | "invalid" | "accept" | "password" | "totp" | "done";
 
-/** SCR-017 invited-user onboarding (R-009): accept -> password -> TOTP -> recovery codes. */
+/** SCR-017 invited-user onboarding (R-009): accept -> password -> TOTP -> orientation (4 steps). */
 export function InviteAcceptScreen(): JSX.Element {
   const { inviteToken = "" } = useParams();
   const [phase, setPhase] = useState<Phase>("loading");
@@ -21,7 +21,7 @@ export function InviteAcceptScreen(): JSX.Element {
       if (!live) return;
       if (res.ok && res.data) {
         setView(res.data);
-        setPhase("password");
+        setPhase("accept");
       } else setPhase("invalid");
     });
     return () => {
@@ -70,11 +70,22 @@ export function InviteAcceptScreen(): JSX.Element {
       </main>
     );
   }
-  if (phase === "password") {
+  if (phase === "accept") {
     return (
       <main>
         <h1>Welcome, {view?.display_name}</h1>
-        <p>You are being set up as: {view?.role}. Step 1 of 3: choose a password.</p>
+        <p>Step 1 of 4: accept your invitation. You are being set up as: {view?.role}.</p>
+        <button type="button" onClick={() => setPhase("password")}>
+          Accept invitation
+        </button>
+      </main>
+    );
+  }
+  if (phase === "password") {
+    return (
+      <main>
+        <h1>Choose a password</h1>
+        <p>Step 2 of 4: choose a password.</p>
         <form onSubmit={(event) => void onPassword(event)}>
           <label htmlFor="inv-pw">New password</label>
           <input
@@ -94,7 +105,7 @@ export function InviteAcceptScreen(): JSX.Element {
     return (
       <main>
         <h1>Set up your authenticator</h1>
-        <p>Step 2 of 3: add this key to your authenticator app, then enter the code.</p>
+        <p>Step 3 of 4: add this key to your authenticator app, then enter the code.</p>
         <p>
           Key: <code>{enroll?.secret_base32}</code>
         </p>
@@ -116,7 +127,14 @@ export function InviteAcceptScreen(): JSX.Element {
   return (
     <main>
       <h1>You are set up</h1>
-      <p>Step 3 of 3: save these recovery codes now. They are shown once.</p>
+      <p>Step 4 of 4: you are signed up as {view?.role}. Save these recovery codes now.</p>
+      <section aria-labelledby="inv-orient">
+        <h2 id="inv-orient">What happens next</h2>
+        <p>
+          Your access is limited to your role. The owner grants account access separately, so you
+          may see no accounts until then. Recovery codes are shown once.
+        </p>
+      </section>
       <ul>
         {codes.map((c) => (
           <li key={c}>

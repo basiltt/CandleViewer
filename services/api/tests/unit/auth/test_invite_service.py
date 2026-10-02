@@ -249,3 +249,49 @@ def test_password_policy_rejects_weak(pw: str) -> None:
 
 def test_password_policy_accepts_good() -> None:
     check_password_policy(GOOD_PW, username="annie", email="ann@example.com")
+
+
+async def test_abandoned_enrolment_cannot_sign_in_through_real_login() -> None:
+    """AC: password set, TOTP abandoned -> a real LoginService.login is refused."""
+    from candleviewer.auth.errors import InvalidCredentials
+    from candleviewer.auth.hashing import Hasher
+    from candleviewer.auth.login_service import LoginService
+    from candleviewer.auth.models import LoginRequest, MfaMethodKind
+    from candleviewer.auth.throttle import PerIpLoginThrottle
+    from tests.unit.auth.auth_fakes import FakeUserRepository, make_user
+
+    class _Capture(FakeRepo):
+        placeholder = ""
+
+        async def create_user_with_invite(self, **kw: Any) -> bool:
+            self.placeholder = kw["placeholder_password_hash"]
+            return await super().create_user_with_invite(**kw)
+
+    repo, clock = _Capture(), Clock()
+    svc = InviteService(repo, FakeHasher(), FakeMfa(), clock=clock)  # type: ignore[arg-type]  # fakes
+    inv = await svc.create(_req(), invited_by=uuid.uuid4())
+    await svc.begin_redemption(inv.token, password=GOOD_PW, source_ip="1.1.1.1")
+    clock.now = T0 + ENROLL_WINDOW + timedelta(seconds=1)
+    with pytest.raises(InviteRejected):
+        await svc.complete_redemption(inv.token, method_id="m", code="123456", source_ip="1.1.1.1")
+    row = repo.rows[hash_token(inv.token)]
+    assert row.user_status is UserStatus.INVITED
+
+    users = FakeUserRepository()
+    users.add(
+        make_user(
+            username=row.username,
+            email=row.email,
+            password_hash=repo.placeholder,
+            status=UserStatus.INVITED,
+            mfa_methods=(MfaMethodKind.TOTP,),
+        )
+    )
+    login = LoginService(
+        users, Hasher(pepper="p"), per_ip_throttle=PerIpLoginThrottle(max_attempts=1000)
+    )
+    for pw in (GOOD_PW, ""):
+        with pytest.raises(InvalidCredentials):
+            await login.login(
+                LoginRequest(identifier=row.username, password=pw or "x" * 12), source_ip="2.2.2.2"
+            )

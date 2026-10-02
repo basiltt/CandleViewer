@@ -1,8 +1,19 @@
+import { createRequire } from "node:module";
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { AdminInviteScreen } from "../../src/features/invites/AdminInviteScreen";
 import { InviteAcceptScreen } from "../../src/features/invites/InviteAcceptScreen";
+
+// axe-core is a transitive dependency of @axe-core/playwright (already a devDependency).
+const axe = createRequire(createRequire(import.meta.url).resolve("@axe-core/playwright"))(
+  "axe-core",
+) as { run: (el: Element, o?: object) => Promise<{ violations: { impact?: string | null }[] }> };
+
+async function seriousViolations(): Promise<unknown[]> {
+  const res = await axe.run(document.body, { rules: { "color-contrast": { enabled: false } } }); // jsdom has no canvas; contrast is covered by the Playwright axe run;
+  return res.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+}
 
 function reply(status: number, body: unknown): Response {
   return { ok: status < 400, status, json: async () => body } as unknown as Response;
@@ -34,6 +45,8 @@ describe("InviteAcceptScreen (SCR-017)", () => {
     vi.stubGlobal("fetch", f);
     mount();
     await screen.findByText(/Welcome, Ann/);
+    expect(screen.getByText(/Step 1 of 4/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Accept invitation" }));
     fireEvent.change(screen.getByLabelText("New password"), {
       target: { value: "correct horse battery" },
     });
@@ -42,6 +55,9 @@ describe("InviteAcceptScreen (SCR-017)", () => {
     fireEvent.change(screen.getByLabelText("Authenticator code"), { target: { value: "123456" } });
     fireEvent.click(screen.getByRole("button", { name: "Activate account" }));
     expect(await screen.findByText("rc-1")).toBeInTheDocument();
+    expect(await seriousViolations()).toEqual([]);
+    expect(screen.getByText(/Step 4 of 4/)).toBeInTheDocument();
+    expect(screen.getByText("What happens next")).toBeInTheDocument();
   });
 
   it("shows the uniform not-valid state for an expired link", async () => {
@@ -84,6 +100,7 @@ describe("AdminInviteScreen (SCR-123)", () => {
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "a@example.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Create invitation" }));
     expect(await screen.findByText(/treat it as a secret/)).toBeInTheDocument();
+    expect(await seriousViolations()).toEqual([]);
     expect((screen.getByLabelText("Invite link") as HTMLInputElement).value).toContain(
       "/invite/abc",
     );
