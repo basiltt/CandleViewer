@@ -30,6 +30,17 @@ docs = st.builds(lambda c, a, lay: {"schema_version": 1, "condition": c, "action
                                     "presentation": {"graph_layout": lay}}, cond, actions, layout)
 
 
+# Small-document variant: keeps shrinking fast for the mutation-detection scenario (AC4).
+cond_small = st.recursive(leaf, lambda c: st.builds(
+    lambda i, t, ch: {"node_id": i, "type": t, "children": ch}, ids,
+    st.sampled_from(["all_of", "any_of"]), st.lists(c, min_size=1, max_size=2)), max_leaves=4)
+docs_small = st.builds(lambda c, a: {"schema_version": 1, "condition": c, "actions": a,
+                                     "limits": {"max_fires": 1}}, cond_small,
+                       st.lists(st.builds(lambda i: {"node_id": i, "type": "notify",
+                                                     "channel": "ui"}, ids),
+                                min_size=1, max_size=2))
+
+
 def shuffle_keys(o: Any, rnd: Any) -> Any:
     if isinstance(o, dict):
         ks = list(o)
@@ -127,9 +138,9 @@ def test_scenario_generator_catches_unsorted_keys_bug_fast() -> None:
 
     failure: dict[str, Any] = {}
 
-    @settings(max_examples=300, deadline=None, database=None,
+    @settings(max_examples=200, deadline=None, database=None,
               suppress_health_check=list(HealthCheck))
-    @given(docs, st.randoms(use_true_random=False))
+    @given(docs_small, st.randoms(use_true_random=False))
     def prop(d: Any, rnd: Any) -> None:
         try:
             assert broken(d) == broken(roundtrip(d, rnd))
