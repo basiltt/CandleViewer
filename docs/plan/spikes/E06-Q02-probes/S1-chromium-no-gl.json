@@ -1,0 +1,18 @@
+{
+  "webgl2": false,
+  "canvas2d_2500cells_ms": {
+    "p50": 14.399999991059303,
+    "p95": 56.400000005960464
+  },
+  "offscreenCanvas_main": true,
+  "worker": {
+    "o": true,
+    "g": false
+  },
+  "dpr": 1,
+  "browserVersion": "153.0.8010.12",
+  "args": [
+    "--disable-gpu",
+    "--disable-software-rasterizer"
+  ]
+}
