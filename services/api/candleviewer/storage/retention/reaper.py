@@ -199,12 +199,23 @@ class Reaper:
                             affected.append(symbol)
         return RetentionReport(items, self._accelerated, affected)
 
+    def _accelerated_detail(self, symbol: str) -> dict[str, str | int]:
+        """Event detail: the effective (halved) hot window per stream, in hours."""
+        detail: dict[str, str | int] = {"symbol": symbol, "retention_factor_pct": 50}
+        for stream in self._policy.streams:
+            rule = self._policy.resolve(symbol, stream)
+            if rule is not None:
+                detail[f"effective_hot_hours_{stream.value}"] = rule.hot_days * 12
+        return detail
+
     async def apply(self, report: RetentionReport) -> RetentionReport:
         """Execute only what `report` listed. Alert BEFORE any delete."""
         if report.accelerated:
             for symbol in report.affected_symbols:
                 await self._events.emit(
-                    "WARNING", "STORAGE_ACCELERATED_RETENTION", {"symbol": symbol}
+                    "WARNING",
+                    "STORAGE_ACCELERATED_RETENTION",
+                    self._accelerated_detail(symbol),
                 )
         for item in report.skipped:
             storage_retention_skipped_total.labels(reason=item.reason).inc()

@@ -168,6 +168,11 @@ async def test_accelerated_mode_priority_halved_and_alert_before_delete() -> Non
     drops = [e for e in env.log if e.startswith("drop")]
     assert [d.split(":")[1] for d in drops] == ["LOW", "HIGH"]
     assert [d["symbol"] for s, c, d in env.events] == ["LOW", "HIGH"]
+    # BUG-D: detail carries the effective halved hot window (hours), not just the symbol
+    detail = env.events[0][2]
+    assert detail["retention_factor_pct"] == 50
+    hot = {k: v for k, v in detail.items() if k.startswith("effective_hot_hours_")}
+    assert hot and all(isinstance(v, int) and v > 0 for v in hot.values())
 
 
 async def test_not_accelerated_above_threshold_keeps_normal_retention() -> None:
