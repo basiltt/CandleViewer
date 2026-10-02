@@ -15,7 +15,11 @@ import pytest
 from candleviewer.storage.cold import exporter as exporter_mod
 from candleviewer.storage.models import StreamKind
 from candleviewer.storage.retention.policy import RetentionPolicy, load_defaults
-from candleviewer.storage.retention.reaper import Reaper
+from candleviewer.storage.retention.reaper import (
+    Reaper,
+    storage_disk_free_ratio,
+    storage_retention_runs_total,
+)
 from tests.chaos.storage._harness import Rig
 from tests.unit.storage.cold._helpers import day_range
 from tests.unit.storage.retention.test_reaper import NOW, Env, part
@@ -41,22 +45,54 @@ async def test_s3_disk_full_alerts_before_any_deletion_and_spares_pinned() -> No
     assert not any(e.startswith("drop:PIN") for e in env.log), "INVARIANT: pinned data untouched"
 
 
-async def test_s8_two_reapers_racing_do_not_double_delete_or_double_audit() -> None:
-    env = Env([part("A", 40)])
-    dropped: set[str] = set()
-    orig_drop = env.drop
+class _Shared(Env):
+    """One backing store seen by two reaper instances (separate volumes => no in-process lock)."""
 
-    async def drop_once(p):  # type: ignore[no-untyped-def]
-        key = f"{p.symbol}:{p.range.end_us}"
-        assert key not in dropped, "INVARIANT: partition deleted twice"
-        dropped.add(key)
+    def __init__(self, parts) -> None:  # type: ignore[no-untyped-def]
+        super().__init__(parts)
+        self.drops: list[str] = []
+
+    async def drop(self, p):  # type: ignore[no-untyped-def]
+        assert p in self.parts, "INVARIANT: partition deleted twice"
+        self.drops.append(f"{p.symbol}:{p.range.end_us}")
+        await super().drop(p)  # removal is atomic, like a real DROP PARTITION
         await asyncio.sleep(0)
-        await orig_drop(p)
 
-    env.drop = drop_once  # type: ignore[method-assign]
-    await asyncio.gather(_reaper(env).run(), _reaper(env).run())
+
+def _named(env: Env, volume: str) -> Reaper:
+    return Reaper(
+        RetentionPolicy([], load_defaults()),
+        env, env, env, env, env, env,
+        clock=lambda: NOW,
+        volume=volume,
+    )  # fmt: skip
+
+
+async def test_s8_cross_instance_race_is_idempotent_no_double_delete_or_audit() -> None:
+    env = _Shared([part("A", 40)])
+    await asyncio.gather(_named(env, "a").run(), _named(env, "b").run())
+    assert len(env.drops) == 1, "INVARIANT: partition deleted exactly once"
     purges = [a for a in env.audits if a[0] == "retention.purge"]
-    assert len(purges) == 1, "INVARIANT: exactly one purge audit entry"
+    assert len(purges) == 1, "INVARIANT: exactly one purge audit entry (C-2.9)"
+    assert not env.parts
+
+
+async def test_s8_same_volume_second_run_is_locked_out_and_counted() -> None:
+    env = _Shared([part("A", 40)])
+    before = storage_retention_runs_total.labels(result="skipped_locked")._value.get()  # type: ignore[attr-defined]
+    await asyncio.gather(_named(env, "v").run(), _named(env, "v").run())
+    after = storage_retention_runs_total.labels(result="skipped_locked")._value.get()  # type: ignore[attr-defined]
+    assert len(env.drops) == 1
+    assert len([a for a in env.audits if a[0] == "retention.purge"]) == 1
+    assert after - before == 1, "signal: lock-out counted in storage_retention_runs_total"
+
+
+async def test_s3_disk_critical_emits_event_signal_and_gauge() -> None:
+    env = Env([part("AUTO", 40)], free=3.0)
+    env.auto = {"AUTO"}
+    await _reaper(env).run()
+    assert env.events and env.events[0][0] == "CRITICAL", "signal: system_events CRITICAL"
+    assert storage_disk_free_ratio.labels(volume="data")._value.get() == pytest.approx(0.03)  # type: ignore[attr-defined]
 
 
 async def test_s9_clock_step_backwards_does_not_reexport(rig: Rig) -> None:

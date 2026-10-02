@@ -107,6 +107,20 @@ async def test_s7_corrupted_parquet_is_quarantined_and_read_fails_loudly(rig: Ri
     assert ("CRITICAL", "STORAGE_COLD_FILE_QUARANTINED") in rig.codes()
     assert not file.exists(), "INVARIANT: corrupt file moved out of the dataset tree"
     assert (rig.root / "_quarantine").exists()
-    assert (
-        await cold.query("BTCUSDT", StreamKind.TRADES, day_range()) == []
-    ), "INVARIANT: nothing served from the quarantined file"
+    assert await cold.query("BTCUSDT", StreamKind.TRADES, day_range()) == [], (
+        "INVARIANT: nothing served from the quarantined file"
+    )
+
+
+def test_hooks_cannot_be_armed_outside_pytest(monkeypatch: pytest.MonkeyPatch) -> None:
+    import sys
+
+    monkeypatch.delitem(sys.modules, "pytest")
+    with pytest.raises(RuntimeError):
+        exporter_mod.arm_test_hook("AFTER_CHECKSUM", lambda: None)
+    assert exporter_mod._TEST_HOOKS == {}
+
+
+def test_unknown_hook_point_rejected() -> None:
+    with pytest.raises(ValueError):
+        exporter_mod.arm_test_hook("NOPE", lambda: None)

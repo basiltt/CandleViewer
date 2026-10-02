@@ -2,8 +2,8 @@
 
 Every scenario follows arrange -> inject -> assert(data) -> assert(signals)
 -> assert(health) -> recover -> assert(recovery) with cleanup in `finally`.
-Crash points use the exporter's test-only hooks, which are inert unless
-`CV_ENV=test`.
+Crash points use the exporter's test-only hooks (`arm_test_hook`, which
+refuses outside a pytest process; nothing in config/env can arm one).
 """
 
 from __future__ import annotations

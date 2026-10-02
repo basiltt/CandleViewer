@@ -10,8 +10,8 @@ decision — is enforced simply by this module never calling a drop.
 from __future__ import annotations
 
 import asyncio
-import os
 import re
+import sys
 import time
 import uuid
 from collections.abc import AsyncIterator, Callable
@@ -62,13 +62,24 @@ AFTER_CHECKSUM = "AFTER_CHECKSUM"
 AFTER_MANIFEST = "AFTER_MANIFEST"
 
 # Test-only crash breakpoints (E07-Q04): a chaos test registers a callable that
-# raises/kills at the exact Sec.5.3 instruction boundary. Inert unless
-# CV_ENV=test, so production can never trigger one.
+# raises/kills at the exact Sec.5.3 instruction boundary. No env var, flag or
+# config can arm one: the registry is empty in every process and only
+# `arm_test_hook` fills it, which refuses unless running under pytest.
 _TEST_HOOKS: dict[str, Callable[[], None]] = {}
+_HOOK_POINTS = frozenset({"AFTER_PARQUET_WRITE", "AFTER_CHECKSUM", "AFTER_MANIFEST"})
+
+
+def arm_test_hook(name: str, hook: Callable[[], None]) -> None:
+    """Register a crash hook; test processes only (pytest must be imported)."""
+    if "pytest" not in sys.modules:
+        raise RuntimeError("exporter test hooks are only available under pytest")
+    if name not in _HOOK_POINTS:
+        raise ValueError(f"unknown hook point {name!r}")
+    _TEST_HOOKS[name] = hook
 
 
 def _fire_hook(name: str) -> None:
-    if os.environ.get("CV_ENV") != "test":
+    if not _TEST_HOOKS:
         return
     hook = _TEST_HOOKS.get(name)
     if hook is not None:

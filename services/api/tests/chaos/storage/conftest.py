@@ -13,8 +13,7 @@ from tests.unit.storage.cold._helpers import FakeHotSource
 
 
 @pytest.fixture
-def test_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    monkeypatch.setenv("CV_ENV", "test")
+def test_env() -> Iterator[None]:
     try:
         yield
     finally:
@@ -27,7 +26,7 @@ def arm_crash(test_env: None) -> Callable[[str], None]:
         def boom() -> None:
             raise Crash(point)
 
-        exporter_mod._TEST_HOOKS[point] = boom
+        exporter_mod.arm_test_hook(point, boom)
 
     return arm
 
