@@ -95,3 +95,14 @@ through `reReplaceAll` (JWT, `secret|token|password|api_key|signature=` pairs, 1
 Tests (`services/api/tests/security/test_e04_alert_payload.py`): redaction rules applied to a poisoned page alert
 (PASS); every interpolation is redacted (PASS); `amtool template render` of the poisoned alert
 (`@pytest.mark.integration`, needs docker -> run by the CI `amtool` step; result to be recorded after the CI run).
+
+## Evidence status and follow-ups (review round 2)
+
+- AC1 (abuse cases): cases 1-7 executed in-process (`test_e04_abuse_cases.py`, `test_e04_alert_payload.py`); staging re-run
+  of 1/2/7 needs a deployed staging stack (no docker/staging in the authoring environment). No p0/p1 Bugs were found, so none filed.
+  Owner exception for the staging re-run is requested on #258; ticket must not move to Done until it is recorded.
+- AC3 (gitleaks on infra/): `obs_security_checks.py` verifies no allowlist entry covers `infra/`; the live gitleaks fail-on-token
+  demonstration runs in the CI `secrets` check (gitleaks is not installed locally). Not demonstrated locally.
+- AC4 (ZAP baseline): `dast-observability-weekly.yml` first run pending; findings triage to follow the first run.
+- AC5: payload inspected via template unit tests; a live Page capture needs the staging drill.
+- 9 `nosemgrep` suppressions: tracked in #1720.
