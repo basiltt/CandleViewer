@@ -15,6 +15,8 @@ from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal
 
+import structlog
+
 from candleviewer.observability.metrics import Counter
 from candleviewer.storage.models import StreamKind, TierHint, TimeRange
 from candleviewer.storage.natural_keys import NATURAL_KEY
@@ -28,6 +30,13 @@ storage_router_queries_total = Counter(
 storage_router_merge_rows_total = Counter(
     "storage_router_merge_rows_total", "Rows emitted by straddle merges."
 )
+
+storage_router_dedup_conflicts_total = Counter(
+    "storage_router_dedup_conflicts_total",
+    "Straddle-merge natural-key collisions whose non-key fields differ.",
+)
+
+logger = structlog.get_logger(__name__)
 
 _US_PER_DAY = 86_400_000_000
 
@@ -54,6 +63,15 @@ def _field(row: Any, name: str) -> Any:
     raise AttributeError(name)
 
 
+def _as_fields(row: Any) -> dict[str, Any]:
+    return dict(row) if isinstance(row, Mapping) else dict(vars(row))
+
+
+def _differing_fields(cold: Any, hot: Any, key: tuple[str, ...]) -> list[str]:
+    a, b = _as_fields(cold), _as_fields(hot)
+    return sorted(f for f in a.keys() | b.keys() if f not in key and a.get(f) != b.get(f))
+
+
 def dedup_merge(
     cold_rows: Sequence[Any], hot_rows: Sequence[Any], key: tuple[str, ...]
 ) -> list[Any]:
@@ -62,7 +80,14 @@ def dedup_merge(
     for row in cold_rows:
         merged[tuple(_field(row, k) for k in key)] = row
     for row in hot_rows:  # inserted last => overrides the cold twin
-        merged[tuple(_field(row, k) for k in key)] = row
+        k = tuple(_field(row, name) for name in key)
+        prior = merged.get(k)
+        if prior is not None:
+            diff = _differing_fields(prior, row, key)
+            if diff:  # hot wins, but never silently (field names only, no values)
+                storage_router_dedup_conflicts_total.inc()
+                logger.warning("storage_router_dedup_conflict", key=list(key), fields=diff)
+        merged[k] = row
     return sorted(merged.values(), key=lambda r: _field(r, "ts"))
 
 

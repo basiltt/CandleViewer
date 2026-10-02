@@ -11,7 +11,11 @@ import pytest
 from candleviewer.storage.models import StreamKind, TimeRange
 from candleviewer.storage.natural_keys import NATURAL_KEY, NATURAL_KEY_BY_TABLE
 from candleviewer.storage.questdb.ddl import parse_ddl_dir
-from candleviewer.storage.router import TierRouter, dedup_merge
+from candleviewer.storage.router import (
+    TierRouter,
+    dedup_merge,
+    storage_router_dedup_conflicts_total,
+)
 
 DAY = 86_400_000_000
 NOW = 100 * DAY
@@ -130,3 +134,12 @@ def test_boundary_is_monotonic_under_clock_step_back() -> None:
     assert r.resolve(StreamKind.TRADES, rng) == "both"
     rng2 = TimeRange(start_us=NOW - 40 * DAY, end_us=NOW - 31 * DAY)
     assert r.resolve(StreamKind.TRADES, rng2) == "cold"
+
+
+def test_dedup_collision_with_differing_fields_is_observable() -> None:
+    before = storage_router_dedup_conflicts_total._value.get()  # type: ignore[attr-defined]
+    cold = [{"ts": 1, "symbol": "X", "trade_id": "a", "price": 1}]
+    hot = [{"ts": 1, "symbol": "X", "trade_id": "a", "price": 2}]
+    rows = dedup_merge(cold, hot, ("ts", "symbol", "trade_id"))
+    assert rows == hot  # hot wins
+    assert storage_router_dedup_conflicts_total._value.get() == before + 1  # type: ignore[attr-defined]
