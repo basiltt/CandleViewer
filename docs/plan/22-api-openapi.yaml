@@ -7433,11 +7433,12 @@ paths:
     get:
       tags: [settings]
       operationId: getOnboardingChecklist
-      summary: First-run / setup checklist state
+      summary: First-run / setup checklist state (E09-S06)
       description: >
-        Drives SCR-019. Each item reports whether the underlying precondition (an exchange
-        account exists, a key verifies, a symbol is recorded, MFA enrolled) is satisfied,
-        so the card never asserts readiness the backend cannot confirm.
+        Drives SCR-019. Every step state is evaluated server-side from read-only probes run with
+        the caller's own identity (US-ONB-007: no step may be faked client-side). Each probe has
+        a 250 ms budget; a probe that times out or fails yields `state=error` for that step only,
+        and an owning epic that has not shipped yields `state=pending` with a feature-flag reason.
       x-rbac: { permissions: [], scope: self }
       responses:
         "200":
@@ -7445,6 +7446,19 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/OnboardingChecklist" }
+
+  /onboarding/checklist/dismiss:
+    post:
+      tags: [settings]
+      operationId: dismissOnboardingChecklist
+      summary: Dismiss the completed checklist summary (persisted per user)
+      description: >
+        Only accepted once every step is `ok`; otherwise 409. Stored server-side so the card
+        stays gone on every device.
+      x-rbac: { permissions: [], scope: self }
+      responses:
+        "204": { description: Dismissed. }
+        "409": { description: Checklist is not complete. }
 
   /onboarding/complete:
     post:
@@ -11995,27 +12009,22 @@ components:
 
     OnboardingChecklist:
       type: object
+      required: [complete, dismissed, items]
       properties:
         complete: { type: boolean }
+        dismissed: { type: boolean }
         items:
           type: array
           items:
             type: object
-            required: [key, satisfied]
+            required: [key, state]
             properties:
               key:
                 type: string
-                enum:
-                  [
-                    mfa_enrolled,
-                    exchange_account_added,
-                    api_key_verified,
-                    symbol_recorded,
-                    workspace_created,
-                    demo_order_placed,
-                  ]
-              satisfied: { type: boolean }
-              detail: { type: ["string", "null"] }
+                enum: [tailscale, totp, sub_account, api_key, profile_limits, demo_session]
+              state: { type: string, enum: [ok, pending, blocked, error] }
+              reason: { type: ["string", "null"] }
+              unblock_at: { type: ["string", "null"], format: date-time }
               action_route: { type: ["string", "null"] }
 
     Notification:

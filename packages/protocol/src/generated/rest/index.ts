@@ -2111,12 +2111,32 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * First-run / setup checklist state
-     * @description Drives SCR-019. Each item reports whether the underlying precondition (an exchange account exists, a key verifies, a symbol is recorded, MFA enrolled) is satisfied, so the card never asserts readiness the backend cannot confirm.
+     * First-run / setup checklist state (E09-S06)
+     * @description Drives SCR-019. Every step state is evaluated server-side from read-only probes run with the caller's own identity (US-ONB-007: no step may be faked client-side). Each probe has a 250 ms budget; a probe that times out or fails yields `state=error` for that step only, and an owning epic that has not shipped yields `state=pending` with a feature-flag reason.
      */
     get: operations["getOnboardingChecklist"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/onboarding/checklist/dismiss": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Dismiss the completed checklist summary (persisted per user)
+     * @description Only accepted once every step is `ok`; otherwise 409. Stored server-side so the card stays gone on every device.
+     */
+    post: operations["dismissOnboardingChecklist"];
     delete?: never;
     options?: never;
     head?: never;
@@ -5438,19 +5458,17 @@ export interface components {
      */
     OffsetUnit: "ticks" | "percent" | "r_multiple" | "atr" | "price";
     OnboardingChecklist: {
-      complete?: boolean;
-      items?: {
+      complete: boolean;
+      dismissed: boolean;
+      items: {
         action_route?: string | null;
-        detail?: string | null;
         /** @enum {string} */
-        key:
-          | "mfa_enrolled"
-          | "exchange_account_added"
-          | "api_key_verified"
-          | "symbol_recorded"
-          | "workspace_created"
-          | "demo_order_placed";
-        satisfied: boolean;
+        key: "tailscale" | "totp" | "sub_account" | "api_key" | "profile_limits" | "demo_session";
+        reason?: string | null;
+        /** @enum {string} */
+        state: "ok" | "pending" | "blocked" | "error";
+        /** Format: date-time */
+        unblock_at?: string | null;
       }[];
     };
     Order: {
@@ -10871,6 +10889,31 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["OnboardingChecklist"];
         };
+      };
+    };
+  };
+  dismissOnboardingChecklist: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Dismissed. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Checklist is not complete. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };

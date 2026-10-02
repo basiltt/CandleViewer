@@ -4064,22 +4064,17 @@ class EffectiveLimits(BaseModel):
 
 
 class Item(BaseModel):
-    key: Literal[
-        "mfa_enrolled",
-        "exchange_account_added",
-        "api_key_verified",
-        "symbol_recorded",
-        "workspace_created",
-        "demo_order_placed",
-    ]
-    satisfied: bool
-    detail: str | None = None
+    key: Literal["tailscale", "totp", "sub_account", "api_key", "profile_limits", "demo_session"]
+    state: Literal["ok", "pending", "blocked", "error"]
+    reason: str | None = None
+    unblock_at: AwareDatetime | None = None
     action_route: str | None = None
 
 
 class OnboardingChecklist(BaseModel):
-    complete: bool | None = None
-    items: list[Item] | None = None
+    complete: bool
+    dismissed: bool
+    items: list[Item]
 
 
 class Notification(BaseModel):

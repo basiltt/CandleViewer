@@ -246,6 +246,13 @@ user_invites = Table(
     Index("ix_user_invites_user", "user_id"),
 )
 
+onboarding_dismissals = Table(
+    "onboarding_dismissals",
+    metadata,
+    Column("user_id", ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("dismissed_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+)
+
 user_account_access = Table(
     "user_account_access",
     metadata,

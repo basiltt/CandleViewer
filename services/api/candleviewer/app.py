@@ -22,7 +22,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -55,6 +55,8 @@ from candleviewer.api.deny_by_default import (
     make_deny_undeclared_dependency,
 )
 from candleviewer.api.invites import make_invites_router
+from candleviewer.api.onboarding import make_onboarding_router
+from candleviewer.api.onboarding_checklist import StepResult
 from candleviewer.api.sessions import make_session_router
 from candleviewer.api.step_up import make_read_only_guard, make_step_up_router
 from candleviewer.api.support_bundle import make_support_bundle_router
@@ -136,6 +138,7 @@ from candleviewer.storage.repositories.instruments_sqlalchemy import (
 )
 from candleviewer.storage.repositories.invites_sqlalchemy import SqlAlchemyInviteRepository
 from candleviewer.storage.repositories.mfa_sqlalchemy import SqlAlchemyMfaRepository
+from candleviewer.storage.repositories.onboarding_sqlalchemy import SqlAlchemyOnboardingStore
 from candleviewer.storage.repositories.relational_sqlalchemy import (
     SqlAlchemyRelationalRepository,
 )
@@ -473,6 +476,58 @@ class _NoPositionStore:
         return None
 
 
+class _OnboardingMetrics:
+    """Adapts the metrics facade to the router's `inc(name, **labels)` port."""
+
+    _SPECS: ClassVar[dict[str, tuple[str, ...]]] = {
+        "onboarding_checklist_views_total": (),
+        "onboarding_step_state_total": ("step", "state"),
+        "onboarding_checklist_dismissed_total": (),
+        "onboarding_probe_timeouts_total": ("step",),
+    }
+
+    def __init__(self, metrics: Metrics) -> None:
+        self._m = {
+            n: metrics.counter(n, f"E09-S06 {n}", labels) for n, labels in self._SPECS.items()
+        }
+
+    def inc(self, name: str, **labels: str) -> None:
+        metric = self._m[name]
+        child = metric.labels(*labels.values()) if labels else metric.child()
+        child.inc()
+
+
+def _build_onboarding_router(
+    settings: Settings, ctx: Any, principal_resolver: Any, metrics: _OnboardingMetrics
+) -> Any:
+    store = None
+    probes: dict[str, Any] = {}
+    if settings.storage_backend == "real":
+        store = SqlAlchemyOnboardingStore(
+            SqlAlchemyRelationalRepository(settings.pg_dsn.get_secret_value(), "onboarding")
+        )
+        gate = ctx.oms_read_only_gate
+
+        async def tailscale(_u: Any) -> StepResult:
+            if gate.is_read_only:
+                return StepResult("blocked", "The mesh-only network check is failing.")
+            return StepResult("ok")
+
+        async def totp(u: Any) -> StepResult:
+            if await store.has_confirmed_totp(u):
+                return StepResult("ok")
+            return StepResult("pending", "Enrol an authenticator app.")
+
+        async def sub_account(u: Any) -> StepResult:
+            if await store.has_account_binding(u):
+                return StepResult("ok")
+            return StepResult("pending", "No sub-account is bound to you yet.")
+
+        probes = {"tailscale": tailscale, "totp": totp, "sub_account": sub_account}
+    flags = {"api_key": False, "profile_limits": False, "demo_session": False}
+    return make_onboarding_router(store, principal_resolver, probes, flags, metrics)
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -634,6 +689,14 @@ def create_app(
     # Process collectors read /proc; the lifespan adds them (no I/O here).
     metrics_facade = Metrics(resolved.environment.value, registry=ctx.metrics)
     app.state.metrics_facade = metrics_facade
+    # E09-S06: server-evaluated first-run checklist. Steps whose owning epic
+    # has not shipped (E27 api_key/demo, E39 profile limits) have no probe and
+    # render `pending` ("coming soon") via the flag table, never a client stub.
+    app.include_router(
+        _build_onboarding_router(
+            resolved, ctx, principal_resolver, _OnboardingMetrics(metrics_facade)
+        )
+    )
     # E04-T06: per-stage tick latency on the real ingestion publish path.
     # Offset = ClockGuard's measured exchange-local offset (E08 wires it via
     # `ctx.ingestion.clock_offset_ms`); the synthetic feed reports 0.
