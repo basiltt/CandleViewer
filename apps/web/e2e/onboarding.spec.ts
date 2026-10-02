@@ -12,7 +12,28 @@ const items = ["tailscale", "totp", "sub_account", "api_key", "profile_limits", 
   }),
 );
 
+// Network-layer session stubs (same pattern as shell-bootstrap.spec.ts); app code is not mocked.
+async function signIn(page: import("@playwright/test").Page): Promise<void> {
+  const ok = (body: unknown) => ({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify(body),
+  });
+  await page.route("**/api/v1/me", (r) =>
+    r.fulfill(
+      ok({
+        role: "owner",
+        permissions: [],
+        session: { environment: "demo", elevated_until: null },
+      }),
+    ),
+  );
+  await page.route("**/api/v1/me/preferences", (r) => r.fulfill(ok({})));
+  await page.route("**/api/v1/me/keymap", (r) => r.fulfill(ok({ bindings: [] })));
+}
+
 test("SCR-019 card renders on first sign-in; axe clean with tour open", async ({ page }) => {
+  await signIn(page);
   await page.route("**/api/v1/onboarding/checklist", (r) =>
     r.fulfill({
       status: 200,
@@ -32,6 +53,7 @@ test("SCR-019 card renders on first sign-in; axe clean with tour open", async ({
 });
 
 test("no tour auto-offer once the checklist is complete", async ({ page }) => {
+  await signIn(page);
   await page.route("**/api/v1/onboarding/checklist", (r) =>
     r.fulfill({
       status: 200,
