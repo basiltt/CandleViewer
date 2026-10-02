@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import pytest
-from test_reaper import Env, part
+from test_reaper import DAY, NOW_US, Env, part
 
+from candleviewer.storage.models import StreamKind, TimeRange
 from candleviewer.storage.router import dedup_merge
 
 
@@ -45,3 +46,50 @@ async def test_apply_twice_same_report_writes_single_purge_audit() -> None:
     await env.reaper().apply(report)
     await env.reaper().apply(report)
     assert [a for a, _ in env.audits].count("retention.purge") == 1
+
+
+async def test_replay_session_created_between_dry_run_and_apply_blocks_drop() -> None:
+    p = part("A", 800, "cold")
+    env = Env([p])
+    reaper = env.reaper()
+    report = await reaper.dry_run()
+    assert [i.action for i in report.to_drop] == ["drop"]
+    env.replay[p] = "sess-late"
+    result = await reaper.apply(report)
+    assert not any(e.startswith("drop") for e in env.log)
+    assert any(i.detail == "session_id=sess-late" for i in result.skipped)
+
+
+@pytest.mark.xfail(reason="BUG-A: router boundary ignores accelerated window", strict=True)
+async def test_router_resolves_cold_when_reaper_accelerated_window_shrinks() -> None:
+    """Free disk 8% halves the hot window to 15d (reaper); router must follow."""
+    from candleviewer.storage.router import TierRouter
+
+    env = Env([part("A", 20)], free=8.0)
+    reaper = env.reaper()
+    report = await reaper.dry_run()
+    assert report.accelerated and len(report.to_drop) == 1  # 20d-old hot dropped
+    router = TierRouter({}, {}, lambda s: 30, clock_us=lambda: NOW_US)
+    rng = TimeRange(start_us=NOW_US - 21 * DAY, end_us=NOW_US - 20 * DAY)
+    assert router.resolve(StreamKind.TRADES, rng) != "hot"
+
+
+@pytest.mark.xfail(reason="BUG-A (class): no monotonic-clock guard in router", strict=True)
+def test_router_clock_step_back_does_not_lose_rows() -> None:
+    from candleviewer.storage.router import TierRouter
+
+    t = [NOW_US]
+    router = TierRouter({}, {}, lambda s: 30, clock_us=lambda: t[0])
+    rng = TimeRange(start_us=NOW_US - 31 * DAY, end_us=NOW_US - 29 * DAY)
+    before = router.resolve(StreamKind.TRADES, rng)
+    t[0] -= 3 * DAY
+    assert router.resolve(StreamKind.TRADES, rng) == before
+
+
+@pytest.mark.xfail(reason="BUG-B: no signal on dedup collision with differing payload", strict=True)
+def test_dedup_collision_with_differing_fields_is_observable(caplog) -> None:  # type: ignore[no-untyped-def]
+    key = ("ts", "symbol", "trade_id")
+    cold = [{"ts": 1, "symbol": "A", "trade_id": "1", "price": 1}]
+    hot = [{"ts": 1, "symbol": "A", "trade_id": "1", "price": 2}]
+    dedup_merge(cold, hot, key)
+    assert caplog.records
