@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Final, Literal
 
-StepState = Literal["ok", "pending", "blocked", "error"]
+StepState = Literal["ok", "pending", "blocked", "error", "not_applicable"]
 PROBE_TIMEOUT_S: Final = 0.25
 STEP_ORDER: Final = (
     "tailscale",
@@ -97,5 +97,6 @@ async def assemble(
                 "action_route": ACTION_ROUTES[key],
             }
         )
-    complete = all(i["state"] == "ok" for i in items)
+    # `not_applicable` (feature not on main yet) never blocks completion.
+    complete = all(i["state"] in ("ok", "not_applicable") for i in items)
     return items, complete, raw

@@ -4065,7 +4065,7 @@ class EffectiveLimits(BaseModel):
 
 class Item(BaseModel):
     key: Literal["tailscale", "totp", "sub_account", "api_key", "profile_limits", "demo_session"]
-    state: Literal["ok", "pending", "blocked", "error"]
+    state: Literal["ok", "pending", "blocked", "error", "not_applicable"]
     reason: str | None = None
     unblock_at: AwareDatetime | None = None
     action_route: str | None = None

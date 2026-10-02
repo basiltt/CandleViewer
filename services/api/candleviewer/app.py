@@ -509,14 +509,19 @@ class _OnboardingMetrics:
 
 
 def _build_onboarding_router(
-    settings: Settings, ctx: Any, principal_resolver: Any, metrics: _OnboardingMetrics
+    settings: Settings,
+    ctx: Any,
+    principal_resolver: Any,
+    metrics: _OnboardingMetrics,
+    store_override: Any = None,
 ) -> Any:
-    store = None
+    store = store_override
     probes: dict[str, Any] = {}
-    if settings.storage_backend == "real":
+    if store is None and settings.storage_backend == "real":
         store = SqlAlchemyOnboardingStore(
             SqlAlchemyRelationalRepository(settings.pg_dsn.get_secret_value(), "onboarding")
         )
+    if store is not None:
         gate = ctx.oms_read_only_gate
 
         async def tailscale(_u: Any) -> StepResult:
@@ -545,7 +550,7 @@ def _build_onboarding_router(
             restricted = bybit_key_restriction(bound_at, datetime.now(UTC))
             if restricted is not None:
                 return restricted
-            return StepResult("pending", "Add a withdrawal-disabled API key.")
+            return StepResult("not_applicable", "API-key inventory is not yet available.")
 
         probes = {
             "tailscale": tailscale,
@@ -553,9 +558,22 @@ def _build_onboarding_router(
             "sub_account": sub_account,
             "api_key": api_key,
         }
-    # profile_limits / demo_session depend on E27 (exchange_accounts), not yet shipped.
-    flags = {"profile_limits": False, "demo_session": False}
-    return make_onboarding_router(store, principal_resolver, probes, flags, metrics)
+
+    # Honest probes: no limits store (E39) nor session environment field (E27)
+    # exists on main, so these report `not_applicable` (satisfied, shown as
+    # "not yet available") instead of a permanent `pending`.
+    async def profile_limits(_u: Any) -> StepResult:
+        return StepResult("not_applicable", "Risk limits are not yet available.")
+
+    async def demo_session(_u: Any) -> StepResult:
+        return StepResult("not_applicable", "Demo sessions are not yet available.")
+
+    probes["profile_limits"] = profile_limits
+    probes["demo_session"] = demo_session
+    flags: dict[str, bool] = {}
+    return make_onboarding_router(
+        store, principal_resolver, probes, flags, metrics, _LazyAuditEmitter(ctx.audit)
+    )
 
 
 def create_app(
@@ -566,6 +584,7 @@ def create_app(
     principal_resolver: SnapshotResolver | None = None,
     ws_authenticate: Authenticate | None = None,
     auth_clock: Callable[[], datetime] | None = None,
+    onboarding_store: Any = None,
 ) -> FastAPI:
     """Build the FastAPI application without touching Postgres/QuestDB/network.
 
@@ -724,7 +743,11 @@ def create_app(
     # render `pending` ("coming soon") via the flag table, never a client stub.
     app.include_router(
         _build_onboarding_router(
-            resolved, ctx, principal_resolver, _OnboardingMetrics(metrics_facade)
+            resolved,
+            ctx,
+            principal_resolver,
+            _OnboardingMetrics(metrics_facade),
+            onboarding_store,
         )
     )
     # E04-T06: per-stage tick latency on the real ingestion publish path.

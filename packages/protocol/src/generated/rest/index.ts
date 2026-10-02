@@ -5466,7 +5466,7 @@ export interface components {
         key: "tailscale" | "totp" | "sub_account" | "api_key" | "profile_limits" | "demo_session";
         reason?: string | null;
         /** @enum {string} */
-        state: "ok" | "pending" | "blocked" | "error";
+        state: "ok" | "pending" | "blocked" | "error" | "not_applicable";
         /** Format: date-time */
         unblock_at?: string | null;
       }[];

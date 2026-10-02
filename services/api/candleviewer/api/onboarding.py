@@ -16,6 +16,7 @@ from fastapi.responses import JSONResponse, Response
 
 from candleviewer.api.onboarding_checklist import Probe, assemble
 from candleviewer.api.users import SnapshotResolver
+from candleviewer.audit.models import AuditOutcome, Severity
 
 
 class DismissalStore(Protocol):
@@ -42,6 +43,7 @@ def make_onboarding_router(
     probes: Mapping[str, Probe],
     flags: Mapping[str, bool],
     metrics: _Metrics | None = None,
+    emitter: Any = None,
 ) -> APIRouter:
     router = APIRouter(tags=["settings"])
 
@@ -81,6 +83,18 @@ def make_onboarding_router(
         principal = principal_resolver.resolve(request)
         if principal is None:
             return _problem(401, "Unauthorized", "no verified session for this request")
+        raw_body = await request.body()
+        if raw_body.strip():
+            # Self-scope only: any client-supplied target/step state is tampering.
+            if emitter is not None:
+                await emitter.emit(
+                    "onboarding.checklist_tamper_rejected",
+                    actor_user_id=principal.user_id,
+                    outcome=AuditOutcome.DENIED,
+                    severity=Severity.WARNING,
+                    reason="client_supplied_state",
+                )
+            return _problem(403, "Forbidden", "the checklist accepts no client-supplied state")
         _, complete, _raw = await assemble(principal.user_id, probes, flags, dismissed=False)
         if not complete:
             return _problem(409, "Conflict", "the checklist is not complete")

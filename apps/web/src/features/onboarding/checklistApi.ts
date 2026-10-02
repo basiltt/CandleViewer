@@ -1,6 +1,6 @@
 /** Thin REST client for the E09-S06 first-run checklist (state is always server-evaluated). */
 
-export type StepState = "ok" | "pending" | "blocked" | "error";
+export type StepState = "ok" | "pending" | "blocked" | "error" | "not_applicable";
 export interface ChecklistItem {
   readonly key: string;
   readonly state: StepState;

@@ -12022,7 +12022,7 @@ components:
               key:
                 type: string
                 enum: [tailscale, totp, sub_account, api_key, profile_limits, demo_session]
-              state: { type: string, enum: [ok, pending, blocked, error] }
+              state: { type: string, enum: [ok, pending, blocked, error, not_applicable] }
               reason: { type: ["string", "null"] }
               unblock_at: { type: ["string", "null"], format: date-time }
               action_route: { type: ["string", "null"] }
