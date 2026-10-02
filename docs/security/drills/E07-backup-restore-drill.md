@@ -22,7 +22,7 @@ Commands: build fixture tar + `_manifests/checksums.sha256`; encrypt with key A 
 nightly host; the SR-047 loopback restriction is enforced by the script's `-h 127.0.0.1`.
 
 ## Full drill (2026-10-02, CI)
-Run: https://github.com/basiltt/CandleViewer/actions/runs/36954315443 (job `integration`, head `e66be40`). Report `restore-drill.json`:
+Run: https://github.com/basiltt/CandleViewer/actions/runs/36954315443 (job `integration`, head `6f9b8f8`). Report `restore-drill.json`:
 seeded 25 audit rows (real `AuditWriter`, trigger-chained) -> `pg_dump -Fc` + Parquet partition
 `trades/symbol=BTCUSDT/dt=2026-10-17` (1,000 rows, real cold-tier writer) encrypted -> both destroyed ->
 decrypt + `pg_restore` + partition restored -> `create_app` (storage_backend=real) `/readyz` 200 ->

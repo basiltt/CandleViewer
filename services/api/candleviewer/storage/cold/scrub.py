@@ -111,5 +111,57 @@ async def run_weekly_scrub(
 ) -> None:
     """Supervisor-owned loop: scrub, then sleep `interval_s`; honours cancellation."""
     while True:
-        await scrub_all(registry, events, clock)
+        try:
+            bad = await scrub_all(registry, events, clock)
+            await events.emit("INFO", "STORAGE_COLD_SCRUB_RUN", {"mismatches": bad})
+        except Exception:
+            logger.exception("cold_scrub_run_failed")
+            await events.emit("WARNING", "STORAGE_COLD_SCRUB_FAILED", {})
         await sleep(interval_s)
+
+
+class ScrubTask:
+    """Tracked, cancellable owner of the weekly scrub loop (C-2.18)."""
+
+    def __init__(
+        self,
+        registry: DatasetRegistry,
+        events: SystemEventSink,
+        *,
+        interval_s: float = SCRUB_INTERVAL_SECONDS,
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+    ) -> None:
+        self._registry = registry
+        self._events = events
+        self._interval_s = interval_s
+        self._sleep = sleep
+        self._clock = clock
+        self._task: asyncio.Task[None] | None = None
+
+    @property
+    def running(self) -> bool:
+        return self._task is not None and not self._task.done()
+
+    def start(self) -> None:
+        if self._task is None:
+            self._task = asyncio.get_running_loop().create_task(
+                run_weekly_scrub(
+                    self._registry,
+                    self._events,
+                    interval_s=self._interval_s,
+                    sleep=self._sleep,
+                    clock=self._clock,
+                ),
+                name="cold-weekly-scrub",
+            )
+
+    async def stop(self) -> None:
+        task, self._task = self._task, None
+        if task is None:
+            return
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
