@@ -92,12 +92,30 @@ async def test_corpus_replay_keeps_book_invariants_and_resyncs_on_hole() -> None
     assert any(isinstance(o, BookStatus) and o.state is BookPhase.DESYNCED for o in published)
 
 
+class FakeSupervisor:
+    """Stands in for `B14BookSupervisor`: records attach/detach and edges."""
+
+    def __init__(self) -> None:
+        self.edges: list[tuple[str, str]] = []
+        self.detached: list[str] = []
+
+    async def attach(self, key: str, symbol: str) -> Any:
+        async def sink(event: str) -> None:
+            self.edges.append((key, event))
+
+        return sink
+
+    def detach(self, key: str) -> None:
+        self.detached.append(key)
+
+
 class Harness:
     def __init__(self) -> None:
         self.bus = Bus()
         self.sub = self.bus.subscribe(
             "b", "live.md.*.book", QueuePolicy.NEVER_DROP, maxsize=100_000
         )
+        self.sup = FakeSupervisor()
         self.desired: set[str] = set()
         self.resubs: list[str] = []
         self.writes: list[Any] = []
@@ -124,6 +142,7 @@ class Harness:
             touch=lambda _t: None,
             writer=W(),
             now_us=lambda: 0,
+            supervisor=self.sup,
         )
 
     def drain(self) -> list[Any]:
@@ -170,3 +189,16 @@ async def test_stream_gap_goes_through_budgeted_resubscribe_and_timeout() -> Non
     assert await h.stream.check_timeouts() == 1
     assert len(h.resubs) == 2
     await h.stream.stop()
+
+
+async def test_stream_forwards_lifecycle_edges_to_injected_supervisor() -> None:
+    h = Harness()
+    h.stream.acquire("c", "BTCUSDT")
+    for f in FRAMES[:20]:
+        await h.stream.handle_frame(f)
+    events = [e for _, e in h.sup.edges]
+    assert events == ["SUBSCRIBE", "SNAPSHOT"]  # never one per delta (INV-B14-a)
+    await h.stream.handle_frame(FRAMES[2700])
+    assert [e for _, e in h.sup.edges][-1] == "SEQUENCE_GAP"
+    await h.stream.stop()
+    assert h.sup.detached == ["live:BTCUSDT:200"]

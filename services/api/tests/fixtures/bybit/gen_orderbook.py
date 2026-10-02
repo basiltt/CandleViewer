@@ -52,11 +52,19 @@ def main() -> None:
         da: dict[int, str] = {}
         for _ in range(rng.randint(1, 4)):
             t = rng.randint(mid - 200, mid - 1)
-            q = "0" if rng.random() < 0.3 and len(bids) > 100 else f"{rng.randint(1, 900)/100:.3f}"
+            q = (
+                "0"
+                if rng.random() < 0.3 and len(bids) > 100
+                else f"{rng.randint(1, 900) / 100:.3f}"
+            )
             db[t] = q
             bids.pop(t, None) if q == "0" else bids.__setitem__(t, q)
             t = rng.randint(mid + 1, mid + 200)
-            q = "0" if rng.random() < 0.3 and len(asks) > 100 else f"{rng.randint(1, 900)/100:.3f}"
+            q = (
+                "0"
+                if rng.random() < 0.3 and len(asks) > 100
+                else f"{rng.randint(1, 900) / 100:.3f}"
+            )
             da[t] = q
             asks.pop(t, None) if q == "0" else asks.__setitem__(t, q)
         out.append(frame("delta", ts, u, db, da))

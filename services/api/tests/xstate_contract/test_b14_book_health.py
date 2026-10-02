@@ -11,18 +11,21 @@ from xstate_statemachine import SimulatedClock
 from candleviewer.book.models import BookPhase
 from candleviewer.book.resync import BookEngine
 from candleviewer.statechart import build
-from candleviewer.statechart.bindings import b14_book as b14
+from candleviewer.statechart.bindings import b14_book  # noqa: F401  (registers "book")
 from tests.unit.book._builders import delta, lvl, snap
 
 
-class _Sup:
+class _Sink:
+    """Records the edges the engine emits and forwards them fire-and-forget
+    (no receipt wait, CV-C51), exactly like `B14BookSupervisor`."""
+
     def __init__(self, interp: object) -> None:
         self.interp = interp
         self.sent: list[str] = []
 
-    async def send(self, event: str) -> None:
+    async def __call__(self, event: str) -> None:
         self.sent.append(event)
-        await self.interp.send(event, wait=True)  # type: ignore[attr-defined]
+        await self.interp.send(event)  # type: ignore[attr-defined]
 
 
 async def _ids(interp: object) -> set[str]:
@@ -40,27 +43,23 @@ async def test_b14_supervised_lifecycle_and_hot_path_bypass() -> None:
     async def resub() -> None: ...
 
     e = BookEngine(symbol="BTCUSDT", depth=200, publish=pub, resubscribe=resub, now_us=lambda: 0)
-    b14.register_runtime("bk1", e)
-    try:
-        r = await build("book", ctx={"book_key": "bk1"}, clock=SimulatedClock(), lane="platform")
-        sup = _Sup(r.interpreter)
-        e.supervisor = sup
-        await e.start()
-        assert "snapshot_pending" in await _ids(r.interpreter)
-        assert e.phase is BookPhase.SNAPSHOT_PENDING
-        await e.on_event(snap(10, [lvl(99, 1)], [lvl(101, 1)]))
-        assert "live" in await _ids(r.interpreter)
-        assert e.phase.value == BookPhase.LIVE.value
-        for u in range(11, 20):
-            await e.on_event(delta(u, u - 1, [lvl(99, u)]))
-        assert "DELTA" not in sup.sent  # INV-B14-a
-        await e.on_event(delta(30, 25))
-        assert "snapshot_pending" in await _ids(r.interpreter)
-        assert e.phase is BookPhase.SNAPSHOT_PENDING and e.resync_count == 1
-        assert r.interpreter.context["resync_count"] == 1
-        await r.interpreter.stop()
-    finally:
-        b14.unregister_runtime("bk1")
+    r = await build("book", ctx={"book_key": "bk1"}, clock=SimulatedClock(), lane="platform")
+    sup = _Sink(r.interpreter)
+    e.health_sink = sup
+    await e.start()
+    assert "snapshot_pending" in await _ids(r.interpreter)
+    assert e.phase is BookPhase.SNAPSHOT_PENDING
+    await e.on_event(snap(10, [lvl(99, 1)], [lvl(101, 1)]))
+    assert "live" in await _ids(r.interpreter)
+    assert e.phase.value == BookPhase.LIVE.value
+    for u in range(11, 20):
+        await e.on_event(delta(u, u - 1, [lvl(99, u)]))
+    assert "DELTA" not in sup.sent  # INV-B14-a
+    await e.on_event(delta(30, 25))
+    assert "snapshot_pending" in await _ids(r.interpreter)
+    assert e.phase is BookPhase.SNAPSHOT_PENDING and e.resync_count == 1
+    assert r.interpreter.context["resync_count"] == 1
+    await r.interpreter.stop()
 
 
 async def test_b14_without_runtime_is_inert() -> None:
@@ -162,3 +161,23 @@ async def test_b14_snapshot_round_trip_at_resync_quiescence_and_refusals() -> No
         with pytest.raises(RestoreRefusedError):
             await restorer().restore(key, bad)
     assert len(audit.quarantined) == 2
+
+
+async def test_b14_book_supervisor_attach_forwards_edges_and_detaches() -> None:
+    """The non-hot `B14BookSupervisor` builds one chart per book and forwards
+    edges without a receipt wait (CV-C51)."""
+    from candleviewer.ingestion.book_supervisor import B14BookSupervisor
+
+    s = B14BookSupervisor()
+    sink = await s.attach("live:BTCUSDT:200", "BTCUSDT")
+    interp = s.interpreter("live:BTCUSDT:200")
+    assert interp is not None
+    await sink("SUBSCRIBE")
+    assert "snapshot_pending" in await _ids(interp)
+    await sink("SNAPSHOT")
+    assert "live" in await _ids(interp)
+    s.detach("live:BTCUSDT:200")
+    s.detach("missing")
+    assert s.interpreter("live:BTCUSDT:200") is None
+    for _ in range(20):
+        await asyncio.sleep(0)

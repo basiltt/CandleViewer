@@ -1,20 +1,17 @@
 """`BookEngine` + resync discipline for one `(env, symbol, depth)` (E08-S05).
 
 Hot path stays plain code (INV-B14-a): `on_event` applies deltas directly.
-The B14 `book` chart only *supervises* the lifecycle; it is driven through
-the injected `Supervisor` (built by the wiring layer via
-`statechart.factory.build("book", ...)`, because hot-path modules never import
-the statechart package - CV-LINT-HOTPATH). The chart's entry actions call
-back into this engine (`request_snapshot`, `go_live`, `go_desynced`), which
-publishes the phase as a plain enum (INV-B14-b). Desync is *enforced*
-synchronously here before the chart is told (C-2.21).
+This engine owns and *enforces* the whole lifecycle synchronously (C-2.21)
+and publishes each lifecycle edge as a plain event name to an optional
+injected `HealthSink` (INV-B14-b). The B14 `book` chart lives behind that sink
+in a non-hot composition module and only *records* the edges; this package
+never imports or queries the statechart runtime (C-2.20, CV-LINT-HOTPATH).
 """
 
 from __future__ import annotations
 
 from collections import deque
 from collections.abc import Awaitable, Callable
-from typing import Protocol
 
 from candleviewer.book.errors import BookError, BookInvariantError
 from candleviewer.book.models import BookPhase, BookStatus
@@ -29,8 +26,9 @@ BREAKER_MAX, BREAKER_WINDOW_US = 5, 60_000_000
 Publish = Callable[[object], Awaitable[None]]
 
 
-class Supervisor(Protocol):
-    async def send(self, event: str) -> None: ...
+#: Receives lifecycle edges (`SUBSCRIBE`, `SNAPSHOT`, `SEQUENCE_GAP`,
+#: `SNAPSHOT_TIMEOUT`). Must not block: fire-and-forget only.
+HealthSink = Callable[[str], Awaitable[None]]
 
 
 class BookEngine:
@@ -51,7 +49,7 @@ class BookEngine:
         self.degraded = False
         self.last_u = 0
         self.last_good_ts_us: int | None = None
-        self.supervisor: Supervisor | None = None
+        self.health_sink: HealthSink | None = None
         self._publish, self._resubscribe, self._now = publish, resubscribe, now_us
         self._buffer: deque[BookDelta] = deque()
         self._staged: BookSnapshot | None = None
@@ -62,10 +60,8 @@ class BookEngine:
 
     # ---- lifecycle --------------------------------------------------------
     async def start(self) -> None:
-        if self.supervisor is not None:
-            await self.supervisor.send("SUBSCRIBE")
-        else:
-            await self.request_snapshot()
+        await self.request_snapshot()
+        await self._edge("SUBSCRIBE")
 
     async def on_event(self, ev: BookSnapshot | BookDelta) -> None:
         """Hot path. Never touches an interpreter for a delta."""
@@ -100,10 +96,9 @@ class BookEngine:
         if self.phase is not BookPhase.SNAPSHOT_PENDING:
             return
         self._staged = ev
-        if self.supervisor is not None:
-            await self.supervisor.send("SNAPSHOT")
-        else:
-            await self.go_live()
+        await self.go_live()
+        if self.book is not None:  # go_live reached LIVE
+            await self._edge("SNAPSHOT")
 
     async def invalidate(self, reason: str) -> None:
         """External discontinuity (frame loss / reconnect): drop and resync."""
@@ -111,18 +106,28 @@ class BookEngine:
             await self._desync(reason)
 
     async def _desync(self, reason: str) -> None:
+        was_live = self.phase is BookPhase.LIVE
         self.phase = BookPhase.DESYNCED  # enforce first (C-2.21)
         self.book = None
         self._reason = reason
-        if self.supervisor is not None:
-            await self.supervisor.send("SEQUENCE_GAP")
-        else:
-            await self.go_desynced()
-            await self.request_snapshot()
+        await self.go_desynced()
+        await self.request_snapshot()
+        # The chart only knows LIVE -> desynced; a failed (re)snapshot stays
+        # in its snapshot_pending, which the engine has just re-entered too.
+        await self._edge("SEQUENCE_GAP" if was_live else "SNAPSHOT_TIMEOUT")
+
+    async def _edge(self, event: str) -> None:
+        if self.health_sink is not None:
+            await self.health_sink(event)
+
+    async def on_snapshot_timeout(self) -> None:
+        """Re-request a snapshot that has been pending too long."""
+        await self.request_snapshot()
+        await self._edge("SNAPSHOT_TIMEOUT")
 
     def check_timeout(self, timeout_us: int) -> bool:
         """True when a snapshot has been pending longer than `timeout_us`;
-        the caller then sends SNAPSHOT_TIMEOUT (or calls `request_snapshot`)."""
+        the caller then calls `on_snapshot_timeout`."""
         since = self._pending_since
         return (
             self.phase is BookPhase.SNAPSHOT_PENDING
@@ -130,7 +135,7 @@ class BookEngine:
             and (self._now() - since >= timeout_us)
         )
 
-    # ---- B14 runtime hooks (called from chart entry actions) ---------------
+    # ---- lifecycle steps -----------------------------------------------------
     async def request_snapshot(self) -> None:
         self.phase = BookPhase.SNAPSHOT_PENDING
         self._buffer.clear()
