@@ -9,8 +9,8 @@ from fastapi.testclient import TestClient
 
 from candleviewer.api._generated.openapi_models import OrderbookSnapshot
 from candleviewer.api.orderbook import make_orderbook_router
-from candleviewer.book_wiring import BookView
 from candleviewer.exchange.base.models import BookSnapshot
+from candleviewer.orderbook_wiring import BookView
 from tests.unit.book._builders import lvl, snap
 
 
