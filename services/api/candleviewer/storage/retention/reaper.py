@@ -123,6 +123,11 @@ class Reaper:
         # production); the per-drop existence re-check is the second line.
         self._lock: RunLock = lock if lock is not None else _PROCESS_LOCK
 
+    @property
+    def accelerated(self) -> bool:
+        """True while disk pressure halves the effective hot window; feed to TierRouter."""
+        return self._accelerated
+
     def _update_mode(self) -> float:
         free = self._disk.free_pct()
         storage_disk_free_ratio.labels(volume=self._volume).set(free / 100.0)

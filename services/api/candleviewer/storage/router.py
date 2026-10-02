@@ -76,14 +76,26 @@ class TierRouter:
         hot_retention_days: Callable[[StreamKind], int],
         *,
         clock_us: Callable[[], int] = lambda: time.time_ns() // 1000,
+        accelerated: Callable[[], bool] = lambda: False,
     ) -> None:
         self._hot = hot
         self._cold = cold
         self._hot_days = hot_retention_days
         self._clock_us = clock_us
+        self._accelerated = accelerated
+        # Monotonic guard: data older than a boundary may already be dropped from
+        # hot, so the boundary never moves backwards (clock step-back, recovery
+        # from accelerated mode).
+        self._high_water: dict[StreamKind, int] = {}
 
     def boundary_us(self, stream: StreamKind) -> int:
-        return self._clock_us() - self._hot_days(stream) * _US_PER_DAY
+        # Accelerated reaper mode halves the effective hot window (SR-096).
+        window = self._hot_days(stream) * _US_PER_DAY
+        if self._accelerated():
+            window //= 2
+        boundary = max(self._clock_us() - window, self._high_water.get(stream, 0))
+        self._high_water[stream] = boundary
+        return boundary
 
     def resolve(self, stream: StreamKind, rng: TimeRange, tier: TierHint = "auto") -> ServedBy:
         if tier == "hot":

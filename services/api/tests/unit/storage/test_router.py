@@ -107,3 +107,26 @@ def test_natural_key_equals_questdb_dedup_clause() -> None:
     for table, key in NATURAL_KEY_BY_TABLE.items():
         assert tables[table] == key, table
     assert set(NATURAL_KEY) <= set(StreamKind)
+
+
+def test_accelerated_window_halves_hot_boundary() -> None:
+    # BUG #1696-A: reaper accelerated (30d -> 15d) dropped 20d-old hot data.
+    state = {"acc": False}
+    r = TierRouter(
+        {}, {}, lambda s: HOT_DAYS, clock_us=lambda: NOW, accelerated=lambda: state["acc"]
+    )
+    rng = TimeRange(start_us=NOW - 21 * DAY, end_us=NOW - 20 * DAY)
+    assert r.resolve(StreamKind.TRADES, rng) == "hot"
+    state["acc"] = True
+    assert r.resolve(StreamKind.TRADES, rng) == "cold"
+
+
+def test_boundary_is_monotonic_under_clock_step_back() -> None:
+    clock = {"t": NOW}
+    r = TierRouter({}, {}, lambda s: HOT_DAYS, clock_us=lambda: clock["t"])
+    rng = TimeRange(start_us=NOW - 31 * DAY, end_us=NOW - 29 * DAY)
+    assert r.resolve(StreamKind.TRADES, rng) == "both"
+    clock["t"] = NOW - 3 * DAY
+    assert r.resolve(StreamKind.TRADES, rng) == "both"
+    rng2 = TimeRange(start_us=NOW - 40 * DAY, end_us=NOW - 31 * DAY)
+    assert r.resolve(StreamKind.TRADES, rng2) == "cold"
