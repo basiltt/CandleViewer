@@ -158,7 +158,8 @@ omit = [
   "candleviewer/admin/*",
   "candleviewer/alerts/*",
   "candleviewer/bars/*",
-  "candleviewer/book/*",
+  "candleviewer/book/service.py",
+  "candleviewer/book/__init__.py",
   "candleviewer/exchange/base/service.py",
   # rest.py/mapping.py/errors.py/models.py are implemented and tested by
   # E08-T02 (>=85% required); only the lifecycle scaffold stays omitted.
