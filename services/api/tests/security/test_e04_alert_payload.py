@@ -102,7 +102,10 @@ def test_amtool_render_poisoned_page_alert_has_no_secret(tmp_path: Path) -> None
     docker = shutil.which("docker")
     if docker is None:
         pytest.skip("docker unavailable; amtool render also runs in _job-py.yml")
-    (tmp_path / "poisoned.json").write_text(json.dumps(_poisoned()), encoding="utf-8")
+    fixture = tmp_path / "poisoned.json"
+    fixture.write_text(json.dumps(_poisoned()), encoding="utf-8")
+    tmp_path.chmod(0o755)  # amtool runs as `nobody` inside the container
+    fixture.chmod(0o644)
     text = '{{ template "cv.title" . }} | {{ template "cv.body" . }}'
     res = subprocess.run(  # noqa: S603  # fixed argv, pinned image, no shell
         [
@@ -125,8 +128,9 @@ def test_amtool_render_poisoned_page_alert_has_no_secret(tmp_path: Path) -> None
         capture_output=True,
         text=True,
         timeout=120,
-        check=True,
+        check=False,
     )
+    assert res.returncode == 0, res.stderr
     for shape in SHAPES:
         assert shape not in res.stdout
     assert "[PAGE]" in res.stdout and "Occurrences: 3" in res.stdout
