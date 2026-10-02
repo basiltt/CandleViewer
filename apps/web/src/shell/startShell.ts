@@ -17,7 +17,7 @@ let activeSocket: SystemSocket | null = null;
 
 /** Starts the bootstrap fetch and the `system` socket. Returns a `stop()`
  * to tear down the socket (used by tests and by logout). */
-export function startShell(options: StartShellOptions): { stop(): void } {
+export function startShell(options: StartShellOptions): { stop(): void; ready: Promise<void> } {
   activeSocket?.stop();
 
   const socket = new SystemSocket({
@@ -31,9 +31,10 @@ export function startShell(options: StartShellOptions): { stop(): void } {
   activeSocket = socket;
   socket.connect();
 
-  void runBootstrap(options);
+  const ready = runBootstrap(options);
 
   return {
+    ready,
     stop: () => {
       socket.stop();
       if (activeSocket === socket) activeSocket = null;
