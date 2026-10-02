@@ -89,6 +89,12 @@ class TcpIlpTransport:
         self._w: asyncio.StreamWriter | None = None
 
     async def connect(self) -> None:
+        # docker-proxy accepts TCP on the published port before QuestDB is
+        # listening, and ILP/TCP has no acks, so a bare connect can "succeed"
+        # into a void and lose the batch. Require an end-to-end PGWire answer
+        # first (finding for the production ILP transport, see #275).
+        if not await qdb_up():
+            raise ConnectionError("questdb not serving yet")
         self._r, self._w = await asyncio.wait_for(
             asyncio.open_connection(HOST, QDB_ILP_PORT), timeout=3
         )

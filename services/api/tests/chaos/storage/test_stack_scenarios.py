@@ -292,15 +292,17 @@ async def test_s3b_disk_full_on_loopback_cold_root_trading_path_unaffected(
 
 
 def _fill(path: Path) -> None:
-    chunk = b"\0" * (1 << 20)
-    with path.open("wb") as f:
-        try:
-            while True:
-                f.write(chunk)
-                f.flush()
-                os.fsync(f.fileno())
-        except OSError:
-            pass  # ENOSPC: image full
+    """Fill to ENOSPC: 1 MiB chunks, then 4 KiB chunks for the last partial MiB."""
+    with path.open("wb", buffering=0) as f:
+        for size in (1 << 20, 1 << 12):
+            chunk = bytes(size)
+            try:
+                while True:
+                    f.write(chunk)
+            except OSError:
+                pass  # ENOSPC at this granularity
+        with contextlib.suppress(OSError):
+            os.fsync(f.fileno())
 
 
 async def test_s8_two_reapers_on_real_postgres_advisory_lock_one_drop_one_audit() -> None:
