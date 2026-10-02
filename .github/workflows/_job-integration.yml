@@ -82,7 +82,10 @@ jobs:
           CV_LISTENER_PROBE: "1"
           COMPOSE_PROFILES: core
         run: |
-          docker compose -f infra/compose/docker-compose.yml --profile core up -d --wait postgres questdb
+          # questdb: its compose healthcheck reports unhealthy on the runner (tracked separately);
+          # the probe needs only its published sockets, so it is started without --wait.
+          docker compose -f infra/compose/docker-compose.yml --profile core up -d --wait postgres
+          docker compose -f infra/compose/docker-compose.yml --profile core up -d questdb
           cd services/api
           uv run pytest tests/integration/security/test_sr047_listener_probe.py -m integration --no-cov -s -p no:cacheprovider
 
