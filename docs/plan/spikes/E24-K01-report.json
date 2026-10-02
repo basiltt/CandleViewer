@@ -51,5 +51,10 @@
       "zones": 504
     }
   },
-  "cost_ms_per_update_method_a_pure_python": 0.00556
+  "cost_ms_per_update_method_a_pure_python": 0.00556,
+  "disposition": {
+    "method_a": "provisionally held back (no-build until real-data evidence)",
+    "ac1_met": false,
+    "real_fixture_ids": []
+  }
 }
