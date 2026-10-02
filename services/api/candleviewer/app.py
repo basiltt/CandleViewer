@@ -48,6 +48,7 @@ from candleviewer.api import (
     make_log_level_router,
     make_market_router,
     make_rules_router,
+    make_orderbook_router,
     make_ticker_router,
     make_trades_router,
 )
@@ -81,6 +82,7 @@ from candleviewer.auth.scopes import PrincipalSnapshot
 from candleviewer.auth.service import AuthService
 from candleviewer.bars.service import BarsService
 from candleviewer.book.service import BookService
+from candleviewer.book_wiring import BookStream
 from candleviewer.bus.models import Topic
 from candleviewer.bus.service import BusService
 from candleviewer.domain.events import InstrumentUpdatedEvent
@@ -155,7 +157,12 @@ from candleviewer.storage.repositories.onboarding_sqlalchemy import SqlAlchemyOn
 from candleviewer.storage.repositories.relational_sqlalchemy import (
     SqlAlchemyRelationalRepository,
 )
-from candleviewer.storage.repositories.rows import TickerRow, TradeRow
+from candleviewer.storage.repositories.rows import (
+    BookDeltaRow,
+    BookSnapshotRow,
+    TickerRow,
+    TradeRow,
+)
 from candleviewer.storage.repositories.rules_sqlalchemy import SqlAlchemyRulesRepository
 from candleviewer.storage.repositories.scope_sqlalchemy import SqlAlchemyScopeSource
 from candleviewer.storage.repositories.sessions_sqlalchemy import (
@@ -935,6 +942,10 @@ def create_app(
             scope_refresh=ctx.rules.refresh_scope,
         )
     )
+    # E08-S05: maintained L2 book snapshot (503 while resyncing, never a patched book).
+    app.include_router(
+        make_orderbook_router(lambda: ctx.ingestion.books, principal_resolver=audit_resolver)
+    )
     app.add_middleware(CorrelationMiddleware)
     # E09-T03 / #1648: a served route without an RBAC declaration fails the build.
     assert_app_routes_declared(app, spec)
@@ -1071,6 +1082,30 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
             tick_size=_tick_size,
             clock=clock,
             writer=_TradeWriter(),
+        )
+    )
+
+    class _BookWriter:
+        """Write-behind to the hot tier (21-database-schema.md `orderbook_*`)."""
+
+        async def write_book_deltas(self, rows: Sequence[BookDeltaRow]) -> None:
+            await ctx.storage.market_data.write_book_deltas(rows)
+
+        async def write_book_snapshot(self, row: BookSnapshotRow) -> None:
+            await ctx.storage.market_data.write_book_snapshot(row)
+
+    ctx.ingestion.attach_books(
+        BookStream(
+            bus=ctx.bus.bus,
+            env=env,
+            set_desired=lambda topics: _set_desired("book", topics),
+            parse_frame=lambda f: adapter.parse_book_frame(f, _tick_size),
+            topic_for=adapter.book_topic,
+            resubscribe=manager.resubscribe_topic,
+            is_listed=_is_listed,
+            touch=watchdog.touch,
+            clock=clock,
+            writer=_BookWriter(),
         )
     )
     ctx.ingestion.attach_tickers(

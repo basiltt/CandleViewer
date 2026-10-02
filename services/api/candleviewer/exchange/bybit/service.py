@@ -12,6 +12,7 @@ from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
 
 from candleviewer.exchange.bybit.config import RestClientConfig
+from candleviewer.exchange.bybit.orderbook import book_topic, parse_book_frame
 from candleviewer.exchange.bybit.public_ws import (
     PublicSocket,
     public_socket_factory,
@@ -45,6 +46,10 @@ class ExchangeBybitService:
     trade_topic = staticmethod(trade_topic)
     parse_trade_frame = staticmethod(parse_trade_frame)
     recent_trades_fetcher = staticmethod(recent_trades_fetcher)
+
+    #: E08-S05: order-book topic naming + frame parser.
+    book_topic = staticmethod(book_topic)
+    parse_book_frame = staticmethod(parse_book_frame)
 
     @staticmethod
     def public_socket_factory(

@@ -49,7 +49,8 @@ async def test_b14_supervised_lifecycle_and_hot_path_bypass() -> None:
         assert "snapshot_pending" in await _ids(r.interpreter)
         assert e.phase is BookPhase.SNAPSHOT_PENDING
         await e.on_event(snap(10, [lvl(99, 1)], [lvl(101, 1)]))
-        assert "live" in await _ids(r.interpreter) and e.phase is BookPhase.LIVE
+        assert "live" in await _ids(r.interpreter)
+        assert e.phase.value == BookPhase.LIVE.value
         for u in range(11, 20):
             await e.on_event(delta(u, u - 1, [lvl(99, u)]))
         assert "DELTA" not in sup.sent  # INV-B14-a
@@ -76,3 +77,88 @@ def test_book_hot_path_never_imports_statechart() -> None:
     for f in root.glob("*.py"):
         text = f.read_text(encoding="utf-8")
         assert "candleviewer.statechart" not in text and "xstate_statemachine" not in text, f
+
+
+async def test_b14_snapshot_round_trip_at_resync_quiescence_and_refusals() -> None:
+    """Persist at the SNAPSHOT_PENDING quiescence point, restore, and refuse a
+    forged / wrong-hash envelope (E08-S05 test plan)."""
+    import dataclasses
+    from typing import Any
+
+    import pytest
+
+    from candleviewer.statechart.persistence import (
+        ChainTripLatch,
+        InMemoryDrainJournal,
+        MachineKey,
+        Persister,
+        Restorer,
+        RestoreRefusedError,
+        SealedSnapshot,
+        hmac_sealer,
+    )
+    from candleviewer.statechart.registry import Registry
+
+    class Keys:
+        def current(self) -> str:
+            return "k1"
+
+        def key(self, key_id: str) -> bytes:
+            return b"\x07" * 32
+
+    class Repo:
+        def __init__(self) -> None:
+            self.rows: dict[MachineKey, SealedSnapshot] = {}
+
+        async def write_snapshot(self, key: MachineKey, env: SealedSnapshot) -> None:
+            self.rows[key] = env
+
+    class Audit:
+        def __init__(self) -> None:
+            self.quarantined: list[str] = []
+
+        async def drain_error(self, key: Any, error: str) -> None: ...
+        async def persist_refused(self, key: Any, reason: str) -> None: ...
+        async def quarantine(self, key: Any, env: Any, reason: str) -> None:
+            self.quarantined.append(reason)
+
+    class Pager:
+        async def page(self, key: Any, severity: str, message: str) -> None: ...
+
+    registry, keys, audit = Registry(), Keys(), Audit()
+    key = MachineKey("book", "00000000-0000-0000-0000-0000000000b1", "live")
+    r = await build("book", ctx={"book_key": "none"}, clock=SimulatedClock(), lane="platform")
+    await r.interpreter.send("SUBSCRIBE", wait=True)
+    assert "snapshot_pending" in await _ids(r.interpreter)
+    repo = Repo()
+    await Persister(
+        repo=repo,
+        journal=InMemoryDrainJournal(),
+        audit=audit,
+        seal=hmac_sealer(keys, registry.get("book")),
+        machine_hash_of=registry.hash,
+    ).persist(r.interpreter, key=key)
+    env = repo.rows[key]
+
+    def restorer() -> Restorer:
+        return Restorer(
+            registry=registry, keys=keys, journal=InMemoryDrainJournal(), audit=audit,
+            pager=Pager(), latch=ChainTripLatch(), plugins=lambda: [],
+            clock=SimulatedClock(), lane="platform",
+        )  # fmt: skip
+
+    res = await restorer().restore(key, env)
+    try:
+        assert "snapshot_pending" in await _ids(res.interpreter)  # resumes at quiescence
+    finally:
+        await res.interpreter.stop()
+    for bad in (
+        dataclasses.replace(env, machine_hash="0" * 64),
+        dataclasses.replace(
+            env,
+            snapshot={**env.snapshot, "context": {**env.snapshot["context"], "resync_count": 9}},
+        ),
+    ):
+        with pytest.raises(RestoreRefusedError):
+            await restorer().restore(key, bad)
+    assert len(audit.quarantined) == 2

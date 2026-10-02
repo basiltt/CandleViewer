@@ -190,6 +190,18 @@ class ConnectionManager:
             await sock.send(json.dumps({"op": "subscribe", "args": list(batch.topics)}))
         self._watchdog.reset()
 
+    async def resubscribe_topic(self, topic: str) -> None:
+        """Force a fresh snapshot for one topic: unsubscribe then subscribe,
+        shaped by the E08-T04 connection budget (`ConnectionRateGuard`)."""
+        sock = self._sock
+        if sock is None or topic not in self._desired:
+            return  # not connected: the (re)subscribe on connect yields the snapshot
+        delay = self._guard.reserve()
+        if delay > 0:
+            await self._sleep(delay)
+        await sock.send(json.dumps({"op": "unsubscribe", "args": [topic]}))
+        await sock.send(json.dumps({"op": "subscribe", "args": [topic]}))
+
     async def close_socket(self) -> None:
         await self.teardown_session()
 

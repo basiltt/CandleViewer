@@ -105,6 +105,11 @@ class BookEngine:
         else:
             await self.go_live()
 
+    async def invalidate(self, reason: str) -> None:
+        """External discontinuity (frame loss / reconnect): drop and resync."""
+        if self.phase is BookPhase.LIVE:
+            await self._desync(reason)
+
     async def _desync(self, reason: str) -> None:
         self.phase = BookPhase.DESYNCED  # enforce first (C-2.21)
         self.book = None
@@ -162,6 +167,16 @@ class BookEngine:
         self.last_good_ts_us = self._now()
         if not self.muted:
             await self.publish_current("subscribe" if self.resync_count == 0 else "resync")
+
+    def live_snapshot(self, depth: int | None = None) -> BookSnapshot | None:
+        """The current top-`depth` book as a `BookSnapshot`, only while LIVE."""
+        if self.phase is not BookPhase.LIVE or self.book is None or self._template is None:
+            return None
+        n = min(depth or self.depth, self.depth)
+        bids, asks = self.book.top(n)
+        return self._template.model_copy(
+            update={"bids": bids, "asks": asks, "update_id": self.last_u, "depth": n}
+        )
 
     async def publish_current(self, reason: str) -> None:
         """Publish the full current book as a `BookSnapshot` (+ LIVE status)."""
