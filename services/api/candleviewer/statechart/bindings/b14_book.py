@@ -1,66 +1,24 @@
 """candleviewer.statechart.bindings.b14_book - MachineLogic for B14 `book`
 (E08-S05). Chart: `machines/B14.book.machine.json`.
 
-Supervision only (INV-B14-a): the per-delta path never reaches these
-bindings. `apply_delta` / `buffer_delta` stay no-ops because the book engine
-applies/buffers deltas directly as plain code; the chart is told only about
-lifecycle edges. Entry actions call the per-book runtime registered under
-`context["input"]["book_key"]` (the statechart package never imports `book`).
-With no runtime registered actions are no-ops (A6). Names are fixed by the
-chart contract.
+Record-only (C-2.20, C-2.21, INV-B14-a): the book engine enforces and
+executes the whole lifecycle as plain code and forwards lifecycle edges
+fire-and-forget through `candleviewer.ingestion.book_supervisor`. These
+actions only maintain chart context; they never call back into the book and
+never send events. Names are fixed by the chart contract.
 """
 
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from typing import Any, Protocol
+from typing import Any
 
 from candleviewer.statechart.bindings import register_binding_module
 from candleviewer.statechart.config import register_event_schemas
 
 
-class BookRuntime(Protocol):
-    """Implemented by `candleviewer.book.resync.BookEngine`."""
-
-    async def request_snapshot(self) -> None: ...
-    async def go_live(self) -> None: ...
-    async def go_desynced(self) -> None: ...
-
-
-_RUNTIMES: dict[str, BookRuntime] = {}
-
-
-def register_runtime(book_key: str, runtime: BookRuntime) -> None:
-    _RUNTIMES[book_key] = runtime
-
-
-def unregister_runtime(book_key: str) -> None:
-    _RUNTIMES.pop(book_key, None)
-
-
-def _rt(context: dict[str, Any]) -> BookRuntime | None:
-    inp = context.get("input")
-    key = inp.get("book_key") if isinstance(inp, dict) else context.get("book_key")
-    return _RUNTIMES.get(str(key or ""))
-
-
 async def _noop_action(*_args: object, **_kwargs: object) -> None:
     return None
-
-
-async def request_snapshot(interp: Any, context: dict[str, Any], *_a: object) -> None:
-    if (rt := _rt(context)) is not None:
-        await rt.request_snapshot()
-
-
-async def install_snapshot(interp: Any, context: dict[str, Any], *_a: object) -> None:
-    if (rt := _rt(context)) is not None:
-        await rt.go_live()
-
-
-async def emit_book_desynced(interp: Any, context: dict[str, Any], *_a: object) -> None:
-    if (rt := _rt(context)) is not None:
-        await rt.go_desynced()
 
 
 async def bump_resync_count(interp: Any, context: dict[str, Any], *_a: object) -> None:
@@ -76,12 +34,12 @@ ACTIONS: dict[str, Callable[..., Awaitable[None]]] = {
     "buffer_delta": _noop_action,  # hot path: BookEngine buffer, never here
     "bump_resync_count": bump_resync_count,
     "clear_buffer": clear_buffer,
-    "emit_book_desynced": emit_book_desynced,
-    "emit_book_live": _noop_action,  # LIVE status published by install_snapshot
+    "emit_book_desynced": _noop_action,  # executed by BookEngine
+    "emit_book_live": _noop_action,  # LIVE status published by BookEngine.go_live
     "emit_resync_metric": _noop_action,
-    "install_snapshot": install_snapshot,
+    "install_snapshot": _noop_action,  # executed by BookEngine
     "replay_buffered_deltas_after_seq": _noop_action,  # done inside go_live
-    "request_snapshot": request_snapshot,
+    "request_snapshot": _noop_action,  # executed by BookEngine
     "stamp_desync": _noop_action,
 }
 

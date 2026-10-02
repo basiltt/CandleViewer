@@ -177,6 +177,15 @@ def render(manifest: dict) -> str:
         lines.append("allow_indirect_imports = True")
         lines.append("")
 
+    # C-2.20 / CV-LINT-HOTPATH: hot-path modules never import the statechart runtime.
+    hot = cc["hotpath_statechart"]
+    lines.append("[importlinter:contract:forbidden-hotpath-statechart]")
+    lines.append(f"name = {hot['rule']} — hot-path modules never import the statechart runtime")
+    lines.append("type = forbidden")
+    lines.append("source_modules =\n    " + "\n    ".join(hot["source_modules"]))
+    lines.append("forbidden_modules =\n    " + "\n    ".join(hot["forbidden_modules"]))
+    lines.append("")
+
     return "\n".join(lines) + "\n"
 
 

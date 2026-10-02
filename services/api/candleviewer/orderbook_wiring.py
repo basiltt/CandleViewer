@@ -14,8 +14,10 @@ Wires the venue-neutral `book` module to ingestion. Rules:
 * Write-behind to QuestDB is a bounded queue that drops oldest, never
   blocking the reader.
 
-Plain code on the hot path (catalogue 1.2). The chart is built only for the
-supervision edge (`statechart.factory.build("book")`).
+Plain code on the hot path (catalogue 1.2, C-2.20): this module never imports
+the statechart package. B14 health supervision is an injected
+`HealthSupervisor` (`ingestion.book_supervisor.B14BookSupervisor`, built in
+`create_app`) that receives lifecycle edges fire-and-forget.
 """
 
 from __future__ import annotations
@@ -25,12 +27,12 @@ import contextlib
 import time
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Protocol
 
 import structlog
 
 from candleviewer.book.models import BookPhase
-from candleviewer.book.resync import BookEngine
+from candleviewer.book.resync import BookEngine, HealthSink
 from candleviewer.book.tiers import DEFAULT_DEPTH, TieredBook
 from candleviewer.bus.bus import Bus
 from candleviewer.bus.models import QueuePolicy, Topic, TopicPattern
@@ -40,16 +42,12 @@ from candleviewer.ingestion.planner import DEFAULT_GRACE_S, DemandTracker
 from candleviewer.ingestion.ticker_stream import UnknownSymbolError
 from candleviewer.ingestion.watchdog import FeedHealthEvent
 from candleviewer.observability.context import spawn
-from candleviewer.statechart import build
-from candleviewer.statechart.bindings import b14_book
-from candleviewer.statechart.factory import default_clock
 from candleviewer.storage.repositories.rows import BookDeltaRow, BookSnapshotRow
 
 logger = structlog.get_logger(__name__)
 
 WRITE_QUEUE_MAXSIZE = 8192
 SNAPSHOT_TIMEOUT_S = 10.0
-_WAIT = True  # reader-side receipt wait, see `_Sup.send`
 
 
 class BookWriter(Protocol):
@@ -69,19 +67,11 @@ def _now_us() -> int:
     return time.time_ns() // 1000
 
 
-class _Sup:
-    """Adapts a B14 interpreter to the engine's `Supervisor` protocol."""
+class HealthSupervisor(Protocol):
+    """Non-hot B14 supervision, injected by the composition root."""
 
-    def __init__(self, interp: Any) -> None:
-        self.interp = interp
-
-    async def send(self, event: str) -> None:
-        # Called by the engine from the ingestion reader, never from a machine
-        # action (actions only call go_live/request_snapshot, which do not
-        # send). Waiting for the receipt keeps entry actions ordered before the
-        # next frame; this is not a self-receipt (CV-C51). `_WAIT` is a
-        # module constant so the receipt wait is declared once.
-        await self.interp.send(event, wait=_WAIT)
+    async def attach(self, key: str, symbol: str) -> HealthSink: ...
+    def detach(self, key: str) -> None: ...
 
 
 class BookStream:
@@ -102,6 +92,7 @@ class BookStream:
         writer: BookWriter | None = None,
         snapshot_timeout_s: float = SNAPSHOT_TIMEOUT_S,
         default_depth: int = DEFAULT_DEPTH,
+        supervisor: HealthSupervisor | None = None,
     ) -> None:
         self._bus, self._env = bus, env
         self._set_desired, self._parse = set_desired, parse_frame
@@ -113,7 +104,7 @@ class BookStream:
         self._demand = DemandTracker(clock, grace_s)
         self._books: dict[str, TieredBook] = {}
         self._first_sub: set[tuple[str, int]] = set()
-        self._interps: dict[str, list[Any]] = {}
+        self._supervisor = supervisor
         self._keys: dict[str, list[str]] = {}
         self._writes: asyncio.Queue[BookDeltaRow | BookSnapshotRow] = asyncio.Queue(
             maxsize=WRITE_QUEUE_MAXSIZE
@@ -156,9 +147,8 @@ class BookStream:
     def _drop(self, symbol: str) -> None:
         self._books.pop(symbol, None)
         for key in self._keys.pop(symbol, []):
-            b14_book.unregister_runtime(key)
-        for interp in self._interps.pop(symbol, []):
-            spawn(interp.stop(), name="book-chart-stop")
+            if self._supervisor is not None:
+                self._supervisor.detach(key)
         self._first_sub = {k for k in self._first_sub if k[0] != symbol}
 
     # ---- reads (GET /market/orderbook) -----------------------------------
@@ -210,14 +200,10 @@ class BookStream:
             return tb
         tb = TieredBook(self._make_engine(symbol), self._depth)
         self._books[symbol] = tb
-        key = f"{self._env}:{symbol}:{tb.active.depth}"
-        b14_book.register_runtime(key, tb.active)
-        self._keys.setdefault(symbol, []).append(key)
-        result = await build(
-            "book", ctx={"book_key": key, "symbol": symbol}, clock=default_clock(), lane="platform"
-        )
-        self._interps.setdefault(symbol, []).append(result.interpreter)
-        tb.active.supervisor = _Sup(result.interpreter)
+        if self._supervisor is not None:
+            key = f"{self._env}:{symbol}:{tb.active.depth}"
+            self._keys.setdefault(symbol, []).append(key)
+            tb.active.health_sink = await self._supervisor.attach(key, symbol)
         await tb.start()
         return tb
 
@@ -279,10 +265,7 @@ class BookStream:
             e = tb.active
             if e.check_timeout(self._timeout_us):
                 n += 1
-                if e.supervisor is not None:
-                    await e.supervisor.send("SNAPSHOT_TIMEOUT")
-                else:
-                    await e.request_snapshot()
+                await e.on_snapshot_timeout()
         return n
 
     async def drain_writes(self, max_batch: int = 500) -> int:
@@ -334,4 +317,4 @@ class BookStream:
         self._bus.unsubscribe(self._health)
 
 
-__all__ = ["BookStream", "BookView", "BookWriter"]
+__all__ = ["BookStream", "BookView", "BookWriter", "HealthSupervisor"]

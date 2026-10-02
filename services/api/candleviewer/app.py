@@ -85,6 +85,7 @@ from candleviewer.health_wiring import (
     PgSystemEventWriter,
     register_real_probes,
 )
+from candleviewer.ingestion.book_supervisor import B14BookSupervisor
 from candleviewer.ingestion.clock import ClockGuard, ServerTimeFetcher, rest_client_fetcher
 from candleviewer.ingestion.connection import MAX_FRAME_BYTES, ConnectionManager
 from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
@@ -862,6 +863,7 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
             touch=watchdog.touch,
             clock=clock,
             writer=_BookWriter(),
+            supervisor=B14BookSupervisor(),
         )
     )
     ctx.ingestion.attach_tickers(
