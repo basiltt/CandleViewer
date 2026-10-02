@@ -93,4 +93,13 @@ describe("SCR-018 coach marks", () => {
     fireEvent.click(screen.getByText("Take the tour"));
     expect(screen.getByRole("dialog")).toBeTruthy();
   });
+
+  it("does not auto-offer the tour once the checklist is complete", async () => {
+    window.localStorage.clear();
+    const body = { complete: true, dismissed: false, items: all("ok") };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(reply(body)));
+    render(<SetupChecklistCard />);
+    await screen.findByText("Setup complete.");
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
 });

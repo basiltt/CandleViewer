@@ -30,3 +30,20 @@ test("SCR-019 card renders on first sign-in; axe clean with tour open", async ({
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
+
+test("no tour auto-offer once the checklist is complete", async ({ page }) => {
+  await page.route("**/api/v1/onboarding/checklist", (r) =>
+    r.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        complete: true,
+        dismissed: false,
+        items: items.map((i) => ({ ...i, state: "ok" })),
+      }),
+    }),
+  );
+  await page.goto("/terminal/last");
+  await expect(page.getByText("Setup complete.")).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});

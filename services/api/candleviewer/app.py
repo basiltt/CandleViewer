@@ -540,6 +540,8 @@ def _build_onboarding_router(
             bound_at = await store.latest_binding_at(u)
             if bound_at is None:
                 return StepResult("pending", "Bind a sub-account first.")
+            # NOTE: exchange_accounts (E27) does not exist yet; binding time is the only
+            # available proxy for account creation. Swap when E27 lands.
             restricted = bybit_key_restriction(bound_at, datetime.now(UTC))
             if restricted is not None:
                 return restricted

@@ -76,7 +76,7 @@ export function SetupChecklistCard(): JSX.Element | null {
     const d = await fetchChecklist();
     setData(d);
     // Auto-offer once; afterwards only via the explicit button (resume from Help).
-    if (d && !d.dismissed && !tourAlreadySeen()) setTour(true);
+    if (d && !d.dismissed && !d.complete && !tourAlreadySeen()) setTour(true);
   }, []);
   useEffect(() => {
     void load();
