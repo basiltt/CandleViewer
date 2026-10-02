@@ -1,0 +1,19 @@
+rules:
+  - id: cv-storage-open-unrooted
+    languages: [python]
+    severity: ERROR
+    message: >-
+      open() on a path not derived from the CV_COLD_ROOT-anchored registry
+      (ColdPaths / DatasetRegistry). Threat: reading outside the cold root
+      (E07 S3, SR-097).
+    metadata:
+      rule-id: cv-storage-open-unrooted
+    patterns:
+      - pattern: open($P, ...)
+      - metavariable-regex:
+          metavariable: $P
+          regex: '^(?!.*(paths|root|partition_dir|manifests_dir|cold_root)).*$'
+    paths:
+      include:
+        - "services/api/candleviewer/storage/**"
+        - "**/cv-storage-open-unrooted*"

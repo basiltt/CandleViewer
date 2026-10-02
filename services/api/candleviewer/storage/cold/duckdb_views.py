@@ -81,7 +81,7 @@ def build_views(db_path: Path, registry: DatasetRegistry, *, pg_dsn: str | None 
         for view_name, stream in VIEW_STREAMS.items():
             if not _create_parquet_view(con, view_name, registry.dataset_glob(stream)):
                 # Not yet exported: a typed empty view so queries return 0 rows.
-                # nosemgrep: cv-raw-sql-string-interpolation -- view_name is a VIEW_STREAMS key
+                # nosemgrep: cv-raw-sql-string-interpolation, cv-storage-sql-construction
                 con.execute(f"CREATE OR REPLACE VIEW {view_name} AS {_EMPTY_MARKET_VIEW}")
         oms_ok: dict[str, bool] = {}
         for view_name, sub in _OMS_VIEWS.items():
@@ -95,14 +95,14 @@ def build_views(db_path: Path, registry: DatasetRegistry, *, pg_dsn: str | None 
             con.execute("DETACH DATABASE IF EXISTS pg")
             dsn = _checked_ro_dsn(pg_dsn)
             # ATTACH has no bind params (DuckDB grammar); DSN validated above.
-            # nosemgrep: cv-raw-sql-string-interpolation
+            # nosemgrep: cv-raw-sql-string-interpolation, cv-storage-sql-construction
             con.execute(f"ATTACH {_sql_literal(dsn)} AS pg (TYPE postgres, READ_ONLY)")
             journal_parts.append(
                 "SELECT * FROM pg.public.journal_trades "
                 "WHERE opened_at >= (current_date - INTERVAL 90 DAY)"
             )
         if journal_parts:
-            # nosemgrep: cv-raw-sql-string-interpolation -- parts are the two fixed literals above
+            # nosemgrep: cv-raw-sql-string-interpolation, cv-storage-sql-construction
             con.execute(
                 "CREATE OR REPLACE VIEW journal_all AS " + " UNION ALL BY NAME ".join(journal_parts)
             )
@@ -132,6 +132,7 @@ def query_symbol_day_count(db_path: Path, view: str, symbol: str, dt: str) -> in
         raise ValueError(f"unregistered view: {view!r}")
     con = duckdb.connect(str(db_path), read_only=True)
     try:
+        # nosemgrep: cv-storage-sql-construction -- view checked against VIEW_STREAMS
         row = con.execute(
             f"SELECT count(*) FROM {view} WHERE symbol = ? AND dt = ?",  # noqa: S608  # nosec B608 - view checked against VIEW_STREAMS
             [symbol, dt],
