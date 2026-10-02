@@ -50,6 +50,7 @@ async def applied_migrations(executor: QuestDbExecutor) -> set[str]:
     # `_MIGRATIONS_TABLE` is a module constant, never user input; noqa'd
     # rather than parameterised because QuestDB/Postgres bind params are
     # values, not identifiers.
+    # nosemgrep: cv-storage-sql-construction -- module-constant identifier
     rows = await executor.fetch(
         f"SELECT filename FROM {_MIGRATIONS_TABLE}"  # noqa: S608  # nosec B608 - module constant identifier, not user input
     )

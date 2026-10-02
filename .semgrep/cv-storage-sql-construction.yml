@@ -1,0 +1,29 @@
+rules:
+  - id: cv-storage-sql-construction
+    languages: [python]
+    severity: ERROR
+    message: >-
+      SQL built by f-string, %-format, .format() or concatenation in storage/**.
+      Threat: SQL injection into the hot/relational tier (E07 STRIDE, SR-097
+      neighbourhood; CONSTITUTION C-12). Use bound parameters or SQLAlchemy Core.
+    metadata:
+      rule-id: cv-storage-sql-construction
+    patterns:
+      - pattern-either:
+          - pattern: $X.execute(f"...", ...)
+          - pattern: $X.execute("..." % ..., ...)
+          - pattern: $X.execute("...".format(...), ...)
+          - pattern: $X.execute("..." + ..., ...)
+          - pattern: $X.fetch(f"...", ...)
+          - pattern: $X.fetchrow(f"...", ...)
+          - pattern: $X.fetchval(f"...", ...)
+          - pattern: $X.fetch("...".format(...), ...)
+          - pattern: $X.fetch("..." + ..., ...)
+          - pattern: text(f"...")
+          - pattern: text("..." + ...)
+          - pattern: text("...".format(...))
+          - pattern: text("..." % ...)
+    paths:
+      include:
+        - "services/api/candleviewer/storage/**"
+        - "**/cv-storage-sql-construction*"

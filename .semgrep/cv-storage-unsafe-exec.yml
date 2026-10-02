@@ -1,0 +1,18 @@
+rules:
+  - id: cv-storage-unsafe-exec
+    languages: [python]
+    severity: ERROR
+    message: >-
+      pickle/eval/exec in storage/**. Threat: code execution via stored or
+      imported data (E07 STRIDE tampering/EoP). Use msgspec/orjson/pyarrow.
+    metadata:
+      rule-id: cv-storage-unsafe-exec
+    pattern-either:
+      - pattern: pickle.$F(...)
+      - pattern: cPickle.$F(...)
+      - pattern: eval(...)
+      - pattern: exec(...)
+    paths:
+      include:
+        - "services/api/candleviewer/storage/**"
+        - "**/cv-storage-unsafe-exec*"

@@ -10,17 +10,22 @@ then receives `StorageExportVerifyFailed` — the Protocol's contract.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime
 
 import pyarrow.parquet as pq
 import structlog
 
-from candleviewer.storage.cold.layout import ColdPaths
+from candleviewer.observability.context import spawn
+from candleviewer.storage.cold.layout import ColdPaths, DatasetRegistry, stream_dir_name
 from candleviewer.storage.cold.manifest import ManifestStore, sha256_of
 from candleviewer.storage.cold.observability import (
     SystemEventSink,
+    storage_scrub_last_run_timestamp_seconds,
     storage_scrub_mismatches_total,
 )
 from candleviewer.storage.errors import StorageExportVerifyFailed
+from candleviewer.storage.models import StreamKind
 
 logger = structlog.get_logger(__name__)
 
@@ -67,3 +72,97 @@ async def verify_partition(paths: ColdPaths, events: SystemEventSink) -> bool:
         },
     )
     raise StorageExportVerifyFailed(f"{rel_dir}/{file_name}: {reason} mismatch; quarantined")
+
+
+SCRUB_INTERVAL_SECONDS = 7 * 24 * 3600
+
+
+async def scrub_all(
+    registry: DatasetRegistry,
+    events: SystemEventSink,
+    clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+) -> int:
+    """Weekly scrub (SR-094): verify every manifested partition of every
+    registered stream/symbol. Mismatches are quarantined + alerted by
+    `verify_partition`; the sweep continues. Stamps the last-run gauge when
+    done and returns the number of partitions with a mismatch."""
+    bad = 0
+    for stream in StreamKind:
+        base = registry.root / "_manifests" / stream_dir_name(stream)
+        if not base.is_dir():
+            continue
+        symbols = sorted(d.name.split("=", 1)[1] for d in base.glob("symbol=*") if d.is_dir())
+        for symbol in symbols:
+            for paths in registry.manifested_partitions(stream, symbol):
+                try:
+                    await verify_partition(paths, events)
+                except StorageExportVerifyFailed:
+                    bad += 1
+    storage_scrub_last_run_timestamp_seconds.set(clock().timestamp())
+    return bad
+
+
+async def run_weekly_scrub(
+    registry: DatasetRegistry,
+    events: SystemEventSink,
+    *,
+    interval_s: float = SCRUB_INTERVAL_SECONDS,
+    sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+    clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+) -> None:
+    """Supervisor-owned loop: scrub, then sleep `interval_s`; honours cancellation."""
+    while True:
+        try:
+            bad = await scrub_all(registry, events, clock)
+            await events.emit("INFO", "STORAGE_COLD_SCRUB_RUN", {"mismatches": bad})
+        except Exception:
+            logger.exception("cold_scrub_run_failed")
+            await events.emit("WARNING", "STORAGE_COLD_SCRUB_FAILED", {})
+        await sleep(interval_s)
+
+
+class ScrubTask:
+    """Tracked, cancellable owner of the weekly scrub loop (C-2.18)."""
+
+    def __init__(
+        self,
+        registry: DatasetRegistry,
+        events: SystemEventSink,
+        *,
+        interval_s: float = SCRUB_INTERVAL_SECONDS,
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+    ) -> None:
+        self._registry = registry
+        self._events = events
+        self._interval_s = interval_s
+        self._sleep = sleep
+        self._clock = clock
+        self._task: asyncio.Task[None] | None = None
+
+    @property
+    def running(self) -> bool:
+        return self._task is not None and not self._task.done()
+
+    def start(self) -> None:
+        if self._task is None:
+            self._task = spawn(
+                run_weekly_scrub(
+                    self._registry,
+                    self._events,
+                    interval_s=self._interval_s,
+                    sleep=self._sleep,
+                    clock=self._clock,
+                ),
+                name="cold-weekly-scrub",
+            )
+
+    async def stop(self) -> None:
+        task, self._task = self._task, None
+        if task is None:
+            return
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass

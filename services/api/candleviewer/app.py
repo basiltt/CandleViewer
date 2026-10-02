@@ -124,6 +124,9 @@ from candleviewer.rules.service import RulesService
 from candleviewer.settings import Environment, Settings, get_settings
 from candleviewer.statechart.bindings.b16_session import set_audit_sink as set_b16_audit_sink
 from candleviewer.statechart.gateway import GatewayOverloadedError
+from candleviewer.storage.cold.layout import DatasetRegistry
+from candleviewer.storage.cold.observability import LoggingSystemEventSink
+from candleviewer.storage.cold.scrub import ScrubTask
 from candleviewer.storage.repositories.audit_sqlalchemy import SqlAlchemyAuditRepository
 from candleviewer.storage.repositories.identity_sqlalchemy import SqlAlchemyIdentityProvider
 from candleviewer.storage.repositories.instruments_sqlalchemy import (
@@ -503,6 +506,16 @@ def create_app(
     app.state.app_context = ctx
     if resolved.ingestion_ws_enabled:
         wire_public_ws(ctx)
+    # E07-X02 (SR-094): supervised weekly scrub; started/stopped by the lifespan.
+    app.state.scrub_task = (
+        ScrubTask(
+            DatasetRegistry(resolved.parquet_root),
+            LoggingSystemEventSink(),
+            interval_s=float(resolved.scrub_interval_s),
+        )
+        if resolved.scrub_enabled
+        else None
+    )
     identity = build_identity_provider(resolved)
     app.state.identity_provider = identity
     # E04-T02: outermost (added last) so every request - even a mesh rejection -

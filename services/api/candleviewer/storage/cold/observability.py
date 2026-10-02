@@ -35,6 +35,10 @@ storage_cold_bytes = Gauge("storage_cold_bytes", "Bytes in the cold tier.", ["st
 storage_scrub_mismatches_total = Counter(
     "storage_scrub_mismatches_total", "Files quarantined after a checksum/row-count mismatch."
 )
+storage_scrub_last_run_timestamp_seconds = Gauge(
+    "storage_scrub_last_run_timestamp_seconds",
+    "Unix time the last full cold-tier scrub finished (SR-094 observability).",
+)
 
 
 class SystemEventSink(Protocol):

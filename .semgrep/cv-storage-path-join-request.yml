@@ -1,0 +1,21 @@
+rules:
+  - id: cv-storage-path-join-request
+    languages: [python]
+    severity: ERROR
+    message: >-
+      os.path.join with a request-derived value in storage/cold/**. Threat:
+      path traversal / arbitrary file read (E07 S3, SR-097). Resolve paths only
+      through DatasetRegistry.resolve_partition.
+    metadata:
+      rule-id: cv-storage-path-join-request
+    patterns:
+      - pattern-either:
+          - pattern: os.path.join(..., $REQ.$F, ...)
+          - pattern: os.path.join(..., $REQ, ...)
+      - metavariable-regex:
+          metavariable: $REQ
+          regex: '^(req|request|body|payload|params|query|dto|cmd)$'
+    paths:
+      include:
+        - "services/api/candleviewer/storage/cold/**"
+        - "**/cv-storage-path-join-request*"

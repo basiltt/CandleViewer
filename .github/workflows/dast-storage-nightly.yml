@@ -1,0 +1,31 @@
+name: dast-storage-nightly
+
+# E07-X02: nightly (not per-PR, 15-minute budget) OWASP ZAP probe scoped to what
+# exists at R0: path-traversal payloads on storage-backed read routes and a check
+# that data-store ports are unreachable through the app origin. Targets a
+# locally-started stack only; never a live exchange.
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  zap-storage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Start stack
+        run: docker compose -f infra/compose/docker-compose.yml up -d --wait
+      - name: Data-store ports unreachable via app origin
+        run: python infra/scripts/dast_storage_probe.py --base http://127.0.0.1:8000
+      - name: ZAP baseline (path traversal)
+        run: |
+          docker run --rm --network host -v "$PWD:/zap/wrk" ghcr.io/zaproxy/zaproxy:stable \
+            zap-baseline.py -t http://127.0.0.1:8000 -c infra/scripts/zap-storage.conf -I
+      - name: Tear down
+        if: always()
+        run: docker compose -f infra/compose/docker-compose.yml down -v

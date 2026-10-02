@@ -61,6 +61,9 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     # Hourly re-check (AC5 "drift after resume is caught").
     ctx.mesh_self_check.start()
+    scrub_task = getattr(app.state, "scrub_task", None)
+    if scrub_task is not None:
+        scrub_task.start()
     overrides = getattr(app.state, "log_level_overrides", None)
     if overrides is not None:
         overrides.start()
@@ -93,6 +96,8 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
             await health_pg.dispose()
         if overrides is not None:
             await overrides.stop()
+        if scrub_task is not None:
+            await scrub_task.stop()
         await ctx.mesh_self_check.stop()
         await supervisor.stop_all()
 

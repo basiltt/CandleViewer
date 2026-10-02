@@ -177,6 +177,9 @@ class Settings(BaseSettings):
     retention_cron: str = "0 3 * * *"
     export_cron: str = "15 2 * * *"
     compact_cron: str = "0 3 * * 0"
+    # E07-X02 (SR-094): weekly cold-tier checksum scrub (off by default, C-4.13).
+    scrub_enabled: bool = False
+    scrub_interval_s: int = 7 * 24 * 3600
     order_rate_per_uid: int = 8
     native_sl_deadline_ms: int = 3000
     killswitch_on_disconnect_s: int = 30
