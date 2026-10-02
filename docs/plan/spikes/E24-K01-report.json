@@ -56,5 +56,12 @@
     "method_a": "provisionally held back (no-build until real-data evidence)",
     "ac1_met": false,
     "real_fixture_ids": []
-  }
+  },
+  "evidence_status": {
+    "hit_rates": "circular on synthetic data (liquidations cluster by construction); harness validation only, NOT evidence for or against shipping any method",
+    "cost_ms": "pure-Python synthetic timings; NOT a valid budget for E24-S07",
+    "recommendation_basis": "input provenance / honesty argument only (spike section 4)",
+    "ac1": "open; real-data re-run or owner-approved exception on #664 required"
+  },
+  "results_note": "not evidence about Bybit"
 }
