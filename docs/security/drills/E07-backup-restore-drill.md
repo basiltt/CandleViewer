@@ -1,6 +1,6 @@
 # E07 backup / restore drill (SR-090..093) - procedure
 
-Status: executed 2026-10-02 (file-level drill, no docker: Postgres leg skipped by the script when no dump is present).
+Status: PARTIAL 2026-10-02 (file-level only). Postgres + app-start legs NOT run (no docker); the script now fails a full run without them (`CV_DRILL_ALLOW_NO_PG=1` marks a partial run). Full run or owner exception on #276 pending.
 Fixtures only; throwaway backup key (`openssl rand -out key 32`), never the runtime KEK.
 
 1. Back up PG dump + one Parquet partition + config; encrypt with the throwaway key.
