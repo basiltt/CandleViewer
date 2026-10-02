@@ -222,7 +222,10 @@ user_invites = Table(
         "token_hash",
         Text,
         nullable=False,
-        comment="SECRET-DERIVED: sha256 hex of the one-time invite token",
+        comment=(
+            "SECRET-DERIVED: sha256 hex of the one-time invite token; "
+            "the raw token is never stored (E09-S05)."
+        ),
     ),
     Column("invited_by", ForeignKey("users.id", ondelete="SET NULL")),
     Column("expires_at", TIMESTAMP(timezone=True), nullable=False),
@@ -230,7 +233,10 @@ user_invites = Table(
     Column(
         "pending_password_hash",
         Text,
-        comment="SECRET: Argon2id digest held until TOTP enrolment completes",
+        comment=(
+            "SECRET: Argon2id digest held until TOTP enrolment completes; "
+            "moved to users.password_hash on activation (E09-S05)."
+        ),
     ),
     Column("revoked_at", TIMESTAMP(timezone=True)),
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
