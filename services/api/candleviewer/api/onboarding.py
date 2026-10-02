@@ -67,7 +67,9 @@ def make_onboarding_router(
             _count("onboarding_step_state_total", step=key, state=res.state)
             if timed_out:
                 _count("onboarding_probe_timeouts_total", step=key)
-        _ = started
+        observe = getattr(metrics, "observe_latency", None)
+        if observe is not None:
+            observe(time.monotonic() - started)
         return JSONResponse(
             {"complete": complete, "dismissed": dismissed and complete, "items": items}
         )

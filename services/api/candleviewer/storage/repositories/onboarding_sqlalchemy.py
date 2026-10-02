@@ -8,6 +8,7 @@ secret column.
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 
 import sqlalchemy as sa
 
@@ -25,6 +26,9 @@ _TOTP = sa.text(
     "AND confirmed_at IS NOT NULL AND revoked_at IS NULL LIMIT 1"
 )
 _BOUND = sa.text("SELECT 1 FROM user_account_access WHERE user_id = CAST(:u AS uuid) LIMIT 1")
+_LATEST_BINDING = sa.text(
+    "SELECT max(created_at) FROM user_account_access WHERE user_id = CAST(:u AS uuid)"
+)
 
 
 class SqlAlchemyOnboardingStore:
@@ -50,3 +54,10 @@ class SqlAlchemyOnboardingStore:
 
     async def has_account_binding(self, user_id: uuid.UUID) -> bool:
         return await self._exists(_BOUND, user_id)
+
+    async def latest_binding_at(self, user_id: uuid.UUID) -> datetime | None:
+        """When the caller's newest sub-account binding was created (None if none)."""
+        async with self._relational.unit_of_work() as uow:
+            row = (await uow.session.execute(_LATEST_BINDING, {"u": str(user_id)})).first()
+            await uow.commit()
+        return row[0] if row else None

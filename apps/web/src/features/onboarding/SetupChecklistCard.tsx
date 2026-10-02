@@ -6,6 +6,7 @@ import {
   type Checklist,
   type ChecklistItem,
 } from "./checklistApi";
+import { CoachMarkTour, tourAlreadySeen } from "./CoachMarkTour";
 
 const LABELS: Record<string, string> = {
   tailscale: "Tailscale network",
@@ -70,7 +71,13 @@ function Step({
 /** SCR-019. Never blocks the workspace: failures render nothing or per-step errors. */
 export function SetupChecklistCard(): JSX.Element | null {
   const [data, setData] = useState<Checklist | null>(null);
-  const load = useCallback(async () => setData(await fetchChecklist()), []);
+  const [tour, setTour] = useState(false);
+  const load = useCallback(async () => {
+    const d = await fetchChecklist();
+    setData(d);
+    // Auto-offer once; afterwards only via the explicit button (resume from Help).
+    if (d && !d.dismissed && !tourAlreadySeen()) setTour(true);
+  }, []);
   useEffect(() => {
     void load();
   }, [load]);
@@ -96,6 +103,10 @@ export function SetupChecklistCard(): JSX.Element | null {
   return (
     <section aria-label="Setup checklist">
       <h2>Finish setting up</h2>
+      <button type="button" onClick={() => setTour(true)}>
+        Take the tour
+      </button>
+      {tour ? <CoachMarkTour onClose={() => setTour(false)} /> : null}
       <ol>
         {data.items.map((i) => (
           <Step key={i.key} item={i} onRetry={() => void load()} />

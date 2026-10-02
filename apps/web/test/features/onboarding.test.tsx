@@ -73,3 +73,24 @@ describe("formatCountdown", () => {
     expect(formatCountdown("2026-09-30T00:00:00Z", now)).toBe("0h 0m");
   });
 });
+
+describe("SCR-018 coach marks", () => {
+  it("auto-shows once, steps through 8 stops, Esc exits and is not shown again", async () => {
+    window.localStorage.clear();
+    const body = { complete: false, dismissed: false, items: all("pending") };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(reply(body)));
+    const { unmount } = render(<SetupChecklistCard />);
+    const dlg = await screen.findByRole("dialog");
+    expect(dlg.getAttribute("aria-label")).toContain("1 of 8");
+    fireEvent.click(screen.getByText("Next"));
+    expect(screen.getByRole("dialog").getAttribute("aria-label")).toContain("2 of 8");
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+    expect(screen.queryByRole("dialog")).toBeNull();
+    unmount();
+    render(<SetupChecklistCard />);
+    await screen.findAllByRole("listitem");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    fireEvent.click(screen.getByText("Take the tour"));
+    expect(screen.getByRole("dialog")).toBeTruthy();
+  });
+});

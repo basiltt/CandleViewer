@@ -56,7 +56,7 @@ from candleviewer.api.deny_by_default import (
 )
 from candleviewer.api.invites import make_invites_router
 from candleviewer.api.onboarding import make_onboarding_router
-from candleviewer.api.onboarding_checklist import StepResult
+from candleviewer.api.onboarding_checklist import StepResult, bybit_key_restriction
 from candleviewer.api.sessions import make_session_router
 from candleviewer.api.step_up import make_read_only_guard, make_step_up_router
 from candleviewer.api.support_bundle import make_support_bundle_router
@@ -485,11 +485,22 @@ class _OnboardingMetrics:
         "onboarding_checklist_dismissed_total": (),
         "onboarding_probe_timeouts_total": ("step",),
     }
+    _BUCKETS: ClassVar[tuple[float, ...]] = (0.01, 0.05, 0.1, 0.25, 0.5, 1.0)
 
     def __init__(self, metrics: Metrics) -> None:
         self._m = {
             n: metrics.counter(n, f"E09-S06 {n}", labels) for n, labels in self._SPECS.items()
         }
+
+        self._latency = metrics.histogram(
+            "onboarding_checklist_duration_seconds",
+            "E09-S06 checklist assembly latency",
+            (),
+            buckets=self._BUCKETS,
+        )
+
+    def observe_latency(self, seconds: float) -> None:
+        self._latency.child().observe(seconds)
 
     def inc(self, name: str, **labels: str) -> None:
         metric = self._m[name]
@@ -523,8 +534,25 @@ def _build_onboarding_router(
                 return StepResult("ok")
             return StepResult("pending", "No sub-account is bound to you yet.")
 
-        probes = {"tailscale": tailscale, "totp": totp, "sub_account": sub_account}
-    flags = {"api_key": False, "profile_limits": False, "demo_session": False}
+        async def api_key(u: Any) -> StepResult:
+            # Real probe: Bybit blocks key creation for 48 h after the sub-account
+            # binding (US-ONB-007). Key inventory itself ships with E27.
+            bound_at = await store.latest_binding_at(u)
+            if bound_at is None:
+                return StepResult("pending", "Bind a sub-account first.")
+            restricted = bybit_key_restriction(bound_at, datetime.now(UTC))
+            if restricted is not None:
+                return restricted
+            return StepResult("pending", "Add a withdrawal-disabled API key.")
+
+        probes = {
+            "tailscale": tailscale,
+            "totp": totp,
+            "sub_account": sub_account,
+            "api_key": api_key,
+        }
+    # profile_limits / demo_session depend on E27 (exchange_accounts), not yet shipped.
+    flags = {"profile_limits": False, "demo_session": False}
     return make_onboarding_router(store, principal_resolver, probes, flags, metrics)
 
 
