@@ -662,3 +662,192 @@ system_events = Table(
         postgresql_where=text("symbol IS NOT NULL"),
     ),
 )
+
+
+#: Recorder tables (E16-T01, revision 0011_recorder) - `21-database-schema.md` Sec.3.6.
+stream_kind = ENUM(
+    "trades",
+    "orderbook_delta",
+    "orderbook_snapshot",
+    "tickers",
+    "klines",
+    "liquidations",
+    "open_interest",
+    "funding",
+    name="stream_kind",
+    metadata=metadata,
+    create_type=False,
+)
+record_reason = ENUM(
+    "manual",
+    "chart_open",
+    "position_open",
+    "rule_dependency",
+    "alert_dependency",
+    name="record_reason",
+    metadata=metadata,
+    create_type=False,
+)
+recording_state = ENUM(
+    "idle",
+    "starting",
+    "recording",
+    "degraded",
+    "stopping",
+    "stopped",
+    "error",
+    name="recording_state",
+    metadata=metadata,
+    create_type=False,
+)
+retention_action = ENUM(
+    "drop",
+    "archive_parquet",
+    "downsample",
+    "pin",
+    name="retention_action",
+    metadata=metadata,
+    create_type=False,
+)
+
+recorded_symbols = Table(
+    "recorded_symbols",
+    metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column(
+        "symbol",
+        symbol_code,
+        ForeignKey("instruments.symbol", ondelete="RESTRICT"),
+        nullable=False,
+    ),
+    Column("env", exchange_env, nullable=False, server_default=text("'live'")),
+    Column("reason", record_reason, nullable=False, server_default=text("'manual'")),
+    Column("reason_refs", JSONB, nullable=False, server_default=text("'[]'::jsonb")),
+    Column(
+        "streams",
+        ARRAY(stream_kind),
+        nullable=False,
+        server_default=text("'{trades,orderbook_delta,tickers,liquidations}'"),
+    ),
+    Column("orderbook_depth", SmallInteger, nullable=False, server_default=text("200")),
+    Column("pinned", Boolean, nullable=False, server_default=text("false")),
+    Column("retention_days", Integer),
+    Column("priority", SmallInteger, nullable=False, server_default=text("100")),
+    Column("added_by", ForeignKey("users.id", ondelete="SET NULL")),
+    Column("auto_added_at", TIMESTAMP(timezone=True)),
+    Column("first_recorded_at", TIMESTAMP(timezone=True)),
+    Column("last_recorded_at", TIMESTAMP(timezone=True)),
+    Column("bytes_estimate", BigInteger, nullable=False, server_default=text("0")),
+    Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("removed_at", TIMESTAMP(timezone=True)),
+    CheckConstraint("orderbook_depth IN (1,50,200,500)", name="rs_depth"),
+    CheckConstraint(
+        "retention_days IS NULL OR retention_days BETWEEN 1 AND 3650", name="rs_retention"
+    ),
+    CheckConstraint("array_length(streams,1) >= 1", name="rs_streams"),
+    CheckConstraint("reason = 'manual' OR auto_added_at IS NOT NULL", name="rs_autoshape"),
+    Index(
+        "ux_rs_symbol", "symbol", "env", unique=True, postgresql_where=text("removed_at IS NULL")
+    ),
+    Index("ix_rs_pinned", "symbol", postgresql_where=text("pinned AND removed_at IS NULL")),
+    Index(
+        "ix_rs_auto",
+        "reason",
+        postgresql_where=text("removed_at IS NULL AND reason <> 'manual'"),
+    ),
+)
+
+recording_sessions = Table(
+    "recording_sessions",
+    metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column(
+        "recorded_symbol_id",
+        ForeignKey("recorded_symbols.id", ondelete="CASCADE"),
+        nullable=False,
+    ),
+    Column("symbol", symbol_code, nullable=False),
+    Column("state", recording_state, nullable=False, server_default=text("'starting'")),
+    Column("streams", ARRAY(stream_kind), nullable=False),
+    Column("orderbook_depth", SmallInteger, nullable=False),
+    Column("ws_endpoint", Text, nullable=False),
+    Column("started_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("ended_at", TIMESTAMP(timezone=True)),
+    Column("first_event_ts", TIMESTAMP(timezone=True)),
+    Column("last_event_ts", TIMESTAMP(timezone=True)),
+    Column("messages_received", BigInteger, nullable=False, server_default=text("0")),
+    Column("messages_dropped", BigInteger, nullable=False, server_default=text("0")),
+    Column("bytes_written", BigInteger, nullable=False, server_default=text("0")),
+    Column("reconnect_count", Integer, nullable=False, server_default=text("0")),
+    Column("snapshot_count", Integer, nullable=False, server_default=text("0")),
+    Column("degraded_seconds", Integer, nullable=False, server_default=text("0")),
+    Column("end_reason", Text),
+    Column("error_message", Text),
+    CheckConstraint("messages_received >= 0 AND messages_dropped >= 0", name="recs_counts"),
+    CheckConstraint("ended_at IS NULL OR ended_at >= started_at", name="recs_window"),
+    Index("ix_recs_symbol_time", "symbol", text("started_at DESC")),
+    Index(
+        "ix_recs_live",
+        "symbol",
+        postgresql_where=text("state IN ('starting','recording','degraded')"),
+    ),
+)
+
+recording_gaps = Table(
+    "recording_gaps",
+    metadata,
+    Column("id", BigInteger, primary_key=True, autoincrement=True),
+    Column(
+        "recording_session_id",
+        ForeignKey("recording_sessions.id", ondelete="CASCADE"),
+        nullable=False,
+    ),
+    Column("symbol", symbol_code, nullable=False),
+    Column("stream", stream_kind, nullable=False),
+    Column("gap_start", TIMESTAMP(timezone=True), nullable=False),
+    Column("gap_end", TIMESTAMP(timezone=True), nullable=False),
+    Column("cause", Text, nullable=False),
+    Column("backfilled", Boolean, nullable=False, server_default=text("false")),
+    Column("backfill_source", Text),
+    CheckConstraint("gap_end > gap_start", name="rg_window"),
+    CheckConstraint(
+        "cause IN ('ws_disconnect','backpressure_drop','process_restart','seq_jump',"
+        "'exchange_outage')",
+        name="rg_cause",
+    ),
+    Index("ix_rg_symbol_time", "symbol", text("gap_start DESC")),
+)
+
+retention_policies = Table(
+    "retention_policies",
+    metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("scope", Text, nullable=False),
+    Column("symbol", symbol_code),
+    Column("stream", stream_kind, nullable=False),
+    Column("retain_days", Integer, nullable=False, server_default=text("30")),
+    Column("action", retention_action, nullable=False, server_default=text("'archive_parquet'")),
+    Column("downsample_to", Text),
+    Column("archive_path", Text),
+    Column("max_disk_gb", Integer),
+    Column("enabled", Boolean, nullable=False, server_default=text("true")),
+    Column("last_run_at", TIMESTAMP(timezone=True)),
+    Column("last_run_deleted_rows", BigInteger, nullable=False, server_default=text("0")),
+    Column("created_by", ForeignKey("users.id", ondelete="SET NULL")),
+    Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    CheckConstraint("scope IN ('default','symbol')", name="rp_scope"),
+    CheckConstraint("(scope = 'symbol') = (symbol IS NOT NULL)", name="rp_symshape"),
+    CheckConstraint("retain_days BETWEEN 1 AND 3650", name="rp_days"),
+    CheckConstraint("action <> 'downsample' OR downsample_to IS NOT NULL", name="rp_downshape"),
+    CheckConstraint("max_disk_gb IS NULL OR max_disk_gb > 0", name="rp_disk"),
+    Index("ux_rp_default", "stream", unique=True, postgresql_where=text("scope = 'default'")),
+    Index(
+        "ux_rp_symbol",
+        "symbol",
+        "stream",
+        unique=True,
+        postgresql_where=text("scope = 'symbol'"),
+    ),
+)

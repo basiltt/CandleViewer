@@ -1568,6 +1568,8 @@ CREATE TRIGGER trg_ad_append BEFORE DELETE ON alert_deliveries
 
 #### 3.6.1 `recorded_symbols`
 
+> Shipped as Alembic `0011_recorder` (E16-T01; the ticket's `0007` number was taken). DDL below is verbatim, except `stream_kind` is created by this revision (no earlier owner) and defaults are seeded one row per `stream_kind` (`engine_metrics` is not a `stream_kind`). `cv_app`/`cv_ro` have DELETE/TRUNCATE revoked on `recording_sessions` and `recording_gaps`.
+
 The user-managed recorded list, empty by default (owner decision #4). Auto-record rows are created by the recorder when a chart or position opens and are removed by the reaper when the last reason disappears **and** the symbol is not pinned.
 
 ```sql
