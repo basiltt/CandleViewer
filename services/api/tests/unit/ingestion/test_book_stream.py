@@ -10,11 +10,11 @@ import pytest
 
 from candleviewer.book.models import BookPhase, BookStatus
 from candleviewer.book.resync import BookEngine
-from candleviewer.book_wiring import BookStream
 from candleviewer.bus.bus import Bus
 from candleviewer.bus.models import QueuePolicy
 from candleviewer.exchange.base.models import BookDelta, BookSnapshot
 from candleviewer.exchange.bybit.orderbook import book_topic, parse_book_frame
+from candleviewer.orderbook_wiring import BookStream
 
 FIX = Path(__file__).parents[2] / "fixtures" / "bybit" / "orderbook_BTCUSDT.jsonl"
 FRAMES = FIX.read_text(encoding="utf-8").splitlines()

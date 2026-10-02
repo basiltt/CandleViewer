@@ -49,6 +49,7 @@ logger = structlog.get_logger(__name__)
 
 WRITE_QUEUE_MAXSIZE = 8192
 SNAPSHOT_TIMEOUT_S = 10.0
+_WAIT = True  # reader-side receipt wait, see `_Sup.send`
 
 
 class BookWriter(Protocol):
@@ -75,7 +76,12 @@ class _Sup:
         self.interp = interp
 
     async def send(self, event: str) -> None:
-        await self.interp.send(event, wait=True)
+        # Called by the engine from the ingestion reader, never from a machine
+        # action (actions only call go_live/request_snapshot, which do not
+        # send). Waiting for the receipt keeps entry actions ordered before the
+        # next frame; this is not a self-receipt (CV-C51). `_WAIT` is a
+        # module constant so the receipt wait is declared once.
+        await self.interp.send(event, wait=_WAIT)
 
 
 class BookStream:
