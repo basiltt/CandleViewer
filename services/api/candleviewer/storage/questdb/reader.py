@@ -14,8 +14,9 @@ parameters, never f-string'd into the query text).
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Protocol, cast
 
 from candleviewer.storage.models import TimeRange
 
@@ -165,3 +166,32 @@ class QuestDbReader:
 
     async def run(self, builder: QueryBuilder) -> list[dict[str, object]]:
         return await self._conn.fetch(builder.sql, *builder.params)
+
+
+def pgwire_readiness_probe(connection: PgWireConnection) -> Callable[[], Awaitable[bool]]:
+    """Production readiness probe for `IlpWriter(readiness_probe=...)`: a
+    `SELECT 1` over PG-wire; any error or empty result means not ready."""
+
+    async def probe() -> bool:
+        try:
+            return bool(await connection.fetch("SELECT 1"))
+        except Exception:
+            return False
+
+    return probe
+
+
+def pgwire_committed_counter(
+    connection: PgWireConnection, tables: Sequence[str]
+) -> Callable[[], Awaitable[int]]:
+    """Total committed rows across `tables` (internal, trusted names) for
+    `IlpWriter(committed_counter=...)`."""
+
+    async def count() -> int:
+        total = 0
+        for table in tables:
+            rows = await connection.fetch(f"SELECT count() AS n FROM {table}")  # noqa: S608  # nosec B608 - table names are internal trusted constants
+            total += int(cast(int, rows[0]["n"])) if rows else 0
+        return total
+
+    return count

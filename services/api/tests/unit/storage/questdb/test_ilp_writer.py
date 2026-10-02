@@ -349,3 +349,127 @@ def test_serialize_ilp_line_arbitrary_string_field_text_is_one_line(text: str) -
     line = serialize_ilp_line(schema, {"note": text}, ts_us=1)
     assert "\n" not in line
     assert "\r" not in line
+
+
+@pytest.mark.asyncio
+async def test_connect_holds_writes_until_readiness_probe_passes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Port accepts before the ILP listener is live: no batch may be sent
+    until the readiness probe succeeds (regression for #1701)."""
+
+    async def _no_sleep(_: float) -> None:
+        return None
+
+    monkeypatch.setattr(asyncio, "sleep", _no_sleep)
+    transport = _FakeTransport()
+    results = iter([False, False, True])
+    calls: list[int] = []
+
+    async def probe() -> bool:
+        calls.append(len(transport.written))
+        return next(results)
+
+    writer = IlpWriter(transport, {"trades": TRADES_SCHEMA}, flush_rows=1, readiness_probe=probe)
+    await writer.start()
+    assert len(calls) == 3
+    assert transport.written == []
+    row = {"symbol": "BTCUSDT", "price": 1.0, "trade_id": "t", "ts": 1_700_000_000_000_000}
+    await writer.write_rows("trades", [row], "ts")
+    assert len(transport.written) == 1
+    assert writer.rows_written_total == 1
+
+
+@pytest.mark.asyncio
+async def test_reconnect_mid_run_reruns_readiness_probe(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A write failure drops the connection; the next flush must re-probe
+    before sending (chaos S1 shape, #1701)."""
+
+    async def _no_sleep(_: float) -> None:
+        return None
+
+    monkeypatch.setattr(asyncio, "sleep", _no_sleep)
+    transport = _FakeTransport()
+    probes: list[int] = []
+
+    async def probe() -> bool:
+        probes.append(1)
+        return True
+
+    writer = IlpWriter(transport, {"trades": TRADES_SCHEMA}, flush_rows=1, readiness_probe=probe)
+    await writer.start()
+    assert len(probes) == 1
+    writer._connected = False  # simulate drop after a failed write
+    row = {"symbol": "BTCUSDT", "price": 1.0, "trade_id": "t", "ts": 1_700_000_000_000_000}
+    await writer.write_rows("trades", [row], "ts")
+    assert len(probes) == 2
+    assert writer.rows_written_total == 1
+
+
+@pytest.mark.asyncio
+async def test_reconcile_reports_sent_vs_committed_gap() -> None:
+    transport = _FakeTransport()
+    committed = [10]
+
+    async def counter() -> int:
+        return committed[0]
+
+    writer = IlpWriter(
+        transport, {"trades": TRADES_SCHEMA}, flush_rows=1, committed_counter=counter
+    )
+    await writer.start()
+    row = {"symbol": "BTCUSDT", "price": 1.0, "trade_id": "t", "ts": 1_700_000_000_000_000}
+    await writer.write_rows("trades", [row], "ts")
+    assert await writer.reconcile() == 1
+    assert writer.unreconciled_rows == 1
+    committed[0] = 11
+    assert await writer.reconcile() == 0
+    assert writer.unreconciled_rows == 0
+
+
+@pytest.mark.asyncio
+async def test_reconcile_baseline_set_once_and_kept_across_reconnect() -> None:
+    transport = _FakeTransport()
+    committed = [100]
+    calls = [0]
+
+    async def counter() -> int:
+        calls[0] += 1
+        return committed[0]
+
+    writer = IlpWriter(
+        transport, {"trades": TRADES_SCHEMA}, flush_rows=1, committed_counter=counter
+    )
+    await writer.start()
+    row = {"symbol": "BTCUSDT", "price": 1.0, "trade_id": "t", "ts": 1_700_000_000_000_000}
+    await writer.write_rows("trades", [row], "ts")
+    writer._connected = False  # drop, then reconnect on next write
+    await writer.write_rows("trades", [row], "ts")
+    committed[0] = 101  # only one of two rows landed
+    before = calls[0]
+    assert await writer.reconcile() == 1  # baseline stayed 100
+    assert calls[0] == before + 1  # reconcile read once; no re-baseline
+
+
+@pytest.mark.asyncio
+async def test_build_hot_tier_writer_wires_guards_and_exports_gap() -> None:
+    from candleviewer.observability.metrics import Metrics
+    from candleviewer.storage.questdb.wiring import build_hot_tier_writer, run_reconcile_loop
+
+    class Conn:
+        n = 5
+
+        async def fetch(self, sql: str, *params: object) -> list[dict[str, object]]:
+            return [{"n": self.n}]
+
+    conn = Conn()
+    writer = build_hot_tier_writer(_FakeTransport(), {"trades": TRADES_SCHEMA}, conn, flush_rows=1)
+    await writer.start()
+    row = {"symbol": "BTCUSDT", "price": 1.0, "trade_id": "t", "ts": 1_700_000_000_000_000}
+    await writer.write_rows("trades", [row], "ts")
+    metrics = Metrics("demo")
+    await run_reconcile_loop(writer, metrics, interval_s=0, iterations=1)
+    assert writer.unreconciled_rows == 1
+    assert "questdb_ilp_unreconciled_rows" in metrics._metrics

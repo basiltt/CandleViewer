@@ -19,6 +19,7 @@ from __future__ import annotations
 import asyncio
 import random
 import time
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Protocol
 
@@ -148,7 +149,21 @@ class IlpWriter:
         flush_rows: int = _FLUSH_ROWS,
         flush_interval_s: float = _FLUSH_INTERVAL_S,
         rng: random.Random | None = None,
+        readiness_probe: Callable[[], Awaitable[bool]] | None = None,
+        committed_counter: Callable[[], Awaitable[int]] | None = None,
     ) -> None:
+        # Optional: returns total rows QuestDB has committed (e.g. via PG-wire
+        # count()). MUST be cumulative/monotonic (e.g. count() of the tables):
+        # baselined once at first successful connect and deliberately NOT
+        # re-baselined on reconnect, so rows lost across a reconnect still
+        # show as a gap. `reconcile()` reports sent-vs-committed (#1701).
+        self._committed_counter = committed_counter
+        self._committed_baseline: int | None = None
+        # ILP/TCP has no acks and the port can accept before the ILP listener
+        # is live, so a batch sent then vanishes. When set, the probe (e.g.
+        # `SELECT 1` over PG-wire / HTTP /exec) must return True after every
+        # (re)connect before any write; buffered rows are held meanwhile.
+        self._readiness_probe = readiness_probe
         self._transport = transport
         self._schemas = schemas
         self._max_queue_rows = max_queue_rows
@@ -163,6 +178,7 @@ class IlpWriter:
         self._reconnect_delay_s = _RECONNECT_BASE_S
         self._write_errors_total = 0
         self._rows_written_total = 0
+        self._unreconciled_rows = 0
         self._lock = asyncio.Lock()
 
     @property
@@ -172,6 +188,28 @@ class IlpWriter:
     @property
     def write_errors_total(self) -> int:
         return self._write_errors_total
+
+    async def reconcile(self) -> int:
+        """Rows sent since start minus rows QuestDB reports committed since
+        start (0 = all landed; >0 = silently dropped/not yet visible). Logs a
+        warning on a positive gap. Requires `committed_counter`."""
+        if self._committed_counter is None or self._committed_baseline is None:
+            raise RuntimeError("reconcile requires committed_counter and a started writer")
+        committed = await self._committed_counter() - self._committed_baseline
+        gap = self._rows_written_total - committed
+        self._unreconciled_rows = max(gap, 0)
+        if gap > 0:
+            logger.warning(
+                "questdb_ilp_sent_vs_committed_gap",
+                sent=self._rows_written_total,
+                committed=committed,
+                gap=gap,
+            )
+        return gap
+
+    @property
+    def unreconciled_rows(self) -> int:
+        return self._unreconciled_rows
 
     def queue_depth(self, table: str) -> int:
         buf = self._buffers.get(table)
@@ -184,6 +222,11 @@ class IlpWriter:
         while True:
             try:
                 await self._transport.connect()
+                if self._readiness_probe is not None and not await self._readiness_probe():
+                    await self._transport.close()
+                    raise ConnectionError("questdb not ready (readiness probe failed)")
+                if self._committed_counter is not None and self._committed_baseline is None:
+                    self._committed_baseline = await self._committed_counter()
                 self._connected = True
                 self._reconnect_delay_s = _RECONNECT_BASE_S
                 return
