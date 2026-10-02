@@ -160,7 +160,7 @@ def main() -> None:
         make_day("syn-cascade-3", 3, True),
     ]
     # Sensitivity: hidden mix == assumed tiers (removes the built-in mismatch bias against (a)).
-    matched = [make_day("syn-matched-%d" % i, 10 + i, i == 2, TIERS) for i in range(3)]
+    matched = [make_day(f"syn-matched-{i}", 10 + i, i == 2, TIERS) for i in range(3)]
     out = {
         "synthetic": True,
         "results_matched_mix_sensitivity": evaluate(matched),
