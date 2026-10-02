@@ -54,7 +54,7 @@
     },
     "0011_recorder": {
       "path": "services/api/candleviewer/migrations/versions/0011_recorder.py",
-      "sha256": "79a8244807f52a5f0fa5a3c2e0a173b680488a2933d56eaa8c5c49107c827124",
+      "sha256": "77e0594c3e4de8255b1ff366d9624d573dc164c6a9e450b539a676c7ad52d42c",
       "down_revision": "0010_user_invites"
     }
   }

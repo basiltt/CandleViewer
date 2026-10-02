@@ -8,7 +8,7 @@ Purely additive (C-5.1). DDL mirrors `docs/plan/21-database-schema.md`
 Sec.3.6.1-3.6.3. The ticket calls this `0007_recorder`; 0007-0010 were taken
 by earlier tickets, so the next free number is used (single linear history).
 `stream_kind` had no earlier owner, so it is created here with the other
-recorder enums (guarded: Postgres has no CREATE TYPE IF NOT EXISTS).
+recorder enums.
 
 Seeds one `scope='default'` retention row per `stream_kind` from the Sec.7
 matrix. `engine_metrics` (the only `drop` row) is not a `stream_kind`, so no
@@ -44,10 +44,7 @@ def downgrade() -> None:
     op.execute(_DOWNGRADE_SQL)
 
 
-_ENUM_GUARD = (
-    "DO $BODY$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = '{n}') "
-    "THEN CREATE TYPE {n} AS ENUM ({v}); END IF; END $BODY$;\n"
-)
+_ENUM_GUARD = "CREATE TYPE {n} AS ENUM ({v});" + chr(10)
 
 # Static literals only (no caller data); `.format` just avoids repeating the guard.
 _ENUMS_SQL = "".join(

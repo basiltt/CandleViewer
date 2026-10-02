@@ -117,7 +117,7 @@ async def test_open_and_close_session() -> None:
         orderbook_depth=200,
         ws_endpoint="wss://example.invalid",
     )
-    assert rel.calls[0][1]["streams"] == "{trades,tickers}"
+    assert rel.calls[0][1]["streams"] == ["trades", "tickers"]
     assert rel.calls[0][1]["id"] == sid
     assert await repo.close_session(sid, "manual_stop") is True
     assert rel.calls[1][1] == {"id": sid, "reason": "manual_stop"}

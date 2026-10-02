@@ -40,6 +40,11 @@ def test_metadata_declares_every_table_from_0001() -> None:
         "user_invites",
         # E04-T04 (0008_system_events)
         "system_events",
+        # E16-T01 (0011_recorder)
+        "recorded_symbols",
+        "recording_sessions",
+        "recording_gaps",
+        "retention_policies",
     }
     actual = {t.name for t in metadata.sorted_tables}
     assert actual == expected
