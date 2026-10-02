@@ -35,3 +35,9 @@ Drill windows are recorded in `system_events`; coordinate security-rule drills (
 | OmsRateRejects | ticket | 0m | `docs/plan/07-release-and-prr.md#alert-omsraterejects` | synthetic | | | | | | pending |
 | EgressIpChanged | ticket | 0m | `docs/plan/07-release-and-prr.md#alert-egressipchanged` | synthetic | | | | | | pending |
 | AlertmanagerNotificationsFailed | ticket | 0m | `docs/plan/07-release-and-prr.md#alert-alertmanagernotificationsfailed` | synthetic | | | | | | pending |
+
+## Execution status and exception request (2026-10-02)
+
+- **Executed locally (evidence):** `services/api/tests/qa/test_e04_q01_blackbox.py` — 12 passed (uv, py3.12, 2026-10-02). Covers in-process metrics exposure, canary-secret redaction across logging paths (AC5), and Prometheus-unavailable fallback behaviour (AC6) at unit/ASGI level.
+- **Not executable on the authoring host:** AC2 live drills (fired/received/runbook walked), AC3 near-miss via promtool, AC4 dashboards, and k6 runs (`metrics_scrape.k6.js` p95<50 ms, alert delivery <=60 s). They need docker, Prometheus, Alertmanager, Grafana and k6, none installed here.
+- **Owner exception requested:** these staging-only items are deferred to the first staging drill; this PR delivers the plan, matrix, scripts and in-process tests only. QA fills the matrix above and attaches k6 output to E04-Q01 before the ticket moves to Done. Until then the 60 s delivery and <50 ms scrape budgets are **unverified**, not passed.
