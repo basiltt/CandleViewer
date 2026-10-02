@@ -21,7 +21,7 @@ recorded as *pending staging run* in `qa/plans/e04-alert-drill-matrix.md`.
 | E04-TC-L01 | stage telemetry | send ticks with end-to-end timestamps | per-stage percentiles exported | US-OBS-002 / E04-T02 | Staging |
 | E04-TC-L02 | synthetic p95 > 250 ms for 60 s | inject series | `LatencyBudgetBreach` fires naming stage | US-OBS-002 / E04-T05 | Auto (promtool) + Staging |
 | E04-TC-L03 | UI session | open latency indicator | compact current figure shown | US-OBS-002 / E04-T06 | Staging |
-| E04-TC-G01 | canary fixture, DEBUG | push canaries through app, stdlib, third-party, traceback paths | zero canaries in captured output (hit = p0 bug) | US-OBS-003 / E04-T03 | Staging |
+| E04-TC-G01 | canary fixture, DEBUG | push canaries through app, stdlib, third-party, traceback paths | zero canaries in captured output (hit = p0 bug) | US-OBS-003 / E04-T03 | CI (automated: test_g01 in services/api/tests/qa/test_e04_q01_blackbox.py) + Staging |
 | E04-TC-G02 | one order request | follow correlation id | same id on API, OMS, adapter, WS lines | US-OBS-003 / E04-T03 | Staging |
 | E04-TC-G03 | runtime override | raise one subsystem, wait timeout | only that subsystem verbose; reverts automatically | US-OBS-003 / E04-T03 | Staging |
 | E04-TC-A01 | Page and Ticket rules | fire each per drill matrix | notification received <= 60 s, runbook walked | US-OBS-004 / E04-T05 | Staging |

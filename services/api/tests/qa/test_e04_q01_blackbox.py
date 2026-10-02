@@ -193,3 +193,50 @@ def test_t05_burst_beyond_limit_is_429_with_retry_after() -> None:
     limited = next(r for r in codes if r.status_code == 429)
     assert "retry-after" in limited.headers
     assert _rejected(m, "rate_limited") >= 1
+
+
+# --- E04-TC-G01 (AC5): canary secrets through the four logging paths at DEBUG ---
+
+
+def test_g01_canaries_never_reach_output_via_four_logging_paths() -> None:
+    import io
+    import logging
+    from contextlib import redirect_stdout
+
+    import structlog
+
+    from candleviewer.observability import logging as logging_mod
+    from candleviewer.observability.logging import configure_logging
+    from candleviewer.observability.secret_type import Secret
+
+    buf = io.StringIO()
+    try:
+        with redirect_stdout(buf):
+            configure_logging(env="dev", level="debug", fmt="json")
+            # 1. app path (structlog), sensitive key name and Secret wrapper
+            structlog.get_logger("app").debug(
+                "login", password=f"{CANARY}-app", wrapped=Secret(f"{CANARY}-wrapped")
+            )
+            # 2. stdlib path, no structlog contact
+            logging.getLogger("stdlib.e04").debug(
+                "hdr %s", {"authorization": f"{CANARY}-stdlib", "x-bapi-sign": CANARY + "-sig"}
+            )
+            # 3. third-party-style logger with extra fields
+            logging.getLogger("urllib3.connectionpool").debug(
+                "req", extra={"api_secret": f"{CANARY}-3p"}
+            )
+            # 4. traceback path
+            try:
+                raise RuntimeError("boom")
+            except RuntimeError:
+                structlog.get_logger("app").error("failed", exc_info=True, secret=f"{CANARY}-tb")
+            listener = logging_mod._listener
+            assert listener is not None
+            listener.stop()
+            logging_mod._listener = None
+    finally:
+        logging.getLogger().handlers = []
+        structlog.reset_defaults()
+    out = buf.getvalue()
+    assert out.strip(), "expected log output to be captured"
+    assert "CANARY-SECRET" not in out, "canary leaked into logs (p0)"
