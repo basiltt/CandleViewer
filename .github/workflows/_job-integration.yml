@@ -74,7 +74,13 @@ jobs:
         env:
           # CI-only throwaway; the stores hold no data and bind loopback only.
           POSTGRES_PASSWORD: ci-only-${{ github.run_id }}
+          GF_SECURITY_ADMIN_PASSWORD: ci-only-${{ github.run_id }}
+          MINIO_ROOT_PASSWORD: ci-only-${{ github.run_id }}
+          CV_ALERT_PAGE_WEBHOOK_URL: http://127.0.0.1:1/unused
+          CV_ALERT_TICKET_WEBHOOK_URL: http://127.0.0.1:1/unused
+          CV_ALERT_DEADMAN_URL: http://127.0.0.1:1/unused
           CV_LISTENER_PROBE: "1"
+          COMPOSE_PROFILES: core
         run: |
           docker compose -f infra/compose/docker-compose.yml --profile core up -d --wait postgres questdb
           cd services/api
@@ -82,6 +88,10 @@ jobs:
 
       - name: Stop compose data stores
         if: always()
+        env:
+          POSTGRES_PASSWORD: unused
+          GF_SECURITY_ADMIN_PASSWORD: unused
+          MINIO_ROOT_PASSWORD: unused
         run: docker compose -f infra/compose/docker-compose.yml --profile core down -v || true
 
       - name: Grafana live render suite (E04-S01 AC1/AC2)
