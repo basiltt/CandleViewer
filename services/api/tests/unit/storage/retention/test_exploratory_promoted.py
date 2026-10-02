@@ -86,7 +86,9 @@ def test_router_clock_step_back_does_not_lose_rows() -> None:
     assert router.resolve(StreamKind.TRADES, rng) == before
 
 
-@pytest.mark.xfail(reason="BUG-B #1698: no signal on dedup collision with differing payload", strict=True)
+@pytest.mark.xfail(
+    reason="BUG-B #1698: no signal on dedup collision with differing payload", strict=True
+)
 def test_dedup_collision_with_differing_fields_is_observable(caplog) -> None:  # type: ignore[no-untyped-def]
     key = ("ts", "symbol", "trade_id")
     cold = [{"ts": 1, "symbol": "A", "trade_id": "1", "price": 1}]
