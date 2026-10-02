@@ -17,3 +17,8 @@ def test_rates_complement() -> None:
     r = e.evaluate([e.make_day("x", 2, False)])
     for v in r.values():
         assert abs(v["hit_rate"] + v["false_positive_rate"] - 1) < 1e-3
+
+
+def test_cost_b_reports_chosen_method() -> None:
+    c = e.cost_ms_b(e.make_day("x", 1, False), reps=2)
+    assert c["events"] > 0 and c["full_recompute_ms"] > 0
