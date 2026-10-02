@@ -1,0 +1,7 @@
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v4 # ruleid: cv-unpinned-action
+      - uses: actions/setup-node@main # ruleid: cv-unpinned-action
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ok: cv-unpinned-action
+      - uses: ./.github/actions/local # ok: cv-unpinned-action

@@ -67,3 +67,129 @@ entries:
     approver: "basiltt"
     expires: "2027-03-25"
     ticket: "https://github.com/basiltt/CandleViewer/issues/1551"
+
+  # --- E43-T05 SCA sweep: HIGH advisories with no in-place fix (ids are pnpm audit advisory ids).
+  # Triage table: docs/plan/04-security-program.md §16.2 (EX-02..EX-04). Expire 2027-03-25 (GA cut).
+  # APPROVAL STATUS: owner + security approval of EX-02..EX-04 is still PENDING (see §16.2);
+  # `approver` names the required approver, not a recorded approval. Do not treat as approved
+  # until the §16.2 row says so.
+
+  - id: "1124279"
+    tool: npm-audit
+    severity: HIGH
+    reason: "GHSA-7g7r-gx96-252g (app-builder-lib): Build-time packaging tool only, never shipped or run on user input"
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "E43-T05 follow-up: bump electron-builder>=26.15"
+
+  - id: "1124278"
+    tool: npm-audit
+    severity: HIGH
+    reason: "GHSA-p2f4-r6v6-j797 (builder-util-runtime): Build-time packaging tool only, never shipped or run on user input"
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "E43-T05 follow-up: bump electron-builder>=26.15"
+
+  - id: "1116060"
+    tool: npm-audit
+    severity: HIGH
+    reason: "GHSA-532v-xpq5-8h95 (electron): Electron 33 -> >=41.10.6 is a major upgrade of the desktop shell; time-boxed exception (approval pending, §16.2) pending an E43-T04 fuse/shell regression pass. Compensating: contextIsolation, sandbox, no nodeIntegration, no <webview>, strict CSP, openExternal allow-list (E10-X02 Semgrep rules); shell only loads the local app."
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "E43-T05 follow-up: bump electron"
+
+  - id: "1116072"
+    tool: npm-audit
+    severity: HIGH
+    reason: "GHSA-8337-3p73-46f4 (electron): Electron 33 -> >=41.10.6 is a major upgrade of the desktop shell; time-boxed exception (approval pending, §16.2) pending an E43-T04 fuse/shell regression pass. Compensating: contextIsolation, sandbox, no nodeIntegration, no <webview>, strict CSP, openExternal allow-list (E10-X02 Semgrep rules); shell only loads the local app."
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "E43-T05 follow-up: bump electron"
+
+  - id: "1116076"
+    tool: npm-audit
+    severity: HIGH
+    reason: "GHSA-jjp3-mq3x-295m (electron): Electron 33 -> >=41.10.6 is a major upgrade of the desktop shell; time-boxed exception (approval pending, §16.2) pending an E43-T04 fuse/shell regression pass. Compensating: contextIsolation, sandbox, no nodeIntegration, no <webview>, strict CSP, openExternal allow-list (E10-X02 Semgrep rules); shell only loads the local app."
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "E43-T05 follow-up: bump electron"
+
+  - id: "1117459"
+    tool: npm-audit
+    severity: HIGH
+    reason: "GHSA-9wfr-w7mm-pc7f (electron): Electron 33 -> >=41.10.6 is a major upgrade of the desktop shell; time-boxed exception (approval pending, §16.2) pending an E43-T04 fuse/shell regression pass. Compensating: contextIsolation, sandbox, no nodeIntegration, no <webview>, strict CSP, openExternal allow-list (E10-X02 Semgrep rules); shell only loads the local app."
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "E43-T05 follow-up: bump electron"
+
+  - id: "1136552"
+    tool: npm-audit
+    severity: HIGH
+    reason: "GHSA-v3j7-r9gq-3gjw (electron): Electron 33 -> >=41.10.6 is a major upgrade of the desktop shell; time-boxed exception (approval pending, §16.2) pending an E43-T04 fuse/shell regression pass. Compensating: contextIsolation, sandbox, no nodeIntegration, no <webview>, strict CSP, openExternal allow-list (E10-X02 Semgrep rules); shell only loads the local app."
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "E43-T05 follow-up: bump electron"
+
+  - id: "1136567"
+    tool: npm-audit
+    severity: HIGH
+    reason: "GHSA-h7rp-cf8h-j98x (electron): Electron 33 -> >=41.10.6 is a major upgrade of the desktop shell; time-boxed exception (approval pending, §16.2) pending an E43-T04 fuse/shell regression pass. Compensating: contextIsolation, sandbox, no nodeIntegration, no <webview>, strict CSP, openExternal allow-list (E10-X02 Semgrep rules); shell only loads the local app."
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "E43-T05 follow-up: bump electron"
+
+  - id: "1136607"
+    tool: npm-audit
+    severity: HIGH
+    reason: "GHSA-9f4c-93c8-jc8g (electron): Electron 33 -> >=41.10.6 is a major upgrade of the desktop shell; time-boxed exception (approval pending, §16.2) pending an E43-T04 fuse/shell regression pass. Compensating: contextIsolation, sandbox, no nodeIntegration, no <webview>, strict CSP, openExternal allow-list (E10-X02 Semgrep rules); shell only loads the local app."
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "E43-T05 follow-up: bump electron"
+
+  - id: "1239973"
+    tool: npm-audit
+    severity: HIGH
+    reason: "GHSA-hq2x-r82h-9wj4 (electron): Electron 33 -> >=41.10.6 is a major upgrade of the desktop shell; time-boxed exception (approval pending, §16.2) pending an E43-T04 fuse/shell regression pass. Compensating: contextIsolation, sandbox, no nodeIntegration, no <webview>, strict CSP, openExternal allow-list (E10-X02 Semgrep rules); shell only loads the local app."
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "E43-T05 follow-up: bump electron"
+
+  - id: "1239977"
+    tool: npm-audit
+    severity: HIGH
+    reason: "GHSA-gr2m-v5gq-v685 (electron): Electron 33 -> >=41.10.6 is a major upgrade of the desktop shell; time-boxed exception (approval pending, §16.2) pending an E43-T04 fuse/shell regression pass. Compensating: contextIsolation, sandbox, no nodeIntegration, no <webview>, strict CSP, openExternal allow-list (E10-X02 Semgrep rules); shell only loads the local app."
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "E43-T05 follow-up: bump electron"
+
+  - id: "1239981"
+    tool: npm-audit
+    severity: HIGH
+    reason: "GHSA-j84w-jfhq-vhvj (electron): Electron 33 -> >=41.10.6 is a major upgrade of the desktop shell; time-boxed exception (approval pending, §16.2) pending an E43-T04 fuse/shell regression pass. Compensating: contextIsolation, sandbox, no nodeIntegration, no <webview>, strict CSP, openExternal allow-list (E10-X02 Semgrep rules); shell only loads the local app."
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "E43-T05 follow-up: bump electron"
+
+  - id: "1239985"
+    tool: npm-audit
+    severity: HIGH
+    reason: "GHSA-9qh4-3jw8-366w (electron): Electron 33 -> >=41.10.6 is a major upgrade of the desktop shell; time-boxed exception (approval pending, §16.2) pending an E43-T04 fuse/shell regression pass. Compensating: contextIsolation, sandbox, no nodeIntegration, no <webview>, strict CSP, openExternal allow-list (E10-X02 Semgrep rules); shell only loads the local app."
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "E43-T05 follow-up: bump electron"
+
+  - id: "1139346"
+    tool: npm-audit
+    severity: HIGH
+    reason: "GHSA-jmr9-qjv8-65gv (extract-zip): No upstream patch; only used by electron's install script on a pinned, checksum-verified release archive"
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "none upstream; replaced when electron is bumped"
+
+  - id: "1193685"
+    tool: npm-audit
+    severity: HIGH
+    reason: "GHSA-7pqw-9j4j-h8q3 (extract-zip): No upstream patch; only used by electron's install script on a pinned, checksum-verified release archive"
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "none upstream; replaced when electron is bumped"
