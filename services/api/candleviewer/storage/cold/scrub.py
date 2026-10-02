@@ -16,6 +16,7 @@ from datetime import UTC, datetime
 import pyarrow.parquet as pq
 import structlog
 
+from candleviewer.observability.context import spawn
 from candleviewer.storage.cold.layout import ColdPaths, DatasetRegistry, stream_dir_name
 from candleviewer.storage.cold.manifest import ManifestStore, sha256_of
 from candleviewer.storage.cold.observability import (
@@ -145,7 +146,7 @@ class ScrubTask:
 
     def start(self) -> None:
         if self._task is None:
-            self._task = asyncio.get_running_loop().create_task(
+            self._task = spawn(
                 run_weekly_scrub(
                     self._registry,
                     self._events,
