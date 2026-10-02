@@ -97,6 +97,50 @@ jobs:
           MINIO_ROOT_PASSWORD: unused
         run: docker compose -f infra/compose/docker-compose.yml --profile core down -v || true
 
+      - name: Storage chaos stack up (E07-Q04 scenarios 1/2/3b/8, C-13.6)
+        env:
+          POSTGRES_PASSWORD: cv-chaos-ci
+          GF_SECURITY_ADMIN_PASSWORD: unused-ci
+          MINIO_ROOT_PASSWORD: unused-ci
+        run: |
+          # Pinned images come from the compose file itself (verified by pin-check).
+          docker compose -f infra/compose/docker-compose.yml up -d postgres questdb
+          # Bounded readiness poll on the real ports (the questdb compose healthcheck
+          # shells out to curl, which the image lacks; tracked as a finding on #275).
+          for i in $(seq 1 60); do
+            pg_isready -h 127.0.0.1 -p 5432 -q && curl -fsS -o /dev/null http://127.0.0.1:9000/ && break
+            if [ "$i" = 60 ]; then docker compose -f infra/compose/docker-compose.yml logs; exit 1; fi
+            sleep 2
+          done
+          # Fixed-size loopback image for scenario 3b: never the runner's real volume.
+          truncate -s 64M /tmp/cv-chaos-cold.img
+          mkfs.ext4 -q -F -m 0 /tmp/cv-chaos-cold.img
+          sudo mkdir -p /mnt/cv-chaos-cold
+          sudo mount -o loop /tmp/cv-chaos-cold.img /mnt/cv-chaos-cold
+          sudo chown "$(id -u):$(id -g)" /mnt/cv-chaos-cold
+          cd services/api
+          CV_PG_DSN=postgresql+asyncpg://cv:cv-chaos-ci@127.0.0.1:5432/candleviewer uv run alembic upgrade head
+
+      - name: Storage chaos scenarios (pytest -m "chaos and integration")
+        working-directory: services/api
+        env:
+          POSTGRES_PASSWORD: cv-chaos-ci
+          GF_SECURITY_ADMIN_PASSWORD: unused-ci
+          MINIO_ROOT_PASSWORD: unused-ci
+          CV_CHAOS_LOOPBACK_DIR: /mnt/cv-chaos-cold
+        run: uv run pytest tests/chaos -m "chaos and integration" --no-cov -v -p no:randomly
+
+      - name: Storage chaos stack down
+        if: always()
+        env:
+          POSTGRES_PASSWORD: unused-ci
+          GF_SECURITY_ADMIN_PASSWORD: unused-ci
+          MINIO_ROOT_PASSWORD: unused-ci
+        run: |
+          docker compose -f infra/compose/docker-compose.yml logs --tail 50 postgres questdb || true
+          docker compose -f infra/compose/docker-compose.yml down -v || true
+          sudo umount /mnt/cv-chaos-cold || true
+
       - name: Grafana live render suite (E04-S01 AC1/AC2)
         env:
           GF_SECURITY_ADMIN_USER: admin

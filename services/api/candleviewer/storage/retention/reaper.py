@@ -23,6 +23,7 @@ from candleviewer.storage.errors import (
     StorageRetentionBlockedByReplay,
     StorageRetentionBlockedUnverified,
 )
+from candleviewer.storage.retention.locks import InProcessRunLock
 from candleviewer.storage.retention.policy import RetentionPolicy
 from candleviewer.storage.retention.ports import (
     AuditWriter,
@@ -30,6 +31,7 @@ from candleviewer.storage.retention.ports import (
     Partition,
     RecorderControl,
     RetentionFacts,
+    RunLock,
     StorageOps,
     SystemEventSink,
     Tier,
@@ -48,6 +50,7 @@ _US_PER_DAY = 86_400_000_000
 MIN_FREE_PCT = 15.0
 RECOVER_FREE_PCT = 25.0
 CRITICAL_FREE_PCT = 5.0
+_PROCESS_LOCK = InProcessRunLock()
 
 Reason = Literal["", "pinned", "replay", "unverified", "journal"]
 _ERRORS = {
@@ -110,11 +113,15 @@ class Reaper:
         *,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
         volume: str = "data",
+        lock: RunLock | None = None,
     ) -> None:
         self._policy, self._ops, self._facts = policy, ops, facts
         self._disk, self._audit, self._events, self._recorder = disk, audit, events, recorder
         self._clock, self._volume = clock, volume
         self._accelerated = False
+        # SR-099: one run per volume across instances (Postgres advisory lock in
+        # production); the per-drop existence re-check is the second line.
+        self._lock: RunLock = lock if lock is not None else _PROCESS_LOCK
 
     def _update_mode(self) -> float:
         free = self._disk.free_pct()
@@ -222,6 +229,10 @@ class Reaper:
                         {"symbol": part.symbol, "stream": part.stream.value},
                     )
                 continue
+            current = await self._ops.list_partitions(part.symbol, part.stream, part.tier)
+            if part not in current:  # already reaped by another instance: idempotent no-op
+                storage_retention_skipped_total.labels(reason="already_dropped").inc()
+                continue
             try:
                 await self._ops.drop(part)
             except Exception as exc:  # justified: one failure must not abort the run
@@ -250,6 +261,13 @@ class Reaper:
 
     async def run(self, *, dry_run_only: bool = False) -> RetentionReport:
         """Daily job entry: guard, dry-run first (audited), then apply."""
+        async with self._lock.hold(self._volume) as acquired:
+            if not acquired:
+                storage_retention_runs_total.labels(result="skipped_locked").inc()
+                return RetentionReport([])
+            return await self._run(dry_run_only)
+
+    async def _run(self, dry_run_only: bool) -> RetentionReport:
         await self.guard()
         report = await self.dry_run()
         await self._audit.write(

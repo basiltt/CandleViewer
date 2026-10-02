@@ -138,6 +138,7 @@ markers = [
   "integration_db: integration test needing the CI Postgres/QuestDB service containers (E03-T03, SR-131)",
   "exchange_smoke: manual-only smoke test against a real exchange host — deselected in CI (E03-T03, SR-140)",
   "flaky: quarantined per Constitution C-9.3 — must link a P1 ticket",
+  "chaos: nightly storage chaos scenarios (E07-Q04, C-13.6) - docker-dependent ones skip without the stack",
   "perf: wall-clock budget assertion (C-13.9) — enforced in CI, deselected by the orchestrator's local verify_pr gate on shared laptops",
 ]
 addopts = "--strict-markers --cov=candleviewer --cov-branch --cov-fail-under=85"

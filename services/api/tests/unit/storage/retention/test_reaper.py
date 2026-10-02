@@ -46,6 +46,8 @@ class Env:
 
     async def drop(self, p: Partition) -> None:
         self.log.append(f"drop:{p.symbol}:{p.range.end_us}")
+        if p in self.parts:
+            self.parts.remove(p)
 
     # facts
     async def symbols(self) -> list[str]:

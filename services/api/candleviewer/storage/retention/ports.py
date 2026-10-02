@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
 from typing import Literal, Protocol
 
@@ -63,6 +64,13 @@ class AuditWriter(Protocol):
     async def write(self, action: str, detail: dict[str, str | int]) -> None: ...
 
 
+class RunLock(Protocol):
+    """Non-blocking per-volume run lock (SR-099). `hold` yields False when
+    another holder (any process) already owns the volume."""
+
+    def hold(self, volume: str) -> AbstractAsyncContextManager[bool]: ...
+
+
 class RecorderControl(Protocol):
     async def pause(self, symbol: str) -> None: ...
 
@@ -73,6 +81,7 @@ __all__ = [
     "Partition",
     "RecorderControl",
     "RetentionFacts",
+    "RunLock",
     "StorageOps",
     "SystemEventSink",
     "Tier",
