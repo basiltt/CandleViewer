@@ -18,12 +18,19 @@ import { PlaceholderRoute } from "./PlaceholderRoute";
 import { AdminInviteScreen } from "../features/invites/AdminInviteScreen";
 import { InviteAcceptScreen } from "../features/invites/InviteAcceptScreen";
 import { SetupChecklistCard } from "../features/onboarding/SetupChecklistCard";
+import { HotkeyEditor } from "../keymap/HotkeyEditor";
 import { getMeClaims } from "../lib/auth/meCache";
 
 function elementFor(routeId: string, owner: string | null): RouteObject["element"] {
   if (routeId === "R-900") return <ForbiddenState />;
   if (routeId === "R-901") return <NotFoundState />;
   if (routeId === "R-009") return <InviteAcceptScreen />;
+  if (routeId === "R-202")
+    return (
+      <main>
+        <HotkeyEditor />
+      </main>
+    );
   if (routeId === "R-303") return <AdminInviteScreen />;
   if (routeId === "R-101") {
     // First sign-in lands on /terminal/last -> here; the card is server-gated (401 => renders nothing).
