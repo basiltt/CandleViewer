@@ -101,3 +101,44 @@ export function usePublishEngineFlags(): (f: EngineFlags) => void {
   const [ch] = useState(() => engineFlagsChannel);
   return useCallback((f) => ch.publish(f), [ch]);
 }
+
+/** Structural subset of the chart-engine handle (avoids coupling to engine internals). */
+export interface FlagsTarget {
+  setFlags(f: EngineFlags): void;
+}
+
+/** Forwards every published flag set to an engine handle; returns the unsubscribe. */
+export function bindEngineFlags(
+  engine: FlagsTarget,
+  channel: EngineFlagsChannel = engineFlagsChannel,
+): () => void {
+  return channel.subscribe((f) => engine.setFlags(f));
+}
+
+export interface AccessiblePanelProps {
+  readonly title: string;
+  readonly chart: ReactNode;
+  readonly table: ReactNode;
+}
+
+/**
+ * Panel that renders the chart or its data-table alternative. "Always show data tables"
+ * makes the table the default view; a toggle lets the user switch either way (no refetch).
+ */
+export function AccessiblePanel(p: AccessiblePanelProps): JSX.Element {
+  const dflt = useDefaultPanelView();
+  const [override, setOverride] = useState<"table" | "chart" | null>(null);
+  const view = override ?? dflt;
+  return (
+    <section aria-label={p.title}>
+      <button
+        type="button"
+        aria-pressed={view === "table"}
+        onClick={() => setOverride(view === "table" ? "chart" : "table")}
+      >
+        {view === "table" ? "Show chart" : "Show data table"}
+      </button>
+      {view === "table" ? p.table : p.chart}
+    </section>
+  );
+}

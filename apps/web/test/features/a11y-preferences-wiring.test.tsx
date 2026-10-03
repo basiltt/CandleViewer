@@ -137,3 +137,50 @@ describe("SCR-117 routed in the real app", () => {
     );
   });
 });
+
+describe("engine flags binding and accessible panel", () => {
+  it("bindEngineFlags forwards disable-canvas-animation to the real engine", async () => {
+    const { createEngine } = await import("@candleviewer/chart-engine");
+    const { bindEngineFlags } = await import("../../src/features/a11y-preferences");
+    const ch = createEngineFlagsChannel();
+    const engine = createEngine();
+    const off = bindEngineFlags(engine, ch);
+    ch.publish(
+      resolveFlags(
+        { ...DEFAULT_PREFERENCES, disable_canvas_animation: true },
+        {
+          reducedMotion: false,
+          highContrast: false,
+        },
+      ),
+    );
+    expect(engine.getFlags()).toEqual({
+      animate: false,
+      heatmapFade: false,
+      inertia: false,
+      flashOnTick: false,
+    });
+    off();
+    engine.dispose();
+  });
+
+  it("AccessiblePanel defaults to the table when always_show_tables is on", async () => {
+    const { AccessiblePanel } = await import("../../src/features/a11y-preferences");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(reply(200, { accessibility: { always_show_tables: true } })),
+    );
+    render(
+      <PreferencesProvider>
+        <AccessiblePanel
+          title="Depth"
+          chart={<span>chart-view</span>}
+          table={<span>table-view</span>}
+        />
+      </PreferencesProvider>,
+    );
+    await waitFor(() => expect(screen.getByText("table-view")).toBeInTheDocument());
+    fireEvent.click(screen.getByRole("button", { name: "Show chart" }));
+    expect(screen.getByText("chart-view")).toBeInTheDocument();
+  });
+});
