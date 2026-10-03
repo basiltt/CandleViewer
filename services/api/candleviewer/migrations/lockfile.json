@@ -56,6 +56,11 @@
       "path": "services/api/candleviewer/migrations/versions/0011_recorder.py",
       "sha256": "77e0594c3e4de8255b1ff366d9624d573dc164c6a9e450b539a676c7ad52d42c",
       "down_revision": "0010_user_invites"
+    },
+    "0012_onboarding_dismissals": {
+      "path": "services/api/candleviewer/migrations/versions/0012_onboarding_dismissals.py",
+      "sha256": "2bd302e1845d4d85e0f1edf25a3242f89602664e5822a7feeec538659098be59",
+      "down_revision": "0011_recorder"
     }
   }
 }

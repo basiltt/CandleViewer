@@ -13,6 +13,7 @@ contracts and every later epic have a concrete injection point.
 
 from __future__ import annotations
 
+import asyncio
 import os
 import time
 import uuid
@@ -22,7 +23,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -55,6 +56,8 @@ from candleviewer.api.deny_by_default import (
     make_deny_undeclared_dependency,
 )
 from candleviewer.api.invites import make_invites_router
+from candleviewer.api.onboarding import make_onboarding_router
+from candleviewer.api.onboarding_checklist import StepResult, bybit_key_restriction
 from candleviewer.api.sessions import make_session_router
 from candleviewer.api.step_up import make_read_only_guard, make_step_up_router
 from candleviewer.api.support_bundle import make_support_bundle_router
@@ -136,6 +139,7 @@ from candleviewer.storage.repositories.instruments_sqlalchemy import (
 )
 from candleviewer.storage.repositories.invites_sqlalchemy import SqlAlchemyInviteRepository
 from candleviewer.storage.repositories.mfa_sqlalchemy import SqlAlchemyMfaRepository
+from candleviewer.storage.repositories.onboarding_sqlalchemy import SqlAlchemyOnboardingStore
 from candleviewer.storage.repositories.relational_sqlalchemy import (
     SqlAlchemyRelationalRepository,
 )
@@ -473,6 +477,100 @@ class _NoPositionStore:
         return None
 
 
+class _OnboardingMetrics:
+    """Adapts the metrics facade to the router's `inc(name, **labels)` port."""
+
+    _SPECS: ClassVar[dict[str, tuple[str, ...]]] = {
+        "onboarding_checklist_views_total": (),
+        "onboarding_step_state_total": ("step", "state"),
+        "onboarding_checklist_dismissed_total": (),
+        "onboarding_probe_timeouts_total": ("step",),
+    }
+    _BUCKETS: ClassVar[tuple[float, ...]] = (0.01, 0.05, 0.1, 0.25, 0.5, 1.0)
+
+    def __init__(self, metrics: Metrics) -> None:
+        self._m = {
+            n: metrics.counter(n, f"E09-S06 {n}", labels) for n, labels in self._SPECS.items()
+        }
+
+        self._latency = metrics.histogram(
+            "onboarding_checklist_duration_seconds",
+            "E09-S06 checklist assembly latency",
+            (),
+            buckets=self._BUCKETS,
+        )
+
+    def observe_latency(self, seconds: float) -> None:
+        self._latency.child().observe(seconds)
+
+    def inc(self, name: str, **labels: str) -> None:
+        metric = self._m[name]
+        child = metric.labels(*labels.values()) if labels else metric.child()
+        child.inc()
+
+
+def _build_onboarding_router(
+    settings: Settings,
+    ctx: Any,
+    principal_resolver: Any,
+    metrics: _OnboardingMetrics,
+    store_override: Any = None,
+) -> Any:
+    store = store_override
+    probes: dict[str, Any] = {}
+    if store is None and settings.storage_backend == "real":
+        store = SqlAlchemyOnboardingStore(
+            SqlAlchemyRelationalRepository(settings.pg_dsn.get_secret_value(), "onboarding")
+        )
+    if store is not None:
+
+        async def tailscale(_u: Any) -> StepResult:
+            # Run the E09-T04 binding self-check itself (read-only; no gate mutation).
+            result = await asyncio.to_thread(ctx.mesh_self_check.check.run)
+            if not result.safe:
+                return StepResult("blocked", "The mesh-only network check is failing.")
+            return StepResult("ok")
+
+        async def totp(u: Any) -> StepResult:
+            if await store.has_confirmed_totp(u):
+                return StepResult("ok")
+            return StepResult("pending", "Enrol an authenticator app.")
+
+        async def sub_account(u: Any) -> StepResult:
+            if await store.has_account_binding(u):
+                return StepResult("ok")
+            return StepResult("pending", "No sub-account is bound to you yet.")
+
+        async def api_key(u: Any) -> StepResult:
+            # Real probe: The exchange blocks key creation for 48 h after the sub-account
+            # binding (US-ONB-007). Key inventory itself ships with E27.
+            bound_at = await store.latest_binding_at(u)
+            if bound_at is None:
+                return StepResult("pending", "Bind a sub-account first.")
+            # NOTE: exchange_accounts (E27) does not exist yet; binding time is the only
+            # available proxy for account creation. Swap when E27 lands.
+            restricted = bybit_key_restriction(bound_at, datetime.now(UTC))
+            if restricted is not None:
+                return restricted
+            # Key inventory (E27) has not shipped: stay pending, never satisfied.
+            return StepResult("pending", "API-key inventory is coming soon.")
+
+        probes = {
+            "tailscale": tailscale,
+            "totp": totp,
+            "sub_account": sub_account,
+            "api_key": api_key,
+        }
+
+    # Steps whose owning epics (E39 limits, E27 demo sessions) have not shipped have
+    # no probe and are switched off in the flag table: they render `pending`
+    # ("coming soon") and keep the card incomplete/undismissable until they ship.
+    flags: dict[str, bool] = {"profile_limits": False, "demo_session": False}
+    return make_onboarding_router(
+        store, principal_resolver, probes, flags, metrics, _LazyAuditEmitter(ctx.audit)
+    )
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -481,6 +579,7 @@ def create_app(
     principal_resolver: SnapshotResolver | None = None,
     ws_authenticate: Authenticate | None = None,
     auth_clock: Callable[[], datetime] | None = None,
+    onboarding_store: Any = None,
 ) -> FastAPI:
     """Build the FastAPI application without touching Postgres/QuestDB/network.
 
@@ -634,6 +733,18 @@ def create_app(
     # Process collectors read /proc; the lifespan adds them (no I/O here).
     metrics_facade = Metrics(resolved.environment.value, registry=ctx.metrics)
     app.state.metrics_facade = metrics_facade
+    # E09-S06: server-evaluated first-run checklist. Steps whose owning epic
+    # has not shipped (E27 api_key/demo, E39 profile limits) have no probe and
+    # render `pending` ("coming soon") via the flag table, never a client stub.
+    app.include_router(
+        _build_onboarding_router(
+            resolved,
+            ctx,
+            principal_resolver,
+            _OnboardingMetrics(metrics_facade),
+            onboarding_store,
+        )
+    )
     # E04-T06: per-stage tick latency on the real ingestion publish path.
     # Offset = ClockGuard's measured exchange-local offset (E08 wires it via
     # `ctx.ingestion.clock_offset_ms`); the synthetic feed reports 0.
