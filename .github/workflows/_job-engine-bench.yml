@@ -16,5 +16,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version-file: ".nvmrc"
+      - run: npm install -g corepack@latest && corepack enable && corepack prepare pnpm@12.5.1 --activate
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: node tools/ci/run-allowed-postinstall.mjs
+      - name: Wall-clock perf budgets (vitest perf project, no coverage)
+        run: pnpm --filter @candleviewer/chart-engine test:perf
       - name: Placeholder (E03-T14 fills in GPU benchmark run + baseline diff)
         run: echo "engine-bench lane stub — implemented by E03-T14"

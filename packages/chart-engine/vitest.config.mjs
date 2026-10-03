@@ -1,14 +1,15 @@
 import { defineConfig } from "vitest/config";
 import { vitestPreset } from "@candleviewer/config/vitest";
 
+// Two projects: `unit` (run under V8 coverage by test:cov) and `perf` (wall-clock budgets,
+// run WITHOUT coverage by engine-bench: instrumentation inflates timings).
 export default defineConfig({
   test: {
     ...vitestPreset.test,
-    include: ["test/**/*.test.ts"],
     coverage: {
       ...vitestPreset.test.coverage,
       include: ["src/**/*.ts", "bench/**/*.ts", "bench/**/*.mjs"],
-      exclude: ["src/**/index.ts", "bench/run-bench.mjs"],
+      exclude: ["src/**/index.ts", "bench/run-bench.mjs", "bench/scenes/run-scene-*.mjs"],
       // Constitution §9 #4: chart-engine coverage floor is >=85%.
       thresholds: {
         lines: 85,
@@ -17,5 +18,19 @@ export default defineConfig({
         branches: 75,
       },
     },
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "unit",
+          include: ["test/**/*.test.ts"],
+          exclude: ["test/**/*.perf.test.ts"],
+        },
+      },
+      {
+        extends: true,
+        test: { name: "perf", include: ["test/**/*.perf.test.ts"], testTimeout: 60_000 },
+      },
+    ],
   },
 });
