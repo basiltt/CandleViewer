@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import logging
 import traceback
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
@@ -110,3 +111,23 @@ def test_audit_export_record_with_embedded_json_secret_is_redacted() -> None:
     row = {"before": json.dumps({"api_secret": SECRET}), "after": {"api_secret": SECRET}}
     out = redact(row)
     assert SECRET not in json.dumps(out, default=str)
+
+
+async def test_audit_writer_emit_never_persists_secret_to_wal(tmp_path: Path) -> None:
+    """Real emit() path: the durable WAL bytes must not contain the secret."""
+    from typing import Any, cast
+
+    from candleviewer.audit.writer import AuditWriter
+
+    wal = tmp_path / "audit.wal"
+    writer = AuditWriter(cast(Any, object()), str(wal))
+    writer._running = True  # flusher not started: we only inspect the durable WAL
+    await writer.emit(
+        "auth.login",
+        actor_label="tester",
+        before_state={"api_secret": SECRET},
+        after_state={"meta": {"totp_seed": SECRET, "note": "ok"}},
+    )
+    data = b"".join(p.read_bytes() for p in tmp_path.iterdir() if p.is_file())
+    assert data, "WAL must contain the emitted record"
+    assert SECRET.encode() not in data
