@@ -96,3 +96,20 @@ describe("SCR-013 cheatsheet", () => {
     expect(screen.getAllByLabelText(/conflicting binding/).length).toBeGreaterThan(0);
   });
 });
+
+describe("wiring (review fixes)", () => {
+  it("Ctrl+/ opens the cheatsheet through the registered command", () => {
+    render(<KeymapHost />);
+    fireEvent.keyDown(window, { key: "/", ctrlKey: true });
+    expect(screen.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeInTheDocument();
+  });
+  it("default audit transport reaches the outbox", async () => {
+    const { applyRebind, auditOutbox, setAuditSink } = await import("../src/keymap/audit");
+    setAuditSink((r) => window.dispatchEvent(new CustomEvent("cv:audit", { detail: r })));
+    render(<KeymapHost />);
+    const n = auditOutbox().length;
+    act(() => void applyRebind(getBindings(), "dom.cancel_all", "Q", true));
+    expect(auditOutbox()).toHaveLength(n + 1);
+    expect(auditOutbox()[n]).toMatchObject({ action: "hotkey.trading_binding_changed" });
+  });
+});

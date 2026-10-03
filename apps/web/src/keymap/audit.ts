@@ -42,3 +42,17 @@ export function applyRebind(
   }
   return next;
 }
+
+/**
+ * Client audit outbox (CMP-093 shape, 14-screens-catalogue §0.5.8). The server is the system of
+ * record: the rebind is persisted via PUT /settings/hotkeys/{id}, which the backend audits; this
+ * outbox keeps the client-side record and lets the transport flush it. No audit POST endpoint
+ * exists in 22-api-openapi.yaml, so none is invented here.
+ */
+const outbox: AuditRecord[] = [];
+export function recordAudit(r: AuditRecord): void {
+  outbox.push(r);
+}
+export function auditOutbox(): readonly AuditRecord[] {
+  return outbox;
+}

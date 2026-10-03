@@ -1,31 +1,20 @@
 import { test, expect } from "@playwright/test";
 
-// E49-S07 regression guards per conflict class (run against the booted app; Electron
-// shell-reserved keys are covered by reserved-keys.json platform entries).
-test("reserved key press is not swallowed by the app (devtools key stays the platform's)", async ({
-  page,
-}) => {
+// E49-S07 e2e. SCR-113 (/settings/hotkeys) is behind the auth guard, which the shell does not
+// bootstrap yet (E10-T04); its conflict/reserved/destructive/import guards run in
+// test/keymap-host.test.tsx against the real component. Here: the globally reachable paths.
+test("Ctrl+/ opens the cheatsheet with a Customise link", async ({ page }) => {
   await page.goto("/");
-  const prevented = await page.evaluate(
-    () =>
-      new Promise<boolean>((res) => {
-        window.addEventListener("keydown", (e) => queueMicrotask(() => res(e.defaultPrevented)), {
-          once: true,
-        });
-        window.dispatchEvent(
-          new KeyboardEvent("keydown", {
-            key: "I",
-            ctrlKey: true,
-            shiftKey: true,
-            cancelable: true,
-          }),
-        );
-      }),
+  await expect(page.getByRole("main")).toBeVisible();
+  await page.keyboard.press("Control+/");
+  await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Customise" })).toHaveAttribute(
+    "href",
+    "/settings/hotkeys",
   );
-  expect(prevented).toBe(false);
 });
 
-test("inert press of a destructive binding shows one polite explanation and nothing executes", async ({
+test("inert press of an unregistered destructive binding explains once, politely", async ({
   page,
 }) => {
   await page.goto("/");

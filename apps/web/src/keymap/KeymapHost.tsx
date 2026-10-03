@@ -2,6 +2,8 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import { createDispatcher } from "./dispatcher";
 import { getBindings, subscribeBindings } from "./profile";
 import type { KeymapCommand } from "./keymap";
+import { Cheatsheet } from "./Cheatsheet";
+import { recordAudit } from "./audit";
 
 /** Command handlers registered by views; a command with no handler / failing predicate is inert. */
 const handlers = new Map<string, { run: () => void; isValid: () => boolean }>();
@@ -33,7 +35,15 @@ export function ToastHost({ messages }: { readonly messages: readonly string[] }
 
 export function KeymapHost(): JSX.Element {
   const [toasts, setToasts] = useState<readonly string[]>([]);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const bindings = useSyncExternalStore(subscribeBindings, getBindings);
+  // Real command: the "?" cheatsheet (SCR-013). Other commands register from their owning views.
+  useEffect(() => registerCommand("global.cheatsheet", () => setSheetOpen((o) => !o)), []);
+  useEffect(() => {
+    const on = (e: Event) => recordAudit((e as CustomEvent).detail);
+    window.addEventListener("cv:audit", on);
+    return () => window.removeEventListener("cv:audit", on);
+  }, []);
   useEffect(() => {
     const dispatch = createDispatcher({
       bindings,
@@ -52,5 +62,10 @@ export function KeymapHost(): JSX.Element {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [bindings]);
-  return <ToastHost messages={toasts} />;
+  return (
+    <>
+      <ToastHost messages={toasts} />
+      {sheetOpen ? <Cheatsheet onClose={() => setSheetOpen(false)} /> : null}
+    </>
+  );
 }
