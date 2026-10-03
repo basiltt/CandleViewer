@@ -1,0 +1,91 @@
+# E09-X03: ZAP automation-framework plan for the authenticated auth/admin surface.
+# Baseline on every PR to main; full active scan weekly + before each release gate.
+# Credentials come ONLY from CI secrets (ZAP_FIXTURE_USER / _PASSWORD / _TOTP_SECRET);
+# nothing test-credential-shaped is committed (SR-122).
+env:
+  contexts:
+    - name: candleviewer-auth
+      urls: ["${ZAP_TARGET}"]
+      includePaths:
+        - "${ZAP_TARGET}/v1/auth/.*"
+        - "${ZAP_TARGET}/v1/admin/.*"
+        - "${ZAP_TARGET}/v1/accounts/.*"
+        - "${ZAP_TARGET}/v1/audit/.*"
+      excludePaths:
+        # Destructive, state-mutating endpoints only; every entry carries a `# reason:`.
+        # reason: kill switch mutation would halt trading on the scan target
+        - "${ZAP_TARGET}/v1/admin/kill-switch.*"
+        # reason: logout terminates the scanner's own session, silently de-authenticating the scan
+        - "${ZAP_TARGET}/v1/auth/logout.*"
+        # reason: revoke-all invalidates every session including the scanner's
+        - "${ZAP_TARGET}/v1/auth/sessions/revoke-all"
+        # reason: key add/delete mutates envelope-encrypted exchange credentials (irreversible)
+        - "${ZAP_TARGET}/v1/accounts/.*/keys/.*"
+      authentication:
+        method: script
+        parameters:
+          script: "security/zap/login-totp.js"   # password + TOTP step, then re-auth on rotation
+          scriptEngine: "Graal.js"
+        verification:
+          method: response
+          # Logged-in indicator: /v1/auth/me returns the principal; 401 => logged out.
+          loggedInRegex: '"principal"\s*:'
+          loggedOutRegex: '"status"\s*:\s*401|Unauthori[sz]ed'
+          pollUrl: "${ZAP_TARGET}/v1/auth/me"
+          pollFrequency: 1
+          pollUnits: requests
+      sessionManagement:
+        method: cookie   # opaque HttpOnly cv_refresh cookie (ADR-0010); rotates on each auth transition (SR-013)
+      users:
+        - name: fixture-owner
+          credentials:
+            username: "${ZAP_FIXTURE_USER}"
+            password: "${ZAP_FIXTURE_PASSWORD}"
+            totpSecret: "${ZAP_FIXTURE_TOTP_SECRET}"
+  parameters:
+    failOnError: true
+    failOnWarning: false
+    progressToStdout: true
+
+jobs:
+  - type: passiveScan-config
+    parameters: {maxAlertsPerRule: 10, scanOnlyInScope: true}
+  - type: openapi
+    parameters:
+      apiFile: "docs/plan/22-api-openapi.yaml"
+      context: candleviewer-auth
+      targetUrl: "${ZAP_TARGET}"
+  - type: requestor
+    name: session-liveness-gate
+    requests:
+      - url: "${ZAP_TARGET}/v1/auth/me"
+        method: GET
+        responseCode: 200   # a 401 here aborts: unauthenticated scan != clean scan
+  - type: passiveScan-wait
+    parameters: {maxDuration: 5}
+  - type: activeScan
+    # Runs only when ZAP_MODE=full (weekly / pre-release); the PR baseline stops after passive.
+    parameters:
+      context: candleviewer-auth
+      user: fixture-owner
+      policy: auth-surface
+      maxScanDurationInMins: 45
+    policyDefinition:
+      defaultStrength: Medium
+      defaultThreshold: Medium
+      rules:
+        - {id: 40018, name: SQL Injection, strength: High, threshold: Low}
+        - {id: 90033, name: Loosely scoped cookie, strength: High, threshold: Low}
+        - {id: 10054, name: Cookie without SameSite, strength: High, threshold: Low}
+        - {id: 10010, name: Cookie without HttpOnly, strength: High, threshold: Low}
+        - {id: 10011, name: Cookie without Secure, strength: High, threshold: Low}
+        - {id: 40012, name: Reflected XSS, strength: Medium, threshold: Low}
+        - {id: 90020, name: Command injection, strength: Medium, threshold: Low}
+  - type: requestor
+    name: session-still-authenticated-after-scan
+    requests:
+      - url: "${ZAP_TARGET}/v1/auth/me"
+        method: GET
+        responseCode: 200
+  - type: report
+    parameters: {template: traditional-json, reportDir: zap-report, reportFile: zap.json}

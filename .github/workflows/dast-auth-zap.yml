@@ -1,0 +1,92 @@
+name: dast-auth-zap
+# E09-X03: ZAP baseline per PR to main (passive); full authenticated active scan weekly
+# and on workflow_dispatch (release gate). Needs the compose stack (docker) and CI secrets
+# ZAP_FIXTURE_USER / ZAP_FIXTURE_PASSWORD / ZAP_FIXTURE_TOTP_SECRET (never in the repo).
+# Compose credentials are generated per run (random, masked, never echoed).
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      ["security/zap/**", "services/api/candleviewer/auth/**", "services/api/candleviewer/api/**"]
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  zap:
+    name: zap-auth
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      ZAP_TARGET: http://localhost:8000
+      ZAP_MODE: ${{ github.event_name == 'pull_request' && 'baseline' || 'full' }}
+      ZAP_FIXTURE_USER: ${{ secrets.ZAP_FIXTURE_USER }}
+      ZAP_FIXTURE_PASSWORD: ${{ secrets.ZAP_FIXTURE_PASSWORD }}
+      ZAP_FIXTURE_TOTP_SECRET: ${{ secrets.ZAP_FIXTURE_TOTP_SECRET }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Require fixture credentials
+        run: |
+          for v in ZAP_FIXTURE_USER ZAP_FIXTURE_PASSWORD ZAP_FIXTURE_TOTP_SECRET; do
+            if [ -z "${!v}" ]; then echo "::error::missing CI secret $v (scan must be authenticated)"; exit 1; fi
+          done
+      - name: Generate ephemeral compose env
+        run: |
+          set -euo pipefail
+          umask 077
+          out=infra/compose/.env
+          : > "$out"
+          # Every *PASSWORD*/*SECRET*/*KEY* value is replaced by a fresh random value;
+          # the file is gitignored, lives only on this runner and is never printed.
+          while IFS= read -r line || [ -n "$line" ]; do
+            case "$line" in
+              \#*|"") echo "$line" >> "$out"; continue ;;
+            esac
+            k=${line%%=*}
+            if [[ "$k" =~ (PASSWORD|SECRET|KEY) ]]; then
+              v=$(openssl rand -hex 24)
+              echo "::add-mask::$v"
+              echo "$k=$v" >> "$out"
+            else
+              echo "$line" >> "$out"
+            fi
+          done < infra/compose/.env.example
+          # The DSN embeds the postgres password: rebuild it from the generated value.
+          pw=$(grep '^POSTGRES_PASSWORD=' "$out" | cut -d= -f2)
+          sed -i "s#^CV_PG_DSN=.*#CV_PG_DSN=postgresql+asyncpg://cv:${pw}@postgres:5432/candleviewer#" "$out"
+          if grep -qi "change_me" "$out"; then echo "::error::placeholder credential left in generated env"; exit 1; fi
+      - name: Start stack
+        run: docker compose -f infra/docker-compose.dev.yml up -d --wait
+      - name: Run ZAP automation plan
+        run: |
+          set -euo pipefail
+          # baseline: drop the activeScan job; full: keep it.
+          cp security/zap/auth-context.yaml plan.yaml
+          if [ "$ZAP_MODE" = baseline ]; then
+            python -c "import yaml;p=yaml.safe_load(open('plan.yaml'));p['jobs']=[j for j in p['jobs'] if j['type']!='activeScan'];yaml.safe_dump(p,open('plan.yaml','w'))"
+          fi
+          docker run --rm --network host -v "$PWD:/zap/wrk:rw" \
+            -e ZAP_TARGET -e ZAP_FIXTURE_USER -e ZAP_FIXTURE_PASSWORD -e ZAP_FIXTURE_TOTP_SECRET \
+            ghcr.io/zaproxy/zaproxy:stable zap.sh -cmd -autorun /zap/wrk/plan.yaml
+      - name: Fail if the scan lost authentication (logged-in indicator)
+        run: |
+          # The plan's requestor jobs assert 200 from /v1/auth/me before and after the scan;
+          # failOnError=true makes ZAP exit non-zero if either is 401, so an unauthenticated
+          # scan is a failed scan, never a clean one.
+          test -f zap-report/zap.json
+      - name: Block on new medium+ alerts
+        run: |
+          python - <<'PY'
+          import json,sys
+          d=json.load(open("zap-report/zap.json"))
+          bad=[a["name"] for s in d.get("site",[]) for a in s.get("alerts",[]) if int(a.get("riskcode",0))>=2]
+          print("medium+ alerts:",bad)
+          sys.exit(1 if bad else 0)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: zap-report
+          path: zap-report/
+          retention-days: 14

@@ -1,0 +1,33 @@
+rules:
+  - id: no-raw-account-id
+    languages: [python]
+    severity: ERROR
+    message: >-
+      SR-051 (E09-X01): a route handler takes a request-supplied account_id
+      but never passes it through the ScopeResolver intersection
+      (scope.intersect(account_id)). Account scope must come from the
+      resolved scope, never from the raw request (IDOR).
+    metadata:
+      sr: SR-051
+    patterns:
+      - pattern-either:
+          - pattern: |
+              @$R.$M(...)
+              async def $F(..., account_id, ...):
+                  ...
+          - pattern: |
+              @$R.$M(...)
+              async def $F(..., account_id: $T, ...):
+                  ...
+          - pattern: |
+              @$R.$M(...)
+              def $F(..., account_id, ...):
+                  ...
+          - pattern: |
+              @$R.$M(...)
+              def $F(..., account_id: $T, ...):
+                  ...
+      - pattern-not-regex: "intersect\\("
+    paths:
+      exclude:
+        - "**/tests/**"
