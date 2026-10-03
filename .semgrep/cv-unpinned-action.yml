@@ -1,0 +1,17 @@
+rules:
+  - id: cv-unpinned-action
+    languages: [yaml]
+    severity: ERROR
+    message: >-
+      GitHub Action referenced by tag/branch instead of a full 40-hex commit
+      SHA (SR-132, E43-T05). Pin `uses: owner/repo@<sha> # vX.Y.Z` and record
+      it in .github/actions-pins.md.
+    metadata:
+      rule-id: cv-unpinned-action
+    patterns:
+      - pattern-regex: '^\s*-?\s*uses:\s*(?!\./|docker://)[\w.-]+/[\w./-]+@(?![0-9a-fA-F]{40}(?:\s|$))\S+'
+    paths:
+      include:
+        - "**/.github/workflows/*.yml"
+        - "**/.github/workflows/*.yaml"
+        - "**/tests/cv-unpinned-action.yml"

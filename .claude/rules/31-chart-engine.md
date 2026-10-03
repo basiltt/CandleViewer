@@ -35,3 +35,4 @@ Source: `docs/plan/26-chart-engine-design.md`, ADR-0002, CONSTITUTION C-2.16, §
 ## Tests
 - Vitest, coverage >=85% (`unit-engine`). Pure math (scales, viewport, hit-testing, LOD/decimation) gets
   property tests. Visual regressions via screenshot tests in headless Chromium with a fixed seed.
+- Wall-clock budget asserts live in `*.perf.test.ts` (vitest `perf` project, run by `engine-bench` without coverage; `unit` runs under coverage). Never loosen a budget or skip without this split.

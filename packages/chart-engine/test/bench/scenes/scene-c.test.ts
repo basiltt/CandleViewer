@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   Ring,
   FINE_COLS,
@@ -20,6 +20,10 @@ import {
 import { SceneC, FULL_CAPS } from "../../../bench/scenes/scene-c.mjs";
 
 const ev = { kind: "heatmapStream" };
+
+// Scoped to this file only: 100k-bar fixture generation is slow under v8 coverage
+// instrumentation (vitest 3). The perf budgets asserted below are unchanged.
+vi.setConfig({ testTimeout: 60_000 });
 
 describe("Ring", () => {
   it("wraps the cursor and yields two sub-quads at the wrap", () => {

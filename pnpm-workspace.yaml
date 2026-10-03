@@ -11,3 +11,12 @@ packages:
 allowBuilds:
   electron: true
   esbuild: true
+  # electron-builder 26 > electron-winstaller: 7z arch selector for Squirrel.Windows;
+  # not used by CI or the portable/NSIS targets, so explicitly denied (E43-T05).
+  electron-winstaller: false
+
+# E43-T05 (SR-130/SR-156): force patched transitive `tar` (electron-builder >
+# app-builder-lib, build-time only) past GHSA-23hp-3jrh-7fpw and the other
+# tar advisories. Remove once electron-builder ships tar>=7.5.21 itself.
+overrides:
+  tar: ">=7.5.21"

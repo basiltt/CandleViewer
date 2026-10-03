@@ -33,7 +33,7 @@ This document is normative. Every requirement carries an ID (`SR-nnn`); tickets 
 ### 1.1 Objectives (ranked)
 
 | # | Objective | Rationale | Measured by |
-|---|-----------|-----------|-------------|
+| --- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | O1 | **No unauthorised order may ever be placed on a Bybit account.** | The order path is the only surface that can destroy owner capital in seconds. | Zero unauthorised orders in audit reconciliation (SR-070); pen-test finding class "auth bypass on order path" = release blocker. |
 | O2 | **API key material must never leave the trust boundary in plaintext.** | Key compromise = total account compromise, irrespective of app controls. | Secrets scanning clean; key-handling unit tests; `gitleaks` + log-redaction tests green. |
 | O3 | **Withdrawal must be impossible via any CandleViewer-held credential.** | Bybit keys cannot withdraw by design, but a mis-scoped key plus a transfer permission is still a fund-movement path. | Onboarding gate + periodic permission verification (SR-030..SR-034). |
@@ -48,7 +48,7 @@ This document is normative. Every requirement carries an ID (`SR-nnn`); tickets 
 - **Least privilege everywhere** — Bybit key scopes, OS users, container capabilities, DB roles, app roles.
 - **Secure by default** — live trading disabled by default; one-click trading disabled by default ("arm" toggle); recorded-symbol list empty by default; every new user created as `Viewer`.
 - **Fail closed on the order path, fail open on the view path** — if authorisation, risk checks or key decryption are uncertain, reject the order; a chart that cannot render must never block a flatten.
-- **Defence in depth** — Tailscale network isolation is *not* an excuse to skip authn/authz, CSRF protection or input validation.
+- **Defence in depth** — Tailscale network isolation is _not_ an excuse to skip authn/authz, CSRF protection or input validation.
 - **No ambient authority** — no "admin mode" flag, no god-object session; every capability is an explicit permission checked at the API boundary and re-checked in the domain layer.
 - **Auditability over convenience** — anything that touches money is logged before it is attempted and after it resolves.
 - **Assume the browser is hostile** — the React app is an untrusted client; all validation, risk caps and RBAC are enforced server-side and merely mirrored in the UI.
@@ -66,7 +66,7 @@ Physical security of the owner's home; Bybit's own platform security; the owner'
 Assets are ranked by loss impact. `C/I/A` = confidentiality / integrity / availability sensitivity on a 1–3 scale.
 
 | ID | Asset | Where it lives | C | I | A | Loss impact |
-|----|-------|----------------|---|---|---|-------------|
+| ---- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | --- | --- | --- | -------------------------------------------------------------------------------------------------------------- |
 | A-01 | Bybit API key + secret (per account, live) | Postgres `exchange_credentials` (ciphertext), process memory (plaintext, transient) | 3 | 3 | 2 | Total account takeover: adversary trades, transfers within UTA, drains via leverage abuse. Unrecoverable. |
 | A-02 | Master key / KEK | OS keyring (Windows Credential Manager via host agent) or `age` identity on an encrypted volume | 3 | 3 | 3 | Decrypts all A-01. Equivalent to A-01 × N accounts. |
 | A-03 | Owner and manager account credentials (Argon2id hashes, TOTP seeds, recovery codes) | Postgres `users`, `user_totp` | 3 | 3 | 2 | Authenticated access to the app → order path, admin screens. |
@@ -97,9 +97,9 @@ Assets are ranked by loss impact. `C/I/A` = confidentiality / integrity / availa
 ## 3. Actors and trust levels
 
 | ID | Actor | Type | Trust | Capabilities | Notes |
-|----|-------|------|-------|--------------|-------|
+| ----- | ----------------------------------------- | -------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | AC-01 | Owner (basiltt) | Human, authenticated | Highest | Everything, incl. key management, user management, live enablement, kill switch | Single owner. Mandatory TOTP (SR-020). Cannot be demoted or deleted (SR-055). |
-| AC-02 | Account Manager | Human, authenticated | Medium | Trade *assigned* accounts only; own journal; own layouts | Untrusted with other accounts' data and with keys. |
+| AC-02 | Account Manager                           | Human, authenticated       | Medium                                       | Trade _assigned_ accounts only; own journal; own layouts                        | Untrusted with other accounts' data and with keys.                                                   |
 | AC-03 | Viewer | Human, authenticated | Low | Read-only over the scope the owner grants | Includes "owner-as-reviewer" persona. |
 | AC-04 | Unauthenticated local user | Human/process on the host | None | Reach the login endpoint over loopback/Tailscale | Rate-limited, lockout-protected. |
 | AC-05 | Backend service identity | Machine | High (internal) | Holds decrypted keys in memory, talks to Bybit | Runs as a non-root container user. |
@@ -175,7 +175,7 @@ flowchart TB
 ### 4.1 Boundary register
 
 | ID | Boundary | Crossing | Controls |
-|----|----------|----------|----------|
+| ---- | ------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | TB-1 | Public internet → tailnet | Device joins tailnet | Tailscale device auth, key expiry ≤ 90 d, ACL tags, owner approval of new devices, MFA on the Tailscale account (SR-045..SR-049). |
 | TB-2 | Tailnet → trading host | Packets to the host | Windows firewall rule allowing only the Tailscale interface to the proxy port; no LAN or public bind (SR-046). |
 | TB-3 | Host → WSL/docker network | Proxy to backend | Backend binds `127.0.0.1`/WSL-internal address only; no `0.0.0.0`; verified by automated `ss`/`netstat` check on startup and in CI-like healthcheck (SR-047). |
@@ -197,7 +197,7 @@ Standing assumptions for all areas: no public listener exists; all human actors 
 ### 5.1 Area 1 — Exchange API keys (A-01, A-02)
 
 | T | STRIDE | Threat | L | I | Risk | Mitigations | Residual |
-|---|--------|--------|---|---|------|-------------|----------|
+| --- | ---------------------- | --------------------------------------------------------------------------------------------------------- | --- | --- | ------------ | -------------------------------------------------------------------------------------------------------------- | ------------------------ |
 | K1 | Information disclosure | Key secret written to application logs, exception traces, HTTP debug dumps or error-reporting payloads | M | H | **High** | SR-006 redaction filter, SR-007 secret type wrapper, SR-120..SR-124 logging redaction, gitleaks in CI (SR-142) | Low |
 | K2 | Information disclosure | Key secret returned by an admin API (e.g. "edit key" screen prefilling the secret) | M | H | **High** | SR-005 write-only secrets, never serialised; schema test asserting absence | Low |
 | K3 | Information disclosure | Database dump / backup contains decryptable keys because the KEK is stored beside the data | M | H | **High** | SR-001 envelope encryption, SR-002 KEK outside DB, SR-092 backups encrypted with an independent key | Low |
@@ -212,7 +212,7 @@ Standing assumptions for all areas: no public listener exists; all human actors 
 ### 5.2 Area 2 — Order path (A-05, A-06)
 
 | T | STRIDE | Threat | L | I | Risk | Mitigations | Residual |
-|---|--------|--------|---|---|------|-------------|----------|
+| --- | ---------------------- | ------------------------------------------------------------------------------------------- | --- | --- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | O1 | Elevation of privilege | Manager submits an order for an account not assigned to them by tampering with `account_id` | M | H | **Critical** | SR-050 per-account authorisation in the domain layer, SR-051 server-side resolution of allowed accounts, contract test per endpoint | Low |
 | O2 | Spoofing | CSRF from a malicious page causes the browser to submit an order with the user's cookie | M | H | **Critical** | SR-041 CSRF double-submit token + `SameSite=Strict`, SR-042 `Origin`/`Sec-Fetch-Site` checks, SR-043 arm-toggle nonce for live orders | Low |
 | O3 | Tampering | Quantity/price/leverage manipulated beyond per-account profile caps | M | H | **High** | SR-052 server-side risk validation against `account_profiles`, SR-053 hard notional/leverage ceilings, SR-054 allowed-symbol allowlist | Low |
@@ -228,7 +228,7 @@ Standing assumptions for all areas: no public listener exists; all human actors 
 ### 5.3 Area 3 — Rule engine (A-07, AC-06)
 
 | T | STRIDE | Threat | L | I | Risk | Mitigations | Residual |
-|---|--------|--------|---|---|------|-------------|----------|
+| --- | ---------------------- | ---------------------------------------------------------------------------------------------- | --- | --- | ------------ | ---------------------------------------------------------------------------------------------------------- | -------- |
 | R1 | Elevation of privilege | Rule IR permits arbitrary code execution (e.g. `eval` of an expression string) | M | H | **Critical** | SR-100 declarative, non-Turing-complete IR; no `eval`/`exec`/`pickle`; allowlisted node types only | Low |
 | R2 | Tampering | Rule edited to remove a stop or enlarge size, bypassing review | M | H | **High** | SR-101 versioned immutable rule revisions + audited diffs; SR-102 rules cannot exceed account profile caps | Low |
 | R3 | Elevation of privilege | A manager's rule targets an account they may not trade | M | H | **High** | SR-103 rules bound to a user identity; RBAC re-checked at fire time, not at save time | Low |
@@ -241,7 +241,7 @@ Standing assumptions for all areas: no public listener exists; all human actors 
 ### 5.4 Area 4 — Multi-account fan-out (A-09)
 
 | T | STRIDE | Threat | L | I | Risk | Mitigations | Residual |
-|---|--------|--------|---|---|------|-------------|----------|
+| --- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | --- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | F1 | Elevation of privilege | Fan-out includes an account outside the actor's grant | M | H | **Critical** | SR-050/SR-051 intersect requested accounts with grants server-side; reject the whole group on mismatch (fail closed) | Low |
 | F2 | Tampering | Per-account profile ignored, so one account gets another's sizing | M | H | **High** | SR-052 sizing computed server-side per account; client-supplied size is a clamped hint only | Low |
 | F3 | Denial of service | Fan-out to N accounts multiplies rate-limit consumption; later legs rejected, leaving a partial group | M | H | **High** | SR-044a/SR-044b one tracker **per UID** (limits are per-UID and shared across that UID's keys, so extra keys give no extra quota), pre-dispatch budget arithmetic, SR-072 partial-group detection + compensating cancel/alert | Low |
@@ -254,7 +254,7 @@ Standing assumptions for all areas: no public listener exists; all human actors 
 ### 5.5 Area 5 — WebSocket ingestion & fan-out (A-10, A-06)
 
 | T | STRIDE | Threat | L | I | Risk | Mitigations | Residual |
-|---|--------|--------|---|---|------|-------------|----------|
+| --- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --- | --- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
 | W1 | Tampering | Malformed/hostile exchange frame crashes a parser or triggers unbounded allocation | M | M | Medium | SR-040 strict schema + size caps on every frame; fuzz tests on the decoder (SR-155) | Low |
 | W2 | Tampering | Order-book desync (Bybit L2 has no checksum) yields a wrong book that drives trading decisions | M | H | **High** | SR-038 `u`/`seq` monotonicity tracking; drop-and-resubscribe on gap; mark book `stale` and suppress trading affordances while stale | Low |
 | W3 | Denial of service | Slow client on the fan-out WS causes unbounded server-side buffering | M | M | Medium | SR-073 bounded per-client queues with conflation and disconnect-on-overflow | Low |
@@ -275,7 +275,7 @@ Standing assumptions for all areas: no public listener exists; all human actors 
 ### 5.6 Area 6 — Authentication & RBAC (A-03, A-04)
 
 | T | STRIDE | Threat | L | I | Risk | Mitigations | Residual |
-|---|--------|--------|---|---|------|-------------|----------|
+| --- | ---------------------- | -------------------------------------------------------------------- | --- | --- | ------------ | ------------------------------------------------------------------------------------------------------------------------------ | -------- |
 | U1 | Spoofing | Password brute force / credential stuffing against a manager account | M | H | **High** | SR-011 Argon2id, SR-015 per-account + per-IP throttling, SR-016 lockout + owner alert | Low |
 | U2 | Spoofing | Phishing a manager's password | M | H | **High** | SR-020 mandatory TOTP for Owner and every role that can trade; SR-021 TOTP replay prevention | Low |
 | U3 | Elevation of privilege | Role check missing on a new endpoint | M | H | **Critical** | SR-017 deny-by-default router (every route declares a capability or fails at import), SR-018 automated route-coverage test | Low |
@@ -290,7 +290,7 @@ Standing assumptions for all areas: no public listener exists; all human actors 
 ### 5.7 Area 7 — Admin screens (A-03, A-08, A-18, A-19)
 
 | T | STRIDE | Threat | L | I | Risk | Mitigations | Residual |
-|---|--------|--------|---|---|------|-------------|----------|
+| --- | ---------------------- | ---------------------------------------------------------------------------------------------- | --- | --- | ------------ | -------------------------------------------------------------------------------------------------------------------- | -------- |
 | D1 | Elevation of privilege | Admin screen hidden in the UI but its API remains callable by a Manager | M | H | **Critical** | SR-017 server-side capability check (UI hiding is cosmetic); tests call every admin route as each role | Low |
 | D2 | Tampering | Feature-flag screen used to enable live trading without review | M | H | **High** | SR-025 step-up re-auth for live enablement, key add/rotate, role change, risk-cap change, kill-switch disable | Low |
 | D3 | Information disclosure | Audit-log viewer exposes raw payload fields to a Viewer | M | M | Medium | SR-067 role-scoped audit projections; raw payloads owner-only | Low |
@@ -301,7 +301,7 @@ Standing assumptions for all areas: no public listener exists; all human actors 
 ### 5.8 Area 8 — Recorder data & storage (A-10, A-12, A-13)
 
 | T | STRIDE | Threat | L | I | Risk | Mitigations | Residual |
-|---|--------|--------|---|---|------|-------------|----------|
+| --- | ---------------------- | ------------------------------------------------------------------------- | --- | --- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | S1 | Tampering | Silent corruption of Parquet archives makes replay/backtests wrong | M | M | Medium | SR-094 per-file checksum manifest verified on read and by a weekly scrub job | Low |
 | S2 | Denial of service | Unbounded recording fills the disk, taking the backend (and trading) down | H | H | **Critical** | SR-096 disk-budget guard: retention 30 d default, per-symbol caps, alert at 75 %, automatic recording pause at 90 %; trading path must not share the fillable volume | Low |
 | S3 | Elevation of privilege | Replay/export endpoint used to read arbitrary filesystem paths | M | H | **High** | SR-097 no user-supplied paths; dataset ids resolved through a registry; path-traversal tests | Low |
@@ -316,7 +316,7 @@ manifest, compactor, DuckDB view layer + Postgres attachment, retention reaper, 
 path for E07's recorder/retention tables:
 
 | T | STRIDE | Threat | L | I | Risk | Mitigations | Residual |
-|---|--------|--------|---|---|------|-------------|----------|
+| --- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | --- | --------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | S10 | Denial of service | ILP client on the recorder floods QuestDB faster than it can flush, causing unbounded WAL growth on the same volume as hot query data | M | H | **High** | SR-096 disk-budget guard extended to the ILP write path: rate-limited to configured symbol/depth budget, conservative commit-lag config, alert at 75%/pause at 90% | Low |
 | S11 | Repudiation | ILP has no per-row authentication; a rogue TB-3 process could inject fabricated rows attributed to the recorder | L | M | Low | SR-047 loopback/WSL-internal ILP port; `recording_sessions`/`recording_gaps` reconciliation detects divergence from the recorder's own record | Low |
 | S12 | Information disclosure | A backend module bypasses the storage repository layer and opens a direct PGWire connection, skipping scope checks | L | M | Low | ADR-0003 binding rule (all storage access via `storage/` repositories) + import-linter boundary | Low |
@@ -336,7 +336,7 @@ the abuse-case → test → ticket traceability table live in `docs/security/thr
 ### 5.9 Area 9 — Electron shell (A-16, AC-09)
 
 | T | STRIDE | Threat | L | I | Risk | Mitigations | Residual |
-|---|--------|--------|---|---|------|-------------|----------|
+| --- | ---------------------- | -------------------------------------------------------------------------- | --- | --- | ------------ | ----------------------------------------------------------------------------------------------------------------------- | -------- |
 | E1 | Elevation of privilege | Renderer compromise reaches Node APIs → arbitrary code on the trading host | M | H | **Critical** | SR-110 `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`, `nodeIntegrationInWorker: false` | Low |
 | E2 | Elevation of privilege | Over-broad preload bridge exposes generic IPC (`invoke(channel, …)`) | M | H | **High** | SR-111 fixed, typed, allowlisted preload API; no dynamic channel names; argument validation on both sides | Low |
 | E3 | Tampering | Remote content loaded into a trusted window | L | H | Medium | SR-113 `will-navigate`/`setWindowOpenHandler` deny non-local origins; external links open in the OS browser | Low |
@@ -356,7 +356,7 @@ there.
 ### 5.10 Area 10 — Tailscale & network (A-15, TB-1..TB-3)
 
 | T | STRIDE | Threat | L | I | Risk | Mitigations | Residual |
-|---|--------|--------|---|---|------|-------------|----------|
+| --- | ---------------------- | -------------------------------------------------------------------------------------------- | --- | --- | ------------ | ----------------------------------------------------------------------------------------------------------------------- | ----------------- |
 | N1 | Spoofing | Compromised Tailscale account adds a hostile device to the tailnet | L | H | **High** | SR-045 MFA on the Tailscale account, device approval required, ACL tags, key expiry ≤ 90 d, periodic device audit | Low |
 | N2 | Elevation of privilege | Flat ACL lets any tailnet device reach every port on the host | M | M | Medium | SR-046 least-privilege ACL: managers reach only the app port; no SSH/DB/metrics from manager tags | Low |
 | N3 | Information disclosure | WSL2 `0.0.0.0` bind plus Windows `portproxy`/UPnP exposes the backend to LAN or internet | M | H | **Critical** | SR-047 loopback/WSL-internal binds only; startup listener assertion; quarterly external port scan; no `portproxy` rules | Low |
@@ -374,7 +374,7 @@ Scope: the repository itself, `main` branch integrity, branch-protection configu
 **Trust boundaries extended**: TB-9 (developer/agent workstation → GitHub SCM & governance surface, register in §4.1) plus these crossings analysed here: PR from a branch vs from a fork; workflow runner → repository write scope; GitHub Projects API → board data; committed governance config (`.github/`, branch-protection-as-code) → live platform settings (the **drift boundary** — what is committed can silently diverge from what GitHub actually enforces).
 
 | T | STRIDE | Threat | L | I | Risk | Mitigations | Residual |
-|---|--------|--------|---|---|------|-------------|----------|
+| --- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --- | -------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
 | G1 | Spoofing | Impersonating a code-owner approval (compromised reviewer account, or a review left by someone without CODEOWNERS standing being read as sufficient) | L | H | **High** | Branch protection requires CODEOWNERS review specifically (not just any 2 approvals); GitHub org 2FA requirement; SR-161 (new, shipped by **E01-T08** branch-protection-as-code) mandates CODEOWNERS enforcement is verified, not assumed | Low |
 | G2 | Spoofing | Forging a QA/security sign-off by typing a marker string into an issue/PR body instead of a real review being performed | M | H | **High** | Sign-off is a required-reviewer GitHub approval event (an audit-logged platform action), never free-text; `pr-metadata` check (C-9.1) validates structured fields, not prose claims; SR-162 (new, shipped by **E01-T07** QA-sign-off guard) | Low |
 | G3 | Spoofing | Unsigned commits allow a spoofed author identity in history | M | M | Medium | Commit-signing recommendation (below): **proposed, pending owner acceptance** — GitHub's verified-committer badge covers only web-UI-authored commits (it does not apply to the CLI/agent-authored commits that make up most of this repo's history) and is not itself relied on as a control; the actual control for this repo is mandatory 2-approval + CODEOWNERS review on every merge regardless of how the commit was authored, judged sufficient for a private repo with a small, known contributor set pending @basiltt's sign-off; revisit if the contributor set grows or a spoofing incident occurs | Medium (pending owner decision, see §16) |
@@ -419,7 +419,7 @@ Scope: the repository itself, `main` branch integrity, branch-protection configu
 ### 5.11 Risk summary
 
 | Residual level | Count |
-|---|---|
+| --------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | Low | 90 (adds S10–S12, S14, S16–S18, S20–S21 from E07-X01) |
 | Medium | 5 (K9 memory exposure under host compromise; N5 remote-access outage; G3 unsigned commits, accepted; S13, S15 from E07-X01) |
 | High / Critical | 0 |
@@ -437,7 +437,7 @@ Notation: **MUST** = mandatory, verified before the owning release ships. **SHOU
 ### 6.1 Key management (SR-001…SR-009)
 
 | ID | Requirement | Verify |
-|----|-------------|--------|
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------ |
 | SR-001 | Exchange credentials MUST be stored using envelope encryption: a per-credential data encryption key (DEK, 256-bit, AES-256-GCM or XChaCha20-Poly1305) encrypts the secret; the DEK is itself wrapped by a master key (KEK). Only the wrapped DEK and ciphertext are persisted in Postgres. | unit, manual-review |
 | SR-002 | The KEK MUST live outside the database and outside the repo: on Windows, the OS keyring (Credential Manager) accessed through a host-side agent; in WSL/container deployments, an `age`/`sops` identity file on a volume with `0400` permissions owned by the service user ("KMS-lite"). The KEK MUST never be written to the DB, to a backup that shares the data key, to logs, or to an image layer. | manual-review, ci-gate (secret scan) |
 | SR-003 | Ciphertexts MUST be AEAD with associated data binding `account_id`, `credential_id`, `environment` (live/demo) and a `key_version`, so a swapped or copied row fails to decrypt. | unit |
@@ -451,7 +451,7 @@ Notation: **MUST** = mandatory, verified before the owning release ships. **SHOU
 ### 6.2 Key lifecycle, rotation and permission enforcement (SR-030…SR-039)
 
 | ID | Requirement | Verify |
-|----|-------------|--------|
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
 | SR-030 | **Withdrawal-OFF onboarding gate.** When a credential is added, the backend MUST call `GET /v5/user/query-api` and verify: no withdrawal permission, no transfer permission beyond what the account model requires, an IP whitelist is present for live keys, and the scope set is the minimum needed (Contract/Order/Position read+trade). If any check fails, the credential is stored **disabled** with a blocking banner and MUST NOT be usable for trading. | integration, e2e |
 | SR-030a | **Fields the gate reads (Bybit-specific).** `GET /v5/user/query-api` (rate limit 10 req/s — the verifier MUST respect it) returns the key's own `readOnly` flag, `permissions` object, `ips` array, `note`, `expiredAt`, `createdAt`, `unified`/`uta` flags and `type` (HMAC vs RSA). The gate MUST assert, field by field: `permissions.Wallet` contains **no** `AccountTransfer`/`SubMemberTransfer`/`Withdraw` entry; `permissions.Exchange`, `permissions.NFT`, `permissions.Affiliate`, `permissions.Options`, `permissions.Spot` are empty for trading keys; `permissions.ContractTrade` and `permissions.Position`/`Order` contain only what the account model needs; `ips` is non-empty and equals the configured egress IP for **live** keys (Bybit's IP whitelist is **per API key**, not per UID or per sub-account, so every key — master and each sub-account key — MUST be whitelisted individually); `expiredAt` is present and in the future. Sub-account keys created via `POST /v5/user/create-sub-api` MUST be requested with `readOnly=0` and the minimum `permissions` set only. The raw (redacted) response is stored with the credential record for diffing. | unit, integration |
 | SR-031 | **Periodic verification.** The same `GET /v5/user/query-api` check MUST re-run on backend start, every 6 hours, and before enabling live trading for a session, for **every** stored credential (master and each sub-account key), not just the one in use. The verifier diffs the returned `permissions`, `ips` and `expiredAt` against the values recorded at onboarding (SR-030a); any drift is an SR-032 violation. Results, including the raw permission set, are recorded in the audit log. | integration, drill |
@@ -467,7 +467,7 @@ Notation: **MUST** = mandatory, verified before the owning release ships. **SHOU
 ### 6.3 Authentication (SR-010…SR-029)
 
 | ID | Requirement | Verify |
-|----|-------------|--------|
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
 | SR-010 | Authentication is local to CandleViewer (no external IdP). Identities live in Postgres `users`. No anonymous access to any route except `/healthz` (loopback only), the login endpoint and static assets. | contract |
 | SR-011 | Passwords MUST be hashed with Argon2id, parameters ≥ `m=64 MiB, t=3, p=4`, 16-byte random salt, tuned so a single verification costs ≥ 100 ms on the target host. Parameters are stored with the hash so they can be raised; hashes are transparently upgraded on successful login. | unit |
 | SR-012 | Sessions MUST use opaque, 256-bit random tokens in a cookie with `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/`, host-only scope. Server-side session records hold user id, role snapshot, created/last-seen, IP, user agent. No JWT is used for browser sessions. | unit, e2e |
@@ -492,7 +492,7 @@ Notation: **MUST** = mandatory, verified before the owning release ships. **SHOU
 ### 6.4 Authorisation, order path and fan-out (SR-050…SR-059, SR-070…SR-074)
 
 | ID | Requirement | Verify |
-|----|-------------|--------|
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
 | SR-050 | Authorisation MUST be enforced at two layers: the API boundary (capability check) and the domain layer (per-account grant check inside the OMS before an order is constructed). Passing only one layer MUST NOT be sufficient. | unit, integration |
 | SR-051 | The set of accounts an actor may act on MUST be resolved server-side from `account_grants` and intersected with the request. Queries MUST be scoped at construction (a `WHERE account_id IN (…)` derived from grants), never filtered after fetching. | unit, integration |
 | SR-052 | Order sizing, leverage, SL/TP offsets and risk caps MUST be computed and enforced server-side from the per-account profile. Client-provided values are hints and MUST be clamped or rejected, never trusted. | unit, integration |
@@ -512,7 +512,7 @@ Notation: **MUST** = mandatory, verified before the owning release ships. **SHOU
 ### 6.5 Rule engine (SR-100…SR-107)
 
 | ID | Requirement | Verify |
-|----|-------------|--------|
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
 | SR-100 | The rule IR MUST be declarative and non-Turing-complete: an allowlisted set of condition nodes, comparators and action nodes with typed parameters. No user-supplied code, expression `eval`, template execution, regex denial-of-service vectors, or deserialisation of executable objects (`pickle` forbidden). | unit, manual-review |
 | SR-101 | Rules MUST be versioned immutably: every save creates a new revision with an IR hash; the audit log records the diff, the author and the hash. Activation references a specific revision. | unit, e2e |
 | SR-102 | Rule-generated orders MUST pass exactly the same server-side validation, RBAC, risk caps and native-SL invariant as human orders — no privileged path exists. | integration |
@@ -525,7 +525,7 @@ Notation: **MUST** = mandatory, verified before the owning release ships. **SHOU
 ### 6.6 Input validation, exchange-environment and API hardening (SR-040…SR-044e)
 
 | ID | Requirement | Verify |
-|----|-------------|--------|
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------- |
 | SR-040 | All external input — HTTP bodies, query strings, headers, WS frames from clients, **and every exchange response** — MUST be validated against an explicit schema (Pydantic v2 models) with strict types, bounds, enum constraints and `extra="forbid"`. Unknown or malformed input is rejected, never coerced. | unit, contract |
 | SR-040a | **Environment capability matrix MUST be enforced in code, not documentation.** A single `ExchangeEnvironment` value (`live` \| `demo`) selects an immutable capability record, and every transport call asserts against it: <br>• **live** — REST `api.bybit.com`, public WS `stream.bybit.com/v5/public/linear`, private WS `/v5/private`, WS Trade `/v5/trade` available (optional optimisation only).<br>• **demo** — REST `api-demo.bybit.com` **only for orders**; **WS Trade is NOT supported on demo** and **demo has no public WS** (mainnet public streams are used for market data). Batch orders on demo are limited to `linear`/`option`.<br>For v1, order entry is **REST-only in both environments** (WS Trade is an explicit non-goal); if WS Trade is ever enabled it MUST be gated on `env == live` by the capability record, so demo can never silently fall through to an unsupported transport or dual-dispatch an order on both paths. Mixing endpoints of two environments in one session MUST be impossible by construction (one client instance per environment, no shared base-URL mutation), and the UI MUST display the order-routing environment persistently. | unit, integration, e2e |
 | SR-040b | Exchange stream semantics MUST be validated before data is trusted: kline bars are treated as closed only when `confirm == true`; a REST order response is an **accept acknowledgement, not a fill** — fills come only from the private `order`/`execution` WS streams (SR-058); orderbook frames are validated for `u`/`seq` monotonicity (SR-038). Bulk CSV backfill parsers MUST branch on timestamp units (derivatives = fractional seconds, spot = milliseconds) and reject files whose parsed range is implausible. | unit, contract |
@@ -542,7 +542,7 @@ Notation: **MUST** = mandatory, verified before the owning release ships. **SHOU
 ### 6.7 Network, deployment and exposure (SR-045…SR-049)
 
 | ID | Requirement | Verify |
-|----|-------------|--------|
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
 | SR-045 | Remote access is Tailscale-only. The Tailscale account MUST have MFA, device approval enabled, key expiry ≤ 90 days, and a quarterly device audit removing unknown or unused nodes. | manual-review, drill |
 | SR-046 | Tailscale ACLs MUST be least-privilege: `tag:manager` may reach only the app port on `tag:trading-host`; `tag:owner` may additionally reach the admin/observability ports. The trading host advertises no exit node and no subnet routes. The ACL file is version-controlled and reviewed. | manual-review |
 | SR-047 | The backend and all data stores MUST bind to loopback or the WSL-internal address only. A startup self-check MUST enumerate listening sockets and refuse to start (or hard-alert) if any service listens on a non-loopback, non-tailnet address. No Windows `portproxy` or UPnP mapping to the app may exist; verified quarterly by an external port scan from a non-tailnet host. | integration, drill |
@@ -554,7 +554,7 @@ Notation: **MUST** = mandatory, verified before the owning release ships. **SHOU
 See §8 for the full specification.
 
 | ID | Requirement | Verify |
-|----|-------------|--------|
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
 | SR-060 | An append-only audit log MUST record every security- and capital-relevant event (event catalogue in §8.2). | integration |
 | SR-061 | Order events MUST be logged twice: an `intent` record written **before** the exchange call (with the full validated parameters) and an `outcome` record after (accepted/rejected/error, exchange ids, latency), correlated by `orderLinkId`. | integration, e2e |
 | SR-062 | Every event MUST carry: `ts` (UTC, monotonic sequence), `actor_type` (human/rule/system), `actor_id`, `session_id`, `source_ip`, `role_at_time`, `account_id` (when applicable), `event_type`, `object_ref`, `before`/`after` (for mutations), `outcome`, `reason_code`, `request_id`, `rule_id`/`rule_version` when actor is a rule. | unit |
@@ -569,7 +569,7 @@ See §8 for the full specification.
 ### 6.9 Logging, monitoring and redaction (SR-120…SR-126)
 
 | ID | Requirement | Verify |
-|----|-------------|--------|
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
 | SR-120 | Logs MUST be structured JSON with a fixed field set, including `request_id`, `actor_id`, `route`, `outcome`, and latency. No free-form string interpolation of user or exchange data into messages. | unit |
 | SR-121 | The redaction filter (SR-006) MUST be applied at the logging-handler level so that it cannot be bypassed by a new call site, and MUST cover exception tracebacks, HTTP client request/response logging and third-party library loggers (`httpx`, `websockets`, `sqlalchemy`, `pybit`). | unit, integration |
 | SR-122 | Session tokens, CSRF tokens, cookies, `Authorization`/`X-BAPI-SIGN` headers, TOTP codes and recovery codes MUST never be logged, at any level, including debug. | unit |
@@ -581,7 +581,7 @@ See §8 for the full specification.
 ### 6.10 Backups and data protection (SR-090…SR-099)
 
 | ID | Requirement | Verify |
-|----|-------------|--------|
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
 | SR-090 | Backups MUST cover: Postgres (logical dump + WAL archive), Parquet cold tier, configuration, Tailscale ACL, and the wrapped-DEK material — but never the KEK in plaintext. | drill |
 | SR-091 | Backups MUST be encrypted at rest (age/sops or repository-native encryption such as restic/borg) with a key distinct from the runtime KEK, stored offline by the Owner. | manual-review |
 | SR-092 | An encrypted backup MUST be useless without the separately held backup key; loss of the backup medium alone MUST NOT disclose credentials. | manual-review, pen-test |
@@ -596,7 +596,7 @@ See §8 for the full specification.
 ### 6.11 Electron shell hardening (SR-110…SR-119)
 
 | ID | Requirement | Verify |
-|----|-------------|--------|
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
 | SR-110 | Every `BrowserWindow`/`WebContents` MUST set `contextIsolation: true`, `nodeIntegration: false`, `nodeIntegrationInWorker: false`, `nodeIntegrationInSubFrames: false`, `sandbox: true`, `webSecurity: true`, `allowRunningInsecureContent: false`, `experimentalFeatures: false`, and `enableRemoteModule` absent. | unit, ci-gate |
 | SR-111 | The preload script MUST expose a fixed, typed, allowlisted API via `contextBridge` (no generic `invoke(channel, …)`, no `ipcRenderer` passthrough). Both sides validate arguments against a schema; unknown channels are dropped and logged. | unit, manual-review |
 | SR-112 | A strict CSP MUST be enforced in packaged builds via response headers and a `<meta>` fallback: `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'` (inline styles only if the design system requires them, otherwise nonce-based); `connect-src 'self' https://<tailnet-host> wss://<tailnet-host>`; `img-src 'self' data: blob:`; `worker-src 'self' blob:`; `object-src 'none'`; `frame-ancestors 'none'`; `base-uri 'none'`; `form-action 'none'`. No `unsafe-eval` — the WebGL engine and rule editors MUST NOT require it. | integration, e2e, ci-gate |
@@ -616,7 +616,7 @@ deep-link surface. IDs continue the existing SR numbering (after SR-172, the las
 names its owner ticket, per the traceability convention in `docs/plan/security/E10-threat-model.md` §8.
 
 | ID | Requirement | Verify | Owner |
-|----|-------------|--------|-------|
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------- | ------- |
 | SR-173 | The renderer's root layout MUST assert `window.location.origin` matches the packaged app origin on mount and refuse to render otherwise, as defence-in-depth alongside the main-process navigation guard (SR-113). | e2e | E10-T01 |
 | SR-174 | The `app://` protocol handler MUST be a read-only static-file server scoped to the packaged asset root, path-traversal-checked, and MUST NOT dispatch IPC actions or app-state changes for non-asset requests. | unit, ci-gate | E10-T02 |
 | SR-175 | Deep-link parameters MUST be schema-validated and MUST NOT directly trigger a state-changing action (arm/disarm, order placement, account switch); a deep link may only pre-fill a route/view, with any resulting state change still requiring the normal in-app confirmation/step-up path. | unit, e2e | E10-T01 |
@@ -631,7 +631,7 @@ names its owner ticket, per the traceability convention in `docs/plan/security/E
 ### 6.12 Frontend application security (SR-127…SR-129)
 
 | ID | Requirement | Verify |
-|----|-------------|--------|
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- |
 | SR-127 | React code MUST NOT use `dangerouslySetInnerHTML` without an allowlisting sanitiser, MUST NOT build DOM from untrusted HTML, and MUST NOT pass untrusted strings into `new Function`, `eval`, `setTimeout(string)` or dynamic `import()` URLs. Enforced by ESLint rules and Semgrep. | ci-gate, manual-review |
 | SR-128 | The chart engine MUST validate all array lengths and offsets when decoding binary frames, and MUST never allocate buffer sizes directly from untrusted length fields without bounds checks. | unit, fuzz |
 | SR-129 | Sensitive state (session token, secrets) MUST NOT be written to `localStorage`, `sessionStorage`, IndexedDB or a service-worker cache. Layout, theme and non-sensitive preferences may be. | unit, manual-review |
@@ -639,7 +639,7 @@ names its owner ticket, per the traceability convention in `docs/plan/security/E
 ### 6.13 Supply chain (SR-130…SR-139)
 
 | ID | Requirement | Verify |
-|----|-------------|--------|
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- |
 | SR-130 | Dependencies MUST be fully locked: `uv.lock`/`poetry.lock`/`requirements.txt` with hashes for Python, `package-lock.json`/`pnpm-lock.yaml` for JS. Lockfiles are committed; CI installs with frozen/`--frozen-lockfile` and hash verification. | ci-gate |
 | SR-131 | Container base images MUST be pinned by digest, rebuilt weekly, and scanned by Trivy; builds are multi-stage with a non-root runtime user, read-only root filesystem where feasible, and dropped Linux capabilities. | ci-gate |
 | SR-132 | GitHub Actions MUST be pinned to a full commit SHA (no floating tags). Workflow `permissions` are least-privilege (`contents: read` by default); `pull_request_target` is prohibited unless security-reviewed. | ci-gate, manual-review |
@@ -654,7 +654,7 @@ names its owner ticket, per the traceability convention in `docs/plan/security/E
 ### 6.14 Secrets in CI and developer environments (SR-140…SR-146)
 
 | ID | Requirement | Verify |
-|----|-------------|--------|
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
 | SR-140 | **CI MUST NOT hold production Bybit credentials.** No live key, demo key with funds, or production KEK may exist as a GitHub secret. Integration tests use recorded fixtures; any live smoke test runs manually on the trading host, never in CI. | manual-review, ci-gate |
 | SR-141 | Secrets required by CI (e.g. signing keys, registry tokens) MUST be repository/environment secrets with environment protection rules and required reviewers; prefer OIDC federation over long-lived tokens. | manual-review |
 | SR-142 | `gitleaks` MUST run on every PR and on a full-history schedule; a finding fails the build. A pre-commit hook runs the same rules locally. | ci-gate |
@@ -668,7 +668,7 @@ owns the full audit; this table is the SR-140…SR-146-scoped extract kept here 
 rules — do not duplicate the full audit, link to it):**
 
 | Secret | Type | Scope | Reachable from | Rotation owner/interval | Blast radius if leaked |
-|---|---|---|---|---|---|
+| ---------------------------- | ----------------------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `PROJECTS_PAT` | Fine-grained PAT (ADR-0017) | Account-level Projects: Read and write | `board-automation.yml` `kind-sync` job only (`issues` trigger, never fork-reachable) | Owner, 90 days (#1417) | All of owner's Projects v2 boards; no repo code/secrets/org access |
 | `GH_BRANCH_PROTECTION_TOKEN` | Repo-administration-scoped credential (E01-T08) | Branch-protection read/write | `governance-drift.yml` only, triggers `schedule`/`workflow_dispatch` — never `pull_request`/`issues` | Owner (interval owned by E01-T08's DoD) | Could rewrite `main` branch protection; break-glass runbook (`CONTRIBUTING.md`) governs manual use |
 
@@ -677,7 +677,7 @@ rules — do not duplicate the full audit, link to it):**
 See §9 for behaviour detail.
 
 | ID | Requirement | Verify |
-|----|-------------|--------|
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ |
 | SR-080 | A global kill switch MUST be reachable from every screen for the Owner (persistent control in the app chrome, plus a hotkey) and MUST complete within 5 s under normal exchange conditions. | e2e, drill |
 | SR-081 | Activating the kill switch MUST: (1) block all new order submissions app-wide, (2) disable all rules, (3) issue `cancel-all` per account and per symbol with open orders, (4) optionally flatten positions (owner-selected mode), (5) mark all credentials `trading-disabled`. | integration, drill |
 | SR-082 | A per-account/per-manager "FREEZE" MUST exist with the same semantics scoped to that account, usable by the Owner without affecting other accounts. | e2e |
@@ -690,7 +690,7 @@ See §9 for behaviour detail.
 ### 6.16 Testing, verification and assurance (SR-150…SR-160)
 
 | ID | Requirement | Verify |
-|----|-------------|--------|
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
 | SR-150 | Every SR in this document MUST map to at least one automated test or a scheduled manual procedure; a traceability table is maintained in the test plan (`03-testing-strategy.md`) and checked at PRR. | manual-review |
 | SR-151 | Authorisation tests MUST be matrix-driven: for each role × each route/topic × each account-grant scenario, assert allow/deny. | contract |
 | SR-152 | Negative tests MUST exist for: CSRF absent/invalid, wrong `Origin`, expired session, unarmed live order, exceeded risk cap, missing SL, cross-account access, rule budget breach, and desynced order book. | integration, e2e |
@@ -708,7 +708,7 @@ See §9 for behaviour detail.
 Requirements arising from §5.12 (Area 11). IDs continue the existing numbering; no existing SR is renumbered. Each requirement below is shipped by a named ticket — this is the AC2 traceability link from threat/requirement to the control that actually implements it; none of SR-161…SR-165 is delivered by this ticket (E01-X01), which is documentation-only.
 
 | ID | Requirement | Verify | Owning ticket |
-|----|-------------|--------|----------------|
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- | ---------------------------------------------- |
 | SR-161 | Branch protection on `main` MUST require CODEOWNERS review (not merely 2 generic approvals); a code-owner approval MUST be verifiably distinguishable from a non-owner approval in the merge UI before merge is permitted. | manual-review, ci-gate | E01-T08 |
 | SR-162 | A QA/security/design sign-off referenced by a ticket's Definition of Done MUST be a structured, audit-logged reviewer action (a GitHub review approval or an equivalent recorded platform event) — never a free-text marker typed into an issue or PR body. `pr-metadata` (C-9.1) MUST reject sign-off claims that are not backed by such an event. | ci-gate, manual-review | E01-T07 |
 | SR-163 | Issue and PR bodies MUST be included in the secret-scanning surface (SR-142): a scheduled scan checks new issue/PR content for credential-shaped strings, alongside the existing diff/history scan; a hit follows the SR-143 rotate-first runbook. | ci-gate | E01-Q02 |
@@ -756,7 +756,7 @@ x-rbac: { permissions: [orders:write], scope: granted_accounts }
 `22-api-openapi.yaml` is the **single source of truth** for the vocabulary. `21-database-schema.md` §10.1 seeds exactly these strings into the `permissions` table, and `24-internal-schemas.md` §15.2 declares exactly these strings as the `Permission` enum. Contract test `rbac_vocabulary_single_source` asserts all three lists are identical and that no route references a permission outside the set; a mismatch fails CI.
 
 | Domain | Permissions |
-|---|---|
+| ---------------------- | --------------------------------------------------------------------------------------------------------- |
 | Identity & access | `users:read`, `users:write` |
 | Accounts & credentials | `accounts:read`, `accounts:write`, `keys:read`, `keys:manage` |
 | Instruments | `instruments:read`, `instruments:write` |
@@ -771,7 +771,7 @@ x-rbac: { permissions: [orders:write], scope: granted_accounts }
 **A permission is necessary but never sufficient.** Every request is authorised by the 4-tuple defined in `24-internal-schemas.md` §15.2 — `(permission, account scope, symbol allowance, environment enabled)` — plus, for the rows marked `(step-up)` below, a session elevated within the last 15 minutes. The `scope` field on `x-rbac` selects how the account dimension is applied:
 
 | `x-rbac.scope` | Meaning |
-|---|---|
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `none` | Not account-scoped; the permission alone decides (e.g. `marketdata:read`). |
 | `self` | Restricted to the caller's own records (own settings, own workspaces, own alerts). |
 | `granted_accounts` | Intersected with the caller's `user_account_access` grants. Requesting only out-of-scope accounts is `403 account_scope_denied`; requesting a mix **narrows silently for reads** and **fails in full for writes** — a partial fan-out is never implied. |
@@ -779,7 +779,7 @@ x-rbac: { permissions: [orders:write], scope: granted_accounts }
 #### 7.2.1 Role → permission assignment
 
 | Permission | Owner | Manager | Viewer |
-|---|:---:|:---:|:---:|
+| -------------------------------------------------- | :-------------------------------: | :-----------------------------------------: | :-------------: |
 | `marketdata:read`, `instruments:read` | ✔ | ✔ | ✔ |
 | `instruments:write` | ✔ | ✖ | ✖ |
 | `replay:read`, `replay:write` | ✔ | ✔(own sessions) | ✔(own sessions) |
@@ -810,7 +810,7 @@ x-rbac: { permissions: [orders:write], scope: granted_accounts }
 Each row names the permission(s) and the operation(s) in `22-api-openapi.yaml` that enforce it, so a reviewer can go straight from a capability to the route that implements it.
 
 | # | Capability | Permission · operation | Owner | Manager | Viewer |
-|---|-----------|---|:-----:|:-------:|:------:|
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | :-----------------------: | :-----------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------: |
 | **Authentication & self-service** |
 | 1 | Log in, complete TOTP | — · `authLogin`, `authMfaVerify` | ✔ | ✔ | ✔ |
 | 2 | Change own password / re-enrol own TOTP | `settings:write` · `authChangePassword`, `authMfaEnroll` | ✔ | ✔ | ✔ |
@@ -884,7 +884,7 @@ Each row names the permission(s) and the operation(s) in `22-api-openapi.yaml` t
 | 52 | Trigger backup / restore | `backups:write` · `createBackup`, `restoreBackup`, `verifyBackup` | ✔(step-up) | ✖ | ✖ |
 | 53 | Change global settings (retention, alert routing, rate budgets) | `settings:write`, `recording:write` · `updateSettings`, `setRetentionPolicies` | ✔(step-up) | ✖ | ✖ |
 
-**Row 49 changed during contract reconciliation.** The earlier text granted a Viewer redacted audit access "if granted". No such grant exists in the data model — `user_account_access` carries `read`/`trade` on *accounts*, not on the audit log — and no audit operation is account-scoped (`queryAuditLog` is `scope: none`). Rather than invent a grant type to justify the row, Viewer audit access is **denied**; a Viewer who needs to review activity is given the journal and trade-group read surfaces instead. This keeps §7.2 implementable exactly as written.
+**Row 49 changed during contract reconciliation.** The earlier text granted a Viewer redacted audit access "if granted". No such grant exists in the data model — `user_account_access` carries `read`/`trade` on _accounts_, not on the audit log — and no audit operation is account-scoped (`queryAuditLog` is `scope: none`). Rather than invent a grant type to justify the row, Viewer audit access is **denied**; a Viewer who needs to review activity is given the journal and trade-group read surfaces instead. This keeps §7.2 implementable exactly as written.
 
 ### 7.3 Enforcement rules
 
@@ -909,7 +909,7 @@ Each row names the permission(s) and the operation(s) in `22-api-openapi.yaml` t
 ### 8.2 Event catalogue
 
 | Domain | Event types |
-|---|---|
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Authentication | `auth.login.success`, `auth.login.failure`, `auth.totp.success`, `auth.totp.failure`, `auth.recovery_code.used`, `auth.lockout`, `auth.logout`, `auth.session.revoked`, `auth.stepup.success`, `auth.stepup.failure`, `auth.password.changed`, `auth.totp.enrolled`, `auth.totp.reset`, `auth.breakglass.used` |
 | Users & RBAC | `user.created`, `user.disabled`, `user.enabled`, `user.deleted`, `user.role.changed`, `grant.added`, `grant.revoked` |
 | Credentials | `key.created`, `key.verified`, `key.verification_failed`, `key.rotated`, `key.retired`, `key.revoked`, `key.disabled_for_trading`, `key.expiry_warning`, `key.egress_ip_changed` |
@@ -937,7 +937,7 @@ Each row names the permission(s) and the operation(s) in `22-api-openapi.yaml` t
 ### 9.1 Scope levels
 
 | Level | Trigger | Effect |
-|---|---|---|
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | **Global kill** | Owner, from any screen (persistent button + hotkey `Ctrl+Shift+K`, confirm dialog with typed confirmation for live) | Block all new orders; disable all rules; cancel-all on every account; optional flatten; mark all credentials trading-disabled |
 | **Account freeze** | Owner, from Risk Dashboard / Admin | Same, scoped to one account/manager |
 | **Automatic** | Risk engine: daily-loss or drawdown cap breached; rule circuit breaker; credential verification failure; clock drift; audit chain mismatch; reconciliation mismatch | Scoped per policy — always blocks new entries; flatten only if the Owner configured auto-flatten for that account |
@@ -994,7 +994,7 @@ sequenceDiagram
 ### 10.1 Severity and response times
 
 | Sev | Definition | Ack | Containment target | Examples |
-|---|---|---|---|---|
+| ------ | ---------------------------------------------------------------------------------- | ------ | ------------------ | --------------------------------------------------------------------------------------- |
 | **P1** | Credential compromise, unauthorised order, RCE, audit chain broken, funds at risk | 15 min | 1 h | Key leaked, unknown order in reconciliation, hostile device on tailnet |
 | **P2** | Exploitable vulnerability without evidence of exploitation; loss of a core control | 4 h | 24 h | Missing authz on a route, CSP disabled in a shipped build, kill switch failing a drill |
 | **P3** | Security-relevant defect with limited impact | 2 days | 7 days | Verbose error leaking internal paths; a dependency High finding not on a reachable path |
@@ -1020,6 +1020,7 @@ flowchart TD
 ### 10.3 Runbooks
 
 **IR-01 — Suspected unauthorised order / account compromise (P1)**
+
 1. Activate global kill switch (§9); choose flatten if exposure is unwanted.
 2. Revoke all sessions for all users; disable every non-Owner account.
 3. Rotate **all** Bybit credentials (create new keys in the Bybit UI with withdrawal off + IP whitelist; add, verify, switch, revoke old).
@@ -1031,6 +1032,7 @@ flowchart TD
 9. Post-incident review; add regression tests; update this document.
 
 **IR-02 — Secret exposed (commit, log, screenshot, CI artefact) (P1)**
+
 1. Treat as compromised immediately — rotate first (SR-143).
 2. Rotate the affected Bybit key; if the KEK is implicated, re-encrypt every credential under a new KEK and rotate all exchange keys.
 3. Revoke any exposed CI/registry/signing token.
@@ -1039,6 +1041,7 @@ flowchart TD
 6. Add/extend a gitleaks rule or redaction pattern to prevent recurrence; add a test (SR-153).
 
 **IR-03 — Malicious/compromised manager (P1)**
+
 1. Account freeze on all their accounts (§9.1); disable the user (SR-029); revoke sessions and grants.
 2. Disable all rules owned by that user.
 3. Owner decides flatten vs hold per account.
@@ -1047,18 +1050,21 @@ flowchart TD
 6. Legal/administrative follow-up is the Owner's decision.
 
 **IR-04 — Dependency or container vulnerability with known exploitation (P2→P1 if reachable)**
+
 1. Determine reachability: is the vulnerable code path used by the backend, the web bundle or the Electron main process?
 2. If reachable and exploitable from a client: disable the affected feature via a flag, patch, rebuild, redeploy, rescan.
 3. If not reachable: schedule the upgrade in the current sprint; record a time-boxed exception in §16.
 4. Regenerate the SBOM; verify no other artefact carries the affected version.
 
 **IR-05 — Exchange-side anomaly (mass rejects, 10006/10018, desync, stale book) (P2)**
+
 1. Confirm whether it is us (rate budget, clock drift, bad payload) or Bybit (status page, demo vs live parity).
 2. Suppress trading affordances for affected symbols (stale flag, SR-038); keep risk-reducing actions enabled.
 3. Verify native SLs still exist on all open positions; if any are missing, remediate (SR-056).
 4. If the condition persists > 5 min with open exposure, escalate to the Owner with a flatten recommendation.
 
 **IR-06 — Audit chain mismatch or missing events (P1)**
+
 1. Force the app into read-only trading mode automatically (§8.1).
 2. Compare local chain with the off-box mirror; identify the first divergent `seq`.
 3. Assume DB compromise or corruption; snapshot everything before touching it.
@@ -1066,12 +1072,14 @@ flowchart TD
 5. Rebuild from backup if corruption; treat as IR-01 if tampering.
 
 **IR-07 — Host or network exposure discovered (backend reachable off-tailnet) (P1)**
+
 1. Stop the exposed listener or drop the firewall path immediately.
 2. Assume scanning/exploitation occurred: review access logs for non-tailnet source addresses; check for unexpected sessions and orders.
 3. Rotate credentials and sessions; follow IR-01 if any evidence of access.
 4. Fix the bind/firewall/portproxy misconfiguration; add the case to the SR-047 startup assertion and the quarterly scan.
 
 **IR-08 — Loss of the KEK / owner lockout (P2)**
+
 1. If the KEK is lost: credentials are unrecoverable by design — delete the ciphertexts, create fresh Bybit keys, re-onboard.
 2. If the Owner is locked out: recovery codes → break-glass CLI (SR-023) → document and audit.
 
@@ -1088,7 +1096,7 @@ flowchart TD
 Every PR carries exactly one security risk label, applied by the author and confirmable by any reviewer:
 
 | Label | Meaning | Requirement |
-|---|---|---|
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `sec:none` | Docs, styling, tests, non-security refactors | Standard 2 approvals |
 | `sec:low` | Touches app code but no security-relevant surface | Standard 2 approvals + author checklist |
 | `sec:review` | Touches authn/authz, input validation, API surface, WS topics, admin screens, logging, Electron config, CI, dependencies | **Security code-owner approval required** + checklist |
@@ -1137,7 +1145,7 @@ Every PR carries exactly one security risk label, applied by the author and conf
 ### 12.1 Gate table
 
 | Tool | Target | When | Gate |
-|---|---|---|---|
+| -------------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | **CodeQL** | Python + JavaScript/TypeScript | PR + weekly full scan on `main` | Any new High/Critical alert blocks merge |
 | **Semgrep** | Python, TS/React, Electron, Dockerfiles, GitHub Actions | PR | Findings at `ERROR` severity block; `WARNING` requires triage comment |
 | **Bandit** | Python backend | PR | High/Medium confidence+severity blocks; `# nosec` requires an inline justification and security approval |
@@ -1206,7 +1214,7 @@ history, signed commits required for release tags.
 ### 13.1 Schedule
 
 | Milestone | Activity | Blocking? |
-|---|---|---|
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
 | End of R1 (Charting alpha) | Internal security review of auth, session, RBAC scaffolding; ZAP authenticated baseline | No, findings feed R2 |
 | End of R2 (Order-flow beta) | Internal review of WS fan-out authorisation and ingestion robustness; fuzzing campaign | No |
 | End of R3 (Trading on demo) | **External penetration test #1 — full scope against the demo environment** | **Yes — R4 cannot start with open High/Critical** |
@@ -1406,7 +1414,7 @@ CandleViewer is a **private, self-hosted tool for the Owner and a small number o
 ### 15.2 Bybit Terms of Service and API rules
 
 | Topic | Position | Engineering consequence |
-|---|---|---|
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | API client status | CandleViewer is an API client acting for the Owner's accounts; managers are authorised individuals under the Owner's account, not independent third parties. | Do not build features that would make the tool a service for unrelated third parties (no public sign-up, no multi-tenant separation beyond the Owner's own accounts). |
 | Broker/affiliate programmes | Not applicable; we do not act as a broker and set no `X-Referer` broker header. | No broker headers; no revenue-sharing integrations. |
 | Copy trading | Explicitly de-scoped; Bybit's copy trading is not used for fan-out. | Fan-out is our own per-account order placement. |
@@ -1445,7 +1453,7 @@ Whether managers trading the Owner's capital constitutes a regulated activity de
 ### 16.1 Accepted residual risks
 
 | ID | Risk | Why accepted | Compensating controls | Review |
-|---|---|---|---|---|
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | RR-01 | Host-level malware could read decrypted keys from process memory (K9, AC-16) | Defending a compromised host from itself is not achievable at this scale | Bounded plaintext lifetime, no core dumps, encrypted swap, host hygiene, rapid rotation runbook (IR-02), off-box audit mirror | Annually |
 | RR-02 | Tailscale account compromise grants network reach (N1) | Vendor-dependent; alternative (manual WireGuard) shifts rather than removes risk | MFA + device approval + ACL tags + key expiry + quarterly device audit; app-layer authn/TOTP still required | Quarterly |
 | RR-03 | Remote access unavailable during a Tailscale/ISP outage while a position is open (N5) | Cannot be removed without public exposure, which is a larger risk | Native SL on every position, exchange-side brackets, host-console kill switch (SR-086), auto-flatten caps | Per release |
@@ -1459,7 +1467,7 @@ Whether managers trading the Owner's capital constitutes a regulated activity de
 These come from the Bybit research (digest 06 "Open questions") and remain unresolved at planning time. Each is tracked as a ticket and re-checked at every PRR; none blocks R1–R3, and the listed control keeps the risk bounded until answered.
 
 | ID | Open question | Security relevance | Interim control | Resolution owner / when |
-|---|---|---|---|---|
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
 | OQ-01 | **Can a sub-account (not just the master login) independently enable Demo Trading?** (digest 06 §Open questions #1, §2) | If not, per-manager demo rehearsal cannot use each manager's own sub-account, and the fallback — sharing one demo identity — would weaken per-manager attribution in the audit log and in RBAC testing | Demo rehearsal runs against the master's demo shadow account with the acting user's identity still recorded on every intent/outcome event (SR-061/SR-062); no credential sharing between managers; a manager may not be granted a demo credential that another manager also holds | Backend lead, empirical test before R2 |
 | OQ-02 | Exact current VIP-tier maker/taker fee schedule is unpublishable/unscrapable (digest 06 §17) | Fee assumptions feed risk caps and max-daily-loss enforcement (SR-053); wrong numbers weaken a capital control | Call `GET /v5/account/fee-rate` (5 req/s) with a live key at runtime and cache per symbol; never hardcode a fee table | Backend lead, at implementation |
 | OQ-03 | Bulk-CSV **orderbook-snapshot and kline** file schemas not inspected (digest 06 §15, §Open questions #10) | An unvalidated third-party file format parsed into the recorder is an untrusted-input surface and a data-integrity risk for backfills | Backfill importer is schema-validated, size-limited, runs offline in a separate process, writes to a quarantine table reviewed before promotion (SR-040), and never feeds the rule engine directly | Data lead, before the backfill job is built |
@@ -1468,10 +1476,10 @@ These come from the Bybit research (digest 06 "Open questions") and remain unres
 
 ### 16.2 Exception process
 
-An exception is a time-boxed, owner-approved deviation from a MUST requirement or an unresolved High/Critical scan finding. Each entry records: id, requirement/finding, reason, compensating control, requested-by, approved-by (Owner + Security), expiry date (max one release cycle), and the ticket tracking the fix. Expired exceptions automatically block the next release. The register lives in this section and is reviewed at every PRR; it is empty at the time of writing.
+An exception is a time-boxed, owner-approved deviation from a MUST requirement or an unresolved High/Critical scan finding. Each entry records: id, requirement/finding, reason, compensating control, requested-by, approved-by (Owner + Security), expiry date (max one release cycle), and the ticket tracking the fix. Expired exceptions automatically block the next release. The register lives in this section and is reviewed at every PRR; see the table below; full SCA triage in `35-dependency-freeze-policy.md` §8.
 
 | Exception id | Requirement/finding | Reason | Compensating control | Approved by | Expires | Tracking ticket |
-|---|---|---|---|---|---|---|
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ---------- | --------------------------------------- |
 | EX-01 | C-12 / SR TOTP-for-every-user: `scripts/seed_fixture_user.py --allow-no-mfa` seeds a fixture owner with `mfa_required=false` | ZAP authenticated scan (#1639) and E2E cannot complete a TOTP step | Opt-in flag only (default seeds `mfa_required=true`); refused unless `CV_ENVIRONMENT=testnet`; writes `users.create`/`roles.grant` audit rows; disposable CI databases only | **Pending** @basiltt + security reviewer (requested by #1658) | 2026-12-31 | #1658 (follow-up: ZAP TOTP step, #1639) |
 
 ---
@@ -1479,7 +1487,7 @@ An exception is a time-boxed, owner-approved deviation from a MUST requirement o
 ## 17. Glossary
 
 | Term | Meaning |
-|---|---|
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **AEAD** | Authenticated encryption with associated data (AES-256-GCM / XChaCha20-Poly1305) — provides confidentiality plus tamper detection, with extra fields bound into the authentication tag. |
 | **Arm toggle** | Explicit, time-boxed, per-session enablement of live one-click order entry; defaults to off after every login. |
 | **Break-glass** | Emergency, host-local administrative path used when normal authentication is impossible; always audited and loudly surfaced. |
@@ -1509,4 +1517,4 @@ An exception is a time-boxed, owner-approved deviation from a MUST requirement o
 
 ---
 
-*End of document. Changes to this file require security code-owner approval (`sec:critical` label) and are announced to the whole team.*
+_End of document. Changes to this file require security code-owner approval (`sec:critical` label) and are announced to the whole team._

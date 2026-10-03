@@ -134,7 +134,8 @@ jobs:
           set -euo pipefail
           CONFIGS="p/python p/typescript p/react p/electron-desktop-app p/docker p/github-actions \
                    p/secrets p/owasp-top-ten p/sql-injection p/jwt p/insecure-transport"
-          if [ -d .semgrep ]; then CONFIGS="$CONFIGS .semgrep"; fi
+          # Rule files only: .semgrep/tests/ holds fixtures (incl. YAML ones) that are not configs.
+          if [ -d .semgrep ]; then CONFIGS="$CONFIGS $(ls .semgrep/cv-*.yml)"; fi
           CONFIG_ARGS=""
           for c in $CONFIGS; do CONFIG_ARGS="$CONFIG_ARGS --config $c"; done
           # --error makes semgrep exit non-zero on findings AND on engine errors;
@@ -347,6 +348,11 @@ jobs:
           set -euo pipefail
           pip install "uv==0.12.19" --quiet
           uv sync --frozen --all-groups --project services/api
+
+      - name: Assert frozen dependency graph matches security/freeze-manifest.sha256 (E43-T05, SR-130)
+        # Byte-identical check of pnpm-lock.yaml + uv.lock + resolved graphs after the frozen
+        # installs above. Does not depend on any pentest-freeze-* tag existing.
+        run: python tools/ci/check_freeze_manifest.py
 
       - name: Collect JS/TS licences
         # license-checker does not understand pnpm workspaces ("No packages found").

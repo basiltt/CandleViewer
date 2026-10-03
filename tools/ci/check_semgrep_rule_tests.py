@@ -83,7 +83,7 @@ def main() -> int:
         rule_id = rule_yaml.stem
         # Fixture language follows the rule (.py default; .ts/.tsx for TypeScript rules, E10-X02).
         fixture = next(
-            (TESTS_DIR / f"{rule_id}{ext}" for ext in (".py", ".ts", ".tsx")
+            (TESTS_DIR / f"{rule_id}{ext}" for ext in (".py", ".ts", ".tsx", ".yml")
              if (TESTS_DIR / f"{rule_id}{ext}").exists()),
             TESTS_DIR / f"{rule_id}.py",
         )
