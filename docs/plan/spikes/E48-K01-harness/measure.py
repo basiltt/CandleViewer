@@ -55,22 +55,11 @@ def scaffold():
     d = ROOT / "mkdocs"
     for n, b in pages():
         write(d / "docs", n, b)
-    write(d, "mkdocs.yml", (
-        "site_name: s
-theme:
-  name: material
-plugins:
-  - search
-markdown_extensions:
-"
-        "  - pymdownx.superfences:
-      custom_fences:
-        - name: mermaid
-"
-        "          class: mermaid
-"
-        "          format: !!python/name:pymdownx.superfences.fence_code_format
-"))
+    write(d, "mkdocs.yml", "\n".join([
+        "site_name: s", "theme:", "  name: material", "plugins:", "  - search",
+        "markdown_extensions:", "  - pymdownx.superfences:", "      custom_fences:",
+        "        - name: mermaid", "          class: mermaid",
+        "          format: !!python/name:pymdownx.superfences.fence_code_format", ""]))
     c["mkdocs-material"] = dict(
         image=PY, dir=d, out="out",
         install="pip install --no-cache-dir --target /w/deps 'mkdocs<2' mkdocs-material",
