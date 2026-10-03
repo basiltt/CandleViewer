@@ -68,8 +68,8 @@ export function AccessibilitySettingsScreen(): JSX.Element {
   const { prefs, media, update, saveError, retry } = usePreferences();
   const set = (patch: Partial<A11yPreferences>): void => void update(patch);
   return (
-    <main aria-labelledby="a11y-h">
-      <h1 id="a11y-h">Accessibility</h1>
+    <section aria-labelledby="a11y-h" style={{ maxWidth: "60rem", overflowWrap: "anywhere" }}>
+      <h2 id="a11y-h">Accessibility</h2>
       <p>Changes apply immediately, including chart canvases. They are saved to your account.</p>
       <div role="status" aria-live="polite">
         {saveError ? (
@@ -148,8 +148,8 @@ export function AccessibilitySettingsScreen(): JSX.Element {
       />
       <p>
         <a href="/accessibility">Accessibility statement</a> |{" "}
-        <a href="/help/hotkeys">Keyboard shortcuts (SCR-013)</a>
+        <a href="/settings/hotkeys">Keyboard shortcuts (SCR-013)</a>
       </p>
-    </main>
+    </section>
   );
 }

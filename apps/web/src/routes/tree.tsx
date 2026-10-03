@@ -22,6 +22,7 @@ import { InviteAcceptScreen } from "../features/invites/InviteAcceptScreen";
 import { AppearanceScreen } from "../features/appearance/AppearanceScreen";
 import { SetupChecklistCard } from "../features/onboarding/SetupChecklistCard";
 import { HotkeyEditor } from "../keymap/HotkeyEditor";
+import { AccessibilitySettingsScreen } from "../features/a11y-preferences/AccessibilitySettingsScreen";
 import { getMeClaims } from "../lib/auth/meCache";
 
 function elementFor(routeId: string, owner: string | null): RouteObject["element"] {
@@ -36,7 +37,14 @@ function elementFor(routeId: string, owner: string | null): RouteObject["element
         <HotkeyEditor />
       </main>
     );
-  if (routeId === "R-203") return <AppearanceScreen />;
+  // R-203 /settings/appearance hosts SCR-116 (palette) and SCR-117 a11y prefs (12-sitemap.md).
+  if (routeId === "R-203")
+    return (
+      <>
+        <AppearanceScreen />
+        <AccessibilitySettingsScreen />
+      </>
+    );
   if (routeId === "R-303") return <AdminInviteScreen />;
   if (routeId === "R-101") {
     // First sign-in lands on /terminal/last -> here; the card is server-gated (401 => renders nothing).
