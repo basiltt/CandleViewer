@@ -11,6 +11,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from candleviewer.observability.health import HealthReport, HealthStatus
+from candleviewer.rules.vocabulary import MetricRegistry, default_registry
 
 if TYPE_CHECKING:
     from candleviewer.app import AppContext
@@ -21,14 +22,21 @@ class RulesService:
 
     def __init__(self) -> None:
         self._started = False
+        self._registry: MetricRegistry | None = None
+
+    def registry(self) -> MetricRegistry | None:
+        """Metric registry while the engine module is running; `None` otherwise (-> 503)."""
+        return self._registry if self._started else None
 
     async def start(self, ctx: AppContext) -> None:
         """Start the module. No-op until the owning epic implements it."""
+        self._registry = default_registry()
         self._started = True
 
     async def stop(self, grace_s: float) -> None:
         """Stop the module within `grace_s` seconds. No-op scaffold."""
         self._started = False
+        self._registry = None
 
     def health(self) -> HealthReport:
         """Report module health. Scaffold modules report `ok` when constructed."""

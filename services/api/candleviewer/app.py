@@ -45,6 +45,7 @@ from candleviewer.api import (
     make_instruments_router,
     make_log_level_router,
     make_market_router,
+    make_rules_router,
     make_ticker_router,
     make_trades_router,
 )
@@ -814,6 +815,14 @@ def create_app(
     # E08-S04: in-memory hot tape (newest-first); same resolver/fail-closed rules.
     app.include_router(
         make_trades_router(lambda: ctx.ingestion.trades, principal_resolver=audit_resolver)
+    )
+    # E35-T03: rule vocabulary + IR schema (fail-closed 501 without a resolver).
+    app.include_router(
+        make_rules_router(
+            lambda: ctx.rules.registry(),
+            principal_resolver=audit_resolver,
+            recorded_symbols=lambda: ctx.recorder.recorded_symbols(),
+        )
     )
     app.add_middleware(CorrelationMiddleware)
     # E09-T03 / #1648: a served route without an RBAC declaration fails the build.

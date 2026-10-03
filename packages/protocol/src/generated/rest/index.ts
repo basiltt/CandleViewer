@@ -3066,6 +3066,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/schemas/rule-ir.json": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** JSON Schema of the rule IR (generated from the pydantic models) */
+    get: operations["getRuleIrSchema"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/session/environment": {
     parameters: {
       query?: never;
@@ -6444,20 +6461,32 @@ export interface components {
     /** @description The closed vocabulary shared by the form editor, the node-graph editor and the rule engine. Anything absent from this response is not expressible in the IR. */
     RuleVocabulary: {
       actions: {
+        /** @default true */
+        available: boolean;
         display_name?: string;
+        guarded?: boolean;
         id: string;
+        idempotent?: boolean;
         /**
          * @description Actions that can widen or remove a stop are flagged so the editors can warn and the engine can gate them behind the owner-only permission.
          * @default false
          */
         loosens_risk: boolean;
+        notes?: string;
         params_schema?: {
           [key: string]: unknown;
         };
         required_permissions: string[];
         /** @default false */
         requires_step_up: boolean;
+        restriction?: string;
+        /** @default false */
+        simulate_only: boolean;
+        targets?: {
+          [key: string]: string;
+        };
       }[];
+      arm_live_permission?: string;
       guards: {
         id?: string;
         params_schema?: {
@@ -6472,20 +6501,43 @@ export interface components {
         result_type?: string;
       }[];
       signals: {
+        /** @default true */
+        available: boolean;
+        /** @enum {string} */
+        confidence?: "exact" | "estimated";
+        dependencies?: string[];
+        description?: string;
+        deterministic?: boolean;
         display_name?: string;
         enum_values?: string[];
         /** @default false */
         estimated: boolean;
         id: string;
+        missing_dependency?: {
+          [key: string]: unknown;
+        };
         params_schema?: {
+          [key: string]: unknown;
+        };
+        recorder_action?: {
           [key: string]: unknown;
         };
         /** @default false */
         requires_recording: boolean;
         /** @enum {string} */
         type: "number" | "boolean" | "price" | "quantity" | "duration" | "enum";
+        unavailable_reason?: string;
         unit?: string | null;
+        valid_range?: string | null;
+        warmup_bars?: number;
+        when_unavailable?: string;
       }[];
+      triggers?: {
+        description?: string;
+        id?: string;
+        required_fields?: string[];
+      }[];
+      vocabulary_version?: number;
     };
     ScannerRow: {
       /**
@@ -12359,20 +12411,41 @@ export interface operations {
   };
   getRuleVocabulary: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description Scope availability to a symbol; metrics needing recorded data for a symbol that is not on the recorded-symbol list are returned `available: false` with the recorder action that would satisfy them. */
+        symbol?: string;
+      };
       header?: never;
       path?: never;
       cookie?: never;
     };
     requestBody?: never;
     responses: {
-      /** @description Vocabulary. */
+      /** @description Vocabulary. Strong `ETag`, `Cache-Control: private, max-age=60`; varies by the caller's permission set. */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "application/json": components["schemas"]["RuleVocabulary"];
+        };
+      };
+      /** @description Not modified (`If-None-Match` matched). */
+      304: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Engine offline - the registry is empty or not wired. */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/problem+json": {
+            [key: string]: unknown;
+          };
         };
       };
     };
@@ -12407,6 +12480,28 @@ export interface operations {
           "application/json": {
             items?: components["schemas"]["ScannerRow"][];
             meta?: components["schemas"]["DataMeta"];
+          };
+        };
+      };
+    };
+  };
+  getRuleIrSchema: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description JSON Schema (draft 2020-12). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
           };
         };
       };

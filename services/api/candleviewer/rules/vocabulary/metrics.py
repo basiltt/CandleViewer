@@ -1,0 +1,157 @@
+"""Default metric descriptors (24-internal-schemas.md 7.2) and picker docs.
+
+`DEFAULT_DOCS` carries what the registry descriptor does not: the description
+and valid range shown in the picker. A registry metric with no entry fails the
+completeness test (and logs a startup warning) so the two lists cannot drift.
+"""
+
+# ruff: noqa: E501 - dense data table, one metric per line
+
+from __future__ import annotations
+
+from candleviewer.rules.vocabulary.registry import MetricDescriptor, MetricRegistry
+
+# name, title, unit ("enum:a|b" for enums), input, params, warmup, confidence, scope, description, range
+_Row = tuple[str, str, str, str, str, int, str, str, str, str]
+_E, _S = "exact", "estimated"
+_T, _B, _R = "trades", "book", "bars"
+_FLOW: tuple[_Row, ...] = (
+    ("delta", "Delta", "qty", _T, "", 0, _E, "symbol", "Bar buy_volume - sell_volume", ""),
+    ("cvd", "CVD", "qty", _T, "anchor=session", 0, _E, "symbol", "Running sum of signed volume from the anchor", ""),
+    ("cvd_slope", "CVD slope", "ratio", _T, "n=10", 10, _E, "symbol", "Least-squares slope of CVD over n bars", ""),
+    ("cvd_bar_change", "CVD bar change", "qty", _T, "", 0, _E, "symbol", "CVD change over the last closed bar", ""),
+    ("min_delta", "Min delta", "qty", _T, "", 0, _E, "symbol", "Intrabar delta minimum", ""),
+    ("max_delta", "Max delta", "qty", _T, "", 0, _E, "symbol", "Intrabar delta maximum", ""),
+    ("delta_divergence", "Delta divergence", "bool", _T, "n=10;pivot_lookback=3", 10, _S, "symbol", "Price makes a new n-bar extreme, CVD does not", ""),
+    ("cvd_divergence", "CVD divergence", "bool", _T, "n=10", 10, _S, "symbol", "Pivot-based swing comparison of price vs CVD", ""),
+    ("buy_sell_ratio", "Buy/sell ratio", "ratio", _T, "", 0, _E, "symbol", "buy_volume / max(sell_volume, qty_step)", ">=0"),
+    ("stacked_imbalance_zone", "Stacked imbalance zone", "bool", _T, "n=20", 20, _E, "symbol", "Price is inside a stacked-imbalance run from the last n bars", ""),
+    ("unfinished_auction_above", "Unfinished auction above", "count", _T, "n=50", 50, _E, "symbol", "Ticks to the nearest unfinished high within n bars", ""),
+    ("unfinished_auction_below", "Unfinished auction below", "count", _T, "n=50", 50, _E, "symbol", "Ticks to the nearest unfinished low within n bars", ""),
+    ("absorption", "Absorption", "bool", _T, "min_volume_z=2.0;k=2", 0, _S, "symbol", "Large volume at a level with price failing to move k ticks", ""),
+    ("exhaustion", "Exhaustion", "bool", _T, "pct=0.25", 0, _S, "symbol", "One-sided extreme cell with volume below pct of the bar max cell", ""),
+    ("big_trade_notional", "Big trade notional", "notional", _T, "window_ms=1000", 0, _E, "symbol", "Largest print notional in the window", ">=0"),
+    ("big_trade_zscore", "Big trade z-score", "zscore", _T, "window=500;z_threshold=3.0", 0, _E, "symbol", "Z-score of print size vs rolling mean", ""),
+    ("tape_speed", "Tape speed", "count", _T, "window_ms=1000", 0, _E, "symbol", "Trades per second", ">=0"),
+    ("tape_speed_zscore", "Tape speed z-score", "zscore", _T, "fast_ms=1000;base_ms=300000", 0, _E, "symbol", "Fast-window tape speed vs baseline", ""),
+    ("trade_cluster", "Trade cluster", "count", _T, "window_ms=50", 0, _S, "symbol", "Prints within window at same price/side treated as one aggressor", ">=0"),
+    ("iceberg_present_at_level", "Iceberg present", "bool", _B, "min_reload_count=3", 0, _S, "symbol", "Repeated resting-size refills at a level", ""),
+    ("iceberg_executed_volume", "Iceberg executed volume", "qty", _B, "min_reload_count=3", 0, _S, "symbol", "Volume traded through a detected iceberg level", ">=0"),
+    ("stop_run_detected", "Stop-run detected", "bool", _T, "cluster_min_z=2.0", 0, _S, "symbol", "Aggressive sweep of a liquidity cluster, then reversal", ""),
+    ("in_stop_hunt_zone", "In stop-hunt zone", "bool", _T, "k=5", 0, _S, "symbol", "Price within k ticks of a detected stop cluster", ""),
+    ("imbalance_zone_count", "Imbalance zone count", "count", _T, "", 0, _E, "symbol", "Open imbalance zones", ">=0"),
+    ("nearest_imbalance_zone_distance", "Nearest imbalance zone distance", "count", _T, "", 0, _E, "symbol", "Ticks to the nearest imbalance zone", ">=0"),
+    ("imbalance_zone_side", "Imbalance zone side", "enum:buy|sell|none", _T, "", 0, _E, "symbol", "Side of the nearest imbalance zone", ""),
+    ("imbalance_zone_strength", "Imbalance zone strength", "ratio", _T, "", 0, _E, "symbol", "Strength of the nearest imbalance zone", ""),
+    ("imbalance_zone_mitigated", "Imbalance zone mitigated", "bool", _T, "", 0, _E, "symbol", "Nearest zone has been mitigated", ""),
+    ("imbalance_zone_retest_count", "Imbalance zone retests", "count", _T, "", 0, _E, "symbol", "Retests of the nearest zone", ">=0"),
+    ("imbalance_hold_rate", "Imbalance hold rate", "pct", _T, "", 0, _E, "symbol", "Share of zones that held on retest", "0..100"),
+    ("diagonal_imbalance_at_price", "Diagonal imbalance at price", "bool", _T, "", 0, _E, "symbol", "Diagonal imbalance at the current price", ""),
+)  # fmt: skip
+_MARKET: tuple[_Row, ...] = (
+    ("distance_to_liquidity_cluster", "Distance to liquidity cluster", "count", _B, "z=2.0", 0, _E, "symbol", "Ticks to the nearest heatmap cluster at or above z", ">=0"),
+    ("spread_ticks", "Spread (ticks)", "count", _B, "", 0, _E, "symbol", "ask1 - bid1 in ticks", ">=0"),
+    ("spread_bps", "Spread (bps)", "bps", _B, "", 0, _E, "symbol", "Spread in basis points of mid", ">=0"),
+    ("mid", "Mid price", "price", _B, "", 0, _E, "symbol", "(bid1 + ask1) / 2", ""),
+    ("microprice", "Microprice", "price", _B, "", 0, _E, "symbol", "Size-weighted top-of-book price", ""),
+    ("dom_imbalance_ratio", "DOM imbalance ratio", "ratio", _B, "n=10", 0, _E, "symbol", "Sum bid qty / sum ask qty over top n levels", ">=0"),
+    ("book_pressure", "Book pressure", "ratio", _B, "n=20", 0, _E, "symbol", "(bids - asks) / (bids + asks) over top n levels", "-1..1"),
+    ("book_speed", "Book speed", "count", _B, "window_ms=1000", 0, _E, "symbol", "Book updates per second", ">=0"),
+    ("queue_position_estimate", "Queue position (estimate)", "qty", _B, "", 0, _S, "position", "Same-side resting size ahead of our order", ">=0"),
+    ("slippage_estimate", "Slippage estimate", "bps", _B, "qty", 0, _E, "symbol", "Cost of walking the book for a given qty", ">=0"),
+    ("book_staleness_ms", "Book staleness", "ms", _B, "", 0, _E, "symbol", "Age of the last applied book update", ">=0"),
+    ("heatmap_cluster_z", "Heatmap cluster z", "zscore", _B, "", 0, _E, "symbol", "Z-score of a heatmap cell's resting size", ""),
+    ("liquidity_cluster_notional", "Liquidity cluster notional", "notional", _B, "", 0, _E, "symbol", "Notional resting in the nearest cluster", ">=0"),
+    ("liquidity_cluster_persistence_ms", "Liquidity cluster persistence", "ms", _B, "", 0, _E, "symbol", "How long the nearest cluster has persisted", ">=0"),
+    ("liquidity_pulled", "Liquidity pulled", "bool", _B, "", 0, _E, "symbol", "A cluster was pulled without trading", ""),
+    ("liquidation_cluster_distance", "Liquidation cluster distance", "count", "liquidations", "", 0, _E, "symbol", "Ticks to the nearest liquidation cluster", ">=0"),
+    ("liquidation_notional", "Liquidation notional", "notional", "liquidations", "window_ms=60000", 0, _E, "symbol", "Liquidated notional in the window", ">=0"),
+    ("price", "Price", "price", _R, "source=last", 0, _E, "symbol", "Last / mark / index price", ">0"),
+    ("atr", "ATR", "price", _R, "n=14", 14, _E, "symbol", "Wilder average true range", ">=0"),
+    ("ema", "EMA", "price", _R, "n", 0, _E, "symbol", "Exponential moving average", ">0"),
+    ("sma", "SMA", "price", _R, "n", 0, _E, "symbol", "Simple moving average", ">0"),
+    ("rsi", "RSI", "pct", _R, "n=14", 14, _E, "symbol", "Relative strength index", "0..100"),
+    ("swing_high", "Swing high", "price", _R, "n=5", 11, _E, "symbol", "Most recent confirmed pivot high", ">0"),
+    ("swing_low", "Swing low", "price", _R, "n=5", 11, _E, "symbol", "Most recent confirmed pivot low", ">0"),
+    ("realized_vol", "Realised volatility", "pct", _R, "n=20", 20, _E, "symbol", "Close-close log-return stdev, annualised", ">=0"),
+    ("parkinson_vol", "Parkinson volatility", "pct", _R, "n=20", 20, _E, "symbol", "High-low range volatility estimator", ">=0"),
+    ("garman_klass_vol", "Garman-Klass volatility", "pct", _R, "n=20", 20, _E, "symbol", "OHLC volatility estimator", ">=0"),
+    ("adx", "ADX", "ratio", _R, "n=14", 28, _E, "symbol", "Wilder average directional index", "0..100"),
+    ("hurst", "Hurst exponent", "ratio", _R, "window=512", 512, _S, "symbol", "R/S analysis slope", "0..1"),
+    ("market_regime", "Market regime", "enum:trending|ranging|volatile|mixed", _R, "", 512, _S, "symbol", "Regime from ADX, Hurst and ATR%", ""),
+    ("open_interest", "Open interest", "qty", "oi", "", 0, _E, "symbol", "Open interest in contracts", ">=0"),
+    ("open_interest_value", "Open interest value", "notional", "oi", "", 0, _E, "symbol", "Open interest notional", ">=0"),
+    ("open_interest_delta", "OI change", "pct", "oi", "window_ms=300000", 0, _E, "symbol", "Percent change in open interest over the window", ""),
+    ("oi_price_quadrant", "OI/price quadrant", "enum:long_build|short_build|long_unwind|short_cover", "oi", "", 0, _E, "symbol", "Quadrant of OI change vs price change", ""),
+    ("funding_rate", "Funding rate", "pct", "funding", "", 0, _E, "symbol", "Current funding rate", ""),
+    ("funding_annualized", "Funding (annualised)", "pct", "funding", "", 0, _E, "symbol", "Funding rate annualised", ""),
+    ("time_to_funding_ms", "Time to funding", "ms", "funding", "", 0, _E, "symbol", "Milliseconds until the next funding", ">=0"),
+    ("basis", "Basis", "price", "funding", "", 0, _E, "symbol", "Mark minus index price", ""),
+    ("premium_pct", "Premium", "pct", "funding", "", 0, _E, "symbol", "Premium index percent", ""),
+    ("profile_poc", "Profile POC", "price", _T, "", 0, _E, "symbol", "Point of control", ">0"),
+    ("profile_vah", "Profile VAH", "price", _T, "", 0, _E, "symbol", "Value area high", ">0"),
+    ("profile_val", "Profile VAL", "price", _T, "", 0, _E, "symbol", "Value area low", ">0"),
+    ("profile_in_value_area", "In value area", "bool", _T, "", 0, _E, "symbol", "Price is inside the value area", ""),
+    ("profile_hvn_distance", "HVN distance", "count", _T, "", 0, _E, "symbol", "Ticks to the nearest high-volume node", ">=0"),
+    ("profile_lvn_distance", "LVN distance", "count", _T, "", 0, _E, "symbol", "Ticks to the nearest low-volume node", ">=0"),
+    ("profile_single_print_present", "Single print present", "bool", _T, "", 0, _E, "symbol", "A single-print region exists", ""),
+    ("naked_poc_distance", "Naked POC distance", "count", _T, "", 0, _E, "symbol", "Ticks to the nearest untested POC", ">=0"),
+    ("vwap", "VWAP", "price", _T, "anchor=session", 0, _E, "symbol", "Volume-weighted average price", ">0"),
+    ("vwap_band_sigma", "VWAP band sigma", "zscore", _T, "", 0, _E, "symbol", "Distance from VWAP in standard deviations", ""),
+    ("developing_va_width", "Developing VA width", "count", _T, "", 0, _E, "symbol", "Width of the developing value area in ticks", ">=0"),
+)  # fmt: skip
+_ACCOUNT: tuple[_Row, ...] = (
+    ("position_open", "Position open", "bool", "positions", "", 0, _E, "position", "A position exists on the symbol", ""),
+    ("position_side", "Position side", "enum:long|short|flat", "positions", "", 0, _E, "position", "Side of the position", ""),
+    ("position_qty", "Position size", "qty", "positions", "", 0, _E, "position", "Position quantity", ">=0"),
+    ("position_notional", "Position notional", "notional", "positions", "", 0, _E, "position", "Position notional", ">=0"),
+    ("avg_entry_price", "Average entry", "price", "positions", "", 0, _E, "position", "Average entry price", ">0"),
+    ("liq_price", "Liquidation price", "price", "positions", "", 0, _E, "position", "Exchange liquidation price", ">0"),
+    ("unrealised_pnl", "Unrealised PnL", "notional", "positions", "", 0, _E, "position", "Unrealised profit and loss", ""),
+    ("unrealised_pnl_pct", "Unrealised PnL %", "pct", "positions", "", 0, _E, "position", "Unrealised PnL percent of margin", ""),
+    ("unrealised_r_multiple", "Unrealised R", "ratio", "positions", "", 0, _E, "position", "Unrealised PnL in multiples of initial risk", ""),
+    ("realised_pnl_today", "Realised PnL today", "notional", "positions", "", 0, _E, "account", "Realised PnL since UTC midnight", ""),
+    ("time_in_trade_ms", "Position age", "ms", "positions", "", 0, _E, "position", "Time since the position opened", ">=0"),
+    ("open_positions_count", "Open positions", "count", "positions", "", 0, _E, "account", "Number of open positions", ">=0"),
+    ("open_orders_count", "Open orders", "count", "orders", "", 0, _E, "account", "Number of open orders", ">=0"),
+    ("account_equity", "Account equity", "notional", "wallet", "", 0, _E, "account", "Account equity", ">=0"),
+    ("available_margin", "Available margin", "notional", "wallet", "", 0, _E, "account", "Free margin", ">=0"),
+    ("margin_ratio", "Margin ratio", "pct", "wallet", "", 0, _E, "account", "Maintenance margin / equity", ">=0"),
+    ("leverage", "Leverage", "ratio", "positions", "", 0, _E, "position", "Effective leverage", ">=0"),
+    ("daily_loss_pct", "Daily loss", "pct", "wallet", "", 0, _E, "account", "Loss today as percent of start-of-day equity", ">=0"),
+    ("drawdown_pct", "Drawdown", "pct", "wallet", "", 0, _E, "account", "Equity drawdown from the high-water mark", ">=0"),
+    ("adl_risk_proxy", "ADL risk (proxy)", "ratio", "positions", "", 0, _S, "position", "Proxy for auto-deleverage risk", "0..1"),
+    ("replay_position_ms", "Replay position", "ms", "trades", "", 0, _E, "global", "Replay cursor position", ">=0"),
+    ("replay_speed", "Replay speed", "ratio", "trades", "", 0, _E, "global", "Replay speed multiplier", ">0"),
+    ("replay_integrity_ok", "Replay integrity OK", "bool", "trades", "", 0, _E, "global", "Replay data is gap-free", ""),
+)  # fmt: skip
+_ROWS: tuple[_Row, ...] = _FLOW + _MARKET + _ACCOUNT
+
+
+def _build() -> tuple[tuple[MetricDescriptor, ...], dict[str, tuple[str, str]]]:
+    descs: list[MetricDescriptor] = []
+    docs: dict[str, tuple[str, str]] = {}
+    for name, title, unit_raw, inp, params, warmup, conf, scope, desc, rng in _ROWS:
+        unit, enums = (
+            ("enum", tuple(unit_raw[5:].split("|")))
+            if unit_raw.startswith("enum:")
+            else (unit_raw, ())
+        )
+        p = {kv.partition("=")[0]: kv.partition("=")[2] for kv in params.split(";") if kv}
+        kwargs: dict[str, object] = {
+            "name": name, "title": title, "unit": unit, "enum_values": enums, "scope": scope,
+            "inputs": (inp,), "params": p, "warmup_bars": warmup, "confidence": conf,
+            "value_type": "enum" if unit == "enum" else "bool" if unit == "bool" else "number",
+            "cadence": "on_bar_close" if inp == "bars" else "on_trade",
+            "nullable_when": "before warmup completes or when an input is unavailable",
+        }  # fmt: skip
+        descs.append(MetricDescriptor.model_validate(kwargs))
+        docs[name] = (desc, rng)
+    return tuple(descs), docs
+
+
+DEFAULT_DESCRIPTORS, DEFAULT_DOCS = _build()
+
+
+def default_registry() -> MetricRegistry:
+    return MetricRegistry(DEFAULT_DESCRIPTORS)

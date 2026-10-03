@@ -8072,13 +8072,43 @@ paths:
         requirements. The form editor and the node-graph editor both render their palettes
         from this single response, which is what keeps the two editors round-trip
         compatible.
+      parameters:
+        - name: symbol
+          in: query
+          required: false
+          description: >
+            Scope availability to a symbol; metrics needing recorded data for a symbol that is
+            not on the recorded-symbol list are returned `available: false` with the recorder
+            action that would satisfy them.
+          schema: { type: string }
       x-rbac: { permissions: [rules:read], scope: none }
       responses:
         "200":
-          description: Vocabulary.
+          description: >
+            Vocabulary. Strong `ETag`, `Cache-Control: private, max-age=60`; varies by the
+            caller's permission set.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/RuleVocabulary" }
+        "304": { description: Not modified (`If-None-Match` matched). }
+        "503":
+          description: Engine offline - the registry is empty or not wired.
+          content:
+            application/problem+json:
+              schema: { type: object, additionalProperties: true }
+
+  /schemas/rule-ir.json:
+    get:
+      tags: [rules]
+      operationId: getRuleIrSchema
+      summary: JSON Schema of the rule IR (generated from the pydantic models)
+      x-rbac: { permissions: [rules:read], scope: none }
+      responses:
+        "200":
+          description: JSON Schema (draft 2020-12).
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
 
   /rules/{ruleId}/compile:
     parameters:
@@ -12357,6 +12387,17 @@ components:
               params_schema: { type: object, additionalProperties: true }
               requires_recording: { type: boolean, default: false }
               estimated: { type: boolean, default: false }
+              description: { type: string }
+              valid_range: { type: ["string", "null"] }
+              warmup_bars: { type: integer }
+              deterministic: { type: boolean }
+              confidence: { type: string, enum: [exact, estimated] }
+              dependencies: { type: array, items: { type: string } }
+              when_unavailable: { type: string }
+              available: { type: boolean, default: true }
+              unavailable_reason: { type: string }
+              missing_dependency: { type: object, additionalProperties: true }
+              recorder_action: { type: object, additionalProperties: true }
         operators:
           type: array
           items:
@@ -12377,6 +12418,13 @@ components:
               params_schema: { type: object, additionalProperties: true }
               required_permissions: { type: array, items: { type: string } }
               requires_step_up: { type: boolean, default: false }
+              idempotent: { type: boolean }
+              guarded: { type: boolean }
+              targets: { type: object, additionalProperties: { type: string } }
+              available: { type: boolean, default: true }
+              simulate_only: { type: boolean, default: false }
+              restriction: { type: string }
+              notes: { type: string }
               loosens_risk:
                 type: boolean
                 default: false
@@ -12390,6 +12438,16 @@ components:
             properties:
               id: { type: string }
               params_schema: { type: object, additionalProperties: true }
+        triggers:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              description: { type: string }
+              required_fields: { type: array, items: { type: string } }
+        vocabulary_version: { type: integer }
+        arm_live_permission: { type: string }
 
     JournalTradeContext:
       type: object
