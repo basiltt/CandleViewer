@@ -324,6 +324,8 @@ Time-boxed (60–120 min) exploratory sessions run by QA once a story reaches "I
 | **P2 — Medium**   | Feature partially broken, non-blocking, cosmetic-but-confusing, or a11y AA violation                              | Footprint cell coloring slightly off theme; a screen missing a keyboard shortcut; minor a11y contrast issue                             | Triaged within 3 business days          | Should fix before release; may be scheduled next sprint with owner sign-off |
 | **P3 — Low**      | Cosmetic, nice-to-have, edge-case wording                                                                         | Tooltip typo; minor spacing inconsistency                                                                                               | Triaged within 1 sprint                 | Backlog, no release block                                                   |
 
+Automation (E49-T01): bug DoR validation, SLA labels/digest and the `regression-guard` check are implemented in `tools/triage/` and `.github/workflows/{defect-triage,regression-guard}.yml`; the weekly ritual is in `docs/plan/backlog/artifacts/e49-triage-ritual.md`.
+
 Every bug ticket must reference the failing test (if automatable, a corresponding regression test is added before the bug ticket closes — no bug closes "fixed" without a regression test guarding it, except pure documentation/cosmetic P3s).
 
 ### 11.4 White-box review checklist

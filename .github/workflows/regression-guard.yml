@@ -1,0 +1,31 @@
+name: regression-guard
+
+# E49-T01: required status check. A PR that closes a Bug issue must change a test
+# file, or the issue carries p3-cosmetic-exempt with a stated reason (§11.3).
+# Runs on pull_request (read-only token); checks out the base-trusted merge ref only
+# to run repository tooling - no secrets beyond the read-only GITHUB_TOKEN.
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+jobs:
+  regression-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet pyyaml==6.0.2
+      - name: Guard
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python -m tools.triage.run guard --number "${{ github.event.pull_request.number }}"
