@@ -31,6 +31,17 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Baseline changes must cite finding id in PR description
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git fetch -q --depth=1 origin "$BASE_SHA"
+          git show "$BASE_SHA:tools/a11y/axe-baseline.json" > "$RUNNER_TEMP/base-baseline.json"
+          printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr-body.txt"
+          python -m tools.a11y.gates baseline-pr "$RUNNER_TEMP/base-baseline.json" tools/a11y/axe-baseline.json "$RUNNER_TEMP/pr-body.txt"
+
       - name: Gate logic meta-tests (injected defect fails, clean passes)
         run: pip install pytest && python -m pytest scripts/tests/test_a11y_gates.py -q
 
