@@ -49,3 +49,9 @@ class RetentionSchedule:
             "retention": self.retention_cron,
             "compact": self.compact_cron,
         }
+
+    def rule_jobs(self) -> dict[str, str]:
+        """Rule-run pruning job (E35-T02): shares the retention cron; empty when off."""
+        if not self.enabled:
+            return {}
+        return {"rule_runs_prune": self.retention_cron}

@@ -858,3 +858,187 @@ retention_policies = Table(
         postgresql_where=text("scope = 'symbol'"),
     ),
 )
+
+
+#: Rule-engine tables (E35-T02, revision 0013_rules) - `21-database-schema.md` Sec.3.4.
+#: `scope_account_id` / `trade_group_id` carry no FK yet (E27 / E34 own those tables).
+rule_scope = ENUM(
+    "global",
+    "account",
+    "symbol",
+    "position",
+    "trade_group",
+    name="rule_scope",
+    metadata=metadata,
+    create_type=False,
+)
+rule_mode = ENUM(
+    "disabled", "simulate", "armed", name="rule_mode", metadata=metadata, create_type=False
+)
+rule_run_status = ENUM(
+    "running",
+    "ok",
+    "error",
+    "aborted",
+    "throttled",
+    name="rule_run_status",
+    metadata=metadata,
+    create_type=False,
+)
+
+rules = Table(
+    "rules",
+    metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("name", Text, nullable=False),
+    Column("description", Text, nullable=False, server_default=text("''")),
+    Column("owner_user_id", ForeignKey("users.id", ondelete="RESTRICT"), nullable=False),
+    Column("scope", rule_scope, nullable=False, server_default=text("'global'")),
+    Column("scope_account_id", UUID(as_uuid=True)),
+    Column("scope_symbol", symbol_code),
+    Column("mode", rule_mode, nullable=False, server_default=text("'disabled'")),
+    Column(
+        "active_version_id",
+        ForeignKey(
+            "rule_versions.id", ondelete="RESTRICT", name="rules_active_version_fk", use_alter=True
+        ),
+    ),
+    Column("editor", Text, nullable=False, server_default=text("'form'")),
+    Column("priority", SmallInteger, nullable=False, server_default=text("100")),
+    Column("eval_interval_ms", Integer, nullable=False, server_default=text("250")),
+    Column("cooldown_seconds", Integer, nullable=False, server_default=text("0")),
+    Column("max_fires_per_day", Integer),
+    Column("max_fires_per_hour", Integer),
+    Column("requires_confirmation", Boolean, nullable=False, server_default=text("false")),
+    Column("armed_at", TIMESTAMP(timezone=True)),
+    Column("armed_by", ForeignKey("users.id", ondelete="SET NULL")),
+    Column("disabled_reason", Text),
+    Column("last_fired_at", TIMESTAMP(timezone=True)),
+    Column("fire_count", BigInteger, nullable=False, server_default=text("0")),
+    Column("error_count", BigInteger, nullable=False, server_default=text("0")),
+    Column("created_by", ForeignKey("users.id", ondelete="SET NULL")),
+    Column("updated_by", ForeignKey("users.id", ondelete="SET NULL")),
+    Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("deleted_at", TIMESTAMP(timezone=True)),
+    CheckConstraint("editor IN ('form','graph')", name="rule_editor"),
+    CheckConstraint("eval_interval_ms BETWEEN 50 AND 3600000", name="rule_interval"),
+    CheckConstraint("cooldown_seconds BETWEEN 0 AND 86400", name="rule_cooldown"),
+    CheckConstraint("priority BETWEEN 0 AND 1000", name="rule_prio"),
+    CheckConstraint("scope <> 'account' OR scope_account_id IS NOT NULL", name="rule_scope_acct"),
+    CheckConstraint("scope <> 'symbol' OR scope_symbol IS NOT NULL", name="rule_scope_sym"),
+    CheckConstraint(
+        "mode <> 'armed' OR (armed_at IS NOT NULL AND armed_by IS NOT NULL "
+        "AND active_version_id IS NOT NULL)",
+        name="rule_armed_shape",
+    ),
+    CheckConstraint(
+        "(max_fires_per_day IS NULL OR max_fires_per_day > 0) "
+        "AND (max_fires_per_hour IS NULL OR max_fires_per_hour > 0)",
+        name="rule_fires_pos",
+    ),
+    Index(
+        "ux_rules_name",
+        "owner_user_id",
+        text("lower(name)"),
+        unique=True,
+        postgresql_where=text("deleted_at IS NULL"),
+    ),
+    Index(
+        "ix_rules_active",
+        "mode",
+        "priority",
+        postgresql_where=text("mode <> 'disabled' AND deleted_at IS NULL"),
+    ),
+    Index("ix_rules_symbol", "scope_symbol", postgresql_where=text("scope_symbol IS NOT NULL")),
+    Index(
+        "ix_rules_account",
+        "scope_account_id",
+        postgresql_where=text("scope_account_id IS NOT NULL"),
+    ),
+)
+
+rule_versions = Table(
+    "rule_versions",
+    metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("rule_id", ForeignKey("rules.id", ondelete="CASCADE"), nullable=False),
+    Column("version", Integer, nullable=False),
+    Column("ir", JSONB, nullable=False),
+    Column("ir_hash", _sha256_hex, nullable=False),
+    Column("graph_layout", JSONB),
+    Column("form_model", JSONB),
+    Column("compiler_version", Text, nullable=False),
+    Column("notes", Text, nullable=False, server_default=text("''")),
+    Column("is_valid", Boolean, nullable=False, server_default=text("false")),
+    Column("validation_errors", JSONB),
+    Column("backtest_summary", JSONB),
+    Column("created_by", ForeignKey("users.id", ondelete="SET NULL")),
+    Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    UniqueConstraint("rule_id", "version", name="rule_versions_rule_id_version_key"),
+    UniqueConstraint("rule_id", "ir_hash", name="rule_versions_rule_id_ir_hash_key"),
+    CheckConstraint("version >= 1", name="rv_version_pos"),
+    CheckConstraint(
+        "jsonb_typeof(ir) = 'object' AND ir ? 'conditions' AND ir ? 'actions'",
+        name="rv_ir_obj",
+    ),
+    Index("ix_rv_rule", "rule_id", text("version DESC")),
+)
+
+rule_runs = Table(
+    "rule_runs",
+    metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("rule_id", ForeignKey("rules.id", ondelete="CASCADE"), nullable=False),
+    Column("rule_version_id", ForeignKey("rule_versions.id", ondelete="RESTRICT"), nullable=False),
+    Column("status", rule_run_status, nullable=False, server_default=text("'running'")),
+    Column("mode", rule_mode, nullable=False),
+    Column("trigger_reason", Text, nullable=False),
+    Column("scope_account_id", UUID(as_uuid=True)),
+    Column("scope_symbol", symbol_code),
+    Column(
+        "input_snapshot",
+        JSONB,
+        nullable=False,
+        comment="financial/confidential: may hold equity, PnL and position size; never log at INFO",
+    ),
+    Column("matched", Boolean, nullable=False, server_default=text("false")),
+    Column("actions_planned", JSONB),
+    Column("actions_executed", JSONB),
+    Column("trade_group_id", UUID(as_uuid=True)),
+    Column("error_code", Text),
+    Column("error_message", Text),
+    Column("duration_ms", Integer),
+    Column("started_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("finished_at", TIMESTAMP(timezone=True)),
+    CheckConstraint(
+        "trigger_reason IN ('tick','bar_close','fill','manual','schedule',"
+        "'position_change','alert')",
+        name="rr_trigger",
+    ),
+    CheckConstraint("duration_ms IS NULL OR duration_ms >= 0", name="rr_duration"),
+    Index("ix_rr_rule_time", "rule_id", text("started_at DESC")),
+    Index("ix_rr_matched", "rule_id", text("started_at DESC"), postgresql_where=text("matched")),
+    Index("ix_rr_errors", text("started_at DESC"), postgresql_where=text("status = 'error'")),
+    Index("ix_rr_group", "trade_group_id", postgresql_where=text("trade_group_id IS NOT NULL")),
+)
+
+rule_events = Table(
+    "rule_events",
+    metadata,
+    Column("id", BigInteger, primary_key=True, autoincrement=True),
+    Column("rule_run_id", ForeignKey("rule_runs.id", ondelete="CASCADE"), nullable=False),
+    Column("seq", Integer, nullable=False),
+    Column("kind", Text, nullable=False),
+    Column("node_ref", Text),
+    Column("payload", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
+    Column("severity", severity, nullable=False, server_default=text("'info'")),
+    Column("event_ts", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    UniqueConstraint("rule_run_id", "seq", name="rule_events_rule_run_id_seq_key"),
+    CheckConstraint(
+        "kind IN ('condition_eval','action_start','action_ok','action_fail','throttled','log')",
+        name="re_kind",
+    ),
+    Index("ix_re_run", "rule_run_id", "seq"),
+    Index("ix_re_time", text("event_ts DESC")),
+)

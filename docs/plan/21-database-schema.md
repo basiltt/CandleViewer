@@ -1495,10 +1495,12 @@ CREATE TABLE rule_events (
 CREATE INDEX ix_re_run  ON rule_events (rule_run_id, seq);
 CREATE INDEX ix_re_time ON rule_events (event_ts DESC);
 CREATE TRIGGER trg_re_append BEFORE UPDATE OR DELETE ON rule_events
-  FOR EACH ROW EXECUTE FUNCTION forbid_mutation();
+  FOR EACH ROW EXECUTE FUNCTION forbid_mutation();  -- implemented as rule_events_forbid_mutation(), see note
 ```
 
 Retention: `rule_runs` + `rule_events` for **non-matched** runs are aggressively pruned (7 days, since a 250 ms evaluator produces ~345 k rows/day/rule); matched runs are kept 24 months and archived to Parquet. This is encoded in §7.
+
+**Implementation note (E35-T02, revision `0013_rules`).** `scope_account_id`, `rule_runs.scope_account_id` and `rule_runs.trade_group_id` are created without their FKs until `exchange_accounts` (E27) and `trade_groups` (E34) exist; those tickets add the constraints. `trg_re_append` calls `rule_events_forbid_mutation()` (a sibling of `forbid_mutation()` in the DDL above): UPDATE is always refused, DELETE only as the FK cascade of an already-deleted parent run, so no role (owner or app) can directly delete an event. `trg_rr_evidence` (`rule_runs_guard_evidence()`) refuses deleting matched/error runs younger than 24 months. Error runs are deliberately never pruned by the 7-day job (evidence, low volume). The 24-month Parquet archive of matched runs is not due until 2028 and is tracked as a follow-up (recorded on #868).
 
 To avoid writing 345 k rows/day of nothing, the engine only persists a `rule_runs` row when `matched = true`, when `status='error'`, or when the rule is in `simulate` mode with explicit "record all evaluations" enabled (per-rule flag `rules.settings.record_all` in `settings`). Non-persisted evaluations are counted in Prometheus only.
 

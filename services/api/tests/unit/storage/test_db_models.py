@@ -47,6 +47,10 @@ def test_metadata_declares_every_table_from_0001() -> None:
         "recording_sessions",
         "recording_gaps",
         "retention_policies",
+        "rules",
+        "rule_versions",
+        "rule_runs",
+        "rule_events",
     }
     actual = {t.name for t in metadata.sorted_tables}
     assert actual == expected
