@@ -218,6 +218,9 @@ flowchart LR
 > complete/gapped) a consumer must know before rendering market data are in
 > [`25-market-data-trust-contract.md`](25-market-data-trust-contract.md).
 
+> **Journal analytics tier (E41-K01):** `/journal/analytics` is computed from Postgres only; Parquet stays archive-only — [`27-adrs/ADR-0027-journal-analytics-query-tier.md`](27-adrs/ADR-0027-journal-analytics-query-tier.md).
+
+
 Common conventions for every module below:
 
 - **Module package**: `services/api/candleviewer/<module>/` with `__init__.py` exporting only the public interface, `service.py` (lifecycle), `models.py` (pydantic v2 domain types), `errors.py`, and internal implementation files.
