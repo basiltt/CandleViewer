@@ -25,7 +25,14 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "security" / "freeze-manifest.sha256"
-_DROP_KEYS = {"path", "from"}
+# ``path``/``from`` are absolute machine paths. ``unsavedDependencies`` is pnpm's view of root
+# devDependencies hoisted into a workspace's node_modules: it depends on local install state
+# (which packages happen to be linked), not on the lockfile, so it differs between a fresh CI
+# install and a developer checkout and must not feed the freeze hash (E43-T05-B1 #1737).
+# ``deduped``/``dedupedDependenciesCount`` mark where pnpm elided an already-printed subtree;
+# which occurrence is printed first depends on hoisting/traversal order of the local
+# node_modules, so these are install-state too.
+_DROP_KEYS = {"path", "from", "unsavedDependencies", "deduped", "dedupedDependenciesCount"}
 
 
 def _sha(data: bytes) -> str:

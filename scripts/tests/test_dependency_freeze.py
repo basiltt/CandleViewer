@@ -143,6 +143,28 @@ def test_freeze_manifest_pnpm_graph_normalisation_drops_paths() -> None:
     assert a == b
 
 
+def test_freeze_manifest_pnpm_graph_ignores_unsaved_hoisted_devdeps() -> None:
+    """``unsavedDependencies`` reflects local install state, not the lockfile (#1737)."""
+    import sys
+
+    sys.path.insert(0, str(ROOT))
+    from tools.ci.check_freeze_manifest import canonical_json, normalise_pnpm_graph
+
+    fresh_ci = [{"name": "@cv/web", "dependencies": {"react": {"version": "18.3.1"}}}]
+    dev_box = [
+        {
+            "name": "@cv/web",
+            "dependencies": {"react": {"version": "18.3.1"}},
+            "unsavedDependencies": {"husky": {"version": "9.1.7"}, "prettier": {"version": "3.3.3"}},
+            "deduped": True,
+            "dedupedDependenciesCount": 3,
+        }
+    ]
+    assert canonical_json(normalise_pnpm_graph(fresh_ci)) == canonical_json(
+        normalise_pnpm_graph(dev_box)
+    )
+
+
 def test_freeze_manifest_pnpm_graph_hash_equal_for_windows_and_linux_inputs() -> None:
     import sys
 
