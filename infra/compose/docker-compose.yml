@@ -68,7 +68,7 @@ services:
     # The final stage of questdb/questdb:8.1.1 is debian:bookworm-slim with no curl/wget
     # (only the runtime tarball, gosu and the entrypoint are copied in), so a curl-based
     # probe exits 127 forever and the service never leaves `unhealthy` (#276, run 36954315443).
-    # Probe with bash's /dev/tcp instead: issue a real `select 1` over HTTP and require a 200,
+    # Probe with bash's /dev/tcp instead: run a trivial SQL query via /exec and require a 200,
     # which only happens once the SQL engine (not merely the listener) is serving.
     # `$$status` is compose-escaped to `$status`; the request line is a printf argument so the
     # `%20` in the URL is never parsed as a format directive.
