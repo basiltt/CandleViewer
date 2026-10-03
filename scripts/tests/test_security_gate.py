@@ -374,6 +374,123 @@ def test_sarif_warning_level_maps_to_medium_and_does_not_block(tmp_path: Path) -
 
 
 # --------------------------------------------------------------------------
+# Regression (ci/e03-codeql-job-fix): CodeQL puts `security-severity` and the
+# default `level` on the rule descriptor, not the result. Reading the result
+# alone downgraded every CodeQL High to MEDIUM, so PRs #1715/#1691 passed
+# `security / codeql` while GitHub's CodeQL check reported a High alert.
+# --------------------------------------------------------------------------
+
+
+def _codeql_sarif_doc(
+    rule_id: str,
+    *,
+    security_severity: str | None,
+    rule_level: str = "error",
+    result_level: str | None = None,
+    via_extension: bool = False,
+    use_rule_ref: bool = False,
+) -> dict:
+    rule = {
+        "id": rule_id,
+        "defaultConfiguration": {"level": rule_level},
+        "properties": {"security-severity": security_severity}
+        if security_severity is not None
+        else {},
+    }
+    result: dict = {
+        "ruleId": rule_id,
+        "message": {"text": "This expression logs sensitive data as clear text."},
+        "locations": [
+            {
+                "physicalLocation": {
+                    "artifactLocation": {"uri": "infra/scripts/obs_security_checks.py"},
+                    "region": {"startLine": 94},
+                }
+            }
+        ],
+    }
+    if result_level is not None:
+        result["level"] = result_level
+    tool: dict = {"driver": {"name": "CodeQL", "rules": [] if via_extension else [rule]}}
+    if via_extension:
+        tool["extensions"] = [{"name": "codeql/python-queries", "rules": [rule]}]
+        if use_rule_ref:
+            result["rule"] = {"id": rule_id, "toolComponent": {"index": 1}, "index": 0}
+    elif use_rule_ref:
+        result["rule"] = {"id": rule_id, "index": 0}
+    return {"version": "2.1.0", "runs": [{"tool": tool, "results": [result]}]}
+
+
+def test_codeql_rule_level_security_severity_high_blocks(tmp_path: Path) -> None:
+    report = _write_json(
+        tmp_path,
+        "codeql.sarif",
+        _codeql_sarif_doc("py/clear-text-logging-sensitive-data", security_severity="7.5"),
+    )
+    findings = parse_sarif(report, "codeql")
+    assert findings[0].severity == "HIGH"
+    assert (
+        findings[0].finding_id
+        == "py/clear-text-logging-sensitive-data:infra/scripts/obs_security_checks.py:94"
+    )
+    result = evaluate_findings(findings, risks=[], run_date=date(2026, 10, 3))
+    assert result.blocked
+    assert result.code == "CI-SEC-001"
+
+
+def test_codeql_rule_in_extension_pack_resolved_by_rule_reference(tmp_path: Path) -> None:
+    report = _write_json(
+        tmp_path,
+        "codeql.sarif",
+        _codeql_sarif_doc(
+            "js/tainted-format-string",
+            security_severity="7.3",
+            via_extension=True,
+            use_rule_ref=True,
+        ),
+    )
+    findings = parse_sarif(report, "codeql")
+    assert findings[0].severity == "HIGH"
+
+
+def test_codeql_result_without_level_falls_back_to_rule_default_level(tmp_path: Path) -> None:
+    report = _write_json(
+        tmp_path,
+        "codeql.sarif",
+        _codeql_sarif_doc("py/some-non-security-rule", security_severity=None, rule_level="error"),
+    )
+    findings = parse_sarif(report, "codeql")
+    assert findings[0].severity == "HIGH"
+
+
+def test_sarif_result_level_security_severity_still_takes_precedence(tmp_path: Path) -> None:
+    doc = _codeql_sarif_doc("py/x", security_severity="9.5", result_level="warning")
+    doc["runs"][0]["results"][0]["properties"] = {"security-severity": "3.0"}
+    report = _write_json(tmp_path, "codeql.sarif", doc)
+    findings = parse_sarif(report, "codeql")
+    assert findings[0].severity == "LOW"
+
+
+def test_codeql_high_with_matching_accepted_risk_does_not_block(tmp_path: Path) -> None:
+    report = _write_json(
+        tmp_path,
+        "codeql.sarif",
+        _codeql_sarif_doc("py/clear-text-logging-sensitive-data", security_severity="7.5"),
+    )
+    findings = parse_sarif(report, "codeql")
+    risk = AcceptedRisk(
+        finding_id=findings[0].finding_id,
+        tool="codeql",
+        severity="HIGH",
+        reason="test",
+        approver="basiltt",
+        expires=date(2027, 1, 1),
+    )
+    result = evaluate_findings(findings, risks=[risk], run_date=date(2026, 10, 3))
+    assert not result.blocked
+
+
+# --------------------------------------------------------------------------
 # Scanner infrastructure failure (CI-SEC-005) never passes as clean
 # --------------------------------------------------------------------------
 
