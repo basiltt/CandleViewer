@@ -1,6 +1,6 @@
 # ADR-0028 — Documentation toolchain and reference-generation pipeline
 
-- Status: **proposed-with-deadline** — deadline: first green E48-T02 CI run that proves the network-less build and the <=180 s budget. Owner approval pending.
+- Status: **proposed-with-deadline (offline-build proof tracked in #1750; owner waiver pending, not assumed)** — deadline: first green E48-T02 CI run that proves the network-less build and the <=180 s budget. Owner approval pending.
 - Date: 2026-10-03
 - Deciders: Owner (`@basiltt`). The ticket says "ADR-0016 (or next free number)"; 0028 is next free.
 - Related: E48-K01 (#1328), E48-T02, `docs/plan/spikes/E48-K01.md`, `30-release-roadmap.md` §9.3-9.4, C-16.5.
