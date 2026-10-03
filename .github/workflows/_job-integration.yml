@@ -213,25 +213,3 @@ jobs:
           name: audit-query-plan-report
           path: services/api/build/reports/audit-query-plan.json
           if-no-files-found: error
-
-  # E48-K01 (#1328) docs-toolchain spike: scaffold a 20-page fixture per candidate,
-  # install deps over the network, then build inside `docker run --network=none`.
-  # Opt-in via the `run-docs-spike` label (or manual dispatch). Not a required check.
-  docs-toolchain-spike:
-    name: docs-toolchain-spike
-    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'run-docs-spike') }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - name: Measure docs candidates (offline builds)
-        run: python3 docs/plan/spikes/E48-K01-harness/measure.py
-
-      - name: Upload docs spike report (E48-K01)
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: docs-spike-report
-          path: build/reports/docs-spike.json
-          if-no-files-found: error
