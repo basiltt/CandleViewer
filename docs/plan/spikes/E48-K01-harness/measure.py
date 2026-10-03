@@ -56,9 +56,21 @@ def scaffold():
     for n, b in pages():
         write(d / "docs", n, b)
     write(d, "mkdocs.yml", (
-        "site_name: s\ntheme: {name: material}\nplugins: [search]\nmarkdown_extensions:\n"
-        "- pymdownx.superfences:\n    custom_fences:\n    - {name: mermaid, class: mermaid,"
-        " format: !!python/name:pymdownx.superfences.fence_code_format}\n"))
+        "site_name: s
+theme:
+  name: material
+plugins:
+  - search
+markdown_extensions:
+"
+        "  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+"
+        "          class: mermaid
+"
+        "          format: !!python/name:pymdownx.superfences.fence_code_format
+"))
     c["mkdocs-material"] = dict(
         image=PY, dir=d, out="out",
         install="pip install --no-cache-dir --target /w/deps 'mkdocs<2' mkdocs-material",
@@ -135,7 +147,7 @@ def main():
             times.append(round(time.time() - t, 1))
             if b.returncode != 0:
                 ok = False
-                r["reason"] = (b.stderr + b.stdout)[-600:]
+                r["reason"] = (b.stderr + b.stdout)[:1500]
                 break
         r.update(offline_build="PASS" if ok else "FAIL", build_s=times,
                  build_median_s=statistics.median(times), out_bytes=size(c["dir"] / c["out"]),
