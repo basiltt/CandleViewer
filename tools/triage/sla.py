@@ -46,7 +46,7 @@ def calendar_from_dict(raw: dict[str, object]) -> Calendar:
 
 
 def load_calendar(path: str | Path) -> Calendar:
-    import yaml  # type: ignore[import-untyped]  # stubs not a dependency
+    import yaml  # type: ignore[import-untyped,unused-ignore]  # stubs not a dependency
 
     return calendar_from_dict(yaml.safe_load(Path(path).read_text(encoding="utf-8")))
 
