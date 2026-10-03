@@ -1,0 +1,405 @@
+{
+  "hot_days": 90,
+  "reps": 7,
+  "rows": [
+    {
+      "rows_n": 1000,
+      "tier": "postgres",
+      "query": "a_totals",
+      "p50_ms": 1.94,
+      "p95_ms": 2.16
+    },
+    {
+      "rows_n": 1000,
+      "tier": "duckdb",
+      "query": "a_totals",
+      "p50_ms": 9.28,
+      "p95_ms": 11.18
+    },
+    {
+      "rows_n": 1000,
+      "tier": "hybrid",
+      "query": "a_totals",
+      "p50_ms": 13.9,
+      "p95_ms": 15.09
+    },
+    {
+      "rows_n": 1000,
+      "tier": "postgres",
+      "query": "b_all_breakdowns",
+      "p50_ms": 41.85,
+      "p95_ms": 56.28
+    },
+    {
+      "rows_n": 1000,
+      "tier": "duckdb",
+      "query": "b_all_breakdowns",
+      "p50_ms": 114.03,
+      "p95_ms": 124.04
+    },
+    {
+      "rows_n": 1000,
+      "tier": "hybrid",
+      "query": "b_all_breakdowns",
+      "p50_ms": 115.87,
+      "p95_ms": 120.4
+    },
+    {
+      "rows_n": 1000,
+      "tier": "postgres",
+      "query": "c_equity_trade",
+      "p50_ms": 10.42,
+      "p95_ms": 12.86
+    },
+    {
+      "rows_n": 1000,
+      "tier": "duckdb",
+      "query": "c_equity_trade",
+      "p50_ms": 29.95,
+      "p95_ms": 35.69
+    },
+    {
+      "rows_n": 1000,
+      "tier": "hybrid",
+      "query": "c_equity_trade",
+      "p50_ms": 25.67,
+      "p95_ms": 31.98
+    },
+    {
+      "rows_n": 1000,
+      "tier": "postgres",
+      "query": "d_mae_mfe",
+      "p50_ms": 8.53,
+      "p95_ms": 12.51
+    },
+    {
+      "rows_n": 1000,
+      "tier": "duckdb",
+      "query": "d_mae_mfe",
+      "p50_ms": 21.4,
+      "p95_ms": 27.23
+    },
+    {
+      "rows_n": 1000,
+      "tier": "hybrid",
+      "query": "d_mae_mfe",
+      "p50_ms": 22.13,
+      "p95_ms": 28.48
+    },
+    {
+      "rows_n": 1000,
+      "tier": "postgres",
+      "query": "e_filtered",
+      "p50_ms": 1.81,
+      "p95_ms": 2.58
+    },
+    {
+      "rows_n": 1000,
+      "tier": "duckdb",
+      "query": "e_filtered",
+      "p50_ms": 15.46,
+      "p95_ms": 18.5
+    },
+    {
+      "rows_n": 1000,
+      "tier": "hybrid",
+      "query": "e_filtered",
+      "p50_ms": 11.58,
+      "p95_ms": 18.94
+    },
+    {
+      "rows_n": 1000,
+      "tier": "pg+covering",
+      "query": "a_totals",
+      "p50_ms": 2.13,
+      "p95_ms": 2.35
+    },
+    {
+      "rows_n": 1000,
+      "tier": "pg+covering",
+      "query": "b_all_breakdowns",
+      "p50_ms": 27.13,
+      "p95_ms": 30.97
+    },
+    {
+      "rows_n": 1000,
+      "tier": "pg+covering",
+      "query": "e_filtered",
+      "p50_ms": 0.91,
+      "p95_ms": 1.12
+    },
+    {
+      "rows_n": 1000,
+      "tier": "pg+rollup",
+      "query": "b_partial(symbol/side/setup only; no tag/hour/dow)",
+      "p50_ms": 6.73,
+      "p95_ms": 10.18
+    },
+    {
+      "rows_n": 10000,
+      "tier": "postgres",
+      "query": "a_totals",
+      "p50_ms": 47.56,
+      "p95_ms": 56.53
+    },
+    {
+      "rows_n": 10000,
+      "tier": "duckdb",
+      "query": "a_totals",
+      "p50_ms": 21.02,
+      "p95_ms": 23.93
+    },
+    {
+      "rows_n": 10000,
+      "tier": "hybrid",
+      "query": "a_totals",
+      "p50_ms": 20.67,
+      "p95_ms": 24.8
+    },
+    {
+      "rows_n": 10000,
+      "tier": "postgres",
+      "query": "b_all_breakdowns",
+      "p50_ms": 297.58,
+      "p95_ms": 339.83
+    },
+    {
+      "rows_n": 10000,
+      "tier": "duckdb",
+      "query": "b_all_breakdowns",
+      "p50_ms": 158.0,
+      "p95_ms": 188.18
+    },
+    {
+      "rows_n": 10000,
+      "tier": "hybrid",
+      "query": "b_all_breakdowns",
+      "p50_ms": 302.92,
+      "p95_ms": 451.75
+    },
+    {
+      "rows_n": 10000,
+      "tier": "postgres",
+      "query": "c_equity_trade",
+      "p50_ms": 232.21,
+      "p95_ms": 276.12
+    },
+    {
+      "rows_n": 10000,
+      "tier": "duckdb",
+      "query": "c_equity_trade",
+      "p50_ms": 286.64,
+      "p95_ms": 2034.57
+    },
+    {
+      "rows_n": 10000,
+      "tier": "hybrid",
+      "query": "c_equity_trade",
+      "p50_ms": 351.43,
+      "p95_ms": 989.63
+    },
+    {
+      "rows_n": 10000,
+      "tier": "postgres",
+      "query": "d_mae_mfe",
+      "p50_ms": 75.01,
+      "p95_ms": 88.23
+    },
+    {
+      "rows_n": 10000,
+      "tier": "duckdb",
+      "query": "d_mae_mfe",
+      "p50_ms": 212.92,
+      "p95_ms": 244.57
+    },
+    {
+      "rows_n": 10000,
+      "tier": "hybrid",
+      "query": "d_mae_mfe",
+      "p50_ms": 265.77,
+      "p95_ms": 3247.21
+    },
+    {
+      "rows_n": 10000,
+      "tier": "postgres",
+      "query": "e_filtered",
+      "p50_ms": 2.64,
+      "p95_ms": 4.82
+    },
+    {
+      "rows_n": 10000,
+      "tier": "duckdb",
+      "query": "e_filtered",
+      "p50_ms": 21.15,
+      "p95_ms": 25.47
+    },
+    {
+      "rows_n": 10000,
+      "tier": "hybrid",
+      "query": "e_filtered",
+      "p50_ms": 30.67,
+      "p95_ms": 35.59
+    },
+    {
+      "rows_n": 10000,
+      "tier": "pg+covering",
+      "query": "a_totals",
+      "p50_ms": 17.04,
+      "p95_ms": 19.0
+    },
+    {
+      "rows_n": 10000,
+      "tier": "pg+covering",
+      "query": "b_all_breakdowns",
+      "p50_ms": 386.3,
+      "p95_ms": 3338.55
+    },
+    {
+      "rows_n": 10000,
+      "tier": "pg+covering",
+      "query": "e_filtered",
+      "p50_ms": 4.59,
+      "p95_ms": 4.66
+    },
+    {
+      "rows_n": 10000,
+      "tier": "pg+rollup",
+      "query": "b_partial(symbol/side/setup only; no tag/hour/dow)",
+      "p50_ms": 64.68,
+      "p95_ms": 106.82
+    },
+    {
+      "rows_n": 100000,
+      "tier": "postgres",
+      "query": "a_totals",
+      "p50_ms": 371.78,
+      "p95_ms": 3474.79
+    },
+    {
+      "rows_n": 100000,
+      "tier": "duckdb",
+      "query": "a_totals",
+      "p50_ms": 52.8,
+      "p95_ms": 69.79
+    },
+    {
+      "rows_n": 100000,
+      "tier": "hybrid",
+      "query": "a_totals",
+      "p50_ms": 1418.34,
+      "p95_ms": 1771.57
+    },
+    {
+      "rows_n": 100000,
+      "tier": "postgres",
+      "query": "b_all_breakdowns",
+      "p50_ms": 4347.06,
+      "p95_ms": 13996.82
+    },
+    {
+      "rows_n": 100000,
+      "tier": "duckdb",
+      "query": "b_all_breakdowns",
+      "p50_ms": 2954.1,
+      "p95_ms": 3861.98
+    },
+    {
+      "rows_n": 100000,
+      "tier": "hybrid",
+      "query": "b_all_breakdowns",
+      "p50_ms": 3584.19,
+      "p95_ms": 13400.34
+    },
+    {
+      "rows_n": 100000,
+      "tier": "postgres",
+      "query": "c_equity_trade",
+      "p50_ms": 8794.88,
+      "p95_ms": 14164.12
+    },
+    {
+      "rows_n": 100000,
+      "tier": "duckdb",
+      "query": "c_equity_trade",
+      "p50_ms": 5998.04,
+      "p95_ms": 11388.15
+    },
+    {
+      "rows_n": 100000,
+      "tier": "hybrid",
+      "query": "c_equity_trade",
+      "p50_ms": 5963.32,
+      "p95_ms": 9673.13
+    },
+    {
+      "rows_n": 100000,
+      "tier": "postgres",
+      "query": "d_mae_mfe",
+      "p50_ms": 3836.22,
+      "p95_ms": 7221.81
+    },
+    {
+      "rows_n": 100000,
+      "tier": "duckdb",
+      "query": "d_mae_mfe",
+      "p50_ms": 6302.1,
+      "p95_ms": 8214.64
+    },
+    {
+      "rows_n": 100000,
+      "tier": "hybrid",
+      "query": "d_mae_mfe",
+      "p50_ms": 2169.87,
+      "p95_ms": 7273.55
+    },
+    {
+      "rows_n": 100000,
+      "tier": "postgres",
+      "query": "e_filtered",
+      "p50_ms": 20.73,
+      "p95_ms": 27.18
+    },
+    {
+      "rows_n": 100000,
+      "tier": "duckdb",
+      "query": "e_filtered",
+      "p50_ms": 117.88,
+      "p95_ms": 118.6
+    },
+    {
+      "rows_n": 100000,
+      "tier": "hybrid",
+      "query": "e_filtered",
+      "p50_ms": 142.05,
+      "p95_ms": 152.44
+    },
+    {
+      "rows_n": 100000,
+      "tier": "pg+covering",
+      "query": "a_totals",
+      "p50_ms": 184.53,
+      "p95_ms": 252.08
+    },
+    {
+      "rows_n": 100000,
+      "tier": "pg+covering",
+      "query": "b_all_breakdowns",
+      "p50_ms": 2568.26,
+      "p95_ms": 3914.82
+    },
+    {
+      "rows_n": 100000,
+      "tier": "pg+covering",
+      "query": "e_filtered",
+      "p50_ms": 22.87,
+      "p95_ms": 36.0
+    },
+    {
+      "rows_n": 100000,
+      "tier": "pg+rollup",
+      "query": "b_partial(symbol/side/setup only; no tag/hour/dow)",
+      "p50_ms": 511.35,
+      "p95_ms": 678.28
+    }
+  ]
+}
