@@ -337,13 +337,55 @@ _SARIF_LEVEL_TO_SEVERITY: dict[str, Severity] = {
 }
 
 
+def _sarif_rule_index(run: dict[str, Any]) -> tuple[dict[str, Any], list[list[dict[str, Any]]]]:
+    """Index a run's rule descriptors by id, plus positional tables.
+
+    Returns `(by_id, components)` where `components[0]` is the driver's rule
+    list and `components[i]` the i-th extension's — the layout SARIF uses to
+    resolve `result.rule.{toolComponent.index, index}` / `result.ruleIndex`.
+    """
+    tool = run.get("tool", {})
+    components: list[list[dict[str, Any]]] = [list(tool.get("driver", {}).get("rules", []))]
+    for ext in tool.get("extensions", []):
+        components.append(list(ext.get("rules", [])))
+    by_id: dict[str, Any] = {}
+    for rules in components:
+        for rule in rules:
+            if isinstance(rule, dict) and "id" in rule:
+                by_id.setdefault(rule["id"], rule)
+    return by_id, components
+
+
+def _sarif_result_rule(
+    result: dict[str, Any], by_id: dict[str, Any], components: list[list[dict[str, Any]]]
+) -> dict[str, Any]:
+    ref = result.get("rule", {})
+    comp_idx = ref.get("toolComponent", {}).get("index", 0)
+    rule_idx = ref.get("index", result.get("ruleIndex"))
+    if isinstance(rule_idx, int) and 0 <= comp_idx < len(components):
+        rules = components[comp_idx]
+        if 0 <= rule_idx < len(rules):
+            rule: dict[str, Any] = rules[rule_idx]
+            return rule
+    found: dict[str, Any] = by_id.get(result.get("ruleId", ""), {})
+    return found
+
+
 def parse_sarif(path: Path, tool: str) -> list[Finding]:
     """Parse a SARIF 2.1.0 file into normalised findings.
 
     Used for CodeQL, Semgrep and Trivy (all three can emit SARIF). Severity
-    is read from `properties.security-severity` when a run provides it
-    (CVSS-like float, mapped to buckets), else falls back to the SARIF
-    `level` (error/warning/note).
+    is read from `security-severity` (CVSS-like float, mapped to buckets)
+    when the result *or its rule descriptor* provides it, else falls back to
+    the SARIF `level` (error/warning/note) of the result, then of the rule's
+    `defaultConfiguration`.
+
+    CodeQL in particular carries both `security-severity` and the level only
+    on the rule (`tool.driver.rules[]` / `tool.extensions[].rules[]`) and
+    omits `level` on results that match the default — reading the result
+    alone silently downgraded every CodeQL High to MEDIUM (never blocking),
+    which is how PRs with a GitHub-reported High CodeQL alert passed this
+    gate (CI-SEC-001 regression, fixed under ci/e03-codeql-job-fix).
     """
     try:
         doc = json.loads(path.read_text(encoding="utf-8"))
@@ -357,8 +399,12 @@ def parse_sarif(path: Path, tool: str) -> list[Finding]:
 
     findings: list[Finding] = []
     for run in doc.get("runs", []):
+        by_id, components = _sarif_rule_index(run)
         for result in run.get("results", []):
             rule_id = result.get("ruleId", "unknown-rule")
+            rule = _sarif_result_rule(result, by_id, components)
+            if rule_id == "unknown-rule" and "id" in rule:
+                rule_id = rule["id"]
             locations = result.get("locations", [])
             loc = ""
             if locations:
@@ -369,6 +415,8 @@ def parse_sarif(path: Path, tool: str) -> list[Finding]:
             finding_id = f"{rule_id}:{loc}" if loc else rule_id
 
             sec_sev = result.get("properties", {}).get("security-severity")
+            if sec_sev is None:
+                sec_sev = rule.get("properties", {}).get("security-severity")
             score: float | None
             if sec_sev is not None:
                 try:
@@ -389,7 +437,9 @@ def parse_sarif(path: Path, tool: str) -> list[Finding]:
                 else:
                     severity = "LOW"
             else:
-                level = result.get("level", "warning")
+                level = result.get("level") or rule.get("defaultConfiguration", {}).get(
+                    "level", "warning"
+                )
                 severity = _SARIF_LEVEL_TO_SEVERITY.get(level, "MEDIUM")
 
             message = result.get("message", {}).get("text", "")
