@@ -1,0 +1,74 @@
+name: _job-xstate-contract
+
+# E50-T31: the BLOCKING statechart contract gate
+# (docs/plan/29-statechart-adoption-plan.md §1.7). Runs every committed
+# `machines/*.machine.json` through `cv.statechart.factory` on the library
+# runtime: every declared arm on both service spellings (`async def` and
+# `def` -> coroutine), persist -> restore at every quiescence point,
+# envelope refusal (wrong machine_hash / bad HMAC / version < 3),
+# guard-denied / unhandled audit, chain-trip latch across restore, and the
+# §Bn.7 invariant ledger. A chart without a contract module fails
+# collection. `-W error::RuntimeWarning` turns a dropped action coroutine
+# (CV-C67) into a failure.
+#
+# The informational sync-engine parity job (`xstate-sync-parity`) never
+# gates: `continue-on-error: true` and it is not listed in ci-required.
+
+on:
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+env:
+  PYTHONIOENCODING: utf-8
+
+jobs:
+  xstate-contract:
+    name: xstate-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ fromJSON(vars.CV_CI_TIMEOUT_MINUTES || 20) }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install uv (cache keyed on uv.lock)
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.9.x"
+          enable-cache: true
+          cache-dependency-glob: "services/api/uv.lock"
+          python-version: "3.12"
+
+      - name: uv sync --frozen
+        working-directory: services/api
+        run: uv sync --frozen --all-groups
+
+      - name: pytest tests/xstate_contract -W error::RuntimeWarning (blocking)
+        working-directory: services/api
+        run: >
+          uv run pytest tests/xstate_contract -q --no-cov -m "not sync_parity"
+          -W error::RuntimeWarning --durations=10
+
+  xstate-sync-parity:
+    name: xstate-sync-parity (informational)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install uv (cache keyed on uv.lock)
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.9.x"
+          enable-cache: true
+          cache-dependency-glob: "services/api/uv.lock"
+          python-version: "3.12"
+
+      - name: uv sync --frozen
+        working-directory: services/api
+        run: uv sync --frozen --all-groups
+
+      - name: SyncInterpreter parity (never gates, MUSTNOT-06)
+        working-directory: services/api
+        run: uv run pytest tests/xstate_contract -q --no-cov -m sync_parity

@@ -1,0 +1,18 @@
+name: xstate-contract-nightly
+
+# E50-T31 exit criterion: "the suite is green on 5 consecutive nightlies
+# before E50 closes" (29-statechart-adoption-plan.md §1.7 Nightly). Runs the
+# same reusable job as the PR gate against `main`; the run history of this
+# workflow is the nightly trend that QA records on the ticket.
+
+on:
+  schedule:
+    - cron: "41 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  xstate-contract:
+    uses: ./.github/workflows/_job-xstate-contract.yml

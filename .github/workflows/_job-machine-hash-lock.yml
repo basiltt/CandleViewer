@@ -45,6 +45,11 @@ jobs:
           uv run --project services/api
           python tools/statechart/check_machine_hash_lock.py
 
+      # The full tests/xstate_contract gate runs in `xstate-contract`
+      # (_job-xstate-contract.yml, E50-T31); this job keeps only its own
+      # golden-snapshot upcaster module.
       - name: Golden-snapshot upcaster suite (part of xstate_contract)
         working-directory: services/api
-        run: uv run pytest tests/xstate_contract -q --no-cov -W error::RuntimeWarning
+        run: >
+          uv run pytest tests/xstate_contract/test_golden_upcaster.py -q --no-cov
+          -W error::RuntimeWarning
