@@ -11,12 +11,11 @@ from __future__ import annotations
 import inspect
 import json
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Protocol
 
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import JSONResponse
 
-from candleviewer.api.ticker import _Principal, _problem, _Resolver
 from candleviewer.rules.ir.schema import to_json_schema
 from candleviewer.rules.vocabulary import (
     MetricRegistry,
@@ -29,6 +28,24 @@ _REQUIRED = "rules:read"
 _ADVISORY_PERMISSIONS = ("orders:write", "rules.loosen_stop", "rules.arm_live")
 _CACHE = "private, max-age=60"
 _Counter = Callable[[str], None]
+
+
+class _Principal(Protocol):
+    def has(self, permission: str) -> bool: ...
+
+
+class _Resolver(Protocol):
+    """Sync or async resolver (`resolve(request)` may return an awaitable)."""
+
+    def resolve(self, request: Request) -> Any: ...
+
+
+def _problem(status: int, title: str, detail: str) -> JSONResponse:
+    return JSONResponse(
+        status_code=status,
+        media_type="application/problem+json",
+        content={"type": "about:blank", "title": title, "status": status, "detail": detail},
+    )
 
 
 def make_rules_router(
