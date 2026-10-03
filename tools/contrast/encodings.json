@@ -1,0 +1,66 @@
+{
+  "$comment": "E47-S06 encoding inventory (US-SET-005 NFR). Each semantic encoding lists every surface that renders it and the non-colour channel(s) each surface provides. channels: glyph|sign|text|pattern|position. A surface with no channel fails the build (A11Y-C008).",
+  "encodings": {
+    "buy-sell": {
+      "surfaces": {
+        "SCR-031 chart candles": ["position", "pattern"],
+        "footprint cells": ["text", "position"],
+        "DOM ladder": ["position", "text"],
+        "order ticket": ["text", "glyph"],
+        "trade tape": ["glyph", "text"]
+      }
+    },
+    "bid-ask": {
+      "surfaces": {
+        "DOM ladder": ["position", "text"],
+        "footprint cells": ["position", "text"],
+        "heatmap": ["position"],
+        "bubbles": ["position", "glyph"]
+      }
+    },
+    "order-status": {
+      "surfaces": {
+        "orders table": ["text", "glyph"],
+        "order toast": ["text", "glyph"]
+      }
+    },
+    "pnl": {
+      "surfaces": {
+        "positions table": ["sign", "text"],
+        "account header": ["sign", "text"],
+        "journal": ["sign", "text"]
+      }
+    },
+    "connection-health": {
+      "surfaces": {
+        "status bar": ["text", "glyph"],
+        "chart overlay": ["text", "glyph"]
+      }
+    },
+    "demo-live": {
+      "surfaces": {
+        "every screen badge": ["text"],
+        "order ticket": ["text"]
+      }
+    },
+    "imbalance": {
+      "surfaces": {
+        "footprint cells": ["pattern", "glyph"],
+        "DOM ladder": ["text"]
+      }
+    },
+    "delta-sign": {
+      "surfaces": {
+        "footprint cells": ["sign", "text"],
+        "delta histogram": ["sign", "position"],
+        "profile": ["sign", "text"]
+      }
+    },
+    "risk-severity": {
+      "surfaces": {
+        "risk panel": ["text", "glyph"],
+        "alerts": ["text", "glyph"]
+      }
+    }
+  }
+}

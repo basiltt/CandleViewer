@@ -213,7 +213,7 @@
   },
   "color.profile.bar": {
     "$type": "color",
-    "$value": "{palette.neutral.400}"
+    "$value": "{palette.neutral.500}"
   },
   "color.profile.poc": {
     "$type": "color",
@@ -221,7 +221,7 @@
   },
   "color.profile.valuearea": {
     "$type": "color",
-    "$value": "{palette.blue.700}"
+    "$value": "{palette.blue.400}"
   },
   "color.order.line": {
     "$type": "color",
@@ -285,35 +285,35 @@
   },
   "color.heatmap.bid.1": {
     "$type": "color",
-    "$value": "{palette.green.900}"
+    "$value": "{palette.green.700}"
   },
   "color.heatmap.ask.1": {
     "$type": "color",
-    "$value": "{palette.red.900}"
+    "$value": "{palette.red.650}"
   },
   "color.heatmap.bid.2": {
     "$type": "color",
-    "$value": "{palette.green.700}"
+    "$value": "{palette.green.600}"
   },
   "color.heatmap.ask.2": {
     "$type": "color",
-    "$value": "{palette.red.700}"
+    "$value": "{palette.red.550}"
   },
   "color.heatmap.bid.3": {
     "$type": "color",
-    "$value": "{palette.green.600}"
+    "$value": "{palette.green.500}"
   },
   "color.heatmap.ask.3": {
     "$type": "color",
-    "$value": "{palette.red.600}"
+    "$value": "{palette.red.400}"
   },
   "color.heatmap.bid.4": {
     "$type": "color",
-    "$value": "{palette.green.500}"
+    "$value": "{palette.green.400}"
   },
   "color.heatmap.ask.4": {
     "$type": "color",
-    "$value": "{palette.red.500}"
+    "$value": "{palette.red.300}"
   },
   "color.heatmap.bid.5": {
     "$type": "color",
@@ -321,7 +321,7 @@
   },
   "color.heatmap.ask.5": {
     "$type": "color",
-    "$value": "{palette.red.300}"
+    "$value": "{palette.red.200}"
   },
   "space.inset.xs": {
     "$type": "spacing",
@@ -410,9 +410,7 @@
   "type.ui.caption": {
     "$type": "typography",
     "$value": {
-      "fontFamily": [
-        "{font.family.ui}"
-      ],
+      "fontFamily": ["{font.family.ui}"],
       "fontSize": "{font.size.xs}",
       "fontWeight": "{font.weight.regular}",
       "lineHeight": "{font.lineheight.tight}"
@@ -421,9 +419,7 @@
   "type.ui.body": {
     "$type": "typography",
     "$value": {
-      "fontFamily": [
-        "{font.family.ui}"
-      ],
+      "fontFamily": ["{font.family.ui}"],
       "fontSize": "{font.size.base}",
       "fontWeight": "{font.weight.regular}",
       "lineHeight": "{font.lineheight.normal}"
@@ -432,9 +428,7 @@
   "type.ui.body-strong": {
     "$type": "typography",
     "$value": {
-      "fontFamily": [
-        "{font.family.ui}"
-      ],
+      "fontFamily": ["{font.family.ui}"],
       "fontSize": "{font.size.base}",
       "fontWeight": "{font.weight.medium}",
       "lineHeight": "{font.lineheight.normal}"
@@ -443,9 +437,7 @@
   "type.ui.label": {
     "$type": "typography",
     "$value": {
-      "fontFamily": [
-        "{font.family.ui}"
-      ],
+      "fontFamily": ["{font.family.ui}"],
       "fontSize": "{font.size.sm}",
       "fontWeight": "{font.weight.medium}",
       "lineHeight": "{font.lineheight.tight}"
@@ -454,9 +446,7 @@
   "type.ui.heading-sm": {
     "$type": "typography",
     "$value": {
-      "fontFamily": [
-        "{font.family.ui}"
-      ],
+      "fontFamily": ["{font.family.ui}"],
       "fontSize": "{font.size.md}",
       "fontWeight": "{font.weight.semibold}",
       "lineHeight": "{font.lineheight.tight}"
@@ -465,9 +455,7 @@
   "type.ui.heading-md": {
     "$type": "typography",
     "$value": {
-      "fontFamily": [
-        "{font.family.ui}"
-      ],
+      "fontFamily": ["{font.family.ui}"],
       "fontSize": "{font.size.lg}",
       "fontWeight": "{font.weight.semibold}",
       "lineHeight": "{font.lineheight.tight}"
@@ -476,9 +464,7 @@
   "type.ui.heading-lg": {
     "$type": "typography",
     "$value": {
-      "fontFamily": [
-        "{font.family.ui}"
-      ],
+      "fontFamily": ["{font.family.ui}"],
       "fontSize": "{font.size.xl}",
       "fontWeight": "{font.weight.semibold}",
       "lineHeight": "{font.lineheight.tight}"
@@ -487,9 +473,7 @@
   "type.ui.display": {
     "$type": "typography",
     "$value": {
-      "fontFamily": [
-        "{font.family.ui}"
-      ],
+      "fontFamily": ["{font.family.ui}"],
       "fontSize": "{font.size.2xl}",
       "fontWeight": "{font.weight.bold}",
       "lineHeight": "{font.lineheight.tight}"
@@ -498,9 +482,7 @@
   "type.num.xs": {
     "$type": "typography",
     "$value": {
-      "fontFamily": [
-        "{font.family.mono}"
-      ],
+      "fontFamily": ["{font.family.mono}"],
       "fontSize": "{font.size.2xs}",
       "fontWeight": "{font.weight.regular}",
       "lineHeight": "{font.lineheight.tight}"
@@ -509,9 +491,7 @@
   "type.num.sm": {
     "$type": "typography",
     "$value": {
-      "fontFamily": [
-        "{font.family.mono}"
-      ],
+      "fontFamily": ["{font.family.mono}"],
       "fontSize": "{font.size.xs}",
       "fontWeight": "{font.weight.regular}",
       "lineHeight": "{font.lineheight.tight}"
@@ -520,9 +500,7 @@
   "type.num.base": {
     "$type": "typography",
     "$value": {
-      "fontFamily": [
-        "{font.family.mono}"
-      ],
+      "fontFamily": ["{font.family.mono}"],
       "fontSize": "{font.size.base}",
       "fontWeight": "{font.weight.regular}",
       "lineHeight": "{font.lineheight.tight}"
@@ -531,9 +509,7 @@
   "type.num.md": {
     "$type": "typography",
     "$value": {
-      "fontFamily": [
-        "{font.family.mono}"
-      ],
+      "fontFamily": ["{font.family.mono}"],
       "fontSize": "{font.size.md}",
       "fontWeight": "{font.weight.medium}",
       "lineHeight": "{font.lineheight.tight}"
@@ -542,9 +518,7 @@
   "type.num.lg": {
     "$type": "typography",
     "$value": {
-      "fontFamily": [
-        "{font.family.mono}"
-      ],
+      "fontFamily": ["{font.family.mono}"],
       "fontSize": "{font.size.lg}",
       "fontWeight": "{font.weight.medium}",
       "lineHeight": "{font.lineheight.tight}"
@@ -553,9 +527,7 @@
   "type.num.xl": {
     "$type": "typography",
     "$value": {
-      "fontFamily": [
-        "{font.family.mono}"
-      ],
+      "fontFamily": ["{font.family.mono}"],
       "fontSize": "{font.size.xl}",
       "fontWeight": "{font.weight.semibold}",
       "lineHeight": "{font.lineheight.tight}"
@@ -660,5 +632,18 @@
   "color.data-confidence.delisted.indicator": {
     "$type": "color",
     "$value": "{color.status.danger.strong}"
-  }
+  },
+  "color.cvd.buy": { "$type": "color", "$value": "{palette.cvd.blue.3}" },
+  "color.cvd.sell": { "$type": "color", "$value": "{palette.cvd.orange.3}" },
+  "color.cvd.imbalance": { "$type": "color", "$value": "{palette.neutral.1000}" },
+  "color.cvd.heatmap.bid.1": { "$type": "color", "$value": "{palette.cvd.blue.1}" },
+  "color.cvd.heatmap.ask.1": { "$type": "color", "$value": "{palette.cvd.orange.1}" },
+  "color.cvd.heatmap.bid.2": { "$type": "color", "$value": "{palette.cvd.blue.2}" },
+  "color.cvd.heatmap.ask.2": { "$type": "color", "$value": "{palette.cvd.orange.2}" },
+  "color.cvd.heatmap.bid.3": { "$type": "color", "$value": "{palette.cvd.blue.3}" },
+  "color.cvd.heatmap.ask.3": { "$type": "color", "$value": "{palette.cvd.orange.3}" },
+  "color.cvd.heatmap.bid.4": { "$type": "color", "$value": "{palette.cvd.blue.4}" },
+  "color.cvd.heatmap.ask.4": { "$type": "color", "$value": "{palette.cvd.orange.4}" },
+  "color.cvd.heatmap.bid.5": { "$type": "color", "$value": "{palette.cvd.blue.5}" },
+  "color.cvd.heatmap.ask.5": { "$type": "color", "$value": "{palette.cvd.orange.5}" }
 }

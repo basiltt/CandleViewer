@@ -8,667 +8,133 @@
         "theme": "dark",
         "id": "heatmap.bid",
         "stops": 16,
-        "failing": [
-          {
-            "pos": 0,
-            "ratio": 1
-          },
-          {
-            "pos": 0.07,
-            "ratio": 1.11
-          },
-          {
-            "pos": 0.13,
-            "ratio": 1.27
-          },
-          {
-            "pos": 0.2,
-            "ratio": 1.49
-          },
-          {
-            "pos": 0.27,
-            "ratio": 1.92
-          },
-          {
-            "pos": 0.33,
-            "ratio": 2.47
-          }
-        ],
-        "pass": false
+        "failing": [],
+        "pass": true
       },
       {
         "theme": "dark",
         "id": "heatmap.ask",
         "stops": 16,
-        "failing": [
-          {
-            "pos": 0,
-            "ratio": 1
-          },
-          {
-            "pos": 0.07,
-            "ratio": 1.05
-          },
-          {
-            "pos": 0.13,
-            "ratio": 1.14
-          },
-          {
-            "pos": 0.2,
-            "ratio": 1.26
-          },
-          {
-            "pos": 0.27,
-            "ratio": 1.57
-          },
-          {
-            "pos": 0.33,
-            "ratio": 1.99
-          },
-          {
-            "pos": 0.4,
-            "ratio": 2.53
-          },
-          {
-            "pos": 0.47,
-            "ratio": 2.87
-          }
-        ],
-        "pass": false
+        "failing": [],
+        "pass": true
       },
       {
         "theme": "dark",
-        "id": "delta.divergence",
+        "id": "delta.positive",
         "stops": 16,
-        "failing": [
-          {
-            "pos": 0.13,
-            "ratio": 2.99
-          },
-          {
-            "pos": 0.2,
-            "ratio": 2.39
-          },
-          {
-            "pos": 0.27,
-            "ratio": 1.89
-          },
-          {
-            "pos": 0.33,
-            "ratio": 1.51
-          },
-          {
-            "pos": 0.4,
-            "ratio": 1.23
-          },
-          {
-            "pos": 0.47,
-            "ratio": 1.05
-          },
-          {
-            "pos": 0.53,
-            "ratio": 1.09
-          },
-          {
-            "pos": 0.6,
-            "ratio": 1.41
-          },
-          {
-            "pos": 0.67,
-            "ratio": 1.88
-          },
-          {
-            "pos": 0.73,
-            "ratio": 2.53
-          }
-        ],
-        "pass": false
+        "failing": [],
+        "pass": true
+      },
+      {
+        "theme": "dark",
+        "id": "delta.negative",
+        "stops": 16,
+        "failing": [],
+        "pass": true
       },
       {
         "theme": "dark",
         "id": "profile.histogram",
         "stops": 16,
-        "failing": [
-          {
-            "pos": 0,
-            "ratio": 1.91
-          },
-          {
-            "pos": 0.07,
-            "ratio": 1.91
-          },
-          {
-            "pos": 0.13,
-            "ratio": 1.89
-          },
-          {
-            "pos": 0.2,
-            "ratio": 1.89
-          },
-          {
-            "pos": 0.27,
-            "ratio": 1.87
-          },
-          {
-            "pos": 0.33,
-            "ratio": 1.87
-          },
-          {
-            "pos": 0.4,
-            "ratio": 1.85
-          },
-          {
-            "pos": 0.47,
-            "ratio": 1.86
-          },
-          {
-            "pos": 0.53,
-            "ratio": 1.85
-          },
-          {
-            "pos": 0.6,
-            "ratio": 1.85
-          },
-          {
-            "pos": 0.67,
-            "ratio": 1.84
-          },
-          {
-            "pos": 0.73,
-            "ratio": 1.85
-          },
-          {
-            "pos": 0.8,
-            "ratio": 1.84
-          },
-          {
-            "pos": 0.87,
-            "ratio": 1.86
-          },
-          {
-            "pos": 0.93,
-            "ratio": 1.86
-          },
-          {
-            "pos": 1,
-            "ratio": 1.87
-          }
-        ],
-        "pass": false
+        "failing": [],
+        "pass": true
       },
       {
         "theme": "dark",
         "id": "liquidation.intensity",
         "stops": 16,
-        "failing": [
-          {
-            "pos": 0,
-            "ratio": 1.26
-          },
-          {
-            "pos": 0.07,
-            "ratio": 1.43
-          },
-          {
-            "pos": 0.13,
-            "ratio": 1.65
-          },
-          {
-            "pos": 0.2,
-            "ratio": 1.91
-          },
-          {
-            "pos": 0.27,
-            "ratio": 2.22
-          },
-          {
-            "pos": 0.33,
-            "ratio": 2.56
-          },
-          {
-            "pos": 0.4,
-            "ratio": 2.94
-          }
-        ],
-        "pass": false
+        "failing": [],
+        "pass": true
       },
       {
         "theme": "light",
         "id": "heatmap.bid",
         "stops": 16,
-        "failing": [
-          {
-            "pos": 0,
-            "ratio": 1
-          },
-          {
-            "pos": 0.07,
-            "ratio": 1.03
-          },
-          {
-            "pos": 0.13,
-            "ratio": 1.06
-          },
-          {
-            "pos": 0.2,
-            "ratio": 1.09
-          },
-          {
-            "pos": 0.27,
-            "ratio": 2.06
-          }
-        ],
-        "pass": false
+        "failing": [],
+        "pass": true
       },
       {
         "theme": "light",
         "id": "heatmap.ask",
         "stops": 16,
-        "failing": [
-          {
-            "pos": 0,
-            "ratio": 1
-          },
-          {
-            "pos": 0.07,
-            "ratio": 1.05
-          },
-          {
-            "pos": 0.13,
-            "ratio": 1.1
-          },
-          {
-            "pos": 0.2,
-            "ratio": 1.15
-          },
-          {
-            "pos": 0.27,
-            "ratio": 2.26
-          }
-        ],
-        "pass": false
+        "failing": [],
+        "pass": true
       },
       {
         "theme": "light",
-        "id": "delta.divergence",
+        "id": "delta.positive",
         "stops": 16,
-        "failing": [
-          {
-            "pos": 0.2,
-            "ratio": 2.57
-          },
-          {
-            "pos": 0.27,
-            "ratio": 2.06
-          },
-          {
-            "pos": 0.33,
-            "ratio": 1.65
-          },
-          {
-            "pos": 0.4,
-            "ratio": 1.34
-          },
-          {
-            "pos": 0.47,
-            "ratio": 1.1
-          },
-          {
-            "pos": 0.53,
-            "ratio": 1.09
-          },
-          {
-            "pos": 0.6,
-            "ratio": 1.31
-          },
-          {
-            "pos": 0.67,
-            "ratio": 1.6
-          },
-          {
-            "pos": 0.73,
-            "ratio": 1.96
-          },
-          {
-            "pos": 0.8,
-            "ratio": 2.45
-          }
-        ],
-        "pass": false
+        "failing": [],
+        "pass": true
+      },
+      {
+        "theme": "light",
+        "id": "delta.negative",
+        "stops": 16,
+        "failing": [],
+        "pass": true
       },
       {
         "theme": "light",
         "id": "profile.histogram",
         "stops": 16,
-        "failing": [
-          {
-            "pos": 0,
-            "ratio": 2.38
-          },
-          {
-            "pos": 0.07,
-            "ratio": 2.25
-          },
-          {
-            "pos": 0.13,
-            "ratio": 2.14
-          },
-          {
-            "pos": 0.2,
-            "ratio": 2.02
-          },
-          {
-            "pos": 0.27,
-            "ratio": 1.93
-          },
-          {
-            "pos": 0.33,
-            "ratio": 1.83
-          },
-          {
-            "pos": 0.4,
-            "ratio": 1.73
-          },
-          {
-            "pos": 0.47,
-            "ratio": 1.66
-          },
-          {
-            "pos": 0.53,
-            "ratio": 1.57
-          },
-          {
-            "pos": 0.6,
-            "ratio": 1.51
-          },
-          {
-            "pos": 0.67,
-            "ratio": 1.44
-          },
-          {
-            "pos": 0.73,
-            "ratio": 1.37
-          },
-          {
-            "pos": 0.8,
-            "ratio": 1.31
-          },
-          {
-            "pos": 0.87,
-            "ratio": 1.25
-          },
-          {
-            "pos": 0.93,
-            "ratio": 1.2
-          },
-          {
-            "pos": 1,
-            "ratio": 1.15
-          }
-        ],
-        "pass": false
+        "failing": [],
+        "pass": true
       },
       {
         "theme": "light",
         "id": "liquidation.intensity",
         "stops": 16,
-        "failing": [
-          {
-            "pos": 0,
-            "ratio": 1.15
-          },
-          {
-            "pos": 0.07,
-            "ratio": 1.3
-          },
-          {
-            "pos": 0.13,
-            "ratio": 1.47
-          },
-          {
-            "pos": 0.2,
-            "ratio": 1.69
-          },
-          {
-            "pos": 0.27,
-            "ratio": 1.94
-          },
-          {
-            "pos": 0.33,
-            "ratio": 2.23
-          },
-          {
-            "pos": 0.4,
-            "ratio": 2.58
-          },
-          {
-            "pos": 0.47,
-            "ratio": 2.99
-          }
-        ],
-        "pass": false
+        "failing": [],
+        "pass": true
       },
       {
         "theme": "high-contrast",
         "id": "heatmap.bid",
         "stops": 16,
-        "failing": [
-          {
-            "pos": 0,
-            "ratio": 1
-          },
-          {
-            "pos": 0.07,
-            "ratio": 1.11
-          },
-          {
-            "pos": 0.13,
-            "ratio": 1.27
-          },
-          {
-            "pos": 0.2,
-            "ratio": 1.49
-          },
-          {
-            "pos": 0.27,
-            "ratio": 1.92
-          },
-          {
-            "pos": 0.33,
-            "ratio": 2.47
-          }
-        ],
-        "pass": false
+        "failing": [],
+        "pass": true
       },
       {
         "theme": "high-contrast",
         "id": "heatmap.ask",
         "stops": 16,
-        "failing": [
-          {
-            "pos": 0,
-            "ratio": 1
-          },
-          {
-            "pos": 0.07,
-            "ratio": 1.05
-          },
-          {
-            "pos": 0.13,
-            "ratio": 1.14
-          },
-          {
-            "pos": 0.2,
-            "ratio": 1.26
-          },
-          {
-            "pos": 0.27,
-            "ratio": 1.57
-          },
-          {
-            "pos": 0.33,
-            "ratio": 1.99
-          },
-          {
-            "pos": 0.4,
-            "ratio": 2.53
-          },
-          {
-            "pos": 0.47,
-            "ratio": 2.87
-          }
-        ],
-        "pass": false
+        "failing": [],
+        "pass": true
       },
       {
         "theme": "high-contrast",
-        "id": "delta.divergence",
+        "id": "delta.positive",
         "stops": 16,
-        "failing": [
-          {
-            "pos": 0.27,
-            "ratio": 2.58
-          },
-          {
-            "pos": 0.33,
-            "ratio": 1.89
-          },
-          {
-            "pos": 0.4,
-            "ratio": 1.4
-          },
-          {
-            "pos": 0.47,
-            "ratio": 1.1
-          },
-          {
-            "pos": 0.53,
-            "ratio": 1.12
-          },
-          {
-            "pos": 0.6,
-            "ratio": 1.52
-          },
-          {
-            "pos": 0.67,
-            "ratio": 2.17
-          }
-        ],
-        "pass": false
+        "failing": [],
+        "pass": true
+      },
+      {
+        "theme": "high-contrast",
+        "id": "delta.negative",
+        "stops": 16,
+        "failing": [],
+        "pass": true
       },
       {
         "theme": "high-contrast",
         "id": "profile.histogram",
         "stops": 16,
-        "failing": [
-          {
-            "pos": 0,
-            "ratio": 1.91
-          },
-          {
-            "pos": 0.07,
-            "ratio": 1.91
-          },
-          {
-            "pos": 0.13,
-            "ratio": 1.89
-          },
-          {
-            "pos": 0.2,
-            "ratio": 1.89
-          },
-          {
-            "pos": 0.27,
-            "ratio": 1.87
-          },
-          {
-            "pos": 0.33,
-            "ratio": 1.87
-          },
-          {
-            "pos": 0.4,
-            "ratio": 1.85
-          },
-          {
-            "pos": 0.47,
-            "ratio": 1.86
-          },
-          {
-            "pos": 0.53,
-            "ratio": 1.85
-          },
-          {
-            "pos": 0.6,
-            "ratio": 1.85
-          },
-          {
-            "pos": 0.67,
-            "ratio": 1.84
-          },
-          {
-            "pos": 0.73,
-            "ratio": 1.85
-          },
-          {
-            "pos": 0.8,
-            "ratio": 1.84
-          },
-          {
-            "pos": 0.87,
-            "ratio": 1.86
-          },
-          {
-            "pos": 0.93,
-            "ratio": 1.86
-          },
-          {
-            "pos": 1,
-            "ratio": 1.87
-          }
-        ],
-        "pass": false
+        "failing": [],
+        "pass": true
       },
       {
         "theme": "high-contrast",
         "id": "liquidation.intensity",
         "stops": 16,
-        "failing": [
-          {
-            "pos": 0,
-            "ratio": 1.26
-          },
-          {
-            "pos": 0.07,
-            "ratio": 1.43
-          },
-          {
-            "pos": 0.13,
-            "ratio": 1.65
-          },
-          {
-            "pos": 0.2,
-            "ratio": 1.91
-          },
-          {
-            "pos": 0.27,
-            "ratio": 2.22
-          },
-          {
-            "pos": 0.33,
-            "ratio": 2.56
-          },
-          {
-            "pos": 0.4,
-            "ratio": 2.94
-          }
-        ],
-        "pass": false
+        "failing": [],
+        "pass": true
       }
     ],
     "failingPerTheme": {
-      "dark": 47,
-      "light": 45,
-      "high-contrast": 48
+      "dark": 0,
+      "light": 0,
+      "high-contrast": 0
     }
   },
   "rows": [
@@ -680,84 +146,6 @@
       "id": "heatmap.bid",
       "key": "dark:heatmap.bid@0.00",
       "pos": 0,
-      "hex": "#11151A",
-      "ratio": 1,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "dark",
-      "density": "all",
-      "palette": "default",
-      "id": "heatmap.bid",
-      "key": "dark:heatmap.bid@0.07",
-      "pos": 0.07,
-      "hex": "#10221C",
-      "ratio": 1.11,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "dark",
-      "density": "all",
-      "palette": "default",
-      "id": "heatmap.bid",
-      "key": "dark:heatmap.bid@0.13",
-      "pos": 0.13,
-      "hex": "#0F301D",
-      "ratio": 1.27,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "dark",
-      "density": "all",
-      "palette": "default",
-      "id": "heatmap.bid",
-      "key": "dark:heatmap.bid@0.20",
-      "pos": 0.2,
-      "hex": "#0E3D1F",
-      "ratio": 1.49,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "dark",
-      "density": "all",
-      "palette": "default",
-      "id": "heatmap.bid",
-      "key": "dark:heatmap.bid@0.27",
-      "pos": 0.27,
-      "hex": "#125028",
-      "ratio": 1.92,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "dark",
-      "density": "all",
-      "palette": "default",
-      "id": "heatmap.bid",
-      "key": "dark:heatmap.bid@0.33",
-      "pos": 0.33,
-      "hex": "#176230",
-      "ratio": 2.47,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "dark",
-      "density": "all",
-      "palette": "default",
-      "id": "heatmap.bid",
-      "key": "dark:heatmap.bid@0.40",
-      "pos": 0.4,
       "hex": "#1B7539",
       "ratio": 3.19,
       "threshold": 3,
@@ -769,10 +157,10 @@
       "density": "all",
       "palette": "default",
       "id": "heatmap.bid",
-      "key": "dark:heatmap.bid@0.47",
-      "pos": 0.47,
-      "hex": "#1E813F",
-      "ratio": 3.72,
+      "key": "dark:heatmap.bid@0.07",
+      "pos": 0.07,
+      "hex": "#1D7F3E",
+      "ratio": 3.63,
       "threshold": 3,
       "pass": true
     },
@@ -782,10 +170,10 @@
       "density": "all",
       "palette": "default",
       "id": "heatmap.bid",
-      "key": "dark:heatmap.bid@0.53",
-      "pos": 0.53,
-      "hex": "#208D44",
-      "ratio": 4.32,
+      "key": "dark:heatmap.bid@0.13",
+      "pos": 0.13,
+      "hex": "#1F8842",
+      "ratio": 4.07,
       "threshold": 3,
       "pass": true
     },
@@ -795,10 +183,10 @@
       "density": "all",
       "palette": "default",
       "id": "heatmap.bid",
-      "key": "dark:heatmap.bid@0.60",
-      "pos": 0.6,
-      "hex": "#23994A",
-      "ratio": 5,
+      "key": "dark:heatmap.bid@0.20",
+      "pos": 0.2,
+      "hex": "#219247",
+      "ratio": 4.6,
       "threshold": 3,
       "pass": true
     },
@@ -808,8 +196,21 @@
       "density": "all",
       "palette": "default",
       "id": "heatmap.bid",
-      "key": "dark:heatmap.bid@0.67",
-      "pos": 0.67,
+      "key": "dark:heatmap.bid@0.27",
+      "pos": 0.27,
+      "hex": "#249B4B",
+      "ratio": 5.12,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "heatmap.bid",
+      "key": "dark:heatmap.bid@0.33",
+      "pos": 0.33,
       "hex": "#27A54F",
       "ratio": 5.74,
       "threshold": 3,
@@ -821,10 +222,75 @@
       "density": "all",
       "palette": "default",
       "id": "heatmap.bid",
+      "key": "dark:heatmap.bid@0.40",
+      "pos": 0.4,
+      "hex": "#2AAF53",
+      "ratio": 6.42,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "heatmap.bid",
+      "key": "dark:heatmap.bid@0.47",
+      "pos": 0.47,
+      "hex": "#2DB857",
+      "ratio": 7.07,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "heatmap.bid",
+      "key": "dark:heatmap.bid@0.53",
+      "pos": 0.53,
+      "hex": "#32BE5C",
+      "ratio": 7.55,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "heatmap.bid",
+      "key": "dark:heatmap.bid@0.60",
+      "pos": 0.6,
+      "hex": "#3BC162",
+      "ratio": 7.84,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "heatmap.bid",
+      "key": "dark:heatmap.bid@0.67",
+      "pos": 0.67,
+      "hex": "#44C468",
+      "ratio": 8.15,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "heatmap.bid",
       "key": "dark:heatmap.bid@0.73",
       "pos": 0.73,
-      "hex": "#2AB154",
-      "ratio": 6.56,
+      "hex": "#4DC76E",
+      "ratio": 8.47,
       "threshold": 3,
       "pass": true
     },
@@ -836,8 +302,8 @@
       "id": "heatmap.bid",
       "key": "dark:heatmap.bid@0.80",
       "pos": 0.8,
-      "hex": "#2EBD59",
-      "ratio": 7.45,
+      "hex": "#55CA74",
+      "ratio": 8.8,
       "threshold": 3,
       "pass": true
     },
@@ -849,8 +315,8 @@
       "id": "heatmap.bid",
       "key": "dark:heatmap.bid@0.87",
       "pos": 0.87,
-      "hex": "#42C569",
-      "ratio": 8.22,
+      "hex": "#5CCE7C",
+      "ratio": 9.23,
       "threshold": 3,
       "pass": true
     },
@@ -862,8 +328,8 @@
       "id": "heatmap.bid",
       "key": "dark:heatmap.bid@0.93",
       "pos": 0.93,
-      "hex": "#57CC7A",
-      "ratio": 9.01,
+      "hex": "#64D183",
+      "ratio": 9.59,
       "threshold": 3,
       "pass": true
     },
@@ -888,10 +354,10 @@
       "id": "heatmap.ask",
       "key": "dark:heatmap.ask@0.00",
       "pos": 0,
-      "hex": "#11151A",
-      "ratio": 1,
+      "hex": "#B83539",
+      "ratio": 3.15,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -901,10 +367,10 @@
       "id": "heatmap.ask",
       "key": "dark:heatmap.ask@0.07",
       "pos": 0.07,
-      "hex": "#251519",
-      "ratio": 1.05,
+      "hex": "#C13A3E",
+      "ratio": 3.44,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -914,10 +380,10 @@
       "id": "heatmap.ask",
       "key": "dark:heatmap.ask@0.13",
       "pos": 0.13,
-      "hex": "#3A1519",
-      "ratio": 1.14,
+      "hex": "#C93F43",
+      "ratio": 3.73,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -927,10 +393,10 @@
       "id": "heatmap.ask",
       "key": "dark:heatmap.ask@0.20",
       "pos": 0.2,
-      "hex": "#4E1518",
-      "ratio": 1.26,
+      "hex": "#D24347",
+      "ratio": 4.04,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -940,10 +406,10 @@
       "id": "heatmap.ask",
       "key": "dark:heatmap.ask@0.27",
       "pos": 0.27,
-      "hex": "#691D20",
-      "ratio": 1.57,
+      "hex": "#D9494D",
+      "ratio": 4.37,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -953,10 +419,10 @@
       "id": "heatmap.ask",
       "key": "dark:heatmap.ask@0.33",
       "pos": 0.33,
-      "hex": "#852428",
-      "ratio": 1.99,
+      "hex": "#DE5053",
+      "ratio": 4.69,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -966,10 +432,10 @@
       "id": "heatmap.ask",
       "key": "dark:heatmap.ask@0.40",
       "pos": 0.4,
-      "hex": "#A02C30",
-      "ratio": 2.53,
+      "hex": "#E35859",
+      "ratio": 5.07,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -979,10 +445,10 @@
       "id": "heatmap.ask",
       "key": "dark:heatmap.ask@0.47",
       "pos": 0.47,
-      "hex": "#AE3135",
-      "ratio": 2.87,
+      "hex": "#E85F60",
+      "ratio": 5.44,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -992,8 +458,8 @@
       "id": "heatmap.ask",
       "key": "dark:heatmap.ask@0.53",
       "pos": 0.53,
-      "hex": "#BB353A",
-      "ratio": 3.21,
+      "hex": "#EB6868",
+      "ratio": 5.86,
       "threshold": 3,
       "pass": true
     },
@@ -1005,8 +471,8 @@
       "id": "heatmap.ask",
       "key": "dark:heatmap.ask@0.60",
       "pos": 0.6,
-      "hex": "#C93A3F",
-      "ratio": 3.63,
+      "hex": "#EC7373",
+      "ratio": 6.34,
       "threshold": 3,
       "pass": true
     },
@@ -1018,8 +484,8 @@
       "id": "heatmap.ask",
       "key": "dark:heatmap.ask@0.67",
       "pos": 0.67,
-      "hex": "#D23F44",
-      "ratio": 3.96,
+      "hex": "#EE7D7D",
+      "ratio": 6.86,
       "threshold": 3,
       "pass": true
     },
@@ -1031,8 +497,8 @@
       "id": "heatmap.ask",
       "key": "dark:heatmap.ask@0.73",
       "pos": 0.73,
-      "hex": "#DC4348",
-      "ratio": 4.31,
+      "hex": "#F08787",
+      "ratio": 7.43,
       "threshold": 3,
       "pass": true
     },
@@ -1044,8 +510,8 @@
       "id": "heatmap.ask",
       "key": "dark:heatmap.ask@0.80",
       "pos": 0.8,
-      "hex": "#E5484D",
-      "ratio": 4.68,
+      "hex": "#F19292",
+      "ratio": 8.09,
       "threshold": 3,
       "pass": true
     },
@@ -1057,8 +523,8 @@
       "id": "heatmap.ask",
       "key": "dark:heatmap.ask@0.87",
       "pos": 0.87,
-      "hex": "#E95E61",
-      "ratio": 5.44,
+      "hex": "#F29C9C",
+      "ratio": 8.74,
       "threshold": 3,
       "pass": true
     },
@@ -1070,8 +536,8 @@
       "id": "heatmap.ask",
       "key": "dark:heatmap.ask@0.93",
       "pos": 0.93,
-      "hex": "#EC7476",
-      "ratio": 6.39,
+      "hex": "#F4A6A6",
+      "ratio": 9.47,
       "threshold": 3,
       "pass": true
     },
@@ -1083,8 +549,8 @@
       "id": "heatmap.ask",
       "key": "dark:heatmap.ask@1.00",
       "pos": 1,
-      "hex": "#F08A8A",
-      "ratio": 7.6,
+      "hex": "#F5B0B0",
+      "ratio": 10.23,
       "threshold": 3,
       "pass": true
     },
@@ -1093,11 +559,11 @@
       "theme": "dark",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "dark:delta.divergence@0.00",
+      "id": "delta.positive",
+      "key": "dark:delta.positive@0.00",
       "pos": 0,
-      "hex": "#E5484D",
-      "ratio": 4.68,
+      "hex": "#1B7539",
+      "ratio": 3.19,
       "threshold": 3,
       "pass": true
     },
@@ -1106,11 +572,11 @@
       "theme": "dark",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "dark:delta.divergence@0.07",
+      "id": "delta.positive",
+      "key": "dark:delta.positive@0.07",
       "pos": 0.07,
-      "hex": "#C94146",
-      "ratio": 3.78,
+      "hex": "#1C7A3B",
+      "ratio": 3.4,
       "threshold": 3,
       "pass": true
     },
@@ -1119,141 +585,141 @@
       "theme": "dark",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "dark:delta.divergence@0.13",
+      "id": "delta.positive",
+      "key": "dark:delta.positive@0.13",
       "pos": 0.13,
-      "hex": "#AC3A3F",
-      "ratio": 2.99,
+      "hex": "#1E7F3D",
+      "ratio": 3.63,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
       "theme": "dark",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "dark:delta.divergence@0.20",
+      "id": "delta.positive",
+      "key": "dark:delta.positive@0.20",
       "pos": 0.2,
-      "hex": "#903439",
-      "ratio": 2.39,
+      "hex": "#1F833F",
+      "ratio": 3.82,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
       "theme": "dark",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "dark:delta.divergence@0.27",
+      "id": "delta.positive",
+      "key": "dark:delta.positive@0.27",
       "pos": 0.27,
-      "hex": "#742D32",
-      "ratio": 1.89,
+      "hex": "#208842",
+      "ratio": 4.07,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
       "theme": "dark",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "dark:delta.divergence@0.33",
+      "id": "delta.positive",
+      "key": "dark:delta.positive@0.33",
       "pos": 0.33,
-      "hex": "#58262B",
-      "ratio": 1.51,
+      "hex": "#218D44",
+      "ratio": 4.33,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
       "theme": "dark",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "dark:delta.divergence@0.40",
+      "id": "delta.positive",
+      "key": "dark:delta.positive@0.40",
       "pos": 0.4,
-      "hex": "#3B1F24",
-      "ratio": 1.23,
+      "hex": "#239246",
+      "ratio": 4.6,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
       "theme": "dark",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "dark:delta.divergence@0.47",
+      "id": "delta.positive",
+      "key": "dark:delta.positive@0.47",
       "pos": 0.47,
-      "hex": "#1F181D",
-      "ratio": 1.05,
+      "hex": "#249748",
+      "ratio": 4.88,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
       "theme": "dark",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "dark:delta.divergence@0.53",
+      "id": "delta.positive",
+      "key": "dark:delta.positive@0.53",
       "pos": 0.53,
-      "hex": "#13201E",
-      "ratio": 1.09,
+      "hex": "#259B4A",
+      "ratio": 5.12,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
       "theme": "dark",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "dark:delta.divergence@0.60",
+      "id": "delta.positive",
+      "key": "dark:delta.positive@0.60",
       "pos": 0.6,
-      "hex": "#173727",
-      "ratio": 1.41,
+      "hex": "#26A04C",
+      "ratio": 5.42,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
       "theme": "dark",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "dark:delta.divergence@0.67",
+      "id": "delta.positive",
+      "key": "dark:delta.positive@0.67",
       "pos": 0.67,
-      "hex": "#1B4D2F",
-      "ratio": 1.88,
+      "hex": "#28A54E",
+      "ratio": 5.74,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
       "theme": "dark",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "dark:delta.divergence@0.73",
+      "id": "delta.positive",
+      "key": "dark:delta.positive@0.73",
       "pos": 0.73,
-      "hex": "#1F6337",
-      "ratio": 2.53,
+      "hex": "#29AA50",
+      "ratio": 6.07,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
       "theme": "dark",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "dark:delta.divergence@0.80",
+      "id": "delta.positive",
+      "key": "dark:delta.positive@0.80",
       "pos": 0.8,
-      "hex": "#227A40",
-      "ratio": 3.43,
+      "hex": "#2AAF53",
+      "ratio": 6.42,
       "threshold": 3,
       "pass": true
     },
@@ -1262,11 +728,11 @@
       "theme": "dark",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "dark:delta.divergence@0.87",
+      "id": "delta.positive",
+      "key": "dark:delta.positive@0.87",
       "pos": 0.87,
-      "hex": "#269048",
-      "ratio": 4.51,
+      "hex": "#2BB355",
+      "ratio": 6.7,
       "threshold": 3,
       "pass": true
     },
@@ -1275,11 +741,11 @@
       "theme": "dark",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "dark:delta.divergence@0.93",
+      "id": "delta.positive",
+      "key": "dark:delta.positive@0.93",
       "pos": 0.93,
-      "hex": "#2AA751",
-      "ratio": 5.89,
+      "hex": "#2DB857",
+      "ratio": 7.07,
       "threshold": 3,
       "pass": true
     },
@@ -1288,8 +754,8 @@
       "theme": "dark",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "dark:delta.divergence@1.00",
+      "id": "delta.positive",
+      "key": "dark:delta.positive@1.00",
       "pos": 1,
       "hex": "#2EBD59",
       "ratio": 7.45,
@@ -1301,13 +767,221 @@
       "theme": "dark",
       "density": "all",
       "palette": "default",
+      "id": "delta.negative",
+      "key": "dark:delta.negative@0.00",
+      "pos": 0,
+      "hex": "#B83539",
+      "ratio": 3.15,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "dark:delta.negative@0.07",
+      "pos": 0.07,
+      "hex": "#BB363A",
+      "ratio": 3.23,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "dark:delta.negative@0.13",
+      "pos": 0.13,
+      "hex": "#BE383C",
+      "ratio": 3.33,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "dark:delta.negative@0.20",
+      "pos": 0.2,
+      "hex": "#C1393D",
+      "ratio": 3.42,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "dark:delta.negative@0.27",
+      "pos": 0.27,
+      "hex": "#C43A3E",
+      "ratio": 3.51,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "dark:delta.negative@0.33",
+      "pos": 0.33,
+      "hex": "#C73B40",
+      "ratio": 3.6,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "dark:delta.negative@0.40",
+      "pos": 0.4,
+      "hex": "#CA3D41",
+      "ratio": 3.71,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "dark:delta.negative@0.47",
+      "pos": 0.47,
+      "hex": "#CD3E42",
+      "ratio": 3.81,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "dark:delta.negative@0.53",
+      "pos": 0.53,
+      "hex": "#D03F44",
+      "ratio": 3.91,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "dark:delta.negative@0.60",
+      "pos": 0.6,
+      "hex": "#D34045",
+      "ratio": 4,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "dark:delta.negative@0.67",
+      "pos": 0.67,
+      "hex": "#D64246",
+      "ratio": 4.12,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "dark:delta.negative@0.73",
+      "pos": 0.73,
+      "hex": "#D94348",
+      "ratio": 4.23,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "dark:delta.negative@0.80",
+      "pos": 0.8,
+      "hex": "#DC4449",
+      "ratio": 4.33,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "dark:delta.negative@0.87",
+      "pos": 0.87,
+      "hex": "#DF454A",
+      "ratio": 4.44,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "dark:delta.negative@0.93",
+      "pos": 0.93,
+      "hex": "#E2474C",
+      "ratio": 4.57,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "dark:delta.negative@1.00",
+      "pos": 1,
+      "hex": "#E5484D",
+      "ratio": 4.68,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
       "id": "profile.histogram",
       "key": "dark:profile.histogram@0.00",
       "pos": 0,
-      "hex": "#3D4650",
-      "ratio": 1.91,
+      "hex": "#586470",
+      "ratio": 3.03,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -1317,10 +991,10 @@
       "id": "profile.histogram",
       "key": "dark:profile.histogram@0.07",
       "pos": 0.07,
-      "hex": "#3A4654",
-      "ratio": 1.91,
+      "hex": "#576678",
+      "ratio": 3.12,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -1330,10 +1004,10 @@
       "id": "profile.histogram",
       "key": "dark:profile.histogram@0.13",
       "pos": 0.13,
-      "hex": "#384558",
-      "ratio": 1.89,
+      "hex": "#566981",
+      "ratio": 3.26,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -1343,10 +1017,10 @@
       "id": "profile.histogram",
       "key": "dark:profile.histogram@0.20",
       "pos": 0.2,
-      "hex": "#35455D",
-      "ratio": 1.89,
+      "hex": "#556B89",
+      "ratio": 3.36,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -1356,10 +1030,10 @@
       "id": "profile.histogram",
       "key": "dark:profile.histogram@0.27",
       "pos": 0.27,
-      "hex": "#334461",
-      "ratio": 1.87,
+      "hex": "#546D92",
+      "ratio": 3.47,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -1369,10 +1043,10 @@
       "id": "profile.histogram",
       "key": "dark:profile.histogram@0.33",
       "pos": 0.33,
-      "hex": "#304465",
-      "ratio": 1.87,
+      "hex": "#536F9A",
+      "ratio": 3.58,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -1382,10 +1056,10 @@
       "id": "profile.histogram",
       "key": "dark:profile.histogram@0.40",
       "pos": 0.4,
-      "hex": "#2E4369",
-      "ratio": 1.85,
+      "hex": "#5272A2",
+      "ratio": 3.74,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -1395,10 +1069,10 @@
       "id": "profile.histogram",
       "key": "dark:profile.histogram@0.47",
       "pos": 0.47,
-      "hex": "#2B436D",
-      "ratio": 1.86,
+      "hex": "#5174AB",
+      "ratio": 3.87,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -1408,10 +1082,10 @@
       "id": "profile.histogram",
       "key": "dark:profile.histogram@0.53",
       "pos": 0.53,
-      "hex": "#294272",
-      "ratio": 1.85,
+      "hex": "#5176B3",
+      "ratio": 4.01,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -1421,10 +1095,10 @@
       "id": "profile.histogram",
       "key": "dark:profile.histogram@0.60",
       "pos": 0.6,
-      "hex": "#264276",
-      "ratio": 1.85,
+      "hex": "#5078BC",
+      "ratio": 4.15,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -1434,10 +1108,10 @@
       "id": "profile.histogram",
       "key": "dark:profile.histogram@0.67",
       "pos": 0.67,
-      "hex": "#24417A",
-      "ratio": 1.84,
+      "hex": "#4F7BC4",
+      "ratio": 4.33,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -1447,10 +1121,10 @@
       "id": "profile.histogram",
       "key": "dark:profile.histogram@0.73",
       "pos": 0.73,
-      "hex": "#21417E",
-      "ratio": 1.85,
+      "hex": "#4E7DCC",
+      "ratio": 4.48,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -1460,10 +1134,10 @@
       "id": "profile.histogram",
       "key": "dark:profile.histogram@0.80",
       "pos": 0.8,
-      "hex": "#1F4082",
-      "ratio": 1.84,
+      "hex": "#4D7FD5",
+      "ratio": 4.64,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -1473,10 +1147,10 @@
       "id": "profile.histogram",
       "key": "dark:profile.histogram@0.87",
       "pos": 0.87,
-      "hex": "#1C4087",
-      "ratio": 1.86,
+      "hex": "#4C81DD",
+      "ratio": 4.79,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -1486,10 +1160,10 @@
       "id": "profile.histogram",
       "key": "dark:profile.histogram@0.93",
       "pos": 0.93,
-      "hex": "#1A3F8B",
-      "ratio": 1.86,
+      "hex": "#4B84E6",
+      "ratio": 5.01,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -1499,112 +1173,8 @@
       "id": "profile.histogram",
       "key": "dark:profile.histogram@1.00",
       "pos": 1,
-      "hex": "#173F8F",
-      "ratio": 1.87,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "dark",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "dark:liquidation.intensity@0.00",
-      "pos": 0,
-      "hex": "#4E1518",
-      "ratio": 1.26,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "dark",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "dark:liquidation.intensity@0.07",
-      "pos": 0.07,
-      "hex": "#5E1A1D",
-      "ratio": 1.43,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "dark",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "dark:liquidation.intensity@0.13",
-      "pos": 0.13,
-      "hex": "#6F1F22",
-      "ratio": 1.65,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "dark",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "dark:liquidation.intensity@0.20",
-      "pos": 0.2,
-      "hex": "#7F2428",
-      "ratio": 1.91,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "dark",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "dark:liquidation.intensity@0.27",
-      "pos": 0.27,
-      "hex": "#90292D",
-      "ratio": 2.22,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "dark",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "dark:liquidation.intensity@0.33",
-      "pos": 0.33,
-      "hex": "#A02E32",
-      "ratio": 2.56,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "dark",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "dark:liquidation.intensity@0.40",
-      "pos": 0.4,
-      "hex": "#B03337",
-      "ratio": 2.94,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "dark",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "dark:liquidation.intensity@0.47",
-      "pos": 0.47,
-      "hex": "#C1383C",
-      "ratio": 3.4,
+      "hex": "#4A86EE",
+      "ratio": 5.18,
       "threshold": 3,
       "pass": true
     },
@@ -1614,8 +1184,21 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "dark:liquidation.intensity@0.53",
-      "pos": 0.53,
+      "key": "dark:liquidation.intensity@0.00",
+      "pos": 0,
+      "hex": "#C93A3F",
+      "ratio": 3.63,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "dark:liquidation.intensity@0.07",
+      "pos": 0.07,
       "hex": "#CC423F",
       "ratio": 3.86,
       "threshold": 3,
@@ -1627,8 +1210,21 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "dark:liquidation.intensity@0.60",
-      "pos": 0.6,
+      "key": "dark:liquidation.intensity@0.13",
+      "pos": 0.13,
+      "hex": "#CE4A3F",
+      "ratio": 4.08,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "dark:liquidation.intensity@0.20",
+      "pos": 0.2,
       "hex": "#D1523F",
       "ratio": 4.35,
       "threshold": 3,
@@ -1640,8 +1236,21 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "dark:liquidation.intensity@0.67",
-      "pos": 0.67,
+      "key": "dark:liquidation.intensity@0.27",
+      "pos": 0.27,
+      "hex": "#D35B40",
+      "ratio": 4.66,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "dark:liquidation.intensity@0.33",
+      "pos": 0.33,
       "hex": "#D66340",
       "ratio": 4.99,
       "threshold": 3,
@@ -1653,8 +1262,21 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "dark:liquidation.intensity@0.73",
-      "pos": 0.73,
+      "key": "dark:liquidation.intensity@0.40",
+      "pos": 0.4,
+      "hex": "#D96B40",
+      "ratio": 5.35,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "dark:liquidation.intensity@0.47",
+      "pos": 0.47,
       "hex": "#DB7340",
       "ratio": 5.71,
       "threshold": 3,
@@ -1666,8 +1288,21 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "dark:liquidation.intensity@0.80",
-      "pos": 0.8,
+      "key": "dark:liquidation.intensity@0.53",
+      "pos": 0.53,
+      "hex": "#DE7B40",
+      "ratio": 6.12,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "dark:liquidation.intensity@0.60",
+      "pos": 0.6,
       "hex": "#E08340",
       "ratio": 6.54,
       "threshold": 3,
@@ -1679,8 +1314,21 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "dark:liquidation.intensity@0.87",
-      "pos": 0.87,
+      "key": "dark:liquidation.intensity@0.67",
+      "pos": 0.67,
+      "hex": "#E38B40",
+      "ratio": 7.01,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "dark:liquidation.intensity@0.73",
+      "pos": 0.73,
       "hex": "#E69340",
       "ratio": 7.51,
       "threshold": 3,
@@ -1692,10 +1340,36 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "dark:liquidation.intensity@0.93",
-      "pos": 0.93,
+      "key": "dark:liquidation.intensity@0.80",
+      "pos": 0.8,
+      "hex": "#E89C41",
+      "ratio": 8.08,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "dark:liquidation.intensity@0.87",
+      "pos": 0.87,
       "hex": "#EBA441",
       "ratio": 8.66,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "dark",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "dark:liquidation.intensity@0.93",
+      "pos": 0.93,
+      "hex": "#EDAC41",
+      "ratio": 9.23,
       "threshold": 3,
       "pass": true
     },
@@ -2122,8 +1796,8 @@
       "key": "dark:default:color.heatmap.bid.5 vs color.heatmap.ask.5:deuteranopia",
       "deficiency": "deuteranopia",
       "simulatedA": "#BDBD8D",
-      "simulatedB": "#B0B087",
-      "deltaE": 5.76,
+      "simulatedB": "#C8C8AE",
+      "deltaE": 12.61,
       "threshold": 5,
       "pass": true
     },
@@ -2137,8 +1811,8 @@
       "key": "dark:default:color.heatmap.bid.5 vs color.heatmap.ask.5:protanopia",
       "deficiency": "protanopia",
       "simulatedA": "#CCCC89",
-      "simulatedB": "#9A9A8B",
-      "deltaE": 31.85,
+      "simulatedB": "#B9B9B0",
+      "deltaE": 30.7,
       "threshold": 5,
       "pass": true
     },
@@ -2152,8 +1826,8 @@
       "key": "dark:default:color.heatmap.bid.5 vs color.heatmap.ask.5:tritanopia",
       "deficiency": "tritanopia",
       "simulatedA": "#ABABFF",
-      "simulatedB": "#C5C500",
-      "deltaE": 124.95,
+      "simulatedB": "#D6D600",
+      "deltaE": 130.37,
       "threshold": 5,
       "pass": true
     },
@@ -2248,6 +1922,321 @@
       "pass": true
     },
     {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.buy.default vs color.sell.default",
+      "key": "dark:cvd-safe:color.buy.default vs color.sell.default:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#9696DA",
+      "simulatedB": "#AEAE47",
+      "deltaE": 91.03,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.buy.default vs color.sell.default",
+      "key": "dark:cvd-safe:color.buy.default vs color.sell.default:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#A1A1D9",
+      "simulatedB": "#9F9F4D",
+      "deltaE": 74.7,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.buy.default vs color.sell.default",
+      "key": "dark:cvd-safe:color.buy.default vs color.sell.default:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#8888FF",
+      "simulatedB": "#BDBD00",
+      "deltaE": 143.49,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.buy.hc vs color.sell.hc",
+      "key": "dark:cvd-safe:color.buy.hc vs color.sell.hc:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#9696DA",
+      "simulatedB": "#AEAE47",
+      "deltaE": 91.03,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.buy.hc vs color.sell.hc",
+      "key": "dark:cvd-safe:color.buy.hc vs color.sell.hc:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#A1A1D9",
+      "simulatedB": "#9F9F4D",
+      "deltaE": 74.7,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.buy.hc vs color.sell.hc",
+      "key": "dark:cvd-safe:color.buy.hc vs color.sell.hc:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#8888FF",
+      "simulatedB": "#BDBD00",
+      "deltaE": 143.49,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.candle.up vs color.candle.down",
+      "key": "dark:cvd-safe:color.candle.up vs color.candle.down:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#9696DA",
+      "simulatedB": "#AEAE47",
+      "deltaE": 91.03,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.candle.up vs color.candle.down",
+      "key": "dark:cvd-safe:color.candle.up vs color.candle.down:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#A1A1D9",
+      "simulatedB": "#9F9F4D",
+      "deltaE": 74.7,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.candle.up vs color.candle.down",
+      "key": "dark:cvd-safe:color.candle.up vs color.candle.down:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#8888FF",
+      "simulatedB": "#BDBD00",
+      "deltaE": 143.49,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "bid-ask",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.bid vs color.footprint.ask",
+      "key": "dark:cvd-safe:color.footprint.bid vs color.footprint.ask:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#9696DA",
+      "simulatedB": "#AEAE47",
+      "deltaE": 91.03,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "bid-ask",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.bid vs color.footprint.ask",
+      "key": "dark:cvd-safe:color.footprint.bid vs color.footprint.ask:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#A1A1D9",
+      "simulatedB": "#9F9F4D",
+      "deltaE": 74.7,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "bid-ask",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.bid vs color.footprint.ask",
+      "key": "dark:cvd-safe:color.footprint.bid vs color.footprint.ask:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#8888FF",
+      "simulatedB": "#BDBD00",
+      "deltaE": 143.49,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "bid-ask",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.heatmap.bid.5 vs color.heatmap.ask.5",
+      "key": "dark:cvd-safe:color.heatmap.bid.5 vs color.heatmap.ask.5:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#CBCBF6",
+      "simulatedB": "#DBDB8D",
+      "deltaE": 62.87,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "bid-ask",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.heatmap.bid.5 vs color.heatmap.ask.5",
+      "key": "dark:cvd-safe:color.heatmap.bid.5 vs color.heatmap.ask.5:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#D3D3F5",
+      "simulatedB": "#D4D48F",
+      "deltaE": 53.67,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "bid-ask",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.heatmap.bid.5 vs color.heatmap.ask.5",
+      "key": "dark:cvd-safe:color.heatmap.bid.5 vs color.heatmap.ask.5:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#C1C1FF",
+      "simulatedB": "#E3E300",
+      "deltaE": 121.69,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "imbalance",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.imbalance vs color.footprint.bid",
+      "key": "dark:cvd-safe:color.footprint.imbalance vs color.footprint.bid:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#F7F7FA",
+      "simulatedB": "#9696DA",
+      "deltaE": 49.01,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "imbalance",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.imbalance vs color.footprint.bid",
+      "key": "dark:cvd-safe:color.footprint.imbalance vs color.footprint.bid:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#F8F8FA",
+      "simulatedB": "#A1A1D9",
+      "deltaE": 42.01,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "imbalance",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.imbalance vs color.footprint.bid",
+      "key": "dark:cvd-safe:color.footprint.imbalance vs color.footprint.bid:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#F7F7FF",
+      "simulatedB": "#8888FF",
+      "deltaE": 72.05,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "imbalance",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.imbalance vs color.footprint.ask",
+      "key": "dark:cvd-safe:color.footprint.imbalance vs color.footprint.ask:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#F7F7FA",
+      "simulatedB": "#AEAE47",
+      "deltaE": 61.58,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "imbalance",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.imbalance vs color.footprint.ask",
+      "key": "dark:cvd-safe:color.footprint.imbalance vs color.footprint.ask:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#F8F8FA",
+      "simulatedB": "#9F9F4D",
+      "deltaE": 56.14,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "imbalance",
+      "theme": "dark",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.imbalance vs color.footprint.ask",
+      "key": "dark:cvd-safe:color.footprint.imbalance vs color.footprint.ask:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#F7F7FF",
+      "simulatedB": "#BDBD00",
+      "deltaE": 84.65,
+      "threshold": 5,
+      "pass": true
+    },
+    {
       "kind": "gradient",
       "theme": "light",
       "density": "all",
@@ -2255,10 +2244,10 @@
       "id": "heatmap.bid",
       "key": "light:heatmap.bid@0.00",
       "pos": 0,
-      "hex": "#F6F7F9",
-      "ratio": 1,
+      "hex": "#2E9A55",
+      "ratio": 3.34,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2268,10 +2257,10 @@
       "id": "heatmap.bid",
       "key": "light:heatmap.bid@0.07",
       "pos": 0.07,
-      "hex": "#EDF6F2",
-      "ratio": 1.03,
+      "hex": "#29914E",
+      "ratio": 3.73,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2281,10 +2270,10 @@
       "id": "heatmap.bid",
       "key": "light:heatmap.bid@0.13",
       "pos": 0.13,
-      "hex": "#E5F4EB",
-      "ratio": 1.06,
+      "hex": "#248948",
+      "ratio": 4.13,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2294,10 +2283,10 @@
       "id": "heatmap.bid",
       "key": "light:heatmap.bid@0.20",
       "pos": 0.2,
-      "hex": "#DCF3E4",
-      "ratio": 1.09,
+      "hex": "#208041",
+      "ratio": 4.64,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2307,10 +2296,10 @@
       "id": "heatmap.bid",
       "key": "light:heatmap.bid@0.27",
       "pos": 0.27,
-      "hex": "#97B6A2",
-      "ratio": 2.06,
+      "hex": "#1B793B",
+      "ratio": 5.1,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2320,8 +2309,8 @@
       "id": "heatmap.bid",
       "key": "light:heatmap.bid@0.33",
       "pos": 0.33,
-      "hex": "#537A61",
-      "ratio": 4.53,
+      "hex": "#197538",
+      "ratio": 5.38,
       "threshold": 3,
       "pass": true
     },
@@ -2333,8 +2322,8 @@
       "id": "heatmap.bid",
       "key": "light:heatmap.bid@0.40",
       "pos": 0.4,
-      "hex": "#0E3D1F",
-      "ratio": 11.48,
+      "hex": "#177135",
+      "ratio": 5.68,
       "threshold": 3,
       "pass": true
     },
@@ -2346,8 +2335,8 @@
       "id": "heatmap.bid",
       "key": "light:heatmap.bid@0.47",
       "pos": 0.47,
-      "hex": "#125028",
-      "ratio": 8.89,
+      "hex": "#146D32",
+      "ratio": 6,
       "threshold": 3,
       "pass": true
     },
@@ -2359,8 +2348,8 @@
       "id": "heatmap.bid",
       "key": "light:heatmap.bid@0.53",
       "pos": 0.53,
-      "hex": "#176230",
-      "ratio": 6.93,
+      "hex": "#12672E",
+      "ratio": 6.52,
       "threshold": 3,
       "pass": true
     },
@@ -2372,8 +2361,8 @@
       "id": "heatmap.bid",
       "key": "light:heatmap.bid@0.60",
       "pos": 0.6,
-      "hex": "#1B7539",
-      "ratio": 5.37,
+      "hex": "#0F5E2A",
+      "ratio": 7.38,
       "threshold": 3,
       "pass": true
     },
@@ -2385,8 +2374,8 @@
       "id": "heatmap.bid",
       "key": "light:heatmap.bid@0.67",
       "pos": 0.67,
-      "hex": "#1B773A",
-      "ratio": 5.23,
+      "hex": "#0D5525",
+      "ratio": 8.36,
       "threshold": 3,
       "pass": true
     },
@@ -2398,8 +2387,8 @@
       "id": "heatmap.bid",
       "key": "light:heatmap.bid@0.73",
       "pos": 0.73,
-      "hex": "#1C783B",
-      "ratio": 5.16,
+      "hex": "#0B4C21",
+      "ratio": 9.46,
       "threshold": 3,
       "pass": true
     },
@@ -2411,8 +2400,8 @@
       "id": "heatmap.bid",
       "key": "light:heatmap.bid@0.80",
       "pos": 0.8,
-      "hex": "#1C7A3C",
-      "ratio": 5.03,
+      "hex": "#0A451E",
+      "ratio": 10.4,
       "threshold": 3,
       "pass": true
     },
@@ -2424,8 +2413,8 @@
       "id": "heatmap.bid",
       "key": "light:heatmap.bid@0.87",
       "pos": 0.87,
-      "hex": "#1D8340",
-      "ratio": 4.48,
+      "hex": "#0A3E1C",
+      "ratio": 11.4,
       "threshold": 3,
       "pass": true
     },
@@ -2437,8 +2426,8 @@
       "id": "heatmap.bid",
       "key": "light:heatmap.bid@0.93",
       "pos": 0.93,
-      "hex": "#1D8B44",
-      "ratio": 4.06,
+      "hex": "#0A371A",
+      "ratio": 12.44,
       "threshold": 3,
       "pass": true
     },
@@ -2450,8 +2439,8 @@
       "id": "heatmap.bid",
       "key": "light:heatmap.bid@1.00",
       "pos": 1,
-      "hex": "#1E9448",
-      "ratio": 3.64,
+      "hex": "#0A3018",
+      "ratio": 13.52,
       "threshold": 3,
       "pass": true
     },
@@ -2463,10 +2452,10 @@
       "id": "heatmap.ask",
       "key": "light:heatmap.ask@0.00",
       "pos": 0,
-      "hex": "#F6F7F9",
-      "ratio": 1,
+      "hex": "#D14A4E",
+      "ratio": 4.08,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2476,10 +2465,10 @@
       "id": "heatmap.ask",
       "key": "light:heatmap.ask@0.07",
       "pos": 0.07,
-      "hex": "#F8F0F2",
-      "ratio": 1.05,
+      "hex": "#CA4449",
+      "ratio": 4.42,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2489,10 +2478,10 @@
       "id": "heatmap.ask",
       "key": "light:heatmap.ask@0.13",
       "pos": 0.13,
-      "hex": "#F9E9EA",
-      "ratio": 1.1,
+      "hex": "#C43F43",
+      "ratio": 4.73,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2502,10 +2491,10 @@
       "id": "heatmap.ask",
       "key": "light:heatmap.ask@0.20",
       "pos": 0.2,
-      "hex": "#FBE2E3",
-      "ratio": 1.15,
+      "hex": "#BD393E",
+      "ratio": 5.13,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2515,10 +2504,10 @@
       "id": "heatmap.ask",
       "key": "light:heatmap.ask@0.27",
       "pos": 0.27,
-      "hex": "#C19E9F",
-      "ratio": 2.26,
+      "hex": "#B63439",
+      "ratio": 5.54,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2528,8 +2517,8 @@
       "id": "heatmap.ask",
       "key": "light:heatmap.ask@0.33",
       "pos": 0.33,
-      "hex": "#88595C",
-      "ratio": 5.4,
+      "hex": "#AD3237",
+      "ratio": 5.96,
       "threshold": 3,
       "pass": true
     },
@@ -2541,8 +2530,8 @@
       "id": "heatmap.ask",
       "key": "light:heatmap.ask@0.40",
       "pos": 0.4,
-      "hex": "#4E1518",
-      "ratio": 13.56,
+      "hex": "#A43034",
+      "ratio": 6.42,
       "threshold": 3,
       "pass": true
     },
@@ -2554,8 +2543,8 @@
       "id": "heatmap.ask",
       "key": "light:heatmap.ask@0.47",
       "pos": 0.47,
-      "hex": "#691D20",
-      "ratio": 10.9,
+      "hex": "#9B2D31",
+      "ratio": 6.96,
       "threshold": 3,
       "pass": true
     },
@@ -2567,8 +2556,8 @@
       "id": "heatmap.ask",
       "key": "light:heatmap.ask@0.53",
       "pos": 0.53,
-      "hex": "#852428",
-      "ratio": 8.59,
+      "hex": "#922A2E",
+      "ratio": 7.56,
       "threshold": 3,
       "pass": true
     },
@@ -2580,8 +2569,8 @@
       "id": "heatmap.ask",
       "key": "light:heatmap.ask@0.60",
       "pos": 0.6,
-      "hex": "#A02C30",
-      "ratio": 6.76,
+      "hex": "#8B262A",
+      "ratio": 8.13,
       "threshold": 3,
       "pass": true
     },
@@ -2593,8 +2582,8 @@
       "id": "heatmap.ask",
       "key": "light:heatmap.ask@0.67",
       "pos": 0.67,
-      "hex": "#AD3034",
-      "ratio": 6.03,
+      "hex": "#832327",
+      "ratio": 8.77,
       "threshold": 3,
       "pass": true
     },
@@ -2606,8 +2595,8 @@
       "id": "heatmap.ask",
       "key": "light:heatmap.ask@0.73",
       "pos": 0.73,
-      "hex": "#BA3338",
-      "ratio": 5.41,
+      "hex": "#7C1F23",
+      "ratio": 9.43,
       "threshold": 3,
       "pass": true
     },
@@ -2619,8 +2608,8 @@
       "id": "heatmap.ask",
       "key": "light:heatmap.ask@0.80",
       "pos": 0.8,
-      "hex": "#C7373C",
-      "ratio": 4.85,
+      "hex": "#711C20",
+      "ratio": 10.37,
       "threshold": 3,
       "pass": true
     },
@@ -2632,8 +2621,8 @@
       "id": "heatmap.ask",
       "key": "light:heatmap.ask@0.87",
       "pos": 0.87,
-      "hex": "#C2363B",
-      "ratio": 5.04,
+      "hex": "#651A1D",
+      "ratio": 11.4,
       "threshold": 3,
       "pass": true
     },
@@ -2645,8 +2634,8 @@
       "id": "heatmap.ask",
       "key": "light:heatmap.ask@0.93",
       "pos": 0.93,
-      "hex": "#BD363B",
-      "ratio": 5.22,
+      "hex": "#5A171B",
+      "ratio": 12.45,
       "threshold": 3,
       "pass": true
     },
@@ -2658,8 +2647,8 @@
       "id": "heatmap.ask",
       "key": "light:heatmap.ask@1.00",
       "pos": 1,
-      "hex": "#B8353A",
-      "ratio": 5.43,
+      "hex": "#4E1518",
+      "ratio": 13.56,
       "threshold": 3,
       "pass": true
     },
@@ -2668,11 +2657,11 @@
       "theme": "light",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "light:delta.divergence@0.00",
+      "id": "delta.positive",
+      "key": "light:delta.positive@0.00",
       "pos": 0,
-      "hex": "#C7373C",
-      "ratio": 4.85,
+      "hex": "#2E9A55",
+      "ratio": 3.34,
       "threshold": 3,
       "pass": true
     },
@@ -2681,11 +2670,11 @@
       "theme": "light",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "light:delta.divergence@0.07",
+      "id": "delta.positive",
+      "key": "light:delta.positive@0.07",
       "pos": 0.07,
-      "hex": "#CD5155",
-      "ratio": 3.99,
+      "hex": "#2D9853",
+      "ratio": 3.42,
       "threshold": 3,
       "pass": true
     },
@@ -2694,11 +2683,11 @@
       "theme": "light",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "light:delta.divergence@0.13",
+      "id": "delta.positive",
+      "key": "light:delta.positive@0.13",
       "pos": 0.13,
-      "hex": "#D46A6E",
-      "ratio": 3.22,
+      "hex": "#2C9652",
+      "ratio": 3.5,
       "threshold": 3,
       "pass": true
     },
@@ -2707,141 +2696,11 @@
       "theme": "light",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "light:delta.divergence@0.20",
+      "id": "delta.positive",
+      "key": "light:delta.positive@0.20",
       "pos": 0.2,
-      "hex": "#DA8488",
-      "ratio": 2.57,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "light",
-      "density": "all",
-      "palette": "default",
-      "id": "delta.divergence",
-      "key": "light:delta.divergence@0.27",
-      "pos": 0.27,
-      "hex": "#E09DA1",
-      "ratio": 2.06,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "light",
-      "density": "all",
-      "palette": "default",
-      "id": "delta.divergence",
-      "key": "light:delta.divergence@0.33",
-      "pos": 0.33,
-      "hex": "#E6B7BA",
-      "ratio": 1.65,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "light",
-      "density": "all",
-      "palette": "default",
-      "id": "delta.divergence",
-      "key": "light:delta.divergence@0.40",
-      "pos": 0.4,
-      "hex": "#EDD1D3",
-      "ratio": 1.34,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "light",
-      "density": "all",
-      "palette": "default",
-      "id": "delta.divergence",
-      "key": "light:delta.divergence@0.47",
-      "pos": 0.47,
-      "hex": "#F3EAEC",
-      "ratio": 1.1,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "light",
-      "density": "all",
-      "palette": "default",
-      "id": "delta.divergence",
-      "key": "light:delta.divergence@0.53",
-      "pos": 0.53,
-      "hex": "#E7EFEC",
-      "ratio": 1.09,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "light",
-      "density": "all",
-      "palette": "default",
-      "id": "delta.divergence",
-      "key": "light:delta.divergence@0.60",
-      "pos": 0.6,
-      "hex": "#CADED3",
-      "ratio": 1.31,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "light",
-      "density": "all",
-      "palette": "default",
-      "id": "delta.divergence",
-      "key": "light:delta.divergence@0.67",
-      "pos": 0.67,
-      "hex": "#ADCDBA",
-      "ratio": 1.6,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "light",
-      "density": "all",
-      "palette": "default",
-      "id": "delta.divergence",
-      "key": "light:delta.divergence@0.73",
-      "pos": 0.73,
-      "hex": "#90BDA1",
-      "ratio": 1.96,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "light",
-      "density": "all",
-      "palette": "default",
-      "id": "delta.divergence",
-      "key": "light:delta.divergence@0.80",
-      "pos": 0.8,
-      "hex": "#73AC88",
-      "ratio": 2.45,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "light",
-      "density": "all",
-      "palette": "default",
-      "id": "delta.divergence",
-      "key": "light:delta.divergence@0.87",
-      "pos": 0.87,
-      "hex": "#569B6E",
-      "ratio": 3.11,
+      "hex": "#2A9450",
+      "ratio": 3.59,
       "threshold": 3,
       "pass": true
     },
@@ -2850,10 +2709,36 @@
       "theme": "light",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "light:delta.divergence@0.93",
-      "pos": 0.93,
-      "hex": "#398B55",
+      "id": "delta.positive",
+      "key": "light:delta.positive@0.27",
+      "pos": 0.27,
+      "hex": "#29914E",
+      "ratio": 3.73,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.positive",
+      "key": "light:delta.positive@0.33",
+      "pos": 0.33,
+      "hex": "#288F4D",
+      "ratio": 3.82,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.positive",
+      "key": "light:delta.positive@0.40",
+      "pos": 0.4,
+      "hex": "#278D4B",
       "ratio": 3.92,
       "threshold": 3,
       "pass": true
@@ -2863,8 +2748,112 @@
       "theme": "light",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "light:delta.divergence@1.00",
+      "id": "delta.positive",
+      "key": "light:delta.positive@0.47",
+      "pos": 0.47,
+      "hex": "#268B49",
+      "ratio": 4.02,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.positive",
+      "key": "light:delta.positive@0.53",
+      "pos": 0.53,
+      "hex": "#248948",
+      "ratio": 4.13,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.positive",
+      "key": "light:delta.positive@0.60",
+      "pos": 0.6,
+      "hex": "#238746",
+      "ratio": 4.24,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.positive",
+      "key": "light:delta.positive@0.67",
+      "pos": 0.67,
+      "hex": "#228544",
+      "ratio": 4.35,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.positive",
+      "key": "light:delta.positive@0.73",
+      "pos": 0.73,
+      "hex": "#218343",
+      "ratio": 4.46,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.positive",
+      "key": "light:delta.positive@0.80",
+      "pos": 0.8,
+      "hex": "#208041",
+      "ratio": 4.64,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.positive",
+      "key": "light:delta.positive@0.87",
+      "pos": 0.87,
+      "hex": "#1E7E3F",
+      "ratio": 4.77,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.positive",
+      "key": "light:delta.positive@0.93",
+      "pos": 0.93,
+      "hex": "#1D7C3E",
+      "ratio": 4.89,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.positive",
+      "key": "light:delta.positive@1.00",
       "pos": 1,
       "hex": "#1C7A3C",
       "ratio": 5.03,
@@ -2876,13 +2865,221 @@
       "theme": "light",
       "density": "all",
       "palette": "default",
+      "id": "delta.negative",
+      "key": "light:delta.negative@0.00",
+      "pos": 0,
+      "hex": "#D14A4E",
+      "ratio": 4.08,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "light:delta.negative@0.07",
+      "pos": 0.07,
+      "hex": "#D0494D",
+      "ratio": 4.13,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "light:delta.negative@0.13",
+      "pos": 0.13,
+      "hex": "#D0474C",
+      "ratio": 4.18,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "light:delta.negative@0.20",
+      "pos": 0.2,
+      "hex": "#CF464A",
+      "ratio": 4.23,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "light:delta.negative@0.27",
+      "pos": 0.27,
+      "hex": "#CE4549",
+      "ratio": 4.29,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "light:delta.negative@0.33",
+      "pos": 0.33,
+      "hex": "#CE4448",
+      "ratio": 4.31,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "light:delta.negative@0.40",
+      "pos": 0.4,
+      "hex": "#CD4247",
+      "ratio": 4.39,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "light:delta.negative@0.47",
+      "pos": 0.47,
+      "hex": "#CC4146",
+      "ratio": 4.44,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "light:delta.negative@0.53",
+      "pos": 0.53,
+      "hex": "#CC4044",
+      "ratio": 4.47,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "light:delta.negative@0.60",
+      "pos": 0.6,
+      "hex": "#CB3F43",
+      "ratio": 4.52,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "light:delta.negative@0.67",
+      "pos": 0.67,
+      "hex": "#CA3D42",
+      "ratio": 4.6,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "light:delta.negative@0.73",
+      "pos": 0.73,
+      "hex": "#CA3C41",
+      "ratio": 4.63,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "light:delta.negative@0.80",
+      "pos": 0.8,
+      "hex": "#C93B40",
+      "ratio": 4.68,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "light:delta.negative@0.87",
+      "pos": 0.87,
+      "hex": "#C83A3E",
+      "ratio": 4.74,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "light:delta.negative@0.93",
+      "pos": 0.93,
+      "hex": "#C8383D",
+      "ratio": 4.79,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "light:delta.negative@1.00",
+      "pos": 1,
+      "hex": "#C7373C",
+      "ratio": 4.85,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
       "id": "profile.histogram",
       "key": "light:profile.histogram@0.00",
       "pos": 0,
-      "hex": "#9AA3AE",
-      "ratio": 2.38,
+      "hex": "#707B87",
+      "ratio": 4.02,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2892,10 +3089,10 @@
       "id": "profile.histogram",
       "key": "light:profile.histogram@0.07",
       "pos": 0.07,
-      "hex": "#9EA8B3",
-      "ratio": 2.25,
+      "hex": "#6B788B",
+      "ratio": 4.18,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2905,10 +3102,10 @@
       "id": "profile.histogram",
       "key": "light:profile.histogram@0.13",
       "pos": 0.13,
-      "hex": "#A3ACB8",
-      "ratio": 2.14,
+      "hex": "#65768E",
+      "ratio": 4.32,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2918,10 +3115,10 @@
       "id": "profile.histogram",
       "key": "light:profile.histogram@0.20",
       "pos": 0.2,
-      "hex": "#A7B1BE",
-      "ratio": 2.02,
+      "hex": "#607392",
+      "ratio": 4.49,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2931,10 +3128,10 @@
       "id": "profile.histogram",
       "key": "light:profile.histogram@0.27",
       "pos": 0.27,
-      "hex": "#ACB5C3",
-      "ratio": 1.93,
+      "hex": "#5A7196",
+      "ratio": 4.62,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2944,10 +3141,10 @@
       "id": "profile.histogram",
       "key": "light:profile.histogram@0.33",
       "pos": 0.33,
-      "hex": "#B0BAC8",
-      "ratio": 1.83,
+      "hex": "#556E9A",
+      "ratio": 4.8,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2957,10 +3154,10 @@
       "id": "profile.histogram",
       "key": "light:profile.histogram@0.40",
       "pos": 0.4,
-      "hex": "#B5BFCD",
-      "ratio": 1.73,
+      "hex": "#506C9D",
+      "ratio": 4.93,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2970,10 +3167,10 @@
       "id": "profile.histogram",
       "key": "light:profile.histogram@0.47",
       "pos": 0.47,
-      "hex": "#B9C3D2",
-      "ratio": 1.66,
+      "hex": "#4A69A1",
+      "ratio": 5.12,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2983,10 +3180,10 @@
       "id": "profile.histogram",
       "key": "light:profile.histogram@0.53",
       "pos": 0.53,
-      "hex": "#BEC8D8",
-      "ratio": 1.57,
+      "hex": "#4567A5",
+      "ratio": 5.24,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -2996,10 +3193,10 @@
       "id": "profile.histogram",
       "key": "light:profile.histogram@0.60",
       "pos": 0.6,
-      "hex": "#C2CCDD",
-      "ratio": 1.51,
+      "hex": "#3F64A9",
+      "ratio": 5.43,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -3009,10 +3206,10 @@
       "id": "profile.histogram",
       "key": "light:profile.histogram@0.67",
       "pos": 0.67,
-      "hex": "#C7D1E2",
-      "ratio": 1.44,
+      "hex": "#3A62AC",
+      "ratio": 5.56,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -3022,10 +3219,10 @@
       "id": "profile.histogram",
       "key": "light:profile.histogram@0.73",
       "pos": 0.73,
-      "hex": "#CBD6E7",
-      "ratio": 1.37,
+      "hex": "#355FB0",
+      "ratio": 5.74,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -3035,10 +3232,10 @@
       "id": "profile.histogram",
       "key": "light:profile.histogram@0.80",
       "pos": 0.8,
-      "hex": "#D0DAEC",
-      "ratio": 1.31,
+      "hex": "#2F5DB4",
+      "ratio": 5.86,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -3048,10 +3245,10 @@
       "id": "profile.histogram",
       "key": "light:profile.histogram@0.87",
       "pos": 0.87,
-      "hex": "#D4DFF2",
-      "ratio": 1.25,
+      "hex": "#2A5AB8",
+      "ratio": 6.02,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -3061,10 +3258,10 @@
       "id": "profile.histogram",
       "key": "light:profile.histogram@0.93",
       "pos": 0.93,
-      "hex": "#D9E3F7",
-      "ratio": 1.2,
+      "hex": "#2458BB",
+      "ratio": 6.14,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -3074,10 +3271,10 @@
       "id": "profile.histogram",
       "key": "light:profile.histogram@1.00",
       "pos": 1,
-      "hex": "#DDE8FC",
-      "ratio": 1.15,
+      "hex": "#1F55BF",
+      "ratio": 6.3,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -3087,10 +3284,10 @@
       "id": "liquidation.intensity",
       "key": "light:liquidation.intensity@0.00",
       "pos": 0,
-      "hex": "#FBE2E3",
-      "ratio": 1.15,
+      "hex": "#B87F0A",
+      "ratio": 3.22,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -3100,97 +3297,6 @@
       "id": "liquidation.intensity",
       "key": "light:liquidation.intensity@0.07",
       "pos": 0.07,
-      "hex": "#F2D5C6",
-      "ratio": 1.3,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "light",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "light:liquidation.intensity@0.13",
-      "pos": 0.13,
-      "hex": "#E9C8A9",
-      "ratio": 1.47,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "light",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "light:liquidation.intensity@0.20",
-      "pos": 0.2,
-      "hex": "#E0BA8C",
-      "ratio": 1.69,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "light",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "light:liquidation.intensity@0.27",
-      "pos": 0.27,
-      "hex": "#D7AD6F",
-      "ratio": 1.94,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "light",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "light:liquidation.intensity@0.33",
-      "pos": 0.33,
-      "hex": "#CEA052",
-      "ratio": 2.23,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "light",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "light:liquidation.intensity@0.40",
-      "pos": 0.4,
-      "hex": "#C59335",
-      "ratio": 2.58,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "light",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "light:liquidation.intensity@0.47",
-      "pos": 0.47,
-      "hex": "#BC8618",
-      "ratio": 2.99,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "light",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "light:liquidation.intensity@0.53",
-      "pos": 0.53,
       "hex": "#B67E0A",
       "ratio": 3.28,
       "threshold": 3,
@@ -3202,8 +3308,21 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "light:liquidation.intensity@0.60",
-      "pos": 0.6,
+      "key": "light:liquidation.intensity@0.13",
+      "pos": 0.13,
+      "hex": "#B47C09",
+      "ratio": 3.36,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "light:liquidation.intensity@0.20",
+      "pos": 0.2,
       "hex": "#B27B09",
       "ratio": 3.42,
       "threshold": 3,
@@ -3215,8 +3334,21 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "light:liquidation.intensity@0.67",
-      "pos": 0.67,
+      "key": "light:liquidation.intensity@0.27",
+      "pos": 0.27,
+      "hex": "#B07909",
+      "ratio": 3.51,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "light:liquidation.intensity@0.33",
+      "pos": 0.33,
       "hex": "#AE7808",
       "ratio": 3.57,
       "threshold": 3,
@@ -3228,8 +3360,21 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "light:liquidation.intensity@0.73",
-      "pos": 0.73,
+      "key": "light:liquidation.intensity@0.40",
+      "pos": 0.4,
+      "hex": "#AC7708",
+      "ratio": 3.63,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "light:liquidation.intensity@0.47",
+      "pos": 0.47,
       "hex": "#AA7508",
       "ratio": 3.73,
       "threshold": 3,
@@ -3241,8 +3386,21 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "light:liquidation.intensity@0.80",
-      "pos": 0.8,
+      "key": "light:liquidation.intensity@0.53",
+      "pos": 0.53,
+      "hex": "#A87407",
+      "ratio": 3.79,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "light:liquidation.intensity@0.60",
+      "pos": 0.6,
       "hex": "#A67207",
       "ratio": 3.89,
       "threshold": 3,
@@ -3254,8 +3412,21 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "light:liquidation.intensity@0.87",
-      "pos": 0.87,
+      "key": "light:liquidation.intensity@0.67",
+      "pos": 0.67,
+      "hex": "#A47107",
+      "ratio": 3.96,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "light:liquidation.intensity@0.73",
+      "pos": 0.73,
       "hex": "#A27006",
       "ratio": 4.03,
       "threshold": 3,
@@ -3267,10 +3438,36 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "light:liquidation.intensity@0.93",
-      "pos": 0.93,
+      "key": "light:liquidation.intensity@0.80",
+      "pos": 0.8,
+      "hex": "#A06E06",
+      "ratio": 4.14,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "light:liquidation.intensity@0.87",
+      "pos": 0.87,
       "hex": "#9E6D06",
       "ratio": 4.22,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "light",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "light:liquidation.intensity@0.93",
+      "pos": 0.93,
+      "hex": "#9C6B05",
+      "ratio": 4.34,
       "threshold": 3,
       "pass": true
     },
@@ -3696,9 +3893,9 @@
       "id": "color.heatmap.bid.5 vs color.heatmap.ask.5",
       "key": "light:default:color.heatmap.bid.5 vs color.heatmap.ask.5:deuteranopia",
       "deficiency": "deuteranopia",
-      "simulatedA": "#7F7F4B",
-      "simulatedB": "#717132",
-      "deltaE": 8.47,
+      "simulatedA": "#292919",
+      "simulatedB": "#2E2E15",
+      "deltaE": 6.08,
       "threshold": 5,
       "pass": true
     },
@@ -3711,9 +3908,9 @@
       "id": "color.heatmap.bid.5 vs color.heatmap.ask.5",
       "key": "light:default:color.heatmap.bid.5 vs color.heatmap.ask.5:protanopia",
       "deficiency": "protanopia",
-      "simulatedA": "#8D8D47",
-      "simulatedB": "#53533B",
-      "deltaE": 32.68,
+      "simulatedA": "#2D2D18",
+      "simulatedB": "#212118",
+      "deltaE": 9.48,
       "threshold": 5,
       "pass": true
     },
@@ -3726,9 +3923,9 @@
       "id": "color.heatmap.bid.5 vs color.heatmap.ask.5",
       "key": "light:default:color.heatmap.bid.5 vs color.heatmap.ask.5:tritanopia",
       "deficiency": "tritanopia",
-      "simulatedA": "#6E6EF6",
-      "simulatedB": "#8A8A00",
-      "deltaE": 138.1,
+      "simulatedA": "#232354",
+      "simulatedB": "#393900",
+      "deltaE": 66.14,
       "threshold": 5,
       "pass": true
     },
@@ -3741,9 +3938,9 @@
       "id": "color.footprint.imbalance vs color.footprint.bid",
       "key": "light:default:color.footprint.imbalance vs color.footprint.bid:deuteranopia",
       "deficiency": "deuteranopia",
-      "simulatedA": "#939300",
+      "simulatedA": "#7B7B00",
       "simulatedB": "#69693F",
-      "deltaE": 42.66,
+      "deltaE": 32.59,
       "threshold": 5,
       "pass": true
     },
@@ -3756,9 +3953,9 @@
       "id": "color.footprint.imbalance vs color.footprint.bid",
       "key": "light:default:color.footprint.imbalance vs color.footprint.bid:protanopia",
       "deficiency": "protanopia",
-      "simulatedA": "#87870D",
+      "simulatedA": "#717107",
       "simulatedB": "#74743B",
-      "deltaE": 26.67,
+      "deltaE": 19.3,
       "threshold": 5,
       "pass": true
     },
@@ -3771,9 +3968,9 @@
       "id": "color.footprint.imbalance vs color.footprint.bid",
       "key": "light:default:color.footprint.imbalance vs color.footprint.bid:tritanopia",
       "deficiency": "tritanopia",
-      "simulatedA": "#9E9E00",
+      "simulatedA": "#848400",
       "simulatedB": "#5B5BCB",
-      "deltaE": 134.35,
+      "deltaE": 125.11,
       "threshold": 5,
       "pass": true
     },
@@ -3786,9 +3983,9 @@
       "id": "color.footprint.imbalance vs color.footprint.ask",
       "key": "light:default:color.footprint.imbalance vs color.footprint.ask:deuteranopia",
       "deficiency": "deuteranopia",
-      "simulatedA": "#939300",
+      "simulatedA": "#7B7B00",
       "simulatedB": "#7A7A33",
-      "deltaE": 26.54,
+      "deltaE": 17.14,
       "threshold": 5,
       "pass": true
     },
@@ -3801,9 +3998,9 @@
       "id": "color.footprint.imbalance vs color.footprint.ask",
       "key": "light:default:color.footprint.imbalance vs color.footprint.ask:protanopia",
       "deficiency": "protanopia",
-      "simulatedA": "#87870D",
+      "simulatedA": "#717107",
       "simulatedB": "#58583D",
-      "deltaE": 45.42,
+      "deltaE": 36.45,
       "threshold": 5,
       "pass": true
     },
@@ -3816,11 +4013,326 @@
       "id": "color.footprint.imbalance vs color.footprint.ask",
       "key": "light:default:color.footprint.imbalance vs color.footprint.ask:tritanopia",
       "deficiency": "tritanopia",
-      "simulatedA": "#9E9E00",
+      "simulatedA": "#848400",
       "simulatedB": "#959500",
-      "deltaE": 4.38,
+      "deltaE": 8.42,
       "threshold": 5,
-      "pass": false
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.buy.default vs color.sell.default",
+      "key": "light:cvd-safe:color.buy.default vs color.sell.default:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#5E5EA2",
+      "simulatedB": "#696900",
+      "deltaE": 90.83,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.buy.default vs color.sell.default",
+      "key": "light:cvd-safe:color.buy.default vs color.sell.default:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#6868A1",
+      "simulatedB": "#575703",
+      "deltaE": 77.5,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.buy.default vs color.sell.default",
+      "key": "light:cvd-safe:color.buy.default vs color.sell.default:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#5252E4",
+      "simulatedB": "#797900",
+      "deltaE": 140.44,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.buy.hc vs color.sell.hc",
+      "key": "light:cvd-safe:color.buy.hc vs color.sell.hc:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#5E5EA2",
+      "simulatedB": "#696900",
+      "deltaE": 90.83,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.buy.hc vs color.sell.hc",
+      "key": "light:cvd-safe:color.buy.hc vs color.sell.hc:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#6868A1",
+      "simulatedB": "#575703",
+      "deltaE": 77.5,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.buy.hc vs color.sell.hc",
+      "key": "light:cvd-safe:color.buy.hc vs color.sell.hc:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#5252E4",
+      "simulatedB": "#797900",
+      "deltaE": 140.44,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.candle.up vs color.candle.down",
+      "key": "light:cvd-safe:color.candle.up vs color.candle.down:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#5E5EA2",
+      "simulatedB": "#696900",
+      "deltaE": 90.83,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.candle.up vs color.candle.down",
+      "key": "light:cvd-safe:color.candle.up vs color.candle.down:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#6868A1",
+      "simulatedB": "#575703",
+      "deltaE": 77.5,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.candle.up vs color.candle.down",
+      "key": "light:cvd-safe:color.candle.up vs color.candle.down:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#5252E4",
+      "simulatedB": "#797900",
+      "deltaE": 140.44,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "bid-ask",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.bid vs color.footprint.ask",
+      "key": "light:cvd-safe:color.footprint.bid vs color.footprint.ask:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#5E5EA2",
+      "simulatedB": "#696900",
+      "deltaE": 90.83,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "bid-ask",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.bid vs color.footprint.ask",
+      "key": "light:cvd-safe:color.footprint.bid vs color.footprint.ask:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#6868A1",
+      "simulatedB": "#575703",
+      "deltaE": 77.5,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "bid-ask",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.bid vs color.footprint.ask",
+      "key": "light:cvd-safe:color.footprint.bid vs color.footprint.ask:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#5252E4",
+      "simulatedB": "#797900",
+      "deltaE": 140.44,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "bid-ask",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.heatmap.bid.5 vs color.heatmap.ask.5",
+      "key": "light:cvd-safe:color.heatmap.bid.5 vs color.heatmap.ask.5:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#7E7ECA",
+      "simulatedB": "#868600",
+      "deltaE": 103.09,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "bid-ask",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.heatmap.bid.5 vs color.heatmap.ask.5",
+      "key": "light:cvd-safe:color.heatmap.bid.5 vs color.heatmap.ask.5:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#8989C9",
+      "simulatedB": "#6F6F06",
+      "deltaE": 88.13,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "bid-ask",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.heatmap.bid.5 vs color.heatmap.ask.5",
+      "key": "light:cvd-safe:color.heatmap.bid.5 vs color.heatmap.ask.5:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#7070FF",
+      "simulatedB": "#9A9A00",
+      "deltaE": 146.85,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "imbalance",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.imbalance vs color.footprint.bid",
+      "key": "light:cvd-safe:color.footprint.imbalance vs color.footprint.bid:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#16161A",
+      "simulatedB": "#5E5EA2",
+      "deltaE": 51.86,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "imbalance",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.imbalance vs color.footprint.bid",
+      "key": "light:cvd-safe:color.footprint.imbalance vs color.footprint.bid:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#17171A",
+      "simulatedB": "#6868A1",
+      "deltaE": 49.7,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "imbalance",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.imbalance vs color.footprint.bid",
+      "key": "light:cvd-safe:color.footprint.imbalance vs color.footprint.bid:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#161621",
+      "simulatedB": "#5252E4",
+      "deltaE": 85.67,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "imbalance",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.imbalance vs color.footprint.ask",
+      "key": "light:cvd-safe:color.footprint.imbalance vs color.footprint.ask:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#16161A",
+      "simulatedB": "#696900",
+      "deltaE": 64.17,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "imbalance",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.imbalance vs color.footprint.ask",
+      "key": "light:cvd-safe:color.footprint.imbalance vs color.footprint.ask:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#17171A",
+      "simulatedB": "#575703",
+      "deltaE": 53.38,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "imbalance",
+      "theme": "light",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.imbalance vs color.footprint.ask",
+      "key": "light:cvd-safe:color.footprint.imbalance vs color.footprint.ask:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#161621",
+      "simulatedB": "#797900",
+      "deltaE": 76.28,
+      "threshold": 5,
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -3830,84 +4342,6 @@
       "id": "heatmap.bid",
       "key": "high-contrast:heatmap.bid@0.00",
       "pos": 0,
-      "hex": "#11151A",
-      "ratio": 1,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "high-contrast",
-      "density": "all",
-      "palette": "default",
-      "id": "heatmap.bid",
-      "key": "high-contrast:heatmap.bid@0.07",
-      "pos": 0.07,
-      "hex": "#10221C",
-      "ratio": 1.11,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "high-contrast",
-      "density": "all",
-      "palette": "default",
-      "id": "heatmap.bid",
-      "key": "high-contrast:heatmap.bid@0.13",
-      "pos": 0.13,
-      "hex": "#0F301D",
-      "ratio": 1.27,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "high-contrast",
-      "density": "all",
-      "palette": "default",
-      "id": "heatmap.bid",
-      "key": "high-contrast:heatmap.bid@0.20",
-      "pos": 0.2,
-      "hex": "#0E3D1F",
-      "ratio": 1.49,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "high-contrast",
-      "density": "all",
-      "palette": "default",
-      "id": "heatmap.bid",
-      "key": "high-contrast:heatmap.bid@0.27",
-      "pos": 0.27,
-      "hex": "#125028",
-      "ratio": 1.92,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "high-contrast",
-      "density": "all",
-      "palette": "default",
-      "id": "heatmap.bid",
-      "key": "high-contrast:heatmap.bid@0.33",
-      "pos": 0.33,
-      "hex": "#176230",
-      "ratio": 2.47,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "high-contrast",
-      "density": "all",
-      "palette": "default",
-      "id": "heatmap.bid",
-      "key": "high-contrast:heatmap.bid@0.40",
-      "pos": 0.4,
       "hex": "#1B7539",
       "ratio": 3.19,
       "threshold": 3,
@@ -3919,10 +4353,10 @@
       "density": "all",
       "palette": "default",
       "id": "heatmap.bid",
-      "key": "high-contrast:heatmap.bid@0.47",
-      "pos": 0.47,
-      "hex": "#1E813F",
-      "ratio": 3.72,
+      "key": "high-contrast:heatmap.bid@0.07",
+      "pos": 0.07,
+      "hex": "#1D7F3E",
+      "ratio": 3.63,
       "threshold": 3,
       "pass": true
     },
@@ -3932,10 +4366,10 @@
       "density": "all",
       "palette": "default",
       "id": "heatmap.bid",
-      "key": "high-contrast:heatmap.bid@0.53",
-      "pos": 0.53,
-      "hex": "#208D44",
-      "ratio": 4.32,
+      "key": "high-contrast:heatmap.bid@0.13",
+      "pos": 0.13,
+      "hex": "#1F8842",
+      "ratio": 4.07,
       "threshold": 3,
       "pass": true
     },
@@ -3945,10 +4379,10 @@
       "density": "all",
       "palette": "default",
       "id": "heatmap.bid",
-      "key": "high-contrast:heatmap.bid@0.60",
-      "pos": 0.6,
-      "hex": "#23994A",
-      "ratio": 5,
+      "key": "high-contrast:heatmap.bid@0.20",
+      "pos": 0.2,
+      "hex": "#219247",
+      "ratio": 4.6,
       "threshold": 3,
       "pass": true
     },
@@ -3958,8 +4392,21 @@
       "density": "all",
       "palette": "default",
       "id": "heatmap.bid",
-      "key": "high-contrast:heatmap.bid@0.67",
-      "pos": 0.67,
+      "key": "high-contrast:heatmap.bid@0.27",
+      "pos": 0.27,
+      "hex": "#249B4B",
+      "ratio": 5.12,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "heatmap.bid",
+      "key": "high-contrast:heatmap.bid@0.33",
+      "pos": 0.33,
       "hex": "#27A54F",
       "ratio": 5.74,
       "threshold": 3,
@@ -3971,10 +4418,75 @@
       "density": "all",
       "palette": "default",
       "id": "heatmap.bid",
+      "key": "high-contrast:heatmap.bid@0.40",
+      "pos": 0.4,
+      "hex": "#2AAF53",
+      "ratio": 6.42,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "heatmap.bid",
+      "key": "high-contrast:heatmap.bid@0.47",
+      "pos": 0.47,
+      "hex": "#2DB857",
+      "ratio": 7.07,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "heatmap.bid",
+      "key": "high-contrast:heatmap.bid@0.53",
+      "pos": 0.53,
+      "hex": "#32BE5C",
+      "ratio": 7.55,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "heatmap.bid",
+      "key": "high-contrast:heatmap.bid@0.60",
+      "pos": 0.6,
+      "hex": "#3BC162",
+      "ratio": 7.84,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "heatmap.bid",
+      "key": "high-contrast:heatmap.bid@0.67",
+      "pos": 0.67,
+      "hex": "#44C468",
+      "ratio": 8.15,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "heatmap.bid",
       "key": "high-contrast:heatmap.bid@0.73",
       "pos": 0.73,
-      "hex": "#2AB154",
-      "ratio": 6.56,
+      "hex": "#4DC76E",
+      "ratio": 8.47,
       "threshold": 3,
       "pass": true
     },
@@ -3986,8 +4498,8 @@
       "id": "heatmap.bid",
       "key": "high-contrast:heatmap.bid@0.80",
       "pos": 0.8,
-      "hex": "#2EBD59",
-      "ratio": 7.45,
+      "hex": "#55CA74",
+      "ratio": 8.8,
       "threshold": 3,
       "pass": true
     },
@@ -3999,8 +4511,8 @@
       "id": "heatmap.bid",
       "key": "high-contrast:heatmap.bid@0.87",
       "pos": 0.87,
-      "hex": "#42C569",
-      "ratio": 8.22,
+      "hex": "#5CCE7C",
+      "ratio": 9.23,
       "threshold": 3,
       "pass": true
     },
@@ -4012,8 +4524,8 @@
       "id": "heatmap.bid",
       "key": "high-contrast:heatmap.bid@0.93",
       "pos": 0.93,
-      "hex": "#57CC7A",
-      "ratio": 9.01,
+      "hex": "#64D183",
+      "ratio": 9.59,
       "threshold": 3,
       "pass": true
     },
@@ -4038,10 +4550,10 @@
       "id": "heatmap.ask",
       "key": "high-contrast:heatmap.ask@0.00",
       "pos": 0,
-      "hex": "#11151A",
-      "ratio": 1,
+      "hex": "#B83539",
+      "ratio": 3.15,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4051,10 +4563,10 @@
       "id": "heatmap.ask",
       "key": "high-contrast:heatmap.ask@0.07",
       "pos": 0.07,
-      "hex": "#251519",
-      "ratio": 1.05,
+      "hex": "#C13A3E",
+      "ratio": 3.44,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4064,10 +4576,10 @@
       "id": "heatmap.ask",
       "key": "high-contrast:heatmap.ask@0.13",
       "pos": 0.13,
-      "hex": "#3A1519",
-      "ratio": 1.14,
+      "hex": "#C93F43",
+      "ratio": 3.73,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4077,10 +4589,10 @@
       "id": "heatmap.ask",
       "key": "high-contrast:heatmap.ask@0.20",
       "pos": 0.2,
-      "hex": "#4E1518",
-      "ratio": 1.26,
+      "hex": "#D24347",
+      "ratio": 4.04,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4090,10 +4602,10 @@
       "id": "heatmap.ask",
       "key": "high-contrast:heatmap.ask@0.27",
       "pos": 0.27,
-      "hex": "#691D20",
-      "ratio": 1.57,
+      "hex": "#D9494D",
+      "ratio": 4.37,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4103,10 +4615,10 @@
       "id": "heatmap.ask",
       "key": "high-contrast:heatmap.ask@0.33",
       "pos": 0.33,
-      "hex": "#852428",
-      "ratio": 1.99,
+      "hex": "#DE5053",
+      "ratio": 4.69,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4116,10 +4628,10 @@
       "id": "heatmap.ask",
       "key": "high-contrast:heatmap.ask@0.40",
       "pos": 0.4,
-      "hex": "#A02C30",
-      "ratio": 2.53,
+      "hex": "#E35859",
+      "ratio": 5.07,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4129,10 +4641,10 @@
       "id": "heatmap.ask",
       "key": "high-contrast:heatmap.ask@0.47",
       "pos": 0.47,
-      "hex": "#AE3135",
-      "ratio": 2.87,
+      "hex": "#E85F60",
+      "ratio": 5.44,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4142,8 +4654,8 @@
       "id": "heatmap.ask",
       "key": "high-contrast:heatmap.ask@0.53",
       "pos": 0.53,
-      "hex": "#BB353A",
-      "ratio": 3.21,
+      "hex": "#EB6868",
+      "ratio": 5.86,
       "threshold": 3,
       "pass": true
     },
@@ -4155,8 +4667,8 @@
       "id": "heatmap.ask",
       "key": "high-contrast:heatmap.ask@0.60",
       "pos": 0.6,
-      "hex": "#C93A3F",
-      "ratio": 3.63,
+      "hex": "#EC7373",
+      "ratio": 6.34,
       "threshold": 3,
       "pass": true
     },
@@ -4168,8 +4680,8 @@
       "id": "heatmap.ask",
       "key": "high-contrast:heatmap.ask@0.67",
       "pos": 0.67,
-      "hex": "#D23F44",
-      "ratio": 3.96,
+      "hex": "#EE7D7D",
+      "ratio": 6.86,
       "threshold": 3,
       "pass": true
     },
@@ -4181,8 +4693,8 @@
       "id": "heatmap.ask",
       "key": "high-contrast:heatmap.ask@0.73",
       "pos": 0.73,
-      "hex": "#DC4348",
-      "ratio": 4.31,
+      "hex": "#F08787",
+      "ratio": 7.43,
       "threshold": 3,
       "pass": true
     },
@@ -4194,8 +4706,8 @@
       "id": "heatmap.ask",
       "key": "high-contrast:heatmap.ask@0.80",
       "pos": 0.8,
-      "hex": "#E5484D",
-      "ratio": 4.68,
+      "hex": "#F19292",
+      "ratio": 8.09,
       "threshold": 3,
       "pass": true
     },
@@ -4207,8 +4719,8 @@
       "id": "heatmap.ask",
       "key": "high-contrast:heatmap.ask@0.87",
       "pos": 0.87,
-      "hex": "#E95E61",
-      "ratio": 5.44,
+      "hex": "#F29C9C",
+      "ratio": 8.74,
       "threshold": 3,
       "pass": true
     },
@@ -4220,8 +4732,8 @@
       "id": "heatmap.ask",
       "key": "high-contrast:heatmap.ask@0.93",
       "pos": 0.93,
-      "hex": "#EC7476",
-      "ratio": 6.39,
+      "hex": "#F4A6A6",
+      "ratio": 9.47,
       "threshold": 3,
       "pass": true
     },
@@ -4233,8 +4745,8 @@
       "id": "heatmap.ask",
       "key": "high-contrast:heatmap.ask@1.00",
       "pos": 1,
-      "hex": "#F08A8A",
-      "ratio": 7.6,
+      "hex": "#F5B0B0",
+      "ratio": 10.23,
       "threshold": 3,
       "pass": true
     },
@@ -4243,11 +4755,11 @@
       "theme": "high-contrast",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "high-contrast:delta.divergence@0.00",
+      "id": "delta.positive",
+      "key": "high-contrast:delta.positive@0.00",
       "pos": 0,
-      "hex": "#F08A8A",
-      "ratio": 7.6,
+      "hex": "#1B7539",
+      "ratio": 3.19,
       "threshold": 3,
       "pass": true
     },
@@ -4256,36 +4768,10 @@
       "theme": "high-contrast",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "high-contrast:delta.divergence@0.07",
+      "id": "delta.positive",
+      "key": "high-contrast:delta.positive@0.07",
       "pos": 0.07,
-      "hex": "#D27A7B",
-      "ratio": 5.94,
-      "threshold": 3,
-      "pass": true
-    },
-    {
-      "kind": "gradient",
-      "theme": "high-contrast",
-      "density": "all",
-      "palette": "default",
-      "id": "delta.divergence",
-      "key": "high-contrast:delta.divergence@0.13",
-      "pos": 0.13,
-      "hex": "#B56B6C",
-      "ratio": 4.61,
-      "threshold": 3,
-      "pass": true
-    },
-    {
-      "kind": "gradient",
-      "theme": "high-contrast",
-      "density": "all",
-      "palette": "default",
-      "id": "delta.divergence",
-      "key": "high-contrast:delta.divergence@0.20",
-      "pos": 0.2,
-      "hex": "#975B5D",
+      "hex": "#207B3E",
       "ratio": 3.46,
       "threshold": 3,
       "pass": true
@@ -4295,102 +4781,128 @@
       "theme": "high-contrast",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "high-contrast:delta.divergence@0.27",
+      "id": "delta.positive",
+      "key": "high-contrast:delta.positive@0.13",
+      "pos": 0.13,
+      "hex": "#268244",
+      "ratio": 3.8,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.positive",
+      "key": "high-contrast:delta.positive@0.20",
+      "pos": 0.2,
+      "hex": "#2B8849",
+      "ratio": 4.12,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.positive",
+      "key": "high-contrast:delta.positive@0.27",
       "pos": 0.27,
-      "hex": "#794C4E",
-      "ratio": 2.58,
+      "hex": "#308E4F",
+      "ratio": 4.46,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
       "theme": "high-contrast",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "high-contrast:delta.divergence@0.33",
+      "id": "delta.positive",
+      "key": "high-contrast:delta.positive@0.33",
       "pos": 0.33,
-      "hex": "#5B3C3F",
-      "ratio": 1.89,
+      "hex": "#369554",
+      "ratio": 4.87,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
       "theme": "high-contrast",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "high-contrast:delta.divergence@0.40",
+      "id": "delta.positive",
+      "key": "high-contrast:delta.positive@0.40",
       "pos": 0.4,
-      "hex": "#3E2C30",
-      "ratio": 1.4,
+      "hex": "#3B9B59",
+      "ratio": 5.25,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
       "theme": "high-contrast",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "high-contrast:delta.divergence@0.47",
+      "id": "delta.positive",
+      "key": "high-contrast:delta.positive@0.47",
       "pos": 0.47,
-      "hex": "#201D21",
-      "ratio": 1.1,
+      "hex": "#40A15F",
+      "ratio": 5.66,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
       "theme": "high-contrast",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "high-contrast:delta.divergence@0.53",
+      "id": "delta.positive",
+      "key": "high-contrast:delta.positive@0.53",
       "pos": 0.53,
-      "hex": "#172221",
-      "ratio": 1.12,
+      "hex": "#46A864",
+      "ratio": 6.15,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
       "theme": "high-contrast",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "high-contrast:delta.divergence@0.60",
+      "id": "delta.positive",
+      "key": "high-contrast:delta.positive@0.60",
       "pos": 0.6,
-      "hex": "#233B30",
-      "ratio": 1.52,
+      "hex": "#4BAE6A",
+      "ratio": 6.6,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
       "theme": "high-contrast",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "high-contrast:delta.divergence@0.67",
+      "id": "delta.positive",
+      "key": "high-contrast:delta.positive@0.67",
       "pos": 0.67,
-      "hex": "#2F553F",
-      "ratio": 2.17,
+      "hex": "#50B46F",
+      "ratio": 7.07,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
       "theme": "high-contrast",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "high-contrast:delta.divergence@0.73",
+      "id": "delta.positive",
+      "key": "high-contrast:delta.positive@0.73",
       "pos": 0.73,
-      "hex": "#3B6E4E",
-      "ratio": 3.08,
+      "hex": "#56BB74",
+      "ratio": 7.64,
       "threshold": 3,
       "pass": true
     },
@@ -4399,11 +4911,11 @@
       "theme": "high-contrast",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "high-contrast:delta.divergence@0.80",
+      "id": "delta.positive",
+      "key": "high-contrast:delta.positive@0.80",
       "pos": 0.8,
-      "hex": "#47885D",
-      "ratio": 4.32,
+      "hex": "#5BC17A",
+      "ratio": 8.16,
       "threshold": 3,
       "pass": true
     },
@@ -4412,11 +4924,11 @@
       "theme": "high-contrast",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "high-contrast:delta.divergence@0.87",
+      "id": "delta.positive",
+      "key": "high-contrast:delta.positive@0.87",
       "pos": 0.87,
-      "hex": "#53A16C",
-      "ratio": 5.83,
+      "hex": "#60C77F",
+      "ratio": 8.7,
       "threshold": 3,
       "pass": true
     },
@@ -4425,11 +4937,11 @@
       "theme": "high-contrast",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "high-contrast:delta.divergence@0.93",
+      "id": "delta.positive",
+      "key": "high-contrast:delta.positive@0.93",
       "pos": 0.93,
-      "hex": "#5FBB7B",
-      "ratio": 7.75,
+      "hex": "#66CE85",
+      "ratio": 9.36,
       "threshold": 3,
       "pass": true
     },
@@ -4438,8 +4950,8 @@
       "theme": "high-contrast",
       "density": "all",
       "palette": "default",
-      "id": "delta.divergence",
-      "key": "high-contrast:delta.divergence@1.00",
+      "id": "delta.positive",
+      "key": "high-contrast:delta.positive@1.00",
       "pos": 1,
       "hex": "#6BD48A",
       "ratio": 9.96,
@@ -4451,13 +4963,221 @@
       "theme": "high-contrast",
       "density": "all",
       "palette": "default",
+      "id": "delta.negative",
+      "key": "high-contrast:delta.negative@0.00",
+      "pos": 0,
+      "hex": "#B83539",
+      "ratio": 3.15,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "high-contrast:delta.negative@0.07",
+      "pos": 0.07,
+      "hex": "#BC3B3E",
+      "ratio": 3.34,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "high-contrast:delta.negative@0.13",
+      "pos": 0.13,
+      "hex": "#BF4044",
+      "ratio": 3.52,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "high-contrast:delta.negative@0.20",
+      "pos": 0.2,
+      "hex": "#C34649",
+      "ratio": 3.75,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "high-contrast:delta.negative@0.27",
+      "pos": 0.27,
+      "hex": "#C74C4F",
+      "ratio": 3.99,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "high-contrast:delta.negative@0.33",
+      "pos": 0.33,
+      "hex": "#CB5154",
+      "ratio": 4.23,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "high-contrast:delta.negative@0.40",
+      "pos": 0.4,
+      "hex": "#CE5759",
+      "ratio": 4.48,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "high-contrast:delta.negative@0.47",
+      "pos": 0.47,
+      "hex": "#D25D5F",
+      "ratio": 4.77,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "high-contrast:delta.negative@0.53",
+      "pos": 0.53,
+      "hex": "#D66264",
+      "ratio": 5.05,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "high-contrast:delta.negative@0.60",
+      "pos": 0.6,
+      "hex": "#DA686A",
+      "ratio": 5.38,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "high-contrast:delta.negative@0.67",
+      "pos": 0.67,
+      "hex": "#DD6E6F",
+      "ratio": 5.7,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "high-contrast:delta.negative@0.73",
+      "pos": 0.73,
+      "hex": "#E17374",
+      "ratio": 6.03,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "high-contrast:delta.negative@0.80",
+      "pos": 0.8,
+      "hex": "#E5797A",
+      "ratio": 6.41,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "high-contrast:delta.negative@0.87",
+      "pos": 0.87,
+      "hex": "#E97F7F",
+      "ratio": 6.81,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "high-contrast:delta.negative@0.93",
+      "pos": 0.93,
+      "hex": "#EC8485",
+      "ratio": 7.16,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "delta.negative",
+      "key": "high-contrast:delta.negative@1.00",
+      "pos": 1,
+      "hex": "#F08A8A",
+      "ratio": 7.6,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
       "id": "profile.histogram",
       "key": "high-contrast:profile.histogram@0.00",
       "pos": 0,
-      "hex": "#3D4650",
-      "ratio": 1.91,
+      "hex": "#586470",
+      "ratio": 3.03,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4467,10 +5187,10 @@
       "id": "profile.histogram",
       "key": "high-contrast:profile.histogram@0.07",
       "pos": 0.07,
-      "hex": "#3A4654",
-      "ratio": 1.91,
+      "hex": "#576678",
+      "ratio": 3.12,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4480,10 +5200,10 @@
       "id": "profile.histogram",
       "key": "high-contrast:profile.histogram@0.13",
       "pos": 0.13,
-      "hex": "#384558",
-      "ratio": 1.89,
+      "hex": "#566981",
+      "ratio": 3.26,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4493,10 +5213,10 @@
       "id": "profile.histogram",
       "key": "high-contrast:profile.histogram@0.20",
       "pos": 0.2,
-      "hex": "#35455D",
-      "ratio": 1.89,
+      "hex": "#556B89",
+      "ratio": 3.36,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4506,10 +5226,10 @@
       "id": "profile.histogram",
       "key": "high-contrast:profile.histogram@0.27",
       "pos": 0.27,
-      "hex": "#334461",
-      "ratio": 1.87,
+      "hex": "#546D92",
+      "ratio": 3.47,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4519,10 +5239,10 @@
       "id": "profile.histogram",
       "key": "high-contrast:profile.histogram@0.33",
       "pos": 0.33,
-      "hex": "#304465",
-      "ratio": 1.87,
+      "hex": "#536F9A",
+      "ratio": 3.58,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4532,10 +5252,10 @@
       "id": "profile.histogram",
       "key": "high-contrast:profile.histogram@0.40",
       "pos": 0.4,
-      "hex": "#2E4369",
-      "ratio": 1.85,
+      "hex": "#5272A2",
+      "ratio": 3.74,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4545,10 +5265,10 @@
       "id": "profile.histogram",
       "key": "high-contrast:profile.histogram@0.47",
       "pos": 0.47,
-      "hex": "#2B436D",
-      "ratio": 1.86,
+      "hex": "#5174AB",
+      "ratio": 3.87,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4558,10 +5278,10 @@
       "id": "profile.histogram",
       "key": "high-contrast:profile.histogram@0.53",
       "pos": 0.53,
-      "hex": "#294272",
-      "ratio": 1.85,
+      "hex": "#5176B3",
+      "ratio": 4.01,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4571,10 +5291,10 @@
       "id": "profile.histogram",
       "key": "high-contrast:profile.histogram@0.60",
       "pos": 0.6,
-      "hex": "#264276",
-      "ratio": 1.85,
+      "hex": "#5078BC",
+      "ratio": 4.15,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4584,10 +5304,10 @@
       "id": "profile.histogram",
       "key": "high-contrast:profile.histogram@0.67",
       "pos": 0.67,
-      "hex": "#24417A",
-      "ratio": 1.84,
+      "hex": "#4F7BC4",
+      "ratio": 4.33,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4597,10 +5317,10 @@
       "id": "profile.histogram",
       "key": "high-contrast:profile.histogram@0.73",
       "pos": 0.73,
-      "hex": "#21417E",
-      "ratio": 1.85,
+      "hex": "#4E7DCC",
+      "ratio": 4.48,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4610,10 +5330,10 @@
       "id": "profile.histogram",
       "key": "high-contrast:profile.histogram@0.80",
       "pos": 0.8,
-      "hex": "#1F4082",
-      "ratio": 1.84,
+      "hex": "#4D7FD5",
+      "ratio": 4.64,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4623,10 +5343,10 @@
       "id": "profile.histogram",
       "key": "high-contrast:profile.histogram@0.87",
       "pos": 0.87,
-      "hex": "#1C4087",
-      "ratio": 1.86,
+      "hex": "#4C81DD",
+      "ratio": 4.79,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4636,10 +5356,10 @@
       "id": "profile.histogram",
       "key": "high-contrast:profile.histogram@0.93",
       "pos": 0.93,
-      "hex": "#1A3F8B",
-      "ratio": 1.86,
+      "hex": "#4B84E6",
+      "ratio": 5.01,
       "threshold": 3,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "gradient",
@@ -4649,112 +5369,8 @@
       "id": "profile.histogram",
       "key": "high-contrast:profile.histogram@1.00",
       "pos": 1,
-      "hex": "#173F8F",
-      "ratio": 1.87,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "high-contrast",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "high-contrast:liquidation.intensity@0.00",
-      "pos": 0,
-      "hex": "#4E1518",
-      "ratio": 1.26,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "high-contrast",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "high-contrast:liquidation.intensity@0.07",
-      "pos": 0.07,
-      "hex": "#5E1A1D",
-      "ratio": 1.43,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "high-contrast",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "high-contrast:liquidation.intensity@0.13",
-      "pos": 0.13,
-      "hex": "#6F1F22",
-      "ratio": 1.65,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "high-contrast",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "high-contrast:liquidation.intensity@0.20",
-      "pos": 0.2,
-      "hex": "#7F2428",
-      "ratio": 1.91,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "high-contrast",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "high-contrast:liquidation.intensity@0.27",
-      "pos": 0.27,
-      "hex": "#90292D",
-      "ratio": 2.22,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "high-contrast",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "high-contrast:liquidation.intensity@0.33",
-      "pos": 0.33,
-      "hex": "#A02E32",
-      "ratio": 2.56,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "high-contrast",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "high-contrast:liquidation.intensity@0.40",
-      "pos": 0.4,
-      "hex": "#B03337",
-      "ratio": 2.94,
-      "threshold": 3,
-      "pass": false
-    },
-    {
-      "kind": "gradient",
-      "theme": "high-contrast",
-      "density": "all",
-      "palette": "default",
-      "id": "liquidation.intensity",
-      "key": "high-contrast:liquidation.intensity@0.47",
-      "pos": 0.47,
-      "hex": "#C1383C",
-      "ratio": 3.4,
+      "hex": "#4A86EE",
+      "ratio": 5.18,
       "threshold": 3,
       "pass": true
     },
@@ -4764,8 +5380,21 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "high-contrast:liquidation.intensity@0.53",
-      "pos": 0.53,
+      "key": "high-contrast:liquidation.intensity@0.00",
+      "pos": 0,
+      "hex": "#C93A3F",
+      "ratio": 3.63,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "high-contrast:liquidation.intensity@0.07",
+      "pos": 0.07,
       "hex": "#CC423F",
       "ratio": 3.86,
       "threshold": 3,
@@ -4777,8 +5406,21 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "high-contrast:liquidation.intensity@0.60",
-      "pos": 0.6,
+      "key": "high-contrast:liquidation.intensity@0.13",
+      "pos": 0.13,
+      "hex": "#CE4A3F",
+      "ratio": 4.08,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "high-contrast:liquidation.intensity@0.20",
+      "pos": 0.2,
       "hex": "#D1523F",
       "ratio": 4.35,
       "threshold": 3,
@@ -4790,8 +5432,21 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "high-contrast:liquidation.intensity@0.67",
-      "pos": 0.67,
+      "key": "high-contrast:liquidation.intensity@0.27",
+      "pos": 0.27,
+      "hex": "#D35B40",
+      "ratio": 4.66,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "high-contrast:liquidation.intensity@0.33",
+      "pos": 0.33,
       "hex": "#D66340",
       "ratio": 4.99,
       "threshold": 3,
@@ -4803,8 +5458,21 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "high-contrast:liquidation.intensity@0.73",
-      "pos": 0.73,
+      "key": "high-contrast:liquidation.intensity@0.40",
+      "pos": 0.4,
+      "hex": "#D96B40",
+      "ratio": 5.35,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "high-contrast:liquidation.intensity@0.47",
+      "pos": 0.47,
       "hex": "#DB7340",
       "ratio": 5.71,
       "threshold": 3,
@@ -4816,8 +5484,21 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "high-contrast:liquidation.intensity@0.80",
-      "pos": 0.8,
+      "key": "high-contrast:liquidation.intensity@0.53",
+      "pos": 0.53,
+      "hex": "#DE7B40",
+      "ratio": 6.12,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "high-contrast:liquidation.intensity@0.60",
+      "pos": 0.6,
       "hex": "#E08340",
       "ratio": 6.54,
       "threshold": 3,
@@ -4829,8 +5510,21 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "high-contrast:liquidation.intensity@0.87",
-      "pos": 0.87,
+      "key": "high-contrast:liquidation.intensity@0.67",
+      "pos": 0.67,
+      "hex": "#E38B40",
+      "ratio": 7.01,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "high-contrast:liquidation.intensity@0.73",
+      "pos": 0.73,
       "hex": "#E69340",
       "ratio": 7.51,
       "threshold": 3,
@@ -4842,10 +5536,36 @@
       "density": "all",
       "palette": "default",
       "id": "liquidation.intensity",
-      "key": "high-contrast:liquidation.intensity@0.93",
-      "pos": 0.93,
+      "key": "high-contrast:liquidation.intensity@0.80",
+      "pos": 0.8,
+      "hex": "#E89C41",
+      "ratio": 8.08,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "high-contrast:liquidation.intensity@0.87",
+      "pos": 0.87,
       "hex": "#EBA441",
       "ratio": 8.66,
+      "threshold": 3,
+      "pass": true
+    },
+    {
+      "kind": "gradient",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "default",
+      "id": "liquidation.intensity",
+      "key": "high-contrast:liquidation.intensity@0.93",
+      "pos": 0.93,
+      "hex": "#EDAC41",
+      "ratio": 9.23,
       "threshold": 3,
       "pass": true
     },
@@ -5001,9 +5721,9 @@
       "palette": "default",
       "id": "color.text.tertiary on color.surface.app",
       "key": "high-contrast:comfortable:color.text.tertiary on color.surface.app",
-      "ratio": 6.29,
+      "ratio": 12.54,
       "threshold": 7,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "text",
@@ -5012,9 +5732,9 @@
       "palette": "default",
       "id": "color.text.tertiary on color.surface.app",
       "key": "high-contrast:compact:color.text.tertiary on color.surface.app",
-      "ratio": 6.29,
+      "ratio": 12.54,
       "threshold": 7,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "text",
@@ -5045,9 +5765,9 @@
       "palette": "default",
       "id": "color.text.on-action on color.action.primary.default",
       "key": "high-contrast:comfortable:color.text.on-action on color.action.primary.default",
-      "ratio": 4.76,
+      "ratio": 7.45,
       "threshold": 7,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "text",
@@ -5056,9 +5776,9 @@
       "palette": "default",
       "id": "color.text.on-action on color.action.primary.default",
       "key": "high-contrast:compact:color.text.on-action on color.action.primary.default",
-      "ratio": 4.76,
+      "ratio": 7.45,
       "threshold": 7,
-      "pass": false
+      "pass": true
     },
     {
       "kind": "text",
@@ -5272,8 +5992,8 @@
       "key": "high-contrast:default:color.heatmap.bid.5 vs color.heatmap.ask.5:deuteranopia",
       "deficiency": "deuteranopia",
       "simulatedA": "#BDBD8D",
-      "simulatedB": "#B0B087",
-      "deltaE": 5.76,
+      "simulatedB": "#C8C8AE",
+      "deltaE": 12.61,
       "threshold": 5,
       "pass": true
     },
@@ -5287,8 +6007,8 @@
       "key": "high-contrast:default:color.heatmap.bid.5 vs color.heatmap.ask.5:protanopia",
       "deficiency": "protanopia",
       "simulatedA": "#CCCC89",
-      "simulatedB": "#9A9A8B",
-      "deltaE": 31.85,
+      "simulatedB": "#B9B9B0",
+      "deltaE": 30.7,
       "threshold": 5,
       "pass": true
     },
@@ -5302,8 +6022,8 @@
       "key": "high-contrast:default:color.heatmap.bid.5 vs color.heatmap.ask.5:tritanopia",
       "deficiency": "tritanopia",
       "simulatedA": "#ABABFF",
-      "simulatedB": "#C5C500",
-      "deltaE": 124.95,
+      "simulatedB": "#D6D600",
+      "deltaE": 130.37,
       "threshold": 5,
       "pass": true
     },
@@ -5394,6 +6114,321 @@
       "simulatedA": "#D4D400",
       "simulatedB": "#ADAD00",
       "deltaE": 18.22,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.buy.default vs color.sell.default",
+      "key": "high-contrast:cvd-safe:color.buy.default vs color.sell.default:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#9696DA",
+      "simulatedB": "#AEAE47",
+      "deltaE": 91.03,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.buy.default vs color.sell.default",
+      "key": "high-contrast:cvd-safe:color.buy.default vs color.sell.default:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#A1A1D9",
+      "simulatedB": "#9F9F4D",
+      "deltaE": 74.7,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.buy.default vs color.sell.default",
+      "key": "high-contrast:cvd-safe:color.buy.default vs color.sell.default:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#8888FF",
+      "simulatedB": "#BDBD00",
+      "deltaE": 143.49,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.buy.hc vs color.sell.hc",
+      "key": "high-contrast:cvd-safe:color.buy.hc vs color.sell.hc:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#9696DA",
+      "simulatedB": "#AEAE47",
+      "deltaE": 91.03,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.buy.hc vs color.sell.hc",
+      "key": "high-contrast:cvd-safe:color.buy.hc vs color.sell.hc:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#A1A1D9",
+      "simulatedB": "#9F9F4D",
+      "deltaE": 74.7,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.buy.hc vs color.sell.hc",
+      "key": "high-contrast:cvd-safe:color.buy.hc vs color.sell.hc:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#8888FF",
+      "simulatedB": "#BDBD00",
+      "deltaE": 143.49,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.candle.up vs color.candle.down",
+      "key": "high-contrast:cvd-safe:color.candle.up vs color.candle.down:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#9696DA",
+      "simulatedB": "#AEAE47",
+      "deltaE": 91.03,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.candle.up vs color.candle.down",
+      "key": "high-contrast:cvd-safe:color.candle.up vs color.candle.down:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#A1A1D9",
+      "simulatedB": "#9F9F4D",
+      "deltaE": 74.7,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "buy-sell",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.candle.up vs color.candle.down",
+      "key": "high-contrast:cvd-safe:color.candle.up vs color.candle.down:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#8888FF",
+      "simulatedB": "#BDBD00",
+      "deltaE": 143.49,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "bid-ask",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.bid vs color.footprint.ask",
+      "key": "high-contrast:cvd-safe:color.footprint.bid vs color.footprint.ask:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#9696DA",
+      "simulatedB": "#AEAE47",
+      "deltaE": 91.03,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "bid-ask",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.bid vs color.footprint.ask",
+      "key": "high-contrast:cvd-safe:color.footprint.bid vs color.footprint.ask:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#A1A1D9",
+      "simulatedB": "#9F9F4D",
+      "deltaE": 74.7,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "bid-ask",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.bid vs color.footprint.ask",
+      "key": "high-contrast:cvd-safe:color.footprint.bid vs color.footprint.ask:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#8888FF",
+      "simulatedB": "#BDBD00",
+      "deltaE": 143.49,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "bid-ask",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.heatmap.bid.5 vs color.heatmap.ask.5",
+      "key": "high-contrast:cvd-safe:color.heatmap.bid.5 vs color.heatmap.ask.5:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#CBCBF6",
+      "simulatedB": "#DBDB8D",
+      "deltaE": 62.87,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "bid-ask",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.heatmap.bid.5 vs color.heatmap.ask.5",
+      "key": "high-contrast:cvd-safe:color.heatmap.bid.5 vs color.heatmap.ask.5:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#D3D3F5",
+      "simulatedB": "#D4D48F",
+      "deltaE": 53.67,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "bid-ask",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.heatmap.bid.5 vs color.heatmap.ask.5",
+      "key": "high-contrast:cvd-safe:color.heatmap.bid.5 vs color.heatmap.ask.5:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#C1C1FF",
+      "simulatedB": "#E3E300",
+      "deltaE": 121.69,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "imbalance",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.imbalance vs color.footprint.bid",
+      "key": "high-contrast:cvd-safe:color.footprint.imbalance vs color.footprint.bid:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#F7F7FA",
+      "simulatedB": "#9696DA",
+      "deltaE": 49.01,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "imbalance",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.imbalance vs color.footprint.bid",
+      "key": "high-contrast:cvd-safe:color.footprint.imbalance vs color.footprint.bid:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#F8F8FA",
+      "simulatedB": "#A1A1D9",
+      "deltaE": 42.01,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "imbalance",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.imbalance vs color.footprint.bid",
+      "key": "high-contrast:cvd-safe:color.footprint.imbalance vs color.footprint.bid:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#F7F7FF",
+      "simulatedB": "#8888FF",
+      "deltaE": 72.05,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "imbalance",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.imbalance vs color.footprint.ask",
+      "key": "high-contrast:cvd-safe:color.footprint.imbalance vs color.footprint.ask:deuteranopia",
+      "deficiency": "deuteranopia",
+      "simulatedA": "#F7F7FA",
+      "simulatedB": "#AEAE47",
+      "deltaE": 61.58,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "imbalance",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.imbalance vs color.footprint.ask",
+      "key": "high-contrast:cvd-safe:color.footprint.imbalance vs color.footprint.ask:protanopia",
+      "deficiency": "protanopia",
+      "simulatedA": "#F8F8FA",
+      "simulatedB": "#9F9F4D",
+      "deltaE": 56.14,
+      "threshold": 5,
+      "pass": true
+    },
+    {
+      "kind": "cvd",
+      "cvdKind": "imbalance",
+      "theme": "high-contrast",
+      "density": "all",
+      "palette": "cvd-safe",
+      "id": "color.footprint.imbalance vs color.footprint.ask",
+      "key": "high-contrast:cvd-safe:color.footprint.imbalance vs color.footprint.ask:tritanopia",
+      "deficiency": "tritanopia",
+      "simulatedA": "#F7F7FF",
+      "simulatedB": "#BDBD00",
+      "deltaE": 84.65,
       "threshold": 5,
       "pass": true
     }

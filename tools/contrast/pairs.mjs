@@ -167,6 +167,21 @@ export const PAIRS = [
     threshold: THRESHOLD.NON_TEXT,
   },
 
+  // --- CVD-safe palette (E47-S06) -------------------------------------
+  { fg: "color.cvd.buy", bg: "color.surface.canvas", threshold: THRESHOLD.NON_TEXT },
+  { fg: "color.cvd.sell", bg: "color.surface.canvas", threshold: THRESHOLD.NON_TEXT },
+  { fg: "color.cvd.imbalance", bg: "color.surface.canvas", threshold: THRESHOLD.NON_TEXT },
+  { fg: "color.cvd.heatmap.bid.1", bg: "color.surface.canvas", threshold: THRESHOLD.NON_TEXT },
+  { fg: "color.cvd.heatmap.bid.2", bg: "color.surface.canvas", threshold: THRESHOLD.NON_TEXT },
+  { fg: "color.cvd.heatmap.bid.3", bg: "color.surface.canvas", threshold: THRESHOLD.NON_TEXT },
+  { fg: "color.cvd.heatmap.bid.4", bg: "color.surface.canvas", threshold: THRESHOLD.NON_TEXT },
+  { fg: "color.cvd.heatmap.bid.5", bg: "color.surface.canvas", threshold: THRESHOLD.NON_TEXT },
+  { fg: "color.cvd.heatmap.ask.1", bg: "color.surface.canvas", threshold: THRESHOLD.NON_TEXT },
+  { fg: "color.cvd.heatmap.ask.2", bg: "color.surface.canvas", threshold: THRESHOLD.NON_TEXT },
+  { fg: "color.cvd.heatmap.ask.3", bg: "color.surface.canvas", threshold: THRESHOLD.NON_TEXT },
+  { fg: "color.cvd.heatmap.ask.4", bg: "color.surface.canvas", threshold: THRESHOLD.NON_TEXT },
+  { fg: "color.cvd.heatmap.ask.5", bg: "color.surface.canvas", threshold: THRESHOLD.NON_TEXT },
+
   // --- Action/neutral chrome (3:1 non-text) ---------------------------
   { fg: "color.action.primary.default", bg: "color.surface.app", threshold: THRESHOLD.NON_TEXT },
   { fg: "color.action.secondary.default", bg: "color.surface.app", threshold: THRESHOLD.NON_TEXT },
