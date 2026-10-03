@@ -113,6 +113,10 @@ describe("token build failure modes (copied fixture tree)", () => {
     });
     mkdirSync(path.join(dir, "packages", "ui", "scripts"), { recursive: true });
     cpSync(BUILD_SCRIPT, path.join(dir, "packages", "ui", "scripts", "build-tokens.mjs"));
+    cpSync(
+      path.join(UI_ROOT, "scripts", "chart-color-modes.mjs"),
+      path.join(dir, "packages", "ui", "scripts", "chart-color-modes.mjs"),
+    );
     mkdirSync(path.join(dir, "tools", "style-dictionary", "formats"), { recursive: true });
     cpSync(
       path.join(UI_ROOT, "..", "..", "tools", "style-dictionary", "formats"),

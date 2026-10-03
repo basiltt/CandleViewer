@@ -51,3 +51,22 @@ export function applyChartColorMode(
   root.setAttribute("data-palette", mode.palette ?? "default");
   root.setAttribute("data-convention", mode.convention ?? "standard");
 }
+
+const MODE_KEY = "cv.chartColorMode";
+
+/** Local (pre-SCR-116) persisted choice; invalid/missing values fall back to defaults. */
+export function readStoredChartColorMode(
+  storage: Pick<Storage, "getItem"> | undefined = typeof localStorage === "undefined"
+    ? undefined
+    : localStorage,
+): { palette?: ChartPalette; convention?: ChartConvention } {
+  try {
+    const raw = JSON.parse(storage?.getItem(MODE_KEY) ?? "{}") as Record<string, unknown>;
+    return {
+      ...(raw["palette"] === "cvd-safe" ? { palette: "cvd-safe" as const } : {}),
+      ...(raw["convention"] === "inverted" ? { convention: "inverted" as const } : {}),
+    };
+  } catch {
+    return {};
+  }
+}

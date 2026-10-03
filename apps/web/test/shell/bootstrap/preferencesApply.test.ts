@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { applyAppearance, applyChartColorMode } from "../../../src/shell/bootstrap/preferencesApply.js";
+import {
+  applyAppearance,
+  applyChartColorMode,
+  readStoredChartColorMode,
+} from "../../../src/shell/bootstrap/preferencesApply.js";
 
 function makeRoot(): HTMLElement {
   return document.createElement("html");
@@ -56,5 +60,22 @@ describe("applyChartColorMode", () => {
     applyAppearance({ theme: "light" }, root);
     expect(root.getAttribute("data-theme")).toBe("light");
     expect(root.getAttribute("data-palette")).toBe("cvd-safe");
+  });
+});
+
+describe("readStoredChartColorMode", () => {
+  const store = (v: string | null) => ({ getItem: () => v });
+  it("reads valid stored values", () => {
+    expect(
+      readStoredChartColorMode(store('{"palette":"cvd-safe","convention":"inverted"}')),
+    ).toEqual({
+      palette: "cvd-safe",
+      convention: "inverted",
+    });
+  });
+  it("ignores junk and invalid JSON", () => {
+    expect(readStoredChartColorMode(store("{bad"))).toEqual({});
+    expect(readStoredChartColorMode(store('{"palette":"x"}'))).toEqual({});
+    expect(readStoredChartColorMode(store(null))).toEqual({});
   });
 });

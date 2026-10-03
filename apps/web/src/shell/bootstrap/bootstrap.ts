@@ -15,7 +15,11 @@
 import { setMeClaims } from "../../lib/auth/meCache.js";
 import type { MeClaims, Role } from "../../routes/rbac.js";
 import { HttpError, HttpTimeoutError, fetchJson } from "./httpClient.js";
-import { applyAppearance } from "./preferencesApply.js";
+import {
+  applyAppearance,
+  applyChartColorMode,
+  readStoredChartColorMode,
+} from "./preferencesApply.js";
 import { type Keymap, type Me, type Settings, setShellState } from "./store.js";
 
 /** `/me` has this ceiling before the "slow boot" state is shown (SCR-150). */
@@ -92,6 +96,7 @@ export async function runBootstrap(deps: BootstrapDeps = {}): Promise<void> {
     });
     applyAppearance(undefined);
   }
+  applyChartColorMode(readStoredChartColorMode());
 
   if (keymapResult.status === "fulfilled") {
     setShellState({ keymap: keymapResult.value, keymapWarning: null });
