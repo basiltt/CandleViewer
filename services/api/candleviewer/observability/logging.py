@@ -95,6 +95,11 @@ class RedactionFilter(logging.Filter):
                 continue
             if isinstance(value, (str, dict, list, tuple)):
                 record.__dict__[key] = _redact_value(value, depth=0)
+        if record.exc_info and not record.exc_text:
+            # Materialise the traceback now so the handler's formatter cannot
+            # render the raw exception text after the filter has run.
+            record.exc_text = logging.Formatter().formatException(record.exc_info)
+            record.exc_info = None
         if record.exc_text:
             record.exc_text = _redact_value(record.exc_text, depth=0)
 

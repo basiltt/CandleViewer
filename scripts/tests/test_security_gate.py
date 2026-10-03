@@ -475,3 +475,43 @@ def test_repo_register_accepts_the_two_ghsa_exceptions_with_approver_and_expiry(
     assert not result.blocked
     late = evaluate_findings(findings, list(risks.values()), run_date=date(2027, 1, 1))
     assert late.blocked
+
+
+def test_gitleaks_block_message_cites_ir02(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    risks = _write_yaml(tmp_path, {"entries": []})
+    report = _write_json(
+        tmp_path, "gitleaks.json", [{"RuleID": "generic-api-key", "File": "a.py", "StartLine": 1}]
+    )
+    rc = main(["--tool", "gitleaks", "--report", str(report), "--accepted-risks", str(risks)])
+    err = capsys.readouterr().err
+    assert rc == 1
+    assert "IR-02" in err and "docs/ci-runbook.md" in err
+
+
+def test_gitleaks_negative_proof_fake_secret_fixture_blocks(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A planted, clearly fake DUMMYKEY_ vector run through real gitleaks -> gate blocks."""
+    import shutil
+    import subprocess
+
+    exe = shutil.which("gitleaks")
+    if exe is None:
+        pytest.skip("gitleaks binary not installed (CI runs the pinned container instead)")
+    (tmp_path / "leak.txt").write_text("token = DUMMYKEY_ABCDEFGHIJKLMNOP\n", encoding="utf-8")
+    (tmp_path / "cfg.toml").write_text(
+        '[[rules]]\nid = "dummy-test-vector"\ndescription = "fake test vector"\n'
+        "regex = '''DUMMYKEY_[A-Z]{16}'''\n",
+        encoding="utf-8",
+    )
+    rep = tmp_path / "gl.json"
+    subprocess.run(
+        [exe, "detect", "--no-git", "--source", str(tmp_path), "--config", str(tmp_path / "cfg.toml"),
+         "--redact", "-f", "json", "-r", str(rep)],
+        check=False,
+        capture_output=True,
+    )
+    risks = _write_yaml(tmp_path, {"entries": []})
+    rc = main(["--tool", "gitleaks", "--report", str(rep), "--accepted-risks", str(risks)])
+    assert rc == 1
+    assert "IR-02" in capsys.readouterr().err

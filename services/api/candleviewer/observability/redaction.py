@@ -125,3 +125,13 @@ def _redact_mapping(mapping: dict[Any, Any], depth: int = 0) -> dict[Any, Any]:
         else:
             out[key] = _redact_value(value, depth)
     return out
+
+
+def redact_text(value: str) -> str:
+    """Public: redact a free-form string using the shared rule set."""
+    return _redact_str_value(value)
+
+
+def redact_structure(value: Any) -> Any:
+    """Public: redact any JSON-like structure using the shared rule set."""
+    return _redact_value(value, 0)

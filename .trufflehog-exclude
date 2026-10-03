@@ -1,0 +1,10 @@
+# trufflehog --exclude-paths (one regex per line; E43-T06 triage, run 37080326323).
+# No blanket excludes: each entry names one path and why it is a false positive.
+# .git/config holds actions/checkout's ephemeral job-token extraheader (runner state, not repo content; git mode still scans history)
+^/repo/\.git/config$
+# Postgres detector: placeholder DSN (user/host/db dummies) asserting DSN redaction
+(^|/)services/api/tests/unit/observability/test_health_probes\.py$
+# Postgres detector: placeholder DSN (u/h/db dummies) asserting error redaction
+(^|/)services/api/tests/unit/api/test_health_report_router\.py$
+# Postgres detector: placeholder DSNs (u/h/d dummies) for DSN-conversion unit tests
+(^|/)services/api/tests/unit/migrations/test_boot_advisory_lock_unit\.py$

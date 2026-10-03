@@ -27,6 +27,11 @@ paths = [
   '''services/api/tests/unit/observability/test_redaction\.py''',
   '''services/api/tests/unit/observability/test_redaction_filter\.py''',
   '''services/api/tests/integration/observability/test_request_logging_no_secret_leak\.py''',
+  # E43-T06: synthetic canary exercising every secret escape path.
+  '''services/api/tests/unit/observability/test_secret_escape_paths\.py''',
+  # E05 threat model prose mentions "API key labels"; documentation, no credential.
+  '''docs/plan/threat-models/E05-design-system\.md''',
+  '''scripts/tests/test_check_secrets_hygiene\.py''',
 ]
 regexes = [
   '''REDACTED''',

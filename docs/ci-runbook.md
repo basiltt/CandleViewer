@@ -471,3 +471,46 @@ previous entry.
 - Baseline updates (as opposed to overrides) always need CODEOWNER approval
   and a written justification per ADR-0013 rule 4 — never conflate "the
   runner was down" with "the baseline should move".
+
+## Credential hygiene and full-history sweep (E43-T06)
+
+- `python scripts/check_secrets_hygiene.py all` (CI `gitleaks` job): fixtures carry the `DUMMYKEY_`
+  prefix (SR-145), `.env` ignored and `.env.example` non-secret (SR-144), no `set -x`/env dumps in
+  workflows (SR-146). `inventory <names.json>` and `logs <paths>` back the secret-inventory (SR-140/141)
+  and log/artefact scans.
+- Full-history sweep (run by the owner/DevSecOps before the pen-test; gitleaks is not installed on
+  agent hosts): `gitleaks detect --source . --log-opts="--all" --config .gitleaks.toml --redact -r sweep.json`
+  then `gitleaks detect --no-git ...`; record ruleset version, result and per-hit disposition in
+  `docs/plan/spikes`-style note. Any real hit: **rotate first** (IR-02, SR-143), then investigate.
+### Sweep record (executed 2026-10-03, gitleaks 8.30.1, ruleset = repo `.gitleaks.toml` on top of defaults)
+
+- Full history (`--log-opts="--all"`, 1037 commits): 16 findings, **0 real credentials**. Dispositions:
+  3x `generic-api-key` in `pr1611.diff` (commit 59f75058) = deliberate `CANARY*`/`hunter2-CANARY` test canaries;
+  2x `generic-api-key` `docs/plan/threat-models/E05-design-system.md:190` = prose false positive;
+  2x `aws-access-token` `.semgrep/tests/cv-secret-shaped-literal.py:7` = an AWS-shaped Semgrep rule-test
+  literal (intentionally secret-shaped); 1x `rest_models.py:2143` = generated `max_length=36` description text;
+  8x `docs/plan/{14,22,23}-*` = documentation examples (truncated JWT `eyJ...`, `mfa_`/`arm_` sample ids).
+  No rotation required (IR-02 not triggered). The `gitleaks` CI job now also runs a full-history gitleaks sweep,
+  `trufflehog filesystem` and `trufflehog git` (image pinned by digest; output is detector, file:line, commit,
+  verified only). First CI run triage ([run 37080326323](https://github.com/basiltt/CandleViewer/actions/runs/37080326323)),
+  all `verified=false`, no rotation:
+
+  | Detector | Location (mode) | Hits | Disposition |
+  |---|---|---|---|
+  | Postgres | `test_boot_advisory_lock_unit.py:121,126,141` (fs + git 8e8443cc) | 6 | test vector (dummy `u`/`h`/`d` DSN) |
+  | Postgres | `test_health_probes.py:67` (fs + git edabeaa2) | 2 | test vector (redaction test DSN) |
+  | Postgres | `test_health_report_router.py:71` (fs + git edabeaa2) | 2 | test vector (redaction test DSN) |
+  | Github | `.git/config:12` (fs) | 1 | false positive: checkout's ephemeral job token, runner state |
+  | Github, Postgres | `trufflehog-fs.log:1-2` (fs) | 2 | false positive: scanner self-scan of its own output |
+
+  Counts by class: test vector 10, false positive 3 (incl. the Postgres self-scan line), REAL 0. Path-specific excludes with
+  reasons live in `.trufflehog-exclude`; raw output moved to `$RUNNER_TEMP` so it is never self-scanned.
+- A committed secret fails `security_gate.py --tool gitleaks` (CI-SEC-001), whose output and a `::error` annotation cite IR-02.
+- GitHub inventory (`gh api repos/.../actions/secrets|variables|environments`): 0 repository secrets, 0
+  variables, 0 environments. CI therefore holds **no production credential** (SR-140). `TURBO_TOKEN`, `PROJECTS_PAT` and
+  `GH_BRANCH_PROTECTION_TOKEN` are referenced by workflows but not provisioned (owner to scope them to an environment when added). When release secrets are introduced they MUST live in a protected
+  `release` environment with required reviewers and use OIDC (no long-lived cloud keys); `check_inventory`
+  fails any prod-credential or repo-scoped release secret name.
+- SR-146: the `gitleaks` job runs `check_secrets_hygiene.py all` and scans its own log/artefact outputs
+  (`logs`), covered by a leaky-job test. Scope: it scans the job's report/log files in the workspace
+  (`*.json`, `*.log`, `*.sarif`), not the hosted Actions log stream itself.
