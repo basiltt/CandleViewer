@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import io
 import logging
 import traceback
@@ -113,6 +114,10 @@ def test_audit_export_record_with_embedded_json_secret_is_redacted() -> None:
     assert SECRET not in json.dumps(out, default=str)
 
 
+def _read_all(root: Path) -> bytes:
+    return b"".join(p.read_bytes() for p in root.iterdir() if p.is_file())
+
+
 async def test_audit_writer_emit_never_persists_secret_to_wal(tmp_path: Path) -> None:
     """Real emit() path: the durable WAL bytes must not contain the secret."""
     from typing import Any, cast
@@ -128,6 +133,6 @@ async def test_audit_writer_emit_never_persists_secret_to_wal(tmp_path: Path) ->
         before_state={"api_secret": SECRET},
         after_state={"meta": {"totp_seed": SECRET, "note": "ok"}},
     )
-    data = b"".join(p.read_bytes() for p in tmp_path.iterdir() if p.is_file())
+    data = await asyncio.to_thread(_read_all, tmp_path)
     assert data, "WAL must contain the emitted record"
     assert SECRET.encode() not in data
