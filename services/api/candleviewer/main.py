@@ -64,6 +64,9 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     scrub_task = getattr(app.state, "scrub_task", None)
     if scrub_task is not None:
         scrub_task.start()
+    rule_prune = getattr(app.state, "rule_prune_task", None)
+    if rule_prune is not None:
+        rule_prune.start()
     overrides = getattr(app.state, "log_level_overrides", None)
     if overrides is not None:
         overrides.start()
@@ -96,6 +99,8 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
             await health_pg.dispose()
         if overrides is not None:
             await overrides.stop()
+        if rule_prune is not None:
+            await rule_prune.stop()
         if scrub_task is not None:
             await scrub_task.stop()
         await ctx.mesh_self_check.stop()

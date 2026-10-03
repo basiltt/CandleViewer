@@ -145,10 +145,13 @@ from candleviewer.storage.repositories.relational_sqlalchemy import (
     SqlAlchemyRelationalRepository,
 )
 from candleviewer.storage.repositories.rows import TickerRow, TradeRow
+from candleviewer.storage.repositories.rules_sqlalchemy import SqlAlchemyRulesRepository
 from candleviewer.storage.repositories.sessions_sqlalchemy import (
     SqlAlchemySessionRepository,
 )
 from candleviewer.storage.repositories.users_sqlalchemy import SqlAlchemyUserRepository
+from candleviewer.storage.retention.rule_prune import RulePruneTask
+from candleviewer.storage.retention.schedule import RetentionSchedule
 from candleviewer.storage.service import StorageService
 from candleviewer.ws.gateway import Authenticate, make_ws_router
 from candleviewer.ws.permissions import ConnectionRegistry
@@ -620,6 +623,14 @@ def create_app(
         )
         if resolved.scrub_enabled
         else None
+    )
+    # E35-T02: unmatched rule-run retention prune; started by the lifespan only
+    # when `retention_enabled` (RetentionSchedule.rule_jobs()).
+    app.state.rule_prune_task = RulePruneTask(
+        SqlAlchemyRulesRepository(
+            SqlAlchemyRelationalRepository(resolved.pg_dsn.get_secret_value(), "rules")
+        ),
+        RetentionSchedule.from_settings(resolved),
     )
     identity = build_identity_provider(resolved)
     app.state.identity_provider = identity
