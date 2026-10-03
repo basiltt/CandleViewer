@@ -18,6 +18,12 @@ that must never be hand-edited:
 non-zero if the working tree's committed files would change — the same
 convention as `tools/gen/export_instrument_policy_rules.py`.
 
+`--out-dir <dir>` redirects both outputs to `<dir>` (the seed is still *read*
+from the committed path). Tests use this to exercise the write path inside
+`tmp_path` without ever touching the checkout (C-13.7). Files are always
+written with LF line endings, byte-identical on every platform, matching
+`.gitattributes`.
+
 Stdlib + PyYAML only; no network. Every operation with an `x-rbac` block
 must declare `is_dangerous` implicitly via the seed's own `dangerous` flag
 (carried over unchanged from `rbac_seed.json`'s existing per-permission
@@ -199,15 +205,17 @@ def render_seed(
     return json.dumps(new_seed, indent=2, ensure_ascii=False) + "\n"
 
 
-def main(argv: list[str]) -> int:
-    check_only = "--check" in argv
-
-    spec = load_openapi_spec()
+def render_outputs(
+    spec_path: Path = OPENAPI_SPEC_PATH, seed_path: Path = SEED_PATH
+) -> tuple[str, str]:
+    """Pure: returns `(enum_content, seed_content)` for the given inputs.
+    Never writes."""
+    spec = load_openapi_spec(spec_path)
     spec_codes = collect_permissions_from_spec(spec)
 
     existing_seed: dict[str, Any] = {}
-    if SEED_PATH.exists():
-        with SEED_PATH.open(encoding="utf-8") as fh:
+    if seed_path.exists():
+        with seed_path.open(encoding="utf-8") as fh:
             existing_seed = json.load(fh)
     existing_domains = {
         p["code"]: p["domain"] for p in existing_seed.get("permissions", [])
@@ -221,14 +229,33 @@ def main(argv: list[str]) -> int:
     enum_content = render_enum(codes_by_domain)
     new_permissions = build_seed_permissions(spec_codes, existing_seed)
     seed_content = render_seed(existing_seed, new_permissions)
+    return enum_content, seed_content
+
+
+def _write_lf(path: Path, content: str) -> None:
+    """Write with LF endings regardless of platform (`.gitattributes` says
+    `eol=lf`; the default `newline=None` would emit CRLF on Windows)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8", newline="\n")
+
+
+def main(argv: list[str]) -> int:
+    check_only = "--check" in argv
+    out_dir: Path | None = None
+    if "--out-dir" in argv:
+        out_dir = Path(argv[argv.index("--out-dir") + 1])
+
+    enum_content, seed_content = render_outputs()
 
     changed = False
     if check_only:
+        # Compare raw bytes (no newline translation) so a CRLF checkout is
+        # reported as drift rather than silently normalised away.
         current_enum = (
-            ENUM_OUT_PATH.read_text(encoding="utf-8") if ENUM_OUT_PATH.exists() else ""
+            ENUM_OUT_PATH.read_bytes().decode("utf-8") if ENUM_OUT_PATH.exists() else ""
         )
         current_seed = (
-            SEED_PATH.read_text(encoding="utf-8") if SEED_PATH.exists() else ""
+            SEED_PATH.read_bytes().decode("utf-8") if SEED_PATH.exists() else ""
         )
         if current_enum != enum_content:
             print(f"DRIFT: {ENUM_OUT_PATH} is stale", file=sys.stderr)
@@ -238,10 +265,12 @@ def main(argv: list[str]) -> int:
             changed = True
         return 1 if changed else 0
 
-    ENUM_OUT_PATH.write_text(enum_content, encoding="utf-8")
-    SEED_PATH.write_text(seed_content, encoding="utf-8")
-    print(f"wrote {ENUM_OUT_PATH}")
-    print(f"wrote {SEED_PATH}")
+    enum_out = out_dir / ENUM_OUT_PATH.name if out_dir else ENUM_OUT_PATH
+    seed_out = out_dir / SEED_PATH.name if out_dir else SEED_PATH
+    _write_lf(enum_out, enum_content)
+    _write_lf(seed_out, seed_content)
+    print(f"wrote {enum_out}")
+    print(f"wrote {seed_out}")
     return 0
 
 

@@ -5,6 +5,7 @@ the generated corpus."""
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -61,3 +62,22 @@ def test_main_check_mode_prints_without_writing(
 ) -> None:
     exit_code = export_instrument_policy_corpus.main(["--check"])
     assert exit_code == 0
+
+
+def test_committed_corpus_round_trips_byte_identical() -> None:
+    """The committed `corpus.json` is exactly the generator's output — same
+    JSON style (`indent=2`, one array element per line) and LF endings — so
+    `pnpm generate` never produces a diff and nothing (prettier included)
+    may reformat it (C-13.7)."""
+    committed = export_instrument_policy_corpus.OUT_PATH.read_bytes()
+    assert b"\r" not in committed, "corpus.json must be LF-only"
+    expected = (
+        json.dumps(
+            export_instrument_policy_corpus.build_document(),
+            indent=2,
+            sort_keys=False,
+            ensure_ascii=False,
+        )
+        + "\n"
+    ).encode("utf-8")
+    assert committed == expected
