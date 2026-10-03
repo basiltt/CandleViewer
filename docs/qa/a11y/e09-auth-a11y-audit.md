@@ -28,6 +28,15 @@ them `not-assessed`; only SCR-006/017/123/154 carry real axe evidence. Added for
 320 px reflow (SC 1.4.10) and reduced-motion (SC 2.3.3) checks. The spec uses the default 30 s
 timeout (no override; the earlier failure was a cold start, now avoided by serving the built bundle).
 
+Update (review round 2): the eight placeholder rows are now reported as SKIPPED by Playwright
+(not passed), so the report no longer shows 12/12 green. The real result is 4 assessed + 8 not
+assessed. A separate test fails when a placeholder is replaced, forcing a real audit.
+
+SCR-017 (the only implemented enrolment flow) is now exercised at every wizard step (1..4):
+axe per step, selectable TOTP secret text (SC 1.1.1), recovery codes as a list, SC 3.3.1 errors
+announced via `role="alert"` (rejected password), reflow at 320 px and 640 px (200% zoom
+equivalent) and reduced motion. SCR-001..005 (login, 2FA, lockout) remain unassessed.
+
 ## 2. Findings
 
 | ID   | Finding                                                                                                      | WCAG SC      | Severity | Owner              | Action                                                                                |
@@ -59,6 +68,9 @@ forward as F-01.
 NVDA/Windows Chromium plus the two other §8.1 configurations, executing §8.2 per screen, need a human
 auditor with a screen reader and recordings. Not done. The a11y-champion and QA-lead sign-offs are
 open.
+
+Owner exception for this manual AC has been requested on #295 and is NOT yet approved; until the
+owner records approval there, this AC is unmet and the ticket must not move to Done.
 
 Not covered by any automated check and still OPEN (no agent can supply them): SR enrolment flow,
 SC 3.3.1 announcement on SCR-001..005, 200% modal zoom on SCR-005/006, and the NVDA/two-config

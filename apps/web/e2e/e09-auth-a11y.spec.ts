@@ -55,6 +55,16 @@ test("E09 screen list covers all twelve SCR ids", () => {
   expect(new Set(E09_SCREENS.map((s) => s.scr)).size).toBe(12);
 });
 
+test("not-assessed screens are still placeholders (fails when one ships: audit it, flip shipped)", async ({
+  page,
+}) => {
+  await stub(page);
+  for (const { path } of E09_SCREENS.filter((s) => s.shipped === false)) {
+    await page.goto(path);
+    await expect(page.getByText("This screen has not shipped yet.")).toBeVisible();
+  }
+});
+
 const SHIPPED = E09_SCREENS.filter((s) => s.shipped !== false);
 
 for (const { scr, path, shipped } of E09_SCREENS) {
@@ -62,11 +72,8 @@ for (const { scr, path, shipped } of E09_SCREENS) {
     await stub(page);
     await page.goto(path);
     await page.waitForLoadState("networkidle");
-    if (shipped === false) {
-      test.info().annotations.push({ type: "not-assessed", description: "placeholder screen" });
-      await expect(page.getByText("This screen has not shipped yet.")).toBeVisible();
-      return;
-    }
+    // Placeholder screens are reported as SKIPPED (not passed): axe on a stub proves nothing.
+    test.skip(shipped === false, "not-assessed: placeholder screen, no real UI to audit");
     await expect(page.getByText("This screen has not shipped yet.")).toHaveCount(0);
     const res = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
@@ -99,3 +106,119 @@ for (const { scr, path } of SHIPPED) {
     expect(running).toBe(0);
   });
 }
+
+// ---- SCR-017 enrolment wizard: every step, not just the landing step (E09-Q04 review) ----
+// This is the only implemented enrolment flow (TOTP secret + recovery codes). It covers the
+// SR-enrolment, SC 3.3.1 (error identification), reflow/200% zoom and reduced-motion criteria
+// for what exists. SCR-001..005 remain not-assessed (placeholders).
+const TOK = "tok-a11y-0123456789";
+
+async function stubWizard(page: Page, opts: { reject?: boolean } = {}): Promise<void> {
+  await stub(page);
+  await page.route(`**/api/v1/invites/${TOK}`, (r) =>
+    r.request().method() === "GET"
+      ? r.fulfill(json({ display_name: "Ann", role: "viewer", expires_at: "x" }))
+      : opts.reject
+        ? r.fulfill({ status: 422, contentType: "application/json", body: "{}" })
+        : r.fulfill(json({ method_id: "m1", otpauth_uri: "otpauth://x", secret_base32: "AAAA" })),
+  );
+  await page.route(`**/api/v1/invites/${TOK}/confirm`, (r) =>
+    opts.reject
+      ? r.fulfill({ status: 422, contentType: "application/json", body: "{}" })
+      : r.fulfill(json({ status: "active", role: "viewer", recovery_codes: ["rc-1", "rc-2"] })),
+  );
+}
+
+async function seriousAxe(page: Page): Promise<string[]> {
+  const res = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+    .analyze();
+  return res.violations
+    .filter((v) => v.impact === "serious" || v.impact === "critical")
+    .map((v) => `${v.id}: ${v.help}`);
+}
+
+async function noOverflow(page: Page): Promise<number> {
+  return page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+}
+
+async function walk(page: Page, check: () => Promise<void>): Promise<void> {
+  await page.goto(`/invite/${TOK}`);
+  await expect(page.getByText(/Step 1 of 4/)).toBeVisible();
+  await check();
+  await page.getByRole("button", { name: "Accept invitation" }).click();
+  await expect(page.getByText(/Step 2 of 4/)).toBeVisible();
+  await check();
+  await page.getByLabel("New password").fill("correct horse battery");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.getByText(/Step 3 of 4/)).toBeVisible();
+  await check();
+  await page.getByLabel("Authenticator code").fill("123456");
+  await page.getByRole("button", { name: "Activate account" }).click();
+  await expect(page.getByText(/Step 4 of 4/)).toBeVisible();
+  await check();
+}
+
+test("SCR-017 enrolment: axe clean at every wizard step", async ({ page }) => {
+  await stubWizard(page);
+  await walk(page, async () => expect(await seriousAxe(page)).toEqual([]));
+});
+
+test("SCR-017 enrolment: secret and recovery codes are readable text for screen readers", async ({
+  page,
+}) => {
+  await stubWizard(page);
+  await walk(page, async () => undefined);
+  await expect(page.getByRole("list").getByRole("listitem")).toHaveCount(2);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("You are set up");
+});
+
+test("SCR-017 enrolment: TOTP secret is selectable text, not only a QR (SC 1.1.1)", async ({
+  page,
+}) => {
+  await stubWizard(page);
+  await page.goto(`/invite/${TOK}`);
+  await page.getByRole("button", { name: "Accept invitation" }).click();
+  await page.getByLabel("New password").fill("correct horse battery");
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.getByText("AAAA")).toBeVisible();
+});
+
+test("SCR-017 SC 3.3.1: rejected password and code are announced via role=alert", async ({
+  page,
+}) => {
+  await stubWizard(page, { reject: true });
+  await page.goto(`/invite/${TOK}`);
+  await page.getByRole("button", { name: "Accept invitation" }).click();
+  await page.getByLabel("New password").fill("x");
+  await page.getByRole("button", { name: "Continue" }).click();
+  const alert = page.getByRole("alert");
+  await expect(alert).toHaveText("That password does not meet the policy.");
+  expect(await seriousAxe(page)).toEqual([]);
+});
+
+test("SCR-017: reflow at 320 px and 200% zoom on every step (SC 1.4.10 / 1.4.4)", async ({
+  page,
+}) => {
+  await stubWizard(page);
+  // 320 CSS px wide; 200% zoom of a 1280 px window is a 640 CSS px viewport.
+  for (const width of [320, 640]) {
+    await page.setViewportSize({ width, height: 640 });
+    await walk(page, async () => expect(await noOverflow(page)).toBeLessThanOrEqual(0));
+  }
+});
+
+test("SCR-017: reduced motion leaves no running animation on any step (SC 2.3.3)", async ({
+  page,
+}) => {
+  await stubWizard(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await walk(page, async () => {
+    const running = await page.evaluate(
+      () => document.getAnimations().filter((a) => a.playState === "running").length,
+    );
+    expect(running).toBe(0);
+  });
+});
