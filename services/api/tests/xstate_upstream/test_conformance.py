@@ -138,9 +138,19 @@ async def test_guard_denied_event_does_not_brick_machine() -> None:
     await interp.send("GO")
     await _settle()
     assert interp.current_state_ids == {"conf.idle"}
-    await interp.send("GO")  # still accepts events afterwards
+    await interp.send("GO")  # repeated denial is harmless
     assert interp.current_state_ids == {"conf.idle"}
+    # a still-valid event is accepted: swap in an allowing machine from a denied snapshot
+    blob = _blob(interp)
     await interp.stop()
+    allowed: Interpreter[Any] = Interpreter.from_snapshot(
+        blob, _machine(_native_async_work, allow=True), minimum_version=3
+    )
+    await allowed.start()
+    await allowed.send("GO")
+    await _settle()
+    assert allowed.current_state_ids == {"conf.done"}
+    await allowed.stop()
 
 
 def test_strict_config_rejects_unknown_key() -> None:
