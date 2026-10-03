@@ -17,6 +17,7 @@ jobs:
     name: a11y
     runs-on: ubuntu-latest
     timeout-minutes: 12
+    # 12 min PR budget (AC); nightly sweep: a11y-nightly.yml (20 min).
     env:
       CV_A11Y_INFRA_WAIVER_UNTIL: ${{ vars.CV_A11Y_INFRA_WAIVER_UNTIL }}
     steps:
@@ -49,21 +50,40 @@ jobs:
         working-directory: apps/web
         run: npx playwright install --with-deps chromium
 
-      - name: axe + keyboard + tree + flash + Lighthouse collectors
-        # Collectors emit JSON under reports/a11y/ (absent until the
-        # screen/collector tickets land; reported as a notice, never silently green); gates.py then decides pass/fail with text output.
+      - name: Collect axe + keyboard + tree + flash (Playwright)
+        # Collectors emit JSON/text under reports/a11y/. They fail only when
+        # they cannot collect; gates.py decides pass/fail on the content.
+        working-directory: apps/web
+        run: |
+          date +%s > "$RUNNER_TEMP/a11y-start"
+          npx playwright test -c e2e/playwright.a11y.config.ts
+
+      - name: Collect Lighthouse scores
+        working-directory: apps/web
+        run: |
+          npx vite preview --port 4173 --host 127.0.0.1 &
+          VP=$!
+          for _ in $(seq 30); do curl -sf http://127.0.0.1:4173 >/dev/null && break; sleep 2; done
+          node e2e/a11y/lighthouse.collect.mjs || true
+          kill $VP
+
+      - name: Evaluate gates (absent collector output = infra error, never green)
         run: |
           set +e
-          for g in "axe reports/a11y/axe.json" "lighthouse reports/a11y/lighthouse.json" \
-                   "keyboard reports/a11y/keyboard.json" "flash reports/a11y/flash.json" \
-                   "tree reports/a11y/trees"; do
+          for g in "axe reports/a11y/axe.json" "lighthouse reports/a11y/lighthouse.json"                    "keyboard reports/a11y/keyboard.json" "flash reports/a11y/flash.json"                    "tree reports/a11y/trees"; do
             set -- $g
-            if [ ! -e "$2" ]; then
-              echo "::notice::a11y gate '$1' collector not landed yet ($2 absent) - not evaluated"
-              continue
-            fi
             python -m tools.a11y.gates $g | tee -a "$GITHUB_STEP_SUMMARY"
             rc=${PIPESTATUS[0]}
             [ "$rc" -ne 0 ] && fail=$rc
           done
+          elapsed=$(( $(date +%s) - $(cat "$RUNNER_TEMP/a11y-start") ))
+          python -m tools.a11y.gates budget "$elapsed" --limit 720 | tee -a "$GITHUB_STEP_SUMMARY"
+          [ "${PIPESTATUS[0]}" -ne 0 ] && fail=1
           exit ${fail:-0}
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: a11y-reports
+          path: reports/a11y/
+          retention-days: 14
