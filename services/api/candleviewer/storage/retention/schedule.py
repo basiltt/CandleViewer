@@ -55,3 +55,9 @@ class RetentionSchedule:
         if not self.enabled:
             return {}
         return {"rule_runs_prune": self.retention_cron}
+
+    def alert_jobs(self) -> dict[str, str]:
+        """`alert_deliveries` purge (E40-T01): 180 d hot, archive_parquet, runs as `cv_owner`."""
+        if not self.enabled:
+            return {}
+        return {"alert_deliveries_purge": self.retention_cron}
