@@ -897,7 +897,12 @@ rules = Table(
     Column("scope_account_id", UUID(as_uuid=True)),
     Column("scope_symbol", symbol_code),
     Column("mode", rule_mode, nullable=False, server_default=text("'disabled'")),
-    Column("active_version_id", UUID(as_uuid=True)),
+    Column(
+        "active_version_id",
+        ForeignKey(
+            "rule_versions.id", ondelete="RESTRICT", name="rules_active_version_fk", use_alter=True
+        ),
+    ),
     Column("editor", Text, nullable=False, server_default=text("'form'")),
     Column("priority", SmallInteger, nullable=False, server_default=text("100")),
     Column("eval_interval_ms", Integer, nullable=False, server_default=text("250")),
@@ -970,8 +975,8 @@ rule_versions = Table(
     Column("backtest_summary", JSONB),
     Column("created_by", ForeignKey("users.id", ondelete="SET NULL")),
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
-    UniqueConstraint("rule_id", "version"),
-    UniqueConstraint("rule_id", "ir_hash"),
+    UniqueConstraint("rule_id", "version", name="rule_versions_rule_id_version_key"),
+    UniqueConstraint("rule_id", "ir_hash", name="rule_versions_rule_id_ir_hash_key"),
     CheckConstraint("version >= 1", name="rv_version_pos"),
     CheckConstraint(
         "jsonb_typeof(ir) = 'object' AND ir ? 'conditions' AND ir ? 'actions'",
@@ -991,7 +996,12 @@ rule_runs = Table(
     Column("trigger_reason", Text, nullable=False),
     Column("scope_account_id", UUID(as_uuid=True)),
     Column("scope_symbol", symbol_code),
-    Column("input_snapshot", JSONB, nullable=False),
+    Column(
+        "input_snapshot",
+        JSONB,
+        nullable=False,
+        comment="financial/confidential: may hold equity, PnL and position size; never log at INFO",
+    ),
     Column("matched", Boolean, nullable=False, server_default=text("false")),
     Column("actions_planned", JSONB),
     Column("actions_executed", JSONB),
@@ -1024,7 +1034,7 @@ rule_events = Table(
     Column("payload", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
     Column("severity", severity, nullable=False, server_default=text("'info'")),
     Column("event_ts", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
-    UniqueConstraint("rule_run_id", "seq"),
+    UniqueConstraint("rule_run_id", "seq", name="rule_events_rule_run_id_seq_key"),
     CheckConstraint(
         "kind IN ('condition_eval','action_start','action_ok','action_fail','throttled','log')",
         name="re_kind",
