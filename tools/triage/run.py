@@ -257,22 +257,27 @@ def cmd_guard(api: GhApi, pr: int) -> int:
     return 1 if failed else 0
 
 
+# Conservative default when the body gives no gradable severity (never left UNSET).
+DEFAULT_SEVERITY = "P1"
+
+
 def sweep_actions(issue: dict[str, Any]) -> dict[str, Any]:
     """One-time re-grade of an existing open bug against §11.3 / §6.1 (pure)."""
     labels = [x["name"] for x in issue.get("labels", [])]
     body = issue.get("body") or ""
     missing = dor.missing_fields(body)
     sev = dor.severity_of(body, labels)
-    if sev is None and "Severity" not in missing:
-        missing.append("Severity")
+    defaulted = sev is None
+    if defaulted:
+        sev = DEFAULT_SEVERITY
+        if "Severity" not in missing:
+            missing.append("Severity")
     owner = (issue.get("assignee") or {}).get("login") or (issue.get("user") or {}).get(
         "login"
     )
     add: list[str] = []
     if missing and "needs-dor" not in labels:
         add.append("needs-dor")
-    if sev is None and "needs-severity" not in labels:
-        add.append("needs-severity")
     if sev and not any(x.startswith("priority/") for x in labels):
         add.append(f"priority/{sev.lower()}")
     if not any(x.startswith("area/") for x in labels) and "needs-area" not in labels:
@@ -286,6 +291,7 @@ def sweep_actions(issue: dict[str, Any]) -> dict[str, Any]:
         )
     return {
         "severity": sev,
+        "defaulted": defaulted,
         "missing": missing,
         "owner": owner,
         "add": add,
@@ -323,7 +329,7 @@ def cmd_sweep(api: GhApi, dry_run: bool = False) -> int:
                     opened, sla.window_minutes(a["severity"], cal), cal
                 ).isoformat(timespec="minutes")
             print(
-                f"#{n}: severity={a['severity'] or 'UNSET'} sla_due={due} "
+                f"#{n}: severity={a['severity']}{'(defaulted)' if a['defaulted'] else ''} sla_due={due} "
                 f"missing={len(a['missing'])} add={','.join(a['add']) or '-'}"
             )
             if dry_run:

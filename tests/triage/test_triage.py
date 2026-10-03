@@ -360,8 +360,11 @@ def test_sweep_flags_failing_bug_with_owner_and_unset_severity() -> None:
     issue = {"labels": [{"name": "type/bug"}], "body": "", "user": {"login": "rep"}}
     a = run.sweep_actions(issue)
     assert (
-        a["owner"] == "rep" and "needs-dor" in a["add"] and "needs-severity" in a["add"]
+        a["owner"] == "rep" and "needs-dor" in a["add"]
+        and "needs-severity" not in a["add"]
     )
+    assert a["severity"] == "P1" and a["defaulted"]
+    assert "priority/p1" in a["add"] and "Severity" in a["missing"]
     assert "@rep" in a["comment"]
 
 
@@ -389,6 +392,7 @@ def test_sweep_adds_priority_label_from_body_and_needs_area() -> None:
 def test_cmd_sweep_labels_and_comments_once(capsys: pytest.CaptureFixture[str]) -> None:
     issue = {
         "number": 5,
+        "created_at": "2026-09-30T10:00:00Z",
         "labels": [{"name": "type/bug"}],
         "body": "",
         "user": {"login": "r"},

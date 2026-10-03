@@ -40,3 +40,8 @@ The 8 bugs previously UNSET were graded and `needs-severity` removed: #1737, #15
 ## Required-check exception
 `regression-guard` stays non-required: C-9.1 owns the required list, so promotion needs a C-16
 amendment (raised on #1340). Owner-approved exception requested on the issue.
+
+## Grading result (review fix 2)
+21/21 open bugs graded (see table above), 0 defaulted,
+none carry `needs-severity`. The sweep now defaults an ungradable bug to P1 (conservative) and keeps
+`needs-dor` naming the missing Severity field, instead of leaving it UNSET.
