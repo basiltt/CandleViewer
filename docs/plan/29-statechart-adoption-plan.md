@@ -181,7 +181,7 @@ MUST-09 applies: the linter ships before the first machine JSON merges.
   - a restore with the wrong `machine_hash`, a bad HMAC or `version < 3` is refused loudly;
   - guard-denied and unhandled events are audited and never brick the machine;
   - a chain-trip latch survives restore.
-- **Runner.** Runs with `-W error::RuntimeWarning` (CV-C67). The suite must finish in under 60 s. A per-machine throughput budget is checked against the BENCH-1 and BENCH-6 baselines.
+- **Runner.** Runs with `-W error::RuntimeWarning` (CV-C67). The suite must finish in under 60 s. A per-machine throughput budget is checked against the BENCH-1 and BENCH-6 baselines. (E50-T06: `tools/statechart/suite_budget.py` enforces the 60 s wall budget and a per-machine cases/s floor in the `xstate-contract` job from the JUnit report; the BENCH-1 idle re-run status is in `docs/research/xstate/bench1-idle-rerun-p3-g4.md`.)
 - **Nightly.**
   - `docs/research/xstate/gate/run_gate.py` runs against the **pinned** 0.9.1 wheel (hash-verified). A second run against the latest upstream release is informational and feeds the liaison chore.
   - `docs/research/xstate/bench/bench_c_timers_v2.py` (BENCH-6) also runs nightly. It gates on target hardware (P3-G6).

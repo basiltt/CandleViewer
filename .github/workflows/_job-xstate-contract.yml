@@ -47,7 +47,12 @@ jobs:
         working-directory: services/api
         run: >
           uv run pytest tests/xstate_contract -q --no-cov -m "not sync_parity"
-          -W error::RuntimeWarning --durations=10
+          -W error::RuntimeWarning --durations=10 --junitxml=xstate-contract-junit.xml
+
+      - name: Suite budget < 60 s + per-machine throughput (E50-T06)
+        run: >
+          python tools/statechart/suite_budget.py
+          services/api/xstate-contract-junit.xml
 
   xstate-sync-parity:
     name: xstate-sync-parity (informational)
