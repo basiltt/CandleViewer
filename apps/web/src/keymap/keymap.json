@@ -242,10 +242,6 @@
       "visibleControl": true,
       "shadows": [
         {
-          "command": "dom.cancel_all",
-          "rationale": "Escape scoped to the focused panel; contexts are never co-active"
-        },
-        {
           "command": "ticket.clear",
           "rationale": "Escape scoped to the focused panel; contexts are never co-active"
         }
@@ -307,20 +303,11 @@
       "id": "dom.cancel_all",
       "label": "Cancel all working orders for symbol",
       "context": "DOM",
-      "defaultBinding": "Esc",
+      "defaultBinding": "Ctrl+Shift+X",
       "destructive": true,
       "validWhen": "working orders exist",
       "visibleControl": true,
-      "shadows": [
-        {
-          "command": "chart.cancel_drawing",
-          "rationale": "Escape scoped to the focused panel; contexts are never co-active"
-        },
-        {
-          "command": "ticket.clear",
-          "rationale": "Escape scoped to the focused panel; contexts are never co-active"
-        }
-      ]
+      "decision": "E49-S07: bare Esc removed (destructive needs a modifier; Esc stays Close/Cancel). Pending Owner confirmation of the replacement key."
     },
     {
       "id": "dom.zoom_in",
@@ -448,10 +435,6 @@
       "shadows": [
         {
           "command": "chart.cancel_drawing",
-          "rationale": "Escape scoped to the focused panel; contexts are never co-active"
-        },
-        {
-          "command": "dom.cancel_all",
           "rationale": "Escape scoped to the focused panel; contexts are never co-active"
         }
       ]
