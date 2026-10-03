@@ -18,7 +18,15 @@ from __future__ import annotations
 import pytest
 from xstate_statemachine import QueueOverflowError
 
-from tests.xstate_contract._harness import SPELLINGS, Charts, Spelling, instrument, stable_states
+from candleviewer.statechart.config import CV_INBOX_BOUND
+from tests.xstate_contract._harness import (
+    SPELLINGS,
+    Charts,
+    Spelling,
+    instrument,
+    lane_of,
+    stable_states,
+)
 from tests.xstate_contract.chaos._chaos import (
     FAMILIES,
     REG,
@@ -56,13 +64,26 @@ def test_ledger_covers_every_catalogue_invariant() -> None:
     pending = {inv for inv, n, _t in ROWS if n in PENDING_CHARTS}
     assert covered | pending == {inv for inv, _n, _t in ROWS}
     assert covered.isdisjoint(pending)
-    assert {chart_for_number(n) for n in PENDING_CHARTS} == {
-        None
-    }, "a pending chart has landed: drop it from PENDING_CHARTS"
+    assert {chart_for_number(n) for n in PENDING_CHARTS} == {None}, (
+        "a pending chart has landed: drop it from PENDING_CHARTS"
+    )
     assert len(covered) == len(LEDGER) >= 80
     assert {f for _i, _m, f in LEDGER} <= set(FAMILIES)
     assert set(FAMILIES) == {f for _i, _m, f in LEDGER}, "every family is exercised"
     assert {(m, f) for _i, m, f in LEDGER} == set(CASES)
+
+
+_PENDING_ROWS = [(inv, n) for inv, n, _t in ROWS if n in PENDING_CHARTS]
+
+
+@pytest.mark.parametrize(("inv", "number"), _PENDING_ROWS, ids=[i for i, _n in _PENDING_ROWS])
+def test_pending_chart_invariant_is_tracked(inv: str, number: int) -> None:
+    """Each invariant of an unlanded chart is a visible skip, never silent.
+
+    The owning epic's ticket must add the chart; the ledger test then fails
+    until that chart's invariants are run here (no waiver is implied).
+    """
+    pytest.skip(f"{inv}: chart B{number} not committed yet; owned by {PENDING_CHARTS[number]}")
 
 
 async def _kill_restart(machine: str, charts: Charts) -> None:
@@ -98,7 +119,7 @@ async def _inbox_overflow(machine: str, charts: Charts) -> None:
     try:
         accepted, refused = flood(live)
         assert refused, f"{machine}: overflow past the lane bound was not refused"
-        assert accepted == live.interp._max_queue_size
+        assert accepted == CV_INBOX_BOUND[lane_of(machine)]
         with pytest.raises(QueueOverflowError):
             live.interp.send(probe_event(machine))  # still refused, not dropped
         await _drain()
