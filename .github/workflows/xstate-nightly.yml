@@ -1,0 +1,138 @@
+name: xstate-nightly
+
+# E50-T04 (29-statechart-adoption-plan.md §1.7 Nightly, P3-G6).
+#  * pinned   - docs/research/xstate/gate/run_gate.py --with-bench against the
+#               hash-locked xstate-statemachine==0.9.1 wheel (uv sync --frozen).
+#               GATES: a blocking check failing that is not in the committed
+#               baseline (result-v0.9.1.json), or BENCH-6 p99 > 100 ms at 500
+#               busy machines, turns the run red and opens an E50-C17 issue.
+#  * upstream - the same gate against the latest PyPI release. Informational:
+#               continue-on-error, never gates, only publishes a note.
+# BENCH-6 must be measured on target hardware: set the repo variable
+# CV_TARGET_HW_RUNNER to a JSON runner label (e.g. '["self-hosted","target-hw"]');
+# it falls back to ubuntu-latest until that runner exists.
+# Reports land in artifacts/xstate-gate/<date>.md (uploaded as an artifact).
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONIOENCODING: utf-8
+  UPSTREAM_REPO: basiltt/xstate-statemachine
+  BASELINE: docs/research/xstate/gate/result-v0.9.1.json
+
+jobs:
+  pinned:
+    name: xstate-nightly-pinned
+    runs-on: ${{ fromJSON(vars.CV_TARGET_HW_RUNNER || '"ubuntu-latest"') }}
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.9.x"
+          enable-cache: true
+          cache-dependency-glob: "services/api/uv.lock"
+          python-version: "3.12"
+
+      - name: Verify the pin (exact, hash-locked)
+        run: python tools/ci/check_pin.py
+
+      - name: uv sync --frozen (hash-verified pinned wheel)
+        working-directory: services/api
+        run: uv sync --frozen --all-groups
+
+      - name: Checkout upstream tag v0.9.1 (BENCH-6 scenario source)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: ${{ env.UPSTREAM_REPO }}
+          ref: v0.9.1
+          path: _upstream
+
+      - name: run_gate.py (pinned, with benchmarks)
+        id: gate
+        continue-on-error: true
+        working-directory: services/api
+        run: >
+          uv run python ../../docs/research/xstate/gate/run_gate.py
+          --with-bench --json "$GITHUB_WORKSPACE/gate-result.json"
+
+      - name: BENCH-6 (bench_c_timers_v2.py)
+        working-directory: services/api
+        run: >
+          uv run python ../../docs/research/xstate/bench/bench_c_timers_v2.py
+          --repo "$GITHUB_WORKSPACE/_upstream" > "$GITHUB_WORKSPACE/bench6.json"
+
+      - name: Verdict + report
+        id: verdict
+        run: >
+          python tools/statechart/nightly_gate.py --mode pinned
+          --result gate-result.json --baseline "$BASELINE" --bench bench6.json
+          --date "$(date -u +%F)" --out "artifacts/xstate-gate/$(date -u +%F).md"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: xstate-gate-pinned
+          path: |
+            artifacts/xstate-gate/
+            gate-result.json
+            bench6.json
+          retention-days: 30
+
+      - name: Notify E50-C17 (pinned regression)
+        if: failure() && steps.verdict.conclusion == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh issue create --title "xstate-nightly: pinned 0.9.1 gate regression $(date -u +%F)"
+          --label "area/backend-platform" --label "priority/p1"
+          --body "E50-C17 (upstream liaison): the pinned gate went red. Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+  upstream:
+    name: xstate-nightly-upstream (informational)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.9.x"
+          python-version: "3.12"
+
+      - name: Latest upstream release in a throwaway venv (not the pin)
+        run: |
+          uv venv "$RUNNER_TEMP/up"
+          uv pip install --python "$RUNNER_TEMP/up/bin/python" --upgrade xstate-statemachine
+
+      - name: run_gate.py (latest upstream, no benchmarks)
+        continue-on-error: true
+        run: >
+          "$RUNNER_TEMP/up/bin/python" docs/research/xstate/gate/run_gate.py
+          --json "$GITHUB_WORKSPACE/gate-result.json"
+
+      - name: Informational note
+        run: >
+          python tools/statechart/nightly_gate.py --mode upstream
+          --result gate-result.json --baseline "$BASELINE"
+          --date "$(date -u +%F)" --out "artifacts/xstate-gate/$(date -u +%F)-upstream.md"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: xstate-gate-upstream
+          path: artifacts/xstate-gate/
+          retention-days: 30
