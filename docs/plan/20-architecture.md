@@ -220,6 +220,8 @@ flowchart LR
 
 > **Journal analytics tier (E41-K01):** `/journal/analytics` is computed from Postgres only; Parquet stays archive-only — [`27-adrs/ADR-0027-journal-analytics-query-tier.md`](27-adrs/ADR-0027-journal-analytics-query-tier.md).
 
+> **Docs toolchain (E48-K01):** MkDocs Material + Redocly CLI + generated WS reference, proposed-with-deadline — [`27-adrs/ADR-0028-docs-toolchain.md`](27-adrs/ADR-0028-docs-toolchain.md).
+
 
 Common conventions for every module below:
 
