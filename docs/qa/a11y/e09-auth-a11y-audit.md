@@ -17,16 +17,16 @@ serious/critical violation. Network stubbed at the transport layer; no live call
 | SCR-005 Re-auth modal          | /locked                       | placeholder                                  | 0 (see note)         |
 | SCR-006 Step-up modal          | /admin/users/new (StepUpGate) | AdminInviteScreen                            | 0 (see note)         |
 | SCR-017 Invite onboarding      | /invite/:token                | InviteAcceptScreen                           | 0 (see note)         |
-| SCR-019 Setup checklist        | /terminal/last                | SetupChecklistCard (stubbed complete)        | 0 (see note)         |
+| SCR-019 Setup checklist        | /terminal/last                | placeholder (checklist card not routed yet)  | 0 (see note)         |
 | SCR-111 Profile settings       | /settings/profile             | placeholder                                  | 0 (see note)         |
 | SCR-112 Security settings      | /settings/profile             | placeholder (no distinct route yet)          | 0 (see note)         |
 | SCR-123 Admin invite           | /admin/users/new              | AdminInviteScreen                            | 0 (see note)         |
 | SCR-154 Permission denied      | /403                          | ForbiddenState                               | 0 (see note)         |
 
 Note: rows with a placeholder are **not assessed**. The spec now asserts the stub marker and tags
-them `not-assessed`; only SCR-006/017/019/123/154 carry real axe evidence. Added for those five:
-320 px reflow (SC 1.4.10) and reduced-motion (SC 2.3.3) checks. Spec timeout reduced to 60 s
-(the earlier 30 s failure was cold dev-server start on the first screen, not a screen defect).
+them `not-assessed`; only SCR-006/017/123/154 carry real axe evidence. Added for those four:
+320 px reflow (SC 1.4.10) and reduced-motion (SC 2.3.3) checks. The spec uses the default 30 s
+timeout (no override; the earlier failure was a cold start, now avoided by serving the built bundle).
 
 ## 2. Findings
 
@@ -36,7 +36,7 @@ them `not-assessed`; only SCR-006/017/019/123/154 carry real axe evidence. Added
 | F-02 | SCR-112 has no distinct route; it shares /settings/profile                                                   | n.a.         | Low      | E11 / sitemap      | Update the spec path when a route exists.                                             |
 | F-03 | Lockout countdown, OTP live regions, recovery-code announcements cannot be assessed (screens absent)         | 3.3.1, 4.1.3 | Pending  | E09 screen tickets | Audit on delivery (checklist in section 3).                                           |
 
-No violation was found on implemented screens (SCR-006, 017, 019, 123, 154). Per-SC bug filing is
+No violation was found on implemented screens (SCR-006, 017, 123, 154). Per-SC bug filing is
 deferred until screens exist; none is open because nothing failing was observed.
 
 ## 3. Structured checklist (to run when screens ship)

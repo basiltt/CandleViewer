@@ -5,7 +5,6 @@ import AxeBuilder from "@axe-core/playwright";
 // Network is stubbed at the transport layer; no live calls. Screens whose real UI has not
 // shipped yet render the shell placeholder; they are still scanned so the gate is in place
 // the moment the screen lands (see docs/qa/a11y/e09-auth-a11y-audit.md).
-test.describe.configure({ timeout: 60_000 });
 
 const json = (body: unknown) => ({
   status: 200,
@@ -24,7 +23,7 @@ export const E09_SCREENS: ReadonlyArray<{ scr: string; path: string; shipped?: b
   { scr: "SCR-005", shipped: false, path: "/locked" },
   { scr: "SCR-006", path: "/admin/users/new" },
   { scr: "SCR-017", path: "/invite/tok-a11y-0123456789" },
-  { scr: "SCR-019", path: "/terminal/last" },
+  { scr: "SCR-019", shipped: false, path: "/terminal/last" },
   { scr: "SCR-111", shipped: false, path: "/settings/profile" },
   { scr: "SCR-112", shipped: false, path: "/settings/profile" },
   { scr: "SCR-123", path: "/admin/users/new" },
