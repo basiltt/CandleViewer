@@ -2,7 +2,7 @@
 
 - Status: **proposed** — owner approval pending. Measurements: CI run 37148408413 (offline `--network=none` builds, all candidates).
 - Date: 2026-10-03
-- Deciders: Owner (`@basiltt`). The ticket says "ADR-0016 (or next free number)"; 0028 is next free.
+- Deciders: Owner (`@basiltt`). The ticket says "ADR-0016 (or next free number)"; 0028 is next free (renumbered from the ticket's 0016, which is the statechart-runtime ADR; recorded on #1328). Follow-up work is filed as #1750 (E48-T02 scope).
 - Related: E48-K01 (#1328), E48-T02, `docs/plan/spikes/E48-K01.md`, `30-release-roadmap.md` §9.3-9.4, C-16.5.
 
 ## Context
