@@ -456,3 +456,15 @@ Once Done, a component/screen design is versioned like code: a change request re
 - `26-chart-engine-design.md` — receives the theme-uniform token output (§11.2c) and the DOM-mirror/windowed-a11y binding constraints (§9.4).
 - `02-definition-of-ready-done.md` — this brief's §13.3 is the design-specific instantiation of that document's cross-discipline Definition of Done.
 - `research/24-owner-decisions.md` — heatmap colour convention (decision #10, §2.1 here) and mandatory pre-sign-off spikes (§13.4 here).
+
+### Validated palette status (E47-T03)
+
+The data-ink palette (heatmap bid/ask ramps, delta divergence ramp, profile histogram, liquidation intensity, plus
+candle/footprint/buy-sell/imbalance CVD pairs) is validated by `tools/contrast/data-ink.mjs` across 3 themes x 2 densities.
+Gradients are sampled at N>=16 stops (`--stops`); high-contrast holds body text to 7:1; compact density raises the
+large-text axis label to 4.5:1. CVD transform: Brettel/Vienot dichromacy projection (`tools/contrast/color-math.mjs`,
+seeded by `docs/research/_tools/cvd_simulate.py`) with discriminability = CIE76 dE >= `CVD_JND_FLOOR` (5.0).
+The matrix (`packages/ui/contrast/data-ink-matrix.{json,md}`) is generated, checked in, and a stale copy fails the
+`contrast:gate` (A11Y-C007). Current failures are listed in `tools/contrast/data-ink-baseline.json` and are fixed by
+E47-S06; the gate fails on any failure not in that baseline. Palette status: not yet fully conformant (see matrix).
+Gradient sampling uses the shared sRGB piecewise-linear ramp until chart-engine layers (E06/E11) export their own.
