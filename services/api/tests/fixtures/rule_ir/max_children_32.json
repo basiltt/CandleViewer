@@ -1,0 +1,456 @@
+{
+  "rule_id": "00000000-0000-4000-8000-000000000001",
+  "version": 1,
+  "name": "mx",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "symbol",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_price_update"
+  },
+  "conditions": {
+    "node_id": "g1",
+    "op": "all_of",
+    "children": [
+      {
+        "node_id": "c1",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "1.0"
+        }
+      },
+      {
+        "node_id": "c2",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "2.0"
+        }
+      },
+      {
+        "node_id": "c3",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "3.0"
+        }
+      },
+      {
+        "node_id": "c4",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "4.0"
+        }
+      },
+      {
+        "node_id": "c5",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "5.0"
+        }
+      },
+      {
+        "node_id": "c6",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "6.0"
+        }
+      },
+      {
+        "node_id": "c7",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "7.0"
+        }
+      },
+      {
+        "node_id": "c8",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "8.0"
+        }
+      },
+      {
+        "node_id": "c9",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "9.0"
+        }
+      },
+      {
+        "node_id": "c10",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "10.0"
+        }
+      },
+      {
+        "node_id": "c11",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "11.0"
+        }
+      },
+      {
+        "node_id": "c12",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "12.0"
+        }
+      },
+      {
+        "node_id": "c13",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "13.0"
+        }
+      },
+      {
+        "node_id": "c14",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "14.0"
+        }
+      },
+      {
+        "node_id": "c15",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "15.0"
+        }
+      },
+      {
+        "node_id": "c16",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "16.0"
+        }
+      },
+      {
+        "node_id": "c17",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "17.0"
+        }
+      },
+      {
+        "node_id": "c18",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "18.0"
+        }
+      },
+      {
+        "node_id": "c19",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "19.0"
+        }
+      },
+      {
+        "node_id": "c20",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "20.0"
+        }
+      },
+      {
+        "node_id": "c21",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "21.0"
+        }
+      },
+      {
+        "node_id": "c22",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "22.0"
+        }
+      },
+      {
+        "node_id": "c23",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "23.0"
+        }
+      },
+      {
+        "node_id": "c24",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "24.0"
+        }
+      },
+      {
+        "node_id": "c25",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "25.0"
+        }
+      },
+      {
+        "node_id": "c26",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "26.0"
+        }
+      },
+      {
+        "node_id": "c27",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "27.0"
+        }
+      },
+      {
+        "node_id": "c28",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "28.0"
+        }
+      },
+      {
+        "node_id": "c29",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "29.0"
+        }
+      },
+      {
+        "node_id": "c30",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "30.0"
+        }
+      },
+      {
+        "node_id": "c31",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "31.0"
+        }
+      },
+      {
+        "node_id": "c32",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "32.0"
+        }
+      }
+    ]
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "send_notification",
+      "params": {
+        "channel": "ui"
+      }
+    }
+  ],
+  "limits": {},
+  "editor": "form",
+  "graph_layout": {
+    "c1": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "ir_version": 1
+}

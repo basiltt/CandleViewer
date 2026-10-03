@@ -1,0 +1,62 @@
+{
+  "rule_id": "00000000-0000-4000-8000-000000000001",
+  "version": 1,
+  "name": "ar",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "symbol",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_price_update"
+  },
+  "conditions": {
+    "node_id": "x1",
+    "op": "gt",
+    "left": {
+      "node_id": "x2",
+      "op": "sub",
+      "operands": [
+        {
+          "metric": "high"
+        },
+        {
+          "node_id": "x3",
+          "op": "mul",
+          "operands": [
+            {
+              "metric": "atr"
+            },
+            {
+              "const": "2.0"
+            }
+          ]
+        }
+      ]
+    },
+    "right": {
+      "const": "0.10"
+    }
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "send_notification",
+      "params": {
+        "channel": "ui"
+      }
+    }
+  ],
+  "limits": {},
+  "editor": "graph",
+  "graph_layout": {
+    "c1": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "ir_version": 1
+}

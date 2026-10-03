@@ -1,0 +1,110 @@
+{
+  "rule_id": "00000000-0000-4000-8000-000000000001",
+  "version": 1,
+  "name": "act",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "symbol",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_price_update"
+  },
+  "conditions": {
+    "node_id": "c1",
+    "op": "gt",
+    "left": {
+      "metric": "price",
+      "params": {
+        "n": 14
+      }
+    },
+    "right": {
+      "const": 1
+    }
+  },
+  "actions": [
+    {
+      "node_id": "a0",
+      "type": "place_order",
+      "params": {
+        "qty": "0.010"
+      }
+    },
+    {
+      "node_id": "a1",
+      "type": "modify_stop_loss",
+      "params": {
+        "qty": "0.010"
+      }
+    },
+    {
+      "node_id": "a2",
+      "type": "cancel_all_orders",
+      "params": {
+        "qty": "0.010"
+      }
+    },
+    {
+      "node_id": "a3",
+      "type": "move_to_breakeven",
+      "params": {
+        "qty": "0.010"
+      }
+    },
+    {
+      "node_id": "a4",
+      "type": "scale_out",
+      "params": {
+        "qty": "0.010"
+      }
+    },
+    {
+      "node_id": "a5",
+      "type": "scale_in",
+      "params": {
+        "qty": "0.010"
+      }
+    },
+    {
+      "node_id": "a6",
+      "type": "flatten_position",
+      "params": {
+        "qty": "0.010"
+      }
+    },
+    {
+      "node_id": "a7",
+      "type": "halt_new_orders",
+      "params": {
+        "qty": "0.010"
+      }
+    },
+    {
+      "node_id": "a8",
+      "type": "send_notification",
+      "params": {
+        "qty": "0.010"
+      }
+    },
+    {
+      "node_id": "a9",
+      "type": "log_journal_tag",
+      "params": {
+        "qty": "0.010"
+      }
+    }
+  ],
+  "limits": {},
+  "editor": "form",
+  "graph_layout": {
+    "c1": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "ir_version": 1
+}

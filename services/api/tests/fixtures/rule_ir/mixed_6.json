@@ -1,0 +1,66 @@
+{
+  "rule_id": "00000000-0000-4000-8000-000000000001",
+  "version": 1,
+  "name": "mix6",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "symbol",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_price_update"
+  },
+  "conditions": {
+    "node_id": "g1",
+    "op": "any_of",
+    "children": [
+      {
+        "node_id": "c1",
+        "op": "gt",
+        "left": {
+          "metric": "price",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": "6.60"
+        }
+      },
+      {
+        "node_id": "c2",
+        "op": "lt",
+        "left": {
+          "metric": "rsi",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": 60
+        }
+      }
+    ]
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "send_notification",
+      "params": {
+        "channel": "ui"
+      }
+    }
+  ],
+  "limits": {},
+  "editor": "form",
+  "graph_layout": {
+    "c1": {
+      "x": 42,
+      "y": 42
+    }
+  },
+  "ir_version": 1
+}
