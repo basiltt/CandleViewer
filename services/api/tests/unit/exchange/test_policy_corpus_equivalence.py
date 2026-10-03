@@ -13,25 +13,46 @@ algorithm — exactly the class of bug `US-MKT-004` exists to prevent.
 
 from __future__ import annotations
 
+import importlib.util
 import json
+import sys
 from decimal import Decimal
 from pathlib import Path
+from types import ModuleType
+from typing import Any
+
+import pytest
 
 from candleviewer.domain.events import Instrument
 from candleviewer.exchange.policy import FilterViolationCode, InstrumentPolicy
 
-_CORPUS_PATH = (
-    Path(__file__).resolve().parents[5]
-    / "packages"
-    / "fixtures"
-    / "golden"
-    / "policy"
-    / "corpus.json"
-)
+_REPO_ROOT = Path(__file__).resolve().parents[5]
+_POLICY_DIR = _REPO_ROOT / "packages" / "fixtures" / "golden" / "policy"
+_CORPUS_PATH = _POLICY_DIR / "corpus.json"
+_RULES_PATH = _POLICY_DIR / "rules.json"
 
 
-def _load_corpus() -> dict[str, object]:
-    return json.loads(_CORPUS_PATH.read_text(encoding="utf-8"))
+def _load_generator(name: str) -> ModuleType:
+    """Imports a stdlib-only `tools/gen/` exporter by path (they are not a
+    package). Only `build_document()` is used — nothing is written."""
+    spec = importlib.util.spec_from_file_location(name, _REPO_ROOT / "tools" / "gen" / f"{name}.py")
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _render(document: object) -> bytes:
+    """The exact serialisation both exporters use (`indent=2`, insertion order,
+    `ensure_ascii=False`, trailing LF, UTF-8)."""
+    text = json.dumps(document, indent=2, sort_keys=False, ensure_ascii=False) + "\n"
+    return text.encode("utf-8")
+
+
+def _load_corpus() -> dict[str, Any]:
+    loaded: dict[str, Any] = json.loads(_CORPUS_PATH.read_text(encoding="utf-8"))
+    return loaded
 
 
 def _instrument_from_case(raw: dict[str, str]) -> Instrument:
@@ -75,13 +96,13 @@ def test_corpus_file_exists_and_is_non_empty() -> None:
 
 def test_corpus_declares_every_filter_violation_code() -> None:
     corpus = _load_corpus()
-    declared = set(corpus["violation_codes"])  # type: ignore[arg-type]
+    declared = set(corpus["violation_codes"])
     assert declared == {code.value for code in FilterViolationCode}
 
 
 def test_instrument_policy_agrees_with_every_generated_case() -> None:
     corpus = _load_corpus()
-    for case in corpus["cases"]:  # type: ignore[union-attr]
+    for case in corpus["cases"]:
         instrument = _instrument_from_case(case["instrument"])
         policy = InstrumentPolicy(instrument)
         price = Decimal(case["price"])
@@ -92,3 +113,24 @@ def test_instrument_policy_agrees_with_every_generated_case() -> None:
 
         actual_codes = [v.code.value for v in policy.validate(price, qty)]
         assert actual_codes == case["expected_violation_codes"], case
+
+
+@pytest.mark.parametrize(
+    ("generator", "committed"),
+    [
+        ("export_instrument_policy_corpus", _CORPUS_PATH),
+        ("export_instrument_policy_rules", _RULES_PATH),
+    ],
+)
+def test_committed_policy_fixture_round_trips_byte_identical(
+    generator: str, committed: Path
+) -> None:
+    """The committed golden file is byte-for-byte what its generator emits
+    (same JSON style, one array element per line, LF endings), so running
+    `pnpm generate` leaves a clean tree and no formatter may reflow it
+    (C-13.7). Backend-side guard for the root `tests/gen` suite, which the
+    backend CI job does not run."""
+    module = _load_generator(generator)
+    committed_bytes = committed.read_bytes()
+    assert b"\r" not in committed_bytes, f"{committed.name} must be LF-only"
+    assert committed_bytes == _render(module.build_document()), committed.name
