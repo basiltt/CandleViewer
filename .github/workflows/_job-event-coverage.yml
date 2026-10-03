@@ -1,0 +1,35 @@
+name: _job-event-coverage
+
+# E50-T05 (MUST-10): every literal event a Gateway.send call site sends must
+# be declared by the target machine's descriptor
+# (docs/plan/29-statechart-adoption-plan.md §1.7). Stdlib only; offline.
+
+on:
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+env:
+  PYTHONIOENCODING: utf-8
+
+jobs:
+  event-coverage:
+    name: event-coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ fromJSON(vars.CV_CI_TIMEOUT_MINUTES || 20) }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.13"
+
+      - name: Install pytest
+        run: python -m pip install --quiet pytest
+
+      - name: Event-name coverage over every Gateway.send site
+        run: python tools/statechart/event_coverage.py
+
+      - name: Self-test - an unknown event name is rejected
+        run: python -m pytest scripts/tests/test_event_coverage.py -q -W error::RuntimeWarning
