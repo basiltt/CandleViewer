@@ -30,7 +30,7 @@
     "@candleviewer/protocol": "workspace:*",
     "@candleviewer/ui": "workspace:*",
     "@playwright/test": "^1.49.1",
-    "@size-limit/file": "^11.1.6",
+    "@size-limit/file": "^14.1.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@types/node": "^22.10.2",

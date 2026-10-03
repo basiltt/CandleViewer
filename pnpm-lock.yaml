@@ -321,8 +321,8 @@ importers:
         specifier: ^1.49.1
         version: 1.63.0
       '@size-limit/file':
-        specifier: ^11.1.6
-        version: 11.2.0(size-limit@11.2.0)
+        specifier: ^14.1.0
+        version: 14.1.0(size-limit@11.2.0)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
         version: 6.10.0(@testing-library/dom@10.4.0)
@@ -1580,11 +1580,11 @@ packages:
     resolution: {integrity: sha512-t09vSN3MdfsyCHoFcTRCH/iUtG7OJ0CsjzB8cjAmKc/va/kIgeDI/TxsigdncE/4be734m0cvIYwNaV4i2XqAw==}
     engines: {node: '>=10'}
 
-  '@size-limit/file@11.2.0':
-    resolution: {integrity: sha512-OZHE3putEkQ/fgzz3Tp/0hSmfVo3wyTpOJSRNm6AmcwX4Nm9YtTfbQQ/hZRwbBFR23S7x2Sd9EbqYzngKwbRoA==}
-    engines: {node: ^18.0.0 || >=20.0.0}
+  '@size-limit/file@14.1.0':
+    resolution: {integrity: sha512-mR0uVxzdzV31pk8Iz795dDXxhHsrv9RSsyjeCVboUr1Q2+2KL/GpjeMZ44ydFqI2JfXZ22dOsbY28yPeOse1Nw==}
+    engines: {node: ^22.19.0 || ^24.5.0 || >=26.0.0}
     peerDependencies:
-      size-limit: 11.2.0
+      size-limit: 14.1.0
 
   '@storybook/addon-a11y@8.6.18':
     resolution: {integrity: sha512-LFvudttdIfDTNWprA8/N1vbiWbJRrNscyt2OP9Qwi85E1d3LKLy+e8AWiqY08gpy2OUYujK7AjxfpKtNeddrxw==}
@@ -6043,7 +6043,7 @@ snapshots:
 
   '@sindresorhus/is@4.6.0': {}
 
-  '@size-limit/file@11.2.0(size-limit@11.2.0)':
+  '@size-limit/file@14.1.0(size-limit@11.2.0)':
     dependencies:
       size-limit: 11.2.0
 
