@@ -1,0 +1,7 @@
+# Working calendar for triage SLA arithmetic (E49-T01). A 24/7 clock would
+# produce false breaches, so SLAs count business minutes only.
+timezone: Europe/London
+working_days: [Mon, Tue, Wed, Thu, Fri]
+work_start: "09:00"
+work_end: "17:00"
+holidays: []   # ISO dates, e.g. "2026-12-25"
