@@ -71,6 +71,10 @@ jobs:
               - 'infra/grafana/**'
               - 'infra/prometheus/**'
               - 'infra/alertmanager/**'
+              # The integration lane boots infra/compose/docker-compose.yml (SR-047 probe,
+              # E07-Q04 chaos stack); a compose/healthcheck change must run it (#276).
+              - 'infra/compose/**'
+              - '.github/workflows/_job-integration.yml'
             engine:
               - 'packages/chart-engine/**'
             protocol:
