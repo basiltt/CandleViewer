@@ -32,4 +32,4 @@ jobs:
         run: python tools/statechart/event_coverage.py
 
       - name: Self-test - an unknown event name is rejected
-        run: python -m pytest scripts/tests/test_event_coverage.py -q
+        run: python -m pytest scripts/tests/test_event_coverage.py -q -W error::RuntimeWarning

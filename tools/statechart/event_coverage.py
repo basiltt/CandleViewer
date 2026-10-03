@@ -7,10 +7,15 @@ name is not declared as a transition event in the target machine's descriptor
 
 Resolution rules (conservative, offline, deterministic):
 
-* machine key: a string literal, matched on the part before ``:`` (instance
-  ids look like ``order:123``) against a machine ``id``. A literal key that
-  names no machine is itself a finding. A non-literal key is checked against
-  the union of all machines' events.
+* machine: a literal key's part before ``:`` (``order:123``); otherwise the
+  ``kind=`` the key expression was ``register``-ed under in the same file (or
+  the file's sole registered kind). A machine naming no descriptor is a
+  finding. Only if unresolvable is the event checked against the union of all
+  machines (weakest fallback).
+* wrappers: a function forwarding one of its parameters as the event of a send
+  (``{"type": event, **p}``), directly or via another wrapper, is detected;
+  its call sites with a literal event are checked against the machine the
+  wrapper sends to.
 * event name: a string literal, a ``{"type": "<lit>"}`` dict, or an
   ``Event("<lit>")`` / ``Event(type="<lit>")`` call. Non-literal events cannot
   be checked statically and are skipped.
@@ -72,49 +77,155 @@ def _str(node: ast.expr | None) -> str | None:
     return None
 
 
-def _event_name(node: ast.expr) -> str | None:
-    lit = _str(node)
-    if lit is not None:
-        return lit
+def _event_node(node: ast.expr) -> ast.expr | None:
+    """The expression carrying the event name (the value of ``type`` for dicts)."""
     if isinstance(node, ast.Dict):
         for k, v in zip(node.keys, node.values, strict=True):
             if _str(k) == "type":
-                return _str(v)
+                return v
+        return None
     if isinstance(node, ast.Call):
         fn = node.func
         name = fn.id if isinstance(fn, ast.Name) else getattr(fn, "attr", None)
         if name == "Event":
             if node.args:
-                return _str(node.args[0])
+                return node.args[0]
             for kw in node.keywords:
                 if kw.arg == "type":
-                    return _str(kw.value)
-    return None
+                    return kw.value
+        return None
+    return node
+
+
+def _event_name(node: ast.expr) -> str | None:
+    inner = _event_node(node)
+    return _str(inner) if inner is not None else None
+
+
+def _callee(call: ast.Call) -> str | None:
+    fn = call.func
+    return fn.id if isinstance(fn, ast.Name) else getattr(fn, "attr", None)
+
+
+def _is_gateway_send(call: ast.Call) -> bool:
+    return (
+        isinstance(call.func, ast.Attribute)
+        and call.func.attr in SEND_METHODS
+        and len(call.args) >= 2
+    )
+
+
+def _registrations(tree: ast.AST) -> dict[str, str]:
+    """``{unparsed key expr: machine kind}`` from ``.register(key, ..., kind=lit)``."""
+    out: dict[str, str] = {}
+    for n in ast.walk(tree):
+        if (
+            isinstance(n, ast.Call)
+            and isinstance(n.func, ast.Attribute)
+            and n.func.attr == "register"
+            and n.args
+        ):
+            for kw in n.keywords:
+                kind = _str(kw.value) if kw.arg == "kind" else None
+                if kind is not None:
+                    out[ast.unparse(n.args[0])] = kind
+    return out
+
+
+def _machine_for(key: ast.expr, regs: dict[str, str]) -> str | None:
+    """Machine id a send key resolves to: literal ``<id>[:inst]``, a key
+    expression registered under ``kind=``, else the file's sole registered kind."""
+    lit = _str(key)
+    if lit is not None:
+        return lit.split(":", 1)[0]
+    kind = regs.get(ast.unparse(key))
+    if kind is None and len(set(regs.values())) == 1:
+        kind = next(iter(regs.values()))
+    return kind
+
+
+def _params(fn: ast.FunctionDef | ast.AsyncFunctionDef) -> list[str]:
+    names = [a.arg for a in fn.args.posonlyargs + fn.args.args]
+    return names[1:] if names and names[0] in ("self", "cls") else names
+
+
+def _wrappers(trees: dict[str, ast.AST]) -> dict[str, tuple[int, str | None]]:
+    """Functions forwarding a *parameter* as the event of a gateway send (directly
+    or via another wrapper): ``{name: (call-arg index of the event, machine)}``."""
+    found: dict[str, tuple[int, str | None]] = {}
+    changed = True
+    while changed:
+        changed = False
+        for tree in trees.values():
+            regs = _registrations(tree)
+            for fn in ast.walk(tree):
+                if not isinstance(fn, ast.FunctionDef | ast.AsyncFunctionDef):
+                    continue
+                params = _params(fn)
+                for c in ast.walk(fn):
+                    if not isinstance(c, ast.Call):
+                        continue
+                    callee = _callee(c)
+                    if _is_gateway_send(c):
+                        ev, machine = (
+                            _event_node(c.args[1]),
+                            _machine_for(c.args[0], regs),
+                        )
+                    elif callee in found and len(c.args) > found[callee][0]:
+                        idx, machine = found[callee]
+                        ev = c.args[idx]
+                    else:
+                        continue
+                    if (
+                        isinstance(ev, ast.Name)
+                        and ev.id in params
+                        and fn.name not in found
+                    ):
+                        found[fn.name] = (params.index(ev.id), machine)
+                        changed = True
+    return found
+
+
+def _sites(
+    tree: ast.AST, path: str, wrappers: dict[str, tuple[int, str | None]]
+) -> list[Site]:
+    regs = _registrations(tree)
+    sites: list[Site] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        if _is_gateway_send(node):
+            event = _event_name(node.args[1])
+            if event is not None:
+                sites.append(
+                    Site(path, node.lineno, _machine_for(node.args[0], regs), event)
+                )
+            continue
+        callee = _callee(node)
+        if callee in wrappers:
+            idx, machine = wrappers[callee]
+            if len(node.args) > idx and _str(node.args[idx]) is not None:
+                sites.append(
+                    Site(path, node.lineno, machine, str(_str(node.args[idx])))
+                )
+    return sites
 
 
 def scan_source(source: str, path: str) -> list[Site]:
-    sites: list[Site] = []
-    for node in ast.walk(ast.parse(source, filename=path)):
-        if not (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Attribute)
-            and node.func.attr in SEND_METHODS
-            and len(node.args) >= 2
-        ):
-            continue
-        event = _event_name(node.args[1])
-        if event is not None:
-            sites.append(Site(path, node.lineno, _str(node.args[0]), event))
-    return sites
+    tree = ast.parse(source, filename=path)
+    return _sites(tree, path, _wrappers({path: tree}))
 
 
 def scan_tree(root: Path = DEFAULT_SCAN) -> list[Site]:
-    sites: list[Site] = []
+    trees: dict[str, ast.AST] = {}
     for p in sorted(root.rglob("*.py")):
         if p.name in EXCLUDE_NAMES or "__pycache__" in p.parts:
             continue
-        sites.extend(scan_source(p.read_text(encoding="utf-8"), p.as_posix()))
-    return sites
+        trees[p.as_posix()] = ast.parse(
+            p.read_text(encoding="utf-8"), filename=p.as_posix()
+        )
+    wrappers = _wrappers(trees)
+    return [s for path, t in trees.items() for s in _sites(t, path, wrappers)]
 
 
 def check(sites: list[Site], descriptors: dict[str, set[str]]) -> list[str]:
@@ -126,12 +237,14 @@ def check(sites: list[Site], descriptors: dict[str, set[str]]) -> list[str]:
             if s.event not in union:
                 findings.append(f"{where}: event '{s.event}' is declared by no machine")
             continue
-        machine = s.key.split(":", 1)[0]
+        machine = s.key
         events = descriptors.get(machine)
         if events is None:
             findings.append(f"{where}: unknown machine '{machine}' (event '{s.event}')")
         elif s.event not in events:
-            findings.append(f"{where}: event '{s.event}' is not declared by machine '{machine}'")
+            findings.append(
+                f"{where}: event '{s.event}' is not declared by machine '{machine}'"
+            )
     return findings
 
 

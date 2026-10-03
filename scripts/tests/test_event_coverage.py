@@ -15,7 +15,11 @@ from tools.statechart.event_coverage import (
     scan_source,
 )
 
-CHART = {"id": "order", "on": {"KILL": {}}, "states": {"a": {"on": {"ORDER_FILLED": {}}}}}
+CHART = {
+    "id": "order",
+    "on": {"KILL": {}},
+    "states": {"a": {"on": {"ORDER_FILLED": {}}}},
+}
 
 
 def _machines(tmp_path: Path) -> Path:
@@ -66,5 +70,41 @@ def test_main_exit_codes(tmp_path: Path, capsys) -> None:  # type: ignore[no-unt
     assert main(["--machines", str(tmp_path / "nope"), "--scan", str(scan)]) == 2
 
 
-def test_real_repo_is_clean() -> None:
+WRAP = """
+class C:
+    def build(self, sid, interp):
+        self._gw.register(sid, interp, kind="order")
+
+    async def _send(self, sid, event, **p):
+        await self._gw.send(sid, {"type": event, **p})
+
+    async def record(self, rec, now, event, **p):
+        await self._send(str(rec.id), event, **p)
+
+    async def go(self, rec, now):
+        await self.record(rec, now, "%s")
+"""
+
+
+def test_wrapper_call_sites_checked_against_registered_machine(tmp_path: Path) -> None:
+    desc = load_descriptors(_machines(tmp_path))
+    desc["other"] = {"ONLY_OTHER"}
+    assert check(scan_source(WRAP % "KILL", "w.py"), desc) == []
+    bad = check(scan_source(WRAP % "ONLY_OTHER", "w.py"), desc)
+    assert len(bad) == 1 and "not declared by machine 'order'" in bad[0]
+
+
+def test_registered_kind_beats_union_for_nonliteral_key(tmp_path: Path) -> None:
+    desc = load_descriptors(_machines(tmp_path))
+    desc["other"] = {"ONLY_OTHER"}
+    src = "gw.register(sid, i, kind='order')\ngw.send(sid, 'ONLY_OTHER')\n"
+    assert len(check(scan_source(src, "x.py"), desc)) == 1
+
+
+def test_real_repo_wiring_is_resolved_and_clean() -> None:
+    from tools.statechart.event_coverage import DEFAULT_SCAN, scan_tree
+
+    sites = scan_tree(DEFAULT_SCAN)
+    session = {s.event for s in sites if s.key == "session"}
+    assert {"MFA_OK", "REVOKE", "REQUEST"} <= session
     assert main([]) == 0
