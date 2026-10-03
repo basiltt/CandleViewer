@@ -15,7 +15,11 @@ def test_accepted_risks_are_time_boxed_and_never_critical() -> None:
     doc = yaml.safe_load((ROOT / "security/accepted-risks.yaml").read_text(encoding="utf-8"))
     for e in doc["entries"]:
         assert e["severity"] != "CRITICAL", e["id"]
-        exp = e["expires"] if isinstance(e["expires"], dt.date) else dt.date.fromisoformat(e["expires"])
+        exp = (
+            e["expires"]
+            if isinstance(e["expires"], dt.date)
+            else dt.date.fromisoformat(e["expires"])
+        )
         assert exp <= dt.date(2027, 3, 25), e["id"]
         assert e["approver"] == "basiltt"
 
@@ -50,8 +54,11 @@ def test_known_vulnerable_dependency_without_exception_fails_gate() -> None:
 
     risks = load_accepted_risks(ROOT / "security/accepted-risks.yaml")
     f = Finding(
-        tool="pip-audit", finding_id="GHSA-fixture-0000", severity="HIGH",
-        package="fixture-vuln", detail="known vulnerable fixture",
+        tool="pip-audit",
+        finding_id="GHSA-fixture-0000",
+        severity="HIGH",
+        package="fixture-vuln",
+        detail="known vulnerable fixture",
     )
     result = evaluate_findings([f], risks, run_date=dt.date(2026, 10, 3))
     assert result.blocked and result.code == "CI-SEC-001"
@@ -109,4 +116,36 @@ def test_frozen_lockfiles_are_integrity_pinned() -> None:
     assert pnpm.count("resolution: {integrity: sha512-") > 100
     assert not re.search(r"resolution: \{tarball:", pnpm)
     uv = (ROOT / "services/api/uv.lock").read_text(encoding="utf-8")
-    assert uv.count("hash = \"sha256:") > 50
+    assert uv.count('hash = "sha256:') > 50
+
+
+def test_freeze_manifest_lock_hashes_match_committed_lockfiles() -> None:
+    import hashlib
+
+    lines = (ROOT / "security/freeze-manifest.sha256").read_text(encoding="utf-8").splitlines()
+    got = {name: digest for digest, name in (ln.split("  ", 1) for ln in lines)}
+    assert set(got) == {"pnpm-lock.yaml", "uv.lock", "pnpm-graph", "uv-graph"}
+    for name, path in (("pnpm-lock.yaml", "pnpm-lock.yaml"), ("uv.lock", "services/api/uv.lock")):
+        data = (ROOT / path).read_bytes().replace(b"\r\n", b"\n")
+        assert hashlib.sha256(data).hexdigest() == got[name], name
+
+
+def test_freeze_manifest_pnpm_graph_normalisation_drops_paths() -> None:
+    import sys
+
+    sys.path.insert(0, str(ROOT))
+    from tools.ci.check_freeze_manifest import normalise_pnpm_graph
+
+    a = normalise_pnpm_graph([{"name": "x", "path": "C:/a", "dependencies": {"y": {"path": "/b"}}}])
+    b = normalise_pnpm_graph(
+        [{"name": "x", "path": "/home/c", "dependencies": {"y": {"path": "/d"}}}]
+    )
+    assert a == b
+
+
+def test_electron_toolchain_past_high_advisories() -> None:
+    dev = json.loads((ROOT / "apps/desktop/package.json").read_text(encoding="utf-8"))[
+        "devDependencies"
+    ]
+    assert dev["electron"] == "^41.10.7"
+    assert dev["electron-builder"] == "^26.15.3"

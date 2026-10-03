@@ -348,6 +348,11 @@ jobs:
           pip install "uv==0.12.19" --quiet
           uv sync --frozen --all-groups --project services/api
 
+      - name: Assert frozen dependency graph matches security/freeze-manifest.sha256 (E43-T05, SR-130)
+        # Byte-identical check of pnpm-lock.yaml + uv.lock + resolved graphs after the frozen
+        # installs above. Does not depend on any pentest-freeze-* tag existing.
+        run: python tools/ci/check_freeze_manifest.py
+
       - name: Collect JS/TS licences
         # license-checker does not understand pnpm workspaces ("No packages found").
         # pnpm licenses is workspace-aware and reads the lockfile CI just installed.

@@ -58,13 +58,13 @@ Adding any vendored or forked code requires a row here in the same PR.
 
 ## 8. SCA sweep triage (2026-10-03, `pnpm audit`, High/Critical)
 
-| Package                               | Advisory                                 | Path                         | Area          | Decision                                                              |
-| ------------------------------------- | ---------------------------------------- | ---------------------------- | ------------- | --------------------------------------------------------------------- |
-| tar (<=7.5.20, 1 Critical + 6 High)   | GHSA-23hp-3jrh-7fpw et al.               | transitive, electron-builder | build-time    | **Fixed**: `overrides: tar >=7.5.21`                                  |
-| vitest 2.1.8 (Critical) / vite (High) | GHSA-5xrq-8626-4rwp, GHSA-fx2h-pf6j-xcff | dev, test runner             | dev-only      | **Fixed**: vitest + coverage-v8 -> ^3.2.6                             |
-| electron 33.4.11 (11 High)            | e.g. GHSA-9qh4-3jw8-366w                 | direct                       | desktop shell | Exception EX-02 (major bump to >=41.10.6 needs shell regression pass) |
-| app-builder-lib, builder-util-runtime | GHSA-7g7r-gx96-252g, GHSA-p2f4-r6v6-j797 | direct, electron-builder     | build-time    | Exception EX-03                                                       |
-| extract-zip                           | GHSA-jmr9-qjv8-65gv, GHSA-7pqw-9j4j-h8q3 | transitive of electron       | install-time  | Exception EX-04 (no upstream patch)                                   |
+| Package                               | Advisory                                 | Path                         | Area          | Decision                                                               |
+| ------------------------------------- | ---------------------------------------- | ---------------------------- | ------------- | ---------------------------------------------------------------------- |
+| tar (<=7.5.20, 1 Critical + 6 High)   | GHSA-23hp-3jrh-7fpw et al.               | transitive, electron-builder | build-time    | **Fixed**: `overrides: tar >=7.5.21`                                   |
+| vitest 2.1.8 (Critical) / vite (High) | GHSA-5xrq-8626-4rwp, GHSA-fx2h-pf6j-xcff | dev, test runner             | dev-only      | **Fixed**: vitest + coverage-v8 -> ^3.2.6                              |
+| electron 33.4.11 (11 High)            | e.g. GHSA-9qh4-3jw8-366w                 | direct                       | desktop shell | **Fixed**: electron -> ^41.10.7 (hardening gate + desktop tests green) |
+| app-builder-lib, builder-util-runtime | GHSA-7g7r-gx96-252g, GHSA-p2f4-r6v6-j797 | direct, electron-builder     | build-time    | **Fixed**: electron-builder -> ^26.15.3                                |
+| extract-zip                           | GHSA-jmr9-qjv8-65gv, GHSA-7pqw-9j4j-h8q3 | transitive of electron       | install-time  | **Fixed**: electron 41 no longer depends on `extract-zip`              |
 
 ### 8.1 Python and container sweep (2026-10-03)
 
@@ -79,17 +79,20 @@ Tests in `scripts/tests/test_dependency_freeze.py`: known-vulnerable finding fai
 Dockerfile is digest-pinned and non-root (static; runtime probe `check_image_non_root.py` needs
 docker, not run locally); lockfiles are integrity-hashed (frozen installs reproduce byte-identically).
 
-### 8.2 Exception approval status
+### 8.2 Post-fix sweep (2026-10-03)
 
-EX-02..EX-04 are **pending** owner + security approval (§16.2 of `04-security-program.md`).
-`security/accepted-risks.yaml` names the required approver but this PR records no approval;
-the pentest-freeze tag (§1) MUST NOT be cut until the §16.2 rows are approved or the
-dependencies are upgraded. Tracking: E43-T05 follow-ups.
+After the electron / electron-builder bumps, `pnpm audit --audit-level=high` reports
+**0 High / 0 Critical** (2 Low, 6 Moderate); `pip-audit` unchanged (none). No High/Critical
+exceptions are needed, so EX-02..EX-04 are withdrawn (§16.2 of `04-security-program.md`).
 
-### 8.3 Freeze evidence still to produce at tag time (release-manager)
+### 8.3 Freeze assertion and tag procedure
 
-- `pentest-freeze-<yyyymmdd>` tag (not created in this PR; it is cut on the merged commit).
-- Backend frozen install: `cd services/api && uv sync --frozen` (hash-verified lock) in CI.
-- JS: `pnpm install --frozen-lockfile --ignore-scripts` in CI.
-
-Order-path / key-handling packages are not affected by any open exception.
+- CI (`license-scan` job, `_job-security.yml`) runs `tools/ci/check_freeze_manifest.py` after
+  `pnpm install --frozen-lockfile` and `uv sync --frozen`: SHA-256 of `pnpm-lock.yaml`, `uv.lock`,
+  the normalised `pnpm ls -r --json --depth Infinity` graph and `uv export --frozen` must equal
+  `security/freeze-manifest.sha256`. It does not depend on any tag. Any approved freeze change
+  (§2) regenerates the manifest with `--write` in the same PR.
+- Tag (owner-only): on the merged commit whose CI is green, the owner runs
+  `git tag -a pentest-freeze-<yyyymmdd> <sha> -m "pen-test freeze; manifest <sha256 of freeze-manifest.sha256>"`
+  and `git push origin pentest-freeze-<yyyymmdd>`; the tag sha + manifest hash go into the
+  evidence pack (E43-X07). Retest uses `pentest-retest-<yyyymmdd>` the same way.

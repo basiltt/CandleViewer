@@ -5,3 +5,6 @@ jobs:
       - uses: actions/setup-node@main # ruleid: cv-unpinned-action
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # ok: cv-unpinned-action
       - uses: ./.github/actions/local # ok: cv-unpinned-action
+      - uses: actions/checkout@11BD71901BBE5B1630CEEA73D27597364C9AF683 # ok: cv-unpinned-action
+      - uses: actions/checkout@11bd719 # ruleid: cv-unpinned-action
+      - uses: docker://alpine:3.20 # ok: cv-unpinned-action
