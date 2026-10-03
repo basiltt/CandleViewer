@@ -360,7 +360,8 @@ def test_sweep_flags_failing_bug_with_owner_and_unset_severity() -> None:
     issue = {"labels": [{"name": "type/bug"}], "body": "", "user": {"login": "rep"}}
     a = run.sweep_actions(issue)
     assert (
-        a["owner"] == "rep" and "needs-dor" in a["add"]
+        a["owner"] == "rep"
+        and "needs-dor" in a["add"]
         and "needs-severity" not in a["add"]
     )
     assert a["severity"] == "P1" and a["defaulted"]
