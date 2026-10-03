@@ -1196,3 +1196,15 @@ forbidden_modules =
     prometheus_client
 allow_indirect_imports = True
 
+[importlinter:contract:forbidden-hotpath-statechart]
+name = C-2.20 — hot-path modules never import the statechart runtime
+type = forbidden
+source_modules =
+    candleviewer.book
+    candleviewer.bars
+    candleviewer.orderflow
+    candleviewer.orderbook_wiring
+forbidden_modules =
+    candleviewer.statechart
+    xstate_statemachine
+

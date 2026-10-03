@@ -12,7 +12,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Protocol
 
 from candleviewer.exchange.base import Ticker, Trade
 from candleviewer.ingestion.clock import ClockGuard
@@ -40,6 +40,20 @@ _QUEUE_MAXSIZE = 256
 WS_FRAME_QUEUE_MAXSIZE = 4096
 
 
+class BookSink(Protocol):
+    """E08-S05 reconstructed-book wiring (composition root; ingestion must not
+    import the `book` module, CONSTITUTION 3)."""
+
+    async def handle_frame(self, frame: str) -> None: ...
+    async def invalidate(self, reason: str) -> None: ...
+    def view(self, symbol: str, depth: int) -> Any: ...
+    def is_listed(self, symbol: str) -> bool: ...
+    def acquire(self, consumer: str, symbol: str) -> None: ...
+    def release(self, consumer: str, symbol: str) -> None: ...
+    async def start(self) -> None: ...
+    async def stop(self) -> None: ...
+
+
 class IngestionService:
     """M6 `ingestion` module lifecycle: synthetic feed only (E02-T12)."""
 
@@ -65,6 +79,8 @@ class IngestionService:
         self.tickers: TickerStream | None = None
         #: E08-S04: trade tape, attached with the public WS.
         self.trades: TradeStream | None = None
+        #: E08-S05: reconstructed L2 book, attached with the public WS.
+        self.books: BookSink | None = None
         self._pump: asyncio.Task[None] | None = None
 
     def attach_latency(
@@ -99,6 +115,12 @@ class IngestionService:
             self.ws_frames_dropped += 1
             if self.trades is not None:  # a lost frame may hold prints: never hide it
                 self.trades.mark_gap("frame_loss")
+            if self.books is not None:  # a lost delta is a sequence gap: resync, never patch
+                try:
+                    asyncio.get_running_loop()
+                except RuntimeError:
+                    return
+                spawn(self.books.invalidate("frame_loss"), name="book-frame-loss")
 
     def attach_ws(self, manager: ConnectionManager) -> None:
         """Hand this module ownership of the public WS connection lifecycle."""
@@ -110,6 +132,9 @@ class IngestionService:
     def attach_trades(self, stream: TradeStream) -> None:
         self.trades = stream
 
+    def attach_books(self, stream: BookSink) -> None:
+        self.books = stream
+
     async def _pump_frames(self) -> None:
         """Drain the bounded raw-frame queue into the ticker and trade streams
         (each parser ignores frames for topics it does not own)."""
@@ -119,6 +144,8 @@ class IngestionService:
                 await self.trades.handle_frame(frame)
             if self.tickers is not None:
                 await self.tickers.handle_frame(frame)
+            if self.books is not None:
+                await self.books.handle_frame(frame)
 
     def attach_instruments(self, scheduler: InstrumentsRefreshScheduler) -> None:
         """Hand this module ownership of the catalogue scheduler's lifecycle."""
@@ -157,7 +184,9 @@ class IngestionService:
             await self.tickers.start()
         if self.trades is not None:
             await self.trades.start()
-        if self.tickers is not None or self.trades is not None:
+        if self.books is not None:
+            await self.books.start()
+        if self.tickers is not None or self.trades is not None or self.books is not None:
             self._pump = spawn(self._pump_frames(), name="ws-frame-pump")
         self._started = True
 
@@ -171,6 +200,8 @@ class IngestionService:
             await self.tickers.stop()
         if self.trades is not None:
             await self.trades.stop()
+        if self.books is not None:
+            await self.books.stop()
         if self.ws is not None:
             async with asyncio.timeout(grace_s):
                 await self.ws.stop()

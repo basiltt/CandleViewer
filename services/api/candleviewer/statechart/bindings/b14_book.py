@@ -1,11 +1,11 @@
-"""candleviewer.statechart.bindings.b14_book — MachineLogic stubs for B14 `book`
-(E50-S02). Chart: `machines/B14.book.machine.json`.
+"""candleviewer.statechart.bindings.b14_book - MachineLogic for B14 `book`
+(E08-S05). Chart: `machines/B14.book.machine.json`.
 
-Stubs only: business logic is owned by E06 order book (ticket "Out of scope").
-Guards are pure, total and return `False` (catalogue A6); actions are
-`async def` no-ops (CV-C67); services are idempotent `async def` that
-return `None` without I/O. Owning epics replace bodies, never names —
-the names are fixed by the chart contract.
+Record-only (C-2.20, C-2.21, INV-B14-a): the book engine enforces and
+executes the whole lifecycle as plain code and forwards lifecycle edges
+fire-and-forget through `candleviewer.ingestion.book_supervisor`. These
+actions only maintain chart context; they never call back into the book and
+never send events. Names are fixed by the chart contract.
 """
 
 from __future__ import annotations
@@ -21,25 +21,25 @@ async def _noop_action(*_args: object, **_kwargs: object) -> None:
     return None
 
 
-def _deny_guard(*_args: object, **_kwargs: object) -> bool:
-    return False
+async def bump_resync_count(interp: Any, context: dict[str, Any], *_a: object) -> None:
+    context["resync_count"] = int(context.get("resync_count", 0)) + 1
 
 
-async def _idempotent_service(*_args: object, **_kwargs: object) -> None:
-    return None
+async def clear_buffer(interp: Any, context: dict[str, Any], *_a: object) -> None:
+    context["buffered_deltas"] = []
 
 
 ACTIONS: dict[str, Callable[..., Awaitable[None]]] = {
-    "apply_delta": _noop_action,
-    "buffer_delta": _noop_action,
-    "bump_resync_count": _noop_action,
-    "clear_buffer": _noop_action,
-    "emit_book_desynced": _noop_action,
-    "emit_book_live": _noop_action,
+    "apply_delta": _noop_action,  # hot path: BookState.apply, never here
+    "buffer_delta": _noop_action,  # hot path: BookEngine buffer, never here
+    "bump_resync_count": bump_resync_count,
+    "clear_buffer": clear_buffer,
+    "emit_book_desynced": _noop_action,  # executed by BookEngine
+    "emit_book_live": _noop_action,  # LIVE status published by BookEngine.go_live
     "emit_resync_metric": _noop_action,
-    "install_snapshot": _noop_action,
-    "replay_buffered_deltas_after_seq": _noop_action,
-    "request_snapshot": _noop_action,
+    "install_snapshot": _noop_action,  # executed by BookEngine
+    "replay_buffered_deltas_after_seq": _noop_action,  # done inside go_live
+    "request_snapshot": _noop_action,  # executed by BookEngine
     "stamp_desync": _noop_action,
 }
 
@@ -49,8 +49,6 @@ SERVICES: dict[str, Callable[..., Awaitable[Any]]] = {}
 
 register_binding_module("book", __name__)
 
-#: Permissive payload schemas (same shape as B16) so `strict=True` accepts
-#: exactly the events this chart declares; owning epics tighten them.
 _ANY_PAYLOAD: dict[str, Any] = {"type": "object", "additionalProperties": True}
 register_event_schemas(
     {

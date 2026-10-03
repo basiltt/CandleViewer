@@ -45,6 +45,7 @@ from candleviewer.api import (
     make_instruments_router,
     make_log_level_router,
     make_market_router,
+    make_orderbook_router,
     make_ticker_router,
     make_trades_router,
 )
@@ -88,6 +89,7 @@ from candleviewer.health_wiring import (
     PgSystemEventWriter,
     register_real_probes,
 )
+from candleviewer.ingestion.book_supervisor import B14BookSupervisor
 from candleviewer.ingestion.clock import ClockGuard, ServerTimeFetcher, rest_client_fetcher
 from candleviewer.ingestion.connection import MAX_FRAME_BYTES, ConnectionManager
 from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
@@ -121,6 +123,7 @@ from candleviewer.observability.support_bundle import filter_config
 from candleviewer.observability.support_bundle_wiring import build_support_bundle_service
 from candleviewer.observability.telemetry import SessionRateLimiter, TelemetrySink
 from candleviewer.oms.service import OmsService
+from candleviewer.orderbook_wiring import BookStream
 from candleviewer.orderflow.service import OrderflowService
 from candleviewer.paper.service import PaperService
 from candleviewer.recorder.service import RecorderService
@@ -144,7 +147,12 @@ from candleviewer.storage.repositories.onboarding_sqlalchemy import SqlAlchemyOn
 from candleviewer.storage.repositories.relational_sqlalchemy import (
     SqlAlchemyRelationalRepository,
 )
-from candleviewer.storage.repositories.rows import TickerRow, TradeRow
+from candleviewer.storage.repositories.rows import (
+    BookDeltaRow,
+    BookSnapshotRow,
+    TickerRow,
+    TradeRow,
+)
 from candleviewer.storage.repositories.sessions_sqlalchemy import (
     SqlAlchemySessionRepository,
 )
@@ -804,6 +812,10 @@ def create_app(
     app.include_router(
         make_trades_router(lambda: ctx.ingestion.trades, principal_resolver=audit_resolver)
     )
+    # E08-S05: maintained L2 book snapshot (503 while resyncing, never a patched book).
+    app.include_router(
+        make_orderbook_router(lambda: ctx.ingestion.books, principal_resolver=audit_resolver)
+    )
     app.add_middleware(CorrelationMiddleware)
     # E09-T03 / #1648: a served route without an RBAC declaration fails the build.
     assert_app_routes_declared(app, spec)
@@ -940,6 +952,31 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
             tick_size=_tick_size,
             clock=clock,
             writer=_TradeWriter(),
+        )
+    )
+
+    class _BookWriter:
+        """Write-behind to the hot tier (21-database-schema.md `orderbook_*`)."""
+
+        async def write_book_deltas(self, rows: Sequence[BookDeltaRow]) -> None:
+            await ctx.storage.market_data.write_book_deltas(rows)
+
+        async def write_book_snapshot(self, row: BookSnapshotRow) -> None:
+            await ctx.storage.market_data.write_book_snapshot(row)
+
+    ctx.ingestion.attach_books(
+        BookStream(
+            bus=ctx.bus.bus,
+            env=env,
+            set_desired=lambda topics: _set_desired("book", topics),
+            parse_frame=lambda f: adapter.parse_book_frame(f, _tick_size),
+            topic_for=adapter.book_topic,
+            resubscribe=manager.resubscribe_topic,
+            is_listed=_is_listed,
+            touch=watchdog.touch,
+            clock=clock,
+            writer=_BookWriter(),
+            supervisor=B14BookSupervisor(),
         )
     )
     ctx.ingestion.attach_tickers(
