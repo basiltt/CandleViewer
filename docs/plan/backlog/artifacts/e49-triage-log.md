@@ -4,6 +4,10 @@ One dated section per weekly ritual (see e49-triage-ritual.md).
 
 ## Debt sweep applied 2026-10-04 (E49-T01 AC4)
 
+> The Grade column below is the grade at first-sweep time; rows shown UNSET were graded afterwards (see
+> "Severity grading completed"). Verified live 2026-10-04: all 21 open type/bug issues carry a priority/*
+> label, none carry needs-severity; each marker comment names @basiltt as owner.
+
 Run: `python -m tools.triage.run sweep` (idempotent; adds labels + one marker comment per bug only).
 
 | Issue | Grade | SLA due | Labels added |
@@ -45,3 +49,8 @@ amendment (raised on #1340). Owner-approved exception requested on the issue.
 21/21 open bugs graded (see table above), 0 defaulted,
 none carry `needs-severity`. The sweep now defaults an ungradable bug to P1 (conservative) and keeps
 `needs-dor` naming the missing Severity field, instead of leaving it UNSET.
+
+## Evidence pointers (review fix 3)
+Scratch-board e2e: `python -m tools.triage.scratch_e2e` ran against scratch issue #1764 (not the live board).
+Projects v2 GraphQL: offline contract tests in tests/triage/test_triage.py; no docker/live board needed.
+AC3 exception: requested from @basiltt on #1340 (C-9.1 owns the required list; C-16 amendment needed).
