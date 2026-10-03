@@ -157,3 +157,10 @@ def test_baseline_change_requires_finding_id_in_pr_body() -> None:
     assert gates.check_baseline_pr_ids(base, head, "no id here")
     assert not gates.check_baseline_pr_ids(base, head, "Justified by A11Y-F012")
     assert not gates.check_baseline_pr_ids(head, head, "")
+
+
+def test_flash_high_rate_strobe_trips_and_calm_canvas_passes() -> None:
+    strobe = [0.0 if (i // 4) % 2 == 0 else 1.0 for i in range(360)]  # 60 Hz sampling, ~7.5 Hz strobe
+    assert gates.check_flash({"fps": 60, "components": {"canvas:strobe": strobe}})
+    calm = [0.05 + 0.01 * ((i * 7) % 5) for i in range(360)]
+    assert gates.check_flash({"fps": 60, "components": {"canvas:heatmap": calm}}) == []

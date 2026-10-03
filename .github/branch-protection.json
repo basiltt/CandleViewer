@@ -22,13 +22,13 @@
       "unit-engine",
       "contract",
       "integration",
-      "architecture",
-      "a11y"
+      "architecture"
     ]
   },
   "x-pending-contexts": [
     "unit-backend",
     "e2e-smoke",
+    "a11y",
     "sast",
     "sca",
     "secrets-scan",

@@ -43,6 +43,8 @@ jobs:
             python -m tools.a11y.gates $g | tee -a "$GITHUB_STEP_SUMMARY"
             [ "${PIPESTATUS[0]}" -ne 0 ] && fail=1
           done
+          python -m tools.a11y.gates flash reports/a11y/flash-canvas.json | tee -a "$GITHUB_STEP_SUMMARY"
+          [ "${PIPESTATUS[0]}" -ne 0 ] && fail=1
           elapsed=$(( $(date +%s) - $(cat "$RUNNER_TEMP/a11y-start") ))
           python -m tools.a11y.gates budget "$elapsed" --limit 1200 | tee -a "$GITHUB_STEP_SUMMARY"
           [ "${PIPESTATUS[0]}" -ne 0 ] && fail=1
