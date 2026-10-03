@@ -4523,6 +4523,17 @@ class Signal1(BaseModel):
     params_schema: dict[str, Any] | None = None
     requires_recording: bool | None = False
     estimated: bool | None = False
+    description: str | None = None
+    valid_range: str | None = None
+    warmup_bars: int | None = None
+    deterministic: bool | None = None
+    confidence: Literal["exact", "estimated"] | None = None
+    dependencies: list[str] | None = None
+    when_unavailable: str | None = None
+    available: bool | None = True
+    unavailable_reason: str | None = None
+    missing_dependency: dict[str, Any] | None = None
+    recorder_action: dict[str, Any] | None = None
 
 
 class Operator(BaseModel):
@@ -4538,6 +4549,13 @@ class Action1(BaseModel):
     params_schema: dict[str, Any] | None = None
     required_permissions: list[str]
     requires_step_up: bool | None = False
+    idempotent: bool | None = None
+    guarded: bool | None = None
+    targets: dict[str, str] | None = None
+    available: bool | None = True
+    simulate_only: bool | None = False
+    restriction: str | None = None
+    notes: str | None = None
     loosens_risk: Annotated[
         bool | None,
         Field(
@@ -4551,12 +4569,21 @@ class Guard(BaseModel):
     params_schema: dict[str, Any] | None = None
 
 
+class Trigger(BaseModel):
+    id: str | None = None
+    description: str | None = None
+    required_fields: list[str] | None = None
+
+
 class RuleVocabulary(BaseModel):
     ir_version: str | None = None
     signals: list[Signal1]
     operators: list[Operator]
     actions: list[Action1]
     guards: list[Guard]
+    triggers: list[Trigger] | None = None
+    vocabulary_version: int | None = None
+    arm_live_permission: str | None = None
 
 
 class Marker(BaseModel):
