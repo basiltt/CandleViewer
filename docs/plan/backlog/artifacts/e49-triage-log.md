@@ -31,3 +31,12 @@ Run: `python -m tools.triage.run sweep` (idempotent; adds labels + one marker co
 | #1337 | P0 | 2026-09-24T11:00+01:00 | needs-dor |
 
 Sweep: graded 21 open bug(s); 21 fail DoR
+
+## Severity grading completed (review fix)
+The 8 bugs previously UNSET were graded and `needs-severity` removed: #1737, #1586 -> priority/p1-high
+(security/supply-chain); #1652, #1646, #1636, #1547 -> priority/p2-medium; #1468, #1462 -> priority/p3
+(docs/evidence). All open type/bug issues now carry a priority label.
+
+## Required-check exception
+`regression-guard` stays non-required: C-9.1 owns the required list, so promotion needs a C-16
+amendment (raised on #1340). Owner-approved exception requested on the issue.

@@ -1,6 +1,6 @@
 name: regression-guard
 
-# E49-T01: required status check. A PR that closes a Bug issue must change a test
+# E49-T01: regression guard (runs non-required until a C-16 amendment lists it in C-9.1). A PR that closes a Bug issue must change a test
 # file, or the issue carries p3-cosmetic-exempt with a stated reason (§11.3).
 # Runs on pull_request (read-only token); checks out the base-trusted merge ref only
 # to run repository tooling - no secrets beyond the read-only GITHUB_TOKEN.
