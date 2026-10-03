@@ -134,3 +134,18 @@ def test_waiver_does_not_hide_violation(tmp_path: Path, monkeypatch) -> None:
         gates.main(["axe", str(tmp_path / "x.json"), "--baseline", str(base)])
         == gates.EXIT_OK
     )
+
+
+def test_runtime_budget_over_limit_fails() -> None:
+    assert gates.check_budget(600, 720) == []
+    assert "A11Y-G007" in gates.check_budget(721, 720)[0]
+
+
+def test_missing_collector_output_is_infra_not_green(tmp_path: Path) -> None:
+    """A collector that produced nothing must exit 3, never pass vacuously."""
+    missing = str(tmp_path / "axe.json")
+    assert gates.main(["axe", missing]) == gates.EXIT_INFRA
+    assert gates.main(["keyboard", missing]) == gates.EXIT_INFRA
+    assert gates.main(["tree", "--snapshots", str(tmp_path), str(tmp_path / "t")]) == (
+        gates.EXIT_INFRA
+    )

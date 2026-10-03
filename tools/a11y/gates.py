@@ -9,7 +9,7 @@ error (A11Y-INFRA). Infra errors are distinct from violations so the documented
 break-glass path never has to disable a gate for a real violation.
 
 Codes: G001 axe regression, G002 Lighthouse below floor, G003 contrast (see
-tools/contrast), G004 keyboard E2E, G005 flash rate, G006 a11y-tree drift.
+tools/contrast), G004 keyboard E2E, G005 flash rate, G006 a11y-tree drift, G007 runtime budget.
 """
 
 from __future__ import annotations
@@ -193,6 +193,18 @@ def check_keyboard(result: dict) -> list[str]:
     return msgs
 
 
+def check_budget(elapsed_s: float, limit_s: float) -> list[str]:
+    """Runtime budget (AC: PR gate < 12 min, nightly sweep < 20 min)."""
+    if limit_s <= 0 or elapsed_s < 0:
+        raise InfraError("A11Y-INFRA invalid runtime budget arguments")
+    if elapsed_s >= limit_s:
+        return [
+            f"A11Y-G007 gate wall-clock {elapsed_s:.0f}s >= budget {limit_s:.0f}s "
+            "(shard the axe sweep by screen band; do not sample)"
+        ]
+    return []
+
+
 MAX_WAIVER_HOURS = 24
 
 
@@ -229,6 +241,9 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("lighthouse").add_argument("scores")
     sub.add_parser("flash").add_argument("capture")
     sub.add_parser("keyboard").add_argument("result")
+    b = sub.add_parser("budget")
+    b.add_argument("elapsed", type=float)
+    b.add_argument("--limit", type=float, required=True)
     t = sub.add_parser("tree")
     t.add_argument("--snapshots", default="tools/a11y/tree-snapshots")
     t.add_argument("actual")
@@ -240,6 +255,8 @@ def main(argv: list[str] | None = None) -> int:
                 check_baseline_entries(baseline)
                 + check_axe(_load(args.report), baseline)
             )
+        if args.cmd == "budget":
+            return _emit(check_budget(args.elapsed, args.limit))
         if args.cmd == "lighthouse":
             return _emit(check_lighthouse(_load(args.scores)))
         if args.cmd == "flash":

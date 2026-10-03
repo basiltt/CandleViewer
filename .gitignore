@@ -76,3 +76,4 @@ packages/chart-engine/bench/scenes/report-*.md
 # planning-phase one-shot generators are never committed
 docs/plan/_*.py
 docs/plan/__*.json
+reports/a11y/
