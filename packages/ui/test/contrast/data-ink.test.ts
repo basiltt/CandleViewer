@@ -52,11 +52,11 @@ describe("gradient sampling", () => {
     expect(() => lib.sampleRamp(["#000000", "#FFFFFF"], 1)).toThrow(/A11Y-C000/);
   });
   it("a single failing stop fails the ramp and reports position and ratio", () => {
-    const rows = lib.evaluate({ dark: theme() }, { stops: 16 });
+    const rows = lib.evaluate({ dark: theme({ "color.heatmap.bid.1": "#000000" }) }, { stops: 16 });
     const sum = lib.summarise(rows);
     const ramp = sum.ramps.find((r: { id: string }) => r.id === "heatmap.bid");
     expect(ramp.stops).toBe(16);
-    expect(ramp.pass).toBe(false); // starts at canvas colour -> 1:1
+    expect(ramp.pass).toBe(false); // first stop at canvas colour -> 1:1
     expect(ramp.failing[0]).toEqual({ pos: 0, ratio: 1 });
   });
   it("a known-good ramp passes at every stop", () => {
@@ -140,7 +140,7 @@ describe("theme and density thresholds", () => {
 
 describe("generated matrix", () => {
   it("is markdown with explicit PASS/FAIL words", () => {
-    const rows = lib.evaluate({ dark: theme() }, { stops: 16 });
+    const rows = lib.evaluate({ dark: theme({ "color.heatmap.bid.1": "#000000" }) }, { stops: 16 });
     const md = lib.toMarkdown(rows, 16) as string;
     expect(md).toContain("| FAIL |");
     expect(md).toMatch(/Gradient ramps/);

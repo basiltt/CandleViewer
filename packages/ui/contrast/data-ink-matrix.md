@@ -7,29 +7,32 @@ CVD transform: Brettel/Vienot dichromacy projection (`tools/contrast/color-math.
 
 | Theme | Failing checks |
 |---|---|
-| dark | 47 |
-| light | 45 |
-| high-contrast | 48 |
+| dark | 0 |
+| light | 0 |
+| high-contrast | 0 |
 
 ## Gradient ramps
 
 | Theme | Ramp | Stops | Result | Failing stops (position: ratio) |
 |---|---|---|---|---|
-| dark | heatmap.bid | 16 | FAIL | 0: 1, 0.07: 1.11, 0.13: 1.27, 0.2: 1.49, 0.27: 1.92, 0.33: 2.47 |
-| dark | heatmap.ask | 16 | FAIL | 0: 1, 0.07: 1.05, 0.13: 1.14, 0.2: 1.26, 0.27: 1.57, 0.33: 1.99, 0.4: 2.53, 0.47: 2.87 |
-| dark | delta.divergence | 16 | FAIL | 0.13: 2.99, 0.2: 2.39, 0.27: 1.89, 0.33: 1.51, 0.4: 1.23, 0.47: 1.05, 0.53: 1.09, 0.6: 1.41, 0.67: 1.88, 0.73: 2.53 |
-| dark | profile.histogram | 16 | FAIL | 0: 1.91, 0.07: 1.91, 0.13: 1.89, 0.2: 1.89, 0.27: 1.87, 0.33: 1.87, 0.4: 1.85, 0.47: 1.86, 0.53: 1.85, 0.6: 1.85, 0.67: 1.84, 0.73: 1.85, 0.8: 1.84, 0.87: 1.86, 0.93: 1.86, 1: 1.87 |
-| dark | liquidation.intensity | 16 | FAIL | 0: 1.26, 0.07: 1.43, 0.13: 1.65, 0.2: 1.91, 0.27: 2.22, 0.33: 2.56, 0.4: 2.94 |
-| light | heatmap.bid | 16 | FAIL | 0: 1, 0.07: 1.03, 0.13: 1.06, 0.2: 1.09, 0.27: 2.06 |
-| light | heatmap.ask | 16 | FAIL | 0: 1, 0.07: 1.05, 0.13: 1.1, 0.2: 1.15, 0.27: 2.26 |
-| light | delta.divergence | 16 | FAIL | 0.2: 2.57, 0.27: 2.06, 0.33: 1.65, 0.4: 1.34, 0.47: 1.1, 0.53: 1.09, 0.6: 1.31, 0.67: 1.6, 0.73: 1.96, 0.8: 2.45 |
-| light | profile.histogram | 16 | FAIL | 0: 2.38, 0.07: 2.25, 0.13: 2.14, 0.2: 2.02, 0.27: 1.93, 0.33: 1.83, 0.4: 1.73, 0.47: 1.66, 0.53: 1.57, 0.6: 1.51, 0.67: 1.44, 0.73: 1.37, 0.8: 1.31, 0.87: 1.25, 0.93: 1.2, 1: 1.15 |
-| light | liquidation.intensity | 16 | FAIL | 0: 1.15, 0.07: 1.3, 0.13: 1.47, 0.2: 1.69, 0.27: 1.94, 0.33: 2.23, 0.4: 2.58, 0.47: 2.99 |
-| high-contrast | heatmap.bid | 16 | FAIL | 0: 1, 0.07: 1.11, 0.13: 1.27, 0.2: 1.49, 0.27: 1.92, 0.33: 2.47 |
-| high-contrast | heatmap.ask | 16 | FAIL | 0: 1, 0.07: 1.05, 0.13: 1.14, 0.2: 1.26, 0.27: 1.57, 0.33: 1.99, 0.4: 2.53, 0.47: 2.87 |
-| high-contrast | delta.divergence | 16 | FAIL | 0.27: 2.58, 0.33: 1.89, 0.4: 1.4, 0.47: 1.1, 0.53: 1.12, 0.6: 1.52, 0.67: 2.17 |
-| high-contrast | profile.histogram | 16 | FAIL | 0: 1.91, 0.07: 1.91, 0.13: 1.89, 0.2: 1.89, 0.27: 1.87, 0.33: 1.87, 0.4: 1.85, 0.47: 1.86, 0.53: 1.85, 0.6: 1.85, 0.67: 1.84, 0.73: 1.85, 0.8: 1.84, 0.87: 1.86, 0.93: 1.86, 1: 1.87 |
-| high-contrast | liquidation.intensity | 16 | FAIL | 0: 1.26, 0.07: 1.43, 0.13: 1.65, 0.2: 1.91, 0.27: 2.22, 0.33: 2.56, 0.4: 2.94 |
+| dark | heatmap.bid | 16 | PASS | none |
+| dark | heatmap.ask | 16 | PASS | none |
+| dark | delta.positive | 16 | PASS | none |
+| dark | delta.negative | 16 | PASS | none |
+| dark | profile.histogram | 16 | PASS | none |
+| dark | liquidation.intensity | 16 | PASS | none |
+| light | heatmap.bid | 16 | PASS | none |
+| light | heatmap.ask | 16 | PASS | none |
+| light | delta.positive | 16 | PASS | none |
+| light | delta.negative | 16 | PASS | none |
+| light | profile.histogram | 16 | PASS | none |
+| light | liquidation.intensity | 16 | PASS | none |
+| high-contrast | heatmap.bid | 16 | PASS | none |
+| high-contrast | heatmap.ask | 16 | PASS | none |
+| high-contrast | delta.positive | 16 | PASS | none |
+| high-contrast | delta.negative | 16 | PASS | none |
+| high-contrast | profile.histogram | 16 | PASS | none |
+| high-contrast | liquidation.intensity | 16 | PASS | none |
 
 ## Text pairs (theme x density)
 
@@ -87,12 +90,12 @@ CVD transform: Brettel/Vienot dichromacy projection (`tools/contrast/color-math.
 | high-contrast | compact | color.text.secondary on color.surface.canvas | 15.2 | 7 | PASS |
 | high-contrast | comfortable | color.text.secondary on color.surface.raised | 14.35 | 7 | PASS |
 | high-contrast | compact | color.text.secondary on color.surface.raised | 14.35 | 7 | PASS |
-| high-contrast | comfortable | color.text.tertiary on color.surface.app | 6.29 | 7 | FAIL |
-| high-contrast | compact | color.text.tertiary on color.surface.app | 6.29 | 7 | FAIL |
+| high-contrast | comfortable | color.text.tertiary on color.surface.app | 12.54 | 7 | PASS |
+| high-contrast | compact | color.text.tertiary on color.surface.app | 12.54 | 7 | PASS |
 | high-contrast | comfortable | color.text.link on color.surface.app | 7.45 | 7 | PASS |
 | high-contrast | compact | color.text.link on color.surface.app | 7.45 | 7 | PASS |
-| high-contrast | comfortable | color.text.on-action on color.action.primary.default | 4.76 | 7 | FAIL |
-| high-contrast | compact | color.text.on-action on color.action.primary.default | 4.76 | 7 | FAIL |
+| high-contrast | comfortable | color.text.on-action on color.action.primary.default | 7.45 | 7 | PASS |
+| high-contrast | compact | color.text.on-action on color.action.primary.default | 7.45 | 7 | PASS |
 | high-contrast | comfortable | color.axis.text on color.surface.canvas | 5.96 | 3 | PASS |
 | high-contrast | compact | color.axis.text on color.surface.canvas | 5.96 | 4.5 | PASS |
 
@@ -112,15 +115,36 @@ CVD transform: Brettel/Vienot dichromacy projection (`tools/contrast/color-math.
 | dark | default | bid-ask | color.footprint.bid vs color.footprint.ask | deuteranopia | #A3A35D | #8F8F44 | 8.26 | PASS |
 | dark | default | bid-ask | color.footprint.bid vs color.footprint.ask | protanopia | #B4B458 | #6B6B4E | 41.16 | PASS |
 | dark | default | bid-ask | color.footprint.bid vs color.footprint.ask | tritanopia | #8E8EFF | #ADAD00 | 134.56 | PASS |
-| dark | default | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | deuteranopia | #BDBD8D | #B0B087 | 5.76 | PASS |
-| dark | default | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | protanopia | #CCCC89 | #9A9A8B | 31.85 | PASS |
-| dark | default | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | tritanopia | #ABABFF | #C5C500 | 124.95 | PASS |
+| dark | default | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | deuteranopia | #BDBD8D | #C8C8AE | 12.61 | PASS |
+| dark | default | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | protanopia | #CCCC89 | #B9B9B0 | 30.7 | PASS |
+| dark | default | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | tritanopia | #ABABFF | #D6D600 | 130.37 | PASS |
 | dark | default | imbalance | color.footprint.imbalance vs color.footprint.bid | deuteranopia | #C8C83B | #A3A35D | 33.36 | PASS |
 | dark | default | imbalance | color.footprint.imbalance vs color.footprint.bid | protanopia | #BCBC42 | #B4B458 | 13.39 | PASS |
 | dark | default | imbalance | color.footprint.imbalance vs color.footprint.bid | tritanopia | #D4D400 | #8E8EFF | 147.46 | PASS |
 | dark | default | imbalance | color.footprint.imbalance vs color.footprint.ask | deuteranopia | #C8C83B | #8F8F44 | 34.38 | PASS |
 | dark | default | imbalance | color.footprint.imbalance vs color.footprint.ask | protanopia | #BCBC42 | #6B6B4E | 53.18 | PASS |
 | dark | default | imbalance | color.footprint.imbalance vs color.footprint.ask | tritanopia | #D4D400 | #ADAD00 | 18.22 | PASS |
+| dark | cvd-safe | buy-sell | color.buy.default vs color.sell.default | deuteranopia | #9696DA | #AEAE47 | 91.03 | PASS |
+| dark | cvd-safe | buy-sell | color.buy.default vs color.sell.default | protanopia | #A1A1D9 | #9F9F4D | 74.7 | PASS |
+| dark | cvd-safe | buy-sell | color.buy.default vs color.sell.default | tritanopia | #8888FF | #BDBD00 | 143.49 | PASS |
+| dark | cvd-safe | buy-sell | color.buy.hc vs color.sell.hc | deuteranopia | #9696DA | #AEAE47 | 91.03 | PASS |
+| dark | cvd-safe | buy-sell | color.buy.hc vs color.sell.hc | protanopia | #A1A1D9 | #9F9F4D | 74.7 | PASS |
+| dark | cvd-safe | buy-sell | color.buy.hc vs color.sell.hc | tritanopia | #8888FF | #BDBD00 | 143.49 | PASS |
+| dark | cvd-safe | buy-sell | color.candle.up vs color.candle.down | deuteranopia | #9696DA | #AEAE47 | 91.03 | PASS |
+| dark | cvd-safe | buy-sell | color.candle.up vs color.candle.down | protanopia | #A1A1D9 | #9F9F4D | 74.7 | PASS |
+| dark | cvd-safe | buy-sell | color.candle.up vs color.candle.down | tritanopia | #8888FF | #BDBD00 | 143.49 | PASS |
+| dark | cvd-safe | bid-ask | color.footprint.bid vs color.footprint.ask | deuteranopia | #9696DA | #AEAE47 | 91.03 | PASS |
+| dark | cvd-safe | bid-ask | color.footprint.bid vs color.footprint.ask | protanopia | #A1A1D9 | #9F9F4D | 74.7 | PASS |
+| dark | cvd-safe | bid-ask | color.footprint.bid vs color.footprint.ask | tritanopia | #8888FF | #BDBD00 | 143.49 | PASS |
+| dark | cvd-safe | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | deuteranopia | #CBCBF6 | #DBDB8D | 62.87 | PASS |
+| dark | cvd-safe | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | protanopia | #D3D3F5 | #D4D48F | 53.67 | PASS |
+| dark | cvd-safe | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | tritanopia | #C1C1FF | #E3E300 | 121.69 | PASS |
+| dark | cvd-safe | imbalance | color.footprint.imbalance vs color.footprint.bid | deuteranopia | #F7F7FA | #9696DA | 49.01 | PASS |
+| dark | cvd-safe | imbalance | color.footprint.imbalance vs color.footprint.bid | protanopia | #F8F8FA | #A1A1D9 | 42.01 | PASS |
+| dark | cvd-safe | imbalance | color.footprint.imbalance vs color.footprint.bid | tritanopia | #F7F7FF | #8888FF | 72.05 | PASS |
+| dark | cvd-safe | imbalance | color.footprint.imbalance vs color.footprint.ask | deuteranopia | #F7F7FA | #AEAE47 | 61.58 | PASS |
+| dark | cvd-safe | imbalance | color.footprint.imbalance vs color.footprint.ask | protanopia | #F8F8FA | #9F9F4D | 56.14 | PASS |
+| dark | cvd-safe | imbalance | color.footprint.imbalance vs color.footprint.ask | tritanopia | #F7F7FF | #BDBD00 | 84.65 | PASS |
 | light | default | buy-sell | color.buy.default vs color.sell.default | deuteranopia | #69693F | #7A7A33 | 16.14 | PASS |
 | light | default | buy-sell | color.buy.default vs color.sell.default | protanopia | #74743B | #58583D | 19.4 | PASS |
 | light | default | buy-sell | color.buy.default vs color.sell.default | tritanopia | #5B5BCB | #959500 | 131.12 | PASS |
@@ -133,15 +157,36 @@ CVD transform: Brettel/Vienot dichromacy projection (`tools/contrast/color-math.
 | light | default | bid-ask | color.footprint.bid vs color.footprint.ask | deuteranopia | #69693F | #7A7A33 | 16.14 | PASS |
 | light | default | bid-ask | color.footprint.bid vs color.footprint.ask | protanopia | #74743B | #58583D | 19.4 | PASS |
 | light | default | bid-ask | color.footprint.bid vs color.footprint.ask | tritanopia | #5B5BCB | #959500 | 131.12 | PASS |
-| light | default | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | deuteranopia | #7F7F4B | #717132 | 8.47 | PASS |
-| light | default | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | protanopia | #8D8D47 | #53533B | 32.68 | PASS |
-| light | default | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | tritanopia | #6E6EF6 | #8A8A00 | 138.1 | PASS |
-| light | default | imbalance | color.footprint.imbalance vs color.footprint.bid | deuteranopia | #939300 | #69693F | 42.66 | PASS |
-| light | default | imbalance | color.footprint.imbalance vs color.footprint.bid | protanopia | #87870D | #74743B | 26.67 | PASS |
-| light | default | imbalance | color.footprint.imbalance vs color.footprint.bid | tritanopia | #9E9E00 | #5B5BCB | 134.35 | PASS |
-| light | default | imbalance | color.footprint.imbalance vs color.footprint.ask | deuteranopia | #939300 | #7A7A33 | 26.54 | PASS |
-| light | default | imbalance | color.footprint.imbalance vs color.footprint.ask | protanopia | #87870D | #58583D | 45.42 | PASS |
-| light | default | imbalance | color.footprint.imbalance vs color.footprint.ask | tritanopia | #9E9E00 | #959500 | 4.38 | FAIL |
+| light | default | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | deuteranopia | #292919 | #2E2E15 | 6.08 | PASS |
+| light | default | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | protanopia | #2D2D18 | #212118 | 9.48 | PASS |
+| light | default | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | tritanopia | #232354 | #393900 | 66.14 | PASS |
+| light | default | imbalance | color.footprint.imbalance vs color.footprint.bid | deuteranopia | #7B7B00 | #69693F | 32.59 | PASS |
+| light | default | imbalance | color.footprint.imbalance vs color.footprint.bid | protanopia | #717107 | #74743B | 19.3 | PASS |
+| light | default | imbalance | color.footprint.imbalance vs color.footprint.bid | tritanopia | #848400 | #5B5BCB | 125.11 | PASS |
+| light | default | imbalance | color.footprint.imbalance vs color.footprint.ask | deuteranopia | #7B7B00 | #7A7A33 | 17.14 | PASS |
+| light | default | imbalance | color.footprint.imbalance vs color.footprint.ask | protanopia | #717107 | #58583D | 36.45 | PASS |
+| light | default | imbalance | color.footprint.imbalance vs color.footprint.ask | tritanopia | #848400 | #959500 | 8.42 | PASS |
+| light | cvd-safe | buy-sell | color.buy.default vs color.sell.default | deuteranopia | #5E5EA2 | #696900 | 90.83 | PASS |
+| light | cvd-safe | buy-sell | color.buy.default vs color.sell.default | protanopia | #6868A1 | #575703 | 77.5 | PASS |
+| light | cvd-safe | buy-sell | color.buy.default vs color.sell.default | tritanopia | #5252E4 | #797900 | 140.44 | PASS |
+| light | cvd-safe | buy-sell | color.buy.hc vs color.sell.hc | deuteranopia | #5E5EA2 | #696900 | 90.83 | PASS |
+| light | cvd-safe | buy-sell | color.buy.hc vs color.sell.hc | protanopia | #6868A1 | #575703 | 77.5 | PASS |
+| light | cvd-safe | buy-sell | color.buy.hc vs color.sell.hc | tritanopia | #5252E4 | #797900 | 140.44 | PASS |
+| light | cvd-safe | buy-sell | color.candle.up vs color.candle.down | deuteranopia | #5E5EA2 | #696900 | 90.83 | PASS |
+| light | cvd-safe | buy-sell | color.candle.up vs color.candle.down | protanopia | #6868A1 | #575703 | 77.5 | PASS |
+| light | cvd-safe | buy-sell | color.candle.up vs color.candle.down | tritanopia | #5252E4 | #797900 | 140.44 | PASS |
+| light | cvd-safe | bid-ask | color.footprint.bid vs color.footprint.ask | deuteranopia | #5E5EA2 | #696900 | 90.83 | PASS |
+| light | cvd-safe | bid-ask | color.footprint.bid vs color.footprint.ask | protanopia | #6868A1 | #575703 | 77.5 | PASS |
+| light | cvd-safe | bid-ask | color.footprint.bid vs color.footprint.ask | tritanopia | #5252E4 | #797900 | 140.44 | PASS |
+| light | cvd-safe | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | deuteranopia | #7E7ECA | #868600 | 103.09 | PASS |
+| light | cvd-safe | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | protanopia | #8989C9 | #6F6F06 | 88.13 | PASS |
+| light | cvd-safe | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | tritanopia | #7070FF | #9A9A00 | 146.85 | PASS |
+| light | cvd-safe | imbalance | color.footprint.imbalance vs color.footprint.bid | deuteranopia | #16161A | #5E5EA2 | 51.86 | PASS |
+| light | cvd-safe | imbalance | color.footprint.imbalance vs color.footprint.bid | protanopia | #17171A | #6868A1 | 49.7 | PASS |
+| light | cvd-safe | imbalance | color.footprint.imbalance vs color.footprint.bid | tritanopia | #161621 | #5252E4 | 85.67 | PASS |
+| light | cvd-safe | imbalance | color.footprint.imbalance vs color.footprint.ask | deuteranopia | #16161A | #696900 | 64.17 | PASS |
+| light | cvd-safe | imbalance | color.footprint.imbalance vs color.footprint.ask | protanopia | #17171A | #575703 | 53.38 | PASS |
+| light | cvd-safe | imbalance | color.footprint.imbalance vs color.footprint.ask | tritanopia | #161621 | #797900 | 76.28 | PASS |
 | high-contrast | default | buy-sell | color.buy.default vs color.sell.default | deuteranopia | #BDBD8D | #B0B087 | 5.76 | PASS |
 | high-contrast | default | buy-sell | color.buy.default vs color.sell.default | protanopia | #CCCC89 | #9A9A8B | 31.85 | PASS |
 | high-contrast | default | buy-sell | color.buy.default vs color.sell.default | tritanopia | #ABABFF | #C5C500 | 124.95 | PASS |
@@ -154,12 +199,33 @@ CVD transform: Brettel/Vienot dichromacy projection (`tools/contrast/color-math.
 | high-contrast | default | bid-ask | color.footprint.bid vs color.footprint.ask | deuteranopia | #A3A35D | #8F8F44 | 8.26 | PASS |
 | high-contrast | default | bid-ask | color.footprint.bid vs color.footprint.ask | protanopia | #B4B458 | #6B6B4E | 41.16 | PASS |
 | high-contrast | default | bid-ask | color.footprint.bid vs color.footprint.ask | tritanopia | #8E8EFF | #ADAD00 | 134.56 | PASS |
-| high-contrast | default | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | deuteranopia | #BDBD8D | #B0B087 | 5.76 | PASS |
-| high-contrast | default | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | protanopia | #CCCC89 | #9A9A8B | 31.85 | PASS |
-| high-contrast | default | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | tritanopia | #ABABFF | #C5C500 | 124.95 | PASS |
+| high-contrast | default | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | deuteranopia | #BDBD8D | #C8C8AE | 12.61 | PASS |
+| high-contrast | default | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | protanopia | #CCCC89 | #B9B9B0 | 30.7 | PASS |
+| high-contrast | default | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | tritanopia | #ABABFF | #D6D600 | 130.37 | PASS |
 | high-contrast | default | imbalance | color.footprint.imbalance vs color.footprint.bid | deuteranopia | #C8C83B | #A3A35D | 33.36 | PASS |
 | high-contrast | default | imbalance | color.footprint.imbalance vs color.footprint.bid | protanopia | #BCBC42 | #B4B458 | 13.39 | PASS |
 | high-contrast | default | imbalance | color.footprint.imbalance vs color.footprint.bid | tritanopia | #D4D400 | #8E8EFF | 147.46 | PASS |
 | high-contrast | default | imbalance | color.footprint.imbalance vs color.footprint.ask | deuteranopia | #C8C83B | #8F8F44 | 34.38 | PASS |
 | high-contrast | default | imbalance | color.footprint.imbalance vs color.footprint.ask | protanopia | #BCBC42 | #6B6B4E | 53.18 | PASS |
 | high-contrast | default | imbalance | color.footprint.imbalance vs color.footprint.ask | tritanopia | #D4D400 | #ADAD00 | 18.22 | PASS |
+| high-contrast | cvd-safe | buy-sell | color.buy.default vs color.sell.default | deuteranopia | #9696DA | #AEAE47 | 91.03 | PASS |
+| high-contrast | cvd-safe | buy-sell | color.buy.default vs color.sell.default | protanopia | #A1A1D9 | #9F9F4D | 74.7 | PASS |
+| high-contrast | cvd-safe | buy-sell | color.buy.default vs color.sell.default | tritanopia | #8888FF | #BDBD00 | 143.49 | PASS |
+| high-contrast | cvd-safe | buy-sell | color.buy.hc vs color.sell.hc | deuteranopia | #9696DA | #AEAE47 | 91.03 | PASS |
+| high-contrast | cvd-safe | buy-sell | color.buy.hc vs color.sell.hc | protanopia | #A1A1D9 | #9F9F4D | 74.7 | PASS |
+| high-contrast | cvd-safe | buy-sell | color.buy.hc vs color.sell.hc | tritanopia | #8888FF | #BDBD00 | 143.49 | PASS |
+| high-contrast | cvd-safe | buy-sell | color.candle.up vs color.candle.down | deuteranopia | #9696DA | #AEAE47 | 91.03 | PASS |
+| high-contrast | cvd-safe | buy-sell | color.candle.up vs color.candle.down | protanopia | #A1A1D9 | #9F9F4D | 74.7 | PASS |
+| high-contrast | cvd-safe | buy-sell | color.candle.up vs color.candle.down | tritanopia | #8888FF | #BDBD00 | 143.49 | PASS |
+| high-contrast | cvd-safe | bid-ask | color.footprint.bid vs color.footprint.ask | deuteranopia | #9696DA | #AEAE47 | 91.03 | PASS |
+| high-contrast | cvd-safe | bid-ask | color.footprint.bid vs color.footprint.ask | protanopia | #A1A1D9 | #9F9F4D | 74.7 | PASS |
+| high-contrast | cvd-safe | bid-ask | color.footprint.bid vs color.footprint.ask | tritanopia | #8888FF | #BDBD00 | 143.49 | PASS |
+| high-contrast | cvd-safe | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | deuteranopia | #CBCBF6 | #DBDB8D | 62.87 | PASS |
+| high-contrast | cvd-safe | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | protanopia | #D3D3F5 | #D4D48F | 53.67 | PASS |
+| high-contrast | cvd-safe | bid-ask | color.heatmap.bid.5 vs color.heatmap.ask.5 | tritanopia | #C1C1FF | #E3E300 | 121.69 | PASS |
+| high-contrast | cvd-safe | imbalance | color.footprint.imbalance vs color.footprint.bid | deuteranopia | #F7F7FA | #9696DA | 49.01 | PASS |
+| high-contrast | cvd-safe | imbalance | color.footprint.imbalance vs color.footprint.bid | protanopia | #F8F8FA | #A1A1D9 | 42.01 | PASS |
+| high-contrast | cvd-safe | imbalance | color.footprint.imbalance vs color.footprint.bid | tritanopia | #F7F7FF | #8888FF | 72.05 | PASS |
+| high-contrast | cvd-safe | imbalance | color.footprint.imbalance vs color.footprint.ask | deuteranopia | #F7F7FA | #AEAE47 | 61.58 | PASS |
+| high-contrast | cvd-safe | imbalance | color.footprint.imbalance vs color.footprint.ask | protanopia | #F8F8FA | #9F9F4D | 56.14 | PASS |
+| high-contrast | cvd-safe | imbalance | color.footprint.imbalance vs color.footprint.ask | tritanopia | #F7F7FF | #BDBD00 | 84.65 | PASS |
