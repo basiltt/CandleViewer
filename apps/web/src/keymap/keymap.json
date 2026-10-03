@@ -1,0 +1,865 @@
+{
+  "$comment": "Single source of truth for default hotkeys (E49-T04). Validated by scripts/keymap_lint.py.",
+  "version": 1,
+  "safetyModifierDefault": true,
+  "cheatsheetContexts": [
+    "Global",
+    "Auth",
+    "Workspace",
+    "Chart",
+    "DOM",
+    "Ticket",
+    "Positions",
+    "Replay",
+    "Rules"
+  ],
+  "commands": [
+    {
+      "id": "global.auth.submit",
+      "label": "Submit sign-in",
+      "context": "Auth",
+      "defaultBinding": "Enter",
+      "destructive": false,
+      "validWhen": "login form focused",
+      "visibleControl": true,
+      "screens": ["SCR-001"],
+      "shadows": [
+        {
+          "command": "positions.open_sltp",
+          "rationale": "Enter/save is scoped to the focused form or editor; contexts are never co-active"
+        },
+        {
+          "command": "rules.inspect_node",
+          "rationale": "Enter/save is scoped to the focused form or editor; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "global.palette",
+      "label": "Command palette",
+      "context": "Global",
+      "defaultBinding": "Ctrl+K",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "screens": ["SCR-010"]
+    },
+    {
+      "id": "global.account_picker",
+      "label": "Account picker",
+      "context": "Global",
+      "defaultBinding": "Ctrl+Shift+A",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "screens": ["SCR-010"]
+    },
+    {
+      "id": "global.cheatsheet",
+      "label": "Hotkey cheatsheet",
+      "context": "Global",
+      "defaultBinding": "Ctrl+/",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "screens": ["SCR-010"]
+    },
+    {
+      "id": "global.fullscreen",
+      "label": "Full-screen workspace",
+      "context": "Global",
+      "defaultBinding": "F11",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "screens": ["SCR-010"],
+      "reservedOverride": {
+        "rationale": "Deliberate: app-managed full-screen workspace replaces the browser default; Electron maps it to the same action"
+      }
+    },
+    {
+      "id": "global.nav_rail",
+      "label": "Navigate rail item 1-9",
+      "context": "Global",
+      "defaultBinding": "Alt+1..9",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "screens": ["SCR-010"]
+    },
+    {
+      "id": "workspace.preset",
+      "label": "Switch layout preset",
+      "context": "Workspace",
+      "defaultBinding": "Ctrl+1..9",
+      "destructive": false,
+      "validWhen": "workspace open",
+      "visibleControl": true,
+      "reservedOverride": {
+        "rationale": "Deliberate override of browser tab switching; Electron has no tabs and users can remap in SCR-113"
+      }
+    },
+    {
+      "id": "workspace.save",
+      "label": "Save layout",
+      "context": "Workspace",
+      "defaultBinding": "Ctrl+S",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "reservedOverride": {
+        "rationale": "Deliberate override of browser save-page; layout save is the expected action"
+      },
+      "shadows": [
+        {
+          "command": "rules.save_draft",
+          "rationale": "Enter/save is scoped to the focused form or editor; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "workspace.save_as",
+      "label": "Save layout as",
+      "context": "Workspace",
+      "defaultBinding": "Ctrl+Shift+S",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "workspace.move_panel",
+      "label": "Move panel",
+      "context": "Workspace",
+      "defaultBinding": "Alt+drag",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": "Panel header drag handle"
+    },
+    {
+      "id": "workspace.fullscreen_panel",
+      "label": "Full-screen active panel",
+      "context": "Workspace",
+      "defaultBinding": "F11",
+      "destructive": false,
+      "validWhen": "panel focused",
+      "visibleControl": true,
+      "shadows": [
+        {
+          "command": "global.fullscreen",
+          "rationale": "Active panel full-screen wins while a panel is focused"
+        }
+      ],
+      "reservedOverride": {
+        "rationale": "Deliberate override of browser full screen, see global.fullscreen"
+      }
+    },
+    {
+      "id": "workspace.panel_prev",
+      "label": "Cycle panels backward",
+      "context": "Workspace",
+      "defaultBinding": "Ctrl+Alt+←",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "workspace.panel_next",
+      "label": "Cycle panels forward",
+      "context": "Workspace",
+      "defaultBinding": "Ctrl+Alt+→",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "chart.footprint_toggle",
+      "label": "Toggle footprint",
+      "context": "Chart",
+      "defaultBinding": "F",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "screens": ["SCR-030"]
+    },
+    {
+      "id": "chart.footprint_mode",
+      "label": "Footprint mode profile/box",
+      "context": "Chart",
+      "defaultBinding": "Alt+F",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "chart.interval_preset",
+      "label": "Interval preset 1-9",
+      "context": "Chart",
+      "defaultBinding": "1..9",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "shadows": [
+        {
+          "command": "ticket.qty_preset",
+          "rationale": "Digits scoped to the focused panel; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "chart.zoom_price",
+      "label": "Zoom price scale",
+      "context": "Chart",
+      "defaultBinding": "Shift+wheel",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": "Price axis zoom control"
+    },
+    {
+      "id": "chart.limit_at_price",
+      "label": "Place limit order at price (arm-gated)",
+      "context": "Chart",
+      "defaultBinding": "Ctrl+drag",
+      "destructive": false,
+      "validWhen": "chart trading armed",
+      "visibleControl": "Order ticket"
+    },
+    {
+      "id": "chart.market_order",
+      "label": "Market order at market (arm-gated)",
+      "context": "Chart",
+      "defaultBinding": "Alt+click",
+      "destructive": false,
+      "validWhen": "chart trading armed",
+      "visibleControl": "Order ticket"
+    },
+    {
+      "id": "chart.cancel_drawing",
+      "label": "Cancel in-progress drawing",
+      "context": "Chart",
+      "defaultBinding": "Esc",
+      "destructive": false,
+      "validWhen": "drawing in progress",
+      "visibleControl": true,
+      "shadows": [
+        {
+          "command": "dom.cancel_all",
+          "rationale": "Escape scoped to the focused panel; contexts are never co-active"
+        },
+        {
+          "command": "ticket.clear",
+          "rationale": "Escape scoped to the focused panel; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "chart.delete_drawing",
+      "label": "Delete selected drawing",
+      "context": "Chart",
+      "defaultBinding": "Del",
+      "destructive": true,
+      "validWhen": "drawing selected",
+      "visibleControl": true,
+      "shadows": [
+        {
+          "command": "rules.delete",
+          "rationale": "Delete scoped to the focused panel; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "chart.undo",
+      "label": "Undo drawing",
+      "context": "Chart",
+      "defaultBinding": "Ctrl+Z",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "chart.redo",
+      "label": "Redo drawing",
+      "context": "Chart",
+      "defaultBinding": "Ctrl+Y",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "dom.market_click",
+      "label": "Market order (click)",
+      "context": "DOM",
+      "defaultBinding": "Ctrl+click",
+      "destructive": false,
+      "validWhen": "DOM armed",
+      "visibleControl": "Order ticket",
+      "screens": ["SCR-050"]
+    },
+    {
+      "id": "dom.stop_click",
+      "label": "Stop order (click)",
+      "context": "DOM",
+      "defaultBinding": "Shift+click",
+      "destructive": false,
+      "validWhen": "DOM armed",
+      "visibleControl": "Order ticket"
+    },
+    {
+      "id": "dom.cancel_all",
+      "label": "Cancel all working orders for symbol",
+      "context": "DOM",
+      "defaultBinding": "Esc",
+      "destructive": true,
+      "validWhen": "working orders exist",
+      "visibleControl": true,
+      "shadows": [
+        {
+          "command": "chart.cancel_drawing",
+          "rationale": "Escape scoped to the focused panel; contexts are never co-active"
+        },
+        {
+          "command": "ticket.clear",
+          "rationale": "Escape scoped to the focused panel; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "dom.zoom_in",
+      "label": "Price zoom in",
+      "context": "DOM",
+      "defaultBinding": "+",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "dom.zoom_out",
+      "label": "Price zoom out",
+      "context": "DOM",
+      "defaultBinding": "-",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "dom.centre_mark",
+      "label": "Centre on mark",
+      "context": "DOM",
+      "defaultBinding": "C",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "dom.recentre",
+      "label": "Re-centre and resume auto-follow",
+      "context": "DOM",
+      "defaultBinding": "Space",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "shadows": [
+        {
+          "command": "replay.play_pause",
+          "rationale": "Space scoped to the focused panel; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "dom.arm",
+      "label": "Arm/disarm one-click",
+      "context": "DOM",
+      "defaultBinding": "Ctrl+Shift+T",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "shadows": [
+        {
+          "command": "ticket.arm",
+          "rationale": "Same action surfaced from both panels"
+        }
+      ],
+      "reservedOverride": {
+        "rationale": "Deliberate override of browser reopen-tab; Electron has no tabs"
+      }
+    },
+    {
+      "id": "ticket.side_buy",
+      "label": "Set side Buy",
+      "context": "Ticket",
+      "defaultBinding": "B",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "screens": ["SCR-060"],
+      "shadows": [
+        {
+          "command": "replay.bookmark",
+          "rationale": "Letters scoped to the focused panel; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "ticket.side_sell",
+      "label": "Set side Sell",
+      "context": "Ticket",
+      "defaultBinding": "S",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "ticket.qty_preset",
+      "label": "Quantity preset 1-4",
+      "context": "Ticket",
+      "defaultBinding": "1..4",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "shadows": [
+        {
+          "command": "chart.interval_preset",
+          "rationale": "Digits scoped to the focused panel; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "ticket.submit",
+      "label": "Submit order",
+      "context": "Ticket",
+      "defaultBinding": "Ctrl+Enter",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "shadows": [
+        {
+          "command": "rules.validate",
+          "rationale": "Ctrl+Enter scoped to the focused panel; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "ticket.clear",
+      "label": "Clear ticket",
+      "context": "Ticket",
+      "defaultBinding": "Esc",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "shadows": [
+        {
+          "command": "chart.cancel_drawing",
+          "rationale": "Escape scoped to the focused panel; contexts are never co-active"
+        },
+        {
+          "command": "dom.cancel_all",
+          "rationale": "Escape scoped to the focused panel; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "ticket.snap_bid",
+      "label": "Snap price to bid",
+      "context": "Ticket",
+      "defaultBinding": "Alt+B",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "ticket.snap_ask",
+      "label": "Snap price to ask",
+      "context": "Ticket",
+      "defaultBinding": "Alt+A",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "ticket.snap_mid",
+      "label": "Snap price to mid",
+      "context": "Ticket",
+      "defaultBinding": "Alt+M",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "ticket.reduce_only",
+      "label": "Toggle reduce-only",
+      "context": "Ticket",
+      "defaultBinding": "R",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "shadows": [
+        {
+          "command": "replay.jump_live",
+          "rationale": "Letters scoped to the focused panel; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "ticket.arm",
+      "label": "Arm/disarm one-click",
+      "context": "Ticket",
+      "defaultBinding": "Ctrl+Shift+T",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "shadows": [
+        {
+          "command": "dom.arm",
+          "rationale": "Same action surfaced from both panels"
+        }
+      ],
+      "reservedOverride": {
+        "rationale": "Deliberate override of browser reopen-tab; Electron has no tabs"
+      }
+    },
+    {
+      "id": "positions.open_sltp",
+      "label": "Open SL/TP editor",
+      "context": "Positions",
+      "defaultBinding": "Enter",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "screens": ["SCR-063"],
+      "shadows": [
+        {
+          "command": "rules.inspect_node",
+          "rationale": "Enter scoped to the focused panel; contexts are never co-active"
+        },
+        {
+          "command": "global.auth.submit",
+          "rationale": "Enter/save is scoped to the focused form or editor; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "positions.close",
+      "label": "Close selected position (confirm)",
+      "context": "Positions",
+      "defaultBinding": "Ctrl+W",
+      "destructive": true,
+      "validWhen": "always",
+      "visibleControl": true,
+      "reservedOverride": {
+        "rationale": "Deliberate, reviewed override of browser close-tab (SCR-063): close-position is confirm-gated and the Electron shell has no tabs"
+      }
+    },
+    {
+      "id": "positions.close_all",
+      "label": "Close all in view (confirm)",
+      "context": "Positions",
+      "defaultBinding": "Ctrl+Shift+W",
+      "destructive": true,
+      "validWhen": "always",
+      "visibleControl": true,
+      "reservedOverride": {
+        "rationale": "Deliberate, reviewed override of browser close-window (SCR-063): confirm-gated"
+      }
+    },
+    {
+      "id": "positions.multi_ctrl",
+      "label": "Multi-select toggle",
+      "context": "Positions",
+      "defaultBinding": "Ctrl",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": "Row checkboxes"
+    },
+    {
+      "id": "positions.multi_shift",
+      "label": "Multi-select range",
+      "context": "Positions",
+      "defaultBinding": "Shift",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": "Row checkboxes"
+    },
+    {
+      "id": "rules.save_draft",
+      "label": "Save draft",
+      "context": "Rules",
+      "defaultBinding": "Ctrl+S",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "screens": ["SCR-081"],
+      "shadows": [
+        {
+          "command": "workspace.save",
+          "rationale": "Rules editor save takes precedence when the editor has focus"
+        }
+      ],
+      "reservedOverride": {
+        "rationale": "Deliberate override of browser save-page; drafts are saved in-app"
+      }
+    },
+    {
+      "id": "rules.validate",
+      "label": "Validate",
+      "context": "Rules",
+      "defaultBinding": "Ctrl+Enter",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "shadows": [
+        {
+          "command": "ticket.submit",
+          "rationale": "Ctrl+Enter scoped to the focused panel; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "rules.graph_mode",
+      "label": "Switch to graph mode",
+      "context": "Rules",
+      "defaultBinding": "Alt+G",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "rules.move_up",
+      "label": "Reorder up",
+      "context": "Rules",
+      "defaultBinding": "Alt+↑",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "rules.move_down",
+      "label": "Reorder down",
+      "context": "Rules",
+      "defaultBinding": "Alt+↓",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "rules.duplicate",
+      "label": "Duplicate row",
+      "context": "Rules",
+      "defaultBinding": "Ctrl+D",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "reservedOverride": {
+        "rationale": "Deliberate override of browser bookmark"
+      }
+    },
+    {
+      "id": "rules.delete",
+      "label": "Delete selection",
+      "context": "Rules",
+      "defaultBinding": "Del",
+      "destructive": true,
+      "validWhen": "always",
+      "visibleControl": true,
+      "screens": ["SCR-082"],
+      "shadows": [
+        {
+          "command": "chart.delete_drawing",
+          "rationale": "Delete scoped to the focused panel; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "rules.select_all",
+      "label": "Select all",
+      "context": "Rules",
+      "defaultBinding": "Ctrl+A",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "rules.group",
+      "label": "Group into sub-graph",
+      "context": "Rules",
+      "defaultBinding": "Ctrl+G",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "rules.auto_layout",
+      "label": "Auto-layout",
+      "context": "Rules",
+      "defaultBinding": "Ctrl+L",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "reservedOverride": {
+        "rationale": "Deliberate override of browser address-bar focus; Electron has no address bar"
+      }
+    },
+    {
+      "id": "rules.pan",
+      "label": "Pan canvas",
+      "context": "Rules",
+      "defaultBinding": "Space+drag",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": "Canvas pan control"
+    },
+    {
+      "id": "rules.cycle_nodes",
+      "label": "Cycle nodes",
+      "context": "Rules",
+      "defaultBinding": "Tab",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "rules.inspect_node",
+      "label": "Open node inspector",
+      "context": "Rules",
+      "defaultBinding": "Enter",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "shadows": [
+        {
+          "command": "positions.open_sltp",
+          "rationale": "Enter scoped to the focused panel; contexts are never co-active"
+        },
+        {
+          "command": "global.auth.submit",
+          "rationale": "Enter/save is scoped to the focused form or editor; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "rules.rename",
+      "label": "Rename node",
+      "context": "Rules",
+      "defaultBinding": "F2",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "replay.play_pause",
+      "label": "Play / pause",
+      "context": "Replay",
+      "defaultBinding": "Space",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "screens": ["SCR-097"],
+      "shadows": [
+        {
+          "command": "dom.recentre",
+          "rationale": "Space scoped to the focused panel; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "replay.step_bar_back",
+      "label": "Step one bar back",
+      "context": "Replay",
+      "defaultBinding": "←",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "replay.step_bar_fwd",
+      "label": "Step one bar forward",
+      "context": "Replay",
+      "defaultBinding": "→",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "replay.step_tick_back",
+      "label": "Step one tick back",
+      "context": "Replay",
+      "defaultBinding": "Shift+←",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "replay.step_tick_fwd",
+      "label": "Step one tick forward",
+      "context": "Replay",
+      "defaultBinding": "Shift+→",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "replay.jump_back",
+      "label": "Jump back 1 minute",
+      "context": "Replay",
+      "defaultBinding": "Ctrl+←",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "replay.jump_fwd",
+      "label": "Jump forward 1 minute",
+      "context": "Replay",
+      "defaultBinding": "Ctrl+→",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "replay.jump_live",
+      "label": "Jump to real time",
+      "context": "Replay",
+      "defaultBinding": "R",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "shadows": [
+        {
+          "command": "ticket.reduce_only",
+          "rationale": "Letters scoped to the focused panel; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "replay.bookmark",
+      "label": "Set bookmark",
+      "context": "Replay",
+      "defaultBinding": "B",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true,
+      "shadows": [
+        {
+          "command": "ticket.side_buy",
+          "rationale": "Letters scoped to the focused panel; contexts are never co-active"
+        }
+      ]
+    },
+    {
+      "id": "replay.bookmark_prev",
+      "label": "Previous bookmark",
+      "context": "Replay",
+      "defaultBinding": "[",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    },
+    {
+      "id": "replay.bookmark_next",
+      "label": "Next bookmark",
+      "context": "Replay",
+      "defaultBinding": "]",
+      "destructive": false,
+      "validWhen": "always",
+      "visibleControl": true
+    }
+  ]
+}

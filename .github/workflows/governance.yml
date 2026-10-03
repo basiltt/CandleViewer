@@ -46,6 +46,9 @@ jobs:
       - name: Rule-reference link check (GOV-002)
         run: python scripts/check_rule_refs.py
 
+      - name: Keymap conflict, reserved-key and catalogue-drift lint (E49-T04)
+        run: python scripts/keymap_lint.py --check-docs
+
       - name: Single-source-of-truth duplication check (GOV-003)
         # known pre-existing GOV-003 finding on docs/plan/04-security-program.md
         # predates this ticket (E01-T08) and is out of its scope to fix;
@@ -117,4 +120,3 @@ jobs:
             echo "::error title=governance job over budget::${duration_ms}ms exceeds the 60s budget (docs/plan/06-performance-and-load-standard.md, E01-Q02 acceptance scenario 'the job is fast enough not to be the bottleneck')"
             exit 1
           fi
-
