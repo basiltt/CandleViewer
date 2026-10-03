@@ -46,7 +46,14 @@ def normalise_pnpm_graph(raw: Any) -> Any:
     if isinstance(raw, list):
         items = [normalise_pnpm_graph(v) for v in raw]
         return sorted(items, key=lambda v: json.dumps(v, sort_keys=True))
+    if isinstance(raw, str):
+        return raw.replace(chr(92), "/").replace(chr(13) + chr(10), chr(10))
     return raw
+
+
+def canonical_json(graph: Any) -> bytes:
+    """Canonical JSON bytes: sorted keys, compact separators, LF, forward slashes."""
+    return json.dumps(graph, sort_keys=True, separators=(",", ":")).encode()
 
 
 def normalise_uv_export(text: str) -> str:
@@ -66,7 +73,7 @@ def compute() -> dict[str, str]:
     return {
         "pnpm-lock.yaml": _sha((ROOT / "pnpm-lock.yaml").read_bytes().replace(b"\r\n", b"\n")),
         "uv.lock": _sha((api / "uv.lock").read_bytes().replace(b"\r\n", b"\n")),
-        "pnpm-graph": _sha(json.dumps(graph, sort_keys=True, separators=(",", ":")).encode()),
+        "pnpm-graph": _sha(canonical_json(graph)),
         "uv-graph": _sha(normalise_uv_export(uv_out.decode("utf-8")).encode()),
     }
 

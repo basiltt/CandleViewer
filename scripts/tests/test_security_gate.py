@@ -440,3 +440,38 @@ def test_main_cli_ok_on_clean_report(tmp_path: Path) -> None:
         ]
     )
     assert rc == 0
+
+
+def test_npm_audit_ghsa_url_becomes_finding_id(tmp_path: Path) -> None:
+    report = _write_json(
+        tmp_path,
+        "npm-audit.json",
+        {
+            "vulnerabilities": {
+                "braces": {
+                    "severity": "high",
+                    "via": [
+                        {
+                            "source": 1098094,
+                            "url": "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm",
+                        }
+                    ],
+                }
+            }
+        },
+    )
+    assert parse_npm_audit(report)[0].finding_id == "GHSA-vfj7-8cjw-p6xm"
+
+
+def test_repo_register_accepts_the_two_ghsa_exceptions_with_approver_and_expiry() -> None:
+    register = Path(__file__).resolve().parents[2] / "security" / "accepted-risks.yaml"
+    risks = {r.finding_id: r for r in load_accepted_risks(register)}
+    ids = ["GHSA-ch52-4w7c-c8xp", "GHSA-vfj7-8cjw-p6xm"]
+    findings = []
+    for gid in ids:
+        assert risks[gid].approver and risks[gid].expires
+        findings.append(Finding(tool="npm-audit", finding_id=gid, severity="HIGH", package="x"))
+    result = evaluate_findings(findings, list(risks.values()), run_date=date(2026, 10, 3))
+    assert not result.blocked
+    late = evaluate_findings(findings, list(risks.values()), run_date=date(2027, 1, 1))
+    assert late.blocked

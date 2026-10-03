@@ -67,3 +67,21 @@ entries:
     approver: "basiltt"
     expires: "2027-03-25"
     ticket: "https://github.com/basiltt/CandleViewer/issues/1551"
+  # E43-T05-B1: no patched release exists upstream for either advisory (2026-10-03).
+  # Both are dev/build-time only transitive deps; neither ships in the runtime.
+  # Approval is pending the owner CODEOWNER review of PR #1745 (security-review);
+  # these entries take effect only on that merge (C-12.3).
+  - id: "GHSA-ch52-4w7c-c8xp"
+    tool: npm-audit
+    severity: HIGH
+    reason: "EX-05: http-cache-semantics@4.2.0 - no patched version exists upstream as of 2026-10-03; dev/build-time only via electron-builder > @electron/get > got. Re-check: re-run pnpm audit at each freeze; remove when a patched version ships"
+    approver: "PENDING (owner basiltt to record approval on #1234)"
+    expires: "2026-12-31"
+    ticket: "https://github.com/basiltt/CandleViewer/issues/1737"
+  - id: "GHSA-vfj7-8cjw-p6xm"
+    tool: npm-audit
+    severity: HIGH
+    reason: "EX-06: braces@3.0.3 - no patched version exists upstream as of 2026-10-03; dev/build-time only via lint-staged > micromatch. Re-check: re-run pnpm audit at each freeze; remove when a patched version ships"
+    approver: "PENDING (owner basiltt to record approval on #1234)"
+    expires: "2026-12-31"
+    ticket: "https://github.com/basiltt/CandleViewer/issues/1737"

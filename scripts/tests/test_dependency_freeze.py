@@ -143,6 +143,25 @@ def test_freeze_manifest_pnpm_graph_normalisation_drops_paths() -> None:
     assert a == b
 
 
+def test_freeze_manifest_pnpm_graph_hash_equal_for_windows_and_linux_inputs() -> None:
+    import sys
+
+    sys.path.insert(0, str(ROOT))
+    from tools.ci.check_freeze_manifest import canonical_json, normalise_pnpm_graph
+
+    win = [
+        {
+            "name": "x",
+            "path": "C:/a",
+            "z": 1,
+            "a": "dir" + chr(92) + "sub" + chr(13) + chr(10) + "l",
+            "b": [2, 1],
+        }
+    ]
+    lin = [{"b": [1, 2], "a": "dir/sub" + chr(10) + "l", "z": 1, "path": "/home/c", "name": "x"}]
+    assert canonical_json(normalise_pnpm_graph(win)) == canonical_json(normalise_pnpm_graph(lin))
+
+
 def test_electron_toolchain_past_high_advisories() -> None:
     dev = json.loads((ROOT / "apps/desktop/package.json").read_text(encoding="utf-8"))[
         "devDependencies"

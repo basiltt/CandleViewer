@@ -85,6 +85,11 @@ After the electron / electron-builder bumps, `pnpm audit --audit-level=high` rep
 **0 High / 0 Critical** (2 Low, 6 Moderate); `pip-audit` unchanged (none). No High/Critical
 exceptions are needed, so EX-02..EX-04 are withdrawn (§16.2 of `04-security-program.md`).
 
+**Correction (E43-T05-B1, #1737):** that sweep later reports 2 High with no upstream patch:
+http-cache-semantics (GHSA-ch52-4w7c-c8xp) and braces (GHSA-vfj7-8cjw-p6xm). Both are build/dev-only
+transitives; recorded as EX-05/EX-06 (EX-02..EX-04 stay withdrawn) (§16.2) and in `security/accepted-risks.yaml`, expiry 2026-12-31.
+The freeze-manifest `pnpm-graph` hash mismatch is not claimed closed here; it is out of scope for #1737.
+
 ### 8.3 Freeze assertion and tag procedure
 
 - CI (`license-scan` job, `_job-security.yml`) runs `tools/ci/check_freeze_manifest.py` after
