@@ -72,7 +72,7 @@ def scaffold():
                                   "react": "^19", "react-dom": "^19"},
                                  {"overrides": {"webpack": "5.99.9"}}))  # newer webpack rejects webpackbar ProgressPlugin opts
     write(d, "docusaurus.config.js", (
-        "module.exports={title:'s',url:'http://x',baseUrl:'/',onBrokenLinks:'throw',"
+        "module.exports={title:'s',url:'http://x',baseUrl:'/',onBrokenLinks:'warn',"
         "presets:[['classic',{docs:{routeBasePath:'/',sidebarPath:false},blog:false,pages:false}]]};"))
     c["docusaurus"] = dict(image=NODE, dir=d, out="out", install=INSTALL_NPM,
                            build="DO_NOT_TRACK=1 npx docusaurus build --out-dir out")
