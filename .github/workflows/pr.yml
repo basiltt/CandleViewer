@@ -271,6 +271,14 @@ jobs:
     if: ${{ needs.changed-paths.outputs.py == 'true' }}
     uses: ./.github/workflows/_job-xstate-contract.yml
 
+  event-coverage:
+    name: event-coverage
+    # E50-T05 (MUST-10): every literal Gateway.send event must exist in the
+    # target machine descriptor (tools/statechart/event_coverage.py).
+    needs: changed-paths
+    if: ${{ needs.changed-paths.outputs.py == 'true' }}
+    uses: ./.github/workflows/_job-event-coverage.yml
+
   xstate-pin-attestation:
     name: xstate-pin-attestation
     # E50-T57: verify the xstate-statemachine==0.9.1 pin is exact and
@@ -417,6 +425,7 @@ jobs:
       - statechart-lint
       - machine-hash-lock
       - xstate-contract
+      - event-coverage
       - xstate-pin-attestation
       - contract
       - integration
@@ -456,6 +465,7 @@ jobs:
           RESULT_STATECHART_LINT: ${{ needs.statechart-lint.result }}
           RESULT_MACHINE_HASH_LOCK: ${{ needs.machine-hash-lock.result }}
           RESULT_XSTATE_CONTRACT: ${{ needs.xstate-contract.result }}
+          RESULT_EVENT_COVERAGE: ${{ needs.event-coverage.result }}
           RESULT_XSTATE_PIN_ATTESTATION: ${{ needs.xstate-pin-attestation.result }}
           RESULT_CONTRACT: ${{ needs.contract.result }}
           RESULT_INTEGRATION: ${{ needs.integration.result }}
@@ -481,6 +491,7 @@ jobs:
               "statechart-lint": { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_STATECHART_LINT },
               "machine-hash-lock": { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_MACHINE_HASH_LOCK },
               "xstate-contract": { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_XSTATE_CONTRACT },
+              "event-coverage": { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_EVENT_COVERAGE },
               "xstate-pin-attestation": { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_XSTATE_PIN_ATTESTATION },
               contract: { applicable: isTrue(process.env.FILTER_PROTOCOL), result: process.env.RESULT_CONTRACT },
               integration: { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_INTEGRATION },
