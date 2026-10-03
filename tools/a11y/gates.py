@@ -87,6 +87,18 @@ def check_baseline_entries(baseline: dict) -> list[str]:
     ]
 
 
+def check_baseline_pr_ids(base: dict, head: dict, pr_body: str) -> list[str]:
+    """Every baseline entry added/changed vs base must have its finding id named in the PR body."""
+    old = {json.dumps(e, sort_keys=True) for e in base.get("entries", [])}
+    return [
+        f"A11Y-G001 baseline change {e.get('fingerprint', '?')!r} not justified: "
+        f"PR description must name {e.get('finding', '?')}"
+        for e in head.get("entries", [])
+        if json.dumps(e, sort_keys=True) not in old
+        and str(e.get("finding", "")) not in pr_body
+    ]
+
+
 # --- Gate 2: Lighthouse ---------------------------------------------------
 
 
@@ -199,8 +211,10 @@ def check_budget(elapsed_s: float, limit_s: float) -> list[str]:
         raise InfraError("A11Y-INFRA invalid runtime budget arguments")
     if elapsed_s >= limit_s:
         return [
-            f"A11Y-G007 gate wall-clock {elapsed_s:.0f}s >= budget {limit_s:.0f}s "
-            "(shard the axe sweep by screen band; do not sample)"
+            (
+                f"A11Y-G007 gate wall-clock {elapsed_s:.0f}s >= budget {limit_s:.0f}s "
+                "(shard the axe sweep by screen band; do not sample)"
+            )
         ]
     return []
 
@@ -241,6 +255,10 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("lighthouse").add_argument("scores")
     sub.add_parser("flash").add_argument("capture")
     sub.add_parser("keyboard").add_argument("result")
+    bp = sub.add_parser("baseline-pr")
+    bp.add_argument("base_baseline")
+    bp.add_argument("head_baseline")
+    bp.add_argument("body_file")
     b = sub.add_parser("budget")
     b.add_argument("elapsed", type=float)
     b.add_argument("--limit", type=float, required=True)
@@ -254,6 +272,13 @@ def main(argv: list[str] | None = None) -> int:
             return _emit(
                 check_baseline_entries(baseline)
                 + check_axe(_load(args.report), baseline)
+            )
+        if args.cmd == "baseline-pr":
+            body = Path(args.body_file).read_text(encoding="utf-8")
+            return _emit(
+                check_baseline_pr_ids(
+                    _load(args.base_baseline), _load(args.head_baseline), body
+                )
             )
         if args.cmd == "budget":
             return _emit(check_budget(args.elapsed, args.limit))

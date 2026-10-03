@@ -149,3 +149,11 @@ def test_missing_collector_output_is_infra_not_green(tmp_path: Path) -> None:
     assert gates.main(["tree", "--snapshots", str(tmp_path), str(tmp_path / "t")]) == (
         gates.EXIT_INFRA
     )
+
+
+def test_baseline_change_requires_finding_id_in_pr_body() -> None:
+    base = {"entries": []}
+    head = {"entries": [{"fingerprint": "fp1", "finding": "A11Y-F012"}]}
+    assert gates.check_baseline_pr_ids(base, head, "no id here")
+    assert not gates.check_baseline_pr_ids(base, head, "Justified by A11Y-F012")
+    assert not gates.check_baseline_pr_ids(head, head, "")
