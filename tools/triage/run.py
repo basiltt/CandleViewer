@@ -273,6 +273,10 @@ def sweep_actions(issue: dict[str, Any]) -> dict[str, Any]:
         add.append("needs-dor")
     if sev is None and "needs-severity" not in labels:
         add.append("needs-severity")
+    if sev and not any(x.startswith("priority/") for x in labels):
+        add.append(f"priority/{sev.lower()}")
+    if not any(x.startswith("area/") for x in labels) and "needs-area" not in labels:
+        add.append("needs-area")
     comment = None
     if missing:
         comment = (
@@ -290,6 +294,9 @@ def sweep_actions(issue: dict[str, Any]) -> dict[str, Any]:
 
 
 def cmd_sweep(api: GhApi, dry_run: bool = False) -> int:
+    cal = sla.load_calendar(
+        os.environ.get("TRIAGE_CALENDAR_PATH", "tools/triage/calendar.yml")
+    )
     graded = flagged = 0
     page = 1
     while True:
@@ -307,8 +314,17 @@ def cmd_sweep(api: GhApi, dry_run: bool = False) -> int:
             n = issue["number"]
             if a["missing"]:
                 flagged += 1
+            due = "n/a"
+            if a["severity"]:
+                opened = datetime.fromisoformat(
+                    issue["created_at"].replace("Z", "+00:00")
+                )
+                due = sla.deadline(
+                    opened, sla.window_minutes(a["severity"], cal), cal
+                ).isoformat(timespec="minutes")
             print(
-                f"#{n}: severity={a['severity'] or 'UNSET'} missing={len(a['missing'])}"
+                f"#{n}: severity={a['severity'] or 'UNSET'} sla_due={due} "
+                f"missing={len(a['missing'])} add={','.join(a['add']) or '-'}"
             )
             if dry_run:
                 continue

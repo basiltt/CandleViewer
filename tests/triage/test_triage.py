@@ -367,13 +367,23 @@ def test_sweep_flags_failing_bug_with_owner_and_unset_severity() -> None:
 
 def test_sweep_passes_complete_bug_and_prefers_assignee() -> None:
     issue = {
-        "labels": [{"name": "type/bug"}, {"name": "priority/p2"}],
+        "labels": [
+            {"name": "type/bug"},
+            {"name": "priority/p2"},
+            {"name": "area/docs"},
+        ],
         "body": _body("complete.md"),
         "assignee": {"login": "dev"},
         "user": {"login": "rep"},
     }
     a = run.sweep_actions(issue)
     assert a["comment"] is None and a["add"] == [] and a["severity"] == "P2"
+
+
+def test_sweep_adds_priority_label_from_body_and_needs_area() -> None:
+    issue = {"labels": [{"name": "type/bug"}], "body": _body("complete.md")}
+    a = run.sweep_actions(issue)
+    assert "priority/p2" in a["add"] and "needs-area" in a["add"]
 
 
 def test_cmd_sweep_labels_and_comments_once(capsys: pytest.CaptureFixture[str]) -> None:
