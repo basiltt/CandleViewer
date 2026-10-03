@@ -1,0 +1,47 @@
+{
+  "rule_id": "00000000-0000-4000-8000-000000000001",
+  "version": 1,
+  "name": "form4",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "symbol",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_price_update"
+  },
+  "conditions": {
+    "node_id": "c1",
+    "op": "gt",
+    "left": {
+      "metric": "volume",
+      "params": {
+        "n": 14
+      }
+    },
+    "right": {
+      "const": "1500.00"
+    }
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "send_notification",
+      "params": {
+        "channel": "ui"
+      }
+    }
+  ],
+  "limits": {},
+  "editor": "form",
+  "graph_layout": {
+    "c1": {
+      "x": 4,
+      "y": 4
+    }
+  },
+  "ir_version": 1
+}

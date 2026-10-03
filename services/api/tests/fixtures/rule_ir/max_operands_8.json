@@ -1,0 +1,71 @@
+{
+  "rule_id": "00000000-0000-4000-8000-000000000001",
+  "version": 1,
+  "name": "mo",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "symbol",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_price_update"
+  },
+  "conditions": {
+    "node_id": "x1",
+    "op": "gt",
+    "left": {
+      "node_id": "x2",
+      "op": "add",
+      "operands": [
+        {
+          "const": "0.50"
+        },
+        {
+          "const": "1.50"
+        },
+        {
+          "const": "2.50"
+        },
+        {
+          "const": "3.50"
+        },
+        {
+          "const": "4.50"
+        },
+        {
+          "const": "5.50"
+        },
+        {
+          "const": "6.50"
+        },
+        {
+          "const": "7.50"
+        }
+      ]
+    },
+    "right": {
+      "const": 1
+    }
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "send_notification",
+      "params": {
+        "channel": "ui"
+      }
+    }
+  ],
+  "limits": {},
+  "editor": "graph",
+  "graph_layout": {
+    "c1": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "ir_version": 1
+}

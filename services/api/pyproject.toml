@@ -170,7 +170,10 @@ omit = [
   "candleviewer/recorder/*",
   "candleviewer/replay/*",
   "candleviewer/risk/*",
-  "candleviewer/rules/*",
+  # candleviewer/rules/ir/* is implemented by E35-T01 and counted in the floor.
+  "candleviewer/rules/errors.py",
+  "candleviewer/rules/models.py",
+  "candleviewer/rules/service.py",
   "candleviewer/secrets/*",
   "candleviewer/ws/service.py",
   # Generated protocol models (E02-T09) — regenerated from docs/plan/22-api-openapi.yaml
