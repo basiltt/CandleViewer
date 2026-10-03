@@ -1,0 +1,4 @@
+{
+  "$comment": "Shrink-only axe baseline (E47-T02). Each entry needs {fingerprint, finding: A11Y-F...}. CODEOWNERS requires the Accessibility role to review any change; the PR must name the finding id justifying it. Empty = no known serious/critical violations.",
+  "entries": []
+}
