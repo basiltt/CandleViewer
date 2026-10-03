@@ -1,6 +1,6 @@
 # ADR-0028 — Documentation toolchain and reference-generation pipeline
 
-- Status: **proposed-with-deadline (offline-build proof tracked in #1750; owner waiver pending, not assumed)** — deadline: first green E48-T02 CI run that proves the network-less build and the <=180 s budget. Owner approval pending.
+- Status: **proposed** — owner approval pending. Measurements: CI run 37148408413 (offline `--network=none` builds, all candidates).
 - Date: 2026-10-03
 - Deciders: Owner (`@basiltt`). The ticket says "ADR-0016 (or next free number)"; 0028 is next free.
 - Related: E48-K01 (#1328), E48-T02, `docs/plan/spikes/E48-K01.md`, `30-release-roadmap.md` §9.3-9.4, C-16.5.
@@ -22,18 +22,21 @@ R5 needs a built, searchable doc set with REST/WS reference generated from `22-a
 Drivers: plain-Markdown authoring (the pre-committed tiebreaker), no new language runtime (Python/uv already present),
 no second copy of endpoint docs, small supply chain (31 Python distributions measured).
 
-## Evidence and its limits
+## Evidence
 
-Measured: unscoped MkDocs build median 201 s over 3 runs on a loaded Windows box (**over budget unscoped**; one scoped
-run 111 s), 16/16 mermaid fences emitted, 220 operations in the OpenAPI source. **Not measured:** other candidates'
-builds, Redocly run, `--network=none` build (no docker locally), axe, FCP, link-check noise, `pip-audit`. See the
-spike's honesty box. The ADR is proposed rather than decided precisely because those hard requirements are unproven.
+Measured on CI (spike doc, "CI measurements"): all five candidates build offline in `--network=none` containers from a
+20-page fixture. MkDocs Material 0.7 s build / 12 s install / 80 MB deps; Docusaurus 2-10 s / 39 s / 207 MB (needed a webpack
+override to build at all); Astro Starlight 3.1 s / 18 s / 250 MB; Redocly 2.0 s / 1 s / 10 MB for the full 220-op spec; Scalar
+0.4 s but 181 MB deps and its CLI needs Node>=24. Local full-tree MkDocs: 201 s unscoped, 60 s scoped (loaded laptop).
+Timing does not discriminate at this size; supply-chain size, authoring friction and fixture stability do: MkDocs has the
+smallest dependency surface (80 MB, 31 Python dists) and plain-Markdown authoring; Docusaurus broke on the stock install.
+Not yet measured (E48-T02): full-tree CI time, axe, FCP, link-check noise, pip-audit.
 
-## Rejected (desk assessment, not benchmarked)
+## Rejected
 
-- **Docusaurus:** MDX makes `{}`/`<` in runbooks a build error; large npm surface; native versioning not needed (one live version).
-- **Astro/Vite on `packages/ui`:** best theming, but we would own search, mermaid and link checking.
-- **Scalar:** new dependency, default CDN assets; Redocly is already vetted.
+- **Docusaurus:** passes offline but required a pin workaround, MDX makes `{}`/`<` errors, 207 MB npm tree.
+- **Astro Starlight:** passes, but 250 MB tree and we would own mermaid/link checking.
+- **Scalar:** passes, but 181 MB tree, Node>=24 CLI vs repo Node 20; Redocly is smaller and already the linter.
 
 ## Consequences / revisit
 
