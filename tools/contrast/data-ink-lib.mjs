@@ -18,45 +18,40 @@ export const CANVAS = "color.surface.canvas";
 export const DENSITY_TEXT_PAIRS = ["color.axis.text on color.surface.canvas"];
 // Palettes under test. US-SET-005 alternative palettes are added here once
 // their tokens ship; `token` maps a canonical name to the palette's token.
-export const PALETTES = [{ id: "default", token: (n) => n }];
+const CVD_MAP = {
+  "color.buy.default": "color.cvd.buy",
+  "color.sell.default": "color.cvd.sell",
+  "color.buy.hc": "color.cvd.buy",
+  "color.sell.hc": "color.cvd.sell",
+  "color.candle.up": "color.cvd.buy",
+  "color.candle.down": "color.cvd.sell",
+  "color.footprint.bid": "color.cvd.buy",
+  "color.footprint.ask": "color.cvd.sell",
+  "color.footprint.imbalance": "color.cvd.imbalance",
+  "color.heatmap.bid.5": "color.cvd.heatmap.bid.5",
+  "color.heatmap.ask.5": "color.cvd.heatmap.ask.5",
+};
+export const PALETTES = [
+  { id: "default", token: (n) => n },
+  { id: "cvd-safe", token: (n) => CVD_MAP[n] ?? n },
+];
 export const CODE = { gradient: "A11Y-C004", text: "A11Y-C005", cvd: "A11Y-C006" };
 
-/** Gradient definitions: ordered colour-token anchors, evenly spaced. */
+/** Gradient definitions: ordered colour-token anchors, evenly spaced.
+ * E47-S06: ramps start at the first *visible* stop. `color.heatmap.zero` is the
+ * "no data" cell (it intentionally equals the canvas) and the diverging
+ * mid-point is the zero-delta state, which always carries a text/sign channel
+ * (see encoding registry); neither is data-ink, so they are not ramp stops. */
+const side = (s) => [1, 2, 3, 4, 5].map((i) => `color.heatmap.${s}.${i}`);
 export const GRADIENTS = [
-  {
-    id: "heatmap.bid",
-    anchors: [
-      "color.heatmap.zero",
-      "color.heatmap.bid.1",
-      "color.heatmap.bid.2",
-      "color.heatmap.bid.3",
-      "color.heatmap.bid.4",
-      "color.heatmap.bid.5",
-    ],
-  },
-  {
-    id: "heatmap.ask",
-    anchors: [
-      "color.heatmap.zero",
-      "color.heatmap.ask.1",
-      "color.heatmap.ask.2",
-      "color.heatmap.ask.3",
-      "color.heatmap.ask.4",
-      "color.heatmap.ask.5",
-    ],
-  },
-  {
-    id: "delta.divergence",
-    anchors: ["color.sell.default", "color.heatmap.zero", "color.buy.default"],
-  },
+  { id: "heatmap.bid", anchors: side("bid") },
+  { id: "heatmap.ask", anchors: side("ask") },
+  { id: "delta.positive", anchors: ["color.heatmap.bid.1", "color.buy.default"] },
+  { id: "delta.negative", anchors: ["color.heatmap.ask.1", "color.sell.default"] },
   { id: "profile.histogram", anchors: ["color.profile.bar", "color.profile.valuearea"] },
   {
     id: "liquidation.intensity",
-    anchors: [
-      "color.status.danger.subtle",
-      "color.status.danger.default",
-      "color.status.danger.strong",
-    ],
+    anchors: ["color.status.danger.default", "color.status.danger.strong"],
   },
 ];
 

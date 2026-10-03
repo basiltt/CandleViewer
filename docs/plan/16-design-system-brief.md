@@ -468,3 +468,7 @@ The matrix (`packages/ui/contrast/data-ink-matrix.{json,md}`) is generated, chec
 `contrast:gate` (A11Y-C007). Current failures are listed in `tools/contrast/data-ink-baseline.json` and are fixed by
 E47-S06; the gate fails on any failure not in that baseline. Palette status: not yet fully conformant (see matrix).
 Gradient sampling uses the shared sRGB piecewise-linear ramp until chart-engine layers (E06/E11) export their own.
+
+### E47-S06 palette remediation and no-hue-alone gate
+
+All T03 failing pairs/stops are fixed by token retune (no per-component overrides): heatmap ramps are monotonic and >= 3:1 from the first visible stop in all themes; high-contrast tertiary text, on-action text and primary action reach 7:1; a CVD-safe palette (`color.cvd.*`, blue/orange, selectable on SCR-116) is validated by `tools/contrast/data-ink.mjs`. `tools/contrast/encodings.json` is the encoding inventory; `tools/contrast/no-hue-alone.mjs` fails the build naming surface and encoding (A11Y-C008). The known-failing baseline is now empty.

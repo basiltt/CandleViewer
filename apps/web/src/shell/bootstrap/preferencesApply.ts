@@ -33,3 +33,21 @@ export function applyAppearance(
   root.setAttribute("data-high-contrast", String(effective.high_contrast));
   root.style.setProperty("--cv-font-scale", String(effective.font_scale));
 }
+
+export type ChartPalette = "default" | "cvd-safe";
+export type ChartConvention = "standard" | "inverted";
+
+/**
+ * Root-level chart colour contract (E47-S06): `data-palette` selects the
+ * CVD-safe `color.cvd.*` set and `data-convention` the buy/sell colour
+ * convention. Every surface keys off these two attributes, so a change
+ * reaches all views (including the canvas theme object) from one place.
+ * Server persistence of the choice arrives with the SCR-116 settings ticket.
+ */
+export function applyChartColorMode(
+  mode: { palette?: ChartPalette; convention?: ChartConvention },
+  root: HTMLElement = document.documentElement,
+): void {
+  root.setAttribute("data-palette", mode.palette ?? "default");
+  root.setAttribute("data-convention", mode.convention ?? "standard");
+}
