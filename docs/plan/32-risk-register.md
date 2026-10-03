@@ -569,6 +569,33 @@ Not a new `RSK-nnn` entry (no new risk was identified; this is reference evidenc
 - **Trigger** — Any audit search p95 > 2 s in the perf run, or audit_log > 10 M rows without partitioning.
 - **Contingency** — Force a time window for full text; monthly range partitioning on `event_ts` if audit_log grows well past 10 M rows.
 
+### RSK-053 · Runbook integrity is review-time only; colluding or compromised approvers bypass the two-key rule
+
+`Risk: R15` · Category **Security** · L 2 · I 5 · **Score 10 — High** · Owner **Security engineer** · Epics E48 · Status **Accepted** (expires 2027-03-25)
+
+- **Description** — Introduced by the E48-X01 STRIDE model (`docs/plan/security/threat-models/e48-docs-ga.md`). A tampered runbook is only caught by CODEOWNERS review; with a single human owner the second approver is an agent review.
+- **Mitigation** — Two approvals plus CODEOWNERS on `docs/runbooks/**`, verified commits, alert on merge with fewer than two approvals (E48-T03); runbook lint for privileged-shortcut patterns.
+- **Trigger** — Alert on a `docs/runbooks/**` merge with fewer than two approvals; any runbook step that disables a safety invariant.
+- **Contingency** — Revert the change, treat as a security incident per `SECURITY.md`, re-review every runbook changed in the window.
+
+### RSK-054 · Allow-list redaction drops diagnostically useful fields, slowing support
+
+`Risk: R15` · Category **Operational** · L 3 · I 2 · **Score 6 — Medium** · Owner **Owner/PO** · Epics E48 · Status **Accepted** (expires 2027-06-30)
+
+- **Description** — Introduced by E48-X01. Deny-by-default redaction in the support bundle (E48-S01) is chosen over a blacklist; the cost is occasional missing context.
+- **Mitigation** — Extend the allow-list by reviewed PR when a field is repeatedly needed.
+- **Trigger** — Two support cases blocked by a missing field in a quarter.
+- **Contingency** — Add the field to the allow-list with a security review; never relax to a blacklist.
+
+### RSK-055 · Manager-role insider sees aggregate non-secret diagnostics for assigned accounts
+
+`Risk: R15` · Category **Security** · L 3 · I 3 · **Score 9 — Medium** · Owner **Security engineer** · Epics E48 · Status **Accepted** (expires 2027-03-25)
+
+- **Description** — Introduced by E48-X01. The support bundle and docs site are available to more roles than admin screens; scoped diagnostics are an accepted disclosure.
+- **Mitigation** — Server-side RBAC and account scoping, audit event per bundle (E48-S01).
+- **Trigger** — A bundle containing data outside the actor's account scope.
+- **Contingency** — Disable bundle generation for the Manager role until fixed; review audit trail.
+
 ---
 
 ## 10. Register summary
@@ -576,9 +603,9 @@ Not a new `RSK-nnn` entry (no new risk was identified; this is reference evidenc
 | Score band           | Count  | IDs                                                                                                                                                                                         |
 | -------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Critical (15–25)** | 7      | RSK-001, RSK-004, RSK-010, RSK-013, RSK-014, RSK-031, RSK-037                                                                                                                               |
-| **High (10–14)**     | 20     | RSK-002, RSK-011, RSK-016, RSK-017, RSK-018, RSK-019, RSK-020, RSK-022, RSK-023, RSK-026, RSK-028, RSK-029, RSK-032, RSK-036, RSK-039, RSK-041, RSK-043, RSK-046, RSK-047, RSK-049 |
-| **Medium (5–9)**     | 20     | RSK-003, RSK-005, RSK-012, RSK-015, RSK-021, RSK-024, RSK-025, RSK-027, RSK-030, RSK-033, RSK-034, RSK-035, RSK-038, RSK-040, RSK-042, RSK-044, RSK-048, RSK-050, RSK-051, RSK-052                            |
-| **Total entries**    | **47** | RSK-001 … RSK-052 (non-contiguous numbering, grouped by category block; numbers are never reused)                                                                                           |
+| **High (10–14)**     | 21     | RSK-002, RSK-011, RSK-016, RSK-017, RSK-018, RSK-019, RSK-020, RSK-022, RSK-023, RSK-026, RSK-028, RSK-029, RSK-032, RSK-036, RSK-039, RSK-041, RSK-043, RSK-046, RSK-047, RSK-049, RSK-053  |
+| **Medium (5–9)**     | 22     | RSK-003, RSK-005, RSK-012, RSK-015, RSK-021, RSK-024, RSK-025, RSK-027, RSK-030, RSK-033, RSK-034, RSK-035, RSK-038, RSK-040, RSK-042, RSK-044, RSK-048, RSK-050, RSK-051, RSK-052, RSK-054, RSK-055                             |
+| **Total entries**    | **50** | RSK-001 … RSK-055 (non-contiguous numbering, grouped by category block; numbers are never reused)                                                                                           |
 
 Band arithmetic: 7 Critical + 20 High + 20 Medium = **47**, equal to the 47 `### RSK-nnn` entries in §3–§9. There are no Low-band entries: anything that scored ≤4 during drafting was not carried into the register as a tracked risk (see §10.1.2). RSK-012 moved High->Medium in an earlier PR (E07-K01 spike evidence, partial retirement); its narrative was corrected in this PR after QA bug #1562 found the spike's original shape-B result was not reproducible (see §4 entry) — the band/score is unchanged, only the evidence text.
 
