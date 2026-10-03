@@ -2,3 +2,7 @@
 # pre-commit hook — lint-staged only (auto-fix + re-stage). Must stay fast
 # (budget: <=5s p95 on a 20-file diff, docs/plan/backlog E02-T07).
 npx --no-install lint-staged
+# SR-142: same gitleaks rules locally when the binary is available (CI is authoritative).
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --redact --config .gitleaks.toml || { echo "Secret detected - runbook IR-02: rotate first (docs/ci-runbook.md)" >&2; exit 1; }
+fi

@@ -62,6 +62,13 @@ _BLOCKING_THRESHOLD: dict[str, Severity | None] = {
 }
 
 
+GITLEAKS_IR02_HINT = (
+    "Treat the secret as compromised: rotate it FIRST per SECURITY.md / runbook IR-02 "
+    "(docs/ci-runbook.md, section 'Credential hygiene and full-history sweep'), "
+    "then remove it from the branch."
+)
+
+
 class SecurityGateError(Exception):
     """Raised for CI-SEC-* conditions; `code` is the stable error code."""
 
@@ -198,7 +205,7 @@ def evaluate_findings(
         if finding.tool == "gitleaks":
             messages.append(
                 f"CI-SEC-001: gitleaks finding {finding.finding_id} blocks the merge "
-                f"({finding.detail})"
+                f"({finding.detail}). {GITLEAKS_IR02_HINT}"
             )
             blocking_code = blocking_code or "CI-SEC-001"
             continue

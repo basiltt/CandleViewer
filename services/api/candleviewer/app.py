@@ -55,6 +55,7 @@ from candleviewer.api.deny_by_default import (
     declared_operations,
     make_deny_undeclared_dependency,
 )
+from candleviewer.api.error_redaction import install_error_redaction
 from candleviewer.api.invites import make_invites_router
 from candleviewer.api.onboarding import make_onboarding_router
 from candleviewer.api.onboarding_checklist import StepResult, bybit_key_restriction
@@ -605,6 +606,7 @@ def create_app(
         dependencies=[Depends(make_deny_undeclared_dependency(declared_operations(spec)))],
     )
     app.add_exception_handler(GatewayOverloadedError, gateway_overloaded_handler)
+    install_error_redaction(app)  # E43-T06: no secret echo via 422/500 bodies
     ctx = build_app_context(resolved, auth_clock=auth_clock)
     app.state.app_context = ctx
     if resolved.ingestion_ws_enabled:
