@@ -30,40 +30,40 @@ _COLS = (
     "queued_at, sent_at, acked_at, acked_by::text AS acked_by"
 )
 
-_INSERT = sa.text(
+_INSERT = sa.text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     "INSERT INTO alert_deliveries (alert_id, user_id, channel, title, body, context) VALUES "
     "(CAST(:alert_id AS uuid), CAST(:user_id AS uuid), CAST(:channel AS alert_channel), :title, "
     f":body, CAST(:context AS jsonb)) RETURNING {_COLS}"
 )
-_MARK_SENT = sa.text(
+_MARK_SENT = sa.text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     "UPDATE alert_deliveries SET status = 'sent', sent_at = now(), attempt = attempt + 1, "
     f"http_status = :http_status, error_message = NULL WHERE id = :id AND status = 'queued' "
     f"RETURNING {_COLS}"
 )
-_MARK_FAILED = sa.text(
+_MARK_FAILED = sa.text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     "UPDATE alert_deliveries SET status = 'failed', attempt = least(attempt + 1, 10), "
     "http_status = :http_status, error_message = :error WHERE id = :id AND status = 'queued' "
     f"RETURNING {_COLS}"
 )
-_MARK_SUPPRESSED = sa.text(
+_MARK_SUPPRESSED = sa.text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     "UPDATE alert_deliveries SET status = 'suppressed', error_message = :reason "
     f"WHERE id = :id AND status = 'queued' RETURNING {_COLS}"
 )
-_ACK_ONE = sa.text(
+_ACK_ONE = sa.text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     "UPDATE alert_deliveries SET status = 'acked', acked_at = now(), "
     "acked_by = CAST(:by AS uuid) WHERE id = :id AND user_id = CAST(:by AS uuid) "
     f"AND status = 'sent' AND acked_at IS NULL RETURNING {_COLS}"
 )
-_ACK_ALL = sa.text(
+_ACK_ALL = sa.text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     "UPDATE alert_deliveries SET status = 'acked', acked_at = now(), "
     "acked_by = CAST(:by AS uuid) WHERE user_id = CAST(:by AS uuid) "
     "AND status = 'sent' AND acked_at IS NULL"
 )
-_UNACKED = sa.text(
+_UNACKED = sa.text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     "SELECT count(*) FROM alert_deliveries WHERE user_id = CAST(:user AS uuid) "
     "AND status = 'sent' AND acked_at IS NULL"
 )
-_LIST = sa.text(
+_LIST = sa.text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     f"SELECT {_COLS} FROM alert_deliveries WHERE "
     "(CAST(:user AS uuid) IS NULL OR user_id = CAST(:user AS uuid)) "
     "AND (CAST(:alert_id AS uuid) IS NULL OR alert_id = CAST(:alert_id AS uuid)) "

@@ -50,8 +50,9 @@ def _conn(dsn: str) -> psycopg.Connection[tuple[object, ...]]:
 def _alert(c: psycopg.Connection[tuple[object, ...]], **over: object) -> str:
     uid = str(uuid.uuid4())
     c.execute(
-        "INSERT INTO users (id, email, display_name, status) VALUES (%s, %s, 'u', 'active')",
-        (uid, f"{uid}@example.test"),
+        "INSERT INTO users (id, email, username, display_name, password_hash, status) "
+        "VALUES (%s, %s, %s, 'u', 'x', 'active')",
+        (uid, f"{uid}@example.test", f"u{uid[:12]}"),
     )
     aid = str(uuid.uuid4())
     cols = {

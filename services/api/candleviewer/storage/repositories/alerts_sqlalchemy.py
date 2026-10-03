@@ -97,7 +97,7 @@ def _alert(m: Any) -> AlertRow:
     return AlertRow(**d)
 
 
-_INSERT = sa.text(
+_INSERT = sa.text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     "INSERT INTO alerts (id, owner_user_id, name, symbol, scope_account_id, condition_ir, "
     "condition_hash, enabled, trigger_mode, cooldown_seconds, expires_at, severity, channels, "
     "webhook_url_enc, webhook_secret_enc, message_template) VALUES (CAST(:id AS uuid), "
@@ -106,16 +106,16 @@ _INSERT = sa.text(
     "CAST(:severity AS severity), CAST(:channels AS alert_channel[]), :url_enc, :secret_enc, "
     f":template) RETURNING {ALERT_COLUMNS}"
 )
-_GET = sa.text(
+_GET = sa.text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     f"SELECT {ALERT_COLUMNS} FROM alerts WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL"
 )
-_LIST = sa.text(
+_LIST = sa.text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     f"SELECT {ALERT_COLUMNS} FROM alerts WHERE owner_user_id = CAST(:owner AS uuid) "
     "AND deleted_at IS NULL AND (CAST(:after_ts AS timestamptz) IS NULL OR "
     "(created_at, id::text) < (CAST(:after_ts AS timestamptz), :after_id)) "
     "ORDER BY created_at DESC, id::text DESC LIMIT :limit"
 )
-_UPDATE = sa.text(
+_UPDATE = sa.text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     "UPDATE alerts SET name = :name, condition_ir = CAST(:ir AS jsonb), condition_hash = :hash, "
     "trigger_mode = CAST(:mode AS alert_trigger_mode), cooldown_seconds = :cooldown, "
     "expires_at = :expires_at, severity = CAST(:severity AS severity), "
@@ -123,26 +123,26 @@ _UPDATE = sa.text(
     "updated_at = clock_timestamp() WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL "
     f"AND updated_at = :if_match RETURNING {ALERT_COLUMNS}"
 )
-_SOFT_DELETE = sa.text(
+_SOFT_DELETE = sa.text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     "UPDATE alerts SET deleted_at = now(), enabled = false, updated_at = clock_timestamp() "
     "WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL"
 )
-_SET_ENABLED = sa.text(
+_SET_ENABLED = sa.text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     "UPDATE alerts SET enabled = :enabled, updated_at = clock_timestamp() "
     f"WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL RETURNING {ALERT_COLUMNS}"
 )
-_SET_SNOOZE = sa.text(
+_SET_SNOOZE = sa.text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     "UPDATE alerts SET snoozed_until = :until, updated_at = clock_timestamp() "
     f"WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL RETURNING {ALERT_COLUMNS}"
 )
-_BUMP = sa.text(
+_BUMP = sa.text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     "UPDATE alerts SET fire_count = fire_count + 1, last_fired_at = :fired_at "
     "WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL"
 )
-_ARMED = sa.text(
+_ARMED = sa.text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     f"SELECT {ALERT_COLUMNS} FROM alerts WHERE symbol = :symbol AND enabled AND deleted_at IS NULL"
 )
-_COUNT_ENABLED = sa.text(
+_COUNT_ENABLED = sa.text(  # nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
     "SELECT enabled, count(*) AS n FROM alerts WHERE deleted_at IS NULL GROUP BY enabled"
 )
 _COUNT_PENDING = sa.text("SELECT count(*) FROM alert_deliveries WHERE status = 'queued'")
