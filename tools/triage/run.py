@@ -20,6 +20,7 @@ from typing import Any
 from tools.triage import dor, guard, sla
 
 DOR_MARKER = "<!-- triage:dor -->"
+SWEEP_MARKER = "<!-- triage:sweep -->"
 
 
 class TriageError(Exception):
@@ -29,7 +30,9 @@ class TriageError(Exception):
 
 
 def with_retry(
-    fn: Callable[[], Any], attempts: int = 4, sleep: Callable[[float], None] = time.sleep
+    fn: Callable[[], Any],
+    attempts: int = 4,
+    sleep: Callable[[float], None] = time.sleep,
 ) -> Any:
     """Retry with exponential backoff; raise (never swallow) after the last attempt."""
     for i in range(attempts):
@@ -37,7 +40,11 @@ def with_retry(
             return fn()
         except urllib.error.HTTPError as exc:
             if i == attempts - 1:
-                code = "E_TRIAGE_RATE_LIMITED" if exc.code in (403, 429) else "E_TRIAGE_API"
+                code = (
+                    "E_TRIAGE_RATE_LIMITED"
+                    if exc.code in (403, 429)
+                    else "E_TRIAGE_API"
+                )
                 raise TriageError(code, f"HTTP {exc.code}") from exc
             sleep(2**i)
         except urllib.error.URLError as exc:
@@ -77,7 +84,9 @@ def dor_decision(issue: dict[str, Any]) -> dict[str, Any]:
     hits = dor.scan_secrets(body)
     lines: list[str] = []
     if missing:
-        lines.append("Bug DoR (02-definition-of-ready-done.md §6.1) is incomplete. Missing fields:")
+        lines.append(
+            "Bug DoR (02-definition-of-ready-done.md §6.1) is incomplete. Missing fields:"
+        )
         lines += [f"- {m}" for m in missing]
     if hits:
         lines.append(
@@ -113,7 +122,9 @@ def cmd_dor(api: GhApi, number: int) -> int:
     return 0  # never auto-closes
 
 
-def sla_labels(issue: dict[str, Any], now: datetime, cal: sla.Calendar) -> tuple[str, str | None]:
+def sla_labels(
+    issue: dict[str, Any], now: datetime, cal: sla.Calendar
+) -> tuple[str, str | None]:
     """Return (state, severity); triaged issues (label `triaged`) are never flagged."""
     labels = [x["name"] for x in issue.get("labels", [])]
     if "triaged" in labels or "type/bug" not in labels:
@@ -137,7 +148,10 @@ def cmd_sla(api: GhApi, cal: sla.Calendar, webhook: str | None) -> int:
     page = 1
     while True:
         batch = (
-            api.call("GET", f"/issues?state=open&labels=type/bug&per_page=100&page={page}") or []
+            api.call(
+                "GET", f"/issues?state=open&labels=type/bug&per_page=100&page={page}"
+            )
+            or []
         )
         for issue in batch:
             state, sev = sla_labels(issue, now, cal)
@@ -145,7 +159,9 @@ def cmd_sla(api: GhApi, cal: sla.Calendar, webhook: str | None) -> int:
                 continue
             have = {x["name"] for x in issue["labels"]}
             if state not in have:
-                api.call("POST", f"/issues/{issue['number']}/labels", {"labels": [state]})
+                api.call(
+                    "POST", f"/issues/{issue['number']}/labels", {"labels": [state]}
+                )
             if state == "sla-breached" and "sla-at-risk" in have:
                 api.call("DELETE", f"/issues/{issue['number']}/labels/sla-at-risk")
             rows.append((issue["number"], sev, state))
@@ -195,22 +211,101 @@ def cmd_guard(api: GhApi, pr: int) -> int:
     return 1 if failed else 0
 
 
+def sweep_actions(issue: dict[str, Any]) -> dict[str, Any]:
+    """One-time re-grade of an existing open bug against §11.3 / §6.1 (pure)."""
+    labels = [x["name"] for x in issue.get("labels", [])]
+    body = issue.get("body") or ""
+    missing = dor.missing_fields(body)
+    sev = dor.severity_of(body, labels)
+    if sev is None and "Severity" not in missing:
+        missing.append("Severity")
+    owner = (issue.get("assignee") or {}).get("login") or (issue.get("user") or {}).get(
+        "login"
+    )
+    add: list[str] = []
+    if missing and "needs-dor" not in labels:
+        add.append("needs-dor")
+    if sev is None and "needs-severity" not in labels:
+        add.append("needs-severity")
+    comment = None
+    if missing:
+        comment = (
+            f"{SWEEP_MARKER}\nOne-time debt sweep: this bug fails the Bug DoR "
+            f"(02-definition-of-ready-done.md §6.1). Owner to complete: @{owner}. Missing:\n"
+            + "\n".join(f"- {m}" for m in missing)
+        )
+    return {
+        "severity": sev,
+        "missing": missing,
+        "owner": owner,
+        "add": add,
+        "comment": comment,
+    }
+
+
+def cmd_sweep(api: GhApi, dry_run: bool = False) -> int:
+    graded = flagged = 0
+    page = 1
+    while True:
+        batch = (
+            api.call(
+                "GET", f"/issues?state=open&labels=type/bug&per_page=100&page={page}"
+            )
+            or []
+        )
+        for issue in batch:
+            if "pull_request" in issue:
+                continue
+            a = sweep_actions(issue)
+            graded += 1
+            n = issue["number"]
+            if a["missing"]:
+                flagged += 1
+            print(
+                f"#{n}: severity={a['severity'] or 'UNSET'} missing={len(a['missing'])}"
+            )
+            if dry_run:
+                continue
+            if a["add"]:
+                api.call("POST", f"/issues/{n}/labels", {"labels": a["add"]})
+            if a["comment"]:
+                comments = api.call("GET", f"/issues/{n}/comments?per_page=100") or []
+                if not any(SWEEP_MARKER in c["body"] for c in comments):
+                    api.call("POST", f"/issues/{n}/comments", {"body": a["comment"]})
+        if len(batch) < 100:
+            break
+        page += 1
+    print(f"Sweep: graded {graded} open bug(s); {flagged} fail DoR")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser()
-    p.add_argument("cmd", choices=["dor", "sla", "guard"])
+    p.add_argument("cmd", choices=["dor", "sla", "guard", "sweep"])
     p.add_argument("--number", type=int)
+    p.add_argument("--dry-run", action="store_true")
     a = p.parse_args(argv)
-    token, repo = os.environ.get("GH_TOKEN", ""), os.environ.get("GITHUB_REPOSITORY", "")
-    if not token or not repo or (a.cmd != "sla" and a.number is None):
-        print("E_TRIAGE_FIELD_MISSING: GH_TOKEN, GITHUB_REPOSITORY or --number", file=sys.stderr)
+    token, repo = (
+        os.environ.get("GH_TOKEN", ""),
+        os.environ.get("GITHUB_REPOSITORY", ""),
+    )
+    if not token or not repo or (a.cmd in ("dor", "guard") and a.number is None):
+        print(
+            "E_TRIAGE_FIELD_MISSING: GH_TOKEN, GITHUB_REPOSITORY or --number",
+            file=sys.stderr,
+        )
         return 2
     api = GhApi(repo, token)
     try:
         if a.cmd == "dor":
             return cmd_dor(api, a.number)
+        if a.cmd == "sweep":
+            return cmd_sweep(api, a.dry_run)
         if a.cmd == "guard":
             return cmd_guard(api, a.number)
-        cal = sla.load_calendar(os.environ.get("TRIAGE_CALENDAR_PATH", "tools/triage/calendar.yml"))
+        cal = sla.load_calendar(
+            os.environ.get("TRIAGE_CALENDAR_PATH", "tools/triage/calendar.yml")
+        )
         return cmd_sla(api, cal, os.environ.get("TRIAGE_DIGEST_WEBHOOK"))
     except TriageError as exc:
         print(str(exc), file=sys.stderr)  # alert, never silent

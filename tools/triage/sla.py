@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
+from typing import cast
 from zoneinfo import ZoneInfo
 
 _DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -21,7 +23,9 @@ class Calendar:
 
     @property
     def day_minutes(self) -> int:
-        return (self.end.hour - self.start.hour) * 60 + (self.end.minute - self.start.minute)
+        return (self.end.hour - self.start.hour) * 60 + (
+            self.end.minute - self.start.minute
+        )
 
 
 def _hm(text: str) -> time:
@@ -30,18 +34,19 @@ def _hm(text: str) -> time:
 
 
 def calendar_from_dict(raw: dict[str, object]) -> Calendar:
-    days = raw.get("working_days", _DAYS[:5])
+    days = cast("list[str]", raw.get("working_days", _DAYS[:5]))
+    hols = cast("list[object]", raw.get("holidays") or [])
     return Calendar(
         tz=ZoneInfo(str(raw.get("timezone", "UTC"))),
-        working_days=frozenset(_DAYS.index(str(d)[:3].title()) for d in days),  # type: ignore[attr-defined]
+        working_days=frozenset(_DAYS.index(str(d)[:3].title()) for d in days),
         start=_hm(str(raw.get("work_start", "09:00"))),
         end=_hm(str(raw.get("work_end", "17:00"))),
-        holidays=frozenset(date.fromisoformat(str(h)) for h in raw.get("holidays", []) or []),  # type: ignore[attr-defined]
+        holidays=frozenset(date.fromisoformat(str(h)) for h in hols),
     )
 
 
 def load_calendar(path: str | Path) -> Calendar:
-    import yaml
+    import yaml  # type: ignore[import-untyped]  # stubs not a dependency
 
     return calendar_from_dict(yaml.safe_load(Path(path).read_text(encoding="utf-8")))
 
@@ -53,7 +58,9 @@ def window_minutes(severity: str, cal: Calendar) -> int:
     return table[severity.upper()]
 
 
-def _windows(cal: Calendar, frm: datetime, days: int = 400):
+def _windows(
+    cal: Calendar, frm: datetime, days: int = 400
+) -> Iterator[tuple[datetime, datetime]]:
     d = frm.astimezone(cal.tz).date()
     for _ in range(days):
         if d.weekday() in cal.working_days and d not in cal.holidays:

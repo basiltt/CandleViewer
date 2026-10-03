@@ -11,7 +11,12 @@ on:
     types: [opened, edited, reopened]
   schedule:
     - cron: "0 8 * * 1-5" # business-day digest, 08:00 UTC
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      sweep:
+        description: "Run the one-time existing-debt sweep (re-grade open bugs)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -41,7 +46,7 @@ jobs:
         run: python -m tools.triage.run dor --number "${{ github.event.issue.number }}"
 
   sla:
-    if: github.event_name != 'issues'
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && !inputs.sweep)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -60,3 +65,22 @@ jobs:
           TRIAGE_CALENDAR_PATH: tools/triage/calendar.yml
           TRIAGE_DIGEST_WEBHOOK: ${{ secrets.TRIAGE_DIGEST_WEBHOOK }}
         run: python -m tools.triage.run sla
+
+  sweep:
+    if: github.event_name == 'workflow_dispatch' && inputs.sweep
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet pyyaml==6.0.2
+      - name: One-time debt sweep
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python -m tools.triage.run sweep

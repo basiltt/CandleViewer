@@ -38,7 +38,8 @@
     "engine-bench",
     "migrations",
     "generated-code-check",
-    "pr-metadata"
+    "pr-metadata",
+    "regression-guard"
   ],
   "merge_queue": {
     "merge_method": "SQUASH",

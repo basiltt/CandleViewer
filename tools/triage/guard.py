@@ -21,11 +21,15 @@ class GuardResult:
     reason: str
 
 
-def evaluate(changed_files: list[str], labels: list[str], exempt_reason: str = "") -> GuardResult:
+def evaluate(
+    changed_files: list[str], labels: list[str], exempt_reason: str = ""
+) -> GuardResult:
     if EXEMPT_LABEL in labels:
         if exempt_reason.strip():
             return GuardResult(True, "exempt: " + exempt_reason.strip())
-        return GuardResult(False, f"label {EXEMPT_LABEL} requires a stated reason in the issue")
+        return GuardResult(
+            False, f"label {EXEMPT_LABEL} requires a stated reason in the issue"
+        )
     if any(is_test_file(f) for f in changed_files):
         return GuardResult(True, "test file changed")
     return GuardResult(

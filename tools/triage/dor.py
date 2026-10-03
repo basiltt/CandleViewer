@@ -20,7 +20,9 @@ _EMPTY = {"", "_no response_", "n/a", "none", "todo", "tbd", "-"}
 _HEADING = re.compile(r"^###\s+(.+?)\s*$", re.MULTILINE)
 
 SECRET_PATTERNS = {
-    "github-token": re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})\b"),
+    "github-token": re.compile(
+        r"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})\b"
+    ),
     "api-key": re.compile(r"\bsk-[A-Za-z0-9]{16,}\b"),
     "private-key": re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
     "key-assignment": re.compile(
