@@ -208,3 +208,61 @@ def test_rule_ir_schema_endpoint() -> None:
     r = c.get("/schemas/rule-ir.json")
     assert r.status_code == 200 and r.json() == json.loads(json.dumps(to_json_schema()))
     assert _client(_P()).get("/schemas/rule-ir.json").status_code == 403
+
+
+class _RealSessions:
+    async def authenticate_access_token(self, token: str, *, touch: bool = False) -> typing.Any:
+        import uuid
+        from types import SimpleNamespace
+
+        from candleviewer.auth.errors import SessionNotFound
+
+        if token not in ("trader", "viewer"):
+            raise SessionNotFound("nope")
+        return SimpleNamespace(id=uuid.uuid4(), user_id=token)
+
+
+class _RealIdentity:
+    async def user(self, user_id: str) -> dict[str, typing.Any]:
+        return {"username": user_id, "status": "active"}
+
+    async def session_info(self, user_id: str) -> dict[str, typing.Any]:
+        perms = ["rules:read", "orders:write"] if user_id == "trader" else ["rules:read"]
+        return {"permissions": perms}
+
+
+def test_simulate_only_through_real_session_resolver() -> None:
+    from candleviewer.api.audit_principal import SessionAuditPrincipalResolver
+
+    app = FastAPI()
+    resolver = SessionAuditPrincipalResolver(lambda: _RealSessions(), _RealIdentity())
+    app.include_router(make_rules_router(default_registry, principal_resolver=resolver))
+    c = TestClient(app)
+
+    def actions(tok: str) -> list[dict[str, typing.Any]]:
+        r = c.get("/rules/vocabulary", headers={"Authorization": f"Bearer {tok}"})
+        assert r.status_code == 200
+        return r.json()["actions"]
+
+    assert any(a["simulate_only"] for a in actions("viewer"))
+    assert not any(a["simulate_only"] for a in actions("trader"))
+    assert c.get("/rules/vocabulary").status_code == 401
+
+
+def test_rules_service_registry_reflects_engine_state() -> None:
+    import asyncio
+
+    from candleviewer.rules.service import RulesService
+
+    svc = RulesService()
+    assert svc.registry() is None  # not started -> router answers 503
+    asyncio.run(svc.start(typing.cast(typing.Any, None)))
+    assert svc.registry() is not None and len(svc.registry() or ()) > 0
+    asyncio.run(svc.stop(1.0))
+    assert svc.registry() is None
+
+
+def test_recorder_service_recorded_symbols_default_empty() -> None:
+    from candleviewer.recorder.service import RecorderService
+
+    assert RecorderService().recorded_symbols() == frozenset()

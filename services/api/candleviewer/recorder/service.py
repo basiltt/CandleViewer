@@ -22,6 +22,10 @@ class RecorderService:
     def __init__(self) -> None:
         self._started = False
 
+    def recorded_symbols(self) -> frozenset[str]:
+        """Symbols with an active recording. Empty until the recorder epic (E16) lands."""
+        return frozenset()
+
     async def start(self, ctx: AppContext) -> None:
         """Start the module. No-op until the owning epic implements it."""
         self._started = True
