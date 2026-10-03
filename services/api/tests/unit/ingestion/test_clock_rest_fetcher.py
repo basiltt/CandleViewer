@@ -8,8 +8,6 @@ E08-T02)."""
 
 from __future__ import annotations
 
-import time
-
 import httpx
 import pytest
 import respx
@@ -90,7 +88,8 @@ async def test_rest_client_fetcher_offset_reflects_injected_skew_not_epoch() -> 
     250 ms, while the monotonic-origin bug would report an offset of
     roughly `time.time() - time.monotonic()` (many years)."""
     injected_skew_ms = 250
-    server_epoch_s = time.time() + injected_skew_ms / 1_000
+    fake_now_s = 1_700_000_000.0
+    server_epoch_s = fake_now_s + injected_skew_ms / 1_000
     respx.get(f"{BASE_URL}/v5/market/time").mock(
         return_value=httpx.Response(
             200,
@@ -103,13 +102,16 @@ async def test_rest_client_fetcher_offset_reflects_injected_skew_not_epoch() -> 
     )
     client = _client()
     try:
-        guard = ClockGuard(rest_client_fetcher(client), sample_count=1)
+        guard = ClockGuard(
+            rest_client_fetcher(client, wall_clock=lambda: fake_now_s, monotonic=lambda: 0.0),
+            sample_count=1,
+        )
         offset_us = await guard.measure_once()
         offset_ms = offset_us / 1_000
-        # Generous tolerance for test-runner scheduling jitter, but far
-        # tighter than the ~1.7e9-second error the monotonic-origin bug
-        # would produce.
-        assert abs(offset_ms - injected_skew_ms) < 2_000
+        # Fake wall clock and zero RTT: the offset is exact (±1 ms rounding),
+        # and nowhere near the ~1.7e9 s error of the monotonic-origin bug.
+        assert abs(offset_ms - injected_skew_ms) <= 1
+        assert abs(offset_us) < 1_000_000_000
     finally:
         await client.aclose()
 

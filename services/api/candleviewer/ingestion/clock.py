@@ -329,7 +329,12 @@ class _PublicRestClient(Protocol):
     async def get_public(self, path: str) -> dict[str, Any]: ...
 
 
-def rest_client_fetcher(client: _PublicRestClient) -> ServerTimeFetcher:
+def rest_client_fetcher(
+    client: _PublicRestClient,
+    *,
+    wall_clock: Callable[[], float] = time.time,
+    monotonic: Callable[[], float] = time.monotonic,
+) -> ServerTimeFetcher:
     """Adapt an exchange adapter's `get_public("/v5/market/time")` REST
     call to `ServerTimeFetcher`. Kept as a factory function (not a method
     on the client) so the REST client itself never depends on this module —
@@ -338,10 +343,10 @@ def rest_client_fetcher(client: _PublicRestClient) -> ServerTimeFetcher:
     a global" (technical notes)."""
 
     async def _fetch() -> tuple[int, float, float]:
-        sent_epoch_s = time.time()
-        sent_monotonic_s = time.monotonic()
+        sent_epoch_s = wall_clock()
+        sent_monotonic_s = monotonic()
         response = await client.get_public("/v5/market/time")
-        rtt_s = time.monotonic() - sent_monotonic_s
+        rtt_s = monotonic() - sent_monotonic_s
         result = response.get("result", {})
         # The exchange's server-time endpoint returns both a
         # second-resolution and a nanosecond-resolution field (`timeSecond`,

@@ -7,7 +7,10 @@ them and audited via `enforce`; decision p99 must stay < 200 microseconds.
 from __future__ import annotations
 
 import asyncio
+import builtins
 import json
+import socket
+import sys
 import time
 import uuid
 from pathlib import Path
@@ -65,6 +68,39 @@ def test_owner_allowed_everything() -> None:
     assert all(isinstance(decide(owner, p), Allow) for p in Permission)
 
 
+def test_decision_path_is_pure_and_operation_bounded(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Deterministic unit copy of the latency budget: `decide` performs no
+    I/O and a bounded number of calls, independent of the permission count."""
+
+    def _no_io(*_a: object, **_k: object) -> None:
+        raise AssertionError("decide() must not perform I/O")
+
+    monkeypatch.setattr(builtins, "open", _no_io)
+    monkeypatch.setattr(socket, "socket", _no_io)
+    monkeypatch.setattr(time, "sleep", _no_io)
+
+    def _calls(principal: PrincipalSnapshot) -> int:
+        count = 0
+
+        def _prof(_frame: object, event: str, _arg: object) -> None:
+            nonlocal count
+            if event in ("call", "c_call"):
+                count += 1
+
+        sys.setprofile(_prof)
+        try:
+            decide(principal, Permission.ORDERS_WRITE)
+        finally:
+            sys.setprofile(None)
+        return count
+
+    manager, owner = _principal("manager"), _principal("owner")
+    assert _calls(manager) <= 25
+    assert _calls(owner) <= 25
+    assert _calls(manager) == _calls(manager)  # no data-dependent drift
+
+
+@pytest.mark.perf
 def test_decision_latency_p99_under_200us() -> None:
     principal = _principal("manager")
     samples: list[float] = []
