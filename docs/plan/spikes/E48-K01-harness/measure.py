@@ -69,7 +69,8 @@ def scaffold():
     for n, b in pages():
         write(d / "docs", n, b.replace("```mermaid", "```text"))
     write(d, "package.json", pkg({"@docusaurus/core": "3.9.2", "@docusaurus/preset-classic": "3.9.2",
-                                  "react": "^19", "react-dom": "^19"}))
+                                  "react": "^19", "react-dom": "^19"},
+                                 {"overrides": {"webpack": "5.99.9"}}))  # newer webpack rejects webpackbar ProgressPlugin opts
     write(d, "docusaurus.config.js", (
         "module.exports={title:'s',url:'http://x',baseUrl:'/',onBrokenLinks:'throw',"
         "presets:[['classic',{docs:{routeBasePath:'/',sidebarPath:false},blog:false,pages:false}]]};"))
