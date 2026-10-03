@@ -432,6 +432,16 @@ def parse_pip_audit(path: Path) -> list[Finding]:
     return findings
 
 
+def _npm_advisory_id(via: dict[str, Any], pkg_name: str) -> str:
+    """Prefer the GHSA id (last segment of the advisory `url`) over npm's
+    numeric `source`, so accepted-risks entries can use stable GHSA ids."""
+    url = str(via.get("url", ""))
+    tail = url.rstrip("/").rsplit("/", 1)[-1]
+    if tail.startswith("GHSA-"):
+        return tail
+    return str(via.get("source", pkg_name))
+
+
 def parse_npm_audit(path: Path) -> list[Finding]:
     """`npm audit --json` (v8+/v10 schema: `vulnerabilities` map) -> Findings."""
     try:
@@ -448,7 +458,7 @@ def parse_npm_audit(path: Path) -> list[Finding]:
         if severity not in _SEVERITY_ORDER:
             severity = "HIGH"
         via = info.get("via", [])
-        ids = [str(v.get("source", pkg_name)) for v in via if isinstance(v, dict)] or [pkg_name]
+        ids = [_npm_advisory_id(v, pkg_name) for v in via if isinstance(v, dict)] or [pkg_name]
         for finding_id in ids:
             findings.append(
                 Finding(
