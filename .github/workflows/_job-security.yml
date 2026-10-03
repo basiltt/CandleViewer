@@ -319,7 +319,9 @@ jobs:
       - name: Full-history gitleaks sweep (git mode, all refs)
         run: |
           set -euo pipefail
-          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.30.1 \n            detect --source=/repo --log-opts="--all" --config=/repo/.gitleaks.toml --redact \n            -f json -r /repo/gitleaks-history.json || true
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.30.1 \
+            detect --source=/repo --log-opts="--all" --config=/repo/.gitleaks.toml --redact \
+            -f json -r /repo/gitleaks-history.json || true
           python -c "import json;print('gitleaks history findings:',len(json.load(open('gitleaks-history.json'))))"
 
       - name: trufflehog second opinion (filesystem + git history, pinned digest)
@@ -333,7 +335,8 @@ jobs:
           for m in fs git; do
             echo "trufflehog $m findings:"
             jq -rc 'select(.DetectorName) | (.SourceMetadata.Data.Filesystem // .SourceMetadata.Data.Git) as $s
-              | "TH \(.DetectorName) \($s.file):\($s.line) commit=\($s.commit // "-") verified=\(.Verified)"'               "$RUNNER_TEMP/trufflehog-$m.log" || true
+              | "TH \(.DetectorName) \($s.file):\($s.line) commit=\($s.commit // "-") verified=\(.Verified)"' \
+              "$RUNNER_TEMP/trufflehog-$m.log" || true
           done
           rm -f "$RUNNER_TEMP"/trufflehog-*.log
 

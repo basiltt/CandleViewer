@@ -511,6 +511,8 @@ previous entry.
   `GH_BRANCH_PROTECTION_TOKEN` are referenced by workflows but not provisioned (owner to scope them to an environment when added). When release secrets are introduced they MUST live in a protected
   `release` environment with required reviewers and use OIDC (no long-lived cloud keys); `check_inventory`
   fails any prod-credential or repo-scoped release secret name.
+  Re-run 2026-10-03 (`gh api .../actions/secrets`, `/variables`, `/environments`; names only): still 0/0/0. No long-lived
+  cloud credentials present; OIDC conversion (SR-141) n/a, evidenced by the empty inventory.
 - SR-146: the `gitleaks` job runs `check_secrets_hygiene.py all` and scans its own log/artefact outputs
   (`logs`), covered by a leaky-job test. Scope: it scans the job's report/log files in the workspace
   (`*.json`, `*.log`, `*.sarif`), not the hosted Actions log stream itself.
