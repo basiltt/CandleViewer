@@ -146,3 +146,19 @@ def test_inv_b13_d_hot_path_reads_plain_phase_not_interpreter() -> None:
 
     src = inspect.getsource(ConnectionManager.state)
     assert "_interp" not in src and "current_state" not in src
+
+
+# §B13.7 ledger (E50-T31 membership): pinned to 28-statechart-catalogue.md.
+INVARIANTS: dict[str, str] = {
+    "INV-B13-a": "test_inv_b13_a_budget_checked_before_open",
+    "INV-B13-b": "test_inv_b13_b_backoff_jitter_bounded_by_monotonic_ceiling",
+    "INV-B13-c": "test_inv_b13_c_subscribe_before_live_and_once_per_entry",
+    "INV-B13-d": "test_inv_b13_d_hot_path_reads_plain_phase_not_interpreter",
+    "INV-B13-e": "deferred:E08",
+}
+
+
+def test_b13_invariant_ledger_matches_catalogue() -> None:
+    from tests.xstate_contract.membership import check_ledger
+
+    check_ledger(13, INVARIANTS, globals())

@@ -186,6 +186,7 @@ MUST-09 applies: the linter ships before the first machine JSON merges.
   - `docs/research/xstate/gate/run_gate.py` runs against the **pinned** 0.9.1 wheel (hash-verified). A second run against the latest upstream release is informational and feeds the liaison chore.
   - `docs/research/xstate/bench/bench_c_timers_v2.py` (BENCH-6) also runs nightly. It gates on target hardware (P3-G6).
   - The report is published to `artifacts/xstate-gate/<date>.md`.
+- **Implementation (E50-T31).** CI job `xstate-contract` (`.github/workflows/_job-xstate-contract.yml`, in `ci-required`) runs `pytest tests/xstate_contract -m "not sync_parity" -W error::RuntimeWarning`; the per-arm and per-quiescence-point cases are generated from the chart JSON (`_harness.py`), each `test_bNN_<id>.py` pins the §Bn.7 ledger to this catalogue (`deferred:E<nn>` where an invariant depends on binding bodies), and `xstate-sync-parity` is the informational sync job. `xstate-contract-nightly.yml` runs the same job nightly for the 5-green exit criterion.
 
 
 ---

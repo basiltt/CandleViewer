@@ -178,3 +178,26 @@ def test_b16_policy_constants_match_service() -> None:
     assert b.STEP_UP_FAILURE_CAP == svc.FAILURE_CAP
     assert b.STEP_UP_GRACE_US == svc.GRACE_WINDOW // timedelta(microseconds=1)
     assert b.READONLY_DOWNGRADE_US == svc.READONLY_WINDOW // timedelta(microseconds=1)
+
+
+# §B16.7 ledger (E50-T31 membership): pinned to 28-statechart-catalogue.md.
+INVARIANTS: dict[str, str] = {
+    "INV-B16-a": "test_b16_terminal_events_revoke_with_reason_and_kill_elevation",
+    "INV-B16-b": "test_b16_terminal_events_revoke_with_reason_and_kill_elevation",
+    "INV-B16-c": "deferred:E09",
+    "INV-B16-d": "test_b16_revoked_is_terminal",
+    "INV-B16-e": "deferred:E09",
+}
+
+
+def test_b16_revoked_is_terminal() -> None:
+    from candleviewer.statechart.registry import Registry
+    from tests.xstate_contract._harness import is_terminal
+
+    assert is_terminal(Registry().get("session"), "auth.revoked")
+
+
+def test_b16_invariant_ledger_matches_catalogue() -> None:
+    from tests.xstate_contract.membership import check_ledger
+
+    check_ledger(16, INVARIANTS, globals())
