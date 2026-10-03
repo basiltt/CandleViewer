@@ -22,6 +22,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 KEYMAP = ROOT / "apps/web/src/keymap/keymap.json"
 CATALOGUE = ROOT / "docs/plan/14-screens-catalogue.md"
+RESERVED_FILE = ROOT / "apps/web/src/keymap/reserved-keys.json"  # shared with the TS validator
 DOCS_OUT = ROOT / "docs/generated/default-keymap.md"
 
 CONTEXTS = (
@@ -199,35 +200,7 @@ def parse_catalogue(text: str) -> tuple[dict[str, set[str]], list[str], list[str
 
 # --------------------------------------------------------------------------- reserved keys
 # binding -> reserving platform(s). Digit ranges are expanded.
-_RESERVED_RAW: dict[str, str] = {
-    "Ctrl+W": "browser/OS (close tab)",
-    "Ctrl+N": "browser/OS (new window)",
-    "Ctrl+T": "browser/OS (new tab)",
-    "Ctrl+Shift+T": "browser (reopen closed tab)",
-    "Ctrl+Shift+N": "browser (incognito window)",
-    "Ctrl+Shift+W": "browser (close window)",
-    "Ctrl+Shift+I": "browser/Electron (devtools)",
-    "Ctrl+Shift+J": "browser (console)",
-    "Ctrl+Shift+R": "browser (hard reload)",
-    "Ctrl+R": "browser/Electron (reload)",
-    "F5": "browser/Electron (reload)",
-    "Ctrl+F5": "browser (hard reload)",
-    "F12": "browser/Electron (devtools)",
-    "Alt+F4": "OS (close window)",
-    "Ctrl+Tab": "browser (next tab)",
-    "Ctrl+Shift+Tab": "browser (previous tab)",
-    "Ctrl+1..9": "browser (switch tab)",
-    "Ctrl+Q": "OS (quit)",
-    "Ctrl+P": "browser (print)",
-    "Ctrl+L": "browser (focus address bar)",
-    "Ctrl+D": "browser (bookmark)",
-    "Alt+←": "browser (history back)",
-    "Alt+→": "browser (history forward)",
-    "F11": "browser (full screen)",
-    "Ctrl+S": "browser (save page)",
-    "Ctrl+O": "browser (open file)",
-    "Ctrl+U": "browser (view source)",
-}
+_RESERVED_RAW: dict[str, str] = json.loads(RESERVED_FILE.read_text(encoding="utf-8"))
 RESERVED: dict[str, str] = {b: why for raw, why in _RESERVED_RAW.items() for b in expand(raw)}
 
 

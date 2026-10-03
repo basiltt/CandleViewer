@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
 import { WsErrorHost } from "./lib/ws/WsErrorHost";
 import { startTelemetry } from "./lib/telemetry/aggregator";
+import { KeymapHost } from "./keymap/KeymapHost";
 import { createRouteTree } from "./routes/tree";
 
 /**
@@ -18,6 +19,7 @@ export function App(): JSX.Element {
     <>
       <RouterProvider router={router} />
       <WsErrorHost />
+      <KeymapHost />
     </>
   );
 }
