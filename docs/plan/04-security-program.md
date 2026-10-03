@@ -333,6 +333,14 @@ path for E07's recorder/retention tables:
 Full abuse cases, per-element rationale (including the manifest-authenticity acceptance for S1/S14), and
 the abuse-case → test → ticket traceability table live in `docs/security/threat-models/E07-storage.md`.
 
+**E16 recorder subsystem** (`docs/security/threat-models/e16-recorder.md`, ticket E16-X01) adds, for
+RecordingPolicy, StreamWriter, RetentionManager, RollOffJob, DiskBudget, the archive importer and the
+recording REST/WS surface: S2 is re-confirmed Critical with the disk-pressure chaos test in E16-Q04, plus
+the aggregate auto-record DoS (R-D2, High), archive substitution/TOCTOU (R-T2, High), reaper starvation by a
+held read lease (R-D5, High), purge-scope widening (R-E2, High), test/shared-volume flags in production
+(R-E3, High) and path traversal at every write/delete site (R-E4, High). Findings are tracked as issues
+linked from the model's section 7; abuse cases AC-01..AC-15 go to E16-Q01.
+
 ### 5.9 Area 9 — Electron shell (A-16, AC-09)
 
 | T | STRIDE | Threat | L | I | Risk | Mitigations | Residual |
@@ -1481,8 +1489,8 @@ An exception is a time-boxed, owner-approved deviation from a MUST requirement o
 | Exception id | Requirement/finding | Reason | Compensating control | Approved by | Expires | Tracking ticket |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ---------- | --------------------------------------- |
 | EX-01 | C-12 / SR TOTP-for-every-user: `scripts/seed_fixture_user.py --allow-no-mfa` seeds a fixture owner with `mfa_required=false` | ZAP authenticated scan (#1639) and E2E cannot complete a TOTP step | Opt-in flag only (default seeds `mfa_required=true`); refused unless `CV_ENVIRONMENT=testnet`; writes `users.create`/`roles.grant` audit rows; disposable CI databases only | **Pending** @basiltt + security reviewer (requested by #1658) | 2026-12-31 | #1658 (follow-up: ZAP TOTP step, #1639) |
-| EX-05 | GHSA-ch52-4w7c-c8xp: http-cache-semantics <=4.2.0 High, no patched version | Upstream has no fix; transitive of electron-builder > @electron/get > got | Build-time only (download cache), not in shipped runtime; no untrusted multi-user cache; re-run `pnpm audit` at each freeze, remove when a patched version ships | **PENDING** owner approval to be recorded on #1234 | 2026-12-31 | #1737 |
-| EX-06 | GHSA-vfj7-8cjw-p6xm: braces <=3.0.3 High, no patched version | Upstream has no fix; transitive of lint-staged > micromatch | Dev-only (local glob expansion of repo files), not shipped, never fed untrusted input; re-run `pnpm audit` at each freeze, remove when a patched version ships | **PENDING** owner approval to be recorded on #1234 | 2026-12-31 | #1737 |
+| EX-05 | GHSA-ch52-4w7c-c8xp: http-cache-semantics <=4.2.0 High, no patched version | Upstream has no fix; transitive of electron-builder > @electron/get > got | Build-time only (download cache), not in shipped runtime; no untrusted multi-user cache; re-run `pnpm audit` at each freeze, remove when a patched version ships | **Approved on merge** by @basiltt CODEOWNER `security-review` of PR #1745 (no merge = no approval) | 2026-12-31 | #1737 |
+| EX-06 | GHSA-vfj7-8cjw-p6xm: braces <=3.0.3 High, no patched version | Upstream has no fix; transitive of lint-staged > micromatch | Dev-only (local glob expansion of repo files), not shipped, never fed untrusted input; re-run `pnpm audit` at each freeze, remove when a patched version ships | **Approved on merge** by @basiltt CODEOWNER `security-review` of PR #1745 (no merge = no approval) | 2026-12-31 | #1737 |
 
 ---
 
