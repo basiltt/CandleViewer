@@ -64,6 +64,7 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           TRIAGE_CALENDAR_PATH: tools/triage/calendar.yml
           TRIAGE_DIGEST_WEBHOOK: ${{ secrets.TRIAGE_DIGEST_WEBHOOK }}
+          TRIAGE_PROJECT_ID: ${{ secrets.TRIAGE_PROJECT_ID }}
         run: python -m tools.triage.run sla
 
   sweep:

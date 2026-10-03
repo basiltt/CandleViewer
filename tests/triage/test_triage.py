@@ -5,6 +5,7 @@ from __future__ import annotations
 import urllib.error
 from datetime import datetime
 from pathlib import Path
+from typing import Self
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -419,3 +420,111 @@ def test_with_retry_succeeds_after_transient_error() -> None:
         return "ok"
 
     assert run.with_retry(fn, sleep=lambda _s: None) == "ok"
+
+
+# --- through the real urlopen layer (stubbed transport) ----------------------
+import io
+import json as _json
+
+_GQL = "https://api.github.com/graphql"
+_ISSUES = "https://api.github.com/repos/o/r/issues?state=open&labels=type/bug&per_page=100&page=1"
+_HOOK = "https://hook.example/x"
+
+
+class _Resp(io.BytesIO):
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, *a: object) -> None:
+        self.close()
+
+
+def _fake(routes: dict[str, object], seen: list[tuple[str, bytes]]):  # type: ignore[no-untyped-def]
+    def op(req, timeout=0):  # type: ignore[no-untyped-def]
+        seen.append((req.full_url, req.data or b""))
+        r = routes[req.full_url]
+        if isinstance(r, Exception):
+            raise r
+        return _Resp(_json.dumps(r).encode())
+
+    return op
+
+
+def _http(code: int) -> urllib.error.HTTPError:
+    return urllib.error.HTTPError("u", code, "m", {}, None)  # type: ignore[arg-type]
+
+
+def test_graphql_project_fields_ok(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: list[tuple[str, bytes]] = []
+    nodes = [{"name": "Severity"}, {"name": "Status"}, {}]
+    data = {"data": {"node": {"fields": {"nodes": nodes}}}}
+    monkeypatch.setattr(run.urllib.request, "urlopen", _fake({_GQL: data}, seen))
+    run.check_project_fields(run.GhApi("o/r", "t"), "PVT_1")
+    assert b"PVT_1" in seen[0][1]
+
+
+def test_graphql_missing_field_raises_field_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    data = {"data": {"node": {"fields": {"nodes": [{"name": "Status"}]}}}}
+    monkeypatch.setattr(run.urllib.request, "urlopen", _fake({_GQL: data}, []))
+    with pytest.raises(run.TriageError) as e:
+        run.check_project_fields(run.GhApi("o/r", "t"), "PVT_1")
+    assert e.value.code == "E_TRIAGE_FIELD_MISSING" and "Severity" in str(e.value)
+
+
+@pytest.mark.parametrize(
+    ("msg", "code"),
+    [("API rate limit exceeded", "E_TRIAGE_RATE_LIMITED"), ("boom", "E_TRIAGE_API")],
+)
+def test_graphql_error_payload_maps_codes(
+    monkeypatch: pytest.MonkeyPatch, msg: str, code: str
+) -> None:
+    payload = {"errors": [{"message": msg}]}
+    monkeypatch.setattr(run.urllib.request, "urlopen", _fake({_GQL: payload}, []))
+    with pytest.raises(run.TriageError) as e:
+        run.GhApi("o/r", "t").graphql("q", {})
+    assert e.value.code == code
+
+
+def test_http_429_after_retries_is_rate_limited(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(run.time, "sleep", lambda _s: None)
+    url = "https://api.github.com/repos/o/r/issues/1"
+    monkeypatch.setattr(run.urllib.request, "urlopen", _fake({url: _http(429)}, []))
+    with pytest.raises(run.TriageError) as e:
+        run.GhApi("o/r", "t").call("GET", "/issues/1")
+    assert e.value.code == "E_TRIAGE_RATE_LIMITED"
+
+
+def test_digest_webhook_payload_shape(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: list[tuple[str, bytes]] = []
+    issue = {
+        "number": 7,
+        "created_at": "2020-01-01T09:00:00Z",
+        "labels": [{"name": "type/bug"}, {"name": "priority/p0"}],
+        "body": "",
+    }
+    routes = {
+        _ISSUES: [issue],
+        "https://api.github.com/repos/o/r/issues/7/labels": [],
+        _HOOK: {},
+    }
+    monkeypatch.setattr(run.urllib.request, "urlopen", _fake(routes, seen))
+    assert run.cmd_sla(run.GhApi("o/r", "t"), CAL, _HOOK) == 0
+    hook = [d for u, d in seen if u == _HOOK]
+    assert hook and "#7" in _json.loads(hook[0])["text"]
+
+
+def test_main_error_code_posted_to_webhook(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: list[tuple[str, bytes]] = []
+    monkeypatch.setattr(run.time, "sleep", lambda _s: None)
+    monkeypatch.setenv("GH_TOKEN", "t")
+    monkeypatch.setenv("GITHUB_REPOSITORY", "o/r")
+    monkeypatch.setenv("TRIAGE_DIGEST_WEBHOOK", _HOOK)
+    monkeypatch.setattr(
+        run.urllib.request, "urlopen", _fake({_ISSUES: _http(500), _HOOK: {}}, seen)
+    )
+    assert run.main(["sla"]) == 1
+    assert any(b"E_TRIAGE_API" in d for u, d in seen if u == _HOOK)

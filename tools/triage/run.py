@@ -74,6 +74,48 @@ class GhApi:
 
         return with_retry(go)
 
+    def graphql(self, query: str, variables: dict[str, Any]) -> Any:
+        """Projects v2 GraphQL call; GraphQL-level errors surface as E_TRIAGE_*."""
+
+        def go() -> Any:
+            req = urllib.request.Request(
+                "https://api.github.com/graphql",
+                data=json.dumps({"query": query, "variables": variables}).encode(),
+                method="POST",
+                headers={"Authorization": f"Bearer {self._token}"},
+            )
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                return json.loads(resp.read())
+
+        out = with_retry(go)
+        if out.get("errors"):
+            msg = str(out["errors"][0].get("message", "graphql error"))
+            code = (
+                "E_TRIAGE_RATE_LIMITED"
+                if "rate limit" in msg.lower()
+                else "E_TRIAGE_API"
+            )
+            raise TriageError(code, msg)
+        return out["data"]
+
+
+PROJECT_FIELDS_QUERY = (
+    "query($id:ID!){node(id:$id){... on ProjectV2{fields(first:50){nodes{"
+    "... on ProjectV2FieldCommon{name}}}}}}"
+)
+
+
+def check_project_fields(
+    api: GhApi, project_id: str, need: tuple[str, ...] = ("Severity", "Status")
+) -> None:
+    """Fail loudly (E_TRIAGE_FIELD_MISSING) if the board lacks a field we rely on."""
+    data = api.graphql(PROJECT_FIELDS_QUERY, {"id": project_id})
+    node = data.get("node") or {}
+    names = {n.get("name") for n in node.get("fields", {}).get("nodes", []) if n}
+    missing = [f for f in need if f not in names]
+    if missing:
+        raise TriageError("E_TRIAGE_FIELD_MISSING", ", ".join(missing))
+
 
 def dor_decision(issue: dict[str, Any]) -> dict[str, Any]:
     labels = [x["name"] for x in issue.get("labels", [])]
@@ -142,7 +184,11 @@ def digest(rows: list[tuple[int, str, str]]) -> str:
     return "\n".join(out)  # plain text, no colour-only meaning
 
 
-def cmd_sla(api: GhApi, cal: sla.Calendar, webhook: str | None) -> int:
+def cmd_sla(
+    api: GhApi, cal: sla.Calendar, webhook: str | None, project_id: str | None = None
+) -> int:
+    if project_id:
+        check_project_fields(api, project_id)
     now = datetime.now(timezone.utc)
     rows: list[tuple[int, str, str]] = []
     page = 1
@@ -306,9 +352,25 @@ def main(argv: list[str] | None = None) -> int:
         cal = sla.load_calendar(
             os.environ.get("TRIAGE_CALENDAR_PATH", "tools/triage/calendar.yml")
         )
-        return cmd_sla(api, cal, os.environ.get("TRIAGE_DIGEST_WEBHOOK"))
+        return cmd_sla(
+            api,
+            cal,
+            os.environ.get("TRIAGE_DIGEST_WEBHOOK"),
+            os.environ.get("TRIAGE_PROJECT_ID"),
+        )
     except TriageError as exc:
         print(str(exc), file=sys.stderr)  # alert, never silent
+        hook = os.environ.get("TRIAGE_DIGEST_WEBHOOK")
+        if hook:  # surface the error code in the digest channel too
+            try:
+                req = urllib.request.Request(
+                    hook,
+                    data=json.dumps({"text": f"Defect triage failed: {exc}"}).encode(),
+                    headers={"Content-Type": "application/json"},
+                )
+                urllib.request.urlopen(req, timeout=30).close()
+            except (urllib.error.URLError, OSError):
+                pass
         return 1
 
 
