@@ -95,11 +95,7 @@ for (const { scr, path } of SHIPPED) {
     await page.goto(path);
     await page.waitForLoadState("networkidle");
     const running = await page.evaluate(
-      () =>
-        document
-          .getAnimations()
-          .filter((a) => a.playState === "running" && !(a as CSSAnimation).animationName === false)
-          .length,
+      () => document.getAnimations().filter((a) => a.playState === "running").length,
     );
     expect(running).toBe(0);
   });
