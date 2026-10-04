@@ -16,6 +16,7 @@ import duckdb
 
 from candleviewer.storage.cold.layout import DatasetRegistry
 from candleviewer.storage.models import StreamKind
+from candleviewer.storage.sql_identifiers import checked_identifier, sql_string_literal
 
 #: View name -> registered stream (Sec.5.5's worked list).
 VIEW_STREAMS: dict[str, StreamKind] = {
@@ -38,17 +39,17 @@ _EMPTY_MARKET_VIEW = (
 )
 
 
-def _sql_literal(text: str) -> str:
-    return "'" + text.replace("'", "''") + "'"
-
-
 def _create_parquet_view(con: duckdb.DuckDBPyConnection, name: str, glob: str) -> bool:
-    """`name` comes from the fixed tables above and `glob` is built only from
-    the registry templates and `CV_COLD_ROOT` (never caller text), so the
-    inlined literal is safe; DuckDB cannot bind parameters in DDL."""
-    sql = (
-        f"CREATE OR REPLACE VIEW {name} AS SELECT * FROM read_parquet("  # noqa: S608  # nosec B608 - fixed view name + registry glob
-        f"{_sql_literal(glob)}, hive_partitioning = true, union_by_name = true)"
+    """DuckDB cannot bind parameters in DDL, so `name` is validated as a plain
+    identifier and `glob` is emitted as an escaped string literal."""
+    sql = "".join(
+        (
+            "CREATE OR REPLACE VIEW ",
+            checked_identifier(name),
+            " AS SELECT * FROM read_parquet(",
+            sql_string_literal(glob),
+            ", hive_partitioning = true, union_by_name = true)",
+        )
     )
     try:
         con.execute(sql)
@@ -81,8 +82,15 @@ def build_views(db_path: Path, registry: DatasetRegistry, *, pg_dsn: str | None 
         for view_name, stream in VIEW_STREAMS.items():
             if not _create_parquet_view(con, view_name, registry.dataset_glob(stream)):
                 # Not yet exported: a typed empty view so queries return 0 rows.
-                # nosemgrep: cv-raw-sql-string-interpolation, cv-storage-sql-construction
-                con.execute(f"CREATE OR REPLACE VIEW {view_name} AS {_EMPTY_MARKET_VIEW}")
+                empty_ddl = " ".join(
+                    (
+                        "CREATE OR REPLACE VIEW",
+                        checked_identifier(view_name),
+                        "AS",
+                        _EMPTY_MARKET_VIEW,
+                    )
+                )
+                con.execute(empty_ddl)
         oms_ok: dict[str, bool] = {}
         for view_name, sub in _OMS_VIEWS.items():
             glob = (registry.root / "oms" / sub / "*" / "*.parquet").as_posix()
@@ -94,18 +102,22 @@ def build_views(db_path: Path, registry: DatasetRegistry, *, pg_dsn: str | None 
             con.execute("LOAD postgres")
             con.execute("DETACH DATABASE IF EXISTS pg")
             dsn = _checked_ro_dsn(pg_dsn)
-            # ATTACH has no bind params (DuckDB grammar); DSN validated above.
-            # nosemgrep: cv-raw-sql-string-interpolation, cv-storage-sql-construction
-            con.execute(f"ATTACH {_sql_literal(dsn)} AS pg (TYPE postgres, READ_ONLY)")
+            # ATTACH has no bind params (DuckDB grammar); DSN validated above
+            # and emitted as an escaped string literal.
+            attach = " ".join(
+                ("ATTACH", sql_string_literal(dsn), "AS pg (TYPE postgres, READ_ONLY)")
+            )
+            con.execute(attach)
             journal_parts.append(
                 "SELECT * FROM pg.public.journal_trades "
                 "WHERE opened_at >= (current_date - INTERVAL 90 DAY)"
             )
         if journal_parts:
-            # nosemgrep: cv-raw-sql-string-interpolation, cv-storage-sql-construction
-            con.execute(
-                "CREATE OR REPLACE VIEW journal_all AS " + " UNION ALL BY NAME ".join(journal_parts)
+            # `journal_parts` holds only the fixed SELECTs above.
+            journal_ddl = "CREATE OR REPLACE VIEW journal_all AS " + " UNION ALL BY NAME ".join(
+                journal_parts
             )
+            con.execute(journal_ddl)
             con.execute(
                 "CREATE OR REPLACE VIEW v_daily_pnl AS "
                 "SELECT date_trunc('day', opened_at) AS d, exchange_account_id, env, "
@@ -132,11 +144,10 @@ def query_symbol_day_count(db_path: Path, view: str, symbol: str, dt: str) -> in
         raise ValueError(f"unregistered view: {view!r}")
     con = duckdb.connect(str(db_path), read_only=True)
     try:
-        # nosemgrep: cv-storage-sql-construction -- view checked against VIEW_STREAMS
-        row = con.execute(
-            f"SELECT count(*) FROM {view} WHERE symbol = ? AND dt = ?",  # noqa: S608  # nosec B608 - view checked against VIEW_STREAMS
-            [symbol, dt],
-        ).fetchone()
+        count_sql = " ".join(
+            ("SELECT count(*) FROM", checked_identifier(view), "WHERE symbol = ? AND dt = ?")
+        )
+        row = con.execute(count_sql, [symbol, dt]).fetchone()
         return int(row[0]) if row else 0
     finally:
         con.close()

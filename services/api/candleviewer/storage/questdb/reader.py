@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from typing import Protocol, cast
 
 from candleviewer.storage.models import TimeRange
+from candleviewer.storage.sql_identifiers import checked_identifier
 
 
 @dataclass(frozen=True, slots=True)
@@ -184,13 +185,17 @@ def pgwire_readiness_probe(connection: PgWireConnection) -> Callable[[], Awaitab
 def pgwire_committed_counter(
     connection: PgWireConnection, tables: Sequence[str]
 ) -> Callable[[], Awaitable[int]]:
-    """Total committed rows across `tables` (internal, trusted names) for
-    `IlpWriter(committed_counter=...)`."""
+    """Total committed rows across `tables` for `IlpWriter(committed_counter=...)`.
+    Table names cannot be bound, so each is validated as a plain identifier
+    up front (fail at wiring time, not on the first count)."""
+    queries = tuple(
+        " ".join(("SELECT count() AS n FROM", checked_identifier(table))) for table in tables
+    )
 
     async def count() -> int:
         total = 0
-        for table in tables:
-            rows = await connection.fetch(f"SELECT count() AS n FROM {table}")  # noqa: S608  # nosec B608 - table names are internal trusted constants
+        for query in queries:
+            rows = await connection.fetch(query)
             total += int(cast(int, rows[0]["n"])) if rows else 0
         return total
 
