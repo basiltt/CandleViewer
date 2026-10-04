@@ -6424,13 +6424,24 @@ export interface components {
         | "missing_action_param"
         | "permission_required"
         | "native_stop_missing"
-        | "unsupported_symbol";
+        | "unsupported_symbol"
+        | "unknown_metric"
+        | "operator_not_applicable"
+        | "cycle_detected"
+        | "dangling_port"
+        | "orphan_node"
+        | "multiple_sinks"
+        | "feedback_loop"
+        | "native_stop_violation"
+        | "high_frequency";
       message?: string;
       path?: string;
       /** @enum {string} */
       severity?: "error" | "warning";
     };
     RuleValidationResult: {
+      /** @description True when any error or open safety warning refuses mode=armed. */
+      blocks_arming?: boolean;
       errors: components["schemas"]["RuleValidationIssue"][];
       estimated_evaluations_per_minute?: number;
       referenced_actions?: string[];
@@ -12152,6 +12163,10 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
+          /** @description Optional stored model of the OTHER editor. When present both are compiled and a divergence is reported in `round_trip` (US-RULE-006); the server never reconciles. */
+          counterpart_model?: {
+            [key: string]: unknown;
+          };
           /** @enum {string} */
           editor: "form" | "graph";
           model: {
@@ -12168,9 +12183,18 @@ export interface operations {
         };
         content: {
           "application/json": {
+            blocks_arming?: boolean;
             ir?: components["schemas"]["RuleIr"];
             ir_hash?: string;
             issues?: components["schemas"]["RuleValidationIssue"][];
+            round_trip?: {
+              diff: {
+                counterpart?: unknown;
+                model?: unknown;
+                path?: string;
+              }[];
+              match: boolean;
+            };
           };
         };
       };
