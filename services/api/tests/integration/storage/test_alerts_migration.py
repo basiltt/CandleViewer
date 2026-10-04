@@ -108,9 +108,7 @@ def test_live_alert_query_uses_partial_index(pg_dsn: str) -> None:
             "FROM alerts, generate_series(1, 500) g WHERE id = %s",
             (aid,),
         )
-        c.execute(
-            "UPDATE alerts SET enabled = false WHERE name LIKE 'bulk-%' AND symbol <> 'SYM1'"
-        )
+        c.execute("UPDATE alerts SET enabled = false WHERE name LIKE 'bulk-%' AND symbol <> 'SYM1'")
         c.execute("ANALYZE alerts")
         plan = "\n".join(
             str(r[0])
