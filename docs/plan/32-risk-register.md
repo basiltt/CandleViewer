@@ -596,6 +596,15 @@ Not a new `RSK-nnn` entry (no new risk was identified; this is reference evidenc
 - **Trigger** — A bundle containing data outside the actor's account scope.
 - **Contingency** — Disable bundle generation for the Manager role until fixed; review audit trail.
 
+### RSK-056 · Unattended rule execution drifts from authoring-time permissions or degrades the shared order path
+
+`Risk: R4` · Category **Security** · L 3 · I 4 · **Score 12 — High** · Owner **Security engineer** · Epics E35 · Status **Open**
+
+- **Description** — Introduced by E35-X01 (`docs/security/threat-models/e35-rule-engine.md`). A rule acts with no human present: a grant revoked after authoring (RE-E1), a slow `pre_trade_check` rule (RE-D5) and pathological IR (RE-D1) can respectively act without authority, degrade all order submission, or exhaust the evaluator.
+- **Mitigation** — Runtime scope enforcement on every action (E35-S04), ejection of slow rules from the pre-trade path (E35-FR-13), IR bounds and window-memory budget (E35-FR-10); abuse cases AC-01..AC-16 executed by E35-X02/Q05/Q07.
+- **Trigger** — Any rule action executed after grant revocation; submit p99 above budget with rules armed; evaluator CPU above cap.
+- **Contingency** — Global Panic / `rules_global_enabled=false`; disarm affected rules; Owner review of the audit trail.
+
 ---
 
 ## 10. Register summary
@@ -603,9 +612,9 @@ Not a new `RSK-nnn` entry (no new risk was identified; this is reference evidenc
 | Score band           | Count  | IDs                                                                                                                                                                                         |
 | -------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Critical (15–25)** | 7      | RSK-001, RSK-004, RSK-010, RSK-013, RSK-014, RSK-031, RSK-037                                                                                                                               |
-| **High (10–14)**     | 21     | RSK-002, RSK-011, RSK-016, RSK-017, RSK-018, RSK-019, RSK-020, RSK-022, RSK-023, RSK-026, RSK-028, RSK-029, RSK-032, RSK-036, RSK-039, RSK-041, RSK-043, RSK-046, RSK-047, RSK-049, RSK-053  |
+| **High (10–14)**     | 22     | RSK-056, RSK-002, RSK-011, RSK-016, RSK-017, RSK-018, RSK-019, RSK-020, RSK-022, RSK-023, RSK-026, RSK-028, RSK-029, RSK-032, RSK-036, RSK-039, RSK-041, RSK-043, RSK-046, RSK-047, RSK-049, RSK-053  |
 | **Medium (5–9)**     | 22     | RSK-003, RSK-005, RSK-012, RSK-015, RSK-021, RSK-024, RSK-025, RSK-027, RSK-030, RSK-033, RSK-034, RSK-035, RSK-038, RSK-040, RSK-042, RSK-044, RSK-048, RSK-050, RSK-051, RSK-052, RSK-054, RSK-055                             |
-| **Total entries**    | **50** | RSK-001 … RSK-055 (non-contiguous numbering, grouped by category block; numbers are never reused)                                                                                           |
+| **Total entries**    | **51** | RSK-001 … RSK-055 (non-contiguous numbering, grouped by category block; numbers are never reused)                                                                                           |
 
 Band arithmetic: 7 Critical + 20 High + 20 Medium = **47**, equal to the 47 `### RSK-nnn` entries in §3–§9. There are no Low-band entries: anything that scored ≤4 during drafting was not carried into the register as a tracked risk (see §10.1.2). RSK-012 moved High->Medium in an earlier PR (E07-K01 spike evidence, partial retirement); its narrative was corrected in this PR after QA bug #1562 found the spike's original shape-B result was not reproducible (see §4 entry) — the band/score is unchanged, only the evidence text.
 
@@ -697,7 +706,7 @@ This is the second of the three partitions reconciled in §10.1.1. Each of the 4
 | R0    | RSK-001 (spike result), RSK-012 (hot-tier decision), RSK-003, RSK-029                                |
 | R1    | RSK-001, RSK-002, RSK-004, RSK-011, RSK-026, RSK-040                                                 |
 | R2    | RSK-004, RSK-005, RSK-010, RSK-027, RSK-028, RSK-044, RSK-049                                        |
-| R3    | RSK-013, RSK-014, RSK-016, RSK-017, RSK-018, RSK-019, RSK-020, RSK-034, RSK-050                      |
+| R3    | RSK-013, RSK-014, RSK-016, RSK-017, RSK-018, RSK-019, RSK-020, RSK-034, RSK-050, RSK-056                      |
 | R4    | RSK-013, RSK-014, RSK-016, RSK-019, RSK-020, RSK-022, RSK-023, RSK-043, RSK-046, RSK-047             |
 | R5    | RSK-040, RSK-044, RSK-046, RSK-047, RSK-048, plus every accepted risk re-reviewed against its expiry |
 
