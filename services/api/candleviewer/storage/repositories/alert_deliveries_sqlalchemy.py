@@ -30,48 +30,40 @@ _COLS = (
     "queued_at, sent_at, acked_at, acked_by::text AS acked_by"
 )
 
-# nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
-_INSERT = sa.text(
+_INSERT = sa.text(  # nosec B608  # nosemgrep
     "INSERT INTO alert_deliveries (alert_id, user_id, channel, title, body, context) VALUES "  # nosec B608 - static column constants, bound params
     "(CAST(:alert_id AS uuid), CAST(:user_id AS uuid), CAST(:channel AS alert_channel), :title, "
     f":body, CAST(:context AS jsonb)) RETURNING {_COLS}"
 )
-# nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
-_MARK_SENT = sa.text(
+_MARK_SENT = sa.text(  # nosec B608  # nosemgrep
     "UPDATE alert_deliveries SET status = 'sent', sent_at = now(), attempt = attempt + 1, "  # nosec B608 - static column constants, bound params
     f"http_status = :http_status, error_message = NULL WHERE id = :id AND status = 'queued' "
     f"RETURNING {_COLS}"
 )
-# nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
-_MARK_FAILED = sa.text(
+_MARK_FAILED = sa.text(  # nosec B608  # nosemgrep
     "UPDATE alert_deliveries SET status = 'failed', attempt = least(attempt + 1, 10), "  # nosec B608 - static column constants, bound params
     "http_status = :http_status, error_message = :error WHERE id = :id AND status = 'queued' "
     f"RETURNING {_COLS}"
 )
-# nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
-_MARK_SUPPRESSED = sa.text(
+_MARK_SUPPRESSED = sa.text(  # nosec B608  # nosemgrep
     "UPDATE alert_deliveries SET status = 'suppressed', error_message = :reason "  # nosec B608 - static column constants, bound params
     f"WHERE id = :id AND status = 'queued' RETURNING {_COLS}"
 )
-# nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
-_ACK_ONE = sa.text(
+_ACK_ONE = sa.text(  # nosec B608  # nosemgrep
     "UPDATE alert_deliveries SET status = 'acked', acked_at = now(), "  # nosec B608 - static column constants, bound params
     "acked_by = CAST(:by AS uuid) WHERE id = :id AND user_id = CAST(:by AS uuid) "
     f"AND status = 'sent' AND acked_at IS NULL RETURNING {_COLS}"
 )
-# nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
-_ACK_ALL = sa.text(
+_ACK_ALL = sa.text(  # nosec B608  # nosemgrep
     "UPDATE alert_deliveries SET status = 'acked', acked_at = now(), "
     "acked_by = CAST(:by AS uuid) WHERE user_id = CAST(:by AS uuid) "
     "AND status = 'sent' AND acked_at IS NULL"
 )
-# nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
-_UNACKED = sa.text(
+_UNACKED = sa.text(  # nosec B608  # nosemgrep
     "SELECT count(*) FROM alert_deliveries WHERE user_id = CAST(:user AS uuid) "
     "AND status = 'sent' AND acked_at IS NULL"
 )
-# nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
-_LIST = sa.text(
+_LIST = sa.text(  # nosec B608  # nosemgrep
     f"SELECT {_COLS} FROM alert_deliveries WHERE "  # nosec B608 - static column constants, bound params
     "(CAST(:user AS uuid) IS NULL OR user_id = CAST(:user AS uuid)) "
     "AND (CAST(:alert_id AS uuid) IS NULL OR alert_id = CAST(:alert_id AS uuid)) "

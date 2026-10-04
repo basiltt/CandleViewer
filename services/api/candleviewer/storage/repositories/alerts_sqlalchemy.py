@@ -97,8 +97,7 @@ def _alert(m: Any) -> AlertRow:
     return AlertRow(**d)
 
 
-# nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
-_INSERT = sa.text(
+_INSERT = sa.text(  # nosec B608  # nosemgrep
     "INSERT INTO alerts (id, owner_user_id, name, symbol, scope_account_id, condition_ir, "  # nosec B608 - static column constants, bound params
     "condition_hash, enabled, trigger_mode, cooldown_seconds, expires_at, severity, channels, "
     "webhook_url_enc, webhook_secret_enc, message_template) VALUES (CAST(:id AS uuid), "
@@ -107,19 +106,16 @@ _INSERT = sa.text(
     "CAST(:severity AS severity), CAST(:channels AS alert_channel[]), :url_enc, :secret_enc, "
     f":template) RETURNING {ALERT_COLUMNS}"
 )
-# nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
-_GET = sa.text(
+_GET = sa.text(  # nosec B608  # nosemgrep
     f"SELECT {ALERT_COLUMNS} FROM alerts WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL"  # nosec B608 - static column constants, bound params
 )
-# nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
-_LIST = sa.text(
+_LIST = sa.text(  # nosec B608  # nosemgrep
     f"SELECT {ALERT_COLUMNS} FROM alerts WHERE owner_user_id = CAST(:owner AS uuid) "  # nosec B608 - static column constants, bound params
     "AND deleted_at IS NULL AND (CAST(:after_ts AS timestamptz) IS NULL OR "
     "(created_at, id::text) < (CAST(:after_ts AS timestamptz), :after_id)) "
     "ORDER BY created_at DESC, id::text DESC LIMIT :limit"
 )
-# nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
-_UPDATE = sa.text(
+_UPDATE = sa.text(  # nosec B608  # nosemgrep
     "UPDATE alerts SET name = :name, condition_ir = CAST(:ir AS jsonb), condition_hash = :hash, "  # nosec B608 - static column constants, bound params
     "trigger_mode = CAST(:mode AS alert_trigger_mode), cooldown_seconds = :cooldown, "
     "expires_at = :expires_at, severity = CAST(:severity AS severity), "
@@ -127,32 +123,26 @@ _UPDATE = sa.text(
     "updated_at = clock_timestamp() WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL "
     f"AND updated_at = :if_match RETURNING {ALERT_COLUMNS}"
 )
-# nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
-_SOFT_DELETE = sa.text(
+_SOFT_DELETE = sa.text(  # nosec B608  # nosemgrep
     "UPDATE alerts SET deleted_at = now(), enabled = false, updated_at = clock_timestamp() "
     "WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL"
 )
-# nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
-_SET_ENABLED = sa.text(
+_SET_ENABLED = sa.text(  # nosec B608  # nosemgrep
     "UPDATE alerts SET enabled = :enabled, updated_at = clock_timestamp() "  # nosec B608 - static column constants, bound params
     f"WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL RETURNING {ALERT_COLUMNS}"
 )
-# nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
-_SET_SNOOZE = sa.text(
+_SET_SNOOZE = sa.text(  # nosec B608  # nosemgrep
     "UPDATE alerts SET snoozed_until = :until, updated_at = clock_timestamp() "  # nosec B608 - static column constants, bound params
     f"WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL RETURNING {ALERT_COLUMNS}"
 )
-# nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
-_BUMP = sa.text(
+_BUMP = sa.text(  # nosec B608  # nosemgrep
     "UPDATE alerts SET fire_count = fire_count + 1, last_fired_at = :fired_at "
     "WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL"
 )
-# nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
-_ARMED = sa.text(
+_ARMED = sa.text(  # nosec B608  # nosemgrep
     f"SELECT {ALERT_COLUMNS} FROM alerts WHERE symbol = :symbol AND enabled AND deleted_at IS NULL"  # nosec B608 - static column constants, bound params
 )
-# nosemgrep: python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
-_COUNT_ENABLED = sa.text(
+_COUNT_ENABLED = sa.text(  # nosec B608  # nosemgrep
     "SELECT enabled, count(*) AS n FROM alerts WHERE deleted_at IS NULL GROUP BY enabled"
 )
 _COUNT_PENDING = sa.text("SELECT count(*) FROM alert_deliveries WHERE status = 'queued'")
