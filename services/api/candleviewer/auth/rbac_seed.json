@@ -207,7 +207,9 @@
     }
   ],
   "role_permissions": {
-    "owner": ["*"],
+    "owner": [
+      "*"
+    ],
     "manager": [
       "marketdata:read",
       "instruments:read",
