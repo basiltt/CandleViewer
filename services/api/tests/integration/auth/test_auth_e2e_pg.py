@@ -39,7 +39,9 @@ from scripts.seed_fixture_user import seed
 pytestmark = pytest.mark.integration
 
 _ROOT = Path(__file__).resolve().parents[3]
-_NOW = datetime(2026, 10, 1, 12, 0, tzinfo=UTC)
+# Track real time: rows carry DB-stamped `created_at` (now()) and CHECKs such as
+# `expires_at > created_at` make a frozen date a time bomb once the wall clock passes it.
+_NOW = datetime.now(UTC).replace(microsecond=0)
 _TOTP_KEY = bytes.fromhex("11" * 32)
 _PEPPER = "it-pepper"
 _PASSWORD = "correct horse battery"  # noqa: S105 -- throwaway fixture password

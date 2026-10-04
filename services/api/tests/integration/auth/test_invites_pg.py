@@ -29,7 +29,6 @@ from scripts.seed_fixture_user import seed
 pytestmark = pytest.mark.integration
 
 _ROOT = Path(__file__).resolve().parents[3]
-_NOW = datetime(2026, 10, 1, tzinfo=UTC)
 PW = "pending-hash"
 
 
@@ -50,6 +49,11 @@ def pg_dsn() -> Iterator[str]:
 
 
 async def test_concurrent_consume_has_exactly_one_winner(pg_dsn: str) -> None:
+    # `user_invites.created_at` defaults to the DB's now() and is CHECKed
+    # `expires_at > created_at`, so the test clock must track real time; a frozen
+    # date silently turns into an expired insert (IntegrityError -> False) once
+    # the wall clock passes it (regression: failed from 2026-10-04).
+    now = datetime.now(UTC)
     await seed(pg_dsn, "owner1", "correct horse battery")
     rel = SqlAlchemyRelationalRepository(pg_dsn)
     repo = SqlAlchemyInviteRepository(rel, lambda **f: InviteRecord.model_validate(f))
@@ -71,13 +75,13 @@ async def test_concurrent_consume_has_exactly_one_winner(pg_dsn: str) -> None:
             placeholder_password_hash="$argon2id$x",  # noqa: S106 - placeholder, not a credential
             invited_by=by,
             token_hash=th,
-            expires_at=_NOW + timedelta(hours=72),
+            expires_at=now + timedelta(hours=72),
         )
         assert created is True
         results = await asyncio.gather(
-            *(repo.consume(th, now=_NOW, pending_password_hash=PW) for _ in range(8))
+            *(repo.consume(th, now=now, pending_password_hash=PW) for _ in range(8))
         )
         assert sum(r is not None for r in results) == 1
-        assert await repo.consume(th, now=_NOW, pending_password_hash=PW) is None
+        assert await repo.consume(th, now=now, pending_password_hash=PW) is None
     finally:
         await rel.dispose()
