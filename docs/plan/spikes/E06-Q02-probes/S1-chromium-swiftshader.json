@@ -1,0 +1,32 @@
+{
+  "webgl2": true,
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "MAX_TEXTURE_SIZE": 8192,
+  "MAX_TEXTURE_IMAGE_UNITS": 32,
+  "MAX_VERTEX_ATTRIBS": 16,
+  "EXT_color_buffer_float": true,
+  "OES_texture_float_linear": true,
+  "instancing": true,
+  "integerAttribs": true,
+  "R16F_render": true,
+  "R16F_sample": true,
+  "loseContextExt": true,
+  "lostEvent": true,
+  "isContextLost": true,
+  "drawWhileLostThrows": false,
+  "restoredEvent": true,
+  "contextUsableAfterRestore": true,
+  "doubleLossRecovers": false,
+  "canvas2d_2500cells_ms": {
+    "p50": 9.599999994039536,
+    "p95": 39.099999994039536
+  },
+  "offscreenCanvas_main": true,
+  "worker": {
+    "o": true,
+    "g": true
+  },
+  "dpr": 1,
+  "browserVersion": "153.0.8010.12",
+  "args": []
+}
