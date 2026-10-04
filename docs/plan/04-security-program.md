@@ -341,6 +341,14 @@ held read lease (R-D5, High), purge-scope widening (R-E2, High), test/shared-vol
 (R-E3, High) and path traversal at every write/delete site (R-E4, High). Findings are tracked as issues
 linked from the model's section 7; abuse cases AC-01..AC-15 go to E16-Q01.
 
+**E35 rule engine** (`docs/security/threat-models/e35-rule-engine.md`, ticket E35-X01) models the IR,
+compiler, rule store, evaluator, executor, `pre_trade_check` hook, `emit_signal` bus, firing log/WS and
+import/export. Critical/High findings: IR resource exhaustion (RE-D1, Critical), permission drift between
+authoring and execution (RE-E1, Critical), `pre_trade_check` shared-fate (RE-D5), cross-owner signals
+(RE-S3), layout-field smuggling (RE-T2), self-arming via `enable_rule` (RE-E7). Findings E35-FR-01..17 are
+tracked in the model's section 8 (see RSK-056); abuse cases AC-01..AC-16 go to E35-X02. Also under
+`docs/security/e35/` (artefact index).
+
 ### 5.9 Area 9 — Electron shell (A-16, AC-09)
 
 | T | STRIDE | Threat | L | I | Risk | Mitigations | Residual |
