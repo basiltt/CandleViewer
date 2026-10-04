@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import time
+from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -23,7 +24,13 @@ def _ir() -> dict[str, Any]:
     raw = json.loads((FIX / "form_simple_0.json").read_text(encoding="utf-8"))
     raw["conditions"]["right"]["const"] = 100
     raw["actions"][0]["params"] = {"channel": "ui", "severity": "info", "template": "x"}
-    return raw  # type: ignore[no-any-return]
+    return dict(raw)
+
+
+async def _until(pred: Callable[[], bool]) -> None:
+    async with asyncio.timeout(2):
+        while not pred():  # noqa: ASYNC110 - polls state owned by the runner task
+            await asyncio.sleep(0.005)
 
 
 async def test_evaluator_not_constructed_when_flag_off() -> None:
@@ -53,10 +60,8 @@ async def test_create_rule_feed_snapshot_evaluator_records_result() -> None:
         src = ctx.rules.metric_source
         assert src is not None
         src.push(ref, Decimal("150"), time.time_ns() // 1_000_000)
-        await runner.process(EvalTick("on_price_update", "BTCUSDT"))
-        await asyncio.sleep(0)
-        print({k: (e.stats, e.rule.trigger.type) for k, e in runner._evaluators.items()})
-        await asyncio.gather(*list(ctx.rules._tasks))
+        assert ctx.rules.submit_tick("on_price_update", "BTCUSDT")
+        await _until(lambda: runner.processed >= 1 and not ctx.rules._tasks)
         row = await mgr._s.get(rid)
         assert row is not None and row.simulation_fires == 1
     finally:
@@ -86,7 +91,44 @@ async def test_queue_is_bounded_and_drops_oldest() -> None:
     from candleviewer.rules.evaluator import SnapshotBuilder
     from candleviewer.rules.runner import QUEUE_BOUND, PushedMetricSource
 
-    r = RuleEvaluationRunner(_none, SnapshotBuilder(PushedMetricSource()), lambda *_: None, print)  # type: ignore[arg-type]
+    def _factory(rule: Any, snaps: Any) -> Any:
+        raise AssertionError("not reached")
+
+    r = RuleEvaluationRunner(
+        _none, SnapshotBuilder(PushedMetricSource()), _factory, lambda _r: None
+    )
     for _ in range(QUEUE_BOUND + 5):
         r.submit(EvalTick("on_price_update"))
     assert r.dropped == 5
+
+
+async def test_stop_cancels_task_and_submit_after_stop_is_refused() -> None:
+    ctx = create_app(Settings(rules_evaluator_enabled=True)).state.app_context
+    ctx.rules.bind(store=InMemoryRuleStore())
+    await ctx.rules.start(ctx)
+    await ctx.rules.stop(1.0)
+    assert ctx.rules.runner is None
+    assert not ctx.rules.submit_tick("on_price_update")
+
+
+async def test_evaluator_error_is_reported_not_swallowed() -> None:
+    errors: list[Exception] = []
+
+    async def _boom() -> list[Any]:
+        raise RuntimeError("boom")
+
+    from candleviewer.rules.evaluator import SnapshotBuilder
+    from candleviewer.rules.runner import PushedMetricSource
+
+    r = RuleEvaluationRunner(
+        _boom,
+        SnapshotBuilder(PushedMetricSource()),
+        lambda *_: None,
+        lambda _r: None,
+        errors.append,
+    )  # type: ignore[arg-type]  # factory never reached: rules() raises first
+    r.start()
+    r.submit(EvalTick("on_price_update"))
+    await _until(lambda: bool(errors))
+    await r.stop()
+    assert isinstance(errors[0], RuntimeError)

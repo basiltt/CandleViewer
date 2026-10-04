@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import logging
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -24,7 +25,12 @@ from candleviewer.rules.evaluator.engine import EvaluationResult, scope_instance
 from candleviewer.rules.evaluator.snapshot import Value
 from candleviewer.rules.ir.models import MetricRef, Rule
 
+_log = logging.getLogger(__name__)
 QUEUE_BOUND = 1024
+
+
+def _log_error(exc: Exception) -> None:
+    _log.error("rule evaluation failed", exc_info=exc)
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,7 +59,7 @@ class RuleEvaluationRunner:
         snapshots: SnapshotBuilder,
         factory: EvaluatorFactory,
         on_result: Callable[[EvaluationResult], None],
-        on_error: Callable[[Exception], None] = lambda _e: None,
+        on_error: Callable[[Exception], None] = _log_error,
     ) -> None:
         self._rules, self._snapshots, self._factory = rules, snapshots, factory
         self._on_result, self._on_error = on_result, on_error
@@ -61,6 +67,7 @@ class RuleEvaluationRunner:
         self._evaluators: dict[str, Evaluator] = {}
         self._task: asyncio.Task[None] | None = None
         self.dropped = 0
+        self.processed = 0
 
     def submit(self, tick: EvalTick) -> None:
         """Sync, non-blocking. Full queue drops the OLDEST tick (current state wins, E10)."""
@@ -87,6 +94,7 @@ class RuleEvaluationRunner:
             tick = await self._queue.get()
             try:
                 await self.process(tick)
+                self.processed += 1
             except Exception as exc:  # one bad tick must not kill the evaluator task
                 self._on_error(exc)
 

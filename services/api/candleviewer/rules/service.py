@@ -9,6 +9,7 @@ module, but it does no real work until its owning epic lands.
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
@@ -23,8 +24,15 @@ from candleviewer.rules.manager import (
     RulesManager,
     RuleStore,
 )
-from candleviewer.rules.runner import PushedMetricSource, RuleEvaluationRunner, default_clocks
+from candleviewer.rules.runner import (
+    EvalTick,
+    PushedMetricSource,
+    RuleEvaluationRunner,
+    default_clocks,
+)
 from candleviewer.rules.vocabulary import MetricRegistry, default_registry
+
+_log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from candleviewer.app import AppContext
@@ -99,14 +107,30 @@ class RulesService:
         self.metric_source = PushedMetricSource()
 
         def _factory(rule: Rule, snaps: SnapshotBuilder) -> Evaluator:
-            # E35-S04 (#1806): swap for `build_evaluator` so the scope gate is mandatory.
+            # Fail-closed (#1806): no scope gate exists until E35-S04's `build_evaluator`,
+            # so only simulate-mode rules are evaluated (see `_simulate_only`); armed rules
+            # are never evaluated by this bare Evaluator.
             return Evaluator(rule, snaps, wall, mono, on_result=self.evaluation_sink())
 
+        async def _simulate_only() -> list[Rule]:
+            return await manager.evaluable_rules(("simulate",))
+
+        def _on_error(exc: Exception) -> None:
+            _log.error("rule evaluator tick failed", exc_info=exc)
+
         self.runner = RuleEvaluationRunner(
-            manager.evaluable_rules, SnapshotBuilder(self.metric_source), _factory,
-            lambda _r: None,
+            _simulate_only, SnapshotBuilder(self.metric_source), _factory,
+            self.evaluation_sink(), _on_error,
         )  # fmt: skip
         self.runner.start()
+
+    def submit_tick(self, trigger_type: str, symbol: str | None = None) -> bool:
+        """Producer entry point (market/bar/snapshot adapters): queue an evaluation tick.
+        Returns False when the evaluator is disabled/stopped."""
+        if self.runner is None:
+            return False
+        self.runner.submit(EvalTick(trigger_type, symbol))
+        return True
 
     async def stop(self, grace_s: float) -> None:
         """Stop the module within `grace_s` seconds: stop the live B9 rule charts."""

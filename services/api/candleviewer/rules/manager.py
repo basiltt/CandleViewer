@@ -466,12 +466,12 @@ class RulesManager:
         row.simulation_fires, row.simulation_hours = fires, hours
         await self._s.put(row)
 
-    async def evaluable_rules(self) -> list[Rule]:
+    async def evaluable_rules(self, modes: tuple[str, ...] = ("simulate", "armed")) -> list[Rule]:
         """Active-version IR of every non-deleted rule in `simulate` or `armed` mode (the
         evaluator runner's work list). Unreadable (quarantined) versions are skipped."""
         out: list[Rule] = []
         for row in await self._s.all():
-            if row.deleted or row.mode not in ("simulate", "armed"):
+            if row.deleted or row.mode not in modes:
                 continue
             v = next((x for x in row.versions if x.id == row.active_version_id), None)
             if v is None or quarantine_path(v.ir):
