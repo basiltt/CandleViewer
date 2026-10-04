@@ -324,12 +324,10 @@ def test_http_403_for_crafted_foreign_or_absent_account_identical_bodies() -> No
     assert c.post("/rules/validate", json={"ir": _ir(account_ids=[str(A)])}).status_code == 200
 
 
-def test_http_live_forbidden_without_arm_live_and_account_list_filtered() -> None:
+def test_http_live_forbidden_without_arm_live() -> None:
     c = _http(FakeState())
     live = c.post("/rules/validate", json={"ir": _ir(environments=["demo", "live"])})
     assert live.status_code == 403
-    listed = c.get("/rules/scope/accounts").json()["accounts"]
-    assert sorted(listed) == sorted([str(A), str(B)]) and str(C) not in listed
 
 
 class _AllGranted(FakeState):
