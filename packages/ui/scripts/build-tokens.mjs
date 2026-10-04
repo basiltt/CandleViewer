@@ -23,6 +23,7 @@ import { fileURLToPath } from "node:url";
 
 import jsonFlatRgba from "../../../tools/style-dictionary/formats/json-flat-rgba.js";
 import jsonFlat from "../../../tools/style-dictionary/formats/json-flat.js";
+import { modeCss } from "./chart-color-modes.mjs";
 import typescriptNestedObject from "../../../tools/style-dictionary/formats/typescript-nested.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -153,7 +154,7 @@ async function buildCss(themeName, resolved) {
   const lines = names.map(
     (name) => `  --${name.replace(/\./g, "-")}: ${cssValue(resolved[name])};`,
   );
-  const content = `${header}[data-theme="${themeName}"] {\n${lines.join("\n")}\n}\n`;
+  const content = `${header}[data-theme="${themeName}"] {\n${lines.join("\n")}\n}\n\n${modeCss(themeName, resolved, cssValue)}`;
   await writeFile(path.join(BUILD_DIR, "css", `tokens.${themeName}.css`), content, "utf-8");
 }
 

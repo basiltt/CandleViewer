@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { applyAppearance } from "../../../src/shell/bootstrap/preferencesApply.js";
+import {
+  applyAppearance,
+  applyChartColorMode,
+  readStoredChartColorMode,
+} from "../../../src/shell/bootstrap/preferencesApply.js";
 
 function makeRoot(): HTMLElement {
   return document.createElement("html");
@@ -32,5 +36,46 @@ describe("applyAppearance", () => {
     expect(root.getAttribute("data-theme")).toBe("dark");
     expect(root.getAttribute("data-density")).toBe("comfortable");
     expect(root.getAttribute("data-reduced-motion")).toBe("false");
+  });
+});
+
+describe("applyChartColorMode", () => {
+  it("defaults to standard palette and convention", () => {
+    const root = makeRoot();
+    applyChartColorMode({}, root);
+    expect(root.getAttribute("data-palette")).toBe("default");
+    expect(root.getAttribute("data-convention")).toBe("standard");
+  });
+
+  it("applies cvd-safe palette and inverted convention to the root", () => {
+    const root = makeRoot();
+    applyChartColorMode({ palette: "cvd-safe", convention: "inverted" }, root);
+    expect(root.getAttribute("data-palette")).toBe("cvd-safe");
+    expect(root.getAttribute("data-convention")).toBe("inverted");
+  });
+
+  it("theme switch and palette are independent root attributes", () => {
+    const root = makeRoot();
+    applyChartColorMode({ palette: "cvd-safe" }, root);
+    applyAppearance({ theme: "light" }, root);
+    expect(root.getAttribute("data-theme")).toBe("light");
+    expect(root.getAttribute("data-palette")).toBe("cvd-safe");
+  });
+});
+
+describe("readStoredChartColorMode", () => {
+  const store = (v: string | null) => ({ getItem: () => v });
+  it("reads valid stored values", () => {
+    expect(
+      readStoredChartColorMode(store('{"palette":"cvd-safe","convention":"inverted"}')),
+    ).toEqual({
+      palette: "cvd-safe",
+      convention: "inverted",
+    });
+  });
+  it("ignores junk and invalid JSON", () => {
+    expect(readStoredChartColorMode(store("{bad"))).toEqual({});
+    expect(readStoredChartColorMode(store('{"palette":"x"}'))).toEqual({});
+    expect(readStoredChartColorMode(store(null))).toEqual({});
   });
 });

@@ -8,8 +8,7 @@ export function PlaceholderRoute(): JSX.Element {
     <main>
       <h1>CandleViewer</h1>
       <p>
-        This is a placeholder route. The real route tree, RBAC guards and env
-        badge ship in E10.
+        This is a placeholder route. The real route tree, RBAC guards and env badge ship in E10.
       </p>
       <a href="#placeholder-focus-target">Skip to focus target</a>
       <button id="placeholder-focus-target" type="button">

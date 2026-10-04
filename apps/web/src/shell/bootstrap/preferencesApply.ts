@@ -33,3 +33,40 @@ export function applyAppearance(
   root.setAttribute("data-high-contrast", String(effective.high_contrast));
   root.style.setProperty("--cv-font-scale", String(effective.font_scale));
 }
+
+export type ChartPalette = "default" | "cvd-safe";
+export type ChartConvention = "standard" | "inverted";
+
+/**
+ * Root-level chart colour contract (E47-S06): `data-palette` selects the
+ * CVD-safe `color.cvd.*` set and `data-convention` the buy/sell colour
+ * convention. Every surface keys off these two attributes, so a change
+ * reaches all views (including the canvas theme object) from one place.
+ * The choice is persisted locally; server persistence needs a separate contract-first PR (C-6.1).
+ */
+export function applyChartColorMode(
+  mode: { palette?: ChartPalette; convention?: ChartConvention },
+  root: HTMLElement = document.documentElement,
+): void {
+  root.setAttribute("data-palette", mode.palette ?? "default");
+  root.setAttribute("data-convention", mode.convention ?? "standard");
+}
+
+const MODE_KEY = "cv.chartColorMode";
+
+/** Local (pre-SCR-116) persisted choice; invalid/missing values fall back to defaults. */
+export function readStoredChartColorMode(
+  storage: Pick<Storage, "getItem"> | undefined = typeof localStorage === "undefined"
+    ? undefined
+    : localStorage,
+): { palette?: ChartPalette; convention?: ChartConvention } {
+  try {
+    const raw = JSON.parse(storage?.getItem(MODE_KEY) ?? "{}") as Record<string, unknown>;
+    return {
+      ...(raw["palette"] === "cvd-safe" ? { palette: "cvd-safe" as const } : {}),
+      ...(raw["convention"] === "inverted" ? { convention: "inverted" as const } : {}),
+    };
+  } catch {
+    return {};
+  }
+}

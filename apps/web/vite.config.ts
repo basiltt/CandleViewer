@@ -8,6 +8,11 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
+      "@candleviewer/ui": resolve(import.meta.dirname, "../../packages/ui/src/index.ts"),
+      "@candleviewer/chart-engine": resolve(
+        import.meta.dirname,
+        "../../packages/chart-engine/src/index.ts",
+      ),
       "@candleviewer/protocol": resolve(
         import.meta.dirname,
         "../../packages/protocol/src/index.ts",
