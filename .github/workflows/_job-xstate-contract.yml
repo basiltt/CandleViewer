@@ -46,7 +46,7 @@ jobs:
       - name: pytest tests/xstate_contract -W error::RuntimeWarning (blocking)
         working-directory: services/api
         run: >
-          uv run pytest tests/xstate_contract -q --no-cov -m "not sync_parity"
+          uv run pytest tests/xstate_contract tests/xstate_upstream -q --no-cov -m "not sync_parity"
           -W error::RuntimeWarning --durations=10 --junitxml=xstate-contract-junit.xml
 
       - name: Event-name coverage over every Gateway.send site (E50-T05, MUST-10)
