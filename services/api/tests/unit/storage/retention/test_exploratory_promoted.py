@@ -39,8 +39,8 @@ def test_dedup_same_key_altered_field_last_writer_wins() -> None:
     assert dedup_merge(cold, hot, key)[0]["price"] == 2
 
 
-@pytest.mark.xfail(reason="BUG-C #1697: apply() has no single-run guard", strict=True)
 async def test_apply_twice_same_report_writes_single_purge_audit() -> None:
+    """Regression for BUG-C #1697 (fixed): apply() is single-run per report."""
     env = Env([part("A", 40)])
     report = await env.reaper().dry_run()
     await env.reaper().apply(report)
@@ -74,8 +74,8 @@ async def test_router_resolves_cold_when_reaper_accelerated_window_shrinks() -> 
     assert router.resolve(StreamKind.TRADES, rng) != "hot"
 
 
-@pytest.mark.xfail(reason="BUG-A #1696 (class): no monotonic-clock guard in router", strict=True)
 def test_router_clock_step_back_does_not_lose_rows() -> None:
+    """Regression for BUG-A #1696 (fixed): router clock is monotonic-guarded."""
     from candleviewer.storage.router import TierRouter
 
     t = [NOW_US]
