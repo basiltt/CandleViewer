@@ -37,6 +37,7 @@ configure_logging(
     fmt=_settings.log_format,
 )
 
+# nosemgrep: cv-obs-no-direct-getlogger -- legacy stdlib logger; migrate to cv.obs logger (#1716)
 logger = logging.getLogger(__name__)
 
 

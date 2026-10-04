@@ -1,0 +1,21 @@
+rules:
+  - id: cv-obs-no-prometheus-import
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Direct `prometheus_client` import outside `candleviewer.observability`
+      bypasses the registry, the injected `env` label and the cardinality
+      guard (SR-125, E04-X02). Declare metrics through the metrics facade.
+    metadata:
+      rule-id: cv-obs-no-prometheus-import
+    pattern-either:
+      - pattern: import prometheus_client
+      - pattern: from prometheus_client import $X
+      - pattern: from prometheus_client.$M import $X
+    paths:
+      include:
+        - "services/api/candleviewer/**"
+        - ".semgrep/tests/**"
+      exclude:
+        - "**/observability/**"
+        - "services/**/tests/**"

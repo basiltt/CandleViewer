@@ -42,6 +42,7 @@ from typing import Any
 
 from candleviewer.audit.errors import AuditError
 
+# nosemgrep: cv-obs-no-direct-getlogger -- legacy stdlib logger; migrate to cv.obs logger (#1716)
 logger = logging.getLogger(__name__)
 
 _MAX_LEN_DIGITS = 10

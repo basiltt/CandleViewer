@@ -30,6 +30,7 @@ from candleviewer.bus.metrics import (
 )
 from candleviewer.bus.models import QueuePolicy, StreamInvalidated, Topic, TopicPattern
 
+# nosemgrep: cv-obs-no-direct-getlogger -- legacy stdlib logger; migrate to cv.obs logger (#1716)
 logger = logging.getLogger("candleviewer.bus")
 
 DEFAULT_QUEUE_SIZE = 4096

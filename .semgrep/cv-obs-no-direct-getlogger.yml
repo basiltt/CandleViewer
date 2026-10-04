@@ -1,0 +1,23 @@
+rules:
+  - id: cv-obs-no-direct-getlogger
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Direct `logging.getLogger(...)` in an application module. Obtain loggers
+      via `structlog.get_logger(__name__)` so the handler-level redaction
+      filter and correlation context apply by construction (SR-120, SR-121,
+      E04-X02). Legitimate exceptions carry an explicit
+      `# nosemgrep: cv-obs-no-direct-getlogger -- <reason>` comment.
+    metadata:
+      rule-id: cv-obs-no-direct-getlogger
+    patterns:
+      - pattern: logging.getLogger($NAME)
+    paths:
+      include:
+        - "services/api/candleviewer/**"
+        - ".semgrep/tests/**"
+      exclude:
+        - "**/observability/**"
+        - "**/migrations/**"
+        - "services/**/tests/**"
+        - "**/test_*.py"

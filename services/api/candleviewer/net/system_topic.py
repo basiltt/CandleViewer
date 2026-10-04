@@ -36,6 +36,7 @@ from candleviewer.bus.bus import Bus
 from candleviewer.bus.models import Topic
 from candleviewer.observability.context import spawn
 
+# nosemgrep: cv-obs-no-direct-getlogger -- legacy stdlib logger; migrate to cv.obs logger (#1716)
 logger = logging.getLogger(__name__)
 
 SYSTEM_TOPIC_DOMAIN = "system"
