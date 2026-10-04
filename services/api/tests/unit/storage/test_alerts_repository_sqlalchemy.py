@@ -247,3 +247,11 @@ async def test_delivery_purge_split_fetch_then_delete_by_ids() -> None:
     assert await repo.delete_ids([]) == 0 and len(rel.calls) == 1
     assert await repo.delete_ids([7]) == 1
     assert "DELETE FROM alert_deliveries" in rel.calls[1][0] and rel.commits == 1
+
+
+def test_array_literal_rejects_unknown_channel() -> None:
+    import pytest
+
+    for bad in ("a,b", "x}", "sms"):
+        with pytest.raises(ValueError):
+            array_literal(("in_app", bad))

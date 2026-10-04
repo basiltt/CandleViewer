@@ -34,6 +34,10 @@ ALERT_COLUMNS = (
 )
 
 
+#: Mirror of the `alert_channel` enum (migration 0014).
+ALERT_CHANNELS = frozenset({"in_app", "email", "webhook", "push", "desktop"})
+
+
 class AlertConflictError(Exception):
     """Optimistic-concurrency failure: `updated_at` no longer matches (HTTP 412)."""
 
@@ -86,7 +90,10 @@ def decode_cursor(cursor: str) -> tuple[datetime, str]:
 
 
 def array_literal(values: tuple[str, ...]) -> str:
-    """Postgres array literal for `alert_channel[]` (values are enum words, never user text)."""
+    """Postgres array literal for `alert_channel[]`; every value must be a known enum word."""
+    bad = [v for v in values if v not in ALERT_CHANNELS]
+    if bad:
+        raise ValueError(f"invalid alert channel: {bad[0]!r}")
     return "{" + ",".join(values) + "}"
 
 
@@ -96,56 +103,100 @@ def _alert(m: Any) -> AlertRow:
     return AlertRow(**d)
 
 
-def _sql(template: str) -> sa.TextClause:
-    # Only the static column fragment is substituted, never caller data.
-    return sa.text(template.replace("@C@", ALERT_COLUMNS))
-
-
-_INSERT = _sql(
+_INSERT = sa.text(
     "INSERT INTO alerts (id, owner_user_id, name, symbol, scope_account_id, condition_ir, "
     "condition_hash, enabled, trigger_mode, cooldown_seconds, expires_at, severity, channels, "
     "webhook_url_enc, webhook_secret_enc, message_template) VALUES (CAST(:id AS uuid), "
     "CAST(:owner AS uuid), :name, :symbol, CAST(:account AS uuid), CAST(:ir AS jsonb), :hash, "
     ":enabled, CAST(:mode AS alert_trigger_mode), :cooldown, :expires_at, "
     "CAST(:severity AS severity), CAST(:channels AS alert_channel[]), :url_enc, :secret_enc, "
-    ":template) RETURNING @C@"
+    ":template) RETURNING "
+    "id::text AS id, owner_user_id::text AS owner_user_id, name, symbol, "
+    "scope_account_id::text AS scope_account_id, condition_ir, "
+    "condition_hash::text AS condition_hash, enabled, trigger_mode::text AS trigger_mode, "
+    "cooldown_seconds, snoozed_until, expires_at, severity::text AS severity, "
+    "channels::text[] AS channels, (webhook_url_enc IS NOT NULL) AS has_webhook, "
+    "message_template, last_fired_at, fire_count, created_at, updated_at"
 )
-_GET = _sql("SELECT @C@ FROM alerts WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL")
-_LIST = _sql(
-    "SELECT @C@ FROM alerts WHERE owner_user_id = CAST(:owner AS uuid) "
+_GET = sa.text(
+    "SELECT "
+    "id::text AS id, owner_user_id::text AS owner_user_id, name, symbol, "
+    "scope_account_id::text AS scope_account_id, condition_ir, "
+    "condition_hash::text AS condition_hash, enabled, trigger_mode::text AS trigger_mode, "
+    "cooldown_seconds, snoozed_until, expires_at, severity::text AS severity, "
+    "channels::text[] AS channels, (webhook_url_enc IS NOT NULL) AS has_webhook, "
+    "message_template, last_fired_at, fire_count, created_at, updated_at"
+    " FROM alerts WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL"
+)
+_LIST = sa.text(
+    "SELECT "
+    "id::text AS id, owner_user_id::text AS owner_user_id, name, symbol, "
+    "scope_account_id::text AS scope_account_id, condition_ir, "
+    "condition_hash::text AS condition_hash, enabled, trigger_mode::text AS trigger_mode, "
+    "cooldown_seconds, snoozed_until, expires_at, severity::text AS severity, "
+    "channels::text[] AS channels, (webhook_url_enc IS NOT NULL) AS has_webhook, "
+    "message_template, last_fired_at, fire_count, created_at, updated_at"
+    " FROM alerts WHERE owner_user_id = CAST(:owner AS uuid) "
     "AND deleted_at IS NULL AND (CAST(:after_ts AS timestamptz) IS NULL OR "
     "(created_at, id::text) < (CAST(:after_ts AS timestamptz), :after_id)) "
     "ORDER BY created_at DESC, id::text DESC LIMIT :limit"
 )
-_UPDATE = _sql(
+_UPDATE = sa.text(
     "UPDATE alerts SET name = :name, condition_ir = CAST(:ir AS jsonb), condition_hash = :hash, "
     "trigger_mode = CAST(:mode AS alert_trigger_mode), cooldown_seconds = :cooldown, "
     "expires_at = :expires_at, severity = CAST(:severity AS severity), "
     "channels = CAST(:channels AS alert_channel[]), message_template = :template, "
     "updated_at = clock_timestamp() WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL "
-    "AND updated_at = :if_match RETURNING @C@"
+    "AND updated_at = :if_match RETURNING "
+    "id::text AS id, owner_user_id::text AS owner_user_id, name, symbol, "
+    "scope_account_id::text AS scope_account_id, condition_ir, "
+    "condition_hash::text AS condition_hash, enabled, trigger_mode::text AS trigger_mode, "
+    "cooldown_seconds, snoozed_until, expires_at, severity::text AS severity, "
+    "channels::text[] AS channels, (webhook_url_enc IS NOT NULL) AS has_webhook, "
+    "message_template, last_fired_at, fire_count, created_at, updated_at"
 )
-_SOFT_DELETE = _sql(
+_SOFT_DELETE = sa.text(
     "UPDATE alerts SET deleted_at = now(), enabled = false, updated_at = clock_timestamp() "
     "WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL"
 )
-_SET_ENABLED = _sql(
+_SET_ENABLED = sa.text(
     "UPDATE alerts SET enabled = :enabled, updated_at = clock_timestamp() "
-    "WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL RETURNING @C@"
+    "WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL RETURNING "
+    "id::text AS id, owner_user_id::text AS owner_user_id, name, symbol, "
+    "scope_account_id::text AS scope_account_id, condition_ir, "
+    "condition_hash::text AS condition_hash, enabled, trigger_mode::text AS trigger_mode, "
+    "cooldown_seconds, snoozed_until, expires_at, severity::text AS severity, "
+    "channels::text[] AS channels, (webhook_url_enc IS NOT NULL) AS has_webhook, "
+    "message_template, last_fired_at, fire_count, created_at, updated_at"
 )
-_SET_SNOOZE = _sql(
+_SET_SNOOZE = sa.text(
     "UPDATE alerts SET snoozed_until = :until, updated_at = clock_timestamp() "
-    "WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL RETURNING @C@"
+    "WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL RETURNING "
+    "id::text AS id, owner_user_id::text AS owner_user_id, name, symbol, "
+    "scope_account_id::text AS scope_account_id, condition_ir, "
+    "condition_hash::text AS condition_hash, enabled, trigger_mode::text AS trigger_mode, "
+    "cooldown_seconds, snoozed_until, expires_at, severity::text AS severity, "
+    "channels::text[] AS channels, (webhook_url_enc IS NOT NULL) AS has_webhook, "
+    "message_template, last_fired_at, fire_count, created_at, updated_at"
 )
-_BUMP = _sql(
+_BUMP = sa.text(
     "UPDATE alerts SET fire_count = fire_count + 1, last_fired_at = :fired_at "
     "WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL"
 )
-_ARMED = _sql("SELECT @C@ FROM alerts WHERE symbol = :symbol AND enabled AND deleted_at IS NULL")
-_COUNT_ENABLED = _sql(
+_ARMED = sa.text(
+    "SELECT "
+    "id::text AS id, owner_user_id::text AS owner_user_id, name, symbol, "
+    "scope_account_id::text AS scope_account_id, condition_ir, "
+    "condition_hash::text AS condition_hash, enabled, trigger_mode::text AS trigger_mode, "
+    "cooldown_seconds, snoozed_until, expires_at, severity::text AS severity, "
+    "channels::text[] AS channels, (webhook_url_enc IS NOT NULL) AS has_webhook, "
+    "message_template, last_fired_at, fire_count, created_at, updated_at"
+    " FROM alerts WHERE symbol = :symbol AND enabled AND deleted_at IS NULL"
+)
+_COUNT_ENABLED = sa.text(
     "SELECT enabled, count(*) AS n FROM alerts WHERE deleted_at IS NULL GROUP BY enabled"
 )
-_COUNT_PENDING = _sql("SELECT count(*) FROM alert_deliveries WHERE status = 'queued'")
+_COUNT_PENDING = sa.text("SELECT count(*) FROM alert_deliveries WHERE status = 'queued'")
 
 
 class SqlAlchemyAlertRepository:
