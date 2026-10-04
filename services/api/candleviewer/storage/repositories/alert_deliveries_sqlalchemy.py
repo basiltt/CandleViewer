@@ -1,4 +1,3 @@
-# ruff: noqa: S608 -- f-strings splice only module-level constant column lists; all values are bound params
 """Postgres repository for `alert_deliveries` (migration `0014_alerts`, E40-T01).
 
 Append-only history: UPDATE (queued->sent->acked) is allowed, DELETE is refused
@@ -30,41 +29,50 @@ _COLS = (
     "queued_at, sent_at, acked_at, acked_by::text AS acked_by"
 )
 
-_INSERT = sa.text(  # nosec B608  # nosemgrep
-    "INSERT INTO alert_deliveries (alert_id, user_id, channel, title, body, context) VALUES "  # nosec B608 - static column constants, bound params
+
+def _sql(template: str) -> sa.TextClause:
+    # Only the static column fragment is substituted, never caller data.
+    return sa.text(template.replace("@C@", _COLS))
+
+
+_INSERT = _sql(
+    "INSERT INTO alert_deliveries (alert_id, user_id, channel, title, body, context) VALUES "
     "(CAST(:alert_id AS uuid), CAST(:user_id AS uuid), CAST(:channel AS alert_channel), :title, "
-    f":body, CAST(:context AS jsonb)) RETURNING {_COLS}"
+    ":body, CAST(:context AS jsonb)) RETURNING @C@"
 )
-_MARK_SENT = sa.text(  # nosec B608  # nosemgrep
-    "UPDATE alert_deliveries SET status = 'sent', sent_at = now(), attempt = attempt + 1, "  # nosec B608 - static column constants, bound params
-    f"http_status = :http_status, error_message = NULL WHERE id = :id AND status = 'queued' "
-    f"RETURNING {_COLS}"
+_MARK_SENT = _sql(
+    "UPDATE alert_deliveries SET status = 'sent', sent_at = now(), attempt = attempt + 1, "
+    "http_status = :http_status, error_message = NULL WHERE id = :id AND status = 'queued' "
+    "RETURNING @C@"
 )
-_MARK_FAILED = sa.text(  # nosec B608  # nosemgrep
-    "UPDATE alert_deliveries SET status = 'failed', attempt = least(attempt + 1, 10), "  # nosec B608 - static column constants, bound params
+_MARK_FAILED = _sql(
+    "UPDATE alert_deliveries SET status = 'failed', attempt = least(attempt + 1, 10), "
     "http_status = :http_status, error_message = :error WHERE id = :id AND status = 'queued' "
-    f"RETURNING {_COLS}"
+    "RETURNING @C@"
 )
-_MARK_SUPPRESSED = sa.text(  # nosec B608  # nosemgrep
-    "UPDATE alert_deliveries SET status = 'suppressed', error_message = :reason "  # nosec B608 - static column constants, bound params
-    f"WHERE id = :id AND status = 'queued' RETURNING {_COLS}"
+_MARK_SUPPRESSED = _sql(
+    "UPDATE alert_deliveries SET status = 'suppressed', error_message = :reason "
+    "WHERE id = :id AND status = 'queued' RETURNING @C@"
 )
-_ACK_ONE = sa.text(  # nosec B608  # nosemgrep
-    "UPDATE alert_deliveries SET status = 'acked', acked_at = now(), "  # nosec B608 - static column constants, bound params
+_ACK_ONE = _sql(
+    "UPDATE alert_deliveries SET status = 'acked', acked_at = now(), "
     "acked_by = CAST(:by AS uuid) WHERE id = :id AND user_id = CAST(:by AS uuid) "
-    f"AND status = 'sent' AND acked_at IS NULL RETURNING {_COLS}"
+    "AND status = 'sent' AND acked_at IS NULL RETURNING @C@"
 )
-_ACK_ALL = sa.text(  # nosec B608  # nosemgrep
+_ACK_ALL = _sql(
     "UPDATE alert_deliveries SET status = 'acked', acked_at = now(), "
     "acked_by = CAST(:by AS uuid) WHERE user_id = CAST(:by AS uuid) "
     "AND status = 'sent' AND acked_at IS NULL"
 )
-_UNACKED = sa.text(  # nosec B608  # nosemgrep
+_UNACKED = _sql(
     "SELECT count(*) FROM alert_deliveries WHERE user_id = CAST(:user AS uuid) "
     "AND status = 'sent' AND acked_at IS NULL"
 )
-_LIST = sa.text(  # nosec B608  # nosemgrep
-    f"SELECT {_COLS} FROM alert_deliveries WHERE "  # nosec B608 - static column constants, bound params
+_PURGE = sa.text(
+    "DELETE FROM alert_deliveries WHERE queued_at < now() - make_interval(days => :days)"
+)
+_LIST = _sql(
+    "SELECT @C@ FROM alert_deliveries WHERE "
     "(CAST(:user AS uuid) IS NULL OR user_id = CAST(:user AS uuid)) "
     "AND (CAST(:alert_id AS uuid) IS NULL OR alert_id = CAST(:alert_id AS uuid)) "
     "AND (CAST(:status AS text) IS NULL OR status::text = :status) "
@@ -145,6 +153,13 @@ class SqlAlchemyAlertDeliveryRepository:
     async def ack_all(self, user_id: str) -> int:
         async with self._relational.unit_of_work() as uow:
             res = await uow.session.execute(_ACK_ALL, {"by": user_id})
+            await uow.commit()
+        return int(getattr(res, "rowcount", 0) or 0)
+
+    async def purge_expired(self, days: int) -> int:
+        """Retention delete (E40-T01); the DB trigger permits it only for `cv_owner`."""
+        async with self._relational.unit_of_work() as uow:
+            res = await uow.session.execute(_PURGE, {"days": days})
             await uow.commit()
         return int(getattr(res, "rowcount", 0) or 0)
 

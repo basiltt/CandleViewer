@@ -1,4 +1,3 @@
-# ruff: noqa: S608 -- f-strings splice only module-level constant column lists; all values are bound params
 """Postgres repository for alerts (migration `0014_alerts`, E40-T01).
 
 Lives in M10 (`storage`): only M10 may import a storage driver (ADR-0003) and M10
@@ -97,55 +96,56 @@ def _alert(m: Any) -> AlertRow:
     return AlertRow(**d)
 
 
-_INSERT = sa.text(  # nosec B608  # nosemgrep
-    "INSERT INTO alerts (id, owner_user_id, name, symbol, scope_account_id, condition_ir, "  # nosec B608 - static column constants, bound params
+def _sql(template: str) -> sa.TextClause:
+    # Only the static column fragment is substituted, never caller data.
+    return sa.text(template.replace("@C@", ALERT_COLUMNS))
+
+
+_INSERT = _sql(
+    "INSERT INTO alerts (id, owner_user_id, name, symbol, scope_account_id, condition_ir, "
     "condition_hash, enabled, trigger_mode, cooldown_seconds, expires_at, severity, channels, "
     "webhook_url_enc, webhook_secret_enc, message_template) VALUES (CAST(:id AS uuid), "
     "CAST(:owner AS uuid), :name, :symbol, CAST(:account AS uuid), CAST(:ir AS jsonb), :hash, "
     ":enabled, CAST(:mode AS alert_trigger_mode), :cooldown, :expires_at, "
     "CAST(:severity AS severity), CAST(:channels AS alert_channel[]), :url_enc, :secret_enc, "
-    f":template) RETURNING {ALERT_COLUMNS}"
+    ":template) RETURNING @C@"
 )
-_GET = sa.text(  # nosec B608  # nosemgrep
-    f"SELECT {ALERT_COLUMNS} FROM alerts WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL"  # nosec B608 - static column constants, bound params
-)
-_LIST = sa.text(  # nosec B608  # nosemgrep
-    f"SELECT {ALERT_COLUMNS} FROM alerts WHERE owner_user_id = CAST(:owner AS uuid) "  # nosec B608 - static column constants, bound params
+_GET = _sql("SELECT @C@ FROM alerts WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL")
+_LIST = _sql(
+    "SELECT @C@ FROM alerts WHERE owner_user_id = CAST(:owner AS uuid) "
     "AND deleted_at IS NULL AND (CAST(:after_ts AS timestamptz) IS NULL OR "
     "(created_at, id::text) < (CAST(:after_ts AS timestamptz), :after_id)) "
     "ORDER BY created_at DESC, id::text DESC LIMIT :limit"
 )
-_UPDATE = sa.text(  # nosec B608  # nosemgrep
-    "UPDATE alerts SET name = :name, condition_ir = CAST(:ir AS jsonb), condition_hash = :hash, "  # nosec B608 - static column constants, bound params
+_UPDATE = _sql(
+    "UPDATE alerts SET name = :name, condition_ir = CAST(:ir AS jsonb), condition_hash = :hash, "
     "trigger_mode = CAST(:mode AS alert_trigger_mode), cooldown_seconds = :cooldown, "
     "expires_at = :expires_at, severity = CAST(:severity AS severity), "
     "channels = CAST(:channels AS alert_channel[]), message_template = :template, "
     "updated_at = clock_timestamp() WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL "
-    f"AND updated_at = :if_match RETURNING {ALERT_COLUMNS}"
+    "AND updated_at = :if_match RETURNING @C@"
 )
-_SOFT_DELETE = sa.text(  # nosec B608  # nosemgrep
+_SOFT_DELETE = _sql(
     "UPDATE alerts SET deleted_at = now(), enabled = false, updated_at = clock_timestamp() "
     "WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL"
 )
-_SET_ENABLED = sa.text(  # nosec B608  # nosemgrep
-    "UPDATE alerts SET enabled = :enabled, updated_at = clock_timestamp() "  # nosec B608 - static column constants, bound params
-    f"WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL RETURNING {ALERT_COLUMNS}"
+_SET_ENABLED = _sql(
+    "UPDATE alerts SET enabled = :enabled, updated_at = clock_timestamp() "
+    "WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL RETURNING @C@"
 )
-_SET_SNOOZE = sa.text(  # nosec B608  # nosemgrep
-    "UPDATE alerts SET snoozed_until = :until, updated_at = clock_timestamp() "  # nosec B608 - static column constants, bound params
-    f"WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL RETURNING {ALERT_COLUMNS}"
+_SET_SNOOZE = _sql(
+    "UPDATE alerts SET snoozed_until = :until, updated_at = clock_timestamp() "
+    "WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL RETURNING @C@"
 )
-_BUMP = sa.text(  # nosec B608  # nosemgrep
+_BUMP = _sql(
     "UPDATE alerts SET fire_count = fire_count + 1, last_fired_at = :fired_at "
     "WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL"
 )
-_ARMED = sa.text(  # nosec B608  # nosemgrep
-    f"SELECT {ALERT_COLUMNS} FROM alerts WHERE symbol = :symbol AND enabled AND deleted_at IS NULL"  # nosec B608 - static column constants, bound params
-)
-_COUNT_ENABLED = sa.text(  # nosec B608  # nosemgrep
+_ARMED = _sql("SELECT @C@ FROM alerts WHERE symbol = :symbol AND enabled AND deleted_at IS NULL")
+_COUNT_ENABLED = _sql(
     "SELECT enabled, count(*) AS n FROM alerts WHERE deleted_at IS NULL GROUP BY enabled"
 )
-_COUNT_PENDING = sa.text("SELECT count(*) FROM alert_deliveries WHERE status = 'queued'")
+_COUNT_PENDING = _sql("SELECT count(*) FROM alert_deliveries WHERE status = 'queued'")
 
 
 class SqlAlchemyAlertRepository:

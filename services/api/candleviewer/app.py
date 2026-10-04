@@ -135,6 +135,10 @@ from candleviewer.statechart.gateway import GatewayOverloadedError
 from candleviewer.storage.cold.layout import DatasetRegistry
 from candleviewer.storage.cold.observability import LoggingSystemEventSink
 from candleviewer.storage.cold.scrub import ScrubTask
+from candleviewer.storage.repositories.alert_deliveries_sqlalchemy import (
+    SqlAlchemyAlertDeliveryRepository,
+)
+from candleviewer.storage.repositories.alerts_sqlalchemy import SqlAlchemyAlertRepository
 from candleviewer.storage.repositories.audit_sqlalchemy import SqlAlchemyAuditRepository
 from candleviewer.storage.repositories.identity_sqlalchemy import SqlAlchemyIdentityProvider
 from candleviewer.storage.repositories.instruments_sqlalchemy import (
@@ -152,6 +156,7 @@ from candleviewer.storage.repositories.sessions_sqlalchemy import (
     SqlAlchemySessionRepository,
 )
 from candleviewer.storage.repositories.users_sqlalchemy import SqlAlchemyUserRepository
+from candleviewer.storage.retention.alert_tasks import AlertDeliveriesPurgeTask, AlertGaugeTask
 from candleviewer.storage.retention.rule_prune import RulePruneTask
 from candleviewer.storage.retention.schedule import RetentionSchedule
 from candleviewer.storage.service import StorageService
@@ -770,6 +775,23 @@ def create_app(
     # Process collectors read /proc; the lifespan adds them (no I/O here).
     metrics_facade = Metrics(resolved.environment.value, registry=ctx.metrics)
     app.state.metrics_facade = metrics_facade
+    # E40-T01: alert_deliveries retention purge + alert gauges (lifespan-started).
+    _alert_pg = SqlAlchemyRelationalRepository(resolved.pg_dsn.get_secret_value(), "alerts")
+    _retention = RetentionSchedule.from_settings(resolved)
+    app.state.alert_purge_task = AlertDeliveriesPurgeTask(
+        SqlAlchemyAlertDeliveryRepository(_alert_pg), _retention
+    )
+    app.state.alert_gauge_task = AlertGaugeTask(
+        SqlAlchemyAlertRepository(_alert_pg),
+        metrics_facade.gauge(
+            "cv_alerts_total",
+            "Non-deleted alerts by enabled flag.",
+            ("enabled",),
+            max_series=2,
+        ),
+        metrics_facade.gauge("cv_alert_deliveries_pending", "Queued alert deliveries."),
+        enabled=_retention.enabled,
+    )
     # E09-S06: server-evaluated first-run checklist. Steps whose owning epic
     # has not shipped (E27 api_key/demo, E39 profile limits) have no probe and
     # render `pending` ("coming soon") via the flag table, never a client stub.

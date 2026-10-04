@@ -67,6 +67,16 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     rule_prune = getattr(app.state, "rule_prune_task", None)
     if rule_prune is not None:
         rule_prune.start()
+    alert_tasks = [
+        t
+        for t in (
+            getattr(app.state, "alert_purge_task", None),
+            getattr(app.state, "alert_gauge_task", None),
+        )
+        if t is not None
+    ]
+    for t in alert_tasks:
+        t.start()
     overrides = getattr(app.state, "log_level_overrides", None)
     if overrides is not None:
         overrides.start()
@@ -101,6 +111,8 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
             await overrides.stop()
         if rule_prune is not None:
             await rule_prune.stop()
+        for t in alert_tasks:
+            await t.stop()
         if scrub_task is not None:
             await scrub_task.stop()
         await ctx.mesh_self_check.stop()
