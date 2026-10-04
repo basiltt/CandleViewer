@@ -86,6 +86,9 @@ select = ["E", "F", "I", "UP", "B", "S", "ASYNC", "RUF"]
 "tests/qa/test_e09_dryrun_group_a.py" = ["S105", "S106"]
 "scripts/tests/**" = ["S101"]
 "benchmarks/questdb_hot_tier/tests/**" = ["S101"]
+# E40-K01 harness: seeded non-crypto RNG is the point (reproducible runs).
+"benchmarks/alerts/**" = ["S311"]
+"benchmarks/alerts/tests/**" = ["S101"]
 # Migration bodies embed raw DDL/seed SQL as triple-quoted strings; wrapping
 # generated INSERT/CREATE statements at 100 cols hurts readability without
 # improving anything (E-4.16: seed rows come from a generator, not hand-tuning).
