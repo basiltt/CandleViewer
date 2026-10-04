@@ -1,7 +1,7 @@
 """Seed the `rules:arm_live` dangerous permission and grant it to `owner` (E35-S01)
 
-Revision ID: 0014_rules_arm_live_permission
-Revises: 0013_rules
+Revision ID: 0015_rules_arm_live_permission
+Revises: 0014_alerts
 
 `PUT /rules/{id}/mode` (setRuleMode) now declares `rules:arm_live` in `x-rbac`
 (docs/plan/22-api-openapi.yaml); arming a rule against the live environment needs
@@ -17,8 +17,8 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = "0014_rules_arm_live_permission"
-down_revision: str | None = "0013_rules"
+revision: str = "0015_rules_arm_live_permission"
+down_revision: str | None = "0014_alerts"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

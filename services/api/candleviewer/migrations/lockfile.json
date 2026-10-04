@@ -72,10 +72,10 @@
       "sha256": "440a984f153a8a72a489a52cd810a57d8072045feccce0d619e67d7d849f8772",
       "down_revision": "0013_rules"
     },
-    "0014_rules_arm_live_permission": {
-      "path": "services/api/candleviewer/migrations/versions/0014_rules_arm_live_permission.py",
-      "sha256": "f2e78ce91132527d04c3f2e85debe1720ab1f5a58d523ef0e478ecd2ca4cd3e2",
-      "down_revision": "0013_rules"
+    "0015_rules_arm_live_permission": {
+      "path": "services/api/candleviewer/migrations/versions/0015_rules_arm_live_permission.py",
+      "sha256": "63de2572a9f1fb2077c975259ff1e27a780f685daaba6eabbaeccf50f7ec88b9",
+      "down_revision": "0014_alerts"
     }
   }
 }
