@@ -24,7 +24,8 @@ test("authenticated session reaches /terminal without redirect to /login", async
   await page.route("**/api/v1/me/preferences", (r) => r.fulfill(json({})));
   await page.route("**/api/v1/me/keymap", (r) => r.fulfill(json({ bindings: [] })));
   await page.goto("/terminal");
-  await expect(page).toHaveURL(/\/terminal$/);
+  // R-100 `/terminal` redirects to the last-used layout (`12-sitemap.md` R-100).
+  await expect(page).toHaveURL(/\/terminal\/last$/);
   expect(calls).toEqual(["me"]);
 });
 
