@@ -1,4 +1,4 @@
-# ADR-0029 — Alert evaluation placement, subscription sharing and storm thresholds
+# ADR-0032 — Alert evaluation placement, subscription sharing and storm thresholds
 
 - Status: **proposed, provisional** (owner approval pending; criterion 1 INCONCLUSIVE; AC exception required, see Limitations)
 - Date: 2026-10-04
