@@ -45,10 +45,13 @@ body:
   - type: dropdown
     id: priority
     attributes:
-      label: Priority
+      label: Severity
       description: >-
-        `priority/p0-critical` for anything touching live money/safety invariants, e.g. missing
-        native SL on fan-out.
+        Definitions (03-testing-strategy.md §11.3, authoritative). P0: data loss, wrong order
+        execution/sizing, missing native SL, security breach, crash blocking core trading (triage 2h).
+        P1: major feature broken with workaround, or chaos scenario mishandled (1 business day).
+        P2: partially broken, non-blocking, cosmetic-but-confusing, or a11y AA violation (3 business days).
+        P3: cosmetic or wording (1 sprint). No bug closes without a regression test.
       options:
         - "priority/p0-critical — drop everything"
         - "priority/p1-high"
@@ -64,12 +67,26 @@ body:
         Or write "needs investigation" — if that investigation is itself nontrivial, file a
         Spike instead.
     validations:
-      required: false
+      required: true
+  - type: dropdown
+    id: test-layer
+    attributes:
+      label: Test layer that should have caught it
+      options: [unit, property, integration, contract, e2e, a11y, chaos, performance, none - needs new layer]
+    validations:
+      required: true
   - type: input
     id: regression-origin
     attributes:
-      label: Regression origin
-      description: Linked Story/Epic key, if this is a regression of prior work.
+      label: Originating Story/Epic
+      description: Key of the originating Story/Epic (e.g. E10-S03).
+    validations:
+      required: true
+  - type: input
+    id: exemption
+    attributes:
+      label: Cosmetic exemption reason
+      description: Only for P3 cosmetic/documentation bugs labelled p3-cosmetic-exempt; otherwise leave blank.
     validations:
       required: false
   - type: dropdown
@@ -77,12 +94,21 @@ body:
     attributes:
       label: Environment
       options:
-        - Web (Desktop Browser)
-        - Web (Mobile Browser)
-        - Desktop App
-        - Other
+        - dev - Demo
+        - dev - Live
+        - staging - Demo
+        - staging - Live
+        - prod - Demo
+        - prod - Live
     validations:
-      required: false
+      required: true
+  - type: input
+    id: context
+    attributes:
+      label: Symbol and account context
+      description: Symbol and (redacted) account/role context, or "n/a".
+    validations:
+      required: true
   - type: textarea
     id: logs
     attributes:
