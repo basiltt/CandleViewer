@@ -1090,7 +1090,9 @@ alerts = Table(
     Column("expires_at", TIMESTAMP(timezone=True)),
     Column("severity", severity, nullable=False, server_default=text("'info'")),
     Column("channels", ARRAY(alert_channel), nullable=False, server_default=text("'{in_app}'")),
-    Column("webhook_url_enc", BYTEA, comment="SECRET: envelope-encrypted"),
+    Column(
+        "webhook_url_enc", BYTEA, comment="SECRET: envelope-encrypted; never selected into API DTOs"
+    ),
     Column("webhook_secret_enc", BYTEA, comment="SECRET: envelope-encrypted HMAC key"),
     Column("message_template", Text, nullable=False, server_default=text("''")),
     Column("last_fired_at", TIMESTAMP(timezone=True)),
