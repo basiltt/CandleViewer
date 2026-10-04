@@ -71,9 +71,11 @@ def _renumber(doc: Any) -> Any:
                 k: (
                     v
                     if k in _OPAQUE_KEYS
-                    else mapping.get(v, v)
-                    if k in ("node_id", "ref") and isinstance(v, str)
-                    else rewrite(v)
+                    else (
+                        mapping.get(v, v)
+                        if k in ("node_id", "ref") and isinstance(v, str)
+                        else rewrite(v)
+                    )
                 )
                 for k, v in n.items()
             }
