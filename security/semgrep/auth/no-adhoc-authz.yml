@@ -19,6 +19,7 @@ rules:
       exclude:
         - "**/tests/**"
         - "**/auth/authorize.py"
+        - "**/auth/scopes.py"  # Principal.is_owner: role-set membership inside the snapshot type itself
         # Allowlist (Security-owned, widening needs Security review): the
         # Principal.has_permission wildcard/set membership implementations.
         - "**/api/instruments.py"

@@ -25,3 +25,9 @@ rules:
     paths:
       exclude:
         - "**/tests/**"
+        # Allowlist (Security-owned, widening needs Security review). Audit for these is
+        # emitted below the handler, not inline; each entry states where.
+        - "**/api/rules.py"        # validate is non-mutating; compile audits in rules/service.py
+        - "**/api/rules_crud.py"   # every mutation goes through rules/service.py (audited)
+        - "**/api/step_up.py"      # step-up grant/fail audited by the B16 plugin (ACTION_REQUEST)
+        - "**/api/telemetry.py"    # frontend telemetry sink, not an audited account action
