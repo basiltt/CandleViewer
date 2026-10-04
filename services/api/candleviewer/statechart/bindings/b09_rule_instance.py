@@ -29,13 +29,34 @@ async def _idempotent_service(*_args: object, **_kwargs: object) -> None:
     return None
 
 
+def _ctx(args: tuple[object, ...]) -> Any:
+    for a in args:
+        c = getattr(a, "context", None)
+        if isinstance(c, dict):
+            return c
+    return None
+
+
+async def _reset_simulation_counters(*args: object, **_kwargs: object) -> None:
+    ctx = _ctx(args)
+    if ctx is not None:
+        ctx["simulation_fires"] = 0
+        ctx["simulation_started_us"] = None
+
+
+async def _bump_simulation_fires(*args: object, **_kwargs: object) -> None:
+    ctx = _ctx(args)
+    if ctx is not None:
+        ctx["simulation_fires"] = int(ctx.get("simulation_fires", 0)) + 1
+
+
 ACTIONS: dict[str, Callable[..., Awaitable[None]]] = {
     "audit_guard_denied": _noop_action,
     "audit_kill": _noop_action,
     "arm_confirmation_ttl": _noop_action,
     "assert_safety_limits": _noop_action,
     "bump_consecutive_errors": _noop_action,
-    "bump_simulation_fires": _noop_action,
+    "bump_simulation_fires": _bump_simulation_fires,
     "drain_deferred": _noop_action,
     "emit_armed_audit": _noop_action,
     "emit_kill_switch_audit": _noop_action,
@@ -54,7 +75,7 @@ ACTIONS: dict[str, Callable[..., Awaitable[None]]] = {
     "record_skip_unconfirmed": _noop_action,
     "reject_promotion_with_reason": _noop_action,
     "reset_consecutive_errors": _noop_action,
-    "reset_simulation_counters": _noop_action,
+    "reset_simulation_counters": _reset_simulation_counters,
     "stamp_cooldown_deadline": _noop_action,
     "stamp_simulation_start": _noop_action,
     "subscribe_triggers": _noop_action,
