@@ -190,6 +190,8 @@ class RulesService:
         if self._broadcast is not None:
             self._manager.set_hooks(broadcast=self._broadcast)
         self._started = True
+        # E35-X02 (i): out-of-band tampering with a protected sys.* rule is audited at boot.
+        await self._manager.verify_system_rules()
         if ctx is not None and ctx.settings.rules_evaluator_enabled:
             self._start_evaluator()
 
