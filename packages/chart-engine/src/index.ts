@@ -13,3 +13,4 @@ export const CHART_ENGINE_VERSION = "0.1.0";
 
 export type { EngineHandle } from "./core/handle.js";
 export { createEngine } from "./core/handle.js";
+export type { EngineOptions, EngineStats, EngineTheme } from "./core/handle.js";

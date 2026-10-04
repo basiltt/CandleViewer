@@ -23,7 +23,13 @@ const STATE_TEXT: Record<string, string> = {
   error: "Error",
   not_applicable: "Not yet available",
 };
-const ICON: Record<string, string> = { ok: "✓", pending: "○", blocked: "⏸", error: "!", not_applicable: "–" };
+const ICON: Record<string, string> = {
+  ok: "✓",
+  pending: "○",
+  blocked: "⏸",
+  error: "!",
+  not_applicable: "–",
+};
 
 function Countdown({ unblockAt }: { readonly unblockAt: string }): JSX.Element {
   const [now, setNow] = useState(() => new Date());

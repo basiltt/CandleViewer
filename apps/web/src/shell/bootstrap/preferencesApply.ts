@@ -12,7 +12,7 @@ export type Appearance = NonNullable<
   generated.rest.components["schemas"]["Settings"]["appearance"]
 >;
 
-const DEFAULT_APPEARANCE: Required<Appearance> = {
+const DEFAULT_APPEARANCE: Required<Omit<Appearance, "chart_palette" | "chart_convention">> = {
   theme: "dark",
   density: "comfortable",
   font_scale: 1,

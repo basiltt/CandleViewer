@@ -19,6 +19,7 @@ import { AdminInviteScreen } from "../features/invites/AdminInviteScreen";
 import { LoginScreen } from "../features/auth/LoginScreen";
 import { ChangePasswordScreen } from "../features/auth/ChangePasswordScreen";
 import { InviteAcceptScreen } from "../features/invites/InviteAcceptScreen";
+import { AppearanceScreen } from "../features/appearance/AppearanceScreen";
 import { SetupChecklistCard } from "../features/onboarding/SetupChecklistCard";
 import { HotkeyEditor } from "../keymap/HotkeyEditor";
 import { getMeClaims } from "../lib/auth/meCache";
@@ -35,6 +36,7 @@ function elementFor(routeId: string, owner: string | null): RouteObject["element
         <HotkeyEditor />
       </main>
     );
+  if (routeId === "R-203") return <AppearanceScreen />;
   if (routeId === "R-303") return <AdminInviteScreen />;
   if (routeId === "R-101") {
     // First sign-in lands on /terminal/last -> here; the card is server-gated (401 => renders nothing).
