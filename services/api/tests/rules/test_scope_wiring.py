@@ -200,3 +200,74 @@ async def test_action_gate_denies_foreign_account_audits_and_follows_scope_chang
     scope_b = RuleScope.model_validate({"level": "account", "account_ids": [str(B)]})
     assert await emitter.emit(req(scope_b, inst)) is True  # new scope, no restart
     assert await emitter.emit(req(scope_b, ok)) is False
+
+
+async def _e2e(target: uuid.UUID) -> tuple[list[str], list[Any]]:
+    """create_app (real evaluator + scope gate) -> simulate/armed rule scoped to A fires."""
+    import asyncio
+    import json
+    import time
+    from decimal import Decimal
+    from pathlib import Path
+
+    from candleviewer.app import create_app
+    from candleviewer.rules.ir.models import MetricRef
+    from candleviewer.rules.manager import Actor, InMemoryRuleStore
+    from candleviewer.settings import Settings
+
+    audits: list[str] = []
+    seen: list[Any] = []
+
+    async def audit(event: str, data: dict[str, str]) -> None:
+        audits.append(f"{event}:{data.get('reason')}")
+
+    async def sink(req: Any) -> None:
+        seen.append(req)
+
+    ctx = create_app(Settings(rules_evaluator_enabled=True)).state.app_context
+    ctx.rules.bind(store=InMemoryRuleStore(), action_sink=sink)
+    ctx.rules.wire_scope(Source(), "demo", audit)
+    await ctx.rules.refresh_scope(OWNER)
+    await ctx.rules.start(ctx)
+    try:
+        fix = Path(__file__).parents[1] / "fixtures/rule_ir/form_simple_0.json"
+        raw = json.loads(fix.read_text(encoding="utf-8"))
+        raw["conditions"]["right"]["const"] = 100
+        raw["actions"][0]["params"] = {"channel": "ui", "severity": "info", "template": "x"}
+        raw["scope"] = {"level": "account", "account_ids": [str(A)], "symbols": ["BTCUSDT"]}
+        actor = Actor(str(OWNER), "s1", frozenset({"rules:arm_live"}), is_owner=True,
+                      step_up_fresh=True)  # fmt: skip
+        mgr = ctx.rules.manager()
+        assert mgr is not None and ctx.rules.runner is not None
+        rid = (await mgr.create(raw, actor))["id"]
+        await mgr.set_mode(rid, "simulate", actor, "k")
+        src = ctx.rules.metric_source
+        assert src is not None
+        src.push(
+            MetricRef.model_validate({"metric": "price", "params": {"n": 14}}),
+            Decimal("150"), time.time_ns() // 1_000_000,
+        )  # fmt: skip
+        # Fake snapshot: the evaluator's scope instance is forced onto `target`.
+        runner = ctx.rules.runner
+        from candleviewer.rules.evaluator.engine import scope_instance
+
+        ev_rules = await mgr.evaluable_rules(("simulate",))
+        ev = runner._factory(ev_rules[0], runner._snapshots)
+        ev.on_trigger(scope_instance("BTCUSDT", str(target)), "on_price_update")
+        async with asyncio.timeout(2):
+            while ctx.rules._tasks:  # noqa: ASYNC110 - drains scheduled emits
+                await asyncio.sleep(0.005)
+    finally:
+        await ctx.rules.stop(1.0)
+    return audits, seen
+
+
+async def test_create_app_evaluator_drops_action_targeting_other_account() -> None:
+    audits, seen = await _e2e(B)  # rule scoped to A, instance targets B
+    assert seen == [] and "rule_action_scope_denied:out_of_scope" in audits
+
+
+async def test_create_app_evaluator_delivers_in_scope_action() -> None:
+    audits, seen = await _e2e(A)
+    assert len(seen) == 1 and seen[0].instance.account_id == A
+    assert not any(a.startswith("rule_action_scope_denied") for a in audits)
