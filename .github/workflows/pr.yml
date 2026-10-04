@@ -383,6 +383,12 @@ jobs:
     if: ${{ needs.changed-paths.outputs.e2e == 'true' }}
     uses: ./.github/workflows/_job-e2e.yml
 
+  a11y:
+    name: a11y
+    needs: changed-paths
+    if: ${{ needs.changed-paths.outputs.e2e == 'true' }}
+    uses: ./.github/workflows/_job-a11y.yml
+
   engine-bench:
     name: engine-bench
     needs: changed-paths
@@ -432,6 +438,7 @@ jobs:
       - migrations
       - security
       - e2e
+      - a11y
       - engine-bench
       - coverage-thresholds
     runs-on: ubuntu-latest
@@ -472,6 +479,7 @@ jobs:
           RESULT_MIGRATIONS: ${{ needs.migrations.result }}
           RESULT_SECURITY: ${{ needs.security.result }}
           RESULT_E2E: ${{ needs.e2e.result }}
+          RESULT_A11Y: ${{ needs.a11y.result }}
           RESULT_ENGINE_BENCH: ${{ needs.engine-bench.result }}
           RESULT_COVERAGE_THRESHOLDS: ${{ needs.coverage-thresholds.result }}
         run: |
@@ -501,6 +509,7 @@ jobs:
                 result: process.env.RESULT_SECURITY,
               },
               e2e: { applicable: isTrue(process.env.FILTER_E2E), result: process.env.RESULT_E2E },
+              a11y: { applicable: isTrue(process.env.FILTER_E2E), result: process.env.RESULT_A11Y },
               "engine-bench": { applicable: isTrue(process.env.FILTER_ENGINE), result: process.env.RESULT_ENGINE_BENCH },
               "coverage-thresholds": {
                 applicable: isTrue(process.env.FILTER_JS) || isTrue(process.env.FILTER_PY),

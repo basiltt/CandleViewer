@@ -1,0 +1,57 @@
+name: a11y-nightly
+
+# E47-T02: full accessibility sweep (every manifest route) off the PR path.
+# Budget 20 min (AC); same collectors and gate logic as the per-PR job.
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  sweep:
+    name: a11y-sweep
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      A11Y_SWEEP: full
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@0a44ba7841725637a19e28fa30b79a866c81b0a6 # v4.0.4
+        with:
+          node-version: "20"
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.12"
+      - run: corepack enable && corepack prepare pnpm@12.5.1 --activate
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @candleviewer/web run build
+      - working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+      - name: Collect and evaluate (axe, keyboard, flash; trees are PR-only baselines)
+        working-directory: apps/web
+        run: |
+          date +%s > "$RUNNER_TEMP/a11y-start"
+          npx playwright test -c e2e/playwright.a11y.config.ts
+          cd ../..
+          set +e
+          for g in "axe reports/a11y/axe.json" "keyboard reports/a11y/keyboard.json" "flash reports/a11y/flash.json"; do
+            set -- $g
+            python -m tools.a11y.gates $g | tee -a "$GITHUB_STEP_SUMMARY"
+            [ "${PIPESTATUS[0]}" -ne 0 ] && fail=1
+          done
+          python -m tools.a11y.gates flash reports/a11y/flash-canvas.json | tee -a "$GITHUB_STEP_SUMMARY"
+          [ "${PIPESTATUS[0]}" -ne 0 ] && fail=1
+          elapsed=$(( $(date +%s) - $(cat "$RUNNER_TEMP/a11y-start") ))
+          python -m tools.a11y.gates budget "$elapsed" --limit 1200 | tee -a "$GITHUB_STEP_SUMMARY"
+          [ "${PIPESTATUS[0]}" -ne 0 ] && fail=1
+          exit ${fail:-0}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: a11y-sweep-reports
+          path: reports/a11y/
+          retention-days: 14

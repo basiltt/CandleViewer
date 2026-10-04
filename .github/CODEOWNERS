@@ -325,3 +325,8 @@
 /docs/research/                         @basiltt
 # future: E02/later scaffolding; directory does not exist yet.
 /docs/incidents/                        @CandleViewer/security @basiltt
+
+# E47-T02: shrink-only axe baseline and a11y gate logic need the Accessibility role (@CandleViewer/design)
+/tools/a11y/axe-baseline.json           @CandleViewer/design @CandleViewer/devsecops
+/tools/a11y/                            @CandleViewer/design @CandleViewer/frontend @CandleViewer/devsecops
+/.github/workflows/_job-a11y.yml        @CandleViewer/devsecops @CandleViewer/design
