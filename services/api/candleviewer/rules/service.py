@@ -37,7 +37,7 @@ _log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from candleviewer.app import AppContext
-    from candleviewer.rules.scope import AuditSink, ScopeResolver
+    from candleviewer.rules.scope import ActionSink, AuditSink, ScopedActionEmitter, ScopeResolver
     from candleviewer.rules.scope_state import ScopeSource, SnapshotScopeState
 
 
@@ -57,6 +57,7 @@ class RulesService:
         self.runner: RuleEvaluationRunner | None = None
         self.scope_state: SnapshotScopeState | None = None
         self.scope_resolver: ScopeResolver | None = None
+        self._scope_audit: AuditSink | None = None
 
     def bind(
         self,
@@ -87,7 +88,6 @@ class RulesService:
             task.add_done_callback(self._tasks.discard)
 
         return _sink
-        self.scope_resolver: ScopeResolver | None = None
 
     def wire_scope(
         self,
@@ -100,6 +100,7 @@ class RulesService:
         from candleviewer.rules.scope import ScopeResolver
         from candleviewer.rules.scope_state import SnapshotScopeState
 
+        self._scope_audit = audit
         self.scope_state = SnapshotScopeState(source, environment, live_gate_open)
         self.scope_resolver = ScopeResolver(self.scope_state, audit)
 
@@ -123,8 +124,21 @@ class RulesService:
 
         if self.scope_resolver is None:
             raise RuntimeError("rule scope not wired; refusing to build an ungated evaluator")
-        gate = make_scope_gate(self.scope_resolver, rule.scope, owner, environment)
-        return Evaluator(rule, snapshots, wall_clock, monotonic_ms, scope_gate=gate)
+        holder: list[Evaluator] = []
+        gate = make_scope_gate(
+            self.scope_resolver, lambda: holder[0].rule.scope, owner, environment
+        )
+        ev = Evaluator(rule, snapshots, wall_clock, monotonic_ms, scope_gate=gate)
+        holder.append(ev)
+        return ev
+
+    def action_emitter(self, sink: ActionSink) -> ScopedActionEmitter:
+        """Production evaluator-output boundary (C-2.21): gate, audit denials, then the sink."""
+        from candleviewer.rules.scope import ScopedActionEmitter
+
+        if self.scope_resolver is None or self._scope_audit is None:
+            raise RuntimeError("rule scope not wired; refusing to emit ungated actions")
+        return ScopedActionEmitter(self.scope_resolver, self._scope_audit, sink)
 
     def registry(self) -> MetricRegistry | None:
         """Metric registry while the engine module is running; `None` otherwise (-> 503)."""

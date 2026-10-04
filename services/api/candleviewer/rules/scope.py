@@ -26,6 +26,7 @@ Reason = Literal[
     "symbol_not_allowed",
     "applies_to",
     "algo_child",
+    "out_of_scope",
 ]
 EntityKind = Literal["open_position", "pending_order", "account"]
 
@@ -156,6 +157,8 @@ class ScopeResolver:
             reason = "grant_revoked"
         else:
             reason = self._account_reason(owner, instance.account_id, instance.symbol)
+        if reason is None and _outside_scope(scope, instance):
+            reason = "out_of_scope"  # action targets an account/symbol outside the rule's scope
         if reason is None:
             if scope.exclude_algo_children and is_algo_child:
                 reason = "algo_child"
@@ -190,6 +193,13 @@ class ScopeResolver:
             await self._audit("rule_live_scope_armed", {"caller": str(caller), "severity": "high"})
 
 
+def _outside_scope(scope: RuleScope, instance: ScopeInstanceRef) -> bool:
+    accounts = {str(a) for a in scope.account_ids}
+    if accounts and str(instance.account_id) not in accounts:
+        return True
+    return bool(scope.symbols and instance.symbol and instance.symbol not in scope.symbols)
+
+
 def _applies(applies_to: str, entity: EntityKind) -> bool:
     return {
         "any": True,
@@ -214,7 +224,10 @@ def summarize_scope(scope: RuleScope, *, account_count: int | None = None) -> st
 
 
 def make_scope_gate(
-    resolver: ScopeResolver, scope: RuleScope, owner: UUID, environment: str
+    resolver: ScopeResolver,
+    scope: RuleScope | Callable[[], RuleScope],
+    owner: UUID,
+    environment: str,
 ) -> Callable[[str], str | None]:
     """Evaluator ``scope_gate``: re-resolves scope on every trigger; reason => skipped "scope"."""
 
@@ -223,7 +236,8 @@ def make_scope_gate(
         ref = ScopeInstanceRef(
             instance_key, None if sym == "*" else sym, None if acct == "*" else UUID(acct)
         )
-        return resolver.check_action(scope, owner, environment, ref)
+        current = scope() if callable(scope) else scope  # runtime scope change: no restart
+        return resolver.check_action(current, owner, environment, ref)
 
     return gate
 
@@ -262,3 +276,45 @@ async def fire_scoped(
         return FireOutcome(False, 0, reason, SKIPPED_REASON)
     await dispatch(instance)
     return FireOutcome(True, 1)
+
+
+@dataclass(frozen=True, slots=True)
+class ActionRequest:
+    rule_scope: RuleScope
+    owner: UUID
+    environment: str
+    instance: ScopeInstanceRef
+    action_type: str
+    payload: object = None
+
+
+ActionSink = Callable[[ActionRequest], Awaitable[None]]
+
+
+class ScopedActionEmitter:
+    """Single evaluator-output boundary: every action passes the scope gate BEFORE the sink."""
+
+    def __init__(self, resolver: ScopeResolver, audit: AuditSink, sink: ActionSink) -> None:
+        self._resolver, self._audit, self._sink = resolver, audit, sink
+        self.denied_total = 0  # rule_action_scope_denied_total
+
+    async def emit(self, req: ActionRequest) -> bool:
+        reason = self._resolver.check_action(
+            req.rule_scope, req.owner, req.environment, req.instance
+        )
+        if reason is not None:
+            self.denied_total += 1
+            await self._audit(
+                "rule_action_scope_denied",
+                {
+                    "caller": str(req.owner),
+                    "reason": reason,
+                    "action": req.action_type,
+                    "account": str(req.instance.account_id),
+                    "symbol": str(req.instance.symbol),
+                    "scope_before": req.rule_scope.model_dump_json(),
+                },
+            )
+            return False
+        await self._sink(req)
+        return True

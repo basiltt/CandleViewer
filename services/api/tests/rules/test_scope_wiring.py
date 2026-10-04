@@ -166,3 +166,37 @@ async def test_summary_matches_enforcement(
         assert s in chip
     for i in res.instances:
         assert isinstance(i, ScopeInstanceRef)
+
+
+async def test_action_gate_denies_foreign_account_audits_and_follows_scope_change() -> None:
+    from candleviewer.app import create_app
+    from candleviewer.rules.scope import ActionRequest
+    from candleviewer.settings import Settings
+
+    ctx = create_app(Settings()).state.app_context  # real composition root
+    src, audits = Source(), list[str]()
+    seen: list[ActionRequest] = []
+
+    async def audit(event: str, data: dict[str, str]) -> None:
+        audits.append(f"{event}:{data['reason']}")
+
+    async def sink(req: ActionRequest) -> None:
+        seen.append(req)
+
+    ctx.rules.wire_scope(src, "demo", audit)
+    await ctx.rules.refresh_scope(OWNER)
+    emitter = ctx.rules.action_emitter(sink)
+    scope_a = RuleScope.model_validate({"level": "account", "account_ids": [str(A)]})
+    inst = ScopeInstanceRef(f"BTCUSDT@{B}", "BTCUSDT", B)
+
+    def req(scope: RuleScope, i: ScopeInstanceRef) -> ActionRequest:
+        return ActionRequest(scope, OWNER, "demo", i, "flatten_position")
+
+    assert await emitter.emit(req(scope_a, inst)) is False  # targets B, scoped to A
+    assert seen == [] and audits == ["rule_action_scope_denied:out_of_scope"]
+    assert emitter.denied_total == 1
+    ok = ScopeInstanceRef(f"BTCUSDT@{A}", "BTCUSDT", A)
+    assert await emitter.emit(req(scope_a, ok)) is True
+    scope_b = RuleScope.model_validate({"level": "account", "account_ids": [str(B)]})
+    assert await emitter.emit(req(scope_b, inst)) is True  # new scope, no restart
+    assert await emitter.emit(req(scope_b, ok)) is False
