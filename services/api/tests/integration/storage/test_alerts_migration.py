@@ -103,8 +103,8 @@ def test_live_alert_query_uses_partial_index(pg_dsn: str) -> None:
     with _conn(pg_dsn) as c:
         aid = _alert(c)
         c.execute(
-            "INSERT INTO alerts (owner_user_id, name, symbol, condition_ir, condition_hash) "
-            "SELECT owner_user_id, 'bulk-' || g, 'SYM' || (g %% 50), condition_ir, condition_hash "
+            "INSERT INTO alerts (id, owner_user_id, name, symbol, condition_ir, condition_hash) "
+            "SELECT gen_random_uuid(), owner_user_id, 'bulk-' || g, 'SYM' || (g %% 50), condition_ir, condition_hash "
             "FROM alerts, generate_series(1, 500) g WHERE id = %s",
             (aid,),
         )
