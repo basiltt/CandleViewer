@@ -83,11 +83,15 @@ jobs:
 
       - name: Run coverage gate
         id: gate
+        # Input passed via env, never inlined as `${{ }}` in the script body
+        # (script injection; semgrep run-shell-injection).
+        env:
+          RAN_LANES: ${{ inputs.ran_lanes }}
         run: |
           python tools/ci/coverage_gate.py \
             --baselines tools/ci/coverage-baselines.json \
             --report-dir coverage-artifacts \
-            --ran-lanes "${{ inputs.ran_lanes }}" \
+            --ran-lanes "$RAN_LANES" \
             --summary-out coverage-summary.md
 
       - name: Post PR summary comment
