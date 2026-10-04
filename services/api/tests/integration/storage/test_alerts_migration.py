@@ -101,7 +101,17 @@ def test_deliveries_append_only_for_app_role_and_purgeable_by_owner(pg_dsn: str)
 
 def test_live_alert_query_uses_partial_index(pg_dsn: str) -> None:
     with _conn(pg_dsn) as c:
-        c.execute("SET enable_seqscan = off")
+        aid = _alert(c)
+        c.execute(
+            "INSERT INTO alerts (owner_user_id, name, symbol, condition_ir, condition_hash) "
+            "SELECT owner_user_id, 'bulk-' || g, 'SYM' || (g % 50), condition_ir, condition_hash "
+            "FROM alerts, generate_series(1, 500) g WHERE id = %s",
+            (aid,),
+        )
+        c.execute(
+            "UPDATE alerts SET enabled = false WHERE name LIKE 'bulk-%%' AND symbol <> 'SYM1'"
+        )
+        c.execute("ANALYZE alerts")
         plan = "\n".join(
             str(r[0])
             for r in c.execute(

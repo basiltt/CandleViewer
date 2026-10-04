@@ -1147,3 +1147,28 @@ alert_deliveries = Table(
         postgresql_where=text("status = 'sent' AND acked_at IS NULL"),
     ),
 )
+
+outbox = Table(
+    "outbox",
+    metadata,
+    Column("id", BigInteger, primary_key=True, autoincrement=True),
+    Column("topic", Text, nullable=False),
+    Column("dedup_key", Text, nullable=False),
+    Column("payload", JSONB, nullable=False),
+    Column("available_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("attempts", SmallInteger, nullable=False, server_default=text("0")),
+    Column("max_attempts", SmallInteger, nullable=False, server_default=text("8")),
+    Column("locked_by", Text),
+    Column("locked_until", TIMESTAMP(timezone=True)),
+    Column("processed_at", TIMESTAMP(timezone=True)),
+    Column("dead_at", TIMESTAMP(timezone=True)),
+    Column("last_error", Text),
+    Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    CheckConstraint("attempts >= 0 AND attempts <= max_attempts + 1", name="ob_attempts"),
+    Index("ux_outbox_dedup", "topic", "dedup_key", unique=True),
+    Index(
+        "ix_outbox_ready",
+        "available_at",
+        postgresql_where=text("processed_at IS NULL AND dead_at IS NULL"),
+    ),
+)
