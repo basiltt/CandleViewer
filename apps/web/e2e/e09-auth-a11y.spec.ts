@@ -15,17 +15,52 @@ const json = (body: unknown) => ({
 // `shipped: false` => the route still renders the StubRoute placeholder. Those are NOT counted as
 // conformant: the test asserts the stub marker (so it fails loudly, forcing review, when the real
 // screen lands) and is annotated as not-assessed instead of passing silently.
-export const E09_SCREENS: ReadonlyArray<{ scr: string; path: string; shipped?: boolean }> = [
-  { scr: "SCR-001", shipped: false, path: "/login" },
-  { scr: "SCR-002", shipped: false, path: "/login/2fa" },
-  { scr: "SCR-003", shipped: false, path: "/login/2fa/enroll" },
-  { scr: "SCR-004", shipped: false, path: "/login/change-password" },
-  { scr: "SCR-005", shipped: false, path: "/locked" },
+// `reason` documents why a screen is waived. Owner exception (#295) waives ONLY screens that do not
+// exist on main yet; every screen that exists is audited.
+export const E09_SCREENS: ReadonlyArray<{
+  scr: string;
+  path: string;
+  shipped?: boolean;
+  reason?: string;
+  // Real-UI marker to assert instead of "no placeholder" (screen is mounted beside a StubRoute).
+  marker?: string;
+}> = [
+  { scr: "SCR-001", path: "/login" }, // LoginScreen (#1824), R-001
+  {
+    scr: "SCR-002",
+    shipped: false,
+    path: "/login/2fa",
+    reason: "no TOTP challenge screen in features/auth",
+  },
+  {
+    scr: "SCR-003",
+    shipped: false,
+    path: "/login/2fa/enroll",
+    reason: "no TOTP enrolment screen in features/auth",
+  },
+  { scr: "SCR-004", path: "/login/change-password" }, // ChangePasswordScreen (#1824), R-007
+  {
+    scr: "SCR-005",
+    shipped: false,
+    path: "/locked",
+    reason: "re-auth modal not built; R-005 is a stub",
+  },
   { scr: "SCR-006", path: "/admin/users/new" },
   { scr: "SCR-017", path: "/invite/tok-a11y-0123456789" },
-  { scr: "SCR-019", shipped: false, path: "/terminal/last" },
-  { scr: "SCR-111", shipped: false, path: "/settings/profile" },
-  { scr: "SCR-112", shipped: false, path: "/settings/profile" },
+  // SetupChecklistCard (SCR-019) is mounted on R-101 beside the stub; needs a non-dismissed payload.
+  { scr: "SCR-019", path: "/terminal/last", marker: "Finish setting up" },
+  {
+    scr: "SCR-111",
+    shipped: false,
+    path: "/settings/profile",
+    reason: "profile settings screen not built",
+  },
+  {
+    scr: "SCR-112",
+    shipped: false,
+    path: "/settings/profile",
+    reason: "security settings not built; no distinct route",
+  },
   { scr: "SCR-123", path: "/admin/users/new" },
   { scr: "SCR-154", path: "/403" },
 ];
@@ -44,7 +79,13 @@ async function stub(page: Page): Promise<void> {
   await page.route("**/api/v1/me/preferences", (r) => r.fulfill(json({})));
   await page.route("**/api/v1/me/keymap", (r) => r.fulfill(json({ bindings: [] })));
   await page.route("**/api/v1/onboarding/checklist", (r) =>
-    r.fulfill(json({ complete: true, dismissed: true, items: [] })),
+    r.fulfill(
+      json({
+        complete: false,
+        dismissed: false,
+        items: [{ key: "totp", state: "pending", action_route: "/login/2fa/enroll" }],
+      }),
+    ),
   );
   await page.route("**/api/v1/invites/**", (r) =>
     r.fulfill(json({ display_name: "Ann", role: "viewer", expires_at: "x" })),
@@ -67,14 +108,15 @@ test("not-assessed screens are still placeholders (fails when one ships: audit i
 
 const SHIPPED = E09_SCREENS.filter((s) => s.shipped !== false);
 
-for (const { scr, path, shipped } of E09_SCREENS) {
+for (const { scr, path, shipped, marker } of E09_SCREENS) {
   test(`${scr} ${path}: axe serious/critical`, async ({ page }) => {
     await stub(page);
     await page.goto(path);
     await page.waitForLoadState("networkidle");
     // Placeholder screens are reported as SKIPPED (not passed): axe on a stub proves nothing.
     test.skip(shipped === false, "not-assessed: placeholder screen, no real UI to audit");
-    await expect(page.getByText("This screen has not shipped yet.")).toHaveCount(0);
+    if (marker) await expect(page.getByText(marker)).toBeVisible();
+    else await expect(page.getByText("This screen has not shipped yet.")).toHaveCount(0);
     const res = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
       .analyze();
@@ -110,7 +152,7 @@ for (const { scr, path } of SHIPPED) {
 // ---- SCR-017 enrolment wizard: every step, not just the landing step (E09-Q04 review) ----
 // This is the only implemented enrolment flow (TOTP secret + recovery codes). It covers the
 // SR-enrolment, SC 3.3.1 (error identification), reflow/200% zoom and reduced-motion criteria
-// for what exists. SCR-001..005 remain not-assessed (placeholders).
+// for what exists. SCR-002/003/005 remain not-assessed (not built).
 const TOK = "tok-a11y-0123456789";
 
 async function stubWizard(page: Page, opts: { reject?: boolean } = {}): Promise<void> {
