@@ -3,7 +3,7 @@ import { createDispatcher } from "./dispatcher";
 import { getBindings, subscribeBindings } from "./profile";
 import type { KeymapCommand } from "./keymap";
 import { Cheatsheet } from "./Cheatsheet";
-import { recordAudit } from "./audit";
+import { flushAuditOutbox, recordAudit } from "./audit";
 
 /** Command handlers registered by views; a command with no handler / failing predicate is inert. */
 const handlers = new Map<string, { run: () => void; isValid: () => boolean }>();
@@ -41,8 +41,14 @@ export function KeymapHost(): JSX.Element {
   useEffect(() => registerCommand("global.cheatsheet", () => setSheetOpen((o) => !o)), []);
   useEffect(() => {
     const on = (e: Event) => recordAudit((e as CustomEvent).detail);
+    const retry = () => void flushAuditOutbox();
     window.addEventListener("cv:audit", on);
-    return () => window.removeEventListener("cv:audit", on);
+    window.addEventListener("online", retry);
+    retry(); // records left by a failed POST or a reload are re-sent on mount
+    return () => {
+      window.removeEventListener("cv:audit", on);
+      window.removeEventListener("online", retry);
+    };
   }, []);
   useEffect(() => {
     const dispatch = createDispatcher({

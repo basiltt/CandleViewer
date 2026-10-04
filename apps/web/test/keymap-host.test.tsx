@@ -1,10 +1,17 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { KeymapHost, registerCommand } from "../src/keymap/KeymapHost";
 import { HotkeyEditor } from "../src/keymap/HotkeyEditor";
 import { Cheatsheet } from "../src/keymap/Cheatsheet";
 import { setAuditSink, type AuditRecord } from "../src/keymap/audit";
 import { getBindings, resetBindings, setBindings } from "../src/keymap/profile";
+
+beforeEach(async () => {
+  const { flushAuditOutbox } = await import("../src/keymap/audit");
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
+  await flushAuditOutbox();
+  vi.unstubAllGlobals();
+});
 
 afterEach(() => {
   resetBindings();
@@ -104,13 +111,20 @@ describe("wiring (review fixes)", () => {
     expect(screen.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeInTheDocument();
   });
   it("default audit transport reaches the outbox", async () => {
-    const { applyRebind, auditOutbox, setAuditSink } = await import("../src/keymap/audit");
+    const { applyRebind, auditOutbox, flushAuditOutbox, setAuditSink } =
+      await import("../src/keymap/audit");
     setAuditSink((r) => window.dispatchEvent(new CustomEvent("cv:audit", { detail: r })));
     render(<KeymapHost />);
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
     const n = auditOutbox().length;
     act(() => void applyRebind(getBindings(), "dom.cancel_all", "Q", true));
     expect(auditOutbox()).toHaveLength(n + 1);
     expect(auditOutbox()[n]).toMatchObject({ action: "hotkey.trading_binding_changed" });
+    await flushAuditOutbox();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
+    await flushAuditOutbox(); // server recovers: durable outbox drains
+    expect(auditOutbox()).toHaveLength(0);
+    vi.unstubAllGlobals();
   });
 });
 

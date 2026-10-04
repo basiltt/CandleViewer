@@ -20,6 +20,13 @@ export interface DispatcherDeps {
   readonly bindings?: ReadonlyMap<string, string>;
 }
 
+/** Contextual explanation: what the command needs and where its visible control lives. */
+export function inertMessage(c: KeymapCommand): string {
+  const where = typeof c.visibleControl === "string" ? ` Use ${c.visibleControl} instead.` : "";
+  const ctx = c.context === "Global" ? "" : ` (${c.context} view)`;
+  return `${c.label} is not available here${ctx}: it needs ${c.validWhen}.${where}`;
+}
+
 /** Resolve binding -> command -> validWhen -> execute, or explain why it is inert here. */
 export function createDispatcher(deps: DispatcherDeps) {
   const lastNotified = new Map<string, number>();
@@ -39,9 +46,7 @@ export function createDispatcher(deps: DispatcherDeps) {
     const notified = prev === undefined || t - prev >= INERT_NOTICE_WINDOW_MS;
     if (notified) {
       lastNotified.set(target.id, t);
-      deps.notify(
-        `${target.label} is not available here (needs ${target.validWhen}; this view does not provide it).`,
-      );
+      deps.notify(inertMessage(target));
     }
     return { status: "inert", commandId: target.id, notified };
   };

@@ -49,12 +49,32 @@ export function applyRebind(
  * outbox until the POST succeeds so a failed attempt can be flushed later.
  */
 const AUDIT_PATH = "/api/v1/settings/hotkey-audit";
-const outbox: AuditRecord[] = [];
+const STORE_KEY = "cv.hotkey-audit-outbox.v1";
+
+function load(): AuditRecord[] {
+  try {
+    const raw = window.localStorage.getItem(STORE_KEY);
+    const v: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(v) ? (v as AuditRecord[]) : [];
+  } catch {
+    return [];
+  }
+}
+function persist(list: readonly AuditRecord[]): void {
+  try {
+    window.localStorage.setItem(STORE_KEY, JSON.stringify(list));
+  } catch {
+    /* storage unavailable: the in-memory copy still retries this session */
+  }
+}
+// Durable outbox: survives reload; a record leaves it only after a 2xx from the server.
+const outbox: AuditRecord[] = load();
 
 export async function sendAudit(r: AuditRecord): Promise<boolean> {
   try {
     const res = await fetch(AUDIT_PATH, {
       method: "POST",
+      credentials: "same-origin",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         command_id: r.commandId,
@@ -69,14 +89,37 @@ export async function sendAudit(r: AuditRecord): Promise<boolean> {
   }
 }
 
-export async function flushAuditOutbox(): Promise<void> {
-  for (const r of [...outbox]) {
-    if (await sendAudit(r)) outbox.splice(outbox.indexOf(r), 1);
+let flushing: Promise<void> | null = null;
+let rerun = false;
+async function drain(): Promise<void> {
+  // Oldest first; stop at the first failure and retry on `online` / next load.
+  while (outbox.length > 0) {
+    const r = outbox[0] as AuditRecord;
+    if (!(await sendAudit(r))) return;
+    outbox.shift();
+    persist(outbox);
   }
+}
+export function flushAuditOutbox(): Promise<void> {
+  if (flushing) {
+    rerun = true; // a record arrived mid-flush: take another pass when this one ends
+    return flushing;
+  }
+  const run = (async () => {
+    await Promise.resolve(); // ensure `flushing` is assigned before any completion
+    do {
+      rerun = false;
+      await drain();
+    } while (rerun && outbox.length > 0);
+    flushing = null;
+  })();
+  flushing = run;
+  return run;
 }
 
 export function recordAudit(r: AuditRecord): void {
   outbox.push(r);
+  persist(outbox);
   void flushAuditOutbox();
 }
 export function auditOutbox(): readonly AuditRecord[] {

@@ -307,7 +307,7 @@
       "destructive": true,
       "validWhen": "working orders exist",
       "visibleControl": true,
-      "decision": "E49-S07: bare Esc removed (destructive needs a modifier; Esc stays Close/Cancel). Pending Owner confirmation of the replacement key."
+      "decision": "E49-S07: bare Esc removed (destructive needs a modifier; Esc stays Close/Cancel). Owner approval of the replacement key is requested on PR #1768 (not yet granted); until then it is a proposed default, user-rebindable via SCR-113 and audited."
     },
     {
       "id": "dom.zoom_in",

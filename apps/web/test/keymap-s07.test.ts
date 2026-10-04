@@ -80,7 +80,7 @@ describe("dispatcher", () => {
     t = 5000;
     expect(press()).toMatchObject({ notified: true });
     expect(notify).toHaveBeenCalledTimes(2);
-    expect(notify.mock.calls[0]?.[0]).toMatch(/Close all in view.*not available/);
+    expect(notify.mock.calls[0]?.[0]).toMatch(/Close all in view.*not available here/);
     expect(execute).not.toHaveBeenCalled();
   });
   it("executes when valid and ignores unbound keys", () => {
