@@ -3866,6 +3866,16 @@ class HotkeyProfileInput(BaseModel):
     bindings: Annotated[list[HotkeyBinding], Field(max_length=200)]
 
 
+class HotkeyBindingAuditInput(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    command_id: Annotated[str, Field(max_length=64, pattern="^[a-z0-9_]+([.][a-z0-9_]+){1,3}$")]
+    before: Annotated[str, Field(max_length=64)]
+    after: Annotated[str, Field(max_length=64)]
+    acknowledged_unsafe: bool
+
+
 class HotkeyProfile(HotkeyProfileInput):
     id: UUID | None = None
     owner_user_id: UUID | None = None

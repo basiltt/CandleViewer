@@ -26,7 +26,7 @@
 | Chart | Undo drawing | `Ctrl+Z` | no | valid when: always |
 | Chart | Zoom price scale | `Shift+wheel` | no | valid when: always |
 | DOM | Arm/disarm one-click | `Ctrl+Shift+T` | no | overrides reserved key: Deliberate override of browser reopen-tab; Electron has no tabs; valid when: always |
-| DOM | Cancel all working orders for symbol | `Esc` | yes | valid when: working orders exist |
+| DOM | Cancel all working orders for symbol | `Ctrl+Shift+X` | yes | valid when: working orders exist |
 | DOM | Centre on mark | `C` | no | valid when: always |
 | DOM | Market order (click) | `Ctrl+click` | no | valid when: DOM armed |
 | DOM | Re-centre and resume auto-follow | `Space` | no | valid when: always |

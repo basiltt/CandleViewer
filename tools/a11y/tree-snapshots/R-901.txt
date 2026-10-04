@@ -3,3 +3,4 @@
   - paragraph: Nothing lives at this address.
   - link "Return to the terminal":
     - /url: /terminal
+- status

@@ -6380,6 +6380,27 @@ paths:
         "204": { description: "Deleted." }
         "409": { $ref: "#/components/responses/Conflict" }
 
+  /settings/hotkey-audit:
+    post:
+      tags: [settings]
+      operationId: recordHotkeyBindingAudit
+      summary: Audit a destructive hotkey binding change (hotkey.trading_binding_changed)
+      description: >
+        The UI posts this when a trading (destructive) command is rebound. The server appends an
+        audit record (C-2.9) attributed to the session principal; actor, role and time are
+        never taken from the body.
+      x-rbac: { permissions: [settings:write], scope: self }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/HotkeyBindingAuditInput" }
+      responses:
+        "204": { description: Audit record appended. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+
   /settings/hotkeys/{hotkeyProfileId}/activate:
     parameters: [{ $ref: "#/components/parameters/HotkeyProfileId" }]
     post:
@@ -11880,6 +11901,15 @@ components:
         name: { type: string, minLength: 1, maxLength: 80 }
         bindings:
           { type: array, maxItems: 200, items: { $ref: "#/components/schemas/HotkeyBinding" } }
+    HotkeyBindingAuditInput:
+      type: object
+      additionalProperties: false
+      required: [command_id, before, after, acknowledged_unsafe]
+      properties:
+        command_id: { type: string, pattern: "^[a-z0-9_]+([.][a-z0-9_]+){1,3}$", maxLength: 64 }
+        before: { type: string, maxLength: 64 }
+        after: { type: string, maxLength: 64 }
+        acknowledged_unsafe: { type: boolean }
     HotkeyProfile:
       allOf:
         - $ref: "#/components/schemas/HotkeyProfileInput"

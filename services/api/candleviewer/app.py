@@ -58,6 +58,7 @@ from candleviewer.api.deny_by_default import (
     make_deny_undeclared_dependency,
 )
 from candleviewer.api.error_redaction import install_error_redaction
+from candleviewer.api.hotkey_audit import make_hotkey_audit_router
 from candleviewer.api.invites import make_invites_router
 from candleviewer.api.onboarding import make_onboarding_router
 from candleviewer.api.onboarding_checklist import StepResult, bybit_key_restriction
@@ -769,6 +770,7 @@ def create_app(
         else None
     )
     app.include_router(make_audit_router(ctx.audit, audit_resolver))
+    app.include_router(make_hotkey_audit_router(_LazyAuditEmitter(ctx.audit), audit_resolver))
     # E04-T06: frontend telemetry push. One facade per process on ctx.metrics
     # (the lifespan's MetricsRuntime reuses it). Session-authenticated via the
     # same session resolver; `None` (fake backend) fails closed with 501.
