@@ -16,8 +16,24 @@ the a11y mirror.
 3. **Auto-layout runs in a web worker** using **dagre** (@dagrejs/dagre); elkjs only if routing needs justify
    its ~442 KB gz cost. Main-thread layout at 200 nodes measured ~230 ms (> 100 ms limit).
 4. `graph_layout` is persisted separately and excluded from the canonical IR hash (ADR-0026).
-5. Rete.js is the fallback if E37-S02 finds a keyboard blocker requiring a fork.
+5. Rete.js is the fallback if E37-S02 finds a keyboard blocker requiring a fork, or if E37-Q04 measures < 45 fps
+   at 200 nodes on reference hardware/Electron (spike: React Flow 21 fps at 4x CPU throttle; minimal Rete 57 fps,
+   lower bound only).
 
 ## Consequences
 Editor route is lazy-loaded (~60 KB gz library delta). Dependency additions need licence/SCA review in E37-T01.
 Confidence is bounded by the spike's limitations (headless Chromium, non-reference hardware).
+
+## Failure path and re-estimates (planning input; owner confirms)
+If React Flow is rejected (E37-Q04 fps < 45, or E37-S02 needs a fork), switch to Rete.js behind the same
+`packages/rule-graph` adapter (controlled nodes/edges, our own ports), so IR, layout and the a11y mirror are unchanged.
+
+| Ticket | Baseline impact (any path) | Failure-path impact (Rete) |
+|---|---|---|
+| E37-T02 (auto-layout) | + worker + dagre message protocol: ~+1 pt | none extra (layout is library-agnostic) |
+| E37-S01 (canvas/nodes) | none | + render plugin, own connection geometry, selection model: ~+3 to +5 pts |
+| E37-S02 (keyboard connect) | + arrow traversal, roving tabindex, edge focus/delete: ~+2 pts | ~+3 pts more (no `nodesFocusable`) |
+| E37-Q04 | + 4x throttle and Electron/reference-HW run: ~+1 pt | becomes the decision gate, runs first |
+
+Mitigation before switching: apply the node cap (120) and a reduced-chrome mode. Points are the spike author's
+estimates, not owner-approved; no risk-register change.

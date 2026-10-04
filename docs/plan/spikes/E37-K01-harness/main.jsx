@@ -9,6 +9,13 @@ let pending=null;const live=()=>document.getElementById('live');
 const say=t=>{live().textContent=t};
 const Node=memo(({id,data})=>{
  const onKey=(port)=>(ev)=>{
+  if(ev.key==='ArrowDown'||ev.key==='ArrowUp'){
+   // arrow traversal across candidate input ports (all nodes except the pending source), roving tabindex
+   const ins=[...document.querySelectorAll('[data-port=in]')].filter(e=>e.dataset.node!==pending);
+   if(!pending||!ins.length)return;ev.preventDefault();
+   const cur=ins.indexOf(ev.currentTarget);const nx=ins[(cur+(ev.key==='ArrowDown'?1:-1)+ins.length)%ins.length]||ins[0];
+   document.querySelectorAll('[data-port]').forEach(e=>e.tabIndex=-1);nx.tabIndex=0;nx.focus();say('Target '+nx.getAttribute('aria-label'));return;}
+  if(ev.key==='Escape'){pending=null;say('Connect cancelled');return;}
   if(ev.key!=='Enter')return;
   if(port==='out'){pending=id;say('Connecting from '+data.label+'. Move to a target input and press Enter.');}
   else if(pending&&pending!==id){window.__connect({source:pending,target:id,sourceHandle:'out',targetHandle:'in'});say('Connected '+pending+' to '+id);pending=null;}
