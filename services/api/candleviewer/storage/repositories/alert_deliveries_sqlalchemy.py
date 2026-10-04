@@ -1,0 +1,219 @@
+"""Postgres repository for `alert_deliveries` (migration `0014_alerts`, E40-T01).
+
+Append-only history: UPDATE (queued->sent->acked) is allowed, DELETE is refused
+by `trg_ad_append` for every role except the `cv_owner` retention job; this
+module therefore exposes no delete. Keyset pagination on `(queued_at, id)`.
+"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
+
+import sqlalchemy as sa
+
+from candleviewer.storage.repositories.alerts_sqlalchemy import (
+    Page,
+    decode_cursor,
+    encode_cursor,
+)
+from candleviewer.storage.repositories.relational_sqlalchemy import (
+    SqlAlchemyRelationalRepository,
+)
+
+_COLS = (
+    "id, alert_id::text AS alert_id, user_id::text AS user_id, channel::text AS channel, "
+    "status::text AS status, title, body, context, attempt, http_status, error_message, "
+    "queued_at, sent_at, acked_at, acked_by::text AS acked_by"
+)
+
+
+def _sql(template: str) -> sa.TextClause:
+    # Only the static column fragment is substituted, never caller data.
+    return sa.text(template.replace("@C@", _COLS))
+
+
+_INSERT = _sql(
+    "INSERT INTO alert_deliveries (alert_id, user_id, channel, title, body, context) VALUES "
+    "(CAST(:alert_id AS uuid), CAST(:user_id AS uuid), CAST(:channel AS alert_channel), :title, "
+    ":body, CAST(:context AS jsonb)) RETURNING @C@"
+)
+_MARK_SENT = _sql(
+    "UPDATE alert_deliveries SET status = 'sent', sent_at = now(), attempt = attempt + 1, "
+    "http_status = :http_status, error_message = NULL WHERE id = :id AND status = 'queued' "
+    "RETURNING @C@"
+)
+_MARK_FAILED = _sql(
+    "UPDATE alert_deliveries SET status = 'failed', attempt = least(attempt + 1, 10), "
+    "http_status = :http_status, error_message = :error WHERE id = :id AND status = 'queued' "
+    "RETURNING @C@"
+)
+_MARK_SUPPRESSED = _sql(
+    "UPDATE alert_deliveries SET status = 'suppressed', error_message = :reason "
+    "WHERE id = :id AND status = 'queued' RETURNING @C@"
+)
+_ACK_ONE = _sql(
+    "UPDATE alert_deliveries SET status = 'acked', acked_at = now(), "
+    "acked_by = CAST(:by AS uuid) WHERE id = :id AND user_id = CAST(:by AS uuid) "
+    "AND status = 'sent' AND acked_at IS NULL RETURNING @C@"
+)
+_ACK_ALL = _sql(
+    "UPDATE alert_deliveries SET status = 'acked', acked_at = now(), "
+    "acked_by = CAST(:by AS uuid) WHERE user_id = CAST(:by AS uuid) "
+    "AND status = 'sent' AND acked_at IS NULL"
+)
+_UNACKED = _sql(
+    "SELECT count(*) FROM alert_deliveries WHERE user_id = CAST(:user AS uuid) "
+    "AND status = 'sent' AND acked_at IS NULL"
+)
+_EXPIRED = _sql(
+    "SELECT @C@ FROM alert_deliveries WHERE queued_at < now() - make_interval(days => :days) "
+    "ORDER BY id LIMIT :limit"
+)
+_DELETE_IDS = sa.text("DELETE FROM alert_deliveries WHERE id = ANY(:ids)")
+_LIST = _sql(
+    "SELECT @C@ FROM alert_deliveries WHERE "
+    "(CAST(:user AS uuid) IS NULL OR user_id = CAST(:user AS uuid)) "
+    "AND (CAST(:alert_id AS uuid) IS NULL OR alert_id = CAST(:alert_id AS uuid)) "
+    "AND (CAST(:status AS text) IS NULL OR status::text = :status) "
+    "AND (NOT :unacked_only OR (status = 'sent' AND acked_at IS NULL)) "
+    "AND (CAST(:from_ts AS timestamptz) IS NULL OR queued_at >= :from_ts) "
+    "AND (CAST(:to_ts AS timestamptz) IS NULL OR queued_at < :to_ts) "
+    "AND (CAST(:after_ts AS timestamptz) IS NULL OR "
+    "(queued_at, id) < (CAST(:after_ts AS timestamptz), CAST(:after_id AS bigint))) "
+    "ORDER BY queued_at DESC, id DESC LIMIT :limit"
+)
+
+
+@dataclass(frozen=True, slots=True)
+class DeliveryRow:
+    id: int
+    alert_id: str
+    user_id: str | None
+    channel: str
+    status: str
+    title: str
+    body: str
+    context: dict[str, Any]
+    attempt: int
+    http_status: int | None
+    error_message: str | None
+    queued_at: datetime
+    sent_at: datetime | None
+    acked_at: datetime | None
+    acked_by: str | None
+
+
+def _row(m: Any) -> DeliveryRow:
+    return DeliveryRow(**dict(m))
+
+
+class SqlAlchemyAlertDeliveryRepository:
+    def __init__(self, relational: SqlAlchemyRelationalRepository) -> None:
+        self._relational = relational
+
+    async def insert(
+        self,
+        *,
+        alert_id: str,
+        channel: str,
+        title: str,
+        body: str = "",
+        context: dict[str, Any] | None = None,
+        user_id: str | None = None,
+    ) -> DeliveryRow:
+        params = {
+            "alert_id": alert_id,
+            "user_id": user_id,
+            "channel": channel,
+            "title": title,
+            "body": body,
+            "context": json.dumps(context or {}, sort_keys=True),
+        }
+        return (await self._write(_INSERT, params)) or _never()
+
+    async def mark_sent(
+        self, delivery_id: int, http_status: int | None = None
+    ) -> DeliveryRow | None:
+        return await self._write(_MARK_SENT, {"id": delivery_id, "http_status": http_status})
+
+    async def mark_failed(
+        self, delivery_id: int, error: str, http_status: int | None = None
+    ) -> DeliveryRow | None:
+        return await self._write(
+            _MARK_FAILED, {"id": delivery_id, "error": error, "http_status": http_status}
+        )
+
+    async def mark_suppressed(self, delivery_id: int, reason: str) -> DeliveryRow | None:
+        return await self._write(_MARK_SUPPRESSED, {"id": delivery_id, "reason": reason})
+
+    async def ack(self, delivery_id: int, user_id: str) -> DeliveryRow | None:
+        return await self._write(_ACK_ONE, {"id": delivery_id, "by": user_id})
+
+    async def ack_all(self, user_id: str) -> int:
+        async with self._relational.unit_of_work() as uow:
+            res = await uow.session.execute(_ACK_ALL, {"by": user_id})
+            await uow.commit()
+        return int(getattr(res, "rowcount", 0) or 0)
+
+    async def fetch_expired(self, days: int, limit: int = 5000) -> list[DeliveryRow]:
+        """Oldest rows past the hot window (E40-T01); archived before `delete_ids`."""
+        async with self._relational.unit_of_work() as uow:
+            rows = (await uow.session.execute(_EXPIRED, {"days": days, "limit": limit})).mappings()
+            return [_row(m) for m in rows]
+
+    async def delete_ids(self, ids: list[int]) -> int:
+        """Retention delete; the DB trigger permits it only for `cv_owner` sessions."""
+        if not ids:
+            return 0
+        async with self._relational.unit_of_work() as uow:
+            res = await uow.session.execute(_DELETE_IDS, {"ids": ids})
+            await uow.commit()
+        return int(getattr(res, "rowcount", 0) or 0)
+
+    async def unacked_count(self, user_id: str) -> int:
+        async with self._relational.unit_of_work() as uow:
+            return int((await uow.session.execute(_UNACKED, {"user": user_id})).scalar_one())
+
+    async def list_page(
+        self,
+        *,
+        user_id: str | None = None,
+        alert_id: str | None = None,
+        status: str | None = None,
+        unacked_only: bool = False,
+        from_ts: datetime | None = None,
+        to_ts: datetime | None = None,
+        cursor: str | None = None,
+        limit: int = 50,
+    ) -> Page[DeliveryRow]:
+        after_ts, after_id = decode_cursor(cursor) if cursor else (None, None)
+        params: dict[str, Any] = {
+            "user": user_id,
+            "alert_id": alert_id,
+            "status": status,
+            "unacked_only": unacked_only,
+            "from_ts": from_ts,
+            "to_ts": to_ts,
+            "after_ts": after_ts,
+            "after_id": None if after_id is None else int(after_id),
+            "limit": limit + 1,
+        }
+        async with self._relational.unit_of_work() as uow:
+            rows = [_row(r) for r in (await uow.session.execute(_LIST, params)).mappings()]
+        more = len(rows) > limit
+        rows = rows[:limit]
+        nxt = encode_cursor(rows[-1].queued_at, rows[-1].id) if more and rows else None
+        return Page(rows, nxt)
+
+    async def _write(self, stmt: sa.TextClause, params: dict[str, Any]) -> DeliveryRow | None:
+        async with self._relational.unit_of_work() as uow:
+            row = (await uow.session.execute(stmt, params)).mappings().first()
+            await uow.commit()
+        return None if row is None else _row(row)
+
+
+def _never() -> DeliveryRow:
+    raise RuntimeError("INSERT ... RETURNING produced no row")

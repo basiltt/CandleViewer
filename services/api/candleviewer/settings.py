@@ -115,6 +115,9 @@ class Settings(BaseSettings):
     allowed_origins: str = ""
 
     pg_dsn: SecretStr = SecretStr("postgresql+asyncpg://cv:cv@localhost:5432/candleviewer")
+    # E40-T01: `cv_owner` DSN used ONLY by the alert_deliveries retention purge
+    # (trg_ad_append refuses DELETE for every other role). Unset => purge off.
+    pg_owner_dsn: SecretStr | None = None
     questdb_ilp: str = "questdb:9009"
     questdb_pg: str = "questdb:8812"
     parquet_root: str = "/data/parquet"

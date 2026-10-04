@@ -1042,3 +1042,135 @@ rule_events = Table(
     Index("ix_re_run", "rule_run_id", "seq"),
     Index("ix_re_time", text("event_ts DESC")),
 )
+
+# --- 0014_alerts (E40-T01) -------------------------------------------------------------------
+alert_channel = ENUM(
+    "in_app",
+    "email",
+    "webhook",
+    "push",
+    "desktop",
+    name="alert_channel",
+    metadata=metadata,
+    create_type=False,
+)
+alert_trigger_mode = ENUM(
+    "once",
+    "every_time",
+    "once_per_bar",
+    name="alert_trigger_mode",
+    metadata=metadata,
+    create_type=False,
+)
+delivery_status = ENUM(
+    "queued",
+    "sent",
+    "failed",
+    "suppressed",
+    "acked",
+    name="delivery_status",
+    metadata=metadata,
+    create_type=False,
+)
+
+alerts = Table(
+    "alerts",
+    metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("owner_user_id", ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("name", Text, nullable=False),
+    Column("symbol", symbol_code),
+    Column("scope_account_id", UUID(as_uuid=True)),
+    Column("condition_ir", JSONB, nullable=False),
+    Column("condition_hash", _sha256_hex, nullable=False),
+    Column("enabled", Boolean, nullable=False, server_default=text("true")),
+    Column("trigger_mode", alert_trigger_mode, nullable=False, server_default=text("'once'")),
+    Column("cooldown_seconds", Integer, nullable=False, server_default=text("60")),
+    Column("snoozed_until", TIMESTAMP(timezone=True)),
+    Column("expires_at", TIMESTAMP(timezone=True)),
+    Column("severity", severity, nullable=False, server_default=text("'info'")),
+    Column("channels", ARRAY(alert_channel), nullable=False, server_default=text("'{in_app}'")),
+    Column(
+        "webhook_url_enc", BYTEA, comment="SECRET: envelope-encrypted; never selected into API DTOs"
+    ),
+    Column("webhook_secret_enc", BYTEA, comment="SECRET: envelope-encrypted HMAC key"),
+    Column("message_template", Text, nullable=False, server_default=text("''")),
+    Column("last_fired_at", TIMESTAMP(timezone=True)),
+    Column("fire_count", BigInteger, nullable=False, server_default=text("0")),
+    Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("deleted_at", TIMESTAMP(timezone=True)),
+    CheckConstraint("cooldown_seconds BETWEEN 0 AND 86400", name="al_cooldown"),
+    CheckConstraint("array_length(channels,1) BETWEEN 1 AND 5", name="al_channels"),
+    CheckConstraint(
+        "NOT ('webhook' = ANY(channels)) OR webhook_url_enc IS NOT NULL", name="al_webhook"
+    ),
+    Index(
+        "ux_alerts_name",
+        "owner_user_id",
+        text("lower(name)"),
+        unique=True,
+        postgresql_where=text("deleted_at IS NULL"),
+    ),
+    Index("ix_alerts_live", "symbol", postgresql_where=text("enabled AND deleted_at IS NULL")),
+    Index("ix_alerts_snooze", "snoozed_until", postgresql_where=text("snoozed_until IS NOT NULL")),
+    Index(
+        "ix_alerts_expiry",
+        "expires_at",
+        postgresql_where=text("expires_at IS NOT NULL AND deleted_at IS NULL"),
+    ),
+)
+
+alert_deliveries = Table(
+    "alert_deliveries",
+    metadata,
+    Column("id", BigInteger, primary_key=True, autoincrement=True),
+    Column("alert_id", ForeignKey("alerts.id", ondelete="CASCADE"), nullable=False),
+    Column("user_id", ForeignKey("users.id", ondelete="SET NULL")),
+    Column("channel", alert_channel, nullable=False),
+    Column("status", delivery_status, nullable=False, server_default=text("'queued'")),
+    Column("title", Text, nullable=False),
+    Column("body", Text, nullable=False, server_default=text("''")),
+    Column("context", JSONB, nullable=False, server_default=text("'{}'::jsonb")),
+    Column("attempt", SmallInteger, nullable=False, server_default=text("0")),
+    Column("http_status", SmallInteger),
+    Column("error_message", Text),
+    Column("queued_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("sent_at", TIMESTAMP(timezone=True)),
+    Column("acked_at", TIMESTAMP(timezone=True)),
+    Column("acked_by", ForeignKey("users.id", ondelete="SET NULL")),
+    CheckConstraint("attempt BETWEEN 0 AND 10", name="ad_attempt"),
+    Index("ix_ad_alert_time", "alert_id", text("queued_at DESC")),
+    Index("ix_ad_pending", "queued_at", postgresql_where=text("status = 'queued'")),
+    Index(
+        "ix_ad_user_unack",
+        "user_id",
+        text("queued_at DESC"),
+        postgresql_where=text("status = 'sent' AND acked_at IS NULL"),
+    ),
+)
+
+outbox = Table(
+    "outbox",
+    metadata,
+    Column("id", BigInteger, primary_key=True, autoincrement=True),
+    Column("topic", Text, nullable=False),
+    Column("dedup_key", Text, nullable=False),
+    Column("payload", JSONB, nullable=False),
+    Column("available_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    Column("attempts", SmallInteger, nullable=False, server_default=text("0")),
+    Column("max_attempts", SmallInteger, nullable=False, server_default=text("8")),
+    Column("locked_by", Text),
+    Column("locked_until", TIMESTAMP(timezone=True)),
+    Column("processed_at", TIMESTAMP(timezone=True)),
+    Column("dead_at", TIMESTAMP(timezone=True)),
+    Column("last_error", Text),
+    Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
+    CheckConstraint("attempts >= 0 AND attempts <= max_attempts + 1", name="ob_attempts"),
+    Index("ux_outbox_dedup", "topic", "dedup_key", unique=True),
+    Index(
+        "ix_outbox_ready",
+        "available_at",
+        postgresql_where=text("processed_at IS NULL AND dead_at IS NULL"),
+    ),
+)

@@ -66,6 +66,11 @@
       "path": "services/api/candleviewer/migrations/versions/0013_rules.py",
       "sha256": "2a7b9982ae71420594b56ec62cd0c88101f96a0865f78c7c0ccdc1840cb0b809",
       "down_revision": "0012_onboarding_dismissals"
+    },
+    "0014_alerts": {
+      "path": "services/api/candleviewer/migrations/versions/0014_alerts.py",
+      "sha256": "440a984f153a8a72a489a52cd810a57d8072045feccce0d619e67d7d849f8772",
+      "down_revision": "0013_rules"
     }
   }
 }

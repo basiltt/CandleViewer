@@ -83,3 +83,9 @@ class RetentionPolicy:
 
     def resolve(self, symbol: str, stream: StreamKind) -> RetentionRule | None:
         return self._by_symbol.get((symbol, stream)) or self._global.get(stream)
+
+
+#: `alert_deliveries` (PG) retention per docs/plan/21-database-schema.md retention table (E40-T01).
+ALERT_DELIVERIES_HOT_DAYS = 180
+ALERT_DELIVERIES_COLD_MONTHS = 24
+ALERT_DELIVERIES_ACTION = "archive_parquet"
