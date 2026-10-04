@@ -14,6 +14,8 @@ from typing import Annotated, Any, Protocol
 from fastapi import APIRouter, Path, Request
 from fastapi.responses import JSONResponse
 
+from candleviewer.api.step_up import _AuthLike, _bearer, require_elevation_for
+from candleviewer.auth.errors import AuthError
 from candleviewer.auth.generated_permissions import Permission, Scope
 from candleviewer.auth.owner_floor import OwnerFloorError, assert_owner_floor
 from candleviewer.auth.scopes import ForbiddenError, PrincipalSnapshot, enforce
@@ -82,6 +84,8 @@ def make_users_router(
     emitter: _Emitter,
     principal_resolver: SnapshotResolver | None,
     notifier: PermissionChangeNotifier,
+    *,
+    auth: _AuthLike | None = None,
 ) -> APIRouter:
     """`emitter` and `notifier` are mandatory: a role change without an
     audit record (C-2.9) or without a live-socket re-evaluation is refused
@@ -113,6 +117,20 @@ def make_users_router(
                 },
                 media_type="application/problem+json",
             )
+        # SR-025: step-up after authn + RBAC, before any mutation. Fail closed
+        # when the step-up service is not wired. Denial is audited by B16.
+        if auth is None or not auth.step_up_is_active or not auth.sessions_is_active:
+            return _problem(503, "Service unavailable", "step-up not wired")
+        token = _bearer(request)
+        if token is None:
+            return _problem(401, "Unauthorized", "authentication required")
+        try:
+            record = await auth.sessions.authenticate_access_token(token)
+        except AuthError:
+            return _problem(401, "Unauthorized", "authentication required")
+        gate = await require_elevation_for(auth, str(record.id), "users")
+        if gate is not None:
+            return gate
         try:
             body = await request.json()
         except ValueError:

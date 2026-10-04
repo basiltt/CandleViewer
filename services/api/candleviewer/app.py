@@ -761,7 +761,11 @@ def create_app(
     # Audit emitter + notifier are mandatory; store/resolver `None` -> 501.
     app.include_router(
         make_users_router(
-            user_role_store, _LazyAuditEmitter(ctx.audit), principal_resolver, ws_registry
+            user_role_store,
+            _LazyAuditEmitter(ctx.audit),
+            principal_resolver,
+            ws_registry,
+            auth=ctx.auth,
         )
     )
     app.include_router(

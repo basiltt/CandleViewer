@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import uuid
+from types import SimpleNamespace
 from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
 from candleviewer.api.users import make_users_router
+from candleviewer.auth.errors import SessionNotFound, StepUpRequired
 from candleviewer.auth.generated_permissions import Permission
 from candleviewer.auth.owner_floor import assert_owner_floor
 from candleviewer.auth.scopes import AccountGrant, PrincipalSnapshot
@@ -60,10 +62,77 @@ class _Notifier:
         self.users.append(user_id)
 
 
-def _client(store: _Store, snap: PrincipalSnapshot | None, em: _Emitter, n: _Notifier):
+class _StepUp:
+    def __init__(self, elevated: bool) -> None:
+        self.elevated = elevated
+        self.pending: list[tuple[str, str]] = []
+
+    async def require_elevation(self, session_id: str, action_class: str) -> None:
+        if not self.elevated:
+            raise StepUpRequired(action_class)
+
+    async def record_pending(self, session_id: str, action_class: str) -> None:
+        self.pending.append((session_id, action_class))
+
+
+class _Sessions:
+    async def authenticate_access_token(self, token: str) -> Any:
+        if token != "tok":  # noqa: S105
+            raise SessionNotFound("x")
+        return SimpleNamespace(id=uuid.uuid4(), user_id=OWNER)
+
+
+class _Auth:
+    step_up_is_active = True
+    sessions_is_active = True
+
+    def __init__(self, elevated: bool) -> None:
+        self.step_up = _StepUp(elevated)
+        self.sessions = _Sessions()
+
+
+def _client(
+    store: _Store,
+    snap: PrincipalSnapshot | None,
+    em: _Emitter,
+    n: _Notifier,
+    *,
+    elevated: bool = True,
+):
     app = FastAPI()
-    app.include_router(make_users_router(store, em, _Resolver(snap), n))
-    return TestClient(app)
+    app.include_router(make_users_router(store, em, _Resolver(snap), n, auth=_Auth(elevated)))
+    return TestClient(app, headers={"Authorization": "Bearer tok"})
+
+
+def test_put_roles_without_elevation_is_step_up_required_and_no_change() -> None:
+    store, em, n = _Store({"viewer"}, 2), _Emitter(), _Notifier()
+    r = _client(store, _admin(), em, n, elevated=False).put(
+        f"/users/{TARGET}/roles", json={"roles": ["manager"]}
+    )
+    assert r.status_code == 403
+    assert r.json()["code"] == "step_up_required"
+    assert r.json()["action_class"] == "users"
+    assert store.roles == {"viewer"}
+    assert n.users == []
+    assert "roles.grant" not in {c["action"] for c in em.calls}
+
+
+def test_put_roles_manager_forbidden_before_step_up() -> None:
+    store, em, n = _Store({"viewer"}, 1), _Emitter(), _Notifier()
+    r = _client(store, _manager(), em, n, elevated=False).put(
+        f"/users/{TARGET}/roles", json={"roles": ["owner"]}
+    )
+    assert r.status_code == 403
+    assert r.json()["code"] == "forbidden"
+
+
+def test_put_roles_without_auth_wired_fails_closed() -> None:
+    app = FastAPI()
+    app.include_router(
+        make_users_router(_Store({"viewer"}, 2), _Emitter(), _Resolver(_admin()), _Notifier())
+    )
+    r = TestClient(app).put(f"/users/{TARGET}/roles", json={"roles": ["manager"]})
+    assert r.status_code == 503
 
 
 def _admin() -> PrincipalSnapshot:
@@ -215,7 +284,9 @@ def test_ws_gateway_hooks_auth_ok_sub_check_and_live_permission_change() -> None
         sent.clear()
         store = _Store({"viewer"}, 2)
         app = FastAPI()
-        app.include_router(make_users_router(store, _Emitter(), _Resolver(_admin()), reg))
+        app.include_router(
+            make_users_router(store, _Emitter(), _Resolver(_admin()), reg, auth=_Auth(True))
+        )
         await reg.roles_changed(TARGET)
         assert [f["t"] for f in sent] == ["permission_change", "revoked"]
         close_connection(reg, authz)
