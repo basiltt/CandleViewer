@@ -120,3 +120,8 @@ trade_writes_dropped_total = Counter(
     "trade_writes_dropped_total",
     "Trade rows dropped from the bounded write-behind queue (oldest first).",
 )
+
+book_writes_dropped_total = Counter(
+    "book_writes_dropped_total",
+    "Order-book rows dropped from the bounded write-behind queue (oldest first).",
+)

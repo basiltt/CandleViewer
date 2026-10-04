@@ -56,6 +56,7 @@ _ALLOWED_EXTRA_EXPORTS: dict[str, set[str]] = {
         "make_audit_router",
         "make_market_router",
         "make_instruments_router",
+        "make_orderbook_router",
         "make_ticker_router",
         "make_trades_router",
         "make_rules_router",
