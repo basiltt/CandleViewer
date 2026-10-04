@@ -3,6 +3,12 @@
 Runs the generator as a subprocess (same convention as
 `services/api/tests/contract/test_generate_protocol_models.py`) so the test
 exercises the exact code path CI's `generated-code` check runs.
+
+These tests never write inside the checkout (C-13.7): the write path is
+exercised via `--out-dir <tmp_path>`, and the committed artefacts are only
+ever *read*. (A previous version regenerated in place and "restored" with a
+platform-default `write_text`, which rewrote the committed LF files as CRLF
+on Windows — a dirty tree after every `pytest` run.)
 """
 
 from __future__ import annotations
@@ -28,6 +34,10 @@ def _run(*extra_args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+def _read_bytes(path: Path) -> bytes:
+    return path.read_bytes()
+
+
 def test_check_passes_against_committed_output() -> None:
     """The committed `generated_permissions.py`/`rbac_seed.json` are exactly
     what the generator produces today — CI's `generated-code` job runs this
@@ -36,25 +46,41 @@ def test_check_passes_against_committed_output() -> None:
     assert result.returncode == 0, result.stderr
 
 
-def test_regenerating_twice_is_byte_identical() -> None:
-    before_enum = ENUM_PATH.read_text(encoding="utf-8")
-    before_seed = SEED_PATH.read_text(encoding="utf-8")
-    try:
-        first = _run()
-        assert first.returncode == 0, first.stderr
-        after_first_enum = ENUM_PATH.read_text(encoding="utf-8")
-        after_first_seed = SEED_PATH.read_text(encoding="utf-8")
+def test_committed_artefacts_round_trip_byte_identical(tmp_path: Path) -> None:
+    """Regenerating into a scratch directory reproduces the committed files
+    byte-for-byte (content *and* LF line endings), so running the generator
+    for real never produces a diff."""
+    result = _run("--out-dir", str(tmp_path))
+    assert result.returncode == 0, result.stderr
 
-        second = _run()
-        assert second.returncode == 0, second.stderr
-        after_second_enum = ENUM_PATH.read_text(encoding="utf-8")
-        after_second_seed = SEED_PATH.read_text(encoding="utf-8")
+    for committed in (ENUM_PATH, SEED_PATH):
+        generated = tmp_path / committed.name
+        assert generated.is_file()
+        assert _read_bytes(generated) == _read_bytes(committed), committed.name
+        assert b"\r" not in _read_bytes(generated), f"{committed.name} must be LF-only"
 
-        assert after_first_enum == after_second_enum
-        assert after_first_seed == after_second_seed
-    finally:
-        ENUM_PATH.write_text(before_enum, encoding="utf-8")
-        SEED_PATH.write_text(before_seed, encoding="utf-8")
+
+def test_regenerating_twice_is_byte_identical(tmp_path: Path) -> None:
+    first_dir = tmp_path / "first"
+    second_dir = tmp_path / "second"
+
+    first = _run("--out-dir", str(first_dir))
+    assert first.returncode == 0, first.stderr
+    second = _run("--out-dir", str(second_dir))
+    assert second.returncode == 0, second.stderr
+
+    for name in (ENUM_PATH.name, SEED_PATH.name):
+        assert _read_bytes(first_dir / name) == _read_bytes(second_dir / name)
+
+
+def test_generator_does_not_touch_the_checkout(tmp_path: Path) -> None:
+    """Explicit no-side-effect guard (C-13.7): after a `--out-dir` run the
+    committed files have the same bytes and mtimes as before."""
+    before = {p: (_read_bytes(p), p.stat().st_mtime_ns) for p in (ENUM_PATH, SEED_PATH)}
+    result = _run("--out-dir", str(tmp_path))
+    assert result.returncode == 0, result.stderr
+    after = {p: (_read_bytes(p), p.stat().st_mtime_ns) for p in (ENUM_PATH, SEED_PATH)}
+    assert before == after
 
 
 def test_generated_enum_imports_cleanly() -> None:

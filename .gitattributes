@@ -20,3 +20,11 @@ docs/plan/ws-schema.json linguist-generated=true
 services/api/candleviewer/api/_generated/** linguist-generated=true
 services/api/candleviewer/ws/_generated/** linguist-generated=true
 
+# Generated artefacts that are byte-compared against their generator in tests
+# (tools/rbac/generate.py --check, tools/gen/export_instrument_policy_*.py).
+# The generators always emit LF; pin eol=lf explicitly so the checkout can
+# never drift to CRLF and make those byte-equality gates platform-dependent.
+packages/fixtures/golden/policy/*.json                      text eol=lf linguist-generated=true
+services/api/candleviewer/auth/generated_permissions.py    text eol=lf linguist-generated=true
+services/api/candleviewer/auth/rbac_seed.json              text eol=lf linguist-generated=true
+
