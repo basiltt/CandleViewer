@@ -1,7 +1,6 @@
 """E35-X02: automated abuse-case suite (AC-a..n). Each case asserts refusal, no state change
 and (where the control exists today) an audit row. Cases whose control is not built yet are
-strict-xfail so they flip to a failure the day the feature lands without a test (see
-docs/security/e35/abuse-case-suite.md)."""
+documented in docs/security/e35/abuse-case-suite.md."""
 
 from __future__ import annotations
 
@@ -115,16 +114,18 @@ def test_ac_e_loosening_a_stop_is_refused_at_save(params: dict[str, Any]) -> Non
     assert _rules(e) == []
 
 
-@pytest.mark.xfail(strict=True, reason="E35-FR: targets=all_accounts widest-grant check not built")
 def test_ac_f_all_accounts_needs_widest_grant() -> None:
-    e = _Env({"rules:read", "rules:write"}, owner=False, granted=frozenset({str(A)}))
     act = {
         "node_id": "a1",
         "type": "send_notification",
         "targets": "all_accounts",
         "params": {"channel": "ui", "severity": "info", "template": "x"},
     }
-    assert e.c.post("/rules", json={"ir": _ir(actions=[act])}).status_code in (403, 422)
+    e = _Env({"rules:read", "rules:write"}, owner=False, granted=frozenset({str(A)}))
+    assert e.c.post("/rules", json={"ir": _ir(actions=[act])}).status_code == 403
+    assert _rules(e) == []
+    owner = _Env()
+    assert owner.c.post("/rules", json={"ir": _ir(actions=[act])}).status_code == 201
 
 
 def _emitter(
@@ -176,25 +177,75 @@ async def test_ac_h_act_while_frozen_is_denied_and_audited(freeze: str) -> None:
     assert sent == [] and audits[-1][1]["reason"] == "manager_frozen"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="sys.native_sl_watchdog / sys.clock_drift_block built-ins not in the repo yet (E35-S08)",
-)
-def test_ac_i_system_builtins_cannot_be_disabled() -> None:
-    e = _Env()
-    r = e.c.put(
-        "/rules/00000000-0000-4000-8000-0000000000aa/mode",
-        json={"mode": "disabled"},
-        headers={"Idempotency-Key": "k"},
-    )
-    assert r.status_code in (403, 409)  # a missing rule is 404 today, so this stays red until built
+async def _seed_system_rule(e: _Env, name: str) -> str:
+    rid = e.create(name=f"seed-{name}")
+    row = e.mgr._s._rows[rid]  # type: ignore[attr-defined]
+    row.name, row.mode = name, "armed"  # as the system-rule provisioner would
+    return rid
 
 
-@pytest.mark.xfail(strict=True, reason="rule export/import endpoints not built yet (E35-S06)")
-def test_ac_j_k_export_import_hygiene() -> None:
+@pytest.mark.parametrize("name", ["sys.native_sl_watchdog", "sys.clock_drift_block"])
+async def test_ac_i_system_builtins_cannot_be_disabled(name: str) -> None:
+    from candleviewer.rules.manager import Actor, RuleError
+
     e = _Env()
-    rid = e.create()
-    assert e.c.get(f"/rules/{rid}/export").status_code == 200
+    rid = await _seed_system_rule(e, name)
+    # API path: disable, edit and delete are all refused and audited
+    for r in (
+        e.mode(rid, "disabled", "k1"),
+        e.mode(rid, "simulate", "k2"),
+        e.c.delete(f"/rules/{rid}"),
+        e.c.put(f"/rules/{rid}", json={"ir": _ir(name=name)}, headers={"If-Match": "1"}),
+    ):
+        assert r.status_code == 403 and r.json()["code"] == "system_rule_protected"
+    assert e.mgr._s._rows[rid].mode == "armed"  # type: ignore[attr-defined]
+    assert _audit_actions(e).count("rule.system_rule_refused") == 4
+    # repository layer (manager) path
+    actor = Actor("u1", "s1", frozenset({"rules:read", "rules:write"}), is_owner=True)
+    with pytest.raises(RuleError) as ei:
+        await e.mgr.set_mode(rid, "disabled", actor, "k3")
+    assert ei.value.code == "system_rule_protected"
+    # a user cannot squat the reserved namespace
+    assert e.c.post("/rules", json={"ir": _ir(name="sys.mine")}).status_code == 403
+    # direct database update bypasses the API: detectable in the audit trail
+    e.mgr._s._rows[rid].mode = "disabled"  # type: ignore[attr-defined]
+    assert await e.mgr.verify_system_rules() == [name]
+    assert "rule.system_rule_tampered" in _audit_actions(e)
+
+
+async def test_ac_j_export_leaks_no_account_id_or_armed_state() -> None:
+    e = _Env()
+    rid = e.create(scope={"level": "account", "account_ids": [str(A)], "environments": ["demo"]})
+    e.ready(rid)
+    assert e.mode(rid, "armed", "a").status_code == 200
+    from candleviewer.rules.manager import Actor
+
+    actor = Actor("u1", "s1", frozenset(), is_owner=True)
+    bundle = await e.mgr.export_rule(rid, actor)
+    blob = str(bundle)
+    assert str(A) not in blob
+    assert bundle["ir"]["mode"] == "disabled" and bundle["ir"]["enabled"] is False
+    assert bundle["ir"]["scope"]["environments"] == ["demo"]
+
+
+async def test_ac_k_import_lands_disabled_and_never_remaps_accounts() -> None:
+    from candleviewer.rules.manager import Actor
+
+    e = _Env()
+    bundle = {
+        "ir": _ir(
+            name="imp",
+            mode="armed",
+            enabled=True,
+            scope={"level": "account", "account_ids": [str(C)], "environments": ["demo", "live"]},
+        )
+    }
+    low = Actor("u2", "s2", frozenset({"rules:write"}), granted_accounts=frozenset({str(A)}))
+    out = await e.mgr.import_rule(bundle, low)
+    assert out["mode"] == "disabled"
+    row = e.mgr._s._rows[out["id"]]  # type: ignore[attr-defined]
+    ir = row.versions[0].ir
+    assert not ir["scope"].get("account_ids") and ir["scope"]["environments"] == ["demo"]
 
 
 def test_ac_l_schema_bound_ir_is_bounded_and_slow_evaluation_is_aborted_then_auto_disabled() -> (

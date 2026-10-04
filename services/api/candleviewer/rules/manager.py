@@ -44,6 +44,11 @@ _ORDER_ACTIONS = frozenset(
 )
 
 
+SYSTEM_RULE_PREFIX = "sys."
+#: Always-on built-ins (24-internal-schemas §11.8 "cannot disable"); E35-X02 (i).
+PROTECTED_SYSTEM_RULES = frozenset({"sys.native_sl_watchdog", "sys.clock_drift_block"})
+
+
 class RuleError(Exception):
     def __init__(self, status: int, code: str, message: str, **extra: Any) -> None:
         super().__init__(message)
@@ -216,11 +221,62 @@ class RulesManager:
         """C-12.4: a non-owner may only target accounts granted to them."""
         if actor.is_owner:
             return
+        if any(a.targets == "all_accounts" for a in rule.actions):
+            # E35-X02 (f): fan-out to every account needs the widest grant (Owner); fail closed.
+            raise RuleError(
+                403, "forbidden", "Targeting all accounts needs the widest grant (Owner)."
+            )
         for a in rule.scope.account_ids:
             if str(a) not in actor.granted_accounts:
                 raise RuleError(
                     403, "forbidden", "You do not have access to one of the accounts in scope."
                 )
+
+    async def _guard_system(self, row: RuleRow, actor: Actor, op: str) -> None:
+        """Protected built-ins can never be disabled, edited or deleted by any API path."""
+        if row.name not in PROTECTED_SYSTEM_RULES:
+            return
+        await self._audit(
+            "rule.system_rule_refused",
+            {"rule_id": row.id, "name": row.name, "op": op, "actor": actor.user_id},
+        )
+        raise RuleError(403, "system_rule_protected", "System rules cannot be changed.")
+
+    async def export_rule(self, rule_id: str, actor: Actor) -> dict[str, Any]:
+        """Portable bundle (E35-X02 j): the IR only, with every account id, environment grant
+        and armed state stripped, so a bundle never leaks identifiers or live intent."""
+        row = await self._visible_row(rule_id, actor)
+        ver = next((v for v in row.versions if v.id == row.active_version_id), row.versions[-1])
+        ir = copy.deepcopy(ver.ir)
+        scope = dict(ir.get("scope", {}))
+        scope.pop("account_ids", None)
+        scope["environments"] = ["demo"]
+        ir.update(scope=scope, mode="disabled", enabled=False)
+        for k in ("created_by", "armed_by", "id"):
+            ir.pop(k, None)
+        return {"format": "cv-rule-bundle/1", "ir": ir}
+
+    async def import_rule(self, bundle: dict[str, Any], actor: Actor) -> dict[str, Any]:
+        """Always lands disabled; account ids in the bundle are dropped (never remapped)."""
+        ir = copy.deepcopy(bundle.get("ir", {}))
+        scope = dict(ir.get("scope", {}))
+        scope.pop("account_ids", None)
+        scope["environments"] = ["demo"]
+        ir.update(scope=scope)
+        return await self.create(ir, actor, notes="imported")
+
+    async def verify_system_rules(self) -> list[str]:
+        """Detect out-of-band tampering (e.g. a direct DB update): a protected built-in that
+        is no longer armed or was deleted is audited as `rule.system_rule_tampered`."""
+        bad: list[str] = []
+        for r in await self._s.all():
+            if r.name in PROTECTED_SYSTEM_RULES and (r.deleted or r.mode != "armed"):
+                bad.append(r.name)
+                await self._audit(
+                    "rule.system_rule_tampered",
+                    {"rule_id": r.id, "name": r.name, "mode": r.mode, "deleted": r.deleted},
+                )
+        return bad
 
     async def _visible_row(self, rule_id: str, actor: Actor) -> RuleRow:
         row = await self._row(rule_id)
@@ -327,6 +383,8 @@ class RulesManager:
         rid = str(uuid.uuid4())
         rule, h = self._validated({**ir, "mode": "disabled", "enabled": False}, rid)
         self._require_grants(rule, actor)
+        if rule.name.startswith(SYSTEM_RULE_PREFIX):
+            raise RuleError(403, "system_rule_reserved", "The 'sys.' name prefix is reserved.")
         existing = await self._s.all()
         if any(not r.deleted and r.name == rule.name for r in existing):
             raise RuleError(409, "name_taken", f"A rule named '{rule.name}' already exists.")
@@ -376,6 +434,7 @@ class RulesManager:
         notes: str = "",
     ) -> dict[str, Any]:
         row = await self._visible_row(rule_id, actor)
+        await self._guard_system(row, actor, "update")
         if expected_version != row.latest_version:
             self._metric("rule_save_conflicts_total", {})
             raise RuleError(
@@ -410,6 +469,7 @@ class RulesManager:
 
     async def delete(self, rule_id: str, actor: Actor) -> None:
         row = await self._visible_row(rule_id, actor)
+        await self._guard_system(row, actor, "delete")
         if row.mode == "armed":
             raise RuleError(
                 409,
@@ -549,6 +609,8 @@ class RulesManager:
             self._idem.move_to_end(cache_key)
             return self._idem[cache_key]
         prev = row.mode
+        if target != "armed":
+            await self._guard_system(row, actor, f"mode:{target}")
         try:
             out = await self._transition(row, target, actor, flatten_ack, override_reason)
         except RuleError as exc:

@@ -1,5 +1,5 @@
 # E35-X02: OWASP ZAP automation plan for the /rules* surface (authenticated, LOW-privilege).
-# Run: zap.sh -cmd -autorun .zap/rules-low-priv.yaml  (needs a seeded demo stack; not run in CI w/o docker)
+# Run: zap.sh -cmd -autorun .zap/rules-low-priv.yaml  (run nightly by .github/workflows/dast-rules-nightly.yml)
 # Credentials come from env vars (never committed): ZAP_LOWPRIV_TOKEN.
 env:
   contexts:
