@@ -28,13 +28,13 @@ from candleviewer.storage.repositories.relational_sqlalchemy import (
 _SELECT_RULE = sa.text(
     "SELECT id::text AS id, name, owner_user_id::text AS owner, scope::text AS scope, "
     "mode::text AS mode, active_version_id::text AS active_version_id, "
-    "armed_by::text AS armed_by, deleted_at IS NOT NULL AS deleted FROM rules "
+    "armed_by::text AS armed_by, disabled_reason, deleted_at IS NOT NULL AS deleted FROM rules "
     "WHERE id = CAST(:id AS uuid)"
 )
 _SELECT_RULES = sa.text(
     "SELECT id::text AS id, name, owner_user_id::text AS owner, scope::text AS scope, "
     "mode::text AS mode, active_version_id::text AS active_version_id, "
-    "armed_by::text AS armed_by, deleted_at IS NOT NULL AS deleted FROM rules"
+    "armed_by::text AS armed_by, disabled_reason, deleted_at IS NOT NULL AS deleted FROM rules"
 )
 _SELECT_VERSIONS_OF = sa.text(
     "SELECT id::text AS id, rule_id::text AS rule_id, version, ir, ir_hash::text AS ir_hash, "
@@ -65,7 +65,7 @@ _SET_SIM = sa.text(
 )
 _UPDATE_RULE = sa.text(
     "UPDATE rules SET name = :name, mode = CAST(:mode AS rule_mode), "
-    "active_version_id = CAST(:active AS uuid), "
+    "active_version_id = CAST(:active AS uuid), disabled_reason = :disabled_reason, "
     "armed_at = CASE WHEN :mode = 'armed' THEN COALESCE(armed_at, now()) ELSE NULL END, "
     "armed_by = CASE WHEN :mode = 'armed' THEN CAST(:armed_by AS uuid) ELSE NULL END, "
     "deleted_at = CASE WHEN :deleted THEN COALESCE(deleted_at, now()) ELSE NULL END, "
@@ -126,6 +126,7 @@ class PostgresRuleStore:
                     simulation_hours=hours,
                     versions=vs,
                     armed_by=r.armed_by,
+                    disabled_reason=r.disabled_reason,
                 )
             )
         return out
@@ -195,6 +196,7 @@ class PostgresRuleStore:
                     "active": row.active_version_id,
                     "armed_by": row.armed_by or row.owner,
                     "deleted": row.deleted,
+                    "disabled_reason": row.disabled_reason,
                 },
             )
             await uow.commit()

@@ -26,9 +26,20 @@ _ACTIONS: dict[str, str] = {
     "rule.disarmed": "rules.disarm",
     "rule.created": "rules.version_create",
     "rule.updated": "rules.version_create",
-    "rule.deleted": "rules.version_create",
+    "rule.deleted": "rules.delete",
+    "rule.simulated": "rules.simulate",
     "rule.mode_refused": "rules.arm",
 }
+
+
+def _before(payload: dict[str, Any]) -> dict[str, Any] | None:
+    """C-2.9 before/after: the prior mode and B9 state of a mode change."""
+    if "from" not in payload:
+        return None
+    before = {"mode": payload["from"]}
+    if "b9_from" in payload:
+        before["b9_state"] = payload["b9_from"]
+    return before
 
 
 def make_rules_audit(emitter: Any) -> Callable[[str, dict[str, Any]], Any]:
@@ -42,6 +53,7 @@ def make_rules_audit(emitter: Any) -> Callable[[str, dict[str, Any]], Any]:
             outcome=AuditOutcome.DENIED if action == "rule.mode_refused" else AuditOutcome.SUCCESS,
             object_kind="rule",
             object_id=str(payload.get("rule_id", "")),
+            before_state=_before(payload),
             after_state={k: v for k, v in payload.items() if k != "actor"} | {"event": action},
         )
 

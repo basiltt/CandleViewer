@@ -136,8 +136,11 @@ def test_live_arm_needs_permission_then_step_up_then_audits_and_publishes() -> N
     assert e.bcs[-1]["topic"] == "rules" and e.bcs[-1]["mode"] == "armed"
     assert e.grants == 0  # one-shot grant consumed by exactly this arming
     assert e.mode(rid, "disabled", "k4").status_code == 200
-    assert e.mode(rid, "simulate", "k5").status_code == 200
-    assert e.mode(rid, "armed", "k6").status_code == 403  # no second free arming
+    # B9 has no `disarmed -> simulating` arm: the chart (not a matrix) refuses it.
+    r = e.mode(rid, "simulate", "k5")
+    assert r.status_code == 422 and r.json()["code"] == "illegal_transition"
+    r = e.mode(rid, "armed", "k6")  # B9 `disarmed --ARM_REQUESTED--> armed`
+    assert r.status_code == 403 and r.json()["code"] == "step_up_required"  # no free re-arm
 
 
 def test_delete_armed_is_409_then_204_after_disarm() -> None:

@@ -78,6 +78,8 @@ AUDIT_ACTIONS: frozenset[str] = frozenset(
         "rules.arm",
         "rules.disarm",
         "rules.version_create",
+        "rules.simulate",
+        "rules.delete",
         "alerts.create",
         "recorder.start",
         "recorder.stop",

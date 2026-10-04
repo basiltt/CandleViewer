@@ -1,6 +1,8 @@
-"""Rule mode-transition matrix and arming preconditions (E35-S01, B9 `rule_instance`).
+"""Synchronous arming preconditions (E35-S01).
 
-Pure and synchronous: statecharts record, synchronous code enforces (C-2.21). Refusal
+Which mode changes are legal is NOT decided here: that is the B9 `rule_instance` chart
+(`rules.lifecycle`). This module only enforces what must hold before an arm is recorded:
+statecharts record, synchronous code enforces (C-2.21). Refusal
 messages are user-facing prose (rendered verbatim in SCR-085, read by a screen reader).
 """
 
@@ -8,18 +10,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-MODES = ("disabled", "simulate", "armed")
-#: `disabled <-> simulate -> armed -> disabled`; direct `disabled -> armed` is refused (§11.7).
-LEGAL: frozenset[tuple[str, str]] = frozenset(
-    {
-        ("disabled", "simulate"),
-        ("simulate", "disabled"),
-        ("simulate", "armed"),
-        ("armed", "disabled"),
-    }
+from candleviewer.statechart.bindings.b09_rule_instance import (
+    DEFAULT_MIN_SIMULATION_FIRES,
+    DEFAULT_MIN_SIMULATION_HOURS,
+    promotion_gate_met,
 )
-DEFAULT_MIN_SIMULATION_FIRES = 5
-DEFAULT_MIN_SIMULATION_HOURS = 24.0
+
+ORDERS_WRITE = "orders:write"
 LIVE_ARM_PERMISSION = "rules:arm_live"  # ticket "rules.arm.live"; DB codes are domain:action
 
 
@@ -54,35 +51,6 @@ class ArmingFacts:
     extra: dict[str, str] = field(default_factory=dict)
 
 
-def promotion_gate_met(
-    fires: int,
-    hours: float,
-    min_fires: int = DEFAULT_MIN_SIMULATION_FIRES,
-    min_hours: float = DEFAULT_MIN_SIMULATION_HOURS,
-) -> bool:
-    """§11.7: ``min_simulation_fires`` OR ``min_simulation_hours``, whichever comes first."""
-    return fires >= min_fires or hours >= min_hours
-
-
-def check_transition(current: str, target: str) -> Refusal | None:
-    if target not in MODES:
-        return Refusal(
-            "invalid_mode", 422, f"Unknown mode '{target}'. Choose disabled, simulate or armed."
-        )
-    if current == target:
-        return None  # idempotent re-request
-    if (current, target) in LEGAL:
-        return None
-    if (current, target) == ("disabled", "armed"):
-        return Refusal(
-            "illegal_transition",
-            422,
-            "A rule cannot be armed straight from disabled. "
-            "Move it to simulate first, then arm it.",
-        )
-    return Refusal("illegal_transition", 422, f"A rule cannot change from {current} to {target}.")
-
-
 def check_arming(f: ArmingFacts) -> Refusal | None:
     """First failing precondition wins; order is stable so refusals are deterministic."""
     if not f.has_valid_active_version or f.validation_errors:
@@ -112,6 +80,12 @@ def check_arming(f: ArmingFacts) -> Refusal | None:
                 f"Simulation needs {f.min_fires} fires or {f.min_hours:g} hours before arming. "
                 "Only the Owner can override this, with a written reason.",
             )
+    if f.sends_orders and not f.is_owner and ORDERS_WRITE not in f.perms:
+        return Refusal(
+            "orders_write_required",
+            403,
+            "You need the orders:write permission to arm a rule that places orders.",
+        )
     if f.sends_orders and f.unauthorised_accounts:
         return Refusal(
             "orders_write_required",

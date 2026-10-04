@@ -9,18 +9,22 @@ from __future__ import annotations
 
 import copy
 import uuid
+from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 from pydantic import ValidationError
 
+from candleviewer.rules.arming import ArmingFacts, check_arming
 from candleviewer.rules.ir import Rule, ir_hash
-from candleviewer.rules.mode import ArmingFacts, Refusal, check_arming, check_transition
+from candleviewer.rules.lifecycle import MODES, LifecycleError, RuleLifecycle, mode_of
 from candleviewer.rules.validator import validate_rule
 from candleviewer.rules.vocabulary import MetricRegistry
 
 COMPILER_VERSION = "1.0.0"
+#: Bounded replay cache for `Idempotency-Key` (C-2.18); see `set_mode`.
+IDEM_CACHE_MAX = 4096
 _ORDER_ACTIONS = frozenset(
     {
         "place_order",
@@ -74,6 +78,9 @@ class RuleRow:
     simulation_hours: float = 0.0
     versions: list[VersionRow] = field(default_factory=list)
     armed_by: str | None = None
+    #: `rules.disabled_reason`: which B9 state a `disabled` row projects (draft / disarmed /
+    #: kill_switched); `rules.lifecycle` hydrates the chart from it.
+    disabled_reason: str | None = None
 
 
 class RuleStore(Protocol):
@@ -125,6 +132,20 @@ def _noop_metric(_name: str, _labels: dict[str, str]) -> None:
     return None
 
 
+def _illegal(leaf: str, target: str) -> str:
+    """User-facing refusal for a change the B9 chart does not accept from *leaf*."""
+    if target == "armed" and leaf == "draft":
+        return (
+            "A rule cannot be armed straight from disabled. "
+            "Move it to simulate first, then arm it."
+        )
+    if target == "armed" and leaf == "kill_switched":
+        return "This rule was stopped by the kill switch. Re-arming needs a fresh step-up code."
+    if target == "armed":
+        return "This rule has not met its simulation requirement, so it cannot be armed yet."
+    return f"A rule cannot change from {mode_of(leaf)} to {target} right now."
+
+
 def quarantine_path(ir: dict[str, Any]) -> str | None:
     """JSON path of the first schema violation, or None when the stored IR is sound."""
     try:
@@ -143,13 +164,15 @@ class RulesManager:
         audit: Audit = _noop_audit,
         broadcast: Broadcast = _noop_bc,
         on_metric: Metric = _noop_metric,
+        lifecycle: RuleLifecycle | None = None,
     ) -> None:
         self._s = store
         self._reg = registry
         self._audit = audit
         self._bc = broadcast
         self._metric = on_metric
-        self._idem: dict[str, dict[str, Any]] = {}
+        self._idem: OrderedDict[str, dict[str, Any]] = OrderedDict()
+        self.lifecycle = lifecycle or RuleLifecycle()
 
     def set_hooks(self, *, audit: Audit | None = None, broadcast: Broadcast | None = None) -> None:
         if audit is not None:
@@ -195,9 +218,7 @@ class RulesManager:
             bad = quarantine_path(active.ir)
             if bad is not None:
                 self._metric("rule_quarantined_total", {})
-                row.mode = "disabled"  # force-disarm: never partially executed
                 out.update(
-                    mode="disabled",
                     read_only=True,
                     quarantined=True,
                     failing_path=bad,
@@ -209,17 +230,16 @@ class RulesManager:
         return out
 
     async def _present(self, row: RuleRow) -> dict[str, Any]:
-        """`_view` + persist a quarantine force-disarm (never left armed in the store)."""
-        before = row.mode
-        out = self._view(row)
-        if row.mode != before:
-            row.armed_by = None
-            await self._audit(
-                "rule.disarmed",
-                {"rule_id": row.id, "mode": "disabled", "from": before, "reason": "quarantined"},
-            )
-            await self._s.put(row)
-        return out
+        """`_view` + a quarantine force-disarm recorded through the B9 chart (`DISARM`), so
+        a corrupt rule is never left armed in the store or the engine."""
+        active = next((v for v in row.versions if v.id == row.active_version_id), None)
+        if row.mode == "armed" and active is not None and quarantine_path(active.ir):
+            leaf = await self._leaf(row)
+            payload = {"rule_id": row.id, "mode": "disabled", "from": row.mode}
+            payload |= {"b9_from": leaf, "b9_event": "DISARM", "reason": "quarantined"}
+            if await self._record(row, "DISARM", "rule.disarmed", payload, reason="quarantined"):
+                await self._bc({"topic": "rules", **payload})
+        return self._view(row)
 
     @staticmethod
     def _version_view(v: VersionRow, full: bool = False) -> dict[str, Any]:
@@ -391,10 +411,7 @@ class RulesManager:
         if v is None:
             raise RuleError(404, "not_found", "That version does not exist.")
         row.active_version_id = v.id
-        if row.mode == "armed" and v.ir_hash not in row.simulated_hashes:
-            row.mode = "simulate"  # an unsimulated version must never run armed
-            row.armed_by = None
-        await self._s.put(row)
+        demote = row.mode == "armed" and v.ir_hash not in row.simulated_hashes
         await self._audit(
             "rule.updated",
             {
@@ -406,7 +423,16 @@ class RulesManager:
                 "activated": True,
             },
         )
-        await self._s.put(row)
+        if demote:
+            # An unsimulated version must never run armed: B9 `armed --EDIT--> simulating`.
+            leaf = await self._leaf(row)
+            payload = {"rule_id": rule_id, "mode": "simulate", "from": "armed", "b9_from": leaf}
+            payload |= {"b9_event": "EDIT", "actor": actor.user_id, "ir_hash": v.ir_hash}
+            if not await self._record(row, "EDIT", "rule.simulated", payload):
+                raise RuleError(409, "conflict", "The rule could not leave armed. Disarm it first.")
+            await self._bc({"topic": "rules", **payload})
+        else:
+            await self._s.put(row)
         return await self._present(row)
 
     async def record_simulation(self, rule_id: str, hash_: str, fires: int, hours: float) -> None:
@@ -427,16 +453,24 @@ class RulesManager:
         flatten_ack: bool = False,
         override_reason: str | None = None,
     ) -> dict[str, Any]:
+        """Move a rule to *target* by sending the matching event to its B9 chart.
+
+        Idempotency is state-based: a request for the mode the rule is already in is a
+        200 no-op (no event, no audit, no broadcast), so a retried arm can never arm twice,
+        also across restarts and workers. The bounded per-process cache only replays the
+        first response byte-for-byte; it is keyed by actor and consulted after the RBAC
+        visibility check, so another user's key never returns this user's result."""
         if not idempotency_key:
             raise RuleError(
                 400,
                 "idempotency_key_required",
                 "Send an Idempotency-Key header so a retry cannot arm the rule twice.",
             )
-        cache_key = f"{rule_id}:{idempotency_key}:{target}"
-        if cache_key in self._idem:
-            return self._idem[cache_key]
         row = await self._visible_row(rule_id, actor)
+        cache_key = f"{actor.user_id}:{rule_id}:{idempotency_key}:{target}"
+        if cache_key in self._idem:
+            self._idem.move_to_end(cache_key)
+            return self._idem[cache_key]
         prev = row.mode
         try:
             out = await self._transition(row, target, actor, flatten_ack, override_reason)
@@ -446,12 +480,46 @@ class RulesManager:
             )
             await self._audit(
                 "rule.mode_refused",
-                {"rule_id": rule_id, "to": target, "code": exc.code, "actor": actor.user_id},
+                {"rule_id": rule_id, "from": prev, "to": target, "code": exc.code}
+                | {"actor": actor.user_id},
             )
             raise
-        self._metric("rule_mode_transitions_total", {"from": prev, "to": target, "result": "ok"})
         self._idem[cache_key] = out
+        while len(self._idem) > IDEM_CACHE_MAX:
+            self._idem.popitem(last=False)
         return out
+
+    async def _leaf(self, row: RuleRow) -> str:
+        return await self.lifecycle.current(row.id, row.mode, row.disabled_reason)
+
+    async def _record(
+        self, row: RuleRow, event: str, audit_action: str, payload: dict[str, Any], **ev: Any
+    ) -> bool:
+        """Send *event* to the rule's B9 chart (via the gateway) after the synchronous
+        decision (C-2.21); if the chart moved, write the audit record (C-2.9, before/after)
+        and only then persist the projected mode on the row. Returns False when the chart
+        refused (nothing audited as a success, nothing persisted). Any failure after the
+        chart moved evicts it, so it is rebuilt from the row - the durable truth - and the
+        caller gets an error, never a 2xx."""
+        try:
+            before, leaf = await self.lifecycle.send(row.id, event, **ev)
+        except LifecycleError as exc:
+            await self.lifecycle.evict(row.id)
+            raise RuleError(
+                503, "lifecycle_unavailable", "Could not change the rule's mode. Try again."
+            ) from exc
+        if leaf == before:
+            return False
+        try:
+            await self._audit(audit_action, payload | {"b9_to": leaf})
+            row.mode = mode_of(leaf)
+            row.disabled_reason = leaf if row.mode == "disabled" and leaf != "draft" else None
+            row.armed_by = str(payload.get("actor") or row.owner) if row.mode == "armed" else None
+            await self._s.put(row)
+        except BaseException:
+            await self.lifecycle.evict(row.id)
+            raise
+        return True
 
     async def _transition(
         self,
@@ -461,12 +529,14 @@ class RulesManager:
         flatten_ack: bool,
         override_reason: str | None,
     ) -> dict[str, Any]:
-        prev = row.mode
-        bad: Refusal | None = check_transition(prev, target)
-        if bad:
-            raise RuleError(bad.status, bad.code, bad.message)
+        if target not in MODES:
+            raise RuleError(
+                422, "invalid_mode", f"Unknown mode '{target}'. Choose disabled, simulate or armed."
+            )
+        leaf = await self._leaf(row)
+        prev = mode_of(leaf)
         if prev == target:
-            return await self._present(row)
+            return self._view(row)  # idempotent no-op: no event, no audit
         v = next((x for x in row.versions if x.id == row.active_version_id), None)
         if target in ("simulate", "armed") and (v is None or quarantine_path(v.ir)):
             raise RuleError(
@@ -474,15 +544,22 @@ class RulesManager:
                 "rule_invalid",
                 "This rule cannot be read by the engine. Export it and repair it first.",
             )
+        ev_payload: dict[str, Any] = {"actor": actor.user_id}
         if target == "armed" and v is not None:
-            await self._check_arming(row, v, actor, flatten_ack, override_reason)
-        row.mode = target
-        row.armed_by = actor.user_id if target == "armed" else None
-        await self._s.put(row)
+            ev_payload |= await self._check_arming(row, v, actor, flatten_ack, override_reason)
+        event = await self.lifecycle.handled_event(
+            row.id, row.mode, row.disabled_reason, target, **ev_payload
+        )
+        if event is None:
+            raise RuleError(422, "illegal_transition", _illegal(leaf, target))
+        if event == "HUMAN_REARM" or (target == "armed" and ev_payload.get("live")):
+            await self._consume_step_up(actor)
         payload: dict[str, Any] = {
             "rule_id": row.id,
             "mode": target,
             "from": prev,
+            "b9_from": leaf,
+            "b9_event": event,
             "actor": actor.user_id,
         }
         if v is not None:
@@ -495,10 +572,19 @@ class RulesManager:
             }
         if override_reason:
             payload["override_reason"] = override_reason
-        action = {"armed": "rule.armed", "disabled": "rule.disarmed"}.get(target, "rule.updated")
-        await self._audit(action, payload)
+        action = {"armed": "rule.armed", "disabled": "rule.disarmed"}.get(target, "rule.simulated")
+        if not await self._record(row, event, action, payload, **ev_payload):
+            raise RuleError(422, "illegal_transition", _illegal(leaf, target))
+        self._metric("rule_mode_transitions_total", {"from": prev, "to": row.mode, "result": "ok"})
         await self._bc({"topic": "rules", **payload})  # emitted before the HTTP response returns
         return self._view(row)
+
+    async def _consume_step_up(self, actor: Actor) -> None:
+        # One-shot: a fresh code arms exactly one live / re-arm transition (no-grace class).
+        if actor.consume_step_up is not None and not await actor.consume_step_up():
+            raise RuleError(
+                403, "step_up_required", "Re-enter your authenticator code to arm a live rule."
+            )
 
     async def _check_arming(
         self,
@@ -507,15 +593,18 @@ class RulesManager:
         actor: Actor,
         flatten_ack: bool,
         override_reason: str | None,
-    ) -> None:
+    ) -> dict[str, Any]:
+        """Synchronous arming decision (C-2.21). Raises on refusal; on success returns the
+        server-computed facts the B9 guards read (`permitted` + simulation evidence)."""
         rule = Rule.model_validate(v.ir)
         res = validate_rule(rule, self._reg, actor.perms)
         types = {a.type for a in rule.actions}
+        sims = v.ir_hash in row.simulated_hashes
         facts = ArmingFacts(
             has_valid_active_version=True,
             validation_errors=len(res.errors),
             open_safety_warnings=sum(1 for w in res.warnings if w.klass == "safety"),
-            simulated_on_ir_hash=v.ir_hash in row.simulated_hashes,
+            simulated_on_ir_hash=sims,
             simulation_fires=row.simulation_fires,
             simulation_hours=row.simulation_hours,
             environments=tuple(rule.scope.environments),
@@ -535,11 +624,14 @@ class RulesManager:
         refusal = check_arming(facts)
         if refusal:
             raise RuleError(refusal.status, refusal.code, refusal.message)
-        if "live" in facts.environments and actor.consume_step_up is not None:
-            # One-shot: a fresh code arms exactly one live transition (no-grace class).
-            if not await actor.consume_step_up():
-                raise RuleError(
-                    403,
-                    "step_up_required",
-                    "Re-enter your authenticator code to arm a live rule.",
-                )
+        out: dict[str, Any] = {
+            "permitted": True,
+            "elevated": True,
+            "is_owner": actor.is_owner,
+            "simulation_fires": row.simulation_fires,
+            "simulation_hours": row.simulation_hours,
+            "live": "live" in facts.environments,
+        }
+        if override_reason:
+            out["owner_override_reason"] = override_reason
+        return out

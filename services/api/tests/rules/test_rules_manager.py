@@ -1,4 +1,4 @@
-"""E35-S01: store, version and mode-switch rules (manager + mode matrix)."""
+"""E35-S01: store, version and mode-switch rules (manager + B9-driven mode lifecycle)."""
 
 from __future__ import annotations
 
@@ -8,16 +8,10 @@ from typing import Any
 
 import pytest
 
+from candleviewer.rules.arming import ArmingFacts, check_arming
 from candleviewer.rules.manager import Actor, InMemoryRuleStore, RuleError, RulesManager
-from candleviewer.rules.mode import (
-    LEGAL,
-    MODES,
-    ArmingFacts,
-    check_arming,
-    check_transition,
-    promotion_gate_met,
-)
 from candleviewer.rules.vocabulary import default_registry
+from candleviewer.statechart.bindings.b09_rule_instance import promotion_gate_met
 
 FIX = Path(__file__).parents[1] / "fixtures/rule_ir"
 OWNER = Actor("u1", "s1", frozenset({"rules:arm_live"}), is_owner=True, step_up_fresh=True)
@@ -222,20 +216,6 @@ async def test_invalid_ir_rejected_422() -> None:
     assert e.value.status == 422
 
 
-@pytest.mark.parametrize("cur", MODES)
-@pytest.mark.parametrize("tgt", MODES)
-def test_transition_matrix(cur: str, tgt: str) -> None:
-    r = check_transition(cur, tgt)
-    assert (r is None) == (cur == tgt or (cur, tgt) in LEGAL)
-
-
-def test_unknown_mode_and_disabled_to_armed_refused() -> None:
-    bad = check_transition("disabled", "bogus")
-    assert bad is not None and bad.code == "invalid_mode"
-    direct = check_transition("disabled", "armed")
-    assert direct is not None and direct.code == "illegal_transition"
-
-
 def _facts(**kw: Any) -> ArmingFacts:
     base: dict[str, Any] = {
         "has_valid_active_version": True,
@@ -259,7 +239,15 @@ def _facts(**kw: Any) -> ArmingFacts:
         ({"open_safety_warnings": 1}, "safety_warning_open"),
         ({"simulated_on_ir_hash": False}, "simulation_required"),
         ({"simulation_fires": 1}, "promotion_gate"),
-        ({"sends_orders": True, "unauthorised_accounts": ("a",)}, "orders_write_required"),
+        ({"sends_orders": True}, "orders_write_required"),
+        (
+            {
+                "sends_orders": True,
+                "perms": frozenset({"orders:write"}),
+                "unauthorised_accounts": ("a",),
+            },
+            "orders_write_required",
+        ),
         ({"environments": ("live",)}, "permission_required"),
         ({"environments": ("live",), "perms": frozenset({"rules:arm_live"})}, "step_up_required"),
         ({"has_flatten_all": True}, "acknowledgement_required"),

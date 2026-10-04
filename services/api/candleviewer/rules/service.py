@@ -66,8 +66,10 @@ class RulesService:
         self._started = True
 
     async def stop(self, grace_s: float) -> None:
-        """Stop the module within `grace_s` seconds. No-op scaffold."""
+        """Stop the module within `grace_s` seconds: stop the live B9 rule charts."""
         self._started = False
+        if self._manager is not None:
+            await self._manager.lifecycle.stop()
         self._registry = None
         self._manager = None
 

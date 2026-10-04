@@ -13,9 +13,22 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from candleviewer.rules.mode import promotion_gate_met
 from candleviewer.statechart.bindings import register_binding_module
 from candleviewer.statechart.config import register_event_schemas
+
+#: §11.7 new-rule gate defaults (24-internal-schemas.md): fires OR hours, whichever first.
+DEFAULT_MIN_SIMULATION_FIRES = 5
+DEFAULT_MIN_SIMULATION_HOURS = 24.0
+
+
+def promotion_gate_met(
+    fires: int,
+    hours: float,
+    min_fires: int = DEFAULT_MIN_SIMULATION_FIRES,
+    min_hours: float = DEFAULT_MIN_SIMULATION_HOURS,
+) -> bool:
+    """§11.7: ``min_simulation_fires`` OR ``min_simulation_hours``, whichever comes first."""
+    return fires >= min_fires or hours >= min_hours
 
 
 async def _noop_action(*_args: object, **_kwargs: object) -> None:
@@ -57,7 +70,12 @@ def _payload(event: Any) -> dict[str, Any]:
 
 
 def _guard_args(args: tuple[object, ...]) -> tuple[dict[str, Any], dict[str, Any]]:
-    """`(context, event payload)` from the library's positional guard arguments."""
+    """`(context, event payload)` from the library's positional guard arguments.
+
+    The runtime calls `guard(context: dict, event: Event)`; tests may pass an object with
+    a `.context` dict and a bare payload dict. Never confuse the context for the event."""
+    if len(args) >= 2 and isinstance(args[0], dict):
+        return args[0], _payload(args[1])
     ctx = _ctx(args) or {}
     for a in args:
         if isinstance(a, dict) and a is not ctx:
@@ -68,20 +86,26 @@ def _guard_args(args: tuple[object, ...]) -> tuple[dict[str, Any], dict[str, Any
 def promotion_gate_satisfied_and_permitted(*args: object, **_kwargs: object) -> bool:
     """Deny-polarity (INV-B9-e): promote only on proven simulation + permission.
 
-    The event carries the server-computed facts (`permitted`, set by the synchronous
-    arming check in `rules.mode`/`RulesManager`; statecharts record, code enforces).
+    The event carries server-computed facts: `permitted` (the synchronous arming check in
+    `rules.arming` passed; statecharts record, code enforces, C-2.21) and the simulation
+    evidence of the active version (`simulation_fires` / `simulation_hours`, read from the
+    row by `RulesManager`), else the chart's own counters. `replay` re-enters an already
+    enforced, persisted `armed` state (built only by `rules.lifecycle` hydration).
     Total: any malformed input yields False (catalogue A6)."""
     try:
         ctx, ev = _guard_args(args)
         if ev.get("permitted") is not True:
             return False
+        if ev.get("replay") is True:
+            return True
         if ev.get("owner_override_reason") and ev.get("is_owner") is True:
             return True
-        hours = 0.0
+        fires = int(ev.get("simulation_fires", ctx.get("simulation_fires", 0)))
+        hours = float(ev.get("simulation_hours", 0.0))
         started, now = ctx.get("simulation_started_us"), ev.get("now_us")
         if started is not None and now is not None:
-            hours = max(0, int(now) - int(started)) / 3_600_000_000
-        return promotion_gate_met(int(ctx.get("simulation_fires", 0)), hours)
+            hours = max(hours, max(0, int(now) - int(started)) / 3_600_000_000)
+        return promotion_gate_met(fires, hours)
     except (TypeError, ValueError, AttributeError):
         return False
 
