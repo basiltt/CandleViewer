@@ -13,7 +13,7 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     PYTHONDONTWRITEBYTECODE=1
 
-RUN pip install --no-cache-dir uv==0.4.27
+RUN pip install --no-cache-dir "pip==26.2.1" uv==0.4.27
 
 WORKDIR /build
 COPY services/api/pyproject.toml services/api/uv.lock ./
