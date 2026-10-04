@@ -155,7 +155,10 @@ def test_freeze_manifest_pnpm_graph_ignores_unsaved_hoisted_devdeps() -> None:
         {
             "name": "@cv/web",
             "dependencies": {"react": {"version": "18.3.1"}},
-            "unsavedDependencies": {"husky": {"version": "9.1.7"}, "prettier": {"version": "3.3.3"}},
+            "unsavedDependencies": {
+                "husky": {"version": "9.1.7"},
+                "prettier": {"version": "3.3.3"},
+            },
             "deduped": True,
             "dedupedDependenciesCount": 3,
         }
@@ -190,3 +193,109 @@ def test_electron_toolchain_past_high_advisories() -> None:
     ]
     assert dev["electron"] == "^41.10.7"
     assert dev["electron-builder"] == "^26.15.3"
+
+
+# --- Dependabot-aware freeze flow (35-dependency-freeze-policy.md §2.1, Refs #1234) ----------
+
+
+def _dependabot_updates() -> list[dict]:
+    doc = yaml.safe_load((ROOT / ".github/dependabot.yml").read_text(encoding="utf-8"))
+    assert doc["version"] == 2
+    return doc["updates"]
+
+
+def test_dependabot_every_ecosystem_is_weekly_grouped_and_labelled_dependencies() -> None:
+    updates = _dependabot_updates()
+    assert {u["package-ecosystem"] for u in updates} == {"github-actions", "pip", "npm", "docker"}
+    for u in updates:
+        assert u["schedule"]["interval"] == "weekly", u["package-ecosystem"]
+        assert u.get("groups"), f"{u['package-ecosystem']} must be grouped (policy §2.1.1)"
+        assert "dependencies" in u["labels"], u["package-ecosystem"]
+        assert "security" in u["labels"], u["package-ecosystem"]
+
+
+def test_dependabot_github_actions_bumps_carry_security_review_label() -> None:
+    (gha,) = [u for u in _dependabot_updates() if u["package-ecosystem"] == "github-actions"]
+    assert "security-review" in gha["labels"]
+
+
+def test_dependabot_ignores_majors_on_pinned_runtime_sensitive_packages() -> None:
+    (npm,) = [u for u in _dependabot_updates() if u["package-ecosystem"] == "npm"]
+    ignored = {i["dependency-name"]: i.get("update-types") for i in npm["ignore"]}
+    assert ignored["size-limit"] == ["version-update:semver-major"]
+    assert ignored["@size-limit/*"] == ["version-update:semver-major"]
+    assert "pnpm" in ignored
+    (pip,) = [u for u in _dependabot_updates() if u["package-ecosystem"] == "pip"]
+    assert "xstate-statemachine" in {i["dependency-name"] for i in pip["ignore"]}
+
+
+def test_license_scan_proposes_manifest_and_uploads_only_for_dependency_prs() -> None:
+    text = (ROOT / ".github/workflows/_job-security.yml").read_text(encoding="utf-8")
+    assert "check_freeze_manifest.py --propose freeze-manifest-proposal" in text
+    assert "name: freeze-manifest-proposal" in text
+    assert "github.actor == 'dependabot[bot]'" in text
+    assert "contains(github.event.pull_request.labels.*.name, 'dependencies')" in text
+    # never auto-commit: no push / commit step and no write permission in the lane
+    assert "git push" not in text and "git commit" not in text
+    assert "contents: write" not in text
+    assert "pull_request_target" not in text
+
+
+def test_write_proposal_writes_manifest_diff_and_step_summary(tmp_path: Path, monkeypatch) -> None:
+    import sys
+
+    sys.path.insert(0, str(ROOT))
+    from tools.ci.check_freeze_manifest import write_proposal
+
+    summary = tmp_path / "summary.md"
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary))
+    expected = "aaa  pnpm-lock.yaml\nbbb  uv.lock\n"
+    actual = "ccc  pnpm-lock.yaml\nbbb  uv.lock\n"
+    out = tmp_path / "proposal"
+    proposed = write_proposal(out, expected, actual)
+    assert proposed == out / "freeze-manifest.sha256"
+    assert proposed.read_text(encoding="utf-8") == actual
+    diff = (out / "freeze-manifest.diff").read_text(encoding="utf-8")
+    assert "-aaa  pnpm-lock.yaml" in diff and "+ccc  pnpm-lock.yaml" in diff
+    body = summary.read_text(encoding="utf-8")
+    assert "policy §2.1" in body and "Nothing was committed" in body and "+ccc" in body
+
+
+def test_propose_mode_never_touches_committed_manifest_and_still_fails(
+    tmp_path: Path, monkeypatch
+) -> None:
+    import sys
+
+    sys.path.insert(0, str(ROOT))
+    import tools.ci.check_freeze_manifest as m
+
+    committed = tmp_path / "freeze-manifest.sha256"
+    committed.write_text("old  pnpm-lock.yaml\n", encoding="utf-8")
+    monkeypatch.setattr(m, "MANIFEST", committed)
+    monkeypatch.setattr(m, "compute", lambda: {"pnpm-lock.yaml": "new"})
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+    rc = m.main(["--propose", str(tmp_path / "out")])
+    assert rc == 1
+    assert committed.read_text(encoding="utf-8") == "old  pnpm-lock.yaml\n"
+    assert (tmp_path / "out" / "freeze-manifest.sha256").read_text(encoding="utf-8") == (
+        "new  pnpm-lock.yaml\n"
+    )
+
+
+def test_propose_mode_is_silent_when_manifest_matches(tmp_path: Path, monkeypatch) -> None:
+    import sys
+
+    sys.path.insert(0, str(ROOT))
+    import tools.ci.check_freeze_manifest as m
+
+    committed = tmp_path / "freeze-manifest.sha256"
+    committed.write_text("same  pnpm-lock.yaml\n", encoding="utf-8")
+    monkeypatch.setattr(m, "MANIFEST", committed)
+    monkeypatch.setattr(m, "compute", lambda: {"pnpm-lock.yaml": "same"})
+    assert m.main(["--propose", str(tmp_path / "out")]) == 0
+    assert not (tmp_path / "out").exists()
+
+
+def test_policy_doc_describes_propose_flow() -> None:
+    text = (ROOT / "docs/plan/35-dependency-freeze-policy.md").read_text(encoding="utf-8")
+    assert "### 2.1" in text and "--propose" in text and "freeze-manifest-proposal" in text

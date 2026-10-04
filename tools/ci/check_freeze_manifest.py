@@ -9,14 +9,21 @@ Lines of the manifest (``<sha256>  <component>``):
   pnpm-graph           ``pnpm ls -r --json --depth Infinity``, normalised (machine paths dropped)
   uv-graph             ``uv export --frozen --all-groups`` for services/api
 
-Usage: ``python tools/ci/check_freeze_manifest.py [--write]`` (``--write`` regenerates).
+Usage: ``python tools/ci/check_freeze_manifest.py [--write | --propose DIR]``.
+  --write        regenerates the committed manifest (approved freeze change, policy §2)
+  --propose DIR  Dependabot-aware CI mode (policy §2.1): on mismatch, writes the regenerated
+                 manifest and a unified diff into DIR and appends them to
+                 ``$GITHUB_STEP_SUMMARY`` for the reviewer. The committed manifest is never
+                 touched and the exit status is still 1 — a human commits the proposal.
 """
 
 from __future__ import annotations
 
 import argparse
+import difflib
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -89,9 +96,52 @@ def render(digests: dict[str, str]) -> str:
     return "".join(f"{v}  {k}\n" for k, v in digests.items())
 
 
+def manifest_diff(expected: str, actual: str) -> str:
+    """Unified diff of the committed manifest vs the recomputed one (relative path header)."""
+    return "".join(
+        difflib.unified_diff(
+            expected.splitlines(keepends=True),
+            actual.splitlines(keepends=True),
+            fromfile="a/security/freeze-manifest.sha256",
+            tofile="b/security/freeze-manifest.sha256",
+        )
+    )
+
+
+def write_proposal(out_dir: Path, expected: str, actual: str) -> Path:
+    """Policy §2.1: materialise the regenerated manifest + diff without touching the committed file.
+
+    Returns the path of the proposed manifest. Also appends a reviewer-facing block to
+    ``$GITHUB_STEP_SUMMARY`` when that variable is set (i.e. in GitHub Actions).
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    proposed = out_dir / "freeze-manifest.sha256"
+    proposed.write_text(actual, encoding="utf-8", newline="\n")
+    diff = manifest_diff(expected, actual)
+    (out_dir / "freeze-manifest.diff").write_text(diff, encoding="utf-8", newline="\n")
+    summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary:
+        with open(summary, "a", encoding="utf-8") as fh:
+            fh.write(
+                "## Freeze manifest proposal (E43-T05, policy §2.1)\n\n"
+                "The dependency graph of this PR differs from `security/freeze-manifest.sha256`. "
+                "Nothing was committed. If the bump is approved, a reviewer commits the regenerated "
+                "manifest (download the `freeze-manifest-proposal` artifact or run "
+                "`python tools/ci/check_freeze_manifest.py --write`) and re-runs CI.\n\n"
+                "```diff\n" + diff + "```\n"
+            )
+    return proposed
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--write", action="store_true", help="regenerate the committed manifest")
+    mode = ap.add_mutually_exclusive_group()
+    mode.add_argument("--write", action="store_true", help="regenerate the committed manifest")
+    mode.add_argument(
+        "--propose",
+        metavar="DIR",
+        help="on mismatch, write the regenerated manifest + diff to DIR (never commits); exit 1",
+    )
     args = ap.parse_args(argv)
     text = render(compute())
     if args.write:
@@ -102,9 +152,14 @@ def main(argv: list[str] | None = None) -> int:
     if text != expected:
         print("freeze-manifest: dependency graph differs from security/freeze-manifest.sha256")
         print("--- expected\n" + expected + "--- actual\n" + text, end="")
-        print(
-            "Regenerate with --write only for an approved freeze change (35-dependency-freeze-policy §2)."
-        )
+        if args.propose:
+            proposed = write_proposal(Path(args.propose), expected, text)
+            print(f"freeze-manifest: proposal written to {proposed} (not committed, policy §2.1)")
+        else:
+            print(
+                "Regenerate with --write only for an approved freeze change "
+                "(35-dependency-freeze-policy §2)."
+            )
         return 1
     print("freeze-manifest: OK (graph byte-identical to committed manifest)")
     return 0
