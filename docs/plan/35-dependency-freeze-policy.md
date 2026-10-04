@@ -24,6 +24,44 @@ Only security fixes (a High/Critical advisory, or a pen-test finding). Each need
 `pentest-freeze-*` tag, and the tester is notified (via E43-X02's channel) of the
 new tag and the diff. Everything else waits until after the retest.
 
+### 2.1 Dependency bumps and the freeze manifest (all year, not only in the window)
+
+`license-scan` compares the installed graph to `security/freeze-manifest.sha256` (§8.3), so
+**every** dependency change is red until the manifest is regenerated in the same PR. That is
+intended: the manifest is the reviewer's proof that the graph only changed where the PR says it
+did. Dependabot cannot run `--write`, so the flow is **propose-in-CI, commit-by-human**:
+
+1. **Grouped, labelled bumps.** `.github/dependabot.yml` opens at most one PR per ecosystem per
+   week (`github-actions`, `pip`, `npm` minor+patch, `npm` majors, `docker`), labelled
+   `dependencies` plus the area / `sla/*` labels. Ungrouped single-package PRs from before this
+   policy are closed in favour of the next grouped run (`@dependabot recreate` is acceptable).
+2. **CI proposes, never commits.** `check_freeze_manifest.py --propose` runs in `license-scan`
+   on every PR. On a mismatch it still fails, prints the expected/actual digests, writes the
+   regenerated manifest + unified diff to the job **step summary**, and (only for
+   `dependabot[bot]` or `dependencies`-labelled PRs) uploads the `freeze-manifest-proposal`
+   artifact (14 days). No workflow has write access to the branch; nothing is auto-committed.
+3. **Review = diff + bump.** The reviewer (Security for `security-review`-labelled bumps, i.e. all
+   `github-actions` ones; otherwise the area CODEOWNER) checks that (a) the other required checks
+   are green, (b) the manifest diff touches exactly the components the bump should touch
+   (`pnpm-lock.yaml`/`pnpm-graph` for npm, `uv.lock`/`uv-graph` for pip, nothing for
+   actions/docker — those PRs must be green without a manifest change), and (c) during the freeze
+   window the bump is a §2 security fix with Owner approval.
+4. **Human commits the manifest.** Approved: the reviewer checks out the Dependabot branch, runs
+   `python tools/ci/check_freeze_manifest.py --write`, commits
+   `chore(<area>): regenerate freeze manifest for <bump>` and pushes (Dependabot keeps rebasing
+   on top; if it force-pushes, re-run `--write`). Alternatively the orchestrator bundles several
+   approved groups into one `chore(deps): weekly dependency bumps <date>` PR with a single
+   `--write` — this is the preferred path when more than one ecosystem is red in the same week.
+   Only after that commit is `license-scan` green and the PR mergeable (no admin merge, C-9.1).
+5. **Majors on pinned-runtime-sensitive packages are ignored**, not merely left red: `size-limit`
+   / `@size-limit/*` >= 12 need Node 22 while `package.json` `engines` pins Node 20 — ignored
+   until the Node 22 upgrade ticket lands, which removes the `ignore` entry in the same PR.
+   `xstate-statemachine` (ADR-0016 exact pin) and `pnpm` (corepack `packageManager` pin) are
+   never bumped by Dependabot. Any new `ignore` entry needs a comment naming the unblocking ticket.
+
+Non-Dependabot dependency changes (a feature PR adding a package) follow §8.3 as before: the
+author runs `--write` in the same PR and the reviewer applies step 3(b).
+
 ## 3. Advisory SLA (SR-134)
 
 Advisories touching the order path or key handling: triage within **48 h**; all others
@@ -97,7 +135,8 @@ The freeze-manifest `pnpm-graph` hash mismatch (defect 2) is only mitigated here
   `pnpm install --frozen-lockfile` and `uv sync --frozen`: SHA-256 of `pnpm-lock.yaml`, `uv.lock`,
   the normalised `pnpm ls -r --json --depth Infinity` graph and `uv export --frozen` must equal
   `security/freeze-manifest.sha256`. It does not depend on any tag. Any approved freeze change
-  (§2) regenerates the manifest with `--write` in the same PR.
+  (§2) regenerates the manifest with `--write` in the same PR; Dependabot PRs get the
+  regenerated manifest as a CI proposal and a human commits it (§2.1).
 - Tag (owner-only): on the merged commit whose CI is green, the owner runs
   `git tag -a pentest-freeze-<yyyymmdd> <sha> -m "pen-test freeze; manifest <sha256 of freeze-manifest.sha256>"`
   and `git push origin pentest-freeze-<yyyymmdd>`; the tag sha + manifest hash go into the

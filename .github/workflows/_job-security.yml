@@ -394,9 +394,27 @@ jobs:
           uv sync --frozen --all-groups --project services/api
 
       - name: Assert frozen dependency graph matches security/freeze-manifest.sha256 (E43-T05, SR-130)
+        id: freeze
         # Byte-identical check of pnpm-lock.yaml + uv.lock + resolved graphs after the frozen
         # installs above. Does not depend on any pentest-freeze-* tag existing.
-        run: python tools/ci/check_freeze_manifest.py
+        # `--propose` (35-dependency-freeze-policy.md §2.1): on mismatch the regenerated
+        # manifest + diff land in the step summary and the artifact below — never in the
+        # branch. The step still fails; a reviewer commits the proposal if the bump is approved.
+        run: python tools/ci/check_freeze_manifest.py --propose freeze-manifest-proposal
+
+      - name: Upload freeze-manifest proposal for the reviewer (Dependabot / dependencies PRs)
+        # Dependabot cannot run --write itself (policy §2.1). Only on a mismatch, and only for
+        # dependency-bump PRs, so ordinary red runs do not grow an artifact.
+        if: >-
+          failure() && steps.freeze.outcome == 'failure' &&
+          (github.actor == 'dependabot[bot]' ||
+           contains(github.event.pull_request.labels.*.name, 'dependencies'))
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: freeze-manifest-proposal
+          path: freeze-manifest-proposal/
+          retention-days: 14
+          if-no-files-found: error
 
       - name: Collect JS/TS licences
         # license-checker does not understand pnpm workspaces ("No packages found").
