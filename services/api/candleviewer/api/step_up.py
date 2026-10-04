@@ -153,6 +153,7 @@ DANGEROUS_ROUTES: tuple[tuple[str, re.Pattern[str], str], ...] = (
 HANDLER_GATED_ROUTES: tuple[tuple[str, str, str], ...] = (
     ("POST", "/trading/kill-switch", "killswitch"),  # E39: release only
     ("POST", "/session/environment", "live_enablement"),  # E44: to live only
+    ("PUT", "/rules/{ruleId}/mode", "live_enablement"),  # E35-S01: arming a live-scoped rule
 )
 
 #: Mounted write routes whose path matches this must be in one of the two

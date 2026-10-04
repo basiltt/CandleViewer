@@ -311,3 +311,12 @@ def test_new_version_drops_temporal_state() -> None:
     assert run(ev).fired
     ev.set_active_version(ev.rule.model_copy(update={"version": 2}))
     assert run(ev).fired is False
+
+
+def test_on_result_hook_called_once_per_evaluation() -> None:
+    """Simulation recorder hook: one call per on_trigger, per evaluation, not per tick."""
+    ev, _, _, _ = make(cmp("c1", "gt", m("last_price"), c(10)), {"last_price": 100})
+    seen: list[Any] = []
+    ev._on_result = seen.append
+    r = run(ev)
+    assert seen == [r]

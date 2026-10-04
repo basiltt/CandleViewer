@@ -58,6 +58,7 @@ class Permission(StrEnum):
     POSITIONS_WRITE = "positions:write"
 
     # rules
+    RULES_ARM_LIVE = "rules:arm_live"
     RULES_READ = "rules:read"
     RULES_WRITE = "rules:write"
 

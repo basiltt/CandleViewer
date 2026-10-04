@@ -62,6 +62,8 @@ from candleviewer.api.hotkey_audit import make_hotkey_audit_router
 from candleviewer.api.invites import make_invites_router
 from candleviewer.api.onboarding import make_onboarding_router
 from candleviewer.api.onboarding_checklist import StepResult, bybit_key_restriction
+from candleviewer.api.rules_actor import SessionRulesActorResolver, make_rules_audit
+from candleviewer.api.rules_crud import make_rules_crud_router
 from candleviewer.api.sessions import make_session_router
 from candleviewer.api.step_up import make_read_only_guard, make_step_up_router
 from candleviewer.api.support_bundle import make_support_bundle_router
@@ -130,6 +132,7 @@ from candleviewer.recorder.service import RecorderService
 from candleviewer.replay.service import ReplayService
 from candleviewer.risk.service import RiskService
 from candleviewer.rules.service import RulesService
+from candleviewer.rules_store_pg import PostgresRuleStore
 from candleviewer.settings import Environment, Settings, get_settings
 from candleviewer.statechart.bindings.b16_session import set_audit_sink as set_b16_audit_sink
 from candleviewer.statechart.gateway import GatewayOverloadedError
@@ -881,6 +884,34 @@ def create_app(
             recorded_symbols=lambda: ctx.recorder.recorded_symbols(),
             on_compile=rule_telemetry.on_compile,
             on_divergence=rule_telemetry.on_divergence,
+        )
+    )
+    # E35-S01: rule store / versions / active-version / mode routes (fail-closed 501
+    # without an identity provider). Audit (C-2.9) is write-ahead via the M19 emitter and
+    # state changes are published on the `{env}.rules` bus topic that the WS gateway fans out.
+    _rules_audit = make_rules_audit(_LazyAuditEmitter(ctx.audit))
+
+    async def _rules_broadcast(payload: dict[str, Any]) -> None:
+        await ctx.bus.bus.publish(
+            Topic(env=resolved.environment.value, domain="rules"),
+            {k: v for k, v in payload.items() if k != "topic"},
+        )
+
+    ctx.rules.bind(
+        store=PostgresRuleStore(
+            SqlAlchemyRelationalRepository(resolved.pg_dsn.get_secret_value(), "rules")
+        ),
+        audit=_rules_audit,
+        broadcast=_rules_broadcast,
+    )
+    rules_actor = (
+        SessionRulesActorResolver(lambda: ctx.auth.sessions, lambda: ctx.auth.step_up, identity)
+        if identity is not None
+        else None
+    )
+    app.include_router(
+        make_rules_crud_router(
+            lambda: ctx.rules.manager(), rules_actor.resolve if rules_actor else None
         )
     )
     app.add_middleware(CorrelationMiddleware)
