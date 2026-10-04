@@ -1,4 +1,10 @@
 - main:
-  - heading "R-001 — owned by E09" [level=1]
-  - paragraph: This screen has not shipped yet.
+  - heading "Sign in to CandleViewer" [level=1]
+  - alert
+  - text: Username or email
+  - textbox "Username or email"
+  - text: Password
+  - textbox "Password"
+  - button "Show password"
+  - button "Sign in"
 - status
