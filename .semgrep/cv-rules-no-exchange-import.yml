@@ -1,0 +1,21 @@
+rules:
+  - id: cv-rules-no-exchange-import
+    languages: [python]
+    severity: ERROR
+    message: >-
+      The rule engine must not import exchange adapters; actions route through the OMS so the
+      native stop-loss, audit and risk paths always apply (C-2.2, C-2.6, E35-X02).
+    metadata:
+      rule-id: cv-rules-no-exchange-import
+    pattern-either:
+      - pattern: import candleviewer.exchange
+      - pattern: import candleviewer.exchange.$X
+      - pattern: from candleviewer.exchange import $Y
+      - pattern: from candleviewer.exchange.$X import $Y
+      - pattern: from candleviewer.exchange.$X.$Z import $Y
+    paths:
+      include:
+        - "services/api/candleviewer/rules/**"
+        - "**/cv-rules-no-exchange-import*"
+      exclude:
+        - "**/test_*.py"

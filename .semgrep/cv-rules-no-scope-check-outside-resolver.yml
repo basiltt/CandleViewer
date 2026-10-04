@@ -1,0 +1,20 @@
+rules:
+  - id: cv-rules-no-scope-check-outside-resolver
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Account-grant checks in evaluator/runner code must go through ScopeResolver (runtime
+      enforcement on every action), not ad-hoc reads of granted_accounts (E35-X02, US-RULE-007).
+    metadata:
+      rule-id: cv-rules-no-scope-check-outside-resolver
+    pattern-either:
+      - pattern: $A in $X.granted_accounts
+      - pattern: $A not in $X.granted_accounts
+    paths:
+      include:
+        - "services/api/candleviewer/rules/evaluator/**"
+        - "services/api/candleviewer/rules/runner.py"
+        - "services/api/candleviewer/rules/service.py"
+        - "**/cv-rules-no-scope-check-outside-resolver*"
+      exclude:
+        - "**/test_*.py"

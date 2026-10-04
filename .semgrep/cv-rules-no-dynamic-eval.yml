@@ -1,0 +1,25 @@
+rules:
+  - id: cv-rules-no-dynamic-eval
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Dynamic evaluation (eval/exec/compile/__import__/pickle.loads) in the rule engine
+      violates ADR-0007 R1: the rule IR is data, never code. Interpret the typed IR instead
+      (E35-X02, threat E35 code-execution).
+    metadata:
+      rule-id: cv-rules-no-dynamic-eval
+      references:
+        - docs/plan/27-adrs/ADR-0007-rule-ir.md
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: exec(...)
+      - pattern: compile(...)
+      - pattern: __import__(...)
+      - pattern: pickle.loads(...)
+      - pattern: pickle.load(...)
+    paths:
+      include:
+        - "services/api/candleviewer/rules/**"
+        - "**/cv-rules-no-dynamic-eval*"
+      exclude:
+        - "**/test_*.py"
