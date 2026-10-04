@@ -12,7 +12,7 @@ export type Appearance = NonNullable<
   generated.rest.components["schemas"]["Settings"]["appearance"]
 >;
 
-const DEFAULT_APPEARANCE: Required<Omit<Appearance, "chart_palette" | "chart_convention">> = {
+const DEFAULT_APPEARANCE: Required<Appearance> = {
   theme: "dark",
   density: "comfortable",
   font_scale: 1,
@@ -42,7 +42,7 @@ export type ChartConvention = "standard" | "inverted";
  * CVD-safe `color.cvd.*` set and `data-convention` the buy/sell colour
  * convention. Every surface keys off these two attributes, so a change
  * reaches all views (including the canvas theme object) from one place.
- * Server persistence of the choice arrives with the SCR-116 settings ticket.
+ * The choice is persisted locally; server persistence needs a separate contract-first PR (C-6.1).
  */
 export function applyChartColorMode(
   mode: { palette?: ChartPalette; convention?: ChartConvention },

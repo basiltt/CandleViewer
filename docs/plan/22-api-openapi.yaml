@@ -11848,8 +11848,6 @@ components:
             font_scale: { type: number, minimum: 0.75, maximum: 2 }
             reduce_motion: { type: boolean }
             high_contrast: { type: boolean }
-            chart_palette: { type: string, enum: [default, cvd-safe] }
-            chart_convention: { type: string, enum: [standard, inverted] }
         chart:
           type: object
           properties:

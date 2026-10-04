@@ -14,49 +14,49 @@ afterEach(() => {
   document.documentElement.removeAttribute("data-convention");
 });
 
-const ok = (): Response => ({ ok: true, status: 200, json: async () => ({}) }) as Response;
-
 describe("SCR-116 appearance screen", () => {
-  it("palette choice persists via PATCH /me/preferences and updates the root", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(ok());
-    vi.stubGlobal("fetch", fetchMock);
+  it("palette choice persists locally and updates the root", async () => {
     render(<AppearanceScreen />);
     fireEvent.click(screen.getByRole("radio", { name: /colour-blind safe/i }));
-    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe("/api/v1/me/preferences");
-    expect(init.method).toBe("PATCH");
-    expect(JSON.parse(init.body as string)).toEqual({
-      appearance: { chart_palette: "cvd-safe", chart_convention: "standard" },
+    expect(JSON.parse(localStorage.getItem("cv.chartColorMode") ?? "{}")).toEqual({
+      palette: "cvd-safe",
+      convention: "standard",
     });
     expect(document.documentElement.getAttribute("data-palette")).toBe("cvd-safe");
     await screen.findByText("Saved.");
   });
 
-  it("reports a failed save without losing the local choice", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("net")));
-    render(<AppearanceScreen />);
-    fireEvent.click(screen.getByRole("checkbox", { name: /invert/i }));
-    await screen.findByText(/could not save/i);
-    expect(document.documentElement.getAttribute("data-convention")).toBe("inverted");
-  });
-
   it("change palette -> engine setTheme with CVD palette -> one texture re-upload", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(ok()));
     const upload = vi.fn();
     const engine = createEngine({ uploadPalette: upload });
     const unregister = registerEngine(engine);
     render(<AppearanceScreen />);
     fireEvent.click(screen.getByRole("radio", { name: /colour-blind safe/i }));
     await screen.findByText("Saved.");
-    expect(engine.stats().paletteUploads).toBe(1);
-    expect(upload).toHaveBeenCalledTimes(1);
-    expect((upload.mock.calls[0]?.[0] as { palette: string }).palette).toBe("cvd-safe");
+    // one upload on register (current theme) + exactly one for the palette switch
+    expect(engine.stats().paletteUploads).toBe(2);
+    expect(upload).toHaveBeenCalledTimes(2);
+    expect((upload.mock.calls[1]?.[0] as { palette: string }).palette).toBe("cvd-safe");
     unregister();
   });
 
+  it("theme and high-contrast switches repaint registered canvases via setTheme", async () => {
+    const setTheme = vi.fn();
+    const unregister = registerEngine({ setTheme });
+    expect(setTheme).toHaveBeenCalledTimes(1);
+    document.documentElement.style.setProperty("--color-buy-default", "#112233");
+    document.documentElement.setAttribute("data-theme", "light");
+    await waitFor(() => expect(setTheme).toHaveBeenCalledTimes(2));
+    document.documentElement.setAttribute("data-high-contrast", "true");
+    await waitFor(() => expect(setTheme).toHaveBeenCalledTimes(3));
+    unregister();
+    document.documentElement.setAttribute("data-theme", "dark");
+    await Promise.resolve();
+    expect(setTheme).toHaveBeenCalledTimes(3);
+    document.documentElement.style.removeProperty("--color-buy-default");
+  });
+
   it("every affected view's legend reflects palette/convention switches", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(ok()));
     render(<AppearanceScreen />);
     const groups = LEGEND_VIEWS.map((v) =>
       screen.getByRole("group", { name: `${v} colour legend` }),
@@ -72,7 +72,7 @@ describe("SCR-116 appearance screen", () => {
         "--color-buy-default",
       );
     }
-    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("Saved."));
+    expect(screen.getByRole("status").textContent).toBe("Saved.");
   });
 
   it("compact density: token >=24px and every interactive element carries it", () => {

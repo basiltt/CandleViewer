@@ -23,38 +23,23 @@ const TARGET: CSSProperties = {
   minHeight: "var(--size-target-min, 24px)",
 };
 
-async function persist(palette: ChartPalette, convention: ChartConvention): Promise<boolean> {
-  try {
-    const res = await fetch("/api/v1/me/preferences", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        appearance: { chart_palette: palette, chart_convention: convention },
-      }),
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
-/** SCR-116 chart palette / convention section: selects, persists, applies everywhere. */
+/** SCR-116 chart palette / convention section: selects, persists locally, applies everywhere. */
 export function AppearanceScreen(): JSX.Element {
   const stored = readStoredChartColorMode();
   const [palette, setPalette] = useState<ChartPalette>(stored.palette ?? "default");
   const [convention, setConvention] = useState<ChartConvention>(stored.convention ?? "standard");
-  const [saved, setSaved] = useState<"idle" | "ok" | "failed">("idle");
+  const [saved, setSaved] = useState(false);
 
-  async function change(p: ChartPalette, c: ChartConvention): Promise<void> {
+  function change(p: ChartPalette, c: ChartConvention): void {
     setPalette(p);
     setConvention(c);
     applyChartColorModeToSurfaces({ palette: p, convention: c }, registeredEngines());
     try {
       localStorage.setItem("cv.chartColorMode", JSON.stringify({ palette: p, convention: c }));
     } catch {
-      // storage unavailable: the server copy below still persists
+      // storage unavailable: the choice still applies for this session
     }
-    setSaved((await persist(p, c)) ? "ok" : "failed");
+    setSaved(true);
   }
 
   return (
@@ -70,7 +55,7 @@ export function AppearanceScreen(): JSX.Element {
               value={p}
               checked={palette === p}
               style={TARGET}
-              onChange={() => void change(p, convention)}
+              onChange={() => change(p, convention)}
             />
             {p === "default" ? "Default (green / red)" : "Colour-blind safe (blue / orange)"}
           </label>
@@ -81,13 +66,11 @@ export function AppearanceScreen(): JSX.Element {
           type="checkbox"
           checked={convention === "inverted"}
           style={TARGET}
-          onChange={(e) => void change(palette, e.target.checked ? "inverted" : "standard")}
+          onChange={(e) => change(palette, e.target.checked ? "inverted" : "standard")}
         />
         Invert buy/sell colours
       </label>
-      <p role="status">
-        {saved === "ok" ? "Saved." : saved === "failed" ? "Could not save; applied locally." : ""}
-      </p>
+      <p role="status">{saved ? "Saved." : ""}</p>
       <section aria-label="Preview">
         {LEGEND_VIEWS.map((view) => (
           <ColorConventionLegend key={view} view={view} palette={palette} convention={convention} />

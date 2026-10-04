@@ -1,13 +1,46 @@
 import type { EngineHandle } from "@candleviewer/chart-engine";
+import { readEngineTheme } from "./chartColorMode.js";
+
+type ThemedEngine = Pick<EngineHandle, "setTheme">;
 
 /** Live engine instances mounted by the chart host adapter (WebGL surfaces). */
-const engines = new Set<Pick<EngineHandle, "setTheme">>();
+const engines = new Set<ThemedEngine>();
 
-export function registerEngine(engine: Pick<EngineHandle, "setTheme">): () => void {
-  engines.add(engine);
-  return () => engines.delete(engine);
+/** Root attributes whose change must repaint every canvas (theme, HC, palette, convention). */
+const THEME_ATTRS = ["data-theme", "data-high-contrast", "data-palette", "data-convention"];
+
+let observer: MutationObserver | undefined;
+
+function pushTheme(targets: Iterable<ThemedEngine>): void {
+  const theme = readEngineTheme();
+  for (const e of targets) e.setTheme(theme);
 }
 
-export function registeredEngines(): readonly Pick<EngineHandle, "setTheme">[] {
+function ensureObserver(): void {
+  if (observer !== undefined || typeof MutationObserver === "undefined") return;
+  observer = new MutationObserver(() => pushTheme(engines));
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: THEME_ATTRS });
+}
+
+/**
+ * Registers an engine. It receives the current theme immediately and again on
+ * every theme / high-contrast / palette / convention switch, so no canvas is
+ * left on stale colours (US-SET-005, AC1). The host adapter calls this on mount
+ * and invokes the returned disposer on unmount.
+ */
+export function registerEngine(engine: ThemedEngine): () => void {
+  engines.add(engine);
+  ensureObserver();
+  pushTheme([engine]);
+  return () => {
+    engines.delete(engine);
+    if (engines.size === 0) {
+      observer?.disconnect();
+      observer = undefined;
+    }
+  };
+}
+
+export function registeredEngines(): readonly ThemedEngine[] {
   return [...engines];
 }

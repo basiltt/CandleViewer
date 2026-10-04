@@ -6709,10 +6709,6 @@ export interface components {
       };
       appearance?: {
         /** @enum {string} */
-        chart_convention?: "standard" | "inverted";
-        /** @enum {string} */
-        chart_palette?: "default" | "cvd-safe";
-        /** @enum {string} */
         density?: "compact" | "comfortable" | "spacious";
         font_scale?: number;
         high_contrast?: boolean;
