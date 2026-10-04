@@ -85,6 +85,7 @@ AUDIT_ACTIONS: frozenset[str] = frozenset(
         "retention.purge",
         "flags.change",
         "settings.change",
+        "hotkey.trading_binding_changed",
         "backup.run",
         "backup.restore",
         "env.switch_live",

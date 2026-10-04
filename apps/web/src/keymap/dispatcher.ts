@@ -39,7 +39,9 @@ export function createDispatcher(deps: DispatcherDeps) {
     const notified = prev === undefined || t - prev >= INERT_NOTICE_WINDOW_MS;
     if (notified) {
       lastNotified.set(target.id, t);
-      deps.notify(`${target.label} is not available here (${target.validWhen} required).`);
+      deps.notify(
+        `${target.label} is not available here (needs ${target.validWhen}; this view does not provide it).`,
+      );
     }
     return { status: "inert", commandId: target.id, notified };
   };

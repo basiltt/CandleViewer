@@ -44,14 +44,40 @@ export function applyRebind(
 }
 
 /**
- * Client audit outbox (CMP-093 shape, 14-screens-catalogue §0.5.8). The server is the system of
- * record: the rebind is persisted via PUT /settings/hotkeys/{id}, which the backend audits; this
- * outbox keeps the client-side record and lets the transport flush it. No audit POST endpoint
- * exists in 22-api-openapi.yaml, so none is invented here.
+ * Transmit a record to the server audit trail (POST /settings/hotkey-audit, C-2.9). The server
+ * attributes it to the session principal and appends the hash-chained row. Records stay in the
+ * outbox until the POST succeeds so a failed attempt can be flushed later.
  */
+const AUDIT_PATH = "/api/v1/settings/hotkey-audit";
 const outbox: AuditRecord[] = [];
+
+export async function sendAudit(r: AuditRecord): Promise<boolean> {
+  try {
+    const res = await fetch(AUDIT_PATH, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        command_id: r.commandId,
+        before: r.before,
+        after: r.after,
+        acknowledged_unsafe: r.acknowledgedUnsafe,
+      }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function flushAuditOutbox(): Promise<void> {
+  for (const r of [...outbox]) {
+    if (await sendAudit(r)) outbox.splice(outbox.indexOf(r), 1);
+  }
+}
+
 export function recordAudit(r: AuditRecord): void {
   outbox.push(r);
+  void flushAuditOutbox();
 }
 export function auditOutbox(): readonly AuditRecord[] {
   return outbox;

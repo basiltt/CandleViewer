@@ -101,3 +101,14 @@ describe("route tree x RBAC matrix", () => {
     }
   });
 });
+
+describe("E49-S07 reachability through the real route tree", () => {
+  beforeEach(() => resetMeClaims());
+  it("mounts SCR-113 HotkeyEditor at /settings/hotkeys", async () => {
+    claimsFor("owner");
+    renderAt("/settings/hotkeys");
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: /hotkeys|keyboard/i })).toBeInTheDocument(),
+    );
+  });
+});

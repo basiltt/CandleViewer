@@ -3156,6 +3156,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/settings/hotkey-audit": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Audit a destructive hotkey binding change (hotkey.trading_binding_changed)
+     * @description The UI posts this when a trading (destructive) command is rebound. The server appends an audit record (C-2.9) attributed to the session principal; actor, role and time are never taken from the body.
+     */
+    post: operations["recordHotkeyBindingAudit"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/settings/hotkeys": {
     parameters: {
       query?: never;
@@ -4815,6 +4835,12 @@ export interface components {
       requires_arm: boolean;
       /** @enum {string} */
       scope: "global" | "chart" | "dom" | "tape" | "orders" | "positions";
+    };
+    HotkeyBindingAuditInput: {
+      acknowledged_unsafe: boolean;
+      after: string;
+      before: string;
+      command_id: string;
     };
     HotkeyProfile: components["schemas"]["HotkeyProfileInput"] & {
       /** Format: uuid */
@@ -12640,6 +12666,31 @@ export interface operations {
         };
       };
       403: components["responses"]["Forbidden"];
+    };
+  };
+  recordHotkeyBindingAudit: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["HotkeyBindingAuditInput"];
+      };
+    };
+    responses: {
+      /** @description Audit record appended. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components["responses"]["Unauthorized"];
+      403: components["responses"]["Forbidden"];
+      422: components["responses"]["UnprocessableEntity"];
     };
   };
   listHotkeyProfiles: {

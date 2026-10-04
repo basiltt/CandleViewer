@@ -113,3 +113,24 @@ describe("wiring (review fixes)", () => {
     expect(auditOutbox()[n]).toMatchObject({ action: "hotkey.trading_binding_changed" });
   });
 });
+
+describe("audit is transmitted server-side", () => {
+  it("POSTs hotkey.trading_binding_changed fields to /settings/hotkey-audit", async () => {
+    const { applyRebind, recordAudit, auditOutbox } = await import("../src/keymap/audit");
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+    setAuditSink(recordAudit);
+    applyRebind(new Map([["dom.cancel_all", "Ctrl+Shift+X"]]), "dom.cancel_all", "X", true);
+    await vi.waitFor(() => expect(auditOutbox()).toHaveLength(0));
+    const calls = fetchMock.mock.calls as [string, RequestInit][];
+    expect(calls.every(([u]) => u === "/api/v1/settings/hotkey-audit")).toBe(true);
+    const bodies = calls.map(([, i]) => JSON.parse(String(i.body)) as unknown);
+    expect(bodies).toContainEqual({
+      command_id: "dom.cancel_all",
+      before: "Ctrl+Shift+X",
+      after: "X",
+      acknowledged_unsafe: true,
+    });
+    vi.unstubAllGlobals();
+  });
+});
