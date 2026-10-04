@@ -8134,6 +8134,12 @@ paths:
               properties:
                 editor: { type: string, enum: [form, graph] }
                 model: { type: object, additionalProperties: true }
+                counterpart_model:
+                  type: object
+                  additionalProperties: true
+                  description: >
+                    Optional stored model of the OTHER editor. When present both are compiled and a
+                    divergence is reported in `round_trip` (US-RULE-006); the server never reconciles.
       responses:
         "200":
           description: Compiled IR.
@@ -8146,6 +8152,20 @@ paths:
                   ir_hash: { type: string }
                   issues:
                     { type: array, items: { $ref: "#/components/schemas/RuleValidationIssue" } }
+                  blocks_arming: { type: boolean }
+                  round_trip:
+                    type: object
+                    required: [match, diff]
+                    properties:
+                      match: { type: boolean }
+                      diff:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            path: { type: string }
+                            model: {}
+                            counterpart: {}
         "422": { $ref: "#/components/responses/RuleIrInvalid" }
 
   /journal/trades/{journalTradeId}/context:
@@ -11263,6 +11283,15 @@ components:
                 permission_required,
                 native_stop_missing,
                 unsupported_symbol,
+                unknown_metric,
+                operator_not_applicable,
+                cycle_detected,
+                dangling_port,
+                orphan_node,
+                multiple_sinks,
+                feedback_loop,
+                native_stop_violation,
+                high_frequency,
               ],
           }
         message: { type: string }
@@ -11278,6 +11307,11 @@ components:
         referenced_variables: { type: array, items: { type: string } }
         referenced_actions: { type: array, items: { type: string } }
         estimated_evaluations_per_minute: { type: integer }
+        blocks_arming:
+          {
+            type: boolean,
+            description: "True when any error or open safety warning refuses mode=armed.",
+          }
     SimulateRuleRequest:
       type: object
       additionalProperties: false

@@ -25,6 +25,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, ClassVar
 
+import structlog
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 
@@ -576,6 +577,28 @@ def _build_onboarding_router(
     )
 
 
+class _RuleCompileTelemetry:
+    """E35-T04: compile counters + a high-severity telemetry event on form/graph divergence."""
+
+    def __init__(self, metrics: Metrics) -> None:
+        self._compiles = metrics.counter(
+            "rule_compile_total", "E35-T04 rule compiles", ("editor", "result")
+        )
+        self._diverged = metrics.counter(
+            "rule_roundtrip_divergence_total", "E35-T04 form/graph divergences (high severity)",
+            ("editor",),
+        )  # fmt: skip
+
+    def on_compile(self, editor: str, result: str) -> None:
+        self._compiles.labels(editor, result).inc()
+
+    def on_divergence(self, editor: str, n_diffs: int) -> None:
+        self._diverged.labels(editor).inc()
+        structlog.get_logger("candleviewer.rules").error(
+            "rule_roundtrip_divergence", editor=editor, diffs=n_diffs, severity="high"
+        )
+
+
 def create_app(
     settings: Settings | None = None,
     *,
@@ -817,11 +840,14 @@ def create_app(
         make_trades_router(lambda: ctx.ingestion.trades, principal_resolver=audit_resolver)
     )
     # E35-T03: rule vocabulary + IR schema (fail-closed 501 without a resolver).
+    rule_telemetry = _RuleCompileTelemetry(metrics_facade)
     app.include_router(
         make_rules_router(
             lambda: ctx.rules.registry(),
             principal_resolver=audit_resolver,
             recorded_symbols=lambda: ctx.recorder.recorded_symbols(),
+            on_compile=rule_telemetry.on_compile,
+            on_divergence=rule_telemetry.on_divergence,
         )
     )
     app.add_middleware(CorrelationMiddleware)

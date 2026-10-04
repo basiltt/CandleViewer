@@ -1,6 +1,5 @@
 """E35-T04: semantic validator scenarios and the compile/validate endpoints."""
 
-# ruff: noqa: E501
 from __future__ import annotations
 
 import json
@@ -287,3 +286,82 @@ def test_endpoints_rbac_and_bad_requests() -> None:
         assert _client(empty=True).post(path, json={}).status_code == 503
     bad = {"editor": "x", "model": {}}
     assert _client().post(f"/rules/{RULE_ID}/compile", json=bad).status_code == 400
+
+
+def test_compile_round_trip_match_and_divergence_reported_never_reconciled() -> None:
+    ir = _rule("form_all_of_any_of.json")
+    seen: list[tuple[str, int]] = []
+    app = FastAPI()
+    app.include_router(
+        make_rules_router(
+            lambda: REG,
+            principal_resolver=_R(_P("rules:read")),
+            on_divergence=lambda e, n: seen.append((e, n)),
+        )
+    )
+    c, url = TestClient(app), f"/rules/{RULE_ID}/compile"
+    form, graph = _jsonable(to_form_model(ir)), _jsonable(to_graph_model(ir))
+    ok = c.post(url, json={"editor": "form", "model": form, "counterpart_model": graph}).json()
+    assert ok["round_trip"] == {"match": True, "diff": []}
+    other = _rule("form_simple_0.json")
+    bad = c.post(
+        url,
+        json={
+            "editor": "form",
+            "model": form,
+            "counterpart_model": _jsonable(to_graph_model(other)),
+        },
+    ).json()
+    assert bad["round_trip"]["match"] is False and bad["round_trip"]["diff"]
+    assert bad["ir_hash"] == ir_hash(ir)  # the submitted model is untouched, never reconciled
+    assert seen and seen[0][0] == "form"
+
+
+def test_compile_blocks_arming_flag_end_to_end() -> None:
+    ir = _rule("form_simple_0.json")
+    r = (
+        _client()
+        .post(
+            f"/rules/{RULE_ID}/compile",
+            json={"editor": "form", "model": _jsonable(to_form_model(ir))},
+        )
+        .json()
+    )
+    assert r["blocks_arming"] == any(
+        i["severity"] == "error" or i["class"] == "safety" for i in r["issues"]
+    )
+
+
+def _big_rule(n: int) -> Rule:
+    """~n leaf comparisons spread over groups of 25 (the all_of fan-out cap is 32)."""
+    groups = [
+        {
+            "node_id": f"g{g}",
+            "op": "any_of",
+            "children": [
+                {**_cmp(PRICE, {"const": g * 25 + i + 1}), "node_id": f"c{g}_{i}"}
+                for i in range(25)
+            ],
+        }
+        for g in range(n // 25)
+    ]
+    return _doc({"node_id": "root", "op": "all_of", "children": groups})
+
+
+@pytest.mark.perf
+def test_perf_100_node_compile_and_validate_budget() -> None:
+    import time
+
+    rule = _big_rule(100)
+    g, f = _jsonable(to_graph_model(rule)), _jsonable(to_form_model(rule))
+    t = time.perf_counter()
+    from candleviewer.rules.compiler import compile_form, compile_graph
+
+    compile_graph(g)
+    compile_form(f)
+    compile_ms = (time.perf_counter() - t) * 1000
+    t = time.perf_counter()
+    validate_rule(rule, REG, set())
+    validate_ms = (time.perf_counter() - t) * 1000
+    assert compile_ms < 500, compile_ms
+    assert validate_ms < 100, validate_ms

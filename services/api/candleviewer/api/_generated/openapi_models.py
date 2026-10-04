@@ -3105,6 +3105,15 @@ class RuleValidationIssue(BaseModel):
             "permission_required",
             "native_stop_missing",
             "unsupported_symbol",
+            "unknown_metric",
+            "operator_not_applicable",
+            "cycle_detected",
+            "dangling_port",
+            "orphan_node",
+            "multiple_sinks",
+            "feedback_loop",
+            "native_stop_violation",
+            "high_frequency",
         ]
         | None
     ) = None
@@ -3122,6 +3131,10 @@ class RuleValidationResult(BaseModel):
     referenced_variables: list[str] | None = None
     referenced_actions: list[str] | None = None
     estimated_evaluations_per_minute: int | None = None
+    blocks_arming: Annotated[
+        bool | None,
+        Field(description="True when any error or open safety warning refuses mode=armed."),
+    ] = None
 
 
 class SimulateRuleRequest(BaseModel):

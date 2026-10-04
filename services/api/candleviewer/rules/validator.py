@@ -68,6 +68,7 @@ class RuleValidationResult:
             "referenced_variables": self.referenced_variables,
             "referenced_actions": self.referenced_actions,
             "estimated_evaluations_per_minute": self.estimated_evaluations_per_minute,
+            "blocks_arming": self.blocks_arming,
         }
 
 
