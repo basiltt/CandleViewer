@@ -132,13 +132,15 @@ def _noop_metric(_name: str, _labels: dict[str, str]) -> None:
     return None
 
 
+_DRAFT_TO_ARMED = (
+    "A rule cannot be armed straight from disabled. Move it to simulate first, then arm it."
+)
+
+
 def _illegal(leaf: str, target: str) -> str:
     """User-facing refusal for a change the B9 chart does not accept from *leaf*."""
     if target == "armed" and leaf == "draft":
-        return (
-            "A rule cannot be armed straight from disabled. "
-            "Move it to simulate first, then arm it."
-        )
+        return _DRAFT_TO_ARMED
     if target == "armed" and leaf == "kill_switched":
         return "This rule was stopped by the kill switch. Re-arming needs a fresh step-up code."
     if target == "armed":
@@ -237,7 +239,7 @@ class RulesManager:
             leaf = await self._leaf(row)
             payload = {"rule_id": row.id, "mode": "disabled", "from": row.mode}
             payload |= {"b9_from": leaf, "b9_event": "DISARM", "reason": "quarantined"}
-            if await self._record(row, "DISARM", "rule.disarmed", payload, reason="quarantined"):
+            if await self._record_b9(row, "DISARM", "rule.disarmed", payload, reason="quarantined"):
                 await self._bc({"topic": "rules", **payload})
         return self._view(row)
 
@@ -428,7 +430,7 @@ class RulesManager:
             leaf = await self._leaf(row)
             payload = {"rule_id": rule_id, "mode": "simulate", "from": "armed", "b9_from": leaf}
             payload |= {"b9_event": "EDIT", "actor": actor.user_id, "ir_hash": v.ir_hash}
-            if not await self._record(row, "EDIT", "rule.simulated", payload):
+            if not await self._record_b9(row, "EDIT", "rule.simulated", payload):
                 raise RuleError(409, "conflict", "The rule could not leave armed. Disarm it first.")
             await self._bc({"topic": "rules", **payload})
         else:
@@ -492,7 +494,7 @@ class RulesManager:
     async def _leaf(self, row: RuleRow) -> str:
         return await self.lifecycle.current(row.id, row.mode, row.disabled_reason)
 
-    async def _record(
+    async def _record_b9(
         self, row: RuleRow, event: str, audit_action: str, payload: dict[str, Any], **ev: Any
     ) -> bool:
         """Send *event* to the rule's B9 chart (via the gateway) after the synchronous
@@ -573,7 +575,7 @@ class RulesManager:
         if override_reason:
             payload["override_reason"] = override_reason
         action = {"armed": "rule.armed", "disabled": "rule.disarmed"}.get(target, "rule.simulated")
-        if not await self._record(row, event, action, payload, **ev_payload):
+        if not await self._record_b9(row, event, action, payload, **ev_payload):
             raise RuleError(422, "illegal_transition", _illegal(leaf, target))
         self._metric("rule_mode_transitions_total", {"from": prev, "to": row.mode, "result": "ok"})
         await self._bc({"topic": "rules", **payload})  # emitted before the HTTP response returns
