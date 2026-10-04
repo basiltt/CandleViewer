@@ -132,6 +132,7 @@ from candleviewer.recorder.service import RecorderService
 from candleviewer.replay.service import ReplayService
 from candleviewer.risk.service import RiskService
 from candleviewer.rules.service import RulesService
+from candleviewer.rules_store_pg import PostgresRuleStore
 from candleviewer.settings import Environment, Settings, get_settings
 from candleviewer.statechart.bindings.b16_session import set_audit_sink as set_b16_audit_sink
 from candleviewer.statechart.gateway import GatewayOverloadedError
@@ -896,7 +897,13 @@ def create_app(
             {k: v for k, v in payload.items() if k != "topic"},
         )
 
-    ctx.rules.bind(audit=_rules_audit, broadcast=_rules_broadcast)
+    ctx.rules.bind(
+        store=PostgresRuleStore(
+            SqlAlchemyRelationalRepository(resolved.pg_dsn.get_secret_value(), "rules")
+        ),
+        audit=_rules_audit,
+        broadcast=_rules_broadcast,
+    )
     rules_actor = (
         SessionRulesActorResolver(lambda: ctx.auth.sessions, lambda: ctx.auth.step_up, identity)
         if identity is not None
