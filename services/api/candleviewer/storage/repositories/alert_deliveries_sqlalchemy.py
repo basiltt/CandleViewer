@@ -68,9 +68,11 @@ _UNACKED = _sql(
     "SELECT count(*) FROM alert_deliveries WHERE user_id = CAST(:user AS uuid) "
     "AND status = 'sent' AND acked_at IS NULL"
 )
-_PURGE = sa.text(
-    "DELETE FROM alert_deliveries WHERE queued_at < now() - make_interval(days => :days)"
+_EXPIRED = _sql(
+    "SELECT @C@ FROM alert_deliveries WHERE queued_at < now() - make_interval(days => :days) "
+    "ORDER BY id LIMIT :limit"
 )
+_DELETE_IDS = sa.text("DELETE FROM alert_deliveries WHERE id = ANY(:ids)")
 _LIST = _sql(
     "SELECT @C@ FROM alert_deliveries WHERE "
     "(CAST(:user AS uuid) IS NULL OR user_id = CAST(:user AS uuid)) "
@@ -156,10 +158,18 @@ class SqlAlchemyAlertDeliveryRepository:
             await uow.commit()
         return int(getattr(res, "rowcount", 0) or 0)
 
-    async def purge_expired(self, days: int) -> int:
-        """Retention delete (E40-T01); the DB trigger permits it only for `cv_owner`."""
+    async def fetch_expired(self, days: int, limit: int = 5000) -> list[DeliveryRow]:
+        """Oldest rows past the hot window (E40-T01); archived before `delete_ids`."""
         async with self._relational.unit_of_work() as uow:
-            res = await uow.session.execute(_PURGE, {"days": days})
+            rows = (await uow.session.execute(_EXPIRED, {"days": days, "limit": limit})).mappings()
+            return [_row(m) for m in rows]
+
+    async def delete_ids(self, ids: list[int]) -> int:
+        """Retention delete; the DB trigger permits it only for `cv_owner` sessions."""
+        if not ids:
+            return 0
+        async with self._relational.unit_of_work() as uow:
+            res = await uow.session.execute(_DELETE_IDS, {"ids": ids})
             await uow.commit()
         return int(getattr(res, "rowcount", 0) or 0)
 

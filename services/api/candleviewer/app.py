@@ -778,8 +778,17 @@ def create_app(
     # E40-T01: alert_deliveries retention purge + alert gauges (lifespan-started).
     _alert_pg = SqlAlchemyRelationalRepository(resolved.pg_dsn.get_secret_value(), "alerts")
     _retention = RetentionSchedule.from_settings(resolved)
+    # The purge needs the cv_owner role (trg_ad_append); the app-role DSN can't DELETE.
+    _owner_dsn = resolved.pg_owner_dsn
     app.state.alert_purge_task = AlertDeliveriesPurgeTask(
-        SqlAlchemyAlertDeliveryRepository(_alert_pg), _retention
+        SqlAlchemyAlertDeliveryRepository(
+            SqlAlchemyRelationalRepository(_owner_dsn.get_secret_value(), "alerts-retention")
+            if _owner_dsn is not None
+            else _alert_pg
+        ),
+        _retention,
+        archive_root=Path(resolved.parquet_root),
+        has_owner_dsn=_owner_dsn is not None,
     )
     app.state.alert_gauge_task = AlertGaugeTask(
         SqlAlchemyAlertRepository(_alert_pg),

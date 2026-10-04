@@ -227,3 +227,23 @@ async def test_gauges_defaults_missing_enabled_buckets_to_zero() -> None:
         "cv_alerts_total{enabled=false}": 0,
         "cv_alert_deliveries_pending": 4,
     }
+
+
+async def test_delivery_purge_split_fetch_then_delete_by_ids() -> None:
+    from candleviewer.storage.repositories.alert_deliveries_sqlalchemy import (
+        SqlAlchemyAlertDeliveryRepository,
+    )
+
+    row = {
+        "id": 7, "alert_id": "a", "user_id": None, "channel": "in_app", "status": "sent",
+        "title": "t", "body": "", "context": {}, "attempt": 1, "http_status": None,
+        "error_message": None, "queued_at": _T0, "sent_at": None, "acked_at": None,
+        "acked_by": None,
+    }  # fmt: skip
+    rel = _Rel(_Result([row]), _Result([], rowcount=1))
+    repo = SqlAlchemyAlertDeliveryRepository(rel)  # type: ignore[arg-type]  # structural fake
+    got = await repo.fetch_expired(180, 10)
+    assert [r.id for r in got] == [7] and rel.calls[0][1] == {"days": 180, "limit": 10}
+    assert await repo.delete_ids([]) == 0 and len(rel.calls) == 1
+    assert await repo.delete_ids([7]) == 1
+    assert "DELETE FROM alert_deliveries" in rel.calls[1][0] and rel.commits == 1
