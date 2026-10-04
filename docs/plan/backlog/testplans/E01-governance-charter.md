@@ -37,14 +37,14 @@ attacking the system?
 1. **GOV-002 wording sensitivity** — tried citing a rule id with trailing punctuation
    (`C-4.13,` and `C-4.13.`) instead of a clean word boundary, to see if the regex's `\b` boundary was
    too permissive and would silently treat a slightly-different-looking citation as satisfied when it
-   should still resolve fine (this is the *good* case — a real, still-valid citation with punctuation
+   should still resolve fine (this is the _good_ case — a real, still-valid citation with punctuation
    should still resolve). Confirmed: `RULE_ID_RE = re.compile(r"C-\d+\.\d+")` correctly extracts the id
    regardless of trailing punctuation, and the declaration check is independent of it. No bypass — the
-   checker's scope (verify the id is *declared*, not verify formatting) is well-matched to its stated
+   checker's scope (verify the id is _declared_, not verify formatting) is well-matched to its stated
    purpose.
 2. **GOV-003 threshold gaming** — the registry uses a token-count threshold (e.g. 3 of N tokens). Tried
    restating exactly `threshold - 1` tokens (2, one below the 3-token bar for `required-check-names`) in
-   a scratch addition to `AGENTS.md`, expecting it to *not* fire (by design — this is meant to allow
+   a scratch addition to `AGENTS.md`, expecting it to _not_ fire (by design — this is meant to allow
    incidental overlap, not wholesale copies). Confirmed it did not fire at 2 tokens, and did fire at 3+.
    This is working as designed, but it is a soft spot worth naming: an engineer who wants to "reference"
    a list without triggering GOV-003 can do so by restating N-1 tokens plus paraphrasing the rest — the
@@ -52,17 +52,17 @@ attacking the system?
    ticket that owns GOV-003, E01-T01, explicitly scoped it as fingerprint-based, not fuzzy).
 3. **qa-guard self-signoff via a second account impersonating write access** — the guard trusts
    `gh_adapter.has_write_access` (a real collaborator-permission API call) rather than any
-   self-reported field. Traced the code path: there is no way for the *closing* actor to also be the
+   self-reported field. Traced the code path: there is no way for the _closing_ actor to also be the
    accepted sign-off commenter (`comment.author_login == closer_login` is explicitly excluded). The
    only remaining route to bypass would be a second GitHub account that itself holds real write access
    on the repo — at which point this is no longer "an engineer in a hurry" but "a second legitimate
    collaborator", which is exactly what separation-of-duties is meant to permit. No bypass found within
    the charter's threat model (excludes adversarial privilege per the ticket's own Out-of-scope note).
 4. **a11y-guard foreign-link check** — read `guard_a11y.py`'s link-validation regex/logic (not just its
-   tests) to check whether a same-repo link to an *unrelated* Actions run (e.g. a run from a totally
+   tests) to check whether a same-repo link to an _unrelated_ Actions run (e.g. a run from a totally
    different, unrelated PR) would be accepted just because it's repo-scoped. Confirmed the guard checks
    repo-scope only, not run-relevance-to-this-issue. This is a genuine, if narrow, bypass: a hurried
-   engineer could satisfy the guard by pasting *any* real Actions run URL from the same repo, not
+   engineer could satisfy the guard by pasting _any_ real Actions run URL from the same repo, not
    necessarily the one that actually ran the a11y sweep for their change. **Filed as QA-BUG-E01-004,
    P2** (workaround exists — a human reviewer reading the linked run would notice; not a P1 because it
    requires the closer to also fabricate a plausible-looking but wrong link, which is a deliberate act
@@ -106,3 +106,11 @@ attacking the system?
 - File QA-BUG-E01-004 on the board with `security`-adjacent but not `security`-labelled (it's an a11y
   evidence-integrity gap, not a security bypass) — P2, referencing this charter.
 - Hand §10 of the test plan (automatable cases) to E01-Q02 alongside this charter.
+
+## E01-Q02 governance job duration budget (measured)
+
+- Before (6 PR runs): 61.4-66 s wall; the 60 s budget failed on pure runner variance.
+- Profile: unit tests ~40 s (3 slow tests: licence-headers 25 s, event-coverage 15 s, error-registry 12 s), pip install 3-6 s, checkout ~5 s, every GOV script <=1 s.
+- Optimisations: pip cache, `pytest -n auto` (xdist). Full-depth checkout is kept because `tools/ci/verify_migration_lockfile.py` needs `git merge-base`.
+- After: ~60 s on the PR run (xdist gains are limited on 2-vCPU runners), so the optimised median is not <40 s.
+- Budget set to 90 s (measured max ~66 s + ~35% margin). The duration step prints a timing table to the step summary so drift is visible.
