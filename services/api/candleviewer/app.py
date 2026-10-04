@@ -925,7 +925,10 @@ def create_app(
     )
     app.include_router(
         make_rules_crud_router(
-            lambda: ctx.rules.manager(), rules_actor.resolve if rules_actor else None
+            lambda: ctx.rules.manager(),
+            rules_actor.resolve if rules_actor else None,
+            scope_resolver=lambda: ctx.rules.scope_resolver,
+            scope_refresh=ctx.rules.refresh_scope,
         )
     )
     app.add_middleware(CorrelationMiddleware)

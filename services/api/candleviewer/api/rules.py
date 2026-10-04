@@ -113,7 +113,7 @@ def make_rules_router(
             await scope_resolver.authorize_accounts(
                 caller, [UUID(str(a)) for a in rule.scope.account_ids]
             )
-            await scope_resolver.authorize_environments(caller, rule.scope)
+            await scope_resolver.authorize_environments(caller, rule.scope, audit_armed=False)
         except ScopeForbiddenError:
             return _problem(403, "Forbidden", ScopeForbiddenError.message)
         return None

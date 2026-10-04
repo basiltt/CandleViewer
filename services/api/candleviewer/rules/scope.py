@@ -182,15 +182,21 @@ class ScopeResolver:
         granted = self._state.granted_accounts(caller)
         return sorted((a for a in granted if self._state.account(a) is not None), key=str)
 
-    async def authorize_environments(self, caller: UUID, scope: RuleScope) -> None:
-        """Including live needs rules.arm_live; denial and success are both audited."""
+    async def authorize_environments(
+        self, caller: UUID, scope: RuleScope, *, audit_armed: bool = True
+    ) -> None:
+        """Including live needs rules.arm_live; denial is always audited, the high-severity
+        `rule_live_scope_armed` only when `audit_armed` (the real arm transition / dry run)."""
         if "live" in scope.environments:
             if not self._state.can_arm_live(caller):
                 await self._audit(
                     "rule_scope_denied", {"caller": str(caller), "environment": "live"}
                 )
                 raise ScopeForbiddenError(ScopeForbiddenError.message)
-            await self._audit("rule_live_scope_armed", {"caller": str(caller), "severity": "high"})
+            if audit_armed:
+                await self._audit(
+                    "rule_live_scope_armed", {"caller": str(caller), "severity": "high"}
+                )
 
 
 def _outside_scope(scope: RuleScope, instance: ScopeInstanceRef) -> bool:

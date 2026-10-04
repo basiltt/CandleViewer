@@ -93,7 +93,7 @@ def test_live_requires_arm_permission_through_app_wiring() -> None:
     assert c.post("/rules/validate", json=live).status_code == 403
     src.perms = frozenset({"rules:read", "rules.arm_live"})
     assert c.post("/rules/validate", json=live).status_code == 200
-    assert audits[-1] == "rule_live_scope_armed"
+    assert "rule_live_scope_armed" not in audits  # a dry run is not an arming
 
 
 def test_revoked_grant_is_picked_up_on_next_request() -> None:
