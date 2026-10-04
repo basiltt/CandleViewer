@@ -6707,6 +6707,21 @@ export interface components {
         /** Format: date-time */
         updated_at?: string;
       };
+      /** @description SCR-117 preferences (E47-S07); closed enums, presentation-only. */
+      accessibility?: {
+        always_show_tables?: boolean;
+        /** @enum {string} */
+        announce_prices?: "off" | "significant" | "always";
+        disable_canvas_animation?: boolean;
+        /** @enum {string} */
+        increased_contrast?: "system" | "on" | "off";
+        keyboard_only?: boolean;
+        /** @enum {string} */
+        reduced_motion?: "system" | "on" | "off";
+        thick_focus_ring?: boolean;
+        /** @enum {string} */
+        verbosity?: "low" | "normal" | "high";
+      };
       appearance?: {
         /** @enum {string} */
         density?: "compact" | "comfortable" | "spacious";

@@ -21,10 +21,16 @@ export interface EngineStats {
   readonly paletteUploads: number;
 }
 
+import { DEFAULT_RENDER_FLAGS, type RenderFlags } from "./flags.js";
+
 export interface EngineHandle {
   /** Applies a theme; re-uploads the palette texture only if it changed. */
   setTheme(theme: EngineTheme): void;
   stats(): EngineStats;
+  /** Applies accessibility render flags from the next frame; no scene rebuild. */
+  setFlags(flags: RenderFlags): void;
+  /** Latest flags read by the render loop each frame. */
+  getFlags(): RenderFlags;
   /** Releases pooled GPU resources and worker subscriptions. */
   dispose(): void;
 }
@@ -51,6 +57,7 @@ export function createEngine(options: EngineOptions = {}): EngineHandle {
   let disposed = false;
   let uploads = 0;
   let currentKey: string | null = null;
+  let flags: RenderFlags = DEFAULT_RENDER_FLAGS;
   return {
     setTheme(theme: EngineTheme): void {
       if (disposed) return;
@@ -62,6 +69,12 @@ export function createEngine(options: EngineOptions = {}): EngineHandle {
     },
     stats(): EngineStats {
       return { paletteUploads: uploads };
+    },
+    setFlags(f: RenderFlags): void {
+      flags = f;
+    },
+    getFlags(): RenderFlags {
+      return flags;
     },
     dispose(): void {
       disposed = true;
