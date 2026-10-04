@@ -40,7 +40,10 @@ function authenticate(helper, paramsValues, credentials) {
   var login = post(helper, target + "/v1/auth/login", JSON.stringify({
     identifier: credentials.getParam("username"), password: credentials.getParam("password")
   }));
-  var mfaToken = JSON.parse(login.getResponseBody().toString()).mfa_token;
+  var body = JSON.parse(login.getResponseBody().toString());
+  // Testnet fixture owner seeded with --allow-no-mfa (EX-01): login issues the session directly.
+  if (!body.mfa_token) { return login; }
+  var mfaToken = body.mfa_token;
   return post(helper, target + "/v1/auth/mfa/verify", JSON.stringify({
     mfa_token: mfaToken, code: totp(credentials.getParam("totpSecret"))
   }));
