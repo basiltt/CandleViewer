@@ -11,14 +11,18 @@ manager's synchronous arming check (statecharts record, code enforces - C-2.21).
 from __future__ import annotations
 
 import inspect
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 
+from candleviewer.rules.errors import ScopeForbiddenError
+from candleviewer.rules.ir.models import RuleScope
 from candleviewer.rules.manager import Actor, RuleError, RulesManager
+from candleviewer.rules.scope import ScopeResolver
 
 _READ = "rules:read"
 _WRITE = "rules:write"
@@ -60,8 +64,45 @@ def _doc(body: dict[str, Any]) -> dict[str, Any] | None:
 def make_rules_crud_router(
     manager_provider: Callable[[], RulesManager | None],
     actor_resolver: Callable[[Request], Any] | None,
+    scope_resolver: Callable[[], ScopeResolver | None] | None = None,
+    scope_refresh: Callable[[UUID], Awaitable[None]] | None = None,
 ) -> APIRouter:
     router = APIRouter(tags=["rules"])
+
+    async def _scope_check(actor: Actor, raw_scope: Any, *, arming: bool) -> JSONResponse | None:
+        """C-12.4 on every state-changing route: 403 for accounts the caller has no grant on and,
+        when live is in scope, without `rules.arm_live`. `arming` additionally writes the
+        high-severity `rule_live_scope_armed` audit (the real arm transition only)."""
+        resolver = scope_resolver() if scope_resolver is not None else None
+        try:
+            scope = RuleScope.model_validate(raw_scope if isinstance(raw_scope, dict) else {})
+        except ValidationError:
+            return None  # the manager's own validation reports the malformed scope (422)
+        if resolver is None:
+            if scope_resolver is not None and (scope.account_ids or "live" in scope.environments):
+                return _problem(501, "not_implemented", "Not implemented", "no scope resolver")
+            return None
+        try:
+            caller = UUID(actor.user_id)
+        except ValueError:
+            return _problem(403, "forbidden", "Forbidden", "Forbidden")
+        if scope_refresh is not None:
+            await scope_refresh(caller)  # current grants/freeze, never a stale cache
+        try:
+            await resolver.authorize_accounts(caller, [UUID(str(a)) for a in scope.account_ids])
+            await resolver.authorize_environments(caller, scope, audit_armed=arming)
+        except ScopeForbiddenError:
+            return _problem(403, "forbidden", "Forbidden", ScopeForbiddenError.message)
+        return None
+
+    async def _active_scope(mgr: RulesManager, rule_id: str, actor: Actor) -> Any:
+        """Scope of the version that would run (IDOR-checked by `get`)."""
+        view = await mgr.get(rule_id, actor)
+        vid = view.get("active_version_id")
+        if not isinstance(vid, str):
+            return {}
+        ver = await mgr.version(rule_id, vid)
+        return ver["ir"].get("scope", {})
 
     async def _gate(request: Request, perm: str) -> tuple[Actor, RulesManager] | JSONResponse:
         if actor_resolver is None:
@@ -123,6 +164,9 @@ def make_rules_crud_router(
         doc = _doc(body) if body is not None else None
         if body is None or doc is None:
             return _bad("body needs an 'ir' object")
+        denied = await _scope_check(actor, doc.get("scope"), arming=False)
+        if denied is not None:
+            return denied
         try:
             return JSONResponse(await mgr.create(doc, actor, str(body.get("note", ""))), 201)
         except RuleError as exc:
@@ -154,6 +198,9 @@ def make_rules_crud_router(
             return _bad("body needs an 'ir' object")
         if not raw.isdigit():
             return _bad("send the version you edited in If-Match (or expected_version)")
+        denied = await _scope_check(actor, doc.get("scope"), arming=False)
+        if denied is not None:
+            return denied
         try:
             out = await mgr.update(str(ruleId), doc, int(raw), actor, str(body.get("note", "")))
         except RuleError as exc:
@@ -209,6 +256,10 @@ def make_rules_crud_router(
         if body is None or not isinstance(body.get("version_id"), str):
             return _bad("body needs 'version_id'")
         try:
+            ver = await mgr.version(str(ruleId), body["version_id"])
+            denied = await _scope_check(actor, ver["ir"].get("scope"), arming=False)
+            if denied is not None:
+                return denied
             out = await mgr.set_active_version(
                 str(ruleId), body["version_id"], str(body.get("note", "")), actor
             )
@@ -235,6 +286,12 @@ def make_rules_crud_router(
         ):
             return _bad("body must be {mode, reason?, acknowledge_flatten_all?}")
         try:
+            if body["mode"] == "armed":
+                denied = await _scope_check(
+                    actor, await _active_scope(mgr, str(ruleId), actor), arming=True
+                )
+                if denied is not None:
+                    return denied
             out = await mgr.set_mode(
                 str(ruleId),
                 body["mode"],

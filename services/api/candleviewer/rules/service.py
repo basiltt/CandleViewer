@@ -12,6 +12,7 @@ import asyncio
 import logging
 from collections.abc import Callable
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from candleviewer.observability.health import HealthReport, HealthStatus
 from candleviewer.rules.evaluator import Evaluator, SnapshotBuilder
@@ -30,12 +31,27 @@ from candleviewer.rules.runner import (
     RuleEvaluationRunner,
     default_clocks,
 )
+from candleviewer.rules.scope import ActionRequest, ScopeInstanceRef
 from candleviewer.rules.vocabulary import MetricRegistry, default_registry
 
 _log = logging.getLogger(__name__)
 
+
+def _owner_uuid(rule: Rule) -> UUID | None:
+    try:
+        return UUID(str(rule.created_by)) if rule.created_by else None
+    except ValueError:
+        return None
+
+
+async def _discard_actions(_req: object) -> None:
+    """Default action sink until E35-S03 lands the executor (nothing is executed)."""
+
+
 if TYPE_CHECKING:
     from candleviewer.app import AppContext
+    from candleviewer.rules.scope import ActionSink, AuditSink, ScopedActionEmitter, ScopeResolver
+    from candleviewer.rules.scope_state import ScopeSource, SnapshotScopeState
 
 
 class RulesService:
@@ -52,6 +68,11 @@ class RulesService:
         #: E35-S02-B1: set by `start()` only when `rules_evaluator_enabled` (C-4.13).
         self.metric_source: PushedMetricSource | None = None
         self.runner: RuleEvaluationRunner | None = None
+        self.scope_state: SnapshotScopeState | None = None
+        self.scope_resolver: ScopeResolver | None = None
+        self._scope_audit: AuditSink | None = None
+        self._scope_env: str | None = None
+        self._action_sink: ActionSink = _discard_actions  # private: only reachable via the gate
 
     def bind(
         self,
@@ -59,8 +80,13 @@ class RulesService:
         store: RuleStore | None = None,
         audit: Audit | None = None,
         broadcast: Broadcast | None = None,
+        action_sink: ActionSink | None = None,
     ) -> None:
-        """Composition-root wiring (store / audit / WS fan-out); call before `start`."""
+        """Composition-root wiring (store / audit / WS fan-out / action executor); before `start`.
+
+        `action_sink` is stored privately and only ever invoked by `ScopedActionEmitter`."""
+        if action_sink is not None:
+            self._action_sink = action_sink
         if store is not None:
             self._store = store
         self._audit, self._broadcast = audit, broadcast
@@ -82,6 +108,72 @@ class RulesService:
             task.add_done_callback(self._tasks.discard)
 
         return _sink
+
+    def wire_scope(
+        self,
+        source: ScopeSource,
+        environment: str,
+        audit: AuditSink,
+        live_gate_open: Callable[[], bool] = lambda: False,
+    ) -> None:
+        """E35-S04: production scope state + resolver (live gate closed until E34 wires it)."""
+        from candleviewer.rules.scope import ScopeResolver
+        from candleviewer.rules.scope_state import SnapshotScopeState
+
+        self._scope_audit = audit
+        self._scope_env = environment
+        self.scope_state = SnapshotScopeState(source, environment, live_gate_open)
+        self.scope_resolver = ScopeResolver(self.scope_state, audit)
+
+    async def refresh_scope(self, owner: UUID) -> None:
+        if self.scope_state is not None:
+            await self.scope_state.refresh(owner)
+
+    async def _refresh_scope_for(self, rules: list[Rule]) -> None:
+        """Re-read grants/freeze for each rule owner; a failed refresh fails closed."""
+        if self.scope_state is None:
+            return
+        for owner in {o for o in (_owner_uuid(r) for r in rules) if o is not None}:
+            try:
+                await self.scope_state.refresh(owner)
+            except Exception:
+                _log.exception("scope refresh failed; failing closed for owner")
+                self.scope_state.invalidate(owner)
+
+    def build_evaluator(
+        self,
+        rule: Rule,
+        snapshots: SnapshotBuilder,
+        wall_clock: Callable[[], int],
+        monotonic_ms: Callable[[], int],
+        *,
+        owner: UUID,
+        environment: str,
+        on_result: Callable[[EvaluationResult], None] | None = None,
+    ) -> Evaluator:
+        """The ONLY production Evaluator factory; the scope gate is always installed."""
+        from candleviewer.rules.evaluator import Evaluator
+        from candleviewer.rules.scope import make_scope_gate
+
+        if self.scope_resolver is None:
+            raise RuntimeError("rule scope not wired; refusing to build an ungated evaluator")
+        holder: list[Evaluator] = []
+        gate = make_scope_gate(
+            self.scope_resolver, lambda: holder[0].rule.scope, owner, environment
+        )
+        ev = Evaluator(
+            rule, snapshots, wall_clock, monotonic_ms, on_result=on_result, scope_gate=gate
+        )
+        holder.append(ev)
+        return ev
+
+    def action_emitter(self, sink: ActionSink) -> ScopedActionEmitter:
+        """Production evaluator-output boundary (C-2.21): gate, audit denials, then the sink."""
+        from candleviewer.rules.scope import ScopedActionEmitter
+
+        if self.scope_resolver is None or self._scope_audit is None:
+            raise RuntimeError("rule scope not wired; refusing to emit ungated actions")
+        return ScopedActionEmitter(self.scope_resolver, self._scope_audit, sink)
 
     def registry(self) -> MetricRegistry | None:
         """Metric registry while the engine module is running; `None` otherwise (-> 503)."""
@@ -106,20 +198,52 @@ class RulesService:
         wall, mono = default_clocks()
         self.metric_source = PushedMetricSource()
 
-        def _factory(rule: Rule, snaps: SnapshotBuilder) -> Evaluator:
-            # Fail-closed (#1806): no scope gate exists until E35-S04's `build_evaluator`,
-            # so only simulate-mode rules are evaluated (see `_simulate_only`); armed rules
-            # are never evaluated by this bare Evaluator.
-            return Evaluator(rule, snaps, wall, mono, on_result=self.evaluation_sink())
+        scoped = self.scope_resolver is not None and self._scope_audit is not None
+        emitter = self.action_emitter(self._action_sink) if scoped else None
+        env = self._scope_env
 
-        async def _simulate_only() -> list[Rule]:
-            return await manager.evaluable_rules(("simulate",))
+        def _on_result(result: EvaluationResult, rule: Rule) -> None:
+            self.evaluation_sink()(result)
+            if emitter is None or env is None:
+                return
+            if not (result.fired or result.skipped_reason == "scope"):
+                return
+            owner = _owner_uuid(rule)
+            if owner is None:
+                return  # fail closed: no owner => no scope to resolve => no action
+            sym, _, acct = result.scope_instance.partition("@")
+            ref = ScopeInstanceRef(
+                result.scope_instance, None if sym == "*" else sym,
+                None if acct == "*" else UUID(acct),
+            )  # fmt: skip
+            for action in rule.actions:
+                req = ActionRequest(rule.scope, owner, env, ref, action.type, action)
+                task = asyncio.get_running_loop().create_task(emitter.emit(req))
+                self._tasks.add(task)
+                task.add_done_callback(self._tasks.discard)
+
+        def _factory(rule: Rule, snaps: SnapshotBuilder) -> Evaluator:
+            if emitter is None or env is None:
+                # No scope wiring: fail closed. Bare evaluator, simulate-only (see below);
+                # it records results but no action is ever emitted.
+                return Evaluator(rule, snaps, wall, mono, on_result=self.evaluation_sink())
+            owner = _owner_uuid(rule)
+            return self.build_evaluator(
+                rule, snaps, wall, mono, owner=owner or UUID(int=0),
+                environment=env, on_result=lambda r: _on_result(r, rule),
+            )  # fmt: skip
+
+        async def _evaluable() -> list[Rule]:
+            modes = ("simulate", "armed") if emitter is not None else ("simulate",)
+            rules = await manager.evaluable_rules(modes)
+            await self._refresh_scope_for(rules)  # revocation/freeze reach every tick (AC1/AC5)
+            return rules
 
         def _on_error(exc: Exception) -> None:
             _log.error("rule evaluator tick failed", exc_info=exc)
 
         self.runner = RuleEvaluationRunner(
-            _simulate_only, SnapshotBuilder(self.metric_source), _factory,
+            _evaluable, SnapshotBuilder(self.metric_source), _factory,
             self.evaluation_sink(), _on_error,
         )  # fmt: skip
         self.runner.start()

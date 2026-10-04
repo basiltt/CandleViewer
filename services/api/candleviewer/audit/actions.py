@@ -76,6 +76,8 @@ AUDIT_ACTIONS: frozenset[str] = frozenset(
         "risk.freeze_manager",
         "risk.unfreeze_manager",
         "rules.arm",
+        "rules.scope_denied",
+        "rules.live_scope_armed",
         "rules.disarm",
         "rules.version_create",
         "rules.simulate",

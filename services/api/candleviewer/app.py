@@ -34,6 +34,7 @@ from candleviewer.admin.service import AdminService
 from candleviewer.admin.wiring import (
     AuditHandle,
     SecretsHandle,
+    audit_writer_sink,
     build_audit_service,
     build_secrets_service,
 )
@@ -156,6 +157,7 @@ from candleviewer.storage.repositories.relational_sqlalchemy import (
 )
 from candleviewer.storage.repositories.rows import TickerRow, TradeRow
 from candleviewer.storage.repositories.rules_sqlalchemy import SqlAlchemyRulesRepository
+from candleviewer.storage.repositories.scope_sqlalchemy import SqlAlchemyScopeSource
 from candleviewer.storage.repositories.sessions_sqlalchemy import (
     SqlAlchemySessionRepository,
 )
@@ -877,6 +879,16 @@ def create_app(
     )
     # E35-T03: rule vocabulary + IR schema (fail-closed 501 without a resolver).
     rule_telemetry = _RuleCompileTelemetry(metrics_facade)
+    # E35-S04: scope enforcement is backed by user_account_access (real backend only);
+    # on the fake backend there is no resolver, so scoped/live rules fail closed (501).
+    if resolved.storage_backend == "real":
+        ctx.rules.wire_scope(
+            SqlAlchemyScopeSource(
+                SqlAlchemyRelationalRepository(resolved.pg_dsn.get_secret_value(), "rule_scope")
+            ),
+            resolved.environment.value,
+            audit_writer_sink(_LazyAuditEmitter(ctx.audit)),
+        )
     app.include_router(
         make_rules_router(
             lambda: ctx.rules.registry(),
@@ -884,6 +896,8 @@ def create_app(
             recorded_symbols=lambda: ctx.recorder.recorded_symbols(),
             on_compile=rule_telemetry.on_compile,
             on_divergence=rule_telemetry.on_divergence,
+            scope_resolver=ctx.rules.scope_resolver,
+            scope_refresh=ctx.rules.refresh_scope,
         )
     )
     # E35-S01: rule store / versions / active-version / mode routes (fail-closed 501
@@ -911,7 +925,10 @@ def create_app(
     )
     app.include_router(
         make_rules_crud_router(
-            lambda: ctx.rules.manager(), rules_actor.resolve if rules_actor else None
+            lambda: ctx.rules.manager(),
+            rules_actor.resolve if rules_actor else None,
+            scope_resolver=lambda: ctx.rules.scope_resolver,
+            scope_refresh=ctx.rules.refresh_scope,
         )
     )
     app.add_middleware(CorrelationMiddleware)

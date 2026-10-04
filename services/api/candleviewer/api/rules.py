@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import inspect
 import json
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Any, Protocol
 from uuid import UUID
 
@@ -19,9 +19,11 @@ from fastapi.responses import JSONResponse
 
 from candleviewer.rules.compiler import compile_form, compile_graph
 from candleviewer.rules.compiler.common import build_rule, check_bounds
+from candleviewer.rules.errors import ScopeForbiddenError
 from candleviewer.rules.ir import canonicalize, ir_hash
 from candleviewer.rules.ir.schema import to_json_schema
 from candleviewer.rules.issues import RuleCompileError
+from candleviewer.rules.scope import ScopeResolver
 from candleviewer.rules.validator import validate_rule
 from candleviewer.rules.vocabulary import (
     MetricRegistry,
@@ -76,6 +78,8 @@ def make_rules_router(
     on_request: _Counter = lambda cache: None,
     on_compile: Callable[[str, str], None] = lambda editor, result: None,
     on_divergence: Callable[[str, int], Any] = lambda editor, n_diffs: None,
+    scope_resolver: ScopeResolver | None = None,
+    scope_refresh: Callable[[UUID], Awaitable[None]] | None = None,
 ) -> APIRouter:
     router = APIRouter(tags=["rules"])
 
@@ -89,6 +93,47 @@ def make_rules_router(
         if not principal.has(_REQUIRED):
             return None, _problem(403, "Forbidden", f"requires {_REQUIRED}")
         return principal, None
+
+    def _caller(principal: _Principal) -> UUID | None:
+        uid = getattr(principal, "user_id", None)
+        return uid if isinstance(uid, UUID) else None
+
+    async def _authorize_scope(principal: _Principal, rule: Any) -> JSONResponse | None:
+        """C-12.4: 403 on any account/environment the caller may not use (no existence leak)."""
+        if scope_resolver is None:
+            if rule.scope.account_ids or "live" in rule.scope.environments:
+                return _problem(501, "Not implemented", "no scope resolver wired")  # fail closed
+            return None
+        caller = _caller(principal)
+        if caller is None:
+            return _problem(401, "Unauthorized", "no verified user identity")
+        if scope_refresh is not None:
+            await scope_refresh(caller)  # current grants/freeze, never a stale cache
+        try:
+            await scope_resolver.authorize_accounts(
+                caller, [UUID(str(a)) for a in rule.scope.account_ids]
+            )
+            await scope_resolver.authorize_environments(caller, rule.scope, audit_armed=False)
+        except ScopeForbiddenError:
+            return _problem(403, "Forbidden", ScopeForbiddenError.message)
+        return None
+
+    @router.get("/rules/accounts")
+    async def list_rule_accounts(request: Request) -> Response:
+        """AC2: only accounts the caller is granted; others are absent (no existence leak)."""
+        principal, denied = await _authorize(request)
+        if denied is not None or principal is None:
+            return denied or _problem(401, "Unauthorized", "no session")
+        if scope_resolver is None:
+            return _problem(501, "Not implemented", "no scope resolver wired")
+        caller = _caller(principal)
+        if caller is None:
+            return _problem(401, "Unauthorized", "no verified user identity")
+        if scope_refresh is not None:
+            await scope_refresh(caller)
+        return JSONResponse(
+            {"accounts": [str(a) for a in scope_resolver.listable_accounts(caller)]}
+        )
 
     @router.get("/rules/vocabulary")
     async def get_vocabulary(request: Request, symbol: str | None = None) -> Response:
@@ -169,6 +214,9 @@ def make_rules_router(
                 {"valid": False, "errors": errs, "warnings": [], "referenced_variables": [],
                  "referenced_actions": [], "estimated_evaluations_per_minute": 0}
             )  # fmt: skip
+        forbidden = await _authorize_scope(principal, rule)
+        if forbidden is not None:
+            return forbidden
         result = validate_rule(rule, registry, perms)
         return JSONResponse(result.to_dict())
 
@@ -192,6 +240,9 @@ def make_rules_router(
         except RuleCompileError as exc:
             on_compile(editor, "invalid")
             return _invalid(exc)
+        forbidden = await _authorize_scope(principal, rule)
+        if forbidden is not None:
+            return forbidden
         result = validate_rule(rule, registry, perms)
         on_compile(editor, "ok" if result.valid else "issues")
         issues = [*result.errors, *result.warnings]

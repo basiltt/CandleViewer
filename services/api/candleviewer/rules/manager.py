@@ -13,6 +13,7 @@ from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any, Protocol
+from uuid import UUID
 
 from pydantic import ValidationError
 
@@ -102,6 +103,13 @@ class InMemoryRuleStore:
 
     async def all(self) -> list[RuleRow]:
         return list(self._rows.values())
+
+
+def _owner_field(owner: str) -> dict[str, str]:
+    try:
+        return {"created_by": str(UUID(owner))}
+    except ValueError:
+        return {}  # non-UUID owner: no scope owner (the runner fails closed on actions)
 
 
 @dataclass(frozen=True, slots=True)
@@ -477,7 +485,9 @@ class RulesManager:
             if v is None or quarantine_path(v.ir):
                 continue
             try:
-                out.append(Rule.model_validate({**v.ir, "rule_id": row.id}))
+                out.append(
+                    Rule.model_validate({**v.ir, **_owner_field(row.owner), "rule_id": row.id})
+                )
             except ValidationError:
                 continue
         return out

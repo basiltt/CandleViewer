@@ -8085,6 +8085,28 @@ paths:
                   job_id: { type: string, format: uuid }
         "422": { $ref: "#/components/responses/UnprocessableEntity" }
 
+  /rules/accounts:
+    get:
+      tags: [rules]
+      operationId: listRuleAccounts
+      summary: Accounts the caller may scope a rule to
+      description: >
+        Only accounts the caller holds a view grant on; an ungranted account is absent
+        (never a 403 row), so account existence does not leak (E35-S04 AC2).
+      x-rbac: { permissions: [rules:read], scope: account }
+      responses:
+        "200":
+          description: Granted account ids.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accounts]
+                properties:
+                  accounts: { type: array, items: { type: string, format: uuid } }
+        "401": { description: No verified session. }
+        "403": { description: Missing rules:read. }
+
   /rules/vocabulary:
     get:
       tags: [rules]

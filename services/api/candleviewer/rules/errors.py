@@ -16,3 +16,9 @@ class FormUnrepresentableError(RulesError, ValueError):
     def __init__(self, reasons: list[str]) -> None:
         self.reasons = tuple(reasons)
         super().__init__("rule is not form-compatible: " + "; ".join(reasons))
+
+
+class ScopeForbiddenError(RulesError):
+    """403: absent and not-granted accounts are indistinguishable (no existence leak)."""
+
+    message = "Forbidden"

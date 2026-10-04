@@ -11,6 +11,11 @@ The type aliases let `app` annotate its fields without a direct import edge.
 
 from __future__ import annotations
 
+import json
+from collections.abc import Awaitable, Callable
+from typing import Any
+
+from candleviewer.audit.models import Severity
 from candleviewer.audit.repository import AuditRepository
 from candleviewer.audit.service import AuditService
 from candleviewer.secrets.service import SecretsService
@@ -29,3 +34,31 @@ def build_audit_service(repository: AuditRepository | None = None) -> AuditHandl
     #1658) `start()` wires the real WAL-backed `AuditWriter`; without one it
     stays the scaffold."""
     return AuditService(repository)
+
+
+def _before(data: dict[str, str]) -> dict[str, Any] | None:
+    raw = data.get("scope_before")
+    return {"rule_scope": json.loads(raw)} if raw else None
+
+
+def audit_writer_sink(writer: Any) -> Callable[[str, dict[str, str]], Awaitable[None]]:
+    """Adapt `AuditWriter.emit` (durable, write-ahead) to the scope audit port."""
+    names = {
+        "rule_scope_denied": "rules.scope_denied",
+        "rule_live_scope_armed": "rules.live_scope_armed",
+        "rule_action_scope_denied": "rules.scope_denied",
+    }
+
+    async def sink(event: str, data: dict[str, str]) -> None:
+        await writer.emit(
+            names[event],
+            actor_label=data.get("caller", "unknown"),
+            actor_user_id=data.get("caller"),
+            object_kind="rule_scope",
+            object_id=data.get("account") or data.get("environment"),
+            severity=Severity.ERROR if data.get("severity") == "high" else Severity.WARNING,
+            before_state=_before(data),
+            after_state={k: v for k, v in data.items() if k != "scope_before"},
+        )
+
+    return sink
