@@ -33,6 +33,7 @@ Status values: `decided` (binding now), `proposed` (decision deadline stated ins
 | [ADR-0026](ADR-0026-rule-ir-canonicalisation.md) | Rule IR canonicalisation and round-trip fuzz strategy (E35-K01) | **proposed** (owner approval pending) |
 | [ADR-0027](ADR-0027-journal-analytics-query-tier.md) | Journal analytics query tier (E41-K01) | **proposed** (owner approval pending) |
 | [ADR-0028](ADR-0028-docs-toolchain.md) | Documentation toolchain and reference-generation pipeline (E48-K01) | **proposed-with-deadline** (E48-T02 CI proof; owner approval pending) |
+| [ADR-0029](ADR-0029-rule-graph-library.md) | Rule node-graph library and layout placement (E37-K01) | **proposed** (owner approval pending) |
 
 ## Writing a new ADR
 

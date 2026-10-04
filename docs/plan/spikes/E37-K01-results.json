@@ -1,0 +1,19 @@
+{
+  "env": "8 logical cores, Windows 11, headless Chromium (Playwright 1243), --disable-frame-rate-limit --disable-gpu-vsync, 1280x800, 8 s scripted zoom+pan per run",
+  "frameTimesMs": {
+    "rf200_x1": {"frames": 756, "p50": 9.4, "p95": 17.5, "p99": 18.2, "fps": 95.1},
+    "rf200virt_x1": {"frames": 714, "p50": 10.0, "p95": 17.9, "p99": 25.7, "fps": 89.7},
+    "rete200_x1": {"frames": 453, "p50": 17.3, "p95": 18.4, "p99": 20.3, "fps": 57.1},
+    "rf200_x4": {"frames": 163, "p50": 48.5, "p95": 60.8, "p99": 71.3, "fps": 20.9},
+    "rf200virt_x4": {"frames": 178, "p50": 45.8, "p95": 69.3, "p99": 85.0, "fps": 22.9},
+    "rete200_x4": {"frames": 455, "p50": 17.4, "p95": 18.2, "p99": 18.7, "fps": 57.3}
+  },
+  "rete_caveat": "Rete frame loop stays ~17 ms at both throttles: its area.zoom/translate path appears rAF-bound/transform-only with minimal node chrome (no handles/edges geometry, edges are static stub paths), so it is NOT like-for-like with React Flow. Treat as lower bound for Rete.",
+  "keyboard": {
+    "edgesBefore": 96, "edgesAfter": 97,
+    "announce1": "Connecting from trigger 0. Move to a target input and press Enter.",
+    "arrowDownSequence": ["trigger 2 input","trigger 3 input","trigger 4 input","trigger 5 input","trigger 6 input"],
+    "arrowUpResult": "trigger 5 input", "tabStopsDuringTraversal": 1,
+    "announce2": "Connected n0 to n5", "escapeAnnounce": "Connect cancelled"
+  }
+}
