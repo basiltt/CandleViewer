@@ -130,7 +130,7 @@ describe("SCR-117 routed in the real app", () => {
     );
     fireEvent.click(await screen.findByLabelText("Disable canvas animation"));
     expect(flags).toHaveBeenLastCalledWith(expect.objectContaining({ animate: false }));
-    expect(screen.getByRole("heading", { level: 1, name: "Accessibility" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: "Accessibility" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Keyboard shortcuts/ })).toHaveAttribute(
       "href",
       "/settings/hotkeys",
