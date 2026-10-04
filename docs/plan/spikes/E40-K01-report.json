@@ -1,66 +1,84 @@
 {
+  "criterion1_rule_interference": {
+    "rule_p99_ms_alone": 0.2459,
+    "threshold_pct": 15,
+    "rule_p99_ms_with_shared": 0.4583,
+    "added_pct_shared": 86.4,
+    "rule_p99_ms_with_separate": 0.3502,
+    "added_pct_separate": 42.4
+  },
   "q1_500_alerts_20_symbols": [
     {
       "option": "shared",
-      "p50_ms": 0.2933,
-      "p95_ms": 0.5483,
-      "p99_ms": 0.6671,
-      "cpu_s": 143.938,
-      "peak_kib": 885,
+      "p50_ms": 0.1641,
+      "p95_ms": 0.3871,
+      "p99_ms": 0.4716,
+      "cpu_s": 79.641,
+      "peak_kib": 890,
       "subscriptions": 500,
       "metric_computations": 20000,
       "evaluations": 500000,
-      "deliveries": 3368
+      "deliveries": 3368,
+      "prom_hist_p99_le_s": 0.0005,
+      "rule_p99_ms": 0.0
     },
     {
       "option": "separate",
-      "p50_ms": 0.3141,
-      "p95_ms": 0.6491,
-      "p99_ms": 0.7991,
-      "cpu_s": 12.016,
-      "peak_kib": 140,
+      "p50_ms": 0.1519,
+      "p95_ms": 0.2757,
+      "p99_ms": 0.3233,
+      "cpu_s": 5.344,
+      "peak_kib": 142,
       "subscriptions": 80,
       "metric_computations": 20000,
       "evaluations": 80000,
-      "deliveries": 3368
+      "deliveries": 3368,
+      "prom_hist_p99_le_s": 0.0005,
+      "rule_p99_ms": 0.0
     }
   ],
   "q2_100_alerts_12_conditions": [
     {
       "option": "shared",
-      "p50_ms": 0.3616,
-      "p95_ms": 0.544,
-      "p99_ms": 0.6779,
-      "cpu_s": 7.547,
-      "peak_kib": 185,
+      "p50_ms": 0.1424,
+      "p95_ms": 0.1924,
+      "p99_ms": 0.3207,
+      "cpu_s": 3.234,
+      "peak_kib": 187,
       "subscriptions": 100,
       "metric_computations": 3073,
       "evaluations": 25630,
-      "deliveries": 486
+      "deliveries": 486,
+      "prom_hist_p99_le_s": 0.0005,
+      "rule_p99_ms": 0.0
     },
     {
       "option": "shared_dedup",
-      "p50_ms": 0.378,
-      "p95_ms": 0.7154,
-      "p99_ms": 0.8271,
-      "cpu_s": 1.094,
-      "peak_kib": 57,
+      "p50_ms": 0.2327,
+      "p95_ms": 0.4752,
+      "p99_ms": 0.6902,
+      "cpu_s": 0.562,
+      "peak_kib": 58,
       "subscriptions": 12,
       "metric_computations": 3073,
       "evaluations": 3073,
-      "deliveries": 486
+      "deliveries": 486,
+      "prom_hist_p99_le_s": 0.001,
+      "rule_p99_ms": 0.0
     },
     {
       "option": "separate",
-      "p50_ms": 0.3289,
-      "p95_ms": 0.6437,
-      "p99_ms": 0.7758,
-      "cpu_s": 0.734,
-      "peak_kib": 32,
+      "p50_ms": 0.161,
+      "p95_ms": 0.2521,
+      "p99_ms": 0.3296,
+      "cpu_s": 0.375,
+      "peak_kib": 33,
       "subscriptions": 12,
       "metric_computations": 3073,
       "evaluations": 3073,
-      "deliveries": 486
+      "deliveries": 486,
+      "prom_hist_p99_le_s": 0.0005,
+      "rule_p99_ms": 0.0
     }
   ],
   "q3_storm_synthetic": {
@@ -97,7 +115,7 @@
   ],
   "q5_guard": {
     "p50_ms": 0.0008999995770864189,
-    "p99_ms": 0.0012000018614344299
+    "p99_ms": 0.0011000010999850929
   },
   "ticks": 20000
 }

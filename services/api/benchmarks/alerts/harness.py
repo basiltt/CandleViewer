@@ -19,6 +19,8 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any
 
+from prometheus_client import CollectorRegistry, Histogram
+
 from candleviewer.rules.evaluator import Evaluator, MetricValue, SnapshotBuilder
 from candleviewer.rules.evaluator.nodes import (
     EvalContext,
@@ -116,6 +118,8 @@ class Result:
     cpu_s: float = 0.0
     peak_kib: float = 0.0
     wall_s: float = 0.0
+    rule_lat_ms: list[float] = field(default_factory=list)
+    hist_p99_s: float = 0.0
 
     def pct(self, p: float) -> float:
         xs = sorted(self.lat_ms)
@@ -133,10 +137,19 @@ class Result:
             "metric_computations": self.computations,
             "evaluations": self.evals,
             "deliveries": self.deliveries,
+            "prom_hist_p99_le_s": self.hist_p99_s,
+            "rule_p99_ms": round(self._pct(self.rule_lat_ms, 0.99), 4),
         }
 
+    @staticmethod
+    def _pct(xs: list[float], p: float) -> float:
+        xs = sorted(xs)
+        return xs[min(len(xs) - 1, int(p * len(xs)))] if xs else 0.0
 
-def run_option(name: str, alerts: list[dict[str, Any]], ticks: int, seed: int = 7) -> Result:
+
+def run_option(
+    name: str, alerts: list[dict[str, Any]], ticks: int, seed: int = 7, rule_load: int = 0
+) -> Result:
     """name: shared (A, one Evaluator per alert) | shared_dedup (A') | separate (B)."""
     clk = Clock()
     src = TickSource(clk, seed)
@@ -166,6 +179,17 @@ def run_option(name: str, alerts: list[dict[str, Any]], ticks: int, seed: int = 
                         (i, (cond, referenced_metrics(cond), InstanceState()))
                     )
         res.subscriptions = len(first)
+    # Criterion 1: concurrent rule load = real E35 Evaluators (one per symbol) sharing the builder.
+    rule_evs = [
+        Evaluator(make_rule(condition(SYMBOLS[i % len(SYMBOLS)], 100)), builder, clk, clk)
+        for i in range(rule_load)
+    ]
+    # Same histogram name/shape E40-T03 will ship (cv_alert_eval_latency_seconds).
+    hist = Histogram(
+        "cv_alert_eval_latency_seconds", "condition met -> delivery committed",
+        buckets=(0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.05, 0.25, 1.0),
+        registry=CollectorRegistry(),
+    )  # fmt: skip
     members: dict[str, list[int]] = {}
     for i, h in enumerate(hashes):
         members.setdefault(h, []).append(i)
@@ -178,6 +202,11 @@ def run_option(name: str, alerts: list[dict[str, Any]], ticks: int, seed: int = 
         clk.t += 5
         src.step(sym)
         builder.new_tick()
+        for k, rev in enumerate(rule_evs):
+            if SYMBOLS[k % len(SYMBOLS)] == sym:
+                r0 = time.perf_counter()
+                rev.on_trigger(f"{sym}@*", "on_price_update")
+                res.rule_lat_ms.append((time.perf_counter() - r0) * 1000)
         for idx, ev in by_symbol[sym]:
             t0 = time.perf_counter()
             res.evals += 1
@@ -188,12 +217,30 @@ def run_option(name: str, alerts: list[dict[str, Any]], ticks: int, seed: int = 
             else:
                 fired = ev.on_trigger(f"{sym}@*", "on_price_update").fired
             if fired:
-                for a_idx in (members[hashes[idx]] if fan else [idx]):
+                for a_idx in members[hashes[idx]] if fan else [idx]:
                     sink.commit(a_idx, clk.t)
                     res.deliveries += 1
-                    res.lat_ms.append((time.perf_counter() - t0) * 1000)
+                    dt = time.perf_counter() - t0
+                    res.lat_ms.append(dt * 1000)
+                    hist.observe(dt)
     res.cpu_s, res.wall_s = time.process_time() - c0, time.perf_counter() - w0
     res.peak_kib = tracemalloc.get_traced_memory()[1] / 1024
     tracemalloc.stop()
     res.computations = src.reads
+    res.hist_p99_s = _hist_quantile(hist, 0.99)
     return res
+
+
+def _hist_quantile(hist: Histogram, q: float) -> float:
+    """Upper bucket bound containing quantile ``q`` of a Prometheus histogram (as PromQL would)."""
+    buckets = [
+        (float(s.labels["le"]), s.value)
+        for m in hist.collect()
+        for s in m.samples
+        if s.name.endswith("_bucket")
+    ]
+    total = max((v for _, v in buckets), default=0)
+    for le, v in sorted(buckets):
+        if total and v >= q * total:
+            return le
+    return 0.0

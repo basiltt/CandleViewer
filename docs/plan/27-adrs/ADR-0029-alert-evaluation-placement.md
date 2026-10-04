@@ -1,6 +1,6 @@
 # ADR-0029 — Alert evaluation placement, subscription sharing and storm thresholds
 
-- Status: **proposed** (owner approval pending)
+- Status: **proposed** (owner approval pending; Q1/Q2/Q3 evidence caveats below)
 - Date: 2026-10-04
 - Deciders: Owner (`@basiltt`) — owner approval pending.
 - Numbering note: the ticket says "ADR-0019"; that number is taken, so this is the next free number.
@@ -18,16 +18,22 @@ never duplicate evaluation (US-ALRT-001/002/003). Open: degenerate rules inside 
 Delivery workstation, Python 3.13, in-memory sqlite as the `alert_deliveries` stand-in: **relative
 numbers only**, not the reference VPS and not Postgres.
 
-| Q1 (500 alerts) | p50 ms | p95 ms | p99 ms | CPU s | peak KiB | subscriptions | evaluations |
-|---|---|---|---|---|---|---|---|
-| A: one `Evaluator` per alert | 0.293 | 0.548 | 0.667 | 143.9 | 885 | 500 | 500,000 |
-| B: notify-only, deduped by `condition_hash` | 0.314 | 0.649 | 0.799 | 12.0 | 140 | 80 | 80,000 |
+Re-run after review (same harness, same seeds, 20,000 ticks / 5,000 for Q2). Latency is also observed into a
+`prometheus_client` Histogram named `cv_alert_eval_latency_seconds` (the shape E40-T03 ships); the
+`hist p99 <=` column is the PromQL-style bucket upper bound.
 
-| Q2 (100 alerts, 12 distinct conditions) | p99 ms | CPU s | subscriptions | metric computations |
+| Q1 (500 alerts) | p50 ms | p95 ms | p99 ms | hist p99 <= s | CPU s | peak KiB | subscriptions |
+|---|---|---|---|---|---|---|---|
+| A: one `Evaluator` per alert | 0.164 | 0.387 | 0.472 | 0.0005 | 79.6 | 890 | 500 |
+| B: notify-only, deduped by `condition_hash` | 0.152 | 0.276 | 0.323 | 0.0005 | 5.3 | 142 | 80 |
+
+| Q2 (100 alerts, 12 distinct conditions) | p99 ms | CPU s | peak KiB | subscriptions |
 |---|---|---|---|---|
-| A: per alert | 0.678 | 7.55 | 100 | 3,073 |
-| A': E35 `Evaluator`, deduped by hash | 0.827 | 1.09 | 12 | 3,073 |
-| B: notify-only, deduped | 0.776 | 0.73 | 12 | 3,073 |
+| A: per alert | 0.321 | 3.23 | 187 | 100 |
+| A': E35 `Evaluator`, deduped by hash | 0.690 | 0.56 | 58 | 12 |
+| B: notify-only, deduped | 0.330 | 0.38 | 33 | 12 |
+
+(Absolute numbers vary run to run on the shared workstation; ratios are stable. Raw: `E40-K01-report.json`.)
 
 - Metric computations are identical in every variant (the shared `SnapshotBuilder` memo already
   prevents duplicate metric work); the cost difference is evaluator instances and repeated evaluation.
@@ -35,19 +41,32 @@ numbers only**, not the reference VPS and not Postgres.
 - Q5: the notify-only IR guard costs ~0.001 ms p50 (budget 300 ms).
 - Q3 (storm) is **synthetic**; see Limitations.
 
+### Decision criteria (stated up front, as the ticket requires)
+
+1. Option A is rejected if running 500 alerts adds **>15% to p99 of concurrently running E35 rule
+   evaluation**. Option B is rejected under the same test.
+2. Reuse without duplicated computation: separate subscriptions == distinct `condition_hash` values and
+   metric computations no higher than A's.
+3. Capacity: condition-to-record p99 well under the 1 s budget.
+
+Criterion 1 measured (40 concurrent E35 rule `Evaluator`s on the same builder/thread, rule-evaluation
+p99 alone **0.246 ms**): with A's 500 alerts **0.458 ms (+86%)**; with B **0.350 ms (+42%)**. Both exceed
+15% in this single-thread harness because alert and rule evaluation interleave on one core
+(contention, not isolation). So criterion 1 is *triggered for A and, in-process, also for B*; B adds
+about half of A's interference at 1/15 of A's CPU.
+
 ## Decision
 
 **Option B, with condition-hash sharing: a separate lightweight alert evaluator that calls E35's
 `evaluate` nodes, `SnapshotBuilder` and `MetricRegistry` directly (no per-alert `Evaluator`
 instance), one subscription per distinct `alerts.condition_hash`, fan-out to member alerts.**
 
-Deciding criterion: *criterion 2* (reuse without duplicated computation) is met: separate
-subscriptions (12) == distinct condition hashes (12) and metric computations equal option A's, so the
-NFR holds. *Criterion 1* (>15% p99 added to rule evaluation) could not be triggered or refuted here:
-the harness does not run alerts concurrently with a loaded rule evaluator (see Limitations); the
-decision instead rests on the 12x CPU and 6x memory cost of A at 500 alerts, plus the fact that A
-drags rule sandbox/arming/limit semantics onto notify-only objects. Re-run E40-Q02 with concurrent
-rule load; if B then adds measurable contention, revisit.
+Deciding criteria: *criterion 1* (A: +86% rule p99, B: +42%, both over 15% when co-scheduled on one
+thread; B is the lower-interference option) and *criterion 2* (12 subscriptions == 12 distinct hashes,
+identical metric computations). A also costs ~15x the CPU and ~6x the memory at 500 alerts and drags rule
+sandbox/arming/limit semantics onto notify-only objects. **Binding condition for E40-T03/Q02:** run the
+alert evaluator in its own task/worker so it cannot add >15% to rule p99; E40-Q02 must verify this on a
+recorded window and, if B still exceeds 15% when isolated, revisit.
 
 Note A' (E35 `Evaluator` + dedup) is nearly as cheap; if E40-T03 prefers zero new evaluator code it is
 an acceptable fallback, provided notify-only validation and per-alert (not per-rule) limits are added.
@@ -60,11 +79,12 @@ exchange event time is deterministic for all of 1m..1w; a late tick inside a bar
 
 ## Q3 — storm threshold
 
-E40-D01's ratified value was not available in the repo, so it is **not confirmed or corrected**. On a
-synthetic detector-heavy stream (12,000 user-minute windows) deliveries per user per 60 s: p50 1,
-p95 4, p99 50, max 82; bursts (stacked-imbalance) dominate the tail. Proposal pending real E25 data:
-storm = **>20 deliveries/user/60 s**, aggregating to one digest per window (catches the burst tail
-without touching the ~95% of windows <=4).
+**Not validated against real data; the AC is not claimed as met.** No recorded E25 detector-heavy window
+exists on `main` (only `packages/fixtures/raw/synthetic_sample.jsonl`), and E40-D01 has no ratified
+threshold value in the repo. Synthetic stream (12,000 user-minute windows, seeded): deliveries per user
+per 60 s p50 1, p95 4, p99 50, max 82; bursts dominate the tail. **Provisional proposal** (to be
+confirmed or corrected by E40-D01/E40-Q02 on real E25 data): storm = >20 deliveries/user/60 s,
+aggregated to one digest per window. Histogram: `E40-K01-report.json` `q3_storm_synthetic`.
 
 ## Metrics (defined for E40-T03/T04)
 
@@ -77,7 +97,7 @@ without touching the ~95% of windows <=4).
   synthetic. Windows must be named when real data lands.
 - Q1's 500-alert corpus uses 20 symbols x 4 thresholds, so it has only 80 distinct conditions, which
   favours B's dedup; the per-alert A column is the like-for-like latency comparison.
-- Latency is in-process condition-to-commit with sqlite, not Postgres; Prometheus histograms are not
-  yet available (E40-T03), so `time.perf_counter` was used.
-- No rule-evaluator interference measured (criterion 1).
+- Latency is in-process condition-to-commit with sqlite, not Postgres; a Prometheus Histogram (same name
+  as T03's) is fed from `perf_counter` deltas; the real T03 pipeline is not yet available.
+- Criterion 1 is measured single-threaded with 40 rule evaluators; isolation behaviour is for Q02.
 - Neither option is near the 1 s budget, so no capacity escalation is needed.
