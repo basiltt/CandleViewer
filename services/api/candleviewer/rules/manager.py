@@ -17,6 +17,7 @@ from typing import Any, Protocol
 from pydantic import ValidationError
 
 from candleviewer.rules.arming import ArmingFacts, check_arming
+from candleviewer.rules.evaluator.engine import EvaluationResult
 from candleviewer.rules.ir import Rule, ir_hash
 from candleviewer.rules.lifecycle import MODES, LifecycleError, RuleLifecycle, mode_of
 from candleviewer.rules.validator import validate_rule
@@ -175,6 +176,8 @@ class RulesManager:
         self._metric = on_metric
         self._idem: OrderedDict[str, dict[str, Any]] = OrderedDict()
         self.lifecycle = lifecycle or RuleLifecycle()
+        #: rule_id -> (ir_hash, first evaluation ts_ms): simulation window for the current hash.
+        self._sim_window: dict[str, tuple[str, int]] = {}
 
     def set_hooks(self, *, audit: Audit | None = None, broadcast: Broadcast | None = None) -> None:
         if audit is not None:
@@ -462,6 +465,33 @@ class RulesManager:
         row.simulated_hashes.add(hash_)
         row.simulation_fires, row.simulation_hours = fires, hours
         await self._s.put(row)
+
+    async def consume_evaluation(self, result: EvaluationResult) -> bool:
+        """Evaluator result sink (E35-S02 -> S01). Only rules in `simulate` mode are recorded;
+        skipped or errored evaluations are not evidence, so they never make a rule eligible.
+        Returns True when a simulation sample was recorded."""
+        row = await self._s.get(result.rule_id)
+        if row is None or row.deleted or row.mode != "simulate":
+            return False
+        v = next((x for x in row.versions if x.version == result.rule_version), None)
+        if v is None:
+            return False
+        if result.error is not None:
+            self._metric("rules_simulation_error", {"rule_id": result.rule_id})
+            return False
+        if result.skipped_reason is not None:
+            return False
+        h = v.ir_hash
+        win = self._sim_window.get(result.rule_id)
+        if win is None or win[0] != h:
+            win = (h, result.ts_ms)
+            self._sim_window[result.rule_id] = win
+            prior = 0
+        else:
+            prior = row.simulation_fires if h in row.simulated_hashes else 0
+        hours = max(0.0, (result.ts_ms - win[1]) / 3_600_000)
+        await self.record_simulation(result.rule_id, h, prior + (1 if result.fired else 0), hours)
+        return True
 
     # ----- mode --------------------------------------------------------------------
     async def set_mode(

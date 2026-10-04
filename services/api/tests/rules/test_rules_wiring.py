@@ -73,3 +73,33 @@ async def test_actor_consume_refuses_without_fresh_step_up() -> None:
     assert actor is not None and actor.consume_step_up is not None
     assert await actor.consume_step_up() is False
     assert pending == ["s1"]
+
+
+async def test_service_sink_records_simulation_for_simulating_rule() -> None:
+    import asyncio
+
+    from candleviewer.rules.evaluator.engine import EvaluationResult
+    from candleviewer.rules.manager import Actor
+    from candleviewer.rules.service import RulesService
+
+    svc = RulesService()
+    await svc.start(None)  # type: ignore[arg-type]
+    m = svc.manager()
+    assert m is not None
+    owner = Actor("u1", "s1", frozenset({"rules:arm_live"}), is_owner=True, step_up_fresh=True)
+    import json
+    from pathlib import Path
+
+    raw = json.loads(
+        (Path(__file__).parents[1] / "fixtures/rule_ir/form_simple_0.json").read_text("utf-8"),
+        parse_float=str,
+    )
+    raw["actions"][0]["params"] = {"channel": "ui", "severity": "info", "template": "x"}
+    rid = (await m.create(raw, owner))["id"]
+    await m.set_mode(rid, "simulate", owner, "k1")
+    sink = svc.evaluation_sink()
+    for i in range(5):
+        sink(EvaluationResult(rid, 1, "BTCUSDT@*", "tick", i, True, None))
+    await asyncio.gather(*svc._tasks)
+    assert (await m.set_mode(rid, "armed", owner, "k2"))["mode"] == "armed"
+    await svc.stop(1.0)

@@ -385,3 +385,38 @@ async def test_conflict_names_session_after_service_rebuild_from_store() -> None
     with pytest.raises(RuleError) as e:
         await rebuilt.update(rid, _ir("3"), 1, other)
     assert e.value.extra["session"] == "s1"
+
+
+def _res(rid: str, fired: bool, ts: int = 0, **kw: Any) -> Any:
+    from candleviewer.rules.evaluator.engine import EvaluationResult
+
+    return EvaluationResult(rid, 1, "BTCUSDT@*", "tick", ts, fired, None, **kw)
+
+
+async def test_simulating_rule_results_are_recorded_with_matching_hash() -> None:
+    m, _, _ = _mgr()
+    rid = (await m.create(_ir(), OWNER))["id"]
+    await m.set_mode(rid, "simulate", OWNER, "k-sim")
+    assert await m.consume_evaluation(_res(rid, True))
+    row = await m._row(rid)
+    assert await _active_hash(m, rid) in row.simulated_hashes and row.simulation_fires == 1
+
+
+async def test_disarmed_rule_results_are_not_recorded() -> None:
+    m, _, _ = _mgr()
+    rid = (await m.create(_ir(), OWNER))["id"]
+    assert not await m.consume_evaluation(_res(rid, True))
+    assert (await m._row(rid)).simulated_hashes == set()
+
+
+async def test_arm_gated_on_simulation_count_then_succeeds() -> None:
+    m, _, _ = _mgr()
+    rid = (await m.create(_ir(), OWNER))["id"]
+    await m.set_mode(rid, "simulate", OWNER, "k-sim")
+    for _ in range(4):
+        await m.consume_evaluation(_res(rid, True))
+    with pytest.raises(RuleError) as e:
+        await m.set_mode(rid, "armed", OWNER, "k-a1")
+    assert e.value.status == 422 and e.value.code == "promotion_gate"
+    await m.consume_evaluation(_res(rid, True))
+    assert (await m.set_mode(rid, "armed", OWNER, "k-a2"))["mode"] == "armed"

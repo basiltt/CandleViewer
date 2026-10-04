@@ -76,7 +76,10 @@ class Evaluator:
         wall_clock: Clock,
         monotonic_ms: Clock,
         on_critical: Callable[[str, str], None] = lambda _rid, _msg: None,
+        on_result: Callable[[EvaluationResult], None] | None = None,
     ) -> None:
+        # Per-evaluation (not per-tick) consumer hook, e.g. the simulation recorder (C-2.20).
+        self._on_result = on_result
         self._snapshots = snapshots
         self._wall = wall_clock
         self._mono = monotonic_ms
@@ -132,6 +135,12 @@ class Evaluator:
         return None
 
     def on_trigger(self, instance: str, trigger_type: str) -> EvaluationResult:
+        result = self._evaluate(instance, trigger_type)
+        if self._on_result is not None:
+            self._on_result(result)
+        return result
+
+    def _evaluate(self, instance: str, trigger_type: str) -> EvaluationResult:
         now = self._wall()
         self.stats.evaluations += 1
         if self.disabled_reason is not None:

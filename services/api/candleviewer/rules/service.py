@@ -8,9 +8,12 @@ module, but it does no real work until its owning epic lands.
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from candleviewer.observability.health import HealthReport, HealthStatus
+from candleviewer.rules.evaluator.engine import EvaluationResult
 from candleviewer.rules.manager import (
     Audit,
     Broadcast,
@@ -29,6 +32,7 @@ class RulesService:
 
     def __init__(self) -> None:
         self._started = False
+        self._tasks: set[asyncio.Task[bool]] = set()
         self._registry: MetricRegistry | None = None
         self._manager: RulesManager | None = None
         self._store: RuleStore = InMemoryRuleStore()
@@ -50,6 +54,20 @@ class RulesService:
     def manager(self) -> RulesManager | None:
         """The store/version/mode manager while the module runs; `None` otherwise (-> 503)."""
         return self._manager if self._started else None
+
+    def evaluation_sink(self) -> Callable[[EvaluationResult], None]:
+        """Sync `Evaluator(on_result=...)` consumer: schedules recording on the manager
+        (per evaluation, off the hot path); dropped silently while the module is stopped."""
+
+        def _sink(result: EvaluationResult) -> None:
+            m = self.manager()
+            if m is None:
+                return
+            task = asyncio.get_running_loop().create_task(m.consume_evaluation(result))
+            self._tasks.add(task)
+            task.add_done_callback(self._tasks.discard)
+
+        return _sink
 
     def registry(self) -> MetricRegistry | None:
         """Metric registry while the engine module is running; `None` otherwise (-> 503)."""
