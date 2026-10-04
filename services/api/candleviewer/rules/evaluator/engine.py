@@ -77,9 +77,11 @@ class Evaluator:
         monotonic_ms: Clock,
         on_critical: Callable[[str, str], None] = lambda _rid, _msg: None,
         on_result: Callable[[EvaluationResult], None] | None = None,
+        scope_gate: Callable[[str], str | None] | None = None,
     ) -> None:
         # Per-evaluation (not per-tick) consumer hook, e.g. the simulation recorder (C-2.20).
         self._on_result = on_result
+        self._scope_gate = scope_gate  # E35-S04: second resolution on every fire
         self._snapshots = snapshots
         self._wall = wall_clock
         self._mono = monotonic_ms
@@ -148,6 +150,8 @@ class Evaluator:
         if self.paused:
             self.stats.missed_triggers += 1
             return self._skip(instance, trigger_type, now, "paused")
+        if self._scope_gate is not None and self._scope_gate(instance) is not None:
+            return self._skip(instance, trigger_type, now, "scope")
         st = self._instances.setdefault(instance, _Instance())
         deb = self.rule.trigger.debounce_ms
         if deb and st.last_trigger_ms is not None and now - st.last_trigger_ms < deb:

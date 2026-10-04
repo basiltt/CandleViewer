@@ -7,9 +7,9 @@ State comes from an in-memory snapshot (grants/accounts/freeze) behind ``ScopeSt
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Callable, Iterable
+from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass, field
-from typing import Literal, Protocol
+from typing import Any, Literal, Protocol
 from uuid import UUID
 
 from candleviewer.rules.errors import ScopeForbiddenError
@@ -69,11 +69,37 @@ class Resolution:
     env_skipped: bool = False
 
 
+AuditSink = Callable[[str, dict[str, str]], Awaitable[None]]  # required: C-2.9, no silent default
+
+
+def audit_writer_sink(writer: Any) -> AuditSink:
+    """Adapt `AuditWriter.emit` (durable, write-ahead) to the scope audit port."""
+    from candleviewer.audit.models import Severity
+
+    names = {
+        "rule_scope_denied": "rules.scope_denied",
+        "rule_live_scope_armed": "rules.live_scope_armed",
+    }
+
+    async def sink(event: str, data: dict[str, str]) -> None:
+        await writer.emit(
+            names[event],
+            actor_label=data.get("caller", "unknown"),
+            actor_user_id=data.get("caller"),
+            object_kind="rule_scope",
+            object_id=data.get("account") or data.get("environment"),
+            severity=Severity.ERROR if data.get("severity") == "high" else Severity.WARNING,
+            after_state=dict(data),
+        )
+
+    return sink
+
+
 class ScopeResolver:
     def __init__(
         self,
         state: ScopeState,
-        audit: Callable[[str, dict[str, str]], None] = lambda _a, _d: None,
+        audit: AuditSink,
     ) -> None:
         self._state = state
         self._audit = audit
@@ -162,25 +188,29 @@ class ScopeResolver:
             self.suppressions_total[reason] += 1
         return reason
 
-    def authorize_accounts(self, caller: UUID, account_ids: Iterable[UUID]) -> None:
+    async def authorize_accounts(self, caller: UUID, account_ids: Iterable[UUID]) -> None:
         """403 for any account the caller cannot see; absent == not granted (no leak)."""
         granted = self._state.granted_accounts(caller)
         for acct in account_ids:
             if acct not in granted or self._state.account(acct) is None:
-                self._audit("rule_scope_denied", {"caller": str(caller), "account": str(acct)})
+                await self._audit(
+                    "rule_scope_denied", {"caller": str(caller), "account": str(acct)}
+                )
                 raise ScopeForbiddenError(ScopeForbiddenError.message)
 
     def listable_accounts(self, caller: UUID) -> list[UUID]:
         granted = self._state.granted_accounts(caller)
         return sorted((a for a in granted if self._state.account(a) is not None), key=str)
 
-    def authorize_environments(self, caller: UUID, scope: RuleScope) -> None:
+    async def authorize_environments(self, caller: UUID, scope: RuleScope) -> None:
         """Including live needs rules.arm_live; denial and success are both audited."""
         if "live" in scope.environments:
             if not self._state.can_arm_live(caller):
-                self._audit("rule_scope_denied", {"caller": str(caller), "environment": "live"})
+                await self._audit(
+                    "rule_scope_denied", {"caller": str(caller), "environment": "live"}
+                )
                 raise ScopeForbiddenError(ScopeForbiddenError.message)
-            self._audit("rule_live_scope_armed", {"caller": str(caller), "severity": "high"})
+            await self._audit("rule_live_scope_armed", {"caller": str(caller), "severity": "high"})
 
 
 def _applies(applies_to: str, entity: EntityKind) -> bool:
@@ -204,3 +234,54 @@ def summarize_scope(scope: RuleScope, *, account_count: int | None = None) -> st
         "any": "any positions and orders",
     }[scope.applies_to]
     return f"{accounts} · {syms} · {what} · {' and '.join(scope.environments)}"
+
+
+def make_scope_gate(
+    resolver: ScopeResolver, scope: RuleScope, owner: UUID, environment: str
+) -> Callable[[str], str | None]:
+    """Evaluator ``scope_gate``: re-resolves scope on every trigger; reason => skipped "scope"."""
+
+    def gate(instance_key: str) -> str | None:
+        sym, _, acct = instance_key.partition("@")
+        ref = ScopeInstanceRef(
+            instance_key, None if sym == "*" else sym, None if acct == "*" else UUID(acct)
+        )
+        return resolver.check_action(scope, owner, environment, ref)
+
+    return gate
+
+
+ActionDispatch = Callable[[ScopeInstanceRef], Awaitable[None]]
+
+
+@dataclass(slots=True)
+class FireOutcome:
+    fired: bool
+    dispatched: int = 0
+    suppressed: Reason | None = None
+    skipped_reason: str | None = None
+
+
+async def fire_scoped(
+    resolver: ScopeResolver,
+    scope: RuleScope,
+    owner: UUID,
+    environment: str,
+    instance: ScopeInstanceRef,
+    dispatch: ActionDispatch,
+    *,
+    entity: EntityKind = "account",
+    is_algo_child: bool = False,
+) -> FireOutcome:
+    """Action-dispatch gate: the second resolution runs immediately before EVERY action.
+
+    A live trigger for an instance whose scope no longer holds (revoked grant, freeze, closed
+    live gate...) is skipped with ``skipped_reason="scope"`` and counted; nothing is dispatched.
+    """
+    reason = resolver.check_action(
+        scope, owner, environment, instance, entity, is_algo_child=is_algo_child
+    )
+    if reason is not None:
+        return FireOutcome(False, 0, reason, SKIPPED_REASON)
+    await dispatch(instance)
+    return FireOutcome(True, 1)
