@@ -76,7 +76,7 @@ _PII_FIELD_NAMES: frozenset[str] = frozenset(
 
 #: Exact (normalised: lowercased, every non-alphanumeric stripped) field
 #: names that are credentials in their own right (security review of PR #1561,
-#: finding 3): HTTP auth headers, exchange request-signing headers (`X-BAPI-SIGN`),
+#: finding 3): HTTP auth headers, exchange request-signing headers (the adapter's signature header),
 #: one-time codes, session identifiers and bearer tokens. Exact match, not
 #: substring, so `sign` does not redact `design`/`assign`. `recv_window` is
 #: deliberately absent — it is a timing parameter, not a secret.

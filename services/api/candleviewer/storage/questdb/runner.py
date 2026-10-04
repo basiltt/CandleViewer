@@ -19,6 +19,7 @@ import structlog
 
 from candleviewer.storage.errors import StorageSchemaDrift
 from candleviewer.storage.questdb.ddl import TableDef, parse_ddl_dir
+from candleviewer.storage.sql_identifiers import checked_identifier
 
 logger = structlog.get_logger(__name__)
 
@@ -34,6 +35,13 @@ CREATE TABLE IF NOT EXISTS {_MIGRATIONS_TABLE} (
 """
 
 
+# Bind params are values, not identifiers, so the query is a fixed literal;
+# the check keeps it in lockstep with `_MIGRATIONS_TABLE`.
+_SELECT_APPLIED = "SELECT filename FROM _cv_migrations"
+if checked_identifier(_MIGRATIONS_TABLE) not in _SELECT_APPLIED.split():  # pragma: no cover
+    raise RuntimeError("_SELECT_APPLIED out of sync with _MIGRATIONS_TABLE")
+
+
 class QuestDbExecutor(Protocol):
     """The minimal surface the runner needs from a PGWire connection —
     kept as a `Protocol` so tests can supply an in-memory fake instead of a
@@ -47,13 +55,7 @@ class QuestDbExecutor(Protocol):
 async def applied_migrations(executor: QuestDbExecutor) -> set[str]:
     """Filenames already recorded in `_cv_migrations`."""
     await executor.execute(_CREATE_MIGRATIONS_TABLE)
-    # `_MIGRATIONS_TABLE` is a module constant, never user input; noqa'd
-    # rather than parameterised because QuestDB/Postgres bind params are
-    # values, not identifiers.
-    # nosemgrep: cv-storage-sql-construction -- module-constant identifier
-    rows = await executor.fetch(
-        f"SELECT filename FROM {_MIGRATIONS_TABLE}"  # noqa: S608  # nosec B608 - module constant identifier, not user input
-    )
+    rows = await executor.fetch(_SELECT_APPLIED)
     return {str(row["filename"]) for row in rows}
 
 

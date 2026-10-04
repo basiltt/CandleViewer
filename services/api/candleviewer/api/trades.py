@@ -4,7 +4,7 @@ Serves the in-memory hot tape kept by `TradeStream` (last 1 000 prints per
 symbol), newest-first, with the full contract surface: `from`/`to`, `side`,
 `min_size`, opaque keyset `cursor` paging, split-fill clustering
 (`cluster_window_ms`/`cluster_tolerance_ticks`) and derived `tick_direction`.
-A request for a listed symbol also (re)acquires its `publicTrade` demand with
+A request for a listed symbol also (re)acquires its public-trade stream demand with
 a grace period, so the tape fills lazily with no other consumer. RBAC (C-12.4)
 mirrors `api/ticker.py`: fail-closed 501/401/403. Deeper history is E16.
 """
@@ -53,7 +53,7 @@ def serialize_trade(event: TradeEvent) -> dict[str, object]:
 
 
 def _tick_directions(asc: list[TradeEvent]) -> dict[str, str]:
-    """Bybit tick semantics derived over the hot tape (oldest first)."""
+    """Exchange tick-direction semantics derived over the hot tape (oldest first)."""
     out: dict[str, str] = {}
     prev: Decimal | None = None
     last = "ZeroPlusTick"

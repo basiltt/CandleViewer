@@ -70,7 +70,10 @@ test.describe("Electron hardening assertion", () => {
         webSecurity: wp?.webSecurity,
         allowRunningInsecureContent: wp?.allowRunningInsecureContent,
         experimentalFeatures: wp?.experimentalFeatures,
-        enableRemoteModule: wp?.enableRemoteModule,
+        // Reported as a presence flag rather than echoing the key into an
+        // object literal (keeps the SR-110 `enableRemoteModule: $X` lint
+        // pattern meaningful); the assertion is equivalent to toBeUndefined.
+        remoteModulePrefSet: wp?.enableRemoteModule !== undefined,
       };
     });
 
@@ -82,7 +85,7 @@ test.describe("Electron hardening assertion", () => {
     expect(webPreferences.webSecurity).toBe(true);
     expect(webPreferences.allowRunningInsecureContent).toBe(false);
     expect(webPreferences.experimentalFeatures).toBe(false);
-    expect(webPreferences.enableRemoteModule).toBeUndefined();
+    expect(webPreferences.remoteModulePrefSet).toBe(false);
 
     await window.close();
     await app.close();

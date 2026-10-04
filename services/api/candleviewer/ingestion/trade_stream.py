@@ -122,7 +122,7 @@ def _now_us() -> int:
 
 
 class TradeStream:
-    """Refcounted `publicTrade.{symbol}` demand + dedupe + gap backfill + publish."""
+    """Refcounted per-symbol public-trade stream demand + dedupe + gap backfill + publish."""
 
     def __init__(
         self,
