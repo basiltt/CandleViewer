@@ -466,6 +466,22 @@ class RulesManager:
         row.simulation_fires, row.simulation_hours = fires, hours
         await self._s.put(row)
 
+    async def evaluable_rules(self) -> list[Rule]:
+        """Active-version IR of every non-deleted rule in `simulate` or `armed` mode (the
+        evaluator runner's work list). Unreadable (quarantined) versions are skipped."""
+        out: list[Rule] = []
+        for row in await self._s.all():
+            if row.deleted or row.mode not in ("simulate", "armed"):
+                continue
+            v = next((x for x in row.versions if x.id == row.active_version_id), None)
+            if v is None or quarantine_path(v.ir):
+                continue
+            try:
+                out.append(Rule.model_validate({**v.ir, "rule_id": row.id}))
+            except ValidationError:
+                continue
+        return out
+
     async def consume_evaluation(self, result: EvaluationResult) -> bool:
         """Evaluator result sink (E35-S02 -> S01). Only rules in `simulate` mode are recorded;
         skipped or errored evaluations are not evidence, so they never make a rule eligible.
