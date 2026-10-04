@@ -1,0 +1,56 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0019",
+  "version": 1,
+  "name": "Leverage cap",
+  "description": "Reduce leverage to 3x when margin ratio is not in the safe band.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "account"
+  },
+  "trigger": {
+    "type": "on_position_open"
+  },
+  "conditions": {
+    "node_id": "g1",
+    "op": "any_of",
+    "children": [
+      {
+        "node_id": "c1",
+        "op": "gt",
+        "left": {
+          "metric": "leverage"
+        },
+        "right": {
+          "const": 5
+        }
+      },
+      {
+        "node_id": "c2",
+        "op": "outside",
+        "left": {
+          "metric": "margin_ratio"
+        },
+        "right": {
+          "const": 0
+        },
+        "right2": {
+          "const": 60
+        }
+      }
+    ]
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "reduce_leverage",
+      "params": {
+        "target": 3
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "form"
+}

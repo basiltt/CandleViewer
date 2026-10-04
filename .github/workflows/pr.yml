@@ -43,6 +43,7 @@ jobs:
       docs: ${{ steps.filter.outputs.docs }}
       e2e: ${{ steps.filter.outputs.e2e }}
       migrations: ${{ steps.filter.outputs.migrations }}
+      rules: ${{ steps.filter.outputs.rules }}
     permissions:
       contents: read
       pull-requests: read
@@ -95,6 +96,13 @@ jobs:
               - 'apps/desktop/**'
               - 'packages/chart-engine/**'
               - 'packages/protocol/**'
+            rules:
+              - 'services/api/candleviewer/rules/ir/**'
+              - 'services/api/candleviewer/rules/compiler/**'
+              - 'services/api/candleviewer/rules/errors.py'
+              - 'services/api/tests/rules/roundtrip/**'
+              - 'services/api/tests/fixtures/rule_corpus/**'
+              - '.github/workflows/_job-rule-roundtrip.yml'
             migrations:
               - 'services/api/candleviewer/migrations/**'
               - 'services/api/candleviewer/db/**'
@@ -245,6 +253,13 @@ jobs:
   # `architecture` required-check name is the job of that name inside
   # `_job-py.yml`, visible in the PR checks list once GitHub Actions exposes
   # reusable-workflow job names ("_job-py / architecture").
+
+  # E35-Q02: rule IR round-trip gate (corpus goldens + mutation check + 10 000-doc property run).
+  rule-roundtrip:
+    name: rule-roundtrip
+    needs: changed-paths
+    if: ${{ needs.changed-paths.outputs.rules == 'true' }}
+    uses: ./.github/workflows/_job-rule-roundtrip.yml
 
   statechart-lint:
     name: statechart-lint
@@ -428,6 +443,7 @@ jobs:
       - gen
       - js
       - py
+      - rule-roundtrip
       - statechart-lint
       - machine-hash-lock
       - xstate-contract
@@ -459,6 +475,7 @@ jobs:
           FILTER_INFRA: ${{ needs.changed-paths.outputs.infra }}
           FILTER_E2E: ${{ needs.changed-paths.outputs.e2e }}
           FILTER_ENGINE: ${{ needs.changed-paths.outputs.engine }}
+          FILTER_RULES: ${{ needs.changed-paths.outputs.rules }}
           RESULT_CHANGED_PATHS: ${{ needs.changed-paths.result }}
           RESULT_PIN_CHECK: ${{ needs.pin-check.result }}
           RESULT_SPIKE_CONTAINMENT: ${{ needs.spike-containment.result }}
@@ -469,6 +486,7 @@ jobs:
           RESULT_GEN: ${{ needs.gen.result }}
           RESULT_JS: ${{ needs.js.result }}
           RESULT_PY: ${{ needs.py.result }}
+          RESULT_RULE_ROUNDTRIP: ${{ needs.rule-roundtrip.result }}
           RESULT_STATECHART_LINT: ${{ needs.statechart-lint.result }}
           RESULT_MACHINE_HASH_LOCK: ${{ needs.machine-hash-lock.result }}
           RESULT_XSTATE_CONTRACT: ${{ needs.xstate-contract.result }}
@@ -496,6 +514,7 @@ jobs:
               gen: { applicable: true, result: process.env.RESULT_GEN },
               js: { applicable: isTrue(process.env.FILTER_JS), result: process.env.RESULT_JS },
               py: { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_PY },
+              "rule-roundtrip": { applicable: isTrue(process.env.FILTER_RULES), result: process.env.RESULT_RULE_ROUNDTRIP },
               "statechart-lint": { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_STATECHART_LINT },
               "machine-hash-lock": { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_MACHINE_HASH_LOCK },
               "xstate-contract": { applicable: isTrue(process.env.FILTER_PY), result: process.env.RESULT_XSTATE_CONTRACT },

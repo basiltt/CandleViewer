@@ -1,0 +1,64 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0009",
+  "version": 1,
+  "name": "ATR trailing stop",
+  "description": "Trail the stop at 2x ATR below price on every 5m bar close; never loosens.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "position",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_bar_close",
+    "timeframe": "5m"
+  },
+  "conditions": {
+    "node_id": "c1",
+    "op": "gt",
+    "left": {
+      "metric": "price"
+    },
+    "right": {
+      "node_id": "x1",
+      "op": "add",
+      "operands": [
+        {
+          "metric": "avg_entry_price"
+        },
+        {
+          "node_id": "x2",
+          "op": "mul",
+          "operands": [
+            {
+              "metric": "atr",
+              "params": {
+                "n": 14
+              }
+            },
+            {
+              "const": 2
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "tighten_stop",
+      "params": {
+        "mode": "atr_multiple",
+        "value": 2,
+        "only_tighten": true
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "graph"
+}

@@ -1,0 +1,38 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0004",
+  "version": 1,
+  "name": "sys.clock_drift_block",
+  "description": "Clock drift reported as block_trading halts order entry.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "global"
+  },
+  "trigger": {
+    "type": "on_signal"
+  },
+  "conditions": {
+    "node_id": "c1",
+    "op": "in_set",
+    "left": {
+      "metric": "market_regime"
+    },
+    "set_values": [
+      "clock_drift_block"
+    ]
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "halt_new_orders",
+      "params": {
+        "scope": "global",
+        "until": "manual"
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "form"
+}

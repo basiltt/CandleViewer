@@ -1,0 +1,52 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0016",
+  "version": 1,
+  "name": "Flatten all on liquidation cascade",
+  "description": "Flatten everything when liquidations exceed 5M notional in a minute.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "account"
+  },
+  "trigger": {
+    "type": "on_liquidation"
+  },
+  "conditions": {
+    "node_id": "c1",
+    "op": "gt",
+    "left": {
+      "metric": "liquidation_notional",
+      "params": {
+        "window_ms": 60000
+      }
+    },
+    "right": {
+      "const": 5000000
+    }
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "flatten_all_positions",
+      "params": {
+        "symbols": [
+          "BTCUSDT",
+          "ETHUSDT"
+        ]
+      }
+    },
+    {
+      "node_id": "a2",
+      "type": "send_notification",
+      "params": {
+        "channel": "ui",
+        "severity": "critical",
+        "template": "Liquidation cascade - flattened"
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "form"
+}

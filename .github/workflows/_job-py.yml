@@ -98,7 +98,7 @@ jobs:
 
       - name: pytest (unit + non-exchange_smoke, network-guarded)
         run: >
-          uv run pytest -p no:cacheprovider -m "not exchange_smoke and not (chaos and integration)"
+          uv run pytest -p no:cacheprovider -m "not exchange_smoke and not (chaos and integration) and not roundtrip"
           --cov --cov-report=xml:coverage.xml --cov-report=term
 
       - name: uv build

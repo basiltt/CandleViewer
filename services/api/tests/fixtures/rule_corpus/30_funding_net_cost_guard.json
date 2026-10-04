@@ -1,0 +1,89 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0030",
+  "version": 1,
+  "name": "Funding net-cost guard",
+  "description": "Tag when annualised funding minus twice the fee exceeds 15%.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "symbol",
+    "symbols": [
+      "SOLUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_timer",
+    "interval_ms": 300000
+  },
+  "conditions": {
+    "node_id": "c1",
+    "op": "gt",
+    "left": {
+      "node_id": "x1",
+      "op": "sub",
+      "operands": [
+        {
+          "metric": "funding_annualized"
+        },
+        {
+          "node_id": "x2",
+          "op": "mul",
+          "operands": [
+            {
+              "const": 2
+            },
+            {
+              "const": "0.055"
+            }
+          ]
+        },
+        {
+          "node_id": "x3",
+          "op": "neg",
+          "operands": [
+            {
+              "const": 0
+            }
+          ]
+        },
+        {
+          "node_id": "x4",
+          "op": "min",
+          "operands": [
+            {
+              "const": 1
+            },
+            {
+              "node_id": "x5",
+              "op": "div",
+              "operands": [
+                {
+                  "metric": "funding_rate"
+                },
+                {
+                  "const": 3
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "right": {
+      "const": 15
+    }
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "log_journal_tag",
+      "params": {
+        "tag": "funding_rich"
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "graph"
+}

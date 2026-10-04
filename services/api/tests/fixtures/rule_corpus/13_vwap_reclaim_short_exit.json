@@ -1,0 +1,46 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0013",
+  "version": 1,
+  "name": "VWAP reclaim short exit",
+  "description": "Take profit closer when price crosses below VWAP.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "position",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_price_update",
+    "debounce_ms": 250
+  },
+  "conditions": {
+    "node_id": "c1",
+    "op": "crosses_below",
+    "left": {
+      "metric": "price"
+    },
+    "right": {
+      "metric": "vwap",
+      "params": {
+        "anchor": "session"
+      }
+    }
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "modify_take_profit",
+      "params": {
+        "mode": "price_offset",
+        "value": 10,
+        "only_tighten": true
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "form"
+}

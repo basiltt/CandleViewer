@@ -1,0 +1,121 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0028",
+  "version": 1,
+  "name": "Shared ATR band",
+  "description": "Shared sub-expression: one ATR-positive check feeds both sides of a breakout test.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "symbol",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_bar_close",
+    "timeframe": "1h"
+  },
+  "conditions": {
+    "node_id": "g1",
+    "op": "any_of",
+    "children": [
+      {
+        "node_id": "g2",
+        "op": "all_of",
+        "children": [
+          {
+            "node_id": "c1",
+            "op": "gt",
+            "left": {
+              "metric": "atr",
+              "params": {
+                "n": 14
+              }
+            },
+            "right": {
+              "const": 0
+            }
+          },
+          {
+            "node_id": "c2",
+            "op": "gt",
+            "left": {
+              "metric": "price"
+            },
+            "right": {
+              "node_id": "x1",
+              "op": "add",
+              "operands": [
+                {
+                  "metric": "vwap"
+                },
+                {
+                  "metric": "atr",
+                  "params": {
+                    "n": 14
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "node_id": "g3",
+        "op": "all_of",
+        "children": [
+          {
+            "node_id": "c1",
+            "op": "gt",
+            "left": {
+              "metric": "atr",
+              "params": {
+                "n": 14
+              }
+            },
+            "right": {
+              "const": 0
+            }
+          },
+          {
+            "node_id": "c3",
+            "op": "lt",
+            "left": {
+              "metric": "price"
+            },
+            "right": {
+              "node_id": "x2",
+              "op": "sub",
+              "operands": [
+                {
+                  "metric": "vwap"
+                },
+                {
+                  "metric": "atr",
+                  "params": {
+                    "n": 14
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "send_notification",
+      "params": {
+        "channel": "ui",
+        "severity": "info",
+        "template": "Breakout outside ATR band"
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "graph"
+}

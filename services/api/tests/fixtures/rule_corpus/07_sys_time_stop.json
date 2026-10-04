@@ -1,0 +1,62 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0007",
+  "version": 1,
+  "name": "sys.time_stop",
+  "description": "Trade older than the time stop and under 0.2R gets flattened and tagged.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "position",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_timer",
+    "interval_ms": 60000
+  },
+  "conditions": {
+    "node_id": "g1",
+    "op": "all_of",
+    "children": [
+      {
+        "node_id": "c1",
+        "op": "gt",
+        "left": {
+          "metric": "time_in_trade_ms"
+        },
+        "right": {
+          "const": 14400000
+        }
+      },
+      {
+        "node_id": "c2",
+        "op": "lt",
+        "left": {
+          "metric": "unrealised_r_multiple"
+        },
+        "right": {
+          "const": "0.2"
+        }
+      }
+    ]
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "flatten_position",
+      "params": {}
+    },
+    {
+      "node_id": "a2",
+      "type": "log_journal_tag",
+      "params": {
+        "tag": "time_stop"
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "form"
+}

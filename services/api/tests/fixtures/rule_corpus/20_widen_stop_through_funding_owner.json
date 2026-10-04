@@ -1,0 +1,46 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0020",
+  "version": 1,
+  "name": "Widen stop through funding (owner)",
+  "description": "Owner-only: widen the stop by 0.5 ATR near funding.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "position",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_timer",
+    "interval_ms": 30000
+  },
+  "conditions": {
+    "node_id": "c1",
+    "op": "between",
+    "left": {
+      "metric": "time_to_funding_ms"
+    },
+    "right": {
+      "const": 0
+    },
+    "right2": {
+      "const": 300000
+    }
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "widen_stop",
+      "params": {
+        "mode": "atr_multiple",
+        "value": "0.5",
+        "only_tighten": false
+      }
+    }
+  ],
+  "limits": {
+    "require_confirmation": true
+  },
+  "editor": "form"
+}

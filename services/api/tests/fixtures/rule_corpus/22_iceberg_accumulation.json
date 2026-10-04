@@ -1,0 +1,59 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0022",
+  "version": 1,
+  "name": "Iceberg accumulation",
+  "description": "Start an iceberg slice when an iceberg prints and absorption holds within 30 s.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "symbol",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_price_update",
+    "debounce_ms": 250
+  },
+  "conditions": {
+    "node_id": "t1",
+    "op": "occurred_within",
+    "child": {
+      "node_id": "g1",
+      "op": "all_of",
+      "children": [
+        {
+          "node_id": "c1",
+          "op": "is_true",
+          "left": {
+            "metric": "iceberg_present_at_level"
+          }
+        },
+        {
+          "node_id": "c2",
+          "op": "is_true",
+          "left": {
+            "metric": "absorption"
+          }
+        }
+      ]
+    },
+    "window_ms": 30000
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "start_iceberg_slice",
+      "params": {
+        "params": {
+          "side": "buy",
+          "slices": 10
+        }
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "graph"
+}

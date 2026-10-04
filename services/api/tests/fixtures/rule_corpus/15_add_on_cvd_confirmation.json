@@ -1,0 +1,46 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0015",
+  "version": 1,
+  "name": "Add on CVD confirmation",
+  "description": "Scale in when CVD slope stays positive for 10 minutes.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "position",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_bar_close",
+    "timeframe": "1m"
+  },
+  "conditions": {
+    "node_id": "t1",
+    "op": "stable_for",
+    "child": {
+      "node_id": "c1",
+      "op": "gt",
+      "left": {
+        "metric": "cvd_slope"
+      },
+      "right": {
+        "const": 0
+      }
+    },
+    "window_ms": 600000
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "scale_in",
+      "params": {
+        "qty_pct": 25
+      }
+    }
+  ],
+  "limits": {
+    "once_per": "position"
+  },
+  "editor": "graph"
+}

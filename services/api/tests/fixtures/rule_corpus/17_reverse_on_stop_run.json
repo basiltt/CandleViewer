@@ -1,0 +1,52 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0017",
+  "version": 1,
+  "name": "Reverse on stop run",
+  "description": "Reverse the position when a stop run is detected against it.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "position",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_price_update",
+    "debounce_ms": 500
+  },
+  "conditions": {
+    "node_id": "g1",
+    "op": "all_of",
+    "children": [
+      {
+        "node_id": "c1",
+        "op": "is_true",
+        "left": {
+          "metric": "stop_run_detected"
+        }
+      },
+      {
+        "node_id": "c2",
+        "op": "eq",
+        "left": {
+          "metric": "position_side"
+        },
+        "right": {
+          "const": "short"
+        }
+      }
+    ]
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "reverse_position",
+      "params": {}
+    }
+  ],
+  "limits": {
+    "once_per": "position"
+  },
+  "editor": "form"
+}

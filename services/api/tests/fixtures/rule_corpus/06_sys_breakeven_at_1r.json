@@ -1,0 +1,42 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0006",
+  "version": 1,
+  "name": "sys.breakeven_at_1r",
+  "description": "At +1R move the stop to breakeven plus two ticks, once per position.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "position",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_position_update",
+    "debounce_ms": 250
+  },
+  "conditions": {
+    "node_id": "c1",
+    "op": "gte",
+    "left": {
+      "metric": "unrealised_r_multiple"
+    },
+    "right": {
+      "const": 1
+    }
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "move_to_breakeven",
+      "params": {
+        "offset_ticks": 2
+      }
+    }
+  ],
+  "limits": {
+    "once_per": "position",
+    "cooldown_ms": 1000
+  },
+  "editor": "form"
+}

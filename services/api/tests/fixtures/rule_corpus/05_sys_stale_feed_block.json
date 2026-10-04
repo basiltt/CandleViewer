@@ -1,0 +1,42 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0005",
+  "version": 1,
+  "name": "sys.stale_feed_block",
+  "description": "Book feed stale for over 5 s vetoes new trades.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "symbol",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "pre_trade_check"
+  },
+  "conditions": {
+    "node_id": "c1",
+    "op": "gt",
+    "left": {
+      "metric": "book_staleness_ms"
+    },
+    "right": {
+      "const": 5000
+    }
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "send_notification",
+      "params": {
+        "channel": "ui",
+        "severity": "warning",
+        "template": "Feed stale - entry vetoed"
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "form"
+}

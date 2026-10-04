@@ -1,0 +1,93 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0029",
+  "version": 1,
+  "name": "Premium divergence alert",
+  "description": "Premium diverging while the position is open, with nested arithmetic.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "symbol",
+    "symbols": [
+      "ETHUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_metric_change",
+    "metric": "premium_pct"
+  },
+  "conditions": {
+    "node_id": "g1",
+    "op": "all_of",
+    "children": [
+      {
+        "node_id": "c1",
+        "op": "gt",
+        "left": {
+          "node_id": "x1",
+          "op": "abs",
+          "operands": [
+            {
+              "metric": "premium_pct"
+            }
+          ]
+        },
+        "right": {
+          "const": "0.3"
+        }
+      },
+      {
+        "node_id": "c2",
+        "op": "neq",
+        "left": {
+          "metric": "position_side"
+        },
+        "right": {
+          "const": "flat"
+        }
+      },
+      {
+        "node_id": "c3",
+        "op": "lt",
+        "left": {
+          "node_id": "x2",
+          "op": "pct_of",
+          "operands": [
+            {
+              "metric": "cvd_bar_change"
+            },
+            {
+              "node_id": "x3",
+              "op": "max",
+              "operands": [
+                {
+                  "metric": "delta"
+                },
+                {
+                  "const": 1
+                }
+              ]
+            }
+          ]
+        },
+        "right": {
+          "const": -20
+        }
+      }
+    ]
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "send_notification",
+      "params": {
+        "channel": "ui",
+        "severity": "warning",
+        "template": "Premium divergence"
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "graph"
+}

@@ -1,0 +1,38 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0018",
+  "version": 1,
+  "name": "Resume after drawdown recovery",
+  "description": "Resume order entry at the 09:00 UTC schedule if drawdown is back under 2%.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "account"
+  },
+  "trigger": {
+    "type": "on_schedule",
+    "cron": "0 9 * * *"
+  },
+  "conditions": {
+    "node_id": "c1",
+    "op": "lt",
+    "left": {
+      "metric": "drawdown_pct"
+    },
+    "right": {
+      "const": 2
+    }
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "resume_new_orders",
+      "params": {
+        "scope": "account"
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "form"
+}

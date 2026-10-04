@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any
 
 from candleviewer.rules.compiler.common import build_rule, check_bounds
+from candleviewer.rules.errors import FormUnrepresentableError
 from candleviewer.rules.ir import Rule, form_incompatibility_reasons
 from candleviewer.rules.issues import Issue, RuleCompileError
 
@@ -80,12 +81,15 @@ def _strip_ids(node: Any, in_opaque: bool = False) -> Any:
 
 
 def to_form_model(ir: Rule) -> dict[str, Any]:
-    """Decompile a form-compatible IR into the form model; ``ValueError`` otherwise."""
+    """Decompile a form-compatible IR into the form model.
+
+    Raises ``FormUnrepresentableError`` (never a lossy document) for graph-only constructs. The
+    ``graph_layout`` presentation block is carried through untouched (ADR-0026 §4, E35-Q02).
+    """
     reasons = form_incompatibility_reasons(ir)
     if reasons:
-        raise ValueError("rule is not form-compatible: " + "; ".join(reasons))
+        raise FormUnrepresentableError(reasons)
     doc = ir.model_dump(mode="python")
-    doc.pop("graph_layout", None)
     doc["editor"] = "form"
     doc["conditions"] = _strip_ids(doc["conditions"])
     doc["actions"] = [_strip_ids(a) for a in doc["actions"]]

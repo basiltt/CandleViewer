@@ -1,0 +1,53 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0001",
+  "version": 1,
+  "name": "sys.native_sl_watchdog",
+  "description": "Position without a native SL for over 10 s: attach fallback stop and raise a critical alert.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "position",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_position_update"
+  },
+  "conditions": {
+    "node_id": "t1",
+    "op": "sustained_for",
+    "child": {
+      "node_id": "c1",
+      "op": "is_true",
+      "left": {
+        "metric": "position_open"
+      }
+    },
+    "window_ms": 10000
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "modify_stop_loss",
+      "params": {
+        "mode": "atr_multiple",
+        "value": 1.5,
+        "only_tighten": true
+      }
+    },
+    {
+      "node_id": "a2",
+      "type": "send_notification",
+      "params": {
+        "channel": "ui",
+        "severity": "critical",
+        "template": "Native SL missing - fallback attached"
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 10000
+  },
+  "editor": "form"
+}

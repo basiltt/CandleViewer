@@ -1,0 +1,41 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0027",
+  "version": 1,
+  "name": "Cancel bracket on close",
+  "description": "When a position closes cancel the remaining bracket order and tag the trade.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "trade_group"
+  },
+  "trigger": {
+    "type": "on_position_close"
+  },
+  "conditions": {
+    "node_id": "c1",
+    "op": "is_false",
+    "left": {
+      "metric": "position_open"
+    }
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "cancel_order",
+      "params": {
+        "purpose": "bracket"
+      }
+    },
+    {
+      "node_id": "a2",
+      "type": "log_journal_tag",
+      "params": {
+        "tag": "closed"
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "form"
+}
