@@ -65,11 +65,27 @@ services:
       - "127.0.0.1:${QUESTDB_HTTP_PORT:-9000}:9000"
     volumes:
       - cv-questdb-data:/var/lib/questdb
+    # The final stage of questdb/questdb:8.1.1 is debian:bookworm-slim with no curl/wget
+    # (only the runtime tarball, gosu and the entrypoint are copied in), so a curl-based
+    # probe exits 127 forever and the service never leaves `unhealthy` (#276, run 36954315443).
+    # Probe with bash's /dev/tcp instead: run a trivial SQL query via /exec and require a 200,
+    # which only happens once the SQL engine (not merely the listener) is serving.
+    # `$$status` is compose-escaped to `$status`; the request line is a printf argument so the
+    # `%20` in the URL is never parsed as a format directive.
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:9000/ || exit 1"]
+      test:
+        - CMD
+        - bash
+        - -c
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/9000
+          && printf '%s\r\nHost: 127.0.0.1\r\n\r\n' 'GET /exec?query=select%20count()%20from%20long_sequence(1) HTTP/1.0' >&3
+          && read -r status <&3
+          && case "$$status" in *' 200 '*) exit 0;; esac; exit 1
       interval: 5s
       timeout: 5s
       retries: 20
+      start_period: 15s
     networks: [cv-internal]
 
   api:
@@ -99,7 +115,13 @@ services:
     tmpfs:
       - /tmp
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2).status == 200 else 1)"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2).status == 200 else 1)",
+        ]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -132,7 +154,8 @@ services:
     profiles: ["obs"]
     environment:
       CV_ALERT_QUIET_HOURS: ${CV_ALERT_QUIET_HOURS:-22:00-07:00}
-    command: ["python", "/src/render_config.py", "/src/alertmanager.yml", "/rendered/alertmanager.yml"]
+    command:
+      ["python", "/src/render_config.py", "/src/alertmanager.yml", "/rendered/alertmanager.yml"]
     volumes:
       - ../alertmanager:/src:ro
       - cv-alertmanager-config:/rendered
@@ -151,7 +174,8 @@ services:
     depends_on:
       alertmanager-config:
         condition: service_completed_successfully
-    command: ["--config.file=/etc/alertmanager/rendered/alertmanager.yml", "--storage.path=/alertmanager"]
+    command:
+      ["--config.file=/etc/alertmanager/rendered/alertmanager.yml", "--storage.path=/alertmanager"]
     secrets: [alert_page_webhook_url, alert_ticket_webhook_url, alert_deadman_url]
     volumes:
       - cv-alertmanager-config:/etc/alertmanager/rendered:ro

@@ -68,3 +68,22 @@ def test_check_healthchecks_flags_missing_block() -> None:
 def test_check_healthchecks_accepts_present_block() -> None:
     compose = {"services": {"api": {"healthcheck": {"test": ["CMD", "true"]}}}}
     assert check_healthchecks(compose) == []
+
+
+def test_questdb_healthcheck_uses_tool_present_in_image() -> None:
+    """Regression for #276: questdb/questdb's final stage is debian:bookworm-slim without
+    curl/wget, so a curl probe exits 127 and the service is permanently `unhealthy`.
+    The probe must use bash's /dev/tcp and the SQL /exec readiness path."""
+    import yaml
+
+    compose = yaml.safe_load(COMPOSE_PATH.read_text(encoding="utf-8"))
+    health = compose["services"]["questdb"]["healthcheck"]
+    test = health["test"]
+    assert test[:3] == ["CMD", "bash", "-c"]
+    script = test[3]
+    assert "curl" not in script and "wget" not in script
+    assert "/dev/tcp/127.0.0.1/9000" in script
+    assert "/exec?query=select" in script
+    assert "start_period" in health
+    # api must still gate on questdb health (the CI work-around is gone).
+    assert compose["services"]["api"]["depends_on"]["questdb"] == {"condition": "service_healthy"}
