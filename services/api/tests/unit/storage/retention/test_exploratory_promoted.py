@@ -6,7 +6,7 @@ import pytest
 from test_reaper import DAY, NOW_US, Env, part
 
 from candleviewer.storage.models import StreamKind, TimeRange
-from candleviewer.storage.router import dedup_merge
+from candleviewer.storage.router import dedup_merge, storage_router_dedup_conflicts_total
 
 
 async def test_pin_applied_between_drops_skips_remaining_partitions() -> None:
@@ -39,8 +39,8 @@ def test_dedup_same_key_altered_field_last_writer_wins() -> None:
     assert dedup_merge(cold, hot, key)[0]["price"] == 2
 
 
-@pytest.mark.xfail(reason="BUG-C #1697: apply() has no single-run guard", strict=True)
 async def test_apply_twice_same_report_writes_single_purge_audit() -> None:
+    """Regression for BUG-C #1697 (fixed): apply() is single-run per report."""
     env = Env([part("A", 40)])
     report = await env.reaper().dry_run()
     await env.reaper().apply(report)
@@ -74,8 +74,8 @@ async def test_router_resolves_cold_when_reaper_accelerated_window_shrinks() -> 
     assert router.resolve(StreamKind.TRADES, rng) != "hot"
 
 
-@pytest.mark.xfail(reason="BUG-A #1696 (class): no monotonic-clock guard in router", strict=True)
 def test_router_clock_step_back_does_not_lose_rows() -> None:
+    """Regression for BUG-A #1696 (fixed): router clock is monotonic-guarded."""
     from candleviewer.storage.router import TierRouter
 
     t = [NOW_US]
@@ -86,12 +86,13 @@ def test_router_clock_step_back_does_not_lose_rows() -> None:
     assert router.resolve(StreamKind.TRADES, rng) == before
 
 
-@pytest.mark.xfail(
-    reason="BUG-B #1698: no signal on dedup collision with differing payload", strict=True
-)
-def test_dedup_collision_with_differing_fields_is_observable(caplog) -> None:  # type: ignore[no-untyped-def]
+def test_dedup_collision_with_differing_fields_is_observable() -> None:
+    """Regression for BUG-B #1698 (fixed by #1709): a hot/cold collision with differing
+    payload increments the conflict counter. Asserting the metric (not caplog) keeps the
+    test deterministic across structlog/stdlib wiring (C-13.7)."""
     key = ("ts", "symbol", "trade_id")
     cold = [{"ts": 1, "symbol": "A", "trade_id": "1", "price": 1}]
     hot = [{"ts": 1, "symbol": "A", "trade_id": "1", "price": 2}]
+    before = storage_router_dedup_conflicts_total._value.get()
     dedup_merge(cold, hot, key)
-    assert caplog.records
+    assert storage_router_dedup_conflicts_total._value.get() == before + 1
