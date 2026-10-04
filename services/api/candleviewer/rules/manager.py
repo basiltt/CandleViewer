@@ -199,6 +199,16 @@ class RulesManager:
         accts = self._accounts(row.versions[-1].ir)
         return all(a in actor.granted_accounts for a in accts)
 
+    def _require_grants(self, rule: Rule, actor: Actor) -> None:
+        """C-12.4: a non-owner may only target accounts granted to them."""
+        if actor.is_owner:
+            return
+        for a in rule.scope.account_ids:
+            if str(a) not in actor.granted_accounts:
+                raise RuleError(
+                    403, "forbidden", "You do not have access to one of the accounts in scope."
+                )
+
     async def _visible_row(self, rule_id: str, actor: Actor) -> RuleRow:
         row = await self._row(rule_id)
         if not self._visible(row, actor):
@@ -303,6 +313,7 @@ class RulesManager:
     async def create(self, ir: dict[str, Any], actor: Actor, notes: str = "") -> dict[str, Any]:
         rid = str(uuid.uuid4())
         rule, h = self._validated({**ir, "mode": "disabled", "enabled": False}, rid)
+        self._require_grants(rule, actor)
         existing = await self._s.all()
         if any(not r.deleted and r.name == rule.name for r in existing):
             raise RuleError(409, "name_taken", f"A rule named '{rule.name}' already exists.")
@@ -368,6 +379,7 @@ class RulesManager:
         rule, h = self._validated(
             {**ir, "mode": row.mode, "enabled": row.mode != "disabled"}, rule_id
         )
+        self._require_grants(rule, actor)
         existing = next((v for v in row.versions if v.ir_hash == h), None)
         if existing is not None:
             return {"created": False, "version": self._version_view(existing)}

@@ -27,7 +27,14 @@ def _ir(threshold: str = "65000.50", **over: Any) -> dict[str, Any]:
 
 
 class _Env:
-    def __init__(self, perms: set[str] | None = None) -> None:
+    def __init__(
+        self,
+        perms: set[str] | None = None,
+        *,
+        owner: bool = True,
+        granted: frozenset[str] = frozenset(),
+        mgr: RulesManager | None = None,
+    ) -> None:
         self.audits: list[tuple[str, dict[str, Any]]] = []
         self.bcs: list[dict[str, Any]] = []
         self.grants = 1
@@ -40,7 +47,9 @@ class _Env:
         async def bc(p: dict[str, Any]) -> None:
             self.bcs.append(p)
 
-        self.mgr = RulesManager(InMemoryRuleStore(), default_registry(), audit=audit, broadcast=bc)
+        self.mgr = mgr or RulesManager(
+            InMemoryRuleStore(), default_registry(), audit=audit, broadcast=bc
+        )
 
         async def consume() -> bool:
             if self.grants <= 0:
@@ -52,7 +61,13 @@ class _Env:
             if self.anon:
                 return None
             return Actor(
-                "u1", "s1", self.perms, is_owner=True, step_up_fresh=True, consume_step_up=consume
+                "u1",
+                "s1",
+                self.perms,
+                granted_accounts=granted,
+                is_owner=owner,
+                step_up_fresh=True,
+                consume_step_up=consume,
             )
 
         app = FastAPI()
@@ -204,3 +219,39 @@ def test_unwired_unavailable_and_bad_id() -> None:
     app2.include_router(make_rules_crud_router(lambda: None, lambda _r: actor))
     assert TestClient(app2).get("/rules").status_code == 503
     assert _Env().c.get("/rules/not-a-uuid").status_code == 422
+
+
+A1, A2 = "11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"
+
+
+def _scoped(*accts: str) -> dict[str, Any]:
+    return {"scope": {**LIVE, "account_ids": list(accts)}}
+
+
+def test_manager_cannot_target_ungranted_accounts_on_create_or_update() -> None:
+    owner = _Env()
+    mgr = _Env(owner=False, granted=frozenset({A1}), mgr=owner.mgr)
+    assert mgr.c.post("/rules", json={"ir": _ir(**_scoped(A2))}).status_code == 403
+    assert mgr.c.post("/rules", json={"ir": _ir(**_scoped(A1, A2))}).status_code == 403
+    rid = mgr.create(**_scoped(A1))
+    bad = {"ir": _ir(name="renamed", **_scoped(A2)), "expected_version": 1}
+    assert mgr.c.put(f"/rules/{rid}", json=bad).status_code == 403
+    assert owner.c.get(f"/rules/{rid}").json()["latest_version"] == 1
+
+
+def test_manager_gets_404_on_another_accounts_rule_everywhere() -> None:
+    owner = _Env()
+    rid = owner.create(**_scoped(A2))
+    vid = owner.c.get(f"/rules/{rid}/versions").json()["items"][0]["id"]
+    m = _Env(owner=False, granted=frozenset({A1}), mgr=owner.mgr)
+    hdr = {"Idempotency-Key": "k1"}
+    ir = {"ir": _ir(**_scoped(A1)), "expected_version": 1}
+    assert m.c.get(f"/rules/{rid}").status_code == 404
+    assert m.c.put(f"/rules/{rid}", json=ir).status_code == 404
+    assert m.c.delete(f"/rules/{rid}").status_code == 404
+    assert m.c.get(f"/rules/{rid}/versions").status_code == 404
+    assert m.c.get(f"/rules/{rid}/versions/{vid}").status_code == 404
+    assert m.c.put(f"/rules/{rid}/active-version", json={"version_id": vid}).status_code == 404
+    assert m.c.put(f"/rules/{rid}/mode", json={"mode": "simulate"}, headers=hdr).status_code == 404
+    assert m.c.get("/rules").json()["items"] == []
+    assert owner.c.get(f"/rules/{rid}").status_code == 200
