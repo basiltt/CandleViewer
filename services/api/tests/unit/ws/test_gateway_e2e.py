@@ -5,6 +5,7 @@ permission_change pushed and the now-forbidden subscription dropped."""
 from __future__ import annotations
 
 import uuid
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -12,6 +13,7 @@ from fastapi import Request
 from fastapi.testclient import TestClient
 
 from candleviewer.app import create_app
+from candleviewer.auth.errors import SessionNotFound, StepUpRequired
 from candleviewer.auth.generated_permissions import Permission
 from candleviewer.auth.owner_floor import assert_owner_floor
 from candleviewer.auth.scopes import AccountGrant, PrincipalSnapshot
@@ -67,6 +69,30 @@ class _World:
         self.audit.append({"action": action, **kw})
 
 
+class _StepUp:
+    """Stand-in for the DB-backed StepUpService (not wired without a database)."""
+
+    def __init__(self) -> None:
+        self.elevated = False
+
+    async def require_elevation(self, session_id: str, action_class: str) -> None:
+        if not self.elevated:
+            raise StepUpRequired(action_class)
+
+    async def record_pending(self, session_id: str, action_class: str) -> None:
+        return None
+
+    async def assert_writable(self, session_id: str) -> None:
+        return None
+
+
+class _Sessions:
+    async def authenticate_access_token(self, token: str) -> Any:
+        if token != "admin-token":  # noqa: S105
+            raise SessionNotFound("x")
+        return SimpleNamespace(id=uuid.uuid4(), user_id=ADMIN)
+
+
 async def _authenticate(presented: str) -> tuple[str, uuid.UUID]:
     if presented != "mgr-token":
         raise PermissionError("bad token")
@@ -83,7 +109,19 @@ def env() -> tuple[TestClient, _World]:
         ws_authenticate=_authenticate,
     )
     app.state.app_context.audit._writer = w  # stand-in for the started AuditWriter
-    return TestClient(app, client=("127.0.0.1", 50000)), w
+    # The router holds this same AuthService: wire the step-up/session seams.
+    auth: Any = app.state.app_context.auth
+    auth._sessions = _Sessions()
+    auth._step_up = _StepUp()
+    client = TestClient(
+        app, client=("127.0.0.1", 50000), headers={"Authorization": "Bearer admin-token"}
+    )
+    return client, w
+
+
+def _elevate(client: TestClient) -> None:
+    """Complete step-up for action class "users" on the admin session."""
+    client.app.state.app_context.auth._step_up.elevated = True  # type: ignore[attr-defined]  # Starlette app typed as ASGIApp
 
 
 def _sub(ws: Any, ch: str, accounts: list[uuid.UUID] | None = None) -> dict[str, Any]:
@@ -109,6 +147,7 @@ def test_ws_e2e_permissions_sub_check_and_live_role_change(env: tuple[TestClient
         assert _sub(ws, "orders", [ACC])["ok"] is True
         assert _sub(ws, "book.BTCUSDT.50")["ok"] is True
 
+        _elevate(client)
         r = client.put(f"/users/{MGR}/roles", json={"roles": ["viewer"]})
         assert r.status_code == 200
         change = ws.receive_json()
@@ -139,8 +178,19 @@ def test_ws_e2e_bad_token_closes_4401_and_frames_before_auth_refused(
         assert bye["t"] == "bye" and bye["p"]["reason"] == "auth_failed"
 
 
+def test_ws_e2e_roles_change_without_step_up_is_403_step_up_required(
+    env: tuple[TestClient, _World],
+) -> None:
+    client, w = env
+    r = client.put(f"/users/{MGR}/roles", json={"roles": ["viewer"]})
+    assert r.status_code == 403
+    assert r.json()["code"] == "step_up_required"
+    assert w.roles[MGR] == frozenset({"manager"})
+
+
 def test_ws_e2e_last_owner_demotion_409_is_audited(env: tuple[TestClient, _World]) -> None:
     client, w = env
+    _elevate(client)
     r = client.put(f"/users/{ADMIN}/roles", json={"roles": ["viewer"]})
     assert r.status_code == 409
     assert [a["action"] for a in w.audit] == ["rbac.denied"]

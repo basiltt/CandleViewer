@@ -133,6 +133,7 @@ def test_put_roles_without_auth_wired_fails_closed() -> None:
     )
     r = TestClient(app).put(f"/users/{TARGET}/roles", json={"roles": ["manager"]})
     assert r.status_code == 503
+    assert r.json()["code"] == "service_unavailable"
 
 
 def _admin() -> PrincipalSnapshot:
@@ -353,3 +354,14 @@ def test_put_roles_owner_floor_denial_records_before_and_requested_roles() -> No
     assert call["reason"] == "owner_floor"
     assert call["before_state"] == {"roles": ["owner"]}
     assert call["after_state"] == {"roles": ["viewer"]}
+
+
+def test_put_roles_bad_bearer_is_401_with_code() -> None:
+    c = _client(_Store({"viewer"}, 2), _admin(), _Emitter(), _Notifier())
+    r = c.put(
+        f"/users/{TARGET}/roles",
+        json={"roles": ["manager"]},
+        headers={"Authorization": "Bearer nope"},
+    )
+    assert r.status_code == 401
+    assert r.json()["code"] == "unauthorized"
