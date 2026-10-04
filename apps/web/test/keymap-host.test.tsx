@@ -148,3 +148,33 @@ describe("audit is transmitted server-side", () => {
     vi.unstubAllGlobals();
   });
 });
+
+describe("profile persistence + Rules-context inert explanation", () => {
+  it("rebinds survive a module reload (localStorage)", async () => {
+    act(() => setBindings(new Map(getBindings()).set("dom.cancel_all", "Q")));
+    vi.resetModules();
+    const fresh = await import("../src/keymap/profile");
+    expect(fresh.getBindings().get("dom.cancel_all")).toBe("Q");
+    fresh.resetBindings();
+    vi.resetModules();
+    expect((await import("../src/keymap/profile")).getBindings().get("dom.cancel_all")).toBe(
+      "Ctrl+Shift+X",
+    );
+  });
+
+  it("explains an inert Rules command when the editor context is not valid", () => {
+    const off = registerCommand("rules.save_draft", vi.fn(), () => false);
+    render(
+      <div data-keymap-context="Rules">
+        <input aria-label="rule editor" />
+        <KeymapHost />
+      </div>,
+    );
+    screen.getByLabelText("rule editor").focus();
+    fireEvent.keyDown(window, { key: "s", ctrlKey: true });
+    expect(screen.getByTestId("toast-host")).toHaveTextContent(
+      /Save draft is not available here \(Rules view\)/,
+    );
+    off();
+  });
+});

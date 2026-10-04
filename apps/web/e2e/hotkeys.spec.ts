@@ -117,3 +117,21 @@ test("inert press of an unregistered destructive binding explains once, politely
   );
   await expect(host).toContainText("needs working orders exist");
 });
+
+test("inert press of a context-gated command (drawing selected) explains what it needs", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.goto("/terminal/last");
+  await expect(page.getByRole("main")).toBeVisible();
+  await page.keyboard.press("Delete");
+  await expect(page.getByTestId("toast-host")).toContainText("needs drawing selected");
+});
+
+test("a rebind persists across reload", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/settings/hotkeys");
+  await bind(page, "Price zoom in", "J");
+  await page.reload();
+  await expect(page.getByRole("row", { name: /Price zoom in/ }).locator("kbd")).toHaveText("J");
+});
