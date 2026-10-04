@@ -264,3 +264,96 @@ def test_arming_ok_override_and_gate() -> None:
     owner = _facts(simulation_fires=0, is_owner=True, owner_override_reason="why")
     assert check_arming(owner) is None
     assert not promotion_gate_met(4, 23.9)
+
+
+async def test_set_active_version_on_armed_rule_always_demotes_even_if_simulated() -> None:
+    m, _, _ = _mgr()
+    rid = (await m.create(_ir(), OWNER))["id"]
+    await _ready_to_arm(m, rid)
+    await m.set_mode(rid, "armed", OWNER, "k-arm")
+    await m.update(rid, _ir("7"), 1, OWNER)
+    first = (await m.versions(rid))[0]
+    await m.record_simulation(rid, first["ir_hash"], 5, 0.0)  # simulated, still must not stay armed
+    out = await m.set_active_version(rid, first["id"], "n", OWNER)
+    assert out["mode"] == "simulate"
+
+
+async def test_set_active_version_requires_grants_for_target_version() -> None:
+    m, _, _ = _mgr()
+    rid = (
+        await m.create(
+            _ir(scope={"level": "global", "account_ids": ["00000000-0000-0000-0000-000000000001"]}),
+            OWNER,
+        )
+    )["id"]
+    await m.update(
+        rid,
+        _ir(
+            "7",
+            scope={
+                "level": "global",
+                "account_ids": [
+                    "00000000-0000-0000-0000-000000000001",
+                    "00000000-0000-0000-0000-000000000002",
+                ],
+            },
+        ),
+        1,
+        OWNER,
+    )
+    first = (await m.versions(rid))[0]["id"]
+    second = (await m.versions(rid))[1]["id"]
+    mgr = Actor(
+        "u2", "s2", frozenset({"orders:write"}), frozenset({"00000000-0000-0000-0000-000000000001"})
+    )
+    with pytest.raises(RuleError) as e:  # rule has a version touching acc2 -> hidden from MGR
+        await m.set_active_version(rid, first, "n", mgr)
+    assert e.value.status == 404
+    assert second
+
+
+async def test_visibility_considers_every_version_not_just_latest() -> None:
+    m, _, _ = _mgr()
+    mgr = Actor(
+        "u2", "s2", frozenset({"orders:write"}), frozenset({"00000000-0000-0000-0000-000000000001"})
+    )
+    rid = (
+        await m.create(
+            _ir(scope={"level": "global", "account_ids": ["00000000-0000-0000-0000-000000000002"]}),
+            OWNER,
+        )
+    )["id"]
+    await m.update(
+        rid,
+        _ir(
+            "7", scope={"level": "global", "account_ids": ["00000000-0000-0000-0000-000000000001"]}
+        ),
+        1,
+        OWNER,
+    )
+    with pytest.raises(RuleError) as e:
+        await m.get(rid, mgr)
+    assert e.value.status == 404
+
+
+async def test_live_arming_consumes_step_up_exactly_once() -> None:
+    m, _, _ = _mgr()
+    calls: list[int] = []
+
+    async def consume() -> bool:
+        calls.append(1)
+        return True
+
+    actor = Actor(
+        "u1",
+        "s1",
+        frozenset({"rules:arm_live"}),
+        is_owner=True,
+        step_up_fresh=True,
+        consume_step_up=consume,
+    )
+    scope = {"level": "symbol", "symbols": ["BTCUSDT"], "environments": ["demo", "live"]}
+    rid = (await m.create(_ir(scope=scope), OWNER))["id"]
+    await _ready_to_arm(m, rid)
+    await m.set_mode(rid, "armed", actor, "k1")
+    assert calls == [1]

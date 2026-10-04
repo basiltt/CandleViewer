@@ -196,8 +196,10 @@ class RulesManager:
     def _visible(self, row: RuleRow, actor: Actor) -> bool:
         if not row.versions or actor.is_owner:
             return True
-        accts = self._accounts(row.versions[-1].ir)
-        return all(a in actor.granted_accounts for a in accts)
+        # Every version counts: the active one may differ from the latest (IDOR, C-12.4).
+        return all(
+            a in actor.granted_accounts for ver in row.versions for a in self._accounts(ver.ir)
+        )
 
     def _require_grants(self, rule: Rule, actor: Actor) -> None:
         """C-12.4: a non-owner may only target accounts granted to them."""
@@ -424,8 +426,11 @@ class RulesManager:
         v = next((x for x in row.versions if x.id == version_id), None)
         if v is None:
             raise RuleError(404, "not_found", "That version does not exist.")
+        self._require_grants(Rule.model_validate(v.ir), actor)
+        # Switching an armed rule to a different version must never keep it armed: arming
+        # checks (live step-up, perms, flatten ack) only run via set_mode, so demote always.
+        demote = row.mode == "armed" and v.id != row.active_version_id
         row.active_version_id = v.id
-        demote = row.mode == "armed" and v.ir_hash not in row.simulated_hashes
         await self._audit(
             "rule.updated",
             {
