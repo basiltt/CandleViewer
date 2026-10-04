@@ -129,6 +129,36 @@ def test_schema_drift_is_caught_in_ci(tmp_path: Path) -> None:
     assert mod.main(["--check"]) == 1  # drift
 
 
+def test_model_change_without_regeneration_fails_drift_check(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Negative case: edit a model field, keep the committed schema -> --check exits 1."""
+    from candleviewer.rules.ir import models, schema
+
+    script = ROOT / "scripts" / "generate_rule_ir_schema.py"
+    spec = importlib.util.spec_from_file_location("gen_schema_neg", script)
+    assert spec is not None and spec.loader is not None
+    mod: Any = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    committed = ROOT / "candleviewer" / "rules" / "ir" / "rule-ir.json"
+    mod.TARGET = tmp_path / "rule-ir.json"
+    mod.TARGET.write_text(committed.read_text(encoding="utf-8"), encoding="utf-8")
+    assert mod.main(["--check"]) == 0
+
+    class DriftedRule(models.Rule):
+        drifted_field: int = 0
+
+    monkeypatch.setattr(schema, "Rule", DriftedRule)
+    assert mod.main(["--check"]) == 1
+    assert committed.read_text(encoding="utf-8") == mod.TARGET.read_text(encoding="utf-8")
+
+
+def test_drift_check_is_wired_into_py_ci_lane() -> None:
+    workflow = ROOT.parents[1] / ".github" / "workflows" / "_job-py.yml"
+    text = workflow.read_text(encoding="utf-8")
+    assert "scripts/generate_rule_ir_schema.py --check" in text
+
+
 _num = st.one_of(st.integers(-(10**6), 10**6), st.decimals(-1000, 1000, places=6))
 _ids = st.text("abcdef0123456789", min_size=1, max_size=6)
 
