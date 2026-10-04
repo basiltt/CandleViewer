@@ -12,6 +12,7 @@ import asyncio
 import logging
 from collections.abc import Callable
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from candleviewer.observability.health import HealthReport, HealthStatus
 from candleviewer.rules.evaluator import Evaluator, SnapshotBuilder
@@ -36,6 +37,8 @@ _log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from candleviewer.app import AppContext
+    from candleviewer.rules.scope import AuditSink, ScopeResolver
+    from candleviewer.rules.scope_state import ScopeSource, SnapshotScopeState
 
 
 class RulesService:
@@ -52,6 +55,8 @@ class RulesService:
         #: E35-S02-B1: set by `start()` only when `rules_evaluator_enabled` (C-4.13).
         self.metric_source: PushedMetricSource | None = None
         self.runner: RuleEvaluationRunner | None = None
+        self.scope_state: SnapshotScopeState | None = None
+        self.scope_resolver: ScopeResolver | None = None
 
     def bind(
         self,
@@ -82,6 +87,44 @@ class RulesService:
             task.add_done_callback(self._tasks.discard)
 
         return _sink
+        self.scope_resolver: ScopeResolver | None = None
+
+    def wire_scope(
+        self,
+        source: ScopeSource,
+        environment: str,
+        audit: AuditSink,
+        live_gate_open: Callable[[], bool] = lambda: False,
+    ) -> None:
+        """E35-S04: production scope state + resolver (live gate closed until E34 wires it)."""
+        from candleviewer.rules.scope import ScopeResolver
+        from candleviewer.rules.scope_state import SnapshotScopeState
+
+        self.scope_state = SnapshotScopeState(source, environment, live_gate_open)
+        self.scope_resolver = ScopeResolver(self.scope_state, audit)
+
+    async def refresh_scope(self, owner: UUID) -> None:
+        if self.scope_state is not None:
+            await self.scope_state.refresh(owner)
+
+    def build_evaluator(
+        self,
+        rule: Rule,
+        snapshots: SnapshotBuilder,
+        wall_clock: Callable[[], int],
+        monotonic_ms: Callable[[], int],
+        *,
+        owner: UUID,
+        environment: str,
+    ) -> Evaluator:
+        """The ONLY production Evaluator factory; the scope gate is always installed."""
+        from candleviewer.rules.evaluator import Evaluator
+        from candleviewer.rules.scope import make_scope_gate
+
+        if self.scope_resolver is None:
+            raise RuntimeError("rule scope not wired; refusing to build an ungated evaluator")
+        gate = make_scope_gate(self.scope_resolver, rule.scope, owner, environment)
+        return Evaluator(rule, snapshots, wall_clock, monotonic_ms, scope_gate=gate)
 
     def registry(self) -> MetricRegistry | None:
         """Metric registry while the engine module is running; `None` otherwise (-> 503)."""

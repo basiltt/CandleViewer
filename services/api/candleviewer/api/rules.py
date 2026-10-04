@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import inspect
 import json
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Any, Protocol
 from uuid import UUID
 
@@ -79,6 +79,7 @@ def make_rules_router(
     on_compile: Callable[[str, str], None] = lambda editor, result: None,
     on_divergence: Callable[[str, int], Any] = lambda editor, n_diffs: None,
     scope_resolver: ScopeResolver | None = None,
+    scope_refresh: Callable[[UUID], Awaitable[None]] | None = None,
 ) -> APIRouter:
     router = APIRouter(tags=["rules"])
 
@@ -106,6 +107,8 @@ def make_rules_router(
         caller = _caller(principal)
         if caller is None:
             return _problem(401, "Unauthorized", "no verified user identity")
+        if scope_refresh is not None:
+            await scope_refresh(caller)  # current grants/freeze, never a stale cache
         try:
             await scope_resolver.authorize_accounts(
                 caller, [UUID(str(a)) for a in rule.scope.account_ids]

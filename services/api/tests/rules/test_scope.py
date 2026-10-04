@@ -262,8 +262,8 @@ async def test_fire_scoped_dispatches_only_when_scope_holds() -> None:
 
 
 async def test_audit_writer_sink_emits_registered_actions() -> None:
+    from candleviewer.admin.wiring import audit_writer_sink
     from candleviewer.audit.actions import validate_action
-    from candleviewer.rules.scope import audit_writer_sink
 
     calls: list[tuple[str, dict[str, Any]]] = []
 
