@@ -51,7 +51,7 @@ def _alert(c: psycopg.Connection[tuple[object, ...]], **over: object) -> str:
     uid = str(uuid.uuid4())
     c.execute(
         "INSERT INTO users (id, email, username, display_name, password_hash, status) "
-        "VALUES (%s, %s, %s, 'u', 'x', 'active')",
+        "VALUES (%s, %s, %s, 'u', '$argon2id$placeholder', 'active')",
         (uid, f"{uid}@example.test", f"u{uid[:12]}"),
     )
     aid = str(uuid.uuid4())

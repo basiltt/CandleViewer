@@ -11,7 +11,7 @@ so it ships as 0014). Documented deviations:
 * `exchange_accounts` (E27) does not exist yet, so `alerts.scope_account_id`
   is created WITHOUT its foreign key (same pattern as 0013); E27 adds it.
 * `outbox` is not created by any earlier revision; it is created here
-  (`IF NOT EXISTS`) exactly as Sec.3.10.4.
+  exactly as Sec.3.10.4.
 * `trg_ad_append` calls `alert_deliveries_forbid_delete()`, a sibling of the
   shared `forbid_mutation()`: DELETE is refused unless `session_user` is
   `cv_owner` (the retention job). UPDATE stays allowed (queued->sent->acked).
@@ -121,7 +121,7 @@ CREATE TRIGGER trg_ad_append BEFORE DELETE ON alert_deliveries
 """
 
 _OUTBOX_SQL = """
-CREATE TABLE IF NOT EXISTS outbox (
+CREATE TABLE outbox (
   id            bigserial PRIMARY KEY,
   topic         text NOT NULL,
   dedup_key     text NOT NULL,
@@ -137,8 +137,8 @@ CREATE TABLE IF NOT EXISTS outbox (
   created_at    timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT ob_attempts CHECK (attempts >= 0 AND attempts <= max_attempts + 1)
 );
-CREATE UNIQUE INDEX IF NOT EXISTS ux_outbox_dedup ON outbox (topic, dedup_key);
-CREATE INDEX IF NOT EXISTS ix_outbox_ready ON outbox (available_at)
+CREATE UNIQUE INDEX ux_outbox_dedup ON outbox (topic, dedup_key);
+CREATE INDEX ix_outbox_ready ON outbox (available_at)
   WHERE processed_at IS NULL AND dead_at IS NULL;
 """
 

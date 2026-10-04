@@ -69,7 +69,7 @@
     },
     "0014_alerts": {
       "path": "services/api/candleviewer/migrations/versions/0014_alerts.py",
-      "sha256": "68640804cbe4aa93a5ad3ba7dd8f7d509c9d5d1b69059c211c8466a40343eb74",
+      "sha256": "440a984f153a8a72a489a52cd810a57d8072045feccce0d619e67d7d849f8772",
       "down_revision": "0013_rules"
     }
   }

@@ -73,7 +73,7 @@ def test_index_names_match_sql() -> None:
 def test_upgrade_sql_has_tables_constraints_and_trigger() -> None:
     sql = _render("upgrade", "0013_rules:0014_alerts")
     for table in ("alerts", "alert_deliveries", "outbox"):
-        assert f"CREATE TABLE {'IF NOT EXISTS ' if table == 'outbox' else ''}{table}" in sql
+        assert f"CREATE TABLE {table}" in sql
     for enum in ("alert_channel", "alert_trigger_mode", "delivery_status"):
         assert f"CREATE TYPE {enum}" in sql
     for name in ("al_cooldown", "al_channels", "al_webhook", "ad_attempt", "ob_attempts"):
