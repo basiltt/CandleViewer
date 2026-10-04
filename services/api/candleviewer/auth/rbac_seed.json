@@ -161,6 +161,11 @@
       "dangerous": false
     },
     {
+      "code": "rules:arm_live",
+      "domain": "rules",
+      "dangerous": true
+    },
+    {
       "code": "rules:read",
       "domain": "rules",
       "dangerous": false
@@ -202,9 +207,7 @@
     }
   ],
   "role_permissions": {
-    "owner": [
-      "*"
-    ],
+    "owner": ["*"],
     "manager": [
       "marketdata:read",
       "instruments:read",

@@ -20,7 +20,7 @@ LEGAL: frozenset[tuple[str, str]] = frozenset(
 )
 DEFAULT_MIN_SIMULATION_FIRES = 5
 DEFAULT_MIN_SIMULATION_HOURS = 24.0
-LIVE_ARM_PERMISSION = "rules.arm.live"
+LIVE_ARM_PERMISSION = "rules:arm_live"  # ticket "rules.arm.live"; DB codes are domain:action
 
 
 @dataclass(frozen=True, slots=True)
@@ -125,7 +125,7 @@ def check_arming(f: ArmingFacts) -> Refusal | None:
             return Refusal(
                 "permission_required",
                 403,
-                "Arming a live rule needs the rules.arm.live permission.",
+                "Arming a live rule needs the rules:arm_live permission.",
             )
         if not f.step_up_fresh:
             return Refusal(

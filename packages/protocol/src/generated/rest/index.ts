@@ -2885,7 +2885,10 @@ export interface paths {
      *     version with zero errors, at least one completed simulation run on that exact
      *     `ir_hash`, no open validation warnings of class `safety`, and — when the rule contains
      *     order-sending actions — `orders:write` on every bound account. The transition is
-     *     audited and broadcast on the `rules` WS topic.
+     *     audited and broadcast on the `rules` WS topic. Arming a rule whose scope includes the
+     *     `live` environment additionally needs `rules:arm_live` (dangerous, owner-seeded) and a
+     *     fresh one-shot step-up (`live_enablement`); refusals use `permission_required` /
+     *     `step_up_required`.
      */
     put: operations["setRuleMode"];
     post?: never;

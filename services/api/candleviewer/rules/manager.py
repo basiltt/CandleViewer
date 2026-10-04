@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import copy
 import uuid
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
@@ -73,25 +73,26 @@ class RuleRow:
     simulation_fires: int = 0
     simulation_hours: float = 0.0
     versions: list[VersionRow] = field(default_factory=list)
+    armed_by: str | None = None
 
 
 class RuleStore(Protocol):
-    def get(self, rule_id: str) -> RuleRow | None: ...
-    def put(self, row: RuleRow) -> None: ...
-    def all(self) -> list[RuleRow]: ...
+    async def get(self, rule_id: str) -> RuleRow | None: ...
+    async def put(self, row: RuleRow) -> None: ...
+    async def all(self) -> list[RuleRow]: ...
 
 
 class InMemoryRuleStore:
     def __init__(self) -> None:
         self._rows: dict[str, RuleRow] = {}
 
-    def get(self, rule_id: str) -> RuleRow | None:
+    async def get(self, rule_id: str) -> RuleRow | None:
         return self._rows.get(rule_id)
 
-    def put(self, row: RuleRow) -> None:
+    async def put(self, row: RuleRow) -> None:
         self._rows[row.id] = row
 
-    def all(self) -> list[RuleRow]:
+    async def all(self) -> list[RuleRow]:
         return list(self._rows.values())
 
 
@@ -103,18 +104,20 @@ class Actor:
     granted_accounts: frozenset[str] = frozenset()
     is_owner: bool = False
     step_up_fresh: bool = False
+    #: Consumes a fresh one-shot step-up grant; True on success (live arming only).
+    consume_step_up: Callable[[], Awaitable[bool]] | None = None
 
 
-Audit = Callable[[str, dict[str, Any]], None]
-Broadcast = Callable[[dict[str, Any]], None]
+Audit = Callable[[str, dict[str, Any]], Awaitable[None]]
+Broadcast = Callable[[dict[str, Any]], Awaitable[None]]
 Metric = Callable[[str, dict[str, str]], None]
 
 
-def _noop_audit(_action: str, _payload: dict[str, Any]) -> None:
+async def _noop_audit(_action: str, _payload: dict[str, Any]) -> None:
     return None
 
 
-def _noop_bc(_payload: dict[str, Any]) -> None:
+async def _noop_bc(_payload: dict[str, Any]) -> None:
     return None
 
 
@@ -148,9 +151,15 @@ class RulesManager:
         self._metric = on_metric
         self._idem: dict[str, dict[str, Any]] = {}
 
+    def set_hooks(self, *, audit: Audit | None = None, broadcast: Broadcast | None = None) -> None:
+        if audit is not None:
+            self._audit = audit
+        if broadcast is not None:
+            self._bc = broadcast
+
     # ----- helpers -----------------------------------------------------------------
-    def _row(self, rule_id: str) -> RuleRow:
-        row = self._s.get(rule_id)
+    async def _row(self, rule_id: str) -> RuleRow:
+        row = await self._s.get(rule_id)
         if row is None or row.deleted:
             raise RuleError(404, "not_found", "That rule does not exist.")
         return row
@@ -165,8 +174,8 @@ class RulesManager:
         accts = self._accounts(row.versions[-1].ir)
         return all(a in actor.granted_accounts for a in accts)
 
-    def _visible_row(self, rule_id: str, actor: Actor) -> RuleRow:
-        row = self._row(rule_id)
+    async def _visible_row(self, rule_id: str, actor: Actor) -> RuleRow:
+        row = await self._row(rule_id)
         if not self._visible(row, actor):
             raise RuleError(404, "not_found", "That rule does not exist.")
         return row
@@ -197,6 +206,19 @@ class RulesManager:
                     f"(problem at {bad}). It is read-only and disarmed. "
                     "Export it as JSON to repair it.",
                 )
+        return out
+
+    async def _present(self, row: RuleRow) -> dict[str, Any]:
+        """`_view` + persist a quarantine force-disarm (never left armed in the store)."""
+        before = row.mode
+        out = self._view(row)
+        if row.mode != before:
+            row.armed_by = None
+            await self._audit(
+                "rule.disarmed",
+                {"rule_id": row.id, "mode": "disabled", "from": before, "reason": "quarantined"},
+            )
+            await self._s.put(row)
         return out
 
     @staticmethod
@@ -256,21 +278,22 @@ class RulesManager:
         return v
 
     # ----- CRUD --------------------------------------------------------------------
-    def create(self, ir: dict[str, Any], actor: Actor, notes: str = "") -> dict[str, Any]:
+    async def create(self, ir: dict[str, Any], actor: Actor, notes: str = "") -> dict[str, Any]:
         rid = str(uuid.uuid4())
         rule, h = self._validated({**ir, "mode": "disabled", "enabled": False}, rid)
-        if any(not r.deleted and r.name == rule.name for r in self._s.all()):
+        existing = await self._s.all()
+        if any(not r.deleted and r.name == rule.name for r in existing):
             raise RuleError(409, "name_taken", f"A rule named '{rule.name}' already exists.")
         row = RuleRow(rid, rule.name, actor.user_id, scope=rule.scope.level)
         v = self._new_version(row, rule, h, notes, actor)
         row.active_version_id = v.id
-        self._s.put(row)
-        self._audit(
+        await self._s.put(row)
+        await self._audit(
             "rule.created", {"rule_id": rid, "version": 1, "ir_hash": h, "actor": actor.user_id}
         )
-        return {**self._view(row), "version": self._version_view(v)}
+        return {**await self._present(row), "version": self._version_view(v)}
 
-    def list_rules(
+    async def list_rules(
         self,
         actor: Actor,
         mode: str | None = None,
@@ -278,8 +301,9 @@ class RulesManager:
         cursor: str | None = None,
         limit: int = 100,
     ) -> dict[str, Any]:
+        everything = await self._s.all()
         rows = sorted(
-            (r for r in self._s.all() if not r.deleted and self._visible(r, actor)),
+            (r for r in everything if not r.deleted and self._visible(r, actor)),
             key=lambda r: r.id,
         )
         if mode:
@@ -290,14 +314,14 @@ class RulesManager:
             rows = [r for r in rows if r.id > cursor]
         page = rows[:limit]
         return {
-            "items": [self._view(r) for r in page],
+            "items": [await self._present(r) for r in page],
             "next_cursor": page[-1].id if len(rows) > limit else None,
         }
 
-    def get(self, rule_id: str, actor: Actor) -> dict[str, Any]:
-        return self._view(self._visible_row(rule_id, actor))
+    async def get(self, rule_id: str, actor: Actor) -> dict[str, Any]:
+        return await self._present(await self._visible_row(rule_id, actor))
 
-    def update(
+    async def update(
         self,
         rule_id: str,
         ir: dict[str, Any],
@@ -305,7 +329,7 @@ class RulesManager:
         actor: Actor,
         notes: str = "",
     ) -> dict[str, Any]:
-        row = self._visible_row(rule_id, actor)
+        row = await self._visible_row(rule_id, actor)
         if expected_version != row.latest_version:
             self._metric("rule_save_conflicts_total", {})
             raise RuleError(
@@ -327,17 +351,18 @@ class RulesManager:
             return {"created": False, "version": self._version_view(existing)}
         v = self._new_version(row, rule, h, notes, actor)
         row.name = rule.name
-        self._audit(
+        await self._audit(
             "rule.updated",
             {"rule_id": rule_id, "version": v.version, "ir_hash": h, "actor": actor.user_id},
         )
         # A simulating/armed rule keeps running its previously active version (US-RULE-006).
         if row.mode == "disabled":
             row.active_version_id = v.id
+        await self._s.put(row)
         return {"created": True, "version": self._version_view(v)}
 
-    def delete(self, rule_id: str, actor: Actor) -> None:
-        row = self._visible_row(rule_id, actor)
+    async def delete(self, rule_id: str, actor: Actor) -> None:
+        row = await self._visible_row(rule_id, actor)
         if row.mode == "armed":
             raise RuleError(
                 409,
@@ -345,29 +370,32 @@ class RulesManager:
                 "This rule is armed. Disarm it before deleting it; its history is kept.",
             )
         row.deleted = True  # soft delete; versions and runs retained
-        self._audit("rule.deleted", {"rule_id": rule_id, "actor": actor.user_id})
+        await self._s.put(row)
+        await self._audit("rule.deleted", {"rule_id": rule_id, "actor": actor.user_id})
 
     # ----- versions ----------------------------------------------------------------
-    def versions(self, rule_id: str) -> list[dict[str, Any]]:
-        return [self._version_view(v) for v in reversed(self._row(rule_id).versions)]
+    async def versions(self, rule_id: str) -> list[dict[str, Any]]:
+        return [self._version_view(v) for v in reversed((await self._row(rule_id)).versions)]
 
-    def version(self, rule_id: str, version_id: str) -> dict[str, Any]:
-        for v in self._row(rule_id).versions:
+    async def version(self, rule_id: str, version_id: str) -> dict[str, Any]:
+        for v in (await self._row(rule_id)).versions:
             if v.id == version_id:
                 return self._version_view(v, full=True)
         raise RuleError(404, "not_found", "That version does not exist.")
 
-    def set_active_version(
+    async def set_active_version(
         self, rule_id: str, version_id: str, note: str, actor: Actor
     ) -> dict[str, Any]:
-        row = self._visible_row(rule_id, actor)
+        row = await self._visible_row(rule_id, actor)
         v = next((x for x in row.versions if x.id == version_id), None)
         if v is None:
             raise RuleError(404, "not_found", "That version does not exist.")
         row.active_version_id = v.id
         if row.mode == "armed" and v.ir_hash not in row.simulated_hashes:
             row.mode = "simulate"  # an unsimulated version must never run armed
-        self._audit(
+            row.armed_by = None
+        await self._s.put(row)
+        await self._audit(
             "rule.updated",
             {
                 "rule_id": rule_id,
@@ -378,16 +406,18 @@ class RulesManager:
                 "activated": True,
             },
         )
-        return self._view(row)
+        await self._s.put(row)
+        return await self._present(row)
 
-    def record_simulation(self, rule_id: str, hash_: str, fires: int, hours: float) -> None:
+    async def record_simulation(self, rule_id: str, hash_: str, fires: int, hours: float) -> None:
         """Written by the simulation runner (E35-S05); consulted by the arming gate."""
-        row = self._row(rule_id)
+        row = await self._row(rule_id)
         row.simulated_hashes.add(hash_)
         row.simulation_fires, row.simulation_hours = fires, hours
+        await self._s.put(row)
 
     # ----- mode --------------------------------------------------------------------
-    def set_mode(
+    async def set_mode(
         self,
         rule_id: str,
         target: str,
@@ -406,15 +436,15 @@ class RulesManager:
         cache_key = f"{rule_id}:{idempotency_key}:{target}"
         if cache_key in self._idem:
             return self._idem[cache_key]
-        row = self._visible_row(rule_id, actor)
+        row = await self._visible_row(rule_id, actor)
         prev = row.mode
         try:
-            out = self._transition(row, target, actor, flatten_ack, override_reason)
+            out = await self._transition(row, target, actor, flatten_ack, override_reason)
         except RuleError as exc:
             self._metric(
                 "rule_mode_transitions_total", {"from": prev, "to": target, "result": exc.code}
             )
-            self._audit(
+            await self._audit(
                 "rule.mode_refused",
                 {"rule_id": rule_id, "to": target, "code": exc.code, "actor": actor.user_id},
             )
@@ -423,7 +453,7 @@ class RulesManager:
         self._idem[cache_key] = out
         return out
 
-    def _transition(
+    async def _transition(
         self,
         row: RuleRow,
         target: str,
@@ -436,7 +466,7 @@ class RulesManager:
         if bad:
             raise RuleError(bad.status, bad.code, bad.message)
         if prev == target:
-            return self._view(row)
+            return await self._present(row)
         v = next((x for x in row.versions if x.id == row.active_version_id), None)
         if target in ("simulate", "armed") and (v is None or quarantine_path(v.ir)):
             raise RuleError(
@@ -445,8 +475,10 @@ class RulesManager:
                 "This rule cannot be read by the engine. Export it and repair it first.",
             )
         if target == "armed" and v is not None:
-            self._check_arming(row, v, actor, flatten_ack, override_reason)
+            await self._check_arming(row, v, actor, flatten_ack, override_reason)
         row.mode = target
+        row.armed_by = actor.user_id if target == "armed" else None
+        await self._s.put(row)
         payload: dict[str, Any] = {
             "rule_id": row.id,
             "mode": target,
@@ -464,11 +496,11 @@ class RulesManager:
         if override_reason:
             payload["override_reason"] = override_reason
         action = {"armed": "rule.armed", "disabled": "rule.disarmed"}.get(target, "rule.updated")
-        self._audit(action, payload)
-        self._bc({"topic": "rules", **payload})  # emitted before the HTTP response returns
+        await self._audit(action, payload)
+        await self._bc({"topic": "rules", **payload})  # emitted before the HTTP response returns
         return self._view(row)
 
-    def _check_arming(
+    async def _check_arming(
         self,
         row: RuleRow,
         v: VersionRow,
@@ -503,3 +535,11 @@ class RulesManager:
         refusal = check_arming(facts)
         if refusal:
             raise RuleError(refusal.status, refusal.code, refusal.message)
+        if "live" in facts.environments and actor.consume_step_up is not None:
+            # One-shot: a fresh code arms exactly one live transition (no-grace class).
+            if not await actor.consume_step_up():
+                raise RuleError(
+                    403,
+                    "step_up_required",
+                    "Re-enter your authenticator code to arm a live rule.",
+                )
