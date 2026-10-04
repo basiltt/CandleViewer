@@ -271,3 +271,43 @@ async def test_create_app_evaluator_delivers_in_scope_action() -> None:
     audits, seen = await _e2e(A)
     assert len(seen) == 1 and seen[0].instance.account_id == A
     assert not any(a.startswith("rule_action_scope_denied") for a in audits)
+
+
+def test_account_list_excludes_ungranted_and_tracks_revocation() -> None:
+    src = Source()
+    c = _client(_svc(src, []))
+    got = c.get("/rules/accounts").json()["accounts"]
+    assert sorted(got) == sorted([str(A), str(B)])
+    assert str(C) not in got
+    src.grants = [(A, True, False)]
+    assert c.get("/rules/accounts").json()["accounts"] == [str(A)]
+
+
+async def test_runtime_refresh_applies_revocation_without_api_call() -> None:
+    from types import SimpleNamespace
+
+    src = Source()
+    svc = _svc(src, [])
+    rules = [SimpleNamespace(created_by=str(OWNER))]
+    await svc._refresh_scope_for(rules)  # type: ignore[arg-type]  # test double
+    assert svc.scope_state is not None and B in svc.scope_state.granted_accounts(OWNER)
+    src.grants = [(A, True, False)]
+    await svc._refresh_scope_for(rules)  # type: ignore[arg-type]  # test double
+    assert B not in svc.scope_state.granted_accounts(OWNER)
+    assert svc.scope_state.account(B) is None
+
+
+async def test_failed_refresh_fails_closed() -> None:
+    from types import SimpleNamespace
+
+    src = Source()
+    svc = _svc(src, [])
+    rules = [SimpleNamespace(created_by=str(OWNER))]
+    await svc._refresh_scope_for(rules)  # type: ignore[arg-type]  # test double
+
+    async def boom(owner: uuid.UUID) -> list[tuple[uuid.UUID, bool, bool]]:
+        raise OSError("db down")
+
+    src.load_grants = boom  # type: ignore[method-assign]  # test double
+    await svc._refresh_scope_for(rules)  # type: ignore[arg-type]  # test double
+    assert svc.scope_state is not None and not svc.scope_state.granted_accounts(OWNER)

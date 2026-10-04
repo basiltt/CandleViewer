@@ -118,6 +118,23 @@ def make_rules_router(
             return _problem(403, "Forbidden", ScopeForbiddenError.message)
         return None
 
+    @router.get("/rules/accounts")
+    async def list_rule_accounts(request: Request) -> Response:
+        """AC2: only accounts the caller is granted; others are absent (no existence leak)."""
+        principal, denied = await _authorize(request)
+        if denied is not None or principal is None:
+            return denied or _problem(401, "Unauthorized", "no session")
+        if scope_resolver is None:
+            return _problem(501, "Not implemented", "no scope resolver wired")
+        caller = _caller(principal)
+        if caller is None:
+            return _problem(401, "Unauthorized", "no verified user identity")
+        if scope_refresh is not None:
+            await scope_refresh(caller)
+        return JSONResponse(
+            {"accounts": [str(a) for a in scope_resolver.listable_accounts(caller)]}
+        )
+
     @router.get("/rules/vocabulary")
     async def get_vocabulary(request: Request, symbol: str | None = None) -> Response:
         principal, denied = await _authorize(request)

@@ -47,6 +47,8 @@ class SnapshotScopeState:
 
     async def refresh(self, owner: UUID) -> None:
         rows = [GrantRow(*t) for t in await self._source.load_grants(owner) if t[1]]
+        for old in self._grants.get(owner, {}):
+            self._accounts.pop(old, None)  # revoked grants must not linger
         self._grants[owner] = {r.account_id: r for r in rows}
         self._perms[owner] = await self._source.load_permissions(owner)
         for r in rows:

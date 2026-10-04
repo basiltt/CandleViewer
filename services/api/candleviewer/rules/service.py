@@ -129,6 +129,17 @@ class RulesService:
         if self.scope_state is not None:
             await self.scope_state.refresh(owner)
 
+    async def _refresh_scope_for(self, rules: list[Rule]) -> None:
+        """Re-read grants/freeze for each rule owner; a failed refresh fails closed."""
+        if self.scope_state is None:
+            return
+        for owner in {o for o in (_owner_uuid(r) for r in rules) if o is not None}:
+            try:
+                await self.scope_state.refresh(owner)
+            except Exception:
+                _log.exception("scope refresh failed; failing closed for owner")
+                self.scope_state.invalidate(owner)
+
     def build_evaluator(
         self,
         rule: Rule,
@@ -224,7 +235,9 @@ class RulesService:
 
         async def _evaluable() -> list[Rule]:
             modes = ("simulate", "armed") if emitter is not None else ("simulate",)
-            return await manager.evaluable_rules(modes)
+            rules = await manager.evaluable_rules(modes)
+            await self._refresh_scope_for(rules)  # revocation/freeze reach every tick (AC1/AC5)
+            return rules
 
         def _on_error(exc: Exception) -> None:
             _log.error("rule evaluator tick failed", exc_info=exc)

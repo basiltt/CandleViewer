@@ -2984,6 +2984,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/rules/accounts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Accounts the caller may scope a rule to
+     * @description Only accounts the caller holds a view grant on; an ungranted account is absent (never a 403 row), so account existence does not leak (E35-S04 AC2).
+     */
+    get: operations["listRuleAccounts"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/rules/runs/{runId}/events": {
     parameters: {
       query?: never;
@@ -12398,6 +12418,42 @@ export interface operations {
         };
       };
       404: components["responses"]["NotFound"];
+    };
+  };
+  listRuleAccounts: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Granted account ids. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            accounts: string[];
+          };
+        };
+      };
+      /** @description No verified session. */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Missing rules:read. */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
   listRuleRunEvents: {
