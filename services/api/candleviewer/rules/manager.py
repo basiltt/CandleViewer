@@ -447,7 +447,9 @@ class RulesManager:
             leaf = await self._leaf(row)
             payload = {"rule_id": rule_id, "mode": "simulate", "from": "armed", "b9_from": leaf}
             payload |= {"b9_event": "EDIT", "actor": actor.user_id, "ir_hash": v.ir_hash}
-            if not await self._record_b9(row, "EDIT", "rule.simulated", payload):
+            if not await self._record_b9(
+                row, "EDIT", "rule.simulated", payload, session=actor.session_id
+            ):
                 raise RuleError(409, "conflict", "The rule could not leave armed. Disarm it first.")
             await self._bc({"topic": "rules", **payload})
         else:
@@ -512,7 +514,14 @@ class RulesManager:
         return await self.lifecycle.current(row.id, row.mode, row.disabled_reason)
 
     async def _record_b9(
-        self, row: RuleRow, event: str, audit_action: str, payload: dict[str, Any], **ev: Any
+        self,
+        row: RuleRow,
+        event: str,
+        audit_action: str,
+        payload: dict[str, Any],
+        *,
+        session: str | None = None,
+        **ev: Any,
     ) -> bool:
         """Send *event* to the rule's B9 chart (via the gateway) after the synchronous
         decision (C-2.21); if the chart moved, write the audit record (C-2.9, before/after)
@@ -534,6 +543,8 @@ class RulesManager:
             row.mode = mode_of(leaf)
             row.disabled_reason = leaf if row.mode == "disabled" and leaf != "draft" else None
             row.armed_by = str(payload.get("actor") or row.owner) if row.mode == "armed" else None
+            if session:
+                row.last_editor, row.last_session = str(payload.get("actor") or ""), session
             await self._s.put(row)
         except BaseException:
             await self.lifecycle.evict(row.id)
@@ -592,7 +603,9 @@ class RulesManager:
         if override_reason:
             payload["override_reason"] = override_reason
         action = {"armed": "rule.armed", "disabled": "rule.disarmed"}.get(target, "rule.simulated")
-        if not await self._record_b9(row, event, action, payload, **ev_payload):
+        if not await self._record_b9(
+            row, event, action, payload, session=actor.session_id, **ev_payload
+        ):
             raise RuleError(422, "illegal_transition", _illegal(leaf, target))
         self._metric("rule_mode_transitions_total", {"from": prev, "to": row.mode, "result": "ok"})
         await self._bc({"topic": "rules", **payload})  # emitted before the HTTP response returns

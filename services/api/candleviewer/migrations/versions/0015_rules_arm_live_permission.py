@@ -9,6 +9,9 @@ it plus a fresh step-up (21-database-schema.md 3.4.1). Purely additive data (C-5
 one `is_dangerous` permission row and the `owner` grant; managers do not hold it
 (live arming is owner-only, schema doc 3.4 note). `ON CONFLICT DO NOTHING` keeps it a
 no-op where `db/seed.py` already upserted the code.
+
+It also adds `rules.last_edit_session_id` / `last_edit_at` (nullable, additive) so the
+optimistic-concurrency 409 can name the session that saved last, across restarts and workers.
 """
 
 from __future__ import annotations
@@ -32,6 +35,9 @@ def downgrade() -> None:
 
 
 _UPGRADE_SQL = """
+ALTER TABLE rules ADD COLUMN last_edit_session_id text;
+ALTER TABLE rules ADD COLUMN last_edit_at timestamptz;
+
 INSERT INTO permissions (id, code, domain, description, is_dangerous)
 VALUES (gen_random_uuid(), 'rules:arm_live', 'rules', '', true)
 ON CONFLICT (code) DO NOTHING;
@@ -43,6 +49,9 @@ ON CONFLICT DO NOTHING;
 """
 
 _DOWNGRADE_SQL = """
+ALTER TABLE rules DROP COLUMN last_edit_at;
+ALTER TABLE rules DROP COLUMN last_edit_session_id;
+
 DELETE FROM role_permissions
 WHERE permission_id IN (SELECT id FROM permissions WHERE code = 'rules:arm_live');
 

@@ -28,13 +28,15 @@ from candleviewer.storage.repositories.relational_sqlalchemy import (
 _SELECT_RULE = sa.text(
     "SELECT id::text AS id, name, owner_user_id::text AS owner, scope::text AS scope, "
     "mode::text AS mode, active_version_id::text AS active_version_id, "
-    "armed_by::text AS armed_by, disabled_reason, deleted_at IS NOT NULL AS deleted FROM rules "
+    "armed_by::text AS armed_by, disabled_reason, deleted_at IS NOT NULL AS deleted, "
+    "last_edit_session_id AS last_session, updated_by::text AS last_editor FROM rules "
     "WHERE id = CAST(:id AS uuid)"
 )
 _SELECT_RULES = sa.text(
     "SELECT id::text AS id, name, owner_user_id::text AS owner, scope::text AS scope, "
     "mode::text AS mode, active_version_id::text AS active_version_id, "
-    "armed_by::text AS armed_by, disabled_reason, deleted_at IS NOT NULL AS deleted FROM rules"
+    "armed_by::text AS armed_by, disabled_reason, deleted_at IS NOT NULL AS deleted, "
+    "last_edit_session_id AS last_session, updated_by::text AS last_editor FROM rules"
 )
 _SELECT_VERSIONS_OF = sa.text(
     "SELECT id::text AS id, rule_id::text AS rule_id, version, ir, ir_hash::text AS ir_hash, "
@@ -69,6 +71,9 @@ _UPDATE_RULE = sa.text(
     "armed_at = CASE WHEN :mode = 'armed' THEN COALESCE(armed_at, now()) ELSE NULL END, "
     "armed_by = CASE WHEN :mode = 'armed' THEN CAST(:armed_by AS uuid) ELSE NULL END, "
     "deleted_at = CASE WHEN :deleted THEN COALESCE(deleted_at, now()) ELSE NULL END, "
+    "last_edit_session_id = COALESCE(NULLIF(:sess, ''), last_edit_session_id), "
+    "last_edit_at = CASE WHEN :sess <> '' THEN now() ELSE last_edit_at END, "
+    "updated_by = COALESCE(CAST(NULLIF(:editor, '') AS uuid), updated_by), "
     "updated_at = now() WHERE id = CAST(:id AS uuid)"
 )
 
@@ -118,8 +123,8 @@ class PostgresRuleStore:
                     scope=r.scope,
                     active_version_id=r.active_version_id,
                     latest_version=vs[-1].version if vs else 0,
-                    last_editor=vs[-1].author if vs else "",
-                    last_session="",
+                    last_editor=r.last_editor or (vs[-1].author if vs else ""),
+                    last_session=r.last_session or "",
                     deleted=bool(r.deleted),
                     simulated_hashes=hashes,
                     simulation_fires=fires,
@@ -197,6 +202,8 @@ class PostgresRuleStore:
                     "armed_by": row.armed_by or row.owner,
                     "deleted": row.deleted,
                     "disabled_reason": row.disabled_reason,
+                    "sess": row.last_session,
+                    "editor": row.last_editor,
                 },
             )
             await uow.commit()

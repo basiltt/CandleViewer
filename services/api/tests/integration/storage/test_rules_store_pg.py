@@ -78,3 +78,18 @@ async def test_versions_dedupe_conflict_arm_and_delete_survive_a_reload(
     await again.delete(rid, actor)
     with pytest.raises(RuleError):
         await again.get(rid, actor)
+
+
+async def test_conflict_after_restart_names_the_other_session(pg_dsn: str) -> None:
+    repo = SqlAlchemyRelationalRepository(pg_dsn, "rules-it-sess")
+    uid = await _owner(repo)
+    a = Actor(uid, "session-A", frozenset({"rules:write"}), is_owner=True)
+    b = Actor(uid, "session-B", frozenset({"rules:write"}), is_owner=True)
+    mgr = RulesManager(PostgresRuleStore(repo), default_registry())
+    rid = (await mgr.create(_ir("1"), a))["id"]
+    await mgr.update(rid, _ir("2"), 1, a)
+    fresh = RulesManager(PostgresRuleStore(repo), default_registry())  # restart / other worker
+    with pytest.raises(RuleError) as e:
+        await fresh.update(rid, _ir("3"), 1, b)
+    assert e.value.status == 409
+    assert e.value.extra["session"] == "session-A"

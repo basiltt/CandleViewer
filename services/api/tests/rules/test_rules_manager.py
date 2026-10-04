@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import json
 from pathlib import Path
 from typing import Any
@@ -357,3 +358,30 @@ async def test_live_arming_consumes_step_up_exactly_once() -> None:
     await _ready_to_arm(m, rid)
     await m.set_mode(rid, "armed", actor, "k1")
     assert calls == [1]
+
+
+class _CopyStore(InMemoryRuleStore):
+    """Persists/loads detached copies, like a DB: nothing survives except stored fields."""
+
+    async def get(self, rule_id: str) -> Any:
+        row = await super().get(rule_id)
+        return copy.deepcopy(row) if row else None
+
+    async def put(self, row: Any) -> None:
+        await super().put(copy.deepcopy(row))
+
+    async def all(self) -> list[Any]:
+        return [copy.deepcopy(r) for r in await super().all()]
+
+
+async def test_conflict_names_session_after_service_rebuild_from_store() -> None:
+    """Session A edits; a service rebuilt over the same store still names A on a stale edit."""
+    store = _CopyStore()
+    m = RulesManager(store, default_registry())
+    rid = (await m.create(_ir(), OWNER))["id"]
+    await m.update(rid, _ir("2"), 1, OWNER)
+    rebuilt = RulesManager(store, default_registry())
+    other = Actor("u3", "s-other", frozenset(), is_owner=True)
+    with pytest.raises(RuleError) as e:
+        await rebuilt.update(rid, _ir("3"), 1, other)
+    assert e.value.extra["session"] == "s1"

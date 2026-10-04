@@ -921,6 +921,8 @@ rules = Table(
     Column("created_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("updated_at", TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")),
     Column("deleted_at", TIMESTAMP(timezone=True)),
+    Column("last_edit_session_id", Text),
+    Column("last_edit_at", TIMESTAMP(timezone=True)),
     CheckConstraint("editor IN ('form','graph')", name="rule_editor"),
     CheckConstraint("eval_interval_ms BETWEEN 50 AND 3600000", name="rule_interval"),
     CheckConstraint("cooldown_seconds BETWEEN 0 AND 86400", name="rule_cooldown"),
