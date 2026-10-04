@@ -1,0 +1,39 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0003",
+  "version": 1,
+  "name": "sys.max_positions_guard",
+  "description": "Veto new entries once open positions reach the configured maximum.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "account"
+  },
+  "trigger": {
+    "type": "pre_trade_check"
+  },
+  "conditions": {
+    "node_id": "c1",
+    "op": "gte",
+    "left": {
+      "metric": "open_positions_count"
+    },
+    "right": {
+      "const": 5
+    }
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "send_notification",
+      "params": {
+        "channel": "ui",
+        "severity": "warning",
+        "template": "Max open positions reached - entry vetoed"
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "form"
+}

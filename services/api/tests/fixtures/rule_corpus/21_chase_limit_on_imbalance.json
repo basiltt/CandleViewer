@@ -1,0 +1,74 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0021",
+  "version": 1,
+  "name": "Chase limit on imbalance",
+  "description": "Arm a chase-limit entry when two of three order-flow signals agree.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "symbol",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_book_update",
+    "debounce_ms": 200
+  },
+  "conditions": {
+    "node_id": "g1",
+    "op": "n_of",
+    "children": [
+      {
+        "node_id": "c1",
+        "op": "gt",
+        "left": {
+          "metric": "dom_imbalance_ratio",
+          "params": {
+            "n": 10
+          }
+        },
+        "right": {
+          "const": "1.5"
+        }
+      },
+      {
+        "node_id": "c2",
+        "op": "gt",
+        "left": {
+          "metric": "big_trade_zscore"
+        },
+        "right": {
+          "const": 3
+        }
+      },
+      {
+        "node_id": "c3",
+        "op": "gt",
+        "left": {
+          "metric": "tape_speed_zscore"
+        },
+        "right": {
+          "const": 2
+        }
+      }
+    ],
+    "n": 2
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "arm_chase_limit",
+      "params": {
+        "params": {
+          "side": "buy",
+          "max_chase_ticks": 5
+        }
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "graph"
+}

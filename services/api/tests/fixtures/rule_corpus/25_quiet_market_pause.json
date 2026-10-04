@@ -1,0 +1,54 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0025",
+  "version": 1,
+  "name": "Quiet market pause",
+  "description": "Pause the chase-limit rule when none of the activity signals are present.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "global"
+  },
+  "trigger": {
+    "type": "on_timer",
+    "interval_ms": 60000
+  },
+  "conditions": {
+    "node_id": "g1",
+    "op": "none_of",
+    "children": [
+      {
+        "node_id": "c1",
+        "op": "gt",
+        "left": {
+          "metric": "tape_speed"
+        },
+        "right": {
+          "const": 5
+        }
+      },
+      {
+        "node_id": "c2",
+        "op": "gt",
+        "left": {
+          "metric": "trade_cluster"
+        },
+        "right": {
+          "const": 0
+        }
+      }
+    ]
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "pause_rule",
+      "params": {
+        "rule_id": "00000000-0000-4000-8000-0000000c0021"
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "graph"
+}

@@ -1,0 +1,61 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0011",
+  "version": 1,
+  "name": "Breakeven after 1R (template)",
+  "description": "Gallery template: breakeven at 1R with one tick offset, plus journal tag.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "position",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_position_update",
+    "debounce_ms": 500
+  },
+  "conditions": {
+    "node_id": "g1",
+    "op": "all_of",
+    "children": [
+      {
+        "node_id": "c1",
+        "op": "gte",
+        "left": {
+          "metric": "unrealised_r_multiple"
+        },
+        "right": {
+          "const": 1
+        }
+      },
+      {
+        "node_id": "c2",
+        "op": "is_true",
+        "left": {
+          "metric": "position_open"
+        }
+      }
+    ]
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "move_to_breakeven",
+      "params": {
+        "offset_ticks": 1
+      }
+    },
+    {
+      "node_id": "a2",
+      "type": "log_journal_tag",
+      "params": {
+        "tag": "be_1r"
+      }
+    }
+  ],
+  "limits": {
+    "once_per": "position"
+  },
+  "editor": "form"
+}

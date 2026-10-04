@@ -234,10 +234,10 @@ def compile_graph(model: dict[str, Any], rule_id: Any = None) -> Rule:
         doc["rule_id"] = rule_id
     doc["editor"] = "graph"
     doc["conditions"] = build(root, 0)
+    # Action order is semantic (on_error=abort_remaining): it follows the node-list order, never
+    # the id sort order (E35-Q02 found ids like a10 < a2 reordering actions across the hop).
     doc["actions"] = [
-        {**n.get("data", {}), "node_id": i}
-        for i, n in sorted(by_id.items())
-        if n["type"] == "action"
+        {**n.get("data", {}), "node_id": n["id"]} for n in model["nodes"] if n["type"] == "action"
     ]
     rule = build_rule(doc)
     reasons = form_incompatibility_reasons(rule)
@@ -331,7 +331,10 @@ def to_graph_model(ir: Rule) -> dict[str, Any]:
         visit(ir.conditions, a.node_id, "when")
     model = ir.model_dump(mode="python", exclude={"conditions", "actions", "graph_layout"})
     model["editor"] = "graph"
-    model["nodes"] = [nodes[i] for i in sorted(nodes)]
+    action_ids = [a.node_id for a in ir.actions]  # actions first, in IR order (order is semantic)
+    model["nodes"] = [nodes[i] for i in action_ids] + [
+        nodes[i] for i in sorted(nodes) if i not in set(action_ids)
+    ]
     model["edges"] = edges
     model["graph_layout"] = ir.graph_layout or _layout(list(nodes), parents, topo)
     return model

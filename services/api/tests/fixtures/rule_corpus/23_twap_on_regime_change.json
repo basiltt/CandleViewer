@@ -1,0 +1,55 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0023",
+  "version": 1,
+  "name": "TWAP on regime change",
+  "description": "Start a TWAP exit when the market regime changes away from trend.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "trade_group"
+  },
+  "trigger": {
+    "type": "on_metric_change",
+    "metric": "market_regime"
+  },
+  "conditions": {
+    "node_id": "g1",
+    "op": "all_of",
+    "children": [
+      {
+        "node_id": "c1",
+        "op": "changed",
+        "left": {
+          "metric": "market_regime"
+        }
+      },
+      {
+        "node_id": "c2",
+        "op": "not_in_set",
+        "left": {
+          "metric": "market_regime"
+        },
+        "set_values": [
+          "trend_up",
+          "trend_down"
+        ]
+      }
+    ]
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "start_twap",
+      "params": {
+        "params": {
+          "duration_ms": 600000,
+          "slices": 12
+        }
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "form"
+}

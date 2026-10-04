@@ -1,0 +1,49 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0014",
+  "version": 1,
+  "name": "Scale out at 2R",
+  "description": "Reduce half the position when the trade reaches 2R.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "position",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_bar_close",
+    "timeframe": "1m"
+  },
+  "conditions": {
+    "node_id": "c1",
+    "op": "gte",
+    "left": {
+      "metric": "unrealised_r_multiple"
+    },
+    "right": {
+      "const": 2
+    }
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "scale_out",
+      "params": {
+        "qty_pct": 50,
+        "order_type": "market"
+      }
+    },
+    {
+      "node_id": "a2",
+      "type": "log_journal_tag",
+      "params": {
+        "tag": "scale_out_2r"
+      }
+    }
+  ],
+  "limits": {
+    "once_per": "position"
+  },
+  "editor": "form"
+}

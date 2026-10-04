@@ -1,0 +1,59 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0024",
+  "version": 1,
+  "name": "Repeated big trades signal",
+  "description": "Emit a signal after 3 big trades within a minute and remember the time.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "symbol",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_price_update",
+    "debounce_ms": 100
+  },
+  "conditions": {
+    "node_id": "t1",
+    "op": "count_within",
+    "child": {
+      "node_id": "c1",
+      "op": "gt",
+      "left": {
+        "metric": "big_trade_notional"
+      },
+      "right": {
+        "const": 250000
+      }
+    },
+    "window_ms": 60000,
+    "min_count": 3
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "set_variable",
+      "params": {
+        "name": "last_big_burst",
+        "value": "now",
+        "ttl_ms": 600000
+      }
+    },
+    {
+      "node_id": "a2",
+      "type": "emit_signal",
+      "params": {
+        "signal_name": "big_trade_burst",
+        "payload": {
+          "symbol": "BTCUSDT"
+        }
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "graph"
+}

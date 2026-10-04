@@ -1,0 +1,58 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0010",
+  "version": 1,
+  "name": "Cancel if spread too wide",
+  "description": "Cancel resting entries while spread is outside 0-8 bps for 3 s.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "symbol",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_book_update",
+    "debounce_ms": 100
+  },
+  "conditions": {
+    "node_id": "t1",
+    "op": "sustained_for",
+    "child": {
+      "node_id": "c1",
+      "op": "outside",
+      "left": {
+        "metric": "spread_bps"
+      },
+      "right": {
+        "const": 0
+      },
+      "right2": {
+        "const": 8
+      }
+    },
+    "window_ms": 3000
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "cancel_all_orders",
+      "params": {
+        "purpose": "entry"
+      }
+    },
+    {
+      "node_id": "a2",
+      "type": "send_notification",
+      "params": {
+        "channel": "ui",
+        "severity": "info",
+        "template": "Spread too wide - entries cancelled"
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "form"
+}

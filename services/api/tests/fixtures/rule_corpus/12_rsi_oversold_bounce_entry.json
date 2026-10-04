@@ -1,0 +1,64 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0012",
+  "version": 1,
+  "name": "RSI oversold bounce entry",
+  "description": "Long when RSI(14) crosses above 30 within value area; native SL attached.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "symbol",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_bar_close",
+    "timeframe": "15m"
+  },
+  "conditions": {
+    "node_id": "g1",
+    "op": "all_of",
+    "children": [
+      {
+        "node_id": "c1",
+        "op": "crosses_above",
+        "left": {
+          "metric": "rsi",
+          "params": {
+            "n": 14
+          }
+        },
+        "right": {
+          "const": 30
+        }
+      },
+      {
+        "node_id": "c2",
+        "op": "is_true",
+        "left": {
+          "metric": "profile_in_value_area"
+        }
+      }
+    ]
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "place_order",
+      "params": {
+        "side": "buy",
+        "order_type": "market",
+        "qty_mode": "risk",
+        "profile": "default",
+        "stop_loss": {
+          "mode": "atr_multiple",
+          "value": 1.5
+        }
+      }
+    }
+  ],
+  "limits": {
+    "once": true
+  },
+  "editor": "form"
+}

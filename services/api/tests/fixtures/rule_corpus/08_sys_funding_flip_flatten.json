@@ -1,0 +1,62 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0008",
+  "version": 1,
+  "name": "sys.funding_flip_flatten",
+  "description": "Funding flips against the position beyond 5 bps after a 1 h minimum hold: flatten and tag.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "position",
+    "symbols": [
+      "BTCUSDT"
+    ]
+  },
+  "trigger": {
+    "type": "on_metric_change",
+    "metric": "funding_rate"
+  },
+  "conditions": {
+    "node_id": "g1",
+    "op": "all_of",
+    "children": [
+      {
+        "node_id": "c1",
+        "op": "lt",
+        "left": {
+          "metric": "funding_rate"
+        },
+        "right": {
+          "const": "-0.05"
+        }
+      },
+      {
+        "node_id": "c2",
+        "op": "gte",
+        "left": {
+          "metric": "time_in_trade_ms"
+        },
+        "right": {
+          "const": 3600000
+        }
+      }
+    ]
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "flatten_position",
+      "params": {}
+    },
+    {
+      "node_id": "a2",
+      "type": "log_journal_tag",
+      "params": {
+        "tag": "funding_flip"
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "form"
+}

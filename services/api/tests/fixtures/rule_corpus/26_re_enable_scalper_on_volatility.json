@@ -1,0 +1,38 @@
+{
+  "rule_id": "00000000-0000-4000-8000-0000000c0026",
+  "version": 1,
+  "name": "Re-enable scalper on volatility",
+  "description": "Re-enable the chase-limit rule when realised vol rises.",
+  "enabled": true,
+  "mode": "simulate",
+  "scope": {
+    "level": "global"
+  },
+  "trigger": {
+    "type": "on_bar_close",
+    "timeframe": "1h"
+  },
+  "conditions": {
+    "node_id": "c1",
+    "op": "gt",
+    "left": {
+      "metric": "realized_vol"
+    },
+    "right": {
+      "const": "0.6"
+    }
+  },
+  "actions": [
+    {
+      "node_id": "a1",
+      "type": "enable_rule",
+      "params": {
+        "rule_id": "00000000-0000-4000-8000-0000000c0021"
+      }
+    }
+  ],
+  "limits": {
+    "cooldown_ms": 5000
+  },
+  "editor": "form"
+}
