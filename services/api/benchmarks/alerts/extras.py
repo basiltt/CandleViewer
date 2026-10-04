@@ -21,6 +21,38 @@ def bar_open(ts_ms: int, tf: str) -> int:
     return (ts_ms // size) * size
 
 
+def once_per_bar_fires(ticks: list[tuple[int, int]], tf: str, threshold: int) -> list[int]:
+    """Replay (event_ts, price) ticks in ARRIVAL order; fire at most once per (alert, bar_open).
+
+    Late/out-of-order ticks revise an earlier bar: they map to that bar's key, so a bar that
+    already fired never fires again, and a late tick that first satisfies the condition fires
+    exactly once for the old bar. Returns the bar_open keys that fired (Q4).
+    """
+    seen: set[int] = set()
+    fired: list[int] = []
+    for ts, price in ticks:
+        key = bar_open(ts, tf)
+        if price >= threshold and key not in seen:
+            seen.add(key)
+            fired.append(key)
+    return fired
+
+
+def late_tick_report() -> dict[str, Any]:
+    """Per timeframe: a revised-by-late-tick scenario yields exactly the expected keys."""
+    out: dict[str, Any] = {}
+    for tf in SUPPORTED_TF:
+        size = int(tf[:-1]) * TF_MS[tf[-1]]
+        b0 = bar_open(1_700_000_000_000, tf)
+        b1 = bar_open(b0 + size, tf)
+        # arrival order: bar0 tick (no fire), bar1 tick (fires b1), LATE bar0 tick (fires b0
+        # once), duplicate late bar0 tick and a second bar1 tick (both suppressed).
+        ticks = [(b0 + 1, 1), (b1 + 1, 10), (b0 + size - 1, 10), (b0 + 5, 11), (b1 + 9, 12)]
+        got = once_per_bar_fires(ticks, tf, 10)
+        out[tf] = {"keys": got, "ok": got == [b1, b0] and b1 - b0 == size}
+    return out
+
+
 def storm_histogram(
     users: int = 50, minutes: int = 240, seed: int = 3, burst_p: float = 0.02
 ) -> dict[str, Any]:

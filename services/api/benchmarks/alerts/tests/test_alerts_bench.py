@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
-from benchmarks.alerts.extras import bar_open, guard_cost, notify_only, storm_histogram
+from benchmarks.alerts.extras import (
+    bar_open,
+    guard_cost,
+    late_tick_report,
+    notify_only,
+    once_per_bar_fires,
+    storm_histogram,
+)
 from benchmarks.alerts.harness import corpus, run_option
 
 DAY = 86_400_000
@@ -36,3 +43,11 @@ def test_storm_histogram_is_seeded_and_notify_guard_rejects_actions() -> None:
     assert notify_only({"actions": [{"type": "send_notification"}]}) == []
     assert notify_only({"actions": [{"type": "place_order"}]}) == ["place_order"]
     assert guard_cost(50)["p99_ms"] < 300
+
+
+def test_late_tick_revising_a_closed_bar_fires_once_for_every_timeframe() -> None:
+    """Q4: a bar revised by a late tick keeps its key; no double fire, no new key."""
+    rep = late_tick_report()
+    assert len(rep) == 12
+    assert all(v["ok"] for v in rep.values()), rep
+    assert once_per_bar_fires([(1, 10), (2, 10), (59_999, 10)], "1m", 10) == [0]

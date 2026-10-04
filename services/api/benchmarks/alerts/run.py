@@ -6,7 +6,7 @@ import json
 import sys
 from typing import Any
 
-from benchmarks.alerts.extras import SUPPORTED_TF, guard_cost, storm_histogram
+from benchmarks.alerts.extras import SUPPORTED_TF, guard_cost, late_tick_report, storm_histogram
 from benchmarks.alerts.harness import corpus, run_option
 
 
@@ -28,6 +28,7 @@ def main(out: str | None = None, ticks: int = 20_000) -> dict[str, Any]:
         "q2_100_alerts_12_conditions": q2,
         "q3_storm_synthetic": storm_histogram(),
         "q4_timeframes": SUPPORTED_TF,
+        "q4_late_tick_revision": late_tick_report(),
         "q5_guard": guard_cost(),
         "ticks": ticks,
     }
