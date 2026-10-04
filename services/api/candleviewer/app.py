@@ -47,8 +47,8 @@ from candleviewer.api import (
     make_instruments_router,
     make_log_level_router,
     make_market_router,
-    make_rules_router,
     make_orderbook_router,
+    make_rules_router,
     make_ticker_router,
     make_trades_router,
 )
