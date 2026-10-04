@@ -22,6 +22,8 @@ cases Dependabot hasn't caught up with yet.
 | `dorny/paths-filter` | `de90cc6fb38fc0963ad72b210f1f284cd68cea36` | `v3.0.2` | `pr.yml` |
 | `astral-sh/setup-uv` | `c18668ad3cf93ea998bef934396af7bb5c839dc7` | `v10.2.0` | `_job-py.yml` |
 | `actions/upload-artifact` | `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a` | `v7.0.1` | `_job-py.yml` |
+| `anchore/sbom-action` | `df80a981bc6edbc4e220a492d3cbe9f5547a6e75` | `v0.17.9` | `main.yml` |
+| `sigstore/cosign-installer` | `dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da` | `v3.7.0` | `main.yml`, `release.yml`, `deploy-dev.yml`, `deploy-staging.yml` |
 
 Verification: `tools/ci/check_action_pins.py .github/workflows` fails the
 build if any `uses:` line drifts back to a tag, and independently rejects any

@@ -176,7 +176,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Generate CycloneDX SBOM (syft, SR-133)
-        uses: anchore/sbom-action@f5e124a5ffb6460cb2fbb2f8259ca7cb50fb18b1 # v0.17.9
+        uses: anchore/sbom-action@df80a981bc6edbc4e220a492d3cbe9f5547a6e75 # v0.17.9
         with:
           image: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}"
           format: cyclonedx-json
@@ -196,7 +196,7 @@ jobs:
             --image "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" \
             >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9101 # v3.7.0
+      - uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
 
       - name: Attach the SBOM as an attestation (in-toto, SR-133)
         run: |

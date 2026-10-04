@@ -54,7 +54,7 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
-      - uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9101 # v3.7.0
+      - uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
 
       - name: Resolve the digest just built by main.yml
         id: digest
