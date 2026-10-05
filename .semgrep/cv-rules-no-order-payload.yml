@@ -7,18 +7,22 @@ rules:
       OMS so the native stop-loss attachment path (C-2.6) cannot be bypassed (E35-X02).
     metadata:
       rule-id: cv-rules-no-order-payload
-    pattern-either:
-      - pattern: |
-          {..., "orderType": $V, ...}
-      - pattern: |
-          {..., "orderLinkId": $V, ...}
-      - pattern: |
-          {..., "stopLoss": $V, ...}
-      - pattern: |
-          {..., "reduceOnly": $V, ...}
+    patterns:
+      - pattern-either:
+          - pattern: |
+              {..., $K: $V, ...}
+          - pattern: dict(..., $K=$V, ...)
+          - pattern: $P[$K] = $V
+          - pattern: $P.setdefault($K, ...)
+          - pattern: $P.update(..., $K=$V, ...)
+      - metavariable-regex:
+          metavariable: $K
+          regex: ^["']?(orderType|order_type|orderLinkId|order_link_id|stopLoss|stop_loss|reduceOnly|reduce_only)["']?$
     paths:
       include:
         - "services/api/candleviewer/rules/**"
         - "**/cv-rules-no-order-payload*"
       exclude:
         - "**/test_*.py"
+        # JSON-schema of IR action params (intent vocabulary, not an exchange payload)
+        - "services/api/candleviewer/rules/vocabulary/catalogue.py"

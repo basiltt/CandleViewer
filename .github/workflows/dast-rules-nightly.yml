@@ -28,7 +28,7 @@ jobs:
           ZAP_LOWPRIV_TOKEN: ${{ secrets.ZAP_LOWPRIV_TOKEN }}
         run: |
           docker run --rm --network host -e ZAP_LOWPRIV_TOKEN -v "$PWD:/zap/wrk" \
-            ghcr.io/zaproxy/zaproxy:stable zap.sh -cmd -autorun /zap/wrk/.zap/rules-low-priv.yaml
+            ghcr.io/zaproxy/zaproxy:2.16.1 zap.sh -cmd -autorun /zap/wrk/.zap/rules-low-priv.yaml
       - name: Upload report
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

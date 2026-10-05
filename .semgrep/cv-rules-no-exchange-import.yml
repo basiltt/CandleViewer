@@ -10,9 +10,22 @@ rules:
     pattern-either:
       - pattern: import candleviewer.exchange
       - pattern: import candleviewer.exchange.$X
+      - pattern: import candleviewer.exchange.$X.$Z
+      - pattern: from candleviewer import exchange
       - pattern: from candleviewer.exchange import $Y
       - pattern: from candleviewer.exchange.$X import $Y
       - pattern: from candleviewer.exchange.$X.$Z import $Y
+      # relative imports from inside candleviewer/rules/** (`from ..exchange import x`)
+      - pattern-regex: ^\s*from\s+\.{2,}\s*exchange(\.|\s)
+      - pattern-regex: ^\s*from\s+\.{2,}\s+import\s+(.*,\s*)?exchange\b
+      # dynamic imports by string
+      - patterns:
+          - pattern-either:
+              - pattern: importlib.import_module($S, ...)
+              - pattern: __import__($S, ...)
+          - metavariable-regex:
+              metavariable: $S
+              regex: ^["'](candleviewer\.)?exchange(\.|["'])
     paths:
       include:
         - "services/api/candleviewer/rules/**"

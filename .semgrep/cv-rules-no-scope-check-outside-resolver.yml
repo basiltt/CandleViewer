@@ -3,18 +3,45 @@ rules:
     languages: [python]
     severity: ERROR
     message: >-
-      Account-grant checks in evaluator/runner code must go through ScopeResolver (runtime
-      enforcement on every action), not ad-hoc reads of granted_accounts (E35-X02, US-RULE-007).
+      Account-grant checks in rule-engine code must go through ScopeResolver (runtime
+      enforcement on every action) or the manager's _require_grants, not ad-hoc reads of
+      granted_accounts (E35-X02, US-RULE-007).
     metadata:
       rule-id: cv-rules-no-scope-check-outside-resolver
-    pattern-either:
-      - pattern: $A in $X.granted_accounts
-      - pattern: $A not in $X.granted_accounts
+    patterns:
+      - pattern-either:
+          - pattern: $A in $X.granted_accounts
+          - pattern: $A not in $X.granted_accounts
+          - pattern: $X.granted_accounts.isdisjoint(...)
+          - pattern: $X.granted_accounts.issuperset(...)
+          - pattern: $X.granted_accounts.issubset(...)
+          - pattern: $X.granted_accounts.intersection(...)
+          - pattern: $X.granted_accounts & $B
+          - pattern: $B & $X.granted_accounts
+          - pattern: $B <= $X.granted_accounts
+          - pattern: $X.granted_accounts >= $B
+          - pattern: $B < $X.granted_accounts
+          - pattern: $B - $X.granted_accounts
+      # the two sanctioned enforcement points (manager grant check, ScopeResolver)
+      - pattern-not-inside: |
+          def _require_grants(...):
+            ...
+      - pattern-not-inside: |
+          def _visible(...):
+            ...
+      - pattern-not-inside: |
+          async def _check_arming(...):
+            ...
+      - pattern-not-inside: |
+          async def import_rule(...):
+            ...
+      - pattern-not-inside: |
+          class ScopeResolver:
+            ...
     paths:
       include:
-        - "services/api/candleviewer/rules/evaluator/**"
-        - "services/api/candleviewer/rules/runner.py"
-        - "services/api/candleviewer/rules/service.py"
+        - "services/api/candleviewer/rules/**"
         - "**/cv-rules-no-scope-check-outside-resolver*"
       exclude:
         - "**/test_*.py"
+        - "services/api/candleviewer/rules/scope.py"
