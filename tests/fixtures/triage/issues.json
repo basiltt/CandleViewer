@@ -1,0 +1,8 @@
+[
+  { "number": 1, "title": "flaky: hypothesis DeadlineExceeded cold run", "state": "OPEN" },
+  { "number": 2, "title": "[E01-T01-B1] Evidence missing for AC2", "state": "OPEN" },
+  { "number": 3, "title": "[E01-T02-B1] writer deadlock", "state": "OPEN" },
+  { "number": 4, "title": "[E01-T03-B1] app never constructed in create_app", "state": "CLOSED" },
+  { "number": 5, "title": "[E49-S06] planning story, not a defect", "state": "OPEN" },
+  { "number": 6, "title": "[E01-T04-B1] storage thing", "state": "OPEN" }
+]

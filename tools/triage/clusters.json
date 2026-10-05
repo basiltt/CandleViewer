@@ -1,0 +1,21 @@
+{
+  "confirmed": {
+    "flaky-tests": [1536, 1535, 1547],
+    "gate-tooling": [1564, 1646, 1442, 1443],
+    "supply-chain-pins": [1586, 1538, 1737],
+    "dod-evidence-gap": [
+      1830, 1829, 1803, 1468, 1462, 1832, 1831, 1828, 1827, 1623, 1557, 1461, 1463, 1467
+    ],
+    "statechart-contract": [1846, 1652, 1649],
+    "storage-writer": [1835, 1636, 1826, 1701, 1698, 1699, 1697, 1696],
+    "unwired-component": [
+      1809, 1725, 1668, 1658, 1648, 1641, 1634, 1622, 1596, 1578, 1529, 1516, 1656
+    ]
+  },
+  "rules": {
+    "flaky-tests": ["flaky", "deadlineexceeded"],
+    "supply-chain-pins": ["digest", "advisor"],
+    "unwired-component": ["never constructed", "not wired", "never called"],
+    "dod-evidence-gap": ["sign-off", "not executed", "evidence missing"]
+  }
+}

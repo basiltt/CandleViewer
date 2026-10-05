@@ -4,37 +4,38 @@ MADR-format records for CandleViewer. The authoritative index (with summaries) i
 
 Status values: `decided` (binding now), `proposed` (decision deadline stated inside the record), `proposed (gated)` (part of the record is binding now and part is gated — the record says which), `superseded` (points at its replacement).
 
-| ADR | Title | Status |
-|---|---|---|
-| [ADR-0001](ADR-0001-stack-selection.md) | Technology stack selection | decided |
-| [ADR-0002](ADR-0002-custom-webgl-chart-engine.md) | Custom WebGL chart engine | decided |
-| [ADR-0003](ADR-0003-storage-tiers.md) | Three-tier storage | decided |
-| [ADR-0004](ADR-0004-modular-monolith.md) | Modular monolith with an internal event bus | decided |
-| [ADR-0005](ADR-0005-ws-protocol-and-binary-encoding.md) | WS protocol and binary encoding | decided |
-| [ADR-0006](ADR-0006-oms-state-machine.md) | OMS state machine, idempotency and reconciliation | decided |
-| [ADR-0007](ADR-0007-rule-ir.md) | A single rule IR shared by both editors | decided |
-| [ADR-0008](ADR-0008-trade-group-fanout.md) | Trade-group fan-out with a mandatory native SL | decided |
-| [ADR-0009](ADR-0009-secrets-and-key-management.md) | Secrets and Bybit API-key management | decided |
-| [ADR-0010](ADR-0010-auth-and-rbac.md) | Authentication, RBAC, admin inside the web app | decided |
-| [ADR-0011](ADR-0011-electron-vs-tauri.md) | Electron vs Tauri desktop shell | proposed (deadline: end of Sprint 03) |
-| [ADR-0012](ADR-0012-testing-pyramid.md) | Testing pyramid and shared fixtures | decided |
-| [ADR-0013](ADR-0013-ci-pipeline.md) | CI/CD pipeline on GitHub Actions | decided |
-| [ADR-0014](ADR-0014-observability.md) | Observability stack | decided |
-| [ADR-0015](ADR-0015-recording-policy.md) | Recording and retention policy | decided |
-| [ADR-0016](ADR-0016-statechart-runtime.md) | Statechart contracts and a gated runtime | **proposed (gated)** (deadline: Sprint 08 go/no-go, `E50-X01`) |
-| [ADR-0017](ADR-0017-board-automation.md) | GitHub Projects v2 board automation: capability and limits | decided |
-| [ADR-0018](ADR-0018-monorepo-tooling.md) | Monorepo tooling: pnpm+Turborepo (JS) and uv+Hatch (Python) | decided |
-| [ADR-0019](ADR-0019-visual-regression-tooling.md) | Visual-regression tooling for design-system snapshots | decided (wall-clock/flake numbers deferred to E05-T04) |
-| [ADR-0020](ADR-0020-session-access-token-and-revocation-model.md) | Session access-token format, WS re-auth cadence, and rotation-family revocation | **proposed** (owner approval pending, spike E09-K01) |
-| [ADR-0022](ADR-0022-hot-tier-questdb-vs-timescaledb.md) | Hot tier: QuestDB confirmed for all six query shapes (E07-T06) | **accepted-partial** (owner approval pending, spike E07-K01, corrected) |
-| [ADR-0023](ADR-0023-exchange-adapter-boundary.md) | Exchange-adapter boundary: port split, P3 enforcement, book invalidate-and-resync, depth-tier default, environment separation | **accepted** (owner approval pending) |
-| [ADR-0024](ADR-0024-design-token-architecture-and-theming.md) | Design-token architecture and theming strategy | decided |
-| [ADR-0025](ADR-0025-audit-query-and-index-strategy.md) | Audit query and index strategy (E42-K01) | **proposed** (measured at 10 M rows; owner approval pending; no write-latency budget named) |
-| [ADR-0026](ADR-0026-rule-ir-canonicalisation.md) | Rule IR canonicalisation and round-trip fuzz strategy (E35-K01) | **proposed** (owner approval pending) |
-| [ADR-0027](ADR-0027-journal-analytics-query-tier.md) | Journal analytics query tier (E41-K01) | **proposed** (owner approval pending) |
-| [ADR-0028](ADR-0028-docs-toolchain.md) | Documentation toolchain and reference-generation pipeline (E48-K01) | **proposed-with-deadline** (E48-T02 CI proof; owner approval pending) |
-| [ADR-0029](ADR-0029-rule-graph-library.md) | Rule node-graph library and layout placement (E37-K01) | **proposed** (owner approval pending) |
-| [ADR-0032](ADR-0032-alert-evaluation-placement.md) | Alert evaluation placement, subscription sharing and storm thresholds (E40-K01) | **proposed** (owner approval pending) |
+| ADR                                                               | Title                                                                                                                         | Status                                                                                      |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| [ADR-0001](ADR-0001-stack-selection.md)                           | Technology stack selection                                                                                                    | decided                                                                                     |
+| [ADR-0002](ADR-0002-custom-webgl-chart-engine.md)                 | Custom WebGL chart engine                                                                                                     | decided                                                                                     |
+| [ADR-0003](ADR-0003-storage-tiers.md)                             | Three-tier storage                                                                                                            | decided                                                                                     |
+| [ADR-0004](ADR-0004-modular-monolith.md)                          | Modular monolith with an internal event bus                                                                                   | decided                                                                                     |
+| [ADR-0005](ADR-0005-ws-protocol-and-binary-encoding.md)           | WS protocol and binary encoding                                                                                               | decided                                                                                     |
+| [ADR-0006](ADR-0006-oms-state-machine.md)                         | OMS state machine, idempotency and reconciliation                                                                             | decided                                                                                     |
+| [ADR-0007](ADR-0007-rule-ir.md)                                   | A single rule IR shared by both editors                                                                                       | decided                                                                                     |
+| [ADR-0008](ADR-0008-trade-group-fanout.md)                        | Trade-group fan-out with a mandatory native SL                                                                                | decided                                                                                     |
+| [ADR-0009](ADR-0009-secrets-and-key-management.md)                | Secrets and Bybit API-key management                                                                                          | decided                                                                                     |
+| [ADR-0010](ADR-0010-auth-and-rbac.md)                             | Authentication, RBAC, admin inside the web app                                                                                | decided                                                                                     |
+| [ADR-0011](ADR-0011-electron-vs-tauri.md)                         | Electron vs Tauri desktop shell                                                                                               | proposed (deadline: end of Sprint 03)                                                       |
+| [ADR-0012](ADR-0012-testing-pyramid.md)                           | Testing pyramid and shared fixtures                                                                                           | decided                                                                                     |
+| [ADR-0013](ADR-0013-ci-pipeline.md)                               | CI/CD pipeline on GitHub Actions                                                                                              | decided                                                                                     |
+| [ADR-0014](ADR-0014-observability.md)                             | Observability stack                                                                                                           | decided                                                                                     |
+| [ADR-0015](ADR-0015-recording-policy.md)                          | Recording and retention policy                                                                                                | decided                                                                                     |
+| [ADR-0016](ADR-0016-statechart-runtime.md)                        | Statechart contracts and a gated runtime                                                                                      | **proposed (gated)** (deadline: Sprint 08 go/no-go, `E50-X01`)                              |
+| [ADR-0017](ADR-0017-board-automation.md)                          | GitHub Projects v2 board automation: capability and limits                                                                    | decided                                                                                     |
+| [ADR-0018](ADR-0018-monorepo-tooling.md)                          | Monorepo tooling: pnpm+Turborepo (JS) and uv+Hatch (Python)                                                                   | decided                                                                                     |
+| [ADR-0019](ADR-0019-visual-regression-tooling.md)                 | Visual-regression tooling for design-system snapshots                                                                         | decided (wall-clock/flake numbers deferred to E05-T04)                                      |
+| [ADR-0020](ADR-0020-session-access-token-and-revocation-model.md) | Session access-token format, WS re-auth cadence, and rotation-family revocation                                               | **proposed** (owner approval pending, spike E09-K01)                                        |
+| [ADR-0022](ADR-0022-hot-tier-questdb-vs-timescaledb.md)           | Hot tier: QuestDB confirmed for all six query shapes (E07-T06)                                                                | **accepted-partial** (owner approval pending, spike E07-K01, corrected)                     |
+| [ADR-0023](ADR-0023-exchange-adapter-boundary.md)                 | Exchange-adapter boundary: port split, P3 enforcement, book invalidate-and-resync, depth-tier default, environment separation | **accepted** (owner approval pending)                                                       |
+| [ADR-0024](ADR-0024-design-token-architecture-and-theming.md)     | Design-token architecture and theming strategy                                                                                | decided                                                                                     |
+| [ADR-0025](ADR-0025-audit-query-and-index-strategy.md)            | Audit query and index strategy (E42-K01)                                                                                      | **proposed** (measured at 10 M rows; owner approval pending; no write-latency budget named) |
+| [ADR-0026](ADR-0026-rule-ir-canonicalisation.md)                  | Rule IR canonicalisation and round-trip fuzz strategy (E35-K01)                                                               | **proposed** (owner approval pending)                                                       |
+| [ADR-0027](ADR-0027-journal-analytics-query-tier.md)              | Journal analytics query tier (E41-K01)                                                                                        | **proposed** (owner approval pending)                                                       |
+| [ADR-0028](ADR-0028-docs-toolchain.md)                            | Documentation toolchain and reference-generation pipeline (E48-K01)                                                           | **proposed-with-deadline** (E48-T02 CI proof; owner approval pending)                       |
+| [ADR-0029](ADR-0029-rule-graph-library.md)                        | Rule node-graph library and layout placement (E37-K01)                                                                        | **proposed** (owner approval pending)                                                       |
+| [ADR-0030](ADR-0030-defect-burn-down-by-root-cause.md)            | Defect burn-down by root cause (E49-K01)                                                                                      | **proposed** (owner approval pending)                                                       |
+| [ADR-0032](ADR-0032-alert-evaluation-placement.md)                | Alert evaluation placement, subscription sharing and storm thresholds (E40-K01)                                               | **proposed** (owner approval pending)                                                       |
 
 ## Writing a new ADR
 
