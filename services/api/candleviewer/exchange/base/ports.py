@@ -3,7 +3,7 @@
 Verbatim transcription of the `MarketDataPort`/`TradingPort` protocol
 signatures. Structural typing (`Protocol`, not `ABC`) is deliberate: a fake
 in-memory adapter (`FakeExchange`, `exchange/base/fakes.py`) and the real
-Bybit adapter (`exchange/bybit/`, E08-T02+) both satisfy these protocols
+the exchange adapter (E08-T02+) both satisfy these protocols
 without sharing a base class or importing each other (C-2.2).
 
 `TradingPort` is declared here so its shape is fixed and reviewable now, but
@@ -111,7 +111,7 @@ class MarketDataPort(Protocol):
 class TradingPort(Protocol):
     """§14.1. Account-scoped order entry and reads. **Declared only** in
     this ticket (E08-T01 scope, ticket body "Out of scope") — building a
-    conforming implementation, Bybit or otherwise, is E29's job. Declaring
+    conforming implementation, the exchange or otherwise, is E29's job. Declaring
     it now lets E29 be authored against a signature that has already been
     reviewed rather than inventing one under deadline."""
 

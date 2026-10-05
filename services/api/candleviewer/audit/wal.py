@@ -33,17 +33,17 @@ Postgres, cursor not yet advanced) replays as an `ON CONFLICT DO NOTHING`.
 from __future__ import annotations
 
 import json
-import logging
 import os
 import zlib
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
+import structlog
+
 from candleviewer.audit.errors import AuditError
 
-# nosemgrep: cv-obs-no-direct-getlogger -- legacy stdlib logger; migrate to cv.obs logger (#1716)
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 _MAX_LEN_DIGITS = 10
 _CRC_FIELD = 9  # 8 hex digits + "\n"

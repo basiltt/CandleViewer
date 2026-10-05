@@ -1,5 +1,5 @@
 """In-memory `MarketDataPort` fake for downstream unit tests (ticket body,
-acceptance criterion 2). No network, no fixtures, no Bybit vocabulary —
+acceptance criterion 2). No network, no fixtures, no exchange vocabulary —
 callers seed it with plain domain objects and get an isinstance-conforming
 adapter back.
 """

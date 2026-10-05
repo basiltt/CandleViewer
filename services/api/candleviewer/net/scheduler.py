@@ -14,8 +14,9 @@ enumeration is a syscall, not a coroutine.
 from __future__ import annotations
 
 import asyncio
-import logging
 from typing import TYPE_CHECKING
+
+import structlog
 
 from candleviewer.observability.context import spawn
 
@@ -26,8 +27,7 @@ if TYPE_CHECKING:
 
     from .read_only_gate import ReadOnlyGate
 
-# nosemgrep: cv-obs-no-direct-getlogger -- legacy stdlib logger; migrate to cv.obs logger (#1716)
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 _SELF_CHECK_TIMEOUT_S = 2.0
 

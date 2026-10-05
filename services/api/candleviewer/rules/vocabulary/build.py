@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-import logging
 import typing
 from collections.abc import Collection
 from typing import Any
+
+import structlog
 
 from candleviewer.rules.ir import models as ir_models
 from candleviewer.rules.vocabulary.catalogue import (
@@ -20,7 +21,7 @@ from candleviewer.rules.vocabulary.catalogue import (
 from candleviewer.rules.vocabulary.metrics import DEFAULT_DOCS
 from candleviewer.rules.vocabulary.registry import RECORDED_INPUTS, MetricRegistry
 
-log = logging.getLogger(__name__)
+log = structlog.get_logger(__name__)
 
 VOCABULARY_VERSION = 1
 RECORDER_ACTION = {"method": "POST", "path": "/api/v1/recording/symbols"}

@@ -21,7 +21,7 @@ experiment exercises the actual backpressure/queueing path rather than a
 bespoke loop. No live socket, no network egress (C-13.5).
 
 The two-hour recorded window is synthesised deterministically (seeded RNG,
-a documented depth/cadence generative model calibrated to Bybit's published
+a documented depth/cadence generative model calibrated to the exchange's published
 `book.{depth}.{symbol}` wire shape — see `docs/plan/spikes/E08-K01.md`
 "Fixture provenance") rather than pulled from a live capture, because this
 environment has no exchange credentials and C-13.5 forbids any live call in
@@ -60,6 +60,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from candleviewer.bus.bus import Bus
 from candleviewer.bus.models import QueuePolicy, Topic
+from candleviewer.observability import spawn
 
 # The bus's own "subscriber lagging" warning fires whenever this harness's
 # single-task consumer falls behind the publish loop (expected under a
@@ -273,7 +274,7 @@ async def _measure_one(
 
     gc.collect()
     tracemalloc.start()
-    consumer_task = asyncio.create_task(consumer())
+    consumer_task = spawn(consumer(), name="bench-consumer")
     proc_t0 = time.process_time()
     wall_t0 = time.perf_counter()
     try:

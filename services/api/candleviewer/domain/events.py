@@ -30,6 +30,8 @@ class Instrument(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
+    # Default mirrors the OpenAPI Exchange contract (C-1.3).
+    # nosemgrep: cv-adapter-isolation — B5-b, owner @CandleViewer/security, review 2026-12-31
     exchange: Exchange = "bybit"
     category: Category = "linear"
     symbol: Symbol
@@ -75,6 +77,8 @@ class MarketEvent(DomainEvent):
     """Base envelope for market-data events; adds the exchange/category/symbol
     identity common to every §2 event family."""
 
+    # Default mirrors the OpenAPI Exchange contract (C-1.3).
+    # nosemgrep: cv-adapter-isolation — B5-b, owner @CandleViewer/security, review 2026-12-31
     exchange: Exchange = "bybit"
     category: Category = "linear"
     symbol: Symbol

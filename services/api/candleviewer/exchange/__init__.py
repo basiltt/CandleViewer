@@ -1,4 +1,4 @@
-"""Namespace package for the `exchange.*` modules (M3 `exchange.base`, M4 `exchange.bybit`).
+"""Namespace package for the `exchange.*` modules (M3 `exchange.base`, M4 the exchange adapter).
 
 Not itself a module in the CONSTITUTION.md Sec.3 table — it only groups the
 two exchange-related module packages.

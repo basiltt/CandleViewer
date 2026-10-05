@@ -14,10 +14,10 @@ concern, does that.
 
 from __future__ import annotations
 
-import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
+import structlog
 from fastapi import FastAPI
 
 from candleviewer.app import AppContext, Supervisor, create_app
@@ -37,8 +37,7 @@ configure_logging(
     fmt=_settings.log_format,
 )
 
-# nosemgrep: cv-obs-no-direct-getlogger -- legacy stdlib logger; migrate to cv.obs logger (#1716)
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 @asynccontextmanager

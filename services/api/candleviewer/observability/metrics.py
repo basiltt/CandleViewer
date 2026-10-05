@@ -54,7 +54,7 @@ __all__ = [
 MetricKind = Literal["counter", "gauge", "histogram", "enum"]
 
 #: Environments a process may declare (`CV_ENV`, ticket config keys) plus the
-#: structural Bybit `testnet` environment (`settings.Environment`).
+#: structural exchange `testnet` environment (`settings.Environment`).
 ALLOWED_ENVS: Final[frozenset[str]] = frozenset({"dev", "staging", "demo", "live", "testnet"})
 
 #: Label names that may never appear on any metric (ticket Security notes,

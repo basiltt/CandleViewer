@@ -54,6 +54,7 @@ from candleviewer.ingestion.metrics import (
     instruments_catalogue_size,
     instruments_refresh_total,
 )
+from candleviewer.observability import spawn
 
 logger = structlog.get_logger(__name__)
 
@@ -174,8 +175,7 @@ class InstrumentsRefreshScheduler:
             # retrying on schedule.
             logger.warning("instruments_startup_refresh_failed")
         self._stopping = False
-        # nosemgrep: cv-bare-create-task -- owned+awaited; migrate to cv.obs.spawn (#1716)
-        self._task = asyncio.create_task(self._run_periodic(), name="instruments-refresh")
+        self._task = spawn(self._run_periodic(), name="instruments-refresh")
 
     async def stop(self, grace_s: float = 5.0) -> None:
         self._stopping = True

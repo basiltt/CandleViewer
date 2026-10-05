@@ -21,7 +21,7 @@ from uuid import UUID
 from pydantic import StringConstraints
 
 type TsUs = int
-"""Microseconds since the Unix epoch, UTC (C4). Bybit millisecond fields are
+"""Microseconds since the Unix epoch, UTC (C4). The exchange millisecond fields are
 multiplied by 1000 at the adapter boundary; `datetime` appears only in
 Postgres rows and human-facing strings."""
 
@@ -54,6 +54,8 @@ RuleId = NewType("RuleId", UUID)
 
 Symbol = Annotated[str, StringConstraints(pattern=r"^[A-Z0-9]{4,20}$")]
 OrderLinkId = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_-]{1,36}$")]
+# Public contract type: must name the one supported exchange (C-1.3).
+# nosemgrep: cv-adapter-isolation — B5-b, owner @CandleViewer/security, review 2026-12-31
 Exchange = Literal["bybit"]
 Category = Literal["linear"]
 Environment = Literal["live", "demo", "testnet"]

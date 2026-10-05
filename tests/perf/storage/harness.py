@@ -18,6 +18,7 @@ import time
 from pathlib import Path
 
 import duckdb
+from candleviewer.storage.sql_identifiers import checked_identifier
 
 sys.path.insert(0, str(Path(__file__).parent))
 from shapes import SHAPES
@@ -59,7 +60,7 @@ def conditions(dataset_id: str, engine: str, cache: str) -> dict[str, str]:
 
 def build_dataset(con: duckdb.DuckDBPyConnection, seed: int, n: int) -> str:
     """Seeded (setseed) set-based generation; executemany is orders slower."""
-    con.execute(f"SELECT setseed({(seed % 1000) / 1000.0})")
+    con.execute("SELECT setseed(?)", [(seed % 1000) / 1000.0])
     t0, span = T0, SPAN
 
     def ts(of: str) -> str:
@@ -131,7 +132,8 @@ def build_dataset(con: duckdb.DuckDBPyConnection, seed: int, n: int) -> str:
         ),
     ]
     for name, sql in q:
-        con.execute(f"CREATE TABLE {name} AS {sql}")
+        stmt = "CREATE TABLE " + checked_identifier(name) + " AS " + sql  # sql: static SHAPES text
+        con.execute(stmt)
     return f"synthetic-seed{seed}-n{n}"
 
 

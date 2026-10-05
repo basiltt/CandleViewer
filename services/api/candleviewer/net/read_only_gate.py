@@ -12,13 +12,13 @@ by `net`, not duplicated).
 
 from __future__ import annotations
 
-import logging
 import threading
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-# nosemgrep: cv-obs-no-direct-getlogger -- legacy stdlib logger; migrate to cv.obs logger (#1716)
-_logger = logging.getLogger(__name__)
+import structlog
+
+_logger = structlog.get_logger(__name__)
 
 if TYPE_CHECKING:
     from .binding_check import BindingCheckResult

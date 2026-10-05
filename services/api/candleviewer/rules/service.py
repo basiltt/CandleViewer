@@ -9,11 +9,13 @@ module, but it does no real work until its owning epic lands.
 from __future__ import annotations
 
 import asyncio
-import logging
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+import structlog
+
+from candleviewer.observability import spawn
 from candleviewer.observability.health import HealthReport, HealthStatus
 from candleviewer.rules.evaluator import Evaluator, SnapshotBuilder
 from candleviewer.rules.evaluator.engine import EvaluationResult
@@ -34,7 +36,7 @@ from candleviewer.rules.runner import (
 from candleviewer.rules.scope import ActionRequest, ScopeInstanceRef
 from candleviewer.rules.vocabulary import MetricRegistry, default_registry
 
-_log = logging.getLogger(__name__)
+_log = structlog.get_logger(__name__)
 
 
 def _owner_uuid(rule: Rule) -> UUID | None:
@@ -103,7 +105,7 @@ class RulesService:
             m = self.manager()
             if m is None:
                 return
-            task = asyncio.get_running_loop().create_task(m.consume_evaluation(result))
+            task = spawn(m.consume_evaluation(result), name="rule-consume-evaluation")
             self._tasks.add(task)
             task.add_done_callback(self._tasks.discard)
 
@@ -218,7 +220,7 @@ class RulesService:
             )  # fmt: skip
             for action in rule.actions:
                 req = ActionRequest(rule.scope, owner, env, ref, action.type, action)
-                task = asyncio.get_running_loop().create_task(emitter.emit(req))
+                task = spawn(emitter.emit(req), name="rule-action-emit")
                 self._tasks.add(task)
                 task.add_done_callback(self._tasks.discard)
 

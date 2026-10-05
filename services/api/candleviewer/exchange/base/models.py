@@ -2,16 +2,16 @@
 
 `Trade` and `Ticker` are the normalised domain events named in C-2.3
 ("Ingestion converts exchange payloads into normalised domain events") —
-exchange-neutral shapes with no Bybit-specific field names, symbols, or
+exchange-neutral shapes with no exchange-specific field names, symbols, or
 error codes (C-2.2). The synthetic feed generator (`candleviewer.ingestion`,
 E02-T12) publishes these same shapes so downstream consumers (bus fan-out,
-dashboards, E08's real Bybit adapter) share one contract regardless of
+dashboards, E08's real exchange adapter) share one contract regardless of
 which feed produced the event.
 
 The rest of this module (E08-T01) is a verbatim transcription of
 `docs/plan/24-internal-schemas.md` §2 (normalised market-data events), §14.1
 (`ExchangeCapabilities`) and the request/response DTOs referenced by
-`TradingPort` in §14.4. Nothing here is Bybit-specific (C-2.2): field names
+`TradingPort` in §14.4. Nothing here is exchange-specific (C-2.2): field names
 and types are the neutral vocabulary every module downstream of the adapter
 consumes.
 """
@@ -111,7 +111,7 @@ class Ticker(BaseModel):
 
 
 class TradeEvent(MarketEvent):
-    """The tape (§2.1). Bybit gives the aggressor side directly — no
+    """The tape (§2.1). The exchange gives the aggressor side directly — no
     tick-rule reconstruction needed."""
 
     trade_id: str
@@ -157,7 +157,7 @@ class BookDelta(MarketEvent):
 
 
 class TickerEvent(MarketEvent):
-    """§2.3. Bybit's linear ticker stream is delta-encoded at the wire, but
+    """§2.3. the exchange's linear ticker stream is delta-encoded at the wire, but
     the adapter always emits a fully-populated snapshot (`is_delta=False`)
     downstream so no consumer implements merge logic."""
 
@@ -241,7 +241,7 @@ class RiskLimitTier(BaseModel):
 
 class ExchangeCapabilities(BaseModel):
     """§14.1. **Data, never branching** (adapter rule 3, §14.2): consumers
-    read fields off this record; they never test `exchange == "bybit"` or
+    read fields off this record; they never test `exchange == "<venue>"` or
     `env == "demo"`. Constructed once per `(exchange, environment)` at
     adapter-instance startup — zero runtime cost thereafter (performance
     notes, ticket body)."""
@@ -292,7 +292,7 @@ class AccountRef(BaseModel):
 
 
 class PlaceOrderRequest(BaseModel):
-    """§14.4 / §8.9 Bybit request mapping."""
+    """§14.4 / §8.9 exchange request mapping."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -320,7 +320,7 @@ class PlaceOrderRequest(BaseModel):
 class AmendOrderRequest(BaseModel):
     """Amend an open order in place. Declared alongside `TradingPort`
     (§14.1) so E29 (OMS) is authored against a merged signature; the field
-    set mirrors `PlaceOrderRequest`'s amendable subset per Bybit
+    set mirrors `PlaceOrderRequest`'s amendable subset per the exchange
     `POST /v5/order/amend`."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
@@ -350,7 +350,7 @@ class CancelOrderRequest(BaseModel):
 class TradingStopRequest(BaseModel):
     """§8.9: attach/replace native TP/SL/trailing on an open position via
     `POST /v5/position/trading-stop`. **Always writes both TP and SL sides**
-    in one call (one-sided writes break Bybit's OCO pairing, §8.9 caveat)."""
+    in one call (one-sided writes break the exchange's OCO pairing, §8.9 caveat)."""
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -462,7 +462,7 @@ class Position(BaseModel):
 
 class ClosedPnl(BaseModel):
     """§14.4 `TradingPort.closed_pnl`. **Deviation, noted in the PR**: no
-    formal field list is given in §14.4; this mirrors Bybit's
+    formal field list is given in §14.4; this mirrors the exchange's
     `GET /v5/position/closed-pnl` response shape at the neutral-vocabulary
     level (no `retCode`/camelCase, C-2.2)."""
 

@@ -6,7 +6,7 @@ instrumentation "configurations" (none / metrics / metrics+logs /
 metrics+logs+tracing).
 
 This module is intentionally dependency-light and synthetic: no network, no
-real Bybit payloads, no real secrets. Only the standard library, prometheus_client,
+real exchange payloads, no real secrets. Only the standard library, prometheus_client,
 structlog, opentelemetry (api+sdk) and psutil are used, all already vendored for
 services/api.
 """
@@ -80,7 +80,7 @@ def _redaction_processor(
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class SyntheticMessage:
-    """A synthetic market-data-shaped message (no real Bybit payloads)."""
+    """A synthetic market-data-shaped message (no real exchange payloads)."""
 
     topic: str
     symbol: str
@@ -90,7 +90,7 @@ class SyntheticMessage:
     api_key: str  # obviously-fake canary, only used to exercise redaction
 
 
-_TOPICS = ("orderbook.200", "publicTrade", "tickers")
+_TOPICS = ("book.deep", "trades.public", "tickers")
 _SYMBOLS = ("BTCUSDT", "ETHUSDT", "SOLUSDT")
 
 

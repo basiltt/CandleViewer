@@ -30,6 +30,10 @@ rules:
         - "services/api/scripts/lint_exchange_vocabulary.py"
         - "packages/protocol/**"
         - "packages/fixtures/**"
+        # tools/fixtures/ builds and redacts the recorded exchange corpus
+        # (E08-T05, #1847); it must speak the wire vocabulary by design,
+        # exactly like packages/fixtures/** which holds its output.
+        - "tools/fixtures/**"
         - "tests/fixtures/**"
         - "services/api/tests/fixtures/**"
         - "docs/**"

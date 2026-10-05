@@ -3,13 +3,13 @@
 Reads a small JSONL sample from `packages/fixtures/raw/` and replays it as
 normalised `Trade`/`Ticker` events (`candleviewer.exchange.base`) onto a
 bounded queue at a configurable rate, so engineers and CI can exercise the
-ingestion path without Bybit credentials (`CV_FEED=synthetic`,
+ingestion path without exchange credentials (`CV_FEED=synthetic`,
 `20-architecture.md` Sec.7.3).
 
 TEST DOUBLE — NOT REAL INGESTION (Semgrep-visible marker below). This
-generator has no Bybit knowledge (C-2.2) and does not reconstruct an order
+generator has no exchange knowledge (C-2.2) and does not reconstruct an order
 book (that is E08/M7); it must never grow into a second ingestion
-implementation. E08 owns the real Bybit WS/REST adapter.
+implementation. E08 owns the real exchange WS/REST adapter.
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ from candleviewer.observability.latency import StageRecorder, StageStamps
 from candleviewer.observability.metrics import CollectorRegistry, Counter
 
 # cv-semgrep: synthetic-feed-test-double — this module is a bounded test
-# double for local/CI development, never the live Bybit ingestion path.
+# double for local/CI development, never the live exchange ingestion path.
 SYNTHETIC_FEED_MARKER = "cv-synthetic-feed-test-double"
 
 _DEFAULT_QUEUE_MAXSIZE = 256
@@ -99,7 +99,7 @@ def load_sample_records(path: Path) -> list[Trade | Ticker]:
 class SyntheticFeedMetrics:
     """Prometheus counters the generator increments on every publish.
 
-    Same counter names the real Bybit ingestion path (E08) will use, so
+    Same counter names the real exchange ingestion path (E08) will use, so
     dashboards built against synthetic data (E04) keep working once real
     ingestion lands (see ticket "Observability" note).
     """

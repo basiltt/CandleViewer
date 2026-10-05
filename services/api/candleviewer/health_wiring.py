@@ -7,12 +7,12 @@ QA #1668. Kept out of `health_probes` so that module stays I/O-free. Probe
 from __future__ import annotations
 
 import asyncio
-import logging
 import os
 import shutil
 from datetime import datetime
 from typing import Any, Protocol
 
+import structlog
 from sqlalchemy import insert, select, text
 
 from candleviewer.bus.models import Topic
@@ -27,8 +27,7 @@ from candleviewer.observability.health_probes import (
     SystemEvent,
 )
 
-# nosemgrep: cv-obs-no-direct-getlogger -- legacy stdlib logger; migrate to cv.obs logger (#1716)
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 _DISK_WARN = 0.90
 _DISK_DOWN = 0.97

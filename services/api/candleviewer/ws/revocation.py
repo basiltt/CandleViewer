@@ -8,16 +8,16 @@ Latency is observed on `auth_revocation_latency_seconds` (alert > 5 s).
 
 from __future__ import annotations
 
-import logging
 import time
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
 from typing import Any
 
+import structlog
+
 from candleviewer.observability.metrics import Counter, Histogram
 
-# nosemgrep: cv-obs-no-direct-getlogger -- legacy stdlib logger; migrate to cv.obs logger (#1716)
-_log = logging.getLogger(__name__)
+_log = structlog.get_logger(__name__)
 CLOSE_TOKEN_EXPIRED = 4401
 
 auth_revocation_latency_seconds = Histogram(
@@ -70,7 +70,7 @@ class RevocationHub:
                 ws_revocation_close_failures_total.inc()
                 _log.error(
                     "ws revocation close failed; revoked socket may remain open",
-                    extra={"session_id": session_id},
+                    session_id=session_id,
                     exc_info=True,
                 )
         if closers:

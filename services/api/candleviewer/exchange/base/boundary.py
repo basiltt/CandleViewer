@@ -4,10 +4,10 @@ that is not already a member of the internal `ExchangeError` taxonomy is
 re-raised as `UnknownStateError`, chaining the original as `__cause__`, and
 increments `exchange_errors_total{class="UNKNOWN_STATE"}`.
 
-Adapters (`exchange/bybit/`, future exchanges) call `translate_exchange_error`
+Adapters (the exchange adapter, future exchanges) call `translate_exchange_error`
 from their own except-clauses once they have exhausted their retCode
 mapping table; this module holds only the *fallback*, generic behaviour —
-the Bybit-specific mapping table itself is out of scope for this ticket
+exchange-specific mapping table itself is out of scope for this ticket
 (E08-T02).
 """
 

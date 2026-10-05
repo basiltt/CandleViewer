@@ -14,9 +14,9 @@ exchange (ticket "Cache hit" scenario).
 
 Backfilling missing history (the exchange fetch itself) is intentionally
 **out of scope for this endpoint** in the fake/CI-default storage backend:
-`KlineBackfillService` needs a live `KlineFetcher` (`exchange.bybit`, not
-yet implemented — E08-T02 is still a scaffold, see `exchange/bybit/
-service.py`), so until that adapter exists this route serves cache-only
+`KlineBackfillService` needs a live `KlineFetcher` (the exchange adapter, not
+yet implemented — E08-T02 is still a scaffold, see the adapter's
+`service.py`), so until that adapter exists this route serves cache-only
 reads and reports the request's coverage holes in `meta` rather than
 silently pretending the exchange was consulted. Once E08-T02 lands, wiring
 a real `KlineFetcher` here is a one-line change (mirrors the audit router's
@@ -56,7 +56,7 @@ _REQUIRED_PERMISSION = "marketdata:read"
 _MAX_LIMIT = 5000
 _DEFAULT_LIMIT = 1000
 
-#: Bybit-compatible interval codes, mirrors `22-api-openapi.yaml`'s
+#: exchange-compatible interval codes, mirrors `22-api-openapi.yaml`'s
 #: `KlineInterval` enum — kept as a plain tuple (not an import from
 #: `exchange.base`) so this router never needs an edge into `exchange.*`.
 _VALID_INTERVALS = (

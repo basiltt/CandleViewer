@@ -17,6 +17,10 @@ rules:
       exclude:
         - "services/api/candleviewer/exchange/bybit/**"
         - "packages/protocol/**"
+        # tools/fixtures/ builds and redacts the recorded exchange corpus
+        # (E08-T05, #1847); it must speak the wire vocabulary by design,
+        # exactly like packages/fixtures/** which holds its output.
+        - "tools/fixtures/**"
         - "docs/**"
         - "**/*.md"
         - "**/*.yaml"

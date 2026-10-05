@@ -28,16 +28,16 @@ blocks the gate's own state transition on a full `system` subscriber queue.
 from __future__ import annotations
 
 import asyncio
-import logging
 from collections.abc import Callable
 from typing import Protocol
+
+import structlog
 
 from candleviewer.bus.bus import Bus
 from candleviewer.bus.models import Topic
 from candleviewer.observability.context import spawn
 
-# nosemgrep: cv-obs-no-direct-getlogger -- legacy stdlib logger; migrate to cv.obs logger (#1716)
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 SYSTEM_TOPIC_DOMAIN = "system"
 

@@ -16,7 +16,6 @@ the parent run is gone. No role can update or directly delete a rule event.
 from __future__ import annotations
 
 import json
-import logging
 import time
 import uuid
 from collections.abc import Callable
@@ -24,12 +23,13 @@ from dataclasses import dataclass
 from typing import Any
 
 import sqlalchemy as sa
+import structlog
 
 from candleviewer.storage.repositories.relational_sqlalchemy import (
     SqlAlchemyRelationalRepository,
 )
 
-_log = logging.getLogger(__name__)
+_log = structlog.get_logger(__name__)
 
 #: Non-matched runs (and, by cascade, their events) are dropped after this many days.
 UNMATCHED_RETENTION_DAYS = 7
@@ -195,5 +195,5 @@ class SqlAlchemyRulesRepository:
         elapsed = int((time.monotonic() - started) * 1000)
         if self._on_pruned is not None:
             self._on_pruned(deleted)
-        _log.info("rule_runs retention pruned", extra={"deleted": deleted, "duration_ms": elapsed})
+        _log.info("rule_runs retention pruned", deleted=deleted, duration_ms=elapsed)
         return PruneResult(deleted, elapsed)

@@ -21,6 +21,7 @@ from dataclasses import asdict, dataclass
 
 from candleviewer.bus.bus import Bus
 from candleviewer.bus.models import QueuePolicy, Topic
+from candleviewer.observability import spawn
 
 
 @dataclass(frozen=True)
@@ -56,7 +57,7 @@ async def _run_once(events_per_s: int, n_subscribers: int, duration_s: float = 1
         while True:
             await sub.get()  # type: ignore[attr-defined]
 
-    consumer_tasks = [asyncio.create_task(consume(s)) for s in subs]
+    consumer_tasks = [spawn(consume(s), name="bench-consume") for s in subs]
     try:
         for _ in range(n_events):
             t0 = time.perf_counter()

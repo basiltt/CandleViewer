@@ -14,7 +14,7 @@ from datetime import date
 
 from tools.ci.security_gate import AcceptedRisk, Finding, evaluate_findings
 
-# Obviously fake — asserted never to match a real Bybit/AWS/GitHub key shape.
+# Obviously fake — asserted never to match a real exchange/AWS/GitHub key shape.
 # Real key patterns (e.g. `gho_`, `ghp_`, `sk-`) are deliberately NOT used
 # here; this is a synthetic marker string only, per SR-145.
 _DUMMY_SECRET_MARKER = "CV_TEST_DUMMY_SECRET_DO_NOT_USE_0000000000"
