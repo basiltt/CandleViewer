@@ -1,3 +1,4 @@
+# ruff: noqa: RUF001  (look-alike unicode is the point of these tests)
 """E40-T02: notify-only alert compiler - accept/reject matrix, triggers, hash, templates."""
 
 from __future__ import annotations
@@ -154,6 +155,35 @@ def test_compile_oversized_tree_rejected_as_too_large() -> None:
         deep = {"node_id": f"t{i}", "op": "sustained_for", "child": deep, "window_ms": 1000}
     assert reject(price_cross(conditions=deep)).reason == "too_large"
     assert MAX_NODES >= 100
+
+
+@pytest.mark.parametrize(
+    "trigger",
+    [
+        {"type": "on_bar_close", "timeframe": "1٣m"},
+        {"type": "on_bar_close", "timeframe": "9999w"},
+        {"type": "on_bar_close", "timeframe": "7m"},
+        {"type": "on_schedule", "cron": "٠ 9 * * 1-5"},
+        {"type": "on_schedule", "cron": "0 9 * * 1-٥"},
+    ],
+)
+def test_trigger_non_ascii_digits_and_unsupported_timeframe_rejected(
+    trigger: dict[str, Any],
+) -> None:
+    assert reject(price_cross(trigger=trigger)).reason == "bad_trigger"
+
+
+def test_oversized_children_list_is_too_large_not_action_node() -> None:
+    kids = [{"bogus": 1}] * (MAX_NODES + 88)
+    raw = price_cross(conditions={"node_id": "r", "op": "all_of", "children": kids})
+    assert reject(raw).reason == "too_large"
+
+
+@pytest.mark.parametrize("key", ["actions", "Actions", "ａctions", "actions​"])
+def test_lookalike_actions_key_inside_operand_rejected(key: str) -> None:
+    raw = price_cross()
+    raw["conditions"]["left"][key] = [{"type": "place_order"}]
+    assert reject(raw).reason == "action_node"
 
 
 # ----- node-kind enumeration (ticket: adding an E35 kind must fail E40 tests) ---------------

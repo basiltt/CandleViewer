@@ -60,6 +60,7 @@ class AlertRepository(Protocol):
         self,
         *,
         owner_user_id: str,
+        alert_id: str | None = ...,
         name: str,
         condition_ir: dict[str, Any],
         condition_hash: str,

@@ -7,6 +7,7 @@ from typing import Any
 
 import pytest
 from _alert_api_env import PRICE_CROSS, USER_B, Env
+from fastapi.testclient import TestClient
 
 ACTION = {"node_id": "a1", "type": "place_order", "params": {"side": "buy", "qty": "1"}}
 
@@ -24,7 +25,7 @@ def test_create_price_cross_201_hash_enabled_audited(env: Env) -> None:
     assert len(body["condition_hash"]) == 64 and body["enabled"] is True
     assert body["estimated_metrics"] == [] and body["webhook_url"] is None
     assert r.headers["etag"] == f'"{env.repo.rows[body["id"]].etag}"'
-    assert env.audit.actions() == ["alerts.create"]
+    assert env.audit.actions() == ["alert.created"]
     assert env.audit.calls[0][1]["object_id"] == body["id"] and env.compiles == [None]
 
 
@@ -91,7 +92,7 @@ def test_put_with_stale_etag_412_and_not_applied(env: Env) -> None:
     )
     assert second.status_code == 412 and second.json()["code"] == "version_conflict"
     assert env.c.get(f"/alerts/{a['id']}").json()["name"] == "one"
-    assert env.audit.actions() == ["alerts.create", "alert.updated"]
+    assert env.audit.actions() == ["alert.created", "alert.updated"]
 
 
 def test_put_garbage_etag_412_and_missing_etag_is_last_write_wins(env: Env) -> None:
@@ -132,3 +133,19 @@ def test_create_template_outside_allow_list_422(env: Env, tpl: str) -> None:
     r = env.c.post("/alerts", json=PRICE_CROSS | {"message_template": tpl})
     assert r.status_code == 422 and "message_template" == r.json()["errors"][0]["field"]
     assert tpl.strip("{}") in r.json()["errors"][0]["message"] and env.repo.rows == {}
+
+
+def test_audit_write_failure_means_no_state_change(env: Env) -> None:
+    a = env.create()
+    snapshot = dict(env.repo.rows)
+
+    async def boom(action: str, **kw: Any) -> None:
+        raise RuntimeError("audit down")
+
+    env.audit.emit = boom  # type: ignore[method-assign]
+    c = TestClient(env.c.app, raise_server_exceptions=False)
+    assert c.post("/alerts", json=PRICE_CROSS | {"name": "new"}).status_code == 500
+    assert c.put(f"/alerts/{a['id']}", json=PRICE_CROSS | {"name": "ren"}).status_code == 500
+    assert c.put(f"/alerts/{a['id']}/enabled", json={"enabled": False}).status_code == 500
+    assert c.delete(f"/alerts/{a['id']}").status_code == 500
+    assert env.repo.rows == snapshot and a["id"] not in env.repo.deleted

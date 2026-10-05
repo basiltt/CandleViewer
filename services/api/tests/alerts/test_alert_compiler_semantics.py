@@ -1,3 +1,4 @@
+# ruff: noqa: RUF001  (look-alike unicode is the point of these tests)
 """E40-T02: metric resolution, estimated flag, shared condition_hash and template allow-list."""
 
 from __future__ import annotations
@@ -137,3 +138,39 @@ def test_template_outside_allow_list_rejected_naming_placeholder(tpl: str) -> No
         validate_template(tpl)
     assert exc.value.reason == "bad_template"
     assert exc.value.issues[0].field == "message_template"
+
+
+@pytest.mark.parametrize(
+    "tpl",
+    [
+        "{{position.account.apikey}}",
+        "{{position.exchange_account.api_key_id}}",
+        "{{alert.owner.email}}",
+        "{{position.account_id}}",
+        "{{market.last_price.__class__}}",
+        "{{{market.last_price}}}",
+        "{{ {{market.last_price}} }}",
+        "{{market.last_price!r}}",
+        "{{market.last_price:>{width}}}",
+        "{{market.last_price\n}}",
+        "{{market.\nlast_price}}",
+        "{{market.lаst_price}}",
+        "{{market.ｌast_price}}",
+        "{{market.last_price​}}",
+    ],
+)
+def test_template_secret_nested_and_trick_placeholders_rejected(tpl: str) -> None:
+    with pytest.raises(AlertIrInvalid) as exc:
+        validate_template(tpl)
+    assert exc.value.reason == "bad_template"
+
+
+def test_template_context_derived_from_condition_metrics() -> None:
+    assert validate_template("{{footprint.sell_stack_size}} {{market.price}}")
+    with pytest.raises(AlertIrInvalid):
+        validate_template("{{market.some_metric}}")
+    assert validate_template("{{market.some_metric}}", ("some_metric",)) == ("market.some_metric",)
+    for name in ("symbol", "last", "bid", "ask", "mark", "funding_rate"):
+        assert validate_template("{{market." + name + "}}")
+    for name in ("side", "size", "entry", "unrealised_pnl", "leverage", "liquidation_price"):
+        assert validate_template("{{position." + name + "}}")

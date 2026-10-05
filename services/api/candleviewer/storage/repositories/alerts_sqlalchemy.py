@@ -178,6 +178,7 @@ class SqlAlchemyAlertRepository:
         self,
         *,
         owner_user_id: str,
+        alert_id: str | None = None,
         name: str,
         condition_ir: dict[str, Any],
         condition_hash: str,
@@ -194,7 +195,7 @@ class SqlAlchemyAlertRepository:
         message_template: str = "",
     ) -> AlertRow:
         params: dict[str, Any] = {
-            "id": str(uuid.uuid4()),
+            "id": alert_id or str(uuid.uuid4()),
             "owner": owner_user_id,
             "name": name,
             "symbol": symbol,

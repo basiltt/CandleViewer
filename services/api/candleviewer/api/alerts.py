@@ -18,7 +18,7 @@ import time
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime
 from typing import Annotated, Any, Literal
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.responses import JSONResponse
@@ -228,7 +228,7 @@ def make_alerts_router(
         started = time.perf_counter()
         try:
             compiled = d.compiler().compile(body.condition_ir)
-            validate_template(body.message_template)
+            validate_template(body.message_template, compiled.metrics)
         except AlertIrInvalid as exc:
             d.on_compile(time.perf_counter() - started, exc.reason)
             raise _Problem(422, "rule_ir_invalid",
@@ -277,11 +277,17 @@ def make_alerts_router(
     @router.post("/alerts")
     async def create_alert(request: Request, actor: Annotated[Actor, Depends(writer)]) -> Response:
         body, compiled = await parse(request, actor)
+        alert_id = str(uuid4())
+        # Write-ahead (C-2.9): the audit record lands first; if it fails nothing is persisted.
+        await d.emit("alert.created", actor, alert_id, after_state={
+            "name": body.name, "condition_hash": compiled.condition_hash,
+            "enabled": body.enabled, "channels": list(body.channels)})  # fmt: skip
         try:
-            row = await d.store().create(owner_user_id=actor.user_id, **fields(body, compiled))
+            row = await d.store().create(
+                owner_user_id=actor.user_id, alert_id=alert_id, **fields(body, compiled)
+            )
         except AlertNameTakenError:
             raise name_taken() from None
-        await d.emit("alerts.create", actor, row.id, after_state=_audit_view(row))
         return d.respond(row, 201, estimated_metrics=list(compiled.estimated_metrics))
 
     @router.get("/alerts/{alertId}")
@@ -299,6 +305,12 @@ def make_alerts_router(
         except ValueError:
             raise _stale() from None
         body, compiled = await parse(request, actor)
+        if if_match != row.updated_at:  # stale: refuse before auditing (store re-checks atomically)
+            raise _stale()
+        await d.emit("alert.updated", actor, row.id, before_state=_audit_view(row),
+                     after_state={"name": body.name, "condition_hash": compiled.condition_hash,
+                                  "enabled": body.enabled,
+                                  "channels": list(body.channels)})  # fmt: skip
         try:
             new = await d.store().update(
                 row.id, if_match=if_match, **update_fields(body, compiled, row)
@@ -307,16 +319,14 @@ def make_alerts_router(
             raise _stale() from None
         except AlertNameTakenError:
             raise name_taken() from None
-        await d.emit("alert.updated", actor, row.id, before_state=_audit_view(row),
-                     after_state=_audit_view(new))  # fmt: skip
         return d.respond(new, estimated_metrics=list(compiled.estimated_metrics))
 
     @router.delete("/alerts/{alertId}")
     async def delete_alert(got: Annotated[tuple[Actor, AlertRow], Depends(owned_w)]) -> Response:
         actor, row = got
+        await d.emit("alert.deleted", actor, row.id, before_state={"name": row.name})
         if not await d.store().soft_delete(row.id):
             raise _not_found()
-        await d.emit("alert.deleted", actor, row.id, before_state={"name": row.name})
         return Response(status_code=204)
 
     @router.put("/alerts/{alertId}/enabled")
@@ -329,11 +339,12 @@ def make_alerts_router(
         except (ValueError, ValidationError):
             raise _Problem(422, "validation_failed", "Invalid body",
                            "Body must be {\"enabled\": true|false}.") from None  # fmt: skip
+        await d.emit("alert.enabled" if body.enabled else "alert.disabled", actor, row.id,
+                     before_state={"enabled": row.enabled},
+                     after_state={"enabled": body.enabled})  # fmt: skip
         new = await d.store().set_enabled(row.id, body.enabled)
         if new is None:
             raise _not_found()
-        await d.emit("alert.enabled_changed", actor, row.id, before_state={"enabled": row.enabled},
-                     after_state={"enabled": new.enabled})  # fmt: skip
         return d.respond(new)
 
     return router

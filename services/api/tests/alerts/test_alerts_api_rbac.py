@@ -63,7 +63,12 @@ def test_lifecycle_soft_delete_frees_unique_name(env: Env) -> None:
     assert env.c.delete(f"/alerts/{a['id']}").status_code == 404
     again = env.create()
     assert again["id"] != a["id"] and again["name"] == PRICE_CROSS["name"]
-    assert env.audit.actions() == ["alerts.create", "alert.deleted", "alerts.create"]
+    assert env.audit.actions() == [
+        "alert.created",
+        "alert.created",  # write-ahead: the refused duplicate attempt is audited too
+        "alert.deleted",
+        "alert.created",
+    ]
 
 
 def test_put_rename_onto_existing_name_409(env: Env) -> None:
@@ -78,7 +83,7 @@ def test_enabled_toggle_audited_with_before_after(env: Env) -> None:
     r = env.c.put(f"/alerts/{a['id']}/enabled", json={"enabled": False})
     assert r.status_code == 200 and r.json()["enabled"] is False
     action, kw = env.audit.calls[-1]
-    assert action == "alert.enabled_changed"
+    assert action == "alert.disabled"
     assert kw["before_state"] == {"enabled": True} and kw["after_state"] == {"enabled": False}
     assert env.c.put(f"/alerts/{a['id']}/enabled", json={"enabled": 1, "x": 2}).status_code == 422
     assert env.c.put(f"/alerts/{a['id']}/enabled", content=b"{").status_code == 422

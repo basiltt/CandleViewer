@@ -411,6 +411,28 @@ CATALOGUE: Final[tuple[MetricSpec, ...]] = (
     ),
     # --- Rules / gateway / OMS ---------------------------------------------
     _s(
+        "cv_alert_compile_rejected_total",
+        "counter",
+        "rejections",
+        ("reason",),
+        "Alert compiles refused, by reason.",
+        "action_node > 0 (security review)",
+        _P,
+        "E40",
+        max_series=8,
+    ),
+    _s(
+        "cv_alert_compile_seconds",
+        "histogram",
+        "seconds",
+        (),
+        "Alert compile + validate time.",
+        "p95 > 0.3s",
+        _P,
+        "E40",
+        buckets=(0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 1.0),
+    ),
+    _s(
         "cv_rule_prefilter_rejection_ratio",
         "gauge",
         "ratio",

@@ -67,21 +67,33 @@ PERMITTED_KINDS: dict[str, frozenset[str]] = {
     "limits": frozenset(RuleLimits.model_fields),
 }
 _SCALAR = (str, int, float, bool, type(None))
-_TF = re.compile(r"^[1-9]\d{0,3}[smhdw]$")
+#: Supported bar timeframes (the bar-close set); anything else, e.g. 9999w, is a 422.
+TIMEFRAMES = frozenset({"1m", "3m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "12h", "1d", "1w"})
 _CRON_FIELDS = ((0, 59), (0, 23), (1, 31), (1, 12), (0, 7))
-_CRON_ATOM = re.compile(r"^(\*|\d{1,2}(-\d{1,2})?)(/\d{1,2})?$")
+_CRON_ATOM = re.compile(r"^(\*|[0-9]{1,2}(-[0-9]{1,2})?)(/[0-9]{1,2})?$", re.ASCII)
 _NOTIFY = Action(
     node_id="__alert_notify",
     type="send_notification",
     params={"channel": "in_app", "severity": "info", "template": ""},
 )
 _PLACEHOLDER = re.compile(r"\{\{(.*?)\}\}", re.DOTALL)
-_PLACEHOLDER_NAME = re.compile(r"^(market|footprint|position|alert)(\.[a-z][a-z0-9_]{0,48}){1,3}$")
-#: Segments that could name a secret-bearing field; refused even inside an allowed namespace.
-_SECRET_SEGMENTS = frozenset(
-    {"key", "api_key", "secret", "token", "password", "signature", "webhook", "webhook_url",
-     "webhook_secret", "dek", "kek", "credentials", "session"}
-)  # fmt: skip
+#: Explicit allow-list of leaf names per namespace (never a deny-list: it fails open). Shared
+#: with the future renderer's context. No account/api/key/email/owner/webhook field exists here.
+TEMPLATE_FIELDS: dict[str, frozenset[str]] = {
+    "market": frozenset({
+        "symbol", "last", "last_price", "price", "bid", "ask", "mark", "mark_price", "index",
+        "index_price", "funding_rate", "open_interest", "volume_24h", "change_24h_pct",
+    }),
+    "footprint": frozenset({
+        "delta", "volume", "poc", "imbalance", "cvd", "buy_volume", "sell_volume",
+        "sell_stack_size", "buy_stack_size", "timeframe",
+    }),
+    "position": frozenset({
+        "side", "size", "entry", "entry_price", "unrealised_pnl", "leverage", "liquidation_price",
+    }),
+    "alert": frozenset({"name", "id", "triggered_at", "condition_summary", "severity"}),
+}  # fmt: skip
+_SEGMENT = re.compile(r"^[a-z][a-z0-9_]{0,48}$", re.ASCII)
 _VARIABLE_NAME = re.compile(r"^[a-z][a-z0-9_]{0,48}$")
 
 
@@ -153,6 +165,8 @@ class _Walker:
             if not isinstance(kids, list):
                 _not_permitted(f"{path}.children", "Expected a list of conditions.", nid)
                 return
+            if len(kids) > MAX_NODES:  # size, not an action: keep the rejection label honest
+                self.enter(path, MAX_DEPTH + 1, nid)
             for i, ch in enumerate(kids):
                 self.condition(ch, f"{path}.children[{i}]", depth + 1, nid)
         elif op in TEMPORAL_OPS:
@@ -201,7 +215,7 @@ def _cron_ok(expr: str) -> bool:
         for atom in f.split(","):
             if not _CRON_ATOM.match(atom):
                 return False
-            nums = [int(n) for n in re.findall(r"\d+", atom.split("/")[0])]
+            nums = [int(n) for n in re.findall(r"[0-9]+", atom.split("/")[0])]
             step = atom.split("/")[1] if "/" in atom else "1"
             if any(not lo <= n <= hi for n in nums) or int(step) == 0:
                 return False
@@ -212,7 +226,7 @@ def _cron_ok(expr: str) -> bool:
 
 def _check_trigger(c: AlertCondition, registry: MetricRegistry) -> None:
     t = c.trigger
-    if t.type == "on_bar_close" and not _TF.match(t.timeframe or ""):
+    if t.type == "on_bar_close" and (t.timeframe or "") not in TIMEFRAMES:
         _reject("bad_trigger", "trigger.timeframe", "bad_trigger",
                 "A bar-close alert needs a timeframe such as 1m, 5m, 1h or 1d.", None)  # fmt: skip
     if t.type == "on_schedule" and not _cron_ok(t.cron or ""):
@@ -263,15 +277,25 @@ def _schema_issues(exc: ValidationError) -> list[AlertIssue]:
     return out
 
 
-def validate_template(template: str) -> tuple[str, ...]:
-    """Every ``{{placeholder}}`` must sit in an allow-listed namespace; returns the names."""
+def _placeholder_ok(name: str, metrics: frozenset[str]) -> bool:
+    ns, dot, leaf = name.partition(".")
+    if not dot or ns not in TEMPLATE_FIELDS or not _SEGMENT.match(leaf):
+        return False  # exactly <namespace>.<leaf>: no deeper paths, no unicode, no whitespace
+    # Context derived from the condition: metrics it references are available as market/footprint.
+    return leaf in TEMPLATE_FIELDS[ns] or (ns in ("market", "footprint") and leaf in metrics)
+
+
+def validate_template(template: str, metrics: tuple[str, ...] = ()) -> tuple[str, ...]:
+    """Every ``{{placeholder}}`` must be an allow-listed ``namespace.field`` (or a metric the
+    compiled condition references); returns the names. Only spaces/tabs may pad the name."""
+    allowed_metrics = frozenset(metrics)
     names: list[str] = []
     for m in _PLACEHOLDER.finditer(template):
-        name = m.group(1).strip()
-        segs = name.split(".")
-        if not _PLACEHOLDER_NAME.match(name) or _SECRET_SEGMENTS.intersection(segs[1:]):
+        raw = m.group(1)
+        name = raw.strip(" \t")  # a newline or any other char inside a placeholder is refused
+        if not _placeholder_ok(name, allowed_metrics):
             _reject("bad_template", "message_template", "placeholder_not_allowed",
-                    f"Placeholder '{{{{{name[:60]}}}}}' is not allowed. Use market.*, "
+                    f"Placeholder '{{{{{raw[:60]}}}}}' is not allowed. Use market.*, "
                     "footprint.*, position.* or alert.* values.", None)  # fmt: skip
         names.append(name)
     rest = _PLACEHOLDER.sub("", template)

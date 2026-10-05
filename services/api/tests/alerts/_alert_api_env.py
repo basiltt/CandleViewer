@@ -61,12 +61,14 @@ class FakeAlertRepo:
             if r.id not in self.deleted
         )
 
-    async def create(self, *, owner_user_id: str, **f: Any) -> AlertRow:
+    async def create(
+        self, *, owner_user_id: str, alert_id: str | None = None, **f: Any
+    ) -> AlertRow:
         if self._taken(owner_user_id, f["name"]):
             raise AlertNameTakenError(f["name"])
         now = self._now()
         row = AlertRow(
-            id=str(uuid.uuid4()),
+            id=alert_id or str(uuid.uuid4()),
             owner_user_id=owner_user_id,
             cooldown_seconds=60,
             snoozed_until=None,

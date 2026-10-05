@@ -82,10 +82,12 @@ AUDIT_ACTIONS: frozenset[str] = frozenset(
         "rules.version_create",
         "rules.simulate",
         "rules.delete",
-        "alerts.create",
-        # E40-T02: every alert mutation and every cross-user denial is audited.
+        # E40-T02: every alert mutation and every cross-user denial is audited (one
+        # `alert.<past-tense>` convention so prefix queries see them all).
+        "alert.created",
         "alert.updated",
-        "alert.enabled_changed",
+        "alert.enabled",
+        "alert.disabled",
         "alert.deleted",
         "alert.denied",
         "recorder.start",
