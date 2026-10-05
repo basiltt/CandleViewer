@@ -64,6 +64,9 @@ def test_architecture_metric_labels_match_catalogue() -> None:
 def test_alert_rules_resolve_to_runbook_anchors_and_policy_severities() -> None:
     prr = (PLAN / "07-release-and-prr.md").read_text(encoding="utf-8")
     anchors = set(re.findall(r'<a id="([^"]+)"', prr))
+    # E08-T06: the ingestion alert set links docs/ops/ingestion.md (20-architecture §12.5).
+    ops = (ROOT / "docs" / "ops" / "ingestion.md").read_text(encoding="utf-8")
+    anchors |= set(re.findall(r'<a id="([^"]+)"', ops))
     rules = list((ROOT / "infra" / "prometheus" / "alerts").glob("*.y*ml"))
     assert rules, "no alert rule files found"
     bad: list[str] = []

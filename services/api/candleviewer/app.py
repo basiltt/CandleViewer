@@ -103,6 +103,7 @@ from candleviewer.ingestion.book_supervisor import B14BookSupervisor
 from candleviewer.ingestion.clock import ClockGuard, ServerTimeFetcher, rest_client_fetcher
 from candleviewer.ingestion.connection import MAX_FRAME_BYTES, ConnectionManager
 from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
+from candleviewer.ingestion.metrics import export_ingestion_metrics, ingest_enabled
 from candleviewer.ingestion.planner import SubscriptionPlanner
 from candleviewer.ingestion.reconnect import ConnectionRateGuard, ReconnectPolicy
 from candleviewer.ingestion.service import IngestionService
@@ -798,6 +799,12 @@ def create_app(
     # Process collectors read /proc; the lifespan adds them (no I/O here).
     metrics_facade = Metrics(resolved.environment.value, registry=ctx.metrics)
     app.state.metrics_facade = metrics_facade
+    # E08-T06: serve the declared ingestion/adapter series on the scraped
+    # registry with consistent `env` + `exchange` labels (the venue name is
+    # owned by the adapter, C-2.2).
+    app.state.ingestion_metrics = export_ingestion_metrics(
+        ctx.metrics, env=resolved.environment.value, exchange=ctx.exchange_bybit.venue
+    )
     # E40-T01: alert_deliveries retention purge + alert gauges (lifespan-started).
     _alert_pg = SqlAlchemyRelationalRepository(resolved.pg_dsn.get_secret_value(), "alerts")
     _retention = RetentionSchedule.from_settings(resolved)
@@ -1030,6 +1037,7 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
         env=env,
     )
     ctx.ingestion.attach_ws(manager)
+    ingest_enabled.set(1.0)  # silent-death meta-alert keys on this (E08-T06)
     # E04-T06: measure the exchange clock offset (public /v5/market/time, no
     # credentials) so the exchange latency stage is available; started and
     # stopped with ingestion. Public data always uses the live host (demo has

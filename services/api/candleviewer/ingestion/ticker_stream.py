@@ -29,8 +29,9 @@ from candleviewer.domain.primitives import EventId
 from candleviewer.exchange.base.models import TickerEvent
 from candleviewer.exchange.base.ticker_delta import TICKER_FIELDS, TickerDelta
 from candleviewer.ingestion.metrics import (
-    ingest_events_total,
+    count_event,
     ingest_lag_seconds,
+    symbol_label,
     ticker_merge_incomplete_total,
     ticker_writes_dropped_total,
     ws_topic_staleness_seconds,
@@ -87,7 +88,7 @@ class TickerMerger:
         state = self._state.setdefault(delta.symbol, {})
         state.update(delta.fields)  # present keys only; absent == unchanged
         if not REQUIRED_FIELDS <= state.keys():
-            ticker_merge_incomplete_total.labels(symbol=delta.symbol).inc()
+            ticker_merge_incomplete_total.labels(symbol=symbol_label(delta.symbol)).inc()
             return None
         values: dict[str, Decimal | int | None] = {f: state.get(f) for f in TICKER_FIELDS}
         return TickerEvent.model_validate(
@@ -194,7 +195,7 @@ class TickerStream:
         sym = delta.symbol
         self._touch(self._topic_for(sym))
         self._last_msg[sym] = self._clock()
-        ingest_events_total.labels(stream="ticker", symbol=sym).inc()
+        count_event("ticker", sym)
         if self._raw_sink is not None:
             self._raw_sink(delta)  # raw delta for the recorder, never the merged view
         was = self._phase.get(sym)

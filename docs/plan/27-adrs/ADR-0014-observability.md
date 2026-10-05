@@ -118,3 +118,28 @@ No change to the alerting, dashboard, logging or health-check sections of this A
 | Logging         | structlog JSON with redaction                    | As decided                                                                                                                                                                                                         | None                                                                                 |
 
 Residual items: the K01 absolute overhead numbers still need a re-run on the reference VPS profile; the three-runbook literal-execution review needs a non-author and a staging stack (not available to the delivery agent) and is tracked on the PR.
+
+## Addendum (2026-10-05) — E08-T06 ingestion observability
+
+- **Registry.** Ingestion and adapter series are declared once in
+  `services/api/candleviewer/ingestion/metrics.py` (`SPECS`); layers that may not import ingestion
+  (`exchange.base`, `exchange.bybit`, `bus`) instantiate their declared series and a registry test fails
+  on any undeclared / duplicated / orphaned / drifted name. The E04 catalogue still owns the
+  platform-wide names; the dashboard lint reads both.
+- **Scrape gap closed.** These module-level series lived only on the library default registry, which
+  `/metrics` does not serve. `export_ingestion_metrics` re-exports exactly the declared set onto the
+  scraped registry with constant `env` + `exchange` labels (`ReexportCollector`).
+- **Cardinality.** Symbol label values are bounded (`symbol_label`: configured set or a 32-symbol cap,
+  overflow `other`, malformed input never a label); `bybit_rate_limit_remaining` lost its `uid` label.
+- **Board + alerts.** Seventh dashboard **CV / Ingestion** (`cv-ingestion`); alert set
+  `infra/prometheus/alerts/ingestion.yml` whose runbook is `docs/ops/ingestion.md` (cross-checked both
+  ways), incl. the silent-death meta-alert `IngestionStoppedReporting`.
+- **Overhead.** Trade-path instrumentation measured ≈ 0.7–3 µs/event in a clean interpreter (host
+  load dominates the spread), ≤ 1.5 % of one core at 5 000 ev/s; asserted < 2 % in CI. Same caveat as
+  K01: dev workstation, not the reference VPS profile.
+- **ADR-0016 deliberately not amended.** The ticket asked to amend ADR-0016 with the soak numbers.
+  The harness exercises only hot-path code that ADR-0016 excludes from statecharts (bus publish,
+  `BookState.apply`), so its numbers say nothing about the interpreter. ADR-0016's standing item —
+  `cv_machine_live_count{kind}` flat across a 24 h soak — stays **unmeasured** until the 24 h demo run
+  with B13/B14 wired (owner exception #1778 A). Only consistent figure: book apply p95 0.011 ms at
+  depth 200, in line with ADR-0016's "15–60 µs of real work" hot-path premise.

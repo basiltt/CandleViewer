@@ -21,7 +21,7 @@ __all__ = ["exchange_errors_total", "translate_exchange_error"]
 
 exchange_errors_total = Counter(
     "exchange_errors_total",
-    "Count of exchange errors by internal taxonomy class.",
+    "Exchange errors by taxonomy class.",
     labelnames=("class",),
 )
 

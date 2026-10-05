@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """E04-T05 CI gate: every alert rule has severity page|ticket (Watchdog excepted),
-a component label and a runbook_url whose anchor resolves in docs/plan/07-release-and-prr.md.
+a component label and a runbook_url whose anchor resolves in docs/plan/07-release-and-prr.md
+(or, for the E08-T06 ingestion set, in docs/ops/ingestion.md).
 """
 
 from __future__ import annotations
@@ -15,6 +16,8 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 ALERT_DIR = ROOT / "infra" / "prometheus" / "alerts"
 RUNBOOK = "docs/plan/07-release-and-prr.md"
+#: Additional runbooks an alert may link to (E08-T06).
+EXTRA_RUNBOOKS = ("docs/ops/ingestion.md",)
 SEVERITIES = {"page", "ticket"}
 EXEMPT = {"Watchdog"}
 
@@ -32,7 +35,10 @@ def anchors(text: str) -> set[str]:
 def check(alert_dir: Path = ALERT_DIR, runbook_text: str | None = None) -> list[str]:
     if runbook_text is None:
         runbook_text = (ROOT / RUNBOOK).read_text(encoding="utf-8")
-    known = anchors(runbook_text)
+    known_by = {RUNBOOK: anchors(runbook_text)}
+    for extra in EXTRA_RUNBOOKS:
+        f = ROOT / extra
+        known_by[extra] = anchors(f.read_text(encoding="utf-8")) if f.exists() else set()
     errors: list[str] = []
     for f in sorted(alert_dir.glob("*.yml")):
         doc: dict[str, Any] = yaml.safe_load(f.read_text(encoding="utf-8"))
@@ -52,7 +58,7 @@ def check(alert_dir: Path = ALERT_DIR, runbook_text: str | None = None) -> list[
                     errors.append(f"{name}: missing annotations.runbook_url")
                     continue
                 path, _, anchor = url.partition("#")
-                if path != RUNBOOK or anchor not in known:
+                if anchor not in known_by.get(path, set()):
                     errors.append(f"{name}: runbook_url anchor not found: {url}")
     return errors
 

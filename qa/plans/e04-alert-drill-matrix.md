@@ -35,6 +35,13 @@ Drill windows are recorded in `system_events`; coordinate security-rule drills (
 | OmsRateRejects | ticket | 0m | `docs/plan/07-release-and-prr.md#alert-omsraterejects` | synthetic | | | | | | pending |
 | EgressIpChanged | ticket | 0m | `docs/plan/07-release-and-prr.md#alert-egressipchanged` | synthetic | | | | | | pending |
 | AlertmanagerNotificationsFailed | ticket | 0m | `docs/plan/07-release-and-prr.md#alert-alertmanagernotificationsfailed` | synthetic | | | | | | pending |
+| IngestionTopicStale | ticket | 1m | `docs/ops/ingestion.md#alert-ingestiontopicstale` | synthetic | | | | | | pending |
+| IngestionBookResyncRateHigh | ticket | 5m | `docs/ops/ingestion.md#alert-ingestionbookresyncratehigh` | synthetic | | | | | | pending |
+| IngestionTradeGapUnrecovered | page | 0m | `docs/ops/ingestion.md#alert-ingestiontradegapunrecovered` | synthetic | | | | | | pending |
+| IngestionRateLimitHeadroomExhausted | ticket | 1m | `docs/ops/ingestion.md#alert-ingestionratelimitheadroomexhausted` | synthetic | | | | | | pending |
+| IngestionNeverDropQueueFull | ticket | 5m | `docs/ops/ingestion.md#alert-ingestionneverdropqueuefull` | synthetic | | | | | | pending |
+| IngestionStoppedReporting | page | 5m | `docs/ops/ingestion.md#alert-ingestionstoppedreporting` | synthetic | | | | | | pending |
+| IngestionMetricsAbsent | ticket | 15m | `docs/ops/ingestion.md#alert-ingestionmetricsabsent` | synthetic | | | | | | pending |
 
 ## Execution status and exception request (2026-10-02)
 

@@ -425,6 +425,20 @@ Sources: live accruing rate from `tickers.{symbol}` (`fundingRate`, `nextFunding
 | `FeedHealthEvent`   | derived                            | 1 Hz                | metrics only                   | `sys.md.health`                |
 | `ClockSyncEvent`    | `GET /v5/market/time`              | 60 s                | metrics only                   | `sys.clock`                    |
 
+**As shipped (E08-T06 reconciliation, 2026-10-05).** Bus topics are `{env}.md.{symbol}.{detail}`
+(`bus/models.py` `Topic.key`, e.g. `demo.md.BTCUSDT.trade`), not `md.{detail}.{symbol}` as tabled above;
+the table's family→stream mapping is otherwise unchanged. Implemented today: `trade`, `book`
+(snapshot + delta + `BookStatus`), `ticker`, `gap` (trade-tape `GapEvent`), feed health
+(`{env}.health.feed`). Queue policy is chosen **per subscriber** at `Bus.subscribe` (not per topic):
+trade consumers must subscribe NEVER_DROP (a full queue awaits and counts
+`ingest_queue_full_total{class="trade"}`); state-like consumers use CONFLATE_LATEST or
+INVALIDATE_ON_FULL (§4.2 of `20-architecture.md`). Metric mapping per family (all
+declared in `ingestion/metrics.py`, exported with `env`, `exchange`): trades/tickers →
+`ingest_events_total{stream,symbol}`, `ingest_lag_seconds{stream}`; trade gaps →
+`trade_gaps_total{symbol,recovered}`; books → `ingest_book_live{symbol}`,
+`ingest_book_resyncs_total{symbol,reason}`; feed health → `ws_topic_staleness_seconds{topic}`,
+`ingest_ws_up{socket}`; clock → `exchange_clock_drift_ms`, `clock_offset_age_seconds`.
+
 ---
 
 ## 3. Bar builders
@@ -3010,6 +3024,13 @@ class ExchangeCapabilities(BaseModel):
 6. Adapters own reconnect, resubscribe and heartbeat; consumers see only a continuous event stream plus `FeedHealthEvent`.
 7. Adapters never persist and never touch Postgres. They are pure I/O plus mapping.
 8. All adapter methods are cancellable (`asyncio.CancelledError` propagates cleanly, connections close).
+9. **Adapter metrics (E08-T06).** Adapter series are declared in the ingestion registry
+   (`ingestion/metrics.py`, `owner="exchange.bybit"` / `"exchange.base"`) and instantiated in the
+   adapter (which may not import `ingestion`); a registry test fails on any drift. As shipped:
+   `bybit_rest_requests_total{endpoint,result}`, `bybit_rest_latency_seconds{endpoint}`,
+   `bybit_rate_limit_remaining{scope,endpoint_class}` (`scope` ∈ `public|account` — **never a UID**,
+   which is an account identifier), `bybit_rate_limited_total{code}`, `exchange_errors_total{class}`.
+   Clock thresholds in §14.3 are unchanged: warn > 500 ms, block > 2000 ms (`recv_window/2`).
 
 ### 14.3 Bybit implementation notes
 

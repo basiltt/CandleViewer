@@ -3767,6 +3767,17 @@ class Appearance(BaseModel):
     high_contrast: bool | None = None
 
 
+class Accessibility(BaseModel):
+    reduced_motion: Literal["system", "on", "off"] | None = None
+    increased_contrast: Literal["system", "on", "off"] | None = None
+    disable_canvas_animation: bool | None = None
+    always_show_tables: bool | None = None
+    thick_focus_ring: bool | None = None
+    announce_prices: Literal["off", "significant", "always"] | None = None
+    verbosity: Literal["low", "normal", "high"] | None = None
+    keyboard_only: bool | None = None
+
+
 class Chart(BaseModel):
     default_bar_type: (
         Literal["time", "tick", "volume", "range", "delta", "renko", "pnf", "heikin_ashi"] | None
@@ -3821,6 +3832,10 @@ class FieldMeta(BaseModel):
 
 class Settings(BaseModel):
     appearance: Appearance | None = None
+    accessibility: Annotated[
+        Accessibility | None,
+        Field(description="SCR-117 preferences (E47-S07); closed enums, presentation-only."),
+    ] = None
     chart: Chart | None = None
     orderflow: Orderflow | None = None
     trading: Trading | None = None

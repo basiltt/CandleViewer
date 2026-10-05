@@ -1,0 +1,45 @@
+name: perf-ingestion-nightly
+# E08-T06: ingestion soak (30-minute canary) + 5x burst regression. Recorded-not-gating
+# in R0 (30-release-roadmap 4.4): runs nightly, never on PRs. Synthetic feed only - no
+# network egress to the exchange (C-13.5). The 24 h demo soak is a manual run (exception #1778 A).
+on:
+  schedule:
+    - cron: "37 3 * * *"
+  workflow_dispatch: {}
+permissions:
+  contents: read
+  issues: write
+jobs:
+  ingestion-soak:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CV_ENV: test
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - id: sync
+        run: uv sync --project services/api
+      - name: Soak canary (1800 s virtual, 3 symbols; fails with growth curve on >5 % RSS)
+        id: soak
+        working-directory: services/api
+        run: uv run python bench/ingestion_soak.py soak --duration-s 1800 --out ingestion-soak.json
+      - name: Burst (5x for 60 s; never-drop, backpressure, recovery window)
+        id: burst
+        working-directory: services/api
+        run: uv run python bench/ingestion_soak.py burst --burst-s 60 --out ingestion-burst.json
+      - name: Open ticket on soak/burst regression
+        if: failure() && (steps.soak.outcome == 'failure' || steps.burst.outcome == 'failure') && steps.sync.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --title "perf: ingestion nightly soak/burst regression ($(date -u +%F))" \
+            --label perf --label area/ingestion \
+            --body "perf-ingestion-nightly failed. Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID. Artifact: ingestion-soak-results."
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        if: always()
+        with:
+          name: ingestion-soak-results
+          path: |
+            services/api/ingestion-soak.json
+            services/api/ingestion-burst.json

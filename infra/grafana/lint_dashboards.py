@@ -16,6 +16,7 @@ DASH = Path(__file__).resolve().parent / "dashboards"
 RULES = ROOT / "infra/prometheus"
 CATALOGUE = ROOT / "services/api/candleviewer/observability/metrics_catalogue.py"
 HEALTH = ROOT / "services/api/candleviewer/observability/health_metrics.py"
+INGESTION = ROOT / "services/api/candleviewer/ingestion/metrics.py"
 DATASOURCE_UID = "cv-prometheus"
 #: Metrics exported by Prometheus/Alertmanager/process collectors, not the catalogue.
 EXTERNAL = {
@@ -58,6 +59,11 @@ def catalogue_names() -> set[str]:
         )
     )
     names |= {"build_info", "health_component_state"}
+    # E08-T06: the declaration-first ingestion registry owns the ingestion and
+    # adapter series (`_g("name", ...)` / `_c(...)` / `_h(...)` in SPECS).
+    names |= set(
+        re.findall(r'^\s+_[cgh]\(\s*"(\w+)"', INGESTION.read_text("utf-8"), re.MULTILINE)
+    )
     # Brittle regex scraping must never silently degrade to "everything unknown/known".
     if len(names) < 10:
         raise RuntimeError(
@@ -159,7 +165,7 @@ def lint(dash_dir: Path = DASH, rules_dir: Path = RULES) -> list[str]:
     known = catalogue_names()
     rules = recorded_rules(rules_dir)
     files = sorted(dash_dir.glob("*.json"))
-    errs = [] if len(files) == 6 else [f"expected 6 dashboards, found {len(files)}"]
+    errs = [] if len(files) == 7 else [f"expected 7 dashboards, found {len(files)}"]
     for f in files:
         errs += lint_dashboard(f, known, rules)
     return errs

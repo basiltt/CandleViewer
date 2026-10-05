@@ -1,4 +1,4 @@
-"""Generate the six provisioned Grafana dashboards (E04-S01, ADR-0014 section 3).
+"""Generate the seven provisioned Grafana dashboards (E04-S01, ADR-0014 section 3).
 
 The committed JSON in ``infra/grafana/dashboards`` is the reviewed artefact; this
 generator keeps it deterministic (no volatile ``id``/``version``). Re-run with
@@ -373,6 +373,91 @@ def storage() -> Board:
     return b
 
 
+def ingestion() -> Board:
+    """E08-T06 "Ingestion" board. Series come from the declaration-first
+    registry `services/api/candleviewer/ingestion/metrics.py`. Every state
+    panel shows a numeric/text value (never colour alone, 05-accessibility)."""
+    b = Board("cv-ingestion", "CV / Ingestion", ["ingestion"])
+    b.row("Connection and pipeline")
+    b.stat("Ingestion wired (1 = yes)", f"max(ingest_enabled{{{E}}})", "short")
+    b.stat("Public socket up (1 = open)", f"min(ingest_ws_up{{{E}}})", "short")
+    b.stat("Books LIVE (count)", f"sum(ingest_book_live{{{E}}})", "short")
+    b.stat("Clock drift (ms)", f"max(abs(exchange_clock_drift_ms{{{E}}}))", "ms", 500, 2000)
+    b.row("Event rates and latency")
+    b.ts(
+        "Events/s per stream and symbol",
+        rate("ingest_events_total", "stream, symbol"),
+        "ops",
+        legend="{{stream}} {{symbol}}",
+    )
+    b.ts(
+        "Ingest lag by stream (budget 20 ms)",
+        f"max by (stream) (ingest_lag_seconds{{{E}}})",
+        "s",
+        0.02,
+        0.1,
+        "{{stream}}",
+    )
+    b.ts(
+        "Topic staleness (book 2 s, trades 10 s)",
+        f"max by (topic) (ws_topic_staleness_seconds{{{E}}})",
+        "s",
+        2,
+        10,
+        "{{topic}}",
+    )
+    b.row("Queues and backpressure")
+    b.ts(
+        "Subscriber queue depth",
+        f"max by (subscriber) (bus_subscriber_lag{{{E}}})",
+        "short",
+        2048,
+        4096,
+        "{{subscriber}}",
+    )
+    b.ts(
+        "Never-drop queue full events/s",
+        rate("ingest_queue_full_total", "class"),
+        "ops",
+        legend="{{class}}",
+    )
+    b.ts(
+        "Write-behind queue depth",
+        f"max by (table) (questdb_write_queue_depth{{{E}}})",
+        "short",
+        legend="{{table}}",
+    )
+    b.row("Book health and tape integrity")
+    b.ts(
+        "Book resyncs/min",
+        f"60 * {rate('ingest_book_resyncs_total', 'symbol, reason')}",
+        "short",
+        3,
+        5,
+        "{{symbol}} {{reason}}",
+    )
+    b.ts(
+        "Unrecovered trade gaps per interval",
+        f'sum by (symbol) (increase(trade_gaps_total{{{E},recovered="false"}}[{RI}]))',
+        "short",
+        None,
+        1,
+        "{{symbol}}",
+    )
+    b.row("Exchange REST")
+    b.ts(
+        "Rate-limit headroom",
+        f"min by (scope, endpoint_class) (bybit_rate_limit_remaining{{{E}}})",
+        "short",
+        10,
+        1,
+        "{{scope}} {{endpoint_class}}",
+    )
+    b.ts("REST p95 by endpoint", q("bybit_rest_latency_seconds", "endpoint"), "s", 0.25, 1)
+    b.flush()
+    return b
+
+
 def frontend() -> Board:
     b = Board("cv-frontend", "CV / Frontend", ["frontend"])
     b.row("Getting worse? (SLO burn)")
@@ -404,6 +489,7 @@ BOARDS = {
     "trading": trading,
     "rules": rules,
     "storage": storage,
+    "ingestion": ingestion,
     "frontend": frontend,
 }
 

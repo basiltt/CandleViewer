@@ -108,6 +108,10 @@ def test_promtool_cases_cover_every_new_page_rule() -> None:
         )
     )
     covered = {a["alertname"] for t in doc["tests"] for a in t["alert_rule_test"]}
+    extra = yaml.safe_load(
+        (INFRA / "prometheus" / "tests" / "ingestion_alerts.test.yml").read_text(encoding="utf-8")
+    )
+    covered |= {a["alertname"] for t in extra["tests"] for a in t["alert_rule_test"]}
     page = {r["alert"] for r in _rules() if r["labels"]["severity"] == "page"}
     assert page - {"BybitClockDriftCritical"} <= covered
 

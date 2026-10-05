@@ -1,0 +1,101 @@
+# E08-T06: Ingestion alert set. Runbook: docs/ops/ingestion.md (every alert here
+# has an entry there and vice versa - infra/alertmanager/tests/test_ingestion_alerts.py).
+# Thresholds: 20-architecture.md section 3.1 (staleness book 2 s / trades 10 s),
+# 3.2 (resync breaker 5/60 s), 24-internal-schemas.md section 14.3 (drift 2 s).
+# Clock drift warning/critical stay in clock_sync.yml (E08-S07, already paged).
+groups:
+  - name: ingestion
+    interval: 30s
+    rules:
+      - alert: IngestionTopicStale
+        expr: max by (env, topic) (ws_topic_staleness_seconds) > 10
+        for: 1m
+        labels:
+          severity: ticket
+          component: ingestion
+        annotations:
+          runbook_url: "docs/ops/ingestion.md#alert-ingestiontopicstale"
+          summary: "Market-data topic {{ $labels.topic }} has been stale for over 10 seconds."
+          description: >-
+            No message has arrived on the topic for longer than the trade
+            staleness threshold, so charts for this symbol show old data.
+
+      - alert: IngestionBookResyncRateHigh
+        expr: sum by (env, symbol) (increase(ingest_book_resyncs_total[5m])) > 5
+        for: 5m
+        labels:
+          severity: ticket
+          component: book
+        annotations:
+          runbook_url: "docs/ops/ingestion.md#alert-ingestionbookresyncratehigh"
+          summary: "The order book for {{ $labels.symbol }} resynchronised more than five times in five minutes."
+          description: >-
+            Repeated resyncs mean sequence gaps or frame loss upstream; the
+            book is unavailable to consumers during each resync.
+
+      - alert: IngestionTradeGapUnrecovered
+        expr: sum by (env, symbol) (increase(trade_gaps_total{recovered="false"}[15m])) > 0
+        for: 0m
+        labels:
+          severity: page
+          component: ingestion
+        annotations:
+          runbook_url: "docs/ops/ingestion.md#alert-ingestiontradegapunrecovered"
+          summary: "A trade tape gap for {{ $labels.symbol }} could not be recovered by backfill."
+          description: >-
+            Trades inside the gap window are missing from the tape and the
+            recording; footprint and CVD for that window are incomplete.
+
+      - alert: IngestionRateLimitHeadroomExhausted
+        expr: min by (env, scope, endpoint_class) (bybit_rate_limit_remaining) <= 1
+        for: 1m
+        labels:
+          severity: ticket
+          component: ingestion
+        annotations:
+          runbook_url: "docs/ops/ingestion.md#alert-ingestionratelimitheadroomexhausted"
+          summary: "Exchange rate-limit headroom for {{ $labels.scope }} {{ $labels.endpoint_class }} is exhausted."
+          description: >-
+            The last observed remaining request budget is at or below one;
+            further requests in this class will be rate limited.
+
+      - alert: IngestionNeverDropQueueFull
+        expr: sum by (env, class) (increase(ingest_queue_full_total[5m])) > 0
+        for: 5m
+        labels:
+          severity: ticket
+          component: ingestion
+        annotations:
+          runbook_url: "docs/ops/ingestion.md#alert-ingestionneverdropqueuefull"
+          summary: "The never-drop {{ $labels.class }} queue has been full repeatedly for five minutes."
+          description: >-
+            Nothing is lost - the reader is back-pressured - but sustained
+            backpressure raises ingest lag and risks upstream disconnects.
+
+      - alert: IngestionStoppedReporting
+        expr: >-
+          (max by (env) (ingest_enabled) == 1)
+          unless on (env) (sum by (env) (rate(ingest_events_total[5m])) > 0)
+        for: 5m
+        labels:
+          severity: page
+          component: ingestion
+        annotations:
+          runbook_url: "docs/ops/ingestion.md#alert-ingestionstoppedreporting"
+          summary: "Ingestion is enabled but has reported no market events for five minutes."
+          description: >-
+            Silent-death detector (R6 Feed rot): the pipeline is wired but no
+            stream is producing events, so every chart is frozen.
+
+      - alert: IngestionMetricsAbsent
+        expr: absent(ingest_enabled)
+        for: 15m
+        labels:
+          severity: ticket
+          component: ingestion
+        annotations:
+          runbook_url: "docs/ops/ingestion.md#alert-ingestionmetricsabsent"
+          summary: "The ingestion job has stopped exporting metrics entirely."
+          description: >-
+            Prometheus has no ingest_enabled series: the API process is down,
+            unscraped, or running without the ingestion registry exported.
