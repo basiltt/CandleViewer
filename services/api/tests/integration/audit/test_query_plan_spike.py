@@ -25,6 +25,7 @@ from typing import Any
 
 import psycopg
 import pytest
+from psycopg import sql
 
 from bench.audit_index import ci_spike as cs
 
@@ -106,7 +107,7 @@ def _load(conn: psycopg.Connection[Any]) -> dict[str, Any]:
     """Bulk load with the chain trigger and secondary indexes off (restored after)."""
     conn.execute(cs.seed_users_sql())
     for name in ("ix_audit_time", "ix_audit_actor", "ix_audit_action", "ix_audit_object"):
-        conn.execute(f"DROP INDEX {name}")
+        conn.execute(sql.SQL("DROP INDEX {}").format(sql.Identifier(name)))
     conn.execute("DROP INDEX ix_audit_sev")
     conn.execute("ALTER TABLE audit_log DISABLE TRIGGER trg_audit_chain")
     t0 = time.perf_counter()
@@ -219,7 +220,10 @@ def _cold(report: dict[str, Any]) -> dict[str, Any]:
     ddl = [(n, b) for n, b in cs.CANDIDATES["f_recommended"]]
     with _conn(pg.get_connection_url().replace("postgresql+psycopg2", "postgresql")) as c:
         for n, body in ddl:
-            c.execute(f"CREATE INDEX IF NOT EXISTS {n} ON {body}")
+            c.execute(
+                sql.SQL("CREATE INDEX IF NOT EXISTS {} ON ").format(sql.Identifier(n))
+                + sql.SQL(body)  # type: ignore[arg-type]  # static DDL tuples defined in this module
+            )
         c.execute("CHECKPOINT")
     pg.get_wrapped_container().restart()
     time.sleep(10)  # wait for postgres to accept connections after restart (infra wait)
@@ -333,7 +337,7 @@ def test_audit_query_plan_spike(dsn: str) -> None:
                 conn, SINGLE_FULL if cand == "g_f_gin" else SINGLE_OTHER
             )
             for n, _ in ixs:
-                conn.execute(f"DROP INDEX {n}")
+                conn.execute(sql.SQL("DROP INDEX {}").format(sql.Identifier(n)))
             cs.write_report(REPORT, report)
         report["fulltext"] = _fulltext(conn, with_gin=False)
         cs.write_report(REPORT, report)

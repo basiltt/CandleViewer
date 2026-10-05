@@ -46,6 +46,7 @@ from candleviewer.storage.repositories.rows import TickerRow, TradeRow
 from candleviewer.storage.retention.policy import RetentionPolicy, RetentionRule
 from candleviewer.storage.retention.ports import Partition, Tier
 from candleviewer.storage.retention.reaper import Reaper
+from candleviewer.storage.sql_identifiers import sql_string_literal
 from tests.integration.storage.test_questdb_hot_tier import (
     DDL_DIR,
     _AsyncpgExecutor,
@@ -222,7 +223,8 @@ class _QuestDbPartitionOps:
 
     async def drop(self, part: Partition) -> None:
         name = datetime.fromtimestamp(part.range.start_us / 1e6, UTC).strftime("%Y-%m-%d")
-        await self._conn.execute(f"ALTER TABLE trades DROP PARTITION LIST '{name}'")  # nosec B608 - derived from a datetime
+        stmt = "ALTER TABLE trades DROP PARTITION LIST " + sql_string_literal(name)
+        await self._conn.execute(stmt)
         self.dropped.append(name)
 
 
