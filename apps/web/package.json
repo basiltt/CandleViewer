@@ -12,7 +12,7 @@
     "format": "prettier --write .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "test:cov": "vitest run --coverage",
+    "test:cov": "node -e \"require('node:fs').mkdirSync('coverage/.tmp',{recursive:true})\" && vitest run --coverage",
     "build": "vite build",
     "size": "size-limit",
     "e2e": "playwright test -c e2e/playwright.config.ts",

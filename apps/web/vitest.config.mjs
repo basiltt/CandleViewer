@@ -26,6 +26,9 @@ export default defineConfig({
     include: ["test/**/*.test.{ts,tsx}"],
     coverage: {
       ...vitestPreset.test.coverage,
+      // #1535: do not wipe coverage/ at start (it raced the .tmp writer on a cold
+      // cache); the test:cov script pre-creates coverage/.tmp instead.
+      clean: false,
       include: ["src/**/*.{ts,tsx}"],
       exclude: ["src/main.tsx", "src/**/*.stories.tsx", "src/shell/ShellPort.ts"],
       thresholds: {
