@@ -2,7 +2,7 @@
 """P3/L1 lint (`docs/plan/24-internal-schemas.md` §17.4, `20-architecture.md`
 P3): no exchange-specific vocabulary — `retCode`, `orderLinkId` and other
 exchange camelCase field names — may appear anywhere under `candleviewer/ingestion/`
-or `candleviewer/exchange/` **outside** `candleviewer/exchange/bybit/` (C-2.2).
+or `candleviewer/exchange/` **outside** the adapter package (C-2.2).
 
 Exit codes: 0 clean, 1 violation(s) found (each printed as
 `<path>:<line>: <token>` so CI output names the offending file/line).
@@ -45,6 +45,8 @@ _TOKEN_RE = re.compile(r"\b(?:" + "|".join(re.escape(t) for t in _FORBIDDEN_TOKE
 # which is what acceptance criterion 3 (ticket body) actually guards
 # against for `candleviewer/ingestion/`.
 _PROTECTED_ROOTS = ("candleviewer/ingestion",)
+# The lint's own exempt root must name the adapter path it polices.
+# nosemgrep: cv-adapter-isolation — B5-b, owner @CandleViewer/security, review 2026-12-31
 _EXEMPT_ROOT = "candleviewer/exchange/bybit"
 
 
@@ -69,7 +71,7 @@ def find_violations(services_api_root: Path) -> list[str]:
                 if match:
                     violations.append(
                         f"{rel}:{lineno}: forbidden exchange vocabulary "
-                        f"{match.group(0)!r} outside exchange/bybit/ (P3/L1, "
+                        f"{match.group(0)!r} outside the adapter package (P3/L1, "
                         f"docs/plan/24-internal-schemas.md Sec.17.4)"
                     )
     del candleviewer_root
