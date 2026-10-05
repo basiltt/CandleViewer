@@ -172,6 +172,12 @@ diff` cannot see because they were never tracked. `git add` them in the
   output at all (crashed, mis-configured, or a > 1 non-finding exit code).
   This never passes by default — check the scanner's own step log for a
   setup problem before assuming the codebase is clean.
+- **CI-SEC-006** (unjustified or expired in-source Semgrep suppression): a
+  `# nosemgrep` marker does not clear the gate unless the comment reads
+  `nosemgrep: <rule-id> - <reason>, owner <name|@handle>, review YYYY-MM-DD`
+  with a review date not before today. Fix the comment (name the rule, add
+  owner and a future review date) or fix the code; see
+  `docs/plan/04-security-program.md` 12.2.
 
 ### CI-COV-* — coverage gate (`tools/ci/coverage_gate.py`)
 
@@ -482,6 +488,7 @@ previous entry.
   agent hosts): `gitleaks detect --source . --log-opts="--all" --config .gitleaks.toml --redact -r sweep.json`
   then `gitleaks detect --no-git ...`; record ruleset version, result and per-hit disposition in
   `docs/plan/spikes`-style note. Any real hit: **rotate first** (IR-02, SR-143), then investigate.
+
 ### Sweep record (executed 2026-10-03, gitleaks 8.30.1, ruleset = repo `.gitleaks.toml` on top of defaults)
 
 - Full history (`--log-opts="--all"`, 1037 commits): 16 findings, **0 real credentials**. Dispositions:
@@ -495,16 +502,17 @@ previous entry.
   verified only). First CI run triage ([run 37080326323](https://github.com/basiltt/CandleViewer/actions/runs/37080326323)),
   all `verified=false`, no rotation:
 
-  | Detector | Location (mode) | Hits | Disposition |
-  |---|---|---|---|
-  | Postgres | `test_boot_advisory_lock_unit.py:121,126,141` (fs + git 8e8443cc) | 6 | test vector (dummy `u`/`h`/`d` DSN) |
-  | Postgres | `test_health_probes.py:67` (fs + git edabeaa2) | 2 | test vector (redaction test DSN) |
-  | Postgres | `test_health_report_router.py:71` (fs + git edabeaa2) | 2 | test vector (redaction test DSN) |
-  | Github | `.git/config:12` (fs) | 1 | false positive: checkout's ephemeral job token, runner state |
-  | Github, Postgres | `trufflehog-fs.log:1-2` (fs) | 2 | false positive: scanner self-scan of its own output |
+  | Detector         | Location (mode)                                                   | Hits | Disposition                                                  |
+  | ---------------- | ----------------------------------------------------------------- | ---- | ------------------------------------------------------------ |
+  | Postgres         | `test_boot_advisory_lock_unit.py:121,126,141` (fs + git 8e8443cc) | 6    | test vector (dummy `u`/`h`/`d` DSN)                          |
+  | Postgres         | `test_health_probes.py:67` (fs + git edabeaa2)                    | 2    | test vector (redaction test DSN)                             |
+  | Postgres         | `test_health_report_router.py:71` (fs + git edabeaa2)             | 2    | test vector (redaction test DSN)                             |
+  | Github           | `.git/config:12` (fs)                                             | 1    | false positive: checkout's ephemeral job token, runner state |
+  | Github, Postgres | `trufflehog-fs.log:1-2` (fs)                                      | 2    | false positive: scanner self-scan of its own output          |
 
   Counts by class: test vector 10, false positive 3 (incl. the Postgres self-scan line), REAL 0. Path-specific excludes with
   reasons live in `.trufflehog-exclude`; raw output moved to `$RUNNER_TEMP` so it is never self-scanned.
+
 - A committed secret fails `security_gate.py --tool gitleaks` (CI-SEC-001), whose output and a `::error` annotation cite IR-02.
 - GitHub inventory (`gh api repos/.../actions/secrets|variables|environments`): 0 repository secrets, 0
   variables, 0 environments. CI therefore holds **no production credential** (SR-140). `TURBO_TOKEN`, `PROJECTS_PAT` and
