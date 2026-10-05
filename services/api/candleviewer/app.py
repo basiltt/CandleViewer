@@ -601,11 +601,11 @@ class _RuleCompileTelemetry:
 
     def __init__(self, metrics: Metrics) -> None:
         self._compiles = metrics.counter(
-            "rule_compile_total", "E35-T04 rule compiles", ("editor", "result")
+            "rule_compile_total", "E35-T04 rule compiles", ("kind", "result")
         )
         self._diverged = metrics.counter(
             "rule_roundtrip_divergence_total", "E35-T04 form/graph divergences (high severity)",
-            ("editor",),
+            ("kind",),
         )  # fmt: skip
 
     def on_compile(self, editor: str, result: str) -> None:
@@ -814,7 +814,7 @@ def create_app(
         metrics_facade.gauge(
             "cv_alerts_total",
             "Non-deleted alerts by enabled flag.",
-            ("enabled",),
+            ("state",),
             max_series=2,
         ),
         metrics_facade.gauge("cv_alert_deliveries_pending", "Queued alert deliveries."),
@@ -870,7 +870,7 @@ def create_app(
     # QA defect #1622 blocker: `/market/klines` (E08-S06 core deliverable)
     # was missing entirely — cache-only reads today (`ctx.storage.
     # market_data`); backfilling from the exchange itself is wired once
-    # E08-T02 lands a real `exchange.bybit` adapter (see `api/market.py`
+    # E08-T02 lands a real exchange adapter (see `api/market.py`
     # module docstring). `principal_resolver` stays `None` for the same
     # reason as `make_audit_router` above (no session-verification module
     # wired yet) — every request fails closed with `501`, not with a silent
