@@ -93,6 +93,129 @@ def _app_state_fetched_in_main() -> set[str]:
     return names if has_start else set()
 
 
+_SPAWNERS = {"spawn", "create_task", "start_soon", "add_task", "enter_async_context"}
+
+
+def _name(n: ast.AST) -> str:
+    return n.id if isinstance(n, ast.Name) else ""
+
+
+def _is_app_state(n: ast.expr) -> bool:
+    return isinstance(n, ast.Attribute) and n.attr == "state" and _name(n.value) == "app"
+
+
+def _has_start(obj: Any) -> bool:
+    return callable(getattr(obj, "start", None))
+
+
+def _lifespan_fn() -> ast.AsyncFunctionDef:
+    for node in ast.walk(MAIN_TREE):
+        if isinstance(node, ast.AsyncFunctionDef) and node.name == "_lifespan":
+            return node
+    raise AssertionError("main.py has no _lifespan")
+
+
+def _imports_of(tree: ast.Module) -> dict[str, str]:
+    return {
+        (a.asname or a.name): n.module
+        for n in ast.walk(tree)
+        if isinstance(n, ast.ImportFrom) and n.module
+        for a in n.names
+    }
+
+
+def _components_in(value: ast.AST, imports: dict[str, str], app: Any) -> list[str]:
+    """Origins ('module.Class' / 'app.state.x' / 'ctx.x') of startable objects built/fetched."""
+    out: list[str] = []
+    ctx = app.state.app_context
+    for n in ast.walk(value):
+        if isinstance(n, ast.Call) and _name(n.func) in imports:
+            mod = importlib.import_module(imports[_name(n.func)])
+            cls = getattr(mod, _name(n.func), None)
+            if isinstance(cls, type) and _has_start(cls):
+                out.append(f"{imports[_name(n.func)]}.{_name(n.func)}")
+        elif (
+            isinstance(n, ast.Call)
+            and _name(n.func) == "getattr"
+            and len(n.args) >= 2
+            and _is_app_state(n.args[0])
+            and isinstance(n.args[1], ast.Constant)
+        ):
+            key = str(n.args[1].value)
+            if _has_start(app.state._state.get(key)):
+                out.append(f"app.state.{key}")
+        elif isinstance(n, ast.Attribute) and _name(n.value) == "ctx":
+            if _has_start(getattr(ctx, n.attr, None)):
+                out.append(f"ctx.{n.attr}")
+    return out
+
+
+def _bindings(fn: ast.AsyncFunctionDef, app: Any) -> dict[str, list[str]]:
+    imports = _imports_of(MAIN_TREE)
+    bound: dict[str, list[str]] = {}
+    for node in ast.walk(fn):
+        targets: list[ast.expr] = []
+        value: ast.AST | None = None
+        if isinstance(node, ast.Assign):
+            targets, value = list(node.targets), node.value
+        elif isinstance(node, ast.AnnAssign) and node.value is not None:
+            targets, value = [node.target], node.value
+        elif isinstance(node, ast.withitem) and node.optional_vars is not None:
+            targets, value = [node.optional_vars], node.context_expr
+        if value is None:
+            continue
+        origins = _components_in(value, imports, app)
+        for tgt in targets:
+            if isinstance(tgt, ast.Name):
+                label = tgt.id
+            elif isinstance(tgt, ast.Attribute) and _is_app_state(tgt.value):
+                label = f"app.state.{tgt.attr}"
+            else:
+                continue
+            if origins:
+                bound.setdefault(label, []).extend(origins)
+    return bound
+
+
+def _started_names(fn: ast.AsyncFunctionDef) -> set[str]:
+    started: set[str] = set()
+    for node in ast.walk(fn):
+        if isinstance(node, ast.Call):
+            f = node.func
+            if isinstance(f, ast.Attribute) and f.attr == "start":
+                started.add(_name(f.value) or ast.unparse(f.value))
+            if (isinstance(f, ast.Attribute) and f.attr in _SPAWNERS) or _name(f) in _SPAWNERS:
+                started |= {_name(a) for a in node.args if _name(a)}
+        if isinstance(node, ast.For) and isinstance(node.target, ast.Name):
+            # ``for t in tasks: t.start()`` starts every element of ``tasks``
+            if any(
+                isinstance(c, ast.Call)
+                and isinstance(c.func, ast.Attribute)
+                and c.func.attr == "start"
+                and _name(c.func.value) == node.target.id
+                for c in ast.walk(node)
+            ):
+                started.add(_name(node.iter))
+    return started
+
+
+def _lifespan_unstarted(app: Any) -> list[str]:
+    """Locals/app.state targets bound to a startable object but never started or handed off."""
+    fn = _lifespan_fn()
+    started = _started_names(fn)
+    return sorted(
+        f"{label} (from {', '.join(sorted(set(src)))})"
+        for label, src in _bindings(fn, app).items()
+        if label not in started
+    )
+
+
+def test_every_lifespan_local_component_is_started(app: Any) -> None:
+    allowed = _allowed("lifespan_locals")
+    left = [m for m in _lifespan_unstarted(app) if m.split(" ", 1)[0] not in allowed]
+    assert not left, f"_lifespan builds/fetches startable components but never starts them: {left}"
+
+
 @pytest.fixture(scope="module")
 def app() -> Any:
     return create_app()
