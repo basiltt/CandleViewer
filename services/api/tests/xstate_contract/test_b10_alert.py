@@ -176,3 +176,70 @@ async def test_b10_retry_exhaustion_bindings() -> None:
     await b10.emit_delivery_failure_metric(None, ctx, None, None)
     assert ctx["suppressed_until_us"] == 5
     assert await b10.dispatch_to_channels(None, ctx, None) == {"delivered_channels": ["in_app"]}
+
+
+# --- B10.3 arms reached only through a failing / partial delivery ----------------------
+
+
+async def _failing(_i: Any, _c: dict[str, Any], _e: Any) -> dict[str, Any]:
+    raise RuntimeError("channel down")
+
+
+async def _trace_failing(events: list[dict[str, Any]], monkeypatch: Any) -> list[str]:
+    monkeypatch.setitem(b10.SERVICES, "dispatch_to_channels", _failing)
+    return await _trace(events)
+
+
+async def test_b10_retrying_retry_due_refires(monkeypatch: Any) -> None:
+    got = await _trace_failing([_MET, {"type": "RETRY_DUE"}], monkeypatch)
+    assert got[:3] == ["armed", "retrying", "retrying"]  # RETRY_DUE -> firing -> fails -> retrying
+
+
+async def test_b10_retrying_ack_acknowledges(monkeypatch: Any) -> None:
+    got = await _trace_failing([_MET, {"type": "ACK"}], monkeypatch)
+    assert got == ["armed", "retrying", "acknowledged"]
+
+
+async def test_b10_retrying_bumps_attempts_on_entry(monkeypatch: Any) -> None:
+    monkeypatch.setitem(b10.SERVICES, "dispatch_to_channels", _failing)
+    interp, gw = await _chart()
+    await gw.send("k", _MET, wait=True)
+    await settle()
+    assert _leaf(interp) == "retrying" and interp.context["delivery_attempts"] == 1
+    await interp.stop()
+
+
+async def test_b10_partially_delivered_resolve() -> None:
+    got = await _trace([{**_MET, "channels": []}, {"type": "RESOLVE"}])
+    assert got == ["armed", "partially_delivered", "resolved"]
+
+
+async def test_b10_delivery_failed_ack_after_exhaustion(monkeypatch: Any) -> None:
+    monkeypatch.setitem(b10.SERVICES, "dispatch_to_channels", _failing)
+    interp, gw = await _chart()
+    interp.context["max_delivery_attempts"] = 1
+    await gw.send("k", _MET, wait=True)
+    await settle()
+    assert _leaf(interp) == "retrying"
+    await gw.send("k", {"type": "RETRY_DUE"}, wait=True)
+    await settle()
+    assert _leaf(interp) == "delivery_failed"
+    await gw.send("k", {"type": "ACK"}, wait=True)
+    await settle()
+    assert _leaf(interp) == "acknowledged"
+    await interp.stop()
+
+
+#: (state, event) pairs the traces in this file and the arms above drive.
+_EXERCISED: set[tuple[str, str]] = {
+    ("armed", "CONDITION_MET"), ("armed", "DISABLE"), ("suppressed", "SUPPRESSION_EXPIRED"),
+    ("suppressed", "DISABLE"), ("retrying", "RETRY_DUE"), ("retrying", "ACK"),
+    ("delivered", "ACK"), ("delivered", "RESOLVE"), ("partially_delivered", "ACK"),
+    ("partially_delivered", "RESOLVE"), ("delivery_failed", "ACK"),
+    ("acknowledged", "RESOLVE"), ("disabled", "ENABLE"),
+}  # fmt: skip
+
+
+def test_b10_every_state_event_arm_is_exercised() -> None:
+    declared = {(s, e) for s, node in CHART["states"].items() for e in (node.get("on") or {})}
+    assert declared <= _EXERCISED, sorted(declared - _EXERCISED)
