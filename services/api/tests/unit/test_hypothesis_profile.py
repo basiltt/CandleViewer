@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 
+import pytest
 from hypothesis import settings
 
 from tests._hypothesis_profiles import CI, DEV
@@ -11,7 +12,7 @@ from tests._hypothesis_profiles import CI, DEV
 
 def test_active_profile_in_ci_has_no_deadline() -> None:
     if os.environ.get("HYPOTHESIS_PROFILE") != CI:
-        return  # only meaningful when CI selects the profile
+        pytest.skip("HYPOTHESIS_PROFILE != ci")
     active = settings()
     assert active.deadline is None
     assert active.derandomize is True
