@@ -10,11 +10,13 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import logging
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
+import structlog
+
+from candleviewer.observability import spawn
 from candleviewer.rules.evaluator import (
     Evaluator,
     MetricValue,
@@ -25,7 +27,7 @@ from candleviewer.rules.evaluator.engine import EvaluationResult, scope_instance
 from candleviewer.rules.evaluator.snapshot import Value
 from candleviewer.rules.ir.models import MetricRef, Rule
 
-_log = logging.getLogger(__name__)
+_log = structlog.get_logger(__name__)
 QUEUE_BOUND = 1024
 
 
@@ -79,7 +81,7 @@ class RuleEvaluationRunner:
 
     def start(self) -> None:
         if self._task is None:
-            self._task = asyncio.get_running_loop().create_task(self._run())
+            self._task = spawn(self._run(), name="rule-runner")
 
     async def stop(self) -> None:
         task, self._task = self._task, None

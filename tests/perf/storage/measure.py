@@ -14,6 +14,7 @@ from pathlib import Path
 import duckdb
 
 sys.path.insert(0, str(Path(__file__).parent))
+from candleviewer.observability import spawn
 from candleviewer.storage.models import StreamKind, TimeRange
 from candleviewer.storage.questdb.ilp_writer import IlpWriter
 from candleviewer.storage.questdb.schemas import TRADES_SCHEMA
@@ -23,6 +24,7 @@ from candleviewer.storage.retention.policy import (
 )
 from candleviewer.storage.retention.ports import Partition
 from candleviewer.storage.retention.reaper import Reaper
+from candleviewer.storage.sql_identifiers import checked_identifier, sql_string_literal
 
 from harness import conditions
 
@@ -126,7 +128,7 @@ async def run_ingest(
             max_depth = max(max_depth, w.queue_depth("trades"))
             await asyncio.sleep(0)
 
-    sampler = asyncio.create_task(sample_depth())
+    sampler = spawn(sample_depth(), name="perf-sample-depth")
     t0 = time.perf_counter()
     while time.perf_counter() - t0 < seconds:
         rows = _trade_rows(rng, submitted, batch)
@@ -164,14 +166,15 @@ async def run_ingest(
 
 def _make_parquet_dir(d: Path, files: int, rows_per_file: int, seed: int) -> None:
     con = duckdb.connect()
-    con.execute(f"SELECT setseed({(seed % 1000) / 1000.0})")
+    con.execute("SELECT setseed(?)", [(seed % 1000) / 1000.0])
     for i in range(files):
         lo = i * rows_per_file
-        con.execute(
-            f"COPY (SELECT i::BIGINT ts,'BTCUSDT' symbol,60000+random() price,"
-            f"random() qty FROM range({lo},{lo + rows_per_file}) r(i)) "
-            f"TO '{(d / f'part-{i:05d}.parquet').as_posix()}' (FORMAT PARQUET)"
+        target = sql_string_literal((d / f"part-{i:05d}.parquet").as_posix())
+        stmt = (
+            "COPY (SELECT i::BIGINT ts,'BTCUSDT' symbol,60000+random() price,"
+            "random() qty FROM range(?,?) r(i)) TO " + target + " (FORMAT PARQUET)"
         )
+        con.execute(stmt, [lo, lo + rows_per_file])
     con.close()
 
 
@@ -181,7 +184,7 @@ def _scan_ms(d: Path, repeats: int = 10) -> float:
     best = float("inf")
     for _ in range(repeats):
         t = time.perf_counter()
-        con.execute(f"SELECT count(*), sum(qty) FROM read_parquet('{glob}')").fetchall()
+        con.execute("SELECT count(*), sum(qty) FROM read_parquet(?)", [glob]).fetchall()
         best = min(best, (time.perf_counter() - t) * 1000)
     con.close()
     return best
@@ -191,14 +194,17 @@ def run_cold(seed: int, rows: int = 200_000, small_files: int = 200) -> dict[str
     """Parquet export MB/s and compaction before/after scan time."""
     tmp = Path(tempfile.mkdtemp(prefix="cvcold-"))
     con = duckdb.connect()
-    con.execute(f"SELECT setseed({(seed % 1000) / 1000.0})")
+    con.execute("SELECT setseed(?)", [(seed % 1000) / 1000.0])
     con.execute(
-        f"CREATE TABLE t AS SELECT i::BIGINT ts,'BTCUSDT' symbol,60000+random() price,"
-        f"random() qty FROM range({rows}) r(i)"
+        "CREATE TABLE t AS SELECT i::BIGINT ts,'BTCUSDT' symbol,60000+random() price,"
+        "random() qty FROM range(?) r(i)",
+        [rows],
     )
     out = tmp / "export.parquet"
     t = time.perf_counter()
-    con.execute(f"COPY t TO '{out.as_posix()}' (FORMAT PARQUET, COMPRESSION ZSTD)")
+    target = sql_string_literal(out.as_posix())
+    stmt = "COPY t TO " + target + " (FORMAT PARQUET, COMPRESSION ZSTD)"
+    con.execute(stmt)
     dt = time.perf_counter() - t
     size = out.stat().st_size
     mb_s = size / 1e6 / dt
@@ -324,7 +330,7 @@ async def measure_loop_lag(
             await asyncio.sleep(interval_s)
             lags.append(max(0.0, (time.perf_counter() - t - interval_s) * 1000))
 
-    task = asyncio.create_task(sampler())
+    task = spawn(sampler(), name="perf-sampler")
     await asyncio.sleep(interval_s * 4)
     t0 = time.perf_counter()
     await reaper.run()

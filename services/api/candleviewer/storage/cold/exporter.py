@@ -21,6 +21,7 @@ from typing import Protocol
 import pyarrow as pa
 import structlog
 
+from candleviewer.observability import spawn
 from candleviewer.storage.cold.layout import ColdPaths, DatasetRegistry
 from candleviewer.storage.cold.manifest import (
     ManifestEntry,
@@ -89,8 +90,7 @@ def _fire_hook(name: str) -> None:
 async def _off_loop[T](fn: Callable[..., T], *args: object, **kwargs: object) -> T:
     """`asyncio.to_thread`, but on cancellation wait for the worker thread to
     finish before re-raising, so cleanup never races a still-running write."""
-    # nosemgrep: cv-bare-create-task -- owned+awaited; migrate to cv.obs.spawn (#1716)
-    fut = asyncio.ensure_future(asyncio.to_thread(fn, *args, **kwargs))
+    fut = spawn(asyncio.to_thread(fn, *args, **kwargs), name="cold-exporter-off-loop")
     try:
         return await asyncio.shield(fut)
     except asyncio.CancelledError:
