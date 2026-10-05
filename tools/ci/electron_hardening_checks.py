@@ -44,8 +44,7 @@ SR112_EXACT: dict[str, str] = {
     "form-action": "'none'",
 }
 
-# nosemgrep: cv-adapter-isolation — B5-b, owner @CandleViewer/security, review 2026-12-31
-# SR-119: any exchange host (both vendor domains), incl. regional domains and stream*.bybit.com.
+# SR-119: any exchange host (both vendor domains), incl. regional and stream* subdomains.
 BYBIT_HOST_RE = re.compile(
     # nosemgrep: cv-adapter-isolation — B5-b, owner @CandleViewer/security, review 2026-12-31
     r"(?i)[a-z0-9*.-]*\b(?:bybit|bytick)[a-z0-9-]*(?:\.[a-z]{2,})+"
