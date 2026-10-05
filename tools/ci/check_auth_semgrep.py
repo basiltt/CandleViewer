@@ -26,6 +26,11 @@ from typing import Any
 
 import yaml
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+from tools.ci.suppressions import field_problems
+
 ANNOT_RE = re.compile(r"(?:#|//)\s*(ruleid|ok):\s*([\w-]+)\s*$")
 SUPPRESS_RE = re.compile(r"(#\s*(?:nosem|nosec)\b.*|#\s*noqa:\s*S\d+.*)$")
 AUTH_PKGS = ("auth", "accounts", "secrets", "api")
@@ -48,9 +53,7 @@ def parse_fixtures(
         for n, line in enumerate(fx.read_text(encoding="utf-8").splitlines(), start=1):
             m = ANNOT_RE.search(line)
             if m:
-                (pos if m.group(1) == "ruleid" else neg).setdefault(
-                    m.group(2), set()
-                ).add((fx, n))
+                (pos if m.group(1) == "ruleid" else neg).setdefault(m.group(2), set()).add((fx, n))
     return pos, neg
 
 
@@ -107,12 +110,8 @@ def check_rules(rules_dir: Path, fx_dir: Path, skip_semgrep: bool = False) -> li
     return errors
 
 
-def _field(text: str, name: str) -> str | None:
-    m = re.search(rf"\b{name}=([^\s;]+)", text)
-    return m.group(1) if m else None
-
-
 def check_suppressions(root: Path, today: date | None = None) -> list[str]:
+    """Grammar and review-date cap are shared with CI-SEC-006 (tools/ci/suppressions.py)."""
     today = today or datetime.now(UTC).date()
     errors: list[str] = []
     for pkg in AUTH_PKGS:
@@ -120,27 +119,12 @@ def check_suppressions(root: Path, today: date | None = None) -> list[str]:
         if not base.is_dir():
             continue
         for f in sorted(base.rglob("*.py")):
-            for n, line in enumerate(
-                f.read_text(encoding="utf-8").splitlines(), start=1
-            ):
+            for n, line in enumerate(f.read_text(encoding="utf-8").splitlines(), start=1):
                 m = SUPPRESS_RE.search(line)
                 if not m:
                     continue
-                txt = m.group(1)
                 loc = f"{f.relative_to(root).as_posix()}:{n}"
-                missing = [
-                    k for k in ("reason", "owner", "review") if not _field(txt, k)
-                ]
-                if missing:
-                    errors.append(f"{loc}: suppression missing {', '.join(missing)}")
-                    continue
-                try:
-                    due = date.fromisoformat(_field(txt, "review") or "")
-                except ValueError:
-                    errors.append(f"{loc}: suppression review date is not YYYY-MM-DD")
-                    continue
-                if due < today:
-                    errors.append(f"{loc}: suppression review date {due} has expired")
+                errors.extend(f"{loc}: {p}" for p in field_problems(m.group(1), today))
     return errors
 
 
@@ -150,9 +134,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--skip-semgrep", action="store_true")
     a = ap.parse_args(argv)
     base = a.root / "security" / "semgrep" / "auth"
-    errors = check_rules(base, base / "fixtures", a.skip_semgrep) + check_suppressions(
-        a.root
-    )
+    errors = check_rules(base, base / "fixtures", a.skip_semgrep) + check_suppressions(a.root)
     for e in errors:
         print(f"security-auth: {e}", file=sys.stderr)
     if not errors:

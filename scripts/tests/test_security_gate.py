@@ -136,16 +136,11 @@ def test_prohibited_license_fails_naming_package_license_and_sr136(
         encoding="utf-8",
     )
     allowlist = load_license_allowlist(allowlist_path)
-    deps = [
-        LicenseFinding(package="evil-dep", version="1.0.0", license="AGPL-3.0-only")
-    ]
+    deps = [LicenseFinding(package="evil-dep", version="1.0.0", license="AGPL-3.0-only")]
     result = evaluate_licenses(deps, allowlist, risks=[], run_date=date(2026, 1, 1))
     assert result.blocked
     assert result.code == "CI-SEC-002"
-    assert any(
-        "evil-dep" in m and "AGPL-3.0-only" in m and "SR-136" in m
-        for m in result.messages
-    )
+    assert any("evil-dep" in m and "AGPL-3.0-only" in m and "SR-136" in m for m in result.messages)
 
 
 def test_unknown_license_fails_closed(tmp_path: Path) -> None:
@@ -156,11 +151,7 @@ def test_unknown_license_fails_closed(tmp_path: Path) -> None:
         "dev_only_exceptions": {"packages": []},
         "unknown_license_policy": "fail",
     }
-    deps = [
-        LicenseFinding(
-            package="mystery-dep", version="2.0.0", license="Some-Weird-License"
-        )
-    ]
+    deps = [LicenseFinding(package="mystery-dep", version="2.0.0", license="Some-Weird-License")]
     result = evaluate_licenses(deps, allowlist, risks=[], run_date=date(2026, 1, 1))
     assert result.blocked
     assert result.code == "CI-SEC-002"
@@ -174,9 +165,7 @@ def test_lgpl_needs_approval_blocks_without_accepted_risk() -> None:
         "dev_only_exceptions": {"packages": []},
         "unknown_license_policy": "fail",
     }
-    deps = [
-        LicenseFinding(package="lgpl-dep", version="1.0.0", license="LGPL-3.0-only")
-    ]
+    deps = [LicenseFinding(package="lgpl-dep", version="1.0.0", license="LGPL-3.0-only")]
     result = evaluate_licenses(deps, allowlist, risks=[], run_date=date(2026, 1, 1))
     assert result.blocked
     assert result.code == "CI-SEC-003"
@@ -190,9 +179,7 @@ def test_lgpl_needs_approval_passes_with_unexpired_accepted_risk() -> None:
         "dev_only_exceptions": {"packages": []},
         "unknown_license_policy": "fail",
     }
-    deps = [
-        LicenseFinding(package="lgpl-dep", version="1.0.0", license="LGPL-3.0-only")
-    ]
+    deps = [LicenseFinding(package="lgpl-dep", version="1.0.0", license="LGPL-3.0-only")]
     risks = [
         AcceptedRisk(
             finding_id="license:lgpl-dep@1.0.0",
@@ -244,11 +231,7 @@ def test_pip_audit_unscored_advisory_treated_as_high_fail_closed(
     report = _write_json(
         tmp_path,
         "pip-audit.json",
-        {
-            "dependencies": [
-                {"name": "p", "version": "1", "vulns": [{"id": "GHSA-yyyy"}]}
-            ]
-        },
+        {"dependencies": [{"name": "p", "version": "1", "vulns": [{"id": "GHSA-yyyy"}]}]},
     )
     findings = parse_pip_audit(report)
     assert findings[0].severity == "HIGH"
@@ -258,11 +241,7 @@ def test_npm_audit_high_severity_blocks(tmp_path: Path) -> None:
     report = _write_json(
         tmp_path,
         "npm-audit.json",
-        {
-            "vulnerabilities": {
-                "left-pad": {"severity": "high", "via": [{"source": "GHSA-zzzz"}]}
-            }
-        },
+        {"vulnerabilities": {"left-pad": {"severity": "high", "via": [{"source": "GHSA-zzzz"}]}}},
     )
     findings = parse_npm_audit(report)
     result = evaluate_findings(findings, risks=[], run_date=date(2026, 1, 1))
@@ -306,9 +285,7 @@ def test_expired_accepted_risk_reblocks_on_run_date(tmp_path: Path) -> None:
         },
     )
     risks = load_accepted_risks(risks_path)
-    findings = [
-        Finding(tool="pip-audit", finding_id="GHSA-xxxx", severity="HIGH", detail="x")
-    ]
+    findings = [Finding(tool="pip-audit", finding_id="GHSA-xxxx", severity="HIGH", detail="x")]
 
     # On the expiry date itself the entry no longer protects (exclusive expiry).
     result = evaluate_findings(findings, risks, run_date=date(2026, 9, 27))
@@ -332,9 +309,7 @@ def test_unexpired_accepted_risk_does_not_block() -> None:
             expires=date(2099, 1, 1),
         )
     ]
-    findings = [
-        Finding(tool="pip-audit", finding_id="GHSA-aaaa", severity="HIGH", detail="x")
-    ]
+    findings = [Finding(tool="pip-audit", finding_id="GHSA-aaaa", severity="HIGH", detail="x")]
     result = evaluate_findings(findings, risks, run_date=date(2026, 1, 1))
     assert not result.blocked
 
@@ -367,9 +342,7 @@ def test_accepted_risks_register_rejects_critical_severity_entry(
 # --------------------------------------------------------------------------
 
 
-def _sarif_doc(
-    rule_id: str, level: str = "error", severity: float | None = None
-) -> dict:
+def _sarif_doc(rule_id: str, level: str = "error", severity: float | None = None) -> dict:
     props = {"security-severity": str(severity)} if severity is not None else {}
     return {
         "version": "2.1.0",
@@ -385,9 +358,7 @@ def _sarif_doc(
                         "locations": [
                             {
                                 "physicalLocation": {
-                                    "artifactLocation": {
-                                        "uri": ".github/workflows/pr.yml"
-                                    },
+                                    "artifactLocation": {"uri": ".github/workflows/pr.yml"},
                                     "region": {"startLine": 12},
                                 }
                             }
@@ -411,9 +382,7 @@ def test_semgrep_cv_unpinned_action_rule_blocks_referencing_sr132(
 
 
 def test_sarif_security_severity_maps_to_critical_bucket(tmp_path: Path) -> None:
-    report = _write_json(
-        tmp_path, "codeql.sarif", _sarif_doc("py/sql-injection", severity=9.5)
-    )
+    report = _write_json(tmp_path, "codeql.sarif", _sarif_doc("py/sql-injection", severity=9.5))
     findings = parse_sarif(report, "codeql")
     assert findings[0].severity == "CRITICAL"
 
@@ -466,9 +435,7 @@ def _codeql_sarif_doc(
     }
     if result_level is not None:
         result["level"] = result_level
-    tool: dict = {
-        "driver": {"name": "CodeQL", "rules": [] if via_extension else [rule]}
-    }
+    tool: dict = {"driver": {"name": "CodeQL", "rules": [] if via_extension else [rule]}}
     if via_extension:
         tool["extensions"] = [{"name": "codeql/python-queries", "rules": [rule]}]
         if use_rule_ref:
@@ -482,9 +449,7 @@ def test_codeql_rule_level_security_severity_high_blocks(tmp_path: Path) -> None
     report = _write_json(
         tmp_path,
         "codeql.sarif",
-        _codeql_sarif_doc(
-            "py/clear-text-logging-sensitive-data", security_severity="7.5"
-        ),
+        _codeql_sarif_doc("py/clear-text-logging-sensitive-data", security_severity="7.5"),
     )
     findings = parse_sarif(report, "codeql")
     assert findings[0].severity == "HIGH"
@@ -520,9 +485,7 @@ def test_codeql_result_without_level_falls_back_to_rule_default_level(
     report = _write_json(
         tmp_path,
         "codeql.sarif",
-        _codeql_sarif_doc(
-            "py/some-non-security-rule", security_severity=None, rule_level="error"
-        ),
+        _codeql_sarif_doc("py/some-non-security-rule", security_severity=None, rule_level="error"),
     )
     findings = parse_sarif(report, "codeql")
     assert findings[0].severity == "HIGH"
@@ -542,9 +505,7 @@ def test_codeql_high_with_matching_accepted_risk_does_not_block(tmp_path: Path) 
     report = _write_json(
         tmp_path,
         "codeql.sarif",
-        _codeql_sarif_doc(
-            "py/clear-text-logging-sensitive-data", security_severity="7.5"
-        ),
+        _codeql_sarif_doc("py/clear-text-logging-sensitive-data", security_severity="7.5"),
     )
     findings = parse_sarif(report, "codeql")
     risk = AcceptedRisk(
@@ -651,21 +612,15 @@ def test_npm_audit_ghsa_url_becomes_finding_id(tmp_path: Path) -> None:
     assert parse_npm_audit(report)[0].finding_id == "GHSA-vfj7-8cjw-p6xm"
 
 
-def test_repo_register_accepts_the_two_ghsa_exceptions_with_approver_and_expiry() -> (
-    None
-):
+def test_repo_register_accepts_the_two_ghsa_exceptions_with_approver_and_expiry() -> None:
     register = Path(__file__).resolve().parents[2] / "security" / "accepted-risks.yaml"
     risks = {r.finding_id: r for r in load_accepted_risks(register)}
     ids = ["GHSA-ch52-4w7c-c8xp", "GHSA-vfj7-8cjw-p6xm"]
     findings = []
     for gid in ids:
         assert risks[gid].approver and risks[gid].expires
-        findings.append(
-            Finding(tool="npm-audit", finding_id=gid, severity="HIGH", package="x")
-        )
-    result = evaluate_findings(
-        findings, list(risks.values()), run_date=date(2026, 10, 3)
-    )
+        findings.append(Finding(tool="npm-audit", finding_id=gid, severity="HIGH", package="x"))
+    result = evaluate_findings(findings, list(risks.values()), run_date=date(2026, 10, 3))
     assert not result.blocked
     late = evaluate_findings(findings, list(risks.values()), run_date=date(2027, 1, 1))
     assert late.blocked
@@ -680,9 +635,7 @@ def test_gitleaks_block_message_cites_ir02(
         "gitleaks.json",
         [{"RuleID": "generic-api-key", "File": "a.py", "StartLine": 1}],
     )
-    rc = main(
-        ["--tool", "gitleaks", "--report", str(report), "--accepted-risks", str(risks)]
-    )
+    rc = main(["--tool", "gitleaks", "--report", str(report), "--accepted-risks", str(risks)])
     err = capsys.readouterr().err
     assert rc == 1
     assert "IR-02" in err and "docs/ci-runbook.md" in err
@@ -697,12 +650,8 @@ def test_gitleaks_negative_proof_fake_secret_fixture_blocks(
 
     exe = shutil.which("gitleaks")
     if exe is None:
-        pytest.skip(
-            "gitleaks binary not installed (CI runs the pinned container instead)"
-        )
-    (tmp_path / "leak.txt").write_text(
-        "token = DUMMYKEY_ABCDEFGHIJKLMNOP\n", encoding="utf-8"
-    )
+        pytest.skip("gitleaks binary not installed (CI runs the pinned container instead)")
+    (tmp_path / "leak.txt").write_text("token = DUMMYKEY_ABCDEFGHIJKLMNOP\n", encoding="utf-8")
     (tmp_path / "cfg.toml").write_text(
         '[[rules]]\nid = "dummy-test-vector"\ndescription = "fake test vector"\n'
         "regex = '''DUMMYKEY_[A-Z]{16}'''\n",
@@ -728,9 +677,7 @@ def test_gitleaks_negative_proof_fake_secret_fixture_blocks(
         capture_output=True,
     )
     risks = _write_yaml(tmp_path, {"entries": []})
-    rc = main(
-        ["--tool", "gitleaks", "--report", str(rep), "--accepted-risks", str(risks)]
-    )
+    rc = main(["--tool", "gitleaks", "--report", str(rep), "--accepted-risks", str(risks)])
     assert rc == 1
     assert "IR-02" in capsys.readouterr().err
 
@@ -740,7 +687,8 @@ def test_gitleaks_negative_proof_fake_secret_fixture_blocks(
 # --------------------------------------------------------------------------
 
 _RULE = "cv-broad-except-on-ingest"
-_GOOD = f"# nosemgrep: {_RULE} - reason, owner @basil, review 2026-12-31"
+_TAIL = "reason=fp owner=@basil review=2026-12-31"
+_GOOD = f"# nosemgrep: {_RULE} {_TAIL}"
 _INSRC = [{"kind": "inSource"}]
 
 
@@ -754,9 +702,7 @@ def _supp_sarif(supp: list[dict], uri: str = "a.py", line: int = 2) -> dict:
     return doc
 
 
-def _parse(
-    tmp_path: Path, doc: dict, src: str | None, tool: str = "semgrep"
-) -> list[Finding]:
+def _parse(tmp_path: Path, doc: dict, src: str | None, tool: str = "semgrep") -> list[Finding]:
     if src is not None:
         (tmp_path / "a.py").write_text(src, encoding="utf-8")
     report = _write_json(tmp_path, "r.sarif", doc)
@@ -765,7 +711,7 @@ def _parse(
 
 def test_justified_in_source_suppression_is_not_blocking(tmp_path: Path) -> None:
     assert _parse(tmp_path, _supp_sarif(_INSRC), f"{_GOOD}\nx = 1\n") == []
-    assert _parse(tmp_path, _supp_sarif(_INSRC), f"x = 1  {_GOOD}\n") == []
+    assert _parse(tmp_path, _supp_sarif(_INSRC, line=1), f"x = 1  {_GOOD}\n") == []
 
 
 def test_blanket_nosemgrep_still_blocks_ci_sec_006(tmp_path: Path) -> None:
@@ -775,16 +721,16 @@ def test_blanket_nosemgrep_still_blocks_ci_sec_006(tmp_path: Path) -> None:
 
 
 def test_nosemgrep_for_other_rule_still_blocks(tmp_path: Path) -> None:
-    src = "# nosemgrep: other-rule - r, owner @b, review 2026-12-31\nx = 1\n"
+    src = "# nosemgrep: other-rule reason=r owner=@b review=2026-12-31\nx = 1\n"
     out = _parse(tmp_path, _supp_sarif(_INSRC), src)
     assert len(out) == 1 and "CI-SEC-006" in out[0].detail
 
 
 def test_expired_suppression_review_date_blocks(tmp_path: Path) -> None:
-    src = f"# nosemgrep: {_RULE} - r, owner @b, review 2026-10-05\nx = 1\n"
+    src = f"# nosemgrep: {_RULE} reason=r owner=@b review=2026-10-05\nx = 1\n"
     out = _parse(tmp_path, _supp_sarif(_INSRC), src)
     assert len(out) == 1 and "expired" in out[0].detail
-    src = f"# nosemgrep: {_RULE} - r, owner @b, review 2026-10-06\nx = 1\n"
+    src = f"# nosemgrep: {_RULE} reason=r owner=@b review=2026-10-06\nx = 1\n"
     assert _parse(tmp_path, _supp_sarif(_INSRC), src) == []
 
 
@@ -808,3 +754,115 @@ def test_external_suppression_kind_is_not_honoured(tmp_path: Path) -> None:
 def test_non_semgrep_tools_ignore_suppressions(tmp_path: Path, tool: str) -> None:
     out = _parse(tmp_path, _supp_sarif(_INSRC), f"{_GOOD}\n", tool=tool)
     assert len(out) == 1 and "CI-SEC-006" not in out[0].detail
+
+
+# --------------------------------------------------------------------------
+# Review round 4: the reviewer's adversarial bypasses must all BLOCK.
+# --------------------------------------------------------------------------
+
+
+def _blocks(out: list[Finding]) -> bool:
+    return len(out) == 1 and "CI-SEC-006" in out[0].detail and out[0].severity == "HIGH"
+
+
+def test_rule_id_prefix_does_not_suppress(tmp_path: Path) -> None:
+    src = f"# nosemgrep: {_RULE}-other {_TAIL}\nx = 1\n"
+    assert _blocks(_parse(tmp_path, _supp_sarif(_INSRC), src))
+    src = f"# nosemgrep: cv-broad {_TAIL}\nx = 1\n"
+    assert _blocks(_parse(tmp_path, _supp_sarif(_INSRC), src))
+
+
+def test_code_line_above_is_never_a_justification(tmp_path: Path) -> None:
+    src = f"ok()  # nosemgrep: {_RULE} {_TAIL}\nx = 1\n"
+    assert _blocks(_parse(tmp_path, _supp_sarif(_INSRC), src))
+
+
+def test_comment_finding_line_does_not_borrow_comment_above(tmp_path: Path) -> None:
+    src = f"{_GOOD}\n# a comment that is itself the finding\n"
+    assert _blocks(_parse(tmp_path, _supp_sarif(_INSRC), src))
+
+
+@pytest.mark.parametrize(
+    "tail",
+    [
+        "reason=fp @ review=2026-12-31",
+        "reason=owner-said-so review=2026-12-31",
+        "reason=fp owner=@ review=2026-12-31",
+        "reason=fp owner=basil review=2026-12-31",
+        "- r, owner @b, review 2026-12-31",
+    ],
+)
+def test_owner_spoofs_and_legacy_format_block(tmp_path: Path, tail: str) -> None:
+    src = f"# nosemgrep: {_RULE} {tail}\nx = 1\n"
+    assert _blocks(_parse(tmp_path, _supp_sarif(_INSRC), src))
+
+
+def test_far_future_review_date_blocks(tmp_path: Path) -> None:
+    src = f"# nosemgrep: {_RULE} reason=r owner=@b review=2099-12-31\nx = 1\n"
+    out = _parse(tmp_path, _supp_sarif(_INSRC), src)
+    assert _blocks(out) and "expiry too far" in out[0].detail
+    cap = f"# nosemgrep: {_RULE} reason=r owner=@b review=2027-04-04\nx = 1\n"
+    assert _parse(tmp_path, _supp_sarif(_INSRC), cap) == []  # today + 180 d
+    over = f"# nosemgrep: {_RULE} reason=r owner=@b review=2027-04-05\nx = 1\n"
+    assert _blocks(_parse(tmp_path, _supp_sarif(_INSRC), over))
+
+
+def test_multi_rule_list_exact_members_suppress(tmp_path: Path) -> None:
+    for rules in (f"other-rule, {_RULE}", f"other-rule,{_RULE}", f"rules.{_RULE} x"):
+        src = f"# nosemgrep: {rules} {_TAIL}\nx = 1\n"
+        assert _parse(tmp_path, _supp_sarif(_INSRC), src) == [], rules
+
+
+def test_migrated_repo_format_with_org_team_owner_is_accepted(tmp_path: Path) -> None:
+    tail = "reason=B5-b owner=@CandleViewer/security review=2026-12-31"
+    src = f"x = 1  # nosemgrep: other,{_RULE} {tail}\n"
+    assert _parse(tmp_path, _supp_sarif(_INSRC, line=1), src) == []
+
+
+def test_rule_index_disagreeing_with_rule_id_takes_higher_severity(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    doc = _sarif_doc("cv-z")
+    run = doc["runs"][0]
+    del run["results"][0]["level"]
+    run["results"][0]["ruleIndex"] = 0
+    run["tool"]["driver"]["rules"] = [
+        {"id": "cv-low", "defaultConfiguration": {"level": "note"}},
+        {"id": "cv-z", "defaultConfiguration": {"level": "error"}},
+    ]
+    out = parse_sarif(_write_json(tmp_path, "r.sarif", doc), "semgrep")
+    assert out[0].severity == "HIGH"
+    assert "disagree" in capsys.readouterr().err
+    run["tool"]["driver"]["rules"] = [
+        {"id": "cv-high", "properties": {"security-severity": "9.5"}},
+        {"id": "cv-z", "defaultConfiguration": {"level": "note"}},
+    ]
+    out = parse_sarif(_write_json(tmp_path, "r2.sarif", doc), "semgrep")
+    assert out[0].severity == "CRITICAL"
+
+
+def test_no_severity_anywhere_is_medium(tmp_path: Path) -> None:
+    doc = _sarif_doc("cv-q")
+    del doc["runs"][0]["results"][0]["level"]
+    assert parse_sarif(_write_json(tmp_path, "r.sarif", doc), "semgrep")[0].severity == "MEDIUM"
+
+
+def test_unreadable_source_still_blocks(tmp_path: Path) -> None:
+    (tmp_path / "a.py").write_bytes(b"\xff\xfe\x00bad")
+    assert _blocks(_parse(tmp_path, _supp_sarif(_INSRC), None))
+
+
+def test_accepted_risk_is_reported_not_silent() -> None:
+    f = Finding(tool="semgrep", finding_id="cv-x:a.py:1", severity="HIGH")
+    risk = AcceptedRisk("cv-x:a.py:1", "semgrep", "HIGH", "why", "basiltt", date(2026, 12, 31))
+    res = evaluate_findings([f], [risk], run_date=date(2026, 10, 6))
+    assert not res.blocked and any("accepted risk: semgrep" in m for m in res.messages)
+
+
+def test_repo_register_covers_the_0004_migration_findings() -> None:
+    root = Path(__file__).resolve().parents[2]
+    risks = load_accepted_risks(root / "security" / "accepted-risks.yaml")
+    mig = "services/api/candleviewer/migrations/versions/0004_instruments.py"
+    hits = [r for r in risks if r.tool == "semgrep" and mig in r.finding_id]
+    assert len(hits) == 3
+    assert all(r.expires == date(2026, 12, 31) for r in hits)

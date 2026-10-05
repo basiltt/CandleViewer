@@ -46,7 +46,7 @@ SR112_EXACT: dict[str, str] = {
 
 # SR-119: any exchange host (both vendor domains), incl. regional and stream* subdomains.
 BYBIT_HOST_RE = re.compile(
-    # nosemgrep: cv-adapter-isolation — B5-b, owner @CandleViewer/security, review 2026-12-31
+    # nosemgrep: cv-adapter-isolation reason=B5-b owner=@CandleViewer/security review=2026-12-31
     r"(?i)[a-z0-9*.-]*\b(?:bybit|bytick)[a-z0-9-]*(?:\.[a-z]{2,})+"
 )
 

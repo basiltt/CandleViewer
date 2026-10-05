@@ -174,9 +174,9 @@ diff` cannot see because they were never tracked. `git add` them in the
   setup problem before assuming the codebase is clean.
 - **CI-SEC-006** (unjustified or expired in-source Semgrep suppression): a
   `# nosemgrep` marker does not clear the gate unless the comment reads
-  `nosemgrep: <rule-id> - <reason>, owner <name|@handle>, review YYYY-MM-DD`
-  with a review date not before today. Fix the comment (name the rule, add
-  owner and a future review date) or fix the code; see
+  `nosemgrep: <rule-id>[,<rule-id>] reason=<r> owner=@<handle> review=YYYY-MM-DD`
+  with a review date between today and today + 180 days (farther is
+  `CI-SEC-006 expiry too far`). Fix the comment or fix the code; see
   `docs/plan/04-security-program.md` 12.2.
 
 ### CI-COV-* — coverage gate (`tools/ci/coverage_gate.py`)

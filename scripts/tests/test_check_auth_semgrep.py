@@ -75,7 +75,7 @@ def test_expired_suppression_fails(tmp_path: Path) -> None:
 
 
 def test_justified_suppression_passes(tmp_path: Path) -> None:
-    line = "x = 1  # nosec reason=fp owner=@sec review=2027-01-01"
+    line = "x = 1  # nosec reason=fp owner=@sec review=2026-03-01"
     assert chk.check_suppressions(_pkg(tmp_path, line), today=date(2026, 1, 1)) == []
 
 

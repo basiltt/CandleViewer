@@ -1219,10 +1219,11 @@ silently treated as a clean scan.
 
 **Justified in-source suppressions (CI-SEC-006).** Semgrep reports `# nosemgrep` results in SARIF with
 `suppressions: [{"kind": "inSource"}]`. `tools/ci/security_gate.py` skips such a result only if the
-comment (the `justification` field, else the finding line or the line above) reads
-`nosemgrep: <rule-id> - <reason>, owner <name|@handle>, review YYYY-MM-DD` and the review date is not
-before today. A blanket `# nosemgrep`, a different rule id, or a lapsed date keeps blocking and is
-reported as `CI-SEC-006: unjustified in-source suppression`. Other tools are unaffected.
+comment (the `justification` field, else the finding line, or the line above only when it is comment-only
+and the finding line is not) reads `nosemgrep: <rule-id>[,<rule-id>] reason=<r> owner=@<handle>[/<team>]
+review=YYYY-MM-DD`, the finding's rule id is an exact member of the list, and the review date is between
+today and today + 180 days. The grammar is owned by `tools/ci/suppressions.py`, shared with the auth-pack
+checker. Anything else keeps blocking as `CI-SEC-006`. Other tools are unaffected.
 
 ### 12.3 Required status checks on `main`
 
