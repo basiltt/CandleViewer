@@ -29,7 +29,15 @@ _ACTIONS: dict[str, str] = {
     "rule.deleted": "rules.delete",
     "rule.simulated": "rules.simulate",
     "rule.mode_refused": "rules.arm",
+    # E35-X02: protected-rule refusals / tampering and import refusals are denials.
+    "rule.system_rule_refused": "rules.scope_denied",
+    "rule.system_rule_tampered": "rules.scope_denied",
+    "rule.import_refused": "rules.scope_denied",
 }
+_DENIED = frozenset(
+    {"rule.mode_refused", "rule.system_rule_refused", "rule.system_rule_tampered",
+     "rule.import_refused"}
+)  # fmt: skip
 
 
 def _before(payload: dict[str, Any]) -> dict[str, Any] | None:
@@ -50,7 +58,7 @@ def make_rules_audit(emitter: Any) -> Callable[[str, dict[str, Any]], Any]:
             _ACTIONS.get(action, "rules.version_create"),
             actor_label=str(payload.get("actor", "system")),
             actor_user_id=payload.get("actor"),
-            outcome=AuditOutcome.DENIED if action == "rule.mode_refused" else AuditOutcome.SUCCESS,
+            outcome=AuditOutcome.DENIED if action in _DENIED else AuditOutcome.SUCCESS,
             object_kind="rule",
             object_id=str(payload.get("rule_id", "")),
             before_state=_before(payload),

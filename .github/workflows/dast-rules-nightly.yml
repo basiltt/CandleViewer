@@ -1,0 +1,40 @@
+name: dast-rules-nightly
+
+# E35-X02: nightly low-privilege OWASP ZAP scan of the /rules* surface (plan: .zap/rules-low-priv.yaml).
+# Nightly, not per-PR; local demo stack only, never a live exchange. ZAP_LOWPRIV_TOKEN is a repository
+# secret for a seeded rules:read-only demo user (never committed).
+on:
+  schedule:
+    - cron: "37 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  zap-rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Require low-privilege token
+        env:
+          ZAP_LOWPRIV_TOKEN: ${{ secrets.ZAP_LOWPRIV_TOKEN }}
+        run: test -n "$ZAP_LOWPRIV_TOKEN" || { echo "ZAP_LOWPRIV_TOKEN secret missing"; exit 1; }
+      - name: Start stack
+        run: docker compose -f infra/compose/docker-compose.yml up -d --wait
+      - name: ZAP automation plan (low-privilege /rules*)
+        env:
+          ZAP_LOWPRIV_TOKEN: ${{ secrets.ZAP_LOWPRIV_TOKEN }}
+        run: |
+          docker run --rm --network host -e ZAP_LOWPRIV_TOKEN -v "$PWD:/zap/wrk" \
+            ghcr.io/zaproxy/zaproxy:2.16.1 zap.sh -cmd -autorun /zap/wrk/.zap/rules-low-priv.yaml
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: zap-rules-low-priv
+          path: zap-reports/
+      - name: Tear down
+        if: always()
+        run: docker compose -f infra/compose/docker-compose.yml down -v

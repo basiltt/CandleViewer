@@ -347,7 +347,7 @@ import/export. Critical/High findings: IR resource exhaustion (RE-D1, Critical),
 authoring and execution (RE-E1, Critical), `pre_trade_check` shared-fate (RE-D5), cross-owner signals
 (RE-S3), layout-field smuggling (RE-T2), self-arming via `enable_rule` (RE-E7). Findings E35-FR-01..17 are
 tracked in the model's section 8 (see RSK-056); abuse cases AC-01..AC-16 go to E35-X02. Also under
-`docs/security/e35/` (artefact index).
+`docs/security/e35/` (artefact index); E35-X02 automates them: Semgrep `cv-rules-*`, `services/api/tests/rules/abuse/`, `.zap/rules-low-priv.yaml` (`docs/security/e35/abuse-case-suite.md`).
 
 ### 5.9 Area 9 — Electron shell (A-16, AC-09)
 

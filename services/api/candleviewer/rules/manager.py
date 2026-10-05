@@ -8,6 +8,7 @@ the optimistic-concurrency token is the version number, never a timestamp.
 from __future__ import annotations
 
 import copy
+import unicodedata
 import uuid
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable
@@ -20,6 +21,7 @@ from pydantic import ValidationError
 from candleviewer.rules.arming import ArmingFacts, check_arming
 from candleviewer.rules.evaluator.engine import EvaluationResult
 from candleviewer.rules.ir import Rule, ir_hash
+from candleviewer.rules.ir.accounts import collect_account_ids, redact_account_ids
 from candleviewer.rules.lifecycle import MODES, LifecycleError, RuleLifecycle, mode_of
 from candleviewer.rules.validator import validate_rule
 from candleviewer.rules.vocabulary import MetricRegistry
@@ -42,6 +44,18 @@ _ORDER_ACTIONS = frozenset(
         "cancel_all_orders",
     }
 )
+
+
+SYSTEM_RULE_PREFIX = "sys."
+#: Always-on built-ins (24-internal-schemas §11.8 "cannot disable"); E35-X02 (i).
+PROTECTED_SYSTEM_RULES = frozenset({"sys.native_sl_watchdog", "sys.clock_drift_block"})
+
+
+def is_reserved_name(name: str) -> bool:
+    """`sys.` is reserved however it is spelled: NFKC folds compatibility lookalikes
+    (fullwidth, ligatures), casefold covers case, and surrounding whitespace is ignored."""
+    norm = unicodedata.normalize("NFKC", name).casefold().strip()
+    return norm.startswith(SYSTEM_RULE_PREFIX)
 
 
 class RuleError(Exception):
@@ -202,7 +216,8 @@ class RulesManager:
 
     @staticmethod
     def _accounts(ir: dict[str, Any]) -> tuple[str, ...]:
-        return tuple(str(a) for a in ir.get("scope", {}).get("account_ids", ()))
+        """Every account referenced anywhere in the IR (scope, metric refs, action params)."""
+        return collect_account_ids(ir)
 
     def _visible(self, row: RuleRow, actor: Actor) -> bool:
         if not row.versions or actor.is_owner:
@@ -216,11 +231,75 @@ class RulesManager:
         """C-12.4: a non-owner may only target accounts granted to them."""
         if actor.is_owner:
             return
-        for a in rule.scope.account_ids:
-            if str(a) not in actor.granted_accounts:
+        if any(a.targets == "all_accounts" for a in rule.actions):
+            # E35-X02 (f): fan-out to every account needs the widest grant (Owner); fail closed.
+            raise RuleError(
+                403, "forbidden", "Targeting all accounts needs the widest grant (Owner)."
+            )
+        refs = collect_account_ids(rule.model_dump(mode="json"))
+        if not refs and not actor.granted_accounts:
+            # An account-less rule resolves to the creator's granted accounts at runtime;
+            # with no grants at all there is nothing it may legitimately touch (no vacuous pass).
+            raise RuleError(403, "forbidden", "You have no accounts this rule could apply to.")
+        for a in refs:
+            if a not in actor.granted_accounts:
                 raise RuleError(
                     403, "forbidden", "You do not have access to one of the accounts in scope."
                 )
+
+    async def _guard_system(self, row: RuleRow, actor: Actor, op: str) -> None:
+        """Protected built-ins can never be disabled, edited or deleted by any API path."""
+        if row.name not in PROTECTED_SYSTEM_RULES:
+            return
+        await self._audit(
+            "rule.system_rule_refused",
+            {"rule_id": row.id, "name": row.name, "op": op, "actor": actor.user_id},
+        )
+        raise RuleError(403, "system_rule_protected", "System rules cannot be changed.")
+
+    async def export_rule(self, rule_id: str, actor: Actor) -> dict[str, Any]:
+        """Portable bundle (E35-X02 j): the IR only, with every account id, environment grant
+        and armed state stripped, so a bundle never leaks identifiers or live intent."""
+        row = await self._visible_row(rule_id, actor)
+        ver = next((v for v in row.versions if v.id == row.active_version_id), row.versions[-1])
+        ir = redact_account_ids(copy.deepcopy(ver.ir))
+        scope = dict(ir.get("scope", {}))
+        scope["environments"] = ["demo"]
+        ir.update(scope=scope, mode="disabled", enabled=False)
+        for k in ("created_by", "armed_by", "id"):
+            ir.pop(k, None)
+        return {"format": "cv-rule-bundle/1", "ir": ir}
+
+    async def import_rule(self, bundle: dict[str, Any], actor: Actor) -> dict[str, Any]:
+        """Always lands disabled. Every account id anywhere in the bundle must be granted to
+        the importer (refused + audited otherwise); they are then dropped, never remapped."""
+        raw = copy.deepcopy(bundle.get("ir", {}))
+        refs = collect_account_ids(raw)
+        denied = [] if actor.is_owner else [a for a in refs if a not in actor.granted_accounts]
+        if denied:
+            await self._audit(
+                "rule.import_refused",
+                {"actor": actor.user_id, "reason": "ungranted_account", "count": len(denied)},
+            )
+            raise RuleError(403, "forbidden", "The bundle references an account you cannot access.")
+        ir = redact_account_ids(raw)
+        scope = dict(ir.get("scope", {}))
+        scope["environments"] = ["demo"]
+        ir.update(scope=scope)
+        return await self.create(ir, actor, notes="imported")
+
+    async def verify_system_rules(self) -> list[str]:
+        """Detect out-of-band tampering (e.g. a direct DB update): a protected built-in that
+        is no longer armed or was deleted is audited as `rule.system_rule_tampered`."""
+        bad: list[str] = []
+        for r in await self._s.all():
+            if r.name in PROTECTED_SYSTEM_RULES and (r.deleted or r.mode != "armed"):
+                bad.append(r.name)
+                await self._audit(
+                    "rule.system_rule_tampered",
+                    {"rule_id": r.id, "name": r.name, "mode": r.mode, "deleted": r.deleted},
+                )
+        return bad
 
     async def _visible_row(self, rule_id: str, actor: Actor) -> RuleRow:
         row = await self._row(rule_id)
@@ -327,6 +406,8 @@ class RulesManager:
         rid = str(uuid.uuid4())
         rule, h = self._validated({**ir, "mode": "disabled", "enabled": False}, rid)
         self._require_grants(rule, actor)
+        if is_reserved_name(rule.name):
+            raise RuleError(403, "system_rule_reserved", "The 'sys.' name prefix is reserved.")
         existing = await self._s.all()
         if any(not r.deleted and r.name == rule.name for r in existing):
             raise RuleError(409, "name_taken", f"A rule named '{rule.name}' already exists.")
@@ -376,6 +457,7 @@ class RulesManager:
         notes: str = "",
     ) -> dict[str, Any]:
         row = await self._visible_row(rule_id, actor)
+        await self._guard_system(row, actor, "update")
         if expected_version != row.latest_version:
             self._metric("rule_save_conflicts_total", {})
             raise RuleError(
@@ -393,6 +475,8 @@ class RulesManager:
             {**ir, "mode": row.mode, "enabled": row.mode != "disabled"}, rule_id
         )
         self._require_grants(rule, actor)
+        if rule.name != row.name:
+            await self._check_rename(row, rule.name, actor)
         existing = next((v for v in row.versions if v.ir_hash == h), None)
         if existing is not None:
             return {"created": False, "version": self._version_view(existing)}
@@ -408,8 +492,20 @@ class RulesManager:
         await self._s.put(row)
         return {"created": True, "version": self._version_view(v)}
 
+    async def _check_rename(self, row: RuleRow, name: str, actor: Actor) -> None:
+        """No rename into the reserved `sys.` namespace, and no rename of a `sys.*` rule."""
+        if is_reserved_name(name) or is_reserved_name(row.name):
+            await self._audit(
+                "rule.system_rule_refused",
+                {"rule_id": row.id, "name": row.name, "op": "rename", "actor": actor.user_id},
+            )
+            raise RuleError(403, "system_rule_reserved", "The 'sys.' name prefix is reserved.")
+        if any(not r.deleted and r.id != row.id and r.name == name for r in await self._s.all()):
+            raise RuleError(409, "name_taken", f"A rule named '{name}' already exists.")
+
     async def delete(self, rule_id: str, actor: Actor) -> None:
         row = await self._visible_row(rule_id, actor)
+        await self._guard_system(row, actor, "delete")
         if row.mode == "armed":
             raise RuleError(
                 409,
@@ -434,6 +530,7 @@ class RulesManager:
         self, rule_id: str, version_id: str, note: str, actor: Actor
     ) -> dict[str, Any]:
         row = await self._visible_row(rule_id, actor)
+        await self._guard_system(row, actor, "set_active_version")
         v = next((x for x in row.versions if x.id == version_id), None)
         if v is None:
             raise RuleError(404, "not_found", "That version does not exist.")
@@ -549,6 +646,8 @@ class RulesManager:
             self._idem.move_to_end(cache_key)
             return self._idem[cache_key]
         prev = row.mode
+        if target != "armed":
+            await self._guard_system(row, actor, f"mode:{target}")
         try:
             out = await self._transition(row, target, actor, flatten_ack, override_reason)
         except RuleError as exc:

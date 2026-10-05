@@ -1,0 +1,44 @@
+rules:
+  - id: cv-rules-no-dynamic-eval
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Dynamic evaluation or deserialisation (eval/exec/compile/__import__/importlib/pickle/
+      marshal/cloudpickle/dill/yaml.load) in the rule engine violates ADR-0007 R1: the rule IR
+      is data, never code. Interpret the typed IR instead (E35-X02, threat E35 code-execution).
+    metadata:
+      rule-id: cv-rules-no-dynamic-eval
+      references:
+        - docs/plan/27-adrs/ADR-0007-rule-ir.md
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: exec(...)
+      - pattern: compile(...)
+      - pattern: __import__(...)
+      - pattern: builtins.eval(...)
+      - pattern: builtins.exec(...)
+      - pattern: builtins.compile(...)
+      - pattern: builtins.__import__(...)
+      - pattern: importlib.import_module(...)
+      - pattern: importlib.__import__(...)
+      - pattern: pickle.loads(...)
+      - pattern: pickle.load(...)
+      - pattern: pickle.Unpickler(...)
+      - pattern: cloudpickle.loads(...)
+      - pattern: cloudpickle.load(...)
+      - pattern: dill.loads(...)
+      - pattern: dill.load(...)
+      - pattern: marshal.loads(...)
+      - pattern: marshal.load(...)
+      - pattern: yaml.load(...)
+      - pattern: yaml.unsafe_load(...)
+      - pattern: from pickle import $X
+      - pattern: from marshal import $X
+      - pattern: from builtins import $X
+      - pattern: from importlib import import_module
+    paths:
+      include:
+        - "services/api/candleviewer/rules/**"
+        - "**/cv-rules-no-dynamic-eval*"
+      exclude:
+        - "**/test_*.py"

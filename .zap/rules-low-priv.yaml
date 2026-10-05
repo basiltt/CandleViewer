@@ -1,0 +1,38 @@
+# E35-X02: OWASP ZAP automation plan for the /rules* surface (authenticated, LOW-privilege).
+# Run: zap.sh -cmd -autorun .zap/rules-low-priv.yaml  (run nightly by .github/workflows/dast-rules-nightly.yml)
+# Credentials come from env vars (never committed): ZAP_LOWPRIV_TOKEN.
+env:
+  contexts:
+    - name: rules-api
+      urls: ["http://127.0.0.1:8000"]
+      includePaths: ["http://127.0.0.1:8000/rules.*", "http://127.0.0.1:8000/schemas/rule-ir.json"]
+  parameters:
+    failOnError: true
+    progressToStdout: true
+jobs:
+  - type: openapi
+    parameters:
+      apiFile: docs/plan/22-api-openapi.yaml
+      targetUrl: http://127.0.0.1:8000
+      context: rules-api
+  - type: replacer
+    rules:
+      - description: low-privilege session (rules:read only)
+        matchType: req_header
+        matchString: Authorization
+        replacementString: "Bearer ${ZAP_LOWPRIV_TOKEN}"
+        initiators: []
+  - type: activeScan
+    parameters:
+      context: rules-api
+    policyDefinition:
+      defaultStrength: Medium
+      defaultThreshold: Medium
+  - type: report
+    parameters:
+      template: traditional-json
+      reportDir: zap-reports
+      reportFile: rules-low-priv
+    risks: [high, medium]
+# Disposition: any 2xx returning data outside the session grants is a HIGH finding (IDOR / authz gap);
+# see docs/security/e35/abuse-case-suite.md "DAST".

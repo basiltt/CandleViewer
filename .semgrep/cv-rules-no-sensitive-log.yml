@@ -1,0 +1,33 @@
+rules:
+  - id: cv-rules-no-sensitive-log
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Do not log input_snapshot, state snapshots or account-balance/equity fields at INFO or
+      below; they are financial/confidential (E35-X02). Log ids and counts instead.
+    metadata:
+      rule-id: cv-rules-no-sensitive-log
+    patterns:
+      - pattern-either:
+          - pattern: $L.$M(..., $ARG, ...)
+          - pattern: $L.$M(..., $K=$ARG, ...)
+          - pattern: |
+              $L.$M(..., extra={..., $EK: $ARG, ...}, ...)
+          - pattern: |
+              $L.$M(..., extra={..., $ARG: $EV, ...}, ...)
+      # any receiver that looks like a logger: _log, self._log, self.logger, LOG, log.bind(...)
+      - metavariable-regex:
+          metavariable: $L
+          regex: (?i)^(.*\.)?(_?log|_?logger|logging|structlog\.get_logger\(.*\)|get_logger\(.*\))(\.bind\(.*\))?$
+      - metavariable-regex:
+          metavariable: $M
+          regex: ^(debug|info|log|msg)$
+      - metavariable-regex:
+          metavariable: $ARG
+          regex: (?i)(input_snapshot|snapshot|\bsnap\b|\bstate\b|balance|equity|wallet|margin)
+    paths:
+      include:
+        - "services/api/candleviewer/rules/**"
+        - "**/cv-rules-no-sensitive-log*"
+      exclude:
+        - "**/test_*.py"

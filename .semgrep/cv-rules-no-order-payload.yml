@@ -1,0 +1,28 @@
+rules:
+  - id: cv-rules-no-order-payload
+    languages: [python]
+    severity: ERROR
+    message: >-
+      The rule engine must not build an exchange order payload itself; submit an intent to the
+      OMS so the native stop-loss attachment path (C-2.6) cannot be bypassed (E35-X02).
+    metadata:
+      rule-id: cv-rules-no-order-payload
+    patterns:
+      - pattern-either:
+          - pattern: |
+              {..., $K: $V, ...}
+          - pattern: dict(..., $K=$V, ...)
+          - pattern: $P[$K] = $V
+          - pattern: $P.setdefault($K, ...)
+          - pattern: $P.update(..., $K=$V, ...)
+      - metavariable-regex:
+          metavariable: $K
+          regex: ^["']?(orderType|order_type|orderLinkId|order_link_id|stopLoss|stop_loss|reduceOnly|reduce_only)["']?$
+    paths:
+      include:
+        - "services/api/candleviewer/rules/**"
+        - "**/cv-rules-no-order-payload*"
+      exclude:
+        - "**/test_*.py"
+        # JSON-schema of IR action params (intent vocabulary, not an exchange payload)
+        - "services/api/candleviewer/rules/vocabulary/catalogue.py"
