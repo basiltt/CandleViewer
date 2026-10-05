@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import logging
 import os
 import uuid
 from collections import defaultdict
@@ -20,13 +19,14 @@ from typing import Any, Protocol
 
 import pyarrow as pa
 import pyarrow.parquet as pq
+import structlog
 
 from candleviewer.observability.context import spawn
 from candleviewer.observability.metrics import BoundedMetric
 from candleviewer.storage.retention.policy import ALERT_DELIVERIES_HOT_DAYS
 from candleviewer.storage.retention.schedule import RetentionSchedule
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 INTERVAL_SECONDS = 24 * 3600
 GAUGE_INTERVAL_SECONDS = 15.0
 ALERT_DELIVERIES_DATASET = "alert_deliveries"
@@ -141,13 +141,13 @@ class AlertDeliveriesPurgeTask(_Loop):
                 total += await self._repo.delete_ids([r.id for r in rows])
                 if len(rows) < PURGE_BATCH:
                     break
-            logger.info("alert_deliveries_archived_and_purged", extra={"deleted": total})
+            logger.info("alert_deliveries_archived_and_purged", deleted=total)
         except Exception:
             logger.exception("alert_deliveries_purge_failed")
 
 
 class AlertGaugeTask(_Loop):
-    """Feeds `cv_alerts_total{enabled}` and `cv_alert_deliveries_pending`."""
+    """Feeds `cv_alerts_total{state}` and `cv_alert_deliveries_pending`."""
 
     def __init__(
         self,

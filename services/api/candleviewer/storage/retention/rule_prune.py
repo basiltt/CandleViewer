@@ -8,14 +8,15 @@ evaluator, and the job is idempotent so the exact minute is immaterial.
 from __future__ import annotations
 
 import asyncio
-import logging
 from collections.abc import Awaitable, Callable
 from typing import Protocol
+
+import structlog
 
 from candleviewer.observability.context import spawn
 from candleviewer.storage.retention.schedule import RetentionSchedule
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 PRUNE_INTERVAL_SECONDS = 24 * 3600
 
 

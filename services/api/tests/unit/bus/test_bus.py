@@ -6,6 +6,7 @@ from __future__ import annotations
 import asyncio
 
 import pytest
+from structlog.testing import capture_logs
 
 from candleviewer.bus.bus import Bus
 from candleviewer.bus.metrics import (
@@ -92,9 +93,7 @@ async def test_conflate_latest_keeps_newest_only_even_with_large_maxsize() -> No
 
 
 @pytest.mark.asyncio
-async def test_slow_consumer_scenario_is_named_not_guessed(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
+async def test_slow_consumer_scenario_is_named_not_guessed() -> None:
     """Gherkin: Slow consumer is named, not guessed."""
     # CONFLATE_LATEST keeps newest-only (depth is always <=1 regardless of
     # maxsize), so the lag threshold must be 1 for this scenario to fire.
@@ -106,14 +105,14 @@ async def test_slow_consumer_scenario_is_named_not_guessed(
         maxsize=100,
         lag_warn_threshold=1,
     )
-    with caplog.at_level("WARNING", logger="candleviewer.bus"):
+    with capture_logs() as logs:
         for i in range(3):
             await bus.publish(TRADE_TOPIC, f"t{i}")
 
-    warnings = [r for r in caplog.records if r.levelname == "WARNING"]
+    warnings = [e for e in logs if e["log_level"] == "warning"]
     assert warnings, "a structured warning must be logged once the lag threshold is crossed"
-    assert warnings[-1].subscriber == "footprint"  # type: ignore[attr-defined]
-    assert warnings[-1].topic == TRADE_TOPIC.key  # type: ignore[attr-defined]
+    assert warnings[-1]["subscriber"] == "footprint"
+    assert warnings[-1]["topic"] == TRADE_TOPIC.key
     assert bus_subscriber_lag.labels(subscriber="footprint")._value.get() >= 1
 
 

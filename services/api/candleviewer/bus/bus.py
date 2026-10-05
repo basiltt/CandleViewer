@@ -14,10 +14,11 @@ queue gives deterministic per-topic, per-subscriber ordering.
 from __future__ import annotations
 
 import asyncio
-import logging
 from collections import deque
 from dataclasses import dataclass, field
 from typing import Any
+
+import structlog
 
 from candleviewer.bus.errors import BusShuttingDownError
 from candleviewer.bus.metrics import (
@@ -30,8 +31,7 @@ from candleviewer.bus.metrics import (
 )
 from candleviewer.bus.models import QueuePolicy, StreamInvalidated, Topic, TopicPattern
 
-# nosemgrep: cv-obs-no-direct-getlogger -- legacy stdlib logger; migrate to cv.obs logger (#1716)
-logger = logging.getLogger("candleviewer.bus")
+logger = structlog.get_logger("candleviewer.bus")
 
 DEFAULT_QUEUE_SIZE = 4096
 DEFAULT_LAG_WARN_THRESHOLD = 512
@@ -172,7 +172,9 @@ class Bus:
         if depth >= sub.lag_warn_threshold:
             logger.warning(
                 "bus subscriber lagging",
-                extra={"subscriber": sub.name, "topic": topic.key, "queue_depth": depth},
+                subscriber=sub.name,
+                topic=topic.key,
+                queue_depth=depth,
             )
 
     @staticmethod
@@ -210,5 +212,5 @@ class Bus:
             if sub.qsize():
                 outstanding[sub.name] = sub.qsize()
         if outstanding:
-            logger.warning("bus drain: outstanding never-drop events", extra=outstanding)
+            logger.warning("bus drain: outstanding never-drop events", outstanding=outstanding)
         return outstanding

@@ -8,16 +8,16 @@ request payload can never leave through the error path.
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
+import structlog
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from candleviewer.observability.redaction import redact_structure, redact_text
 
-_log = logging.getLogger(__name__)
+_log = structlog.get_logger(__name__)
 _PROBLEM = "application/problem+json"
 _BASE = "https://candleviewer.local/errors/"
 

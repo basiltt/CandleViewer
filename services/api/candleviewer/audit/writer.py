@@ -39,12 +39,13 @@ from __future__ import annotations
 
 import asyncio
 import json
-import logging
 import uuid
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+import structlog
 
 from candleviewer.audit.actions import validate_action
 from candleviewer.audit.errors import AuditError
@@ -54,8 +55,7 @@ from candleviewer.audit.repository import AuditRepository
 from candleviewer.audit.wal import AuditWal, AuditWalFull
 from candleviewer.observability.context import spawn
 
-# nosemgrep: cv-obs-no-direct-getlogger -- legacy stdlib logger; migrate to cv.obs logger (#1716)
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 AlarmCallback = Callable[[str], Awaitable[None]] | None
 Clock = Callable[[], datetime]

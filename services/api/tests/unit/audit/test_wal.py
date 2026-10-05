@@ -5,7 +5,6 @@ space on a full WAL, and the flusher-death log."""
 from __future__ import annotations
 
 import asyncio
-import logging
 import zlib
 from collections.abc import Callable
 from pathlib import Path
@@ -13,6 +12,7 @@ from typing import Any
 
 import pytest
 from audit_fakes import FakeAuditRepository, FakeClock
+from structlog.testing import capture_logs
 
 from candleviewer.audit.wal import AuditWal, AuditWalCorrupt, AuditWalFull, encode_frame
 from candleviewer.audit.writer import AuditWriter, _log_task_failure
@@ -56,16 +56,16 @@ async def test_writer_compacts_committed_prefix_when_wal_full(
     assert w.refused_total == 0
 
 
-async def test_log_task_failure_reports_crash(caplog: pytest.LogCaptureFixture) -> None:
+async def test_log_task_failure_reports_crash() -> None:
     async def boom() -> None:
         raise ValueError("x")
 
     task = asyncio.create_task(boom())
     with pytest.raises(ValueError):
         await task
-    with caplog.at_level(logging.CRITICAL):
+    with capture_logs() as logs:
         _log_task_failure(task)
-    assert "audit writer task died" in caplog.text
+    assert any(e["event"] == "audit writer task died" for e in logs)
 
 
 @pytest.mark.parametrize("cut", [1, 3, 12, -1])
@@ -84,17 +84,15 @@ def test_wal_torn_tail_truncated_before_next_append(tmp_path: Path, cut: int) ->
     assert [r for _, r in reopened.replay()] == [{"a": 1}, {"a": 2}]
 
 
-def test_wal_torn_tail_in_process_append_and_replay_skip(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
-) -> None:
+def test_wal_torn_tail_in_process_append_and_replay_skip(tmp_path: Path) -> None:
     path = tmp_path / "w.wal"
     wal = AuditWal(path)
     wal.append({"a": 1})
     with open(path, "ab") as fh:
         fh.write(encode_frame({"a": "torn"})[:-4])
-    with caplog.at_level(logging.CRITICAL):
+    with capture_logs() as logs:
         assert [r for _, r in wal.replay()] == [{"a": 1}]
-    assert "torn tail" in caplog.text
+    assert any("torn tail" in e["event"] for e in logs)
     wal.append({"a": 2})
     assert wal.torn_tail_truncations == 1
     assert [r for _, r in wal.replay()] == [{"a": 1}, {"a": 2}]
