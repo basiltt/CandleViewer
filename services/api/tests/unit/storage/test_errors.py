@@ -9,6 +9,9 @@ from __future__ import annotations
 
 from candleviewer.storage.errors import (
     ERROR_CODES,
+    IlpRowError,
+    InvalidSymbol,
+    MissingDesignatedTimestamp,
     StorageDiskCritical,
     StorageError,
     StorageExportVerifyFailed,
@@ -17,6 +20,7 @@ from candleviewer.storage.errors import (
     StorageRetentionBlockedUnverified,
     StorageSchemaDrift,
     StorageTierUnavailable,
+    UnknownIlpTable,
 )
 
 
@@ -30,6 +34,10 @@ def test_error_codes_are_stable_and_unique() -> None:
         StorageRetentionBlockedUnverified: "STORAGE_RETENTION_BLOCKED_UNVERIFIED",
         StorageRetentionBlockedByReplay: "STORAGE_RETENTION_BLOCKED_REPLAY",
         StorageDiskCritical: "STORAGE_DISK_CRITICAL",
+        IlpRowError: "STORAGE_ILP_ROW_INVALID",
+        MissingDesignatedTimestamp: "STORAGE_ILP_MISSING_DESIGNATED_TS",
+        InvalidSymbol: "STORAGE_ILP_INVALID_SYMBOL",
+        UnknownIlpTable: "STORAGE_ILP_UNKNOWN_TABLE",
     }
     assert len(set(ERROR_CODES.values())) == len(ERROR_CODES)
 
