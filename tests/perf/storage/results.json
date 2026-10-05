@@ -7,16 +7,16 @@
       "target_ms": 100.0,
       "unit": "ms",
       "n": 30,
-      "p50": 85.84120000159601,
-      "p95": 110.67370000091614,
-      "p99": 117.52239999987069,
+      "p50": 26.132099999813363,
+      "p95": 47.33459999260958,
+      "p99": 59.08740000450052,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "warm",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "1:cold": {
@@ -26,16 +26,16 @@
       "target_ms": 100.0,
       "unit": "ms",
       "n": 30,
-      "p50": 85.8224000003247,
-      "p95": 153.87249999912456,
-      "p99": 174.69680000067456,
+      "p50": 28.08389998972416,
+      "p95": 53.17590000049677,
+      "p99": 57.76749999495223,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "cold",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "2:warm": {
@@ -45,16 +45,16 @@
       "target_ms": 150.0,
       "unit": "ms",
       "n": 30,
-      "p50": 40.65379999883589,
-      "p95": 58.8199000012537,
-      "p99": 59.8162999995111,
+      "p50": 8.091399999102578,
+      "p95": 12.359500004095025,
+      "p99": 12.571299987030216,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "warm",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "2:cold": {
@@ -64,16 +64,16 @@
       "target_ms": 150.0,
       "unit": "ms",
       "n": 30,
-      "p50": 36.06220000074245,
-      "p95": 74.3438999998034,
-      "p99": 78.29640000272775,
+      "p50": 10.085200003231876,
+      "p95": 10.873200008063577,
+      "p99": 12.833400003728457,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "cold",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "3:warm": {
@@ -83,16 +83,16 @@
       "target_ms": 50.0,
       "unit": "ms",
       "n": 30,
-      "p50": 7.994999999937136,
-      "p95": 9.231200001522666,
-      "p99": 9.245100001862738,
+      "p50": 2.215699991211295,
+      "p95": 2.839499997207895,
+      "p99": 2.9066999995848164,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "warm",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "3:cold": {
@@ -102,16 +102,16 @@
       "target_ms": 50.0,
       "unit": "ms",
       "n": 30,
-      "p50": 19.85190000050352,
-      "p95": 25.647300000855466,
-      "p99": 72.32549999753246,
+      "p50": 4.833099999814294,
+      "p95": 5.426999996416271,
+      "p99": 5.563400001847185,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "cold",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "4:warm": {
@@ -121,16 +121,16 @@
       "target_ms": 80.0,
       "unit": "ms",
       "n": 30,
-      "p50": 58.013499998196494,
-      "p95": 85.4747999983374,
-      "p99": 103.2134999986738,
+      "p50": 10.0215999991633,
+      "p95": 14.510900000459515,
+      "p99": 31.14089999871794,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "warm",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "4:cold": {
@@ -140,16 +140,16 @@
       "target_ms": 80.0,
       "unit": "ms",
       "n": 30,
-      "p50": 60.85509999684291,
-      "p95": 974.0947999998752,
-      "p99": 1086.1686999996891,
+      "p50": 13.932499990914948,
+      "p95": 14.680499996757135,
+      "p99": 15.024000007542782,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "cold",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "5:warm": {
@@ -159,16 +159,16 @@
       "target_ms": 10.0,
       "unit": "ms",
       "n": 30,
-      "p50": 6.556499996804632,
-      "p95": 29.206800001702504,
-      "p99": 45.869899997342145,
+      "p50": 1.5808999887667596,
+      "p95": 1.745899993693456,
+      "p99": 2.3289999953703955,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "warm",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "5:cold": {
@@ -178,16 +178,16 @@
       "target_ms": 10.0,
       "unit": "ms",
       "n": 30,
-      "p50": 12.994000000617234,
-      "p95": 20.75219999824185,
-      "p99": 22.342899999785004,
+      "p50": 3.8758000009693205,
+      "p95": 5.303300000377931,
+      "p99": 6.112499992013909,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "cold",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "6:warm": {
@@ -197,16 +197,16 @@
       "target_ms": 50.0,
       "unit": "ms",
       "n": 30,
-      "p50": 3.1456999968213495,
-      "p95": 4.554799998004455,
-      "p99": 4.899100000329781,
+      "p50": 1.2448999914340675,
+      "p95": 1.963300004717894,
+      "p99": 2.036899997619912,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "warm",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "6:cold": {
@@ -216,16 +216,16 @@
       "target_ms": 50.0,
       "unit": "ms",
       "n": 30,
-      "p50": 8.685400000103982,
-      "p95": 24.12199999889708,
-      "p99": 242.57870000292314,
+      "p50": 2.925900000263937,
+      "p95": 5.447399991680868,
+      "p99": 11.014000003342517,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "cold",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "7:warm": {
@@ -235,16 +235,16 @@
       "target_ms": 200.0,
       "unit": "ms",
       "n": 30,
-      "p50": 49.76200000237441,
-      "p95": 62.12550000054762,
-      "p99": 66.00360000084038,
+      "p50": 12.189499990199693,
+      "p95": 14.0596999990521,
+      "p99": 14.205799991032109,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "warm",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "7:cold": {
@@ -254,16 +254,16 @@
       "target_ms": 200.0,
       "unit": "ms",
       "n": 30,
-      "p50": 69.74049999917042,
-      "p95": 99.08369999902789,
-      "p99": 136.2435999981244,
+      "p50": 12.4913000036031,
+      "p95": 13.658299998496659,
+      "p99": 13.736599998082966,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "cold",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "8:warm": {
@@ -273,16 +273,16 @@
       "target_ms": 60.0,
       "unit": "ms",
       "n": 30,
-      "p50": 12.935200000356417,
-      "p95": 14.595000000554137,
-      "p99": 14.64289999785251,
+      "p50": 2.4966000055428594,
+      "p95": 3.4324999869568273,
+      "p99": 3.700599991134368,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "warm",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "8:cold": {
@@ -292,16 +292,16 @@
       "target_ms": 60.0,
       "unit": "ms",
       "n": 30,
-      "p50": 21.229900001344504,
-      "p95": 38.7475000025006,
-      "p99": 48.51319999943371,
+      "p50": 5.165200011106208,
+      "p95": 6.282899994403124,
+      "p99": 6.70199999876786,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "cold",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "9:warm": {
@@ -311,16 +311,16 @@
       "target_ms": 40.0,
       "unit": "ms",
       "n": 30,
-      "p50": 5.495000001246808,
-      "p95": 6.061399999452988,
-      "p99": 6.062399999791523,
+      "p50": 1.143500005127862,
+      "p95": 1.4615000109188259,
+      "p99": 1.5394999936688691,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "warm",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "9:cold": {
@@ -330,16 +330,16 @@
       "target_ms": 40.0,
       "unit": "ms",
       "n": 30,
-      "p50": 9.342800000013085,
-      "p95": 122.57640000098036,
-      "p99": 147.53840000048513,
+      "p50": 2.500500006135553,
+      "p95": 2.980099990963936,
+      "p99": 3.5992999910376966,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "cold",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "10:warm": {
@@ -349,16 +349,16 @@
       "target_ms": 30.0,
       "unit": "ms",
       "n": 30,
-      "p50": 3.600899999582907,
-      "p95": 4.085199998371536,
-      "p99": 4.3680999988282565,
+      "p50": 0.7504000095650554,
+      "p95": 0.9104999917326495,
+      "p99": 1.1439999943831936,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "warm",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "10:cold": {
@@ -368,16 +368,16 @@
       "target_ms": 30.0,
       "unit": "ms",
       "n": 30,
-      "p50": 7.400699996651383,
-      "p95": 15.725699999165954,
-      "p99": 81.22860000003129,
+      "p50": 2.1256000036373734,
+      "p95": 2.4002999998629093,
+      "p99": 2.424200007226318,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "cold",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "11:warm": {
@@ -387,16 +387,16 @@
       "target_ms": 200.0,
       "unit": "ms",
       "n": 30,
-      "p50": 38.73139999996056,
-      "p95": 48.17180000100052,
-      "p99": 49.607799999648705,
+      "p50": 11.45209999231156,
+      "p95": 16.439600003650412,
+      "p99": 17.755399996531196,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "warm",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "11:cold": {
@@ -406,27 +406,27 @@
       "target_ms": 200.0,
       "unit": "ms",
       "n": 30,
-      "p50": 43.74470000038855,
-      "p95": 87.68810000037774,
-      "p99": 89.83850000004168,
+      "p50": 12.953999990713783,
+      "p95": 16.027600009692833,
+      "p99": 17.72809999238234,
       "conditions": {
         "engine": "duckdb-proxy",
         "cache": "cold",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-seed1-n20000",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     }
   },
   "ingest_sustained": {
-    "submitted_rows": 140000,
-    "sink_lines_received": 140000,
-    "sink_bytes_received": 20953198,
-    "written_rows": 140000,
-    "rows_per_s": 45300,
+    "submitted_rows": 320000,
+    "sink_lines_received": 320000,
+    "sink_bytes_received": 48036112,
+    "written_rows": 320000,
+    "rows_per_s": 104621,
     "max_queue_depth": 0,
-    "backpressure_onset_rows_s": 37112,
+    "backpressure_onset_rows_s": 115833,
     "trade_rows_dropped": 0,
     "write_errors": 0,
     "target_rows_s": 600000,
@@ -436,17 +436,17 @@
       "cpu_limit": "unrestricted",
       "mem_limit": "unrestricted",
       "dataset_id": "synthetic-trades",
-      "commit_sha": "5690aea"
+      "commit_sha": "04182bd"
     }
   },
   "ingest_stress": {
-    "submitted_rows": 50000,
-    "sink_lines_received": 50000,
-    "sink_bytes_received": 7461987,
-    "written_rows": 50000,
-    "rows_per_s": 14768,
-    "max_queue_depth": 0,
-    "backpressure_onset_rows_s": 58373,
+    "submitted_rows": 92500,
+    "sink_lines_received": 92500,
+    "sink_bytes_received": 13814116,
+    "written_rows": 92500,
+    "rows_per_s": 30366,
+    "max_queue_depth": 2000,
+    "backpressure_onset_rows_s": 577634,
     "trade_rows_dropped": 0,
     "write_errors": 0,
     "target_rows_s": 600000,
@@ -456,14 +456,14 @@
       "cpu_limit": "unrestricted",
       "mem_limit": "unrestricted",
       "dataset_id": "synthetic-trades",
-      "commit_sha": "5690aea"
+      "commit_sha": "04182bd"
     }
   },
   "cold": {
     "export": {
       "bytes": 2912344,
-      "seconds": 0.1452,
-      "mb_per_s": 20.1,
+      "seconds": 0.0594,
+      "mb_per_s": 49.0,
       "target_mb_s": 200,
       "note": "output size/time; MB/s is compressed bytes written",
       "conditions": {
@@ -472,42 +472,42 @@
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-200000rows",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     },
     "compaction": {
       "small_files": 200,
-      "scan_ms_before": 66.657,
-      "scan_ms_after": 7.669,
-      "speedup_x": 8.69,
+      "scan_ms_before": 24.708,
+      "scan_ms_after": 3.009,
+      "speedup_x": 8.21,
       "conditions": {
         "engine": "duckdb",
         "cache": "warm",
         "cpu_limit": "unrestricted",
         "mem_limit": "unrestricted",
         "dataset_id": "synthetic-200000rows",
-        "commit_sha": "5690aea"
+        "commit_sha": "04182bd"
       }
     }
   },
   "reaper_loop_lag": {
-    "samples": 601,
-    "max_lag_ms": 118.25,
+    "samples": 602,
+    "max_lag_ms": 36.7,
     "partitions": 1200,
     "partitions_dropped": 1200,
-    "run_seconds": 0.378,
+    "run_seconds": 0.255,
     "threshold_ms": [
       50,
       100
     ],
-    "within_threshold": false,
+    "within_threshold": true,
     "conditions": {
       "engine": "real Reaper+fake ops",
       "cache": "n/a",
       "cpu_limit": "unrestricted",
       "mem_limit": "unrestricted",
       "dataset_id": "synthetic-1200-partitions",
-      "commit_sha": "5690aea"
+      "commit_sha": "04182bd"
     }
   },
   "storage_growth": {
@@ -544,7 +544,7 @@
       "cpu_limit": "unrestricted",
       "mem_limit": "unrestricted",
       "dataset_id": "replay-seed1-n50000",
-      "commit_sha": "5690aea"
+      "commit_sha": "04182bd"
     }
   }
 }

@@ -100,6 +100,7 @@ async def run_ingest(
     drain_delay_s: float = 0.0,
     max_queue_rows: int = 200_000,
     seed: int = 1,
+    require_backpressure: bool = False,
 ) -> dict[str, object]:
     """Push trade rows through the real IlpWriter for `seconds`; report rows/s,
     queue depth, backpressure onset (first time a write_rows call had to wait)
@@ -117,6 +118,15 @@ async def run_ingest(
     submitted = 0
     max_depth = 0
     onset: float | None = None
+    stop_sampling = False
+
+    async def sample_depth() -> None:
+        nonlocal max_depth
+        while not stop_sampling:
+            max_depth = max(max_depth, w.queue_depth("trades"))
+            await asyncio.sleep(0)
+
+    sampler = asyncio.create_task(sample_depth())
     t0 = time.perf_counter()
     while time.perf_counter() - t0 < seconds:
         rows = _trade_rows(rng, submitted, batch)
@@ -128,9 +138,15 @@ async def run_ingest(
         if onset is None and (waited > 0.01 or w.queue_depth("trades") >= max_queue_rows - batch):
             onset = submitted / (time.perf_counter() - t0)
     elapsed = time.perf_counter() - t0
+    stop_sampling = True
+    await sampler
     await w.stop()
     await asyncio.sleep(0.2)  # let the sink consume what the kernel buffered
     await sink.stop()
+    if require_backpressure and (max_depth <= 0 or onset is None):
+        raise AssertionError(
+            f"stress scenario never backed up: max_queue_depth={max_depth}, onset={onset}"
+        )
     return {
         "submitted_rows": submitted,
         "sink_lines_received": sink.lines,
