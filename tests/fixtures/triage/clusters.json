@@ -1,0 +1,8 @@
+{
+  "confirmed": { "storage-writer": [3, 6] },
+  "rules": {
+    "flaky-tests": ["flaky"],
+    "dod-evidence-gap": ["evidence missing"],
+    "unwired-component": ["never constructed"]
+  }
+}
