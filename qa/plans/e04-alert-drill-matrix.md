@@ -42,6 +42,9 @@ Drill windows are recorded in `system_events`; coordinate security-rule drills (
 | IngestionNeverDropQueueFull | ticket | 5m | `docs/ops/ingestion.md#alert-ingestionneverdropqueuefull` | synthetic | | | | | | pending |
 | IngestionStoppedReporting | page | 5m | `docs/ops/ingestion.md#alert-ingestionstoppedreporting` | synthetic | | | | | | pending |
 | IngestionMetricsAbsent | ticket | 15m | `docs/ops/ingestion.md#alert-ingestionmetricsabsent` | synthetic | | | | | | pending |
+| GADefectForecastSlipping | ticket | 3d | `docs/plan/07-release-and-prr.md#alert-gadefectforecastslipping` | synthetic | | | | | | pending (promtool unit/firing test: #1844 follow-up) |
+| GADefectArrivalExceedsClosure | ticket | 1h | `docs/plan/07-release-and-prr.md#alert-gadefectarrivalexceedsclosure` | synthetic | | | | | | pending (promtool unit/firing test: #1844 follow-up) |
+| GADefectSLABreached | ticket | 5m | `docs/plan/07-release-and-prr.md#alert-gadefectslabreached` | synthetic | | | | | | pending (promtool unit/firing test: #1844 follow-up) |
 
 ## Execution status and exception request (2026-10-02)
 

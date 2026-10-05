@@ -1,0 +1,590 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "cv-prometheus"
+        },
+        "enable": true,
+        "expr": "changes(build_info{env=\"$env\"}[$__rate_interval]) > 0",
+        "iconColor": "#0072B2",
+        "name": "Deploys",
+        "tagKeys": "version,commit",
+        "titleFormat": "deploy"
+      }
+    ]
+  },
+  "editable": false,
+  "panels": [
+    {
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "## GA readiness - defects (GA 2027-03-25) - env = **$env**",
+        "mode": "markdown"
+      },
+      "title": "Environment",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 2,
+      "panels": [],
+      "title": "Burn-down vs GA target (S23-S26, GA 2027-03-25)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cv-prometheus"
+      },
+      "description": "Legend lists severity P0 (most severe) to P3. Dashed lines are the exit targets.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "noValue": "STALE: no push for over 2 h (or no data)",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0072B2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "TARGET.*"
+            },
+            "properties": [
+              {
+                "id": "custom.stacking",
+                "value": {
+                  "mode": "none"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "id": 3,
+      "maxDataPoints": 500,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "ga_defects_open and on() (time() - push_time_seconds{job=\"ga_defects\"} < 7200)",
+          "legendFormat": "{{severity}} open",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "vector(0)",
+          "legendFormat": "TARGET P0/P1 = 0 by 2027-03-25",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "vector(10)",
+          "legendFormat": "TARGET P2 <= 10 by 2027-03-25",
+          "refId": "C"
+        }
+      ],
+      "title": "Open defects by severity (stacked P0 > P1 > P2 > P3) vs target",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cv-prometheus"
+      },
+      "description": "Linear regression, trailing 3 weeks. A projection, not a commitment.",
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "STALE: no push for over 2 h (or no data)",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0072B2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "d"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 4
+      },
+      "id": 4,
+      "maxDataPoints": 500,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "ga_defect_forecast_days_to_zero{method=\"linear\"} and on() (time() - push_time_seconds{job=\"ga_defects\"} < 7200)",
+          "legendFormat": "linear 3-week fit",
+          "refId": "A"
+        }
+      ],
+      "title": "Zero-crossing, linear fit (days from now; no value = undefined)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cv-prometheus"
+      },
+      "description": "Mean net burn rate, trailing 3 weeks. A projection, not a commitment.",
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "STALE: no push for over 2 h (or no data)",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0072B2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "d"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 4
+      },
+      "id": 5,
+      "maxDataPoints": 500,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "ga_defect_forecast_days_to_zero{method=\"trailing_3w\"} and on() (time() - push_time_seconds{job=\"ga_defects\"} < 7200)",
+          "legendFormat": "trailing 3-week rate",
+          "refId": "A"
+        }
+      ],
+      "title": "Zero-crossing, 3-week trailing rate (days from now)",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 6,
+      "panels": [],
+      "title": "Flow, ageing and queue health",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cv-prometheus"
+      },
+      "description": "Leading indicator: when arrived exceeds closed the open curve rises.",
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "STALE: no push for over 2 h (or no data)",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0072B2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 7,
+      "maxDataPoints": 500,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "ga_defects_arrived_7d and on() (time() - push_time_seconds{job=\"ga_defects\"} < 7200)",
+          "legendFormat": "arrived (7d)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "ga_defects_closed_7d and on() (time() - push_time_seconds{job=\"ga_defects\"} < 7200)",
+          "legendFormat": "closed (7d)",
+          "refId": "B"
+        }
+      ],
+      "title": "Arrival vs closure, rolling 7 days (arrival above closure cannot converge)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cv-prometheus"
+      },
+      "description": "Cumulative histogram; triage SLA windows per 03-testing-strategy 11.3.",
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "STALE: no push for over 2 h (or no data)",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0072B2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 8,
+      "maxDataPoints": 500,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "ga_defect_age_days_bucket and on() (time() - push_time_seconds{job=\"ga_defects\"} < 7200)",
+          "legendFormat": "{{severity}} <= {{le}} d",
+          "refId": "A"
+        }
+      ],
+      "title": "Ageing: defects at most N days old (SLA: P0 2h, P1 1d, P2 3d, P3 5d)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cv-prometheus"
+      },
+      "description": "Open type/bug issues without the triaged label.",
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "STALE: no push for over 2 h (or no data)",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0072B2",
+                "value": null
+              },
+              {
+                "color": "#E69F00",
+                "value": 1
+              },
+              {
+                "color": "#D55E00",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 16
+      },
+      "id": 9,
+      "maxDataPoints": 500,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "ga_defects_untriaged and on() (time() - push_time_seconds{job=\"ga_defects\"} < 7200)",
+          "legendFormat": "untriaged",
+          "refId": "A"
+        }
+      ],
+      "title": "Untriaged open bugs",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cv-prometheus"
+      },
+      "description": "Any P0/P1 breached fires GADefectSLABreached.",
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "STALE: no push for over 2 h (or no data)",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0072B2",
+                "value": null
+              },
+              {
+                "color": "#E69F00",
+                "value": 1
+              },
+              {
+                "color": "#D55E00",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 16
+      },
+      "id": 10,
+      "maxDataPoints": 500,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "sum by (severity, state) (ga_defects_sla_state) and on() (time() - push_time_seconds{job=\"ga_defects\"} < 7200)",
+          "legendFormat": "{{severity}} {{state}}",
+          "refId": "A"
+        }
+      ],
+      "title": "SLA at-risk / breached by severity",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cv-prometheus"
+      },
+      "description": "Where the debt sits (area/* labels).",
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "STALE: no push for over 2 h (or no data)",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0072B2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 11,
+      "maxDataPoints": 500,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "ga_defects_open_by_component and on() (time() - push_time_seconds{job=\"ga_defects\"} < 7200)",
+          "legendFormat": "{{component}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Open defects by component",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cv-prometheus"
+      },
+      "description": "From e49-design-qa-ledger.csv; design debt next to functional debt.",
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "STALE: no push for over 2 h (or no data)",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0072B2",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 23
+      },
+      "id": 12,
+      "maxDataPoints": 500,
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cv-prometheus"
+          },
+          "expr": "design_qa_findings_open and on() (time() - push_time_seconds{job=\"design_qa_ledger\"} < 7200)",
+          "legendFormat": "design {{severity}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Design-QA findings open by severity (E49-D01 ledger)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": [
+    "candleviewer",
+    "ga",
+    "defects"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "demo",
+          "value": "demo"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "cv-prometheus"
+        },
+        "includeAll": false,
+        "label": "env",
+        "multi": false,
+        "name": "env",
+        "query": {
+          "query": "label_values(build_info, env)",
+          "refId": "env"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timezone": "utc",
+  "title": "GA readiness - defects",
+  "uid": "cv-ga-defects"
+}

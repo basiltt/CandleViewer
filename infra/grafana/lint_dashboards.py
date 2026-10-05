@@ -25,6 +25,17 @@ EXTERNAL = {
     "prometheus_rule_group_last_duration_seconds",
     "alertmanager_notifications_failed_total",
     "ALERTS",
+    # E49-T02 push-model metrics (tools/ga_defects via pushgateway), not app-catalogue metrics.
+    "push_time_seconds",
+    "ga_defects_open",
+    "ga_defects_open_by_component",
+    "ga_defects_arrived_7d",
+    "ga_defects_closed_7d",
+    "ga_defects_untriaged",
+    "ga_defects_sla_state",
+    "ga_defect_age_days_bucket",
+    "ga_defect_forecast_days_to_zero",
+    "design_qa_findings_open",
 }
 _FUNCS = {
     "sum",
@@ -165,7 +176,10 @@ def lint(dash_dir: Path = DASH, rules_dir: Path = RULES) -> list[str]:
     known = catalogue_names()
     rules = recorded_rules(rules_dir)
     files = sorted(dash_dir.glob("*.json"))
-    errs = [] if len(files) == 7 else [f"expected 7 dashboards, found {len(files)}"]
+    from generate_dashboards import BOARDS  # registry is the single source of the count
+
+    want = len(BOARDS)
+    errs = [] if len(files) == want else [f"expected {want} dashboards, found {len(files)}"]
     for f in files:
         errs += lint_dashboard(f, known, rules)
     return errs

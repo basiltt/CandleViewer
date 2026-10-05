@@ -1,0 +1,9 @@
+finding_id,severity,status,component,opened
+DQ-001,P1,open,charting-ui,2026-10-01
+DQ-002,P2,in-progress,design-system,2026-10-01
+DQ-003,P2,open,charting-ui,2026-10-02
+DQ-004,P3,fixed,design-system,2026-09-28
+DQ-005,P0,accepted,charting-ui,2026-09-29
+DQ-006,P9,open,charting-ui,2026-10-02
+DQ-007,P2,open
+,P2,open,x,2026-10-02
