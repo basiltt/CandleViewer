@@ -83,9 +83,18 @@ def test_query_shapes_report_warm_and_cold_separately_with_conditions() -> None:
 
 
 def test_stress_ingest_never_drops_trades_and_records_backpressure() -> None:
-    r = asyncio.run(
-        measure.run_ingest(seconds=0.3, batch=500, drain_delay_s=0.02, max_queue_rows=1000)
-    )
+    async def bounded() -> dict[str, object]:
+        try:
+            return await asyncio.wait_for(
+                measure.run_ingest(seconds=0.3, batch=500, drain_delay_s=0.02, max_queue_rows=1000),
+                timeout=30.0,
+            )
+        except TimeoutError:
+            raise AssertionError(
+                "run_ingest hung >30 s under backpressure (writer deadlock?)"
+            ) from None
+
+    r = asyncio.run(bounded())
     assert r["trade_rows_dropped"] == 0
     assert r["backpressure_onset_rows_s"] is not None
 
