@@ -105,6 +105,8 @@ jobs:
         run: uv run lint-imports
 
       - name: pytest (unit + non-exchange_smoke, network-guarded)
+        env:
+          HYPOTHESIS_PROFILE: ci
         run: >
           uv run pytest -p no:cacheprovider -m "not exchange_smoke and not (chaos and integration) and not roundtrip"
           --cov --cov-report=xml:coverage.xml --cov-report=term
