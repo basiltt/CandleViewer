@@ -126,6 +126,8 @@ exceptions are needed, so EX-02..EX-04 are withdrawn (§16.2 of `04-security-pro
 **Correction (E43-T05-B1, #1737):** that sweep later reports 2 High with no upstream patch:
 http-cache-semantics (GHSA-ch52-4w7c-c8xp) and braces (GHSA-vfj7-8cjw-p6xm). Both are build/dev-only
 transitives; recorded as EX-05/EX-06 (EX-02..EX-04 stay withdrawn) (§16.2) and in `security/accepted-risks.yaml`, expiry 2026-12-31.
+**Update (#1857):** EX-05 is cleared by a `pnpm-workspace.yaml` override (`http-cache-semantics >=4.3.0 <5`,
+no major bump) and its register entry removed; EX-06 (braces, no upstream patch) remains.
 The freeze-manifest `pnpm-graph` hash mismatch (defect 2) is only mitigated here by OS-independent normalisation
 (unit-tested); it is NOT verified on Windows+Linux, so #1737 must not be closed on it: track it as a separate bug.
 
