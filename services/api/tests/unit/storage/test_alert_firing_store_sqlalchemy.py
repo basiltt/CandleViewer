@@ -96,8 +96,9 @@ def test_firing_store_select_mirrors_alert_column_allow_list() -> None:
     from candleviewer.storage.repositories import alert_firing_sqlalchemy as m
     from candleviewer.storage.repositories.alerts_sqlalchemy import ALERT_COLUMNS
 
-    assert ALERT_COLUMNS + ", " in m._SELECT  # no secret column can slip in
-    assert "webhook_url_enc," not in m._SELECT and "secret" not in m._SELECT
+    for stmt in (str(m._LIVE), str(m._GET)):
+        assert ALERT_COLUMNS + ", " in stmt  # no secret column can slip in
+        assert "webhook_url_enc," not in stmt and "secret" not in stmt
 
 
 async def test_firing_store_rows_carry_last_bar_open_ms() -> None:

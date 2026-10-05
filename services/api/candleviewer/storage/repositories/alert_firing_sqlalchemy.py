@@ -22,10 +22,10 @@ from candleviewer.storage.repositories.relational_sqlalchemy import (
     SqlAlchemyRelationalRepository,
 )
 
-#: Static SQL only (no string building, Bandit B608). The column list mirrors
+#: Static literal SQL only (no string building: Bandit B608 / Semgrep). Columns mirror
 #: `ALERT_COLUMNS` (drift asserted by a unit test) plus the `bar_open_ms` of the latest
 #: delivery, so a restart rebuilds `once_per_bar` memory from exchange event time.
-_SELECT = (
+_LIVE = sa.text(
     "SELECT "
     "id::text AS id, owner_user_id::text AS owner_user_id, name, symbol, "
     "scope_account_id::text AS scope_account_id, condition_ir, "
@@ -36,10 +36,21 @@ _SELECT = (
     "(SELECT (d.context->>'bar_open_ms')::bigint FROM alert_deliveries d "
     "WHERE d.alert_id = alerts.id AND d.context->>'bar_open_ms' IS NOT NULL "
     "ORDER BY d.queued_at DESC, d.id DESC LIMIT 1) AS last_bar_open_ms "
-    "FROM alerts "
+    "FROM alerts WHERE enabled AND deleted_at IS NULL"
 )
-_LIVE = sa.text(_SELECT + "WHERE enabled AND deleted_at IS NULL")
-_GET = sa.text(_SELECT + "WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL")
+_GET = sa.text(
+    "SELECT "
+    "id::text AS id, owner_user_id::text AS owner_user_id, name, symbol, "
+    "scope_account_id::text AS scope_account_id, condition_ir, "
+    "condition_hash::text AS condition_hash, enabled, trigger_mode::text AS trigger_mode, "
+    "cooldown_seconds, snoozed_until, expires_at, severity::text AS severity, "
+    "channels::text[] AS channels, (webhook_url_enc IS NOT NULL) AS has_webhook, "
+    "message_template, last_fired_at, fire_count, created_at, updated_at, "
+    "(SELECT (d.context->>'bar_open_ms')::bigint FROM alert_deliveries d "
+    "WHERE d.alert_id = alerts.id AND d.context->>'bar_open_ms' IS NOT NULL "
+    "ORDER BY d.queued_at DESC, d.id DESC LIMIT 1) AS last_bar_open_ms "
+    "FROM alerts WHERE id = CAST(:id AS uuid) AND deleted_at IS NULL"
+)
 #: Conditional disarm: zero rows => another worker already fired this `once` alert.
 _DISARM_ONCE = sa.text(
     "UPDATE alerts SET enabled = false, updated_at = clock_timestamp() "
