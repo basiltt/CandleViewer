@@ -56,9 +56,6 @@ updates:
       npm-minor-patch:
         patterns: ["*"]
         update-types: ["minor", "patch"]
-      npm-major:
-        patterns: ["*"]
-        update-types: ["major"]
     labels:
       - "dependencies"
       - "area/frontend-platform"
@@ -67,11 +64,8 @@ updates:
     commit-message:
       prefix: "chore(frontend-platform)"
     ignore:
-      # Pinned runtime: package.json engines = node >=20.19 <21 (tools/ci/check-node-version.mjs).
-      # size-limit >=12 requires Node 22; revisit when the Node 22 upgrade ticket lands.
-      - dependency-name: "size-limit"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@size-limit/*"
+      # Majors are sequenced manually via #1819 (Node 22 floor first, #1778 F); remove once step 1 of #1819 lands.
+      - dependency-name: "*"
         update-types: ["version-update:semver-major"]
       # pnpm is pinned via `packageManager` + corepack in every workflow (pnpm@12.5.1).
       - dependency-name: "pnpm"
