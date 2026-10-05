@@ -18,6 +18,7 @@ Cold samples run in a fresh subprocess + fresh DuckDB instance each (OS page cac
 | Real `Reaper.run()` loop lag (1200 partitions) | max 118 ms (threshold 50-100 ms): **over**; defect #1826 (E07-T05-B1); local rerun not possible (no docker), re-measure on CI runner | 50-100 ms |
 | 24 h growth | **not measured**: CI QuestDB diskSize deltas are 16 MiB page-allocation multiples (see 21-database-schema 11.1 note); R0 proxy figure withdrawn | 0.5-0.75 total |
 
+Overflow policy (C-2.18): the ILP writer blocks the producer and self-flushes when its bounded queue is full — rows are never dropped (see #1835).
 Gate check: `test_baseline_gate_fires_on_deliberate_slowdown` injects a 50 ms slowdown and asserts regressions fire.
 Not run (needs docker / hours): 10-minute ingest, 12-month scans, reference 4 vCPU/8 GB profile -> deferred to nightly - tracked in #1778 A (owner exception).
 
