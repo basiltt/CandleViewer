@@ -91,9 +91,7 @@ class Board:
                 "defaults": {"unit": unit, "thresholds": _th(warn, bad)},
                 "overrides": [],
             },
-            "targets": [
-                {"refId": "A", "datasource": DS, "expr": expr, "legendFormat": legend}
-            ],
+            "targets": [{"refId": "A", "datasource": DS, "expr": expr, "legendFormat": legend}],
         }
         self.panels.append(p)
         self.x += w
@@ -214,9 +212,7 @@ def system() -> Board:
         legend="{{socket}}",
     )
     b.ts("Topic staleness", f"topic_staleness_seconds{{{E}}}", "s", 5, 15, "{{topic}}")
-    b.ts(
-        "Ingest queue depth", f"ingest_queue_depth{{{E}}}", "short", legend="{{stage}}"
-    )
+    b.ts("Ingest queue depth", f"ingest_queue_depth{{{E}}}", "short", legend="{{stage}}")
     b.row("Component health and observability stack")
     b.ts(
         "health_component_state (0=ok, higher=worse)",
@@ -277,9 +273,7 @@ def market() -> Board:
         0.02,
         0.05,
     )
-    b.ts(
-        "Ingest queue depth", f"ingest_queue_depth{{{E}}}", "short", legend="{{stage}}"
-    )
+    b.ts("Ingest queue depth", f"ingest_queue_depth{{{E}}}", "short", legend="{{stage}}")
     b.flush()
     return b
 
@@ -464,9 +458,7 @@ def frontend() -> Board:
     b.stat("Frame time p95 (budget 16 ms)", q("fe_frame_time_ms"), "ms", 16, 33)
     # Budget-ratio stats computed directly from catalogue histograms (no recording-rule
     # dependency): >1 means the p95 is over its budget.
-    b.stat(
-        "WS decode p95 / budget (2 ms)", f"{q('fe_ws_decode_ms')} / 2", "short", 1, 2.5
-    )
+    b.stat("WS decode p95 / budget (2 ms)", f"{q('fe_ws_decode_ms')} / 2", "short", 1, 2.5)
     b.stat(
         "Frame time p95 / budget (16 ms)",
         f"{q('fe_frame_time_ms')} / 16",
@@ -483,6 +475,117 @@ def frontend() -> Board:
     return b
 
 
+# --- GA readiness: defects (E49-T02) ------------------------------------------------
+# Target numbers are the R5 exit criteria (docs/plan/30-release-roadmap.md 9.3 item 3) and the
+# S26 boundary from docs/plan/backlog/_tools/calendar_cv.py; tests pin both so they cannot drift.
+GA_P01_TARGET, GA_P2_TARGET = 0, 10
+GA_DATE = "2027-03-25"
+STALE_S = 7200
+GA_FRESH = f'(time() - push_time_seconds{{job="ga_defects"}} < {STALE_S})'
+GA_LEDGER_FRESH = f'(time() - push_time_seconds{{job="design_qa_ledger"}} < {STALE_S})'
+NO_DATA = "STALE: no push for over 2 h (or no data)"
+
+
+def _fresh(metric: str, fresh: str = GA_FRESH) -> str:
+    """Drop the series when the pushgateway group is stale so the panel shows NO_DATA."""
+    return f"{metric} and on() {fresh}"
+
+
+def _extra(b: Board, refid: str, expr: str, legend: str) -> None:
+    b.panels[-1]["targets"].append(
+        {"refId": refid, "datasource": DS, "expr": expr, "legendFormat": legend}
+    )
+
+
+def _finish(b: Board, desc: str) -> None:
+    p = b.panels[-1]
+    p["description"] = desc
+    p["fieldConfig"]["defaults"]["noValue"] = NO_DATA
+
+
+def ga_defects() -> Board:
+    b = Board("cv-ga-defects", "GA readiness - defects", ["ga", "defects"])
+    b.panels[0]["options"]["content"] = f"## GA readiness - defects (GA {GA_DATE}) - env = **$env**"
+    b.row("Burn-down vs GA target (S23-S26, GA " + GA_DATE + ")")
+    b.ts(
+        "Open defects by severity (stacked P0 > P1 > P2 > P3) vs target",
+        _fresh("ga_defects_open"),
+        "short",
+        legend="{{severity}} open",
+    )
+    _extra(b, "B", f"vector({GA_P01_TARGET})", f"TARGET P0/P1 = {GA_P01_TARGET} by {GA_DATE}")
+    _extra(b, "C", f"vector({GA_P2_TARGET})", f"TARGET P2 <= {GA_P2_TARGET} by {GA_DATE}")
+    p = b.panels[-1]
+    p["fieldConfig"]["defaults"]["custom"] = {"stacking": {"mode": "normal"}}
+    p["fieldConfig"]["overrides"] = [
+        {
+            "matcher": {"id": "byRegexp", "options": "TARGET.*"},
+            "properties": [
+                {"id": "custom.stacking", "value": {"mode": "none"}},
+                {"id": "custom.lineStyle", "value": {"fill": "dash", "dash": [10, 10]}},
+            ],
+        }
+    ]
+    _finish(b, "Legend lists severity P0 (most severe) to P3. Dashed lines are the exit targets.")
+    b.stat(
+        "Zero-crossing, linear fit (days from now; no value = undefined)",
+        _fresh('ga_defect_forecast_days_to_zero{method="linear"}'),
+        "d",
+        legend="linear 3-week fit",
+    )
+    _finish(b, "Linear regression, trailing 3 weeks. A projection, not a commitment.")
+    b.stat(
+        "Zero-crossing, 3-week trailing rate (days from now)",
+        _fresh('ga_defect_forecast_days_to_zero{method="trailing_3w"}'),
+        "d",
+        legend="trailing 3-week rate",
+    )
+    _finish(b, "Mean net burn rate, trailing 3 weeks. A projection, not a commitment.")
+    b.row("Flow, ageing and queue health")
+    b.ts(
+        "Arrival vs closure, rolling 7 days (arrival above closure cannot converge)",
+        _fresh("ga_defects_arrived_7d"),
+        "short",
+        legend="arrived (7d)",
+    )
+    _extra(b, "B", _fresh("ga_defects_closed_7d"), "closed (7d)")
+    _finish(b, "Leading indicator: when arrived exceeds closed the open curve rises.")
+    b.ts(
+        "Ageing: defects at most N days old (SLA: P0 2h, P1 1d, P2 3d, P3 5d)",
+        _fresh("ga_defect_age_days_bucket"),
+        "short",
+        legend="{{severity}} <= {{le}} d",
+    )
+    _finish(b, "Cumulative histogram; triage SLA windows per 03-testing-strategy 11.3.")
+    b.stat("Untriaged open bugs", _fresh("ga_defects_untriaged"), "short", 1, 5, "untriaged")
+    _finish(b, "Open type/bug issues without the triaged label.")
+    b.stat(
+        "SLA at-risk / breached by severity",
+        _fresh("sum by (severity, state) (ga_defects_sla_state)"),
+        "short",
+        1,
+        1,
+        "{{severity}} {{state}}",
+    )
+    _finish(b, "Any P0/P1 breached fires GADefectSLABreached.")
+    b.ts(
+        "Open defects by component",
+        _fresh("ga_defects_open_by_component"),
+        "short",
+        legend="{{component}}",
+    )
+    _finish(b, "Where the debt sits (area/* labels).")
+    b.ts(
+        "Design-QA findings open by severity (E49-D01 ledger)",
+        _fresh("design_qa_findings_open", GA_LEDGER_FRESH),
+        "short",
+        legend="design {{severity}}",
+    )
+    _finish(b, "From e49-design-qa-ledger.csv; design debt next to functional debt.")
+    b.flush()
+    return b
+
+
 BOARDS = {
     "system-health": system,
     "market-data": market,
@@ -491,6 +594,7 @@ BOARDS = {
     "storage": storage,
     "ingestion": ingestion,
     "frontend": frontend,
+    "ga-defects": ga_defects,
 }
 
 

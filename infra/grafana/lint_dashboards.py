@@ -25,6 +25,17 @@ EXTERNAL = {
     "prometheus_rule_group_last_duration_seconds",
     "alertmanager_notifications_failed_total",
     "ALERTS",
+    # E49-T02 push-model metrics (tools/ga_defects via pushgateway), not app-catalogue metrics.
+    "push_time_seconds",
+    "ga_defects_open",
+    "ga_defects_open_by_component",
+    "ga_defects_arrived_7d",
+    "ga_defects_closed_7d",
+    "ga_defects_untriaged",
+    "ga_defects_sla_state",
+    "ga_defect_age_days_bucket",
+    "ga_defect_forecast_days_to_zero",
+    "design_qa_findings_open",
 }
 _FUNCS = {
     "sum",

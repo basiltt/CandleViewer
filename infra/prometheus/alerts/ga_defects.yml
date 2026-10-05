@@ -1,0 +1,55 @@
+groups:
+  - name: ga-defects
+    rules:
+      - alert: GADefectForecastSlipping
+        # Linear zero-crossing is later than the S26 boundary (2027-03-25 = 1805932800), or no
+        # convergence is projectable while P0/P1 defects are open. Pushed hourly, so 3d = 3 days.
+        expr: |
+          (
+            ga_defect_forecast_days_to_zero{method="linear"} > (1805932800 - time()) / 86400
+          )
+          or
+          (
+            (sum(ga_defects_open{severity=~"P0|P1"}) > 0)
+            unless on() ga_defect_forecast_days_to_zero{method="linear"}
+          )
+        for: 3d
+        labels:
+          severity: ticket
+          component: release
+        annotations:
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-gadefectforecastslipping"
+          summary: "GA defect forecast is later than the 2027-03-25 S26 boundary"
+          description: >-
+            The linear zero-crossing projection (ga_defect_forecast_days_to_zero) has been past
+            the GA date, or undefined with P0/P1 open, for 3 consecutive days. Re-plan a wave at
+            the next triage ritual (docs/plan/backlog/artifacts/e49-triage-ritual.md).
+
+      - alert: GADefectArrivalExceedsClosure
+        expr: ga_defects_arrived_7d > ga_defects_closed_7d
+        for: 1h
+        labels:
+          severity: ticket
+          component: release
+        annotations:
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-gadefectarrivalexceedsclosure"
+          summary: "Defect arrivals exceed closures over 7 days ({{ $value }} arrived)"
+          description: >-
+            The 7-day arrival rate is above the 7-day closure rate, so the open curve cannot
+            converge. Top components by open defects:
+            {{ range query "topk(3, ga_defects_open_by_component)" }}{{ .Labels.component }}={{ .Value }} {{ end }}.
+            Walk the By-component view in the triage ritual
+            (docs/plan/backlog/artifacts/e49-triage-ritual.md).
+
+      - alert: GADefectSLABreached
+        expr: sum(ga_defects_sla_state{state="sla-breached", severity=~"P0|P1"}) > 0
+        for: 5m
+        labels:
+          severity: ticket
+          component: release
+        annotations:
+          runbook_url: "docs/plan/07-release-and-prr.md#alert-gadefectslabreached"
+          summary: "{{ $value }} P0/P1 defect(s) have breached their triage SLA"
+          description: >-
+            At least one untriaged P0/P1 bug is past its business-time SLA window. Triage it now
+            per docs/plan/backlog/artifacts/e49-triage-ritual.md.
