@@ -194,12 +194,14 @@ def bind_symbol_universe(symbols: Iterable[str]) -> None:
     """Restrict `symbol` label values to the configured/recorded set."""
     _GUARD.universe = frozenset(s for s in symbols if _SYMBOL_RE.match(s))
     _GUARD.seen.clear()
+    _EVENT_CHILDREN.clear()
 
 
 def reset_symbol_universe() -> None:
     """Return to the unbound (capped) mode."""
     _GUARD.universe = None
     _GUARD.seen.clear()
+    _EVENT_CHILDREN.clear()
 
 
 def symbol_label(value: str) -> str:
@@ -209,13 +211,12 @@ def symbol_label(value: str) -> str:
     never become a label value; an unbound process admits at most
     `MAX_SYMBOLS` distinct well-formed symbols before folding to `other`.
     """
-    if not _SYMBOL_RE.match(value):
-        return OTHER_SYMBOL
-    if _GUARD.universe is not None:
-        return value if value in _GUARD.universe else OTHER_SYMBOL
-    if value in _GUARD.seen:
+    universe = _GUARD.universe
+    if universe is not None:
+        return value if value in universe else OTHER_SYMBOL
+    if value in _GUARD.seen:  # hot path: already admitted (and validated)
         return value
-    if len(_GUARD.seen) >= MAX_SYMBOLS:
+    if not _SYMBOL_RE.match(value) or len(_GUARD.seen) >= MAX_SYMBOLS:
         return OTHER_SYMBOL
     _GUARD.seen.add(value)
     return value
@@ -272,6 +273,20 @@ kline_backfill_pages_total = _counter("kline_backfill_pages_total")
 kline_backfill_duration_seconds = _histogram("kline_backfill_duration_seconds")
 kline_cache_hit_ratio = _gauge("kline_cache_hit_ratio")
 kline_coverage_holes = _gauge("kline_coverage_holes")
+
+_EVENT_CHILDREN: dict[tuple[str, str], Counter] = {}
+
+
+def count_event(stream: str, symbol: str) -> None:
+    """Hot path (per trade / ticker message): one dict hit + `inc()` on a
+    pre-bound `ingest_events_total` child; the symbol is bounded first."""
+    key = (stream, symbol)
+    child = _EVENT_CHILDREN.get(key)
+    if child is None:
+        child = ingest_events_total.labels(stream=stream, symbol=symbol_label(symbol))
+        if len(_EVENT_CHILDREN) < 4 * (MAX_SYMBOLS + 1):  # bounded cache
+            _EVENT_CHILDREN[key] = child
+    child.inc()
 
 
 def export_ingestion_metrics(

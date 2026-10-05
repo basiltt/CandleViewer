@@ -39,7 +39,7 @@ from candleviewer.domain.primitives import EventId
 from candleviewer.exchange.base.models import TradeEvent
 from candleviewer.exchange.base.trade_print import TradePrint
 from candleviewer.ingestion.metrics import (
-    ingest_events_total,
+    count_event,
     ingest_lag_seconds,
     questdb_write_queue_depth,
     symbol_label,
@@ -270,7 +270,7 @@ class TradeStream:
             if source == "backfill" and floor is not None and p.ts_event_us < floor:
                 continue  # pre-gap history: publishing it would move time backwards
             event = self._event(p, source, ts_ingest)
-            ingest_events_total.labels(stream="trade", symbol=symbol_label(sym)).inc()
+            count_event("trade", sym)
             await self._bus.publish(topic, event)  # NEVER_DROP subscribers back-pressure us
             self._last_ts[sym] = max(self._last_ts.get(sym, 0), p.ts_event_us)
             recent = self._recent.setdefault(sym, deque(maxlen=1000))

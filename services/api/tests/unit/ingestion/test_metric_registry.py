@@ -81,12 +81,14 @@ def check_registry(root: Path = PKG) -> list[str]:
 
 
 def _used_names(root: Path) -> set[str]:
-    """Ingestion-owned metric objects referenced outside the registry."""
+    """Ingestion-owned metric objects used anywhere (a registry-internal hot
+    helper like `count_event` counts via `name.labels(`)."""
     used: set[str] = set()
     for f in [*sorted(root.rglob("*.py"))]:
-        if f.name == "metrics.py" and f.parent.name == "ingestion":
-            continue
         text = f.read_text(encoding="utf-8")
+        if f.name == "metrics.py" and f.parent.name == "ingestion":
+            used |= {n for n in reg.SPEC_BY_NAME if f"{n}.labels(" in text}
+            continue
         used |= {n for n in reg.SPEC_BY_NAME if n in text}
     return used
 
@@ -172,6 +174,15 @@ def test_symbol_label_free_form_input_never_becomes_a_label(raw: str) -> None:
     out = reg.symbol_label(raw)
     assert out == reg.OTHER_SYMBOL or (out == raw and raw.isascii() and raw.isalnum())
     assert out == reg.OTHER_SYMBOL or out.upper() == out
+
+
+def test_count_event_folds_hostile_symbol_and_caches_children() -> None:
+    reg.bind_symbol_universe(["BTCUSDT"])
+    before = reg.ingest_events_total.labels(stream="trade", symbol="other")._value.get()
+    reg.count_event("trade", "'; DROP TABLE x --")
+    reg.count_event("trade", "'; DROP TABLE x --")
+    after = reg.ingest_events_total.labels(stream="trade", symbol="other")._value.get()
+    assert after - before == 2
 
 
 def test_export_attaches_env_and_exchange_to_every_declared_series() -> None:
