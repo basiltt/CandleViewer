@@ -176,7 +176,10 @@ def lint(dash_dir: Path = DASH, rules_dir: Path = RULES) -> list[str]:
     known = catalogue_names()
     rules = recorded_rules(rules_dir)
     files = sorted(dash_dir.glob("*.json"))
-    errs = [] if len(files) == 7 else [f"expected 7 dashboards, found {len(files)}"]
+    from generate_dashboards import BOARDS  # registry is the single source of the count
+
+    want = len(BOARDS)
+    errs = [] if len(files) == want else [f"expected {want} dashboards, found {len(files)}"]
     for f in files:
         errs += lint_dashboard(f, known, rules)
     return errs
