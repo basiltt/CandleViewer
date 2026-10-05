@@ -38,6 +38,7 @@ from candleviewer.admin.wiring import (
     build_audit_service,
     build_secrets_service,
 )
+from candleviewer.alerts.dispatcher import AlertDispatcher, default_adapters
 from candleviewer.alerts.evaluator import AlertEvaluator, AlertMetrics
 from candleviewer.alerts.lifecycle import AlertCharts
 from candleviewer.alerts.outbox import TOPIC_ALERT_DELIVER, alert_deliver_dedup_key
@@ -153,6 +154,9 @@ from candleviewer.storage.cold.observability import LoggingSystemEventSink
 from candleviewer.storage.cold.scrub import ScrubTask
 from candleviewer.storage.repositories.alert_deliveries_sqlalchemy import (
     SqlAlchemyAlertDeliveryRepository,
+)
+from candleviewer.storage.repositories.alert_dispatch_sqlalchemy import (
+    SqlAlchemyAlertDispatchStore,
 )
 from candleviewer.storage.repositories.alert_firing_sqlalchemy import SqlAlchemyAlertFiringStore
 from candleviewer.storage.repositories.alerts_sqlalchemy import SqlAlchemyAlertRepository
@@ -985,7 +989,10 @@ def create_app(
         )
     )
     if resolved.alerts_evaluator_enabled:
-        ctx.alerts.bind(_alert_evaluator_factory(ctx, _alert_pg, metrics_facade))
+        ctx.alerts.bind(
+            _alert_evaluator_factory(ctx, _alert_pg, metrics_facade),
+            _alert_dispatcher(_alert_pg, metrics_facade, resolved.alerts_webhook_enabled),
+        )
     # E08-S05: maintained L2 book snapshot (503 while resyncing, never a patched book).
     app.include_router(
         make_orderbook_router(lambda: ctx.ingestion.books, principal_resolver=audit_resolver)
@@ -994,6 +1001,39 @@ def create_app(
     # E09-T03 / #1648: a served route without an RBAC declaration fails the build.
     assert_app_routes_declared(app, spec)
     return app
+
+
+def _alert_dispatcher(
+    pg: SqlAlchemyRelationalRepository, facade: Metrics, webhook_enabled: bool
+) -> AlertDispatcher:
+    """E40-T04: `alert.deliver` outbox poller. Email stays disabled (suppressed) until the
+    E04 relay transport is provisioned; no network transport is constructed here."""
+    adapters = default_adapters(None, webhook_enabled=webhook_enabled)  # refuses webhook=on
+    m = {
+        "cv_alert_delivery_total": facade.counter(
+            "cv_alert_delivery_total", "Settled alert deliveries.", ("channel", "status"),
+            max_series=15),
+        "cv_alert_delivery_latency_seconds": facade.histogram(
+            "cv_alert_delivery_latency_seconds", "Alert firing -> delivery sent.", ("channel",),
+            buckets=(0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 30.0, 300.0), max_series=5),
+        "cv_alert_delivery_attempts": facade.histogram(
+            "cv_alert_delivery_attempts", "Adapter attempts per settled delivery.",
+            buckets=(1, 2, 3, 4, 6, 8, 10)),
+        "cv_outbox_dead_total": facade.counter(
+            "cv_outbox_dead_total", "Dead-lettered outbox rows.", ("topic",), max_series=8),
+    }  # fmt: skip
+
+    def _sink(name: str, labels: tuple[str, ...]) -> Any:
+        b = m[name]
+        return b.labels(*labels) if labels else b.child()
+
+    return AlertDispatcher(
+        SqlAlchemyAlertDispatchStore(pg),
+        adapters,
+        worker=f"api-{os.getpid()}-{uuid.uuid4().hex[:8]}",
+        now=lambda: datetime.now(UTC),
+        metric=_sink,
+    )
 
 
 def _alert_evaluator_factory(

@@ -26,8 +26,12 @@ from candleviewer.storage.repositories.relational_sqlalchemy import (
 _COLS = (
     "id, alert_id::text AS alert_id, user_id::text AS user_id, channel::text AS channel, "
     "status::text AS status, title, body, context, attempt, http_status, error_message, "
-    "queued_at, sent_at, acked_at, acked_by::text AS acked_by"
+    "queued_at, sent_at, acked_at, acked_by::text AS acked_by, "
+    "(SELECT a.severity::text FROM alerts a WHERE a.id = alert_deliveries.alert_id) AS severity"
 )
+
+#: Public alias for sibling repositories (the dispatch store).
+DELIVERY_COLS = _COLS
 
 
 def _sql(template: str) -> sa.TextClause:
@@ -59,11 +63,14 @@ _ACK_ONE = _sql(
     "acked_by = CAST(:by AS uuid) WHERE id = :id AND user_id = CAST(:by AS uuid) "
     "AND status = 'sent' AND acked_at IS NULL RETURNING @C@"
 )
+#: Bounded (ticket DoS note): one batch of at most `:cap` rows via `ix_ad_user_unack`.
 _ACK_ALL = _sql(
     "UPDATE alert_deliveries SET status = 'acked', acked_at = now(), "
-    "acked_by = CAST(:by AS uuid) WHERE user_id = CAST(:by AS uuid) "
-    "AND status = 'sent' AND acked_at IS NULL"
+    "acked_by = CAST(:by AS uuid) WHERE id IN (SELECT id FROM alert_deliveries "
+    "WHERE user_id = CAST(:by AS uuid) AND status = 'sent' AND acked_at IS NULL "
+    "ORDER BY queued_at DESC LIMIT :cap FOR UPDATE SKIP LOCKED)"
 )
+_GET_OWNED = _sql("SELECT @C@ FROM alert_deliveries WHERE id = :id AND user_id = CAST(:by AS uuid)")
 _UNACKED = _sql(
     "SELECT count(*) FROM alert_deliveries WHERE user_id = CAST(:user AS uuid) "
     "AND status = 'sent' AND acked_at IS NULL"
@@ -104,10 +111,15 @@ class DeliveryRow:
     sent_at: datetime | None
     acked_at: datetime | None
     acked_by: str | None
+    #: `alerts.severity` of the parent alert (`AlertDelivery.severity`).
+    severity: str | None = None
 
 
 def _row(m: Any) -> DeliveryRow:
     return DeliveryRow(**dict(m))
+
+
+row_of = _row
 
 
 class SqlAlchemyAlertDeliveryRepository:
@@ -152,9 +164,17 @@ class SqlAlchemyAlertDeliveryRepository:
     async def ack(self, delivery_id: int, user_id: str) -> DeliveryRow | None:
         return await self._write(_ACK_ONE, {"id": delivery_id, "by": user_id})
 
-    async def ack_all(self, user_id: str) -> int:
+    async def get_owned(self, delivery_id: int, user_id: str) -> DeliveryRow | None:
+        """`scope: self`: another user's delivery is indistinguishable from a missing one."""
         async with self._relational.unit_of_work() as uow:
-            res = await uow.session.execute(_ACK_ALL, {"by": user_id})
+            m = await uow.session.execute(_GET_OWNED, {"id": delivery_id, "by": user_id})
+            row = m.mappings().first()
+        return None if row is None else _row(row)
+
+    async def ack_all(self, user_id: str, cap: int = 1000) -> int:
+        """One bounded batch; callers loop while the result equals `cap`."""
+        async with self._relational.unit_of_work() as uow:
+            res = await uow.session.execute(_ACK_ALL, {"by": user_id, "cap": cap})
             await uow.commit()
         return int(getattr(res, "rowcount", 0) or 0)
 

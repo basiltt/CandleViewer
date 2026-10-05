@@ -11,6 +11,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
 
+from candleviewer.alerts.dispatcher import AlertDispatcher
 from candleviewer.alerts.evaluator import AlertEvaluator, AlertTick
 from candleviewer.observability.health import HealthReport, HealthStatus
 
@@ -25,14 +26,20 @@ class AlertsService:
         self._started = False
         self._factory: EvaluatorFactory | None = None
         self.evaluator: AlertEvaluator | None = None
+        self.dispatcher: AlertDispatcher | None = None
 
-    def bind(self, factory: EvaluatorFactory) -> None:
+    def bind(self, factory: EvaluatorFactory, dispatcher: AlertDispatcher | None = None) -> None:
+        """`dispatcher` (E40-T04) drains `alert.deliver`; it starts before the evaluator so
+        no firing waits on a cold poller, and stops after it so in-flight firings drain."""
         self._factory = factory
+        self.dispatcher = dispatcher
 
     async def start(self, ctx: AppContext) -> None:
         self._started = True
         if self._factory is None:
             return
+        if self.dispatcher is not None:
+            self.dispatcher.start()
         ev = await self._factory()
         if ev is not None:
             await ev.warm_up()
@@ -54,6 +61,8 @@ class AlertsService:
         ev, self.evaluator = self.evaluator, None
         if ev is not None:
             await ev.stop(grace_s)
+        if self.dispatcher is not None:
+            await self.dispatcher.stop()
         self._started = False
 
     def health(self) -> HealthReport:
