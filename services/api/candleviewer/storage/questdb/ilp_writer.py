@@ -135,8 +135,8 @@ class IlpWriter:
     or 100 ms (whichever first), bounded queue with explicit backpressure.
 
     Backpressure policy: the internal queue is bounded
-    (`max_queue_rows`); when full, `write_rows` **awaits** queue space
-    (never drops, never raises) so a slow/down QuestDB backs the caller up
+    (`max_queue_rows`); when full, `write_rows` **awaits** a flush it
+    performs itself (never drops) so a slow/down QuestDB backs the caller up
     rather than silently losing trades. `stop()` awaits a final `flush()`.
     """
 
@@ -172,8 +172,6 @@ class IlpWriter:
         self._rng = rng if rng is not None else random.Random()  # noqa: S311 - jitter, not crypto
         self._buffers: dict[str, _TableBuffer] = {}
         self._total_buffered = 0
-        self._not_full = asyncio.Event()
-        self._not_full.set()
         self._connected = False
         self._reconnect_delay_s = _RECONNECT_BASE_S
         self._write_errors_total = 0
@@ -256,15 +254,19 @@ class IlpWriter:
         flushes `table` if its own flush threshold (5 000 rows or 100 ms) is
         met.
 
-        The wait for queue space happens *outside* the lock — `flush()`
-        needs the same lock to drain a buffer and signal `_not_full`, so
-        holding it while waiting would deadlock the writer against its own
-        flush path.
+        When full, the caller flushes *outside* the lock — `flush()` needs
+        the same lock to take a buffer, so flushing while holding it would
+        deadlock the writer against its own flush path.
         """
         schema = self._schemas[table]
         while True:
             async with self._lock:
-                if self._total_buffered + len(rows) <= self._max_queue_rows:
+                # An empty queue always admits (a batch larger than the whole budget
+                # would otherwise wait forever).
+                if (
+                    self._total_buffered == 0
+                    or self._total_buffered + len(rows) <= self._max_queue_rows
+                ):
                     buf = self._buffers.setdefault(table, _TableBuffer(schema=schema))
                     for row in rows:
                         ts_us = int(str(row[ts_us_key]))
@@ -276,8 +278,11 @@ class IlpWriter:
                         buf.rows.append((fields, ts_us))
                     self._total_buffered += len(rows)
                     break
-                self._not_full.clear()
-            await self._not_full.wait()
+            # Queue full: the caller drains it itself (outside the lock) and
+            # pays the transport's drain time — that *is* the backpressure.
+            # Waiting for some other flusher deadlocked a lone producer when
+            # `max_queue_rows < flush_rows`: nothing else ever flushes (E07-Q03).
+            await self.flush(None)
         await self._maybe_flush(table)
 
     async def _maybe_flush(self, table: str) -> None:
@@ -301,7 +306,6 @@ class IlpWriter:
                 rows_to_send = buf.rows
                 buf.rows = []
                 self._total_buffered -= len(rows_to_send)
-                self._not_full.set()
             lines = [serialize_ilp_line(buf.schema, row, ts_us) for row, ts_us in rows_to_send]
             payload = ("\n".join(lines) + "\n").encode("utf-8")
             try:
@@ -316,7 +320,6 @@ class IlpWriter:
                 async with self._lock:
                     buf.rows = rows_to_send + buf.rows
                     self._total_buffered += len(rows_to_send)
-                    self._not_full.set()
                 logger.error("questdb_ilp_write_failed", table=name, error=str(exc))
                 raise StorageTierUnavailable(f"questdb ILP write failed for {name!r}") from exc
 
