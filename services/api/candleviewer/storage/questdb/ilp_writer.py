@@ -32,10 +32,29 @@ IlpWriter contract (E49-K01-F2, #1856 — the storage-writer defect cluster
 4. **Acknowledgement.** A row is *acknowledged* once `write_rows` returns
    (or once it has been admitted, if a later flush in the same call raised).
    Acknowledged rows leave the buffer only after a successful transport
-   write; a failed **or cancelled** flush requeues them at the head.
-5. **Close.** `stop(timeout_s)` drains, then closes the transport; on a
-   drain timeout it raises `StorageTierUnavailable` and rows stay buffered.
-   After `stop()` `write_rows` raises `StorageTierUnavailable`.
+   write; a failed **or cancelled** flush requeues them at the head, marks
+   the writer disconnected and closes the transport, so the next flush
+   reconnects on a clean line boundary (a cancelled write may have left a
+   torn ILP line on the old socket) and resends the whole batch.
+5. **At-least-once, not exactly-once.** A retry after a failed/cancelled
+   flush may resend rows whose bytes already left. This is safe only
+   because every QuestDB table declares `DEDUP UPSERT KEYS`
+   (`21-database-schema.md` Sec.4.14; asserted for every registered table
+   in `ALL_SCHEMAS` by the contract suite). `rows_written_total` is not
+   incremented for such bytes, so `reconcile()` can briefly report a
+   negative gap after a resend.
+6. **Ordering is per flush only.** Rows are never lost or admitted twice,
+   but concurrent self-flushes of one table take disjoint slices and send
+   outside the lock, so batches may reach the sink out of order, and a
+   failed flush is requeued behind rows admitted since. QuestDB `o3MaxLag`
+   plus dedup absorbs this.
+7. **Close.** `stop(timeout_s)` drains, then closes the transport. The
+   default drain is bounded (`DEFAULT_STOP_TIMEOUT_S`, 30 s) because
+   reconnect retries forever while QuestDB is down. On timeout/failure it
+   raises `StorageTierUnavailable` naming the buffered-row count; those rows
+   stay in the (closed) writer and are the **caller's** to spill/log — there
+   is no handoff API yet (wiring ticket). After `stop()` `write_rows`
+   raises `StorageTierUnavailable`.
 """
 
 from __future__ import annotations
@@ -58,6 +77,7 @@ from candleviewer.storage.errors import (
 
 logger = structlog.get_logger(__name__)
 
+DEFAULT_STOP_TIMEOUT_S = 30.0
 _FLUSH_ROWS = 5_000
 _FLUSH_INTERVAL_S = 0.1  # 100 ms, per Sec.4.14
 _RECONNECT_BASE_S = 0.5
@@ -436,28 +456,42 @@ class IlpWriter:
                 # read and write of the buffer here.
                 buf.rows = rows_to_send + buf.rows
                 self._total_buffered += len(rows_to_send)
+                # The write may be half-sent: drop the connection so the
+                # next flush reconnects on a clean line boundary.
+                self._set_connected(False)
+                await self._close_transport_quietly()
                 if not isinstance(exc, Exception):
                     raise  # CancelledError etc.: never swallowed
                 self._write_errors_total += 1
-                self._set_connected(False)
                 logger.error("questdb_ilp_write_failed", table=name, error=str(exc))
                 raise StorageTierUnavailable(f"questdb ILP write failed for {name!r}") from exc
             self._rows_written_total += len(rows_to_send)
             buf.last_flush = self._clock()
 
-    async def stop(self, timeout_s: float | None = None) -> None:
-        """Close: refuse new writes, drain every buffered row (bounded by
-        `timeout_s` if given), then close the transport. Idempotent.
+    async def _close_transport_quietly(self) -> None:
+        try:
+            await self._transport.close()
+        except Exception as exc:
+            logger.warning("questdb_ilp_close_failed", error=str(exc))
 
-        On a drain failure/timeout raises `StorageTierUnavailable`; the
-        undelivered rows remain buffered (visible via `total_buffered`)."""
+    async def stop(self, timeout_s: float | None = DEFAULT_STOP_TIMEOUT_S) -> None:
+        """Close: refuse new writes, drain every buffered row (bounded by
+        `timeout_s`, default 30 s; `None` = unbounded), then close the
+        transport. Idempotent.
+
+        On a drain failure/timeout raises `StorageTierUnavailable` with the
+        buffered-row count; those rows remain buffered (`total_buffered`) and
+        are the caller's to spill/log."""
         self._closed = True
         try:
             async with asyncio.timeout(timeout_s):
                 await self.flush(None)
-        except TimeoutError as exc:
-            logger.error("questdb_ilp_drain_timeout", buffered=self._total_buffered)
-            raise StorageTierUnavailable("questdb ILP drain timed out on stop") from exc
+        except (TimeoutError, StorageTierUnavailable) as exc:
+            logger.error("questdb_ilp_drain_failed", buffered=self._total_buffered)
+            raise StorageTierUnavailable(
+                f"questdb ILP drain failed on stop; {self._total_buffered} rows "
+                "remain buffered and are the caller's to spill/log"
+            ) from exc
         finally:
             await self._transport.close()
             self._set_connected(False)
