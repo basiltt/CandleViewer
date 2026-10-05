@@ -113,3 +113,21 @@ def canonicalize(ir: Rule | dict[str, Any]) -> bytes:
 def ir_hash(ir: Rule | dict[str, Any]) -> str:
     """sha256 hex of ``canonicalize(ir)``."""
     return hashlib.sha256(canonicalize(ir)).hexdigest()
+
+
+#: The condition half of the IR (E40-T02): what an alert and a rule can share.
+CONDITION_KEYS = ("ir_version", "trigger", "conditions", "variables")
+
+
+def condition_hash(dumped: dict[str, Any]) -> str:
+    """sha256 hex of the canonical *condition* view of a dumped rule or alert IR.
+
+    Same pipeline as ``canonicalize`` (renumber, normalise, sorted compact JSON) over only
+    ``CONDITION_KEYS`` (empty ``variables`` dropped), so an identical condition authored in a
+    rule and in an alert hashes identically - E40-T03 keys shared subscriptions on it.
+    """
+    view = {k: dumped[k] for k in CONDITION_KEYS if dumped.get(k) not in (None, {})}
+    body = json.dumps(
+        _normalise(_renumber(view)), sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    )
+    return hashlib.sha256(body.encode()).hexdigest()
