@@ -14,7 +14,16 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
+from sqlalchemy.exc import IntegrityError
 
+from candleviewer.alerts.outbox import (
+    ALERT_OUTBOX_TOPICS,
+    TOPIC_ALERT_DELIVER,
+    TOPIC_WEBHOOK_POST,
+    alert_deliver_dedup_key,
+    webhook_post_dedup_key,
+)
+from candleviewer.storage.repositories.alerts import AlertNameTakenError
 from candleviewer.storage.repositories.alerts_sqlalchemy import (
     ALERT_COLUMNS,
     AlertConflictError,
@@ -255,3 +264,35 @@ def test_array_literal_rejects_unknown_channel() -> None:
     for bad in ("a,b", "x}", "sms"):
         with pytest.raises(ValueError):
             array_literal(("in_app", bad))
+
+
+class _Raising(_Rel):
+    """Execute raises the `ux_alerts_name` unique violation (E40-T02)."""
+
+    @asynccontextmanager
+    async def unit_of_work(self) -> AsyncIterator[Any]:
+        async def execute(stmt: Any, params: dict[str, Any] | None = None) -> _Result:
+            raise IntegrityError(str(stmt), params, Exception("ux_alerts_name"))
+
+        yield SimpleNamespace(session=SimpleNamespace(execute=execute), commit=None)
+
+
+async def test_create_and_update_map_unique_name_violation_to_name_taken() -> None:
+    repo = _repo(_Raising())
+    with pytest.raises(AlertNameTakenError):
+        await repo.create(owner_user_id="u1", name="a", condition_ir={}, condition_hash="h")
+    with pytest.raises(AlertNameTakenError):
+        await repo.update("id-1", **_update_kwargs())
+
+
+async def test_list_page_passes_enabled_and_symbol_filters() -> None:
+    rel = _Rel(_Result([]))
+    await _repo(rel).list_page("u1", enabled=False, symbol="BTCUSDT")
+    sql, p = rel.calls[0]
+    assert p["enabled"] is False and p["symbol"] == "BTCUSDT" and ":enabled" in sql
+
+
+def test_outbox_dedup_keys() -> None:
+    assert alert_deliver_dedup_key(7) == "7"
+    assert webhook_post_dedup_key("a", 1, 2) == "a:1:2"
+    assert {TOPIC_ALERT_DELIVER, TOPIC_WEBHOOK_POST} == ALERT_OUTBOX_TOPICS

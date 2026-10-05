@@ -52,6 +52,7 @@ from candleviewer.api import (
     make_ticker_router,
     make_trades_router,
 )
+from candleviewer.api.alerts import make_alerts_router
 from candleviewer.api.audit_principal import SessionAuditPrincipalResolver
 from candleviewer.api.contract_conformance import load_openapi_spec
 from candleviewer.api.deny_by_default import (
@@ -941,6 +942,31 @@ def create_app(
             rules_actor.resolve if rules_actor else None,
             scope_resolver=lambda: ctx.rules.scope_resolver,
             scope_refresh=ctx.rules.refresh_scope,
+        )
+    )
+    # E40-T02: notify-only alert CRUD. Same session->Actor resolver as /rules (fail-closed 501
+    # without an identity provider); write-ahead audit via the M19 emitter (C-2.9).
+    _alert_rejects = metrics_facade.counter(
+        "cv_alert_compile_rejected_total", "Alert compiles refused, by reason.", ("reason",),
+        max_series=8,
+    )  # fmt: skip
+    _alert_compile = metrics_facade.histogram(
+        "cv_alert_compile_seconds", "Alert compile + validate time.",
+        buckets=(0.001, 0.005, 0.01, 0.05, 0.1, 0.3, 1.0),
+    )  # fmt: skip
+
+    def _on_alert_compile(seconds: float, reason: str | None) -> None:
+        _alert_compile.child().observe(seconds)
+        if reason is not None:
+            _alert_rejects.labels(reason).inc()
+
+    app.include_router(
+        make_alerts_router(
+            lambda: SqlAlchemyAlertRepository(_alert_pg),
+            lambda: ctx.rules.registry(),
+            rules_actor.resolve if rules_actor else None,
+            _LazyAuditEmitter(ctx.audit),
+            on_compile=_on_alert_compile,
         )
     )
     # E08-S05: maintained L2 book snapshot (503 while resyncing, never a patched book).
