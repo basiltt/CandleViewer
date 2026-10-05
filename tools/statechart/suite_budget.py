@@ -44,7 +44,12 @@ def analyse(
     min_rate: float = DEFAULT_MIN_CASES_PER_S,
 ) -> tuple[dict[str, object], list[str]]:
     """Return (report, violations)."""
-    root = ET.parse(junit).getroot()
+    # Input is our own pytest JUnit output; stdlib expat does not fetch external
+    # entities, and a DOCTYPE/entity declaration is rejected outright below.
+    text = junit.read_text(encoding="utf-8")
+    if "<!DOCTYPE" in text or "<!ENTITY" in text:
+        raise ET.ParseError("DTD/entity declarations are not allowed in JUnit XML")
+    root = ET.fromstring(text)
     suites = [root] if root.tag == "testsuite" else list(root.iter("testsuite"))
     total = sum(float(s.get("time", 0)) for s in suites)
     per: dict[str, list[float]] = {k: [0, 0.0] for k in keys}
