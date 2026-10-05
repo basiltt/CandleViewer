@@ -1,4 +1,4 @@
-"""E08-Q02 / E08-TC-F04, F06: server-time fixture -> `ClockGuard` offset, on injected clocks."""
+"""E08-Q02 / E08-TC-F04, E08-TC-F06: server-time fixture -> `ClockGuard` offset (fake clocks)."""
 
 from __future__ import annotations
 

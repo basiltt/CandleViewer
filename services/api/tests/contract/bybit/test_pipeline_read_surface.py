@@ -1,10 +1,13 @@
-"""E08-Q02 pipeline integration: corpus frame -> stream -> bus -> REST read surface.
+"""E08-Q02 pipeline contract (E08-TC-D01, E08-TC-E03, E08-TC-E06, E08-TC-F01).
+
+Corpus frame -> stream -> bus -> REST read surface.
 
 Drives the real `TradeStream`/`BookStream`/`TickerStream` with raw corpus frames and reads the
 result back through the real routers (`/market/trades`, `/market/orderbook`,
 `/instruments/{symbol}/ticker`, `/market/klines`), validating each body against the generated
 OpenAPI models (the codegen output of `22-api-openapi.yaml`, no hand-written expectations).
-Offline, fake clock, in-process (no sockets).
+Offline, fake clock, in-process (no sockets, no docker): it lives in the contract lane, not
+`tests/integration/` (which is docker-backed).
 
 Gaps against the ticket text, reported in the PR: there is no `GET /market/data-coverage` route
 and no WS gateway topics (`book.{symbol}.{depth}` etc.) in the codebase yet (E17), so those two

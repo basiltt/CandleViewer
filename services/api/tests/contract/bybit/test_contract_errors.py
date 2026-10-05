@@ -1,4 +1,4 @@
-"""E08-Q02 / E08-TC-F03, F06, A10: Bybit error payloads -> the internal taxonomy (E08-T01)."""
+"""E08-Q02 / E08-TC-F03, E08-TC-F06, E08-TC-A10: Bybit error payloads -> internal taxonomy."""
 
 from __future__ import annotations
 

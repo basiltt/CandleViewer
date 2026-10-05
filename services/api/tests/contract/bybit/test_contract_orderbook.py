@@ -1,4 +1,4 @@
-"""E08-Q02 / E08-TC-E01..E07: `orderbook.{depth}` frames -> `BookSnapshot`/`BookDelta`."""
+"""E08-Q02 / E08-TC-E01, E08-TC-E02, E08-TC-E03, E08-TC-E06: `orderbook.N` -> snapshot/delta."""
 
 from __future__ import annotations
 

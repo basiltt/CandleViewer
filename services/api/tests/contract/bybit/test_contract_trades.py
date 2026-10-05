@@ -1,4 +1,4 @@
-"""E08-Q02 / E08-TC-D01..D05: `publicTrade` frames -> `TradePrint` -> `TradeEvent`."""
+"""E08-Q02 / E08-TC-D01, E08-TC-D03, E08-TC-D05: `publicTrade` -> `TradePrint` -> `TradeEvent`."""
 
 from __future__ import annotations
 

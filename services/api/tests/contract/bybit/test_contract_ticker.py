@@ -1,4 +1,4 @@
-"""E08-Q02 / E08-TC-C01..C04: `tickers` snapshot + delta frames -> merged `TickerEvent`."""
+"""E08-Q02 / E08-TC-C01: `tickers` snapshot + delta frames -> merged `TickerEvent`."""
 
 from __future__ import annotations
 

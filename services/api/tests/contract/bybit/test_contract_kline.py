@@ -1,4 +1,4 @@
-"""E08-Q02 / E08-TC-F01..F02: kline REST pages -> ascending series via `paginate_klines`.
+"""E08-Q02 / E08-TC-F01: kline REST pages -> ascending series via `paginate_klines`.
 
 Scope note: the adapter currently ships the paging helper only; there is no Bybit
 list-of-lists -> `KlineEvent` mapper yet (`confirm -> confirmed`, `end = start + interval - 1`

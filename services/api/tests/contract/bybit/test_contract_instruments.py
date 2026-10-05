@@ -1,4 +1,4 @@
-"""E08-Q02 / E08-TC-A01..A10: `instruments-info` -> `Instrument`, delisting, tick-size change."""
+"""E08-Q02 / E08-TC-A01: `instruments-info` -> `Instrument` filters, delisting, tick-size change."""
 
 from __future__ import annotations
 
