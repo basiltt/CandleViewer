@@ -273,6 +273,31 @@ Not a new `RSK-nnn` entry (no new risk was identified; this is reference evidenc
   for "Real-time cost" under R3/R2 going forward — track it via `E08-S05`'s planned re-measurement
   rather than re-deriving it here.
 
+#### R0 ingestion evidence addendum (E08-T06, 2026-10-05) — R3 / R6 / R7 watch items
+
+Not new `RSK-nnn` entries; reference evidence for the existing watch items the ticket names. The
+ticket's labels "R3 Real-time cost", "R6 Feed rot" and "R7" are the E08 epic's internal risk tags, not
+the §1.2 `Risk` field values (§1.2 R6 = AuthN/AuthZ); they map onto RSK-011/RSK-013/RSK-047 below.
+All numbers are **in-process** (`services/api/bench/ingestion_soak.py`, synthetic feed, 3 symbols,
+dev workstation). The **24 h demo soak has not been run**: it is covered by owner exception **#1778
+group A** and remains the R0-exit evidence still owed; the nightly `perf-ingestion-nightly` job runs
+the 30-minute canary meanwhile.
+
+- **Real-time cost (R3 / RSK-011).** ingest→bus p95 0.025 ms, book apply p95 0.011 ms at depth 200,
+  RSS +1.4 % over 1800 virtual s. Observability overhead on the trade path ≤ 1.5 % of one core at
+  5 000 ev/s (budget 2 %), and metric cardinality is bounded (symbols × streams; unknown symbols fold
+  to `other`). Per-symbol vCPU on the real M7 book under live load is **still unmeasured**.
+- **Feed rot (silent death, RSK-047).** `IngestionStoppedReporting` pages when ingestion is wired but
+  emits no events for 5 min; `IngestionMetricsAbsent` tickets when the job stops exporting at all.
+  Before this ticket the ingestion series were registered only on the library default registry and
+  were **not scraped** — closed by `export_ingestion_metrics`.
+- **Burst loss (RSK-011 trigger).** 5× / 60 s burst: 0 trades lost, 46 790 awaited publishes counted
+  by `ingest_queue_full_total{class="trade"}`, recovery 19.9 s (window 30 s). Trigger unchanged.
+- **Rate-limit identity leak (RSK-013, security).** `bybit_rate_limit_remaining` was labelled by
+  `uid`; now `scope` (`public|account`), and a registry test forbids `uid` labels.
+- **R7 hand-off.** Recorder bytes/day is not measured here (E16 owns it); the harness exposes write-queue
+  depth only.
+
 ---
 
 ## 6. Security risks (R4, R5, R6, R11, R15)

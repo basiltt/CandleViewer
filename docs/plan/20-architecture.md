@@ -222,7 +222,6 @@ flowchart LR
 
 > **Docs toolchain (E48-K01):** MkDocs Material + Redocly CLI + generated WS reference, proposed-with-deadline — [`27-adrs/ADR-0028-docs-toolchain.md`](27-adrs/ADR-0028-docs-toolchain.md).
 
-
 Common conventions for every module below:
 
 - **Module package**: `services/api/candleviewer/<module>/` with `__init__.py` exporting only the public interface, `service.py` (lifecycle), `models.py` (pydantic v2 domain types), `errors.py`, and internal implementation files.
@@ -266,6 +265,21 @@ flowchart TB
 
 **Backpressure.** Reader tasks never block: each publishes into a bounded `asyncio.Queue` (size 4096 per topic-class). If full: trades and executions are _never_ dropped (queue full = increment `ingest_queue_full_total` and await, applying real backpressure to the socket read loop, which is correct because Bybit will buffer briefly); book deltas may be dropped only by _invalidating the book and requesting a re-snapshot_ (never by skipping a delta).
 
+**As shipped (E08-T06 reconciliation, 2026-10-05).** The bus default subscriber queue is **4096**
+(`bus/bus.py` `DEFAULT_QUEUE_SIZE`); the raw-frame buffer between the WS reader and the parsers is
+bounded and _drop-newest + mark gap_ (`ingestion/service.py`: a lost frame marks a trade gap and
+resyncs books — never a silent loss). Staleness thresholds are `ingestion/watchdog.py`
+`STALENESS_S` = book 2 s, trades 10 s, ticker 5 s; ping 20 s. Every ingestion metric is declared once
+in `ingestion/metrics.py` (`SPECS`) and exported on `/metrics` with `env` + `exchange` labels; symbol
+label values are bounded to the configured set (`symbol_label`, overflow → `other`). Measured
+(in-process harness `services/api/bench/ingestion_soak.py`, synthetic feed, 3 symbols, dev host — **not**
+the 24 h demo run, which is owner exception #1778 A): ingest→bus p95 **0.025 ms** (budget 20 ms), book
+apply p95 **0.011 ms** at depth 200 (budget 2 ms), RSS **+1.4 %** over 1800 virtual s (limit ±5 %); 5×
+burst for 60 s: **0 trades lost**, `ingest_queue_full_total{class="trade"}` = 46 790 (backpressure
+applied), steady state after **19.9 s** (documented recovery window **30 s**). Instrumentation cost on
+the trade path ≈ 0.7–3 µs/event (≤ 1.5 % of a core at 5 000 ev/s; asserted < 2 % by
+`tests/unit/ingestion/test_metrics_overhead_perf.py`).
+
 ### 3.2 Book Engine
 
 | Component           | Responsibility                                                                                                                                                                                   | Interface                              |
@@ -278,6 +292,14 @@ flowchart TB
 | `IcebergHeuristic`* | Detects repeated refills at a price after aggressive consumption; emits `IcebergEstimate{confidence}`                                                                                            | `evaluate(price, window)`              |
 
 States: `INIT → SNAPSHOT_PENDING → LIVE → DESYNCED → SNAPSHOT_PENDING`. `LIVE` is the only state from which derived engines consume. Book memory: 500 levels × 2 sides × 32 B ≈ 32 KB per symbol plus a 10-minute liquidity ring (≈ 12 MB per symbol at 100 ms cadence × 200 buckets) — bounded and evictable.
+
+**As shipped (E08-S05, reconciled E08-T06).** Default depth tier is **200** (ADR-0021). Resync
+discipline is invalidate-and-resubscribe (ADR-0023) with reasons `sequence_gap`, `buffer_overflow`,
+`server_reset`, `bad_snapshot`, `bad_replay`, `frame_loss`, `reconnect`; the breaker marks a book
+`degraded` at **> 5 resyncs / 60 s** (`book/resync.py`). The phase is exported as
+`ingest_book_live{symbol}` and resyncs as `ingest_book_resyncs_total{symbol,reason}`; the alert
+`IngestionBookResyncRateHigh` fires at > 5 per 5 min (runbook `docs/ops/ingestion.md`). `book_resync_total`
+in §12.1 remains the E04 catalogue name; the ingestion registry series is the one emitted today.
 
 ### 3.3 Bar Builders
 
@@ -534,6 +556,13 @@ Rules:
 | OMS → Bybit REST          | token bucket            | **per-UID (per account), split `critical`/`entry`/`poll` — see §4.3** | Pre-flight reservation; `atomic` groups reject the whole ticket with `RATE_BUDGET_EXCEEDED`, `best_effort` groups defer the starved account to a deadline. Never silently delayed. | `oms_rate_reject_total`, `oms_fanout_deferred_total` |
 
 **Priority classes.** When the loop is saturated, work is shed in this order (lowest first): heatmap columns → profile recompute → footprint detail → bars → book top-N → trades → OMS/private stream. Order-related work is **never** shed.
+
+**Measured backpressure (E08-T06).** The 5× / 60 s burst (`bench/ingestion_soak.py burst`) drives
+the real `Bus` with a NEVER_DROP trade subscriber whose consumer has 4× steady-state headroom: the
+publisher awaited on a full queue 46 790 times, no trade was lost or reordered, and the backlog
+cleared 19.9 s after the burst ended. **Recovery window (documented): 30 s** after a 5× / 60 s burst at
+≥ 4× consumer headroom; with only 1× headroom the harness fails explicitly (never-drop still holds,
+recovery does not).
 
 ### 4.3 Order-path backpressure: per-account rate-limit budgeting and partial fan-out
 
@@ -1276,6 +1305,9 @@ Shipped (E04-S01): generated by `infra/grafana/generate_dashboards.py`, committe
 4. **Rules** — evaluations, fires, suspensions, auto-disarms per rule.
 5. **Storage** — ingest rate, disk used vs cap, retention/roll-off runs, spill.
 6. **Frontend** — frame times, dropped frames, decode times, per-screen p95.
+7. **Ingestion** (E08-T06, uid `cv-ingestion`) — connection state, per-stream event rates, ingest lag,
+   queue depth and full-counts, book LIVE/resyncs, topic staleness, rate-limit headroom, clock drift.
+   Series are owned by the ingestion registry `services/api/candleviewer/ingestion/metrics.py`.
 
 ### 12.5 Alert policy
 
@@ -1283,6 +1315,14 @@ Shipped (E04-T05/T07): rules live in `infra/prometheus/alerts/`, only two severi
 
 Page (critical): `naked_position_alerts_total` > 0, `oms_unknown_orders` > 0 for 60 s, Postgres down, clock drift blocking trading, disk > 95 %.
 Ticket (warning): public WS down > 60 s, resync rate high, loop lag > 100 ms, disk > 80 %, rule auto-disarm, demo/live mismatch attempts.
+
+Ingestion set (E08-T06, `infra/prometheus/alerts/ingestion.yml`, runbook `docs/ops/ingestion.md` —
+an exception to the section-9 anchor rule, enforced both ways by
+`infra/alertmanager/tests/test_ingestion_alerts.py`): Page — `IngestionTradeGapUnrecovered`,
+`IngestionStoppedReporting` (silent-death meta-alert: `ingest_enabled == 1` with no events for 5 min);
+Ticket — `IngestionTopicStale` (> 10 s), `IngestionBookResyncRateHigh` (> 5 / 5 min),
+`IngestionRateLimitHeadroomExhausted` (≤ 1), `IngestionNeverDropQueueFull`, `IngestionMetricsAbsent`.
+Clock drift warning/critical stay in `clock_sync.yml` (E08-S07).
 
 ---
 
