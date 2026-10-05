@@ -51,18 +51,27 @@ def _write_json(tmp_path: Path, name: str, data: object) -> Path:
 # --------------------------------------------------------------------------
 
 
-def test_gitleaks_finding_always_blocks_even_with_no_accepted_risks(tmp_path: Path) -> None:
+def test_gitleaks_finding_always_blocks_even_with_no_accepted_risks(
+    tmp_path: Path,
+) -> None:
     risks_path = _write_yaml(tmp_path, {"entries": []})
     risks = load_accepted_risks(risks_path)
     findings = [
-        Finding(tool="gitleaks", finding_id="aws-key:app.py:10", severity="CRITICAL", detail="x")
+        Finding(
+            tool="gitleaks",
+            finding_id="aws-key:app.py:10",
+            severity="CRITICAL",
+            detail="x",
+        )
     ]
     result = evaluate_findings(findings, risks, run_date=date(2026, 1, 1))
     assert result.blocked
     assert result.code == "CI-SEC-001"
 
 
-def test_gitleaks_finding_cannot_be_accepted_even_if_entry_present(tmp_path: Path) -> None:
+def test_gitleaks_finding_cannot_be_accepted_even_if_entry_present(
+    tmp_path: Path,
+) -> None:
     # load_accepted_risks rejects a gitleaks entry outright (CI-SEC-005) —
     # the register itself refuses to hold one.
     risks_path = _write_yaml(
@@ -89,7 +98,14 @@ def test_parse_gitleaks_report_never_reprints_secret_value(tmp_path: Path) -> No
     report = _write_json(
         tmp_path,
         "gitleaks.json",
-        [{"RuleID": "generic-api-key", "File": "app.py", "StartLine": 5, "Secret": "REDACTED"}],
+        [
+            {
+                "RuleID": "generic-api-key",
+                "File": "app.py",
+                "StartLine": 5,
+                "Secret": "REDACTED",
+            }
+        ],
     )
     findings = parse_gitleaks(report)
     assert len(findings) == 1
@@ -103,7 +119,9 @@ def test_parse_gitleaks_report_never_reprints_secret_value(tmp_path: Path) -> No
 # --------------------------------------------------------------------------
 
 
-def test_prohibited_license_fails_naming_package_license_and_sr136(tmp_path: Path) -> None:
+def test_prohibited_license_fails_naming_package_license_and_sr136(
+    tmp_path: Path,
+) -> None:
     allowlist_path = tmp_path / "allowlist.json"
     allowlist_path.write_text(
         json.dumps(
@@ -118,11 +136,16 @@ def test_prohibited_license_fails_naming_package_license_and_sr136(tmp_path: Pat
         encoding="utf-8",
     )
     allowlist = load_license_allowlist(allowlist_path)
-    deps = [LicenseFinding(package="evil-dep", version="1.0.0", license="AGPL-3.0-only")]
+    deps = [
+        LicenseFinding(package="evil-dep", version="1.0.0", license="AGPL-3.0-only")
+    ]
     result = evaluate_licenses(deps, allowlist, risks=[], run_date=date(2026, 1, 1))
     assert result.blocked
     assert result.code == "CI-SEC-002"
-    assert any("evil-dep" in m and "AGPL-3.0-only" in m and "SR-136" in m for m in result.messages)
+    assert any(
+        "evil-dep" in m and "AGPL-3.0-only" in m and "SR-136" in m
+        for m in result.messages
+    )
 
 
 def test_unknown_license_fails_closed(tmp_path: Path) -> None:
@@ -133,7 +156,11 @@ def test_unknown_license_fails_closed(tmp_path: Path) -> None:
         "dev_only_exceptions": {"packages": []},
         "unknown_license_policy": "fail",
     }
-    deps = [LicenseFinding(package="mystery-dep", version="2.0.0", license="Some-Weird-License")]
+    deps = [
+        LicenseFinding(
+            package="mystery-dep", version="2.0.0", license="Some-Weird-License"
+        )
+    ]
     result = evaluate_licenses(deps, allowlist, risks=[], run_date=date(2026, 1, 1))
     assert result.blocked
     assert result.code == "CI-SEC-002"
@@ -147,7 +174,9 @@ def test_lgpl_needs_approval_blocks_without_accepted_risk() -> None:
         "dev_only_exceptions": {"packages": []},
         "unknown_license_policy": "fail",
     }
-    deps = [LicenseFinding(package="lgpl-dep", version="1.0.0", license="LGPL-3.0-only")]
+    deps = [
+        LicenseFinding(package="lgpl-dep", version="1.0.0", license="LGPL-3.0-only")
+    ]
     result = evaluate_licenses(deps, allowlist, risks=[], run_date=date(2026, 1, 1))
     assert result.blocked
     assert result.code == "CI-SEC-003"
@@ -161,7 +190,9 @@ def test_lgpl_needs_approval_passes_with_unexpired_accepted_risk() -> None:
         "dev_only_exceptions": {"packages": []},
         "unknown_license_policy": "fail",
     }
-    deps = [LicenseFinding(package="lgpl-dep", version="1.0.0", license="LGPL-3.0-only")]
+    deps = [
+        LicenseFinding(package="lgpl-dep", version="1.0.0", license="LGPL-3.0-only")
+    ]
     risks = [
         AcceptedRisk(
             finding_id="license:lgpl-dep@1.0.0",
@@ -207,11 +238,17 @@ def test_pip_audit_high_severity_with_no_accepted_risk_blocks(tmp_path: Path) ->
     assert result.code == "CI-SEC-001"
 
 
-def test_pip_audit_unscored_advisory_treated_as_high_fail_closed(tmp_path: Path) -> None:
+def test_pip_audit_unscored_advisory_treated_as_high_fail_closed(
+    tmp_path: Path,
+) -> None:
     report = _write_json(
         tmp_path,
         "pip-audit.json",
-        {"dependencies": [{"name": "p", "version": "1", "vulns": [{"id": "GHSA-yyyy"}]}]},
+        {
+            "dependencies": [
+                {"name": "p", "version": "1", "vulns": [{"id": "GHSA-yyyy"}]}
+            ]
+        },
     )
     findings = parse_pip_audit(report)
     assert findings[0].severity == "HIGH"
@@ -221,7 +258,11 @@ def test_npm_audit_high_severity_blocks(tmp_path: Path) -> None:
     report = _write_json(
         tmp_path,
         "npm-audit.json",
-        {"vulnerabilities": {"left-pad": {"severity": "high", "via": [{"source": "GHSA-zzzz"}]}}},
+        {
+            "vulnerabilities": {
+                "left-pad": {"severity": "high", "via": [{"source": "GHSA-zzzz"}]}
+            }
+        },
     )
     findings = parse_npm_audit(report)
     result = evaluate_findings(findings, risks=[], run_date=date(2026, 1, 1))
@@ -265,7 +306,9 @@ def test_expired_accepted_risk_reblocks_on_run_date(tmp_path: Path) -> None:
         },
     )
     risks = load_accepted_risks(risks_path)
-    findings = [Finding(tool="pip-audit", finding_id="GHSA-xxxx", severity="HIGH", detail="x")]
+    findings = [
+        Finding(tool="pip-audit", finding_id="GHSA-xxxx", severity="HIGH", detail="x")
+    ]
 
     # On the expiry date itself the entry no longer protects (exclusive expiry).
     result = evaluate_findings(findings, risks, run_date=date(2026, 9, 27))
@@ -289,12 +332,16 @@ def test_unexpired_accepted_risk_does_not_block() -> None:
             expires=date(2099, 1, 1),
         )
     ]
-    findings = [Finding(tool="pip-audit", finding_id="GHSA-aaaa", severity="HIGH", detail="x")]
+    findings = [
+        Finding(tool="pip-audit", finding_id="GHSA-aaaa", severity="HIGH", detail="x")
+    ]
     result = evaluate_findings(findings, risks, run_date=date(2026, 1, 1))
     assert not result.blocked
 
 
-def test_accepted_risks_register_rejects_critical_severity_entry(tmp_path: Path) -> None:
+def test_accepted_risks_register_rejects_critical_severity_entry(
+    tmp_path: Path,
+) -> None:
     risks_path = _write_yaml(
         tmp_path,
         {
@@ -320,7 +367,9 @@ def test_accepted_risks_register_rejects_critical_severity_entry(tmp_path: Path)
 # --------------------------------------------------------------------------
 
 
-def _sarif_doc(rule_id: str, level: str = "error", severity: float | None = None) -> dict:
+def _sarif_doc(
+    rule_id: str, level: str = "error", severity: float | None = None
+) -> dict:
     props = {"security-severity": str(severity)} if severity is not None else {}
     return {
         "version": "2.1.0",
@@ -336,7 +385,9 @@ def _sarif_doc(rule_id: str, level: str = "error", severity: float | None = None
                         "locations": [
                             {
                                 "physicalLocation": {
-                                    "artifactLocation": {"uri": ".github/workflows/pr.yml"},
+                                    "artifactLocation": {
+                                        "uri": ".github/workflows/pr.yml"
+                                    },
                                     "region": {"startLine": 12},
                                 }
                             }
@@ -348,7 +399,9 @@ def _sarif_doc(rule_id: str, level: str = "error", severity: float | None = None
     }
 
 
-def test_semgrep_cv_unpinned_action_rule_blocks_referencing_sr132(tmp_path: Path) -> None:
+def test_semgrep_cv_unpinned_action_rule_blocks_referencing_sr132(
+    tmp_path: Path,
+) -> None:
     report = _write_json(tmp_path, "semgrep.sarif", _sarif_doc("cv-unpinned-action"))
     findings = parse_sarif(report, "semgrep")
     assert findings[0].severity == "HIGH"
@@ -358,7 +411,9 @@ def test_semgrep_cv_unpinned_action_rule_blocks_referencing_sr132(tmp_path: Path
 
 
 def test_sarif_security_severity_maps_to_critical_bucket(tmp_path: Path) -> None:
-    report = _write_json(tmp_path, "codeql.sarif", _sarif_doc("py/sql-injection", severity=9.5))
+    report = _write_json(
+        tmp_path, "codeql.sarif", _sarif_doc("py/sql-injection", severity=9.5)
+    )
     findings = parse_sarif(report, "codeql")
     assert findings[0].severity == "CRITICAL"
 
@@ -411,7 +466,9 @@ def _codeql_sarif_doc(
     }
     if result_level is not None:
         result["level"] = result_level
-    tool: dict = {"driver": {"name": "CodeQL", "rules": [] if via_extension else [rule]}}
+    tool: dict = {
+        "driver": {"name": "CodeQL", "rules": [] if via_extension else [rule]}
+    }
     if via_extension:
         tool["extensions"] = [{"name": "codeql/python-queries", "rules": [rule]}]
         if use_rule_ref:
@@ -425,7 +482,9 @@ def test_codeql_rule_level_security_severity_high_blocks(tmp_path: Path) -> None
     report = _write_json(
         tmp_path,
         "codeql.sarif",
-        _codeql_sarif_doc("py/clear-text-logging-sensitive-data", security_severity="7.5"),
+        _codeql_sarif_doc(
+            "py/clear-text-logging-sensitive-data", security_severity="7.5"
+        ),
     )
     findings = parse_sarif(report, "codeql")
     assert findings[0].severity == "HIGH"
@@ -438,7 +497,9 @@ def test_codeql_rule_level_security_severity_high_blocks(tmp_path: Path) -> None
     assert result.code == "CI-SEC-001"
 
 
-def test_codeql_rule_in_extension_pack_resolved_by_rule_reference(tmp_path: Path) -> None:
+def test_codeql_rule_in_extension_pack_resolved_by_rule_reference(
+    tmp_path: Path,
+) -> None:
     report = _write_json(
         tmp_path,
         "codeql.sarif",
@@ -453,17 +514,23 @@ def test_codeql_rule_in_extension_pack_resolved_by_rule_reference(tmp_path: Path
     assert findings[0].severity == "HIGH"
 
 
-def test_codeql_result_without_level_falls_back_to_rule_default_level(tmp_path: Path) -> None:
+def test_codeql_result_without_level_falls_back_to_rule_default_level(
+    tmp_path: Path,
+) -> None:
     report = _write_json(
         tmp_path,
         "codeql.sarif",
-        _codeql_sarif_doc("py/some-non-security-rule", security_severity=None, rule_level="error"),
+        _codeql_sarif_doc(
+            "py/some-non-security-rule", security_severity=None, rule_level="error"
+        ),
     )
     findings = parse_sarif(report, "codeql")
     assert findings[0].severity == "HIGH"
 
 
-def test_sarif_result_level_security_severity_still_takes_precedence(tmp_path: Path) -> None:
+def test_sarif_result_level_security_severity_still_takes_precedence(
+    tmp_path: Path,
+) -> None:
     doc = _codeql_sarif_doc("py/x", security_severity="9.5", result_level="warning")
     doc["runs"][0]["results"][0]["properties"] = {"security-severity": "3.0"}
     report = _write_json(tmp_path, "codeql.sarif", doc)
@@ -475,7 +542,9 @@ def test_codeql_high_with_matching_accepted_risk_does_not_block(tmp_path: Path) 
     report = _write_json(
         tmp_path,
         "codeql.sarif",
-        _codeql_sarif_doc("py/clear-text-logging-sensitive-data", security_severity="7.5"),
+        _codeql_sarif_doc(
+            "py/clear-text-logging-sensitive-data", security_severity="7.5"
+        ),
     )
     findings = parse_sarif(report, "codeql")
     risk = AcceptedRisk(
@@ -524,7 +593,9 @@ def test_malformed_accepted_risks_entry_raises_ci_sec_005(tmp_path: Path) -> Non
 def test_main_cli_blocks_on_gitleaks_finding(tmp_path: Path) -> None:
     risks = _write_yaml(tmp_path, {"entries": []})
     report = _write_json(
-        tmp_path, "gitleaks.json", [{"RuleID": "generic-api-key", "File": "a.py", "StartLine": 1}]
+        tmp_path,
+        "gitleaks.json",
+        [{"RuleID": "generic-api-key", "File": "a.py", "StartLine": 1}],
     )
     rc = main(
         [
@@ -580,26 +651,38 @@ def test_npm_audit_ghsa_url_becomes_finding_id(tmp_path: Path) -> None:
     assert parse_npm_audit(report)[0].finding_id == "GHSA-vfj7-8cjw-p6xm"
 
 
-def test_repo_register_accepts_the_two_ghsa_exceptions_with_approver_and_expiry() -> None:
+def test_repo_register_accepts_the_two_ghsa_exceptions_with_approver_and_expiry() -> (
+    None
+):
     register = Path(__file__).resolve().parents[2] / "security" / "accepted-risks.yaml"
     risks = {r.finding_id: r for r in load_accepted_risks(register)}
     ids = ["GHSA-ch52-4w7c-c8xp", "GHSA-vfj7-8cjw-p6xm"]
     findings = []
     for gid in ids:
         assert risks[gid].approver and risks[gid].expires
-        findings.append(Finding(tool="npm-audit", finding_id=gid, severity="HIGH", package="x"))
-    result = evaluate_findings(findings, list(risks.values()), run_date=date(2026, 10, 3))
+        findings.append(
+            Finding(tool="npm-audit", finding_id=gid, severity="HIGH", package="x")
+        )
+    result = evaluate_findings(
+        findings, list(risks.values()), run_date=date(2026, 10, 3)
+    )
     assert not result.blocked
     late = evaluate_findings(findings, list(risks.values()), run_date=date(2027, 1, 1))
     assert late.blocked
 
 
-def test_gitleaks_block_message_cites_ir02(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_gitleaks_block_message_cites_ir02(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     risks = _write_yaml(tmp_path, {"entries": []})
     report = _write_json(
-        tmp_path, "gitleaks.json", [{"RuleID": "generic-api-key", "File": "a.py", "StartLine": 1}]
+        tmp_path,
+        "gitleaks.json",
+        [{"RuleID": "generic-api-key", "File": "a.py", "StartLine": 1}],
     )
-    rc = main(["--tool", "gitleaks", "--report", str(report), "--accepted-risks", str(risks)])
+    rc = main(
+        ["--tool", "gitleaks", "--report", str(report), "--accepted-risks", str(risks)]
+    )
     err = capsys.readouterr().err
     assert rc == 1
     assert "IR-02" in err and "docs/ci-runbook.md" in err
@@ -614,8 +697,12 @@ def test_gitleaks_negative_proof_fake_secret_fixture_blocks(
 
     exe = shutil.which("gitleaks")
     if exe is None:
-        pytest.skip("gitleaks binary not installed (CI runs the pinned container instead)")
-    (tmp_path / "leak.txt").write_text("token = DUMMYKEY_ABCDEFGHIJKLMNOP\n", encoding="utf-8")
+        pytest.skip(
+            "gitleaks binary not installed (CI runs the pinned container instead)"
+        )
+    (tmp_path / "leak.txt").write_text(
+        "token = DUMMYKEY_ABCDEFGHIJKLMNOP\n", encoding="utf-8"
+    )
     (tmp_path / "cfg.toml").write_text(
         '[[rules]]\nid = "dummy-test-vector"\ndescription = "fake test vector"\n'
         "regex = '''DUMMYKEY_[A-Z]{16}'''\n",
@@ -623,12 +710,101 @@ def test_gitleaks_negative_proof_fake_secret_fixture_blocks(
     )
     rep = tmp_path / "gl.json"
     subprocess.run(
-        [exe, "detect", "--no-git", "--source", str(tmp_path), "--config", str(tmp_path / "cfg.toml"),
-         "--redact", "-f", "json", "-r", str(rep)],
+        [
+            exe,
+            "detect",
+            "--no-git",
+            "--source",
+            str(tmp_path),
+            "--config",
+            str(tmp_path / "cfg.toml"),
+            "--redact",
+            "-f",
+            "json",
+            "-r",
+            str(rep),
+        ],
         check=False,
         capture_output=True,
     )
     risks = _write_yaml(tmp_path, {"entries": []})
-    rc = main(["--tool", "gitleaks", "--report", str(rep), "--accepted-risks", str(risks)])
+    rc = main(
+        ["--tool", "gitleaks", "--report", str(rep), "--accepted-risks", str(risks)]
+    )
     assert rc == 1
     assert "IR-02" in capsys.readouterr().err
+
+
+# --------------------------------------------------------------------------
+# CI-SEC-006: in-source Semgrep suppressions
+# --------------------------------------------------------------------------
+
+_RULE = "cv-broad-except-on-ingest"
+_GOOD = f"# nosemgrep: {_RULE} - reason, owner @basil, review 2026-12-31"
+_INSRC = [{"kind": "inSource"}]
+
+
+def _supp_sarif(supp: list[dict], uri: str = "a.py", line: int = 2) -> dict:
+    doc = _sarif_doc(f"rules.{_RULE}")
+    res = doc["runs"][0]["results"][0]
+    res["suppressions"] = supp
+    loc = res["locations"][0]["physicalLocation"]
+    loc["artifactLocation"]["uri"] = uri
+    loc["region"]["startLine"] = line
+    return doc
+
+
+def _parse(
+    tmp_path: Path, doc: dict, src: str | None, tool: str = "semgrep"
+) -> list[Finding]:
+    if src is not None:
+        (tmp_path / "a.py").write_text(src, encoding="utf-8")
+    report = _write_json(tmp_path, "r.sarif", doc)
+    return parse_sarif(report, tool, source_root=tmp_path, today=date(2026, 10, 6))
+
+
+def test_justified_in_source_suppression_is_not_blocking(tmp_path: Path) -> None:
+    assert _parse(tmp_path, _supp_sarif(_INSRC), f"{_GOOD}\nx = 1\n") == []
+    assert _parse(tmp_path, _supp_sarif(_INSRC), f"x = 1  {_GOOD}\n") == []
+
+
+def test_blanket_nosemgrep_still_blocks_ci_sec_006(tmp_path: Path) -> None:
+    out = _parse(tmp_path, _supp_sarif(_INSRC), "# nosemgrep\nx = 1\n")
+    assert len(out) == 1 and out[0].severity == "HIGH"
+    assert "CI-SEC-006: unjustified in-source suppression" in out[0].detail
+
+
+def test_nosemgrep_for_other_rule_still_blocks(tmp_path: Path) -> None:
+    src = "# nosemgrep: other-rule - r, owner @b, review 2026-12-31\nx = 1\n"
+    out = _parse(tmp_path, _supp_sarif(_INSRC), src)
+    assert len(out) == 1 and "CI-SEC-006" in out[0].detail
+
+
+def test_expired_suppression_review_date_blocks(tmp_path: Path) -> None:
+    src = f"# nosemgrep: {_RULE} - r, owner @b, review 2026-10-05\nx = 1\n"
+    out = _parse(tmp_path, _supp_sarif(_INSRC), src)
+    assert len(out) == 1 and "expired" in out[0].detail
+    src = f"# nosemgrep: {_RULE} - r, owner @b, review 2026-10-06\nx = 1\n"
+    assert _parse(tmp_path, _supp_sarif(_INSRC), src) == []
+
+
+def test_justification_field_path_needs_no_source_file(tmp_path: Path) -> None:
+    ok = _supp_sarif([{"kind": "inSource", "justification": _GOOD}])
+    assert _parse(tmp_path, ok, None) == []
+    bad = _supp_sarif([{"kind": "inSource", "justification": "nosemgrep"}])
+    assert "CI-SEC-006" in _parse(tmp_path, bad, None)[0].detail
+
+
+def test_missing_source_file_fails_closed(tmp_path: Path) -> None:
+    assert len(_parse(tmp_path, _supp_sarif(_INSRC), None)) == 1
+
+
+def test_external_suppression_kind_is_not_honoured(tmp_path: Path) -> None:
+    out = _parse(tmp_path, _supp_sarif([{"kind": "external"}]), f"{_GOOD}\n")
+    assert len(out) == 1 and "CI-SEC-006" not in out[0].detail
+
+
+@pytest.mark.parametrize("tool", ["codeql", "trivy", "bandit"])
+def test_non_semgrep_tools_ignore_suppressions(tmp_path: Path, tool: str) -> None:
+    out = _parse(tmp_path, _supp_sarif(_INSRC), f"{_GOOD}\n", tool=tool)
+    assert len(out) == 1 and "CI-SEC-006" not in out[0].detail

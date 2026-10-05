@@ -542,7 +542,8 @@ symbol_code = DOMAIN(
 # domain, not adapter logic; C-1.3 scopes this whole product to that single
 # exchange, so the enum member is a schema fact, not leaked adapter vocab.
 exchange_code = ENUM(
-    "bybit",  # nosemgrep: cv-adapter-isolation
+    # nosemgrep: cv-adapter-isolation - schema value domain, owner @basiltt, review 2027-03-25
+    "bybit",
     name="exchange_code",
     metadata=metadata,
     create_type=False,
@@ -552,7 +553,7 @@ instruments = Table(
     "instruments",
     metadata,
     Column("symbol", symbol_code, primary_key=True),
-    # nosemgrep: cv-adapter-isolation -- see exchange_code above.
+    # nosemgrep: cv-adapter-isolation - see exchange_code, owner @basiltt, review 2027-03-25
     Column("exchange", exchange_code, nullable=False, server_default=text("'bybit'")),
     Column("category", Text, nullable=False, server_default=text("'linear'")),
     Column("base_coin", Text, nullable=False),

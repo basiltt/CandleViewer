@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
@@ -128,7 +129,9 @@ def load_accepted_risks(path: Path) -> list[AcceptedRisk]:
 
     entries_raw = raw.get("entries", [])
     if not isinstance(entries_raw, list):
-        raise SecurityGateError("CI-SEC-005", "accepted-risk register: 'entries' must be a list")
+        raise SecurityGateError(
+            "CI-SEC-005", "accepted-risk register: 'entries' must be a list"
+        )
 
     risks: list[AcceptedRisk] = []
     for i, entry in enumerate(entries_raw):
@@ -150,8 +153,11 @@ def load_accepted_risks(path: Path) -> list[AcceptedRisk]:
             expires_raw = entry["expires"]
             expires = (
                 expires_raw
-                if isinstance(expires_raw, date) and not isinstance(expires_raw, datetime)
-                else datetime.strptime(str(expires_raw), "%Y-%m-%d").replace(tzinfo=UTC).date()
+                if isinstance(expires_raw, date)
+                and not isinstance(expires_raw, datetime)
+                else datetime.strptime(str(expires_raw), "%Y-%m-%d")
+                .replace(tzinfo=UTC)
+                .date()
             )
             risks.append(
                 AcceptedRisk(
@@ -231,7 +237,9 @@ def evaluate_findings(
             continue
         # Unexpired, matching accepted-risk entry: does not block.
 
-    return GateResult(blocked=blocking_code is not None, code=blocking_code, messages=messages)
+    return GateResult(
+        blocked=blocking_code is not None, code=blocking_code, messages=messages
+    )
 
 
 @dataclass(frozen=True)
@@ -282,7 +290,11 @@ def evaluate_licenses(
 
         if dep.license in needs_approval:
             risk = next(
-                (r for r in risks if r.finding_id == finding_id and r.tool == "license-scan"),
+                (
+                    r
+                    for r in risks
+                    if r.finding_id == finding_id and r.tool == "license-scan"
+                ),
                 None,
             )
             if risk is None:
@@ -318,7 +330,9 @@ def evaluate_licenses(
             )
             blocking_code = blocking_code or "CI-SEC-002"
 
-    return GateResult(blocked=blocking_code is not None, code=blocking_code, messages=messages)
+    return GateResult(
+        blocked=blocking_code is not None, code=blocking_code, messages=messages
+    )
 
 
 # --------------------------------------------------------------------------
@@ -337,7 +351,9 @@ _SARIF_LEVEL_TO_SEVERITY: dict[str, Severity] = {
 }
 
 
-def _sarif_rule_index(run: dict[str, Any]) -> tuple[dict[str, Any], list[list[dict[str, Any]]]]:
+def _sarif_rule_index(
+    run: dict[str, Any],
+) -> tuple[dict[str, Any], list[list[dict[str, Any]]]]:
     """Index a run's rule descriptors by id, plus positional tables.
 
     Returns `(by_id, components)` where `components[0]` is the driver's rule
@@ -345,7 +361,9 @@ def _sarif_rule_index(run: dict[str, Any]) -> tuple[dict[str, Any], list[list[di
     resolve `result.rule.{toolComponent.index, index}` / `result.ruleIndex`.
     """
     tool = run.get("tool", {})
-    components: list[list[dict[str, Any]]] = [list(tool.get("driver", {}).get("rules", []))]
+    components: list[list[dict[str, Any]]] = [
+        list(tool.get("driver", {}).get("rules", []))
+    ]
     for ext in tool.get("extensions", []):
         components.append(list(ext.get("rules", [])))
     by_id: dict[str, Any] = {}
@@ -357,7 +375,9 @@ def _sarif_rule_index(run: dict[str, Any]) -> tuple[dict[str, Any], list[list[di
 
 
 def _sarif_result_rule(
-    result: dict[str, Any], by_id: dict[str, Any], components: list[list[dict[str, Any]]]
+    result: dict[str, Any],
+    by_id: dict[str, Any],
+    components: list[list[dict[str, Any]]],
 ) -> dict[str, Any]:
     ref = result.get("rule", {})
     comp_idx = ref.get("toolComponent", {}).get("index", 0)
@@ -371,7 +391,57 @@ def _sarif_result_rule(
     return found
 
 
-def parse_sarif(path: Path, tool: str) -> list[Finding]:
+_NOSEMGREP_RE = re.compile(
+    r"nosemgrep:\s*(?P<rules>[^\n]*?)(?:owner|@)[^\n]*?review\s+(?P<date>\d{4}-\d{2}-\d{2})",
+    re.IGNORECASE,
+)
+
+
+def _suppression_problem(
+    result: dict[str, Any], rule_id: str, source_root: Path, today: date
+) -> str | None:
+    """Return None if the result carries a justified, unexpired in-source
+    suppression (so it may be skipped), else the reason it still blocks.
+    Returns "" if the result has no in-source suppression at all.
+    """
+    sups = result.get("suppressions") or []
+    inline = [s for s in sups if isinstance(s, dict) and s.get("kind") == "inSource"]
+    if not inline:
+        return ""
+    suffix = rule_id.rsplit(".", 1)[-1]
+    texts = [str(s["justification"]) for s in inline if s.get("justification")]
+    if not texts:
+        locs = result.get("locations") or []
+        phys = locs[0].get("physicalLocation", {}) if locs else {}
+        uri = phys.get("artifactLocation", {}).get("uri", "")
+        start = phys.get("region", {}).get("startLine")
+        if uri and isinstance(start, int) and start >= 1:
+            try:
+                lines = (source_root / uri).read_text(encoding="utf-8").splitlines()
+            except (OSError, UnicodeDecodeError):
+                lines = []
+            texts = [lines[i] for i in (start - 2, start - 1) if 0 <= i < len(lines)]
+    for text in texts:
+        for m in _NOSEMGREP_RE.finditer(text):
+            if suffix not in m.group("rules"):
+                continue
+            try:
+                review = date.fromisoformat(m.group("date"))
+            except ValueError:
+                continue
+            if review < today:
+                return f"suppression review date {review.isoformat()} has expired"
+            return None
+    return "needs 'nosemgrep: <rule-id> ..., owner <who>, review YYYY-MM-DD'"
+
+
+def parse_sarif(
+    path: Path,
+    tool: str,
+    *,
+    source_root: Path | None = None,
+    today: date | None = None,
+) -> list[Finding]:
     """Parse a SARIF 2.1.0 file into normalised findings.
 
     Used for CodeQL, Semgrep and Trivy (all three can emit SARIF). Severity
@@ -395,7 +465,9 @@ def parse_sarif(path: Path, tool: str) -> list[Finding]:
         ) from exc
 
     if not isinstance(doc, dict) or "runs" not in doc:
-        raise SecurityGateError("CI-SEC-005", f"{tool}: {path} is not a SARIF document (no 'runs')")
+        raise SecurityGateError(
+            "CI-SEC-005", f"{tool}: {path} is not a SARIF document (no 'runs')"
+        )
 
     findings: list[Finding] = []
     for run in doc.get("runs", []):
@@ -413,6 +485,21 @@ def parse_sarif(path: Path, tool: str) -> list[Finding]:
                 line = phys.get("region", {}).get("startLine", "")
                 loc = f"{uri}:{line}" if uri else ""
             finding_id = f"{rule_id}:{loc}" if loc else rule_id
+
+            suppression_note = ""
+            if tool == "semgrep":
+                problem = _suppression_problem(
+                    result,
+                    rule_id,
+                    source_root or Path.cwd(),
+                    today or datetime.now(UTC).date(),
+                )
+                if problem is None:
+                    continue
+                if problem:
+                    suppression_note = (
+                        f"CI-SEC-006: unjustified in-source suppression ({problem}) "
+                    )
 
             sec_sev = result.get("properties", {}).get("security-severity")
             if sec_sev is None:
@@ -448,7 +535,8 @@ def parse_sarif(path: Path, tool: str) -> list[Finding]:
                     tool=tool,
                     finding_id=finding_id,
                     severity=severity,
-                    detail=f"{message} ({loc})" if loc else message,
+                    detail=suppression_note
+                    + (f"{message} ({loc})" if loc else message),
                 )
             )
     return findings
@@ -515,7 +603,9 @@ def parse_npm_audit(path: Path) -> list[Finding]:
         if severity not in _SEVERITY_ORDER:
             severity = "HIGH"
         via = info.get("via", [])
-        ids = [_npm_advisory_id(v, pkg_name) for v in via if isinstance(v, dict)] or [pkg_name]
+        ids = [_npm_advisory_id(v, pkg_name) for v in via if isinstance(v, dict)] or [
+            pkg_name
+        ]
         for finding_id in ids:
             findings.append(
                 Finding(
@@ -573,11 +663,15 @@ def parse_license_report(path: Path) -> list[LicenseFinding]:
         ) from exc
 
     if not isinstance(doc, list):
-        raise SecurityGateError("CI-SEC-005", f"license-scan: {path} must be a JSON array")
+        raise SecurityGateError(
+            "CI-SEC-005", f"license-scan: {path} must be a JSON array"
+        )
 
     return [
         LicenseFinding(
-            package=entry["package"], version=entry.get("version", ""), license=entry["license"]
+            package=entry["package"],
+            version=entry.get("version", ""),
+            license=entry["license"],
         )
         for entry in doc
     ]
@@ -596,8 +690,12 @@ _PARSERS: dict[str, Any] = {
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--tool", required=True, choices=sorted(_PARSERS) + ["license-scan"])
-    parser.add_argument("--report", required=True, type=Path, help="tool's native report file")
+    parser.add_argument(
+        "--tool", required=True, choices=sorted(_PARSERS) + ["license-scan"]
+    )
+    parser.add_argument(
+        "--report", required=True, type=Path, help="tool's native report file"
+    )
     parser.add_argument(
         "--accepted-risks",
         type=Path,
@@ -610,7 +708,9 @@ def main(argv: list[str] | None = None) -> int:
         help="only used when --tool license-scan",
     )
     parser.add_argument(
-        "--run-date", default=None, help="ISO date override for tests; default: today (UTC)"
+        "--run-date",
+        default=None,
+        help="ISO date override for tests; default: today (UTC)",
     )
     args = parser.parse_args(argv)
 
@@ -627,7 +727,10 @@ def main(argv: list[str] | None = None) -> int:
             allowlist = load_license_allowlist(args.allowlist)
             result = evaluate_licenses(deps, allowlist, risks, run_date=run_date)
         else:
-            findings = _PARSERS[args.tool](args.report)
+            if args.tool == "semgrep":
+                findings = parse_sarif(args.report, "semgrep", today=run_date)
+            else:
+                findings = _PARSERS[args.tool](args.report)
             result = evaluate_findings(findings, risks, run_date=run_date)
     except SecurityGateError as exc:
         print(f"{exc.code}: {exc.message}", file=sys.stderr)
