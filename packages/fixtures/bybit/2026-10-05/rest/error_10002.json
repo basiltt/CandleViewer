@@ -1,7 +1,1 @@
-{
-  "retCode": 10002,
-  "retMsg": "invalid request, please check your server timestamp or recv_window param",
-  "result": {},
-  "retExtInfo": {},
-  "time": 1700000000000
-}
+{"retCode":10002,"retMsg":"invalid request, please check your server timestamp or recv_window param","result":{},"retExtInfo":{},"time":1700000000000}
