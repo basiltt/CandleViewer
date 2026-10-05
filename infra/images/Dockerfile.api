@@ -33,9 +33,10 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# The base image ships pip 25.0.1 (CVE-2026-8643, HIGH); the runtime never runs
-# pip, but the package is scanned, so pin the fixed release here as in builder.
-RUN pip install --no-cache-dir "pip==26.2.1"
+# The base image ships pip 25.0.1 (CVE-2026-8643, HIGH) and setuptools 70.3.0
+# (CVE-2025-47273, HIGH; fixed in 78.1.1); the runtime never runs either, but
+# the packages are scanned, so pin the fixed releases here.
+RUN pip install --no-cache-dir "pip==26.2.1" "setuptools==80.10.2"
 
 RUN groupadd --gid 10001 cvapi \
     && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin cvapi
