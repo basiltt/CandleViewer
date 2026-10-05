@@ -86,7 +86,13 @@ def test_stress_ingest_never_drops_trades_and_records_backpressure() -> None:
     async def bounded() -> dict[str, object]:
         try:
             return await asyncio.wait_for(
-                measure.run_ingest(seconds=0.3, batch=500, drain_delay_s=0.02, max_queue_rows=1000),
+                measure.run_ingest(
+                    seconds=0.3,
+                    batch=500,
+                    drain_delay_s=0.02,
+                    max_queue_rows=1000,
+                    require_backpressure=True,
+                ),
                 timeout=30.0,
             )
         except TimeoutError:
@@ -97,6 +103,16 @@ def test_stress_ingest_never_drops_trades_and_records_backpressure() -> None:
     r = asyncio.run(bounded())
     assert r["trade_rows_dropped"] == 0
     assert r["backpressure_onset_rows_s"] is not None
+    assert r["max_queue_depth"] > 0
+
+
+def test_stress_scenario_fails_when_queue_never_fills() -> None:
+    with pytest.raises(AssertionError, match="never backed up"):
+        asyncio.run(
+            measure.run_ingest(
+                seconds=0.2, batch=5000, max_queue_rows=200_000, require_backpressure=True
+            )
+        )
 
 
 def test_compaction_reports_before_after() -> None:
@@ -156,3 +172,36 @@ def test_report_writer_merges_sections(tmp_path: Path) -> None:
     write_report_section(p, "a", {"x": 1})
     write_report_section(p, "b", {"y": 2})
     assert json.loads(p.read_text("utf-8")) == {"a": {"x": 1}, "b": {"y": 2}}
+
+
+def test_adr_addendum_compaction_numbers_match_committed_results() -> None:
+    root = Path(__file__).resolve().parents[3]
+    c = json.loads((Path(__file__).parent / "results.json").read_text("utf-8"))["cold"][
+        "compaction"
+    ]
+    adr = next((root / "docs/plan/27-adrs").glob("ADR-0022-*.md")).read_text("utf-8")
+    expected = f"{c['scan_ms_before']} ms -> {c['scan_ms_after']} ms ({c['speedup_x']}x)"
+    assert expected in adr
+
+
+def test_harness_entry_point_exits_1_naming_shape_and_delta_on_slowed_results(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("CV_ENV", "test")
+    here = Path(__file__).parent
+    res = json.loads((here / "baseline.json").read_text("utf-8"))["p95_ms"]
+    shapes = {f"{k}:warm": {"p95": v * 1.3 + 5} for k, v in res.items()}
+    slowed = tmp_path / "results.json"
+    slowed.write_text(json.dumps({"shapes": shapes}), encoding="utf-8")
+    rc = harness.main(["--compare-only", str(slowed), "--baseline", str(here / "baseline.json")])
+    out = capsys.readouterr().out
+    assert rc == 1
+    first = next(iter(res))
+    assert first in out and "%" in out
+    clean = tmp_path / "clean.json"
+    clean.write_text(
+        json.dumps({"shapes": {f"{k}:warm": {"p95": v} for k, v in res.items()}}), encoding="utf-8"
+    )
+    assert (
+        harness.main(["--compare-only", str(clean), "--baseline", str(here / "baseline.json")]) == 0
+    )

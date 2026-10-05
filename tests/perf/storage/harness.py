@@ -221,16 +221,36 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", type=Path, default=Path(__file__).parent / "results.json")
     ap.add_argument("--baseline", type=Path, default=Path(__file__).parent / "baseline.json")
     ap.add_argument("--update-baseline", action="store_true")
+    ap.add_argument(
+        "--compare-only",
+        type=Path,
+        help="skip measuring; compare this results.json against --baseline (exit 1 on regression)",
+    )
     a = ap.parse_args(argv)
     require_test_env()
+    if a.compare_only is not None:
+        recorded = json.loads(a.compare_only.read_text("utf-8"))["shapes"]
+        cur = {
+            k.split(":")[0]: float(v["p95"])
+            for k, v in recorded.items()
+            if k.endswith(":warm") and "p95" in v
+        }
+        regs = compare_to_baseline(json.loads(a.baseline.read_text("utf-8"))["p95_ms"], cur)
+        if regs:
+            print(format_regression_report(regs))
+            return 1
+        return 0
     shapes = run_query_shapes(a.seed, a.rows, cold_samples=a.cold_samples)
     ingest = asyncio.run(run_ingest(seconds=a.ingest_seconds, batch=5000))
     stress = asyncio.run(
         run_ingest(
             seconds=a.ingest_seconds,
-            batch=5000,
+            # batch < flush threshold and a tiny queue: the buffer fills past capacity so the
+            # lone producer must self-flush (backpressure) instead of every write flushing at once
+            batch=500,
             drain_delay_s=0.02,
-            max_queue_rows=20_000,
+            max_queue_rows=2_000,
+            require_backpressure=True,
         )
     )
     cold = run_cold(a.seed)

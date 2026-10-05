@@ -134,4 +134,7 @@ reversal path, if ever triggered, is a known-quantity schema translation, not a 
 `tests/perf/storage/` (see its README) records warm/cold p50/p95/p99 for shapes #1-#11, ILP writer ingest,
 export, compaction and loop lag. R0 numbers are from a DuckDB proxy / in-memory ILP transport (no docker), so they
 are regression baselines, not engine verdicts; this ADR's K01 decision is unchanged. Compaction of 200 small
-Parquet files cut scan time 77.4 ms -> 8.6 ms (9x). Authoritative QuestDB numbers await the compose-stack nightly run.
+Parquet files cut scan time 24.708 ms -> 3.009 ms (8.21x)
+(source of truth: committed `tests/perf/storage/results.json`; a test keeps this line in sync). Authoritative
+QuestDB numbers await the compose-stack nightly run. The E07-Q03 ticket text says results go in ADR-0008; that is
+a typo - ADR-0008 is trade-group fan-out and ADR-0022 is the hot-tier decision whose table these numbers extend.
