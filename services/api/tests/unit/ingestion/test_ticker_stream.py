@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 from decimal import Decimal
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -19,8 +18,9 @@ from candleviewer.bus.models import QueuePolicy, TopicPattern
 from candleviewer.exchange.bybit.ticker import parse_ticker_frame, ticker_topic
 from candleviewer.ingestion.ticker_stream import TickerMerger, TickerStream, UnknownSymbolError
 from candleviewer.ingestion.watchdog import FeedHealthEvent
+from tests._corpus import corpus_path
 
-FIX = Path(__file__).parents[2] / "fixtures" / "bybit" / "tickers_BTCUSDT.jsonl"
+FIX = corpus_path("ws/tickers_BTCUSDT.jsonl")
 FRAMES = FIX.read_text(encoding="utf-8").splitlines()
 
 

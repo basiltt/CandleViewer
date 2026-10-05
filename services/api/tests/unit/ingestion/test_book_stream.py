@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -15,8 +14,9 @@ from candleviewer.bus.models import QueuePolicy
 from candleviewer.exchange.base.models import BookDelta, BookSnapshot
 from candleviewer.exchange.bybit.orderbook import book_topic, parse_book_frame
 from candleviewer.orderbook_wiring import BookStream
+from tests._corpus import corpus_path
 
-FIX = Path(__file__).parents[2] / "fixtures" / "bybit" / "orderbook_BTCUSDT.jsonl"
+FIX = corpus_path("ws/orderbook_BTCUSDT.jsonl")
 FRAMES = FIX.read_text(encoding="utf-8").splitlines()
 TICK = Decimal("0.1")
 

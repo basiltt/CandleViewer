@@ -3,7 +3,7 @@
 Documented Bybit v5 `orderbook.200.BTCUSDT` shapes (24-internal-schemas.md 2.2):
 one snapshot, then ~3 h of deltas (one frame / 2 s, `u` +1), a `u == 1`
 server-reset snapshot, and one deliberate sequence hole. NOT a live capture
-(replace with a recorder capture once E16 lands). Run: python gen_orderbook.py
+(replace with a recorder capture once E16 lands). Run: python tools/fixtures/gen_orderbook.py
 """
 
 from __future__ import annotations
@@ -17,6 +17,12 @@ TICK = Decimal("0.1")
 T0 = 1_700_000_000_000
 rng = random.Random(8005)  # noqa: S311 - deterministic fixture, not crypto
 mid = 63_120_00  # ticks
+_OUT = (
+    Path(__file__)
+    .resolve()
+    .parents[2]
+    .joinpath("packages", "fixtures", "bybit", "2026-10-05", "ws", "orderbook_BTCUSDT.jsonl")
+)
 
 
 def px(t: int) -> str:
@@ -68,7 +74,7 @@ def main() -> None:
             da[t] = q
             asks.pop(t, None) if q == "0" else asks.__setitem__(t, q)
         out.append(frame("delta", ts, u, db, da))
-    Path(__file__).with_name("orderbook_BTCUSDT.jsonl").write_text("\n".join(out) + "\n")
+    _OUT.write_text("\n".join(out) + "\n", encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":

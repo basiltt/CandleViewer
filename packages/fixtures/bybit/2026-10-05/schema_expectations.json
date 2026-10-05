@@ -1,0 +1,872 @@
+{
+ "orderbook.200": {
+  "": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "cts": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  },
+  "data": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "data.a": {
+   "types": [
+    "array"
+   ],
+   "required": true
+  },
+  "data.a[]": {
+   "types": [
+    "array"
+   ],
+   "required": true
+  },
+  "data.a[][]": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "data.b": {
+   "types": [
+    "array"
+   ],
+   "required": true
+  },
+  "data.b[]": {
+   "types": [
+    "array"
+   ],
+   "required": true
+  },
+  "data.b[][]": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "data.s": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "data.seq": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  },
+  "data.u": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  },
+  "topic": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "ts": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  },
+  "type": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  }
+ },
+ "orderbook.50": {
+  "": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "cts": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  },
+  "data": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "data.a": {
+   "types": [
+    "array"
+   ],
+   "required": true
+  },
+  "data.a[]": {
+   "types": [
+    "array"
+   ],
+   "required": true
+  },
+  "data.a[][]": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "data.b": {
+   "types": [
+    "array"
+   ],
+   "required": true
+  },
+  "data.b[]": {
+   "types": [
+    "array"
+   ],
+   "required": true
+  },
+  "data.b[][]": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "data.s": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "data.seq": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  },
+  "data.u": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  },
+  "topic": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "ts": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  },
+  "type": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  }
+ },
+ "publicTrade": {
+  "": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "data": {
+   "types": [
+    "array"
+   ],
+   "required": true
+  },
+  "data[]": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "data[].BT": {
+   "types": [
+    "boolean"
+   ],
+   "required": true
+  },
+  "data[].L": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "data[].S": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "data[].T": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  },
+  "data[].i": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "data[].p": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "data[].s": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "data[].v": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "topic": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "ts": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  },
+  "type": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  }
+ },
+ "rest.error": {
+  "": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "result": {
+   "types": [
+    "object"
+   ],
+   "required": false
+  },
+  "retCode": {
+   "types": [
+    "number"
+   ],
+   "required": false
+  },
+  "retExtInfo": {
+   "types": [
+    "object"
+   ],
+   "required": false
+  },
+  "retMsg": {
+   "types": [
+    "string"
+   ],
+   "required": false
+  },
+  "time": {
+   "types": [
+    "number"
+   ],
+   "required": false
+  }
+ },
+ "rest.instruments": {
+  "": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "result": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "result.category": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list": {
+   "types": [
+    "array"
+   ],
+   "required": true
+  },
+  "result.list[]": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "result.list[].baseCoin": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].contractType": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].copyTrading": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].fundingInterval": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  },
+  "result.list[].launchTime": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].leverageFilter": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "result.list[].leverageFilter.leverageStep": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].leverageFilter.maxLeverage": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].leverageFilter.minLeverage": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].lotSizeFilter": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "result.list[].lotSizeFilter.maxMktOrderQty": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].lotSizeFilter.maxOrderQty": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].lotSizeFilter.minNotionalValue": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].lotSizeFilter.minOrderQty": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].lotSizeFilter.qtyStep": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].lowerFundingRate": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].priceFilter": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "result.list[].priceFilter.maxPrice": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].priceFilter.minPrice": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].priceFilter.tickSize": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].priceScale": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].quoteCoin": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].settleCoin": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].status": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].symbol": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].upperFundingRate": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.nextPageCursor": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "retCode": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  },
+  "retExtInfo": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "retMsg": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "time": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  }
+ },
+ "rest.kline": {
+  "": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "result": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "result.category": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list": {
+   "types": [
+    "array"
+   ],
+   "required": true
+  },
+  "result.list[]": {
+   "types": [
+    "array"
+   ],
+   "required": true
+  },
+  "result.list[][]": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.symbol": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "retCode": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  },
+  "retExtInfo": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "retMsg": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "time": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  }
+ },
+ "rest.recent": {
+  "": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "result": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "result.category": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list": {
+   "types": [
+    "array"
+   ],
+   "required": true
+  },
+  "result.list[]": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "result.list[].execId": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].isBlockTrade": {
+   "types": [
+    "boolean"
+   ],
+   "required": true
+  },
+  "result.list[].price": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].side": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].size": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].symbol": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.list[].time": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "retCode": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  },
+  "retExtInfo": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "retMsg": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "time": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  }
+ },
+ "rest.server": {
+  "": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "result": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "result.timeNano": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "result.timeSecond": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "retCode": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  },
+  "retExtInfo": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "retMsg": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "time": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  }
+ },
+ "tickers": {
+  "": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "cs": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  },
+  "data": {
+   "types": [
+    "object"
+   ],
+   "required": true
+  },
+  "data.ask1Price": {
+   "types": [
+    "string"
+   ],
+   "required": false
+  },
+  "data.ask1Size": {
+   "types": [
+    "string"
+   ],
+   "required": false
+  },
+  "data.bid1Price": {
+   "types": [
+    "string"
+   ],
+   "required": false
+  },
+  "data.bid1Size": {
+   "types": [
+    "string"
+   ],
+   "required": false
+  },
+  "data.fundingRate": {
+   "types": [
+    "string"
+   ],
+   "required": false
+  },
+  "data.indexPrice": {
+   "types": [
+    "string"
+   ],
+   "required": false
+  },
+  "data.lastPrice": {
+   "types": [
+    "string"
+   ],
+   "required": false
+  },
+  "data.markPrice": {
+   "types": [
+    "string"
+   ],
+   "required": false
+  },
+  "data.nextFundingTime": {
+   "types": [
+    "string"
+   ],
+   "required": false
+  },
+  "data.openInterest": {
+   "types": [
+    "string"
+   ],
+   "required": false
+  },
+  "data.openInterestValue": {
+   "types": [
+    "string"
+   ],
+   "required": false
+  },
+  "data.price24hPcnt": {
+   "types": [
+    "string"
+   ],
+   "required": false
+  },
+  "data.symbol": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "data.turnover24h": {
+   "types": [
+    "string"
+   ],
+   "required": false
+  },
+  "data.volume24h": {
+   "types": [
+    "string"
+   ],
+   "required": false
+  },
+  "topic": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  },
+  "ts": {
+   "types": [
+    "number"
+   ],
+   "required": true
+  },
+  "type": {
+   "types": [
+    "string"
+   ],
+   "required": true
+  }
+ }
+}

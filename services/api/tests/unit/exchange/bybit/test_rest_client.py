@@ -23,6 +23,7 @@ from candleviewer.exchange.bybit.config import EndpointClass, RestClientConfig
 from candleviewer.exchange.bybit.rate_limit import TokenBucketGovernor
 from candleviewer.exchange.bybit.rest import BybitRestClient
 from candleviewer.exchange.bybit.signer import BybitSigner
+from tests._corpus import http_status, rest
 
 BASE_URL = "https://api-demo.bybit.com"
 
@@ -99,7 +100,7 @@ async def test_10018_raises_rate_limit_error_and_drains_bucket_then_retries() ->
     route.side_effect = [
         httpx.Response(
             200,
-            json={"retCode": 10018, "retMsg": "too many visits"},
+            json=rest("rest/error_10018.json"),
             headers={"X-Bapi-Limit-Status": "3"},
         ),
         httpx.Response(200, json={"retCode": 0, "retMsg": "OK", "result": {}}),
@@ -129,7 +130,7 @@ async def test_10018_raises_rate_limit_error_and_drains_bucket_then_retries() ->
 @respx.mock
 async def test_10018_non_retryable_path_raises_when_retries_exhausted() -> None:
     respx.get(f"{BASE_URL}/v5/market/kline").mock(
-        return_value=httpx.Response(200, json={"retCode": 10018, "retMsg": "too many visits"})
+        return_value=httpx.Response(200, json=rest("rest/error_10018.json"))
     )
     client = BybitRestClient(_config(max_retries=0), governor=_fresh_governor())
     try:
@@ -145,9 +146,7 @@ async def test_10002_retries_exactly_once_then_surfaces_clock_drift_error() -> N
     """Acceptance criterion 4: a second 10002 surfaces as `ClockDriftError`
     rather than looping."""
     route = respx.get(f"{BASE_URL}/v5/market/kline")
-    route.mock(
-        return_value=httpx.Response(200, json={"retCode": 10002, "retMsg": "invalid timestamp"})
-    )
+    route.mock(return_value=httpx.Response(200, json=rest("rest/error_10002.json")))
     resync_calls = 0
 
     def offset_provider() -> int:
@@ -170,7 +169,8 @@ async def test_10002_retries_exactly_once_then_surfaces_clock_drift_error() -> N
 @respx.mock
 async def test_5xx_retries_then_raises_transport_error_when_exhausted() -> None:
     route = respx.get(f"{BASE_URL}/v5/market/time")
-    route.mock(return_value=httpx.Response(503, json={}))
+    err = "rest/error_503.json"
+    route.mock(return_value=httpx.Response(http_status(err), json=rest(err)))
 
     async def fake_sleep(_seconds: float) -> None:
         return None

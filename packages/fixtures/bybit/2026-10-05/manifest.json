@@ -1,0 +1,214 @@
+{
+  "capture_date": "2026-10-05",
+  "fixtures": [
+    {
+      "path": "rest/error_10002.json",
+      "symbol": "*",
+      "stream": "GET /v5/market/kline",
+      "host": "api-demo.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "error_10002 response",
+      "http_status": 200,
+      "size_cap_bytes": 4000
+    },
+    {
+      "path": "rest/error_10018.json",
+      "symbol": "*",
+      "stream": "GET /v5/market/kline",
+      "host": "api-demo.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "error_10018 response",
+      "http_status": 200,
+      "size_cap_bytes": 4000
+    },
+    {
+      "path": "rest/error_503.json",
+      "symbol": "*",
+      "stream": "GET /v5/market/kline",
+      "host": "api-demo.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "error_503 response",
+      "http_status": 503,
+      "size_cap_bytes": 4000
+    },
+    {
+      "path": "rest/instruments_after.json",
+      "symbol": "*",
+      "stream": "GET /v5/market/instruments-info",
+      "host": "api-demo.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "LUNAUSDT delisted (Closed), SOLUSDT tickSize 0.010->0.005",
+      "http_status": 200,
+      "size_cap_bytes": 64000
+    },
+    {
+      "path": "rest/instruments_before.json",
+      "symbol": "*",
+      "stream": "GET /v5/market/instruments-info",
+      "host": "api-demo.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "baseline catalogue",
+      "http_status": 200,
+      "size_cap_bytes": 64000
+    },
+    {
+      "path": "rest/kline_BTCUSDT_1_page0.json",
+      "symbol": "BTCUSDT",
+      "stream": "GET /v5/market/kline",
+      "host": "api-demo.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "page boundary: page 0 of 3 (limit 200, 450 rows)",
+      "http_status": 200,
+      "size_cap_bytes": 32000
+    },
+    {
+      "path": "rest/kline_BTCUSDT_1_page1.json",
+      "symbol": "BTCUSDT",
+      "stream": "GET /v5/market/kline",
+      "host": "api-demo.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "page boundary: page 1 of 3 (limit 200, 450 rows)",
+      "http_status": 200,
+      "size_cap_bytes": 32000
+    },
+    {
+      "path": "rest/kline_BTCUSDT_1_page2.json",
+      "symbol": "BTCUSDT",
+      "stream": "GET /v5/market/kline",
+      "host": "api-demo.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "page boundary: page 2 of 3 (limit 200, 450 rows)",
+      "http_status": 200,
+      "size_cap_bytes": 32000
+    },
+    {
+      "path": "rest/recent_trade_BTCUSDT.json",
+      "symbol": "BTCUSDT",
+      "stream": "GET /v5/market/recent-trade",
+      "host": "api-demo.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "gap backfill page",
+      "http_status": 200,
+      "size_cap_bytes": 4000
+    },
+    {
+      "path": "rest/server_time.json",
+      "symbol": "*",
+      "stream": "GET /v5/market/time",
+      "host": "api-demo.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "server time",
+      "http_status": 200,
+      "size_cap_bytes": 4000
+    },
+    {
+      "path": "ws/burst_tickers_BTCUSDT.jsonl",
+      "symbol": "BTCUSDT",
+      "stream": "tickers.BTCUSDT",
+      "host": "stream.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "delta-only burst: 600 deltas @100 ms after one snapshot",
+      "http_status": 200,
+      "size_cap_bytes": 96000
+    },
+    {
+      "path": "ws/clean_publicTrade_BTCUSDT.jsonl",
+      "symbol": "BTCUSDT",
+      "stream": "publicTrade.BTCUSDT",
+      "host": "stream.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "clean 3 h window",
+      "http_status": 200,
+      "size_cap_bytes": 128000
+    },
+    {
+      "path": "ws/clean_publicTrade_ETHUSDT.jsonl",
+      "symbol": "ETHUSDT",
+      "stream": "publicTrade.ETHUSDT",
+      "host": "stream.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "clean 3 h window",
+      "http_status": 200,
+      "size_cap_bytes": 128000
+    },
+    {
+      "path": "ws/clean_publicTrade_SOLUSDT.jsonl",
+      "symbol": "SOLUSDT",
+      "stream": "publicTrade.SOLUSDT",
+      "host": "stream.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "clean 3 h window",
+      "http_status": 200,
+      "size_cap_bytes": 128000
+    },
+    {
+      "path": "ws/gap_orderbook_ETHUSDT.jsonl",
+      "symbol": "ETHUSDT",
+      "stream": "orderbook.50.ETHUSDT",
+      "host": "stream.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "sequence gap: u jumps +3 at frame 30",
+      "http_status": 200,
+      "size_cap_bytes": 64000
+    },
+    {
+      "path": "ws/orderbook_BTCUSDT.jsonl",
+      "symbol": "BTCUSDT",
+      "stream": "orderbook.200.BTCUSDT",
+      "host": "stream.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "3 h; u hole at frame 2700, u==1 reset at 4000",
+      "http_status": 200,
+      "size_cap_bytes": 1500000
+    },
+    {
+      "path": "ws/publicTrade_BTCUSDT.jsonl",
+      "symbol": "BTCUSDT",
+      "stream": "publicTrade.BTCUSDT",
+      "host": "stream.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "reconnect between frames 2 and 3",
+      "http_status": 200,
+      "size_cap_bytes": 4000
+    },
+    {
+      "path": "ws/reconnect_publicTrade_ETHUSDT.jsonl",
+      "symbol": "ETHUSDT",
+      "stream": "publicTrade.ETHUSDT",
+      "host": "stream.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "reconnect: 15 s silence after frame 20, 2 replayed prints",
+      "http_status": 200,
+      "size_cap_bytes": 64000
+    },
+    {
+      "path": "ws/tickers_BTCUSDT.jsonl",
+      "symbol": "BTCUSDT",
+      "stream": "tickers.BTCUSDT",
+      "host": "stream.bybit.com",
+      "capture_date": "2026-10-05",
+      "source": "documented-shape (exception #1778 A)",
+      "notable_event": "snapshot + deltas incl. explicit 0",
+      "http_status": 200,
+      "size_cap_bytes": 4000
+    }
+  ]
+}

@@ -9,7 +9,8 @@ import { dirname, join, relative } from "node:path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageRoot = join(__dirname, "..");
-const scanDirs = ["raw", "golden"].map((d) => join(packageRoot, d));
+// E08-T05: `bybit/` is the shared recorded corpus (packages/fixtures/bybit/<date>/).
+const scanDirs = ["raw", "golden", "bybit"].map((d) => join(packageRoot, d));
 
 const SECRET_PATTERNS = [
   { name: "PEM private key block", re: /-----BEGIN [A-Z ]*PRIVATE KEY-----/ },

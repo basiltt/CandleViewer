@@ -6,18 +6,18 @@ so the bar for changes is high and the rules are explicit.
 
 ## Read these first
 
-| Document                                 | What it is                                                                                                                                                                                                                                                                                         |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **[`CONSTITUTION.md`](CONSTITUTION.md)** | **The binding rules.** Scope guardrails, architecture invariants, branching, quality gates, review rules, DoR/DoD, security, testing, a11y/performance budgets, release and amendment process. It outranks every other document in this repo.                                                      |
-| **[`AGENTS.md`](AGENTS.md)**             | The practical operating manual — repo map, how to pick up a ticket, ticket anatomy (§3a), board protocol (§3b), commands per package, coding standards, test-writing rules, PR checklist, prohibitions. Written for AI coding agents (tool-agnostic: Copilot, Codex, Cursor, Claude Code, humans). |
-| **[`CLAUDE.md`](CLAUDE.md)**             | Claude Code's entry point specifically — a thin pointer into `CONSTITUTION.md` and `AGENTS.md`, not a second rulebook. If you use a different agent, read `AGENTS.md` directly instead.                                                                                                            |
-| **[`SECURITY.md`](SECURITY.md)**         | Vulnerability reporting, supported versions, secrets policy, incident process.                                                                                                                                                                                                                     |
-| `docs/plan/`                             | Planning source of truth: SDLC, DoR/DoD, testing, security, a11y, performance, release/PRR, UX, architecture, API/WS contract, schema, roadmap, backlog.                                                                                                                                           |
-| `docs/adr/`                              | Accepted architecture decisions (MADR). Do not relitigate them silently.                                                                                                                                                                                                                           |
-| `.github/PULL_REQUEST_TEMPLATE.md`       | The checklist your PR must satisfy.                                                                                                                                                                                                                                                                |
-| `.github/CODEOWNERS`                     | Who must review what.                                                                                                                                                                                                                                                                              |
-| **[`docs/ci-runbook.md`](docs/ci-runbook.md)** | Operating manual for the CI/CD pipeline: job map, `ci-required` resolver, per-error-code triage recipes, dev-environment rebuild, secret-exposure and bad-deploy response, flaky-test quarantine, weekly PR-feedback-time metrics.                                                        |
-| **[`docs/plan/observability-contract.md`](docs/plan/observability-contract.md)** | One-page contract for module authors: registering metrics, permitted labels, probes and getting an alert approved. |
+| Document                                                                         | What it is                                                                                                                                                                                                                                                                                         |
+| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **[`CONSTITUTION.md`](CONSTITUTION.md)**                                         | **The binding rules.** Scope guardrails, architecture invariants, branching, quality gates, review rules, DoR/DoD, security, testing, a11y/performance budgets, release and amendment process. It outranks every other document in this repo.                                                      |
+| **[`AGENTS.md`](AGENTS.md)**                                                     | The practical operating manual — repo map, how to pick up a ticket, ticket anatomy (§3a), board protocol (§3b), commands per package, coding standards, test-writing rules, PR checklist, prohibitions. Written for AI coding agents (tool-agnostic: Copilot, Codex, Cursor, Claude Code, humans). |
+| **[`CLAUDE.md`](CLAUDE.md)**                                                     | Claude Code's entry point specifically — a thin pointer into `CONSTITUTION.md` and `AGENTS.md`, not a second rulebook. If you use a different agent, read `AGENTS.md` directly instead.                                                                                                            |
+| **[`SECURITY.md`](SECURITY.md)**                                                 | Vulnerability reporting, supported versions, secrets policy, incident process.                                                                                                                                                                                                                     |
+| `docs/plan/`                                                                     | Planning source of truth: SDLC, DoR/DoD, testing, security, a11y, performance, release/PRR, UX, architecture, API/WS contract, schema, roadmap, backlog.                                                                                                                                           |
+| `docs/adr/`                                                                      | Accepted architecture decisions (MADR). Do not relitigate them silently.                                                                                                                                                                                                                           |
+| `.github/PULL_REQUEST_TEMPLATE.md`                                               | The checklist your PR must satisfy.                                                                                                                                                                                                                                                                |
+| `.github/CODEOWNERS`                                                             | Who must review what.                                                                                                                                                                                                                                                                              |
+| **[`docs/ci-runbook.md`](docs/ci-runbook.md)**                                   | Operating manual for the CI/CD pipeline: job map, `ci-required` resolver, per-error-code triage recipes, dev-environment rebuild, secret-exposure and bad-deploy response, flaky-test quarantine, weekly PR-feedback-time metrics.                                                                 |
+| **[`docs/plan/observability-contract.md`](docs/plan/observability-contract.md)** | One-page contract for module authors: registering metrics, permitted labels, probes and getting an alert approved.                                                                                                                                                                                 |
 
 If anything below appears to conflict with the Constitution, **the Constitution wins** and the conflict is
 a bug to report.
@@ -34,6 +34,10 @@ a bug to report.
    (§6).
 4. **Tests first, at the right level.** Unit for pure logic, integration for boundaries (with recorded
    Bybit fixtures — no live-exchange calls in CI), E2E only for user-visible critical paths (§13).
+   Exchange payloads come from the shared corpus `packages/fixtures/bybit/` (via
+   `services/api/tests/_corpus.py`). The only suite that reaches Bybit is the opt-in, demo-only,
+   credential-free `exchange_smoke` suite. Its fail-closed environment guard is explained in
+   `services/api/tests/exchange_smoke/README.md`.
 5. **[Conventional Commits](https://www.conventionalcommits.org/)** with an allowed scope; `commitlint`
    enforces it (§4.4). This also feeds the changelog: your PR title must be a conventional-commit header,
    or the PR body must include a `Changelog: <one-line user-facing summary>` footer — the
@@ -123,7 +127,7 @@ The `gen` job (`.github/workflows/_job-gen.yml`) is an always-on required check.
    commit it in the same PR as the schema change.
 3. **`CI-GEN-002` (untracked output)** — `make gen` produced a new file CI can see via `git status` but
    `git diff` couldn't. Check `.gitignore` hasn't accidentally swallowed a new generated path, then `git
-   add` and commit it.
+add` and commit it.
 4. **`CI-GEN-004` (generator toolchain failure)** — the generator command itself errored (missing
    dependency, syntax error in the schema, pinned tool version mismatch); the job summary and step log
    carry the underlying stdout/stderr.
@@ -154,14 +158,14 @@ checkers, each emitting a stable `GOV-00n` code so CI history stays greppable. R
 locally with `python scripts/<checker>.py` (or `python docs/plan/backlog/_tools/validate.py` for the
 backlog report tool); fix instructions live in the tool's own `--help` and its emitted message.
 
-| Code | Checker | What it means |
-|---|---|---|
-| `GOV-001` | `scripts/check_codeowners_coverage.py` | A tracked path resolves only to the CODEOWNERS catch-all `*`, a rule matches no tracked path, or a rule names an undeclared owner. |
-| `GOV-002` | `scripts/check_rule_refs.py` | A `C-x.y` rule reference doesn't resolve to a declaration in `CONSTITUTION.md`. Run with `--fix-suggest` for nearest-id suggestions. |
-| `GOV-003` | `scripts/check_sot_duplication.py` | A `C-16.5`-owned list has been restated outside its owner file/section (`scripts/sot-registry.json`). Delete the copy and link to the owner, or add an isolated-mention entry to `scripts/sot-allowlist.txt`. |
-| `GOV-004` | `scripts/check_issue_forms.py`, `scripts/validate-backlog.py`, `docs/plan/backlog/_tools/validate.py` | An issue form is structurally broken, or a backlog ticket JSON fails schema/cross-file validation (dependency cycles, parent chains, sprint ordering, secret-pattern scan). |
-| `GOV-005` | `scripts/check_required_check_reconciliation.py` | `.github/branch-protection.json` and `CONSTITUTION.md` §9 (and, once populated, the workflow job names) disagree on required-check names. |
-| `GOV-006` | `scripts/check_markdown_governance_docs.py` | A governance document (`CONTRIBUTING.md`, the E01 test plans, the E01-X02 security findings doc) has a broken relative link or a lint issue (hard tab, trailing whitespace, a heading level jump, a bare autolink, missing trailing newline). |
+| Code      | Checker                                                                                               | What it means                                                                                                                                                                                                                                 |
+| --------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GOV-001` | `scripts/check_codeowners_coverage.py`                                                                | A tracked path resolves only to the CODEOWNERS catch-all `*`, a rule matches no tracked path, or a rule names an undeclared owner.                                                                                                            |
+| `GOV-002` | `scripts/check_rule_refs.py`                                                                          | A `C-x.y` rule reference doesn't resolve to a declaration in `CONSTITUTION.md`. Run with `--fix-suggest` for nearest-id suggestions.                                                                                                          |
+| `GOV-003` | `scripts/check_sot_duplication.py`                                                                    | A `C-16.5`-owned list has been restated outside its owner file/section (`scripts/sot-registry.json`). Delete the copy and link to the owner, or add an isolated-mention entry to `scripts/sot-allowlist.txt`.                                 |
+| `GOV-004` | `scripts/check_issue_forms.py`, `scripts/validate-backlog.py`, `docs/plan/backlog/_tools/validate.py` | An issue form is structurally broken, or a backlog ticket JSON fails schema/cross-file validation (dependency cycles, parent chains, sprint ordering, secret-pattern scan).                                                                   |
+| `GOV-005` | `scripts/check_required_check_reconciliation.py`                                                      | `.github/branch-protection.json` and `CONSTITUTION.md` §9 (and, once populated, the workflow job names) disagree on required-check names.                                                                                                     |
+| `GOV-006` | `scripts/check_markdown_governance_docs.py`                                                           | A governance document (`CONTRIBUTING.md`, the E01 test plans, the E01-X02 security findings doc) has a broken relative link or a lint issue (hard tab, trailing whitespace, a heading level jump, a bare autolink, missing trailing newline). |
 
 The job also runs a **canary self-test** (`python scripts/gov_self_test.py --self-test`) that replays
 every checker above against a deliberately-broken fixture tree under
@@ -171,8 +175,6 @@ check that has silently stopped checking anything — and a **coverage gate** (`
 recorded as a `::notice` annotation on every run; exceeding the budget fails the job (`::error`
 annotation). Per-run artefacts (CODEOWNERS ownership report, backlog per-epic summary) are uploaded
 as the `governance-reports` artefact for diffable history across runs.
-
-
 
 Sprints are **1 week** (Fri→Thu; Sprint 01 = 2026-09-25; calendar in `docs/plan/backlog/_tools/calendar_cv.py`). Design runs at least two sprints ahead of engineering; no frontend screen work starts before its design
 ticket is Done. Architectural decisions are recorded as MADR ADRs in `docs/adr/` and must be proposed

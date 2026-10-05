@@ -1,0 +1,73 @@
+name: fixture-drift
+
+# E08-T05 (risk R6 "feed rot"): nightly payload-drift early warning.
+# Captures a small fresh sample from Bybit's PUBLIC stream (no credentials,
+# no secrets referenced) with tools/fixtures/capture_fixture.py, compares its
+# field presence + JSON types to packages/fixtures/bybit/<date>/schema_expectations.json
+# and opens an issue naming the stream and field on drift. Scheduled/manual only:
+# never runs on pull_request and is not a required check (C-9.1 unchanged).
+
+on:
+  schedule:
+    - cron: "41 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONIOENCODING: utf-8
+
+jobs:
+  drift:
+    name: fixture-drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.9.x"
+          python-version: "3.12"
+
+      - name: uv sync --frozen
+        working-directory: services/api
+        run: uv sync --frozen
+
+      - name: Capture a fresh public sample
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/sample/ws"
+          for topic in publicTrade.BTCUSDT tickers.BTCUSDT orderbook.50.BTCUSDT; do
+            uv run --project services/api python tools/fixtures/capture_fixture.py \
+              --topic "$topic" --frames 20 --out "$RUNNER_TEMP/sample/ws/$topic.jsonl"
+          done
+          rm -f "$RUNNER_TEMP"/sample/ws/*.manifest.json
+
+      - name: Drift check
+        id: drift
+        run: >
+          uv run --project services/api python tools/fixtures/drift_check.py
+          --sample "$RUNNER_TEMP/sample" --report "$RUNNER_TEMP/drift.txt"
+
+      - name: Open an issue on drift (R6)
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          touch "$RUNNER_TEMP/drift.txt"
+          {
+            echo "Bybit payload drift (or the drift job itself failed). Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo
+            echo '```'
+            cat "$RUNNER_TEMP/drift.txt"
+            echo '```'
+          } > "$RUNNER_TEMP/body.md"
+          gh issue create --title "fixture-drift: Bybit payload drift $(date -u +%F)" \
+            --label "area/ingestion" --label "priority/p1" --body-file "$RUNNER_TEMP/body.md"
