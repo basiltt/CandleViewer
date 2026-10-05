@@ -209,14 +209,57 @@ async def test_write_rows_applies_backpressure_never_drops() -> None:
     await writer.write_rows("trades", [row, row], "ts")
     assert writer.queue_depth("trades") == 2
 
-    blocked = asyncio.ensure_future(writer.write_rows("trades", [row], "ts"))
-    await asyncio.sleep(0.01)
-    assert not blocked.done()  # queue full -> caller is awaiting, not dropped
+    gate = asyncio.Event()
+    real_write = transport.write
 
-    await writer.flush("trades")
+    async def gated_write(data: bytes) -> None:
+        await gate.wait()
+        await real_write(data)
+
+    transport.write = gated_write  # type: ignore[method-assign]  # stall the sink
+    blocked = asyncio.ensure_future(writer.write_rows("trades", [row], "ts"))
+    for _ in range(5):
+        await asyncio.sleep(0)
+    assert not blocked.done()  # queue full + slow sink -> caller is awaiting, not dropped
+
+    gate.set()
     await asyncio.wait_for(blocked, timeout=1.0)
     await writer.flush("trades")  # drain the 3rd row too — nothing left buffered
     assert writer.rows_written_total == 3  # every row eventually written, none dropped
+
+
+@pytest.mark.asyncio
+async def test_write_rows_lone_producer_full_queue_self_flushes_no_deadlock() -> None:
+    """Regression (E07-Q03 harness): with `max_queue_rows < flush_rows` and a
+    single producer, a full queue used to wait on an Event only another
+    flusher could set — so the lone producer hung forever."""
+    transport = _FakeTransport()
+    writer = IlpWriter(
+        transport,
+        {"trades": TRADES_SCHEMA},
+        max_queue_rows=2,
+        flush_rows=1000,
+        flush_interval_s=1000.0,
+    )
+    await writer.start()
+    row = {
+        "symbol": "BTCUSDT",
+        "side": "Buy",
+        "price": 1.0,
+        "size": 1.0,
+        "notional": 1.0,
+        "trade_id": "1",
+        "tick_dir": "PlusTick",
+        "is_block": False,
+        "ts": 1,
+    }
+    for _ in range(5):
+        await asyncio.wait_for(writer.write_rows("trades", [row, row], "ts"), timeout=1.0)
+    # an oversized batch into an empty queue is admitted, not parked forever
+    await writer.flush(None)
+    await asyncio.wait_for(writer.write_rows("trades", [row] * 3, "ts"), timeout=1.0)
+    await writer.stop()
+    assert writer.rows_written_total == 13
 
 
 @pytest.mark.asyncio
