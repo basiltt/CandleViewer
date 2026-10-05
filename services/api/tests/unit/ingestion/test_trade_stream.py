@@ -7,7 +7,6 @@ import time
 from collections.abc import Sequence
 from decimal import Decimal
 from itertools import pairwise
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -31,10 +30,11 @@ from candleviewer.ingestion.metrics import (
 from candleviewer.ingestion.ticker_stream import UnknownSymbolError
 from candleviewer.ingestion.trade_stream import DedupeRing, GapEvent, TradeStream, merge_ordered
 from candleviewer.ingestion.watchdog import FeedHealthEvent
+from tests._corpus import corpus_path
 
-FIX = Path(__file__).parents[2] / "fixtures" / "bybit"
+FIX = corpus_path("ws")
 FRAMES = (FIX / "publicTrade_BTCUSDT.jsonl").read_text(encoding="utf-8").splitlines()
-RECENT = json.loads((FIX / "recent_trade_BTCUSDT.json").read_text(encoding="utf-8"))
+RECENT = json.loads(corpus_path("rest/recent_trade_BTCUSDT.json").read_text(encoding="utf-8"))
 ID = "a0000001-0000-4000-8000-00000000000"
 
 

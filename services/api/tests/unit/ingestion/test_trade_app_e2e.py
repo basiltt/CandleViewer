@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import asyncio
 from decimal import Decimal
-from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
@@ -20,12 +19,9 @@ from candleviewer.ingestion.watchdog import FeedHealthEvent
 from candleviewer.settings import Settings
 from candleviewer.storage.repositories.rows import TradeRow
 from candleviewer.storage.testing.fakes import FakeMarketDataRepository
+from tests._corpus import corpus_path
 
-FRAMES = (
-    (Path(__file__).parents[2] / "fixtures" / "bybit" / "publicTrade_BTCUSDT.jsonl")
-    .read_text(encoding="utf-8")
-    .splitlines()
-)
+FRAMES = corpus_path("ws/publicTrade_BTCUSDT.jsonl").read_text(encoding="utf-8").splitlines()
 
 
 class _Principal:
