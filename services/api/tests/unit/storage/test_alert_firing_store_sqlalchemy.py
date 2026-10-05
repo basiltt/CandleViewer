@@ -38,7 +38,9 @@ class _Rel:
 
 def _store(rel: _Rel) -> SqlAlchemyAlertFiringStore:
     return SqlAlchemyAlertFiringStore(
-        rel, topic=TOPIC_ALERT_DELIVER, dedup_key=alert_deliver_dedup_key  # type: ignore[arg-type]  # structural fake
+        rel,
+        topic=TOPIC_ALERT_DELIVER,
+        dedup_key=alert_deliver_dedup_key,  # type: ignore[arg-type]  # structural fake
     )
 
 
@@ -82,3 +84,23 @@ async def test_firing_store_load_live_and_get() -> None:
     got = await s.get("id-2")
     assert got is not None and got.id == "id-2"
     assert await s.get("nope") is None
+
+
+async def test_firing_store_disable_already_disarmed_commits_nothing() -> None:
+    rel = _Rel(_Result([], 0))
+    assert await _fire(_store(rel), bump=False, disable=True) is None
+    assert rel.commits == 0 and rel.sql == ["UPDATE SET"]
+
+
+def test_firing_store_select_mirrors_alert_column_allow_list() -> None:
+    from candleviewer.storage.repositories import alert_firing_sqlalchemy as m
+    from candleviewer.storage.repositories.alerts_sqlalchemy import ALERT_COLUMNS
+
+    assert ALERT_COLUMNS + ", " in m._SELECT  # no secret column can slip in
+    assert "webhook_url_enc," not in m._SELECT and "secret" not in m._SELECT
+
+
+async def test_firing_store_rows_carry_last_bar_open_ms() -> None:
+    rel = _Rel(_Result([dict(_mapping(1)) | {"last_bar_open_ms": 300_000}]))
+    [r] = await _store(rel).load_live()
+    assert r.last_bar_open_ms == 300_000 and r.id == "id-1"

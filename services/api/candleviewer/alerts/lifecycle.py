@@ -70,7 +70,7 @@ class AlertCharts:
             if interp is not None:  # previous firing finished: fresh armed chart
                 await self._drop(alert_id)
             interp = (await build(MACHINE, clock=default_clock(), lane=LANE)).interpreter
-            self._gateway.register(alert_id, interp, kind=MACHINE, lane=LANE, metrics=self.refusals)
+            self._gateway.register(alert_id, interp, kind="alert", lane=LANE, metrics=self.refusals)
             self._charts[alert_id] = interp
             while len(self._charts) > self._max:
                 await self._drop(next(iter(self._charts)))
@@ -82,26 +82,27 @@ class AlertCharts:
         if interp is not None:
             await interp.stop()
 
-    async def _send(self, alert_id: str, event: dict[str, Any]) -> str:
-        interp = await self._get(alert_id)
-        if not interp.can(event):
+    async def _send_alert(self, key: str, event: str, /, **payload: Any) -> str:
+        """Unique name + literal event so `tools/statechart/event_coverage.py` checks
+        every alert send against the B10 descriptor."""
+        ev: dict[str, Any] = {"type": event, **payload}
+        interp = await self._get(key)
+        if not interp.can(ev):
             self.refusals.record_send_refused("unhandled")
             return leaf_of(interp)
-        await self._gateway.send(alert_id, event, wait=_AWAIT_STEP)
+        await self._gateway.send(key, {"type": event, **payload}, wait=_AWAIT_STEP)
         return leaf_of(interp)
 
     async def fired(
         self, alert_id: str, delivery_ids: Sequence[int], channels: Sequence[str]
     ) -> None:
-        await self._send(
+        await self._send_alert(
             alert_id,
-            {
-                "type": "CONDITION_MET",
-                "storm": False,
-                "alert_id": alert_id,
-                "delivery_ids": list(delivery_ids),
-                "channels": list(channels),
-            },
+            "CONDITION_MET",
+            storm=False,
+            alert_id=alert_id,
+            delivery_ids=list(delivery_ids),
+            channels=list(channels),
         )
         await self._settle(alert_id)
 
@@ -114,15 +115,19 @@ class AlertCharts:
             await asyncio.sleep(0)
 
     async def suppressed(self, alert_id: str, window_end_ms: int) -> None:
-        ev = {"type": "CONDITION_MET", "storm": True, "alert_id": alert_id,
-              "storm_window_end_us": window_end_ms * 1000}  # fmt: skip
-        await self._send(alert_id, ev)
+        await self._send_alert(
+            alert_id,
+            "CONDITION_MET",
+            storm=True,
+            alert_id=alert_id,
+            storm_window_end_us=window_end_ms * 1000,
+        )
 
     async def suppression_expired(self, alert_id: str) -> None:
-        await self._send(alert_id, {"type": "SUPPRESSION_EXPIRED"})
+        await self._send_alert(alert_id, "SUPPRESSION_EXPIRED")
 
     async def disabled(self, alert_id: str) -> None:
-        await self._send(alert_id, {"type": "DISABLE"})
+        await self._send_alert(alert_id, "DISABLE")
 
     async def stop(self) -> None:
         async with self._lock:
