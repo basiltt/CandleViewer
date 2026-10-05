@@ -165,7 +165,7 @@ quadrantChart
 `Risk: R7` · Category **Technical** · L 2 · I 4 · **Score 8 — Medium** · Owner **Architect** · Epics E07, E26, E46 · Status **Mitigating (largely retired — E07-K01, corrected)**
 
 - **Description** — QuestDB's performance claims are disputed (research finding #19). The hot tier was chosen for feature richness, but the queries that matter are footprint aggregation over a session and full-day L2 replay scans, neither of which is a benchmark-marketing shape.
-- **Mitigation** — E07-K01 (spike, `docs/plan/spikes/S2-hot-tier.md`, `ADR-0022-hot-tier-questdb-vs-timescaledb.md`) benchmarked QuestDB and TimescaleDB on six shapes including footprint aggregation, CVD roll-up and full-day replay scan. QA bug #1562 found the first pass's harness timed queries with a non-reproducible `time.perf_counter()` wall-clock read, so the committed shape-B result (p95 ~626 ms, "extend for tuning") could not be reproduced from the documented command/seed; the harness now derives latency deterministically from the real, seed-reproducible rows-scanned count, and the corrected re-run shows **QuestDB meets target on all 6/6 shapes and is faster than TimescaleDB on every one of them**, including the replay scan (p95 ~27 ms vs the <200 ms target) — the original shape-B miss was an artefact of wall-clock jitter on the reporting session's box, not a real algorithmic cost. Ingest throughput, on-disk size (now computed from documented §11.1 bytes/row, ~153 GB for the full unscaled 7-day/2-symbol dataset) and the out-of-order/DEDUP-UPSERT correctness scenario (now simulated: replaying 30s of already-ingested rows against a dedup-keyed store yields identical row counts for both engines' semantically-equivalent upsert keys) are also covered by the corrected harness; only the *real-container* PGWire/ILP re-run remains as `E07-S07`'s scope. L kept at 2 (not lowered further) pending that real-container confirmation.
+- **Mitigation** — E07-K01 (spike, `docs/plan/spikes/S2-hot-tier.md`, `ADR-0022-hot-tier-questdb-vs-timescaledb.md`) benchmarked QuestDB and TimescaleDB on six shapes including footprint aggregation, CVD roll-up and full-day replay scan. QA bug #1562 found the first pass's harness timed queries with a non-reproducible `time.perf_counter()` wall-clock read, so the committed shape-B result (p95 ~626 ms, "extend for tuning") could not be reproduced from the documented command/seed; the harness now derives latency deterministically from the real, seed-reproducible rows-scanned count, and the corrected re-run shows **QuestDB meets target on all 6/6 shapes and is faster than TimescaleDB on every one of them**, including the replay scan (p95 ~27 ms vs the <200 ms target) — the original shape-B miss was an artefact of wall-clock jitter on the reporting session's box, not a real algorithmic cost. Ingest throughput, on-disk size (now computed from documented §11.1 bytes/row, ~153 GB for the full unscaled 7-day/2-symbol dataset) and the out-of-order/DEDUP-UPSERT correctness scenario (now simulated: replaying 30s of already-ingested rows against a dedup-keyed store yields identical row counts for both engines' semantically-equivalent upsert keys) are also covered by the corrected harness; only the _real-container_ PGWire/ILP re-run remains as `E07-S07`'s scope. L kept at 2 (not lowered further) pending that real-container confirmation.
 - **Trigger** — Footprint session aggregation >2 s (retired — measured at ~4 ms), or a symbol-day replay scan unable to sustain 20× replay speed (**narrowed** — corrected E07-K01 measured the replay-scan p95 at ~27 ms against a <200 ms target on the synthetic dataset, meeting it; `E07-S07` still re-measures against real containers before this trigger is considered fully cleared against production data).
 - **Contingency** — Switch the hot tier to TimescaleDB per ADR-0022's recorded reversal path (not taken for any of the 6 confirmed shapes; remains available pending `E07-S07`'s real-container confirmation); the Parquet/DuckDB cold tier and Postgres relational tier are unaffected, which bounds the blast radius to one module.
 
@@ -434,6 +434,7 @@ Not a new `RSK-nnn` entry (no new risk was identified; this is reference evidenc
 - **Mitigation** — Calibration anchors and reference stories re-used at every planning poker session; velocity tracked per discipline, not just in aggregate (a backend-only overrun is a different problem from a frontend one); 10% buffer per train; re-planning at every train boundary with actuals recorded in the roadmap; the ≤8-point split rule keeps individual errors small.
 - **Trigger** — Rolling 3-sprint velocity deviates >15% from 90 pts.
 - **Contingency** — Re-baseline the affected train's scope against measured velocity rather than against the plan's assumption, and publish the revised allocation at the train boundary.
+- **E49-K01 note (2026-10-05)** — The "22-month accumulated defect backlog" assumption behind E49's sizing is refuted at snapshot time: 21 open defects, none P0, queue ~10 days old (`docs/plan/backlog/artifacts/e49-root-cause-clusters.md`, ADR-0030). Re-run `tools/triage/cluster_report.py` at S23 start before sizing the waves; no score change.
 
 ---
 
@@ -610,12 +611,12 @@ Not a new `RSK-nnn` entry (no new risk was identified; this is reference evidenc
 
 ## 10. Register summary
 
-| Score band           | Count  | IDs                                                                                                                                                                                         |
-| -------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Critical (15–25)** | 7      | RSK-001, RSK-004, RSK-010, RSK-013, RSK-014, RSK-031, RSK-037                                                                                                                               |
-| **High (10–14)**     | 22     | RSK-056, RSK-002, RSK-011, RSK-016, RSK-017, RSK-018, RSK-019, RSK-020, RSK-022, RSK-023, RSK-026, RSK-028, RSK-029, RSK-032, RSK-036, RSK-039, RSK-041, RSK-043, RSK-046, RSK-047, RSK-049, RSK-053  |
-| **Medium (5–9)**     | 22     | RSK-003, RSK-005, RSK-012, RSK-015, RSK-021, RSK-024, RSK-025, RSK-027, RSK-030, RSK-033, RSK-034, RSK-035, RSK-038, RSK-040, RSK-042, RSK-044, RSK-048, RSK-050, RSK-051, RSK-052, RSK-054, RSK-055                             |
-| **Total entries**    | **51** | RSK-001 … RSK-055 (non-contiguous numbering, grouped by category block; numbers are never reused)                                                                                           |
+| Score band           | Count  | IDs                                                                                                                                                                                                  |
+| -------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Critical (15–25)** | 7      | RSK-001, RSK-004, RSK-010, RSK-013, RSK-014, RSK-031, RSK-037                                                                                                                                        |
+| **High (10–14)**     | 22     | RSK-056, RSK-002, RSK-011, RSK-016, RSK-017, RSK-018, RSK-019, RSK-020, RSK-022, RSK-023, RSK-026, RSK-028, RSK-029, RSK-032, RSK-036, RSK-039, RSK-041, RSK-043, RSK-046, RSK-047, RSK-049, RSK-053 |
+| **Medium (5–9)**     | 22     | RSK-003, RSK-005, RSK-012, RSK-015, RSK-021, RSK-024, RSK-025, RSK-027, RSK-030, RSK-033, RSK-034, RSK-035, RSK-038, RSK-040, RSK-042, RSK-044, RSK-048, RSK-050, RSK-051, RSK-052, RSK-054, RSK-055 |
+| **Total entries**    | **51** | RSK-001 … RSK-055 (non-contiguous numbering, grouped by category block; numbers are never reused)                                                                                                    |
 
 Band arithmetic: 7 Critical + 20 High + 20 Medium = **47**, equal to the 47 `### RSK-nnn` entries in §3–§9. There are no Low-band entries: anything that scored ≤4 during drafting was not carried into the register as a tracked risk (see §10.1.2). RSK-012 moved High->Medium in an earlier PR (E07-K01 spike evidence, partial retirement); its narrative was corrected in this PR after QA bug #1562 found the spike's original shape-B result was not reproducible (see §4 entry) — the band/score is unchanged, only the evidence text.
 
@@ -643,16 +644,16 @@ IDs are assigned in **category blocks of ten** so a reader can infer a risk's fa
 
 Each of the 47 entries appears in **exactly one** category row below — the categories are a partition, not overlapping tags. IDs are listed in ascending order so a reader can verify membership by scanning.
 
-| Category                                                                            | Count  | IDs (ascending)                                                               |
-| ----------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------- |
+| Category                                                                            | Count  | IDs (ascending)                                                                    |
+| ----------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------- |
 | Technical (rendering, market data, storage, concurrency, quality-of-rendering a11y) | 16     | RSK-001, 002, 003, 004, 005, 010, 011, 012, 017, 026, 027, 028, 040, 044, 050, 052 |
-| Security                                                                            | 10     | RSK-016, 018, 019, 020, 021, 022, 029, 030, 043, 051                          |
-| Vendor/Bybit                                                                        | 6      | RSK-013, 014, 015, 023, 024, 025                                              |
-| Schedule                                                                            | 5      | RSK-031, 032, 033, 036, 039                                                   |
-| Team                                                                                | 4      | RSK-037, 038, 041, 042                                                        |
-| Operational                                                                         | 3      | RSK-046, 047, 048                                                             |
-| Scope & compliance                                                                  | 3      | RSK-034, 035, 049                                                             |
-| **Total**                                                                           | **47** | —                                                                             |
+| Security                                                                            | 10     | RSK-016, 018, 019, 020, 021, 022, 029, 030, 043, 051                               |
+| Vendor/Bybit                                                                        | 6      | RSK-013, 014, 015, 023, 024, 025                                                   |
+| Schedule                                                                            | 5      | RSK-031, 032, 033, 036, 039                                                        |
+| Team                                                                                | 4      | RSK-037, 038, 041, 042                                                             |
+| Operational                                                                         | 3      | RSK-046, 047, 048                                                                  |
+| Scope & compliance                                                                  | 3      | RSK-034, 035, 049                                                                  |
+| **Total**                                                                           | **47** | —                                                                                  |
 
 #### 10.1.1 Numeric reconciliation (auditor's check)
 
@@ -707,7 +708,7 @@ This is the second of the three partitions reconciled in §10.1.1. Each of the 4
 | R0    | RSK-001 (spike result), RSK-012 (hot-tier decision), RSK-003, RSK-029                                |
 | R1    | RSK-001, RSK-002, RSK-004, RSK-011, RSK-026, RSK-040                                                 |
 | R2    | RSK-004, RSK-005, RSK-010, RSK-027, RSK-028, RSK-044, RSK-049                                        |
-| R3    | RSK-013, RSK-014, RSK-016, RSK-017, RSK-018, RSK-019, RSK-020, RSK-034, RSK-050, RSK-056                      |
+| R3    | RSK-013, RSK-014, RSK-016, RSK-017, RSK-018, RSK-019, RSK-020, RSK-034, RSK-050, RSK-056             |
 | R4    | RSK-013, RSK-014, RSK-016, RSK-019, RSK-020, RSK-022, RSK-023, RSK-043, RSK-046, RSK-047             |
 | R5    | RSK-040, RSK-044, RSK-046, RSK-047, RSK-048, plus every accepted risk re-reviewed against its expiry |
 

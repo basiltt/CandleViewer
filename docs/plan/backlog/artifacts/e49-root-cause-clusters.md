@@ -91,13 +91,13 @@ The queue is small enough that S01+S02 are essentially "P1 + P0 re-checks"; size
 3. **E49-S03 (P2/P3, ~8 pts):** `gate-tooling` remainder (#1442, #1443, #1646), `dod-evidence-gap` (#1462, #1468, #1803, #1829, #1830: owner sign-offs and measurements; some are "needs-owner"), singleton #1822.
 4. Re-run `cluster_report.py` at S23 start; the queue will have changed. Expect new families (token drift, state patterns) once S04/S05 land.
 
+Root-fix follow-ups: flaky-tests #1855, storage-writer #1856, supply-chain-pins #1857, unwired-component #1858,
+dod-evidence-gap #1859. Decision record: ADR-0030. Singleton #1822 carries `cluster/singleton`.
+
 ## 6. Unresolved, risks, follow-ups
 
 - **Unresolved:** reproduction evidence (>=2 members per cluster); not done, so shared causes are hypothesised.
-- **Risk register:** no new risk surfaced; the DoD-evidence family is already covered by the E49-T01 regression guard.
-- **ADR / follow-up tickets:** the spike brief asks for an ADR and follow-up tickets. Not created here: the numbered
-  ADR sequence and ticket filing are owner-gated in the autonomous run, and with no >=3-member open family needing an
-  architectural root fix the decision is "root-fix flaky-tests, storage-writer, supply-chain-pins, unwired guard; patch the rest",
-  recorded in this report. Owner approval pending.
+- **Risk register:** no new risk; RSK-039 annotated: the "22-month backlog" assumption is refuted (queue ~10 days old).
+- **ADR / follow-up tickets:** ADR-0030 (Proposed, owner approval pending) and issues #1855-#1859 created; see above.
 - **Security:** `storage-writer`, `supply-chain-pins` and `statechart-contract` roots need `security-review` / Security-engineer
   pass (feeds E49-X01). The bug export was scanned by eye for secrets; only issue numbers and titles are committed.
