@@ -41,6 +41,12 @@ READ, WRITE = "alerts:read", "alerts:write"
 _SYMBOL = r"^[A-Z0-9]{2,20}USDT$"
 Channel = Literal["in_app", "email", "webhook", "push", "desktop"]
 OnCompile = Callable[[float, str | None], None]
+#: E40-T03: the in-process change event (alert id) the evaluator re-keys on.
+OnChange = Callable[[str], Awaitable[None]]
+
+
+async def _no_change(_alert_id: str) -> None:
+    return None
 
 
 class AlertInput(BaseModel):
@@ -126,9 +132,10 @@ class _Deps:
         actor_resolver: Callable[[Request], Any] | None,
         audit: Any,
         on_compile: OnCompile,
+        on_change: OnChange = _no_change,
     ) -> None:
         self.repo, self.registry, self.resolver = repo, registry, actor_resolver
-        self.audit, self.on_compile = audit, on_compile
+        self.audit, self.on_compile, self.on_change = audit, on_compile, on_change
 
     def store(self) -> AlertRepository:
         r = self.repo()
@@ -171,8 +178,9 @@ def make_alerts_router(
     actor_resolver: Callable[[Request], Any] | None,
     audit: Any,
     on_compile: OnCompile = lambda seconds, reason: None,
+    on_change: OnChange = _no_change,
 ) -> APIRouter:
-    d = _Deps(repo_provider, registry_provider, actor_resolver, audit, on_compile)
+    d = _Deps(repo_provider, registry_provider, actor_resolver, audit, on_compile, on_change)
     router = APIRouter(tags=["alerts"], route_class=_ProblemRoute)
 
     def need(perm: str) -> Callable[[Request], Awaitable[Actor]]:
@@ -288,6 +296,7 @@ def make_alerts_router(
             )
         except AlertNameTakenError:
             raise name_taken() from None
+        await d.on_change(row.id)
         return d.respond(row, 201, estimated_metrics=list(compiled.estimated_metrics))
 
     @router.get("/alerts/{alertId}")
@@ -319,6 +328,7 @@ def make_alerts_router(
             raise _stale() from None
         except AlertNameTakenError:
             raise name_taken() from None
+        await d.on_change(new.id)
         return d.respond(new, estimated_metrics=list(compiled.estimated_metrics))
 
     @router.delete("/alerts/{alertId}")
@@ -327,6 +337,7 @@ def make_alerts_router(
         await d.emit("alert.deleted", actor, row.id, before_state={"name": row.name})
         if not await d.store().soft_delete(row.id):
             raise _not_found()
+        await d.on_change(row.id)
         return Response(status_code=204)
 
     @router.put("/alerts/{alertId}/enabled")
@@ -345,6 +356,7 @@ def make_alerts_router(
         new = await d.store().set_enabled(row.id, body.enabled)
         if new is None:
             raise _not_found()
+        await d.on_change(new.id)
         return d.respond(new)
 
     return router

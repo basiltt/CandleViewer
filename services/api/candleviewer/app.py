@@ -38,6 +38,9 @@ from candleviewer.admin.wiring import (
     build_audit_service,
     build_secrets_service,
 )
+from candleviewer.alerts.evaluator import AlertEvaluator, AlertMetrics
+from candleviewer.alerts.lifecycle import AlertCharts
+from candleviewer.alerts.outbox import TOPIC_ALERT_DELIVER, alert_deliver_dedup_key
 from candleviewer.alerts.service import AlertsService
 from candleviewer.api import (
     make_audit_router,
@@ -151,6 +154,7 @@ from candleviewer.storage.cold.scrub import ScrubTask
 from candleviewer.storage.repositories.alert_deliveries_sqlalchemy import (
     SqlAlchemyAlertDeliveryRepository,
 )
+from candleviewer.storage.repositories.alert_firing_sqlalchemy import SqlAlchemyAlertFiringStore
 from candleviewer.storage.repositories.alerts_sqlalchemy import SqlAlchemyAlertRepository
 from candleviewer.storage.repositories.audit_sqlalchemy import SqlAlchemyAuditRepository
 from candleviewer.storage.repositories.identity_sqlalchemy import SqlAlchemyIdentityProvider
@@ -977,8 +981,11 @@ def create_app(
             rules_actor.resolve if rules_actor else None,
             _LazyAuditEmitter(ctx.audit),
             on_compile=_on_alert_compile,
+            on_change=ctx.alerts.on_alert_changed,
         )
     )
+    if resolved.alerts_evaluator_enabled:
+        ctx.alerts.bind(_alert_evaluator_factory(ctx, _alert_pg, metrics_facade))
     # E08-S05: maintained L2 book snapshot (503 while resyncing, never a patched book).
     app.include_router(
         make_orderbook_router(lambda: ctx.ingestion.books, principal_resolver=audit_resolver)
@@ -987,6 +994,55 @@ def create_app(
     # E09-T03 / #1648: a served route without an RBAC declaration fails the build.
     assert_app_routes_declared(app, spec)
     return app
+
+
+def _alert_evaluator_factory(
+    ctx: AppContext, pg: SqlAlchemyRelationalRepository, facade: Metrics
+) -> Callable[[], Awaitable[AlertEvaluator | None]]:
+    """E40-T03: evaluator over the rules module's pushed metric source (shared E35 bus)."""
+    metric = _alert_metric_sink(facade)
+
+    async def _make() -> AlertEvaluator | None:
+        source = ctx.rules.metric_source
+        if source is None:  # E35 evaluator off: no metric bus to subscribe to
+            return None
+        audit = _LazyAuditEmitter(ctx.audit)
+        store = SqlAlchemyAlertFiringStore(
+            pg, topic=TOPIC_ALERT_DELIVER, dedup_key=alert_deliver_dedup_key
+        )
+        return AlertEvaluator(
+            store, source, charts=AlertCharts(), audit=audit, metrics=AlertMetrics(metric)
+        )
+
+    return _make
+
+
+def _alert_metric_sink(facade: Metrics) -> Callable[[str, tuple[str, ...]], Any]:
+    """Ticket "Observability" metrics, registered once through the facade (E04-T03)."""
+    m = {
+        "cv_alert_eval_latency_seconds": facade.histogram(
+            "cv_alert_eval_latency_seconds", "Alert condition met -> delivery committed.",
+            buckets=(0.001, 0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5)),
+        "cv_alerts_armed": facade.gauge("cv_alerts_armed", "Armed alerts in the evaluator."),
+        "cv_alert_subscriptions": facade.gauge(
+            "cv_alert_subscriptions", "Distinct condition_hash subscriptions."),
+        "cv_alert_fires_total": facade.counter(
+            "cv_alert_fires_total", "Alert firings.", ("trigger_mode",), max_series=3),
+        "cv_alert_suppressed_total": facade.counter(
+            "cv_alert_suppressed_total", "Gated alert firings.", ("reason",), max_series=5),
+        "cv_alert_autodisarmed_total": facade.counter(
+            "cv_alert_autodisarmed_total", "Alerts auto-disarmed.", ("reason",), max_series=4),
+        "cv_alert_eval_queue_depth": facade.gauge(
+            "cv_alert_eval_queue_depth", "Alert evaluation queue depth."),
+        "cv_alert_eval_dropped_total": facade.counter(
+            "cv_alert_eval_dropped_total", "Alert ticks shed by the bounded queue."),
+    }  # fmt: skip
+
+    def _sink(name: str, labels: tuple[str, ...]) -> Any:
+        b = m[name]
+        return b.labels(*labels) if labels else b.child()
+
+    return _sink
 
 
 def wire_instrument_catalogue(

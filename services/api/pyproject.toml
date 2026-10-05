@@ -159,8 +159,6 @@ source = ["candleviewer"]
 omit = [
   "candleviewer/accounts/*",
   "candleviewer/admin/*",
-  # alerts: compiler/models/errors implemented by E40-T02; only the lifecycle scaffold stays.
-  "candleviewer/alerts/service.py",
   "candleviewer/bars/*",
   "candleviewer/book/service.py",
   "candleviewer/book/__init__.py",

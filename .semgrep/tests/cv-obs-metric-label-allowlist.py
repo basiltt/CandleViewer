@@ -7,3 +7,7 @@ def bad(reg: object) -> None:
 
 def ok(reg: object) -> None:
     reg.counter("cv_y_total", "help", ("symbol", "result"))  # ok: cv-obs-metric-label-allowlist
+
+
+def ok_trigger_mode(reg: object) -> None:
+    reg.counter("cv_z_total", "help", ("trigger_mode",))  # ok: cv-obs-metric-label-allowlist
