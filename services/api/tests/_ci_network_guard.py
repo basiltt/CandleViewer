@@ -1,7 +1,7 @@
 """Pytest network guard (E03-T03).
 
 ADR-0012 ("offline deterministic CI, no live venue in CI") and SR-140
-("CI must not hold production Bybit credentials") require that no test in
+("CI must not hold production exchange credentials") require that no test in
 this suite can reach the live exchange or any other non-loopback host. This
 module wraps `socket.socket.connect`/`connect_ex` so that any attempted
 connection to a host outside the allow-list raises immediately, before the

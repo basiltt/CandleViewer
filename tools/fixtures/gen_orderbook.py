@@ -1,6 +1,6 @@
 """Deterministic generator for `orderbook_BTCUSDT.jsonl` (E08-S05).
 
-Documented Bybit v5 `orderbook.200.BTCUSDT` shapes (24-internal-schemas.md 2.2):
+Documented exchange v5 `orderbook.200.BTCUSDT` shapes (24-internal-schemas.md 2.2):
 one snapshot, then ~3 h of deltas (one frame / 2 s, `u` +1), a `u == 1`
 server-reset snapshot, and one deliberate sequence hole. NOT a live capture
 (replace with a recorder capture once E16 lands). Run: python tools/fixtures/gen_orderbook.py

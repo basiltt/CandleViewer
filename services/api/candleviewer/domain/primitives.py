@@ -21,7 +21,7 @@ from uuid import UUID
 from pydantic import StringConstraints
 
 type TsUs = int
-"""Microseconds since the Unix epoch, UTC (C4). Bybit millisecond fields are
+"""Microseconds since the Unix epoch, UTC (C4). The exchange millisecond fields are
 multiplied by 1000 at the adapter boundary; `datetime` appears only in
 Postgres rows and human-facing strings."""
 

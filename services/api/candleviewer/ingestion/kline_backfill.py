@@ -23,7 +23,7 @@ Design, tied to the ticket's Gherkin scenarios:
   rows already fetched and persisted before the throttle stay in the cache
   and are returned to the caller as partial progress.
 - "Descending payload ordered correctly": `fetch_klines` already returns
-  ascending-by-`start` `KlineEvent`s (E08-T02's adapter reverses Bybit's
+  ascending-by-`start` `KlineEvent`s (E08-T02's adapter reverses the exchange's
   native descending order), so this module only has to preserve that order
   end to end and never re-sort by anything but `start`; a duplicate `start`
   across two pages is deduped by the storage layer's `(symbol, interval,
@@ -72,7 +72,7 @@ _PAGE_LIMIT = 1000
 
 class KlineFetcher(Protocol):
     """Structural type for `exchange.base.ports.MarketDataPort.fetch_klines`
-    — declared locally so this module never imports `exchange.bybit`
+    — declared locally so this module never imports the exchange adapter package
     directly (only `exchange.base` types, which M6 is allowed)."""
 
     async def __call__(
@@ -318,10 +318,10 @@ class KlineBackfillService:
         self, symbol: str, interval: str, start_us: TsUs, end_us: TsUs
     ) -> Sequence[KlineEvent]:
         """One page fetch, retried with full jitter backoff on any
-        exception (Bybit rate-limit `10018` included — `exchange.bybit.
-        mapping` maps it to `RateLimitError`, a plain `Exception` subclass
+        exception (the exchange's rate-limit `10018` included — the adapter's
+        mapping maps it to `RateLimitError`, a plain `Exception` subclass
         this module treats no differently to any other transient failure,
-        keeping this module free of a `candleviewer.exchange.bybit`
+        keeping this module free of an exchange adapter package
         import). Never lets one throttled page fail the whole backfill —
         see this module's docstring, "Rate limited" scenario."""
         last_error: Exception | None = None

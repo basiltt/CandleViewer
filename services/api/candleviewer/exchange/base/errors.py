@@ -2,7 +2,7 @@
 
 Every exchange error (transport or business rejection) is mapped, at the
 adapter boundary, to exactly one of these types. No `retCode` integer, and
-no Bybit-specific error string, escapes `exchange/bybit/` (C-2.2, adapter
+no exchange-specific error string, escapes the exchange adapter (C-2.2, adapter
 rule 1, §14.2). An error class not in this taxonomy is a defect: the
 boundary wrapper re-raises it as `UnknownStateError` with the original
 preserved as `__cause__` (acceptance criterion 4).

@@ -44,7 +44,7 @@ SR112_EXACT: dict[str, str] = {
     "form-action": "'none'",
 }
 
-# SR-119: any Bybit/Bytick host, incl. regional domains and stream*.bybit.com.
+# SR-119: any exchange host (both vendor domains), incl. regional domains and stream*.bybit.com.
 BYBIT_HOST_RE = re.compile(
     r"(?i)[a-z0-9*.-]*\b(?:bybit|bytick)[a-z0-9-]*(?:\.[a-z]{2,})+"
 )
@@ -133,7 +133,7 @@ def check_declared_prefs(shell_port_js: str) -> list[Violation]:
 
 
 def check_csp(source: str, csp: str) -> list[Violation]:
-    """SR-112 (verbatim directives, no unsafe-eval) + SR-119 (no Bybit host)."""
+    """SR-112 (verbatim directives, no unsafe-eval) + SR-119 (no exchange host)."""
     vs: list[Violation] = []
     d = parse_csp(csp)
     for name, want in SR112_EXACT.items():
@@ -176,7 +176,7 @@ def check_csp(source: str, csp: str) -> list[Violation]:
             Violation(
                 "SR-119",
                 source,
-                f"Bybit host '{m.group(0)}' in CSP; all exchange traffic is backend-only "
+                f"Exchange host '{m.group(0)}' in CSP; all exchange traffic is backend-only "
                 "(single chokepoint: credentials, per-UID rate tracker, env capability record)",
             )
         )
@@ -209,7 +209,7 @@ def check_dev_affordances(subject: str, text: str) -> list[Violation]:
 
 
 def check_bundle_hosts(subject: str, text: str) -> list[Violation]:
-    """SR-119: no Bybit host in renderer-bundled code (string scan)."""
+    """SR-119: no exchange host in renderer-bundled code (string scan)."""
     seen: set[str] = set()
     vs: list[Violation] = []
     for m in BYBIT_HOST_RE.finditer(text):
@@ -220,7 +220,7 @@ def check_bundle_hosts(subject: str, text: str) -> list[Violation]:
                 Violation(
                     "SR-119",
                     subject,
-                    f"Bybit host '{host}' in bundled code; exchange traffic is backend-only",
+                    f"Exchange host '{host}' in bundled code; exchange traffic is backend-only",
                 )
             )
     return vs

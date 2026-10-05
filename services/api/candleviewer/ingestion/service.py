@@ -3,7 +3,7 @@
 Every module implements the lifecycle contract from
 `docs/plan/20-architecture.md` Sec.3: `start`, `stop`, `health`. This ticket
 (E02-T12) adds the *synthetic* feed path only (`CV_FEED=synthetic`): the real
-Bybit ingestion path (`CV_FEED=live`) is scaffolded but not implemented until
+exchange ingestion path (`CV_FEED=live`) is scaffolded but not implemented until
 E08 lands.
 """
 

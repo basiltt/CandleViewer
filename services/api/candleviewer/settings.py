@@ -27,7 +27,7 @@ _REDACT_NAME_RE = re.compile(r"(key|secret|token|password|dsn)", re.IGNORECASE)
 
 
 class Environment(StrEnum):
-    """The three structural Bybit environments (P9, `20-architecture.md` Sec.7.1).
+    """The three structural exchange environments (P9, `20-architecture.md` Sec.7.1).
 
     `live` | `demo` | `testnet` select hosts, keys, storage namespace and code
     paths — never inferred, always explicit (arch P9).
@@ -42,7 +42,7 @@ class FeedMode(StrEnum):
     """`CV_FEED` switch (`20-architecture.md` Sec.7.3).
 
     `synthetic` replays `packages/fixtures/raw` at configurable rates so
-    engineers and CI can work without Bybit credentials; E2E tests and dev
+    engineers and CI can work without exchange credentials; E2E tests and dev
     defaults never use `live` here (this is a *feed* toggle, orthogonal to
     `Environment`).
     """
@@ -237,7 +237,7 @@ class Settings(BaseSettings):
                 "CV_FEED=live requires CV_BYBIT_API_KEY and CV_BYBIT_API_SECRET to be "
                 "set; refusing to start half-configured (see "
                 "docs/plan/20-architecture.md Sec.7.3). Use CV_FEED=synthetic for local "
-                "development without Bybit credentials."
+                "development without exchange credentials."
             )
 
     def __repr_args__(self) -> list[tuple[str | None, object]]:

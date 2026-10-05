@@ -1,6 +1,6 @@
 """Live ticker stream: subscribe once, fan out, delta-merge, reconnect (E08-S03).
 
-Bybit's linear ticker stream is a *delta* stream: absent fields mean unchanged,
+the exchange's linear ticker stream is a *delta* stream: absent fields mean unchanged,
 not null (`docs/plan/24-internal-schemas.md` §2.3). `TickerMerger` keeps a
 per-symbol last-known state and only ever yields fully populated `TickerEvent`s
 (`is_delta=False`), so no consumer implements merge logic. Until a complete
