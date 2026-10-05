@@ -73,8 +73,9 @@ class FiringStore(Protocol):
     ) -> list[int] | None:
         """One transaction. `once`: `UPDATE ... SET enabled = false WHERE enabled`; zero
         rows means another worker won the race -> roll back, return None. `disable`
-        disarms unconditionally (source loss). Queued rows get an `alert.deliver` outbox
-        row; `suppressed` rows are history only. Returns the delivery ids."""
+        (source loss) uses the same conditional update: zero rows -> None. Queued rows
+        get an `alert.deliver` outbox row; `suppressed` rows are history only.
+        Returns the delivery ids."""
         ...
 
 

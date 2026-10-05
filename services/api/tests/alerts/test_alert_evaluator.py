@@ -81,9 +81,10 @@ async def test_evaluator_once_per_bar_late_tick_does_not_fire_twice() -> None:
 async def test_evaluator_once_per_bar_restart_does_not_reopen_fired_bar() -> None:
     fired = datetime.fromtimestamp(T0 / 1000, UTC)
     r = row("a1", trigger_mode="once_per_bar", last_fired_at=fired,
+            last_bar_open_ms=bar_open_ms(T0, "5m"),
             condition_ir=ir(trigger="on_bar_close", timeframe="5m"))  # fmt: skip
     ev, store, src, *_ = make(r)
-    await ev.warm_up()  # bar memory rebuilt from last_fired_at
+    await ev.warm_up()  # bar memory rebuilt from the stored bar_open_ms
     src.set("price", 65500, T0)
     await ev.process(tick(T0 + 1, trig="on_bar_close"))
     assert store.deliveries == []

@@ -29,7 +29,6 @@ from candleviewer.alerts.gating import (
     AlertState,
     Muted,
     StormSuppressor,
-    bar_open_ms,
     gate,
     to_ms,
 )
@@ -145,8 +144,10 @@ def _jsonable(v: Value) -> Any:
 
 
 def state_of(row: AlertRecord) -> AlertState:
-    """Row -> in-memory state; the bar/cooldown memory is rebuilt from `last_fired_at`
-    so a restart cannot re-open a cooldown window or an already-fired bar."""
+    """Row -> in-memory state. Cooldown memory is rebuilt from `last_fired_at` (wall
+    clock, as the cooldown gate uses wall clock); `once_per_bar` memory from the stored
+    `last_bar_open_ms` of the latest firing (exchange event time, as the bar gate uses),
+    so a restart can re-open neither a cooldown window nor an already-fired bar."""
     cond = AlertCondition.model_validate(row.condition_ir)
     a = AlertState(
         id=row.id, owner_user_id=row.owner_user_id, name=row.name, symbol=row.symbol,
@@ -157,8 +158,9 @@ def state_of(row: AlertRecord) -> AlertState:
         expires_at_ms=to_ms(row.expires_at), snoozed_until_ms=to_ms(row.snoozed_until),
         last_fired_ms=to_ms(row.last_fired_at),
     )  # fmt: skip
-    if a.trigger_mode == "once_per_bar" and a.last_fired_ms is not None:
-        a.remember_bar(bar_open_ms(a.last_fired_ms, a.timeframe or "1m"))
+    last_bar: int | None = getattr(row, "last_bar_open_ms", None)
+    if a.trigger_mode == "once_per_bar" and last_bar is not None:
+        a.remember_bar(last_bar)
     return a
 
 
@@ -456,21 +458,27 @@ class AlertEvaluator:
     # --- auto-disarm on source loss (US-ALRT-002 scenario 2) ------------------------
 
     async def disarm(self, alert_id: str, metric: str) -> None:
-        """Disarm loudly: `enabled = false` and a delivery stating why, in one transaction."""
-        a = self.alerts.get(alert_id)
-        if a is None:
-            return
-        now = self._clock()
-        await self._store.record_firing(
-            alert_id=a.id, user_id=a.owner_user_id, channels=a.channels, status="queued",
-            title=DISARM_TITLE.format(metric=metric), body="",
-            context={"disarmed": True, "reason": "source_unavailable", "metric": metric},
-            fired_at=_dt(now), once=False, bump=False, disable=True,
-        )  # fmt: skip
-        a.enabled = False
-        self.metrics.inc("cv_alert_autodisarmed_total", "source_unavailable")
-        await self._emit("alert.disarmed", a, reason="source_unavailable",
-                         after_state={"enabled": False, "metric": metric})  # fmt: skip
-        if self._charts is not None:
-            await self._charts.disabled(a.id)
-        self._retire(a)
+        """Disarm loudly: `enabled = false` and a delivery stating why, in one transaction.
+        Runs under the same lock as firing and the UPDATE is conditional on `enabled`, so a
+        disarm can never interleave with a firing of the same alert (either order is safe)."""
+        async with self._lock:
+            a = self.alerts.get(alert_id)
+            if a is None or not a.enabled:
+                return
+            now = self._clock()
+            ids = await self._store.record_firing(
+                alert_id=a.id, user_id=a.owner_user_id, channels=a.channels, status="queued",
+                title=DISARM_TITLE.format(metric=metric), body="",
+                context={"disarmed": True, "reason": "source_unavailable", "metric": metric},
+                fired_at=_dt(now), once=False, bump=False, disable=True,
+            )  # fmt: skip
+            a.enabled = False
+            if ids is None:  # already disarmed (a `once` firing won): nothing to announce
+                self._retire(a)
+                return
+            self.metrics.inc("cv_alert_autodisarmed_total", "source_unavailable")
+            await self._emit("alert.disarmed", a, reason="source_unavailable",
+                             after_state={"enabled": False, "metric": metric})  # fmt: skip
+            if self._charts is not None:
+                await self._charts.disabled(a.id)
+            self._retire(a)

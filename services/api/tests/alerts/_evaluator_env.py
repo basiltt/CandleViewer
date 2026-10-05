@@ -46,6 +46,7 @@ class Row:
     channels: tuple[str, ...] = ("in_app",)
     message_template: str = ""
     last_fired_at: datetime | None = None
+    last_bar_open_ms: int | None = None
 
 
 def row(id: str, **kw: Any) -> Row:
@@ -84,14 +85,14 @@ class FakeStore:
                             fired_at: datetime, once: bool, bump: bool,
                             disable: bool = False) -> list[int] | None:  # fmt: skip
         r = self.rows[alert_id]
-        if once:
+        if once or disable:
             if not r.enabled:
                 return None
             r = replace(r, enabled=False)
-        elif disable:
-            r = replace(r, enabled=False)
         if bump:
             r = replace(r, last_fired_at=fired_at)
+        if context.get("bar_open_ms") is not None:
+            r = replace(r, last_bar_open_ms=int(context["bar_open_ms"]))
             self.fire_count[alert_id] = self.fire_count.get(alert_id, 0) + 1
         self.rows[alert_id] = r
         ids = []
