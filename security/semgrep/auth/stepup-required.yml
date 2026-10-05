@@ -1,0 +1,70 @@
+rules:
+  - id: stepup-required
+    languages: [python]
+    severity: ERROR
+    message: >-
+      SR-025: this route performs a step-up-gated action but has no
+      require_step_up dependency. Add dependencies=[Depends(require_step_up(...))],
+      a Depends(require_step_up(...)) parameter, or an awaited
+      require_elevation_for(...) call in the handler. A comment or unused
+      import does not count.
+    metadata:
+      sr: SR-025
+    patterns:
+      - pattern-either:
+          - pattern: |
+              @$R.$M($P, ...)
+              async def $F(...):
+                  ...
+          - pattern: |
+              @$R.$M($P, ...)
+              def $F(...):
+                  ...
+      - metavariable-regex:
+          metavariable: $M
+          regex: "^(get|post|put|patch|delete|api_route)$"
+      # $P may be a literal, a constant name, an f-string or an expression:
+      # the regex runs on its source text.
+      - metavariable-regex:
+          metavariable: $P
+          regex: "(?i)^(?!.*reset-preview).*(mfa/reset|api-keys|api_keys|kill-switch|kill_switch|/roles|roles_path|recovery-codes/regenerate|revoke-all|revoke_all|/password|password_path).*$"
+      # Real dependency in the decorator.
+      - pattern-not: |
+          @$R.$M(..., dependencies=[..., Depends(require_step_up(...)), ...], ...)
+          async def $F(...):
+              ...
+      - pattern-not: |
+          @$R.$M(..., dependencies=[..., Depends(require_step_up(...)), ...], ...)
+          def $F(...):
+              ...
+      # Real dependency parameter.
+      - pattern-not: |
+          @$R.$M(...)
+          async def $F(..., $D = Depends(require_step_up(...)), ...):
+              ...
+      - pattern-not: |
+          @$R.$M(...)
+          async def $F(..., $D: $T = Depends(require_step_up(...)), ...):
+              ...
+      # Real call in the body.
+      - pattern-not: |
+          @$R.$M(...)
+          async def $F(...):
+              ...
+              $G = await require_elevation_for(...)
+              ...
+      - pattern-not: |
+          @$R.$M(...)
+          async def $F(...):
+              ...
+              await require_elevation_for(...)
+              ...
+      - pattern-not: |
+          @$R.$M(...)
+          async def $F(...):
+              ...
+              await require_step_up(...)
+              ...
+    paths:
+      exclude:
+        - "**/tests/**"

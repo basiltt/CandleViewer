@@ -1,0 +1,25 @@
+rules:
+  - id: no-adhoc-authz
+    languages: [python]
+    severity: ERROR
+    message: >-
+      SR-017 / ADR-0010 invariant 1: permission or role comparison outside
+      the single authorize() implementation. Call authorize(principal,
+      capability, resource) instead of comparing roles inline.
+    metadata:
+      sr: SR-017
+    pattern-either:
+      - pattern: $P.role == $V
+      - pattern: $P.role != $V
+      - pattern: $P.role in $V
+      - pattern: $V in $P.roles
+      - pattern: $V in $P.permissions
+      - pattern: $V in $P.capabilities
+      - pattern: $P.role is $V
+      - pattern: getattr($P, "role") == $V
+      - pattern: getattr($P, "role", $D) == $V
+    paths:
+      exclude:
+        - "**/tests/**"
+        - "**/auth/authorize.py"
+        - "**/auth/scopes.py" # Principal.is_owner: role-set membership inside the snapshot type itself

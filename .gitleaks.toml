@@ -62,3 +62,36 @@ description = "Bybit v5 X-BAPI-* authentication header with a live-looking value
 regex = '''(?i)X-BAPI-(API-KEY|SIGN)\s*[:=]\s*["']?[A-Za-z0-9]{16,}'''
 tags = ["header", "bybit"]
 
+
+# E09-X03: CandleViewer's own auth token shapes (SR-012, SR-022, SR-122).
+[[rules]]
+id = "cv-session-token"
+description = "CandleViewer session token (cvs_ + 43+ url-safe chars)"
+regex = '''\bcvs_[A-Za-z0-9_-]{43,}\b'''
+tags = ["auth", "session"]
+
+[[rules]]
+id = "cv-refresh-token"
+description = "CandleViewer refresh token (cvr_ + 43+ url-safe chars)"
+regex = '''\bcvr_[A-Za-z0-9_-]{43,}\b'''
+tags = ["auth", "refresh"]
+
+[[rules]]
+id = "cv-invite-token"
+description = "CandleViewer invite token (cvi_ + 43+ url-safe chars)"
+regex = '''\bcvi_[A-Za-z0-9_-]{43,}\b'''
+tags = ["auth", "invite"]
+
+[[rules]]
+id = "cv-recovery-code"
+description = "CandleViewer MFA recovery code (xxxxx-xxxxx base32 groups) assigned to a recovery field"
+# The match spans the whole list/assignment so every code, not just the first,
+# is inside the finding (and redacted).
+regex = '''(?i)recovery[_-]?codes?["']?\s*[:=]\s*["'\[(]*[A-Z2-7]{5}-[A-Z2-7]{5}(?:["']?\s*,\s*["']?[A-Z2-7]{5}-[A-Z2-7]{5})*'''
+tags = ["auth", "recovery"]
+
+[[rules]]
+id = "cv-totp-secret"
+description = "TOTP shared secret (base32, 16+ chars) assigned to a totp secret field"
+regex = '''(?i)totp[_-]?secret["']?\s*[:=]\s*["']?[A-Z2-7]{16,}'''
+tags = ["auth", "totp"]

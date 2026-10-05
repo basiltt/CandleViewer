@@ -28,14 +28,22 @@ updates:
 
   # E03-T07: SCA coverage (CONSTITUTION §9 #11) for pip, npm and Docker base
   # images, mirroring the pip-audit / npm-audit / trivy CI jobs above.
+  # E09-X03: covers the auth dependency set (argon2-cffi Argon2 binding, pyotp/TOTP,
+  # cryptography envelope encryption, starlette cookie/session middleware). Those
+  # bumps land in their own `crypto` group (separate PR, never batched with the
+  # rest) so the security reviewer sees them in isolation; Dependabot labels are
+  # per-ecosystem, so the group name — not a label — is the marker.
   - package-ecosystem: "pip"
     directory: "/services/api"
     schedule:
       interval: "weekly"
       day: "monday"
     groups:
+      crypto:
+        patterns: ["argon2-cffi", "cryptography", "pyotp", "starlette", "itsdangerous"]
       python:
         patterns: ["*"]
+        exclude-patterns: ["argon2-cffi", "cryptography", "pyotp", "starlette", "itsdangerous"]
     labels:
       - "dependencies"
       - "area/backend-platform"

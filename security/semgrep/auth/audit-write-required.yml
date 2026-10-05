@@ -1,0 +1,33 @@
+rules:
+  - id: audit-write-required
+    languages: [python]
+    severity: ERROR
+    message: >-
+      C-2.9 / SR-112: a mutating route handler contains no audit call
+      (_audit(...), audit_*(...) or writer.emit(...)). Every state-changing
+      auth/account action writes an append-only audit record.
+    metadata:
+      sr: SR-112
+    patterns:
+      - pattern-either:
+          - pattern: |
+              @$R.$M(...)
+              async def $F(...):
+                  ...
+          - pattern: |
+              @$R.$M(...)
+              def $F(...):
+                  ...
+      - metavariable-regex:
+          metavariable: $M
+          regex: "^(post|put|patch|delete)$"
+      - pattern-not-regex: "(_audit\\(|audit_\\w+\\(|\\.emit\\()"
+    paths:
+      exclude:
+        - "**/tests/**"
+        # Allowlist (Security-owned, widening needs Security review). Audit for these is
+        # emitted below the handler, not inline; each entry states where.
+        - "**/api/rules.py"        # validate is non-mutating; compile audits in rules/service.py
+        - "**/api/rules_crud.py"   # every mutation goes through rules/service.py (audited)
+        - "**/api/step_up.py"      # step-up grant/fail audited by the B16 plugin (ACTION_REQUEST)
+        - "**/api/telemetry.py"    # frontend telemetry sink, not an audited account action
