@@ -178,6 +178,9 @@ class Settings(BaseSettings):
     # E35-S02-B1 (#1809): run the deterministic rule evaluator in the app (C-4.13: off by
     # default). Never gates a safety invariant (C-4.14): native SL / scope checks stay on.
     rules_evaluator_enabled: bool = False
+    # E40-T03: run the server-side alert evaluator (C-4.13: off by default until E40-T04's
+    # dispatcher ships; removal with E40-Q02). Never gates a safety invariant (C-4.14).
+    alerts_evaluator_enabled: bool = False
     # E07-T05: retention scheduler flag (off by default) and cron expressions.
     retention_enabled: bool = False
     retention_cron: str = "0 3 * * *"
