@@ -1,0 +1,57 @@
+name: cold-cache
+# Non-required guard (#1855, cluster flaky-tests): runs the py unit suite and web
+# test:cov with NO caches (fresh uv sync, fresh pnpm install) to catch cold-run
+# only failures such as #1535/#1536. Nightly + manual; never on PRs.
+on:
+  schedule:
+    - cron: "41 4 * * *"
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  cold-py:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      HYPOTHESIS_PROFILE: ci
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          enable-cache: false
+      - run: uv sync --frozen --no-cache
+        working-directory: services/api
+      - name: pytest (cold)
+        working-directory: services/api
+        # Stricter than _job-py.yml on purpose: cold runs have no docker services,
+        # so all integration tests are excluded, not only chaos+integration.
+        run: uv run --no-cache pytest -p no:cacheprovider -m "not exchange_smoke and not integration and not chaos and not roundtrip" --no-cov
+  explore-py:
+    # Non-blocking nightly: random (non-derandomised) Hypothesis exploration; the ci profile never finds new examples.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      HYPOTHESIS_PROFILE: dev
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          enable-cache: false
+      - run: uv sync --frozen --no-cache
+        working-directory: services/api
+      - name: pytest (hypothesis dev profile, random exploration)
+        working-directory: services/api
+        run: uv run --no-cache pytest -p no:cacheprovider -m "not exchange_smoke and not integration and not chaos and not roundtrip" --no-cov
+  cold-web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: ".nvmrc"
+      - name: Install pnpm (no store cache; same pin as _job-js.yml / packageManager)
+        run: npm install -g corepack@latest && corepack enable && corepack prepare pnpm@12.5.1 --activate
+      - run: pnpm install --frozen-lockfile
+      - name: web test:cov (cold, pnpm direct, no turbo)
+        run: pnpm --filter @candleviewer/web run test:cov
