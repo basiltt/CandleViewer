@@ -75,13 +75,39 @@ entries:
     tool: npm-audit
     severity: HIGH
     reason: "EX-05: http-cache-semantics@4.2.0 - no patched version exists upstream as of 2026-10-03; dev/build-time only via electron-builder > @electron/get > got. Re-check: re-run pnpm audit at each freeze; remove when a patched version ships"
-    approver: "basiltt"  # approval = owner CODEOWNER security-review merge of PR #1745
+    approver: "basiltt" # approval = owner CODEOWNER security-review merge of PR #1745
     expires: "2026-12-31"
     ticket: "https://github.com/basiltt/CandleViewer/issues/1737"
   - id: "GHSA-vfj7-8cjw-p6xm"
     tool: npm-audit
     severity: HIGH
     reason: "EX-06: braces@3.0.3 - no patched version exists upstream as of 2026-10-03; dev/build-time only via lint-staged > micromatch. Re-check: re-run pnpm audit at each freeze; remove when a patched version ships"
-    approver: "basiltt"  # approval = owner CODEOWNER security-review merge of PR #1745
+    approver: "basiltt" # approval = owner CODEOWNER security-review merge of PR #1745
     expires: "2026-12-31"
     ticket: "https://github.com/basiltt/CandleViewer/issues/1737"
+  # E03 #1755 review round 4 (#1778 B5-b forbids file-level excludes): applied migration
+  # 0004_instruments.py is immutable (C-5.4), so its three legacy `nosemgrep` markers
+  # cannot gain reason/owner/review fields. The `exchange_code` enum value names the one
+  # exchange C-1.3 scopes the product to (schema fact, not adapter logic). Listed per line so
+  # every gate run reports them and any NEW finding in the file still blocks.
+  - id: "semgrep.cv-adapter-isolation:services/api/candleviewer/migrations/versions/0004_instruments.py:45"
+    tool: semgrep
+    severity: HIGH
+    reason: "applied migration immutable C-5.4; enum value names the exchange; B5-b"
+    approver: "basiltt" # owner: security (@CandleViewer/security); approval = PR #1755 merge
+    expires: "2026-12-31"
+    ticket: "https://github.com/basiltt/CandleViewer/issues/1778"
+  - id: "semgrep.cv-adapter-isolation:services/api/candleviewer/migrations/versions/0004_instruments.py:46"
+    tool: semgrep
+    severity: HIGH
+    reason: "applied migration immutable C-5.4; enum value names the exchange; B5-b"
+    approver: "basiltt" # owner: security (@CandleViewer/security); approval = PR #1755 merge
+    expires: "2026-12-31"
+    ticket: "https://github.com/basiltt/CandleViewer/issues/1778"
+  - id: "semgrep.cv-adapter-isolation:services/api/candleviewer/migrations/versions/0004_instruments.py:52"
+    tool: semgrep
+    severity: HIGH
+    reason: "applied migration immutable C-5.4; enum value names the exchange; B5-b"
+    approver: "basiltt" # owner: security (@CandleViewer/security); approval = PR #1755 merge
+    expires: "2026-12-31"
+    ticket: "https://github.com/basiltt/CandleViewer/issues/1778"
