@@ -1,0 +1,665 @@
+{
+  "routers": {},
+  "context_modules": {},
+  "state_tasks": {
+    "app.state.support_bundle": {
+      "reason": "start() begins an on-demand bundle job, not a lifecycle; invoked by the /admin/support-bundle route",
+      "ticket": "E04-S02"
+    }
+  },
+  "machines": {},
+  "openapi_pending": {
+    "DELETE /admin/backups/{backupId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "DELETE /auth/mfa/methods/{methodId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "DELETE /chart-templates/{templateId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "DELETE /drawings/{drawingId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "DELETE /exchange-accounts/{accountId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "DELETE /exchange-accounts/{accountId}/keys/{keyId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "DELETE /exchange-accounts/{accountId}/profiles/{profileId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "DELETE /indicator-presets/{presetId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "DELETE /orders/{orderId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "DELETE /recording/symbols/{recordedSymbolId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "DELETE /replay/sessions/{replayId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "DELETE /settings/hotkeys/{hotkeyProfileId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "DELETE /users/{userId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "DELETE /watchlists/{watchlistId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "DELETE /workspaces/{workspaceId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "DELETE /workspaces/{workspaceId}/layouts/{layoutId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /admin/backups": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /admin/backups/{backupId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /admin/capacity": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /admin/feature-flags": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /admin/incidents": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /admin/jobs/{jobId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /admin/overview": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /admin/security/summary": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /alerts/deliveries": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /chart-templates": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /chart-templates/{templateId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /detectors/config": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /detectors/methodology": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /drawings": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /exchange-accounts": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /exchange-accounts/{accountId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /exchange-accounts/{accountId}/fee-rate": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /exchange-accounts/{accountId}/keys": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /exchange-accounts/{accountId}/profiles": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /exchange-accounts/{accountId}/profiles/{profileId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /executions": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /executions/closed-pnl": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /indicator-presets": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /indicators": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /journal/analytics": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /journal/tags": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /journal/trades": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /journal/trades/{journalTradeId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /journal/trades/{journalTradeId}/context": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /journal/trades/{journalTradeId}/notes": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /layout-presets": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /market/bars": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /market/data-coverage": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /market/footprint": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /market/funding": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /market/heatmap": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /market/liquidations": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /market/metrics": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /market/open-interest": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /market/profile": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /market/regime/explain": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /me": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /me/keymap": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /me/limits": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /me/preferences": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /me/sessions": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /notifications": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /orders": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /orders/{orderId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /orders/{orderId}/diagnostics": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /permissions": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /positions": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /positions/{positionId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /recording/retention-policies": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /recording/sessions": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /recording/status": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /recording/storage": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /recording/symbols": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /recording/symbols/{recordedSymbolId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /replay/sessions": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /replay/sessions/{replayId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /risk/summary": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /roles": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /rules/runs/{runId}/events": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /rules/{ruleId}/runs": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /scanner": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /settings": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /settings/hotkeys": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /system/build": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /trade-groups": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /trade-groups/{tradeGroupId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /trading/kill-switch": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /users": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /users/{userId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /users/{userId}/account-access": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /watchlists": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /workspaces": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /workspaces/{workspaceId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /workspaces/{workspaceId}/export": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /workspaces/{workspaceId}/layouts": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "GET /workspaces/{workspaceId}/layouts/{layoutId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PATCH /exchange-accounts/{accountId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PATCH /journal/trades/{journalTradeId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PATCH /me/preferences": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PATCH /orders/{orderId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PATCH /recording/symbols/{recordedSymbolId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PATCH /settings": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PATCH /users/{userId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /admin/backups": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /admin/backups/{backupId}/restore": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /admin/backups/{backupId}/verify": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /admin/recorder/compact": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /admin/recorder/purge": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /alerts/deliveries/ack-all": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /alerts/deliveries/{deliveryId}/ack": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /chart-templates": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /drawings": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /drawings/batch": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /exchange-accounts": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /exchange-accounts/{accountId}/keys": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /exchange-accounts/{accountId}/keys/{keyId}/rotate": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /exchange-accounts/{accountId}/keys/{keyId}/test": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /exchange-accounts/{accountId}/profiles": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /indicator-presets": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /instruments/refresh": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /journal/tags": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /journal/trades/{journalTradeId}/notes": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /market/footprint/recompute": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /onboarding/complete": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /orders": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /orders/cancel-all": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /positions/close-all": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /positions/{positionId}/close": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /positions/{positionId}/reverse": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /recording/symbols": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /replay/sessions": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /replay/sessions/{replayId}/control": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /risk/lockouts/{accountId}/override": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /rules/{ruleId}/simulate": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /session/environment": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /settings/arm": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /settings/hotkeys": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /settings/hotkeys/{hotkeyProfileId}/activate": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /trade-groups": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /trade-groups/preview": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /trade-groups/{tradeGroupId}/amend": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /trade-groups/{tradeGroupId}/cancel": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /trading/kill-switch": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /watchlists": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /workspaces": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "POST /workspaces/{workspaceId}/layouts": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PUT /admin/feature-flags/{flagKey}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PUT /auth/password": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PUT /chart-templates/{templateId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PUT /detectors/config": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PUT /drawings/{drawingId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PUT /exchange-accounts/{accountId}/profiles/{profileId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PUT /indicator-presets/{presetId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PUT /positions/{positionId}/leverage": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PUT /positions/{positionId}/tpsl": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PUT /recording/retention-policies": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PUT /recording/symbols/{recordedSymbolId}/pin": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PUT /settings/hotkeys/{hotkeyProfileId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PUT /users/{userId}/account-access": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PUT /watchlists/{watchlistId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PUT /workspaces/{workspaceId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    },
+    "PUT /workspaces/{workspaceId}/layouts/{layoutId}": {
+      "reason": "contract-first operation; implementation lands with its owning epic",
+      "ticket": "E49-K01-F4-baseline"
+    }
+  }
+}
