@@ -86,7 +86,10 @@
               {
                 "id": "custom.lineStyle",
                 "value": {
-                  "dash": [10, 10],
+                  "dash": [
+                    10,
+                    10
+                  ],
                   "fill": "dash"
                 }
               }
@@ -547,7 +550,11 @@
   ],
   "refresh": "30s",
   "schemaVersion": 39,
-  "tags": ["candleviewer", "ga", "defects"],
+  "tags": [
+    "candleviewer",
+    "ga",
+    "defects"
+  ],
   "templating": {
     "list": [
       {
