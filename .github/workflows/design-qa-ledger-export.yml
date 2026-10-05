@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   export:
-    if: github.repository_owner != ''
+    if: github.repository == 'basiltt/CandleViewer'
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
@@ -31,4 +31,4 @@ jobs:
       - name: Push ledger counts
         env:
           PUSHGATEWAY_URL: ${{ secrets.PUSHGATEWAY_URL }}
-        run: python -m tools.ga_defects.run ledger
+        run: python -m tools.ga_defects.run ledger --require-push

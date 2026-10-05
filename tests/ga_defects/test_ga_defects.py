@@ -29,7 +29,9 @@ def test_linear_converging_projects_zero_date() -> None:
 
 
 def test_linear_exact_line_hits_expected_day() -> None:
-    f = fc.linear_zero_date([(D0 + timedelta(days=i), 20.0 - i) for i in range(0, 15, 2)])
+    f = fc.linear_zero_date(
+        [(D0 + timedelta(days=i), 20.0 - i) for i in range(0, 15, 2)]
+    )
     assert f.when == D0 + timedelta(days=20)
 
 
@@ -46,7 +48,9 @@ def test_diverging_series_is_undefined() -> None:
 def test_sparse_and_single_point_are_undefined() -> None:
     assert fc.linear_zero_date(series([9])).reason == "insufficient-data"
     assert fc.trailing_rate_zero_date(series([9])).reason == "insufficient-data"
-    assert fc.linear_zero_date(series([9, 8])).reason == "insufficient-data"  # < 3 points
+    assert (
+        fc.linear_zero_date(series([9, 8])).reason == "insufficient-data"
+    )  # < 3 points
     short = [(D0, 9.0), (D0 + timedelta(days=2), 5.0), (D0 + timedelta(days=3), 1.0)]
     assert fc.linear_zero_date(short).reason == "insufficient-data"  # < 7 day span
     assert fc.linear_zero_date([]).when is None
@@ -60,7 +64,10 @@ def test_already_zero_reports_zero_reached() -> None:
 def test_trailing_rate_projection_and_window() -> None:
     f = fc.trailing_rate_zero_date(series([30, 20, 10]))  # 10/week
     assert f.when == D0 + timedelta(days=14 + 7)
-    old = [(D0 - timedelta(days=200), 99.0), *series([30, 20, 10])]  # outside window, ignored
+    old = [
+        (D0 - timedelta(days=200), 99.0),
+        *series([30, 20, 10]),
+    ]  # outside window, ignored
     assert fc.trailing_rate_zero_date(old) == f
 
 
@@ -101,14 +108,18 @@ def test_ledger_bad_header_raises(tmp_path: Path) -> None:
 
 def test_ledger_ignores_blank_lines(tmp_path: Path) -> None:
     f = tmp_path / "l.csv"
-    f.write_text(",".join(ledger.HEADER) + "\n\nX,P1,open,c,2026-10-01\n", encoding="utf-8")
+    f.write_text(
+        ",".join(ledger.HEADER) + "\n\nX,P1,open,c,2026-10-01\n", encoding="utf-8"
+    )
     c = ledger.parse_ledger(f)
     assert c is not None and c.open_by_severity["P1"] == 1 and c.malformed_rows == 0
 
 
 # ---- metrics / push -----------------------------------------------------------------
 def test_render_ledger_and_defects_text() -> None:
-    assert 'design_qa_findings_open{severity="P1"} 1' in metrics.render_ledger({"P1": 1})
+    assert 'design_qa_findings_open{severity="P1"} 1' in metrics.render_ledger(
+        {"P1": 1}
+    )
     s = metrics.DefectSnapshot(
         open_by_severity={"P1": 2},
         open_by_component={"oms": 1},
@@ -150,16 +161,37 @@ def test_push_unavailable_raises_loudly() -> None:
 
 def test_cmd_ledger_paths(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     sent: list[bytes] = []
-    assert run.cmd_ledger(FIX / "ledger.csv", "http://pg", lambda u, b: sent.append(b)) == 0
+    assert (
+        run.cmd_ledger(FIX / "ledger.csv", "http://pg", lambda u, b: sent.append(b))
+        == 0
+    )
     assert b'design_qa_findings_open{severity="P2"} 2' in sent[0]
     assert "malformed" in capsys.readouterr().err
-    assert run.cmd_ledger(tmp_path / "x.csv", "http://pg", lambda u, b: sent.append(b)) == 1
+    assert (
+        run.cmd_ledger(tmp_path / "x.csv", "http://pg", lambda u, b: sent.append(b))
+        == 1
+    )
     assert len(sent) == 1  # missing ledger pushes nothing
 
 
-def test_main_requires_pushgateway_url(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_main_unset_pushgateway_skips_with_notice(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
     monkeypatch.delenv("PUSHGATEWAY_URL", raising=False)
-    assert run.main(["ledger"]) == 2
+    path = str(FIX / "ledger.csv")
+    assert run.main(["ledger", "--path", path]) == 0
+    assert "::notice::" in capsys.readouterr().out
+    assert run.main(["ledger", "--path", path, "--require-push"]) == run.EXIT_NO_PUSH
+
+
+def test_main_bad_ledger_header_clean_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    bad = tmp_path / "l.csv"
+    bad.write_text("a,b\n", encoding="utf-8")
+    monkeypatch.setenv("PUSHGATEWAY_URL", "http://pg")
+    assert run.main(["ledger", "--path", str(bad)]) == run.EXIT_LEDGER_SCHEMA
+    assert "E_LEDGER_SCHEMA" in capsys.readouterr().err
 
 
 def test_main_ledger_push_failure_exit_1(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -184,7 +216,9 @@ def issue(
         "body": "",
         "created_at": created,
         "closed_at": closed,
-        "labels": [{"name": x} for x in ("type/bug", f"priority/{sev.lower()}", *labels)],
+        "labels": [
+            {"name": x} for x in ("type/bug", f"priority/{sev.lower()}", *labels)
+        ],
     }
 
 
@@ -194,7 +228,9 @@ def test_build_snapshot_counts_and_history() -> None:
         issue(2, "P2", "2027-03-06T00:00:00Z", None, "area/oms"),
         issue(3, "P0", "2027-02-01T00:00:00Z", "2027-03-07T00:00:00Z"),
     ]
-    snap = run.build_snapshot(issues, NOW, lambda i: "sla-breached" if i["number"] == 2 else "ok")
+    snap = run.build_snapshot(
+        issues, NOW, lambda i: "sla-breached" if i["number"] == 2 else "ok"
+    )
     assert snap.open_by_severity["P1"] == 1 and snap.open_by_severity["P2"] == 1
     assert snap.open_by_component == {"oms": 2}
     assert (snap.arrived_7d, snap.closed_7d, snap.untriaged) == (1, 1, 1)
@@ -203,7 +239,9 @@ def test_build_snapshot_counts_and_history() -> None:
 
 
 def test_weekly_section_and_idempotent_append(tmp_path: Path) -> None:
-    snap = metrics.DefectSnapshot(open_by_severity={"P1": 1}, forecast_days={"linear": 10})
+    snap = metrics.DefectSnapshot(
+        open_by_severity={"P1": 1}, forecast_days={"linear": 10}
+    )
     text = run.weekly_section(snap, NOW, run.GA_DATE)
     assert "2027-03-18" in text and "trailing_3w: undefined" in text
     log = tmp_path / "log.md"
@@ -224,35 +262,74 @@ class FakeApi:
         return [issue(2, "P2", "2027-03-01T00:00:00Z", "2027-03-07T00:00:00Z")]
 
 
-def test_cmd_defects_pushes_and_logs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cmd_defects_pushes_and_logs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setenv("TRIAGE_CALENDAR_PATH", str(ROOT / "tools/triage/calendar.yml"))
     log = tmp_path / "log.md"
     log.write_text("# log\n", encoding="utf-8")
     sent: list[bytes] = []
     api = FakeApi()
-    assert run.cmd_defects(api, "http://pg", lambda u, b: sent.append(b), log, run.GA_DATE) == 0
+    assert (
+        run.cmd_defects(api, "http://pg", lambda u, b: sent.append(b), log, run.GA_DATE)
+        == 0
+    )
     assert b'ga_defects_open{severity="P1"} 1' in sent[0]
     assert "GA defect snapshot" in log.read_text(encoding="utf-8")
     assert len(api.paths) == 2
 
 
+def test_cmd_defects_unset_url_still_logs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("TRIAGE_CALENDAR_PATH", str(ROOT / "tools/triage/calendar.yml"))
+    log = tmp_path / "log.md"
+    log.write_text("# log\n", encoding="utf-8")
+    assert run.cmd_defects(FakeApi(), "", lambda u, b: None, log, run.GA_DATE) == 0
+    assert "GA defect snapshot" in log.read_text(encoding="utf-8")
+    assert (
+        run.cmd_defects(
+            FakeApi(), "", lambda u, b: None, log, run.GA_DATE, require_push=True
+        )
+        == run.EXIT_NO_PUSH
+    )
+
+
+def test_fetch_bugs_since_only_on_closed() -> None:
+    api = FakeApi()
+    run.fetch_bugs(api)
+    open_q = next(p for p in api.paths if "state=open" in p)
+    closed_q = next(p for p in api.paths if "state=closed" in p)
+    assert "since=" not in open_q  # an untouched old open bug must still be counted
+    assert "since=" in closed_q
+
+
 # ---- dashboard + alerts pinned to the roadmap --------------------------------------
 def test_dashboard_has_target_stale_and_forecast() -> None:
-    d = json.loads((ROOT / "infra/grafana/dashboards/ga-defects.json").read_text("utf-8"))
+    d = json.loads(
+        (ROOT / "infra/grafana/dashboards/ga-defects.json").read_text("utf-8")
+    )
     panels = [p for p in d["panels"] if p["type"] not in ("row", "text")]
     assert len(panels) == 9  # 7 required views; forecast is two stats, burn-down one
     burn = panels[0]
     exprs = {t["expr"] for t in burn["targets"]}
     assert "vector(0)" in exprs and "vector(10)" in exprs  # roadmap 9.3 item 3
     assert "2027-03-25" in json.dumps(burn["targets"])
-    assert any(p["type"] == "stat" and "linear" in json.dumps(p["targets"]) for p in panels)
+    assert any(
+        p["type"] == "stat" and "linear" in json.dumps(p["targets"]) for p in panels
+    )
     for p in panels:
-        assert "push_time_seconds" in " ".join(t["expr"] for t in p["targets"][-1:]) or p is burn
+        assert (
+            "push_time_seconds" in " ".join(t["expr"] for t in p["targets"][-1:])
+            or p is burn
+        )
         assert p["fieldConfig"]["defaults"]["noValue"].startswith("STALE")
 
 
 def test_alert_rules_present_with_runbook_and_ga_boundary() -> None:
-    doc = yaml.safe_load((ROOT / "infra/prometheus/alerts/ga_defects.yml").read_text("utf-8"))
+    doc = yaml.safe_load(
+        (ROOT / "infra/prometheus/alerts/ga_defects.yml").read_text("utf-8")
+    )
     rules = {r["alert"]: r for r in doc["groups"][0]["rules"]}
     assert set(rules) == {
         "GADefectForecastSlipping",
@@ -260,11 +337,15 @@ def test_alert_rules_present_with_runbook_and_ga_boundary() -> None:
         "GADefectSLABreached",
     }
     assert rules["GADefectForecastSlipping"]["for"] == "3d"
-    assert "1805932800" in rules["GADefectForecastSlipping"]["expr"]  # 2027-03-25T00:00Z
+    assert (
+        "1805932800" in rules["GADefectForecastSlipping"]["expr"]
+    )  # 2027-03-25T00:00Z
     assert int(datetime(2027, 3, 25, tzinfo=timezone.utc).timestamp()) == 1805932800
     assert (
         "ga_defects_open_by_component"
         in rules["GADefectArrivalExceedsClosure"]["annotations"]["description"]
     )
+    for name in ("GADefectArrivalExceedsClosure", "GADefectSLABreached"):
+        assert 'push_time_seconds{job="ga_defects"}' in rules[name]["expr"]
     for r in rules.values():
         assert "e49-triage-ritual.md" in r["annotations"]["description"]

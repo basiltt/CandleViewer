@@ -26,7 +26,7 @@ groups:
             the next triage ritual (docs/plan/backlog/artifacts/e49-triage-ritual.md).
 
       - alert: GADefectArrivalExceedsClosure
-        expr: ga_defects_arrived_7d > ga_defects_closed_7d
+        expr: (ga_defects_arrived_7d > ga_defects_closed_7d) and on() (time() - push_time_seconds{job="ga_defects"} < 7200)
         for: 1h
         labels:
           severity: ticket
@@ -42,7 +42,7 @@ groups:
             (docs/plan/backlog/artifacts/e49-triage-ritual.md).
 
       - alert: GADefectSLABreached
-        expr: sum(ga_defects_sla_state{state="sla-breached", severity=~"P0|P1"}) > 0
+        expr: (sum(ga_defects_sla_state{state="sla-breached", severity=~"P0|P1"}) > 0) and on() (time() - push_time_seconds{job="ga_defects"} < 7200)
         for: 5m
         labels:
           severity: ticket
