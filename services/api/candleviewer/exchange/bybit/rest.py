@@ -368,7 +368,9 @@ class BybitRestClient:
         except ValueError:
             return
         self._governor.observe_header(self._uid, endpoint_class, remaining)
-        bybit_rate_limit_remaining.labels(uid=self._uid, endpoint_class=str(endpoint_class)).set(
+        # E08-T06 security note: never a UID label (account identifier) - scope only.
+        scope = "public" if self._uid == "public" else "account"
+        bybit_rate_limit_remaining.labels(scope=scope, endpoint_class=str(endpoint_class)).set(
             remaining
         )
 

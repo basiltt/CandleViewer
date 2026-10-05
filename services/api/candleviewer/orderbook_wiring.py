@@ -31,13 +31,19 @@ from typing import Protocol
 
 import structlog
 
-from candleviewer.book.models import BookPhase
+from candleviewer.book.models import BookPhase, BookStatus
 from candleviewer.book.resync import BookEngine, HealthSink
 from candleviewer.book.tiers import DEFAULT_DEPTH, TieredBook
 from candleviewer.bus.bus import Bus
 from candleviewer.bus.models import QueuePolicy, Topic, TopicPattern
 from candleviewer.exchange.base.models import BookDelta, BookSnapshot
-from candleviewer.ingestion.metrics import book_writes_dropped_total, questdb_write_queue_depth
+from candleviewer.ingestion.metrics import (
+    book_writes_dropped_total,
+    ingest_book_live,
+    ingest_book_resyncs_total,
+    questdb_write_queue_depth,
+    symbol_label,
+)
 from candleviewer.ingestion.planner import DEFAULT_GRACE_S, DemandTracker
 from candleviewer.ingestion.ticker_stream import UnknownSymbolError
 from candleviewer.ingestion.watchdog import FeedHealthEvent
@@ -48,6 +54,31 @@ logger = structlog.get_logger(__name__)
 
 WRITE_QUEUE_MAXSIZE = 8192
 SNAPSHOT_TIMEOUT_S = 10.0
+
+
+#: Closed set of resync reasons (book/resync.py + ingestion); anything else -> "other".
+_RESYNC_REASONS = frozenset(
+    {
+        "buffer_overflow",
+        "sequence_gap",
+        "server_reset",
+        "bad_snapshot",
+        "bad_replay",
+        "frame_loss",
+        "reconnect",
+        "snapshot_timeout",
+    }
+)
+
+
+def _observe_book_status(status: BookStatus) -> None:
+    """E08-T06: book LIVE gauge + resync counter, from the published status."""
+    sym = symbol_label(status.symbol)
+    live = status.state is BookPhase.LIVE
+    ingest_book_live.labels(symbol=sym).set(1.0 if live else 0.0)
+    if status.state is BookPhase.DESYNCED:
+        reason = status.reason if status.reason in _RESYNC_REASONS else "other"
+        ingest_book_resyncs_total.labels(symbol=sym, reason=reason).inc()
 
 
 class BookWriter(Protocol):
@@ -210,6 +241,8 @@ class BookStream:
     async def _publish(self, symbol: str, obj: object) -> None:
         topic = Topic(env=self._env, domain="md", symbol=symbol, detail="book")
         await self._bus.publish(topic, obj)
+        if isinstance(obj, BookStatus):
+            _observe_book_status(obj)
         if isinstance(obj, BookSnapshot):
             self._enqueue(
                 BookSnapshotRow(

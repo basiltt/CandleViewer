@@ -23,6 +23,7 @@ import structlog
 
 from candleviewer.bus.bus import Bus
 from candleviewer.bus.models import Topic
+from candleviewer.ingestion.metrics import ingest_ws_up
 from candleviewer.ingestion.planner import SubscriptionPlanner
 from candleviewer.ingestion.reconnect import ConnectionRateGuard, ReconnectPolicy
 from candleviewer.ingestion.watchdog import FeedHealthEvent, StalenessWatchdog, ping_loop
@@ -106,6 +107,10 @@ class ConnectionManager:
         self.attempt = 0
         self.opens = 0
 
+    def _set_phase(self, phase: str) -> None:
+        self._phase = phase
+        ingest_ws_up.labels(socket="public").set(1.0 if phase == PHASE_OPEN else 0.0)
+
     # ---- public API -----------------------------------------------------
     def state(self) -> str:
         """Phase published on chart state entry: open | connecting | degraded | closed."""
@@ -145,7 +150,7 @@ class ConnectionManager:
             finally:
                 await interp.stop()
         await self.teardown_session()
-        self._phase = PHASE_CLOSED
+        self._set_phase(PHASE_CLOSED)
         unregister_runtime(self._key)
 
     def attach_latency(
@@ -164,7 +169,7 @@ class ConnectionManager:
 
     def bump_attempt(self) -> None:  # entry of `connecting`
         self.attempt += 1
-        self._phase = PHASE_CONNECTING
+        self._set_phase(PHASE_CONNECTING)
 
     def reset_attempt(self) -> None:
         self.attempt = 0
@@ -180,7 +185,7 @@ class ConnectionManager:
         return None
 
     async def subscribe(self) -> None:
-        self._phase = PHASE_CONNECTING
+        self._set_phase(PHASE_CONNECTING)
         if self._was_live:
             await self.emit_health("resubscribing")
         sock = self._sock
@@ -255,7 +260,7 @@ class ConnectionManager:
         self._timer = spawn(fire(), name="ws-backoff")
 
     def schedule_budget_recheck(self, interp: Any) -> None:  # entry of `budget_blocked`
-        self._phase = PHASE_DEGRADED
+        self._set_phase(PHASE_DEGRADED)
 
         async def fire() -> None:
             await self._sleep(self._recheck_s)
@@ -267,9 +272,9 @@ class ConnectionManager:
 
     async def emit_health(self, state: str) -> None:
         if state == "healthy":
-            self._phase = PHASE_OPEN
+            self._set_phase(PHASE_OPEN)
         elif state == "degraded":
-            self._phase = PHASE_DEGRADED
+            self._set_phase(PHASE_DEGRADED)
         for topic in sorted(self._desired) or ["*"]:
             await self._publish(FeedHealthEvent(topic, state, 0.0))
 

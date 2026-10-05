@@ -56,11 +56,12 @@ from candleviewer.domain.primitives import Symbol, TsUs
 from candleviewer.exchange.base.models import KlineEvent
 from candleviewer.ingestion.errors import IngestionError
 from candleviewer.ingestion.kline_coverage import CoverageIndex, Range
-from candleviewer.ingestion.kline_metrics import (
+from candleviewer.ingestion.metrics import (
     kline_backfill_duration_seconds,
     kline_backfill_pages_total,
     kline_cache_hit_ratio,
     kline_coverage_holes,
+    symbol_label,
 )
 
 logger = structlog.get_logger(__name__)
@@ -238,16 +239,22 @@ class KlineBackfillService:
         holes = index.holes(rng)
         total_us = max(1, rng.end_us - rng.start_us)
         covered_us = total_us - sum(h.end_us - h.start_us for h in holes)
-        kline_cache_hit_ratio.labels(symbol=symbol, interval=interval).set(covered_us / total_us)
+        kline_cache_hit_ratio.labels(symbol=symbol_label(symbol), interval=interval).set(
+            covered_us / total_us
+        )
         result = BackfillResult(fetched=[], partial=False)
         if holes:
-            with kline_backfill_duration_seconds.labels(symbol=symbol, interval=interval).time():
+            with kline_backfill_duration_seconds.labels(
+                symbol=symbol_label(symbol), interval=interval
+            ).time():
                 for hole in holes:
                     hole_result = await self._backfill_hole(symbol, interval, hole, rng)
                     result.fetched.extend(hole_result.fetched)
                     result.partial = result.partial or hole_result.partial
         cached_rows = await self._cache.read_klines(symbol, interval, rng)
-        kline_coverage_holes.labels(symbol=symbol, interval=interval).set(len(index.holes(rng)))
+        kline_coverage_holes.labels(symbol=symbol_label(symbol), interval=interval).set(
+            len(index.holes(rng))
+        )
         # Rows already fetched this call are included via `cached_rows`
         # once persisted; `result.fetched` is kept too so a caller can see
         # exactly what was newly pulled this call (ticket "Backfill":
@@ -331,13 +338,13 @@ class KlineBackfillService:
                     symbol, interval, start_us, end_us, limit=_PAGE_LIMIT
                 )
                 kline_backfill_pages_total.labels(
-                    symbol=symbol, interval=interval, result="ok"
+                    symbol=symbol_label(symbol), interval=interval, result="ok"
                 ).inc()
                 return page
             except Exception as exc:  # see docstring: any failure is transient/retried
                 last_error = exc
                 kline_backfill_pages_total.labels(
-                    symbol=symbol, interval=interval, result="retry"
+                    symbol=symbol_label(symbol), interval=interval, result="retry"
                 ).inc()
                 if attempt < self._max_retries - 1:
                     backoff = min(_MAX_BACKOFF_S, _MIN_BACKOFF_S * (2**attempt))
@@ -350,7 +357,9 @@ class KlineBackfillService:
                         error=str(exc),
                     )
                     await self._sleep(jitter)
-        kline_backfill_pages_total.labels(symbol=symbol, interval=interval, result="error").inc()
+        kline_backfill_pages_total.labels(
+            symbol=symbol_label(symbol), interval=interval, result="error"
+        ).inc()
         logger.warning(
             "kline_backfill_page_failed", symbol=symbol, interval=interval, error=str(last_error)
         )

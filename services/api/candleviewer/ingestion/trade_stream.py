@@ -42,6 +42,7 @@ from candleviewer.ingestion.metrics import (
     ingest_events_total,
     ingest_lag_seconds,
     questdb_write_queue_depth,
+    symbol_label,
     trade_backfill_rows_total,
     trade_duplicates_suppressed_total,
     trade_gaps_total,
@@ -251,7 +252,7 @@ class TradeStream:
         merged = merge_ordered(live, rows)
         gev = GapEvent(sym, start_us, end_us, recovered, reason)
         self._gaps.setdefault(sym, deque(maxlen=256)).append(gev)
-        trade_gaps_total.labels(symbol=sym, recovered=str(recovered).lower()).inc()
+        trade_gaps_total.labels(symbol=symbol_label(sym), recovered=str(recovered).lower()).inc()
         await self._bus.publish(Topic(env=self._env, domain="md", symbol=sym, detail="gap"), gev)
         tagged = [(p, "live" if p.trade_id in live_ids else "backfill") for p in merged]
         await self._publish_all(sym, tagged, ts_ingest)
@@ -264,12 +265,12 @@ class TradeStream:
         floor = self._last_ts.get(sym)
         for p, source in prints:
             if not ring.add(p.trade_id):
-                trade_duplicates_suppressed_total.labels(symbol=sym).inc()
+                trade_duplicates_suppressed_total.labels(symbol=symbol_label(sym)).inc()
                 continue
             if source == "backfill" and floor is not None and p.ts_event_us < floor:
                 continue  # pre-gap history: publishing it would move time backwards
             event = self._event(p, source, ts_ingest)
-            ingest_events_total.labels(stream="trade", symbol=sym).inc()
+            ingest_events_total.labels(stream="trade", symbol=symbol_label(sym)).inc()
             await self._bus.publish(topic, event)  # NEVER_DROP subscribers back-pressure us
             self._last_ts[sym] = max(self._last_ts.get(sym, 0), p.ts_event_us)
             recent = self._recent.setdefault(sym, deque(maxlen=1000))

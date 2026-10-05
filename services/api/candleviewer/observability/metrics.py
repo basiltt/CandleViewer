@@ -38,7 +38,10 @@ from prometheus_client import (
     ProcessCollector,
     generate_latest,
 )
+from prometheus_client import REGISTRY as _DEFAULT_REGISTRY
 from prometheus_client.metrics import MetricWrapperBase
+from prometheus_client.metrics_core import Metric
+from prometheus_client.registry import Collector
 
 # Re-exported so modules outside `candleviewer.observability` never import
 # `prometheus_client` directly (import-linter contract, E04-T03).
@@ -48,6 +51,7 @@ __all__ = [
     "Counter",
     "Gauge",
     "Histogram",
+    "ReexportCollector",
     "generate_latest",
 ]
 
@@ -456,3 +460,49 @@ class Metrics:
                 key = f"{sample.name}{{{extra}}}" if extra else sample.name
                 out[key] = sample.value
         return out
+
+
+class ReexportCollector(Collector):
+    """Serve named families from a *source* registry (default: the library
+    global one module-level metrics land on) on a *target* registry, adding
+    constant labels (E08-T06: `env`, `exchange` on every ingestion series).
+
+    Registration on `target` is the side effect of construction; `close()`
+    unregisters (idempotent). Families not in `names` are never exposed, so
+    the target registry's surface is exactly the declared set.
+    """
+
+    def __init__(
+        self,
+        target: CollectorRegistry,
+        *,
+        names: frozenset[str],
+        const_labels: dict[str, str],
+        source: CollectorRegistry = _DEFAULT_REGISTRY,
+    ) -> None:
+        check_label_names("reexport", [k for k in const_labels if k != ENV_LABEL])
+        self._names = names
+        self._const = dict(const_labels)
+        self._source = source
+        self._target: CollectorRegistry | None = target
+        target.register(self)
+
+    def describe(self) -> list[Metric]:
+        # Empty describe: lets the target registry accept us without name
+        # clashes being checked against families that may not exist yet.
+        return []
+
+    def collect(self) -> Iterable[Metric]:
+        for family in self._source.collect():
+            # Counter families drop the `_total` suffix; declarations keep it.
+            if family.name not in self._names and f"{family.name}_total" not in self._names:
+                continue
+            out = Metric(family.name, family.documentation, family.type, family.unit)
+            for s in family.samples:
+                out.add_sample(s.name, {**s.labels, **self._const}, s.value, s.timestamp)
+            yield out
+
+    def close(self) -> None:
+        if self._target is not None:
+            self._target.unregister(self)
+            self._target = None
