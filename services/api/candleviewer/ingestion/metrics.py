@@ -4,7 +4,7 @@ emitted by the ingestion path (`E08-T02/T03/T04/S01/S03/S04/S05/S06/S07`).
 Declaration-first: every metric is a `MetricSpec` in `SPECS` (name, kind,
 call-site labels, help, owning module). Ingestion-owned metrics are built
 from their spec here and imported by child modules; metrics owned by layers
-that may not import ingestion (`exchange.base`, `exchange.bybit`, `bus` —
+that may not import ingestion (`exchange.base`, the concrete adapter, `bus` —
 CONSTITUTION §3 / `.importlinter`) are declared here and instantiated in
 their owner module. `tests/unit/ingestion/test_metric_registry.py` scans the
 packages and fails naming any undeclared, duplicated, orphaned or
@@ -14,9 +14,8 @@ Labels: `env` and `exchange` are attached once, at scrape time, by
 `export_ingestion_metrics()` (the composition root passes them), so they are
 consistent across every series and no call site can set them. Call-site
 labels come from `ALLOWED_LABELS` only; symbol values pass through
-`symbol_label()` (bounded cardinality, no free-form input). Names here are
-adapter-agnostic (C-2.2) except the `bybit_*` adapter series, which stay
-owned by `exchange/bybit/metrics.py`.
+`symbol_label()` (bounded cardinality, no free-form input). Adapter-owned
+series keep their adapter prefix (C-2.2: the adapter module owns them).
 """
 
 from __future__ import annotations
@@ -35,7 +34,7 @@ from candleviewer.observability.metrics import (
 )
 
 Kind = Literal["counter", "gauge", "histogram"]
-Owner = Literal["ingestion", "exchange.base", "exchange.bybit", "bus"]
+Owner = Literal["ingestion", "exchange.base", "adapter", "bus"]
 
 #: Call-site label names any ingestion-path metric may use. `env`/`exchange`
 #: are deliberately absent: they are attached at export time, never by code.
@@ -129,26 +128,26 @@ SPECS: Final[tuple[MetricSpec, ...]] = (
         "Adapter REST requests, by endpoint and result.",
         "endpoint",
         "result",
-        owner="exchange.bybit",
+        owner="adapter",
     ),
     _h(
         "bybit_rest_latency_seconds",
         "Adapter REST latency, by endpoint.",
         "endpoint",
-        owner="exchange.bybit",
+        owner="adapter",
     ),
     _g(
         "bybit_rate_limit_remaining",
         "Last-observed remaining rate-limit budget (scope public|account, never a UID).",
         "scope",
         "endpoint_class",
-        owner="exchange.bybit",
+        owner="adapter",
     ),
     _c(
         "bybit_rate_limited_total",
         "Rate-limited responses, by code.",
         "code",
-        owner="exchange.bybit",
+        owner="adapter",
     ),
     _c("bus_published_total", "Events published, by topic class.", "topic_class", owner="bus"),
     _c("bus_delivered_total", "Events delivered to a subscriber.", "subscriber", owner="bus"),

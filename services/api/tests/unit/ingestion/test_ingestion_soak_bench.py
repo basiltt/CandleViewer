@@ -29,16 +29,16 @@ class FakeSampler:
         return soak.ProcSample(100 * 2**20 + self.n * self.slope, 12.5)
 
 
-def _soak_cfg(**kw: object) -> soak.RunConfig:
-    base: dict[str, object] = {"duration_s": 60.0, "sample_every_s": 5.0, "trades_per_s": 20}
-    base.update(kw)
-    return soak.RunConfig(mode="soak", **base)  # type: ignore[arg-type]  # test kwargs
+def _soak_cfg(duration_s: float = 60.0, realtime: bool = False) -> soak.RunConfig:
+    return soak.RunConfig(
+        mode="soak", duration_s=duration_s, sample_every_s=5.0, trades_per_s=20, realtime=realtime
+    )
 
 
 async def test_soak_flat_memory_three_symbols_passes_and_records_budgets() -> None:
     rep = await soak.run(_soak_cfg(), FakeSampler())
     assert rep.passed, rep.failures
-    assert len(rep.config["symbols"]) >= 3  # type: ignore[arg-type]
+    assert len(soak.SYMBOLS) >= 3 and rep.config["symbols"] == soak.SYMBOLS
     assert rep.trades_lost == 0 and rep.trades_published == rep.trades_delivered > 0
     assert set(rep.latency_ms) == {"ingest_to_bus", "book_apply"}
     assert rep.latency_ms["ingest_to_bus"]["p95"] <= soak.BUDGET_INGEST_BUS_P95_MS

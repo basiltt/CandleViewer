@@ -800,10 +800,10 @@ def create_app(
     metrics_facade = Metrics(resolved.environment.value, registry=ctx.metrics)
     app.state.metrics_facade = metrics_facade
     # E08-T06: serve the declared ingestion/adapter series on the scraped
-    # registry with consistent `env` + `exchange` labels (USDT linear perps
-    # on one venue only, C-1.3).
+    # registry with consistent `env` + `exchange` labels (the venue name is
+    # owned by the adapter, C-2.2).
     app.state.ingestion_metrics = export_ingestion_metrics(
-        ctx.metrics, env=resolved.environment.value, exchange="bybit"
+        ctx.metrics, env=resolved.environment.value, exchange=ctx.exchange_bybit.venue
     )
     # E40-T01: alert_deliveries retention purge + alert gauges (lifespan-started).
     _alert_pg = SqlAlchemyRelationalRepository(resolved.pg_dsn.get_secret_value(), "alerts")

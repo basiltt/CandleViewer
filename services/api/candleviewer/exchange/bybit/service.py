@@ -37,6 +37,8 @@ class ExchangeBybitService:
     def __init__(self) -> None:
         self._started = False
 
+    #: E08-T06: venue name for the `exchange` metric label (owned here, C-2.2).
+    venue = "bybit"
     #: E08-T04: venue topic -> neutral stream kind, for ingestion's watchdog.
     topic_kind = staticmethod(topic_kind)
     #: E08-S03: ticker topic naming + frame parser, injected into ingestion.

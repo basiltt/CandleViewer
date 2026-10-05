@@ -50,6 +50,7 @@ from candleviewer.bus.metrics import ingest_queue_full_total
 from candleviewer.bus.models import QueuePolicy, Topic
 from candleviewer.exchange.base.models import BookLevel
 from candleviewer.ingestion.metrics import ingest_events_total, symbol_label
+from candleviewer.observability.context import spawn
 
 SYMBOLS: tuple[str, ...] = ("BTCUSDT", "ETHUSDT", "SOLUSDT")
 _ANCHOR = {"BTCUSDT": 65000, "ETHUSDT": 3200, "SOLUSDT": 150}  # ticks of 0.1
@@ -329,7 +330,7 @@ async def run(
     market = SyntheticMarket(cfg.symbols, cfg.seed)
     cons = _Consumer(bus, env, cfg.queue_size)
     prod = _Producer(bus, env, cfg.symbols)
-    tasks = [asyncio.create_task(cons.run()), asyncio.create_task(prod.run())]
+    tasks = [spawn(cons.run(), name="soak-consumer"), spawn(prod.run(), name="soak-producer")]
     book_ms = Reservoir(seed=cfg.seed + 1)
     loop_lag = Reservoir(size=2_000, seed=cfg.seed + 2)
     qf0 = _queue_full_trade()
