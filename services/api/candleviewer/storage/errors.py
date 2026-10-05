@@ -65,6 +65,39 @@ class StorageDiskCritical(StorageError):
     code = "STORAGE_DISK_CRITICAL"
 
 
+class IlpRowError(StorageError, ValueError):
+    """A row handed to `IlpWriter.write_rows` is malformed (E49-K01-F2, #1636).
+
+    Raised *before* any row of the batch is enqueued, so a bad row never
+    poisons a batch or tears down the writer; the caller (ingestion
+    supervisor) can quarantine the row and alarm. Subclasses `ValueError`
+    for callers that already catch it.
+    """
+
+    code = "STORAGE_ILP_ROW_INVALID"
+
+
+class MissingDesignatedTimestamp(IlpRowError):
+    """The row lacks the designated-timestamp key, or it is not a non-negative int (µs)."""
+
+    code = "STORAGE_ILP_MISSING_DESIGNATED_TS"
+
+
+class InvalidSymbol(IlpRowError):
+    """The row's `symbol` tag is missing, empty or not a string."""
+
+    code = "STORAGE_ILP_INVALID_SYMBOL"
+
+
+class UnknownIlpTable(IlpRowError, KeyError):
+    """`write_rows` was called for a table with no registered `TableSchema`.
+
+    Also a `KeyError` (the pre-contract behaviour) for caller compatibility.
+    """
+
+    code = "STORAGE_ILP_UNKNOWN_TABLE"
+
+
 #: Frozen mapping from exception class to its stable code, asserted by a
 #: unit test so a future rename cannot silently change a log/system_events
 #: value (ticket "Scope / Deliverables").
@@ -77,4 +110,8 @@ ERROR_CODES: dict[type[StorageError], str] = {
     StorageRetentionBlockedUnverified: StorageRetentionBlockedUnverified.code,
     StorageRetentionBlockedByReplay: StorageRetentionBlockedByReplay.code,
     StorageDiskCritical: StorageDiskCritical.code,
+    IlpRowError: IlpRowError.code,
+    MissingDesignatedTimestamp: MissingDesignatedTimestamp.code,
+    InvalidSymbol: InvalidSymbol.code,
+    UnknownIlpTable: UnknownIlpTable.code,
 }
