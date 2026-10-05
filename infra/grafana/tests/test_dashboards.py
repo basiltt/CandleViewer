@@ -27,8 +27,8 @@ def _rules_with(expr: str, tmp_path: Path, uid: str = "cv-prometheus") -> list[s
     return lint.lint_dashboard(f, lint.catalogue_names())
 
 
-def test_six_dashboards_committed_and_lint_clean() -> None:
-    assert len(list((G / "dashboards").glob("*.json"))) == 6
+def test_seven_dashboards_committed_and_lint_clean() -> None:
+    assert len(list((G / "dashboards").glob("*.json"))) == 7
     assert lint.lint() == []
 
 

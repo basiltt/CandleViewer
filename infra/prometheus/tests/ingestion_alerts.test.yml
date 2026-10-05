@@ -1,0 +1,64 @@
+# promtool test rules for the E08-T06 ingestion alert set (hand-written; the
+# E04-T05 generator covers system_*.yml only). Run:
+#   promtool test rules infra/prometheus/tests/ingestion_alerts.test.yml
+rule_files:
+  - ../alerts/ingestion.yml
+evaluation_interval: 1m
+tests:
+  - interval: 1m
+    input_series:
+      - series: 'trade_gaps_total{env="demo",exchange="bybit",symbol="BTCUSDT",recovered="false"}'
+        values: "0 0 1 1 1"
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: IngestionTradeGapUnrecovered
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              component: ingestion
+              env: demo
+              symbol: BTCUSDT
+            exp_annotations:
+              runbook_url: "docs/ops/ingestion.md#alert-ingestiontradegapunrecovered"
+              summary: "A trade tape gap for BTCUSDT could not be recovered by backfill."
+              description: >-
+                Trades inside the gap window are missing from the tape and the
+                recording; footprint and CVD for that window are incomplete.
+  - interval: 1m
+    input_series:
+      - series: 'trade_gaps_total{env="demo",exchange="bybit",symbol="BTCUSDT",recovered="true"}'
+        values: "0 0 1 1 1"
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: IngestionTradeGapUnrecovered
+        exp_alerts: []
+  - interval: 1m
+    input_series:
+      - series: 'ingest_enabled{env="demo",exchange="bybit"}'
+        values: "1+0x20"
+      - series: 'ingest_events_total{env="demo",exchange="bybit",stream="trade",symbol="BTCUSDT"}'
+        values: "5+0x20"
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: IngestionStoppedReporting
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              component: ingestion
+              env: demo
+            exp_annotations:
+              runbook_url: "docs/ops/ingestion.md#alert-ingestionstoppedreporting"
+              summary: "Ingestion is enabled but has reported no market events for five minutes."
+              description: >-
+                Silent-death detector (R6 Feed rot): the pipeline is wired but no
+                stream is producing events, so every chart is frozen.
+  - interval: 1m
+    input_series:
+      - series: 'ingest_enabled{env="demo",exchange="bybit"}'
+        values: "1+0x20"
+      - series: 'ingest_events_total{env="demo",exchange="bybit",stream="trade",symbol="BTCUSDT"}'
+        values: "0+60x20"
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: IngestionStoppedReporting
+        exp_alerts: []
