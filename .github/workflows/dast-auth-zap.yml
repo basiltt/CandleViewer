@@ -30,8 +30,14 @@ jobs:
         id: gate
         run: |
           if [ -z "${ZAP_FIXTURE_USER}" ] || [ -z "${ZAP_FIXTURE_PASSWORD}" ]; then
-            echo "::notice title=zap-auth skipped::ZAP_FIXTURE_USER/ZAP_FIXTURE_PASSWORD secrets are not set; the authenticated scan is owner-pending (#1778 D)."
-            echo "present=false" >> "$GITHUB_OUTPUT"
+            if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+              echo "::notice title=zap-auth skipped::ZAP_FIXTURE_USER/ZAP_FIXTURE_PASSWORD secrets are not set; PR baseline skipped (owner-pending, #1778 D)."
+              echo "present=false" >> "$GITHUB_OUTPUT"
+            else
+              # Release gate / weekly: a scan that cannot authenticate is a failed scan, not a clean one.
+              echo "::error title=zap-auth::fixture secrets missing on ${GITHUB_EVENT_NAME}; refusing to report an unauthenticated scan as clean."
+              exit 1
+            fi
           else
             echo "present=true" >> "$GITHUB_OUTPUT"
           fi
@@ -74,7 +80,7 @@ jobs:
           set -euo pipefail
           pw=$(grep '^POSTGRES_PASSWORD=' infra/compose/.env | cut -d= -f2)
           export CV_PG_DSN="postgresql+asyncpg://cv:${pw}@127.0.0.1:5432/candleviewer"
-          pip install uv >/dev/null
+          pip install uv==0.12.19 >/dev/null
           cd services/api && uv sync --frozen -q
           uv run alembic upgrade head
           uv run python scripts/seed_fixture_user.py --allow-no-mfa
@@ -89,14 +95,14 @@ jobs:
           fi
           docker run --rm --network host -v "$PWD:/zap/wrk:rw" \
             -e ZAP_TARGET -e ZAP_FIXTURE_USER -e ZAP_FIXTURE_PASSWORD -e ZAP_FIXTURE_TOTP_SECRET \
-            ghcr.io/zaproxy/zaproxy:stable zap.sh -cmd -autorun /zap/wrk/plan.yaml
+            ghcr.io/zaproxy/zaproxy:2.17.0@sha256:781a2bdaea47324e7bab583e2263f21d257b0aee61ed51521a5be45f5f5081ef zap.sh -cmd -autorun /zap/wrk/plan.yaml 2>&1 | tee zap-run.log
       - name: Fail if the scan lost authentication (logged-in indicator)
         if: steps.gate.outputs.present == 'true'
         run: |
-          # The plan's requestor jobs assert 200 from /v1/auth/me before and after the scan;
-          # failOnError=true makes ZAP exit non-zero if either is 401, so an unauthenticated
-          # scan is a failed scan, never a clean one.
-          test -f zap-report/zap.json
+          # Independent of ZAP's exit code: the run log must show both /v1/auth/me requestor
+          # jobs finished without error, and the report must exist and contain the
+          # authenticated /v1/auth/me response (never a 401 for it).
+          python security/zap/check_liveness.py zap-run.log zap-report/zap.json
       - name: Block on new medium+ alerts
         if: steps.gate.outputs.present == 'true'
         run: |

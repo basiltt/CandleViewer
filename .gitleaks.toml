@@ -85,7 +85,9 @@ tags = ["auth", "invite"]
 [[rules]]
 id = "cv-recovery-code"
 description = "CandleViewer MFA recovery code (xxxxx-xxxxx base32 groups) assigned to a recovery field"
-regex = '''(?i)recovery[_-]?codes?["']?\s*[:=]\s*["'\[]*[A-Z2-7]{5}-[A-Z2-7]{5}'''
+# The match spans the whole list/assignment so every code, not just the first,
+# is inside the finding (and redacted).
+regex = '''(?i)recovery[_-]?codes?["']?\s*[:=]\s*["'\[(]*[A-Z2-7]{5}-[A-Z2-7]{5}(?:["']?\s*,\s*["']?[A-Z2-7]{5}-[A-Z2-7]{5})*'''
 tags = ["auth", "recovery"]
 
 [[rules]]

@@ -382,7 +382,8 @@ jobs:
 
       - name: Scan auth surface with the auth rule pack
         run: |
-          semgrep scan --config security/semgrep/auth --error --metrics=off             --exclude fixtures services/api/candleviewer apps packages/ui
+          semgrep scan --config security/semgrep/auth --error --metrics=off \
+            --exclude fixtures services/api/candleviewer apps packages/ui
 
   # ---------------------------------------------------------------------
   # license-scan — CONSTITUTION §9 #14 (license-check), SR-136 policy.

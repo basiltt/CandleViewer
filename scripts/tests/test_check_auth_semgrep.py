@@ -99,6 +99,9 @@ def test_gitleaks_detects_our_token_shapes() -> None:
     assert rules["cv-refresh-token"].search("cvr_" + body)
     assert rules["cv-invite-token"].search("cvi_" + body)
     assert rules["cv-recovery-code"].search("recovery_code = 'ABCDE-" + "FGHIJ'")
+    first, second = "ABCDE-" + "FGHIJ", "KLMNO-" + "PQRST"
+    m = rules["cv-recovery-code"].search(f"recovery_codes = ['{first}', '{second}']")
+    assert m and first in m.group(0) and second in m.group(0)  # every code, not just the first
     assert rules["cv-totp-secret"].search("totp_secret = '" + "JBSWY3DPEHPK3PXP" + "'")
 
 
@@ -106,3 +109,30 @@ def test_gitleaks_ignores_benign_text() -> None:
     rules = _gitleaks_rules()
     assert not rules["cv-session-token"].search("cvs_short")
     assert not rules["cv-totp-secret"].search("totp_secret = settings.secret")
+
+
+# --- ZAP liveness gate (security/zap/check_liveness.py) --------------------
+sys.path.insert(0, str(ROOT / "security" / "zap"))
+import check_liveness as live  # noqa: E402 -- path set just above
+
+_OK_LOG = "Job requestor started\nJob requestor finished\n" * 2
+_REPORT = '{"site": []}'
+
+
+def test_liveness_both_requestors_ok_passes() -> None:
+    assert live.check(_OK_LOG, _REPORT) == []
+
+
+def test_liveness_requestor_401_fails() -> None:
+    log = _OK_LOG + "Job requestor error: response code 401 does not match 200\n"
+    assert any("requestor failure" in e for e in live.check(log, _REPORT))
+
+
+def test_liveness_missing_post_scan_check_fails() -> None:
+    log = "Job requestor started\nJob requestor finished\n"
+    assert live.check(log, _REPORT)
+
+
+def test_liveness_report_missing_or_not_zap_fails() -> None:
+    assert live.check(_OK_LOG, None)
+    assert live.check(_OK_LOG, "{}")

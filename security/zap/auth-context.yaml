@@ -24,7 +24,7 @@ env:
       authentication:
         method: script
         parameters:
-          script: "security/zap/login-totp.js"   # password + TOTP step, then re-auth on rotation
+          script: "security/zap/login-totp.js" # password + TOTP step, then re-auth on rotation
           scriptEngine: "Graal.js"
         verification:
           method: response
@@ -35,7 +35,7 @@ env:
           pollFrequency: 1
           pollUnits: requests
       sessionManagement:
-        method: cookie   # opaque HttpOnly cv_refresh cookie (ADR-0010); rotates on each auth transition (SR-013)
+        method: cookie # opaque HttpOnly cv_refresh cookie (ADR-0010); rotates on each auth transition (SR-013)
       users:
         - name: fixture-owner
           credentials:
@@ -49,7 +49,7 @@ env:
 
 jobs:
   - type: passiveScan-config
-    parameters: {maxAlertsPerRule: 10, scanOnlyInScope: true}
+    parameters: { maxAlertsPerRule: 10, scanOnlyInScope: true }
   - type: openapi
     parameters:
       apiFile: "docs/plan/22-api-openapi.yaml"
@@ -57,12 +57,13 @@ jobs:
       targetUrl: "${ZAP_TARGET}"
   - type: requestor
     name: session-liveness-gate
+    parameters: { user: fixture-owner }
     requests:
       - url: "${ZAP_TARGET}/v1/auth/me"
         method: GET
-        responseCode: 200   # a 401 here aborts: unauthenticated scan != clean scan
+        responseCode: 200 # a 401 here aborts: unauthenticated scan != clean scan
   - type: passiveScan-wait
-    parameters: {maxDuration: 5}
+    parameters: { maxDuration: 5 }
   - type: activeScan
     # Runs only when ZAP_MODE=full (weekly / pre-release); the PR baseline stops after passive.
     parameters:
@@ -74,18 +75,19 @@ jobs:
       defaultStrength: Medium
       defaultThreshold: Medium
       rules:
-        - {id: 40018, name: SQL Injection, strength: High, threshold: Low}
-        - {id: 90033, name: Loosely scoped cookie, strength: High, threshold: Low}
-        - {id: 10054, name: Cookie without SameSite, strength: High, threshold: Low}
-        - {id: 10010, name: Cookie without HttpOnly, strength: High, threshold: Low}
-        - {id: 10011, name: Cookie without Secure, strength: High, threshold: Low}
-        - {id: 40012, name: Reflected XSS, strength: Medium, threshold: Low}
-        - {id: 90020, name: Command injection, strength: Medium, threshold: Low}
+        - { id: 40018, name: SQL Injection, strength: High, threshold: Low }
+        - { id: 90033, name: Loosely scoped cookie, strength: High, threshold: Low }
+        - { id: 10054, name: Cookie without SameSite, strength: High, threshold: Low }
+        - { id: 10010, name: Cookie without HttpOnly, strength: High, threshold: Low }
+        - { id: 10011, name: Cookie without Secure, strength: High, threshold: Low }
+        - { id: 40012, name: Reflected XSS, strength: Medium, threshold: Low }
+        - { id: 90020, name: Command injection, strength: Medium, threshold: Low }
   - type: requestor
     name: session-still-authenticated-after-scan
+    parameters: { user: fixture-owner }
     requests:
       - url: "${ZAP_TARGET}/v1/auth/me"
         method: GET
         responseCode: 200
   - type: report
-    parameters: {template: traditional-json, reportDir: zap-report, reportFile: zap.json}
+    parameters: { template: traditional-json, reportDir: zap-report, reportFile: zap.json }
