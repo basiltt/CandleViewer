@@ -222,9 +222,13 @@ def test_dependabot_github_actions_bumps_carry_security_review_label() -> None:
 def test_dependabot_ignores_majors_on_pinned_runtime_sensitive_packages() -> None:
     (npm,) = [u for u in _dependabot_updates() if u["package-ecosystem"] == "npm"]
     ignored = {i["dependency-name"]: i.get("update-types") for i in npm["ignore"]}
-    assert ignored["size-limit"] == ["version-update:semver-major"]
-    assert ignored["@size-limit/*"] == ["version-update:semver-major"]
+    # npm majors are sequenced manually (#1819) until the Node 22 floor lands (#1778 F);
+    # the wildcard subsumes the former size-limit / @size-limit/* entries.
+    assert ignored["*"] == ["version-update:semver-major"]
     assert "pnpm" in ignored
+    # only minor/patch flow automatically; no stale npm-major group may re-raise the bundle
+    assert set(npm["groups"]) == {"npm-minor-patch"}
+    assert npm["groups"]["npm-minor-patch"]["update-types"] == ["minor", "patch"]
     (pip,) = [u for u in _dependabot_updates() if u["package-ecosystem"] == "pip"]
     assert "xstate-statemachine" in {i["dependency-name"] for i in pip["ignore"]}
 

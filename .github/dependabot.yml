@@ -65,6 +65,8 @@ updates:
       prefix: "chore(frontend-platform)"
     ignore:
       # Majors are sequenced manually via #1819 (Node 22 floor first, #1778 F); remove once step 1 of #1819 lands.
+      # Version-update ignores do not suppress Dependabot *security* updates - advisory-driven
+      # PRs (including majors) still open; this covers size-limit/@size-limit/* (Node 22) too.
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
       # pnpm is pinned via `packageManager` + corepack in every workflow (pnpm@12.5.1).
