@@ -131,6 +131,8 @@ jobs:
           python-version: "3.13"
       - name: Check action pins and pull_request_target (CI-GATE-003)
         run: python tools/ci/check_action_pins.py .github/workflows
+      - name: Check image digest pins are real (CI-IMG-002)
+        run: python tools/ci/resolve_image_digests.py --check
 
   spike-containment:
     name: spike-containment

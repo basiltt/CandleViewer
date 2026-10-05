@@ -1,14 +1,9 @@
 # infra/compose/docker-compose.yml — E02-T08 base stack.
 #
-# NOTE (Deviation, see PR body): this environment has no docker installed, so
-# the `sha256:` digests below could not be resolved with
-# `docker pull <image>:<tag> && docker inspect --format '{{index .RepoDigests 0}}'`.
-# Each is a well-formed placeholder in `image@sha256:<64 hex>` form matching
-# the tag named in the comment; infra/scripts/lint_compose.py enforces the
-# *shape* (digest present, no bare/`:latest` tag) which is what the
-# acceptance criterion's compose-lint gate checks. Before first real `make up`
-# run, re-resolve each digest against the tag noted per service and update in
-# place — tracked as a residual in the E02-X01/E02-X02 threat model (R4).
+# Image digests are REAL registry manifest digests (index digests for multi-arch tags), resolved
+# and verified by tools/ci/resolve_image_digests.py (re-run it to refresh, `--check` in CI);
+# ledger in infra/images/PINS.md. minio: minio/minio:RELEASE.2024-09-13T20-26-02Z is no longer
+# served anonymously (#1586), so the same-date release is taken from bitnamilegacy/minio:2024.9.13.
 networks:
   cv-internal:
     driver: bridge
@@ -228,17 +223,17 @@ services:
     networks: [cv-internal]
 
   minio:
-    image: minio/minio:RELEASE.2024-09-13T20-26-02Z@sha256:8b3e4d5a9c2f1b6e0d7a3c9f2b5e8d1a4c7f0b3e6d9a2c5f8b1e4d7a0c3f6b9e
+    image: bitnamilegacy/minio:2024.9.13@sha256:8a92f71856f4b4b5755fa6afe4e7f9d0db7e18c889318f6772cb342d9b13470d
     profiles: ["cold"]
-    command: server /data --console-address ":9003"
     environment:
+      MINIO_CONSOLE_PORT_NUMBER: "9003"
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-cvminio}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set in infra/compose/.env}
     ports:
       - "127.0.0.1:${MINIO_API_PORT:-9002}:9000"
       - "127.0.0.1:${MINIO_CONSOLE_PORT:-9003}:9003"
     volumes:
-      - cv-minio-data:/data
+      - cv-minio-data:/bitnami/minio/data
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
       interval: 5s
