@@ -768,7 +768,10 @@
   ],
   "refresh": "30s",
   "schemaVersion": 39,
-  "tags": ["candleviewer", "ingestion"],
+  "tags": [
+    "candleviewer",
+    "ingestion"
+  ],
   "templating": {
     "list": [
       {
