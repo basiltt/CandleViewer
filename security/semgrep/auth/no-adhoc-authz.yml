@@ -15,13 +15,11 @@ rules:
       - pattern: $V in $P.roles
       - pattern: $V in $P.permissions
       - pattern: $V in $P.capabilities
+      - pattern: $P.role is $V
+      - pattern: getattr($P, "role") == $V
+      - pattern: getattr($P, "role", $D) == $V
     paths:
       exclude:
         - "**/tests/**"
         - "**/auth/authorize.py"
-        - "**/auth/scopes.py"  # Principal.is_owner: role-set membership inside the snapshot type itself
-        # Allowlist (Security-owned, widening needs Security review): the
-        # Principal.has_permission wildcard/set membership implementations.
-        - "**/api/instruments.py"
-        - "**/api/market.py"
-        - "**/audit/access.py"
+        - "**/auth/scopes.py" # Principal.is_owner: role-set membership inside the snapshot type itself

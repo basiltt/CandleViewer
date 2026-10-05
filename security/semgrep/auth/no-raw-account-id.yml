@@ -3,31 +3,64 @@ rules:
     languages: [python]
     severity: ERROR
     message: >-
-      SR-051 (E09-X01): a route handler takes a request-supplied account_id
-      but never passes it through the ScopeResolver intersection
-      (scope.intersect(account_id)). Account scope must come from the
-      resolved scope, never from the raw request (IDOR).
+      SR-051 (E09-X01): a route handler takes a request-supplied account id
+      ($A) but never passes it through the scope resolver
+      ($S.intersect($A) or $S.authorize_accounts(caller, ...$A...)) in the
+      same handler. Account scope must come from the resolved scope, never
+      from the raw request (IDOR). A comment or an unrelated intersect() call
+      does not count: the id itself must reach the resolver call.
     metadata:
       sr: SR-051
     patterns:
       - pattern-either:
           - pattern: |
               @$R.$M(...)
-              async def $F(..., account_id, ...):
+              async def $F(..., $A, ...):
                   ...
           - pattern: |
               @$R.$M(...)
-              async def $F(..., account_id: $T, ...):
+              async def $F(..., $A: $T, ...):
                   ...
           - pattern: |
               @$R.$M(...)
-              def $F(..., account_id, ...):
+              async def $F(..., $A: $T = $D, ...):
                   ...
           - pattern: |
               @$R.$M(...)
-              def $F(..., account_id: $T, ...):
+              def $F(..., $A, ...):
                   ...
-      - pattern-not-regex: "intersect\\("
+          - pattern: |
+              @$R.$M(...)
+              def $F(..., $A: $T, ...):
+                  ...
+          - pattern: |
+              @$R.$M(...)
+              def $F(..., $A: $T = $D, ...):
+                  ...
+      - metavariable-regex:
+          metavariable: $M
+          regex: "^(get|post|put|patch|delete|api_route|websocket)$"
+      - metavariable-regex:
+          metavariable: $A
+          regex: "^(account_id|account_ids|accountId|accountIds|acct_id|acct_ids)$"
+      - pattern-not: |
+          @$R.$M(...)
+          async def $F(...):
+              ...
+              $S.intersect(..., <... $A ...>, ...)
+              ...
+      - pattern-not: |
+          @$R.$M(...)
+          async def $F(...):
+              ...
+              await $S.authorize_accounts(..., <... $A ...>, ...)
+              ...
+      - pattern-not: |
+          @$R.$M(...)
+          def $F(...):
+              ...
+              $S.intersect(..., <... $A ...>, ...)
+              ...
     paths:
       exclude:
         - "**/tests/**"

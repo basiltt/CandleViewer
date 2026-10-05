@@ -88,7 +88,7 @@ class MarketDataPrincipal:
     permissions: frozenset[str]
 
     def has(self, permission: str) -> bool:
-        return "*" in self.permissions or permission in self.permissions
+        return "*" in self.permissions or permission in self.permissions  # nosem: no-adhoc-authz reason=Principal.has_permission-wildcard-impl-pending-E09-T01-authorize owner=@CandleViewer/security review=2026-12-31  # noqa: E501  # fmt: skip
 
 
 class PrincipalResolver(Protocol):

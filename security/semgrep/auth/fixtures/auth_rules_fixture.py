@@ -18,11 +18,33 @@ async def orders_ok(account_id: str, scope):
     return await repo.orders(allowed)
 
 
+@router.get("/fills")  # ruleid: no-raw-account-id
+async def fills_bad_unrelated_intersect(account_ids: list[str], scope):
+    # scope.intersect(account_ids) -- a comment is not scoping
+    other = tags.intersect(set())
+    return await repo.fills(account_ids)
+
+
+@router.get("/pnl")  # ruleid: no-raw-account-id
+async def pnl_bad_camel(accountId: str = Query(None)):
+    return await repo.pnl(accountId)
+
+
+@router.post("/rules/check")  # ok: no-raw-account-id
+async def rules_ok(account_ids: list[str], resolver, caller):
+    await resolver.authorize_accounts(caller, [UUID(a) for a in account_ids])
+    return None
+
+
 # --- no-adhoc-authz (SR-017) ----------------------------------------------
 def adhoc_bad(principal):
     if principal.role == "owner":  # ruleid: no-adhoc-authz
         return True
     return False
+
+
+def adhoc_getattr_bad(principal):
+    return getattr(principal, "role") == "owner"  # ruleid: no-adhoc-authz
 
 
 def adhoc_ok(principal):
@@ -51,6 +73,23 @@ async def kill_bad():
     return None
 
 
+@router.post(KILL_SWITCH_PATH)  # ruleid: stepup-required
+async def kill_const_bad():
+    return None
+
+
+@router.post("/me/api-keys")  # ruleid: stepup-required
+async def keys_comment_only_bad():
+    # require_step_up is mentioned here but never called
+    return None
+
+
+@router.delete("/me/api-keys/{key_id}")  # ok: stepup-required
+async def keys_body_ok(auth):
+    gate = await require_elevation_for(auth, "x", "api_keys")
+    return gate
+
+
 @router.post("/admin/kill-switch/arm", dependencies=[Depends(require_step_up("kill"))])  # ok: stepup-required
 async def kill_ok():
     return None
@@ -63,6 +102,31 @@ def log_bad(logger, session_token):
 
 def log_fstring_bad(logger, recovery_code):
     logger.warning(f"bad code {recovery_code}")  # ruleid: no-secret-logging
+
+
+class Svc:
+    def attr_logger_bad(self, body):
+        self.logger.info(body.password)  # ruleid: no-secret-logging
+
+
+def log_attr_secret_bad(log, user):
+    log.warning("x %s", user.token)  # ruleid: no-secret-logging
+
+
+def log_structlog_bad(req):
+    structlog.get_logger().info("k", key=req.api_key)  # ruleid: no-secret-logging
+
+
+def log_attr_ok(self, user):
+    self.logger.info("login", user_id=user.id)  # ok: no-secret-logging
+
+
+def log_session_id_ok(_log, session_id):
+    _log.error("x", extra={"session_id": session_id})  # ok: no-secret-logging
+
+
+def log_nonlogger_ok(cache, body):
+    cache.info(body.password)  # ok: no-secret-logging
 
 
 def log_ok(logger, user_id):
