@@ -229,7 +229,7 @@ async def test_ac_j_export_leaks_no_account_id_or_armed_state() -> None:
 
 
 async def test_ac_k_import_lands_disabled_and_never_remaps_accounts() -> None:
-    from candleviewer.rules.manager import Actor
+    from candleviewer.rules.manager import Actor, RuleError
 
     e = _Env()
     bundle = {
@@ -237,7 +237,7 @@ async def test_ac_k_import_lands_disabled_and_never_remaps_accounts() -> None:
             name="imp",
             mode="armed",
             enabled=True,
-            scope={"level": "account", "account_ids": [str(C)], "environments": ["demo", "live"]},
+            scope={"level": "account", "account_ids": [str(A)], "environments": ["demo", "live"]},
         )
     }
     low = Actor("u2", "s2", frozenset({"rules:write"}), granted_accounts=frozenset({str(A)}))
@@ -246,6 +246,17 @@ async def test_ac_k_import_lands_disabled_and_never_remaps_accounts() -> None:
     row = e.mgr._s._rows[out["id"]]  # type: ignore[attr-defined]
     ir = row.versions[0].ir
     assert not ir["scope"].get("account_ids") and ir["scope"]["environments"] == ["demo"]
+    # a bundle naming an account the importer cannot access is refused, never remapped
+    bad = {
+        "ir": {
+            **bundle["ir"],
+            "name": "imp2",
+            "scope": {"level": "account", "account_ids": [str(C)]},
+        }
+    }
+    with pytest.raises(RuleError):
+        await e.mgr.import_rule(bad, low)
+    assert "rule.import_refused" in _audit_actions(e)
 
 
 def test_ac_l_schema_bound_ir_is_bounded_and_slow_evaluation_is_aborted_then_auto_disabled() -> (
