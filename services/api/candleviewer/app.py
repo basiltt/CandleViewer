@@ -988,6 +988,8 @@ def create_app(
             on_change=ctx.alerts.on_alert_changed,
         )
     )
+    if resolved.alerts_webhook_enabled:  # refused whatever the evaluator flag (E40-S03)
+        default_adapters(None, webhook_enabled=True)  # raises
     if resolved.alerts_evaluator_enabled:
         ctx.alerts.bind(
             _alert_evaluator_factory(ctx, _alert_pg, metrics_facade),
@@ -1011,10 +1013,10 @@ def _alert_dispatcher(
     adapters = default_adapters(None, webhook_enabled=webhook_enabled)  # refuses webhook=on
     m = {
         "cv_alert_delivery_total": facade.counter(
-            "cv_alert_delivery_total", "Settled alert deliveries.", ("channel", "status"),
+            "cv_alert_delivery_total", "Settled alert deliveries.", ("transport", "state"),
             max_series=15),
         "cv_alert_delivery_latency_seconds": facade.histogram(
-            "cv_alert_delivery_latency_seconds", "Alert firing -> delivery sent.", ("channel",),
+            "cv_alert_delivery_latency_seconds", "Alert firing -> delivery sent.", ("transport",),
             buckets=(0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 30.0, 300.0), max_series=5),
         "cv_alert_delivery_attempts": facade.histogram(
             "cv_alert_delivery_attempts", "Adapter attempts per settled delivery.",

@@ -36,3 +36,23 @@ def test_app_dispatcher_refuses_webhook_flag_and_builds_otherwise() -> None:
         _alert_dispatcher(None, Metrics("dev"), True)  # type: ignore[arg-type]  # pg unused
     d = _alert_dispatcher(None, Metrics("dev"), False)  # type: ignore[arg-type]  # pg lazy
     assert isinstance(d, AlertDispatcher)
+
+
+def test_dispatcher_not_constructed_when_evaluator_flag_off(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import candleviewer.app as app_mod
+    from candleviewer.settings import Settings
+
+    built: list[bool] = []
+    monkeypatch.setattr(app_mod, "_alert_dispatcher", lambda *a: built.append(True))
+    app = app_mod.create_app(Settings(alerts_evaluator_enabled=False))
+    assert built == [] and app.state.app_context.alerts.dispatcher is None
+
+
+def test_webhook_flag_refused_even_with_evaluator_off() -> None:
+    from candleviewer.app import create_app
+    from candleviewer.settings import Settings
+
+    with pytest.raises(ValueError, match="E40-S03"):
+        create_app(Settings(alerts_evaluator_enabled=False, alerts_webhook_enabled=True))

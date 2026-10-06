@@ -16,7 +16,6 @@ from typing import Any
 import sqlalchemy as sa
 
 from candleviewer.storage.repositories.alert_deliveries_sqlalchemy import (
-    DELIVERY_COLS,
     DeliveryRow,
     row_of,
 )
@@ -33,8 +32,14 @@ _CLAIM = sa.text(
     "ORDER BY available_at, id LIMIT :limit FOR UPDATE SKIP LOCKED) "
     "RETURNING id, (payload->>'delivery_id')::bigint AS delivery_id, attempts, max_attempts"
 )
-# Only the static column fragment is substituted, never caller data.
-_LOAD = sa.text("SELECT @C@ FROM alert_deliveries WHERE id = :id".replace("@C@", DELIVERY_COLS))
+#: Fixed SQL, bound params only (same columns as `alert_deliveries_sqlalchemy._COLS`).
+_LOAD = sa.text(
+    "SELECT id, alert_id::text AS alert_id, user_id::text AS user_id, channel::text AS channel, "
+    "status::text AS status, title, body, context, attempt, http_status, error_message, "
+    "queued_at, sent_at, acked_at, acked_by::text AS acked_by, "
+    "(SELECT a.severity::text FROM alerts a WHERE a.id = alert_deliveries.alert_id) AS severity "
+    "FROM alert_deliveries WHERE id = :id"
+)
 _OB_DONE = sa.text(
     "UPDATE outbox SET processed_at = now(), locked_by = NULL, locked_until = NULL, "
     "attempts = :attempts WHERE id = :id"
@@ -52,7 +57,8 @@ _AD_SENT = sa.text(
     "http_status = :http, error_message = NULL WHERE id = :id AND status = 'queued'"
 )
 _AD_SUPPRESSED = sa.text(
-    "UPDATE alert_deliveries SET status = 'suppressed', error_message = :reason "
+    "UPDATE alert_deliveries SET status = 'suppressed', error_message = :reason, "
+    "context = context || jsonb_build_object('suppression_reason', CAST(:reason AS text)) "
     "WHERE id = :id AND status = 'queued'"
 )
 _AD_ATTEMPT = sa.text(

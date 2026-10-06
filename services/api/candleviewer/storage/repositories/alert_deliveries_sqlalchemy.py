@@ -30,9 +30,6 @@ _COLS = (
     "(SELECT a.severity::text FROM alerts a WHERE a.id = alert_deliveries.alert_id) AS severity"
 )
 
-#: Public alias for sibling repositories (the dispatch store).
-DELIVERY_COLS = _COLS
-
 
 def _sql(template: str) -> sa.TextClause:
     # Only the static column fragment is substituted, never caller data.

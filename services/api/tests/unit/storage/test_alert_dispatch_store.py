@@ -65,7 +65,9 @@ async def test_settle_sent_is_conditional_and_marks_outbox_in_one_tx() -> None:
 
 async def test_settle_suppressed_retry_processed() -> None:
     store, rel = _store(_Result([], rowcount=1), _Result([]))
-    assert await store.settle_suppressed(JOB, reason="off") is True
+    assert await store.settle_suppressed(JOB, reason="email_relay_off") is True
+    assert "suppression_reason" in str(rel.calls[0][0])
+    assert rel.calls[0][1] == {"id": 7, "reason": "email_relay_off"}
     store, rel = _store(_Result([]), _Result([]))
     await store.settle_retry(JOB, attempt=3, error="e", delay_s=4.0)
     assert rel.calls[0][1] == {"id": 7, "attempt": 3, "error": "e"}
