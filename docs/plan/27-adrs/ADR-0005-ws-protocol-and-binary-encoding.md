@@ -40,11 +40,13 @@ The browser needs book top-N, footprint cells, heatmap columns (one per 100 ms),
 ### Consequences
 
 Positive:
+
 - The worker decodes a frame into `Float32Array`/`Int32Array` views over the received buffer with no parse and no copy, then transfers it to the render worker — this is what keeps the ≤ 4 ms p95 decode budget achievable.
 - One encode per topic serves all subscribers, so client count does not multiply backend CPU.
 - The JSON control plane keeps the system debuggable and keeps the contract legible in `23-ws-protocol.md`.
 
 Negative / risks:
+
 - Two encodings to maintain and test. Mitigated by generating both the Python encoder and the TS decoder from a single schema declaration in `packages/protocol`, with a round-trip property test.
 - Binary framing is unforgiving of drift. Mitigated by the `version` byte, a CI check that regenerates `packages/protocol` and fails on a diff, and fuzz tests feeding malformed frames to the decoder.
 
@@ -60,3 +62,38 @@ Negative / risks:
 - Contract tests: every frame kind round-trips Python encode → TS decode → re-encode, byte-identical.
 - Fuzz tests: malformed frames, truncated payloads, out-of-order and duplicate sequences, NaN/Infinity values.
 - Benchmark B7 in `26-chart-engine-design.md` §13 enforces the decode budget in CI.
+
+## Amendment 1 — 2026-10-06: Spike S5 / E17-K01 validation result — gate NOT MET as specified
+
+Evidence: `docs/plan/notes/e17-binary-vs-json.md`; harness and committed artefact `tests/perf/ws/`
+(`run_all.py`, `results.json`). 4-pane reference workspace (§16.3), 60 s, seed 17001, headless Chromium
+153 on an i7-8550U laptop, median of 5 runs. Workload is modelled on a documented-shape corpus, not a
+live capture. **Owner ratification pending.**
+
+| Gate criterion                                  | Result                                                                        | Verdict  |
+| ----------------------------------------------- | ----------------------------------------------------------------------------- | -------- |
+| Decode time >= 30 % lower than JSON             | -82.3 % (workspace CPU 0.76 -> 0.13 ms/s; footprint -88 %, book delta -17 %)  | PASS     |
+| Bandwidth >= 40 % lower, JSON deflated per §3.5 | binary 50.4 KiB/s raw vs JSON 23.7 KiB/s deflated: binary is **112 % larger** | **FAIL** |
+| Bandwidth >= 40 % lower, both uncompressed      | 50.4 vs 153.6 KiB/s: -67.2 %                                                  | PASS     |
+
+The verdict turns on compression: with `permessage-deflate` context takeover the workspace (dominated by the redundant 400-cell
+footprint) compresses ~6.5x in JSON and ~21x in binary; without takeover the binary advantage is only -29 %.
+Everything is far inside the §16.3 envelope (350 KiB/s; footprint decode p99 0.35 ms JSON vs 1.0 ms
+target), and `@msgpack/msgpack` structured payloads decode ~2x **slower** than `JSON.parse`, which confirms
+the rejection of MessagePack-everywhere. Server-side, a scalar struct-packing encoder (97-103 µs for
+footprint/heatmap) is slower than orjson on the whole structured frame (68 / 34 µs); the encode-CPU
+benefit of binary exists only with a vectorised or native codec.
+
+**Amended decision (proposed, pending owner ratification).**
+
+1. The **data plane stays JSON** (`cv.v1.json`, deflate on, the negotiated fallback) for the first
+   release. This overrides "Data plane (binary)" above for every kind except those in point 2.
+2. The binary codec (E17-T02) is **re-scoped to footprint (kind 5), heatmap column (kind 6) and book
+   snapshot (kind 1)** — the kinds where decode is 66-88 % cheaper — as an opt-in `binary: true`
+   capability. It ships only if the owner accepts per-connection deflate-with-takeover (or a
+   delta-footprint) for it; otherwise it is deferred until E17-Q03 measures a real budget miss.
+   Book delta, trades and bars (decode 11-17 % better, bars 23 % worse) stay JSON.
+3. The **schema-first codec generation** discipline is unchanged; MessagePack remains mid-tier only
+   (low volume), never on hot kinds.
+4. Not discharged: §3.4's prose record sizes (bars 69 B, footprint cell 33 B) disagree with its field
+   lists (65 B, 29 B) and must be reconciled by E17-T02 before any codec is written.
