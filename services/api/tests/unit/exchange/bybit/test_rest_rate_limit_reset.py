@@ -5,14 +5,18 @@ Fixture-driven (`tests/_corpus`), MockTransport, fake clock - no real sleeps.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 
 import httpx
 import pytest
 
 from candleviewer.exchange.base.errors import RateLimitError
-from candleviewer.exchange.bybit.config import RestClientConfig
-from candleviewer.exchange.bybit.metrics import bybit_rate_limited_total
+from candleviewer.exchange.bybit.config import EndpointClass, RestClientConfig
+from candleviewer.exchange.bybit.metrics import (
+    bybit_ip_hold_remaining_seconds,
+    bybit_rate_limited_total,
+)
 from candleviewer.exchange.bybit.rate_limit import TokenBucketGovernor
 from candleviewer.exchange.bybit.rest import BybitRestClient
 from tests._corpus import rest
@@ -84,7 +88,7 @@ def _seq(responses: list[httpx.Response]) -> Handler:
 
 
 @pytest.mark.parametrize("fixture", ["rest/error_10018.json"])
-async def test_10018_retry_waits_for_advertised_reset(fixture: str) -> None:
+async def test_rate_limit_10018_with_reset_header_waits_for_reset(fixture: str) -> None:
     world = _World()
     hdr = _reset_header(world, 30.0)
     client, _ = _client(
@@ -96,7 +100,7 @@ async def test_10018_retry_waits_for_advertised_reset(fixture: str) -> None:
     assert world.sent_at[1] - world.sent_at[0] >= 30.0
 
 
-async def test_10018_reset_uses_clockguard_offset_not_raw_local_time() -> None:
+async def test_rate_limit_10018_reset_wait_uses_clockguard_offset() -> None:
     world = _World()
     # Venue epoch 30 s ahead of *venue-now*; a client ignoring the offset would wait 32 s.
     hdr = _reset_header(world, 30.0)
@@ -115,7 +119,7 @@ async def test_10018_reset_uses_clockguard_offset_not_raw_local_time() -> None:
     assert 30.0 in [round(s, 3) for s in world.sleeps]
 
 
-async def test_10018_holds_the_ip_for_every_uid_at_least_ten_minutes() -> None:
+async def test_rate_limit_10018_holds_every_uid_for_ten_minutes() -> None:
     world = _World()
     hdr = _reset_header(world, 5.0)
     client_a, gov = _client(
@@ -143,7 +147,7 @@ async def test_10018_holds_the_ip_for_every_uid_at_least_ten_minutes() -> None:
         assert world.sent_at[-1] - before >= 600.0
 
 
-async def test_10006_uses_reset_header_but_does_not_hold_the_ip() -> None:
+async def test_rate_limit_10006_with_reset_header_waits_without_ip_hold() -> None:
     world = _World()
     hdr = _reset_header(world, 12.0)
     client, gov = _client(
@@ -160,8 +164,8 @@ def _ret(code: int) -> dict[str, object]:
     return {"retCode": code, "retMsg": "too many visits", "result": {}}
 
 
-@pytest.mark.parametrize("raw", ["garbage", "", "1"])
-async def test_unusable_or_past_reset_falls_back_to_default_backoff(raw: str) -> None:
+@pytest.mark.parametrize("raw", ["garbage", "", "1", "1000030"])  # last: seconds, not ms
+async def test_rate_limit_unusable_reset_header_falls_back_to_default_backoff(raw: str) -> None:
     world = _World()
     client, _ = _client(
         world,
@@ -179,8 +183,9 @@ async def test_unusable_or_past_reset_falls_back_to_default_backoff(raw: str) ->
     assert world.sleeps and max(world.sleeps) <= 2.0  # 2**1 * (0.5 + 0.0)
 
 
-async def test_rate_limited_metric_counts_the_code_label() -> None:
+async def test_rate_limit_10006_increments_code_labelled_counter() -> None:
     world = _World()
+    # prometheus_client exposes no public per-child read; reading `_value` is test-only.
     before = bybit_rate_limited_total.labels(code="10006")._value.get()
     client, _ = _client(
         world, _seq([httpx.Response(200, json=_ret(10006)), httpx.Response(200, json=OK)])
@@ -190,9 +195,70 @@ async def test_rate_limited_metric_counts_the_code_label() -> None:
     assert bybit_rate_limited_total.labels(code="10006")._value.get() == before + 1
 
 
-async def test_exhausted_retries_still_raise_rate_limit_error() -> None:
+async def test_rate_limit_exhausted_retries_raise_rate_limit_error() -> None:
     world = _World()
     client, _ = _client(world, lambda _r: httpx.Response(200, json=_ret(10006)))
     async with client:
         with pytest.raises(RateLimitError):
             await client.get_public("/v5/market/kline")
+
+
+async def test_rate_limit_far_future_reset_header_is_clamped_to_cap() -> None:
+    world = _World()
+    hdr = _reset_header(world, 7 * 86_400.0)
+    client, gov = _client(
+        world,
+        _seq([httpx.Response(200, json=_ret(10006), headers=hdr), httpx.Response(200, json=OK)]),
+    )
+    async with client:
+        await client.get_public("/v5/market/kline")
+    assert world.sent_at[1] - world.sent_at[0] == pytest.approx(900.0)
+    assert gov.ip_hold_remaining_s() == 0.0
+
+
+async def test_rate_limit_10018_far_future_header_holds_ip_at_most_cap() -> None:
+    world = _World()
+    hdr = _reset_header(world, 7 * 86_400.0)
+    client, _ = _client(
+        world,
+        _seq(
+            [
+                httpx.Response(200, json=rest("rest/error_10018.json"), headers=hdr),
+                httpx.Response(200, json=OK),
+            ]
+        ),
+    )
+    async with client:
+        await client.get_public("/v5/market/kline")
+    assert world.sent_at[1] - world.sent_at[0] == pytest.approx(900.0)
+
+
+def test_governor_hold_ip_never_extends_beyond_cap() -> None:
+    world = _World()
+    gov = TokenBucketGovernor(clock=lambda: world.now, sleep=world.sleep)
+    gov.hold_ip(10**9)
+    assert gov.ip_hold_remaining_s() == pytest.approx(900.0)
+    assert bybit_ip_hold_remaining_seconds._value.get() == pytest.approx(900.0)
+
+
+async def test_governor_hold_gauge_clears_after_hold_elapses() -> None:
+    world = _World()
+    gov = TokenBucketGovernor(clock=lambda: world.now, sleep=world.sleep)
+    gov.hold_ip(600.0)
+    await gov.acquire("u", EndpointClass.MARKET_DATA)
+    assert bybit_ip_hold_remaining_seconds._value.get() == 0.0
+
+
+async def test_governor_acquire_queued_on_lock_observes_hold_set_meanwhile() -> None:
+    world = _World()
+    gov = TokenBucketGovernor(
+        default_capacity=1.0, default_refill_per_s=1.0, clock=lambda: world.now, sleep=world.sleep
+    )
+    bucket = gov._get_bucket("u", EndpointClass.MARKET_DATA)
+    await bucket.lock.acquire()
+    waiter = asyncio.create_task(gov.acquire("u", EndpointClass.MARKET_DATA))
+    await asyncio.sleep(0)  # waiter is now queued on the bucket lock, past the first check
+    gov.hold_ip(600.0)
+    bucket.lock.release()
+    await waiter
+    assert world.now >= 600.0

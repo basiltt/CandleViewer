@@ -129,7 +129,8 @@ async def test_10018_raises_rate_limit_error_and_drains_bucket_then_retries() ->
         # `acquire`; either way it must have gone down relative to a
         # no-rate-limit baseline, and a retry sleep must have been recorded.
         assert after_drain_and_refill <= before
-        assert sleeps and sum(sleeps) >= 600.0  # backoff + the 10018 IP hold (#1908)
+        assert len(sleeps) == 2  # default backoff, then the IP-hold remainder
+        assert sum(sleeps) == pytest.approx(600.0)
     finally:
         await client.aclose()
 

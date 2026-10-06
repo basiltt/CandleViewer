@@ -15,6 +15,10 @@ import time
 from collections.abc import Awaitable, Callable
 
 from candleviewer.exchange.bybit.config import EndpointClass
+from candleviewer.exchange.bybit.metrics import bybit_ip_hold_remaining_seconds
+
+#: Hard ceiling on one IP hold (defence in depth vs a hostile/garbled reset header).
+MAX_IP_HOLD_S = 900.0
 
 
 class _Bucket:
@@ -84,6 +88,8 @@ class TokenBucketGovernor:
         for target in (bucket, self._ip_bucket):
             async with target.lock:
                 while True:
+                    # A hold set while we queued on this lock must not be missed.
+                    await self._wait_ip_hold()
                     now = self._now()
                     target._refill(now)
                     if target.tokens >= 1.0:
@@ -115,7 +121,10 @@ class TokenBucketGovernor:
         """Throttle every caller (all UIDs, all endpoint classes) for at least
         `duration_s` from now (`24-internal-schemas.md` §8.6, `10018`: IP-level
         backoff, all accounts throttled). Holds only ever extend, never shorten."""
-        self._ip_hold_until = max(self._ip_hold_until, self._now() + max(0.0, duration_s))
+        now = self._now()
+        capped = min(max(0.0, duration_s), MAX_IP_HOLD_S)
+        self._ip_hold_until = max(self._ip_hold_until, min(now + capped, now + MAX_IP_HOLD_S))
+        bybit_ip_hold_remaining_seconds.set(self.ip_hold_remaining_s())
 
     def ip_hold_remaining_s(self) -> float:
         return max(0.0, self._ip_hold_until - self._now())
@@ -123,6 +132,9 @@ class TokenBucketGovernor:
     async def _wait_ip_hold(self) -> None:
         while (remaining := self.ip_hold_remaining_s()) > 0.0:
             await self._sleep(remaining)
+        if self._ip_hold_until > 0.0:
+            self._ip_hold_until = 0.0
+            bybit_ip_hold_remaining_seconds.set(0.0)
 
     def remaining(self, uid: str, endpoint_class: EndpointClass) -> float:
         bucket = self._get_bucket(uid, endpoint_class)

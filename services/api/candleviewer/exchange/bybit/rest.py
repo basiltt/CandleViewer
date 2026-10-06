@@ -55,6 +55,8 @@ _REDACTED = "**redacted**"
 #: `10018` is the IP-level limit: hold every caller >=10 min (24-internal-schemas §8.6).
 _IP_RATE_LIMIT_CODE = 10018
 _IP_HOLD_S = 600.0
+#: Cap on any venue-advertised wait (header is untrusted input).
+_MAX_RESET_WAIT_S = 900.0
 
 #: SR-040a: a request path is a relative `/v5/...` path of URL-safe segment
 #: characters only. No scheme, authority, backslash, whitespace/control char,
@@ -395,7 +397,9 @@ class BybitRestClient:
                 self._account_for_rate_limit(response, endpoint_class)
                 reset_wait_s = await self._reset_wait_s(response)
                 if ret_code == _IP_RATE_LIMIT_CODE:
-                    self._governor.hold_ip(max(_IP_HOLD_S, reset_wait_s))
+                    hold_s = min(max(_IP_HOLD_S, reset_wait_s), _MAX_RESET_WAIT_S)
+                    self._governor.hold_ip(hold_s)
+                    logger.warning("rest_ip_hold_started", hold_s=hold_s, code=ret_code)
                 if error.retryable and attempt <= self._config.max_retries:
                     default = error.retry_after_s or self._retry_after_default(attempt)
                     retry_after = max(reset_wait_s, default)
@@ -453,7 +457,8 @@ class BybitRestClient:
             reset_ms = int(raw)
         except ValueError:
             return 0.0
-        return max(0.0, (reset_ms - await self._clock.now_ms()) / 1000.0)
+        wait_s = (reset_ms - await self._clock.now_ms()) / 1000.0
+        return min(max(0.0, wait_s), _MAX_RESET_WAIT_S)
 
     def _retry_after_default(self, attempt: int) -> float:
         base = min(2.0**attempt, 30.0)
