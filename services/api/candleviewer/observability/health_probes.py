@@ -111,6 +111,8 @@ class CallableProbe:
 
 #: #1918: hot-tier write-behind health component / `/readyz` check name.
 HOT_TIER_WRITE_BEHIND = "hot_tier_write_behind"
+#: #1919: ingestion feed health component / `/readyz` check name.
+INGESTION = "ingestion"
 
 #: Components named by the ticket; unbuilt ones get a `not_deployed` probe.
 REQUIRED_COMPONENTS: tuple[str, ...] = (
@@ -139,6 +141,7 @@ EVENT_COMPONENT: dict[str, str] = {
     "recorder": "recorder",
     "disk": "api",
     "hot_tier_write_behind": "db",
+    "ingestion": "exchange",
 }
 _SEVERITY: dict[ComponentState, str] = {
     ComponentState.HEALTHY: "info",

@@ -18,8 +18,11 @@ from sqlalchemy import insert, select, text
 
 from candleviewer.bus.models import Topic
 from candleviewer.db.models import system_events
+from candleviewer.ingestion.connection import PHASE_OPEN, ConnectionManager
+from candleviewer.observability.health import HealthReport, HealthStatus
 from candleviewer.observability.health_probes import (
     HOT_TIER_WRITE_BEHIND,
+    INGESTION,
     CallableProbe,
     ComponentHealth,
     ComponentState,
@@ -215,3 +218,36 @@ def register_write_behind_probe(
         return hot_tier_write_behind_state(buffers())
 
     registry.register(CallableProbe(HOT_TIER_WRITE_BEHIND, probe, timeout=1.0))
+
+
+def ingestion_state(report: HealthReport) -> ProbeResult:
+    """#1919: DEGRADED (never down) while the feed is impaired; detail = reason tokens."""
+    if report.status is HealthStatus.STOPPED:
+        return ProbeResult(ComponentState.NOT_DEPLOYED, "ingestion stopped")
+    if report.status is HealthStatus.DEGRADED:
+        return ProbeResult(ComponentState.DEGRADED, report.detail)
+    return ProbeResult(ComponentState.HEALTHY)
+
+
+def register_ingestion_probe(registry: HealthRegistry, health: Callable[[], HealthReport]) -> None:
+    async def probe() -> ProbeResult:
+        return ingestion_state(health())
+
+    registry.register(CallableProbe(INGESTION, probe, timeout=1.0))
+
+
+def register_public_ws_probe(
+    registry: HealthRegistry, ws: Callable[[], ConnectionManager | None]
+) -> None:
+    """#1919: `bybit_public_ws` (system topic `exchange.public_ws`) shows the real phase."""
+
+    async def probe() -> ProbeResult:
+        mgr = ws()
+        if mgr is None:
+            return ProbeResult(ComponentState.NOT_DEPLOYED, "public ws not wired")
+        phase = mgr.state()
+        if phase == PHASE_OPEN:
+            return ProbeResult(ComponentState.HEALTHY, phase)
+        return ProbeResult(ComponentState.DEGRADED, phase)
+
+    registry.register(CallableProbe("bybit_public_ws", probe, timeout=1.0))

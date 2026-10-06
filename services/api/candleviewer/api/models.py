@@ -26,6 +26,8 @@ class ReadyCheck(BaseModel):
 
     name: str
     ok: bool
+    #: #1919: degraded reasons (comma-joined tokens); empty when ok.
+    detail: str = ""
 
 
 class LivenessResponse(BuildInfo):

@@ -12,6 +12,7 @@ from __future__ import annotations
 import asyncio
 import time
 from collections.abc import Awaitable, Callable
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -48,12 +49,16 @@ PUMP_BREAKER_TRIPS = 32
 PUMP_BREAKER_WINDOW_S = 30.0
 #: #1919: WS may be non-open this long (reconnect backoff) before health degrades.
 WS_GRACE_S = 5.0
-#: #1919: stable, enumerable `HealthReport.detail` reasons (comma-joined when several).
-REASON_WS = "ws_not_open"
-REASON_BOOK = "book_out_of_live"
-REASON_TRADE_GAP = "trade_gap_unrecovered"
-REASON_CATALOGUE = "catalogue_stale"
-REASON_PUMP = "pump_breaker_open"
+
+
+class HealthReason(StrEnum):
+    """#1919: stable, enumerable `HealthReport.detail` tokens (24-internal-schemas.md)."""
+
+    WS_NOT_OPEN = "ws_not_open"
+    BOOK_OUT_OF_LIVE = "book_out_of_live"
+    TRADE_GAP_UNRECOVERED = "trade_gap_unrecovered"
+    CATALOGUE_STALE = "catalogue_stale"
+    PUMP_BREAKER_OPEN = "pump_breaker_open"
 
 
 class BookSink(Protocol):
@@ -64,6 +69,7 @@ class BookSink(Protocol):
     async def invalidate(self, reason: str) -> None: ...
     def view(self, symbol: str, depth: int) -> Any: ...
     def is_listed(self, symbol: str) -> bool: ...
+    def out_of_live(self, slo_s: float = ...) -> tuple[str, ...]: ...
     def acquire(self, consumer: str, symbol: str) -> None: ...
     def release(self, consumer: str, symbol: str) -> None: ...
     async def start(self) -> None: ...
@@ -282,30 +288,29 @@ class IngestionService:
             self._generator = None
         self._started = False
 
-    def degraded_reasons(self) -> list[str]:
+    def degraded_reasons(self) -> list[HealthReason]:
         """#1919: reasons the feed is impaired, from published plain signals only
         (C-2.20: no interpreter is queried)."""
-        now, reasons = self._clock(), []
+        now = self._clock()
+        reasons: list[HealthReason] = []
         ws = self.ws
         if (
             ws is not None
             and ws.state() != PHASE_OPEN
             and now - ws.phase_since() > self._ws_grace_s
         ):
-            reasons.append(REASON_WS)
-        books = self.books
-        out_of_live = getattr(books, "out_of_live", None)
-        if callable(out_of_live):
+            reasons.append(HealthReason.WS_NOT_OPEN)
+        if self.books is not None:
             slo = {} if self._book_slo_s is None else {"slo_s": self._book_slo_s}
-            if out_of_live(**slo):
-                reasons.append(REASON_BOOK)
+            if self.books.out_of_live(**slo):
+                reasons.append(HealthReason.BOOK_OUT_OF_LIVE)
         if self.trades is not None and self.trades.open_gaps():
-            reasons.append(REASON_TRADE_GAP)
+            reasons.append(HealthReason.TRADE_GAP_UNRECOVERED)
         if self.instruments is not None and self.instruments.cache.is_stale(now_us=self._now_us()):
-            reasons.append(REASON_CATALOGUE)
+            reasons.append(HealthReason.CATALOGUE_STALE)
         trip = self._last_pump_trip
         if trip is not None and now - trip <= PUMP_BREAKER_WINDOW_S:
-            reasons.append(REASON_PUMP)
+            reasons.append(HealthReason.PUMP_BREAKER_OPEN)
         return reasons
 
     def health(self) -> HealthReport:
@@ -315,4 +320,6 @@ class IngestionService:
             return HealthReport(module="ingestion", status=HealthStatus.STOPPED, detail="")
         reasons = self.degraded_reasons()
         status = HealthStatus.DEGRADED if reasons else HealthStatus.OK
-        return HealthReport(module="ingestion", status=status, detail=",".join(reasons))
+        return HealthReport(
+            module="ingestion", status=status, detail=",".join(r.value for r in reasons)
+        )

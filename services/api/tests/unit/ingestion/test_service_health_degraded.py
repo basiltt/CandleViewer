@@ -13,16 +13,12 @@ from typing import Any, cast
 import pytest
 
 from candleviewer.ingestion.connection import PHASE_CONNECTING, PHASE_OPEN
-from candleviewer.ingestion.instruments import InstrumentCatalogueCache
+from candleviewer.ingestion.instruments import CatalogueSnapshot, InstrumentCatalogueCache
 from candleviewer.ingestion.service import (
     PUMP_BREAKER_TRIPS,
     PUMP_BREAKER_WINDOW_S,
-    REASON_BOOK,
-    REASON_CATALOGUE,
-    REASON_PUMP,
-    REASON_TRADE_GAP,
-    REASON_WS,
     WS_GRACE_S,
+    HealthReason,
     IngestionService,
 )
 from candleviewer.observability.health import HealthStatus
@@ -101,7 +97,7 @@ def test_ws_not_open_degrades_only_past_grace_and_recovers() -> None:
     clock.t += WS_GRACE_S  # boundary: exactly the grace is still OK
     assert s.health().status is HealthStatus.OK
     clock.t += 0.001
-    assert _reason(s) == (HealthStatus.DEGRADED, REASON_WS)
+    assert _reason(s) == (HealthStatus.DEGRADED, HealthReason.WS_NOT_OPEN)
     ws.set(PHASE_OPEN)
     assert s.health().status is HealthStatus.OK
 
@@ -112,7 +108,7 @@ def test_book_out_of_live_degrades_and_recovers() -> None:
     s.books = cast(Any, books)
     assert s.health().status is HealthStatus.OK
     books.bad = ("BTCUSDT",)
-    assert _reason(s) == (HealthStatus.DEGRADED, REASON_BOOK)
+    assert _reason(s) == (HealthStatus.DEGRADED, HealthReason.BOOK_OUT_OF_LIVE)
     books.bad = ()
     assert s.health().status is HealthStatus.OK
 
@@ -130,7 +126,7 @@ def test_unrecovered_trade_gap_degrades_and_recovers() -> None:
     s, trades = _svc(clock), _Trades()
     s.trades = cast(Any, trades)
     trades.gaps["BTCUSDT"] = (1, "frame_loss")
-    assert _reason(s) == (HealthStatus.DEGRADED, REASON_TRADE_GAP)
+    assert _reason(s) == (HealthStatus.DEGRADED, HealthReason.TRADE_GAP_UNRECOVERED)
     trades.gaps.clear()
     assert s.health().status is HealthStatus.OK
 
@@ -139,40 +135,52 @@ def test_stale_catalogue_degrades() -> None:
     clock = _Clock()
     s, inst = _svc(clock), _Instruments()
     s.instruments = cast(Any, inst)
-    assert _reason(s) == (HealthStatus.DEGRADED, REASON_CATALOGUE)  # never loaded
-    from candleviewer.ingestion.instruments import CatalogueSnapshot
-
+    assert _reason(s) == (HealthStatus.DEGRADED, HealthReason.CATALOGUE_STALE)  # never loaded
     fetched = int(clock() * 1_000_000)
     inst.cache.swap(CatalogueSnapshot(by_symbol={}, fetched_at_us=fetched))
     assert s.health().status is HealthStatus.OK
     clock.t += 101.0
-    assert _reason(s) == (HealthStatus.DEGRADED, REASON_CATALOGUE)
+    assert _reason(s) == (HealthStatus.DEGRADED, HealthReason.CATALOGUE_STALE)
+
+
+class _Boom:
+    """Parser that always faults; `mark_gap` fires only from the breaker's resync."""
+
+    def __init__(self) -> None:
+        self.resynced = asyncio.Event()
+
+    async def handle_frame(self, frame: str) -> None:
+        raise RuntimeError("parser fault")
+
+    def mark_gap(self, reason: str, symbol: str | None = None) -> None:
+        self.resynced.set()
+
+    def open_gaps(self) -> dict[str, tuple[int, str]]:
+        return {}
+
+
+async def _trip(s: IngestionService) -> None:
+    boom = _Boom()
+    s.trades = cast(Any, boom)
+    for _ in range(PUMP_BREAKER_TRIPS):
+        s.ws_frames.put_nowait("{}")
+    task = asyncio.create_task(s._pump_frames())
+    try:
+        await asyncio.wait_for(boom.resynced.wait(), timeout=5)
+    finally:
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
 
 
 async def test_pump_breaker_trip_degrades_for_window_then_recovers() -> None:
     clock = _Clock()
     s = _svc(clock)
-
-    async def boom(frame: str) -> bool:
-        return False
-
-    s._dispatch = boom  # type: ignore[method-assign]  # test seam, #1919
-    tripped = asyncio.Event()
-    real = s._resync_all
-
-    async def resync(reason: str) -> None:
-        await real(reason)
-        tripped.set()
-
-    s._resync_all = resync  # type: ignore[method-assign]  # test seam, #1919
-    for _ in range(PUMP_BREAKER_TRIPS):
-        s.ws_frames.put_nowait("x")
-    task = asyncio.create_task(s._pump_frames())
-    await asyncio.wait_for(tripped.wait(), timeout=5)
-    task.cancel()
-    await asyncio.gather(task, return_exceptions=True)
-    assert _reason(s) == (HealthStatus.DEGRADED, REASON_PUMP)
-    clock.t += PUMP_BREAKER_WINDOW_S + 0.001
+    await _trip(s)
+    assert s.pump_breaker_trips == 1
+    s.trades = None
+    clock.t += PUMP_BREAKER_WINDOW_S  # exact boundary: still open
+    assert _reason(s) == (HealthStatus.DEGRADED, HealthReason.PUMP_BREAKER_OPEN)
+    clock.t += 0.001
     assert s.health().status is HealthStatus.OK
 
 
@@ -183,16 +191,30 @@ def test_multiple_reasons_are_comma_joined_in_stable_order() -> None:
     ws.set(PHASE_CONNECTING)
     clock.t += WS_GRACE_S + 1
     trades.gaps["X"] = (1, "r")
-    assert s.health().detail == f"{REASON_WS},{REASON_TRADE_GAP}"
+    assert s.health().detail == f"{HealthReason.WS_NOT_OPEN},{HealthReason.TRADE_GAP_UNRECOVERED}"
 
 
-def test_health_never_queries_a_gateway_or_interpreter() -> None:
+def test_health_reads_only_plain_phase_signals_never_the_interpreter() -> None:
     clock = _Clock()
     s = _svc(clock)
+    calls: list[str] = []
 
-    class _Strict(_Ws):
+    class _Gateway:
+        @property
+        def _interp(self) -> Any:
+            pytest.fail("health() touched the interpreter")
+
+        def state(self) -> str:
+            calls.append("state")
+            return PHASE_OPEN
+
+        def phase_since(self) -> float:
+            calls.append("phase_since")
+            return clock()
+
         def __getattr__(self, name: str) -> Any:
             pytest.fail(f"health() touched {name}")
 
-    s.ws = cast(Any, _Strict(clock))
+    s.ws = cast(Any, _Gateway())
     assert s.health().status is HealthStatus.OK
+    assert set(calls) <= {"state", "phase_since"}

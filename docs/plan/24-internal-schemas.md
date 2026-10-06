@@ -425,6 +425,19 @@ Sources: live accruing rate from `tickers.{symbol}` (`fundingRate`, `nextFunding
 | `FeedHealthEvent`   | derived                            | 1 Hz                | metrics only                   | `sys.md.health`                |
 | `ClockSyncEvent`    | `GET /v5/market/time`              | 60 s                | metrics only                   | `sys.clock`                    |
 
+**Ingestion health reasons (#1919).** `IngestionService.health()` returns `degraded` (never `down`;
+`stopped` before start) with `detail` = comma-joined `HealthReason` tokens, derived from published plain
+signals only (C-2.20). Surfaced as `/readyz` check `ingestion` (`ok:false`, `detail`, still HTTP 200), the
+`ingestion` health component and `exchange.public_ws` (real WS phase).
+
+| Token | Condition | Threshold |
+|---|---|---|
+| `ws_not_open` | public WS phase != `open` | > 5 s (`WS_GRACE_S`) |
+| `book_out_of_live` | a desired book not LIVE | > 30 s (`RESYNC_BACKOFF_CAP_S`: the longest a healthy backoff cycle waits) |
+| `trade_gap_unrecovered` | any open trade gap | until backfill closes it |
+| `catalogue_stale` | instrument cache older than its TTL (or never loaded) | cache `ttl_seconds` |
+| `pump_breaker_open` | frame-pump breaker tripped | 30 s (`PUMP_BREAKER_WINDOW_S`) |
+
 **As shipped (E08-T06 reconciliation, 2026-10-05).** Bus topics are `{env}.md.{symbol}.{detail}`
 (`bus/models.py` `Topic.key`, e.g. `demo.md.BTCUSDT.trade`), not `md.{detail}.{symbol}` as tabled above;
 the table's family→stream mapping is otherwise unchanged. Implemented today: `trade`, `book`
