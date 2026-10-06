@@ -381,6 +381,12 @@ class BookStream:
         for tb in list(self._books.values()):
             await tb.active.invalidate(reason)
 
+    async def invalidate_symbol(self, symbol: str, reason: str) -> None:
+        """#1916: one symbol's dispatch lane dropped frames: resync only it."""
+        tb = self._books.get(symbol)
+        if tb is not None:
+            await tb.active.invalidate(reason)
+
     async def check_timeouts(self) -> int:
         """SNAPSHOT_TIMEOUT: re-request every snapshot pending too long."""
         n = 0

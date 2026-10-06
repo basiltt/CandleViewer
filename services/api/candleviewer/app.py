@@ -1324,6 +1324,9 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
             writer=_TickerWriter(),
         )
     )
+    # #1916/#1905: per-topic dispatch lanes behind the pump; the pump touches
+    # the watchdog on routing, so freshness reflects the venue.
+    ctx.ingestion.attach_router(adapter.frame_route, watchdog.touch)
     return manager
 
 

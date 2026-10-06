@@ -16,6 +16,7 @@ from candleviewer.exchange.bybit.funding import BybitFundingFetcher
 from candleviewer.exchange.bybit.orderbook import book_topic, parse_book_frame
 from candleviewer.exchange.bybit.public_ws import (
     PublicSocket,
+    frame_route,
     public_socket_factory,
     topic_kind,
 )
@@ -42,6 +43,8 @@ class ExchangeBybitService:
     venue = "bybit"
     #: E08-T04: venue topic -> neutral stream kind, for ingestion's watchdog.
     topic_kind = staticmethod(topic_kind)
+    #: #1916: raw frame -> (topic, kind, symbol) for per-topic dispatch lanes.
+    frame_route = staticmethod(frame_route)
     #: E08-S03: ticker topic naming + frame parser, injected into ingestion.
     ticker_topic = staticmethod(ticker_topic)
     parse_ticker_frame = staticmethod(parse_ticker_frame)
