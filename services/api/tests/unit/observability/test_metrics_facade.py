@@ -126,12 +126,6 @@ def test_cardinality_guard_existing_series_still_update_after_breach() -> None:
 
 
 def test_cardinality_guard_does_not_leak_memory() -> None:
-    m = Metrics("demo")
-    metric = m.counter("leak_total", "h", ("k",), max_series=10)
-    for i in range(10):
-        metric.labels(str(i))
-    for i in range(5_000):  # warm-up: absorbs one-off allocations (first-breach log, caches)
-        metric.labels(f"warm{i}").inc()
     # Only allocations made by the facade/prometheus code count: unrelated allocations from other
     # threads, pytest or the allocator must not decide this test (#1871).
     only_facade = [
@@ -139,9 +133,18 @@ def test_cardinality_guard_does_not_leak_memory() -> None:
         tracemalloc.Filter(True, "*prometheus_client*"),
     ]
     gc.collect()
-    tracemalloc.start()
+    tracemalloc.start()  # before the metric exists, so its retained children are in the baseline
     try:
+        m = Metrics("demo")
+        metric = m.counter("leak_total", "h", ("k",), max_series=10)
+        for i in range(10):
+            metric.labels(str(i))
+        for i in range(5_000):  # warm-up: absorbs one-off allocations (first-breach log, caches)
+            metric.labels(f"warm{i}").inc()
+        gc.collect()
         before = tracemalloc.take_snapshot().filter_traces(only_facade)
+        # Guard against a glob that silently stops matching (growth would then read as 0).
+        assert sum(st.size for st in before.statistics("filename")) > 0
         for i in range(20_000):
             metric.labels(f"new{i}").inc()
         gc.collect()
