@@ -27,15 +27,8 @@ ROOT = Path(__file__).resolve().parents[1]
 MODEL_RE = re.compile(r"^(e\d{2})-.+\.md$", re.IGNORECASE)
 HEADING_RE = re.compile(r"^#{2,3} .*ticket", re.IGNORECASE | re.MULTILINE)
 KEY_RE = re.compile(r"^E\d{2}-[A-Z]\d{2}$")
-# Known pre-existing gaps per epic (follow-ups). Shrink-only: never add keys.
-BASELINE_GAPS: dict[str, frozenset[str]] = {
-    "E25": frozenset(
-        {f"E25-D0{i}" for i in range(1, 9)}
-        | {"E25-K01", "E25-T05", "E25-T06", "E25-T07", "E25-Q04", "E25-Q05"}
-        | {"E25-S01", "E25-S02", "E25-S03", "E25-S04", "E25-S06"}
-        | {"E25-X01"}
-    ),
-}
+# Known pre-existing gaps per epic. Empty: the baseline is exhausted; never add keys.
+BASELINE_GAPS: dict[str, frozenset[str]] = {}
 
 
 def _section(text: str) -> str | None:
