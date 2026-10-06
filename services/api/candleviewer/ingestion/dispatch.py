@@ -104,7 +104,7 @@ class LaneSet:
         self,
         handle: Callable[[str], Awaitable[bool]],
         on_overflow: Callable[[FrameRoute], Awaitable[None]],
-        on_breaker: Callable[[], Awaitable[None]],
+        on_breaker: Callable[[FrameRoute | None], Awaitable[None]],
         breaker_trips: Callable[[], int],
     ) -> None:
         self._handle = handle
@@ -165,7 +165,7 @@ class LaneSet:
             consecutive += 1
             if consecutive >= self._breaker_trips():
                 consecutive = 0
-                await self._on_breaker()
+                await self._on_breaker(lane.route)  # scoped to this lane's symbol
 
 
 __all__ = ["FALLBACK_KEY", "LANE_MAXSIZE", "MAX_LANES", "FrameRoute", "Lane", "LaneSet"]

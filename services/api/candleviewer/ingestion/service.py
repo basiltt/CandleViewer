@@ -229,10 +229,13 @@ class IngestionService:
 
     async def _resync_route(self, route: FrameRoute) -> None:
         """A lane dropped frames: resync exactly that symbol's stream."""
+        await self._resync_symbol(route, "dispatch_overflow")
+
+    async def _resync_symbol(self, route: FrameRoute, reason: str) -> None:
         if route.stream == "trade" and self.trades is not None:
-            self.trades.mark_gap("dispatch_overflow", route.symbol)
+            self.trades.mark_gap(reason, route.symbol)
         elif route.stream == "book" and self.books is not None:
-            await self.books.invalidate_symbol(route.symbol, "dispatch_overflow")
+            await self.books.invalidate_symbol(route.symbol, reason)
         # ticker: snapshot+delta merge, the next full snapshot heals it
 
     async def _dispatch(self, frame: str) -> bool:
@@ -249,10 +252,21 @@ class IngestionService:
                 ok = False
         return ok
 
-    async def _trip_breaker(self) -> None:
+    async def _trip_breaker(self, route: FrameRoute | None) -> None:
+        """A lane failed `PUMP_BREAKER_TRIPS` frames in a row. Resync only that
+        lane's symbol (#1916 blast radius); the unrouted fallback lane cannot
+        name one, so it resyncs every symbol as before."""
         self.pump_breaker_trips += 1
         self._last_pump_trip = self._clock()
-        await self._resync_all("pump_breaker")
+        if route is None:
+            await self._resync_all("pump_breaker")
+            return
+        try:
+            await self._resync_symbol(route, "pump_breaker")
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # the breaker itself must not kill the lane
+            self._pump_rejects.record(exc)
 
     async def _resync_all(self, reason: str) -> None:
         if self.trades is not None:

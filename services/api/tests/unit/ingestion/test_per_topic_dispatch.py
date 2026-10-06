@@ -306,3 +306,36 @@ async def test_cancelled_backfill_reopens_the_gap() -> None:
     await settle()
     await stream.stop()  # cancels the in-flight backfill
     assert stream.open_gaps()["BTCUSDT"][1] == "backfill_failed"
+
+
+async def test_lane_breaker_resyncs_only_that_lanes_symbol(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from candleviewer.ingestion import service as service_mod
+
+    monkeypatch.setattr(service_mod, "PUMP_BREAKER_TRIPS", 3)
+    svc, fake, _bus, _ = rig()
+    inner = fake.handle_frame
+
+    async def poisoned(frame: str) -> None:
+        if "orderbook.200.BTCUSDT" in frame:
+            raise KeyError("poison")
+        await inner(frame)
+
+    fake.handle_frame = poisoned  # type: ignore[method-assign]
+    pump = asyncio.create_task(svc._pump_frames())
+    try:
+        for i in range(6):
+            svc.offer_frame(book("BTCUSDT", i))
+            svc.offer_frame(book("ETHUSDT", i))
+            svc.offer_frame(trade("ETHUSDT", i))
+            await settle(4)
+        await settle()
+        assert svc.pump_breaker_trips == 2
+        assert fake.invalidated == [("pump_breaker", "BTCUSDT")] * 2  # never every symbol
+        assert fake.marked == []  # ETH tape untouched
+        assert sum("ETHUSDT" in f for f in fake.seen) == 12
+        assert not pump.done()
+    finally:
+        pump.cancel()
+        await asyncio.gather(pump, return_exceptions=True)
