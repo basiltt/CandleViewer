@@ -1,0 +1,251 @@
+{
+  "$defs": {
+    "Bar": {
+      "additionalProperties": false,
+      "description": "One bar (§3.1).\n\n`min_delta`/`max_delta` are the **running intra-bar path extremes** of the cumulative\ndelta (minimum/maximum the delta reached at any trade inside the bar), NOT the endpoint\nvalues and NOT min/max of per-trade deltas. BI-3: `min_delta <= delta <= max_delta`.\n`synthetic=True` marks a `BarSeries.densify()` filler bar, which is never persisted.",
+      "properties": {
+        "buy_volume": {
+          "$ref": "#/$defs/Qty"
+        },
+        "close": {
+          "$ref": "#/$defs/Px"
+        },
+        "close_time": {
+          "$ref": "#/$defs/TsUs"
+        },
+        "closed": {
+          "title": "Closed",
+          "type": "boolean"
+        },
+        "delta": {
+          "$ref": "#/$defs/Qty"
+        },
+        "gap_before": {
+          "title": "Gap Before",
+          "type": "boolean"
+        },
+        "high": {
+          "$ref": "#/$defs/Px"
+        },
+        "index": {
+          "minimum": 0,
+          "title": "Index",
+          "type": "integer"
+        },
+        "low": {
+          "$ref": "#/$defs/Px"
+        },
+        "max_delta": {
+          "$ref": "#/$defs/Qty"
+        },
+        "min_delta": {
+          "$ref": "#/$defs/Qty"
+        },
+        "open": {
+          "$ref": "#/$defs/Px"
+        },
+        "open_time": {
+          "$ref": "#/$defs/TsUs"
+        },
+        "partial": {
+          "title": "Partial",
+          "type": "boolean"
+        },
+        "sell_volume": {
+          "$ref": "#/$defs/Qty"
+        },
+        "spec_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Spec Hash",
+          "type": "string"
+        },
+        "symbol": {
+          "pattern": "^[A-Z0-9]{4,20}$",
+          "title": "Symbol",
+          "type": "string"
+        },
+        "synthetic": {
+          "default": false,
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "trade_count": {
+          "minimum": 0,
+          "title": "Trade Count",
+          "type": "integer"
+        },
+        "turnover": {
+          "$ref": "#/$defs/Notional"
+        },
+        "volume": {
+          "$ref": "#/$defs/Qty"
+        },
+        "vwap": {
+          "$ref": "#/$defs/Px"
+        }
+      },
+      "required": [
+        "spec_hash",
+        "symbol",
+        "index",
+        "open_time",
+        "close_time",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "buy_volume",
+        "sell_volume",
+        "delta",
+        "min_delta",
+        "max_delta",
+        "trade_count",
+        "turnover",
+        "vwap",
+        "closed",
+        "partial",
+        "gap_before"
+      ],
+      "title": "Bar",
+      "type": "object"
+    },
+    "BarSpec": {
+      "additionalProperties": false,
+      "description": "What series a builder produces. Exactly one per-kind parameter is set, matching `kind`.\n\nIdentity is `spec_hash` (sha256 over canonical JSON, defaults included) — see\n`candleviewer.bars.spec`.",
+      "properties": {
+        "align_to_epoch": {
+          "default": true,
+          "title": "Align To Epoch",
+          "type": "boolean"
+        },
+        "delta_threshold": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Qty"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "interval_ms": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Interval Ms"
+        },
+        "kind": {
+          "enum": ["time", "tick", "volume", "range", "delta", "renko"],
+          "title": "Kind",
+          "type": "string"
+        },
+        "price_source": {
+          "default": "last",
+          "enum": ["last", "mark"],
+          "title": "Price Source",
+          "type": "string"
+        },
+        "range_ticks": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Range Ticks"
+        },
+        "renko_wick": {
+          "default": false,
+          "title": "Renko Wick",
+          "type": "boolean"
+        },
+        "reversal_bricks": {
+          "default": 2,
+          "minimum": 1,
+          "title": "Reversal Bricks",
+          "type": "integer"
+        },
+        "session_anchor_utc_min": {
+          "default": 0,
+          "exclusiveMaximum": 1440,
+          "minimum": 0,
+          "title": "Session Anchor Utc Min",
+          "type": "integer"
+        },
+        "tick_count": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tick Count"
+        },
+        "volume_threshold": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Qty"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": ["kind"],
+      "title": "BarSpec",
+      "type": "object"
+    },
+    "BarUpdate": {
+      "additionalProperties": false,
+      "description": "A builder emission (§3.2).",
+      "properties": {
+        "bar": {
+          "$ref": "#/$defs/Bar"
+        },
+        "kind": {
+          "enum": ["open", "update", "close"],
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": ["kind", "bar"],
+      "title": "BarUpdate",
+      "type": "object"
+    },
+    "Notional": {
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "type": "string"
+    },
+    "Px": {
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "type": "string"
+    },
+    "Qty": {
+      "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+      "type": "string"
+    },
+    "TsUs": {
+      "type": "integer"
+    }
+  },
+  "title": "CandleViewer bar domain model (24-internal-schemas.md §3.1-§3.2)"
+}

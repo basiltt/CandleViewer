@@ -160,7 +160,9 @@ source = ["candleviewer"]
 omit = [
   "candleviewer/accounts/*",
   "candleviewer/admin/*",
-  "candleviewer/bars/*",
+  # bars models/spec/series/schema are implemented by E12-T01 and counted in the floor.
+  "candleviewer/bars/service.py",
+  "candleviewer/bars/__init__.py",
   "candleviewer/book/service.py",
   "candleviewer/book/__init__.py",
   "candleviewer/exchange/base/service.py",

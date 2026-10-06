@@ -501,7 +501,13 @@ class Bar(BaseModel):
     closed: bool
     partial: bool                 # True when the bar began before recording started
     gap_before: bool              # True when a data gap precedes this bar
+    synthetic: bool = False       # densify() filler (§3.3a) — never persisted
 ```
+
+Shipped in `services/api/candleviewer/bars/` (E12-T01): `spec_hash` = sha256 over canonical JSON
+(every field, defaults explicit, sorted keys, no whitespace, Decimals as plain normalised
+strings); golden vectors in `packages/fixtures/golden/bars/`; TS mirror generated into
+`packages/protocol/src/generated/bars/`.
 
 `min_delta`/`max_delta` require tracking the running intrabar delta path, not just the endpoint (research 08 §2) — they are the input to exhaustion and absorption reads.
 
