@@ -144,13 +144,23 @@
           "title": "Interval Ms"
         },
         "kind": {
-          "enum": ["time", "tick", "volume", "range", "delta", "renko"],
+          "enum": [
+            "time",
+            "tick",
+            "volume",
+            "range",
+            "delta",
+            "renko"
+          ],
           "title": "Kind",
           "type": "string"
         },
         "price_source": {
           "default": "last",
-          "enum": ["last", "mark"],
+          "enum": [
+            "last",
+            "mark"
+          ],
           "title": "Price Source",
           "type": "string"
         },
@@ -210,7 +220,9 @@
           "default": null
         }
       },
-      "required": ["kind"],
+      "required": [
+        "kind"
+      ],
       "title": "BarSpec",
       "type": "object"
     },
@@ -222,12 +234,19 @@
           "$ref": "#/$defs/Bar"
         },
         "kind": {
-          "enum": ["open", "update", "close"],
+          "enum": [
+            "open",
+            "update",
+            "close"
+          ],
           "title": "Kind",
           "type": "string"
         }
       },
-      "required": ["kind", "bar"],
+      "required": [
+        "kind",
+        "bar"
+      ],
       "title": "BarUpdate",
       "type": "object"
     },
