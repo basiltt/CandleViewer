@@ -21,15 +21,19 @@ standalone poll confirms plateau=1003 on both kinds.
 Exit 1 = any check fails.
 """
 from __future__ import annotations
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 
 import re
 import subprocess
 import sys
 from pathlib import Path
 
-REPO = Path(r"C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine")
+REPO = Path(str(_XS))
 TEST_FILE = REPO / "tests" / "test_round6_findings.py"
-PYEXE = str(REPO / ".venv-main" / "Scripts" / "python")
+PYEXE = _xs_main_py()
 
 
 def check_source() -> dict:

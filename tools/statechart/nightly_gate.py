@@ -26,6 +26,7 @@ from typing import Any
 
 BENCH6_THRESHOLD_MS = 100.0
 BENCH6_LEVEL = "500"
+SKIP_ENV = "SKIP-ENV"
 
 
 def _key(check: dict[str, Any]) -> str:
@@ -48,13 +49,28 @@ def regressions(result: dict[str, Any], baseline: dict[str, Any]) -> list[str]:
     return sorted(k for k in _blocking_failures(result) if k not in known)
 
 
+def skipped_env(result: dict[str, Any]) -> list[str]:
+    """Checks run_gate.py reported as ``SKIP-ENV`` (skipped (environment), #1928)."""
+    return sorted(
+        _key(c) for c in result.get("checks", []) if c.get("status") == SKIP_ENV
+    )
+
+
 def fixed(result: dict[str, Any], baseline: dict[str, Any]) -> list[str]:
-    """Baseline blocking failures that no longer fail (improvements)."""
+    """Baseline blocking failures that no longer fail (improvements).
+
+    A check skipped for environment reasons was not run, so it is not "fixed".
+    """
     now = _blocking_failures(result)
-    return sorted(k for k in _blocking_failures(baseline) if k not in now)
+    skipped = set(skipped_env(result))
+    return sorted(
+        k for k in _blocking_failures(baseline) if k not in now and k not in skipped
+    )
 
 
-def bench6(bench: dict[str, Any] | None, threshold: float) -> tuple[bool | None, float | None]:
+def bench6(
+    bench: dict[str, Any] | None, threshold: float
+) -> tuple[bool | None, float | None]:
     """Return ``(ok, p99)``.
 
     ``ok`` is None when no bench was supplied, False when the p99 is missing
@@ -79,6 +95,7 @@ def render(
     bench_ok: bool | None,
     p99: float | None,
     threshold: float,
+    skipped: list[str] | None = None,
 ) -> str:
     gating = mode == "pinned"
     red = bool(new) or bench_ok is False
@@ -86,7 +103,8 @@ def render(
     lines = [
         f"# xstate nightly gate - {date} ({mode})",
         "",
-        f"- Verdict: **{verdict}**" + ("" if gating else " (informational, never gates)"),
+        f"- Verdict: **{verdict}**"
+        + ("" if gating else " (informational, never gates)"),
         f"- Library: {result.get('library_version')} @ {result.get('library_commit')}",
         f"- Build: {result.get('build')}",
         f"- run_gate exit code: {result.get('exit_code')}",
@@ -96,6 +114,8 @@ def render(
     lines += [f"- {k}" for k in new] or ["- none"]
     lines += ["", "## Baseline failures now passing"]
     lines += [f"- {k}" for k in gone] or ["- none"]
+    lines += ["", "## Skipped (environment) - not run on this host, not a regression"]
+    lines += [f"- {k}" for k in skipped or []] or ["- none"]
     lines += ["", "## BENCH-6 (timer lateness, 500 busy machines, p99)"]
     if bench_ok is None:
         lines.append("- not run")
@@ -118,12 +138,18 @@ def _load(path: Path) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--mode", choices=("pinned", "upstream"), required=True)
-    ap.add_argument("--result", type=Path, required=True, help="run_gate.py --json output")
-    ap.add_argument("--baseline", type=Path, required=True, help="committed baseline result JSON")
+    ap.add_argument(
+        "--result", type=Path, required=True, help="run_gate.py --json output"
+    )
+    ap.add_argument(
+        "--baseline", type=Path, required=True, help="committed baseline result JSON"
+    )
     ap.add_argument("--bench", type=Path, help="bench_c_timers_v2.py JSON (BENCH-6)")
     ap.add_argument("--threshold", type=float, default=BENCH6_THRESHOLD_MS)
     ap.add_argument("--date", required=True, help="report date, YYYY-MM-DD")
-    ap.add_argument("--out", type=Path, required=True, help="artifacts/xstate-gate/<date>.md")
+    ap.add_argument(
+        "--out", type=Path, required=True, help="artifacts/xstate-gate/<date>.md"
+    )
     args = ap.parse_args(argv)
     try:
         result = _load(args.result)
@@ -144,6 +170,7 @@ def main(argv: list[str] | None = None) -> int:
         bench_ok=ok,
         p99=p99,
         threshold=args.threshold,
+        skipped=skipped_env(result),
     )
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(report, encoding="utf-8")

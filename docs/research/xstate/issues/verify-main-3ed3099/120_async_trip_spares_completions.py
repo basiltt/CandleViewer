@@ -14,6 +14,10 @@ Acceptance criteria (from the issue body):
         engine parity (or lack thereof) for this guarantee.
 """
 from __future__ import annotations
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 
 import asyncio
 import subprocess
@@ -21,7 +25,7 @@ import sys
 
 sys.path.insert(
     0,
-    "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src",
+    str(_XS / 'src'),
 )
 
 from xstate_statemachine import Interpreter, MachineLogic, create_machine  # noqa: E402
@@ -80,8 +84,7 @@ src = inspect.getsource(Interpreter._run_loop) if hasattr(Interpreter, "_run_loo
 if not src:
     # fall back: grep the module source directly
     with open(
-        "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/"
-        "src/xstate_statemachine/interpreter.py",
+        str(_XS / 'src/xstate_statemachine/interpreter.py'),
         encoding="utf-8",
     ) as f:
         src = f.read()
@@ -91,10 +94,10 @@ check(
 )
 
 # --- Criterion 2: dedicated test exists and passes ---
-PY = "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python"
+PY = _xs_main_py()
 r = subprocess.run(
     [PY, "-m", "pytest", "tests/test_round4_findings.py", "-k", "AsyncTripSparesCompletion", "-v"],
-    cwd="C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine",
+    cwd=str(_XS),
     capture_output=True,
     text=True,
     timeout=60,
@@ -107,7 +110,7 @@ print(r.stdout[-400:])
 
 # --- Criterion 3: CHANGELOG documents engine parity for this guarantee ---
 with open(
-    "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/CHANGELOG.md",
+    str(_XS / 'CHANGELOG.md'),
     encoding="utf-8",
 ) as f:
     changelog = f.read()
@@ -118,9 +121,7 @@ check(
 
 # --- Original repro from post-5e07ba8 ---
 repro_path = (
-    "C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/"
-    "research/xstate/issues/post-5e07ba8/new/repro/"
-    "R4-25_async_completion_sparing_missing.py"
+    str(_REPO / 'docs/research/xstate/issues/post-5e07ba8/new/repro/R4-25_async_completion_sparing_missing.py')
 )
 r2 = subprocess.run([PY, repro_path], capture_output=True, text=True, timeout=30)
 print("--- original repro ---")

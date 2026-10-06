@@ -1,12 +1,15 @@
 """Verify #233, #234, #235 on xstate-statemachine v0.9.0/main.
 STANDALONE: stdlib + xstate_statemachine only. Run from cwd C:/Users/basil.
 """
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 import sys, json, warnings, importlib.metadata
 
 sys.path.insert(
     0,
-    "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/"
-    "xstate-statemachine/src",
+    str(_XS / 'src'),
 )
 
 import xstate_statemachine as x
@@ -39,8 +42,7 @@ except Exception as e:
     dist_ver = f"ERR:{e}"
 results["234_dist_version"] = dist_ver
 changelog_path = (
-    "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/"
-    "xstate-statemachine/CHANGELOG.md"
+    str(_XS / 'CHANGELOG.md')
 )
 with open(changelog_path, encoding="utf-8") as f:
     head = f.read(400)

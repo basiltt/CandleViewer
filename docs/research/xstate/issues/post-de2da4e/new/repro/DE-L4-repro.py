@@ -1,8 +1,12 @@
 """Re-run our carried restore-observability finding (on_invalid_event unreachable on restore path)
 against de2da4e. STANDALONE: stdlib + xstate_statemachine only.
 """
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[4] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 import sys, json
-sys.path.insert(0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0, str(_XS / 'src'))
 from xstate_statemachine import create_machine, MachineLogic, SyncInterpreter, PluginBase
 
 cfg = {

@@ -17,6 +17,10 @@ Exits 0 only if ALL criteria pass.
 """
 
 from __future__ import annotations
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 
 import asyncio
 import inspect
@@ -183,7 +187,7 @@ async def crit_send_threadsafe_works() -> None:
 
 def need_docs_mention_behavioural_break() -> None:
     guide = Path(
-        r"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/docs/_guide/interpreters.md"
+        str(_XS / 'docs/_guide/interpreters.md')
     )
     if not guide.exists():
         record("7-guide-documents-behavioural-break", False, f"guide file missing: {guide}")
@@ -205,7 +209,7 @@ def need_docs_mention_behavioural_break() -> None:
     )
 
     changelog = Path(
-        r"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/CHANGELOG.md"
+        str(_XS / 'CHANGELOG.md')
     ).read_text(encoding="utf-8")
     changelog_ok = (
         "This is a\n  0.8.0 behavioural break for previously-correct code" in changelog
@@ -222,8 +226,7 @@ def need_docs_mention_behavioural_break() -> None:
 
 def crit_original_repro_lc43() -> None:
     repro = (
-        r"C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/research/xstate"
-        r"/issues/repro/LC-43_cross-thread-send-silently-lost.py"
+        str(_REPO / 'docs/research/xstate/issues/repro/LC-43_cross-thread-send-silently-lost.py')
     )
     proc = subprocess.run([sys.executable, repro], capture_output=True, text=True, timeout=60)
     print("--- original LC-43 repro output ---")

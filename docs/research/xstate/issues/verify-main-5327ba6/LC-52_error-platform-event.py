@@ -19,6 +19,10 @@ Exits 0 only if ALL criteria pass.
 """
 
 from __future__ import annotations
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 
 import asyncio
 import subprocess
@@ -35,8 +39,7 @@ def record(name: str, ok: bool, detail: str) -> None:
 
 def criterion_changelog_mentions_errorevent() -> None:
     changelog = Path(
-        "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/"
-        "xstate-statemachine/CHANGELOG.md"
+        str(_XS / 'CHANGELOG.md')
     )
     text = changelog.read_text(encoding="utf-8")
     ok = "ErrorEvent" in text
@@ -106,8 +109,7 @@ async def criterion_runtime_behaviour() -> tuple[str, object]:
 
 def criterion_tests_present() -> None:
     tests_dir = Path(
-        "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/"
-        "xstate-statemachine/tests"
+        str(_XS / 'tests')
     )
     combined = ""
     for f in tests_dir.glob("*.py"):
@@ -151,7 +153,7 @@ async def main():
     raise SystemExit(1 if type(ev).__name__ == "DoneEvent" else 0)
 asyncio.run(main())
 '''
-    py = "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python"
+    py = _xs_main_py()
     import os
 
     proc = subprocess.run(

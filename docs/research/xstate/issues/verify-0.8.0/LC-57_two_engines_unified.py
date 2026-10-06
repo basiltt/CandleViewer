@@ -24,6 +24,10 @@ that are still checkable from a clone are present. Exit 1 otherwise.
 """
 
 from __future__ import annotations
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py, upstream_dev_python as _xs_dev_py  # noqa: E402,F401
 
 import inspect
 import os
@@ -32,8 +36,8 @@ import re
 import subprocess
 import sys
 
-REPO = pathlib.Path(os.environ.get("XSM_REPO", r"C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine"))
-PY = str(REPO / ".venv-gate" / "Scripts" / "python.exe")
+REPO = pathlib.Path(os.environ.get("XSM_REPO", str(_XS)))
+PY = _xs_dev_py(".venv-gate", REPO)
 
 sys.path.insert(0, str(REPO / "src"))
 

@@ -7,13 +7,17 @@ Exercises both def and async def call sites (re_mint itself is sync, so the
 matrix collapses to: called from sync code, and called from inside an async
 service/action) x {Interpreter, SyncInterpreter}.
 """
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 import sys
 from pathlib import Path
 
 from xstate_statemachine.events import is_system_event, re_mint
 
 REPO_DOCS = Path(
-    "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine"
+    str(_XS)
 )
 
 

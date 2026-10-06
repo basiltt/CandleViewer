@@ -27,6 +27,10 @@ PARTIAL classification and reasoning.
 """
 
 from __future__ import annotations
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 
 import asyncio
 import subprocess
@@ -229,8 +233,7 @@ def criterion_docs_mention_reserved_prefixes() -> None:
     """The reserved prefixes should be documented in the events guide,
     onUnhandled section and strict-mode section."""
     docs_root = Path(
-        "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/"
-        "xstate-statemachine/docs"
+        str(_XS / 'docs')
     )
     hits = []
     if docs_root.exists():
@@ -250,8 +253,7 @@ def criterion_docs_mention_reserved_prefixes() -> None:
 
 def tests_present() -> None:
     tests_dir = Path(
-        "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/"
-        "xstate-statemachine/tests"
+        str(_XS / 'tests')
     )
     combined = ""
     found_in = []
@@ -285,10 +287,9 @@ def tests_present() -> None:
 
 def original_repro_exit_code() -> None:
     repro = Path(
-        "C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/"
-        "research/xstate/issues/new-0.8.0/repro/N-08_error-done-namespace-invisible.py"
+        str(_REPO / 'docs/research/xstate/issues/new-0.8.0/repro/N-08_error-done-namespace-invisible.py')
     )
-    py = "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python"
+    py = _xs_main_py()
     import os
 
     proc = subprocess.run(

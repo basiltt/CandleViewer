@@ -5,11 +5,15 @@ v1-style record (no keys) restores as None, not 0.0.
 Exit 0 iff all acceptance criteria + CHANGELOG claim hold.
 """
 from __future__ import annotations
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 
 import sys
 
 sys.path.insert(
-    0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src"
+    0, str(_XS / 'src')
 )
 
 from xstate_statemachine.events import AfterEvent, persist_event, restore_event  # noqa: E402

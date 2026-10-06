@@ -19,20 +19,22 @@ Acceptance criteria exercised:
    access as the recommended pattern.
 """
 from __future__ import annotations
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 
 import os
 import re
 import subprocess
 import sys
 
-REPO = r"C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine"
+REPO = str(_XS)
 CHANGELOG = os.path.join(REPO, "CHANGELOG.md")
 GUIDE_CHANGELOG = os.path.join(REPO, "docs", "_guide", "changelog.md")
 TESTING_DOC = os.path.join(REPO, "docs", "_guide", "testing-and-pure-api.md")
 REPRO = (
-    r"C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs"
-    r"\research\xstate\issues\post-5e07ba8\new\repro"
-    r"\R4-24_receipt_arity_break.py"
+    str(_REPO / 'docs/research/xstate/issues/post-5e07ba8/new/repro/R4-24_receipt_arity_break.py')
 )
 
 

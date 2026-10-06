@@ -22,6 +22,10 @@ Exit 0 if all criteria hold (i.e. #174 is confirmed DOCUMENTED-ONLY, not
 fixed) -- 1 if either the docs are missing OR the behaviour has actually
 been bounded (which would mean the classification should change).
 """
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 import asyncio
 import sys
 import time
@@ -30,8 +34,7 @@ from pathlib import Path
 from xstate_statemachine import Interpreter, MachineLogic, create_machine
 
 DOCS_PATH = Path(
-    "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine"
-    "/docs/_guide/production-characteristics.md"
+    str(_XS / 'docs/_guide/production-characteristics.md')
 )
 
 BUDGET_MS = 50

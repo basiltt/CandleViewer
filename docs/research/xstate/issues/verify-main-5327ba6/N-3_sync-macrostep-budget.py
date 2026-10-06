@@ -20,6 +20,10 @@ Also verifies the "need" specifics:
 
 Exits 0 only if ALL criteria pass.
 """
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 import asyncio
 import os
 import subprocess
@@ -33,10 +37,9 @@ from xstate_statemachine import (
 )
 
 REPRO = (
-    r"C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research"
-    r"\xstate\issues\new-0.8.0\repro\N-03_sync-macrostep-budget-clears-queue.py"
+    str(_REPO / 'docs/research/xstate/issues/new-0.8.0/repro/N-03_sync-macrostep-budget-clears-queue.py')
 )
-LIB_ROOT = r"C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine"
+LIB_ROOT = str(_XS)
 
 
 def check(label, cond, observed, expected):

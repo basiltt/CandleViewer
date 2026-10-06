@@ -14,6 +14,10 @@ Acceptance criteria exercised:
 6. repro/R4-23_afterevent_lateness_lost.py exits 0.
 """
 from __future__ import annotations
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 
 import json
 import os
@@ -23,9 +27,7 @@ import sys
 from xstate_statemachine.events import AfterEvent, persist_event, restore_event
 
 REPRO = (
-    r"C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs"
-    r"\research\xstate\issues\post-5e07ba8\new\repro"
-    r"\R4-23_afterevent_lateness_lost.py"
+    str(_REPO / 'docs/research/xstate/issues/post-5e07ba8/new/repro/R4-23_afterevent_lateness_lost.py')
 )
 
 

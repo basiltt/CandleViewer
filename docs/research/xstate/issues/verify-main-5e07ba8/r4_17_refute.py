@@ -1,5 +1,9 @@
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 import asyncio, json, sys, threading, logging
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,str(_XS / 'src'))
 logging.disable(logging.CRITICAL)
 from xstate_statemachine import Interpreter, MachineLogic, create_machine
 from xstate_statemachine.models import OverflowPolicy

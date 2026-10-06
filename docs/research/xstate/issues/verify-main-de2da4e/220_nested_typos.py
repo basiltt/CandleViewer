@@ -10,6 +10,10 @@ Exit 0 = all cells pass, AND every catalogue machine.json builds clean
 under strict_config=True. Exit 1 = any typo missed, any metadata key
 rejected, or any catalogue machine falsely flagged.
 """
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 import glob
 import json
 import os
@@ -33,7 +37,7 @@ def _stub_logic(cfg):
         services={n: (lambda i, c, e: None) for n in services},
     )
 
-ROOT = r"C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/research/xstate"
+ROOT = str(_REPO / 'docs/research/xstate')
 CONTRACT_DIRS = [
     f"{ROOT}/battle-c78ce99/contracts",
     f"{ROOT}/battle-19cb1f1/contracts",
