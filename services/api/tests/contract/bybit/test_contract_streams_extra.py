@@ -175,6 +175,7 @@ async def test_d04_trade_gap_is_counted_backfilled_and_equals_the_recorded_oracl
     rows = counter_value(trade_backfill_rows_total, result="ok")
     await h.stream.process_health(FeedHealthEvent("publicTrade.BTCUSDT", "resubscribing", 0.0))
     await h.stream.handle_frame(raws[2])
+    await h.stream.wait_backfills()  # #1905: the backfill runs off the dispatch path
     (gap,) = h.drain_gaps()
     assert gap.recovered is True and gap.label().startswith("Backfilled")
     assert counter_value(trade_gaps_total, symbol="BTCUSDT", recovered="true") == gaps + 1

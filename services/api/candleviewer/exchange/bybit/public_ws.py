@@ -9,6 +9,7 @@ public feed of its own, so `demo` uses the mainnet public stream).
 
 from __future__ import annotations
 
+import re
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Protocol
 
@@ -29,6 +30,23 @@ def topic_kind(topic: str) -> str:
     """Map a Bybit topic (`orderbook.50.BTCUSDT`) to a neutral stream kind."""
     head = topic.split(".", 1)[0]
     return _TOPIC_KIND.get(head, head)
+
+
+_TOPIC_RE = re.compile(r'"topic"\s*:\s*"([A-Za-z0-9._]{1,64})"')
+
+
+def frame_route(frame: str) -> tuple[str, str, str] | None:
+    """#1916: cheap `(topic, kind, symbol)` routing key for one raw frame
+    without a full JSON parse (the stream parsers still validate it fully).
+    None for control frames (acks, pongs) or anything unrecognised."""
+    m = _TOPIC_RE.search(frame, 0, 256)
+    if m is None:
+        return None
+    topic = m.group(1)
+    kind = topic_kind(topic)
+    if kind not in ("book", "trade", "ticker"):
+        return None
+    return topic, kind, topic.rsplit(".", 1)[-1]
 
 
 class PublicSocket(Protocol):

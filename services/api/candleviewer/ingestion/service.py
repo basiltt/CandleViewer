@@ -20,6 +20,7 @@ from candleviewer.exchange.base import Ticker, Trade
 from candleviewer.exchange.base.frame_guard import FrameRejectedError, json_depth_exceeds
 from candleviewer.ingestion.clock import ClockGuard
 from candleviewer.ingestion.connection import PHASE_OPEN, ConnectionManager
+from candleviewer.ingestion.dispatch import FrameRoute, LaneSet
 from candleviewer.ingestion.instruments import utc_now_us
 from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
 from candleviewer.ingestion.rejection import RejectionLog
@@ -67,6 +68,7 @@ class BookSink(Protocol):
 
     async def handle_frame(self, frame: str) -> None: ...
     async def invalidate(self, reason: str) -> None: ...
+    async def invalidate_symbol(self, symbol: str, reason: str) -> None: ...
     def view(self, symbol: str, depth: int) -> Any: ...
     def is_listed(self, symbol: str) -> bool: ...
     def out_of_live(self, slo_s: float = ...) -> tuple[str, ...]: ...
@@ -117,6 +119,9 @@ class IngestionService:
         self._pump: asyncio.Task[None] | None = None
         self._pump_rejects = RejectionLog("pump")
         self.pump_breaker_trips = 0
+        self._route: Callable[[str], tuple[str, str, str] | None] | None = None
+        self._touch: Callable[[str], None] | None = None
+        self.lanes: LaneSet | None = None
 
     def attach_latency(
         self, recorder: StageRecorder, clock_offset_ms: Callable[[], int | None] | None = None
@@ -170,31 +175,67 @@ class IngestionService:
     def attach_books(self, stream: BookSink) -> None:
         self.books = stream
 
-    async def _pump_frames(self) -> None:
-        """Drain the bounded raw-frame queue into the ticker and trade streams
-        (each parser ignores frames for topics it does not own).
+    def attach_router(
+        self,
+        route: Callable[[str], tuple[str, str, str] | None],
+        touch: Callable[[str], None],
+    ) -> None:
+        """#1916: venue frame router (`(topic, kind, symbol)`) + watchdog touch.
+        With a router each topic gets its own dispatch lane; without one every
+        frame shares the fallback lane (still off the pump task)."""
+        self._route, self._touch = route, touch
 
-        Must never die (#1889): an exception escaping one stream for one frame
-        is counted (`ingest_rejected_total{stream="pump"}`) and the loop moves
-        on. `PUMP_BREAKER_TRIPS` consecutive failing frames trip a circuit
-        breaker that resyncs (trade gap + book invalidate), never a halt."""
-        consecutive = 0
-        while True:
-            frame = await self.ws_frames.get()
-            if await self._dispatch(frame):
-                consecutive = 0
-                continue
-            consecutive += 1
-            if consecutive >= PUMP_BREAKER_TRIPS:
-                consecutive = 0
-                self.pump_breaker_trips += 1
-                self._last_pump_trip = self._clock()
-                await self._resync_all("pump_breaker")
+    async def _pump_frames(self) -> None:
+        """Route raw frames into per-topic dispatch lanes (#1916, #1905).
+
+        The pump itself never awaits a stream, a bus subscriber or REST: it
+        rejects over-deep frames, touches the watchdog (freshness reflects the
+        venue, not a local consumer), and hands the frame to its topic's lane
+        (`ingestion.dispatch`), whose worker applies it. The lanes are owned
+        by this task: cancelling the pump cancels and awaits every worker
+        (queued frames are discarded; streams resync on restart).
+
+        Must never die (#1889): failures are per frame, inside the lanes;
+        `PUMP_BREAKER_TRIPS` consecutive failures in one lane trip a resync."""
+        lanes = self.lanes = LaneSet(
+            self._dispatch,
+            self._resync_route,
+            self._trip_breaker,
+            lambda: PUMP_BREAKER_TRIPS,
+        )
+        try:
+            while True:
+                frame = await self.ws_frames.get()
+                if json_depth_exceeds(frame):  # once per frame, before any parser
+                    self._pump_rejects.record(
+                        FrameRejectedError("depth_limit", "frame nests too deep")
+                    )
+                    continue
+                route = self._route_of(frame)
+                if route is not None and self._touch is not None:
+                    self._touch(route.topic)
+                lanes.lane_for(route).offer(frame)
+        finally:
+            await lanes.aclose()
+
+    def _route_of(self, frame: str) -> FrameRoute | None:
+        if self._route is None:
+            return None
+        try:
+            key = self._route(frame)
+        except Exception:  # routing is best effort; the lane parser validates
+            return None
+        return None if key is None else FrameRoute(*key)
+
+    async def _resync_route(self, route: FrameRoute) -> None:
+        """A lane dropped frames: resync exactly that symbol's stream."""
+        if route.stream == "trade" and self.trades is not None:
+            self.trades.mark_gap("dispatch_overflow", route.symbol)
+        elif route.stream == "book" and self.books is not None:
+            await self.books.invalidate_symbol(route.symbol, "dispatch_overflow")
+        # ticker: snapshot+delta merge, the next full snapshot heals it
 
     async def _dispatch(self, frame: str) -> bool:
-        if json_depth_exceeds(frame):  # once per frame, before any parser json.loads
-            self._pump_rejects.record(FrameRejectedError("depth_limit", "frame nests too deep"))
-            return True  # rejected cleanly: not a pump fault, does not feed the breaker
         ok = True
         for stream in (self.trades, self.tickers, self.books):
             if stream is None:
@@ -207,6 +248,11 @@ class IngestionService:
                 self._pump_rejects.record(exc)
                 ok = False
         return ok
+
+    async def _trip_breaker(self) -> None:
+        self.pump_breaker_trips += 1
+        self._last_pump_trip = self._clock()
+        await self._resync_all("pump_breaker")
 
     async def _resync_all(self, reason: str) -> None:
         if self.trades is not None:

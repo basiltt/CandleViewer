@@ -65,6 +65,15 @@ class Harness:
             writer=writer,
         )
         self.stream.acquire("tape", "BTCUSDT")
+        # #1905: backfill runs off the dispatch path; these scenarios assert
+        # the merged outcome, so each frame is followed by its backfill.
+        inner = self.stream.handle_frame
+
+        async def handle_and_settle(frame: str) -> None:
+            await inner(frame)
+            await self.stream.wait_backfills()
+
+        self.stream.handle_frame = handle_and_settle  # type: ignore[method-assign]
 
     def _set(self, desired: set[str]) -> None:
         self.desired = set(desired)

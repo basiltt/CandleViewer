@@ -108,6 +108,11 @@ SPECS: Final[tuple[MetricSpec, ...]] = (
         "stream",
         "reason",
     ),
+    _c(
+        "ingest_dispatch_overflow_total",
+        "Frames dropped by a full per-topic dispatch lane (resync follows), by stream.",
+        "stream",
+    ),
     _g("questdb_write_queue_depth", "Rows waiting in a write-behind queue.", "table"),
     _c(
         "trade_writes_dropped_total",
@@ -286,6 +291,7 @@ trade_gaps_total = _counter("trade_gaps_total")
 trade_backfill_rows_total = _counter("trade_backfill_rows_total")
 trade_prints_rejected_total = _counter("trade_prints_rejected_total")
 ingest_rejected_total = _counter("ingest_rejected_total")
+ingest_dispatch_overflow_total = _counter("ingest_dispatch_overflow_total")
 questdb_write_queue_depth = _gauge("questdb_write_queue_depth")
 trade_writes_dropped_total = _counter("trade_writes_dropped_total")
 book_writes_dropped_total = _counter("book_writes_dropped_total")

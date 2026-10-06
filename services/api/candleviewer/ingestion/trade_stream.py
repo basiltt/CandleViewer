@@ -12,6 +12,9 @@ Every derived view (bars, footprint, CVD, bubbles) is a cache over this stream
   any later print (no consumer sees time move backwards). A `GapEvent` with
   explicit bounds and a text label is published either way; `recovered=False`
   when the backfill failed or did not reach back to the gap start.
+* **Off the dispatch path (#1905)** — the backfill runs in a tracked,
+  single-flight task per symbol; live batches for that symbol are held
+  (bounded) and published after the merge, so other symbols/streams never wait.
 * **Never drop** — prints go to the bus with `NEVER_DROP` subscribers, so a slow
   consumer back-pressures this reader (`ingest_queue_full_total{class}`).
 
@@ -39,6 +42,7 @@ from candleviewer.exchange.base.models import TradeEvent
 from candleviewer.exchange.base.trade_print import TradePrint
 from candleviewer.ingestion.metrics import (
     count_event,
+    ingest_dispatch_overflow_total,
     ingest_lag_seconds,
     symbol_label,
     trade_backfill_rows_total,
@@ -61,6 +65,10 @@ logger = structlog.get_logger(__name__)
 DEDUPE_CAPACITY = 50_000
 WRITE_QUEUE_MAXSIZE = 8192
 BACKFILL_TIMEOUT_S = 5.0
+#: #1905: live prints parked per symbol while its backfill is in flight
+#: (5 000 prints/s x the 5 s backfill timeout, x2). Overflow: drop newest,
+#: counted, and the gap is reopened so the next batch backfills again.
+HOLD_CAPACITY = 50_000
 
 
 class TradeWriter(Protocol):
@@ -146,6 +154,7 @@ class TradeStream:
         backfill_timeout_s: float = BACKFILL_TIMEOUT_S,
         write_sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         write_rand: Callable[[], float] | None = None,
+        hold_capacity: int = HOLD_CAPACITY,
     ) -> None:
         self._bus, self._env = bus, env
         self._set_desired, self._parse = set_desired, parse_frame
@@ -173,6 +182,11 @@ class TradeStream:
             rand=write_rand,
         )
         self._tasks: list[asyncio.Task[None]] = []
+        #: #1905: single-flight backfill per symbol + the live batches held meanwhile.
+        self._bf_tasks: dict[str, asyncio.Task[None]] = {}
+        self._hold: dict[str, list[TradePrint]] = {}
+        self._hold_overflow: set[str] = set()
+        self._hold_cap = hold_capacity
         self._health = bus.subscribe(
             "trade-stream-health",
             TopicPattern(env=env, domain="health", detail="feed"),
@@ -270,12 +284,35 @@ class TradeStream:
         self._touch(self._topic_for(sym))
         ts_ingest = self._now_us()
         live = sorted(prints, key=lambda p: (p.ts_event_us, p.trade_id))
+        if sym in self._hold:
+            self._hold_batch(sym, live)
+            return
         gap = self._gap_open.pop(sym, None)
         if gap is None:
             await self._publish_all(sym, [(p, "live") for p in live], ts_ingest)
             return
+        self._hold[sym] = list(live)
+        task = spawn(self._backfill_and_merge(sym, gap, ts_ingest), name=f"trade-backfill:{sym}")
+        self._bf_tasks[sym] = task
+        task.add_done_callback(self._backfill_done)
+
+    def _hold_batch(self, sym: str, live: list[TradePrint]) -> None:
+        """#1905: a backfill is in flight for `sym`; park the batch (bounded)."""
+        held = self._hold[sym]
+        if len(held) + len(live) > self._hold_cap:  # drop newest; reopen the gap after
+            ingest_dispatch_overflow_total.labels(stream="trade").inc()
+            self._hold_overflow.add(sym)
+            return
+        held.extend(live)
+
+    async def _backfill_and_merge(self, sym: str, gap: tuple[int, str], ts_ingest: int) -> None:
+        """#1905: runs in its own task, so a slow/failing REST backfill never
+        blocks frame dispatch. Live batches arriving meanwhile are held and
+        published after the merge, in arrival order (never backwards)."""
         start_us, reason = gap
         backfill = await self._backfill(sym)
+        live = self._hold[sym]
+        self._hold[sym] = []
         end_us = live[0].ts_event_us
         rows = [p for p in (backfill or ()) if p.symbol == sym]
         recovered = bool(rows) and min(p.ts_event_us for p in rows) <= start_us
@@ -287,6 +324,33 @@ class TradeStream:
         await self._bus.publish(Topic(env=self._env, domain="md", symbol=sym, detail="gap"), gev)
         tagged = [(p, "live" if p.trade_id in live_ids else "backfill") for p in merged]
         await self._publish_all(sym, tagged, ts_ingest)
+        while self._hold[sym]:  # batches that arrived during the backfill/publish
+            more = sorted(self._hold[sym], key=lambda p: (p.ts_event_us, p.trade_id))
+            self._hold[sym] = []
+            await self._publish_all(sym, [(p, "live") for p in more], self._now_us())
+        # No await between the drained check and here: handle_frame sees a
+        # consistent "not backfilling" state from now on.
+        self._hold.pop(sym, None)
+        if sym in self._hold_overflow:
+            self._hold_overflow.discard(sym)
+            self.mark_gap("backfill_hold_full", sym)
+
+    def _backfill_done(self, task: asyncio.Task[None]) -> None:
+        for sym, t in list(self._bf_tasks.items()):
+            if t is task:
+                del self._bf_tasks[sym]
+                if sym in self._hold:  # cancelled/failed mid-merge: never hide the hole
+                    self._hold.pop(sym, None)
+                    self._hold_overflow.discard(sym)
+                    if sym in self._last_ts:
+                        self._gap_open.setdefault(sym, (self._last_ts[sym], "backfill_failed"))
+        if not task.cancelled() and task.exception() is not None:
+            logger.error("trade backfill task failed", exc_info=task.exception())
+
+    async def wait_backfills(self) -> None:
+        """Await every in-flight backfill (tests, orderly shutdown)."""
+        while self._bf_tasks:
+            await asyncio.gather(*list(self._bf_tasks.values()), return_exceptions=True)
 
     async def _publish_all(
         self, sym: str, prints: list[tuple[TradePrint, str]], ts_ingest: int
@@ -391,7 +455,7 @@ class TradeStream:
         ]
 
     async def stop(self) -> None:
-        tasks, self._tasks = self._tasks, []
+        tasks, self._tasks = self._tasks + list(self._bf_tasks.values()), []
         for t in tasks:
             t.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
