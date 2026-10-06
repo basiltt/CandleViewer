@@ -198,6 +198,20 @@ class TradeStream:
             for d in (self._rings, self._last_ts, self._gap_open):
                 d.pop(gone, None)
 
+    async def prune_unlisted(self) -> list[str]:
+        """#1913: drop demand for symbols the catalogue no longer lists as
+        trading (held topics were only checked on `acquire`), unsubscribe via
+        `sync()`, and publish a plain `delisted` FeedHealthEvent per symbol."""
+        gone = sorted(s for s in self._demand.desired() if not self._is_listed(s))
+        for sym in gone:
+            self._demand.drop(sym)
+        if gone:
+            self.sync()
+        health = Topic(env=self._env, domain="health", detail="feed")
+        for sym in gone:
+            await self._bus.publish(health, FeedHealthEvent(self._topic_for(sym), "delisted", 0.0))
+        return gone
+
     # ---- reads (GET /market/trades) --------------------------------------
     def is_listed(self, symbol: str) -> bool:
         return self._is_listed(symbol)

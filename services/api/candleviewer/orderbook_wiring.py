@@ -221,6 +221,22 @@ class BookStream:
         for gone in set(self._books) - wanted:
             self._drop(gone)
 
+    async def prune_unlisted(self) -> list[str]:
+        """#1913: drop demand for symbols the catalogue no longer lists as
+        trading (held topics were only checked on `acquire`), unsubscribe via
+        `sync()`, and publish a plain `delisted` FeedHealthEvent per symbol."""
+        gone = sorted(s for s in self._demand.desired() if not self._is_listed(s))
+        for sym in gone:
+            self._demand.drop(sym)
+        if gone:
+            self.sync()
+        health = Topic(env=self._env, domain="health", detail="feed")
+        for sym in gone:
+            await self._bus.publish(
+                health, FeedHealthEvent(self._topic_for(sym, self._depth), "delisted", 0.0)
+            )
+        return gone
+
     def _drop(self, symbol: str) -> None:
         self._books.pop(symbol, None)
         for key in self._keys.pop(symbol, []):

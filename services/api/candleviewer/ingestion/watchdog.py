@@ -18,7 +18,7 @@ STALENESS_S: dict[str, float] = {"book": 2.0, "trade": 10.0, "ticker": 5.0}
 @dataclass(frozen=True, slots=True)
 class FeedHealthEvent:
     topic: str
-    state: str  # "stale" | "healthy" | "resubscribing" | "degraded"
+    state: str  # "stale" | "healthy" | "resubscribing" | "degraded" | "delisted"
     last_msg_age_s: float
 
 
@@ -63,6 +63,12 @@ class StalenessWatchdog:
         for topic in self._last:
             self._last[topic] = now
         self._stale.clear()
+
+    def all_stale(self) -> bool:
+        """True when every watched topic that has a limit is stale (#1913): only
+        then is the shared socket suspect; one silent topic is per-topic."""
+        limited = {t for t in self._last if self._kind(t) in self._limits}
+        return bool(limited) and limited <= self._stale
 
     def check(self) -> list[str]:
         """Emit stale events; returns newly stale topics."""

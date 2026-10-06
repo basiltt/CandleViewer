@@ -97,6 +97,12 @@ class ConnectionManager:
         self._clock_offset_ms = clock_offset_ms
         self._now_ms = now_ms
         self._desired: set[str] = set()
+        #: Topics dropped from demand while a socket is up: unsubscribed on the
+        #: next `subscribe()` (#1913) so a delisted symbol leaves the socket.
+        self._unsub_pending: set[str] = set()
+        #: Per-topic stale resubscribes on the live socket (#1913); these are
+        #: subscription ops, not dials, so they never touch the SR-039 budget.
+        self.topic_resubscribes = 0
         self._interp: Any = None
         self._key = f"public-{next(_conn_ids)}"
         self._sock: Socket | None = None
@@ -122,9 +128,17 @@ class ConnectionManager:
         for new in topics - self._desired:
             self._watchdog.watch(new)
         changed = self._desired != topics
+        if self._sock is not None:
+            self._unsub_pending |= self._desired - topics
+        self._unsub_pending -= topics
         self._desired = set(topics)
         if changed and self._interp is not None and self.state() == "open":
-            spawn(self._interp.send("TOPICS_CHANGED"), name="ws-topics-changed")
+            interp = self._interp
+
+            async def _changed() -> None:  # `send` returns a Future, not a coroutine
+                await interp.send("TOPICS_CHANGED")
+
+            spawn(_changed(), name="ws-topics-changed")
 
     async def start(self) -> None:
         if self._interp is not None:
@@ -179,6 +193,7 @@ class ConnectionManager:
         if delay > 0:
             await self._sleep(delay)
         self._sock = await self._factory()
+        self._unsub_pending.clear()  # a fresh socket holds no subscriptions
         self.opens += 1
 
     async def authenticate(self) -> None:  # public feed: never reached
@@ -191,6 +206,9 @@ class ConnectionManager:
         sock = self._sock
         if sock is None:
             raise ConnectionError("no socket to subscribe on")
+        gone, self._unsub_pending = self._unsub_pending, set()
+        for batch in self._planner.plan(gone):
+            await sock.send(json.dumps({"op": "unsubscribe", "args": list(batch.topics)}))
         for batch in self._planner.plan(self._desired):
             await sock.send(json.dumps({"op": "subscribe", "args": list(batch.topics)}))
         self._watchdog.reset()
@@ -322,10 +340,26 @@ class ConnectionManager:
         )
 
     async def _watch(self) -> None:
-        """Returns once any topic goes stale (publishing `stale` on the bus)."""
+        """Publish `stale` per topic and resubscribe just that topic on the live
+        socket (#1913). Returns (-> B13 `TOPIC_STALE`, socket recycle) only when
+        every watched topic is stale: then the socket itself is suspect."""
         while True:
             await self._sleep(self._check_interval)
             if stale := self._watchdog.check():
                 for topic in stale:
                     await self._publish(FeedHealthEvent(topic, "stale", 0.0))
-                return
+                if self._watchdog.all_stale():
+                    return
+                for topic in stale:
+                    await self._resubscribe_stale(topic)
+
+    async def _resubscribe_stale(self, topic: str) -> None:
+        """One unsubscribe+subscribe for a newly stale topic. It stays marked
+        stale until a frame arrives, so a silent (e.g. delisted) topic is
+        resubscribed once per staleness episode, never in a loop."""
+        sock = self._sock
+        if sock is None or topic not in self._desired:
+            return
+        await sock.send(json.dumps({"op": "unsubscribe", "args": [topic]}))
+        await sock.send(json.dumps({"op": "subscribe", "args": [topic]}))
+        self.topic_resubscribes += 1

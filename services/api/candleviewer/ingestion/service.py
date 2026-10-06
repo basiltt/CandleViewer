@@ -54,6 +54,7 @@ class BookSink(Protocol):
     def is_listed(self, symbol: str) -> bool: ...
     def acquire(self, consumer: str, symbol: str) -> None: ...
     def release(self, consumer: str, symbol: str) -> None: ...
+    async def prune_unlisted(self) -> list[str]: ...
     async def start(self) -> None: ...
     async def stop(self) -> None: ...
 
@@ -189,6 +190,13 @@ class IngestionService:
             except Exception as exc:  # the breaker itself must not kill the pump
                 self._pump_rejects.record(exc)
 
+    async def prune_unlisted(self) -> None:
+        """#1913: after each catalogue swap, every stream drops (and
+        unsubscribes) symbols that are no longer `trading`."""
+        for stream in (self.trades, self.tickers, self.books):
+            if stream is not None:
+                await stream.prune_unlisted()
+
     def attach_instruments(self, scheduler: InstrumentsRefreshScheduler) -> None:
         """Hand this module ownership of the catalogue scheduler's lifecycle."""
         self.instruments = scheduler
@@ -217,6 +225,7 @@ class IngestionService:
             )
             await self._generator.start()
         if self.instruments is not None:
+            self.instruments.add_listener(self.prune_unlisted)
             await self.instruments.start()
         if self.clock is not None:
             await self.clock.start()
