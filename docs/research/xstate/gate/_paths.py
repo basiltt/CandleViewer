@@ -14,7 +14,12 @@ Resolution of the upstream ``xstate-statemachine`` source tree (``XSTATE_SRC``):
    which is the repo root), when it exists;
 3. the local developer checkout ``<repo>/../_ref/xstate-statemachine``, only
    when it exists;
-4. otherwise ``<repo>/_upstream`` (missing; scripts that need it fail loudly).
+4. otherwise nothing resolves.
+
+If ``XSTATE_SRC`` is set but is not a directory, or nothing resolves, reading
+``XSTATE_SRC`` exits with :data:`SKIP_ENV_EXIT` ("skipped (environment)") rather
+than handing back a missing path that would later surface as a false FAIL. It is
+resolved lazily (module ``__getattr__``), so importing this module never exits.
 
 Scripts that need the upstream *main* dev venv (``.venv-main``) call
 :func:`upstream_main_python`. When that interpreter is absent they exit with
@@ -42,20 +47,44 @@ def resolve_xstate_src(
     env: dict[str, str] | None = None,
     ci_upstream: Path = CI_UPSTREAM,
     local_ref: Path = LOCAL_REF,
-) -> Path:
-    """Return the upstream source tree per the order in the module docstring."""
+) -> Path | None:
+    """Return the upstream source tree per the module docstring, or None if unusable."""
     environ = os.environ if env is None else env
     explicit = environ.get("XSTATE_SRC", "").strip()
     if explicit:
-        return Path(explicit)
+        return Path(explicit) if Path(explicit).is_dir() else None
     if ci_upstream.is_dir():
         return ci_upstream
     if local_ref.is_dir():
         return local_ref
-    return ci_upstream
+    return None
 
 
-XSTATE_SRC = resolve_xstate_src()
+def require_xstate_src(
+    env: dict[str, str] | None = None,
+    ci_upstream: Path = CI_UPSTREAM,
+    local_ref: Path = LOCAL_REF,
+) -> Path:
+    """The upstream source tree, or exit ``SKIP_ENV_EXIT`` with the reason."""
+    src = resolve_xstate_src(env, ci_upstream, local_ref)
+    if src is None:
+        environ = os.environ if env is None else env
+        explicit = environ.get("XSTATE_SRC", "").strip()
+        why = (
+            f"XSTATE_SRC={explicit} is not a directory"
+            if explicit
+            else f"XSTATE_SRC is unset and neither {ci_upstream} nor {local_ref} exists"
+        )
+        print(f"skipped (environment): no upstream xstate-statemachine source tree ({why})")
+        sys.exit(SKIP_ENV_EXIT)
+    return src
+
+
+def __getattr__(name: str) -> Path:
+    # Lazy so that `import _paths` never exits; only reading XSTATE_SRC can skip.
+    if name == "XSTATE_SRC":
+        return require_xstate_src()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def find_dev_python(src: Path, venv_name: str = ".venv-main") -> Path | None:
@@ -74,7 +103,7 @@ def upstream_dev_python(venv_name: str, src: Path | None = None) -> str:
     Checks that need ``.venv-main`` / ``.venv-gate`` verify an upstream dev
     build, not the pinned wheel, so they only run where that venv exists.
     """
-    root = XSTATE_SRC if src is None else src
+    root = require_xstate_src() if src is None else src
     py = find_dev_python(root, venv_name)
     if py is None:
         print(
