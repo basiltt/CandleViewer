@@ -116,6 +116,11 @@ CHECKERS: tuple[CheckerEntry, ...] = (
         lambda: _repo_root_argv(os.path.join(FIXTURES_ROOT, "owned_docs_broken")),
     ),
     CheckerEntry(
+        "check_threat_model_ticket_map",
+        os.path.join("scripts", "check_threat_model_ticket_map.py"),
+        lambda: _repo_root_argv(os.path.join(FIXTURES_ROOT, "threat_map_broken")),
+    ),
+    CheckerEntry(
         "check_bypass_register",
         os.path.join("scripts", "check_bypass_register.py"),
         lambda: _bypass_register_argv(
