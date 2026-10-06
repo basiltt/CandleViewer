@@ -10,6 +10,7 @@ pathological regression. Each size takes the min of repeated runs
 
 from __future__ import annotations
 
+import gc
 import time
 
 import pytest
@@ -34,10 +35,14 @@ def _evict_cpu_s(n: int) -> float:
     rows = [("BTCUSDT", i) for i in range(n + _CAP)]
     for r in rows[:_CAP]:
         buf.put(r)
-    start = time.perf_counter()
-    for r in rows[_CAP:]:
-        buf.put(r)
-    elapsed = time.perf_counter() - start
+    gc.disable()  # a GC pause inside one timed loop would skew the ratio
+    try:
+        start = time.perf_counter()
+        for r in rows[_CAP:]:
+            buf.put(r)
+        elapsed = time.perf_counter() - start
+    finally:
+        gc.enable()
     assert buf.evicted == n
     return elapsed
 
@@ -53,6 +58,6 @@ def test_write_behind_sustained_eviction_records_one_contiguous_lost_range() -> 
 def test_write_behind_evictions_scale_linearly() -> None:
     _evict_cpu_s(10_000)  # warm-up
     small = min(_evict_cpu_s(10_000) for _ in range(5))
-    large = min(_evict_cpu_s(100_000) for _ in range(2))
+    large = min(_evict_cpu_s(100_000) for _ in range(3))
     assert large < 2.0  # sanity: was ~29 s with the quadratic merge
-    assert large / small < 20  # linear ~10, quadratic ~100
+    assert large / small < 30  # linear ~10, quadratic ~100

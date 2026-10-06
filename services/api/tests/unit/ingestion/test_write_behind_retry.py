@@ -392,3 +392,35 @@ async def test_trade_stream_stop_flushes_pending_drop_counts() -> None:
     assert _outage_count() == before  # batched, not yet published
     await stream.stop()
     assert _outage_count() - before == 5
+
+
+async def test_book_stream_stop_flushes_pending_drop_counts() -> None:
+    from candleviewer.bus.bus import Bus
+    from candleviewer.ingestion.metrics import book_writes_dropped_total
+    from candleviewer.orderbook_wiring import BookStream
+    from candleviewer.storage.repositories.rows import BookDeltaRow
+
+    def count() -> float:
+        return float(book_writes_dropped_total.labels(reason="outage")._value.get())  # type: ignore[attr-defined]  # test-only peek
+
+    async def _noop(_t: str) -> None:
+        return None
+
+    stream = BookStream(
+        bus=Bus(),
+        env="live",
+        set_desired=lambda _t: None,
+        parse_frame=lambda _f: None,
+        topic_for=lambda s, d: f"orderbook.{d}.{s}",
+        resubscribe=_noop,
+        is_listed=lambda _s: True,
+        touch=lambda _t: None,
+    )
+    buf = stream.write_behind
+    buf.failures = 1
+    before = count()
+    for i in range(8192 + 5):
+        buf.put(BookDeltaRow(i, "BTCUSDT", i, "bid", "1", "1"))
+    assert count() == before  # batched, not yet published
+    await stream.stop()
+    assert count() - before == 5
