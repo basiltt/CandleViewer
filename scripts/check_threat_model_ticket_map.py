@@ -3,8 +3,14 @@
 
 For each ``docs/security/threat-models/E<nn>-*.md`` (case-insensitive) that has a
 control-to-ticket section (a heading containing "ticket"), every non-epic ticket key
-``E<nn>-*`` from ``docs/plan/backlog/all-tickets.json`` must be mentioned in the
-model. A missing key is a model defect. Grouped rows like ``E22-D01 / D02`` count.
+``E<nn>-*`` from ``docs/plan/backlog/all-tickets.json`` must be mentioned inside that
+section (heading containing "ticket" up to the next ``## ``). Tickets labelled
+``retired`` are skipped. A missing key is a model defect. Grouped rows like
+``E22-D01 / D02`` count.
+
+``BASELINE_GAPS`` records known pre-existing gaps (warned, not failed). It is a
+shrink-only ratchet: when the live gap set is a strict subset of the baseline the
+check FAILS until the stale keys are removed; new gaps beyond the baseline fail.
 
 Exit codes: 0 clean, 1 gaps, 2 internal error. Stdlib only.
 """
@@ -21,9 +27,42 @@ ROOT = Path(__file__).resolve().parents[1]
 MODEL_RE = re.compile(r"^(e\d{2})-.+\.md$", re.IGNORECASE)
 HEADING_RE = re.compile(r"^#{2,3} .*ticket", re.IGNORECASE | re.MULTILINE)
 KEY_RE = re.compile(r"^E\d{2}-[A-Z]\d{2}$")
-# Models with known pre-existing gaps (follow-ups; reported as warnings, not failures).
-# Remove an epic from this set once its map is complete; never add to it.
-BASELINE_GAPS = frozenset({"E07", "E24", "E25"})
+# Known pre-existing gaps per epic (follow-ups). Shrink-only: never add keys.
+BASELINE_GAPS: dict[str, frozenset[str]] = {
+    "E07": frozenset(
+        {
+            "E07-T01",
+            "E07-D01",
+            "E07-K01",
+            "E07-T04",
+            "E07-T06",
+            "E07-D02",
+            "E07-Q02",
+            "E07-Q03",
+        }
+        | {"E07-T02", "E07-T03", "E07-T05", "E07-X01"}
+    ),
+    "E24": frozenset(
+        {f"E24-D0{i}" for i in range(1, 7)}
+        | {"E24-Q04", "E24-Q05", "E24-S01", "E24-S02", "E24-S03", "E24-S06", "E24-S08"}
+        | {"E24-K01", "E24-S05", "E24-T06", "E24-X01"}
+    ),
+    "E25": frozenset(
+        {f"E25-D0{i}" for i in range(1, 9)}
+        | {"E25-K01", "E25-T05", "E25-T06", "E25-T07", "E25-Q04", "E25-Q05"}
+        | {"E25-S01", "E25-S02", "E25-S03", "E25-S04", "E25-S06"}
+        | {"E25-X01"}
+    ),
+}
+
+
+def _section(text: str) -> str | None:
+    """Return the ticket-map section: heading containing 'ticket' to the next '## '."""
+    m = HEADING_RE.search(text)
+    if not m:
+        return None
+    end = re.compile(r"^## ", re.MULTILINE).search(text, m.end())
+    return text[m.start() : end.start() if end else len(text)]
 
 
 def _mentioned(key: str, text: str) -> bool:
@@ -39,31 +78,45 @@ def _mentioned(key: str, text: str) -> bool:
     return False
 
 
-def check(root: Path = ROOT) -> list[str]:
+def check(
+    root: Path = ROOT,
+    baseline: dict[str, frozenset[str]] | None = None,
+    warnings: list[str] | None = None,
+) -> list[str]:
     """Return GOV-008 violation messages (empty when clean)."""
+    base = BASELINE_GAPS if baseline is None else baseline
     tickets = json.loads(
         (root / "docs/plan/backlog/all-tickets.json").read_text(encoding="utf-8")
     )
-    keys = [t["key"] for t in tickets if KEY_RE.match(t["key"])]
+    keys = [
+        t["key"]
+        for t in tickets
+        if KEY_RE.match(t["key"]) and "retired" not in (t.get("labels") or [])
+    ]
     problems: list[str] = []
     for path in sorted((root / "docs/security/threat-models").glob("*.md")):
         m = MODEL_RE.match(path.name)
         if not m:
             continue
-        text = path.read_text(encoding="utf-8", errors="replace")
-        if not HEADING_RE.search(text):
+        section = _section(path.read_text(encoding="utf-8", errors="replace"))
+        if section is None:
             continue
         epic = m.group(1).upper()
-        missing = [
-            k for k in keys if k.startswith(epic + "-") and not _mentioned(k, text)
-        ]
-        if missing and epic in BASELINE_GAPS:
-            print(
-                f"GOV-008 warning (baseline) {path.name}: missing {', '.join(missing)}"
-            )
-        elif missing:
+        missing = {
+            k for k in keys if k.startswith(epic + "-") and not _mentioned(k, section)
+        }
+        known = base.get(epic, frozenset())
+        new = sorted(missing - known)
+        if new:
+            problems.append(f"GOV-008 {path.name}: ticket map missing {', '.join(new)}")
+        resolved = sorted(known - missing)
+        if resolved:
             problems.append(
-                f"GOV-008 {path.name}: ticket map missing {', '.join(missing)}"
+                f"GOV-008 baseline for {epic} is stale - remove {', '.join(resolved)}"
+            )
+        elif missing and not new and warnings is not None:
+            warnings.append(
+                f"GOV-008 warning (baseline) {path.name}: missing {', '.join(sorted(missing))}"
             )
     return problems
 
@@ -73,11 +126,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--repo-root", default=str(ROOT))
     args = parser.parse_args(argv)
     try:
-        problems = check(Path(args.repo_root))
+        warnings: list[str] = []
+        problems = check(Path(args.repo_root), warnings=warnings)
     except (OSError, ValueError, KeyError) as exc:
         print(f"GOV-008 internal error: {exc}", file=sys.stderr)
         return 2
-    for line in problems:
+    for line in warnings + problems:
         print(line)
     if problems:
         print("::error::GOV-008 threat model ticket map is incomplete")
