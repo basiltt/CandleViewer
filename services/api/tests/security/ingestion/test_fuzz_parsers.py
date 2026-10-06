@@ -183,10 +183,10 @@ def test_instrument_regression_launchtime_inf() -> None:
     "name", sorted(p.name for p in REG.glob("*.frame") if not p.name.startswith("instr"))
 )
 def test_checked_in_regressions_never_crash(name: str) -> None:
-    issue = json.loads((REG / "INDEX.json").read_text(encoding="utf-8"))[name]
     frame = (REG / name).read_text(encoding="utf-8")
-    if issue == "#1889":
-        pytest.xfail(f"{issue}: RecursionError/OverflowError escapes the parser contract")
+    # deep nesting fixed by #1898 (#1889); non-finite ts still escapes parse_book_frame
+    if name == "book_ts_infinity.frame":
+        pytest.xfail("#1889 residual: ts=Infinity -> OverflowError escapes parse_book_frame")
     for fn, _ in PARSERS.values():
         _contract(fn, frame)
 

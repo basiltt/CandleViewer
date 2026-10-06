@@ -93,7 +93,7 @@ async def test_sequence_backwards_or_repeat_resyncs(u: int) -> None:
     assert rig.books.view("BTCUSDT", 50) is None or u == 1  # u==1 is a server reset snapshot
 
 
-@pytest.mark.xfail(strict=True, reason="#1890 off-tick price truncated, level silently lost")
+# fixed by #1898 (#1890): off-tick price truncated, level silently lost
 async def test_off_tick_price_is_rejected() -> None:
     rig = Rig()
     await rig.feed(book("snapshot", 1, [["100.05", "1"], ["100.0", "2"]], ASKS))
@@ -106,21 +106,21 @@ async def test_zero_qty_trade_rejected() -> None:
     assert rig.drain() == []
 
 
-@pytest.mark.xfail(strict=True, reason="#1892 trade ts far in the future accepted")
+# fixed by #1898 (#1892): trade ts far in the future accepted
 async def test_far_future_trade_rejected() -> None:
     rig = Rig()
     await rig.feed(trade(T=TS * 1000))
     assert rig.drain() == []
 
 
-@pytest.mark.xfail(strict=True, reason="#1892 1e308 trade price accepted as a print")
+# fixed by #1898 (#1892): 1e308 trade price accepted as a print
 async def test_absurd_trade_price_rejected() -> None:
     rig = Rig()
     await rig.feed(trade(p="1e308"))
     assert rig.drain() == []
 
 
-@pytest.mark.xfail(strict=True, reason="#1892 negative/crossed ticker values accepted")
+# fixed by #1898 (#1892): negative/crossed ticker values accepted
 async def test_negative_or_crossed_ticker_rejected() -> None:
     rig = Rig()
     msg = json.loads(TICKERS[0])
@@ -136,7 +136,7 @@ async def test_recorded_ticker_snapshot_publishes() -> None:
     assert [e for e in rig.drain() if type(e).__name__ == "TickerEvent"]
 
 
-@pytest.mark.xfail(strict=True, reason="#1892 KlineEvent accepts high < low")
+# fixed by #1898 (#1892): KlineEvent accepts high < low
 def test_kline_high_below_low_rejected() -> None:
     with pytest.raises(ValueError):
         KlineEvent.model_validate(

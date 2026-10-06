@@ -167,7 +167,7 @@ async def test_never_idle_stream_does_not_starve_loop() -> None:
 
 
 @pytest.mark.perf
-@pytest.mark.xfail(strict=True, reason="#1893 huge-exponent prices cost >1 s of loop CPU")
+# fixed by #1898 (#1893): huge-exponent prices cost >1 s of loop CPU
 async def test_huge_exponent_levels_rejected_cheaply() -> None:
     frame = book("snapshot", 1, [["1e4200", "1"]] * 1000, [])
     rig = Rig()

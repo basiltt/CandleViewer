@@ -52,14 +52,14 @@ async def test_trade_rejection_counter_increments() -> None:
     assert trade_prints_rejected_total._value.get() == before + 1
 
 
-@pytest.mark.xfail(strict=True, reason="#1894 no ingest_rejected_total{reason} for ticker/book")
+# fixed by #1898 (#1894): no ingest_rejected_total{reason} for ticker/book
 async def test_every_rejection_is_counted_with_reason() -> None:
     from candleviewer.ingestion import metrics
 
     assert hasattr(metrics, "ingest_rejected_total")
 
 
-@pytest.mark.xfail(strict=True, reason="#1889 RecursionError escapes handle_frame, pump dies")
+# fixed by #1898 (#1889): RecursionError escapes handle_frame, pump dies
 async def test_deep_nesting_does_not_kill_pump() -> None:
     svc, rig = IngestionService(), Rig()
     svc.attach_trades(rig.trades)
