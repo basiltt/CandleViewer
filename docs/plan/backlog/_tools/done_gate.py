@@ -9,7 +9,10 @@ Evidence rules (C-11.2, docs/design/README.md, C-10.4):
   perf      label perf / DoD lines naming a measurement: a number+unit near the metric in PR/issue text
   security  security label: `Security review ... VERDICT: APPROVE` on the PR
   a11y      UI tickets: axe report / Storybook link
-  dod       every unchecked `- [ ]` DoD line must be ticked or waived
+  dod       an unchecked `- [ ]` DoD line fails only if no evidence maps to it (QA PASS table row, linked
+            PR body, issue comment: explicit `DoD#n` or >=2 shared content words) and no waiver names it
+`--json` lists each DoD item as ticked / evidenced-by / waived-by / GAP; `AC n` and `DoD n` waivers are
+separate namespaces.
 Waivers: an OWNER comment matching `exception|waived` + `#1778` waives only the item it names
 (`DoD 4`, `AC 2`, `item 3`, `evidence:perf`, or a quoted fragment of the DoD line). Blanket waivers are ignored.
 """
@@ -38,32 +41,107 @@ QA_RE = re.compile(
     r"QA (?:re-)?verification[^\n]*VERDICT:\s*(PASS|FAIL)", re.IGNORECASE
 )
 SEC_RE = re.compile(
-    r"Security review[^\n]*VERDICT:\s*(APPROVE|REQUEST_CHANGES|BLOCK)", re.IGNORECASE
+    r"Security (?:re-)?review\b.{0,160}?VERDICT:\s*(APPROVE|REQUEST_CHANGES|BLOCK)",
+    re.IGNORECASE | re.DOTALL,
 )
 A11Y_RE = re.compile(r"\baxe\b|storybook|a11y (?:report|evidence)", re.IGNORECASE)
+WAIVER_LINE_RE = re.compile(r"exception|waived", re.IGNORECASE)
+NOT_APPROVED_RE = re.compile(
+    r"\b(?:not|never|un)[\s-]*(?:yet\s+)?approv|n't\s+approv", re.IGNORECASE
+)
 APPROVED_RE = re.compile(r"\bapproved?\b", re.IGNORECASE)
 UNIT = r"(?:ms|µs|us|ns|fps|hz|mb|kb|gb|%|s|/s|msg/s|ops/s|bytes?)"
-NUM_RE = re.compile(rf"\d[\d.,]*\s*{UNIT}\b", re.IGNORECASE)
-METRIC_WORDS = [
+NUM_RE = re.compile(rf"\d[\d.,]*\s*{UNIT}(?!\w)", re.IGNORECASE)
+# Explicit perf keywords (word-boundary matched), used when the ticket has no perf label.
+PERF_STRICT = [
     "p50",
     "p95",
     "p99",
     "fps",
     "latency",
     "throughput",
-    "memory",
-    "frame",
-    "time",
     "benchmark",
-    "bench",
-    "duration",
-    "overhead",
+    "frame time",
+]
+# Wider metric words, considered only when the ticket carries a perf label.
+PERF_LABELLED = [
+    *PERF_STRICT,
+    "memory",
     "heap",
     "rss",
     "cpu",
-    "fan-out",
     "jitter",
+    "overhead",
+    "duration",
 ]
+STOPWORDS = frozenset(
+    [
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "at",
+        "be",
+        "by",
+        "for",
+        "from",
+        "has",
+        "have",
+        "in",
+        "is",
+        "it",
+        "its",
+        "of",
+        "on",
+        "or",
+        "per",
+        "that",
+        "the",
+        "this",
+        "to",
+        "with",
+        "without",
+        "all",
+        "any",
+        "each",
+        "every",
+        "no",
+        "not",
+        "only",
+        "via",
+        "when",
+        "where",
+        "which",
+        "will",
+        "must",
+        "should",
+        "can",
+        "into",
+        "than",
+        "then",
+        "there",
+        "their",
+        "them",
+        "they",
+        "these",
+        "those",
+        "was",
+        "were",
+        "been",
+        "being",
+        "also",
+        "if",
+        "else",
+        "both",
+        "done",
+        "ticket",
+        "pr",
+        "issue",
+        "test",
+        "tests",
+    ]
+)
 UI_AREAS = ("area/charting-ui", "area/design-system", "area/frontend-platform")
 
 
@@ -74,6 +152,7 @@ def gh_json(args: list[str]) -> Any:
         text=True,
         encoding="utf-8",
         errors="replace",
+        check=False,
     )
     if r.returncode:
         raise RuntimeError(f"gh {' '.join(args[:3])} failed: {r.stderr.strip()[:200]}")
@@ -108,11 +187,34 @@ def _norm(s: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", s.lower()).strip()
 
 
+def _words(s: str) -> set[str]:
+    out: set[str] = set()
+    for w in _norm(s).split():
+        if len(w) > 4:
+            w = re.sub(r"(?:ing|ed|es|s)$", "", w)
+        if len(w) >= 2 and w not in STOPWORDS:
+            out.add(w)
+    return out
+
+
+def _kw_re(words: list[str]) -> re.Pattern[str]:
+    alt = "|".join(re.escape(w) for w in words)
+    return re.compile(rf"(?<![\w-])(?:{alt})(?![\w-])", re.IGNORECASE)
+
+
+PERF_STRICT_RE = _kw_re(PERF_STRICT)
+PERF_LABELLED_RE = _kw_re(PERF_LABELLED)
+
+
 def parse_waivers(
     comments: list[dict[str, Any]], dod: list[tuple[int, bool, str]], owner: str = OWNER
-) -> tuple[set[int], set[str], list[str]]:
-    """Return (waived DoD indexes, waived evidence kinds, ignored blanket waiver notes)."""
-    items: set[int] = set()
+) -> tuple[dict[int, str], set[int], set[str], list[str]]:
+    """Return (DoD index -> waiving comment excerpt, waived AC numbers, waived kinds, blanket notes).
+
+    `DoD n`/`item n` and `AC n` are separate namespaces. Only OWNER comments citing #1778 count.
+    """
+    items: dict[int, str] = {}
+    acs: set[int] = set()
     kinds: set[str] = set()
     blanket: list[str] = []
     for c in comments:
@@ -124,12 +226,16 @@ def parse_waivers(
             or not re.search(r"exception|waived", body, re.IGNORECASE)
         ):
             continue
+        ref = body.strip().splitlines()[0][:60] if body.strip() else ""
         blk = re.search(r"exception:\s*\n?(.*)", body, re.IGNORECASE | re.DOTALL)
         segs = (blk.group(1) if blk else body).splitlines()
         hit = False
         for seg in segs:
-            for n in re.findall(r"\b(?:DoD|AC|item)\s*#?(\d+)", seg, re.IGNORECASE):
-                items.add(int(n))
+            for n in re.findall(r"\b(?:DoD|item)\s*#?(\d+)", seg, re.IGNORECASE):
+                items[int(n)] = ref
+                hit = True
+            for n in re.findall(r"\bAC\s*#?(\d+)", seg, re.IGNORECASE):
+                acs.add(int(n))
                 hit = True
             for k in re.findall(r"evidence:(\w+)", seg, re.IGNORECASE):
                 kinds.add(k.lower())
@@ -137,11 +243,11 @@ def parse_waivers(
             for q in re.findall(r"[\"`“]([^\"`”]{8,})[\"`”]", seg):
                 for idx, _, text in dod:
                     if _norm(q) in _norm(text):
-                        items.add(idx)
+                        items[idx] = ref
                         hit = True
         if not hit:
-            blanket.append(body.strip().splitlines()[0][:80] if body.strip() else "")
-    return items, kinds, blanket
+            blanket.append(ref)
+    return items, acs, kinds, blanket
 
 
 def _text_of(issue: dict[str, Any], prs: list[dict[str, Any]]) -> str:
@@ -154,15 +260,85 @@ def _text_of(issue: dict[str, Any], prs: list[dict[str, Any]]) -> str:
     return "\n".join(parts)
 
 
-def has_measurement(line: str, text: str) -> bool:
-    words = [w for w in METRIC_WORDS if w in line.lower()]
-    if not words:
+def has_measurement(line: str, text: str, rx: re.Pattern[str]) -> bool:
+    if not rx.search(line):
         return bool(NUM_RE.search(text))
-    for w in words:
-        for m in re.finditer(re.escape(w), text, re.IGNORECASE):
-            if NUM_RE.search(text[max(0, m.start() - 80) : m.end() + 80]):
-                return True
-    return False
+    return any(
+        NUM_RE.search(text[max(0, m.start() - 80) : m.end() + 80])
+        for m in rx.finditer(text)
+    )
+
+
+def evidence_lines(
+    comments: list[dict[str, Any]], prs: list[dict[str, Any]], qa_pass_ts: str
+) -> list[tuple[str, str]]:
+    """(source, line) pairs from the QA PASS comment, issue comments and linked PR bodies.
+
+    The issue body (which holds the DoD list itself) is deliberately excluded.
+    """
+    out: list[tuple[str, str]] = []
+    for c in comments:
+        body = c.get("body") or ""
+        is_qa = c.get("createdAt", "") == qa_pass_ts and bool(QA_RE.search(body))
+        src = "QA PASS comment" if is_qa else "issue comment"
+        out += [
+            (src, ln)
+            for ln in body.splitlines()
+            if ln.strip() and not WAIVER_LINE_RE.search(ln)
+        ]
+    for p in prs:
+        src = f"PR #{p.get('number', '?')} body"
+        out += [(src, ln) for ln in (p.get("body") or "").splitlines() if ln.strip()]
+    return out
+
+
+MERGE_RE = re.compile(r"\bmerge[ds]?\b|merge queue", re.IGNORECASE)
+REVIEW_RE = re.compile(r"^\W*review(?:ed)?\b", re.IGNORECASE)
+
+
+def structural_evidence(text: str, prs: list[dict[str, Any]]) -> str | None:
+    """PR-state evidence for process items: a merged linked PR, or an APPROVE review on one."""
+    merged = [p for p in prs if p.get("mergedAt")]
+    if merged and MERGE_RE.search(text):
+        return f"PR #{merged[0].get('number', '?')} merged"
+    if REVIEW_RE.search(text):
+        for p in prs:
+            if any(
+                re.search(r"VERDICT:\s*APPROVE", r.get("body") or "", re.IGNORECASE)
+                for r in p.get("reviews", [])
+            ):
+                return f"PR #{p.get('number', '?')} APPROVE review"
+    return None
+
+
+def map_dod_item(idx: int, text: str, ev: list[tuple[str, str]]) -> str | None:
+    """Evidencing source or None: explicit `DoD#n` reference, else >=2 shared content words."""
+    ref = re.compile(rf"\bDoD\s*#?\s*{idx}\b", re.IGNORECASE)
+    for src, ln in ev:
+        if ref.search(ln):
+            return src
+    want = _words(text)
+    need_n = min(2, len(want))
+    for src, ln in ev:
+        if need_n and len(want & _words(ln)) >= need_n:
+            return src
+    return None
+
+
+def _latest_security_verdicts(prs: list[dict[str, Any]]) -> list[str]:
+    latest: dict[str, tuple[tuple[str, int], str]] = {}
+    seq = 0
+    for p in prs:
+        for r in [*p.get("reviews", []), *p.get("comments", [])]:
+            seq += 1
+            m = SEC_RE.search(r.get("body") or "")
+            if not m:
+                continue
+            who = (r.get("author") or {}).get("login", "?")
+            key = (r.get("submittedAt") or r.get("createdAt") or "", seq)
+            if who not in latest or key >= latest[who][0]:
+                latest[who] = (key, m.group(1).upper())
+    return [v for _, v in latest.values()]
 
 
 def evaluate(
@@ -177,7 +353,7 @@ def evaluate(
     body = issue.get("body") or ticket.get("body") or ""
     dod = dod_lines(body) or dod_lines(ticket.get("body", ""))
     comments = issue.get("comments", [])
-    w_items, w_kinds, blanket = parse_waivers(comments, dod, owner)
+    w_items, w_acs, w_kinds, blanket = parse_waivers(comments, dod, owner)
     text = _text_of(issue, prs)
     fails: list[dict[str, Any]] = []
     waived: list[str] = []
@@ -196,17 +372,15 @@ def evaluate(
         for m in [QA_RE.search(c.get("body") or "")]
         if m
     )
-    need(
-        "qa",
-        bool(verdicts) and verdicts[-1][1] == "PASS",
-        "no `QA verification — VERDICT: PASS` comment",
-    )
+    qa_ok = bool(verdicts) and verdicts[-1][1] == "PASS"
+    need("qa", qa_ok, "no `QA verification — VERDICT: PASS` comment")
 
     if "type/design" in labels or ticket.get("kind") == "Design":
         merged = any(p.get("mergedAt") for p in prs)
         appr = any(
             (c.get("author") or {}).get("login") == owner
             and APPROVED_RE.search(c.get("body") or "")
+            and not NOT_APPROVED_RE.search(c.get("body") or "")
             for c in comments
         )
         need(
@@ -222,36 +396,57 @@ def evaluate(
         )
         need("design", pngs, "no PNG exports committed/embedded")
 
-    perf_lines = [
-        (i, t)
-        for i, _, t in dod
-        if NUM_RE.search(t) or any(w in t.lower() for w in METRIC_WORDS)
-    ]
-    for i, t in perf_lines if ("perf" in labels or perf_lines) else []:
-        need(
-            "perf", has_measurement(t, text), f"no numeric measurement for: {t[:70]}", i
-        )
+    has_perf_label = any(x in ("perf", "type/perf") for x in labels)
+    prx = PERF_LABELLED_RE if has_perf_label else PERF_STRICT_RE
+    for i, _, t in dod:
+        if prx.search(t) or (has_perf_label and NUM_RE.search(t)):
+            need(
+                "perf",
+                has_measurement(t, text, prx),
+                f"no numeric measurement for: {t[:70]}",
+                i,
+            )
 
     if any("security" in x for x in labels):
-        approved = any(
-            (m := SEC_RE.search(r.get("body") or ""))
-            and m.group(1).upper() == "APPROVE"
-            for p in prs
-            for r in [*p.get("reviews", []), *p.get("comments", [])]
+        verd = _latest_security_verdicts(prs)
+        need(
+            "security",
+            bool(verd) and all(v == "APPROVE" for v in verd),
+            "no `Security review … VERDICT: APPROVE` on the PR (latest verdict per reviewer)",
         )
-        need("security", approved, "no `Security review … VERDICT: APPROVE` on the PR")
 
     if "a11y" in labels or any(x in labels for x in UI_AREAS):
         need("a11y", bool(A11Y_RE.search(text)), "no axe report / Storybook link")
 
+    ev = evidence_lines(comments, prs, verdicts[-1][0] if qa_ok else "")
+    items: list[dict[str, Any]] = []
     for i, checked, t in dod:
-        if not checked:
-            need("dod", False, f"unchecked DoD box: {t[:80]}", i)
+        src = (
+            None if checked else (map_dod_item(i, t, ev) or structural_evidence(t, prs))
+        )
+        if checked:
+            items.append({"item": i, "status": "ticked"})
+        elif src is not None:
+            items.append({"item": i, "status": f"evidenced-by: {src}"})
+        elif i in w_items:
+            items.append({"item": i, "status": f"waived-by: {w_items[i]}"})
+            waived.append(f"dod DoD#{i}")
+        else:
+            items.append({"item": i, "status": "GAP"})
+            fails.append(
+                {
+                    "rule": "dod",
+                    "item": i,
+                    "detail": f"no evidence maps to DoD item: {t[:80]}",
+                }
+            )
 
     return {
         "ok": not fails,
         "failures": fails,
         "waived": waived,
+        "waived_acs": sorted(w_acs),
+        "dod_items": items,
         "blanket_waivers_ignored": blanket,
     }
 
@@ -276,7 +471,7 @@ def fetch(issue_no: str, gh: GhFn) -> tuple[dict[str, Any], list[dict[str, Any]]
             "number,body,files,reviews,comments,mergedAt",
         ]
     )
-    # keep only PRs that actually close this issue
+    # ASSUMPTION: the linked PR carries `Closes|Fixes|Resolves #N` in its body (C-4.7); other PRs are ignored.
     pat = re.compile(rf"(?:closes|fixes|resolves)\s+#{issue_no}\b", re.IGNORECASE)
     return issue, [p for p in prs or [] if pat.search(p.get("body") or "")]
 
@@ -311,7 +506,7 @@ def main(argv: list[str]) -> int:
         return 2
     try:
         res = run_gate(args[0], args[1])
-    except (KeyError, RuntimeError) as e:
+    except (KeyError, RuntimeError, ValueError) as e:
         print(f"done_gate error: {e}", file=sys.stderr)
         return 2
     print(

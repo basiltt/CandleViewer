@@ -183,3 +183,95 @@ def test_run_gate_with_fake_gh_filters_prs_and_renders() -> None:
         }
     )
     assert out.startswith("K #5: FAIL")
+
+
+# --- review round 2 ------------------------------------------------------------
+
+
+def test_unchecked_box_evidenced_by_qa_table_row() -> None:
+    t = ticket(["- [ ] Deterministic replay test green and reproducible"])
+    qa = {
+        "body": "QA verification — VERDICT: PASS\n| 1 | pass | deterministic replay test reproducible |",
+        "createdAt": "2026-10-01",
+    }
+    res = dg.evaluate(t, issue([qa]), [])
+    assert (
+        res["ok"] and res["dod_items"][0]["status"] == "evidenced-by: QA PASS comment"
+    )
+
+
+def test_unchecked_box_evidenced_by_pr_body_and_explicit_ref() -> None:
+    t = ticket(["- [ ] Coverage floor met", "- [ ] Demo done"])
+    pr = {"number": 9, "body": "DoD 2 shown in review\nunit coverage floor met at 91%"}
+    res = dg.evaluate(t, issue([QA_PASS]), [pr])
+    assert [i["status"] for i in res["dod_items"]] == ["evidenced-by: PR #9 body"] * 2
+
+
+def test_single_shared_word_is_not_evidence() -> None:
+    t = ticket(["- [ ] Soak report attached"])
+    assert rules(dg.evaluate(t, issue([QA_PASS, owner("soak later")]), [])) == ["dod"]
+
+
+def test_waiver_comment_line_is_not_evidence_and_reports_waived_by() -> None:
+    t = ticket(["- [ ] second thing here"])
+    res = dg.evaluate(t, issue([QA_PASS, owner("waived #1778 DoD 1")]), [])
+    assert res["ok"] and res["dod_items"][0]["status"].startswith("waived-by")
+
+
+def test_ac_and_dod_waivers_are_separate_namespaces() -> None:
+    t = ticket(["- [ ] second thing here"])
+    res = dg.evaluate(t, issue([QA_PASS, owner("waived #1778: AC 1")]), [])
+    assert rules(res) == ["dod"] and res["waived_acs"] == [1]
+
+
+def test_perf_not_triggered_by_substrings_or_without_label() -> None:
+    t = ticket(["- [x] works sometimes within a framework"])
+    assert dg.evaluate(t, issue([QA_PASS]), [])["ok"]
+    t2 = ticket(["- [x] memory use documented"])
+    assert dg.evaluate(t2, issue([QA_PASS]), [])["ok"]
+    assert rules(
+        dg.evaluate(
+            ticket(["- [x] memory use documented"], ["perf"]), issue([QA_PASS]), []
+        )
+    ) == ["perf"]
+
+
+def test_security_later_request_changes_overrides_approve() -> None:
+    t = ticket([], ["security-review"])
+    rev = [
+        {
+            "body": "Security review — VERDICT: APPROVE",
+            "author": {"login": "sec"},
+            "submittedAt": "1",
+        },
+        {
+            "body": "Security review — VERDICT: REQUEST_CHANGES",
+            "author": {"login": "sec"},
+            "submittedAt": "2",
+        },
+    ]
+    assert rules(dg.evaluate(t, issue([QA_PASS]), [{"body": "", "reviews": rev}])) == [
+        "security"
+    ]
+    rev.append(
+        {
+            "body": "Security review — VERDICT: APPROVE",
+            "author": {"login": "sec"},
+            "submittedAt": "3",
+        }
+    )
+    assert dg.evaluate(t, issue([QA_PASS]), [{"body": "", "reviews": rev}])["ok"]
+
+
+def test_design_not_approved_comment_does_not_count() -> None:
+    t = ticket([], ["type/design"])
+    c = [QA_PASS, owner(f"not approved yet. {PENPOT} a/x.png")]
+    assert "design" in rules(dg.evaluate(t, issue(c), []))
+
+
+def test_main_maps_json_decode_error_to_exit_2(monkeypatch: Any) -> None:
+    def boom(*_a: Any, **_k: Any) -> Any:
+        raise ValueError("bad json")
+
+    monkeypatch.setattr(dg, "run_gate", boom)
+    assert dg.main(["K", "1"]) == 2
