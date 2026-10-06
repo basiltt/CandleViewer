@@ -75,6 +75,22 @@ class RejectionLog:
 LAUNCH_GRACE_US: Final[int] = 24 * 3600 * 1_000_000
 
 
+def corrected_now_us(
+    offset_us: Callable[[], int] | None,
+    host_now_us: Callable[[], int] = lambda: time.time_ns() // 1000,
+) -> Callable[[], int]:
+    """Exchange-corrected "now" in µs (#1912): host wall clock + `ClockGuard.offset_us()`.
+
+    The guard's offset is `server - local`, so a venue ahead of the host gives a
+    positive offset and a larger corrected now. The offset is applied exactly once,
+    here; callers must pass the raw host clock. With no guard (`offset_us is None`)
+    the host clock is used uncorrected and that is logged once."""
+    if offset_us is None:
+        structlog.get_logger(_LOGGER_NAME).warning("event_window_host_clock_uncorrected")
+        return host_now_us
+    return lambda: host_now_us() + offset_us()
+
+
 class EventWindow:
     """`[launchTime - grace, now + max_future_skew]` over an injected wall clock
     (#1892). Raises `FrameRejectedError`; a missing launch time skips that side."""

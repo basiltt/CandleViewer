@@ -116,7 +116,7 @@ from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshSchedul
 from candleviewer.ingestion.metrics import export_ingestion_metrics, ingest_enabled
 from candleviewer.ingestion.planner import SubscriptionPlanner
 from candleviewer.ingestion.reconnect import ConnectionRateGuard, ReconnectPolicy
-from candleviewer.ingestion.rejection import EventWindow
+from candleviewer.ingestion.rejection import EventWindow, corrected_now_us
 from candleviewer.ingestion.service import IngestionService
 from candleviewer.ingestion.ticker_stream import TickerStream
 from candleviewer.ingestion.trade_stream import TradeStream
@@ -1195,7 +1195,7 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
     # stopped with ingestion. Public data always uses the live host (demo has
     # no separate public feed).
     rest = adapter.public_rest_client(env)
-    wire_clock_offset(ctx, rest_client_fetcher(rest))
+    guard = wire_clock_offset(ctx, rest_client_fetcher(rest))
     ctx.ingestion.attach_closer(rest.aclose)
 
     def _is_listed(symbol: str) -> bool:
@@ -1265,8 +1265,9 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
         inst = snap.get(symbol) if snap is not None else None
         return None if inst is None else int(inst.launch_time)
 
-    # #1892: wall clock (not the monotonic demand clock) bounds event time.
-    window = EventWindow(lambda: time.time_ns() // 1000, _launch_us)
+    # #1892/#1912: wall clock (not the monotonic demand clock) bounds event time,
+    # shifted by ClockGuard's measured offset so the exchange clock is truth.
+    window = EventWindow(corrected_now_us(guard.offset_us), _launch_us)
 
     ctx.ingestion.attach_trades(
         TradeStream(
