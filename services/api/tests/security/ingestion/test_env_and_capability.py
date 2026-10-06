@@ -76,7 +76,6 @@ async def test_relative_paths_stay_on_configured_host() -> None:
     assert rec.hosts == ["api-demo.bybit.com"]
 
 
-@pytest.mark.xfail(strict=True, reason="#1891 absolute URL in path escapes base_url")
 async def test_absolute_path_cannot_escape_base_url() -> None:
     rec = _Rec()
     signer = BybitSigner("DUMMYKEY" + "q" * 10, SecretStr("s" * 24))
