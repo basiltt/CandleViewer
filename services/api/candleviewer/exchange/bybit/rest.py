@@ -433,10 +433,12 @@ async def paginate_klines(
     """Kline-specific paging helper (ticket deliverable "the kline 1 000-row
     limit paging helper"). Bybit returns at most `limit` rows per call,
     newest-first within the window; this walks the window backwards from
-    `end_ms` until `start_ms` is covered or a page returns no rows."""
+    `end_ms` until `start_ms` is covered or a page returns no rows. Both bounds
+    are inclusive (Bybit semantics), so `start_ms == end_ms` is a one-bar window;
+    only `start_ms > end_ms` is empty."""
     all_rows: list[dict[str, Any]] = []
     window_end = end_ms
-    while window_end > start_ms:
+    while window_end >= start_ms:
         page = await fetch_range(start_ms, window_end)
         if not page:
             break

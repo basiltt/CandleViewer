@@ -11,7 +11,6 @@ from __future__ import annotations
 import itertools
 from typing import Any
 
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
@@ -86,16 +85,32 @@ async def test_arbitrary_split_points_reconstruct_the_single_call_series(
     assert len(starts) == len(set(starts))
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="adapter defect: paginate_klines loops on `window_end > start_ms`, so a one-bar "
-    "window (start == end, inclusive on Bybit) returns no rows. Found by the E08-Q02 property "
-    "run; remove this marker when the helper is fixed.",
-)
 async def test_single_bar_window_returns_that_bar() -> None:
     only = STARTS_ASC[-1]
     rows = await paginate_klines(_server(200), start_ms=only, end_ms=only, limit=200)
     assert [int(r["start"]) for r in rows] == [only]
+
+
+async def test_inverted_window_is_empty() -> None:
+    rows = await paginate_klines(_server(200), start_ms=STARTS_ASC[5], end_ms=STARTS_ASC[4])
+    assert rows == []
+
+
+@given(
+    lo=st.integers(min_value=0, max_value=449),
+    span=st.integers(min_value=0, max_value=3),
+    limit=st.integers(min_value=1, max_value=450),
+)
+@settings(max_examples=80, deadline=None)
+async def test_inclusive_window_returns_exactly_the_bars_inside(
+    lo: int, span: int, limit: int
+) -> None:
+    """One-bar (span 0), two-bar (span 1) and page-boundary-exact windows (limit == bars)."""
+    hi_i = min(lo + span, 449)
+    start, end = STARTS_ASC[lo], STARTS_ASC[hi_i]
+    for lim in (limit, hi_i - lo + 1):
+        rows = await paginate_klines(_server(lim), start_ms=start, end_ms=end, limit=lim)
+        assert sorted(int(r["start"]) for r in rows) == STARTS_ASC[lo : hi_i + 1]
 
 
 async def test_empty_page_stops_paging() -> None:
