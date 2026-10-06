@@ -227,6 +227,11 @@ def make_alerts_router(
                                     "message": e["msg"]} for e in errs]) from None  # fmt: skip
         except ValueError:
             raise _Problem(422, "validation_failed", "Invalid alert", "Body is not JSON.") from None
+        if "push" in body.channels:  # E40-T04: never accept an alert that can never deliver
+            raise _Problem(422, "validation_failed", "Invalid alert",
+                           "Push delivery is not available in this deployment.",
+                           errors=[{"field": "channels", "rule": "channel_unavailable",
+                                    "message": "push is not available"}])  # fmt: skip
         if body.webhook_url is not None or "webhook" in body.channels:
             raise _Problem(422, "validation_failed", "Invalid alert",
                            "Webhook delivery is not available yet.")  # fmt: skip

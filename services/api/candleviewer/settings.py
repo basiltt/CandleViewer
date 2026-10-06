@@ -181,6 +181,9 @@ class Settings(BaseSettings):
     # E40-T03: run the server-side alert evaluator (C-4.13: off by default until E40-T04's
     # dispatcher ships; removal with E40-Q02). Never gates a safety invariant (C-4.14).
     alerts_evaluator_enabled: bool = False
+    # E40-T04: webhook alert delivery (`alerts.webhook_enabled`). Must stay off until E40-S03
+    # ships the egress allow-list; the dispatcher refuses to build with it on.
+    alerts_webhook_enabled: bool = False
     # E07-T05: retention scheduler flag (off by default) and cron expressions.
     retention_enabled: bool = False
     retention_cron: str = "0 3 * * *"
