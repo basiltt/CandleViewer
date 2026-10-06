@@ -362,3 +362,33 @@ async def test_book_stream_cancelled_write_restores_unwritten_suffix() -> None:
         await task
     assert written == [d1]
     assert await stream.write_behind.take(5) == [snap]
+
+
+async def test_trade_stream_stop_flushes_pending_drop_counts() -> None:
+    from candleviewer.bus.bus import Bus
+    from candleviewer.ingestion.trade_stream import TradeStream
+
+    class Never:
+        async def write_trades(self, events: Sequence[object]) -> None:
+            raise OSError("questdb down")
+
+    stream = TradeStream(
+        bus=Bus(),
+        env="live",
+        set_desired=lambda _t: None,
+        parse_frame=lambda _f: None,
+        topic_for=lambda s: s,
+        is_listed=lambda _s: True,
+        touch=lambda _t: None,
+        writer=Never(),  # type: ignore[arg-type]  # structural fake
+    )
+    buf = stream.write_behind
+    buf.failures = 1
+    before = _outage_count()
+    from types import SimpleNamespace
+
+    for i in range(8192 + 5):  # only the key fields are read
+        buf.put(SimpleNamespace(symbol="BTCUSDT", ts_event=i))  # type: ignore[arg-type]
+    assert _outage_count() == before  # batched, not yet published
+    await stream.stop()
+    assert _outage_count() - before == 5

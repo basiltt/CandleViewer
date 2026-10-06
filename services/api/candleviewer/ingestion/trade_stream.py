@@ -384,6 +384,7 @@ class TradeStream:
         for t in tasks:
             t.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+        self._writes.flush_metrics()  # pending batched drop counts (#1918)
         self._bus.unsubscribe(self._health)
 
 
