@@ -357,7 +357,11 @@ async def test_write_behind_batches_and_survives_writer_failure() -> None:
     assert [e.trade_id[-1] for e in w.rows] == ["1", "2", "3"]
     w.fail = True
     await h.stream.handle_frame(FRAMES[2])
-    assert await h.stream.drain_writes() == 1  # logged, not raised
+    assert await h.stream.drain_writes() == 0  # logged, not raised; requeued (#1918)
+    assert h.stream.write_behind.qsize() == 1 and h.stream.write_behind.degraded
+    w.fail = False
+    assert await h.stream.drain_writes() == 1
+    assert len(w.rows) == 4 and not h.stream.write_behind.degraded
 
 
 async def test_stalled_writer_never_blocks_reader() -> None:

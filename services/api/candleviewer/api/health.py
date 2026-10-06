@@ -17,11 +17,13 @@ bare unit test) still gets a valid response with `mesh_binding_safe=None`.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from typing import Protocol
 
 from fastapi import APIRouter, Response
 
-from candleviewer.api.models import LivenessResponse, ReadinessResponse
+from candleviewer.api.models import LivenessResponse, ReadinessResponse, ReadyCheck
+from candleviewer.observability.health_probes import HOT_TIER_WRITE_BEHIND
 from candleviewer.observability.metrics import (
     CONTENT_TYPE_LATEST,
     CollectorRegistry,
@@ -40,6 +42,13 @@ class ReadOnlyGateLike(Protocol):
     def reason_code(self) -> str | None: ...
 
 
+class WriteBehindStatus(Protocol):
+    """Structural view of a hot-tier write-behind buffer (#1918; no import edge)."""
+
+    @property
+    def degraded(self) -> bool: ...
+
+
 def _build_info(settings: Settings) -> dict[str, str]:
     return {
         "git_sha": settings.git_sha,
@@ -52,6 +61,7 @@ def make_health_router(
     settings: Settings,
     metrics: CollectorRegistry | None = None,
     mesh_read_only_gate: ReadOnlyGateLike | None = None,
+    write_behind: Callable[[], Sequence[WriteBehindStatus]] | None = None,
 ) -> APIRouter:
     """Bind the health/metrics routes to a concrete `Settings` instance.
 
@@ -78,8 +88,17 @@ def make_health_router(
         mesh_reason_code = (
             mesh_read_only_gate.reason_code if mesh_read_only_gate is not None else None
         )
+        # #1918: hot-tier write-behind retrying = degraded, not fatal (still 200).
+        buffers = write_behind() if write_behind is not None else ()
+        checks = (
+            [ReadyCheck(name=HOT_TIER_WRITE_BEHIND, ok=not any(b.degraded for b in buffers))]
+            if buffers
+            else []
+        )
+        degraded = any(not c.ok for c in checks)
         return ReadinessResponse(
-            checks=[],
+            status="degraded" if degraded else "ok",
+            checks=checks,
             mesh_binding_safe=mesh_binding_safe,
             mesh_reason_code=mesh_reason_code,
             **_build_info(settings),

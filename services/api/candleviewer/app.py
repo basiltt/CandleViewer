@@ -103,7 +103,9 @@ from candleviewer.health_wiring import (
     HealthSystemPublisher,
     PgSystemEventReader,
     PgSystemEventWriter,
+    WriteBehindLike,
     register_real_probes,
+    register_write_behind_probe,
 )
 from candleviewer.ingestion.book_supervisor import B14BookSupervisor
 from candleviewer.ingestion.clock import ClockGuard, ServerTimeFetcher, rest_client_fetcher
@@ -706,7 +708,12 @@ def create_app(
     # `principal_resolver=None` -> fails closed with 501 until E09-S03 (as /admin/audit).
     app.include_router(make_log_level_router(overrides, _LazyAuditEmitter(ctx.audit)))
     app.include_router(
-        make_health_router(resolved, ctx.metrics, mesh_read_only_gate=ctx.oms_read_only_gate)
+        make_health_router(
+            resolved,
+            ctx.metrics,
+            mesh_read_only_gate=ctx.oms_read_only_gate,
+            write_behind=lambda: _write_behind_buffers(ctx),
+        )
     )
     # E04-T04: cached component health. Unbuilt modules register `not_deployed`
     # probes; the ticker is started/stopped by the lifespan (`app.state`).
@@ -732,6 +739,7 @@ def create_app(
             disk_path=resolved.parquet_root,
         )
     bind_health_metrics(health_registry, ctx.metrics, resolved)
+    register_write_behind_probe(health_registry, lambda: _write_behind_buffers(ctx))
     app.state.health_registry = health_registry
     app.include_router(
         make_health_report_router(
@@ -1143,6 +1151,16 @@ def wire_instrument_catalogue(
     )
     ctx.ingestion.attach_instruments(scheduler)
     return scheduler
+
+
+def _write_behind_buffers(ctx: AppContext) -> list[WriteBehindLike]:
+    """#1918: the hot-tier write-behind buffers wired in this process."""
+    out: list[WriteBehindLike] = []
+    if ctx.ingestion.trades is not None:
+        out.append(ctx.ingestion.trades.write_behind)
+    if isinstance(ctx.ingestion.books, BookStream):
+        out.append(ctx.ingestion.books.write_behind)
+    return out
 
 
 def wire_public_ws(ctx: AppContext) -> ConnectionManager:
