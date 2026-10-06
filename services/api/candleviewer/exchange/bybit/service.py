@@ -12,6 +12,7 @@ from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
 
 from candleviewer.exchange.bybit.config import RestClientConfig
+from candleviewer.exchange.bybit.funding import BybitFundingFetcher
 from candleviewer.exchange.bybit.orderbook import book_topic, parse_book_frame
 from candleviewer.exchange.bybit.public_ws import (
     PublicSocket,
@@ -66,6 +67,13 @@ class ExchangeBybitService:
         Public data always uses the live host (demo has no public feed)."""
         base = "https://api-testnet.bybit.com" if env == "testnet" else "https://api.bybit.com"
         return BybitRestClient(RestClientConfig(base_url=base))
+
+    @classmethod
+    def funding_fetcher(cls, env: str) -> tuple[BybitFundingFetcher, Callable[[], Awaitable[None]]]:
+        """E24-T02-F1: settled-funding history fetcher over a governed public REST
+        client (`MARKET_DATA` bucket) plus the closer for that client."""
+        client = cls.public_rest_client(env)
+        return BybitFundingFetcher(client), client.aclose
 
     async def start(self, ctx: AppContext) -> None:
         """Start the module. No-op until the owning epic implements it."""

@@ -192,6 +192,14 @@ class Settings(BaseSettings):
     # E07-X02 (SR-094): weekly cold-tier checksum scrub (off by default, C-4.13).
     scrub_enabled: bool = False
     scrub_interval_s: int = 7 * 24 * 3600
+    # E24-T02-F1: supervised settled-funding backfill/refresh (C-4.13: on by default; it only
+    # runs when a hot-tier funding store and a REST fetcher exist; on the real backend no store
+    # exists yet, so it is a no-op until #1939). Never gates a safety invariant.
+    # funding_refresh_interval_s: seconds between refresh passes (also the failure-backoff cap).
+    # funding_backfill_days: depth of the first (startup) backfill; later passes cover 2 days.
+    funding_enabled: bool = True
+    funding_refresh_interval_s: int = Field(default=3600, ge=60)
+    funding_backfill_days: int = Field(default=30, ge=1, le=400)
     order_rate_per_uid: int = 8
     native_sl_deadline_ms: int = 3000
     killswitch_on_disconnect_s: int = 30
