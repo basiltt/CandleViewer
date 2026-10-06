@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
 
 import httpx
@@ -9,6 +10,7 @@ import pytest
 from pydantic import SecretStr
 
 from candleviewer.exchange.base.errors import ClockDriftError
+from candleviewer.exchange.bybit import rest as rest_module
 from candleviewer.exchange.bybit.config import RestClientConfig
 from candleviewer.exchange.bybit.rate_limit import TokenBucketGovernor
 from candleviewer.exchange.bybit.rest import BybitRestClient
@@ -46,7 +48,7 @@ def _client(
     )
 
 
-async def test_10002_resync_runs_before_retry_and_retry_resigns_with_fresh_offset() -> None:
+async def test_signed_request_10002_resyncs_before_retry_and_resigns_with_fresh_offset() -> None:
     offset = [-10_000]  # host clock jumped back 10 s
     stamps: list[str] = []
     order: list[str] = []
@@ -69,7 +71,7 @@ async def test_10002_resync_runs_before_retry_and_retry_resigns_with_fresh_offse
     assert stamps == [str(int(WALL_S * 1000) - 10_000), str(int(WALL_S * 1000))]
 
 
-async def test_second_10002_raises_and_resyncs_only_once() -> None:
+async def test_signed_request_second_10002_raises_clock_drift_after_one_resync() -> None:
     calls = [0]
 
     async def resync() -> None:
@@ -85,7 +87,7 @@ async def test_second_10002_raises_and_resyncs_only_once() -> None:
     assert calls == [1]
 
 
-async def test_failing_resync_does_not_mask_the_clock_error() -> None:
+async def test_signed_request_failing_resync_hook_still_raises_clock_drift() -> None:
     async def resync() -> None:
         raise RuntimeError("time endpoint down")
 
@@ -98,7 +100,7 @@ async def test_failing_resync_does_not_mask_the_clock_error() -> None:
             await client.signed_request("GET", PATH)
 
 
-async def test_no_hook_keeps_single_retry_behaviour() -> None:
+async def test_signed_request_10002_without_hook_retries_once_then_raises() -> None:
     n = [0]
 
     def handler(_r: httpx.Request) -> httpx.Response:
@@ -112,7 +114,7 @@ async def test_no_hook_keeps_single_retry_behaviour() -> None:
     assert n[0] == 2
 
 
-async def test_wired_to_clockguard_increments_metric_and_updates_offset() -> None:
+async def test_signed_request_10002_with_clockguard_hook_counts_metric_and_resigns() -> None:
     # Venue clock is 10 s ahead of local; ClockGuard measures that on resync.
     async def fetch() -> tuple[int, float, float]:
         return int((WALL_S + 10.0) * 1_000_000), WALL_S, 0.0
@@ -137,3 +139,24 @@ async def test_wired_to_clockguard_increments_metric_and_updates_offset() -> Non
     assert after == before + 1
     assert stamps[1] - stamps[0] == 10_000  # retry re-signed with the fresh offset
     assert guard.health_severity() == "critical"  # drift alarm state (E08-S07)
+
+
+async def test_signed_request_hung_resync_hook_times_out_and_retry_still_happens(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(rest_module, "_SIGNATURE_RESYNC_TIMEOUT_S", 0.01)
+    never = asyncio.Event()  # never set: the hook hangs forever
+    n = [0]
+
+    async def hung() -> None:
+        await never.wait()
+
+    def handler(_r: httpx.Request) -> httpx.Response:
+        n[0] += 1
+        return httpx.Response(200, json=rest("rest/error_10002.json"))
+
+    client = _client(httpx.MockTransport(handler), offset_ms=lambda: 0, hook=hung)
+    async with client:
+        with pytest.raises(ClockDriftError):
+            await client.signed_request("GET", PATH)
+    assert n[0] == 2  # the single retry still happened after the bounded wait

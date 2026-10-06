@@ -57,6 +57,8 @@ _IP_RATE_LIMIT_CODE = 10018
 _IP_HOLD_S = 600.0
 #: Cap on any venue-advertised wait (header is untrusted input).
 _MAX_RESET_WAIT_S = 900.0
+#: Bound on the injected re-measure hook so a hung server-time call cannot stall the retry.
+_SIGNATURE_RESYNC_TIMEOUT_S = 5.0
 
 #: SR-040a: a request path is a relative `/v5/...` path of URL-safe segment
 #: characters only. No scheme, authority, backslash, whitespace/control char,
@@ -392,7 +394,8 @@ class BybitRestClient:
                 # re-signs with it (E08-S07 "Signature failure fallback").
                 if self._on_signature_failure is not None:
                     try:
-                        await self._on_signature_failure()
+                        async with asyncio.timeout(_SIGNATURE_RESYNC_TIMEOUT_S):
+                            await self._on_signature_failure()
                     except Exception as exc:  # re-measure failure must not mask the 10002
                         logger.warning("bybit_clock_resync_failed", error=type(exc).__name__)
                 continue
