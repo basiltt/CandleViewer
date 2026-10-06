@@ -21,10 +21,16 @@ import argparse
 import json
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
+from collections.abc import Callable
 from pathlib import Path
-from typing import Protocol
+from typing import Protocol, TypeVar
+
+T = TypeVar("T")
+RETRY_ATTEMPTS = 3
+RETRY_STATUS = frozenset({429, 500, 502, 503, 504})
 
 ROOT = Path(__file__).resolve().parents[2]
 # repo[:tag]@sha256:digest. The repo may include a registry host.
@@ -38,6 +44,22 @@ ACCEPT = (
     "application/vnd.oci.image.manifest.v1+json, "
     "application/vnd.docker.distribution.manifest.v2+json"
 )
+
+
+def with_retry(
+    fn: Callable[[], T],
+    attempts: int = RETRY_ATTEMPTS,
+    sleep: Callable[[float], None] = time.sleep,
+) -> T:
+    """Call ``fn``, retrying with exponential backoff on HTTP 429/5xx (not on 4xx)."""
+    for i in range(attempts):
+        try:
+            return fn()
+        except urllib.error.HTTPError as exc:
+            if exc.code not in RETRY_STATUS or i == attempts - 1:
+                raise
+            sleep(2.0**i)
+    raise AssertionError("unreachable")  # pragma: no cover
 
 
 class RegistryClient(Protocol):
@@ -107,9 +129,13 @@ class HttpRegistry:
         tok = self._token(host, path)
         if tok:
             req.add_header("Authorization", f"Bearer {tok}")
-        try:
+
+        def _do() -> str | None:
             with urllib.request.urlopen(req, timeout=30) as r:  # nosec B310
                 return str(r.headers.get("Docker-Content-Digest") or "") or None
+
+        try:
+            return with_retry(_do)
         except urllib.error.HTTPError as exc:
             if exc.code in (400, 401, 403, 404):
                 return None
