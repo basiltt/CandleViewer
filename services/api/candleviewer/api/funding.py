@@ -24,7 +24,6 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse
 
 from candleviewer.orderflow.funding import (
-    CURSOR_MAX_LEN,
     DEFAULT_LIMIT,
     FundingInvalidRequest,
     FundingSeries,
@@ -131,7 +130,7 @@ def make_funding_router(
         symbol: str,
         from_: str | None = Query(default=None, alias="from"),
         to: str | None = Query(default=None, alias="to"),
-        cursor: str | None = Query(default=None, max_length=CURSOR_MAX_LEN),
+        cursor: str | None = Query(default=None),
         limit: int = Query(default=DEFAULT_LIMIT),
     ) -> JSONResponse:
         if principal_resolver is None:
@@ -145,6 +144,7 @@ def make_funding_router(
         if not principal.has(_REQUIRED_PERMISSION):
             return _problem(403, "forbidden", "Forbidden", f"requires {_REQUIRED_PERMISSION}")
         if not _SYMBOL_RE.match(symbol):
+            deriv_range_rejected_total.labels(endpoint="funding").inc()
             return _problem(400, "validation_failed", "Bad request", "invalid symbol")
         reader = reader_provider()
         if reader is None:

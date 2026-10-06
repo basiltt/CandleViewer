@@ -29,6 +29,8 @@ import structlog
 
 from candleviewer.domain.funding import (
     FundingIntervalUnknown,
+    FundingPage,
+    FundingRowRejected,
     FundingSettlement,
     HasFundingInterval,
     PredictedFunding,
@@ -41,6 +43,7 @@ from candleviewer.orderflow.funding_metrics import (
     deriv_funding_backfill_pages_total,
     deriv_funding_interval_minutes,
     deriv_funding_refresh_total,
+    deriv_upstream_schema_rejected_total,
     symbol_label,
 )
 
@@ -56,6 +59,7 @@ MAX_LIMIT: Final = 500
 DEFAULT_LIMIT: Final = 100
 CURSOR_TTL_S: Final = 3600
 CURSOR_MAX_LEN: Final = 512
+_INT64_MAX: Final = 2**63 - 1
 _US_PER_DAY: Final = 86_400 * 1_000_000
 
 
@@ -144,7 +148,8 @@ def decode_cursor(cursor: str, *, symbol: str, now_s: float) -> int:
         sym, after, issued = data["s"], data["t"], data["i"]
     except (ValueError, KeyError, TypeError, binascii.Error) as exc:
         raise bad from exc
-    ints = all(isinstance(v, int) and not isinstance(v, bool) for v in (after, issued))
+    in_range = isinstance(after, int) and not isinstance(after, bool) and 0 <= after <= _INT64_MAX
+    ints = in_range and all(isinstance(v, int) and not isinstance(v, bool) for v in (after, issued))
     if sym != symbol or not ints or now_s - issued > CURSOR_TTL_S or issued > now_s + 60:
         raise bad
     return int(after)
@@ -192,6 +197,7 @@ class FundingService:
             for _ in range(MAX_PAGES_PER_RUN):
                 page = await self._fetcher(symbol, window.start_us, end_us, PAGE_LIMIT)
                 deriv_funding_backfill_pages_total.inc()
+                self._count_rejected(label, page)
                 if not page:
                     break
                 rows = [
@@ -205,11 +211,29 @@ class FundingService:
                 if len(page) < PAGE_LIMIT or oldest <= window.start_us or oldest > end_us:
                     break
                 end_us = oldest - 1000  # the upstream takes millisecond bounds
-        except Exception:
+        except Exception as exc:
+            if isinstance(exc, FundingRowRejected):
+                deriv_upstream_schema_rejected_total.labels(
+                    topic="funding_history", reason=exc.reason
+                ).inc()
+                logger.warning("funding_page_rejected", symbol=label, reason=exc.reason)
             deriv_funding_refresh_total.labels(symbol=label, result="error").inc()
             raise
         deriv_funding_refresh_total.labels(symbol=label, result="ok").inc()
         return written
+
+    @staticmethod
+    def _count_rejected(label: str, page: Sequence[FundingSettlement]) -> None:
+        """Count adapter-rejected rows; one structured log line per page (no payload)."""
+        reasons = page.rejected_reasons if isinstance(page, FundingPage) else []
+        for reason in reasons:
+            deriv_upstream_schema_rejected_total.labels(
+                topic="funding_history", reason=reason
+            ).inc()
+        if reasons:
+            logger.warning(
+                "funding_rows_rejected", symbol=label, count=len(reasons), reason=reasons[0]
+            )
 
     def predicted(self, symbol: str) -> tuple[PredictedFunding | None, int | None]:
         """`(predicted item | None, next_funding_time_us | None)` from the ticker."""
@@ -237,6 +261,10 @@ class FundingService:
     ) -> FundingSeries:
         now_s = self._clock_s()
         now_us = int(now_s * 1_000_000)
+        if cursor is not None and len(cursor) > CURSOR_MAX_LEN:
+            raise FundingInvalidRequest(
+                "invalid_cursor", "pagination cursor is malformed or expired"
+            )
         if not 1 <= limit <= MAX_LIMIT:
             raise FundingInvalidRequest("validation_failed", f"limit must be 1..{MAX_LIMIT}")
         end = end_us if end_us is not None else now_us

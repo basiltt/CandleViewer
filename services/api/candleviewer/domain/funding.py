@@ -13,12 +13,34 @@ Exchange-neutral (C-2.2): no exchange field names here.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Final, Literal, Protocol
 
 #: Minutes in a 365-day year. The annualisation numerator (not an interval).
 MINUTES_PER_YEAR: Final[int] = 525_600
+
+
+class FundingRowRejected(ValueError):
+    """A funding-history row (or its envelope) failed strict validation.
+    `reason` is a bounded enum value safe to use as a metric label."""
+
+    def __init__(self, message: str, reason: str = "envelope") -> None:
+        super().__init__(message)
+        self.reason = reason
+
+
+class FundingPage(list["FundingSettlement"]):
+    """Accepted rows of one upstream page plus the bounded reasons of rows the
+    adapter rejected (fail-closed per row, STRIDE D1)."""
+
+    def __init__(
+        self, rows: Iterable[FundingSettlement] = (), rejected_reasons: list[str] | None = None
+    ) -> None:
+        super().__init__(rows)
+        self.rejected_reasons: list[str] = rejected_reasons or []
+
 
 #: `funding_rates.source` for rows backfilled from the settled-history endpoint.
 SOURCE_HISTORY: Final[str] = "history"

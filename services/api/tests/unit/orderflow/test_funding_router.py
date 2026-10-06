@@ -190,3 +190,32 @@ def test_each_principal_only_sees_what_resolver_grants_no_cross_symbol_leak() ->
     c = _client(reader, _OK)
     c.get("/market/funding", params={"symbol": "ETHUSDT"})
     assert reader.calls[0]["symbol"] == "ETHUSDT"  # symbol comes from the query only
+
+
+def test_every_400_path_increments_range_rejected_counter() -> None:
+    from candleviewer.orderflow.funding_metrics import deriv_range_rejected_total
+
+    def count() -> float:
+        return deriv_range_rejected_total.labels(endpoint="funding")._value.get()  # type: ignore[no-any-return]
+
+    cases = [
+        (_Reader(_series()), {"symbol": "eth"}),
+        (_Reader(_series()), {"symbol": "ETHUSDT", "from": "garbage"}),
+        (_Reader(FundingInvalidRequest("invalid_cursor", "bad")), {"symbol": "ETHUSDT"}),
+        (_Reader(FundingInvalidRequest("validation_failed", "bad")), {"symbol": "ETHUSDT"}),
+    ]
+    for reader, params in cases:
+        before = count()
+        assert _client(reader, _OK).get("/market/funding", params=params).status_code == 400
+        assert count() == before + 1
+
+
+def test_overlong_cursor_is_400_invalid_cursor_not_422() -> None:
+    from candleviewer.orderflow.funding import FundingService
+
+    reader = _Reader(FundingInvalidRequest("invalid_cursor", "bad"))
+    r = _client(reader, _OK).get(
+        "/market/funding", params={"symbol": "ETHUSDT", "cursor": "a" * 600}
+    )
+    assert r.status_code == 400 and r.json()["code"] == "invalid_cursor"
+    assert FundingService is not None

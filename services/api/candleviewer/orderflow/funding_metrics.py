@@ -46,6 +46,6 @@ deriv_range_rejected_total = Counter(
 )
 deriv_upstream_schema_rejected_total = Counter(
     "deriv_upstream_schema_rejected_total",
-    "Upstream derivatives payloads rejected by strict validation, by topic.",
-    ["topic"],
+    "Upstream derivatives payloads rejected by strict validation, by topic and bounded reason.",
+    ["topic", "reason"],
 )

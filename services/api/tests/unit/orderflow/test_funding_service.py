@@ -203,6 +203,11 @@ async def test_series_cursor_pagination_covers_all_rows_once() -> None:
     assert seen == [r.ts_us for r in rows]
 
 
+def _forged_cursor(t: object) -> str:
+    raw = json.dumps({"s": "BTCUSDT", "t": t, "i": int(NOW_S)}).encode()
+    return base64.urlsafe_b64encode(raw).decode().rstrip("=")
+
+
 @pytest.mark.parametrize(
     ("kw", "code"),
     [
@@ -212,6 +217,9 @@ async def test_series_cursor_pagination_covers_all_rows_once() -> None:
         ({"start_us": 0, "end_us": 401 * 86_400 * 1_000_000}, "invalid_time_range"),
         ({"cursor": "!!notbase64"}, "invalid_cursor"),
         ({"cursor": "a" * 513}, "invalid_cursor"),
+        ({"cursor": _forged_cursor(2**63)}, "invalid_cursor"),
+        ({"cursor": _forged_cursor(-1)}, "invalid_cursor"),
+        ({"cursor": _forged_cursor("12")}, "invalid_cursor"),
     ],
 )
 async def test_series_rejects_out_of_bounds_before_querying(
@@ -245,3 +253,77 @@ def test_cursor_roundtrip_expiry_and_symbol_binding() -> None:
     for bad in (base64.urlsafe_b64encode(forged).decode(), ""):
         with pytest.raises(FundingInvalidRequest):
             decode_cursor(bad, symbol="BTCUSDT", now_s=NOW_S)
+
+
+def _counter(metric: object, **labels: str) -> float:
+    return metric.labels(**labels)._value.get()  # type: ignore[attr-defined,no-any-return]
+
+
+async def test_backfill_counts_rejected_rows_persists_good_ones_and_continues() -> None:
+    from candleviewer.domain.funding import FundingPage
+    from candleviewer.orderflow.funding_metrics import deriv_upstream_schema_rejected_total
+
+    good = _settlements(3)
+
+    class _Mixed:
+        async def __call__(self, *a: object) -> FundingPage:
+            return FundingPage(good, ["rate_implausible"])
+
+    store = InMemoryFundingStore()
+    svc = FundingService(
+        store=store,
+        fetcher=_Mixed(),  # type: ignore[arg-type]
+        instruments=lambda s: _Inst(240),
+        tickers=lambda: _Tickers(None),
+        clock_s=lambda: NOW_S,
+    )
+    before = _counter(
+        deriv_upstream_schema_rejected_total, topic="funding_history", reason="rate_implausible"
+    )
+    written = await svc.backfill("BTCUSDT", TimeWindow(BASE_US, BASE_US + 3 * 14_400_000_000))
+    after = _counter(
+        deriv_upstream_schema_rejected_total, topic="funding_history", reason="rate_implausible"
+    )
+    assert written == 3 and after == before + 1
+
+
+async def test_backfill_envelope_rejection_is_counted_and_reraised() -> None:
+    from candleviewer.domain.funding import FundingRowRejected
+    from candleviewer.orderflow.funding_metrics import deriv_upstream_schema_rejected_total
+
+    class _Bad:
+        async def __call__(self, *a: object) -> list[FundingSettlement]:
+            raise FundingRowRejected("funding history: missing list")
+
+    store = InMemoryFundingStore()
+    svc = FundingService(
+        store=store,
+        fetcher=_Bad(),  # type: ignore[arg-type]
+        instruments=lambda s: _Inst(240),
+        tickers=lambda: _Tickers(None),
+        clock_s=lambda: NOW_S,
+    )
+    before = _counter(
+        deriv_upstream_schema_rejected_total, topic="funding_history", reason="envelope"
+    )
+    with pytest.raises(FundingRowRejected):
+        await svc.backfill("BTCUSDT", TimeWindow(BASE_US, BASE_US + 14_400_000_000))
+    assert (
+        _counter(deriv_upstream_schema_rejected_total, topic="funding_history", reason="envelope")
+        == before + 1
+    )
+
+
+async def test_backfill_empty_page_stops_and_writes_nothing() -> None:
+    store = InMemoryFundingStore()
+    written = await _service(store, fetcher=_Fetcher([])).backfill(
+        "BTCUSDT", TimeWindow(BASE_US, BASE_US + 14_400_000_000)
+    )
+    assert written == 0
+
+
+def test_symbol_label_is_bounded_and_malformed_maps_to_other() -> None:
+    from candleviewer.orderflow.funding_metrics import symbol_label
+
+    assert symbol_label("bad/sym") == "other"
+    assert symbol_label("BTCUSDT") == symbol_label("BTCUSDT") == "BTCUSDT"

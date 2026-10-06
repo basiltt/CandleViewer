@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[2] / "packages" / "fixtures" / "bybit" /
 T0 = 1_700_000_000_000
 WS_HOST = "stream.bybit.com"
 REST_HOST = "api-demo.bybit.com"
+PUBLIC_REST_HOST = "api.bybit.com"  # public market data has no demo feed (C-2.11)
 
 
 def _dump(obj: Any) -> str:
@@ -234,7 +235,7 @@ def build() -> list[dict[str, Any]]:
         _write_json(rel, funding_history(sym, step_h))
         m.append(_entry(rel, sym, "GET /v5/market/funding/history",
                         f"{step_h} h interval symbol, 4 settlements newest-first",
-                        host=REST_HOST, cap=4_000))  # fmt: skip
+                        host=PUBLIC_REST_HOST, cap=4_000))  # fmt: skip
     for name, after in (("instruments_before", False), ("instruments_after", True)):
         _write_json(f"rest/{name}.json", instruments(after))
         m.append(_entry(f"rest/{name}.json", "*", "GET /v5/market/instruments-info",

@@ -29,24 +29,47 @@ def test_parse_recorded_8h_and_4h_fixtures() -> None:
     assert eth[0].ts_us - eth[1].ts_us == 4 * 3_600 * 1_000_000
 
 
-@pytest.mark.parametrize(
-    "payload",
-    [
-        {},
-        {"result": {}},
-        {"result": {"list": ["x"]}},
-        _page(symbol="ETHUSDT"),
-        _page(fundingRate=1),
-        _page(fundingRate="abc"),
-        _page(fundingRate="NaN"),
-        _page(fundingRate="5"),
-        _page(fundingRateTimestamp="0"),
-        _page(fundingRateTimestamp="x"),
-    ],
-)
-def test_parse_rejects_malformed_rows(payload: dict[str, Any]) -> None:
+@pytest.mark.parametrize("payload", [{}, {"result": {}}, {"result": {"list": "x"}}, {"result": []}])
+def test_parse_rejects_malformed_envelope(payload: dict[str, Any]) -> None:
     with pytest.raises(FundingRowRejected):
         parse_funding_page(payload, symbol="BTCUSDT")
+
+
+NOW_MS = 1_800_000_000_000
+
+
+@pytest.mark.parametrize(
+    ("payload", "reason"),
+    [
+        ({"result": {"list": ["x"]}}, "not_object"),
+        (_page(symbol="ETHUSDT"), "symbol_mismatch"),
+        (_page(fundingRate=1), "type"),
+        (_page(fundingRate="abc"), "unparseable"),
+        (_page(fundingRate="NaN"), "rate_implausible"),
+        (_page(fundingRate="0.031"), "rate_implausible"),
+        (_page(fundingRateTimestamp="0"), "time_nonpositive"),
+        (_page(fundingRateTimestamp="x"), "unparseable"),
+        (_page(fundingRateTimestamp=str(NOW_MS + 600_000)), "time_future"),
+    ],
+)
+def test_parse_skips_bad_row_and_records_reason(payload: dict[str, Any], reason: str) -> None:
+    page = parse_funding_page(payload, symbol="BTCUSDT", now_ms=NOW_MS)
+    assert list(page) == [] and page.rejected_reasons == [reason]
+
+
+def test_parse_keeps_good_rows_and_flags_non_monotonic() -> None:
+    def row(ts: int) -> dict[str, str]:
+        return {"symbol": "BTCUSDT", "fundingRate": "0.0001", "fundingRateTimestamp": str(ts)}
+
+    payload = {"result": {"list": [row(3000), row(2000), row(2500), row(2000), row(1000)]}}
+    page = parse_funding_page(payload, symbol="BTCUSDT", now_ms=NOW_MS)
+    assert [s.ts_us for s in page] == [3_000_000, 2_000_000, 1_000_000]
+    assert page.rejected_reasons == ["non_monotonic", "non_monotonic"]
+
+
+def test_rate_at_ceiling_is_accepted() -> None:
+    page = parse_funding_page(_page(fundingRate="-0.03"), symbol="BTCUSDT", now_ms=NOW_MS)
+    assert len(page) == 1
 
 
 async def test_fetch_is_public_market_data_and_bounds_params() -> None:
