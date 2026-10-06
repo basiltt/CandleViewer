@@ -150,6 +150,8 @@ class BybitRestClient:
             timeout=timeout,
             limits=limits,
             transport=transport,
+            # SR-040a: a 3xx from the real host must never carry the signature elsewhere.
+            follow_redirects=False,
         )
 
     async def check_reachable(self) -> bool:

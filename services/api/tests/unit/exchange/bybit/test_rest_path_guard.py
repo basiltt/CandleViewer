@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 import httpx
 import pytest
 from hypothesis import given
@@ -72,11 +74,60 @@ async def test_happy_path_unchanged() -> None:
     assert hosts == ["api.bybit.com", "api.bybit.com"]
 
 
-@given(st.text())
-def test_any_accepted_path_targets_base_host(path: str) -> None:
-    try:
-        validate_rest_path(path)
-    except RestPathRejected:
-        return
-    client = httpx.Client(base_url=BASE)
-    assert client.build_request("GET", path).url.host == "api.bybit.com"
+_SEG = st.text(
+    alphabet="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-", min_size=1
+)
+_SAFE = st.lists(_SEG, min_size=1, max_size=4).map(lambda segs: "/v5/" + "/".join(segs))
+_MUTATIONS = [
+    "//",
+    chr(92),
+    "@",
+    ":",
+    "%2F",
+    "%2e",
+    "?",
+    "#",
+    " ",
+    chr(10),
+    chr(0),
+    chr(9),
+    chr(0xFF0F),
+    chr(0x2215),
+    "..",
+    "https://evil.example",
+    "//evil.example",
+]
+
+
+@given(_SAFE)
+def test_built_safe_paths_accepted_and_target_base_host(path: str) -> None:
+    assert validate_rest_path(path) == path
+    built = httpx.Client(base_url=BASE).build_request("GET", path)
+    assert built.url.host == "api.bybit.com"
+
+
+@st.composite
+def _mutated(draw: st.DrawFn) -> str:
+    path = draw(_SAFE)
+    kind = draw(st.sampled_from(["inject", "no_slash", "empty"]))
+    if kind == "empty":
+        return ""
+    if kind == "no_slash":
+        return path[1:]
+    pos = draw(st.integers(min_value=0, max_value=len(path)))
+    return path[:pos] + draw(st.sampled_from(_MUTATIONS)) + path[pos:]
+
+
+@given(_mutated())
+def test_mutated_paths_rejected_and_nothing_sent(path: str) -> None:
+    hosts: list[str] = []
+
+    async def run() -> None:
+        async with _client(hosts) as c:
+            with pytest.raises(RestPathRejected):
+                await c.signed_request("GET", path)
+            with pytest.raises(RestPathRejected):
+                await c.get_public(path)
+
+    asyncio.run(run())
+    assert hosts == []
