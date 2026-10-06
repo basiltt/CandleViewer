@@ -109,6 +109,10 @@ class ClockGuard:
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         random_fn: Callable[[], float] = random.random,
+        wall_ns: Callable[[], int] = time.time_ns,
+        mono_ns: Callable[[], int] = time.monotonic_ns,
+        step_threshold_s: float = 1.0,
+        step_check_interval_ms: int = 100,
     ) -> None:
         if hard_threshold_ms <= warn_threshold_ms:
             raise ValueError("hard_threshold_ms must exceed warn_threshold_ms")
@@ -123,6 +127,14 @@ class ClockGuard:
         self._random = random_fn
 
         self._offset_us: int = 0
+        # #1912 host-step detector: (wall - mono) only moves when the host wall
+        # clock is stepped (WSL sleep/resume, NTP jump), never with elapsed time.
+        self._wall_ns, self._mono_ns = wall_ns, mono_ns
+        self._step_threshold_us = int(step_threshold_s * 1_000_000)
+        self._step_check_interval_ns = step_check_interval_ms * 1_000_000
+        self._skew_ref_us = self._wall_minus_mono_us()
+        self._next_step_check_ns = 0
+        self._resync_task: asyncio.Task[int] | None = None
         self._last_measured_monotonic: float | None = None
         self._consecutive_failures = 0
         self._task: asyncio.Task[None] | None = None
@@ -134,8 +146,50 @@ class ClockGuard:
         """The last verified offset (server - local), in microseconds. Never
         raises — before the first successful measurement this is `0`
         (uncorrected), which is why `assert_healthy()` and the age metric
-        exist to guard trading on that state, not this accessor."""
+        exist to guard trading on that state, not this accessor. A host clock
+        step is folded in immediately (#1912), before any re-measurement."""
+        self._maybe_check_host_step()
         return self._offset_us
+
+    def _wall_minus_mono_us(self) -> int:
+        return (self._wall_ns() - self._mono_ns()) // 1_000
+
+    def _maybe_check_host_step(self) -> None:
+        """Throttled (>= `step_check_interval_ms` apart; never per frame work)."""
+        now_ns = self._mono_ns()
+        if now_ns < self._next_step_check_ns:
+            return
+        self._next_step_check_ns = now_ns + self._step_check_interval_ns
+        self.check_host_step()
+
+    def check_host_step(self) -> int:
+        """Detect a host wall-clock step; returns the step in µs (0 if none).
+
+        offset = server - local, so a pure host step of `s` shifts the offset by
+        `-s` exactly. Corrects at once, counts it, and schedules one
+        single-flight `measure_once()` (public unsigned endpoint) to confirm."""
+        delta_us = self._wall_minus_mono_us()
+        step_us = delta_us - self._skew_ref_us
+        if abs(step_us) <= self._step_threshold_us:
+            return 0
+        self._skew_ref_us = delta_us
+        self._offset_us -= step_us
+        clock_resync_triggered_total.labels(reason="host_step").inc()
+        logger.warning("clock_host_step_detected", step_ms=step_us / _MICROS_PER_MS)
+        if self._resync_task is None or self._resync_task.done():
+            try:
+                asyncio.get_running_loop()
+            except RuntimeError:
+                return step_us  # no loop: periodic task will re-measure
+            self._resync_task = spawn(self._resync_after_step(), name="clock-guard-step-resync")
+        return step_us
+
+    async def _resync_after_step(self) -> int:
+        try:
+            return await self.measure_once()
+        except ClockMeasurementUnavailableError as exc:
+            logger.warning("clock_step_measurement_failed", error=str(exc))
+            return self._offset_us
 
     def offset_ms_or_none(self) -> int | None:
         """E04-T06 latency provider: `exchange - local` in ms, or `None` before
@@ -233,6 +287,7 @@ class ClockGuard:
         median_offset_us = offsets[len(offsets) // 2]
 
         self._offset_us = median_offset_us
+        self._skew_ref_us = self._wall_minus_mono_us()
         self._last_measured_monotonic = self._clock()
         self._consecutive_failures = 0
         clock_measurements_total.labels(result="ok").inc()
