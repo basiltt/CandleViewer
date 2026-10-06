@@ -1,7 +1,8 @@
 ---
 description: Run the Definition-of-Done checklist (C-11.2) against the current branch and report pass/fail per item.
-allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git branch:*), Bash(gh issue view:*), Bash(pnpm:*), Bash(uv run:*), Bash(pytest:*), Bash(ruff:*), Bash(black:*), Bash(mypy:*), Bash(lint-imports:*), Bash(alembic:*), Bash(gitleaks:*), Read, Grep, Glob
+allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git branch:*), Bash(gh issue view:*), Bash(python docs/plan/backlog/_tools/done_gate.py:*), Bash(pnpm:*), Bash(uv run:*), Bash(pytest:*), Bash(ruff:*), Bash(black:*), Bash(mypy:*), Bash(lint-imports:*), Bash(alembic:*), Bash(gitleaks:*), Read, Grep, Glob
 ---
+
 # /ready-check
 
 Evaluate the current branch against DoD (C-11.2, `docs/plan/02-definition-of-ready-done.md`). Do not fix anything;
@@ -21,9 +22,13 @@ report. Output a table: item | PASS/FAIL/N/A | evidence.
    - UI: Storybook story for each touched CMP-*; the a11y test command
    - contracts: the generate command produces no diff
    - always: the secrets-scan command
-   If a command does not exist yet (pre-INFRA-001), mark N/A with the reason — never invent one.
+     If a command does not exist yet (pre-INFRA-001), mark N/A with the reason — never invent one.
 5. **Docs:** docs named in the ticket updated; `AGENTS.md` §4 updated if scripts changed; ADR if required.
 6. **Safety:** no secrets in diff; no flag gating a safety invariant (C-4.14); every `C-x.y` cited exists in CONSTITUTION.md.
-7. **Feature flags:** multi-PR features behind a flag (C-4.13).
+7. **Done-gate (DoD evidence):** run `python docs/plan/backlog/_tools/done_gate.py <KEY> <issue#>` (read-only) and
+   report each named gap (design sign-off/Penpot/PNGs, measurements, security verdict, a11y evidence, QA PASS,
+   unchecked DoD boxes). Gaps need the evidence or a specific `#1778` owner exception — never a blanket waiver.
+   `qa_close.py` runs the same gate and refuses to close on failure.
+8. **Feature flags:** multi-PR features behind a flag (C-4.13).
 
 Finish with `READY FOR PR` or `NOT READY` + the ordered fix list.
