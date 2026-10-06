@@ -46,15 +46,16 @@ better or worse than real flow: treat cold as +/-2x.
 Rows/day from §11.1 (BTCUSDT-class; depth 50 = 1/4 of delta rows per §11.1), bytes/row from §2. ETHUSDT assumed equal to BTCUSDT
 (no 3 h ETH book capture exists; ETH is the same order of magnitude in volume terms, unverified).
 
-| stream                                                 |            rows/day |                                       hot GB/day (d200) | cold GB/day (d200) | hot GB/day (d50) | cold GB/day (d50) |
-| ------------------------------------------------------ | ------------------: | ------------------------------------------------------: | -----------------: | ---------------: | ----------------: |
-| trades                                                 |               2.5 M |                                                   0.362 |              0.059 |            0.362 |             0.059 |
-| orderbook_deltas                                       | 190 M (d50: 47.5 M) |                                                   13.68 |               1.14 |             3.42 |              0.44 |
-| orderbook_snapshots                                    |               1.5 k |                                                   0.022 |              0.004 |            0.006 |             0.003 |
-| tickers                                                |               864 k |                                                   0.135 |              0.015 |            0.135 |             0.015 |
-| liquidations/OI/funding/klines                         |               small |                                                   <0.01 |              <0.01 |            <0.01 |             <0.01 |
-| **raw total / symbol**                                 |                     |                                               **~14.2** |          **~1.22** |         **~3.9** |         **~0.52** |
-| derived (`bars_*`, `footprint_cells`, `heatmap_cells`) |   not measured here | recomputable from `trades`; §11.1 estimates +2.3 GB hot |                    |                  |                   |
+| stream                                                                |            rows/day |                                       hot GB/day (d200) |        cold GB/day (d200) |         hot GB/day (d50) |         cold GB/day (d50) |
+| --------------------------------------------------------------------- | ------------------: | ------------------------------------------------------: | ------------------------: | -----------------------: | ------------------------: |
+| trades                                                                |               2.5 M |                                                   0.362 |                     0.059 |                    0.362 |                     0.059 |
+| orderbook_deltas                                                      | 190 M (d50: 47.5 M) |                                                   13.68 |                      1.14 |                     3.42 |                      0.44 |
+| orderbook_snapshots                                                   |               1.5 k |                                                   0.022 |                     0.004 |                    0.006 |                     0.003 |
+| tickers                                                               |               864 k |                                                   0.135 |                     0.015 |                    0.135 |                     0.015 |
+| liquidations/OI/funding/klines                                        |               small |                                                   <0.01 |                     <0.01 |                    <0.01 |                     <0.01 |
+| **raw total / symbol** (ETH rows: assumed = BTC, no ETH book capture) |                     |                                               **~14.2** |                 **~1.22** |                 **~3.9** |                 **~0.52** |
+| **ETH raw total / symbol**                                            |                     |          **~14.2 (assumed = BTC, no ETH book capture)** | **~1.22 (assumed = BTC)** | **~3.9 (assumed = BTC)** | **~0.52 (assumed = BTC)** |
+| derived (`bars_*`, `footprint_cells`, `heatmap_cells`)                |   not measured here | recomputable from `trades`; §11.1 estimates +2.3 GB hot |                           |                          |                           |
 
 Error bars: rate x bytes/row, each +/-2x => **cold d200 0.6-2.4 GB/day/symbol**. Central 1.22 is ~1.6x the 0.75 planning
 bound but below the 1.5 GB/day trigger of the ticket's third scenario, and that trigger is defined on the _live_ measurement, so no
@@ -75,6 +76,8 @@ Sizing basis: 2 symbols (BTC+ETH), depth 200, QuestDB overhead +25 % (WAL, page 
 | `CV_RECORDER_HOT_DAYS`       | **7 (keep)**; **3 if depth 200 on >=3 symbols**                                       | 2 sym x 14.2 x 7 d = 199 GB x 1.25 = ~250 GB. 5 symbols = ~620 GB > cap, so use depth 50 (3.9 GB/day: 5 x 3.9 x 7 x 1.25 = 171 GB) or 3 hot days (266 GB)                                                                             |
 | `CV_RECORDER_RETENTION_DAYS` | **30 (keep)**                                                                         | cold 2 sym x 1.22 x 30 = 73 GB central; 146 GB at the 2x error-bar top; 292 GB if the 2x safety margin is stacked on that                                                                                                             |
 | `CV_DISK_CAP_GB`             | **600** for <=2 symbols at d200 (ADR default 500 is enough only for the central case) | 250 hot + 73 cold = ~320 GB central; 250 + 146 = ~400 GB at the error-bar top (hits the 80 % alert of a 500 cap); 250 + 292 = 542 GB with the stacked margin, hence 600. For larger sets raise the cap or cut depth/hot days as above |
+
+**Gate:** E16-T06/E16-T07 MUST treat the recommended constants as provisional; do not bake them as final defaults until the live 7-day re-measure (#1778 A) lands; the plausible range runs to 2.4 GB/day (1.6x-3.2x budget #12). The margin per ADR-0015 is carried by the 600 GB cap, which stacks a 2x safety margin on top of the +/-2x error-bar top (conservative).
 
 Re-validate all three after the live run; the number most likely to move is the d200 delta row rate (real vs §11.1).
 
