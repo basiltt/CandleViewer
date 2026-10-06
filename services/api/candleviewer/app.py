@@ -1097,20 +1097,24 @@ def _alert_metric_sink(facade: Metrics) -> Callable[[str, tuple[str, ...]], Any]
 
 
 def _compose_funding(ctx: AppContext, settings: Settings) -> Any:
-    """E24-T02-F1: fake backend -> in-memory store, no fetcher (no network);
-    real backend -> adapter fetcher, store `None` (503) until the QuestDB funding
-    client is composed by the storage tier."""
+    """E24-T02-F1: fake backend -> in-memory store, no fetcher (no network).
+
+    Real backend -> no store yet, so NO fetcher/refresh task is built (pages that cannot be
+    written must not spend MARKET_DATA budget); `/market/funding` serves 503 until the QuestDB
+    funding client lands (follow-up issue #1939, parent #1932 / #666)."""
     store: Any = None
-    fetcher: Any = None
-    closer: Callable[[], Awaitable[None]] | None = None
     if settings.storage_backend == "fake":
         from candleviewer.storage.questdb.funding_store import InMemoryFundingStore
 
         store = InMemoryFundingStore()
     else:
-        fetcher, closer = ctx.exchange_bybit.funding_fetcher(settings.environment.value)
+        structlog.get_logger("candleviewer.funding").info(
+            "funding_refresh_disabled",
+            reason="pending_questdb_funding_client",
+            issue="#1939",
+        )
     return wire_funding(
-        ctx, store=store, fetcher=fetcher, closer=closer, now_us=lambda: time.time_ns() // 1000
+        ctx, store=store, fetcher=None, closer=None, now_us=lambda: time.time_ns() // 1000
     )
 
 

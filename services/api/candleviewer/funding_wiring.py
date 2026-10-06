@@ -10,8 +10,10 @@ cache and the ticker stream together (C-3.1). Rules:
   backfill over the catalogue's trading symbols. A rejected page
   (`FundingRowRejected`), an unknown interval or any per-symbol failure is
   counted by the service and skipped; the loop never dies.
-* No fetcher is built unless one is injected or `storage_backend == "real"`, so
-  dev/CI defaults never touch the network (C-13.5).
+* No fetcher is built unless one is injected, so dev/CI defaults never touch the network
+  (C-13.5). On `storage_backend == "real"` there is no store yet, so no fetcher/task is
+  composed (nothing is fetched that cannot be written) until the QuestDB funding client
+  lands: follow-up issue #1939 (parent #1932 / #666).
 """
 
 from __future__ import annotations
@@ -39,6 +41,8 @@ RECENT_DAYS: Final = 2
 #: Retry cadence while the instruments catalogue is not loaded yet.
 CATALOGUE_RETRY_S: Final = 30.0
 JITTER_FRACTION: Final = 0.1
+#: First retry delay after a pass in which every symbol failed; doubles up to the interval.
+FAILURE_BACKOFF_S: Final = 30.0
 
 
 class GuardedFundingStore:
@@ -86,6 +90,7 @@ class FundingRefreshTask:
         self._now_us = now_us
         self._task: asyncio.Task[None] | None = None
         self._first = True
+        self._failures = 0
 
     @property
     def running(self) -> bool:
@@ -118,21 +123,32 @@ class FundingRefreshTask:
                 raise
             except Exception as exc:  # counted by the service; one symbol never stops the loop
                 logger.warning("funding_refresh_skipped", symbol=symbol, error=type(exc).__name__)
-        if symbols:
-            self._first = False
+        if ok > 0:
+            self._first = False  # deep backfill is retried until one symbol succeeds
         return ok
+
+    def _next_delay(self, ok: int, had_symbols: bool) -> float:
+        if not had_symbols:
+            return CATALOGUE_RETRY_S
+        if ok > 0:
+            self._failures = 0
+            return float(self._interval_s * (1 + JITTER_FRACTION * self._random()))
+        self._failures += 1
+        base = min(FAILURE_BACKOFF_S * 2 ** (self._failures - 1), self._interval_s)
+        return float(base * (1 + JITTER_FRACTION * self._random()))
 
     async def _run(self) -> None:
         while True:
             try:
-                await self.run_once()
-                delay = self._interval_s * (1 + JITTER_FRACTION * self._random())
+                had_symbols = bool(self._symbols())
+                ok = await self.run_once()
+                delay = self._next_delay(ok, had_symbols)
             except asyncio.CancelledError:
                 raise
             except Exception:
                 logger.exception("funding_refresh_failed")
-                delay = self._interval_s
-            await self._sleep(delay if self._first is False else CATALOGUE_RETRY_S)
+                delay = self._next_delay(0, True)
+            await self._sleep(delay)
 
 
 def _default_random() -> float:

@@ -13,7 +13,7 @@ from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
 from candleviewer.api.funding import make_funding_router
-from candleviewer.app import AppContext, build_app_context, create_app
+from candleviewer.app import AppContext, _compose_funding, build_app_context, create_app
 from candleviewer.domain.funding import FundingRowRejected
 from candleviewer.exchange.bybit.config import RestClientConfig
 from candleviewer.exchange.bybit.funding import BybitFundingFetcher
@@ -125,7 +125,7 @@ async def test_rejected_page_is_skipped_not_fatal() -> None:
     assert calls == ["ETHUSDT"]
 
 
-async def test_lifecycle_start_stop_with_fake_sleep_and_jitter() -> None:
+async def test_refresh_task_started_then_stopped_sleeps_jittered_interval_and_closes() -> None:
     ctx = await _started()
     sleeps: list[float] = []
     closed: list[bool] = []
@@ -161,3 +161,55 @@ def test_create_app_fake_backend_wires_funding_without_network() -> None:
     app = create_app()
     assert app.state.app_context.orderflow.funding is not None
     assert app.state.funding_refresh_task is None
+
+
+async def test_refresh_task_total_failure_backs_off_exponentially_to_interval_cap() -> None:
+    ctx = await _started()
+    sleeps: list[float] = []
+    calls: list[int] = []
+
+    async def fetcher(symbol: str, s: int, e: int, limit: int) -> Any:
+        calls.append(s)
+        raise FundingRowRejected("bad page", "envelope")
+
+    task = wire_funding(ctx, store=InMemoryFundingStore(), fetcher=fetcher, now_us=lambda: NOW_US)
+    assert task is not None
+    task._random = lambda: 0.0  # type: ignore[method-assign]
+    done = asyncio.Event()
+
+    async def sleep(d: float) -> None:
+        sleeps.append(d)
+        if len(sleeps) >= 8:
+            done.set()
+            await asyncio.Event().wait()
+
+    task._sleep = sleep  # type: ignore[method-assign]
+    task.start()
+    await asyncio.wait_for(done.wait(), 2)
+    await task.stop()
+    assert sleeps == [30.0, 60.0, 120.0, 240.0, 480.0, 960.0, 1920.0, 3600.0]
+    # deep backfill retried every pass (first window is the full 30 days each time)
+    assert set(calls) == {NOW_US - 30 * 86_400 * 1_000_000}
+
+
+async def test_run_once_after_success_switches_to_recent_window() -> None:
+    ctx = await _started()
+    starts: list[int] = []
+
+    async def fetcher(symbol: str, s: int, e: int, limit: int) -> Any:
+        starts.append(s)
+        return []
+
+    task = wire_funding(ctx, store=InMemoryFundingStore(), fetcher=fetcher, now_us=lambda: NOW_US)
+    assert task is not None
+    await task.run_once()
+    await task.run_once()
+    assert starts == [NOW_US - 30 * 86_400 * 1_000_000, NOW_US - 2 * 86_400 * 1_000_000]
+
+
+async def test_compose_funding_real_backend_without_store_spawns_no_task_and_serves_503() -> None:
+    ctx = await _started()
+    task = _compose_funding(ctx, Settings(storage_backend="real"))
+    assert task is None
+    resp = await asyncio.to_thread(_http(ctx).get, "/market/funding", params={"symbol": "ETHUSDT"})
+    assert resp.status_code == 503
