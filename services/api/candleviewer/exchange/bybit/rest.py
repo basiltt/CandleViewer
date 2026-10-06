@@ -57,6 +57,8 @@ _IP_RATE_LIMIT_CODE = 10018
 _IP_HOLD_S = 600.0
 #: Cap on any venue-advertised wait (header is untrusted input).
 _MAX_RESET_WAIT_S = 900.0
+#: Bound on the injected re-measure hook so a hung server-time call cannot stall the retry.
+_SIGNATURE_RESYNC_TIMEOUT_S = 5.0
 
 #: SR-040a: a request path is a relative `/v5/...` path of URL-safe segment
 #: characters only. No scheme, authority, backslash, whitespace/control char,
@@ -140,8 +142,10 @@ class BybitRestClient:
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         random_fn: Callable[[], float] = random.random,
         wall_clock: Callable[[], float] = time.time,
+        on_signature_failure: Callable[[], Awaitable[object]] | None = None,
     ) -> None:
         self._config = config
+        self._on_signature_failure = on_signature_failure
         self._wall_clock = wall_clock
         self._uid = uid
         self._signer = signer
@@ -385,10 +389,15 @@ class BybitRestClient:
             if isinstance(error, ClockDriftError) and not clock_retry_used:
                 clock_retry_used = True
                 bybit_rest_requests_total.labels(endpoint=path, result="clock_drift").inc()
-                # Caller-injected offset provider is responsible for the
-                # actual re-measurement; we simply retry once with whatever
-                # it now returns (ticket scenario "Clock error self-heals
-                # once").
+                # Re-measure the offset (ClockGuard.resync_after_signature_failure,
+                # injected by the composition root) *before* the single retry
+                # re-signs with it (E08-S07 "Signature failure fallback").
+                if self._on_signature_failure is not None:
+                    try:
+                        async with asyncio.timeout(_SIGNATURE_RESYNC_TIMEOUT_S):
+                            await self._on_signature_failure()
+                    except Exception as exc:  # re-measure failure must not mask the 10002
+                        logger.warning("bybit_clock_resync_failed", error=type(exc).__name__)
                 continue
 
             if isinstance(error, RateLimitError):
