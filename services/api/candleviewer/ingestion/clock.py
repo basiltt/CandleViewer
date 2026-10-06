@@ -48,6 +48,15 @@ from candleviewer.observability.context import spawn
 
 logger = structlog.get_logger(__name__)
 
+
+def _log() -> structlog.stdlib.BoundLogger:
+    """Resolved per call: a module-level logger cached under
+    `cache_logger_on_first_use=True` keeps a stale processor chain after
+    `configure_logging()` runs, so step events would escape `capture_logs()`
+    (same pitfall as ingestion/rejection.py)."""
+    return structlog.get_logger(__name__)  # type: ignore[no-any-return]  # structlog returns Any
+
+
 _STEP_RETRY_BACKOFF_S = (1.0, 2.0, 4.0, 8.0, 16.0, 30.0)
 """Delays before each confirming retry of a host-step correction (doubling, capped
 at 30 s). The provisional correction stays applied while retrying; only after the
@@ -202,7 +211,7 @@ class ClockGuard:
         self._offset_us -= step_us
         reason = "host_step_redetect" if self._step_reverted else "host_step"
         clock_resync_triggered_total.labels(reason=reason).inc()
-        logger.warning("clock_host_step_detected", step_ms=step_us / _MICROS_PER_MS)
+        _log().warning("clock_host_step_detected", step_ms=step_us / _MICROS_PER_MS)
         if self._resync_task is None or self._resync_task.done():
             try:
                 asyncio.get_running_loop()
@@ -223,7 +232,7 @@ class ClockGuard:
             try:
                 return await self.measure_once()  # success clears the provisional state
             except ClockMeasurementUnavailableError as exc:
-                logger.warning("clock_step_measurement_failed", error=str(exc))
+                _log().warning("clock_step_measurement_failed", error=str(exc))
             if delay is None:
                 break
             await self._sleep(delay)
@@ -232,7 +241,7 @@ class ClockGuard:
             self._skew_ref_us = self._pre_step_skew_ref_us  # detector re-fires next check
             self._pre_step_offset_us = None
             self._step_reverted = True
-        logger.warning("clock_step_unconfirmed", offset_us=self._offset_us)
+        _log().warning("clock_step_unconfirmed", offset_us=self._offset_us)
         return self._offset_us
 
     def offset_ms_or_none(self) -> int | None:
@@ -314,7 +323,7 @@ class ClockGuard:
                 self._step_reverted = False
                 self._record_measured(offset)
                 return offset
-            logger.warning("clock_step_during_measurement", attempt=_attempt)
+            _log().warning("clock_step_during_measurement", attempt=_attempt)
         clock_measurements_total.labels(result="failed").inc()
         self._consecutive_failures += 1
         raise ClockMeasurementUnavailableError("host clock stepped during every measurement burst")
