@@ -35,10 +35,13 @@ def _dump(obj: Any) -> str:
     return json.dumps(obj, separators=(",", ":"))
 
 
+TRADE_TOPIC = "publicTrade.BTCUSDT"  # nosemgrep: cv-bybit-vocabulary-leak,cv-adapter-isolation reason=B5-b-harness owner=@CandleViewer/security review=2026-12-31  # noqa: E501 - fixed marker format
+
+
 def trade(**rec: Any) -> str:
     base: dict[str, Any] = {"s": "BTCUSDT", "i": "t-1", "T": TS, "p": "100.0", "v": "1"}
     base.update({"S": "Buy"}, **rec)
-    return _dump({"topic": "publicTrade.BTCUSDT", "ts": TS, "type": "snapshot", "data": [base]})
+    return _dump({"topic": TRADE_TOPIC, "ts": TS, "type": "snapshot", "data": [base]})
 
 
 def ticker(**data: Any) -> str:
@@ -53,7 +56,7 @@ def book(kind: str, u: int, bids: list[list[str]], asks: list[list[str]], **extr
 
 
 def nested(depth: int) -> str:
-    return '{"topic":"publicTrade.BTCUSDT","data":' + "[" * depth + "]" * depth + "}"
+    return '{"topic":"' + TRADE_TOPIC + '","data":' + "[" * depth + "]" * depth + "}"
 
 
 _NUMERIC = {

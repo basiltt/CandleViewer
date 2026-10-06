@@ -11,6 +11,7 @@ import time
 import tracemalloc
 import zlib
 from typing import Any
+from urllib.parse import urlsplit
 
 import pytest
 from websockets.exceptions import PayloadTooBig
@@ -56,7 +57,9 @@ async def test_ws_client_bounds_frames_before_buffering(monkeypatch: pytest.Monk
     monkeypatch.setattr(client, "connect", fake_connect)
     await public_ws.public_socket_factory("live", max_frame_bytes=MAX_FRAME_BYTES)()
     assert seen["max_size"] == MAX_FRAME_BYTES
-    assert seen["url"].startswith("wss://stream.bybit.com/")
+    parts = urlsplit(seen["url"])
+    assert parts.scheme == "wss"
+    assert parts.hostname == "stream.bybit.com"
 
 
 def test_deflate_bomb_is_capped_at_max_size() -> None:
