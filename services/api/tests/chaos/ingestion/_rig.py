@@ -1,0 +1,283 @@
+"""Production composition over the stub exchange (mirrors `app.wire_public_ws`).
+
+`IngestionService` + `ConnectionManager` (B13 chart via the factory) +
+`TradeStream` + `BookStream`, all on one `Bus`, with the stub exchange as the
+socket factory and as the REST transport of a real `BybitRestClient`. The only
+deviations from the composition root are the injected virtual clock/RNG and
+the stub transport - exactly the seams the production classes expose.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import random
+from dataclasses import dataclass, field
+from decimal import Decimal
+from typing import Any, cast
+
+from candleviewer.book.models import BookPhase, BookStatus
+from candleviewer.bus.bus import Bus, Subscription
+from candleviewer.bus.models import QueuePolicy
+from candleviewer.exchange.base.models import BookDelta, BookSnapshot
+
+# nosemgrep: cv-adapter-isolation reason=Q03 owner=@CandleViewer/security review=2026-12-31
+from candleviewer.exchange.bybit.config import RestClientConfig
+
+# nosemgrep: cv-adapter-isolation reason=Q03 owner=@CandleViewer/security review=2026-12-31
+from candleviewer.exchange.bybit.orderbook import book_topic, parse_book_frame
+
+# nosemgrep: cv-adapter-isolation reason=Q03 owner=@CandleViewer/security review=2026-12-31
+from candleviewer.exchange.bybit.public_ws import topic_kind
+
+# nosemgrep: cv-adapter-isolation reason=Q03 owner=@CandleViewer/security review=2026-12-31
+from candleviewer.exchange.bybit.rate_limit import TokenBucketGovernor
+
+# nosemgrep: cv-adapter-isolation reason=Q03 owner=@CandleViewer/security review=2026-12-31
+from candleviewer.exchange.bybit.rest import BybitRestClient
+
+# nosemgrep: cv-adapter-isolation reason=Q03 owner=@CandleViewer/security review=2026-12-31
+from candleviewer.exchange.bybit.trades import parse_trade_frame, recent_trades_fetcher, trade_topic
+from candleviewer.ingestion.connection import ConnectionManager
+from candleviewer.ingestion.planner import SubscriptionPlanner
+from candleviewer.ingestion.reconnect import ConnectionRateGuard, ReconnectPolicy
+from candleviewer.ingestion.rejection import EventWindow
+from candleviewer.ingestion.service import IngestionService
+from candleviewer.ingestion.trade_stream import GapEvent, TradeStream
+from candleviewer.ingestion.watchdog import FeedHealthEvent, StalenessWatchdog
+from candleviewer.observability.context import spawn
+from candleviewer.orderbook_wiring import BookStream
+from tests._corpus import TICKS
+from tests.chaos.ingestion._clock import VirtualClock
+from tests.chaos.ingestion._stub_exchange import StubExchange
+
+#: The stub's REST base URL. Allow-listed host string only: `MockTransport`
+#: answers in-process, nothing is ever dialled (network guard stays armed).
+STUB_BASE_URL = "https://api.bybit.com"
+TICK_ALL: dict[str, Decimal] = {**TICKS, "ETHUSDT": Decimal("0.01")}
+
+
+def _tick(symbol: str) -> Decimal | None:
+    return TICK_ALL.get(symbol)
+
+
+@dataclass
+class Observed:
+    """The user-visible signals, in publish order (what SCR-152 / panels read)."""
+
+    feed: list[FeedHealthEvent] = field(default_factory=list)
+    book_status: list[BookStatus] = field(default_factory=list)
+    book_events: list[BookSnapshot | BookDelta] = field(default_factory=list)
+    gaps: list[GapEvent] = field(default_factory=list)
+    trades: list[Any] = field(default_factory=list)
+    order: list[str] = field(default_factory=list)  # "status:desynced", "delta:42", ...
+
+
+class FlakyWriter:
+    """Hot-tier writer double: `down=True` models a QuestDB/Postgres outage."""
+
+    def __init__(self) -> None:
+        self.down = False
+        self.persisted_trades: list[Any] = []
+        self.persisted_book_rows = 0
+        self.failed_batches = 0
+
+    def _check(self) -> None:
+        if self.down:
+            self.failed_batches += 1
+            raise ConnectionError("hot tier unavailable")
+
+    async def write_trades(self, events: Any) -> None:
+        self._check()
+        self.persisted_trades.extend(events)
+
+    async def write_book_deltas(self, rows: Any) -> None:
+        self._check()
+        self.persisted_book_rows += len(rows)
+
+    async def write_book_snapshot(self, row: Any) -> None:
+        self._check()
+        self.persisted_book_rows += 1
+
+
+class _NullRepo:
+    """Instrument repository double (Postgres is out of this suite's seam)."""
+
+    async def upsert_snapshot(self, rows: Any) -> None:
+        return None
+
+    async def record_version(self, row: Any, *, changed_fields: Any) -> None:
+        return None
+
+    async def mark_stale(self, *, stale_since_us: int) -> None:
+        return None
+
+    async def load_all(self) -> list[Any]:
+        return []
+
+
+class Rig:
+    """One env's public ingestion stack wired to the stub exchange."""
+
+    def __init__(self, *, seed: int, symbols: tuple[str, ...] = ("BTCUSDT",)) -> None:
+        self.seed = seed
+        self.clock = VirtualClock()
+        self.rng = random.Random(seed)  # noqa: S311  (deterministic jitter)
+        self.ex = StubExchange(self.clock, seed=seed)
+        self.bus = Bus()
+        self.env = "live"
+        self.symbols = symbols
+        self.writer = FlakyWriter()
+        self.seen = Observed()
+        self.governor = TokenBucketGovernor(
+            default_capacity=50.0, default_refill_per_s=5.0, clock=self.clock
+        )
+        self.rest = BybitRestClient(
+            RestClientConfig(base_url=STUB_BASE_URL),
+            governor=self.governor,
+            transport=self.ex.transport,
+            sleep=self.clock.sleep,
+            random_fn=self.rng.random,
+        )
+        self.host_skew_s = 0.0  # market-data host clock skew (WSL sleep)
+        self.svc = IngestionService()
+        self.guard = ConnectionRateGuard(self.clock)
+        self.watchdog = StalenessWatchdog(self.clock, lambda _e: None, kind_of=topic_kind)
+        self.ws = ConnectionManager(
+            self.ex.socket_factory,
+            SubscriptionPlanner(),
+            self.watchdog,
+            ReconnectPolicy(rng=random.Random(seed + 1)),  # noqa: S311
+            self.guard,
+            self.svc.offer_frame,
+            sleep=self.clock.sleep,
+            bus=self.bus,
+            env=self.env,
+        )
+        self.listed: set[str] = set(symbols)
+        self._demand: dict[str, set[str]] = {}
+        window = EventWindow(self.host_now_us, lambda _s: None)
+        self.trades = TradeStream(
+            bus=self.bus,
+            env=self.env,
+            set_desired=lambda t: self._set_desired("trade", t),
+            parse_frame=parse_trade_frame,
+            topic_for=trade_topic,
+            is_listed=self.is_listed,
+            touch=self.watchdog.touch,
+            fetch_recent=recent_trades_fetcher(self.rest.get_public),
+            tick_size=_tick,
+            clock=self.clock,
+            now_us=self.clock.now_us,
+            event_window=window,
+            writer=self.writer,
+        )
+        self.books = BookStream(
+            bus=self.bus,
+            env=self.env,
+            set_desired=lambda t: self._set_desired("book", t),
+            parse_frame=lambda f: parse_book_frame(f, _tick),
+            topic_for=book_topic,
+            resubscribe=self.ws.resubscribe_topic,
+            is_listed=self.is_listed,
+            touch=self.watchdog.touch,
+            clock=self.clock,
+            now_us=self.clock.now_us,
+            writer=self.writer,
+            rand=self.rng.random,
+        )
+        self.svc.attach_ws(self.ws)
+        self.svc.attach_trades(self.trades)
+        self.svc.attach_books(self.books)
+        self._ui: Subscription = self.bus.subscribe(
+            "chaos-ui", f"{self.env}.*.*.*", QueuePolicy.NEVER_DROP, maxsize=1_000_000
+        )
+
+    # ---- composition-root callbacks ---------------------------------------
+    def is_listed(self, symbol: str) -> bool:
+        return symbol in self.listed
+
+    def host_now_us(self) -> int:
+        return self.clock.now_us() + int(self.host_skew_s * 1_000_000)
+
+    def _set_desired(self, stream: str, topics: set[str]) -> None:
+        self._demand[stream] = set(topics)
+        self.ws.set_desired(set().union(*self._demand.values()))
+
+    # ---- lifecycle -----------------------------------------------------------
+    async def start(self) -> None:
+        """`IngestionService.start` minus the settings-bound synthetic feed.
+
+        `BookStream._timeout_loop` sleeps on the real loop clock (not injectable),
+        so the rig runs the same `check_timeouts()` on the virtual clock instead."""
+
+        await self.ws.start()
+        await self.trades.start()
+        b = cast(Any, self.books)
+        self._tasks: list[asyncio.Task[None]] = [
+            spawn(b._health_loop(), name="chaos-book-health"),
+            spawn(b._write_loop(), name="chaos-book-write"),
+            spawn(self._book_ticks(), name="chaos-book-ticks"),
+            spawn(cast(Any, self.svc)._pump_frames(), name="chaos-pump"),
+        ]
+        self.svc.ws = self.ws
+        for sym in self.symbols:
+            self.trades.acquire("chaos", sym)
+            self.books.acquire("chaos", sym)
+        await self.clock.settle()
+
+    async def _book_ticks(self) -> None:
+        while True:
+            await self.clock.sleep(0.25)
+            await self.books.check_timeouts()
+
+    async def stop(self) -> None:
+
+        for t in self._tasks:
+            t.cancel()
+        await asyncio.gather(*self._tasks, return_exceptions=True)
+        await self.trades.stop()
+        await self.ws.stop()
+        await self.rest.aclose()
+
+    # ---- observation -----------------------------------------------------------
+    def observe(self) -> Observed:
+        """Drain what a UI subscriber would have received since the last call."""
+        while not self._ui.queue.empty():
+            ev = self._ui.get_nowait()
+            if isinstance(ev, BookStatus):
+                self.seen.book_status.append(ev)
+                self.seen.order.append(f"status:{ev.state}")
+            elif isinstance(ev, BookDelta):
+                self.seen.book_events.append(ev)
+                self.seen.order.append(f"delta:{ev.update_id}")
+            elif isinstance(ev, BookSnapshot):
+                self.seen.book_events.append(ev)
+                self.seen.order.append(f"snapshot:{ev.update_id}")
+            elif isinstance(ev, GapEvent):
+                self.seen.gaps.append(ev)
+            elif isinstance(ev, FeedHealthEvent):
+                self.seen.feed.append(ev)
+                self.seen.order.append(f"feed:{ev.state}")
+            else:
+                self.seen.trades.append(ev)
+        return self.seen
+
+    def book_phase(self, symbol: str = "BTCUSDT") -> BookPhase | None:
+        return self.books.phase(symbol)
+
+    def book_levels(self, symbol: str = "BTCUSDT") -> tuple[dict[Decimal, Decimal], ...]:
+        view = self.books.view(symbol, 200)
+        if view is None:
+            return ({}, {})
+        snap = view.snapshot
+        return ({lv.price: lv.qty for lv in snap.bids}, {lv.price: lv.qty for lv in snap.asks})
+
+    def health_report(self) -> str:
+        """What the health endpoint / SCR-152 derives from the connection phase."""
+        return "ok" if self.ws.state() == "open" else "degraded"
+
+
+def metric(m: Any, **labels: str) -> float:
+    """Current value of a prometheus child (counters/gauges on the default registry)."""
+    child = m.labels(**labels) if labels else m
+    return float(child._value.get())
