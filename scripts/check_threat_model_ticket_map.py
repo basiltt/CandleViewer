@@ -29,11 +29,6 @@ HEADING_RE = re.compile(r"^#{2,3} .*ticket", re.IGNORECASE | re.MULTILINE)
 KEY_RE = re.compile(r"^E\d{2}-[A-Z]\d{2}$")
 # Known pre-existing gaps per epic (follow-ups). Shrink-only: never add keys.
 BASELINE_GAPS: dict[str, frozenset[str]] = {
-    "E24": frozenset(
-        {f"E24-D0{i}" for i in range(1, 7)}
-        | {"E24-Q04", "E24-Q05", "E24-S01", "E24-S02", "E24-S03", "E24-S06", "E24-S08"}
-        | {"E24-K01", "E24-S05", "E24-T06", "E24-X01"}
-    ),
     "E25": frozenset(
         {f"E25-D0{i}" for i in range(1, 9)}
         | {"E25-K01", "E25-T05", "E25-T06", "E25-T07", "E25-Q04", "E25-Q05"}
