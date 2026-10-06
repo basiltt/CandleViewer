@@ -42,12 +42,14 @@ Bybit's REST API offers no deep history for the tape or the order book — recen
 ### Consequences
 
 Positive:
+
 - Nothing is recorded until the user acts, which matches the owner's explicit instruction and keeps a fresh installation weightless.
 - Disk growth is visible before it is a problem, and the degradation path stops recording rather than losing pinned history.
 - Keeping raw ticks means future metrics can be backfilled over existing history — the single most valuable property of the whole policy.
 - Explicit coverage tracking makes every history-dependent view honest, which the research flagged as a recurring UX risk across views 3, 6–10, 12 and 17.
 
 Negative / risks:
+
 - Users will inevitably want history for a symbol they only just started recording, and it will not exist. Mitigated by making this explicit in the UI from the first run: empty-state screens explain that history begins when recording begins, and the recorded-list screen is prominent in onboarding.
 - Auto-recording on chart open can surprise a user who browses many symbols. Mitigated by a short grace period (a symbol must be open 60 s before auto-recording starts), a visible recording indicator, and a one-click stop.
 - The GB/day estimate may be off by 2–3×. Mitigated by spike S6 (7-day instrumentation) replacing the estimate before retention defaults are finalised.
@@ -61,5 +63,6 @@ Negative / risks:
 ## Validation
 
 - Spike S6: instrument the recorder against BTCUSDT and ETHUSDT for 7 days; publish measured GB/day per stream and adjust `CV_DISK_CAP_GB`, hot-tier sizing and retention defaults accordingly.
+  - **Status (E16-K01, #478, 2026-10-06): partial.** In-process measurement done from the recorded corpus (ILP/row, modelled QuestDB B/row, real Parquet B/row via the E07 cold writer, hot/cold ratio 2.4-11.9x) — see `docs/plan/notes/e16-storage-measurement.md`. Provisional depth-200 figure: ~14.2 GB/day/symbol hot, ~1.2 GB/day/symbol cold (plausible 0.6-2.4), ~1.6x the 0.75 planning bound; depth 50: ~3.9 hot / ~0.5 cold. Suggested defaults: hot 7 d, retention 30 d, `CV_DISK_CAP_GB` 600 for 2 symbols at depth 200 (hand-off to E16-T06/T07; unchanged in code). **The live 7-day QuestDB run is pending** (leg waived for the agent phase by #1778 group A; checklist in the note) and must replace these numbers before the retention defaults are final.
 - Retention tests: a symbol crossing the retention boundary is rolled off and dropped exactly once; a pinned symbol never is; a coverage row is written for every capture interval.
 - Disk-pressure chaos test: fill the volume to 85 %, 91 % and 96 % and assert each documented behaviour, including that pinned data survives.
