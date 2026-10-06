@@ -341,6 +341,12 @@ held read lease (R-D5, High), purge-scope widening (R-E2, High), test/shared-vol
 (R-E3, High) and path traversal at every write/delete site (R-E4, High). Findings are tracked as issues
 linked from the model's section 7; abuse cases AC-01..AC-15 go to E16-Q01.
 
+**E22 big trades & bubbles** (`docs/security/threat-models/E22-big-trades.md`, ticket E22-X01) is
+availability-first: unbounded `/market/trades` window, `min_size=0`, extreme `cluster_window_ms`, per-user
+`trades.*` subscription fan-out, per-symbol cluster-state memory, slow-consumer queues and bubble-burst
+render storms (High: D14-D19, D21). Controls SR-E22-01..15 (recommended bounds in its section 3) are
+assigned to E22-T01/T02/S02/S03/S05; abuse cases AC1-AC19 go to E22-X02 (see RSK-057).
+
 **E35 rule engine** (`docs/security/threat-models/e35-rule-engine.md`, ticket E35-X01) models the IR,
 compiler, rule store, evaluator, executor, `pre_trade_check` hook, `emit_signal` bus, firing log/WS and
 import/export. Critical/High findings: IR resource exhaustion (RE-D1, Critical), permission drift between
