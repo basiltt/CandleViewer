@@ -14,8 +14,10 @@ from __future__ import annotations
 
 import os
 import random
+import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 from typing import Any
 
@@ -49,6 +51,36 @@ def test_roundtrip_plan_splits_the_exact_document_count() -> None:
     assert len({s for *_, s in p}) == len(p)  # every shard has its own seed
 
 
+#: A worker that dies (OOM-kill, host pressure) poisons the whole pool; the shards are seeded and
+#: pure, so re-running the unfinished ones in a fresh pool is exact. Real property failures are
+#: ordinary exceptions from ``f.result()`` and are never retried.
+POOL_RESTARTS = 2
+this = sys.modules[__name__]  # the module under its pytest-assigned name
+
+
+def run_shards(shards: list[tuple[str, int, int]]) -> list[tuple[int, float]]:
+    """Run every shard; restart the pool (bounded) when a worker process dies."""
+    results: dict[int, tuple[int, float]] = {}
+    for attempt in range(POOL_RESTARTS + 1):
+        todo = [i for i in range(len(shards)) if i not in results]
+        if not todo:
+            break
+        try:
+            with ProcessPoolExecutor(max_workers=min(WORKERS, len(todo))) as pool:
+                futures = {i: pool.submit(run_shard, *shards[i], DB) for i in todo}
+                for i, f in futures.items():
+                    results[i] = f.result()
+        except BrokenProcessPool as exc:
+            print(f"[roundtrip] worker died (attempt {attempt + 1}/{POOL_RESTARTS + 1}): {exc!r}")
+    missing = [shards[i] for i in range(len(shards)) if i not in results]
+    if missing:
+        pytest.fail(
+            f"worker pool kept dying; {len(missing)} shard(s) never finished "
+            f"(seed={SEED}, workers={WORKERS}): {missing}"
+        )
+    return [results[i] for i in range(len(shards))]
+
+
 @pytest.mark.roundtrip
 def test_roundtrip_ten_thousand_generated_documents_round_trip() -> None:
     """Scenario: Ten thousand generated documents round-trip."""
@@ -57,19 +89,52 @@ def test_roundtrip_ten_thousand_generated_documents_round_trip() -> None:
     print(f"\n[roundtrip] seed={SEED} workers={WORKERS} target={EXAMPLES}")
     total = 0
     try:
-        with ProcessPoolExecutor(max_workers=WORKERS) as pool:
-            futures = [pool.submit(run_shard, k, n, s, DB) for k, n, s in shards]
-            for (kind, _, s), f in zip(shards, futures, strict=True):
-                done, secs = f.result()
-                total += done
-                print(
-                    f"[roundtrip] shard kind={kind} seed={s} documents={done} elapsed_s={secs:.1f}"
-                )
+        for (kind, _, s), (done, secs) in zip(shards, run_shards(shards), strict=True):
+            total += done
+            print(f"[roundtrip] shard kind={kind} seed={s} documents={done} elapsed_s={secs:.1f}")
     finally:
         print(
             f"[roundtrip] seed={SEED} documents={total} elapsed_s={time.monotonic() - started:.1f}"
         )
     assert total >= EXAMPLES, f"only {total} documents generated (NFR floor {EXAMPLES})"
+
+
+def test_roundtrip_run_shards_survives_a_dead_worker(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A BrokenProcessPool on the first pool is retried; a persistent one fails with a message."""
+    calls = {"n": 0}
+
+    class FlakyPool:
+        def __init__(self, max_workers: int) -> None:
+            calls["n"] += 1
+            self.fail = calls["n"] == 1
+
+        def __enter__(self) -> FlakyPool:
+            return self
+
+        def __exit__(self, *a: object) -> None:
+            return None
+
+        def submit(self, fn: Any, *args: Any) -> Any:
+            class F:
+                def result(_self) -> tuple[int, float]:
+                    if self.fail:
+                        raise BrokenProcessPool("dead")
+                    return (args[1], 0.0)
+
+            return F()
+
+    monkeypatch.setattr(this, "ProcessPoolExecutor", FlakyPool)
+    assert run_shards([("any", 3, 1), ("form", 2, 2)]) == [(3, 0.0), (2, 0.0)]
+    calls["n"] = -10  # never equals 1 again -> no failure; now force permanent failure
+    monkeypatch.setattr(this, "POOL_RESTARTS", 1)
+
+    class DeadPool(FlakyPool):
+        def __init__(self, max_workers: int) -> None:
+            self.fail = True
+
+    monkeypatch.setattr(this, "ProcessPoolExecutor", DeadPool)
+    with pytest.raises(pytest.fail.Exception, match="worker pool kept dying"):
+        run_shards([("any", 3, 1)])
 
 
 @pytest.mark.parametrize("strategy", [any_rule, form_rule], ids=["any", "form"])
