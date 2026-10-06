@@ -46,7 +46,7 @@ from candleviewer.ingestion.metrics import (
 from candleviewer.ingestion.planner import DEFAULT_GRACE_S, DemandTracker
 from candleviewer.ingestion.rejection import RejectionLog
 from candleviewer.ingestion.ticker_stream import UnknownSymbolError
-from candleviewer.ingestion.watchdog import FeedHealthEvent
+from candleviewer.ingestion.watchdog import FeedHealthEvent, prune_unlisted
 from candleviewer.ingestion.write_behind import WriteBehindBuffer
 from candleviewer.observability.context import spawn
 from candleviewer.storage.repositories.rows import BookDeltaRow, BookSnapshotRow
@@ -222,20 +222,19 @@ class BookStream:
             self._drop(gone)
 
     async def prune_unlisted(self) -> list[str]:
-        """#1913: drop demand for symbols the catalogue no longer lists as
-        trading (held topics were only checked on `acquire`), unsubscribe via
-        `sync()`, and publish a plain `delisted` FeedHealthEvent per symbol."""
-        gone = sorted(s for s in self._demand.desired() if not self._is_listed(s))
-        for sym in gone:
-            self._demand.drop(sym)
-        if gone:
-            self.sync()
+        """#1913: drop + unsubscribe symbols that left the catalogue."""
         health = Topic(env=self._env, domain="health", detail="feed")
-        for sym in gone:
-            await self._bus.publish(
-                health, FeedHealthEvent(self._topic_for(sym, self._depth), "delisted", 0.0)
-            )
-        return gone
+
+        async def publish(ev: FeedHealthEvent) -> None:
+            await self._bus.publish(health, ev)
+
+        return await prune_unlisted(
+            self._demand,
+            self._is_listed,
+            self.sync,
+            publish,
+            lambda s: self._topic_for(s, self._depth),
+        )
 
     def _drop(self, symbol: str) -> None:
         self._books.pop(symbol, None)

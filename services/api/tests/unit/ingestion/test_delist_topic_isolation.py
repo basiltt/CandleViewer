@@ -40,9 +40,11 @@ class _Sock:
         self.sent: list[dict[str, object]] = []
         self.closed = False
         self.q: asyncio.Queue[str] = asyncio.Queue()
+        self.first_send = asyncio.Event()
 
     async def send(self, frame: str) -> None:
         self.sent.append(json.loads(frame))
+        self.first_send.set()
 
     async def recv(self, max_bytes: int) -> str:
         return await self.q.get()
@@ -74,10 +76,19 @@ class _Rig:
             ping_interval_s=10_000.0,
         )
         self.m.set_desired(topics)
+        self.reopened = asyncio.Event()
 
     async def _connect(self) -> _Sock:
         self.socks.append(_Sock())
+        if len(self.socks) == 2:
+            self.reopened.set()
         return self.socks[-1]
+
+    def states(self) -> list[str]:
+        out: list[str] = []
+        while not self.sub.queue.empty():
+            out.append(self.sub.queue.get_nowait().state)
+        return out
 
     def _on_message(self, frame: str) -> None:
         topic = json.loads(frame)["topic"]
@@ -126,12 +137,12 @@ async def test_one_silent_topic_resubscribes_only_that_topic_and_keeps_socket() 
 async def test_all_topics_silent_still_recycles_socket() -> None:
     rig = _Rig({BOOK_BTC, BOOK_LUNA}, alive=set())
     await rig.m.start()
-    for _ in range(5000):
-        if len(rig.socks) >= 2 and rig.socks[1].sent:
-            break
-        await asyncio.sleep(0)
-    assert len(rig.socks) >= 2 and rig.socks[0].closed
-    assert set(rig.sent("subscribe", 1)) == {BOOK_BTC, BOOK_LUNA}
+    async with asyncio.timeout(10):
+        await rig.reopened.wait()
+        await rig.socks[1].first_send.wait()
+    assert rig.socks[0].closed
+    assert set(rig.sent("subscribe", 1)) == {BOOK_BTC, BOOK_LUNA}  # full subscribe
+    assert "resubscribing" in rig.states()  # a reopened socket still reports it
     await rig.m.stop()
 
 
@@ -139,10 +150,29 @@ async def test_dropped_demand_is_unsubscribed_on_live_socket() -> None:
     rig = _Rig({BOOK_BTC, BOOK_LUNA}, alive={BOOK_BTC, BOOK_LUNA})
     await rig.m.start()
     await rig.run_for(1.0)
+    subs_before = rig.sent("subscribe")
+    rig.states()
     rig.m.set_desired({BOOK_BTC})
     await rig.run_for(1.0)
     assert rig.sent("unsubscribe") == [BOOK_LUNA]
-    assert len(rig.socks) == 1
+    assert rig.sent("subscribe") == subs_before  # no re-subscribe of the rest
+    assert "resubscribing" not in rig.states()
+    assert len(rig.socks) == 1 and rig.m.state() == "open"
+    await rig.m.stop()
+
+
+async def test_live_add_subscribes_only_the_new_topic() -> None:
+    rig = _Rig({BOOK_BTC}, alive={BOOK_BTC, BOOK_ETH})
+    await rig.m.start()
+    await rig.run_for(1.0)
+    rig.states()
+    rig.m.set_desired({BOOK_BTC, BOOK_ETH})
+    await rig.run_for(1.0)
+    assert rig.socks[0].sent[1:] == [{"op": "subscribe", "args": [BOOK_ETH]}]
+    assert "resubscribing" not in rig.states()
+    assert len(rig.socks) == 1 and rig.m.state() == "open"
+    late = rig.frames[-6:]
+    assert BOOK_BTC in late and BOOK_ETH in late  # reader/session kept running
     await rig.m.stop()
 
 
@@ -246,3 +276,33 @@ async def test_service_prune_fans_out_to_every_attached_stream() -> None:
     cat.listed.clear()
     await svc.prune_unlisted()
     assert desired == {"trade": set(), "ticker": set(), "book": set()}
+
+
+async def test_delist_prune_on_live_socket_is_a_single_unsubscribe() -> None:
+    btc, luna = ticker_topic("BTCUSDT"), ticker_topic("LUNAUSDT")
+    rig, cat = _Rig(set(), alive={btc, luna}), _Catalogue()
+    stream = TickerStream(
+        bus=rig.bus,
+        env="live",
+        set_desired=rig.m.set_desired,
+        parse_frame=parse_ticker_frame,
+        topic_for=ticker_topic,
+        is_listed=cat,
+        touch=lambda _t: None,
+        clock=lambda: 0.0,
+    )
+    stream.acquire("chart", "BTCUSDT")
+    stream.acquire("chart", "LUNAUSDT")
+    await rig.m.start()
+    await rig.run_for(1.0)
+    subs_before = rig.sent("subscribe")
+    rig.states()
+    cat.listed.discard("LUNAUSDT")
+    assert await stream.prune_unlisted() == ["LUNAUSDT"]
+    await rig.run_for(1.0)
+    assert rig.sent("unsubscribe") == [luna]
+    assert rig.sent("subscribe") == subs_before
+    states = rig.states()
+    assert "resubscribing" not in states and "delisted" in states
+    assert len(rig.socks) == 1 and rig.m.state() == "open"
+    await rig.m.stop()
