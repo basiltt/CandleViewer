@@ -145,6 +145,7 @@ class InstrumentsRefreshScheduler:
         self._task: asyncio.Task[None] | None = None
         self._stopping = False
         self._refresh_lock = asyncio.Lock()
+        self._listeners: list[Callable[[], Awaitable[None]]] = []
 
     # -- lifecycle (M6 `ingestion` conventions, 20-architecture.md §3) ------
 
@@ -195,6 +196,11 @@ class InstrumentsRefreshScheduler:
 
     # -- on-demand refresh (ticket "unknown symbol" + "Refresh does not ----
     # -- stall readers" scenarios) -------------------------------------------
+
+    def add_listener(self, listener: Callable[[], Awaitable[None]]) -> None:
+        """Awaited after every successful catalogue swap (#1913: delist teardown)."""
+        if listener not in self._listeners:
+            self._listeners.append(listener)
 
     def snapshot(self) -> CatalogueSnapshot | None:
         """Current snapshot (O(1), no I/O) for readers such as the API."""
@@ -311,6 +317,11 @@ class InstrumentsRefreshScheduler:
         self.cache.swap(CatalogueSnapshot(by_symbol=parsed, fetched_at_us=fetched_at_us))
         instruments_cache_age_seconds.set(0.0)
         instruments_catalogue_size.set(len(parsed))
+        for listener in self._listeners:
+            try:
+                await listener()
+            except Exception:  # a consumer fault must not fail the refresh
+                logger.exception("instruments_listener_failed")
 
     async def _run_periodic(self) -> None:
         while not self._stopping:

@@ -5319,6 +5319,8 @@ All actions are `@cv_action`-wrapped (A1). A raising action writes `context["_fa
 | `backing_off` | `BACKOFF_DUE` | — | `connecting` | — | — |
 | `backing_off` | `SHUTDOWN` | — | `closing` | — | — |
 
+> Per-topic staleness is handled below the machine (#1913): the runtime resubscribes the stale topic on the live socket, and `TOPIC_STALE` fires only when every watched topic is stale. A `TOPICS_CHANGED` pass sends only the subscribe/unsubscribe diff and does not emit `resubscribing`.
+
 ### B13.4 Invoked services
 
 | In state | `id` | `src` | `onDone` | `onError` |

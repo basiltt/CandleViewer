@@ -38,7 +38,7 @@ from candleviewer.ingestion.metrics import (
 )
 from candleviewer.ingestion.planner import DEFAULT_GRACE_S, DemandTracker
 from candleviewer.ingestion.rejection import RejectionLog
-from candleviewer.ingestion.watchdog import FeedHealthEvent
+from candleviewer.ingestion.watchdog import FeedHealthEvent, prune_unlisted
 from candleviewer.observability.context import spawn
 
 logger = structlog.get_logger(__name__)
@@ -174,6 +174,17 @@ class TickerStream:
         now = self._clock()
         for sym, at in self._last_msg.items():
             ws_topic_staleness_seconds.labels(topic=self._topic_for(sym)).set(now - at)
+
+    async def prune_unlisted(self) -> list[str]:
+        """#1913: drop + unsubscribe symbols that left the catalogue."""
+        health = Topic(env=self._env, domain="health", detail="feed")
+
+        async def publish(ev: FeedHealthEvent) -> None:
+            await self._bus.publish(health, ev)
+
+        return await prune_unlisted(
+            self._demand, self._is_listed, self.sync, publish, self._topic_for
+        )
 
     # ---- reads ----------------------------------------------------------
     def latest(self, symbol: str) -> TickerEvent | None:

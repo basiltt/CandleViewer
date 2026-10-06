@@ -248,3 +248,24 @@ async def test_stop_propagates_cancellation_of_its_caller() -> None:
         await caller
     blocker.set()
     await stubborn
+
+
+async def test_listener_awaited_after_swap_and_fault_isolated() -> None:
+    """#1913: delist teardown hooks the swap; a listener fault never fails refresh."""
+    sched, _, _, _ = make([[raw("BTCUSDT"), raw("LUNAUSDT")], [raw("LUNAUSDT", status="Closed")]])
+    seen: list[str | None] = []
+
+    async def listener() -> None:
+        snap = sched.snapshot()
+        luna = snap.get("LUNAUSDT") if snap is not None else None
+        seen.append(None if luna is None else luna.status)
+
+    async def broken() -> None:
+        raise RuntimeError("consumer bug")
+
+    sched.add_listener(listener)
+    sched.add_listener(listener)  # idempotent
+    sched.add_listener(broken)
+    await sched.refresh_now()
+    await sched.refresh_now()
+    assert len(seen) == 2 and seen[0] == "trading" and seen[1] != "trading"

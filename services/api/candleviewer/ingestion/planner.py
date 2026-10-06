@@ -89,6 +89,11 @@ class DemandTracker:
             del self._refs[topic]
             self._released_at[topic] = self._clock()
 
+    def drop(self, topic: str) -> None:
+        """Forget `topic` outright (no grace): it left the catalogue (#1913)."""
+        self._refs.pop(topic, None)
+        self._released_at.pop(topic, None)
+
     def desired(self) -> set[str]:
         """Topics to keep upstream: live demand plus topics inside grace."""
         now = self._clock()
