@@ -89,6 +89,13 @@ jobs:
       - name: Branch-protection bypass register check (CI-PROT-004, E03-T13)
         run: python scripts/check_bypass_register.py
 
+      - name: Accepted-risk expiry check (C-12.3, E49-T03)
+        # Fails on any expired acceptance (yaml / register Accepted rows /
+        # in-source nosemgrep review dates); warns <30 days. Also runs weekly
+        # in accepted-risk-expiry-weekly.yml so an expiry that passes with no
+        # PR open is still caught.
+        run: python tools/ci/check_accepted_risk_expiry.py
+
       - name: Canary self-test (deliberately-broken fixtures must fail)
         # The guard against a green check that no longer checks anything
         # (E01-Q02 acceptance scenario "the job proves it can still fail").
