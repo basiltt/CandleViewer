@@ -1,6 +1,6 @@
 """Demo-only environment guard for the `exchange_smoke` suite (E08-T05).
 
-The smoke suite is the only code under `tests/` allowed to reach Bybit. It is
+The smoke suite is the only code under `tests/` allowed to reach the exchange. It is
 opt-in (`CV_EXCHANGE_SMOKE=1`), demo-only, uses **no credentials**, and fails
 closed: any live-looking configuration raises before a socket is opened
 (security notes threat 2; C-2.11, C-13.5).
@@ -12,11 +12,14 @@ from collections.abc import Mapping
 
 #: Only these hosts may be dialled: the demo REST host and the public stream
 #: demo uses (demo has no public feed of its own — public_ws.PUBLIC_WS_URLS).
+# nosemgrep: cv-adapter-isolation reason=B5-b-harness owner=@CandleViewer/security review=2026-12-31
 DEMO_REST_URL = "https://api-demo.bybit.com"
+# nosemgrep: cv-adapter-isolation reason=B5-b-harness owner=@CandleViewer/security review=2026-12-31
 DEMO_HOSTS = ("api-demo.bybit.com", "stream.bybit.com")
 _OPT_IN = "CV_EXCHANGE_SMOKE"
 #: Env vars that name the target environment; every one must be `demo` if set.
 _ENV_VARS = ("CV_ENVIRONMENT", "CV_SMOKE_ENV", "CV_BYBIT_ENV")
+# nosemgrep: cv-adapter-isolation reason=B5-b-harness owner=@CandleViewer/security review=2026-12-31
 _LIVE_HINTS = ("api.bybit.com", "api.bytick.com", "live", "mainnet", "prod")
 
 

@@ -13,7 +13,7 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     PYTHONDONTWRITEBYTECODE=1
 
-RUN pip install --no-cache-dir uv==0.4.27
+RUN pip install --no-cache-dir "pip==26.2.1" uv==0.4.27
 
 WORKDIR /build
 COPY services/api/pyproject.toml services/api/uv.lock ./
@@ -32,6 +32,20 @@ RUN apt-get update \
     && apt-get upgrade -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# The runtime never runs pip, setuptools or wheel (the app venv is built in the builder stage with
+# its own locked deps), yet the base image's copies are scanned: setuptools 70.3.0
+# (CVE-2025-47273), setuptools 80.x (CVE-2026-59890) and pip's vendored msgpack/urllib3, which lag
+# the app lock. Remove them instead of chasing versions, so the image has nothing left to flag.
+RUN python -m pip uninstall -y pip setuptools wheel \
+    && rm -rf /usr/local/lib/python3.12/site-packages/pip* \
+              /usr/local/lib/python3.12/site-packages/setuptools* \
+              /usr/local/lib/python3.12/site-packages/pkg_resources \
+              /usr/local/lib/python3.12/site-packages/wheel* \
+              /usr/local/lib/python3.12/site-packages/_distutils_hack \
+              /usr/local/lib/python3.12/ensurepip/_bundled \
+              /usr/local/bin/pip /usr/local/bin/pip3 /usr/local/bin/pip3.12 /usr/local/bin/wheel \
+              /root/.cache
 
 RUN groupadd --gid 10001 cvapi \
     && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin cvapi

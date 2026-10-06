@@ -77,6 +77,11 @@ jobs:
           output: codeql-results
           upload: false # gate on our normalised policy first, then upload
 
+      # security_gate.py reads `security-severity` / `level` from the rule
+      # descriptor when the result omits them (CodeQL always does) — see the
+      # parse_sarif docstring. Before that fix every CodeQL High was bucketed
+      # MEDIUM and this step passed PRs that GitHub's own "CodeQL" check
+      # (fed by the upload below) flagged red (#1715, #1691).
       - name: Evaluate CodeQL findings (security_gate.py, CI-SEC-001/004)
         if: always()
         run: |
@@ -92,8 +97,10 @@ jobs:
           done
 
       - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
-        # Gate decided above; code scanning is not enabled on this private repo
-        # (no GHAS) so the upload API 403s — never let that mask the gate result.
+        # Gate decided above. The upload feeds GitHub's informational "CodeQL"
+        # check run (github-advanced-security app; PR-scoped alerts, not a
+        # C-9.1 required check) — it must agree with the gate, never replace
+        # it, and an upload outage must never mask the gate result.
         if: always() && hashFiles('codeql-results/*.sarif') != ''
         continue-on-error: true
         with:

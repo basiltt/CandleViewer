@@ -55,7 +55,7 @@ RuleId = NewType("RuleId", UUID)
 Symbol = Annotated[str, StringConstraints(pattern=r"^[A-Z0-9]{4,20}$")]
 OrderLinkId = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_-]{1,36}$")]
 # Public contract type: must name the one supported exchange (C-1.3).
-# nosemgrep: cv-adapter-isolation — B5-b, owner @CandleViewer/security, review 2026-12-31
+# nosemgrep: cv-adapter-isolation reason=B5-b owner=@CandleViewer/security review=2026-12-31
 Exchange = Literal["bybit"]
 Category = Literal["linear"]
 Environment = Literal["live", "demo", "testnet"]

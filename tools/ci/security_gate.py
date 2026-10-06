@@ -32,6 +32,16 @@ from typing import Any
 
 import yaml
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+from tools.ci.suppressions import (
+    COMMENT_ONLY_RE,
+    field_problems,
+    parse_nosemgrep,
+    rule_matches,
+)
+
 Severity = str  # "CRITICAL" | "HIGH" | "MEDIUM" | "LOW"
 _SEVERITY_ORDER: dict[Severity, int] = {"LOW": 0, "MEDIUM": 1, "HIGH": 2, "CRITICAL": 3}
 _KNOWN_TOOLS = frozenset(
@@ -229,7 +239,12 @@ def evaluate_findings(
             )
             blocking_code = blocking_code or "CI-SEC-004"
             continue
-        # Unexpired, matching accepted-risk entry: does not block.
+        # Unexpired, matching accepted-risk entry: does not block, but is always
+        # reported so an accepted risk is never silent (C-12.3).
+        messages.append(
+            f"accepted risk: {finding.tool} finding {finding.finding_id} "
+            f"({finding.severity}) until {risk.expires.isoformat()} - {risk.reason}"
+        )
 
     return GateResult(blocked=blocking_code is not None, code=blocking_code, messages=messages)
 
@@ -337,13 +352,163 @@ _SARIF_LEVEL_TO_SEVERITY: dict[str, Severity] = {
 }
 
 
-def parse_sarif(path: Path, tool: str) -> list[Finding]:
+def _sarif_rule_index(
+    run: dict[str, Any],
+) -> tuple[dict[str, Any], list[list[dict[str, Any]]]]:
+    """Index a run's rule descriptors by id, plus positional tables.
+
+    Returns `(by_id, components)` where `components[0]` is the driver's rule
+    list and `components[i]` the i-th extension's — the layout SARIF uses to
+    resolve `result.rule.{toolComponent.index, index}` / `result.ruleIndex`.
+    """
+    tool = run.get("tool", {})
+    components: list[list[dict[str, Any]]] = [list(tool.get("driver", {}).get("rules", []))]
+    for ext in tool.get("extensions", []):
+        components.append(list(ext.get("rules", [])))
+    by_id: dict[str, Any] = {}
+    for rules in components:
+        for rule in rules:
+            if isinstance(rule, dict) and "id" in rule:
+                by_id.setdefault(rule["id"], rule)
+    return by_id, components
+
+
+def _rule_severity(rule: dict[str, Any], result: dict[str, Any] | None = None) -> Severity:
+    """Bucket from `security-severity` (result first, then rule), else SARIF level.
+
+    No severity anywhere defaults to `warning` -> MEDIUM (below the semgrep HIGH
+    threshold, so unscored SAST noise does not block; fail-closed adapters such
+    as pip-audit treat unscored advisories as HIGH on their own).
+    """
+    res = result or {}
+    sec_sev = res.get("properties", {}).get("security-severity")
+    if sec_sev is None:
+        sec_sev = rule.get("properties", {}).get("security-severity")
+    score: float | None = None
+    if sec_sev is not None:
+        try:
+            score = float(sec_sev)
+        except (TypeError, ValueError):
+            score = None
+    if score is not None:
+        if score >= 9.0:
+            return "CRITICAL"
+        if score >= 7.0:
+            return "HIGH"
+        if score >= 4.0:
+            return "MEDIUM"
+        return "LOW"
+    level = res.get("level") or rule.get("defaultConfiguration", {}).get("level", "warning")
+    return _SARIF_LEVEL_TO_SEVERITY.get(level, "MEDIUM")
+
+
+def _sarif_result_rule(
+    result: dict[str, Any],
+    by_id: dict[str, Any],
+    components: list[list[dict[str, Any]]],
+) -> dict[str, Any]:
+    """Resolve a result's rule descriptor, preferring `ruleId`.
+
+    If the positional reference (`rule.index` / `ruleIndex`) points at a
+    different rule than `ruleId`, the descriptor with the HIGHER severity wins
+    (fail-closed) and a warning is logged: a mismatched index never downgrades.
+    """
+    ref = result.get("rule", {})
+    comp_idx = ref.get("toolComponent", {}).get("index", 0)
+    rule_idx = ref.get("index", result.get("ruleIndex"))
+    by_index: dict[str, Any] = {}
+    if isinstance(rule_idx, int) and 0 <= comp_idx < len(components):
+        rules = components[comp_idx]
+        if 0 <= rule_idx < len(rules):
+            by_index = rules[rule_idx]
+    rid = result.get("ruleId") or ref.get("id")
+    by_rule_id: dict[str, Any] = by_id.get(rid, {}) if rid else {}
+    if not by_rule_id:
+        return by_index
+    if not by_index or by_index.get("id") == by_rule_id.get("id"):
+        return by_rule_id
+    print(
+        f"security_gate: warning: ruleId {rid!r} and ruleIndex {rule_idx} "
+        f"({by_index.get('id')!r}) disagree; using the higher severity",
+        file=sys.stderr,
+    )
+    sev_id = _SEVERITY_ORDER[_rule_severity(by_rule_id)]
+    sev_ix = _SEVERITY_ORDER[_rule_severity(by_index)]
+    return by_index if sev_ix > sev_id else by_rule_id
+
+
+def _justification_texts(result: dict[str, Any], source_root: Path) -> list[str]:
+    """The finding line, plus the line above only when that line is comment-only
+    and the finding line itself is not a comment. Never a code line."""
+    locs = result.get("locations") or []
+    phys = locs[0].get("physicalLocation", {}) if locs else {}
+    uri = phys.get("artifactLocation", {}).get("uri", "")
+    start = phys.get("region", {}).get("startLine")
+    if not uri or not isinstance(start, int) or start < 1:
+        return []
+    try:
+        lines = (source_root / uri).read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError):
+        return []
+    if start > len(lines):
+        return []
+    own = lines[start - 1]
+    texts = [own]
+    if start >= 2 and not COMMENT_ONLY_RE.match(own) and COMMENT_ONLY_RE.match(lines[start - 2]):
+        texts.append(lines[start - 2])
+    return texts
+
+
+def _suppression_problem(
+    result: dict[str, Any], rule_id: str, source_root: Path, today: date
+) -> str | None:
+    """Return None if the result carries a justified, unexpired in-source
+    suppression (so it may be skipped), else the reason it still blocks.
+    Returns "" if the result has no in-source suppression at all.
+
+    Grammar, exact rule-id matching and the review-date cap are owned by
+    `tools/ci/suppressions.py`, shared with `check_auth_semgrep.py`.
+    """
+    sups = result.get("suppressions") or []
+    inline = [s for s in sups if isinstance(s, dict) and s.get("kind") == "inSource"]
+    if not inline:
+        return ""
+    texts = [str(s["justification"]) for s in inline if s.get("justification")]
+    if not texts:
+        texts = _justification_texts(result, source_root)
+    last = "needs 'nosemgrep: <rule-id>[,<rule-id>] reason=<r> owner=@<who> review=YYYY-MM-DD'"
+    for text in texts:
+        for marker in parse_nosemgrep(text):
+            if not rule_matches(rule_id, marker.rules):
+                continue
+            problems = field_problems(marker.rest, today)
+            if not problems:
+                return None
+            last = "; ".join(problems)
+    return last
+
+
+def parse_sarif(
+    path: Path,
+    tool: str,
+    *,
+    source_root: Path | None = None,
+    today: date | None = None,
+) -> list[Finding]:
     """Parse a SARIF 2.1.0 file into normalised findings.
 
     Used for CodeQL, Semgrep and Trivy (all three can emit SARIF). Severity
-    is read from `properties.security-severity` when a run provides it
-    (CVSS-like float, mapped to buckets), else falls back to the SARIF
-    `level` (error/warning/note).
+    is read from `security-severity` (CVSS-like float, mapped to buckets)
+    when the result *or its rule descriptor* provides it, else falls back to
+    the SARIF `level` (error/warning/note) of the result, then of the rule's
+    `defaultConfiguration`.
+
+    CodeQL in particular carries both `security-severity` and the level only
+    on the rule (`tool.driver.rules[]` / `tool.extensions[].rules[]`) and
+    omits `level` on results that match the default — reading the result
+    alone silently downgraded every CodeQL High to MEDIUM (never blocking),
+    which is how PRs with a GitHub-reported High CodeQL alert passed this
+    gate (CI-SEC-001 regression, fixed under ci/e03-codeql-job-fix).
     """
     try:
         doc = json.loads(path.read_text(encoding="utf-8"))
@@ -357,40 +522,35 @@ def parse_sarif(path: Path, tool: str) -> list[Finding]:
 
     findings: list[Finding] = []
     for run in doc.get("runs", []):
+        by_id, components = _sarif_rule_index(run)
         for result in run.get("results", []):
             rule_id = result.get("ruleId", "unknown-rule")
+            rule = _sarif_result_rule(result, by_id, components)
+            if rule_id == "unknown-rule" and "id" in rule:
+                rule_id = rule["id"]
             locations = result.get("locations", [])
             loc = ""
             if locations:
                 phys = locations[0].get("physicalLocation", {})
-                uri = phys.get("artifactLocation", {}).get("uri", "")
+                uri = phys.get("artifactLocation", {}).get("uri", "").replace("\\", "/")
                 line = phys.get("region", {}).get("startLine", "")
                 loc = f"{uri}:{line}" if uri else ""
             finding_id = f"{rule_id}:{loc}" if loc else rule_id
 
-            sec_sev = result.get("properties", {}).get("security-severity")
-            score: float | None
-            if sec_sev is not None:
-                try:
-                    score = float(sec_sev)
-                except (TypeError, ValueError):
-                    score = None
-            else:
-                score = None
+            suppression_note = ""
+            if tool == "semgrep":
+                problem = _suppression_problem(
+                    result,
+                    rule_id,
+                    source_root or Path.cwd(),
+                    today or datetime.now(UTC).date(),
+                )
+                if problem is None:
+                    continue
+                if problem:
+                    suppression_note = f"CI-SEC-006: unjustified in-source suppression ({problem}) "
 
-            severity: Severity
-            if score is not None:
-                if score >= 9.0:
-                    severity = "CRITICAL"
-                elif score >= 7.0:
-                    severity = "HIGH"
-                elif score >= 4.0:
-                    severity = "MEDIUM"
-                else:
-                    severity = "LOW"
-            else:
-                level = result.get("level", "warning")
-                severity = _SARIF_LEVEL_TO_SEVERITY.get(level, "MEDIUM")
+            severity = _rule_severity(rule, result)
 
             message = result.get("message", {}).get("text", "")
             findings.append(
@@ -398,7 +558,7 @@ def parse_sarif(path: Path, tool: str) -> list[Finding]:
                     tool=tool,
                     finding_id=finding_id,
                     severity=severity,
-                    detail=f"{message} ({loc})" if loc else message,
+                    detail=suppression_note + (f"{message} ({loc})" if loc else message),
                 )
             )
     return findings
@@ -527,7 +687,9 @@ def parse_license_report(path: Path) -> list[LicenseFinding]:
 
     return [
         LicenseFinding(
-            package=entry["package"], version=entry.get("version", ""), license=entry["license"]
+            package=entry["package"],
+            version=entry.get("version", ""),
+            license=entry["license"],
         )
         for entry in doc
     ]
@@ -560,7 +722,9 @@ def main(argv: list[str] | None = None) -> int:
         help="only used when --tool license-scan",
     )
     parser.add_argument(
-        "--run-date", default=None, help="ISO date override for tests; default: today (UTC)"
+        "--run-date",
+        default=None,
+        help="ISO date override for tests; default: today (UTC)",
     )
     args = parser.parse_args(argv)
 
@@ -577,7 +741,10 @@ def main(argv: list[str] | None = None) -> int:
             allowlist = load_license_allowlist(args.allowlist)
             result = evaluate_licenses(deps, allowlist, risks, run_date=run_date)
         else:
-            findings = _PARSERS[args.tool](args.report)
+            if args.tool == "semgrep":
+                findings = parse_sarif(args.report, "semgrep", today=run_date)
+            else:
+                findings = _PARSERS[args.tool](args.report)
             result = evaluate_findings(findings, risks, run_date=run_date)
     except SecurityGateError as exc:
         print(f"{exc.code}: {exc.message}", file=sys.stderr)

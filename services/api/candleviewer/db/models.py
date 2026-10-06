@@ -537,12 +537,14 @@ symbol_code = DOMAIN(
     check="VALUE ~ '^[A-Z0-9]{4,20}$'",
     create_type=False,
 )
-# nosemgrep: cv-adapter-isolation -- DB schema mirror of the 0004_instruments
+# DB schema mirror of the 0004_instruments
 # DDL's `exchange_code` enum (E08-S01): this is the storage-layer value
 # domain, not adapter logic; C-1.3 scopes this whole product to that single
 # exchange, so the enum member is a schema fact, not leaked adapter vocab.
+# The justified suppressions are on the matched lines below.
 exchange_code = ENUM(
-    "bybit",  # nosemgrep: cv-adapter-isolation
+    # nosemgrep: cv-adapter-isolation reason=schema-enum-0004 owner=@basiltt review=2027-03-25
+    "bybit",
     name="exchange_code",
     metadata=metadata,
     create_type=False,
@@ -552,7 +554,7 @@ instruments = Table(
     "instruments",
     metadata,
     Column("symbol", symbol_code, primary_key=True),
-    # nosemgrep: cv-adapter-isolation -- see exchange_code above.
+    # nosemgrep: cv-adapter-isolation reason=schema-enum-0004 owner=@basiltt review=2027-03-25
     Column("exchange", exchange_code, nullable=False, server_default=text("'bybit'")),
     Column("category", Text, nullable=False, server_default=text("'linear'")),
     Column("base_coin", Text, nullable=False),

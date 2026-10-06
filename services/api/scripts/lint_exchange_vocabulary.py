@@ -46,7 +46,7 @@ _TOKEN_RE = re.compile(r"\b(?:" + "|".join(re.escape(t) for t in _FORBIDDEN_TOKE
 # against for `candleviewer/ingestion/`.
 _PROTECTED_ROOTS = ("candleviewer/ingestion",)
 # The lint's own exempt root must name the adapter path it polices.
-# nosemgrep: cv-adapter-isolation — B5-b, owner @CandleViewer/security, review 2026-12-31
+# nosemgrep: cv-adapter-isolation reason=B5-b owner=@CandleViewer/security review=2026-12-31
 _EXEMPT_ROOT = "candleviewer/exchange/bybit"
 
 

@@ -1,6 +1,6 @@
-"""Shared Bybit fixture corpus + replay harness (E08-T05, 24-internal-schemas §14.2 rule 5).
+"""Shared recorded-exchange fixture corpus + replay harness (E08-T05, 24-internal-schemas §14.2).
 
-Every E08 test reads exchange payloads from `packages/fixtures/bybit/<capture-date>/`
+Every E08 test reads exchange payloads from `packages/fixtures/<exchange>/<capture-date>/`
 through this module, so all tickets assert against the same inputs (C-13.5, no
 network). `replay()` drives the production parser entry points the socket path
 uses (`parse_trade_frame`, `parse_ticker_frame`, `parse_book_frame` — the same
@@ -20,11 +20,17 @@ from typing import Any
 
 from pydantic import BaseModel
 
+# nosemgrep: cv-adapter-isolation reason=B5-b-harness owner=@CandleViewer/security review=2026-12-31
 from candleviewer.exchange.bybit.orderbook import parse_book_frame
+
+# nosemgrep: cv-adapter-isolation reason=B5-b-harness owner=@CandleViewer/security review=2026-12-31
 from candleviewer.exchange.bybit.ticker import parse_ticker_frame
+
+# nosemgrep: cv-adapter-isolation reason=B5-b-harness owner=@CandleViewer/security review=2026-12-31
 from candleviewer.exchange.bybit.trades import parse_trade_frame
 
 CAPTURE_DATE = "2026-10-05"
+# nosemgrep: cv-adapter-isolation reason=B5-b-harness owner=@CandleViewer/security review=2026-12-31
 CORPUS_ROOT = Path(__file__).resolve().parents[3] / "packages" / "fixtures" / "bybit"
 #: Tick sizes for the corpus symbols (mirrors `rest/instruments_before.json`).
 TICKS: dict[str, Decimal] = {
@@ -70,6 +76,7 @@ def _tick(symbol: str) -> Decimal | None:
 def normalize(frame: str) -> list[object]:
     """Run one raw frame through the production parser owning its topic (the same
     parser the socket pump reaches; the others would return `None` for it)."""
+    # nosemgrep: cv-bybit-vocabulary-leak,cv-adapter-isolation reason=B5-b-harness owner=@CandleViewer/security review=2026-12-31  # noqa: E501 - semgrep marker format is fixed
     if '"topic":"publicTrade.' in frame:
         return list(parse_trade_frame(frame) or ())
     if '"topic":"tickers.' in frame:
