@@ -193,6 +193,7 @@
 /services/api/bars/                     @CandleViewer/backend
 # future: E02/later scaffolding; directory does not exist yet.
 /services/api/orderflow/                @CandleViewer/backend
+# future: E22-T01 (SR-E22 constants module); file does not exist yet.
 /services/api/orderflow/limits.py     @CandleViewer/backend @CandleViewer/security
 # future: E02/later scaffolding; directory does not exist yet.
 /services/api/recorder/                 @CandleViewer/backend @CandleViewer/devsecops
