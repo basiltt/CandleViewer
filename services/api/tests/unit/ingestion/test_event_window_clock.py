@@ -153,13 +153,15 @@ async def test_step_triggers_exactly_one_single_flight_measure() -> None:
     assert len(fetches) == 1  # reference re-based: no re-trigger
 
 
-def test_offset_tracks_guard_without_double_apply() -> None:
+async def test_offset_tracks_guard_without_double_apply() -> None:
     clocks = _Clocks()
     guard = _guard(clocks)
     now = corrected_now_us(guard.offset_us, clocks.host_us)
     assert now() == clocks.host_us()  # unmeasured offset is 0
-    guard._offset_us = 7 * _S
-    assert now() == clocks.host_us() + 7 * _S
+    clocks.wall_base_ns -= 7 * 1_000_000_000  # host 7 s behind; measured, not poked
+    await guard.measure_once()
+    assert guard.offset_us() == 7 * _S
+    assert now() == clocks.host_us() + 7 * _S == _venue_now(clocks)
 
 
 async def _drain() -> None:
@@ -175,8 +177,7 @@ async def test_suspend_false_step_reverts_when_confirmation_keeps_failing() -> N
     clocks.wall_base_ns += 10 * 1_000_000_000
     assert guard.offset_us() == -10 * _S  # provisional correction
     await _drain()
-    assert guard._offset_us == 0  # reverted to the last verified offset
-    assert guard._pre_step_offset_us is None
+    assert guard.offset_us() == 0  # reverted to the last verified offset
 
 
 async def test_suspend_false_step_confirmed_by_measurement_keeps_true_offset() -> None:
@@ -187,8 +188,7 @@ async def test_suspend_false_step_confirmed_by_measurement_keeps_true_offset() -
     await _drain()
     # Venue time is unaffected by the host step, so the measurement re-derives the
     # true offset (server - local) from scratch; the provisional value is dropped.
-    assert guard._pre_step_offset_us is None
-    assert guard._offset_us == -10 * _S + 0  # wall is 10 s ahead of venue after the step
+    assert guard.offset_us() == -10 * _S  # wall is 10 s ahead of venue after the step
 
 
 async def test_step_during_measure_burst_is_not_lost() -> None:
@@ -209,3 +209,20 @@ async def test_step_during_measure_burst_is_not_lost() -> None:
     assert calls == 2  # first burst discarded, redone after the step
     assert offset == 10 * _S
     assert guard.check_host_step() == 0  # reference rebased onto the post-step skew
+
+
+def test_host_step_without_event_loop_corrects_and_schedules_nothing() -> None:
+    clocks = _Clocks()
+    guard = _guard(clocks)
+    clocks.step(-10)
+    assert guard.check_host_step() == -10 * _S  # sync caller, no running loop
+    assert guard.offset_us() == 10 * _S
+
+
+async def test_offset_ms_or_none_includes_host_step() -> None:
+    clocks = _Clocks()
+    guard = _guard(clocks)
+    assert guard.offset_ms_or_none() is None  # never measured
+    await guard.measure_once()
+    clocks.step(-10)
+    assert guard.offset_ms_or_none() == 10_000

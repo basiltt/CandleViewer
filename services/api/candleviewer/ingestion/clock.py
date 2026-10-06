@@ -233,7 +233,7 @@ class ClockGuard:
         never a skew-dominated number)."""
         if self._last_measured_monotonic is None:
             return None
-        return self._offset_us // _MICROS_PER_MS
+        return self.offset_us() // _MICROS_PER_MS  # includes any detected host step
 
     def offset_age_s(self) -> float:
         """Seconds since the last successful measurement, or `inf` if none
