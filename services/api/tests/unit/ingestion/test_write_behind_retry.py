@@ -133,7 +133,7 @@ def test_readyz_reports_hot_tier_write_behind_degraded_then_ok() -> None:
     body = client.get("/readyz")
     assert body.status_code == 200  # degraded, not fatal
     assert body.json()["status"] == "degraded"
-    assert body.json()["checks"] == [{"name": "hot_tier_write_behind", "ok": False}]
+    assert body.json()["checks"] == [{"name": "hot_tier_write_behind", "ok": False, "detail": ""}]
     buf.succeeded()
     body = client.get("/readyz").json()
     assert body["status"] == "ok" and body["checks"][0]["ok"] is True

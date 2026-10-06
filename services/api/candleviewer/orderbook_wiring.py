@@ -164,6 +164,8 @@ class BookStream:
         self._clock, self._rand = clock, rand
         self._backoff: dict[str, _ResyncBackoff] = {}
         self._deferred: set[str] = set()
+        #: #1919: symbol -> clock() reading when its book last left LIVE.
+        self._not_live_since: dict[str, float] = {}
         self._bus, self._env = bus, env
         self._set_desired, self._parse = set_desired, parse_frame
         self._topic_for, self._resub = topic_for, resubscribe
@@ -244,6 +246,13 @@ class BookStream:
         self._first_sub = {k for k in self._first_sub if k[0] != symbol}
         self._backoff.pop(symbol, None)
         self._deferred.discard(symbol)
+        self._not_live_since.pop(symbol, None)
+
+    def out_of_live(self, slo_s: float = RESYNC_BACKOFF_CAP_S) -> tuple[str, ...]:
+        """#1919: desired symbols whose book has been out of LIVE longer than `slo_s`
+        (default: the resync backoff cap). Plain bookkeeping, no engine query."""
+        now = self._clock()
+        return tuple(sorted(s for s, t in self._not_live_since.items() if now - t > slo_s))
 
     # ---- reads (GET /market/orderbook) -----------------------------------
     def view(self, symbol: str, depth: int) -> BookView | None:
@@ -303,6 +312,7 @@ class BookStream:
             return tb
         tb = TieredBook(self._make_engine(symbol), self._depth)
         self._books[symbol] = tb
+        self._not_live_since[symbol] = self._clock()
         if self._supervisor is not None:
             key = f"{self._env}:{symbol}:{tb.active.depth}"
             self._keys.setdefault(symbol, []).append(key)
@@ -315,6 +325,10 @@ class BookStream:
         await self._bus.publish(topic, obj)
         if isinstance(obj, BookStatus):
             _observe_book_status(obj)
+            if obj.state is BookPhase.LIVE:
+                self._not_live_since.pop(symbol, None)
+            elif symbol in self._books:
+                self._not_live_since.setdefault(symbol, self._clock())
             if obj.state is BookPhase.LIVE:  # stable-LIVE for RESYNC_STABLE_S resets it
                 bo = self._backoff.get(symbol)
                 if bo is not None:

@@ -23,12 +23,13 @@ from typing import Protocol
 from fastapi import APIRouter, Response
 
 from candleviewer.api.models import LivenessResponse, ReadinessResponse, ReadyCheck
-from candleviewer.observability.health_probes import HOT_TIER_WRITE_BEHIND
+from candleviewer.observability.health_probes import HOT_TIER_WRITE_BEHIND, INGESTION
 from candleviewer.observability.metrics import (
     CONTENT_TYPE_LATEST,
     CollectorRegistry,
     generate_latest,
 )
+from candleviewer.observability.models import HealthReport, HealthStatus
 from candleviewer.settings import Settings
 
 
@@ -62,6 +63,7 @@ def make_health_router(
     metrics: CollectorRegistry | None = None,
     mesh_read_only_gate: ReadOnlyGateLike | None = None,
     write_behind: Callable[[], Sequence[WriteBehindStatus]] | None = None,
+    ingestion_health: Callable[[], HealthReport] | None = None,
 ) -> APIRouter:
     """Bind the health/metrics routes to a concrete `Settings` instance.
 
@@ -95,6 +97,11 @@ def make_health_router(
             if buffers
             else []
         )
+        if ingestion_health is not None:  # #1919: DEGRADED feed = degraded, still 200
+            rep = ingestion_health()
+            if rep.status is not HealthStatus.STOPPED:
+                ok = rep.status is HealthStatus.OK
+                checks.append(ReadyCheck(name=INGESTION, ok=ok, detail=rep.detail))
         degraded = any(not c.ok for c in checks)
         return ReadinessResponse(
             status="degraded" if degraded else "ok",

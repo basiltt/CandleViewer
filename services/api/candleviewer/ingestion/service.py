@@ -10,14 +10,17 @@ E08 lands.
 from __future__ import annotations
 
 import asyncio
+import time
 from collections.abc import Awaitable, Callable
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol
 
 from candleviewer.exchange.base import Ticker, Trade
 from candleviewer.exchange.base.frame_guard import FrameRejectedError, json_depth_exceeds
 from candleviewer.ingestion.clock import ClockGuard
-from candleviewer.ingestion.connection import ConnectionManager
+from candleviewer.ingestion.connection import PHASE_OPEN, ConnectionManager
+from candleviewer.ingestion.instruments import utc_now_us
 from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
 from candleviewer.ingestion.rejection import RejectionLog
 from candleviewer.ingestion.synthetic_feed import (
@@ -42,6 +45,20 @@ _QUEUE_MAXSIZE = 256
 WS_FRAME_QUEUE_MAXSIZE = 4096
 #: #1889: this many consecutive frames failing inside the pump trip a resync.
 PUMP_BREAKER_TRIPS = 32
+#: #1919: health stays DEGRADED this long after a pump breaker trip.
+PUMP_BREAKER_WINDOW_S = 30.0
+#: #1919: WS may be non-open this long (reconnect backoff) before health degrades.
+WS_GRACE_S = 5.0
+
+
+class HealthReason(StrEnum):
+    """#1919: stable, enumerable `HealthReport.detail` tokens (24-internal-schemas.md)."""
+
+    WS_NOT_OPEN = "ws_not_open"
+    BOOK_OUT_OF_LIVE = "book_out_of_live"
+    TRADE_GAP_UNRECOVERED = "trade_gap_unrecovered"
+    CATALOGUE_STALE = "catalogue_stale"
+    PUMP_BREAKER_OPEN = "pump_breaker_open"
 
 
 class BookSink(Protocol):
@@ -52,6 +69,7 @@ class BookSink(Protocol):
     async def invalidate(self, reason: str) -> None: ...
     def view(self, symbol: str, depth: int) -> Any: ...
     def is_listed(self, symbol: str) -> bool: ...
+    def out_of_live(self, slo_s: float = ...) -> tuple[str, ...]: ...
     def acquire(self, consumer: str, symbol: str) -> None: ...
     def release(self, consumer: str, symbol: str) -> None: ...
     async def prune_unlisted(self) -> list[str]: ...
@@ -62,7 +80,17 @@ class BookSink(Protocol):
 class IngestionService:
     """M6 `ingestion` module lifecycle: synthetic feed only (E02-T12)."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        clock: Callable[[], float] = time.monotonic,
+        now_us: Callable[[], int] = utc_now_us,
+        ws_grace_s: float = WS_GRACE_S,
+        book_slo_s: float | None = None,
+    ) -> None:
+        self._clock, self._now_us = clock, now_us
+        self._ws_grace_s, self._book_slo_s = ws_grace_s, book_slo_s
+        self._last_pump_trip: float | None = None
         self._started = False
         self.queue: asyncio.Queue[Trade | Ticker] | None = None
         self._generator: SyntheticFeedGenerator | None = None
@@ -160,6 +188,7 @@ class IngestionService:
             if consecutive >= PUMP_BREAKER_TRIPS:
                 consecutive = 0
                 self.pump_breaker_trips += 1
+                self._last_pump_trip = self._clock()
                 await self._resync_all("pump_breaker")
 
     async def _dispatch(self, frame: str) -> bool:
@@ -268,7 +297,38 @@ class IngestionService:
             self._generator = None
         self._started = False
 
+    def degraded_reasons(self) -> list[HealthReason]:
+        """#1919: reasons the feed is impaired, from published plain signals only
+        (C-2.20: no interpreter is queried)."""
+        now = self._clock()
+        reasons: list[HealthReason] = []
+        ws = self.ws
+        if (
+            ws is not None
+            and ws.state() != PHASE_OPEN
+            and now - ws.phase_since() > self._ws_grace_s
+        ):
+            reasons.append(HealthReason.WS_NOT_OPEN)
+        if self.books is not None:
+            slo = {} if self._book_slo_s is None else {"slo_s": self._book_slo_s}
+            if self.books.out_of_live(**slo):
+                reasons.append(HealthReason.BOOK_OUT_OF_LIVE)
+        if self.trades is not None and self.trades.open_gaps():
+            reasons.append(HealthReason.TRADE_GAP_UNRECOVERED)
+        if self.instruments is not None and self.instruments.cache.is_stale(now_us=self._now_us()):
+            reasons.append(HealthReason.CATALOGUE_STALE)
+        trip = self._last_pump_trip
+        if trip is not None and now - trip <= PUMP_BREAKER_WINDOW_S:
+            reasons.append(HealthReason.PUMP_BREAKER_OPEN)
+        return reasons
+
     def health(self) -> HealthReport:
-        """Report module health. `ok` once started (synthetic or scaffold)."""
-        status = HealthStatus.OK if self._started else HealthStatus.STOPPED
-        return HealthReport(module="ingestion", status=status, detail="")
+        """`stopped` before start/after stop; `degraded` (never down) with a stable
+        reason list in `detail` while the feed is impaired (#1919); else `ok`."""
+        if not self._started:
+            return HealthReport(module="ingestion", status=HealthStatus.STOPPED, detail="")
+        reasons = self.degraded_reasons()
+        status = HealthStatus.DEGRADED if reasons else HealthStatus.OK
+        return HealthReport(
+            module="ingestion", status=status, detail=",".join(r.value for r in reasons)
+        )
