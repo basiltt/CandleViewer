@@ -80,6 +80,7 @@ class ConnectionManager:
         latency: StageRecorder | None = None,
         clock_offset_ms: Callable[[], int | None] = lambda: None,
         now_ms: Callable[[], int] = lambda: time.time_ns() // 1_000_000,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._factory = factory
         self._planner = planner
@@ -103,11 +104,15 @@ class ConnectionManager:
         self._session: list[asyncio.Task[Any]] = []
         self._timer: asyncio.Task[None] | None = None
         self._was_live = False
+        self._clock = clock
         self._phase = PHASE_CLOSED
+        self._phase_since = clock()
         self.attempt = 0
         self.opens = 0
 
     def _set_phase(self, phase: str) -> None:
+        if phase != self._phase:
+            self._phase_since = self._clock()
         self._phase = phase
         ingest_ws_up.labels(socket="public").set(1.0 if phase == PHASE_OPEN else 0.0)
 
@@ -115,6 +120,10 @@ class ConnectionManager:
     def state(self) -> str:
         """Phase published on chart state entry: open | connecting | degraded | closed."""
         return self._phase
+
+    def phase_since(self) -> float:
+        """#1919: `clock()` reading when the current phase was entered (plain value)."""
+        return self._phase_since
 
     def set_desired(self, topics: set[str]) -> None:
         for gone in self._desired - topics:
