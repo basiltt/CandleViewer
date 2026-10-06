@@ -349,6 +349,9 @@ class TradeStream:
         try:
             if self._writer is not None:
                 await self._writer.write_trades(batch)
+        except asyncio.CancelledError:
+            self._writes.restore(batch)  # stop(): nothing taken is lost
+            raise
         except Exception:  # write-behind must never take ingest down
             self._writes.requeue(batch)
             logger.warning(
@@ -358,7 +361,7 @@ class TradeStream:
             )
             await self._writes.backoff()
             return 0
-        self._writes.succeeded()
+        self._writes.succeeded(batch)
         return len(batch)
 
     @property

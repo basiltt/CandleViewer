@@ -109,6 +109,9 @@ class CallableProbe:
         return await self._fn()
 
 
+#: #1918: hot-tier write-behind health component / `/readyz` check name.
+HOT_TIER_WRITE_BEHIND = "hot_tier_write_behind"
+
 #: Components named by the ticket; unbuilt ones get a `not_deployed` probe.
 REQUIRED_COMPONENTS: tuple[str, ...] = (
     "postgres",

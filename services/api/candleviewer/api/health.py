@@ -23,6 +23,7 @@ from typing import Protocol
 from fastapi import APIRouter, Response
 
 from candleviewer.api.models import LivenessResponse, ReadinessResponse, ReadyCheck
+from candleviewer.observability.health_probes import HOT_TIER_WRITE_BEHIND
 from candleviewer.observability.metrics import (
     CONTENT_TYPE_LATEST,
     CollectorRegistry,
@@ -46,9 +47,6 @@ class WriteBehindStatus(Protocol):
 
     @property
     def degraded(self) -> bool: ...
-
-
-HOT_TIER_WRITE_BEHIND = "hot_tier_write_behind"
 
 
 def _build_info(settings: Settings) -> dict[str, str]:

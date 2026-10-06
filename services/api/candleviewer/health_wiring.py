@@ -19,6 +19,7 @@ from sqlalchemy import insert, select, text
 from candleviewer.bus.models import Topic
 from candleviewer.db.models import system_events
 from candleviewer.observability.health_probes import (
+    HOT_TIER_WRITE_BEHIND,
     CallableProbe,
     ComponentHealth,
     ComponentState,
@@ -191,9 +192,6 @@ class WriteBehindLike(Protocol):
 
     @property
     def evicted(self) -> int: ...
-
-
-HOT_TIER_WRITE_BEHIND = "hot_tier_write_behind"
 
 
 def hot_tier_write_behind_state(buffers: Sequence[WriteBehindLike]) -> ProbeResult:

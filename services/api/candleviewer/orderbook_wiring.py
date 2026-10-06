@@ -392,6 +392,9 @@ class BookStream:
                     run.append(r)
                 await self._writer.write_book_deltas(run)
                 done += len(run)
+        except asyncio.CancelledError:
+            self._writes.restore(batch[done:])  # stop(): nothing taken is lost
+            raise
         except Exception:  # write-behind must never take ingest down
             self._writes.requeue(batch[done:])
             logger.warning(
@@ -401,7 +404,7 @@ class BookStream:
             )
             await self._writes.backoff()
             return done
-        self._writes.succeeded()
+        self._writes.succeeded(batch)
         return done
 
     @property
