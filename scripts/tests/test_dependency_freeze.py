@@ -303,3 +303,11 @@ def test_propose_mode_is_silent_when_manifest_matches(tmp_path: Path, monkeypatc
 def test_policy_doc_describes_propose_flow() -> None:
     text = (ROOT / "docs/plan/35-dependency-freeze-policy.md").read_text(encoding="utf-8")
     assert "### 2.1" in text and "--propose" in text and "freeze-manifest-proposal" in text
+
+
+def test_http_cache_semantics_override_clears_high_advisory() -> None:
+    root = Path(__file__).resolve().parents[2]
+    assert "http-cache-semantics:" in (root / "pnpm-workspace.yaml").read_text(encoding="utf-8")
+    lock = (root / "pnpm-lock.yaml").read_text(encoding="utf-8")
+    assert "http-cache-semantics@4.2.0:" not in lock
+    assert "http-cache-semantics@4.3.0:" in lock
