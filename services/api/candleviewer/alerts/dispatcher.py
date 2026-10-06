@@ -12,6 +12,16 @@ adapter, and settles delivery + outbox row in one store call:
 - terminal failure: delivery `failed` + `error_message`, outbox `dead_at`, and ONE in-app
   channel-failure notice in the same transaction. The alert record and the other channels'
   rows are never touched (US-ALRT-005: no channel is the source of truth);
+- email is at-least-once for the external effect: a crash between the relay accepting the
+  message and the settle commit re-sends it after the lease (60 s) expires. The outbox lease
+  is the `sending` marker; the transport receives `idempotency_key` (stable per delivery
+  id) and the E04 relay MUST dedupe on it. The record itself stays exactly-once;
+- adapter errors pass through the C-12.6 redaction filter before they are stored; an
+  adapter raising anything else is a retryable `adapter_error`, so a poison row
+  dead-letters after `max_attempts` instead of looping once per lease;
+- `stop()` lets the in-flight send finish (bounded by `grace_s`) before cancelling;
+- `suppressed` rows carry a bounded reason code (`SUPPRESSION_REASONS`) in
+  `error_message` and `context.suppression_reason`;
 - `webhook` (flag `alerts_webhook_enabled`, E40-S03) and `push` (out of scope) are
   registered but disabled -> `suppressed`. `desktop` awaits the Electron shell's outcome
   (report-back lands with the `alerts` WS topic, PR 2) and stays `queued` until then.
@@ -31,6 +41,7 @@ import structlog
 
 from candleviewer.alerts.outbox import TOPIC_ALERT_DELIVER
 from candleviewer.observability import spawn
+from candleviewer.observability.redaction import redact_text
 
 _log = structlog.get_logger(__name__)
 
@@ -38,6 +49,18 @@ MAX_BACKOFF_S = 300.0
 #: `alert_deliveries.attempt` CHECK (0..10).
 MAX_ATTEMPT_COLUMN = 10
 CHANNELS: tuple[str, ...] = ("in_app", "desktop", "email", "webhook", "push")
+MAX_ERROR_LEN = 200
+
+#: Bounded `suppressed` reason codes (stored in `error_message` and `context`).
+SUPPRESSION_REASONS: frozenset[str] = frozenset(
+    {"email_relay_off", "webhook_disabled", "push_unavailable", "recipient_deleted",
+     "unknown_channel"}
+)  # fmt: skip
+
+
+def idempotency_key(delivery_id: int) -> str:
+    """Stable per delivery: a re-send after a crash carries the same key."""
+    return f"alert-delivery-{delivery_id}"
 
 
 class IllegalTransition(ValueError):
@@ -166,6 +189,8 @@ class DesktopAdapter:
 
 class DisabledAdapter:
     def __init__(self, reason: str) -> None:
+        if reason not in SUPPRESSION_REASONS:
+            raise ValueError(f"unknown suppression reason: {reason}")
         self.reason = reason
 
     async def deliver(self, d: Delivery) -> Outcome:
@@ -175,7 +200,9 @@ class DisabledAdapter:
 class EmailTransport(Protocol):
     """The E04 relay. Raises `EmailError` on failure; never returns secrets."""
 
-    async def send(self, *, user_id: str, subject: str, body: str) -> None: ...
+    async def send(
+        self, *, user_id: str, subject: str, body: str, idempotency_key: str
+    ) -> None: ...
 
 
 class EmailError(Exception):
@@ -190,14 +217,17 @@ class EmailAdapter:
 
     async def deliver(self, d: Delivery) -> Outcome:
         if d.user_id is None:
-            return Outcome("disabled", "recipient deleted")
+            return Outcome("disabled", "recipient_deleted")
         try:
             async with asyncio.timeout(self._timeout):
-                await self._transport.send(user_id=d.user_id, subject=d.title, body=d.body)
+                await self._transport.send(
+                    user_id=d.user_id, subject=d.title, body=d.body,
+                    idempotency_key=idempotency_key(d.id),
+                )  # fmt: skip
         except TimeoutError:
             return Outcome("retry", "email relay timeout")
         except EmailError as exc:
-            return Outcome("retry", str(exc)[:200], exc.status)
+            return Outcome("retry", str(exc), exc.status)
         return SENT
 
 
@@ -225,9 +255,9 @@ def default_adapters(
     return {
         "in_app": InAppAdapter(),
         "desktop": DesktopAdapter(),
-        "email": EmailAdapter(email) if email is not None else DisabledAdapter("email relay off"),
-        "webhook": DisabledAdapter("webhook delivery disabled"),
-        "push": DisabledAdapter("push not available in this deployment"),
+        "email": EmailAdapter(email) if email is not None else DisabledAdapter("email_relay_off"),
+        "webhook": DisabledAdapter("webhook_disabled"),
+        "push": DisabledAdapter("push_unavailable"),
     }
 
 
@@ -257,6 +287,7 @@ class AlertDispatcher:
         self._batch, self._lease, self._interval = batch, lease_s, interval_s
         self._wake = asyncio.Event()
         self._task: asyncio.Task[None] | None = None
+        self._stopping = False
 
     async def run_once(self) -> int:
         jobs = await self._store.claim(
@@ -264,6 +295,8 @@ class AlertDispatcher:
         )
         changed: list[int] = []
         for job in jobs:
+            if self._stopping:  # draining: the rest stay leased and are replayed later
+                break
             try:
                 if await self._handle(job):
                     changed.append(job.delivery_id)
@@ -281,7 +314,7 @@ class AlertDispatcher:
             await self._store.settle_processed(job)
             return False
         adapter = self._adapters.get(d.channel)
-        out = await adapter.deliver(d) if adapter else Outcome("disabled", "unknown channel")
+        out = await self._deliver(adapter, d)
         attempt = min(job.attempts + 1, MAX_ATTEMPT_COLUMN)
         if out.kind == "sent":
             won = await self._store.settle_sent(job, attempt=attempt, http_status=out.http_status)
@@ -295,14 +328,26 @@ class AlertDispatcher:
             await self._store.settle_processed(job)
             return True
         if out.kind == "disabled":
-            won = await self._store.settle_suppressed(job, reason=out.error or "disabled")
+            reason = out.error if out.error in SUPPRESSION_REASONS else "unknown_channel"
+            won = await self._store.settle_suppressed(job, reason=reason)
             if won:
                 self._count(d.channel, "suppressed")
             return won
         return await self._retry_or_fail(job, d, out, attempt)
 
+    async def _deliver(self, adapter: ChannelAdapter | None, d: Delivery) -> Outcome:
+        if adapter is None:
+            return Outcome("disabled", "unknown_channel")
+        try:
+            return await adapter.deliver(d)
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:  # poison row: count the attempt, dead-letter at the cap
+            _log.warning("alert_adapter_error", delivery_id=d.id, error=type(exc).__name__)
+            return Outcome("retry", f"adapter_error: {type(exc).__name__}")
+
     async def _retry_or_fail(self, job: OutboxJob, d: Delivery, out: Outcome, attempt: int) -> bool:
-        error = out.error or "delivery failed"
+        error = redact_text(out.error or "delivery failed")[:MAX_ERROR_LEN]
         if job.attempts + 1 < job.max_attempts:
             delay = backoff_seconds(job.attempts, self._rng)
             await self._store.settle_retry(job, attempt=attempt, error=error, delay_s=delay)
@@ -329,7 +374,7 @@ class AlertDispatcher:
             self._task = spawn(self._run(), name="alert-dispatcher")
 
     async def _run(self) -> None:
-        while True:
+        while not self._stopping:
             try:
                 n = await self.run_once()
             except asyncio.CancelledError:
@@ -337,16 +382,27 @@ class AlertDispatcher:
             except Exception:  # storage blip: keep polling
                 _log.exception("alert_dispatch_poll_failed")
                 n = 0
-            if n >= self._batch:
+            if n >= self._batch or self._stopping:
                 continue
             self._wake.clear()
             with contextlib.suppress(TimeoutError):
                 async with asyncio.timeout(self._interval):
                     await self._wake.wait()
 
-    async def stop(self) -> None:
+    async def stop(self, grace_s: float = 5.0) -> None:
+        """Drain: the in-flight send finishes (bounded by `grace_s`), then the loop ends;
+        on timeout the task is cancelled and the leased row is replayed after its lease."""
         task, self._task = self._task, None
-        if task is not None:
+        if task is None:
+            return
+        self._stopping = True
+        self._wake.set()
+        try:
+            async with asyncio.timeout(grace_s):
+                await asyncio.shield(task)
+        except TimeoutError:
             task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await task
+        finally:
+            self._stopping = False

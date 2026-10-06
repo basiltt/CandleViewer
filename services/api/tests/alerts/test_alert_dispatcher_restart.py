@@ -58,7 +58,8 @@ async def test_webhook_and_push_registered_but_disabled_suppressed() -> None:
     store.fire(["webhook", "push", "email"])
     await _disp(store, clock, None).run_once()
     assert [r.status for r in store.rows.values()] == ["suppressed"] * 3
-    assert store.rows[2].error_message == "push not available in this deployment"
+    assert store.rows[2].error_message == "push_unavailable"
+    assert dict(store.rows[2].context)["suppression_reason"] == "push_unavailable"
     assert set(default_adapters(None)) == set(CHANNELS)
     with pytest.raises(ValueError, match="E40-S03"):
         default_adapters(None, webhook_enabled=True)

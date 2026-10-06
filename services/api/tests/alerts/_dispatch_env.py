@@ -136,7 +136,8 @@ class MemStore:
 
     async def settle_suppressed(self, job: Job, *, reason: str) -> bool:
         self.calls.append("suppressed")
-        won = self._cond(job.delivery_id, status="suppressed", error_message=reason)
+        won = self._cond(job.delivery_id, status="suppressed", error_message=reason,
+                         context=(("suppression_reason", reason),))  # fmt: skip
         self._ob(job, processed=True)
         return won
 

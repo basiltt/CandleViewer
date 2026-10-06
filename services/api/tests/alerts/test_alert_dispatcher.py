@@ -20,8 +20,10 @@ from candleviewer.alerts.dispatcher import (
 class FailingRelay:
     def __init__(self, fail: int = 10**6, status: int | None = 500) -> None:
         self.fail, self.status, self.sent = fail, status, 0
+        self.keys: list[str] = []
 
-    async def send(self, *, user_id: str, subject: str, body: str) -> None:
+    async def send(self, *, user_id: str, subject: str, body: str, idempotency_key: str) -> None:
+        self.keys.append(idempotency_key)
         self.sent += 1
         if self.sent <= self.fail:
             raise EmailError("relay returned 500", self.status)
