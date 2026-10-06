@@ -1,0 +1,178 @@
+{
+  "hardware": {
+    "cpu": "Intel64 Family 6 Model 142 Stepping 10, GenuineIntel",
+    "logical_cpus": 8,
+    "ram_gb": 15.9,
+    "python": "3.12.3",
+    "os": "Windows-11-10.0.26300-SP0"
+  },
+  "rows": 1000000,
+  "seed": 12001,
+  "parquet_mb": 8.033324,
+  "source": "synthetic-from-corpus parquet (no live QuestDB; see ADR-0014)",
+  "builders": [
+    {
+      "kind": "time",
+      "rows": 1000000,
+      "bars": 1440,
+      "wall_s": 0.9078565999952843,
+      "read_s": 0.03597310002078302,
+      "build_s": 0.8718834999745013,
+      "rows_per_s": 1101495.5445663934,
+      "peak_rss_mb": 83.017728
+    },
+    {
+      "kind": "tick",
+      "rows": 1000000,
+      "bars": 1000,
+      "wall_s": 0.8231285000074422,
+      "read_s": 0.03623509996396024,
+      "build_s": 0.786893400043482,
+      "rows_per_s": 1214877.1425007866,
+      "peak_rss_mb": 84.00896
+    },
+    {
+      "kind": "volume",
+      "rows": 1000000,
+      "bars": 51024,
+      "wall_s": 1.0160343000025023,
+      "read_s": 0.036370999994687736,
+      "build_s": 0.9796633000078145,
+      "rows_per_s": 984218.7414317974,
+      "peak_rss_mb": 105.992192
+    },
+    {
+      "kind": "range",
+      "rows": 1000000,
+      "bars": 17108,
+      "wall_s": 0.8918503000022611,
+      "read_s": 0.037726300026406534,
+      "build_s": 0.8541239999758545,
+      "rows_per_s": 1121264.409506242,
+      "peak_rss_mb": 90.99264
+    },
+    {
+      "kind": "delta",
+      "rows": 1000000,
+      "bars": 19188,
+      "wall_s": 0.9207718999969075,
+      "read_s": 0.03693879999627825,
+      "build_s": 0.8838331000006292,
+      "rows_per_s": 1086045.3061212648,
+      "peak_rss_mb": 91.705344
+    },
+    {
+      "kind": "renko",
+      "rows": 1000000,
+      "bars": 40467,
+      "wall_s": 1.0472971999988658,
+      "read_s": 0.03720700003032107,
+      "build_s": 1.0100901999685448,
+      "rows_per_s": 954838.7983860578,
+      "peak_rss_mb": 97.603584
+    }
+  ],
+  "cancel": [
+    {
+      "strategy": "A_task_cancel_on_loop",
+      "baseline_rebuild_s": 1.0902447999978904,
+      "chunk_rows": 8192,
+      "trials": 20,
+      "p50_ms": 7.614560876390897,
+      "max_ms": 28.20032386807725,
+      "leaked_rows": 0
+    },
+    {
+      "strategy": "A_task_cancel_on_loop",
+      "baseline_rebuild_s": 1.0902447999978904,
+      "chunk_rows": 65536,
+      "trials": 20,
+      "p50_ms": 150.2531342994189,
+      "max_ms": 188.5823163902387,
+      "leaked_rows": 0
+    },
+    {
+      "strategy": "A_task_cancel_on_loop",
+      "baseline_rebuild_s": 1.0902447999978904,
+      "chunk_rows": 262144,
+      "trials": 20,
+      "p50_ms": 729.0408036205918,
+      "max_ms": 794.0511481428985,
+      "leaked_rows": 0
+    },
+    {
+      "strategy": "A2_task_cancel_to_thread",
+      "baseline_rebuild_s": 1.0902447999978904,
+      "chunk_rows": 65536,
+      "trials": 20,
+      "p50_ms": 670.3233999869553,
+      "max_ms": 1062.8333000058774,
+      "leaked_rows": 809340
+    },
+    {
+      "strategy": "B_token_chunked_thread",
+      "baseline_rebuild_s": 1.0902447999978904,
+      "chunk_rows": 8192,
+      "trials": 20,
+      "p50_ms": 2.220299997134134,
+      "max_ms": 4.513799998676404,
+      "leaked_rows": 0
+    },
+    {
+      "strategy": "B_token_chunked_thread",
+      "baseline_rebuild_s": 1.0902447999978904,
+      "chunk_rows": 65536,
+      "trials": 20,
+      "p50_ms": 5.791999996290542,
+      "max_ms": 8.785700003500096,
+      "leaked_rows": 0
+    },
+    {
+      "strategy": "B_token_chunked_thread",
+      "baseline_rebuild_s": 1.0902447999978904,
+      "chunk_rows": 262144,
+      "trials": 20,
+      "p50_ms": 5.499300008523278,
+      "max_ms": 12.839999995776452,
+      "leaked_rows": 0
+    }
+  ],
+  "invariants": {
+    "time": {
+      "BI-4": true,
+      "BI-5": true,
+      "BI-1": true
+    },
+    "tick": {
+      "BI-4": true,
+      "BI-5": true,
+      "BI-1": true
+    },
+    "volume": {
+      "BI-4": true,
+      "BI-5": true,
+      "BI-1": true
+    },
+    "range": {
+      "BI-4": true,
+      "BI-5": true,
+      "BI-1": true
+    },
+    "delta": {
+      "BI-4": true,
+      "BI-5": true,
+      "BI-1": true
+    },
+    "renko": {
+      "BI-4": true,
+      "BI-5": true,
+      "BI-1": true
+    }
+  },
+  "atr": {
+    "frozen_brick_ticks": 176,
+    "frozen_bricks": 301,
+    "frozen_BI-4_BI-5": true,
+    "drifting_BI-5_when_history_not_replayed": false
+  }
+}
