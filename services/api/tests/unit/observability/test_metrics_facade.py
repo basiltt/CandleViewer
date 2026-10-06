@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gc
 import tracemalloc
 from typing import Any
 
@@ -125,21 +126,35 @@ def test_cardinality_guard_existing_series_still_update_after_breach() -> None:
 
 
 def test_cardinality_guard_does_not_leak_memory() -> None:
-    m = Metrics("demo")
-    metric = m.counter("leak_total", "h", ("k",), max_series=10)
-    for i in range(10):
-        metric.labels(str(i))
-    tracemalloc.start()
-    for i in range(5_000):  # warm-up: absorbs one-off allocations
-        metric.labels(f"warm{i}").inc()
-    before = tracemalloc.take_snapshot()
-    for i in range(20_000):
-        metric.labels(f"new{i}").inc()
-    after = tracemalloc.take_snapshot()
-    tracemalloc.stop()
+    # Only allocations made by the facade/prometheus code count: unrelated allocations from other
+    # threads, pytest or the allocator must not decide this test (#1871).
+    only_facade = [
+        tracemalloc.Filter(True, "*observability*metrics.py"),
+        tracemalloc.Filter(True, "*prometheus_client*"),
+    ]
+    gc.collect()
+    tracemalloc.start()  # before the metric exists, so its retained children are in the baseline
+    try:
+        m = Metrics("demo")
+        metric = m.counter("leak_total", "h", ("k",), max_series=10)
+        for i in range(10):
+            metric.labels(str(i))
+        for i in range(5_000):  # warm-up: absorbs one-off allocations (first-breach log, caches)
+            metric.labels(f"warm{i}").inc()
+        gc.collect()
+        before = tracemalloc.take_snapshot().filter_traces(only_facade)
+        # Guard against a glob that silently stops matching (growth would then read as 0).
+        assert sum(st.size for st in before.statistics("filename")) > 0
+        for i in range(20_000):
+            metric.labels(f"new{i}").inc()
+        gc.collect()
+        after = tracemalloc.take_snapshot().filter_traces(only_facade)
+    finally:
+        tracemalloc.stop()
     grown = sum(s.size_diff for s in after.compare_to(before, "filename"))
     assert grown < 16_000  # O(1), not O(refused combinations)
     assert metric.series_count == 10
+    assert metric.sample_count() == 10  # refused combinations are never retained
 
 
 def test_staleness_gauge_grows_when_updates_stop() -> None:
