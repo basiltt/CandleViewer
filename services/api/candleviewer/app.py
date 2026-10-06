@@ -98,6 +98,7 @@ from candleviewer.exchange.base.service import ExchangeBaseService
 # Composition root: wires the one concrete exchange adapter (C-2.2).
 # nosemgrep: cv-adapter-isolation reason=B5-b owner=@CandleViewer/security review=2026-12-31
 from candleviewer.exchange.bybit.service import ExchangeBybitService
+from candleviewer.funding_wiring import wire_funding
 from candleviewer.health_wiring import (
     HealthSystemPublisher,
     PgSystemEventReader,
@@ -910,6 +911,8 @@ def create_app(
     app.include_router(
         make_funding_router(lambda: ctx.orderflow.funding, principal_resolver=audit_resolver)
     )
+    # E24-T02-F1: compose FundingService (503 until the hot tier serves it).
+    app.state.funding_refresh_task = _compose_funding(ctx, resolved)
     # E08-S04: in-memory hot tape (newest-first); same resolver/fail-closed rules.
     app.include_router(
         make_trades_router(lambda: ctx.ingestion.trades, principal_resolver=audit_resolver)
@@ -1091,6 +1094,24 @@ def _alert_metric_sink(facade: Metrics) -> Callable[[str, tuple[str, ...]], Any]
         return b.labels(*labels) if labels else b.child()
 
     return _sink
+
+
+def _compose_funding(ctx: AppContext, settings: Settings) -> Any:
+    """E24-T02-F1: fake backend -> in-memory store, no fetcher (no network);
+    real backend -> adapter fetcher, store `None` (503) until the QuestDB funding
+    client is composed by the storage tier."""
+    store: Any = None
+    fetcher: Any = None
+    closer: Callable[[], Awaitable[None]] | None = None
+    if settings.storage_backend == "fake":
+        from candleviewer.storage.questdb.funding_store import InMemoryFundingStore
+
+        store = InMemoryFundingStore()
+    else:
+        fetcher, closer = ctx.exchange_bybit.funding_fetcher(settings.environment.value)
+    return wire_funding(
+        ctx, store=store, fetcher=fetcher, closer=closer, now_us=lambda: time.time_ns() // 1000
+    )
 
 
 def wire_instrument_catalogue(

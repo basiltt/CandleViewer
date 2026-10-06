@@ -67,6 +67,9 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     rule_prune = getattr(app.state, "rule_prune_task", None)
     if rule_prune is not None:
         rule_prune.start()
+    funding_task = getattr(app.state, "funding_refresh_task", None)
+    if funding_task is not None:
+        funding_task.start()
     alert_tasks = [
         t
         for t in (
@@ -111,6 +114,8 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
             await overrides.stop()
         if rule_prune is not None:
             await rule_prune.stop()
+        if funding_task is not None:
+            await funding_task.stop()
         for t in alert_tasks:
             await t.stop()
         if scrub_task is not None:

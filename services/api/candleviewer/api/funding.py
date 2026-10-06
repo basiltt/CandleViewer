@@ -30,6 +30,7 @@ from candleviewer.orderflow.funding import (
     FundingSymbolUnknown,
 )
 from candleviewer.orderflow.funding_metrics import deriv_range_rejected_total
+from candleviewer.storage.errors import StorageTierUnavailable
 
 _REQUIRED_PERMISSION = "marketdata:read"
 _SYMBOL_RE = re.compile(r"^[A-Z0-9]{2,24}$")
@@ -163,6 +164,10 @@ def make_funding_router(
         except FundingInvalidRequest as exc:
             deriv_range_rejected_total.labels(endpoint="funding").inc()
             return _problem(400, exc.code, "Bad request", exc.detail)
+        except StorageTierUnavailable:
+            return _problem(
+                503, "service_unavailable", "Service unavailable", "hot tier unavailable"
+            )
         except FundingSymbolUnknown:
             return _problem(404, "not_found", "Not found", f"unknown instrument {symbol}")
         return JSONResponse(status_code=200, content=serialize_series(series))
