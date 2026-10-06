@@ -13,6 +13,7 @@ Exit codes: 0 clean, 1 violation(s), 2 internal error. Stdlib only.
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -50,9 +51,16 @@ def check(root: Path = ROOT) -> list[str]:
     return problems
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="GOV-007 owned-docs injection check")
+    parser.add_argument(
+        "--repo-root",
+        default=str(ROOT),
+        help="repository root (default: this checkout)",
+    )
+    args = parser.parse_args(argv)
     try:
-        problems = check()
+        problems = check(Path(args.repo_root))
     except OSError as exc:  # pragma: no cover - defensive
         print(f"GOV-007 internal error: {exc}", file=sys.stderr)
         return 2

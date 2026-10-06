@@ -63,3 +63,20 @@ def test_check_either_marker_is_detected(tmp_path: Path, marker: str) -> None:
 
 def test_real_repo_is_clean() -> None:
     assert mod.check(mod.ROOT) == []
+
+
+def test_main_clean_repo_exits_zero(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = _repo(tmp_path, agents="# AGENTS\n", turbo={"agentGuidance": False})
+    assert mod.main(["--repo-root", str(root)]) == 0
+    assert "GOV-007 ok" in capsys.readouterr().out
+
+
+def test_main_injected_repo_exits_one_with_error_annotation(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = _repo(tmp_path, agents=f"x\n{MARKER}\n", turbo={"agentGuidance": False})
+    assert mod.main(["--repo-root", str(root)]) == 1
+    out = capsys.readouterr().out
+    assert "AGENTS.md" in out and "::error::GOV-007" in out
