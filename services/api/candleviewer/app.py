@@ -46,6 +46,7 @@ from candleviewer.alerts.service import AlertsService
 from candleviewer.api import (
     make_audit_router,
     make_auth_router,
+    make_funding_router,
     make_health_report_router,
     make_health_router,
     make_instruments_router,
@@ -904,6 +905,10 @@ def create_app(
     # E08-S03: merged ticker snapshot; session-backed resolver (501 only without identity).
     app.include_router(
         make_ticker_router(lambda: ctx.ingestion.tickers, principal_resolver=audit_resolver)
+    )
+    # E24-T02: funding history + predicted rate; same resolver/fail-closed rules.
+    app.include_router(
+        make_funding_router(lambda: ctx.orderflow.funding, principal_resolver=audit_resolver)
     )
     # E08-S04: in-memory hot tape (newest-first); same resolver/fail-closed rules.
     app.include_router(

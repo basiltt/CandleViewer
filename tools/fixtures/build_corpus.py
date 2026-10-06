@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[2] / "packages" / "fixtures" / "bybit" /
 T0 = 1_700_000_000_000
 WS_HOST = "stream.bybit.com"
 REST_HOST = "api-demo.bybit.com"
+PUBLIC_REST_HOST = "api.bybit.com"  # public market data has no demo feed (C-2.11)
 
 
 def _dump(obj: Any) -> str:
@@ -183,6 +184,17 @@ ERRORS: dict[str, tuple[int, Any]] = {
 
 SERVER_TIME = _rest_ok({"timeSecond": "1700000000", "timeNano": "1700000000123456789"}, T0)
 
+def funding_history(symbol: str, step_h: int) -> dict[str, Any]:
+    """`GET /v5/market/funding/history`: `fundingRate` + `fundingRateTimestamp`
+    strings, newest first, `step_h` hours apart (24-internal-schemas §2.7). The
+    exchange sends no interval; the cadence is only visible from the spacing."""
+    rates = ("0.0001", "0.00008", "-0.00004", "0.00012")
+    rows = [{"symbol": symbol, "fundingRate": r,
+             "fundingRateTimestamp": str(T0 + 6_400_000 - i * step_h * 3_600_000)}
+            for i, r in enumerate(rates)]  # fmt: skip
+    return _rest_ok({"category": "linear", "list": rows}, T0 + 30_000_000)
+
+
 _SRC = "documented-shape (exception #1778 A)"
 _MAX = 1_500_000  # bytes; the E08-S05 3 h depth-200 book is the only file near it
 
@@ -218,6 +230,12 @@ def build() -> list[dict[str, Any]]:
         _write_json(rel, page)
         m.append(_entry(rel, "BTCUSDT", "GET /v5/market/kline", f"page boundary: page {i} of 3"
                         " (limit 200, 450 rows)", host=REST_HOST, cap=32_000))  # fmt: skip
+    for sym, step_h in (("BTCUSDT", 8), ("ETHUSDT", 4)):
+        rel = f"rest/funding_history_{sym}_{step_h}h.json"
+        _write_json(rel, funding_history(sym, step_h))
+        m.append(_entry(rel, sym, "GET /v5/market/funding/history",
+                        f"{step_h} h interval symbol, 4 settlements newest-first",
+                        host=PUBLIC_REST_HOST, cap=4_000))  # fmt: skip
     for name, after in (("instruments_before", False), ("instruments_after", True)):
         _write_json(f"rest/{name}.json", instruments(after))
         m.append(_entry(f"rest/{name}.json", "*", "GET /v5/market/instruments-info",
