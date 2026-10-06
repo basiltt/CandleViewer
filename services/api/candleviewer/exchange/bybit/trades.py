@@ -13,6 +13,16 @@ from collections.abc import Awaitable, Callable, Mapping, Sequence
 from decimal import Decimal, InvalidOperation
 from typing import Any, Literal
 
+from candleviewer.exchange.base.frame_guard import (
+    MAX_FUTURE_SKEW_MS,
+    MAX_PRICE,
+    MAX_QTY,
+    MAX_TS_MS,
+    FrameRejectedError,
+    check_event_ts,
+    check_price,
+    check_qty,
+)
 from candleviewer.exchange.base.trade_print import (
     MAX_PRINTS_PER_BATCH,
     MAX_TRADE_ID_LEN,
@@ -22,6 +32,7 @@ from candleviewer.exchange.base.trade_print import (
 TOPIC_PREFIX = "publicTrade."
 RECENT_TRADE_PATH = "/v5/market/recent-trade"
 _SYMBOL_RE = re.compile(r"^[A-Z0-9]{4,20}$")
+_ZERO = Decimal(0)
 _SIDES: dict[str, Literal["buy", "sell"]] = {"Buy": "buy", "Sell": "sell"}
 
 
@@ -29,18 +40,15 @@ def trade_topic(symbol: str) -> str:
     return f"{TOPIC_PREFIX}{symbol}"
 
 
-def _dec(raw: object) -> Decimal:
-    try:
-        value = Decimal(str(raw))
-    except InvalidOperation as exc:
-        raise ValueError("unparseable trade number") from exc
-    if not value.is_finite() or value <= 0:
-        raise ValueError("non-finite or non-positive trade number")
-    return value
-
-
 def _print(
-    symbol: str, tid: object, ts_ms: object, p: object, v: object, s: object, bt: object
+    symbol: str,
+    tid: object,
+    ts_ms: object,
+    p: object,
+    v: object,
+    s: object,
+    bt: object,
+    envelope_ms: int | None = None,
 ) -> TradePrint:
     if not isinstance(tid, str) or not 0 < len(tid) <= MAX_TRADE_ID_LEN:
         raise ValueError("trade id missing or over length cap")
@@ -50,15 +58,29 @@ def _print(
     ts = int(str(ts_ms))
     if ts <= 0:
         raise ValueError("bad trade timestamp")
-    return TradePrint(symbol, tid, ts * 1000, _dec(p), _dec(v), side, bt is True)
+    if ts > MAX_TS_MS or (envelope_ms is not None and ts > envelope_ms + MAX_FUTURE_SKEW_MS):
+        check_event_ts(ts, envelope_ms, symbol=symbol)
+    try:
+        price, qty = Decimal(str(p)), Decimal(str(v))
+    except InvalidOperation as exc:
+        raise FrameRejectedError("malformed", "unparseable trade number", symbol=symbol) from exc
+    # Hot path (C-2.20): one chained comparison each; reason derived on failure only.
+    if not (price.is_finite() and _ZERO < price <= MAX_PRICE):
+        check_price(price, symbol=symbol)
+    if not (qty.is_finite() and _ZERO < qty <= MAX_QTY):
+        check_qty(qty, symbol=symbol)
+    return TradePrint(symbol, tid, ts * 1000, price, qty, side, bt is True)
 
 
 def parse_trade_frame(frame: str) -> list[TradePrint] | None:
-    """`None` for non-trade frames; `ValueError` for a malformed trade frame."""
+    """`None` for non-trade frames; `ValueError` (a `FrameRejectedError` with a
+    reason once the check is a plausibility one) for a malformed trade frame."""
     try:
         msg = json.loads(frame)
     except ValueError:
         return None
+    except RecursionError as exc:  # backstop; the pump scans depth before fan-out (#1889)
+        raise FrameRejectedError("depth_limit", "frame nests too deep") from exc
     if not isinstance(msg, dict):
         return None
     topic = msg.get("topic")
@@ -70,12 +92,23 @@ def parse_trade_frame(frame: str) -> list[TradePrint] | None:
         raise ValueError("trade frame carries an invalid symbol or data")
     if len(data) > MAX_PRINTS_PER_BATCH:
         raise ValueError("trade frame exceeds batch cap")
+    env_ts = msg.get("ts")
+    envelope_ms = env_ts if isinstance(env_ts, int) and not isinstance(env_ts, bool) else None
     out = []
     for d in data:
         if not isinstance(d, dict) or d.get("s") != symbol:
             raise ValueError("trade record malformed")
         out.append(
-            _print(symbol, d.get("i"), d.get("T"), d.get("p"), d.get("v"), d.get("S"), d.get("BT"))
+            _print(
+                symbol,
+                d.get("i"),
+                d.get("T"),
+                d.get("p"),
+                d.get("v"),
+                d.get("S"),
+                d.get("BT"),
+                envelope_ms,
+            )
         )
     return out
 

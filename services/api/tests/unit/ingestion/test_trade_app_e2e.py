@@ -43,7 +43,7 @@ def _app_with_catalogue() -> Any:
         .status_code
         == 501
     )  # mounted by create_app, fail-closed without identity
-    inst = SimpleNamespace(status="trading", tick_size=Decimal("0.1"))
+    inst = SimpleNamespace(status="trading", tick_size=Decimal("0.1"), launch_time=0)
     ctx.ingestion.instruments = SimpleNamespace(
         snapshot=lambda: SimpleNamespace(get=lambda s: inst if s == "BTCUSDT" else None)
     )

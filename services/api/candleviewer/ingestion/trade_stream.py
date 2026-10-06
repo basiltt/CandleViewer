@@ -50,6 +50,7 @@ from candleviewer.ingestion.metrics import (
     trade_writes_dropped_total,
 )
 from candleviewer.ingestion.planner import DEFAULT_GRACE_S, DemandTracker
+from candleviewer.ingestion.rejection import RejectionLog
 from candleviewer.ingestion.ticker_stream import UnknownSymbolError, uuid7
 from candleviewer.ingestion.watchdog import FeedHealthEvent
 from candleviewer.observability.context import spawn
@@ -139,6 +140,7 @@ class TradeStream:
         tick_size: Callable[[str], Decimal | None] = lambda _s: None,
         clock: Callable[[], float] = time.monotonic,
         now_us: Callable[[], int] = _now_us,
+        event_window: Callable[[str, int], None] | None = None,
         grace_s: float = DEFAULT_GRACE_S,
         writer: TradeWriter | None = None,
         dedupe_capacity: int = DEDUPE_CAPACITY,
@@ -150,6 +152,9 @@ class TradeStream:
         self._fetch, self._tick_size = fetch_recent, tick_size
         self._clock, self._now_us = clock, now_us
         self._demand = DemandTracker(clock, grace_s)
+        self._rejects = RejectionLog("trade", clock)
+        #: #1892: clock/listing-relative plausibility (`ingestion.rejection.EventWindow`).
+        self._window = event_window
         self._writer, self._cap, self._bf_timeout = writer, dedupe_capacity, backfill_timeout_s
         self._rings: dict[str, DedupeRing] = {}
         self._last_ts: dict[str, int] = {}  # last published ts_event per symbol
@@ -227,9 +232,15 @@ class TradeStream:
     async def handle_frame(self, frame: str) -> None:
         try:
             prints = self._parse(frame)
-        except ValueError:
+            if prints and self._window is not None:
+                for p in prints:
+                    self._window(p.symbol, p.ts_event_us)
+        except (ValueError, RecursionError) as exc:
             trade_prints_rejected_total.inc()
-            logger.warning("trade frame rejected")
+            self._rejects.record(exc)
+            sym = getattr(exc, "symbol", None)
+            if isinstance(sym, str):  # the frame held prints we dropped: backfill heals it
+                self.mark_gap("rejected_frame", sym)
             return
         if not prints:
             return

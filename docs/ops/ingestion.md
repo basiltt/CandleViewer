@@ -44,6 +44,43 @@ breaker marks it degraded at more than 5 per 60 s. Severity: Ticket.
 3. For `sequence_gap` with a healthy host, check exchange status; if it persists for 30 minutes,
    drop the symbol to depth 50 and file a defect with the reason counts.
 
+<a id="alert-bookresyncstorm"></a>
+
+## BookResyncStorm
+
+**Meaning.** More than five `rejected_frame` / `backoff` book resyncs in five minutes for one symbol,
+sustained for 5 minutes (`ingest_book_resyncs_total{reason}`). Each rejected book frame invalidates the
+book; the per-symbol backoff (250 ms doubling to 30 s, with jitter, reset after 5 s of stable LIVE) bounds
+snapshot requests, and `reason="backoff"` counts requests held back while the symbol stays stale (no
+book served). Deferred/back-off requests also count, so a storm inflates its own signal; that is
+acceptable for paging. Severity: Page.
+
+1. Check `ingest_rejected_total{stream="book"}` for the `reason`: `off_tick` after an instrument refresh
+   means a tick-size change; `non_finite` / `out_of_bounds` / `crossed` point at a corrupt feed.
+2. If the venue is healthy and one symbol is affected, release its demand until the cause is
+   understood; the backoff keeps other symbols unaffected.
+3. File a defect with the reason counts and a redacted frame sample from the recorder.
+
+<a id="alert-ingestionframesrejectedsustained"></a>
+
+## IngestionFramesRejectedSustained
+
+**Meaning.** One stream has rejected more than one frame every 10 seconds, sustained for 10 minutes
+(`ingest_rejected_total{stream, reason}`). Rejected frames are never published: book frames trigger a
+resync (`ingest_book_resyncs_total{reason="rejected_frame"}`) and trade frames open a tape gap that
+backfill heals. Reasons: `off_tick` (price not on the tick grid), `crossed` (bid above ask),
+`ts_future` / `ts_past` (event time outside the clock or listing window), `out_of_bounds`,
+`non_positive`, `non_finite`, `depth_limit` (frame nested deeper than 32), `malformed`, and
+`internal_error` (an unexpected exception the frame pump caught). Severity: Ticket.
+
+1. Read the `stream` and `reason` labels. `off_tick` right after an instrument refresh usually means
+   the venue changed the tick size: check `GET /v1/instruments` for a new `tick_size` on the symbol.
+2. `ts_future` on every stream at once points at the local clock: check the clock-drift alerts and
+   host NTP before you suspect the feed.
+3. `internal_error` or `depth_limit` from `stream="pump"` means hostile or corrupt frames are arriving.
+   Capture a support bundle (logs carry the reason and error class, never the payload) and open a
+   security defect with the time window. If `pump_breaker` resyncs repeat, recycle the socket.
+
 <a id="alert-ingestiontradegapunrecovered"></a>
 
 ## IngestionTradeGapUnrecovered

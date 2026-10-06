@@ -62,3 +62,90 @@ tests:
       - eval_time: 15m
         alertname: IngestionStoppedReporting
         exp_alerts: []
+  # #1889/#1890/#1892: sustained ingest-boundary rejections (12/min = 0.2/s > 0.1/s).
+  - interval: 1m
+    input_series:
+      - series: 'ingest_rejected_total{env="demo",exchange="bybit",stream="book",reason="off_tick"}'
+        values: "0+12x20"
+    alert_rule_test:
+      - eval_time: 18m
+        alertname: IngestionFramesRejectedSustained
+        exp_alerts:
+          - exp_labels:
+              severity: ticket
+              component: ingestion
+              env: demo
+              stream: book
+              reason: off_tick
+            exp_annotations:
+              runbook_url: "docs/ops/ingestion.md#alert-ingestionframesrejectedsustained"
+              summary: "The book stream has rejected frames for ten minutes with reason off_tick."
+              description: >-
+                Frames failing the ingest-boundary checks are dropped, never
+                published, so the affected stream is missing data and books resync.
+  - interval: 1m
+    input_series:
+      - series: 'ingest_rejected_total{env="demo",exchange="bybit",stream="trade",reason="malformed"}'
+        values: "0+1x20"
+    alert_rule_test:
+      - eval_time: 18m
+        alertname: IngestionFramesRejectedSustained
+        exp_alerts: []
+  # BookResyncStorm: rejected_frame 3/min + backoff 3/min = 30 per 5m (> 5), sustained > 5m.
+  - interval: 1m
+    input_series:
+      - series: 'ingest_book_resyncs_total{env="demo",exchange="bybit",symbol="BTCUSDT",reason="rejected_frame"}'
+        values: "0+3x30"
+      - series: 'ingest_book_resyncs_total{env="demo",exchange="bybit",symbol="BTCUSDT",reason="backoff"}'
+        values: "0+3x30"
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: BookResyncStorm
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              component: book
+              env: demo
+              symbol: BTCUSDT
+            exp_annotations:
+              runbook_url: "docs/ops/ingestion.md#alert-bookresyncstorm"
+              summary: "The order book for BTCUSDT is stuck resyncing on rejected frames."
+              description: >-
+                Rejected book frames keep forcing resyncs for five minutes; the
+                book is held stale (resync backoff) and unavailable to consumers.
+  # Below threshold: 0.2/min per reason = ~2 per 5m combined (< 5) -> no alert.
+  - interval: 1m
+    input_series:
+      - series: 'ingest_book_resyncs_total{env="demo",exchange="bybit",symbol="BTCUSDT",reason="rejected_frame"}'
+        values: "0+0.2x30"
+      - series: 'ingest_book_resyncs_total{env="demo",exchange="bybit",symbol="BTCUSDT",reason="backoff"}'
+        values: "0+0.2x30"
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: BookResyncStorm
+        exp_alerts: []
+  # Fires, then resets: counters stop rising at 10m, so the 5m increase decays to 0 and the alert resolves.
+  - interval: 1m
+    input_series:
+      - series: 'ingest_book_resyncs_total{env="demo",exchange="bybit",symbol="BTCUSDT",reason="rejected_frame"}'
+        values: "0+3x10 30+0x30"
+      - series: 'ingest_book_resyncs_total{env="demo",exchange="bybit",symbol="BTCUSDT",reason="backoff"}'
+        values: "0+3x10 30+0x30"
+    alert_rule_test:
+      - eval_time: 12m
+        alertname: BookResyncStorm
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              component: book
+              env: demo
+              symbol: BTCUSDT
+            exp_annotations:
+              runbook_url: "docs/ops/ingestion.md#alert-bookresyncstorm"
+              summary: "The order book for BTCUSDT is stuck resyncing on rejected frames."
+              description: >-
+                Rejected book frames keep forcing resyncs for five minutes; the
+                book is held stale (resync backoff) and unavailable to consumers.
+      - eval_time: 25m
+        alertname: BookResyncStorm
+        exp_alerts: []
