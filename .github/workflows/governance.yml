@@ -77,6 +77,9 @@ jobs:
       - name: Markdownlint + relative-link resolution over governance docs (GOV-006)
         run: python scripts/check_markdown_governance_docs.py
 
+      - name: Owned docs untouched by tooling; turbo agentGuidance opted out (GOV-007, #1907)
+        run: python scripts/check_owned_docs_untouched.py
+
       - name: CI runbook completeness check (CI-DOC-001, E03-T15)
         run: python scripts/check_runbook_completeness.py
 
