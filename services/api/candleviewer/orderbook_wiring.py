@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import random
 import time
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
@@ -55,6 +56,37 @@ logger = structlog.get_logger(__name__)
 
 WRITE_QUEUE_MAXSIZE = 8192
 SNAPSHOT_TIMEOUT_S = 10.0
+#: Per-symbol snapshot-request backoff (#1898 review r2): 250 ms doubling to 30 s,
+#: x[1, 1.25) jitter. A good snapshot resets it; suppressed requests are counted
+#: as `ingest_book_resyncs_total{reason="backoff"}` and the book stays out of LIVE.
+RESYNC_BACKOFF_BASE_S = 0.25
+RESYNC_BACKOFF_CAP_S = 30.0
+#: A book LIVE this long without another resync is healthy: the backoff resets.
+RESYNC_STABLE_S = 5.0
+_TICK_S = 0.25
+_JITTER = random.SystemRandom().random
+
+
+class _ResyncBackoff:
+    """Cooldown gate for one symbol's snapshot requests (clock-injected)."""
+
+    __slots__ = ("fails", "live_at", "next_ok")
+
+    def __init__(self) -> None:
+        self.fails = 0
+        self.next_ok = 0.0
+        self.live_at: float | None = None
+
+    def allow(self, now: float, rand: float) -> bool:
+        if self.live_at is not None and now - self.live_at >= RESYNC_STABLE_S:
+            self.fails, self.next_ok = 0, 0.0  # was stable: this is a fresh incident
+        self.live_at = None
+        if now < self.next_ok:
+            return False
+        delay = min(RESYNC_BACKOFF_CAP_S, RESYNC_BACKOFF_BASE_S * (2**self.fails))
+        self.fails = min(self.fails + 1, 16)
+        self.next_ok = now + delay * (1.0 + 0.25 * rand)
+        return True
 
 
 #: Closed set of resync reasons (book/resync.py + ingestion); anything else -> "other".
@@ -69,6 +101,7 @@ _RESYNC_REASONS = frozenset(
         "reconnect",
         "snapshot_timeout",
         "rejected_frame",
+        "backoff",
     }
 )
 
@@ -126,7 +159,11 @@ class BookStream:
         snapshot_timeout_s: float = SNAPSHOT_TIMEOUT_S,
         default_depth: int = DEFAULT_DEPTH,
         supervisor: HealthSupervisor | None = None,
+        rand: Callable[[], float] = _JITTER,
     ) -> None:
+        self._clock, self._rand = clock, rand
+        self._backoff: dict[str, _ResyncBackoff] = {}
+        self._deferred: set[str] = set()
         self._bus, self._env = bus, env
         self._set_desired, self._parse = set_desired, parse_frame
         self._topic_for, self._resub = topic_for, resubscribe
@@ -184,6 +221,8 @@ class BookStream:
             if self._supervisor is not None:
                 self._supervisor.detach(key)
         self._first_sub = {k for k in self._first_sub if k[0] != symbol}
+        self._backoff.pop(symbol, None)
+        self._deferred.discard(symbol)
 
     # ---- reads (GET /market/orderbook) -----------------------------------
     def view(self, symbol: str, depth: int) -> BookView | None:
@@ -218,6 +257,15 @@ class BookStream:
                 if key not in self._first_sub:  # first subscribe is the demand sync itself
                     self._first_sub.add(key)
                     return
+                bo = self._backoff.setdefault(symbol, _ResyncBackoff())
+                if not bo.allow(self._clock(), self._rand()):
+                    # Cooling down: stay desynced/stale, retry from the tick loop.
+                    self._deferred.add(symbol)
+                    ingest_book_resyncs_total.labels(
+                        symbol=symbol_label(symbol), reason="backoff"
+                    ).inc()
+                    return
+                self._deferred.discard(symbol)
                 await self._resub(self._topic_for(symbol, depth))
 
             eng = BookEngine(
@@ -246,6 +294,11 @@ class BookStream:
         await self._bus.publish(topic, obj)
         if isinstance(obj, BookStatus):
             _observe_book_status(obj)
+            if obj.state is BookPhase.LIVE:  # stable-LIVE for RESYNC_STABLE_S resets it
+                bo = self._backoff.get(symbol)
+                if bo is not None:
+                    bo.live_at = self._clock()
+                self._deferred.discard(symbol)
         if isinstance(obj, BookSnapshot):
             self._enqueue(
                 BookSnapshotRow(
@@ -306,6 +359,15 @@ class BookStream:
             if e.check_timeout(self._timeout_us):
                 n += 1
                 await e.on_snapshot_timeout()
+        now = self._clock()
+        for sym in list(self._deferred):  # cooldown elapsed: the deferred snapshot request
+            dtb = self._books.get(sym)
+            bo = self._backoff.get(sym)
+            if dtb is None or bo is None:
+                self._deferred.discard(sym)
+            elif now >= bo.next_ok and dtb.active.phase is not BookPhase.LIVE:
+                n += 1
+                await dtb.active.request_snapshot()
         return n
 
     async def drain_writes(self, max_batch: int = 500) -> int:
@@ -337,7 +399,7 @@ class BookStream:
 
     async def _timeout_loop(self) -> None:
         while True:
-            await asyncio.sleep(max(0.5, self._timeout_us / 4_000_000))
+            await asyncio.sleep(_TICK_S)
             await self.check_timeouts()
 
     async def start(self) -> None:

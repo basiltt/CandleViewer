@@ -44,6 +44,22 @@ breaker marks it degraded at more than 5 per 60 s. Severity: Ticket.
 3. For `sequence_gap` with a healthy host, check exchange status; if it persists for 30 minutes,
    drop the symbol to depth 50 and file a defect with the reason counts.
 
+<a id="alert-bookresyncstorm"></a>
+
+## BookResyncStorm
+
+**Meaning.** More than five `rejected_frame` / `backoff` book resyncs in five minutes for one symbol,
+sustained for 5 minutes (`ingest_book_resyncs_total{reason}`). Each rejected book frame invalidates the
+book; the per-symbol backoff (250 ms doubling to 30 s, with jitter, reset after 5 s of stable LIVE) bounds
+snapshot requests, and `reason="backoff"` counts requests held back while the symbol stays stale (no
+book served). Severity: Page.
+
+1. Check `ingest_rejected_total{stream="book"}` for the `reason`: `off_tick` after an instrument refresh
+   means a tick-size change; `non_finite` / `out_of_bounds` / `crossed` point at a corrupt feed.
+2. If the venue is healthy and one symbol is affected, release its demand until the cause is
+   understood; the backoff keeps other symbols unaffected.
+3. File a defect with the reason counts and a redacted frame sample from the recorder.
+
 <a id="alert-ingestionframesrejectedsustained"></a>
 
 ## IngestionFramesRejectedSustained

@@ -3038,7 +3038,11 @@ class ExchangeCapabilities(BaseModel):
     emitted**:
     - **Depth limit.** The ingestion frame pump scans `[`/`{` nesting once per frame before any
       `json.loads`; a frame nested deeper than 32 is rejected (`depth_limit`). The parsers map a
-      residual `RecursionError` to the same reason.
+      residual `RecursionError` to the same reason. The scan is string-aware (brackets inside JSON
+      string literals are ignored, escapes honoured, single O(n) pass, no regex).
+    - **Resync backoff.** A rejected book frame resyncs the book, but snapshot requests are
+      rate-limited per symbol (250 ms doubling to 30 s, jittered; reset after 5 s stable LIVE).
+      A symbol in cooldown stays stale and counts `ingest_book_resyncs_total{reason="backoff"}`.
     - **Numbers.** Prices are finite, `> 0` and `<= 1e12`; quantities are finite, `> 0` (book
       level `"0"` = delete, so `>= 0` there) and `<= 1e12`; ticker aggregates `>= 0`.
     - **Tick grid.** A book price that is not an exact multiple of `tick_size` (Decimal
@@ -3046,6 +3050,8 @@ class ExchangeCapabilities(BaseModel):
     - **Ticker.** `bid1Price <= ask1Price` when both are present (`crossed` otherwise).
     - **Time.** An event time is `<= envelope ts + 5 s` and `<=` year 2100. Ingestion also
       enforces `[launchTime − 24 h, now + 5 s]` on the injected wall clock (`EventWindow`).
+      Past timestamps are bounded **only** by `launchTime − 24 h` (replay/backfill must be
+      accepted); the recorded corpus is replayed through this window in the zero-rejection test.
     - **Kline.** `KlineEvent` enforces `0 < low <= open, close <= high`, `volume, turnover >= 0`
       and `start <= end` as a model invariant.
 

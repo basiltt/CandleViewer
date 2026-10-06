@@ -33,6 +33,21 @@ groups:
             Repeated resyncs mean sequence gaps or frame loss upstream; the
             book is unavailable to consumers during each resync.
 
+      # #1898 r2: a rejected-frame resync storm. The per-symbol backoff (250 ms -> 30 s) caps
+      # snapshot requests; `reason="backoff"` counts suppressed requests, i.e. a book held stale.
+      - alert: BookResyncStorm
+        expr: sum by (env, symbol) (increase(ingest_book_resyncs_total{reason=~"rejected_frame|backoff"}[5m])) > 5
+        for: 5m
+        labels:
+          severity: page
+          component: book
+        annotations:
+          runbook_url: "docs/ops/ingestion.md#alert-bookresyncstorm"
+          summary: "The order book for {{ $labels.symbol }} is stuck resyncing on rejected frames."
+          description: >-
+            Rejected book frames keep forcing resyncs for five minutes; the
+            book is held stale (resync backoff) and unavailable to consumers.
+
       # #1889/#1890/#1892: ingest-boundary rejections. `reason` is a closed enum
       # (exchange/base/frame_guard.py REJECT_REASONS); stream in trade|ticker|book|pump.
       - alert: IngestionFramesRejectedSustained

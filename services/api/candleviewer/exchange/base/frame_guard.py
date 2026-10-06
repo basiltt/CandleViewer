@@ -72,16 +72,9 @@ class FrameRejectedError(ValueError):
         self.symbol = symbol
 
 
-def json_depth_exceeds(frame: str, limit: int = MAX_FRAME_DEPTH) -> bool:
-    """True when `frame` nests `[`/`{` deeper than `limit`, decided before any
-    `json.loads` (#1889). Fast path: fewer opening brackets than `limit` cannot
-    nest that deep. Slow path keeps only bracket chars (C-speed translate) and
-    walks them. Brackets inside JSON strings are counted too: that can only
-    over-estimate depth, and no venue string carries brackets."""
-    if frame.count("[") + frame.count("{") <= limit:
-        return False
+def _walk(structural: str, limit: int) -> bool:
     depth = 0
-    for ch in frame.translate(_BRACKETS):
+    for ch in structural.translate(_BRACKETS):
         if ch in "[{":
             depth += 1
             if depth > limit:
@@ -89,6 +82,42 @@ def json_depth_exceeds(frame: str, limit: int = MAX_FRAME_DEPTH) -> bool:
         elif ch in "]}":
             depth -= 1
     return False
+
+
+def _outside_strings_escaped(frame: str) -> str:
+    """Single O(n) pass dropping JSON string literals, honouring backslash
+    escapes (an odd run of backslashes escapes the following quote)."""
+    out: list[str] = []
+    in_string = False
+    escaped = False
+    for ch in frame:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                in_string = False
+        elif ch == '"':
+            in_string = True
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
+def json_depth_exceeds(frame: str, limit: int = MAX_FRAME_DEPTH) -> bool:
+    """True when `frame` nests `[`/`{` deeper than `limit`, decided before any
+    `json.loads` (#1889). String-aware: bracket characters inside JSON string
+    literals are ignored, so they can neither raise nor lower the count.
+    Fast path: fewer opening brackets than `limit` cannot nest that deep.
+    Escape-free frames (all venue frames) are split on `"` at C speed and only
+    the even (outside-string) segments are walked; a frame with a backslash
+    takes the O(n) escape-tracking pass."""
+    if frame.count("[") + frame.count("{") <= limit:
+        return False
+    if "\\" in frame:
+        return _walk(_outside_strings_escaped(frame), limit)
+    return _walk("".join(frame.split('"')[::2]), limit)
 
 
 def check_price(value: Decimal, *, symbol: str | None = None) -> Decimal:

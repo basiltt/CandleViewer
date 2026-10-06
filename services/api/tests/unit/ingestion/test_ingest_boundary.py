@@ -12,6 +12,7 @@ import asyncio
 import json
 from collections import deque
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -47,7 +48,7 @@ from candleviewer.ingestion.ticker_stream import TickerStream
 from candleviewer.ingestion.trade_stream import TradeStream
 from candleviewer.observability.context import spawn
 from candleviewer.orderbook_wiring import BookStream
-from tests._corpus import TICKS, frames
+from tests._corpus import TICKS, frames, rest
 
 TS = 1_700_000_000_000
 TICK = {"BTCUSDT": Decimal("0.1")}
@@ -596,3 +597,73 @@ def test_recorded_corpus_has_zero_rejections(rel: str) -> None:
             if parse(raw) is not None:  # raises on any (false-positive) rejection
                 parsed += 1
     assert parsed > 0
+
+
+# ---- r2: string-aware depth scan (#1889 review finding 1) -------------------
+
+_FIXTURES = Path(__file__).resolve().parents[2] / "fixtures" / "ingestion"
+
+
+def test_depth_scan_not_fooled_by_closing_brackets_in_strings() -> None:
+    n = 5000  # string literals full of `]` lowered the old count; real nesting ~5000
+    assert json_depth_exceeds('{"x":[' + '"]",[' * n + "]" * n + "]}")
+
+
+def test_depth_scan_crasher_fixture_rejected() -> None:
+    raw = (_FIXTURES / "depth_bypass_string_brackets.frame").read_text(encoding="utf-8")
+    assert json_depth_exceeds(raw)
+
+
+def test_depth_scan_ignores_brackets_in_strings_and_handles_escapes() -> None:
+    assert not json_depth_exceeds('{"a":"' + "[" * 100 + '"}', limit=4)
+    # an escaped quote does not end the string; an escaped backslash does not escape it.
+    assert not json_depth_exceeds('{"a":"\\"' + "[" * 100 + '","b":1}', limit=4)
+    assert json_depth_exceeds('{"a":"\\\\"' + "[" * 100, limit=4)
+
+
+@given(st.text(alphabet='[]{}"\\ab', max_size=200), st.integers(min_value=0, max_value=6))
+@settings(max_examples=300, deadline=None)
+def test_depth_scan_matches_reference_scanner(frame: str, limit: int) -> None:
+    depth, in_s, esc, over = 0, False, False, False
+    for ch in frame:
+        if in_s:
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_s = False
+        elif ch == '"':
+            in_s = True
+        elif ch in "[{":
+            depth += 1
+            over = over or depth > limit
+        elif ch in "]}":
+            depth -= 1
+    assert json_depth_exceeds(frame, limit) == over
+
+
+# ---- r2: corpus replay through the clock / launchTime window (finding 4) ----
+
+
+@pytest.mark.parametrize("rel", _CORPUS)
+def test_recorded_corpus_passes_clock_and_launch_window(rel: str) -> None:
+    """Fake clock = each frame's envelope time; launchTime from the instruments
+    capture. Past events are bounded only by `launchTime - 24h` (§14.2)."""
+    launch = {
+        i["symbol"]: int(i["launchTime"]) * 1000
+        for i in rest("rest/instruments_before.json")["result"]["list"]
+    }
+    now = {"us": 0}
+    window = EventWindow(lambda: now["us"], launch.get)
+    checked = 0
+    for raw in frames(rel):
+        now["us"] = int(json.loads(raw)["ts"]) * 1000
+        for parse in (parse_trade_frame, parse_ticker_frame):
+            ev = parse(raw)
+            if ev is None:
+                continue
+            for e in ev if isinstance(ev, (list, tuple)) else (ev,):
+                window(e.symbol, int(e.ts_event_us))
+                checked += 1
+    assert checked > 0 or "orderbook" in rel

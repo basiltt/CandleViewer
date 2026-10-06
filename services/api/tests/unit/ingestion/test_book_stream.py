@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from decimal import Decimal
 from typing import Any
 
@@ -186,6 +187,7 @@ async def test_stream_gap_goes_through_budgeted_resubscribe_and_timeout() -> Non
     eng = h.stream._books["BTCUSDT"].active
     eng._pending_since = -10_000_000
     h.stream._timeout_us = 1
+    h.stream._clock = lambda: time.monotonic() + 1_000.0  # past the resync cooldown (fake clock)
     assert await h.stream.check_timeouts() == 1
     assert len(h.resubs) == 2
     await h.stream.stop()

@@ -37,7 +37,9 @@ Drill windows are recorded in `system_events`; coordinate security-rule drills (
 | AlertmanagerNotificationsFailed | ticket | 0m | `docs/plan/07-release-and-prr.md#alert-alertmanagernotificationsfailed` | synthetic | | | | | | pending |
 | IngestionTopicStale | ticket | 1m | `docs/ops/ingestion.md#alert-ingestiontopicstale` | synthetic | | | | | | pending |
 | IngestionBookResyncRateHigh | ticket | 5m | `docs/ops/ingestion.md#alert-ingestionbookresyncratehigh` | synthetic | | | | | | pending |
+| BookResyncStorm | page | 5m | `docs/ops/ingestion.md#alert-bookresyncstorm` | synthetic | | | | | | pending |
 | IngestionFramesRejectedSustained | ticket | 10m | `docs/ops/ingestion.md#alert-ingestionframesrejectedsustained` | synthetic | | | | | | pending |
+ ticket | 10m | `docs/ops/ingestion.md#alert-ingestionframesrejectedsustained` | synthetic | | | | | | pending |
 | IngestionTradeGapUnrecovered | page | 0m | `docs/ops/ingestion.md#alert-ingestiontradegapunrecovered` | synthetic | | | | | | pending |
 | IngestionRateLimitHeadroomExhausted | ticket | 1m | `docs/ops/ingestion.md#alert-ingestionratelimitheadroomexhausted` | synthetic | | | | | | pending |
 | IngestionNeverDropQueueFull | ticket | 5m | `docs/ops/ingestion.md#alert-ingestionneverdropqueuefull` | synthetic | | | | | | pending |
