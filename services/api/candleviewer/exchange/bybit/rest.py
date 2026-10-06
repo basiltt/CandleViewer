@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import random
+import re
 import time
 from collections.abc import Awaitable, Callable, Mapping
 from typing import Any
@@ -26,6 +27,7 @@ import structlog
 from candleviewer.exchange.base.boundary import exchange_errors_total
 from candleviewer.exchange.base.errors import (
     ClockDriftError,
+    ExchangeError,
     RateLimitError,
     TransportError,
     UnknownStateError,
@@ -49,6 +51,27 @@ logger = structlog.get_logger(__name__)
 _SECRET_KEY_MARKERS = ("api_key", "api-key", "sign", "secret", "authorization")
 
 _REDACTED = "**redacted**"
+
+#: SR-040a: a request path is a relative `/v5/...` path of URL-safe segment
+#: characters only. No scheme, authority, backslash, whitespace/control char,
+#: query/fragment or percent-escape can match, so httpx can never be steered
+#: to another host (it honours an absolute/scheme-relative URL over base_url).
+_SAFE_PATH = re.compile(r"/v5/[A-Za-z0-9_\-]+(?:/[A-Za-z0-9_\-]+)*\Z")
+
+
+class RestPathRejected(ExchangeError, ValueError):
+    """The request `path` is not a plain relative `/v5/...` path (SR-040a).
+
+    Raised before signing or sending. The message never carries the key or
+    signature, and never echoes the rejected path (it may hold control chars)."""
+
+
+def validate_rest_path(path: str) -> str:
+    """Return `path` unchanged if it is a safe relative `/v5/` path, else raise."""
+    if not isinstance(path, str) or not _SAFE_PATH.match(path):
+        raise RestPathRejected("REST path must be a relative /v5/ path (SR-040a)")
+    return path
+
 
 ClockOffsetProvider = Callable[[], Awaitable[int]] | Callable[[], int]
 """Returns the current clock offset in milliseconds, injected by the caller
@@ -225,6 +248,13 @@ class BybitRestClient:
             return str(query)
         return body if isinstance(body, str) else ("" if body is None else _json_dumps(body))
 
+    def _assert_same_host(self, method: str, path: str) -> None:
+        """Defence in depth: the built request must target the configured host."""
+        built = self._client.build_request(method, path)
+        expected = httpx.URL(self._config.base_url).host
+        if built.url.host != expected or built.url.scheme != "https":
+            raise RestPathRejected("built request host differs from configured base (SR-040a)")
+
     async def _request(
         self,
         method: str,
@@ -235,6 +265,8 @@ class BybitRestClient:
         endpoint_class: EndpointClass,
         signed: bool,
     ) -> dict[str, Any]:
+        validate_rest_path(path)
+        self._assert_same_host(method, path)
         attempt = 0
         clock_retry_used = False
         while True:
