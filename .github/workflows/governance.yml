@@ -80,6 +80,9 @@ jobs:
       - name: Owned docs untouched by tooling; turbo agentGuidance opted out (GOV-007, #1907)
         run: python scripts/check_owned_docs_untouched.py
 
+      - name: Every epic ticket appears in its threat model ticket map (GOV-008, #1922)
+        run: python scripts/check_threat_model_ticket_map.py
+
       - name: CI runbook completeness check (CI-DOC-001, E03-T15)
         run: python scripts/check_runbook_completeness.py
 
