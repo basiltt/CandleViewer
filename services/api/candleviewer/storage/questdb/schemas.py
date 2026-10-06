@@ -83,6 +83,11 @@ ORDERFLOW_METRICS_SCHEMA = TableSchema(
     tag_columns=("symbol", "regime"),
 )
 
+FUNDING_RATES_SCHEMA = TableSchema(
+    name="funding_rates",
+    tag_columns=("symbol", "source"),
+)
+
 ALL_SCHEMAS: dict[str, TableSchema] = {
     "trades": TRADES_SCHEMA,
     "orderbook_deltas": ORDERBOOK_DELTAS_SCHEMA,
@@ -91,5 +96,6 @@ ALL_SCHEMAS: dict[str, TableSchema] = {
     "klines": KLINES_SCHEMA,
     "footprint_cells": FOOTPRINT_CELLS_SCHEMA,
     "orderflow_metrics": ORDERFLOW_METRICS_SCHEMA,
+    "funding_rates": FUNDING_RATES_SCHEMA,
     **{schema.name: schema for schema in BAR_SCHEMAS_BY_FAMILY.values()},
 }

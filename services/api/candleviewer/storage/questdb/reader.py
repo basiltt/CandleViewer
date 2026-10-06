@@ -66,6 +66,17 @@ def build_read_klines(sym: str, interval: str, rng: TimeRange) -> QueryBuilder:
     return QueryBuilder(sql, (sym, interval, rng.start_us, rng.end_us))
 
 
+def build_read_funding(sym: str, rng: TimeRange, limit: int) -> QueryBuilder:
+    """E24-T02 settled funding series: symbol equality, two-sided ts bound,
+    ts-ordered, hard row cap (`limit` is a validated int, still bound)."""
+    sql = (
+        "SELECT ts, symbol, funding_rate, annualised_pct, interval_min, source "
+        "FROM funding_rates WHERE symbol = $1 AND ts >= $2 AND ts < $3 "
+        "ORDER BY ts LIMIT $4"
+    )
+    return QueryBuilder(sql, (sym, rng.start_us, rng.end_us, limit))
+
+
 def build_read_big_trades(sym: str, rng: TimeRange, min_notional: float) -> QueryBuilder:
     """Shape #4 (big-trade bubbles): precomputed `notional` column."""
     sql = (
