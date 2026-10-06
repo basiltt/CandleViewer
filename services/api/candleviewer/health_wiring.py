@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import os
 import shutil
+from collections.abc import Callable, Sequence
 from datetime import datetime
 from typing import Any, Protocol
 
@@ -180,3 +181,39 @@ def register_real_probes(
         ("disk", disk),
     ):
         registry.register(CallableProbe(name, fn, timeout=1.5))
+
+
+class WriteBehindLike(Protocol):
+    """Structural view of `ingestion.write_behind.WriteBehindBuffer` (#1918)."""
+
+    @property
+    def degraded(self) -> bool: ...
+
+    @property
+    def evicted(self) -> int: ...
+
+
+HOT_TIER_WRITE_BEHIND = "hot_tier_write_behind"
+
+
+def hot_tier_write_behind_state(buffers: Sequence[WriteBehindLike]) -> ProbeResult:
+    """#1918: degraded (never down — ingest stays live) while any hot-tier
+    write-behind is failing; the detail names evictions so lost rows show."""
+    failing = sum(1 for b in buffers if b.degraded)
+    evicted = sum(b.evicted for b in buffers)
+    if not buffers:
+        return ProbeResult(ComponentState.NOT_DEPLOYED, "ingestion not wired")
+    if failing:
+        return ProbeResult(
+            ComponentState.DEGRADED, f"{failing} writer(s) retrying; evicted {evicted}"
+        )
+    return ProbeResult(ComponentState.HEALTHY, f"evicted {evicted}")
+
+
+def register_write_behind_probe(
+    registry: HealthRegistry, buffers: Callable[[], Sequence[WriteBehindLike]]
+) -> None:
+    async def probe() -> ProbeResult:
+        return hot_tier_write_behind_state(buffers())
+
+    registry.register(CallableProbe(HOT_TIER_WRITE_BEHIND, probe, timeout=1.0))

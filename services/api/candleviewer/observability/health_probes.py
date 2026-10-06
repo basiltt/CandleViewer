@@ -135,6 +135,7 @@ EVENT_COMPONENT: dict[str, str] = {
     "rule_engine": "rules",
     "recorder": "recorder",
     "disk": "api",
+    "hot_tier_write_behind": "db",
 }
 _SEVERITY: dict[ComponentState, str] = {
     ComponentState.HEALTHY: "info",

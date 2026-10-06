@@ -109,8 +109,16 @@ SPECS: Final[tuple[MetricSpec, ...]] = (
         "reason",
     ),
     _g("questdb_write_queue_depth", "Rows waiting in a write-behind queue.", "table"),
-    _c("trade_writes_dropped_total", "Trade rows dropped from write-behind (oldest first)."),
-    _c("book_writes_dropped_total", "Book rows dropped from write-behind (oldest first)."),
+    _c(
+        "trade_writes_dropped_total",
+        "Trade rows evicted from write-behind (oldest first), by reason (outage|queue_full).",
+        "reason",
+    ),
+    _c(
+        "book_writes_dropped_total",
+        "Book rows evicted from write-behind (oldest first), by reason (outage|queue_full).",
+        "reason",
+    ),
     # E08-S05 book health (E08-T06: resync rate + live state for the dashboard/alerts)
     _c("ingest_book_resyncs_total", "Book resyncs (left LIVE), by reason.", "symbol", "reason"),
     _g("ingest_book_live", "1 while the symbol's book is LIVE, else 0.", "symbol"),

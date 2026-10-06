@@ -22,7 +22,6 @@ parsing and REST are injected (C-2.2): this module sees only `TradePrint`s.
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import time
 from collections import deque
 from collections.abc import Awaitable, Callable, Iterable, Sequence
@@ -41,7 +40,6 @@ from candleviewer.exchange.base.trade_print import TradePrint
 from candleviewer.ingestion.metrics import (
     count_event,
     ingest_lag_seconds,
-    questdb_write_queue_depth,
     symbol_label,
     trade_backfill_rows_total,
     trade_duplicates_suppressed_total,
@@ -53,6 +51,7 @@ from candleviewer.ingestion.planner import DEFAULT_GRACE_S, DemandTracker
 from candleviewer.ingestion.rejection import RejectionLog
 from candleviewer.ingestion.ticker_stream import UnknownSymbolError, uuid7
 from candleviewer.ingestion.watchdog import FeedHealthEvent
+from candleviewer.ingestion.write_behind import WriteBehindBuffer
 from candleviewer.observability.context import spawn
 
 logger = structlog.get_logger(__name__)
@@ -145,6 +144,8 @@ class TradeStream:
         writer: TradeWriter | None = None,
         dedupe_capacity: int = DEDUPE_CAPACITY,
         backfill_timeout_s: float = BACKFILL_TIMEOUT_S,
+        write_sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        write_rand: Callable[[], float] | None = None,
     ) -> None:
         self._bus, self._env = bus, env
         self._set_desired, self._parse = set_desired, parse_frame
@@ -162,7 +163,15 @@ class TradeStream:
         self._gap_open: dict[str, tuple[int, str]] = {}  # symbol -> (start_us, reason)
         self._recent: dict[str, deque[TradeEvent]] = {}
         self._gaps: dict[str, deque[GapEvent]] = {}
-        self._writes: asyncio.Queue[TradeEvent] = asyncio.Queue(maxsize=WRITE_QUEUE_MAXSIZE)
+        #: #1918: a failed batch is requeued with backoff, never discarded.
+        self._writes: WriteBehindBuffer[TradeEvent] = WriteBehindBuffer(
+            table="trades",
+            maxsize=WRITE_QUEUE_MAXSIZE,
+            dropped=trade_writes_dropped_total,
+            key=lambda e: (e.symbol, e.ts_event),
+            sleep=write_sleep,
+            rand=write_rand,
+        )
         self._tasks: list[asyncio.Task[None]] = []
         self._health = bus.subscribe(
             "trade-stream-health",
@@ -318,12 +327,7 @@ class TradeStream:
     def _enqueue_write(self, event: TradeEvent) -> None:
         if self._writer is None:
             return
-        if self._writes.full():  # write-behind never blocks the reader
-            with contextlib.suppress(asyncio.QueueEmpty):
-                self._writes.get_nowait()
-            trade_writes_dropped_total.inc()
-        self._writes.put_nowait(event)
-        questdb_write_queue_depth.labels(table="trades").set(self._writes.qsize())
+        self._writes.put(event)  # never blocks the reader; full -> drop-oldest, counted
 
     # ---- loops / lifecycle -------------------------------------------------
     async def process_health(self, event: FeedHealthEvent) -> None:
@@ -337,17 +341,30 @@ class TradeStream:
                 await self.process_health(ev)
 
     async def drain_writes(self, max_batch: int = 500) -> int:
-        """Write one batch (blocks for the first row); returns rows written."""
-        batch = [await self._writes.get()]
-        while len(batch) < max_batch and not self._writes.empty():
-            batch.append(self._writes.get_nowait())
-        questdb_write_queue_depth.labels(table="trades").set(self._writes.qsize())
+        """Write one batch (blocks for the first row); returns rows written.
+
+        On failure the batch goes back to the head of the buffer and the loop
+        backs off (#1918); 0 is returned and nothing counts as persisted."""
+        batch = await self._writes.take(max_batch)
         try:
             if self._writer is not None:
                 await self._writer.write_trades(batch)
         except Exception:  # write-behind must never take ingest down
-            logger.warning("trade write-behind failed", rows=len(batch))
+            self._writes.requeue(batch)
+            logger.warning(
+                "trade write-behind failed; requeued",
+                rows=len(batch),
+                failures=self._writes.failures,
+            )
+            await self._writes.backoff()
+            return 0
+        self._writes.succeeded()
         return len(batch)
+
+    @property
+    def write_behind(self) -> WriteBehindBuffer[TradeEvent]:
+        """Hot-tier write-behind state (health probe + lost-range index)."""
+        return self._writes
 
     async def _write_loop(self) -> None:
         while True:

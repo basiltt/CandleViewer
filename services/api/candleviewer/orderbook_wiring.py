@@ -23,7 +23,6 @@ the statechart package. B14 health supervision is an injected
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import random
 import time
 from collections.abc import Awaitable, Callable, Sequence
@@ -42,13 +41,13 @@ from candleviewer.ingestion.metrics import (
     book_writes_dropped_total,
     ingest_book_live,
     ingest_book_resyncs_total,
-    questdb_write_queue_depth,
     symbol_label,
 )
 from candleviewer.ingestion.planner import DEFAULT_GRACE_S, DemandTracker
 from candleviewer.ingestion.rejection import RejectionLog
 from candleviewer.ingestion.ticker_stream import UnknownSymbolError
 from candleviewer.ingestion.watchdog import FeedHealthEvent
+from candleviewer.ingestion.write_behind import WriteBehindBuffer
 from candleviewer.observability.context import spawn
 from candleviewer.storage.repositories.rows import BookDeltaRow, BookSnapshotRow
 
@@ -160,6 +159,7 @@ class BookStream:
         default_depth: int = DEFAULT_DEPTH,
         supervisor: HealthSupervisor | None = None,
         rand: Callable[[], float] = _JITTER,
+        write_sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     ) -> None:
         self._clock, self._rand = clock, rand
         self._backoff: dict[str, _ResyncBackoff] = {}
@@ -177,8 +177,14 @@ class BookStream:
         self._first_sub: set[tuple[str, int]] = set()
         self._supervisor = supervisor
         self._keys: dict[str, list[str]] = {}
-        self._writes: asyncio.Queue[BookDeltaRow | BookSnapshotRow] = asyncio.Queue(
-            maxsize=WRITE_QUEUE_MAXSIZE
+        #: #1918: a failed batch is requeued with backoff, never discarded.
+        self._writes: WriteBehindBuffer[BookDeltaRow | BookSnapshotRow] = WriteBehindBuffer(
+            table="orderbook",
+            maxsize=WRITE_QUEUE_MAXSIZE,
+            dropped=book_writes_dropped_total,
+            key=lambda r: (r.symbol, r.ts_us),
+            sleep=write_sleep,
+            rand=rand,
         )
         self._tasks: list[asyncio.Task[None]] = []
         self._health = bus.subscribe(
@@ -321,12 +327,7 @@ class BookStream:
     def _enqueue(self, row: BookDeltaRow | BookSnapshotRow) -> None:
         if self._writer is None:
             return
-        if self._writes.full():  # write-behind never blocks the reader
-            with contextlib.suppress(asyncio.QueueEmpty):
-                self._writes.get_nowait()
-            book_writes_dropped_total.inc()
-        self._writes.put_nowait(row)
-        questdb_write_queue_depth.labels(table="orderbook").set(self._writes.qsize())
+        self._writes.put(row)  # never blocks the reader; full -> drop-oldest, counted
 
     # ---- frames -----------------------------------------------------------
     async def handle_frame(self, frame: str) -> None:
@@ -371,21 +372,42 @@ class BookStream:
         return n
 
     async def drain_writes(self, max_batch: int = 500) -> int:
-        batch = [await self._writes.get()]
-        while len(batch) < max_batch and not self._writes.empty():
-            batch.append(self._writes.get_nowait())
-        questdb_write_queue_depth.labels(table="orderbook").set(self._writes.qsize())
-        if self._writer is not None:
-            try:
-                deltas = [r for r in batch if isinstance(r, BookDeltaRow)]
-                if deltas:
-                    await self._writer.write_book_deltas(deltas)
-                for r in batch:
-                    if isinstance(r, BookSnapshotRow):
-                        await self._writer.write_book_snapshot(r)
-            except Exception:  # write-behind must never take ingest down
-                logger.warning("book write-behind failed", rows=len(batch))
-        return len(batch)
+        """Write one batch in row order; on failure requeue the unwritten
+        suffix at the head and back off (#1918). Returns rows written."""
+        batch = await self._writes.take(max_batch)
+        if self._writer is None:
+            return len(batch)
+        done = 0  # persisted prefix of `batch`: never resent
+        try:
+            while done < len(batch):
+                head = batch[done]
+                if isinstance(head, BookSnapshotRow):
+                    await self._writer.write_book_snapshot(head)
+                    done += 1
+                    continue
+                run: list[BookDeltaRow] = []
+                for r in batch[done:]:
+                    if not isinstance(r, BookDeltaRow):
+                        break
+                    run.append(r)
+                await self._writer.write_book_deltas(run)
+                done += len(run)
+        except Exception:  # write-behind must never take ingest down
+            self._writes.requeue(batch[done:])
+            logger.warning(
+                "book write-behind failed; requeued",
+                rows=len(batch) - done,
+                failures=self._writes.failures,
+            )
+            await self._writes.backoff()
+            return done
+        self._writes.succeeded()
+        return done
+
+    @property
+    def write_behind(self) -> WriteBehindBuffer[BookDeltaRow | BookSnapshotRow]:
+        """Hot-tier write-behind state (health probe + lost-range index)."""
+        return self._writes
 
     async def _health_loop(self) -> None:
         while True:
