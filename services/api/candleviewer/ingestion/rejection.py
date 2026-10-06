@@ -21,7 +21,7 @@ from candleviewer.exchange.base.frame_guard import (
 )
 from candleviewer.ingestion.metrics import ingest_rejected_total
 
-logger = structlog.get_logger(__name__)
+_LOGGER_NAME: Final[str] = __name__
 
 Stream = Literal["trade", "ticker", "book", "pump"]
 LOG_INTERVAL_S: Final[float] = 10.0
@@ -57,7 +57,10 @@ class RejectionLog:
             self.suppressed += 1
             return reason
         self._last[reason] = now
-        logger.warning(
+        # Resolved per call (rate-limited path): a module-level logger cached under
+        # `cache_logger_on_first_use=True` keeps a stale processor chain after
+        # `configure_logging()` runs (same pitfall as observability/metrics.py).
+        structlog.get_logger(_LOGGER_NAME).warning(
             f"{self._stream} frame rejected",
             stream=self._stream,
             reason=reason,

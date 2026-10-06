@@ -72,6 +72,12 @@ def book(kind: str, u: int, bids: list[list[str]], asks: list[list[str]]) -> str
     return _dump({"topic": "orderbook.50.BTCUSDT", "type": kind, "ts": TS + u, "data": data})
 
 
+#: Deeper than any CPython C-recursion limit (3.12: ~8000 on Linux, lower on Windows),
+#: so the C JSON scanner overflows on every platform. A 5000-deep frame parses fine
+#: on Linux 3.12 and only overflows on Windows -- the r4 CI failure.
+OVERFLOW_DEPTH = 200_000
+
+
 def nested(depth: int) -> str:
     return '{"topic":"publicTrade.BTCUSDT","data":' + "[" * depth + "]" * depth + "}"
 
@@ -191,7 +197,7 @@ async def test_deep_nesting_does_not_kill_pump() -> None:  # #1889
     svc.attach_trades(rig.trades)
     pump = spawn(svc._pump_frames(), name="x02-pump")
     try:
-        svc.offer_frame(nested(5_000))
+        svc.offer_frame(nested(OVERFLOW_DEPTH))
         svc.offer_frame(TRADES[0])
         for _ in range(5):
             await asyncio.sleep(0)
@@ -216,8 +222,8 @@ async def test_deep_nesting_does_not_kill_pump() -> None:  # #1889
         (trade(p="abc"), "malformed"),
         (trade(T=TS + 60_000), "ts_future"),
         (trade(T=5_000_000_000_000), "ts_future"),
-        (nested(5_000), "depth_limit"),  # parser RecursionError backstop
-        (nested(MAX_FRAME_DEPTH + 1), "malformed"),  # parses; shape is wrong
+        pytest.param(nested(OVERFLOW_DEPTH), "depth_limit", id="overflow"),  # parser backstop
+        pytest.param(nested(MAX_FRAME_DEPTH + 1), "malformed", id="deep-shape"),  # parses
     ],
 )
 async def test_trade_rejection_reason(frame: str, reason: str) -> None:
@@ -486,7 +492,7 @@ def test_rejection_log_rate_limits_and_never_logs_payload() -> None:
 # ---- depth guard ------------------------------------------------------------
 
 
-@pytest.mark.parametrize("depth", [MAX_FRAME_DEPTH + 1, 5_000])
+@pytest.mark.parametrize("depth", [MAX_FRAME_DEPTH + 1, OVERFLOW_DEPTH])
 async def test_pump_rejects_deep_frame_before_any_parser(depth: int) -> None:
     svc, boom = IngestionService(), _Boom(KeyError("never"))
     svc.trades = boom  # type: ignore[assignment]  # duck-typed stream double
@@ -496,10 +502,37 @@ async def test_pump_rejects_deep_frame_before_any_parser(depth: int) -> None:
     assert rejected("pump", "depth_limit") == before + 1
 
 
-@pytest.mark.parametrize("parse", [parse_ticker_frame, lambda f: parse_book_frame(f, TICK.get)])
-def test_parser_recursion_backstop(parse: Any) -> None:
+_PARSERS = [
+    pytest.param(parse_ticker_frame, "ticker", id="ticker"),
+    pytest.param(lambda f: parse_book_frame(f, TICK.get), "orderbook", id="book"),
+    pytest.param(parse_trade_frame, "trades", id="trade"),
+]
+
+
+def _raise_recursion(_frame: str) -> object:
+    raise RecursionError
+
+
+@pytest.mark.parametrize(("parse", "module"), _PARSERS)
+def test_parser_recursion_backstop_contract(
+    parse: Any, module: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Contract, platform-independent: a RecursionError from the JSON decoder
+    maps to FrameRejectedError(depth_limit)."""
+    import importlib
+
+    mod = importlib.import_module(f"candleviewer.exchange.bybit.{module}")
+    monkeypatch.setattr(mod.json, "loads", _raise_recursion)
     with pytest.raises(FrameRejectedError) as ei:
-        parse(nested(5_000))
+        parse('{"topic":"x"}')
+    assert ei.value.reason == "depth_limit"
+
+
+@pytest.mark.parametrize(("parse", "module"), _PARSERS)
+def test_parser_recursion_backstop_real_overflow(parse: Any, module: str) -> None:
+    """Real overflow of the C scanner (depth beyond any platform's C limit)."""
+    with pytest.raises(FrameRejectedError) as ei:
+        parse(nested(OVERFLOW_DEPTH))
     assert ei.value.reason == "depth_limit"
 
 
