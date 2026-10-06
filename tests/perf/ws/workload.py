@@ -1,9 +1,9 @@
 """E17-K01 deterministic workload generator: the reference-workspace frame stream.
 
 One stream, three encodings (see codecs.py). Seeded; derives book deltas and trade prints from
-the recorded corpus ``packages/fixtures/bybit/2026-10-05/ws`` (the corpus is a documented-shape
-assembly, not a live capture - see its README - so rates/sizes below are *modelled*, and the
-model is stated in the finding note).
+the recorded corpus at ``CORPUS`` below (the corpus is a documented-shape assembly, not a live
+capture - see its README - so rates/sizes below are *modelled*, and the model is stated in the
+finding note).
 
 Rates are the 23-ws-protocol 6.1 default throttles for the 4-pane reference workspace
 (16.3): bars 250 ms, footprint 250 ms, book.50 50 ms, trades 100 ms; plus the heatmap pane
@@ -43,6 +43,7 @@ from wire_codecs import (
 SEED = 17_001
 T0_MS = 1_789_000_000_000
 REPO = Path(__file__).resolve().parents[3]
+# nosemgrep: cv-adapter-isolation reason=B5-b-harness owner=@CandleViewer/security review=2026-12-31
 CORPUS = REPO / "packages" / "fixtures" / "bybit" / "2026-10-05" / "ws"
 
 # 23-ws 6.1 default throttles (ms) - the production cadence of each pane's topic.

@@ -67,6 +67,10 @@ jobs:
               - 'turbo.json'
             py:
               - 'services/api/**'
+              # Repo-level Python suites (xstate_contract, perf, load, chaos) are scanned by
+              # the same Semgrep/Bandit lane; #1910 slipped past the gate because this
+              # filter did not cover them.
+              - 'tests/**'
               - 'tools/ci/**'
               - 'scripts/**/*.py'
               - 'infra/grafana/**'
