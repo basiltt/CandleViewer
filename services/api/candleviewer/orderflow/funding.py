@@ -2,7 +2,7 @@
 predicted-rate exposure.
 
 Module boundary (C-3.1): orderflow may not import `storage`, `ingestion` or
-`exchange.bybit`, so every collaborator is a local structural Protocol and the
+the exchange adapter, so every collaborator is a local structural Protocol and the
 composition root injects the concrete store / fetcher / catalogue / ticker.
 
 Invariants (STRIDE `docs/security/threat-models/E24-derivatives.md` D3/D12):
