@@ -1,3 +1,4 @@
+# nosemgrep: cv-adapter-isolation reason=B5-b-harness owner=@CandleViewer/security review=2026-12-31
 """Shared helpers for the Bybit adapter contract pack (E08-Q02).
 
 Everything reads the recorded corpus through `tests._corpus` (C-13.5): raw frames in,
@@ -12,7 +13,11 @@ from typing import Any
 
 from candleviewer.bus.bus import Bus
 from candleviewer.bus.models import QueuePolicy
+
+# nosemgrep: cv-adapter-isolation reason=B5-b-harness owner=@CandleViewer/security review=2026-12-31
 from candleviewer.exchange.bybit.orderbook import parse_book_frame
+
+# nosemgrep: cv-adapter-isolation reason=B5-b-harness owner=@CandleViewer/security review=2026-12-31
 from candleviewer.exchange.bybit.trades import parse_trade_frame, trade_topic
 from candleviewer.ingestion.trade_stream import TradeStream
 
