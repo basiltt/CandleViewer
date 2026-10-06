@@ -105,11 +105,19 @@ async def test_10018_raises_rate_limit_error_and_drains_bucket_then_retries() ->
         ),
         httpx.Response(200, json={"retCode": 0, "retMsg": "OK", "result": {}}),
     ]
-    governor = _fresh_governor()
+    now = [0.0]
     sleeps: list[float] = []
 
     async def fake_sleep(seconds: float) -> None:
         sleeps.append(seconds)
+        now[0] += seconds
+
+    governor = TokenBucketGovernor(
+        default_capacity=1000.0,
+        default_refill_per_s=1000.0,
+        clock=lambda: now[0],
+        sleep=fake_sleep,
+    )
 
     client = BybitRestClient(_config(), governor=governor, sleep=fake_sleep)
     try:
@@ -121,7 +129,8 @@ async def test_10018_raises_rate_limit_error_and_drains_bucket_then_retries() ->
         # `acquire`; either way it must have gone down relative to a
         # no-rate-limit baseline, and a retry sleep must have been recorded.
         assert after_drain_and_refill <= before
-        assert len(sleeps) == 1
+        assert len(sleeps) == 2  # default backoff, then the IP-hold remainder
+        assert sum(sleeps) == pytest.approx(600.0)
     finally:
         await client.aclose()
 

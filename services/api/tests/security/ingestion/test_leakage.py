@@ -30,6 +30,9 @@ from candleviewer.exchange.base.errors import ExchangeError
 from candleviewer.exchange.bybit.config import EndpointClass, RestClientConfig
 
 # nosemgrep: cv-adapter-isolation reason=X02 owner=@CandleViewer/security review=2026-12-31
+from candleviewer.exchange.bybit.rate_limit import TokenBucketGovernor
+
+# nosemgrep: cv-adapter-isolation reason=X02 owner=@CandleViewer/security review=2026-12-31
 from candleviewer.exchange.bybit.rest import BybitRestClient
 
 # nosemgrep: cv-adapter-isolation reason=X02 owner=@CandleViewer/security review=2026-12-31
@@ -113,10 +116,16 @@ async def _no_sleep(_s: float) -> None:
 
 
 async def _drive(kind: str) -> str:
+    now = [0.0]  # virtual time: a 10018 IP hold (#1908) elapses instantly
+
+    async def _advance(s: float) -> None:
+        now[0] += s
+
     client = BybitRestClient(
         RestClientConfig(base_url="https://api-demo.bybit.com", max_retries=1),
         uid=UID,
         signer=BybitSigner(API_KEY, SecretStr(API_SECRET)),
+        governor=TokenBucketGovernor(clock=lambda: now[0], sleep=_advance),
         transport=httpx.MockTransport(_responder(kind)),
         sleep=_no_sleep,
         random_fn=lambda: 0.0,

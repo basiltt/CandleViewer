@@ -52,6 +52,12 @@ _SECRET_KEY_MARKERS = ("api_key", "api-key", "sign", "secret", "authorization")
 
 _REDACTED = "**redacted**"
 
+#: `10018` is the IP-level limit: hold every caller >=10 min (24-internal-schemas §8.6).
+_IP_RATE_LIMIT_CODE = 10018
+_IP_HOLD_S = 600.0
+#: Cap on any venue-advertised wait (header is untrusted input).
+_MAX_RESET_WAIT_S = 900.0
+
 #: SR-040a: a request path is a relative `/v5/...` path of URL-safe segment
 #: characters only. No scheme, authority, backslash, whitespace/control char,
 #: query/fragment or percent-escape can match, so httpx can never be steered
@@ -96,11 +102,16 @@ class _Clock:
     """Injected wall-clock + offset, so timestamps are testable and the
     offset can be re-measured without this client owning a global."""
 
-    def __init__(self, offset_ms_provider: ClockOffsetProvider | None) -> None:
+    def __init__(
+        self,
+        offset_ms_provider: ClockOffsetProvider | None,
+        wall_clock: Callable[[], float] = time.time,
+    ) -> None:
         self._offset_ms_provider = offset_ms_provider
+        self._wall_clock = wall_clock
 
     async def now_ms(self) -> int:
-        base = int(time.time() * 1000)
+        base = int(self._wall_clock() * 1000)
         if self._offset_ms_provider is None:
             return base
         result = self._offset_ms_provider()
@@ -128,8 +139,10 @@ class BybitRestClient:
         transport: httpx.AsyncBaseTransport | None = None,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         random_fn: Callable[[], float] = random.random,
+        wall_clock: Callable[[], float] = time.time,
     ) -> None:
         self._config = config
+        self._wall_clock = wall_clock
         self._uid = uid
         self._signer = signer
         self._governor = (
@@ -137,7 +150,7 @@ class BybitRestClient:
             if governor is not None
             else TokenBucketGovernor(ip_budget_per_5s=config.ip_budget_per_5s)
         )
-        self._clock = _Clock(clock_offset_ms_provider)
+        self._clock = _Clock(clock_offset_ms_provider, wall_clock)
         self._sleep = sleep
         self._random = random_fn
         timeout = httpx.Timeout(config.total_timeout_s, connect=config.connect_timeout_s)
@@ -382,8 +395,14 @@ class BybitRestClient:
                 bybit_rate_limited_total.labels(code=str(ret_code)).inc()
                 bybit_rest_requests_total.labels(endpoint=path, result="rate_limited").inc()
                 self._account_for_rate_limit(response, endpoint_class)
+                reset_wait_s = await self._reset_wait_s(response)
+                if ret_code == _IP_RATE_LIMIT_CODE:
+                    hold_s = min(max(_IP_HOLD_S, reset_wait_s), _MAX_RESET_WAIT_S)
+                    self._governor.hold_ip(hold_s)
+                    logger.warning("rest_ip_hold_started", hold_s=hold_s, code=ret_code)
                 if error.retryable and attempt <= self._config.max_retries:
-                    retry_after = error.retry_after_s or self._retry_after_default(attempt)
+                    default = error.retry_after_s or self._retry_after_default(attempt)
+                    retry_after = max(reset_wait_s, default)
                     await self._sleep(retry_after)
                     continue
                 raise error
@@ -427,6 +446,19 @@ class BybitRestClient:
         if response.headers.get("X-Bapi-Limit-Status") is not None:
             return
         self._governor.drain(self._uid, endpoint_class, 1.0)
+
+    async def _reset_wait_s(self, response: httpx.Response) -> float:
+        """Seconds until `X-Bapi-Limit-Reset-Timestamp` (venue epoch ms), measured
+        against the ClockGuard-corrected clock; 0.0 if absent/unparseable/past."""
+        raw = response.headers.get("X-Bapi-Limit-Reset-Timestamp")
+        if raw is None:
+            return 0.0
+        try:
+            reset_ms = int(raw)
+        except ValueError:
+            return 0.0
+        wait_s = (reset_ms - await self._clock.now_ms()) / 1000.0
+        return min(max(0.0, wait_s), _MAX_RESET_WAIT_S)
 
     def _retry_after_default(self, attempt: int) -> float:
         base = min(2.0**attempt, 30.0)

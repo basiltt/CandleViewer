@@ -33,6 +33,11 @@ bybit_rate_limit_remaining = Gauge(
     ["scope", "endpoint_class"],
 )
 
+bybit_ip_hold_remaining_seconds = Gauge(
+    "bybit_ip_hold_remaining_seconds",
+    "Seconds left on the IP-wide REST hold after a 10018 (0 when none; no UID label).",
+)
+
 bybit_rate_limited_total = Counter(
     "bybit_rate_limited_total",
     "Rate-limited responses, by code.",

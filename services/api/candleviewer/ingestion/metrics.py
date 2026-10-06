@@ -162,6 +162,11 @@ SPECS: Final[tuple[MetricSpec, ...]] = (
         "endpoint_class",
         owner="adapter",
     ),
+    _g(
+        "bybit_ip_hold_remaining_seconds",
+        "Seconds left on the IP-wide REST hold after a 10018 (0 when none; no UID label).",
+        owner="adapter",
+    ),
     _c(
         "bybit_rate_limited_total",
         "Rate-limited responses, by code.",
