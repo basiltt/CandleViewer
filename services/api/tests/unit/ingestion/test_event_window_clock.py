@@ -46,15 +46,28 @@ class _Clocks:
         self.mono_ns += int(seconds * 1_000_000_000)
 
 
-def _guard(clocks: _Clocks, fetches: list[int] | None = None) -> ClockGuard:
+async def _no_sleep(_s: float) -> None:
+    await asyncio.sleep(0)
+
+
+def _guard(
+    clocks: _Clocks, fetches: list[int] | None = None, fail: list[bool] | None = None
+) -> ClockGuard:
     async def _fetch() -> tuple[int, float, float]:
+        if fail:
+            raise ConnectionError("network down after resume")
         if fetches is not None:
             fetches.append(1)
         # venue time is the true time: unaffected by host steps
         return (_VENUE_US + clocks.mono_ns // 1000 - 5_000 * _S, clocks.wall() / 1e9, 0.0)
 
     return ClockGuard(
-        _fetch, sample_count=1, wall_ns=clocks.wall, mono_ns=clocks.mono, step_check_interval_ms=0
+        _fetch,
+        sample_count=1,
+        wall_ns=clocks.wall,
+        mono_ns=clocks.mono,
+        step_check_interval_ms=0,
+        sleep=_no_sleep,
     )
 
 
@@ -67,6 +80,7 @@ def _venue_now(clocks: _Clocks) -> int:
 
 
 def _steps() -> float:
+    # No public read on the metric facade; the private child value is the only accessor.
     return float(clock_resync_triggered_total.labels(reason="host_step")._value.get())
 
 
@@ -146,3 +160,52 @@ def test_offset_tracks_guard_without_double_apply() -> None:
     assert now() == clocks.host_us()  # unmeasured offset is 0
     guard._offset_us = 7 * _S
     assert now() == clocks.host_us() + 7 * _S
+
+
+async def _drain() -> None:
+    for _ in range(40):
+        await asyncio.sleep(0)
+
+
+async def test_suspend_false_step_reverts_when_confirmation_keeps_failing() -> None:
+    clocks = _Clocks()
+    fail = [True]
+    guard = _guard(clocks, fail=fail)
+    # Suspend: the monotonic reference pauses while wall advances 10 s (offset was right).
+    clocks.wall_base_ns += 10 * 1_000_000_000
+    assert guard.offset_us() == -10 * _S  # provisional correction
+    await _drain()
+    assert guard._offset_us == 0  # reverted to the last verified offset
+    assert guard._pre_step_offset_us is None
+
+
+async def test_suspend_false_step_confirmed_by_measurement_keeps_true_offset() -> None:
+    clocks = _Clocks()
+    guard = _guard(clocks)
+    clocks.wall_base_ns += 10 * 1_000_000_000  # false step: venue time did not move
+    guard.offset_us()
+    await _drain()
+    # Venue time is unaffected by the host step, so the measurement re-derives the
+    # true offset (server - local) from scratch; the provisional value is dropped.
+    assert guard._pre_step_offset_us is None
+    assert guard._offset_us == -10 * _S + 0  # wall is 10 s ahead of venue after the step
+
+
+async def test_step_during_measure_burst_is_not_lost() -> None:
+    clocks = _Clocks()
+    calls = 0
+
+    async def _fetch() -> tuple[int, float, float]:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            clocks.step(-10)  # lands while the first burst samples
+        return (_venue_now(clocks), clocks.wall() / 1e9, 0.0)
+
+    guard = ClockGuard(
+        _fetch, sample_count=1, wall_ns=clocks.wall, mono_ns=clocks.mono, sleep=_no_sleep
+    )
+    offset = await guard.measure_once()
+    assert calls == 2  # first burst discarded, redone after the step
+    assert offset == 10 * _S
+    assert guard.check_host_step() == 0  # reference rebased onto the post-step skew

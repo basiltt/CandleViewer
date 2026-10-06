@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import asyncio
 import random
+import sys
 import time
 from collections.abc import Awaitable, Callable
 from typing import Any, Protocol
@@ -47,8 +48,24 @@ from candleviewer.observability.context import spawn
 
 logger = structlog.get_logger(__name__)
 
+_STEP_RETRY_BACKOFF_S = (1.0, 2.0, 4.0)
+"""Delays before each confirming retry of a host-step correction; the cap (30 s)
+is never reached because the correction is reverted once these are exhausted."""
+
+
+def default_mono_ns() -> int:
+    """Reference clock for step detection: `CLOCK_BOOTTIME` where available
+    (Linux — keeps counting through suspend, so a WSL/host sleep is NOT seen as a
+    wall step), else `time.monotonic_ns` (which may pause across suspend)."""
+    if sys.platform == "linux":
+        return time.clock_gettime_ns(time.CLOCK_BOOTTIME)
+    return time.monotonic_ns()
+
+
 _MICROS_PER_MS = 1_000
 _SAMPLE_COUNT = 5
+_BURST_ATTEMPTS = 3
+"""Max bursts per measurement when the host clock steps mid-burst (#1912)."""
 """Samples per measurement burst (Test plan: "offset maths incl. outlier
 rejection" needs more than one sample to have an outlier to reject)."""
 
@@ -110,7 +127,7 @@ class ClockGuard:
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         random_fn: Callable[[], float] = random.random,
         wall_ns: Callable[[], int] = time.time_ns,
-        mono_ns: Callable[[], int] = time.monotonic_ns,
+        mono_ns: Callable[[], int] = default_mono_ns,
         step_threshold_s: float = 1.0,
         step_check_interval_ms: int = 100,
     ) -> None:
@@ -135,6 +152,8 @@ class ClockGuard:
         self._skew_ref_us = self._wall_minus_mono_us()
         self._next_step_check_ns = 0
         self._resync_task: asyncio.Task[int] | None = None
+        #: Last *verified* offset while a step correction is unconfirmed (else None).
+        self._pre_step_offset_us: int | None = None
         self._last_measured_monotonic: float | None = None
         self._consecutive_failures = 0
         self._task: asyncio.Task[None] | None = None
@@ -173,6 +192,8 @@ class ClockGuard:
         if abs(step_us) <= self._step_threshold_us:
             return 0
         self._skew_ref_us = delta_us
+        if self._pre_step_offset_us is None:
+            self._pre_step_offset_us = self._offset_us  # provisional until confirmed
         self._offset_us -= step_us
         clock_resync_triggered_total.labels(reason="host_step").inc()
         logger.warning("clock_host_step_detected", step_ms=step_us / _MICROS_PER_MS)
@@ -185,11 +206,26 @@ class ClockGuard:
         return step_us
 
     async def _resync_after_step(self) -> int:
-        try:
-            return await self.measure_once()
-        except ClockMeasurementUnavailableError as exc:
-            logger.warning("clock_step_measurement_failed", error=str(exc))
-            return self._offset_us
+        """Confirm the provisional step correction with a real measurement.
+
+        Retries with short backoff (single-flight: only one such task exists). If
+        every attempt fails the correction is REVERTED to the last verified offset:
+        a suspend/resume or NTP slew can masquerade as a step, and an unverified
+        correction must not outlive the evidence (same rule as `measure_once`:
+        keep the last *verified* value)."""
+        for delay in (*_STEP_RETRY_BACKOFF_S, None):
+            try:
+                return await self.measure_once()  # success clears the provisional state
+            except ClockMeasurementUnavailableError as exc:
+                logger.warning("clock_step_measurement_failed", error=str(exc))
+            if delay is None:
+                break
+            await self._sleep(delay)
+        if self._pre_step_offset_us is not None:
+            self._offset_us = self._pre_step_offset_us
+            self._pre_step_offset_us = None
+        logger.warning("clock_step_unconfirmed", offset_us=self._offset_us)
+        return self._offset_us
 
     def offset_ms_or_none(self) -> int | None:
         """E04-T06 latency provider: `exchange - local` in ms, or `None` before
@@ -259,6 +295,22 @@ class ClockGuard:
         fall back to an uncorrected local clock — falling back here means
         *keeping* the last verified offset, not zeroing it).
         """
+        for _attempt in range(_BURST_ATTEMPTS):
+            skew_before = self._wall_minus_mono_us()
+            offset = await self._measure_burst()
+            skew_after = self._wall_minus_mono_us()
+            if abs(skew_after - skew_before) <= self._step_threshold_us:
+                self._offset_us = offset
+                self._skew_ref_us = skew_after
+                self._pre_step_offset_us = None
+                self._record_measured(offset)
+                return offset
+            logger.warning("clock_step_during_measurement", attempt=_attempt)
+        clock_measurements_total.labels(result="failed").inc()
+        self._consecutive_failures += 1
+        raise ClockMeasurementUnavailableError("host clock stepped during every measurement burst")
+
+    async def _measure_burst(self) -> int:
         samples: list[tuple[int, float]] = []  # (offset_us, rtt_s)
         errors: list[Exception] = []
         for _ in range(self._sample_count):
@@ -284,17 +336,15 @@ class ClockGuard:
 
         clean = self._discard_outlier(samples)
         offsets = sorted(offset for offset, _ in clean)
-        median_offset_us = offsets[len(offsets) // 2]
+        return offsets[len(offsets) // 2]
 
-        self._offset_us = median_offset_us
-        self._skew_ref_us = self._wall_minus_mono_us()
+    def _record_measured(self, median_offset_us: int) -> None:
         self._last_measured_monotonic = self._clock()
         self._consecutive_failures = 0
         clock_measurements_total.labels(result="ok").inc()
         exchange_clock_drift_ms.set(median_offset_us / _MICROS_PER_MS)
         clock_offset_age_seconds.set(0.0)
         self._log_if_drifted(median_offset_us)
-        return median_offset_us
 
     @staticmethod
     def _discard_outlier(samples: list[tuple[int, float]]) -> list[tuple[int, float]]:
