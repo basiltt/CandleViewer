@@ -37,10 +37,23 @@ async def _no_sleep(_s: float) -> None:
     return None
 
 
+def _virtual_governor() -> TokenBucketGovernor:
+    """Governor on a virtual clock whose sleep advances it: an IP hold (#1908)
+    elapses instantly instead of really waiting."""
+    now = [0.0]
+
+    async def _sleep(seconds: float) -> None:
+        now[0] += seconds
+
+    return TokenBucketGovernor(
+        default_capacity=1000.0, default_refill_per_s=1000.0, clock=lambda: now[0], sleep=_sleep
+    )
+
+
 def _client(max_retries: int = 0, **kw: Any) -> BybitRestClient:
     return BybitRestClient(
         RestClientConfig(base_url=BASE, max_retries=max_retries),
-        governor=TokenBucketGovernor(default_capacity=1000.0, default_refill_per_s=1000.0),
+        governor=_virtual_governor(),
         sleep=_no_sleep,
         **kw,
     )

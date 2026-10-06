@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 
 from candleviewer.exchange.bybit.config import EndpointClass
 
@@ -53,7 +53,10 @@ class TokenBucketGovernor:
         default_refill_per_s: float = 5.0,
         ip_budget_per_5s: int = 600,
         clock: Callable[[], float] | None = None,
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     ) -> None:
+        self._sleep = sleep
+        self._ip_hold_until: float = 0.0
         self._default_capacity = default_capacity
         self._default_refill_per_s = default_refill_per_s
         self._buckets: dict[tuple[str, EndpointClass], _Bucket] = {}
@@ -76,6 +79,7 @@ class TokenBucketGovernor:
     async def acquire(self, uid: str, endpoint_class: EndpointClass) -> None:
         """Wait until both the per-UID/endpoint-class bucket and the
         IP-wide bucket have a spare token, then consume one from each."""
+        await self._wait_ip_hold()
         bucket = self._get_bucket(uid, endpoint_class)
         for target in (bucket, self._ip_bucket):
             async with target.lock:
@@ -94,6 +98,7 @@ class TokenBucketGovernor:
         touching any per-UID/endpoint-class bucket. Used by unauthenticated,
         unbudgeted-by-endpoint-class calls (e.g. the startup reachability
         probe) that must still respect the IP-wide ceiling (C-12.7)."""
+        await self._wait_ip_hold()
         target = self._ip_bucket
         async with target.lock:
             while True:
@@ -105,6 +110,19 @@ class TokenBucketGovernor:
                 deficit = 1.0 - target.tokens
                 wait_s = deficit / target.refill_per_s if target.refill_per_s > 0 else 0.05
                 await asyncio.sleep(min(wait_s, 1.0))
+
+    def hold_ip(self, duration_s: float) -> None:
+        """Throttle every caller (all UIDs, all endpoint classes) for at least
+        `duration_s` from now (`24-internal-schemas.md` §8.6, `10018`: IP-level
+        backoff, all accounts throttled). Holds only ever extend, never shorten."""
+        self._ip_hold_until = max(self._ip_hold_until, self._now() + max(0.0, duration_s))
+
+    def ip_hold_remaining_s(self) -> float:
+        return max(0.0, self._ip_hold_until - self._now())
+
+    async def _wait_ip_hold(self) -> None:
+        while (remaining := self.ip_hold_remaining_s()) > 0.0:
+            await self._sleep(remaining)
 
     def remaining(self, uid: str, endpoint_class: EndpointClass) -> float:
         bucket = self._get_bucket(uid, endpoint_class)
