@@ -1,14 +1,16 @@
 """Verify #146 on main @ cec108b (hostile snapshot fields typed)."""
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 import subprocess
 import sys
 
 REPRO = (
-    "C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/"
-    "research/xstate/issues/post-3ed3099/new/repro/"
-    "R5-03_from_snapshot_untyped_errors.py"
+    str(_REPO / 'docs/research/xstate/issues/post-3ed3099/new/repro/R5-03_from_snapshot_untyped_errors.py')
 )
-PY = "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python"
-REPO = "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine"
+PY = _xs_main_py()
+REPO = str(_XS)
 
 ok = True
 

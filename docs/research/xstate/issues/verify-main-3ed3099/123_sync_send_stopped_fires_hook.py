@@ -11,6 +11,10 @@ Acceptance criteria:
   - [ ] repro/R4-28_sync_send_stopped_silent.py exits 0 once fixed.
 """
 from __future__ import annotations
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 
 import asyncio
 import subprocess
@@ -18,7 +22,7 @@ import sys
 
 sys.path.insert(
     0,
-    "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src",
+    str(_XS / 'src'),
 )
 
 from xstate_statemachine import (  # noqa: E402
@@ -37,8 +41,8 @@ def check(label: str, cond: bool) -> None:
         FAILS.append(label)
 
 
-PY = "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python"
-REPO = "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine"
+PY = _xs_main_py()
+REPO = str(_XS)
 
 CFG = {"id": "m", "initial": "a", "states": {"a": {"on": {"T": "b"}}, "b": {}}}
 
@@ -103,9 +107,7 @@ print(r.stdout[-500:])
 
 # --- Criterion 3: original repro exits 0 ---
 repro_path = (
-    "C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/"
-    "research/xstate/issues/post-5e07ba8/new/repro/"
-    "R4-28_sync_send_stopped_silent.py"
+    str(_REPO / 'docs/research/xstate/issues/post-5e07ba8/new/repro/R4-28_sync_send_stopped_silent.py')
 )
 r2 = subprocess.run([PY, repro_path], capture_output=True, text=True, timeout=30)
 print("--- original repro ---")

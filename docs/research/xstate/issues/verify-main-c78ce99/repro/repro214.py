@@ -3,13 +3,16 @@ pre-081 (v2) after-record as engine-minted so it still fires, and a v3
 record without the engine flag stays untrusted user traffic.
 Run from neutral cwd (stdlib + xstate_statemachine only).
 """
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[3] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 import json
 import sys
 
 sys.path.insert(
     0,
-    "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/"
-    "xstate-statemachine/src",
+    str(_XS / 'src'),
 )
 
 from xstate_statemachine import (

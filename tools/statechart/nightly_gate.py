@@ -26,6 +26,9 @@ from typing import Any
 
 BENCH6_THRESHOLD_MS = 100.0
 BENCH6_LEVEL = "500"
+SKIP_ENV = "SKIP-ENV"
+# Above this share of SKIP-ENV checks the report warns that the run says little (#1928).
+SKIP_WARN_RATIO = 0.25
 
 
 def _key(check: dict[str, Any]) -> str:
@@ -48,10 +51,31 @@ def regressions(result: dict[str, Any], baseline: dict[str, Any]) -> list[str]:
     return sorted(k for k in _blocking_failures(result) if k not in known)
 
 
+def skipped_env(result: dict[str, Any]) -> list[str]:
+    """Checks run_gate.py reported as ``SKIP-ENV`` (skipped (environment), #1928)."""
+    return sorted(_key(c) for c in result.get("checks", []) if c.get("status") == SKIP_ENV)
+
+
+def coverage_lost(result: dict[str, Any], baseline: dict[str, Any]) -> list[str]:
+    """Checks that PASSED in the baseline but are SKIP-ENV now (lost coverage, not a regression)."""
+    passed = {_key(c) for c in baseline.get("checks", []) if c.get("status") == "PASS"}
+    return [k for k in skipped_env(result) if k in passed]
+
+
+def skip_ratio(result: dict[str, Any]) -> float:
+    """Share of all checks that were SKIP-ENV (0.0 when there are no checks)."""
+    total = len(result.get("checks", []))
+    return len(skipped_env(result)) / total if total else 0.0
+
+
 def fixed(result: dict[str, Any], baseline: dict[str, Any]) -> list[str]:
-    """Baseline blocking failures that no longer fail (improvements)."""
+    """Baseline blocking failures that no longer fail (improvements).
+
+    A check skipped for environment reasons was not run, so it is not "fixed".
+    """
     now = _blocking_failures(result)
-    return sorted(k for k in _blocking_failures(baseline) if k not in now)
+    skipped = set(skipped_env(result))
+    return sorted(k for k in _blocking_failures(baseline) if k not in now and k not in skipped)
 
 
 def bench6(bench: dict[str, Any] | None, threshold: float) -> tuple[bool | None, float | None]:
@@ -79,6 +103,9 @@ def render(
     bench_ok: bool | None,
     p99: float | None,
     threshold: float,
+    skipped: list[str] | None = None,
+    lost: list[str] | None = None,
+    ratio: float = 0.0,
 ) -> str:
     gating = mode == "pinned"
     red = bool(new) or bench_ok is False
@@ -96,6 +123,15 @@ def render(
     lines += [f"- {k}" for k in new] or ["- none"]
     lines += ["", "## Baseline failures now passing"]
     lines += [f"- {k}" for k in gone] or ["- none"]
+    lines += ["", "## Skipped (environment) - not run on this host, not a regression"]
+    lines += [f"- {k}" for k in skipped or []] or ["- none"]
+    for k in lost or []:
+        lines.append(f"- COVERAGE LOSS: {k} passed in the baseline but was skipped (environment)")
+    if ratio > SKIP_WARN_RATIO:
+        lines.append(
+            f"- WARNING: {ratio:.0%} of checks skipped (environment), above "
+            f"{SKIP_WARN_RATIO:.0%}; this run covers little (non-blocking)"
+        )
     lines += ["", "## BENCH-6 (timer lateness, 500 busy machines, p99)"]
     if bench_ok is None:
         lines.append("- not run")
@@ -144,6 +180,9 @@ def main(argv: list[str] | None = None) -> int:
         bench_ok=ok,
         p99=p99,
         threshold=args.threshold,
+        skipped=skipped_env(result),
+        lost=coverage_lost(result, baseline),
+        ratio=skip_ratio(result),
     )
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(report, encoding="utf-8")

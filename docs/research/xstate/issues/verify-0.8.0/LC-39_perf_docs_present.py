@@ -10,13 +10,17 @@ carries a measured scaling table, and is linked from the README.
 """
 
 from __future__ import annotations
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 
 import pathlib
 import re
 import sys
 
 REPO = pathlib.Path(
-    r"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine"
+    str(_XS)
 )
 
 

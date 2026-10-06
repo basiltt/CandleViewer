@@ -223,6 +223,8 @@ import sys
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
+from _paths import SKIP_ENV_EXIT  # noqa: E402  (sibling module in gate/)
+
 # -----------------------------------------------------------------------------
 # Paths
 # -----------------------------------------------------------------------------
@@ -766,6 +768,9 @@ BENCH_SCRIPTS = [
 # Result record
 # -----------------------------------------------------------------------------
 PASS, FAIL, SKIP, ERROR, IMPROVED = "PASS", "FAIL", "SKIP", "ERROR", "IMPROVED"
+# "skipped (environment)": the script needs an upstream dev venv / checkout that
+# this host does not have (#1928). Neither a pass nor a failure; never blocking.
+SKIP_ENV = "SKIP-ENV"
 
 
 class Check:
@@ -827,6 +832,30 @@ def run_script(path: str, cwd: str, timeout: int) -> Tuple[int, str]:
 #   repro" rather than "unfixed" -- see 20-adoption-gate.md s.9.2. Reported for
 #   contrast, excluded from the exit code.
 # -----------------------------------------------------------------------------
+def classify_exit(rc: int, out: str, fail_detail: str) -> Tuple[str, str]:
+    """Map a check script's exit code to ``(status, detail)``.
+
+    0 == defect gone (PASS); 1 == defect present (FAIL); ``SKIP_ENV_EXIT`` (77)
+    == the script cannot run on this host (SKIP-ENV, see gate/_paths.py);
+    anything else is a harness ERROR.
+    """
+    if rc == 0:
+        return PASS, "defect NOT reproduced -- fixed"
+    if rc == 1:
+        return FAIL, fail_detail
+    if rc == SKIP_ENV_EXIT:
+        reason = next(
+            (
+                ln.strip()
+                for ln in reversed(out.splitlines())
+                if ln.strip().startswith("skipped (environment)")
+            ),
+            "skipped (environment): " + _last_line(out),
+        )
+        return SKIP_ENV, reason[:200]
+    return ERROR, f"exit {rc}: {_last_line(out)}"
+
+
 def _run_lc_dir(
     directory: str,
     kind: str,
@@ -855,15 +884,7 @@ def _run_lc_dir(
         script = os.path.join(directory, fn)
         rc, out = run_script(script, directory, timeout_for(script, timeout))
         chk.seconds = time.perf_counter() - t0
-        if rc == 0:
-            chk.status = PASS
-            chk.detail = "defect NOT reproduced -- fixed"
-        elif rc == 1:
-            chk.status = FAIL
-            chk.detail = fail_detail
-        else:
-            chk.status = ERROR
-            chk.detail = f"exit {rc}: {_last_line(out)}"
+        chk.status, chk.detail = classify_exit(rc, out, fail_detail)
         checks.append(chk)
     return checks
 
@@ -1479,8 +1500,10 @@ def summarize(checks: List[Check], version: str, commit: str) -> int:
         if not subset:
             continue
         p = sum(1 for c in subset if c.status in (PASS, IMPROVED))
+        sk = sum(1 for c in subset if c.status == SKIP_ENV)
+        skipped = f", {sk} skipped (environment)" if sk else ""
         suffix = f"   ({note})" if note else ""
-        print(f"  {kind:<6}: {p}/{len(subset)} pass{suffix}")
+        print(f"  {kind:<6}: {p}/{len(subset) - sk} pass{skipped}{suffix}")
     print(
         "  totals: "
         + ", ".join(f"{k}={v}" for k, v in sorted(counts.items()))

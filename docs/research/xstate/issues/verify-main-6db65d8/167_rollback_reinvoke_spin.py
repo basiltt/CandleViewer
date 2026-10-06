@@ -14,14 +14,17 @@ Criteria (from issue #167 acceptance criteria / CHANGELOG #167 reopen):
  3. Machine survives (status == "running"), not bricked.
  4. Original R6-03 standalone repro (coroutine-service shape) exits 0.
 """
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 import asyncio
 import subprocess
 import sys
 
 sys.path.insert(
     0,
-    "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/"
-    "xstate-statemachine/src",
+    str(_XS / 'src'),
 )
 import logging
 
@@ -145,14 +148,11 @@ def check_sync(is_async_service: bool):
 
 def run_original_repro():
     path = (
-        "C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/"
-        "docs/research/xstate/issues/post-cec108b/new/repro/"
-        "R6-03_rollback_ondone_reinvoke_spin.py"
+        str(_REPO / 'docs/research/xstate/issues/post-cec108b/new/repro/R6-03_rollback_ondone_reinvoke_spin.py')
     )
     r = subprocess.run(
         [
-            "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/"
-            "xstate-statemachine/.venv-main/Scripts/python",
+            _xs_main_py(),
             path,
         ],
         capture_output=True,

@@ -24,6 +24,10 @@ Exits 0 only if ALL criteria pass.
 """
 
 from __future__ import annotations
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 
 import asyncio
 import subprocess
@@ -320,7 +324,7 @@ async def need_a_withdraw_raised_events() -> None:
 
 def need_a_sendto_documented() -> None:
     changelog = Path(
-        r"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/CHANGELOG.md"
+        str(_XS / 'CHANGELOG.md')
     ).read_text(encoding="utf-8")
     ok = "cannot un-send a `sendTo`" in changelog or "cannot un-send a" in changelog
     record(

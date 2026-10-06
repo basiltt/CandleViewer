@@ -8,12 +8,16 @@ for a send() after stop(), and the async engine fires on_event_dropped for
 the identical scenario.
 """
 from __future__ import annotations
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[4] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 
 import asyncio
 import sys
 
 sys.path.insert(
-    0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src"
+    0, str(_XS / 'src')
 )
 from xstate_statemachine import (  # noqa: E402
     Interpreter,

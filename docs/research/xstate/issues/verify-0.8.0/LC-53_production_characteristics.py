@@ -21,13 +21,17 @@ Exit 0 if ALL criteria hold, 1 otherwise.
 """
 
 from __future__ import annotations
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py, upstream_dev_python as _xs_dev_py  # noqa: E402,F401
 
 import os
 import pathlib
 import re
 import sys
 
-REPO = pathlib.Path(os.environ.get("XSM_REPO", r"C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine"))
+REPO = pathlib.Path(os.environ.get("XSM_REPO", str(_XS)))
 GUIDE = REPO / "docs" / "_guide"
 
 results: list[tuple[str, bool, str]] = []
@@ -100,7 +104,7 @@ import subprocess
 env = dict(os.environ)
 env["XSM_REPO"] = str(REPO)
 repro_path = pathlib.Path(__file__).resolve().parents[1] / "repro" / "LC-53_undocumented-production-characteristics.py"
-py = str(REPO / ".venv-gate" / "Scripts" / "python.exe")
+py = _xs_dev_py(".venv-gate", REPO)
 proc = subprocess.run([py, str(repro_path)], env=env, capture_output=True, text=True)
 check("original repro exits 0", proc.returncode == 0, f"exit={proc.returncode}")
 

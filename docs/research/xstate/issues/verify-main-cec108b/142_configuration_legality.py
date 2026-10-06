@@ -3,16 +3,18 @@
 Runs original R5-01 repro (expect exit 0) and the pytest evidence for the
 new `_configuration_is_legal` predicate. Exits 0 only if all pass.
 """
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 import subprocess
 import sys
 
 REPRO = (
-    "C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/"
-    "research/xstate/issues/post-3ed3099/new/repro/"
-    "R5-01_parallel-tear-passes-midstep-guard.py"
+    str(_REPO / 'docs/research/xstate/issues/post-3ed3099/new/repro/R5-01_parallel-tear-passes-midstep-guard.py')
 )
-PY = "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python"
-REPO = "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine"
+PY = _xs_main_py()
+REPO = str(_XS)
 
 ok = True
 

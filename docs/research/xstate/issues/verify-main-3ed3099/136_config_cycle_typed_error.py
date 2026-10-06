@@ -13,19 +13,21 @@ Acceptance criteria (from gh issue #136):
 
 Exits 0 only if all criteria pass.
 """
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 import os
 import subprocess
 import sys
 from pathlib import Path
 
 REPO = Path(
-    "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine"
+    str(_XS)
 )
-PY = str(REPO / ".venv-main" / "Scripts" / "python")
+PY = _xs_main_py()
 REPRO = Path(
-    "C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/"
-    "research/xstate/issues/post-5e07ba8/new/repro/"
-    "R4-38_config_cycle_recursionerror.py"
+    str(_REPO / 'docs/research/xstate/issues/post-5e07ba8/new/repro/R4-38_config_cycle_recursionerror.py')
 )
 
 sys.path.insert(0, str(REPO / "src"))

@@ -25,6 +25,10 @@ Exits 0 only if ALL criteria pass.
 """
 
 from __future__ import annotations
+import sys as _xs_sys  # noqa: E402
+from pathlib import Path as _XsPath  # noqa: E402
+_xs_sys.path.insert(0, str(_XsPath(__file__).resolve().parents[2] / "gate"))
+from _paths import REPO_ROOT as _REPO, XSTATE_SRC as _XS, upstream_main_python as _xs_main_py  # noqa: E402,F401
 
 import asyncio
 import re
@@ -199,8 +203,7 @@ def criterion_5_tests_present() -> None:
     # renamed to `tests/test_strict.py` (test names unchanged). Search
     # across the tests dir so a harmless rename doesn't fail the criterion.
     tests_dir = Path(
-        "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/"
-        "xstate-statemachine/tests"
+        str(_XS / 'tests')
     )
     combined = ""
     found_in = []
@@ -226,10 +229,9 @@ def criterion_5_tests_present() -> None:
 
 def criterion_1_repro_exits_zero() -> None:
     repro = Path(
-        "C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/"
-        "research/xstate/issues/new-0.8.0/repro/N-04_send-threadsafe-bypasses-strict.py"
+        str(_REPO / 'docs/research/xstate/issues/new-0.8.0/repro/N-04_send-threadsafe-bypasses-strict.py')
     )
-    py = "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python"
+    py = _xs_main_py()
     proc = subprocess.run(
         [py, str(repro)],
         capture_output=True,
