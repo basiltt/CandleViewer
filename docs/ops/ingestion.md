@@ -52,7 +52,8 @@ breaker marks it degraded at more than 5 per 60 s. Severity: Ticket.
 sustained for 5 minutes (`ingest_book_resyncs_total{reason}`). Each rejected book frame invalidates the
 book; the per-symbol backoff (250 ms doubling to 30 s, with jitter, reset after 5 s of stable LIVE) bounds
 snapshot requests, and `reason="backoff"` counts requests held back while the symbol stays stale (no
-book served). Severity: Page.
+book served). Deferred/back-off requests also count, so a storm inflates its own signal; that is
+acceptable for paging. Severity: Page.
 
 1. Check `ingest_rejected_total{stream="book"}` for the `reason`: `off_tick` after an instrument refresh
    means a tick-size change; `non_finite` / `out_of_bounds` / `crossed` point at a corrupt feed.
