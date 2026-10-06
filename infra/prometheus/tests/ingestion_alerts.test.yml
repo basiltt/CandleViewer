@@ -62,3 +62,32 @@ tests:
       - eval_time: 15m
         alertname: IngestionStoppedReporting
         exp_alerts: []
+  # #1889/#1890/#1892: sustained ingest-boundary rejections (12/min = 0.2/s > 0.1/s).
+  - interval: 1m
+    input_series:
+      - series: 'ingest_rejected_total{env="demo",exchange="bybit",stream="book",reason="off_tick"}'
+        values: "0+12x20"
+    alert_rule_test:
+      - eval_time: 18m
+        alertname: IngestionFramesRejectedSustained
+        exp_alerts:
+          - exp_labels:
+              severity: ticket
+              component: ingestion
+              env: demo
+              stream: book
+              reason: off_tick
+            exp_annotations:
+              runbook_url: "docs/ops/ingestion.md#alert-ingestionframesrejectedsustained"
+              summary: "The book stream has rejected frames for ten minutes with reason off_tick."
+              description: >-
+                Frames failing the ingest-boundary checks are dropped, never
+                published, so the affected stream is missing data and books resync.
+  - interval: 1m
+    input_series:
+      - series: 'ingest_rejected_total{env="demo",exchange="bybit",stream="trade",reason="malformed"}'
+        values: "0+1x20"
+    alert_rule_test:
+      - eval_time: 18m
+        alertname: IngestionFramesRejectedSustained
+        exp_alerts: []

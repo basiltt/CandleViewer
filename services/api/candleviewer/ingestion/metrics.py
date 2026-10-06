@@ -102,6 +102,12 @@ SPECS: Final[tuple[MetricSpec, ...]] = (
     _c("trade_gaps_total", "Tape gap windows, by backfill recovery.", "symbol", "recovered"),
     _c("trade_backfill_rows_total", "Rows returned by the trade gap backfill.", "result"),
     _c("trade_prints_rejected_total", "Malformed trade frames rejected before dedupe."),
+    _c(
+        "ingest_rejected_total",
+        "Frames rejected at the ingest boundary, by stream and bounded reason.",
+        "stream",
+        "reason",
+    ),
     _g("questdb_write_queue_depth", "Rows waiting in a write-behind queue.", "table"),
     _c("trade_writes_dropped_total", "Trade rows dropped from write-behind (oldest first)."),
     _c("book_writes_dropped_total", "Book rows dropped from write-behind (oldest first)."),
@@ -261,6 +267,7 @@ trade_duplicates_suppressed_total = _counter("trade_duplicates_suppressed_total"
 trade_gaps_total = _counter("trade_gaps_total")
 trade_backfill_rows_total = _counter("trade_backfill_rows_total")
 trade_prints_rejected_total = _counter("trade_prints_rejected_total")
+ingest_rejected_total = _counter("ingest_rejected_total")
 questdb_write_queue_depth = _gauge("questdb_write_queue_depth")
 trade_writes_dropped_total = _counter("trade_writes_dropped_total")
 book_writes_dropped_total = _counter("book_writes_dropped_total")

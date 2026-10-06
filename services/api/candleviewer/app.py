@@ -110,6 +110,7 @@ from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshSchedul
 from candleviewer.ingestion.metrics import export_ingestion_metrics, ingest_enabled
 from candleviewer.ingestion.planner import SubscriptionPlanner
 from candleviewer.ingestion.reconnect import ConnectionRateGuard, ReconnectPolicy
+from candleviewer.ingestion.rejection import EventWindow
 from candleviewer.ingestion.service import IngestionService
 from candleviewer.ingestion.ticker_stream import TickerStream
 from candleviewer.ingestion.trade_stream import TradeStream
@@ -1205,6 +1206,15 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
         inst = snap.get(symbol) if snap is not None else None
         return None if inst is None else inst.tick_size
 
+    def _launch_us(symbol: str) -> int | None:
+        scheduler = ctx.ingestion.instruments
+        snap = scheduler.snapshot() if scheduler is not None else None
+        inst = snap.get(symbol) if snap is not None else None
+        return None if inst is None else int(inst.launch_time)
+
+    # #1892: wall clock (not the monotonic demand clock) bounds event time.
+    window = EventWindow(lambda: time.time_ns() // 1000, _launch_us)
+
     ctx.ingestion.attach_trades(
         TradeStream(
             bus=ctx.bus.bus,
@@ -1217,6 +1227,7 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
             fetch_recent=adapter.recent_trades_fetcher(rest.get_public),
             tick_size=_tick_size,
             clock=clock,
+            event_window=window,
             writer=_TradeWriter(),
         )
     )
@@ -1255,6 +1266,7 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
             is_listed=_is_listed,
             touch=watchdog.touch,
             clock=clock,
+            event_window=window,
             writer=_TickerWriter(),
         )
     )

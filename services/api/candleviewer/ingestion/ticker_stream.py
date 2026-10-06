@@ -37,6 +37,7 @@ from candleviewer.ingestion.metrics import (
     ws_topic_staleness_seconds,
 )
 from candleviewer.ingestion.planner import DEFAULT_GRACE_S, DemandTracker
+from candleviewer.ingestion.rejection import RejectionLog
 from candleviewer.ingestion.watchdog import FeedHealthEvent
 from candleviewer.observability.context import spawn
 
@@ -123,6 +124,7 @@ class TickerStream:
         touch: Callable[[str], None],
         clock: Callable[[], float] = time.monotonic,
         now_us: Callable[[], int] = _now_us,
+        event_window: Callable[[str, int], None] | None = None,
         grace_s: float = DEFAULT_GRACE_S,
         raw_sink: Callable[[TickerDelta], None] | None = None,
         writer: TickerWriter | None = None,
@@ -133,6 +135,9 @@ class TickerStream:
         self._parse, self._topic_for, self._is_listed = parse_frame, topic_for, is_listed
         self._touch, self._clock, self._now_us = touch, clock, now_us
         self._demand = DemandTracker(clock, grace_s)
+        self._rejects = RejectionLog("ticker", clock)
+        #: #1892: clock/listing-relative plausibility (`ingestion.rejection.EventWindow`).
+        self._window = event_window
         self._merger = TickerMerger()
         self._raw_sink, self._writer, self._sleep = raw_sink, writer, sleep
         self._latest: dict[str, TickerEvent] = {}
@@ -187,8 +192,11 @@ class TickerStream:
     async def handle_frame(self, frame: str) -> None:
         try:
             delta = self._parse(frame)
-        except ValueError:
-            logger.warning("ticker frame rejected")
+            if delta is not None and self._window is not None:
+                self._window(delta.symbol, delta.ts_event_us)
+        except (ValueError, RecursionError) as exc:
+            # Dropped whole: merged state keeps the last plausible values.
+            self._rejects.record(exc)
             return
         if delta is None or delta.symbol not in self._demand.desired():
             return

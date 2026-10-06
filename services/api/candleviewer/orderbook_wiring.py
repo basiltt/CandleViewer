@@ -45,6 +45,7 @@ from candleviewer.ingestion.metrics import (
     symbol_label,
 )
 from candleviewer.ingestion.planner import DEFAULT_GRACE_S, DemandTracker
+from candleviewer.ingestion.rejection import RejectionLog
 from candleviewer.ingestion.ticker_stream import UnknownSymbolError
 from candleviewer.ingestion.watchdog import FeedHealthEvent
 from candleviewer.observability.context import spawn
@@ -67,6 +68,7 @@ _RESYNC_REASONS = frozenset(
         "frame_loss",
         "reconnect",
         "snapshot_timeout",
+        "rejected_frame",
     }
 )
 
@@ -133,6 +135,7 @@ class BookStream:
         self._timeout_us = int(snapshot_timeout_s * 1_000_000)
         self._depth = default_depth
         self._demand = DemandTracker(clock, grace_s)
+        self._rejects = RejectionLog("book", clock)
         self._books: dict[str, TieredBook] = {}
         self._first_sub: set[tuple[str, int]] = set()
         self._supervisor = supervisor
@@ -276,8 +279,12 @@ class BookStream:
     async def handle_frame(self, frame: str) -> None:
         try:
             ev = self._parse(frame)
-        except ValueError:
-            logger.warning("book frame rejected")
+        except (ValueError, RecursionError) as exc:
+            self._rejects.record(exc)
+            sym = getattr(exc, "symbol", None)
+            tb = self._books.get(sym) if isinstance(sym, str) else None
+            if tb is not None:  # C-2.5: a rejected book frame is a gap -> resync, never patch
+                await tb.active.invalidate("rejected_frame")
             return
         if ev is None or ev.symbol not in self._demand.desired():
             return

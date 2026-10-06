@@ -23,7 +23,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from candleviewer.domain.events import Instrument, MarketEvent
 from candleviewer.domain.primitives import (
@@ -192,6 +192,22 @@ class KlineEvent(MarketEvent):
     volume: Qty
     turnover: Notional
     confirmed: bool
+
+    @model_validator(mode="after")
+    def _ohlc_plausible(self) -> KlineEvent:
+        """#1892: `0 < low <= open, close <= high`; volume/turnover `>= 0`, finite."""
+        values = (self.open, self.high, self.low, self.close, self.volume, self.turnover)
+        if not all(v.is_finite() for v in values):
+            raise ValueError("kline carries a non-finite value")
+        if self.low <= 0 or not self.low <= min(self.open, self.close):
+            raise ValueError("kline low is not the bar minimum")
+        if max(self.open, self.close) > self.high:
+            raise ValueError("kline high is not the bar maximum")
+        if self.volume < 0 or self.turnover < 0:
+            raise ValueError("kline volume/turnover is negative")
+        if self.end < self.start:
+            raise ValueError("kline ends before it starts")
+        return self
 
 
 class LiquidationEvent(MarketEvent):

@@ -3031,6 +3031,30 @@ class ExchangeCapabilities(BaseModel):
    `bybit_rate_limit_remaining{scope,endpoint_class}` (`scope` ∈ `public|account` — **never a UID**,
    which is an account identifier), `bybit_rate_limited_total{code}`, `exchange_errors_total{class}`.
    Clock thresholds in §14.3 are unchanged: warn > 500 ms, block > 2000 ms (`recv_window/2`).
+10. **Ingest-boundary validation (#1889 / #1890 / #1892).** Parsers check market plausibility
+    _before_ building a domain event; checks are O(1) per field (no regex per frame, C-2.20).
+    Shared primitives live in `exchange/base/frame_guard.py`; a failure raises
+    `FrameRejectedError(reason, symbol)` (a `ValueError`), and **no event from that frame is
+    emitted**:
+    - **Depth limit.** The ingestion frame pump scans `[`/`{` nesting once per frame before any
+      `json.loads`; a frame nested deeper than 32 is rejected (`depth_limit`). The parsers map a
+      residual `RecursionError` to the same reason.
+    - **Numbers.** Prices are finite, `> 0` and `<= 1e12`; quantities are finite, `> 0` (book
+      level `"0"` = delete, so `>= 0` there) and `<= 1e12`; ticker aggregates `>= 0`.
+    - **Tick grid.** A book price that is not an exact multiple of `tick_size` (Decimal
+      `divmod`, remainder `!= 0`) is rejected as `off_tick`. It is **never** quantised.
+    - **Ticker.** `bid1Price <= ask1Price` when both are present (`crossed` otherwise).
+    - **Time.** An event time is `<= envelope ts + 5 s` and `<=` year 2100. Ingestion also
+      enforces `[launchTime − 24 h, now + 5 s]` on the injected wall clock (`EventWindow`).
+    - **Kline.** `KlineEvent` enforces `0 < low <= open, close <= high`, `volume, turnover >= 0`
+      and `start <= end` as a model invariant.
+
+    Consumers count every rejection in `ingest_rejected_total{stream, reason}` (`reason` is the
+    closed `REJECT_REASONS` set) and log one rate-limited line with no payload. A rejected book
+    frame invalidates that book (resync, reason `rejected_frame`, C-2.5). A rejected trade frame
+    opens a tape gap for backfill. A rejected ticker frame is dropped, and the merged state keeps
+    its last plausible values. The pump isolates every per-frame exception (`stream="pump"`). After
+    32 consecutive failing frames it resyncs (`pump_breaker`); it never stops.
 
 ### 14.3 Bybit implementation notes
 

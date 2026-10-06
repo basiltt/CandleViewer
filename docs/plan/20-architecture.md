@@ -295,11 +295,14 @@ States: `INIT → SNAPSHOT_PENDING → LIVE → DESYNCED → SNAPSHOT_PENDING`. 
 
 **As shipped (E08-S05, reconciled E08-T06).** Default depth tier is **200** (ADR-0021). Resync
 discipline is invalidate-and-resubscribe (ADR-0023) with reasons `sequence_gap`, `buffer_overflow`,
-`server_reset`, `bad_snapshot`, `bad_replay`, `frame_loss`, `reconnect`; the breaker marks a book
+`server_reset`, `bad_snapshot`, `bad_replay`, `frame_loss`, `reconnect`, `rejected_frame`; the breaker marks a book
 `degraded` at **> 5 resyncs / 60 s** (`book/resync.py`). The phase is exported as
 `ingest_book_live{symbol}` and resyncs as `ingest_book_resyncs_total{symbol,reason}`; the alert
 `IngestionBookResyncRateHigh` fires at > 5 per 5 min (runbook `docs/ops/ingestion.md`). `book_resync_total`
 in §12.1 remains the E04 catalogue name; the ingestion registry series is the one emitted today.
+Ingest-boundary rejections (24-internal-schemas §14.2 rule 10) are counted as
+`ingest_rejected_total{stream,reason}` with `stream` ∈ `trade|ticker|book|pump` and a closed
+`reason` enum. A rejected book frame resyncs with reason `rejected_frame`.
 
 ### 3.3 Bar Builders
 
@@ -1328,6 +1331,7 @@ an exception to the section-9 anchor rule, enforced both ways by
 `infra/alertmanager/tests/test_ingestion_alerts.py`): Page — `IngestionTradeGapUnrecovered`,
 `IngestionStoppedReporting` (silent-death meta-alert: `ingest_enabled == 1` with no events for 5 min);
 Ticket — `IngestionTopicStale` (> 10 s), `IngestionBookResyncRateHigh` (> 5 / 5 min),
+`IngestionFramesRejectedSustained` (> 0.1/s per stream+reason for 10 min),
 `IngestionRateLimitHeadroomExhausted` (≤ 1), `IngestionNeverDropQueueFull`, `IngestionMetricsAbsent`.
 Clock drift warning/critical stay in `clock_sync.yml` (E08-S07).
 

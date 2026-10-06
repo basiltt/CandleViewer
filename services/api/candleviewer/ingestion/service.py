@@ -15,9 +15,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol
 
 from candleviewer.exchange.base import Ticker, Trade
+from candleviewer.exchange.base.frame_guard import FrameRejectedError, json_depth_exceeds
 from candleviewer.ingestion.clock import ClockGuard
 from candleviewer.ingestion.connection import ConnectionManager
 from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
+from candleviewer.ingestion.rejection import RejectionLog
 from candleviewer.ingestion.synthetic_feed import (
     SyntheticFeedGenerator,
     SyntheticFeedMetrics,
@@ -38,6 +40,8 @@ _QUEUE_MAXSIZE = 256
 #: Overflow policy: drop-newest and count (`ws_frames_dropped`); the
 #: staleness watchdog recycles the socket if consumers fall behind for long.
 WS_FRAME_QUEUE_MAXSIZE = 4096
+#: #1889: this many consecutive frames failing inside the pump trip a resync.
+PUMP_BREAKER_TRIPS = 32
 
 
 class BookSink(Protocol):
@@ -82,6 +86,8 @@ class IngestionService:
         #: E08-S05: reconstructed L2 book, attached with the public WS.
         self.books: BookSink | None = None
         self._pump: asyncio.Task[None] | None = None
+        self._pump_rejects = RejectionLog("pump")
+        self.pump_breaker_trips = 0
 
     def attach_latency(
         self, recorder: StageRecorder, clock_offset_ms: Callable[[], int | None] | None = None
@@ -137,15 +143,51 @@ class IngestionService:
 
     async def _pump_frames(self) -> None:
         """Drain the bounded raw-frame queue into the ticker and trade streams
-        (each parser ignores frames for topics it does not own)."""
+        (each parser ignores frames for topics it does not own).
+
+        Must never die (#1889): an exception escaping one stream for one frame
+        is counted (`ingest_rejected_total{stream="pump"}`) and the loop moves
+        on. `PUMP_BREAKER_TRIPS` consecutive failing frames trip a circuit
+        breaker that resyncs (trade gap + book invalidate), never a halt."""
+        consecutive = 0
         while True:
             frame = await self.ws_frames.get()
-            if self.trades is not None:
-                await self.trades.handle_frame(frame)
-            if self.tickers is not None:
-                await self.tickers.handle_frame(frame)
-            if self.books is not None:
-                await self.books.handle_frame(frame)
+            if await self._dispatch(frame):
+                consecutive = 0
+                continue
+            consecutive += 1
+            if consecutive >= PUMP_BREAKER_TRIPS:
+                consecutive = 0
+                self.pump_breaker_trips += 1
+                await self._resync_all("pump_breaker")
+
+    async def _dispatch(self, frame: str) -> bool:
+        if json_depth_exceeds(frame):  # once per frame, before any parser json.loads
+            self._pump_rejects.record(FrameRejectedError("depth_limit", "frame nests too deep"))
+            return True  # rejected cleanly: not a pump fault, does not feed the breaker
+        ok = True
+        for stream in (self.trades, self.tickers, self.books):
+            if stream is None:
+                continue
+            try:
+                await stream.handle_frame(frame)
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:  # per-frame isolation is the contract (#1889)
+                self._pump_rejects.record(exc)
+                ok = False
+        return ok
+
+    async def _resync_all(self, reason: str) -> None:
+        if self.trades is not None:
+            self.trades.mark_gap(reason)
+        if self.books is not None:
+            try:
+                await self.books.invalidate(reason)
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:  # the breaker itself must not kill the pump
+                self._pump_rejects.record(exc)
 
     def attach_instruments(self, scheduler: InstrumentsRefreshScheduler) -> None:
         """Hand this module ownership of the catalogue scheduler's lifecycle."""

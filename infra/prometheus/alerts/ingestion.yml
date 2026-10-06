@@ -33,6 +33,21 @@ groups:
             Repeated resyncs mean sequence gaps or frame loss upstream; the
             book is unavailable to consumers during each resync.
 
+      # #1889/#1890/#1892: ingest-boundary rejections. `reason` is a closed enum
+      # (exchange/base/frame_guard.py REJECT_REASONS); stream in trade|ticker|book|pump.
+      - alert: IngestionFramesRejectedSustained
+        expr: sum by (env, stream, reason) (rate(ingest_rejected_total[5m])) > 0.1
+        for: 10m
+        labels:
+          severity: ticket
+          component: ingestion
+        annotations:
+          runbook_url: "docs/ops/ingestion.md#alert-ingestionframesrejectedsustained"
+          summary: "The {{ $labels.stream }} stream has rejected frames for ten minutes with reason {{ $labels.reason }}."
+          description: >-
+            Frames failing the ingest-boundary checks are dropped, never
+            published, so the affected stream is missing data and books resync.
+
       - alert: IngestionTradeGapUnrecovered
         expr: sum by (env, symbol) (increase(trade_gaps_total{recovered="false"}[15m])) > 0
         for: 0m

@@ -16,12 +16,21 @@ import uuid
 from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
 
+from candleviewer.exchange.base.frame_guard import (
+    MAX_PRICE,
+    MAX_QTY,
+    FrameRejectedError,
+    check_event_ts,
+    check_price,
+    check_qty,
+)
 from candleviewer.exchange.base.models import BookDelta, BookLevel, BookSnapshot
 
 TOPIC_PREFIX = "orderbook."
 BOOK_DEPTHS = (1, 50, 200, 500)
 MAX_LEVELS_PER_FRAME = 1_000
 _SYMBOL_RE = re.compile(r"^[A-Z0-9]{4,20}$")
+_ZERO = Decimal(0)
 
 TickSize = Callable[[str], Decimal | None]
 
@@ -32,7 +41,7 @@ def book_topic(symbol: str, depth: int = 200) -> str:
     return f"{TOPIC_PREFIX}{depth}.{symbol}"
 
 
-def _levels(raw: object, tick: Decimal) -> tuple[BookLevel, ...]:
+def _levels(raw: object, tick: Decimal, symbol: str) -> tuple[BookLevel, ...]:
     if not isinstance(raw, list) or len(raw) > MAX_LEVELS_PER_FRAME:
         raise ValueError("book side malformed or over level cap")
     out: list[BookLevel] = []
@@ -43,18 +52,28 @@ def _levels(raw: object, tick: Decimal) -> tuple[BookLevel, ...]:
             price, qty = Decimal(str(row[0])), Decimal(str(row[1]))
         except InvalidOperation as exc:
             raise ValueError("unparseable book number") from exc
-        if not price.is_finite() or not qty.is_finite() or price <= 0 or qty < 0:
-            raise ValueError("non-finite, non-positive or negative book number")
-        out.append(BookLevel(price=price, qty=qty, price_ticks=int(price / tick)))
+        # Hot path (C-2.20): one chained comparison per value; the precise
+        # reason is derived only on failure. Bounded before the division.
+        if not (price.is_finite() and _ZERO < price <= MAX_PRICE):
+            check_price(price, symbol=symbol)
+        if not (qty.is_finite() and _ZERO <= qty <= MAX_QTY):  # "0" deletes a level
+            check_qty(qty, allow_zero=True, symbol=symbol)
+        ticks, rem = divmod(price, tick)
+        if rem:  # #1890: never quantise an off-grid price onto a neighbour row
+            raise FrameRejectedError("off_tick", "price not on tick grid", symbol=symbol)
+        out.append(BookLevel(price=price, qty=qty, price_ticks=int(ticks)))
     return tuple(out)
 
 
 def parse_book_frame(frame: str, tick_size: TickSize) -> BookSnapshot | BookDelta | None:
-    """`None` for non-book frames; `ValueError` for a malformed book frame."""
+    """`None` for non-book frames; `ValueError` (a `FrameRejectedError` with a
+    reason and the symbol once known) for a malformed or implausible frame."""
     try:
         msg = json.loads(frame)
     except ValueError:
         return None
+    except RecursionError as exc:  # backstop; the pump scans depth before fan-out (#1889)
+        raise FrameRejectedError("depth_limit", "frame nests too deep") from exc
     if not isinstance(msg, dict):
         return None
     topic = msg.get("topic")
@@ -76,7 +95,12 @@ def parse_book_frame(frame: str, tick_size: TickSize) -> BookSnapshot | BookDelt
         raise ValueError("book frame missing u/ts") from exc
     if u <= 0 or ts_ms <= 0:
         raise ValueError("bad book sequence or timestamp")
-    ts_match = int(msg.get("cts", ts_ms)) * 1000
+    check_event_ts(ts_ms, None, symbol=symbol)
+    try:
+        cts_ms = int(msg.get("cts", ts_ms))
+    except (TypeError, ValueError) as exc:
+        raise ValueError("book frame carries a bad cts") from exc
+    ts_match = check_event_ts(cts_ms, ts_ms, symbol=symbol) * 1000
     common = {
         "event_id": uuid.uuid4(),
         "ts_event": ts_ms * 1000,
@@ -84,8 +108,8 @@ def parse_book_frame(frame: str, tick_size: TickSize) -> BookSnapshot | BookDelt
         "source": "live",
         "symbol": symbol,
         "depth": depth,
-        "bids": _levels(data.get("b", []), tick),
-        "asks": _levels(data.get("a", []), tick),
+        "bids": _levels(data.get("b", []), tick, symbol),
+        "asks": _levels(data.get("a", []), tick, symbol),
         "update_id": u,
         "cross_seq": seq,
         "ts_match": ts_match,
