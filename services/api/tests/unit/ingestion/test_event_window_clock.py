@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 
 import pytest
+from structlog.testing import capture_logs
 
 from candleviewer.exchange.base.frame_guard import MAX_FUTURE_SKEW_MS, FrameRejectedError
 from candleviewer.ingestion.clock import ClockGuard
@@ -169,15 +170,80 @@ async def _drain() -> None:
         await asyncio.sleep(0)
 
 
-async def test_suspend_false_step_reverts_when_confirmation_keeps_failing() -> None:
+async def test_unconfirmed_step_reverts_and_rearms_detector() -> None:
+    clocks = _Clocks()
+    guard = _guard(clocks, fail=[True])
+    clocks.wall_base_ns += 10 * 1_000_000_000  # suspend: mono paused, wall advanced
+    with capture_logs() as logs:
+        assert guard.offset_us() == -10 * _S  # provisional correction
+        await _drain()
+    assert "clock_step_unconfirmed" in [e["event"] for e in logs]
+    # Reverted with the pre-step reference restored: the next check re-detects the
+    # still-present skew instead of silently trusting the old offset forever.
+    assert guard.check_host_step() == 10 * _S
+
+
+async def test_genuine_step_survives_outage_longer_than_first_retries() -> None:
     clocks = _Clocks()
     fail = [True]
-    guard = _guard(clocks, fail=fail)
-    # Suspend: the monotonic reference pauses while wall advances 10 s (offset was right).
-    clocks.wall_base_ns += 10 * 1_000_000_000
-    assert guard.offset_us() == -10 * _S  # provisional correction
+    sleeps = 0
+
+    async def _flaky_sleep(_s: float) -> None:
+        nonlocal sleeps
+        sleeps += 1
+        if sleeps == 5:
+            fail[0] = False  # network is back after ~15 s of backoff
+        await asyncio.sleep(0)
+
+    async def _fetch() -> tuple[int, float, float]:
+        if fail[0]:
+            raise ConnectionError("down")
+        return (_venue_now(clocks), clocks.wall() / 1e9, 0.0)
+
+    guard = ClockGuard(
+        _fetch,
+        sample_count=1,
+        wall_ns=clocks.wall,
+        mono_ns=clocks.mono,
+        step_check_interval_ms=0,
+        sleep=_flaky_sleep,
+    )
+    window = _window(clocks, guard)
+    clocks.step(-10)
+    window("BTCUSDT", _venue_now(clocks))  # accepted while provisional
     await _drain()
-    assert guard.offset_us() == 0  # reverted to the last verified offset
+    assert sleeps == 5
+    window("BTCUSDT", _venue_now(clocks))  # accepted after confirmation
+    assert guard.offset_us() == 10 * _S
+
+
+async def test_stop_cancels_the_step_confirm_task() -> None:
+    clocks = _Clocks()
+    block = asyncio.Event()
+
+    async def _hang_sleep(_s: float) -> None:
+        await block.wait()
+
+    guard = ClockGuard(
+        _fail_fetch,
+        sample_count=1,
+        wall_ns=clocks.wall,
+        mono_ns=clocks.mono,
+        step_check_interval_ms=0,
+        sleep=_hang_sleep,
+    )
+    before = asyncio.all_tasks()
+    clocks.step(-10)
+    guard.offset_us()
+    await asyncio.sleep(0)
+    assert len(asyncio.all_tasks() - before) == 1  # the confirm task
+    await guard.stop()
+    await asyncio.sleep(0)
+    assert asyncio.all_tasks() - before == set()
+
+
+async def _fail_fetch() -> tuple[int, float, float]:
+    raise ConnectionError("down")
 
 
 async def test_suspend_false_step_confirmed_by_measurement_keeps_true_offset() -> None:

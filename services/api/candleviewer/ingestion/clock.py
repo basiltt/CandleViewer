@@ -29,7 +29,6 @@ from __future__ import annotations
 
 import asyncio
 import random
-import sys
 import time
 from collections.abc import Awaitable, Callable
 from typing import Any, Protocol
@@ -48,26 +47,30 @@ from candleviewer.observability.context import spawn
 
 logger = structlog.get_logger(__name__)
 
-_STEP_RETRY_BACKOFF_S = (1.0, 2.0, 4.0)
-"""Delays before each confirming retry of a host-step correction; the cap (30 s)
-is never reached because the correction is reverted once these are exhausted."""
+_STEP_RETRY_BACKOFF_S = (1.0, 2.0, 4.0, 8.0, 16.0, 30.0)
+"""Delays before each confirming retry of a host-step correction (doubling, capped
+at 30 s). The provisional correction stays applied while retrying; only after the
+last attempt fails is it reverted (and the step reference restored)."""
 
 
 def default_mono_ns() -> int:
     """Reference clock for step detection: `CLOCK_BOOTTIME` where available
     (Linux — keeps counting through suspend, so a WSL/host sleep is NOT seen as a
     wall step), else `time.monotonic_ns` (which may pause across suspend)."""
-    if sys.platform == "linux":
-        return time.clock_gettime_ns(time.CLOCK_BOOTTIME)
-    return time.monotonic_ns()
+    try:
+        # getattr: these names are absent off-Linux (and from the Windows typeshed).
+        clock_gettime_ns: Callable[[int], int] = getattr(time, "clock_gettime_ns")  # noqa: B009
+        return clock_gettime_ns(getattr(time, "CLOCK_BOOTTIME"))  # noqa: B009
+    except AttributeError:  # non-Linux platform
+        return time.monotonic_ns()
 
 
 _MICROS_PER_MS = 1_000
 _SAMPLE_COUNT = 5
-_BURST_ATTEMPTS = 3
-"""Max bursts per measurement when the host clock steps mid-burst (#1912)."""
 """Samples per measurement burst (Test plan: "offset maths incl. outlier
 rejection" needs more than one sample to have an outlier to reject)."""
+_BURST_ATTEMPTS = 3
+"""Max bursts per measurement when the host clock steps mid-burst (#1912)."""
 
 
 class ServerTimeFetcher(Protocol):
@@ -154,6 +157,7 @@ class ClockGuard:
         self._resync_task: asyncio.Task[int] | None = None
         #: Last *verified* offset while a step correction is unconfirmed (else None).
         self._pre_step_offset_us: int | None = None
+        self._pre_step_skew_ref_us: int = self._skew_ref_us
         self._last_measured_monotonic: float | None = None
         self._consecutive_failures = 0
         self._task: asyncio.Task[None] | None = None
@@ -191,9 +195,11 @@ class ClockGuard:
         step_us = delta_us - self._skew_ref_us
         if abs(step_us) <= self._step_threshold_us:
             return 0
-        self._skew_ref_us = delta_us
         if self._pre_step_offset_us is None:
-            self._pre_step_offset_us = self._offset_us  # provisional until confirmed
+            # provisional until confirmed; remember both so a revert re-arms detection
+            self._pre_step_offset_us = self._offset_us
+            self._pre_step_skew_ref_us = self._skew_ref_us
+        self._skew_ref_us = delta_us
         self._offset_us -= step_us
         clock_resync_triggered_total.labels(reason="host_step").inc()
         logger.warning("clock_host_step_detected", step_ms=step_us / _MICROS_PER_MS)
@@ -208,7 +214,7 @@ class ClockGuard:
     async def _resync_after_step(self) -> int:
         """Confirm the provisional step correction with a real measurement.
 
-        Retries with short backoff (single-flight: only one such task exists). If
+        Retries with doubling backoff up to 30 s (single-flight: one such task). If
         every attempt fails the correction is REVERTED to the last verified offset:
         a suspend/resume or NTP slew can masquerade as a step, and an unverified
         correction must not outlive the evidence (same rule as `measure_once`:
@@ -223,6 +229,7 @@ class ClockGuard:
             await self._sleep(delay)
         if self._pre_step_offset_us is not None:
             self._offset_us = self._pre_step_offset_us
+            self._skew_ref_us = self._pre_step_skew_ref_us  # detector re-fires next check
             self._pre_step_offset_us = None
         logger.warning("clock_step_unconfirmed", offset_us=self._offset_us)
         return self._offset_us
@@ -403,6 +410,13 @@ class ClockGuard:
             except asyncio.CancelledError:
                 pass
             self._task = None
+        if self._resync_task is not None:
+            self._resync_task.cancel()
+            try:
+                await self._resync_task
+            except asyncio.CancelledError:
+                pass
+            self._resync_task = None
 
     async def _run_periodic(self) -> None:
         while not self._stopping:
