@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import asyncio
 import random
+import sys
 import time
 from collections.abc import Awaitable, Callable
 from typing import Any, Protocol
@@ -57,12 +58,9 @@ def default_mono_ns() -> int:
     """Reference clock for step detection: `CLOCK_BOOTTIME` where available
     (Linux — keeps counting through suspend, so a WSL/host sleep is NOT seen as a
     wall step), else `time.monotonic_ns` (which may pause across suspend)."""
-    try:
-        # getattr: these names are absent off-Linux (and from the Windows typeshed).
-        clock_gettime_ns: Callable[[int], int] = getattr(time, "clock_gettime_ns")  # noqa: B009
-        return clock_gettime_ns(getattr(time, "CLOCK_BOOTTIME"))  # noqa: B009
-    except AttributeError:  # non-Linux platform
-        return time.monotonic_ns()
+    if sys.platform == "linux":
+        return time.clock_gettime_ns(time.CLOCK_BOOTTIME)
+    return time.monotonic_ns()
 
 
 _MICROS_PER_MS = 1_000
@@ -158,6 +156,7 @@ class ClockGuard:
         #: Last *verified* offset while a step correction is unconfirmed (else None).
         self._pre_step_offset_us: int | None = None
         self._pre_step_skew_ref_us: int = self._skew_ref_us
+        self._step_reverted = False  # next detection is a re-detection (outage), not new
         self._last_measured_monotonic: float | None = None
         self._consecutive_failures = 0
         self._task: asyncio.Task[None] | None = None
@@ -201,7 +200,8 @@ class ClockGuard:
             self._pre_step_skew_ref_us = self._skew_ref_us
         self._skew_ref_us = delta_us
         self._offset_us -= step_us
-        clock_resync_triggered_total.labels(reason="host_step").inc()
+        reason = "host_step_redetect" if self._step_reverted else "host_step"
+        clock_resync_triggered_total.labels(reason=reason).inc()
         logger.warning("clock_host_step_detected", step_ms=step_us / _MICROS_PER_MS)
         if self._resync_task is None or self._resync_task.done():
             try:
@@ -231,6 +231,7 @@ class ClockGuard:
             self._offset_us = self._pre_step_offset_us
             self._skew_ref_us = self._pre_step_skew_ref_us  # detector re-fires next check
             self._pre_step_offset_us = None
+            self._step_reverted = True
         logger.warning("clock_step_unconfirmed", offset_us=self._offset_us)
         return self._offset_us
 
@@ -310,6 +311,7 @@ class ClockGuard:
                 self._offset_us = offset
                 self._skew_ref_us = skew_after
                 self._pre_step_offset_us = None
+                self._step_reverted = False
                 self._record_measured(offset)
                 return offset
             logger.warning("clock_step_during_measurement", attempt=_attempt)
