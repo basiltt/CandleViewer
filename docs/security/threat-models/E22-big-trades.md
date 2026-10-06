@@ -208,7 +208,7 @@ response, ack, error or metric depends on another user's options).
 | AC4  | Subscribe `trades.BTCUSDT` with `min_size=0`, negative, `NaN`, `1e-30`, below floor      | rejected with `ws_subscribe_rejected_total{reason}`; first subscription unaffected                                                                      | D15      | X02      |
 | AC5  | Same symbol with 3+ distinct option sets on one connection                               | third rejected                                                                                                                                          | D17      | X02      |
 | AC6  | 41st distinct symbol on one connection; 201st subscription; 51 topics in one request     | rejected, first 40 unaffected                                                                                                                           | D17      | X02      |
-| AC7  | 9 connections for one user; 61 subscriptions over 3 connections                          | 9th connection / 61st sub rejected                                                                                                                      | D17      | X02      |
+| AC7  | 9 connections for one user; 61 subscriptions over 3 connections                          | 9th connection closes the oldest idle one with `bye` (23-ws cap); 61st sub rejected                                                                     | D17      | X02      |
 | AC8  | `cluster_window_ms` 5001, 2001 on WS, `-1`, non-integer; tolerance 21                    | 400 / reject                                                                                                                                            | D16      | Q01, X02 |
 | AC9  | Hostile 5 000-prints/s burst of adversarial same-price/same-side keys at window 2000 ms  | cluster keys <= 4096, `bigtrade_state_truncated_total` increments, CPU in budget, no OOM                                                                | D16, D19 | Q03      |
 | AC10 | Slow consumer stops reading while 2 000 prints/s flow                                    | connection within 8 MiB / 2 000 frames, `gap` marker + REST backfill (`reason=backpressure`), `4429` if still over, engine and other clients unaffected | D18      | Q03      |
@@ -254,7 +254,7 @@ sustained rejection (abuse) and any non-zero truncation outside a load test.
 SR-E22-nn are epic-local requirement ids (convention of `E16-FR-nn` / `E35-FR-nn`), to be promoted into
 `04-security-program.md` numbering when E22-T02 lands. Interface-first gaps: **G1** window cap, **G2**
 `min_size` floor (22-api), **G3** state caps (24-internal-schemas), **G4** per-user budget (23-ws `limits`),
-**G5** option-set cap, **G6** frame-level `estimated` flag (23-ws §14.2).
+**G5** option-set cap, **G6** frame-level `estimated` flag (23-ws §14.2), **G7** error code `invalid_min_size` for the `min_size` floor (22-api problem-code registry), **G8** the `trades` `gap` marker frame emitted on §8.4 backpressure with the REST backfill hint (23-ws §8.4 / §14.2). The `trades.*` fair share is a named constant `TRADES_BUDGET_SHARE = 0.5` in `orderflow/limits.py` (frames and bytes derived from it; revisit after the E22-Q03 k6 run). Note: 23-ws already caps connections at 8 per user — SR-E22-06 adopts that cap rather than introducing it, and the 9th connection follows the contract (oldest idle closed with `bye`), which AC7 asserts.
 
 ## 12. Residual risks, review and sign-off
 
