@@ -3,8 +3,8 @@
 - Status: **proposed** (owner ratification pending, decision item on #1778).
 - Date: 2026-10-07
 - Deciders: Owner (`@basiltt`) — owner approval pending.
-- Numbering note: the ticket (E12-K01, #525) says "ADR-0014"; 0014 is taken (Observability) and 0031 is an
-  unexplained gap, so this is the next free number after 0032.
+- Numbering note: the ticket (E12-K01, #525) says "ADR-0014"; 0014 is taken (Observability) and 0031 is reserved by
+  E45-K01 (`ADR-0031-resilience-and-chaos`, not yet on `main`), so this is the next free number after 0032.
 - Related: E12-K01 (#525, this spike), E12-T01 (#344, `BarSpec`), E12-S04 (Renko builder), E12-S12
   (rebuild API), E12-T05 (param parsing), E12-T07 (rebuild CI budget), `24-internal-schemas.md` §3.1/§3.3/§3.4,
   `22-api-openapi.yaml` `/market/bars`, `23-ws-protocol.md` §6.1, `30-release-roadmap.md` §12.
@@ -32,36 +32,113 @@ fallback). `BarSpec` is unchanged in R1; `atr` stays a reserved word in the para
 2. `23-ws-protocol.md` §6.1: same wording for `renko`.
 3. `24-internal-schemas.md` §3.3: add the R2 reservation below as a paragraph.
 
+**Breaking-change classification (C-6.1/C-6.3).** Rejecting `atr:14` narrows input that `22-api` and `23-ws`
+§6.1 currently document as accepted, so under C-6.3 ("tightening a type", "changing semantics") it **is** a
+breaking contract change on paper. No consumer can depend on it: no builder, no `/market/bars` renko path and no
+generated client call exists yet (E12-S04 is unstarted). The follow-up contract PR therefore ships as
+`docs(protocol)!:` with a `BREAKING CHANGE:` footer citing ADR-0033 and states "no shipped implementation; no
+`/v2` needed", rather than as a wording tweak. If any implementation accepting `atr:*` lands first, this
+argument fails and a `/v2` plus deprecation entry is required.
+
 **Why defer rather than ship:** ATR over the renko series is circular, so a coherent form needs a second
 series, a warmup rule and a freeze rule — three new contract surfaces on a rung-2 (cuttable) feature. Deferral
 costs nothing the roadmap promised for R1 (fixed-size Renko is intact).
 
 **R2 reservation (the only coherent design; prototyped and verified):**
 
-| Aspect               | Rule                                                                                                                                                                                                                                                                                                                                       |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| (a) Source series    | ATR is Wilder ATR(`period`) over a **fixed 1m time series** of the same symbol/`price_source`, built from the same `TradeEvent`s. Never the renko series.                                                                                                                                                                                  |
-| (b) Cadence          | **Frozen at series construction**: brick size = `max(1, ATR_last_closed_1m_bar_before_series_start * mult)` in integer ticks, resolved once. No per-brick or per-minute recompute. A new size means a new series (new `spec_hash`).                                                                                                        |
-| (c) BI-4 / BI-5      | Hold, because the resolved size is a plain integer in the spec and a pure function of the (recorded) lookback trades; the builder never sees ATR. A drifting live ATR fails BI-5 whenever history is not replayed (verified, below).                                                                                                       |
-| (d) `BarSpec` fields | Add `renko_atr_period: int \| None` (2..100), `renko_atr_mult_x100: int` (default 100), `renko_atr_source_interval_ms: int` (default 60000) **and** the resolved `range_ticks`. All are in `spec_hash`; the request supplies the first three, the server fills `range_ticks`. Exactly-one validator: `renko_atr_*` only with `kind=renko`. |
-| Warmup               | Fewer than `period + 1` closed 1m bars before the start -> 422 (never a default size).                                                                                                                                                                                                                                                     |
+| Aspect                                          | Rule                                                                                                                                                                                                                                                                                                                                       |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| (a) Source series                               | ATR is Wilder ATR(`period`) over a **fixed 1m time series** of the same symbol/`price_source`, built from the same `TradeEvent`s. Never the renko series.                                                                                                                                                                                  |
+| (b) Cadence                                     | **Frozen at series construction**: brick size = `max(1, ATR_last_closed_1m_bar_before_series_start * mult)` in integer ticks, resolved once. No per-brick or per-minute recompute. A new size means a new series (new `spec_hash`).                                                                                                        |
+| (c) BI-4 / BI-5                                 | Hold, because the resolved size is a plain integer in the spec and a pure function of the (recorded) lookback trades; the builder never sees ATR. A drifting live ATR fails BI-5 whenever history is not replayed (verified, below).                                                                                                       |
+| (d) `BarSpec` fields (see R2 spec design below) | Add `renko_atr_period: int \| None` (2..100), `renko_atr_mult_x100: int` (default 100), `renko_atr_source_interval_ms: int` (default 60000) **and** the resolved `range_ticks`. All are in `spec_hash`; the request supplies the first three, the server fills `range_ticks`. Exactly-one validator: `renko_atr_*` only with `kind=renko`. |
+| Warmup                                          | Fewer than `period + 1` closed 1m bars before the start -> 422 (never a default size).                                                                                                                                                                                                                                                     |
 
-Security note (E12-T05): the R1 integer pattern and the R2 `atr:<2..100>(:<mult>)?` pattern are whitelisted
+**R2 spec design (request spec vs resolved spec).** `24-internal` §3.1's `_exactly_one` stays true for every
+**resolved** `BarSpec` (what builders, `spec_hash`, storage and snapshots use): a renko spec has exactly one sizing
+field, `range_ticks`, always set. The ATR request is a separate type, `RenkoAtrRequest(period, mult_x100,
+source_interval_ms)`, validated at the API edge, which the bars service resolves into a normal `BarSpec` plus a
+non-hashed **provenance record** (`resolved_from`: request, lookback end timestamp, source ATR value). So
+`range_ticks` is never "server-filled alongside" `renko_atr_*`; builders and the validator never see ATR and the
+validator is unchanged. The `renko_atr_*` names in row (d) are the fields of `RenkoAtrRequest`, **not** new
+`BarSpec` fields.
+
+- **`spec_hash` (canonical JSON).** Any field ever added to `BarSpec` MUST be omitted from canonical JSON when
+  `None`/default, so every existing `spec_hash` stays valid (`spec_hash_vectors.json` must not change).
+- **Clients cannot compute the resolved hash.** It depends on server-side lookback trades. The API must echo
+  the resolved spec and `spec_hash` (and the request -> resolved mapping) in the response/subscribe ack; clients
+  treat `spec_hash` as an opaque server-issued id. The bars service persists the mapping so a re-subscribe with
+  the same request is idempotent.
+- **A different ATR period/multiple (or a re-resolution at a different time) yields a NEW `spec_hash`, hence
+  a NEW series** with its own index epoch. The old series is never mutated.
+- **Anchor/tie-break.** "Last closed 1m bar before series start": a 1m bar whose close boundary is
+  `<= start_ts` is closed (a start exactly on a boundary uses the bar that just ended, not the one beginning).
+
+**BI-5 and `restore()`.** `BuilderState` (§3.2) MUST persist the resolved brick size in **price units** and the
+`spec_hash` it belongs to (proposed fields `resolved_brick_px`, `tick_size_at_start`, `spec_hash`). `restore()`
+reads these and **never re-resolves** ATR (or re-reads the instrument cache); a restore whose persisted
+`spec_hash` differs from the requested one is refused, not silently re-keyed. Without this, a restart after a
+long gap would resolve a different size, create a new `spec_hash` and make BI-5 only nominally true.
+
+**Mid-session tick-size change (applies to R1 fixed renko and range bars too).** §3.3 defines a brick as
+`range_ticks x tick_size`. Proposal: the size is **frozen in price units at series construction**
+(`tick_size_at_start` comes from the instrument-info cache, `21-database-schema.md`, refreshed every 12 h, and is
+captured into `BuilderState` and the series provenance). If the cache later reports a different `tick_size`, the
+existing series keeps its captured value, so BI-4/BI-5 do not depend on cache timing; the service starts a
+**new series (new `spec_hash`/epoch)** for new subscriptions and the UI shows a notice ("Tick size changed;
+series restarted") instead of altering the old one.
+
+**Security note (E12-T05): the R1 integer pattern and the R2 `atr:<2..100>(:<mult>)?` pattern are whitelisted
 regexes with bounded length (`maxLength: 24` already), not a parser.
 
 Evidence (seeded, 400k trades, `atr_experiment`): frozen brick 176 ticks, 301 bricks, BI-4/BI-5 hold over 10
 random cuts; live-drifting ATR resumed from a restart without history reproduces **a different series**
 (BI-5 false).
 
-## Decision 2 — Rebuild: chunked pull in a worker thread with a cancellation token, atomic publish
+## Decision 2 — Rebuild: chunked pull in a bounded worker with a cancellation token, generation-swap publish
 
 Cancellation contract for E12-S12 (`rebuild(spec, range, token) -> RebuildResult`):
 
-1. Rows are read in chunks (<= 8 192 rows) in a worker thread (`asyncio.to_thread`); the token (a
-   `threading.Event`) is checked between chunks **and** every <= 4 096 rows of building.
-2. Output goes to a staging buffer and is published to `bars_*` in one commit at the end; cancel discards
-   staging, closes the cursor, writes nothing (acceptance: "no partial rows").
-3. `asyncio.Task.cancel()` alone is **not** the mechanism: it only abandons the `await`.
+1. Rows are read in chunks (<= 8 192 rows) in a worker thread; the token (a `threading.Event`) is checked
+   between chunks **and** every <= 4 096 rows of building.
+2. **Publish by generation swap, not "one commit".** QuestDB (ADR-0003 hot tier) has no multi-row atomic
+   commit. The rebuild writes all rows under a new **series generation id**, then flips a per-`(symbol,
+spec_hash)` **current-generation pointer** (one transactional Postgres row update) as its only publish step.
+   Readers resolve the pointer first and **pin** that generation for the whole read, so two generations are never
+   mixed. The superseded generation is garbage collected after readers drain (grace >= max read timeout); a
+   failed or cancelled generation is deleted immediately. Cancel leaves no _visible_ rows (the pointer never
+   moved) and orphans are swept. Schema detail belongs to the E12-T02/S12 contract-first PR; this is the
+   semantic requirement.
+3. **Staging bound.** Closed bars stream to the write-behind in batches; nothing holds a whole series. Where a
+   buffer is unavoidable the cap is **250 000 bars per rebuild**; exceeding it fails the rebuild with a typed
+   error (`bar_rebuild_too_large`, 422; copy: "Too many bars for this setting; choose a larger size").
+   Sizing: prototype tuple bars cost roughly 0.45 KB each (peak RSS 106 MB for 51 024 volume bars vs 83 MB for
+   1 440 time bars, so ~23 MB; coarse); a production `Bar` with `Decimal`s and pydantic is **estimated** at
+   1.5-3 KB (unmeasured), so the cap is about 0.4-0.75 GB worst case, and an uncapped 1M-bar spec (1-lot
+   volume bars) would be 1.5-3 GB, hence cap and refuse.
+4. `asyncio.Task.cancel()` alone is **not** the mechanism: it only abandons the `await`.
+5. **Executor (C-2.18).** Rebuilds run on a **dedicated bounded** `ThreadPoolExecutor` (proposal: 2 workers)
+   with a bounded admission queue (proposal: 4 waiting). When full the request is **refused**
+   (`bar_rebuild_busy`), never queued unboundedly and never on the default `to_thread` pool the rest of the
+   app shares. (The harness used `to_thread` for brevity.)
+6. **Same code as live/replay (C-2.15).** Rebuild drives the production builder through the same `BarBuilder`
+   code and the same `spec_hash`; there is no fast path. A rebuild MUST NOT swap the pointer for a
+   `(symbol, spec_hash)` while a replay session is reading it: replay pins its generation, the swap is deferred
+   until the session ends, or the rebuild is refused with `bar_rebuild_busy`.
+
+**Cancel path contract (PROPOSAL for the contract-first PR; not authoritative until it lands in 22-api/23-ws).**
+
+- REST: `POST /v1/market/bars/rebuilds` returns `{rebuild_id, spec_hash, generation}`;
+  `DELETE /v1/market/bars/rebuilds/{rebuild_id}` returns 202, idempotent, 404 if unknown.
+- WS: client frame `{"op": "bars.rebuild.cancel", "rebuild_id": "..."}`; server frames
+  `bars.rebuild.progress|done|cancelled`.
+- **Owner:** the `bars` service holds the registry `rebuild_id -> (threading.Event, task, generation, owner
+principal)`. RBAC applies (C-12.4): only the requesting principal (or Owner) may cancel.
+- **Client disconnect cancels** the rebuild it started (WS close or REST request abort). Background rebuild
+  jobs that outlive a client are out of scope for R1.
+- **Client ingestion (26-chart-engine).** A rebuilt series arrives as a snapshot carrying the new `generation`;
+  the client does a **full replace** of the series in the DataModel, never a merge with bars of the old
+  generation.
 
 Metrics (E12-S12 ships them from day one): `bar_rebuild_duration_seconds{kind}`,
 `bar_rebuild_cancelled_total{kind}`, `bar_rebuild_rows_total{kind}`, `bar_rebuild_cancel_latency_seconds`.
@@ -120,7 +197,12 @@ Invariants on the prototypes (50k trades, 20 random cut points each): BI-1, BI-4
 ## Consequences
 
 - E12-S04 builds fixed-size Renko only; param parsing is the integer whitelist; `atr:*` is a 422.
-- E12-S12's rebuild API takes a token and publishes atomically; no reliance on task cancellation.
+- E12-S12's rebuild API takes a token and publishes by generation swap; no reliance on task cancellation.
+- **E12-T07 is the BLOCKING re-measurement gate** for the 10 s NFR: 1M prints through the production
+  `Decimal`/pydantic builders, the E08 QuestDB PGWire read path, on the reference 4 vCPU / 8 GB VPS. This ADR's
+  numbers do not satisfy US-CHART-003 on their own. The single-pass all-six figure (~5.5 s of build time here)
+  would breach 10 s at a mere 2x slowdown, and Decimal/pydantic builders could plausibly cost 10-30x (estimate,
+  unmeasured), so the headroom is **not** assumed to survive.
 - Descoping note for `30-release-roadmap.md` §12 rung 2 (Renko and range bars -> R2): at risk is **only** the
   builder + UI of two cheap builders (both ~0.9-1.0 s / 1M rows, no new storage); `bars_range`/`bars_renko`
   tables already exist. ATR bricks are already out of R1 by this ADR, so pulling the rung removes no ATR work.
@@ -135,5 +217,12 @@ Invariants on the prototypes (50k trades, 20 random cut points each): BI-1, BI-4
 
 ## Revisit when
 
-QuestDB integration profile is available (re-run `--rows 1000000` through `QuestDbHotTierSource`), or E12-S0x
-production builders land and exceed 5 s per builder.
+Not a soft trigger: E12-T07 (above) is a blocking gate. If any builder exceeds 10 s there, the dominant cost
+is recorded and an optimisation Task is filed (batch/columnar builders) rather than relaxing the NFR.
+
+## Follow-ups
+
+Filed after owner ratification, so they carry the final decision: E12-S04 (integer renko, param whitelist, 422
+copy, tick-size freeze), E12-S12 (rebuild API, token registry, generation swap, bounded executor, metrics), the
+contract-first PR (`docs(protocol)!:`), an E08/E12 QuestDB-path re-measure Task, and a `32-risk-register.md`
+entry.
