@@ -430,13 +430,13 @@ Sources: live accruing rate from `tickers.{symbol}` (`fundingRate`, `nextFunding
 signals only (C-2.20). Surfaced as `/readyz` check `ingestion` (`ok:false`, `detail`, still HTTP 200), the
 `ingestion` health component and `exchange.public_ws` (real WS phase).
 
-| Token | Condition | Threshold |
-|---|---|---|
-| `ws_not_open` | public WS phase != `open` | > 5 s (`WS_GRACE_S`) |
-| `book_out_of_live` | a desired book not LIVE | > 30 s (`RESYNC_BACKOFF_CAP_S`: the longest a healthy backoff cycle waits) |
-| `trade_gap_unrecovered` | any open trade gap | until backfill closes it |
-| `catalogue_stale` | instrument cache older than its TTL (or never loaded) | cache `ttl_seconds` |
-| `pump_breaker_open` | frame-pump breaker tripped | 30 s (`PUMP_BREAKER_WINDOW_S`) |
+| Token                   | Condition                                             | Threshold                                                                  |
+| ----------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------- |
+| `ws_not_open`           | public WS phase != `open`                             | > 5 s (`WS_GRACE_S`)                                                       |
+| `book_out_of_live`      | a desired book not LIVE                               | > 30 s (`RESYNC_BACKOFF_CAP_S`: the longest a healthy backoff cycle waits) |
+| `trade_gap_unrecovered` | any open trade gap                                    | until backfill closes it                                                   |
+| `catalogue_stale`       | instrument cache older than its TTL (or never loaded) | cache `ttl_seconds`                                                        |
+| `pump_breaker_open`     | frame-pump breaker tripped                            | 30 s (`PUMP_BREAKER_WINDOW_S`)                                             |
 
 **As shipped (E08-T06 reconciliation, 2026-10-05).** Bus topics are `{env}.md.{symbol}.{detail}`
 (`bus/models.py` `Topic.key`, e.g. `demo.md.BTCUSDT.trade`), not `md.{detail}.{symbol}` as tabled above;
@@ -482,7 +482,7 @@ class BarSpec(BaseModel):
 class Bar(BaseModel):
     spec_hash: str                # sha256 of BarSpec canonical JSON — cache key
     symbol: Symbol
-    index: int                    # monotonic per (symbol, spec_hash) since series epoch
+    index: int                    # strictly increasing per (symbol, spec_hash) for real bars
     open_time: TsUs               # ts_event of the first trade in the bar
     close_time: TsUs              # ts_event of the last trade (or boundary for time bars)
     open: Px
@@ -501,7 +501,20 @@ class Bar(BaseModel):
     closed: bool
     partial: bool                 # True when the bar began before recording started
     gap_before: bool              # True when a data gap precedes this bar
+    synthetic: bool = False       # densify() filler (§3.3) — never persisted
 ```
+
+Shipped in `services/api/candleviewer/bars/` (E12-T01): `spec_hash` = sha256 over canonical JSON
+(every `BarSpec` field, defaults included explicitly; keys sorted; separators `,` and `:` with no whitespace;
+`ensure_ascii`; Decimals rendered as a plain, non-rounded string: no exponent, no trailing fractional zeros, `-0` as `0`;
+this supersedes any "fixed-precision" wording). Spec Decimals are bounded to at most 28 significant digits and
+longer values are rejected at validation, so the hash never rounds. `SPEC_HASH_VERSION = 1`: any change to the
+canonical form bumps it and moves every hash (persisted keys must be migrated); see ADR-0033 / PR #1968, which
+proposes omitting unset fields and would need a coordinated bump. `densify()` index semantics: real bars' `index`
+is strictly increasing and is never renumbered; synthetic fillers repeat the preceding real bar's `index`, are
+view-only (never persisted or sent on the wire), and consumers key densified views by `open_time`, never by `index` alone;
+golden vectors in `packages/fixtures/golden/bars/`; TS mirror generated into
+`packages/protocol/src/generated/bars/`.
 
 `min_delta`/`max_delta` require tracking the running intrabar delta path, not just the endpoint (research 08 §2) — they are the input to exhaustion and absorption reads.
 

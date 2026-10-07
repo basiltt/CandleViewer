@@ -10,7 +10,10 @@
 //  - ./ws     — TS types for docs/plan/23-ws-protocol.md §13-15 (via ws-schema.json)
 //  - ./policy — enum-value tables mirroring services/api/candleviewer/
 //               exchange/policy.py (tools/gen/export_instrument_policy_rules.py)
+//  - ./bars   — bar domain model mirroring services/api/candleviewer/bars/
+//               models.py (scripts/generate-bar-types.mjs)
 // ==========================================================================
 export * as rest from "./rest/index.js";
 export * as ws from "./ws/index.js";
 export * as policy from "./policy/index.js";
+export * as bars from "./bars/index.js";

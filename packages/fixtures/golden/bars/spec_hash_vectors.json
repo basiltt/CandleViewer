@@ -1,0 +1,86 @@
+{
+  "$note": "GENERATED - do not hand-edit. Regenerate with `python services/api/scripts/generate_bar_artifacts.py`. A diff here means every persisted bar/builder-state key moves: bump SPEC_HASH_VERSION + migrate.",
+  "spec_hash_version": 1,
+  "vectors": [
+    {
+      "canonical_json": "{\"align_to_epoch\":true,\"delta_threshold\":null,\"interval_ms\":60000,\"kind\":\"time\",\"price_source\":\"last\",\"range_ticks\":null,\"renko_wick\":false,\"reversal_bricks\":2,\"session_anchor_utc_min\":0,\"tick_count\":null,\"volume_threshold\":null}",
+      "spec_hash": "a273d446aff40bd5a18ab5314ed605dbf48161e615518ef5e6637c570d791be1",
+      "wire": {
+        "bar_type": "time",
+        "param": "1"
+      }
+    },
+    {
+      "canonical_json": "{\"align_to_epoch\":true,\"delta_threshold\":null,\"interval_ms\":300000,\"kind\":\"time\",\"price_source\":\"last\",\"range_ticks\":null,\"renko_wick\":false,\"reversal_bricks\":2,\"session_anchor_utc_min\":0,\"tick_count\":null,\"volume_threshold\":null}",
+      "spec_hash": "243a2e966460a213138db11e49fe6b6b2ca7f7c8d994e8f05384c0f6c5bfd88f",
+      "wire": {
+        "bar_type": "time",
+        "param": "5"
+      }
+    },
+    {
+      "canonical_json": "{\"align_to_epoch\":true,\"delta_threshold\":null,\"interval_ms\":86400000,\"kind\":\"time\",\"price_source\":\"last\",\"range_ticks\":null,\"renko_wick\":false,\"reversal_bricks\":2,\"session_anchor_utc_min\":0,\"tick_count\":null,\"volume_threshold\":null}",
+      "spec_hash": "e7150a4cf0201244a7c298f1e42bde7701ce402ec0bdf487f0eb70ec6e698eed",
+      "wire": {
+        "bar_type": "time",
+        "param": "D"
+      }
+    },
+    {
+      "canonical_json": "{\"align_to_epoch\":false,\"delta_threshold\":null,\"interval_ms\":3600000,\"kind\":\"time\",\"price_source\":\"last\",\"range_ticks\":null,\"renko_wick\":false,\"reversal_bricks\":2,\"session_anchor_utc_min\":480,\"tick_count\":null,\"volume_threshold\":null}",
+      "spec_hash": "c197b0c133eb923ed26f571dd3bfd2e8f173f24fc2394c19836ca18b5b75a209"
+    },
+    {
+      "canonical_json": "{\"align_to_epoch\":true,\"delta_threshold\":null,\"interval_ms\":null,\"kind\":\"tick\",\"price_source\":\"last\",\"range_ticks\":null,\"renko_wick\":false,\"reversal_bricks\":2,\"session_anchor_utc_min\":0,\"tick_count\":1000,\"volume_threshold\":null}",
+      "spec_hash": "13cef7c261e3cd48fbb9f77a3bd085f22659f78f079253bb414cc43063eb344f",
+      "wire": {
+        "bar_type": "tick",
+        "param": "1000"
+      }
+    },
+    {
+      "canonical_json": "{\"align_to_epoch\":true,\"delta_threshold\":null,\"interval_ms\":null,\"kind\":\"volume\",\"price_source\":\"last\",\"range_ticks\":null,\"renko_wick\":false,\"reversal_bricks\":2,\"session_anchor_utc_min\":0,\"tick_count\":null,\"volume_threshold\":\"50\"}",
+      "spec_hash": "8cd5e14ce82d19da67d3b1b1165eaab39453f5af31b9c150b25c9684d935574e",
+      "wire": {
+        "bar_type": "volume",
+        "param": "50"
+      }
+    },
+    {
+      "canonical_json": "{\"align_to_epoch\":true,\"delta_threshold\":null,\"interval_ms\":null,\"kind\":\"volume\",\"price_source\":\"last\",\"range_ticks\":null,\"renko_wick\":false,\"reversal_bricks\":2,\"session_anchor_utc_min\":0,\"tick_count\":null,\"volume_threshold\":\"0.125\"}",
+      "spec_hash": "9c69b4aa8bbb32e79aeac9da1cc45a754a942a9de8eb0d1f046bcb42db39e846"
+    },
+    {
+      "canonical_json": "{\"align_to_epoch\":true,\"delta_threshold\":null,\"interval_ms\":null,\"kind\":\"range\",\"price_source\":\"last\",\"range_ticks\":40,\"renko_wick\":false,\"reversal_bricks\":2,\"session_anchor_utc_min\":0,\"tick_count\":null,\"volume_threshold\":null}",
+      "spec_hash": "d042f6a7bce6d001a752cab5fc11e0d72f401479d1292476ab8287c74efef310",
+      "wire": {
+        "bar_type": "range",
+        "param": "40"
+      }
+    },
+    {
+      "canonical_json": "{\"align_to_epoch\":true,\"delta_threshold\":\"25\",\"interval_ms\":null,\"kind\":\"delta\",\"price_source\":\"last\",\"range_ticks\":null,\"renko_wick\":false,\"reversal_bricks\":2,\"session_anchor_utc_min\":0,\"tick_count\":null,\"volume_threshold\":null}",
+      "spec_hash": "106f5761f7ace5359882bd944119f44f0f2e4a40805f10fbd386a9952c3cbcf9",
+      "wire": {
+        "bar_type": "delta",
+        "param": "25"
+      }
+    },
+    {
+      "canonical_json": "{\"align_to_epoch\":true,\"delta_threshold\":null,\"interval_ms\":null,\"kind\":\"renko\",\"price_source\":\"last\",\"range_ticks\":30,\"renko_wick\":false,\"reversal_bricks\":2,\"session_anchor_utc_min\":0,\"tick_count\":null,\"volume_threshold\":null}",
+      "spec_hash": "3f07cf33c3e086939d59f341fff453e08fe118e1c1c0e993c994345b67ba23ea",
+      "wire": {
+        "bar_type": "renko",
+        "param": "30"
+      }
+    },
+    {
+      "canonical_json": "{\"align_to_epoch\":true,\"delta_threshold\":null,\"interval_ms\":null,\"kind\":\"renko\",\"price_source\":\"last\",\"range_ticks\":30,\"renko_wick\":true,\"reversal_bricks\":3,\"session_anchor_utc_min\":0,\"tick_count\":null,\"volume_threshold\":null}",
+      "spec_hash": "309aec37d123a18a654fe44c23d18e520ad751b77072af019b542e97338adc1f"
+    },
+    {
+      "canonical_json": "{\"align_to_epoch\":true,\"delta_threshold\":null,\"interval_ms\":60000,\"kind\":\"time\",\"price_source\":\"mark\",\"range_ticks\":null,\"renko_wick\":false,\"reversal_bricks\":2,\"session_anchor_utc_min\":0,\"tick_count\":null,\"volume_threshold\":null}",
+      "spec_hash": "27c96431c06284904c1a786e96b6aa53bc3ff2dd9f144e50a264ec05a832a050"
+    }
+  ]
+}
