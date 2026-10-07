@@ -178,15 +178,15 @@ def test_reconfigure_mid_window_equals_fresh_engine_on_buffered_prints(
     eng.process(head)
     replayed_members = eng._clusters.open_members()
     new = _cfg(window=new_window, tol=new_tol)
+    before = _clusters(eng.process([]))  # nothing pending
     out = eng.reconfigure(new, at=head[-1])
-    old_closed = [c for c in _clusters(out) if c.close_reason == "config_change"]
-    after = [c for c in _clusters(out) if c.close_reason != "config_change"]
-    after += _clusters([*eng.process(tail), *eng.flush()])
+    assert all(c.close_reason != "config_change" for c in _clusters(out))  # §2.10 amended
+    after = [*_clusters(out), *_clusters([*eng.process(tail), *eng.flush()])]
 
     fresh = BigTradeEngine("BTCUSDT", TICK, new)
     expected = _clusters([*fresh.process([*replayed_members, *tail]), *fresh.flush()])
+    assert before == []
     assert _key(after) == _key(expected)
-    assert sum(c.trade_id_count for c in old_closed) == len(replayed_members)
 
 
 def test_reconfigure_replays_open_cluster_into_wider_window() -> None:
@@ -194,7 +194,7 @@ def test_reconfigure_replays_open_cluster_into_wider_window() -> None:
     a, b = trade(0, "100.0", "1"), trade(200 * MS, "100.1", "1")
     eng.process([a, b])  # two keys at tol=0
     out = eng.reconfigure(_cfg(window=1000, tol=4), at=b)
-    assert [c.close_reason for c in _clusters(out)] == ["config_change", "config_change"]
+    assert _clusters(out) == []  # never-published open clusters: no superseded closes
     (merged,) = eng.flush()
     assert merged.trade_ids == (a.trade_id, b.trade_id)  # recomputed: one bucket at tol=4
 
@@ -215,3 +215,46 @@ def test_open_members_exclude_late_prints_of_closed_clusters() -> None:
     c.add(trade(300 * MS, "100.0", "1", trade_id="x3"))  # A past deadline: closes; new A'
     # buffer still holds x2 (B's first print at 100 ms keeps it), but A is closed
     assert [e.trade_id for e in c.open_members()] == ["y1", "x3"]
+
+
+@settings(max_examples=80, deadline=None)
+@given(
+    raw=_prints,
+    cut=st.integers(0, 60),
+    new_window=st.sampled_from([0, 50, 250, 1000, 2000]),
+    new_tol=st.integers(0, 4),
+)
+def test_every_trade_id_in_exactly_one_emitted_cluster_across_reconfigure(
+    raw: list[tuple[int, int, str, int]], cut: int, new_window: int, new_tol: int
+) -> None:
+    """§2.10 invariant (amended, #2006): across a mid-window reconfigure every trade id appears
+    in exactly one emitted cluster (clustering-on configs before and after; when the new config
+    turns clustering off, prints after the change are not clustered at all)."""
+    evs = sorted(
+        (
+            trade(ts * MS, f"{100 + p * 0.1:.1f}", str(q), s, trade_id=f"k{n:03d}")
+            for n, (ts, p, s, q) in enumerate(raw)
+        ),
+        key=lambda e: (e.ts_event, e.trade_id),
+    )
+    head, tail = evs[:cut], evs[cut:]
+    eng = BigTradeEngine("BTCUSDT", TICK, _cfg(window=250, tol=1))
+    out = _clusters(eng.process(head))
+    if head:
+        out += _clusters(eng.reconfigure(_cfg(window=new_window, tol=new_tol), at=head[-1]))
+    out += _clusters([*eng.process(tail), *eng.flush()])
+    ids = [i for c in out for i in c.trade_ids]
+    assert all(not c.trade_ids_truncated for c in out)  # <= 60 prints: full membership
+    assert len(ids) == len(set(ids))  # never in two clusters
+    expected = {e.trade_id for e in (evs if new_window or not head else head)}
+    assert set(ids) == expected
+
+
+def test_clustering_turned_off_closes_open_clusters_with_config_change() -> None:
+    eng = BigTradeEngine("BTCUSDT", TICK, _cfg(window=250))
+    a, b = trade(0, "100.0", "1"), trade(1, "100.5", "1", "sell")
+    eng.process([a, b])
+    out = _clusters(eng.reconfigure(_cfg(window=0), at=b))
+    assert sorted(c.close_reason for c in out) == ["config_change", "config_change"]
+    assert sorted(i for c in out for i in c.trade_ids) == sorted([a.trade_id, b.trade_id])
+    assert eng.flush() == []

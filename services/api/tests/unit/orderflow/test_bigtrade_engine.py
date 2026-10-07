@@ -145,15 +145,15 @@ def test_ws_surface_caps_cluster_window_at_2000() -> None:
     BigTradeConfig(cluster_window_ms=5000).validated(surface="rest")
 
 
-def test_reconfigure_closes_clusters_and_echoes_new_config() -> None:
+def test_reconfigure_recomputes_silently_and_echoes_new_config() -> None:
     eng = BigTradeEngine("BTCUSDT", TICK, BigTradeConfig(value=Decimal("1"), cluster_window_ms=250))
     p = trade(S, "100.0", "1")
     eng.process([p])
     out = eng.reconfigure(BigTradeConfig(value=Decimal("1"), cluster_window_ms=1000), at=p)
-    kinds = [type(e).__name__ for e in out]
-    assert kinds == ["TradeClusterEvent", "BigTradeThresholdEvent"]
-    assert out[0].close_reason == "config_change"  # type: ignore[union-attr]
-    assert out[1].cluster_window_ms == 1000  # type: ignore[union-attr]
+    (echo,) = out  # §2.10: no close for the never-published open cluster
+    assert isinstance(echo, BigTradeThresholdEvent) and echo.cluster_window_ms == 1000
+    (cl,) = eng.flush()
+    assert cl.trade_ids == (p.trade_id,) and cl.close_reason == "flush"
 
 
 def test_replay_compares_and_does_not_republish() -> None:
