@@ -110,6 +110,13 @@ def test_source_must_be_known() -> None:
         bar_row(_bar(), SPEC, source="guess")
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "21 §4.8 is ahead of the DDL since #2019 (generation/index columns and dedup keys "
+        "land with QuestDB migration 0004, #2016); strict so the marker must go when it lands"
+    ),
+)
 def test_ddl_matches_schema_doc() -> None:
     doc = (ROOT / "docs/plan/21-database-schema.md").read_text("utf-8")
     block = doc[doc.index("### 4.8") : doc.index("### 4.9")]
