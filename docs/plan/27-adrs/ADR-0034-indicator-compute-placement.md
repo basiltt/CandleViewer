@@ -9,7 +9,7 @@
 - Related: E13-K01 (#348, this spike), E13-T01, E13-T02, E13-T04, E13-S08, E13-Q03, E13-Q05, E13-X01;
   `26-chart-engine-design.md` O4, §3.12, §7, §14; `24-internal-schemas.md` §7.2; ADR-0007 (rule IR);
   `06-performance-and-load-standard.md` §4.3.
-- Evidence: [`notes/e13-k01-indicator-compute.md`](../notes/e13-k01-indicator-compute.md) (benchmark, parity and
+- Evidence: [`spikes/e13-o4.md`](../spikes/e13-o4.md) (benchmark, parity and
   assignment tables); throwaway prototypes on `spike/e13-indicator-compute` @ `1e7cfbd`.
 
 ## Context and problem statement
@@ -39,8 +39,8 @@ of the 28 v1 indicators and the shape of the parity test.
 Chosen: **option 3**.
 
 1. **Placement.** `compute = server` iff the indicator is rule-eligible in `24-internal-schemas.md` §7.2 (today:
-   `sma`, `ema`, `rsi`, `atr`, `adx`, `vwap`(+σ bands), `cvd`, `volume`/`bar_volume`) — 8 indicators. The other
-   20 v1 indicators are `client_worker`. Measured worker cost at 100k bars: worst full compute 14.8 ms
+   `sma`, `ema`, `rsi`, `atr`, `adx`, `vwap`(+σ bands), `cvd`, `volume`/`bar_volume`, `zigzag` via `swing_high`/`swing_low`) — 9 indicators. The other
+   19 v1 indicators are `client_worker`. Measured worker cost at 100k bars: worst full compute 14.8 ms
    (Ichimoku), worst incremental 0.12 µs per closed bar, ten indicators 86 ms full / 1.8 µs per bar — no
    indicator exceeds a budget, so none is `server` on performance grounds. The per-indicator table in the note is
    the seed data for `GET /api/v1/indicators`.
@@ -50,13 +50,18 @@ Chosen: **option 3**.
    worker kernels on every value (0 non-identical over 23 output series, recorded window with a 15-bar densified
    gap and 100k synthetic bars). The `abs(a-b) <= 1e-8*max(1,abs(a))` fallback is **not** adopted, so
    `26-chart-engine-design.md` §14 wording is unchanged. Binding kernel rules: IEEE-754 binary64 throughout;
-   identical operation order on both sides; only correctly-rounded primitives (`+ − × ÷ sqrt`, min/max); no
+   identical operation order on both sides; the allowed operation set is **only `+ − × ÷ sqrt min max floor`**
+   (all correctly rounded / exact in IEEE-754); **`pow`, `exp`, `log` are banned** in mirrored kernels because they are
+   libm-dependent and not guaranteed identical across CPython and V8. Indicators that need them (e.g. `realized_vol`-style
+   log-return metrics) must declare an explicit epsilon in their own ADR amendment when they arrive; no
    reassociated (prefix-sum / pairwise) or one-pass-variance forms in a `server` kernel — the vectorised VWAP
    σ prototype diverged by up to 0.64 absolute (3.2e-5 relative on the ±3σ band), failing even the epsilon.
    Parity tests assert NaN-aware exact equality.
 4. **Worker memory is bounded by retention, not by placement.** Full-history f64 outputs for ten indicators at
-   100k bars measured 46.5 MB against the 8 MB allocation; E13-T01 retains outputs only for a window around the
-   viewport (≈ 17k bars fits ten indicators at the cap) and recomputes off-window ranges from the BarStore.
+   100k bars measured 46.5 MiB (61 series × 100k × 8 B, plus scratch) against the 8 MB allocation that is shared
+   with profile + drawings; E13-T01 retains outputs only for a window around the
+   viewport, sized by `bars_window ≤ budget_bytes / (output_series × 8)` (e.g. a 4 MiB indicator share at 61 series
+   ≈ 8.6k bars), and recomputes off-window ranges from the BarStore.
 
 ### Consequences
 
@@ -73,6 +78,12 @@ Chosen: **option 3**.
 
 - Option 1 adds WS load and a server round-trip for 20 indicators that the worker computes 17x under budget.
 - Option 2 contradicts O4's hard constraint (rules must not depend on a browser) for rule-referenced indicators.
+
+## Open items (owner accepts at ratification)
+
+- The #348 Gherkin AC "measured on reference hardware in Electron" is **open**: the spike measured Node 20 `worker_threads`
+  on a shared dev laptop. Handed off to E13-Q03; margins are ≥ 17x.
+- The indicator share of the shared 8 MB profile/indicators/drawings allocation is set by E13-T01.
 
 ## Validation
 
