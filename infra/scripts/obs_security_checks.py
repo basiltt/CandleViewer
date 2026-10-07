@@ -34,13 +34,13 @@ def check_gitleaks_covers_infra(config_text: str) -> list[str]:
     out: list[str] = []
     if "useDefault = true" not in config_text:
         out.append("gitleaks: [extend] useDefault = true missing")
-    for line in config_text.splitlines():
+    for lineno, line in enumerate(config_text.splitlines(), 1):
         s = line.strip()
         if s.startswith("#"):
             continue
         for d in SCANNED_INFRA + ("infra/",):
             if d in s and "'''" in s:
-                out.append(f"gitleaks: allowlist exempts {d} (line fingerprint {_fingerprint(s)})")
+                out.append(f"gitleaks: allowlist exempts {d} (line {lineno}, {_fingerprint(s)})")
     return out
 
 
@@ -62,8 +62,7 @@ def check_workflows_no_log_artifacts(workflows: Path) -> list[str]:
     for wf in sorted(workflows.glob("*.yml")):
         text = wf.read_text(encoding="utf-8")
         for m in re.finditer(
-            r"upload-artifact[\s\S]{0,400}?path:\s*(\|?[\s\S]{0,200}?)(?:\n\s*\n|\n\s*\w+:|$)",
-            text,
+            r"upload-artifact[\s\S]{0,400}?path:\s*(\|?[\s\S]{0,200}?)(?:\n\s*\n|\n\s*\w+:|$)", text
         ):
             if re.search(r"(^|[\s/*])(logs?|support-bundles?)(/|\s|$)", m.group(1)):
                 out.append(f"{wf.name}: uploads a log/bundle directory as an artefact (SR-124)")

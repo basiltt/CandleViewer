@@ -92,7 +92,7 @@ def render(manifest: dict) -> str:
 
     # C-3.2 / C-3.3 cross-cutting protected contracts.
     cc = manifest["cross_cutting"]
-    import_rule = cc["secrets_importers"]
+    import_rule = cc["c32_importers"]
     lines.append("[importlinter:contract:protected-secrets]")
     rule_id = import_rule["rule"]
     lines.append(f"name = {rule_id} — secrets is importable only by its allow-list")
@@ -130,7 +130,9 @@ def render(manifest: dict) -> str:
         "candleviewer.risk",
     ]
     lines.append("[importlinter:contract:independence-oms-siblings]")
-    lines.append("name = C-3.1 rules/paper/risk are independent siblings of oms (no cross-imports)")
+    lines.append(
+        "name = C-3.1 rules/paper/risk are independent siblings of oms (no cross-imports)"
+    )
     lines.append("type = independence")
     modules_block = "\n    ".join(independent_siblings)
     lines.append(f"modules =\n    {modules_block}")

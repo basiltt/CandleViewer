@@ -273,7 +273,7 @@ allowed = ["candleviewer.settings"]
 # this module* rather than *what this module may import*.
 [cross_cutting]
 
-[cross_cutting.secrets_importers]
+[cross_cutting.c32_importers]
 # C-3.2: M2 (secrets) is importable only by M4 (exchange.bybit) and M21
 # (admin, metadata only).
 rule = "C-3.2"
