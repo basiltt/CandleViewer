@@ -2505,6 +2505,10 @@ All six tables also carry two integrity columns added by `backend/db/questdb/000
 
 `row_checksum` is an **unkeyed** sha256 prefix: tamper-evidence against naive edits only (an attacker with write access can recompute it); an HMAC is out of scope for E12-T02. A NULL checksum is untrusted on read (integrity event, `reason=missing`) except for pre-0003 legacy rows, which have NULL `source` *and* NULL `row_checksum`. Source precedence: a `kline` row never overwrites a `tape`/`parquet` row at the same key.
 
+Source precedence is enforced in `BarWriter` against rows written by the same process; the stored-row check belongs to the E12-T05 backfill caller (follow-up filed).
+
+**Deviation (E12-T02, BR-25 ask on #345):** the stored `bar_param` is the readable form (`5m`, `tick:500`, …) rather than the `spec_hash`, per the §4.8 table and the ticket's design note (low SYMBOL cardinality, operator-readable queries). The BR-25 proposal to store `spec_hash` is not adopted because specs with non-default options have no readable form and are refused at persistence (`BarPersistError`); `spec_hash` ⇄ `bar_param` is 1:1 via `to_wire`. Revisit if option-bearing specs must be persisted.
+
 ### 4.9 `footprint_cells`
 
 The per-bar, per-price-level aggregation behind the footprint chart. One row per (bar, price level).

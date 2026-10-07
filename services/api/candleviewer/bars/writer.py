@@ -1,14 +1,15 @@
 """Async batched bars write path (E12-T02, #345; BR-34 bounded buffer).
 
-Builders call `submit()` on the emit path; a single tracked drain task batches rows per table and
-hands them to a sink with `IlpWriter.write_rows`'s shape (the composition root passes the real
-`IlpWriter`, which owns reconnect/at-least-once/never-drop - `storage/questdb/ilp_writer.py`).
-
-Never drops (C-2.18): the buffer is a bounded `asyncio.Queue`; a full buffer makes `submit()`
-*await* space (counted + warned), it never discards. In-flight sink calls are bounded by a
-semaphore. BR-34: a *new* spec is refused (`BarBufferFull`) while the buffer is saturated, so a
-flood of fresh specs cannot starve established series; `healthy` is the signal for that.
-Amended bars re-submit the same `(ts, symbol, bar_param)` and replace the row via DEDUP UPSERT.
+Layering (who owns what): `IlpWriter` owns reconnect, at-least-once delivery and never-drop of
+rows it has admitted (`storage/questdb/ilp_writer.py`). `BarWriter` only maps and **orders**.
+It drains one batch at a time (a single in-flight sink call), so a retried batch always lands
+before any later batch for the same key: an original close can never overwrite a later amended
+close (DEDUP keeps the last write). Errors are classified: *permanent* (invalid row, closed
+sink) are surfaced as a typed error, counted and not retried; *transient* get a bounded
+exponential backoff, then the batch is counted failed (`bars_write_failed_total{reason}`) and
+the writer is marked `degraded`. Producers never lose rows to a full buffer (`submit()` awaits).
+`stop(timeout_s)` is bounded (mirrors IlpWriter's 30 s contract) and returns the remaining count.
+BR-34: a *new* spec is refused (`BarBufferFull`) while the buffer is saturated.
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ from __future__ import annotations
 import asyncio
 import time
 from collections import OrderedDict
-from collections.abc import Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from typing import Protocol
 
 import structlog
@@ -43,6 +44,15 @@ bars_write_queue_depth = Gauge("bars_write_queue_depth", "Rows waiting in the ba
 bars_write_saturation_total = Counter(
     "bars_write_saturation_total", "Submits that had to wait for buffer space (backpressure)."
 )
+bars_write_failed_total = Counter(
+    "bars_write_failed_total",
+    "Bar batches that failed (reason: permanent | transient_exhausted).",
+    ["reason"],
+)
+DEFAULT_STOP_TIMEOUT_S = 30.0
+MAX_ATTEMPTS = 5
+BACKOFF_BASE_S = 0.5
+BACKOFF_MAX_S = 10.0
 bars_write_latency_seconds = Histogram(
     "bars_write_latency_seconds", "Wall time of one batched sink write."
 )
@@ -64,6 +74,17 @@ class SourceOverwriteRefused(BarsError):
     """SR-E12-10/BR-07: a kline row may not overwrite a tape row at the same dedup key."""
 
 
+class BarWritePermanentError(BarsError):
+    """A batch failed for a reason a retry cannot fix (invalid row, closed sink)."""
+
+
+def default_is_permanent(exc: Exception) -> bool:
+    """Bad-input errors cannot be fixed by a retry. The composition root passes a classifier that
+    also knows the storage errors (`IlpRowError`, closed `StorageTierUnavailable`): `bars` must
+    not import `storage` (C-3.1)."""
+    return isinstance(exc, (ValueError, TypeError))
+
+
 class BarBufferFull(BarsError):
     """BR-34: the write buffer is saturated; a new spec is refused (existing series still wait)."""
 
@@ -81,23 +102,24 @@ class BarWriter:
         *,
         max_buffered: int = 10_000,
         batch_rows: int = 500,
-        max_in_flight: int = 2,
         refuse_new_specs_at: float = 0.9,
-        retry_s: float = 0.5,
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        is_permanent: Callable[[Exception], bool] = default_is_permanent,
     ) -> None:
-        if max_buffered < 1 or batch_rows < 1 or max_in_flight < 1:
-            raise ValueError("max_buffered, batch_rows and max_in_flight must be >= 1")
+        if max_buffered < 1 or batch_rows < 1:
+            raise ValueError("max_buffered and batch_rows must be >= 1")
         self._sink = sink
         self._queue: asyncio.Queue[tuple[str, dict[str, object]]] = asyncio.Queue(max_buffered)
         self._batch_rows = batch_rows
-        self._in_flight = asyncio.Semaphore(max_in_flight)
-        self._retry_s = retry_s
+        self._sleep = sleep
+        self._is_permanent = is_permanent
+        self.last_error: BarWritePermanentError | None = None
+        self._inflight_rows = 0
+        self.degraded = False
         self._refuse_at = max(1, int(max_buffered * refuse_new_specs_at))
         self._params: dict[str, set[str]] = {}
         self._known_specs: set[tuple[str, str]] = set()
         self._task: asyncio.Task[None] | None = None
-        self._pending: set[asyncio.Task[None]] = set()
-        self._failure: Exception | None = None
         self._sources: OrderedDict[tuple[str, str, int], str] = OrderedDict()
 
     @property
@@ -179,41 +201,53 @@ class BarWriter:
             while sum(map(len, batch.values())) < self._batch_rows and not self._queue.empty():
                 t, r = self._queue.get_nowait()
                 batch.setdefault(t, []).append(r)
-            await self._in_flight.acquire()
-            task = spawn(self._write(batch), name="bars-writer-batch")
-            self._pending.add(task)
-            task.add_done_callback(self._pending.discard)
-
-    async def _write(self, batch: dict[str, list[dict[str, object]]]) -> None:
-        """Write one batch, retrying until it lands: a failed sink call never discards rows
-        (the sink is idempotent via DEDUP UPSERT KEYS, so a resend is safe)."""
-        try:
-            for table, rows in batch.items():
-                while True:
-                    started = time.monotonic()
-                    try:
-                        await self._sink.write_rows(table, rows, "ts")
-                    except Exception as exc:
-                        self._failure = exc
-                        _log.error("bars_write_failed", table=table, error=type(exc).__name__)
-                        await asyncio.sleep(self._retry_s)
-                        continue
-                    self._failure = None
-                    break
-                bars_write_latency_seconds.observe(time.monotonic() - started)
-                bars_rows_written_total.labels(table.removeprefix("bars_")).inc(len(rows))
-                for _ in rows:
+            self._inflight_rows = sum(map(len, batch.values()))
+            try:
+                for tbl, rows in batch.items():
+                    await self._write_one(tbl, rows)
+            finally:
+                for _ in range(self._inflight_rows):
                     self._queue.task_done()
-        finally:
-            self._in_flight.release()
-            bars_write_queue_depth.set(self._queue.qsize())
+                self._inflight_rows = 0
+                bars_write_queue_depth.set(self._queue.qsize())
 
-    async def stop(self) -> None:
-        """Wait until every queued row is written, then stop the drain task."""
-        await self._queue.join()
-        if self._pending:
-            await asyncio.gather(*self._pending, return_exceptions=True)
+    async def _write_one(self, table: str, rows: list[dict[str, object]]) -> None:
+        """One table batch, in order: retry transient errors (bounded), never reorder."""
+        for attempt in range(1, MAX_ATTEMPTS + 1):
+            started = time.monotonic()
+            try:
+                await self._sink.write_rows(table, rows, "ts")
+            except Exception as exc:
+                if self._is_permanent(exc):
+                    self.last_error = BarWritePermanentError(type(exc).__name__)
+                    bars_write_failed_total.labels("permanent").inc()
+                    self.degraded = True
+                    _log.error(
+                        "bars_write_permanent_failure", table=table, error=type(exc).__name__
+                    )
+                    return
+                if attempt == MAX_ATTEMPTS:
+                    bars_write_failed_total.labels("transient_exhausted").inc()
+                    self.degraded = True
+                    _log.error("bars_write_exhausted", table=table, rows=len(rows))
+                    return
+                await self._sleep(min(BACKOFF_MAX_S, BACKOFF_BASE_S * 2 ** (attempt - 1)))
+                continue
+            self.degraded = False
+            bars_write_latency_seconds.observe(time.monotonic() - started)
+            bars_rows_written_total.labels(table.removeprefix("bars_")).inc(len(rows))
+            return
+
+    async def stop(self, timeout_s: float | None = DEFAULT_STOP_TIMEOUT_S) -> int:
+        """Drain within `timeout_s`; return the number of rows NOT written (0 = clean)."""
+        try:
+            async with asyncio.timeout(timeout_s):
+                await self._queue.join()
+        except TimeoutError:
+            _log.error("bars_writer_stop_timeout", remaining=self._queue.qsize())
+        remaining = self._queue.qsize() + self._inflight_rows
         if self._task is not None:
             self._task.cancel()
             await asyncio.gather(self._task, return_exceptions=True)
             self._task = None
+        return remaining

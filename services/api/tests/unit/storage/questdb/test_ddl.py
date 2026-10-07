@@ -51,3 +51,15 @@ def test_parse_ddl_file_comments_are_stripped_from_columns() -> None:
     # No comment fragment ever leaks into a column name.
     assert all("--" not in col for col in trades.columns)
     assert all(col == col.lower() for col in trades.columns)
+
+
+def test_alter_parser_accepts_bracketed_types(tmp_path: Path) -> None:
+    (tmp_path / "0001.sql").write_text(
+        "CREATE TABLE IF NOT EXISTS t (\n  ts TIMESTAMP,\n  a DOUBLE\n"
+        ") TIMESTAMP(ts) PARTITION BY DAY WAL;\n"
+        "ALTER TABLE t ADD COLUMN IF NOT EXISTS note VARCHAR(32);\n"
+        "ALTER TABLE t ADD COLUMN IF NOT EXISTS tag SYMBOL CAPACITY 8 CACHE;\n",
+        encoding="utf-8",
+    )
+    (table,) = parse_ddl_dir(tmp_path)
+    assert table.columns == ("ts", "a", "note", "tag")

@@ -22,7 +22,7 @@ _CREATE_RE = re.compile(
 
 #: A column definition line: `name TYPE [CAPACITY n] [CACHE] -- comment`.
 _COLUMN_RE = re.compile(
-    r"^\s*(?P<name>\w+)\s+(?P<type>[A-Z0-9_]+)(?:\s+CAPACITY\s+\d+)?(?:\s+CACHE)?\s*$",
+    r"^\s*(?P<name>\w+)\s+(?P<type>[A-Z0-9_]+(?:\(\d+\))?)(?:\s+CAPACITY\s+\d+)?(?:\s+CACHE)?\s*$",
     re.IGNORECASE,
 )
 
@@ -30,7 +30,7 @@ _COLUMN_RE = re.compile(
 #: `ALTER TABLE t ADD COLUMN IF NOT EXISTS name TYPE [CAPACITY n] [CACHE];` (additive batches).
 _ALTER_ADD_RE = re.compile(
     r"ALTER\s+TABLE\s+(?P<table>\w+)\s+ADD\s+COLUMN\s+(?:IF\s+NOT\s+EXISTS\s+)?"
-    r"(?P<col>\w+)\s+[A-Z0-9_]+(?:\s+CAPACITY\s+\d+)?(?:\s+CACHE)?\s*;",
+    r"(?P<col>\w+)\s+[A-Z0-9_]+(?:\(\d+\))?(?:\s+CAPACITY\s+\d+)?(?:\s+CACHE)?\s*;",
     re.IGNORECASE,
 )
 

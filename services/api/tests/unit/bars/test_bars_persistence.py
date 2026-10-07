@@ -132,12 +132,20 @@ def test_ddl_matches_schema_doc() -> None:
         assert {"source", "row_checksum"} <= set(t.columns)
 
 
+async def _settle() -> None:
+    """Let every ready task run to its next await (no wall-clock sleep)."""
+    for _ in range(25):
+        await asyncio.sleep(0)
+
+
 class _SlowSink:
     def __init__(self) -> None:
         self.gate = asyncio.Event()
+        self.entered = asyncio.Event()
         self.rows: list[dict[str, object]] = []
 
     async def write_rows(self, table: str, rows: list[dict[str, object]], ts_us_key: str) -> None:
+        self.entered.set()
         await self.gate.wait()
         self.rows.extend(rows)
 
@@ -145,11 +153,12 @@ class _SlowSink:
 @pytest.mark.asyncio
 async def test_backpressure_awaits_and_drops_nothing() -> None:
     sink = _SlowSink()
-    w = BarWriter(sink, max_buffered=3, batch_rows=1, max_in_flight=1)
+    w = BarWriter(sink, max_buffered=3, batch_rows=1)
     await w.start()
     bars = [_bar(index=i, open_time=1_700_000_000_000_000 + i) for i in range(12)]
     producer = asyncio.create_task(w.submit(bars, SPEC))
-    await asyncio.sleep(0.05)
+    await sink.entered.wait()
+    await _settle()
     assert not producer.done()  # blocked, awaiting space
     assert w.depth <= 3
     sink.gate.set()
@@ -161,12 +170,13 @@ async def test_backpressure_awaits_and_drops_nothing() -> None:
 @pytest.mark.asyncio
 async def test_new_spec_refused_when_saturated_but_known_spec_waits() -> None:
     sink = _SlowSink()
-    w = BarWriter(sink, max_buffered=4, batch_rows=1, max_in_flight=1, refuse_new_specs_at=0.5)
+    w = BarWriter(sink, max_buffered=4, batch_rows=1, refuse_new_specs_at=0.5)
     await w.start()
     await w.submit([_bar(index=0)], SPEC)
     more = [_bar(index=i, open_time=1_700_000_000_000_000 + i) for i in range(1, 5)]
     await w.submit(more, SPEC)
-    await asyncio.sleep(0.01)
+    await sink.entered.wait()
+    await _settle()
     other = BarSpec(kind="tick", tick_count=100)
     assert not w.healthy
     with pytest.raises(BarBufferFull):
@@ -191,7 +201,11 @@ async def test_sink_failure_retries_and_loses_nothing() -> None:
             self.rows.extend(rows)
 
     sink = Flaky()
-    w = BarWriter(sink, retry_s=0)
+
+    async def no_sleep(_: float) -> None:
+        return None
+
+    w = BarWriter(sink, sleep=no_sleep)
     await w.start()
     await w.submit([_bar()], SPEC)
     await w.stop()
@@ -370,3 +384,78 @@ def test_checksum_round_trips_through_ilp_floats() -> None:
     row = bar_row(_bar(), SPEC)
     assert row_checksum(row) == row["row_checksum"]
     assert row_checksum({**row, "open": float(repr(row["open"]))}) == row["row_checksum"]
+
+
+class _OrderSink:
+    """Fails the first write (the ORIGINAL close); records the order rows land in."""
+
+    def __init__(self) -> None:
+        self.landed: list[object] = []
+        self.calls = 0
+
+    async def write_rows(self, t: str, rows: list[dict[str, object]], k: str) -> None:
+        self.calls += 1
+        if self.calls == 1:
+            raise ConnectionError("down")
+        self.landed.extend(r["close"] for r in rows)
+
+
+@pytest.mark.asyncio
+async def test_failed_original_retries_before_amend_so_final_row_is_the_amend() -> None:
+    sink = _OrderSink()
+    sleeps: list[float] = []
+
+    async def fake_sleep(d: float) -> None:
+        sleeps.append(d)
+
+    w = BarWriter(sink, batch_rows=1, sleep=fake_sleep)
+    await w.start()
+    await w.submit([_bar()], SPEC)  # original close 100.5 (batch 1 fails once)
+    await w.submit([_bar(close=Decimal("100.9"))], SPEC)  # amend
+    assert await w.stop() == 0
+    assert sink.landed == [100.5, 100.9]  # last write wins -> the amend
+    assert sleeps == [0.5]
+
+
+@pytest.mark.asyncio
+async def test_permanent_error_not_retried_transient_bounded_and_counted() -> None:
+    from candleviewer.bars import writer as wr
+
+    class Bad:
+        calls = 0
+
+        def __init__(self, exc: Exception) -> None:
+            self.exc = exc
+
+        async def write_rows(self, t: str, rows: list[dict[str, object]], k: str) -> None:
+            Bad.calls += 1
+            raise self.exc
+
+    async def no_sleep(_: float) -> None:
+        return None
+
+    perm = wr.bars_write_failed_total.labels("permanent")._value.get()
+    w = BarWriter(Bad(ValueError("bad row")), sleep=no_sleep)
+    await w.start()
+    await w.submit([_bar()], SPEC)
+    assert await w.stop() == 0
+    assert Bad.calls == 1 and w.degraded and w.last_error is not None
+    assert wr.bars_write_failed_total.labels("permanent")._value.get() == perm + 1
+
+    Bad.calls = 0
+    exh = wr.bars_write_failed_total.labels("transient_exhausted")._value.get()
+    w2 = BarWriter(Bad(ConnectionError("down")), sleep=no_sleep)
+    await w2.start()
+    await w2.submit([_bar()], SPEC)
+    await w2.stop()
+    assert Bad.calls == wr.MAX_ATTEMPTS and w2.degraded
+    assert wr.bars_write_failed_total.labels("transient_exhausted")._value.get() == exh + 1
+
+
+@pytest.mark.asyncio
+async def test_stop_is_bounded_and_returns_remaining() -> None:
+    sink = _SlowSink()  # never released: QuestDB "down"
+    w = BarWriter(sink, batch_rows=1)
+    await w.start()
+    await w.submit([_bar(index=i, open_time=1_700_000_000_000_000 + i) for i in range(3)], SPEC)
+    assert await w.stop(timeout_s=0.01) == 3
