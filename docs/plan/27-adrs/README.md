@@ -36,6 +36,7 @@ Status values: `decided` (binding now), `proposed` (decision deadline stated ins
 | [ADR-0029](ADR-0029-rule-graph-library.md)                        | Rule node-graph library and layout placement (E37-K01)                                                                        | **proposed** (owner approval pending)                                                       |
 | [ADR-0030](ADR-0030-defect-burn-down-by-root-cause.md)            | Defect burn-down by root cause (E49-K01)                                                                                      | **proposed** (owner approval pending)                                                       |
 | [ADR-0032](ADR-0032-alert-evaluation-placement.md)                | Alert evaluation placement, subscription sharing and storm thresholds (E40-K01)                                               | **proposed** (owner approval pending)                                                       |
+| [ADR-0033](ADR-0033-renko-brick-sizing-and-series-rebuild.md)     | Renko brick sizing (`atr:*` deferred to R2) and cancellable series rebuild semantics (E12-K01)                                | **proposed** (owner approval pending)                                                       |
 
 ## Writing a new ADR
 
