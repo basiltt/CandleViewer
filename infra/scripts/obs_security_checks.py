@@ -69,7 +69,7 @@ def check_workflows_no_log_artifacts(workflows: Path) -> list[str]:
     return out
 
 
-def check_no_committed_webhook_secret(infra: Path) -> list[str]:
+def check_alertmanager_webhook_literals(infra: Path) -> list[str]:
     out: list[str] = []
     base = infra / "alertmanager"
     if not base.exists():
@@ -83,7 +83,7 @@ def check_no_committed_webhook_secret(infra: Path) -> list[str]:
                     continue
                 if _WEBHOOK_RE.search(line):
                     out.append(
-                        f"{p.relative_to(infra.parent)}:{n}: literal webhook secret (SR-126)"
+                        f"{p.relative_to(infra.parent)}:{n}: literal webhook URL or token (SR-126)"
                     )
     return out
 
@@ -92,7 +92,7 @@ def main(argv: list[str] | None = None) -> int:
     args = sys.argv[1:] if argv is None else argv
     violations = check_gitleaks_covers_infra((REPO / ".gitleaks.toml").read_text(encoding="utf-8"))
     violations += check_workflows_no_log_artifacts(REPO / ".github/workflows")
-    violations += check_no_committed_webhook_secret(REPO / "infra")
+    violations += check_alertmanager_webhook_literals(REPO / "infra")
     for d in args:  # runtime log / bundle dirs supplied by the deploy smoke test
         violations += check_modes(Path(d))
     for v in violations:
