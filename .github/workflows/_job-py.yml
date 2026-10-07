@@ -55,13 +55,15 @@ jobs:
         run: uv sync --frozen --all-groups
 
       - name: ruff check
-        run: uv run ruff check .
+        run: uv run ruff check . ../../docs/research/xstate/gate/_paths.py ../../docs/research/xstate/gate/run_gate.py ../../tools/statechart/nightly_gate.py
 
       - name: ruff format --check
-        run: uv run ruff format --check .
+        run: uv run ruff format --check . ../../docs/research/xstate/gate/_paths.py ../../docs/research/xstate/gate/run_gate.py ../../tools/statechart/nightly_gate.py
 
       - name: mypy --strict
-        run: uv run mypy --strict candleviewer
+        # #1964: explicit gate-module paths only; the research scripts under
+        # docs/research/xstate/gate/issues/** stay out of the lint lane.
+        run: uv run mypy --strict candleviewer ../../docs/research/xstate/gate/_paths.py ../../docs/research/xstate/gate/run_gate.py ../../tools/statechart/nightly_gate.py
 
       # E35-T01 follow-up: the committed rule IR JSON Schema
       # (candleviewer/rules/ir/rule-ir.json) is generated from the pydantic

@@ -221,9 +221,9 @@ import re
 import subprocess
 import sys
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-from _paths import SKIP_ENV_EXIT  # noqa: E402  (sibling module in gate/)
+from _paths import SKIP_ENV_EXIT
 
 # -----------------------------------------------------------------------------
 # Paths
@@ -307,7 +307,7 @@ BASELINE_REPORTED_VERSION = "0.8.0"  # what __version__ STILL says on that commi
 # LC-28 and LC-52 PASSED on this commit (#43 and #80 landed) and were removed
 # from the expected set -- a FAIL on either is now a regression. A verifyM FAIL
 # on any id OUTSIDE this set is a regression and must be triaged in writing.
-VERIFYM_BASELINE_FAILURES: List[str] = [
+VERIFYM_BASELINE_FAILURES: list[str] = [
     "LC-07",  # #31 engine parity under strict_targets=False -- REOPEN
     "N-3",  # #77 runaway overflow still silent (drops+logs, does not raise)
     "N-8",  # #79 namespace-visibility sub-check; the reported defect is fixed,
@@ -317,7 +317,7 @@ VERIFYM_BASELINE_FAILURES: List[str] = [
 # Recorded `verifyM2` outcome on BASELINE_COMMIT: 3/3 PASS. There is no expected
 # failure in this set -- any FAIL is a regression against the commit that
 # introduced these fixes.
-VERIFYM2_BASELINE_FAILURES: List[str] = []
+VERIFYM2_BASELINE_FAILURES: list[str] = []
 
 # Recorded `verifyM3` outcome on `cec108b` (round 6, 2026-09-20). This set is
 # the 26 round-5 issue verifications. One id is an expected FAIL and is triaged
@@ -344,7 +344,7 @@ VERIFYM2_BASELINE_FAILURES: List[str] = []
 # default-argument `send_threadsafe()` from a plain `threading.Thread` is still
 # unbudgeted); `probe` is `AssertionError: no RunawayChainError recorded`, named
 # in `39-r6-final-readiness-verdict.md` s.2 as a pre-existing cec108b FAIL.
-VERIFYM3_BASELINE_FAILURES: List[str] = ["157", "150", "probe"]
+VERIFYM3_BASELINE_FAILURES: list[str] = ["157", "150", "probe"]
 
 # Recorded `verifyM4` outcome on `221ce7c` (round 7, 2026-09-20). This set is
 # the 12 round-6 issue verifications. One id is an expected FAIL, triaged in
@@ -361,7 +361,7 @@ VERIFYM3_BASELINE_FAILURES: List[str] = ["157", "150", "probe"]
 # NOT-FIXED Case D as a FAIL correctly, and that row is expected to stay FAIL
 # until `stop()` resolves duplicate-`Event`-instance receipts -- but it is
 # recorded as a defect row, not a baseline allowance, so it stays visible.
-VERIFYM4_BASELINE_FAILURES: List[str] = ["167"]
+VERIFYM4_BASELINE_FAILURES: list[str] = ["167"]
 
 # Recorded `verifyM5` outcome on `6db65d8` (round 8, 2026-09-21). This set is the
 # 16 round-7 issues re-verified on that commit: #179-#190 plus the reopened
@@ -382,7 +382,7 @@ VERIFYM4_BASELINE_FAILURES: List[str] = ["167"]
 # THIS set is a regression even though the same number is allow-listed in
 # `VERIFYM4_BASELINE_FAILURES` for the older commit-keyed set. The sets are
 # keyed on different commits on purpose; do not merge the allow-lists.
-VERIFYM5_BASELINE_FAILURES: List[str] = ["174"]
+VERIFYM5_BASELINE_FAILURES: list[str] = ["174"]
 
 # Recorded `verifyM6` outcome on `f28719c` (round 9, 2026-09-22). This set is the
 # 12 round-8 issues re-verified on that commit: #192-#201 plus the reopened
@@ -403,7 +403,7 @@ VERIFYM5_BASELINE_FAILURES: List[str] = ["174"]
 # favour of THIS script -- it carries an assertion the older cell lacks, and the
 # assertion is the genuine defect signal. Do not "fix" the disagreement by
 # weakening this one.
-VERIFYM6_BASELINE_FAILURES: List[str] = ["197"]
+VERIFYM6_BASELINE_FAILURES: list[str] = ["197"]
 
 # Recorded `verifyM7` outcome on `19cb1f1` (round 10, 2026-09-22). This set is
 # the 8 round-9 issues re-verified on that commit: #203-#210.
@@ -422,7 +422,7 @@ VERIFYM6_BASELINE_FAILURES: List[str] = ["197"]
 #    coverage, here or in the library's own tests/test_round9_findings.py.
 #  - `207_*`'s reporter-side "failure" in the original report was under-waiting
 #    after an async send(), not a regression. Poll to convergence.
-VERIFYM7_BASELINE_FAILURES: List[str] = []
+VERIFYM7_BASELINE_FAILURES: list[str] = []
 
 # Recorded `verifyM8` outcome on `c78ce99` (round 11, 2026-09-22). This set is
 # the 5 round-10 issues re-verified on that commit: #212-#216, across 6 scripts.
@@ -445,7 +445,7 @@ VERIFYM7_BASELINE_FAILURES: List[str] = []
 #    start()), R11-02/R11-10 (#214's strict check and its reporting do not reach
 #    `scheduled_sends` / any plugin). A green verifyM8 is NOT evidence against
 #    any of them; they are tracked in `63-r11-findings-register.md`.
-VERIFYM8_BASELINE_FAILURES: List[str] = []
+VERIFYM8_BASELINE_FAILURES: list[str] = []
 
 # Recorded `verifyM9` outcome on `de2da4e` (round 12, 2026-09-23). This set is
 # the 5 round-11 issues re-verified on that commit: #218-#222, across 7 scripts
@@ -472,7 +472,7 @@ VERIFYM8_BASELINE_FAILURES: List[str] = []
 #    recurse into an inline-machine invoke.src). A green verifyM9 is NOT
 #    evidence against either; both are tracked in
 #    `69-r12-final-readiness-verdict.md` s.5.
-VERIFYM9_BASELINE_FAILURES: List[str] = []
+VERIFYM9_BASELINE_FAILURES: list[str] = []
 
 # -----------------------------------------------------------------------------
 # OUR scripts RETIRED or REWRITTEN because an upstream rule change superseded
@@ -483,7 +483,7 @@ VERIFYM9_BASELINE_FAILURES: List[str] = []
 # The round-11 precedent worked: `206_delayed_selfsend_charged.py` was renamed
 # with a `_RETIRED_` prefix, and round 12 spent ZERO triage on it.
 # -----------------------------------------------------------------------------
-RETIRED_OR_REWRITTEN: List[tuple] = [
+RETIRED_OR_REWRITTEN: list[tuple[str, ...]] = [
     (
         "issues/verify-main-19cb1f1/_RETIRED_206_delayed_selfsend_charged.py",
         "RETIRED (round 11)",
@@ -530,7 +530,7 @@ def report_retired_scripts() -> None:
 # harness artefacts, not defects. `196_*` is additionally noisy by design (it
 # logs expected RunawayChainError / microstep-exceeded lines); noise is not
 # failure.
-SCRIPT_TIMEOUT_OVERRIDES: Dict[str, int] = {
+SCRIPT_TIMEOUT_OVERRIDES: dict[str, int] = {
     "195_provenance": 150,
     "196_always_vs_named_event": 150,
     "197_empty_config_wait": 150,
@@ -554,12 +554,13 @@ def timeout_for(path: str, default: int) -> int:
             return max(default, secs)
     return default
 
+
 # H-2 (round 7): the `verify` set had no baseline-failure allow-list at all, so
 # five unchanged pre-existing FAILs flagged on every run. All five were already
 # FAIL at cec108b (confirmed by direct check-by-check JSON diff); LC-01 is the
 # documented-superseded row (#145 deliberately changed the behaviour the script
 # asserts). A `verify` FAIL outside this list is a regression.
-VERIFY_BASELINE_FAILURES: List[str] = [
+VERIFY_BASELINE_FAILURES: list[str] = [
     "LC-01",  # asserts the pre-#145 status == "error"; the docstring is stale
     "LC-12",  # spawn blocking on the async engine
     "LC-26",  # after-timer starvation under load (BENCH-6 class)
@@ -580,7 +581,7 @@ PREVIOUS_BASELINES = {
 # below for the baseline actually used to evaluate the currently installed
 # library version.
 # -----------------------------------------------------------------------------
-PROBE_BASELINE_FAILURES_0_7_0: Dict[str, List[str]] = {
+PROBE_BASELINE_FAILURES_0_7_0: dict[str, list[str]] = {
     "01_core_transitions": ["A3", "A5", "A6", "A10"],
     "02_invoke_timers_history": [],
     "03_context_snapshot_determinism": [
@@ -609,7 +610,7 @@ PROBE_BASELINE_FAILURES_0_7_0: Dict[str, List[str]] = {
 #     behaviour, not a regression. Added to the baseline.
 #   - A3, A6, A10, C6, C7, C15, C17 are unchanged, still-open defects.
 # -----------------------------------------------------------------------------
-PROBE_BASELINE_FAILURES: Dict[str, List[str]] = {
+PROBE_BASELINE_FAILURES: dict[str, list[str]] = {
     "01_core_transitions": ["A3", "A6", "A10", "A18"],
     "02_invoke_timers_history": [],
     "03_context_snapshot_determinism": [
@@ -633,7 +634,7 @@ PROBE_BASELINE_FAILURES_5327BA6 = PROBE_BASELINE_FAILURES
 # Each entry: (bench script, human label, extractor key path, rule, threshold)
 #   rule "ge" -> metric must be >= threshold
 #   rule "le" -> metric must be <= threshold
-THRESHOLDS: List[Dict[str, Any]] = [
+THRESHOLDS: list[dict[str, Any]] = [
     {
         "bench": "bench_h_candleviewer_budgets.py",
         "id": "BENCH-1",
@@ -782,7 +783,7 @@ class Check:
         self.detail = ""
         self.seconds = 0.0
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "kind": self.kind,
@@ -796,12 +797,12 @@ class Check:
 # -----------------------------------------------------------------------------
 # Subprocess helper
 # -----------------------------------------------------------------------------
-def run_script(path: str, cwd: str, timeout: int) -> Tuple[int, str]:
+def run_script(path: str, cwd: str, timeout: int) -> tuple[int, str]:
     env = dict(os.environ)
     env["PYTHONIOENCODING"] = "utf-8"
     env["PYTHONUTF8"] = "1"
     try:
-        proc = subprocess.run(
+        proc = subprocess.run(  # noqa: S603  # runs the gate's own research scripts via sys.executable
             [sys.executable, path],
             cwd=cwd,
             env=env,
@@ -832,7 +833,7 @@ def run_script(path: str, cwd: str, timeout: int) -> Tuple[int, str]:
 #   repro" rather than "unfixed" -- see 20-adoption-gate.md s.9.2. Reported for
 #   contrast, excluded from the exit code.
 # -----------------------------------------------------------------------------
-def classify_exit(rc: int, out: str, fail_detail: str) -> Tuple[str, str]:
+def classify_exit(rc: int, out: str, fail_detail: str) -> tuple[str, str]:
     """Map a check script's exit code to ``(status, detail)``.
 
     0 == defect gone (PASS); 1 == defect present (FAIL); ``SKIP_ENV_EXIT`` (77)
@@ -859,15 +860,15 @@ def classify_exit(rc: int, out: str, fail_detail: str) -> Tuple[str, str]:
 def _run_lc_dir(
     directory: str,
     kind: str,
-    only: Optional[List[str]],
+    only: list[str] | None,
     timeout: int,
     fail_detail: str,
-) -> List[Check]:
+) -> list[Check]:
     """Run every LC-xx script in `directory`; exit 0 == defect gone."""
-    checks: List[Check] = []
+    checks: list[Check] = []
     if not os.path.isdir(directory):
         raise SystemExit(f"[gate] missing {kind} dir: {directory}")
-    seen: Dict[str, int] = {}
+    seen: dict[str, int] = {}
     for fn in sorted(os.listdir(directory)):
         if not fn.endswith(".py") or fn.startswith("_"):
             continue
@@ -889,7 +890,7 @@ def _run_lc_dir(
     return checks
 
 
-def run_verify(only: Optional[List[str]], timeout: int) -> List[Check]:
+def run_verify(only: list[str] | None, timeout: int) -> list[Check]:
     """PRIMARY check set -- the mandated configuration. Blocking."""
     return _run_lc_dir(
         VERIFY_DIR,
@@ -900,7 +901,7 @@ def run_verify(only: Optional[List[str]], timeout: int) -> List[Check]:
     )
 
 
-def run_verify_main(only: Optional[List[str]], timeout: int) -> List[Check]:
+def run_verify_main(only: list[str] | None, timeout: int) -> list[Check]:
     """PRIMARY check set -- the main @ 5327ba6 verification scripts. Blocking.
 
     Added by the `main` @ `5327ba6` pass (`22-verify-main-verdict.md`). Same
@@ -915,7 +916,7 @@ def run_verify_main(only: Optional[List[str]], timeout: int) -> List[Check]:
     )
 
 
-def run_verify_main2(only: Optional[List[str]], timeout: int) -> List[Check]:
+def run_verify_main2(only: list[str] | None, timeout: int) -> list[Check]:
     """PRIMARY check set -- the main @ 3c527b0 verification scripts. Blocking.
 
     Added by the `main` @ `3c527b0` pass (`26-verify-3c527b0-verdict.md`),
@@ -934,7 +935,7 @@ def run_verify_main2(only: Optional[List[str]], timeout: int) -> List[Check]:
     )
 
 
-def run_verify_main3(only: Optional[List[str]], timeout: int) -> List[Check]:
+def run_verify_main3(only: list[str] | None, timeout: int) -> list[Check]:
     """PRIMARY check set -- the main @ cec108b verification scripts. Blocking.
 
     Added by the round-6 pass (`39-r6-final-readiness-verdict.md`), covering the
@@ -957,8 +958,7 @@ def run_verify_main3(only: Optional[List[str]], timeout: int) -> List[Check]:
     )
 
 
-
-def run_verify_main4(only: Optional[List[str]], timeout: int) -> List[Check]:
+def run_verify_main4(only: list[str] | None, timeout: int) -> list[Check]:
     """PRIMARY check set -- the main @ 221ce7c verification scripts. Blocking.
 
     Added by the round-7 pass (`44-r7-final-readiness-verdict.md`), covering the
@@ -983,7 +983,7 @@ def run_verify_main4(only: Optional[List[str]], timeout: int) -> List[Check]:
     )
 
 
-def run_verify_main5(only: Optional[List[str]], timeout: int) -> List[Check]:
+def run_verify_main5(only: list[str] | None, timeout: int) -> list[Check]:
     """PRIMARY check set -- the main @ 6db65d8 verification scripts. Blocking.
 
     Added by the round-8 pass (`49-r8-final-readiness-verdict.md`), covering the
@@ -1015,7 +1015,7 @@ def run_verify_main5(only: Optional[List[str]], timeout: int) -> List[Check]:
     )
 
 
-def run_verify_main6(only: Optional[List[str]], timeout: int) -> List[Check]:
+def run_verify_main6(only: list[str] | None, timeout: int) -> list[Check]:
     """PRIMARY check set -- the main @ f28719c verification scripts. Blocking.
 
     Added by the round-9 pass (`54-r9-final-readiness-verdict.md`), covering the
@@ -1053,7 +1053,7 @@ def run_verify_main6(only: Optional[List[str]], timeout: int) -> List[Check]:
     )
 
 
-def run_verify_main7(only: Optional[List[str]], timeout: int) -> List[Check]:
+def run_verify_main7(only: list[str] | None, timeout: int) -> list[Check]:
     """PRIMARY check set -- the main @ 19cb1f1 verification scripts. Blocking.
 
     Added by the round-10 pass (`59-r10-final-readiness-verdict.md`), covering
@@ -1094,7 +1094,7 @@ def run_verify_main7(only: Optional[List[str]], timeout: int) -> List[Check]:
     )
 
 
-def run_verify_main8(only: Optional[List[str]], timeout: int) -> List[Check]:
+def run_verify_main8(only: list[str] | None, timeout: int) -> list[Check]:
     """PRIMARY check set -- `main` @ c78ce99 (round 11). Blocking.
 
     The round-10 fix set #212-#216, pinned on the commit. Baseline 6/6 PASS.
@@ -1128,7 +1128,7 @@ def run_verify_main8(only: Optional[List[str]], timeout: int) -> List[Check]:
     )
 
 
-def run_verify_main9(only: Optional[List[str]], timeout: int) -> List[Check]:
+def run_verify_main9(only: list[str] | None, timeout: int) -> list[Check]:
     """PRIMARY check set -- `main` @ de2da4e (round 12). Blocking.
 
     The round-11 fix set #218-#222, pinned on the commit. Baseline 7/7 PASS.
@@ -1209,7 +1209,7 @@ def run_verify_main9(only: Optional[List[str]], timeout: int) -> List[Check]:
     return checks
 
 
-def run_repros(only: Optional[List[str]], timeout: int) -> List[Check]:
+def run_repros(only: list[str] | None, timeout: int) -> list[Check]:
     """SECONDARY check set -- library defaults. Informational only."""
     return _run_lc_dir(
         REPRO_DIR,
@@ -1228,8 +1228,8 @@ def _last_line(text: str) -> str:
 # -----------------------------------------------------------------------------
 # 2. Probes -- compare non-PASS set against the 0.7.0 baseline
 # -----------------------------------------------------------------------------
-def run_probes(timeout: int) -> List[Check]:
-    checks: List[Check] = []
+def run_probes(timeout: int) -> list[Check]:
+    checks: list[Check] = []
     if not os.path.isdir(PROBE_DIR):
         raise SystemExit(f"[gate] missing probe dir: {PROBE_DIR}")
     for fn in sorted(os.listdir(PROBE_DIR)):
@@ -1251,7 +1251,7 @@ def run_probes(timeout: int) -> List[Check]:
         try:
             with open(rpath, encoding="utf-8") as fh:
                 data = json.load(fh)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             chk.status = ERROR
             chk.detail = f"cannot read {rpath}: {exc}"
             checks.append(chk)
@@ -1265,19 +1265,14 @@ def run_probes(timeout: int) -> List[Check]:
 
         if regressed:
             chk.status = FAIL
-            chk.detail = (
-                f"{n_pass}/{len(data)} PASS; REGRESSED: {','.join(regressed)}"
-            )
+            chk.detail = f"{n_pass}/{len(data)} PASS; REGRESSED: {','.join(regressed)}"
         elif improved:
             chk.status = IMPROVED
-            chk.detail = (
-                f"{n_pass}/{len(data)} PASS; newly passing: {','.join(improved)}"
-            )
+            chk.detail = f"{n_pass}/{len(data)} PASS; newly passing: {','.join(improved)}"
         elif nonpass:
             chk.status = FAIL
             chk.detail = (
-                f"{n_pass}/{len(data)} PASS; still failing at baseline: "
-                f"{','.join(nonpass)}"
+                f"{n_pass}/{len(data)} PASS; still failing at baseline: {','.join(nonpass)}"
             )
         else:
             chk.status = PASS
@@ -1292,9 +1287,9 @@ def run_probes(timeout: int) -> List[Check]:
 _BLOCK = re.compile(r"^=== (?P<name>[^=]+?) ===\s*$", re.M)
 
 
-def parse_bench_blocks(text: str) -> Dict[str, Any]:
+def parse_bench_blocks(text: str) -> dict[str, Any]:
     """Extract every `=== name ===\\n<json>` block printed by common.report()."""
-    blocks: Dict[str, Any] = {}
+    blocks: dict[str, Any] = {}
     marks = list(_BLOCK.finditer(text))
     for i, m in enumerate(marks):
         start = m.end()
@@ -1333,7 +1328,7 @@ def parse_bench_blocks(text: str) -> Dict[str, Any]:
     return blocks
 
 
-def dig(blocks: Dict[str, Any], path: List[str]) -> Optional[float]:
+def dig(blocks: dict[str, Any], path: list[str]) -> float | None:
     node: Any = blocks
     for key in path:
         if isinstance(node, dict) and key in node:
@@ -1347,10 +1342,10 @@ def dig(blocks: Dict[str, Any], path: List[str]) -> Optional[float]:
     return None
 
 
-def run_benches(timeout: int) -> List[Check]:
-    checks: List[Check] = []
-    outputs: Dict[str, Dict[str, Any]] = {}
-    errors: Dict[str, str] = {}
+def run_benches(timeout: int) -> list[Check]:
+    checks: list[Check] = []
+    outputs: dict[str, dict[str, Any]] = {}
+    errors: dict[str, str] = {}
 
     for script in BENCH_SCRIPTS:
         path = os.path.join(BENCH_DIR, script)
@@ -1374,9 +1369,7 @@ def run_benches(timeout: int) -> List[Check]:
         value = dig(outputs.get(script, {}), spec["path"])
         if value is None:
             chk.status = ERROR
-            chk.detail = (
-                f"metric {'.'.join(spec['path'])} not found in {script} output"
-            )
+            chk.detail = f"metric {'.'.join(spec['path'])} not found in {script} output"
             checks.append(chk)
             continue
         thr, unit = spec["threshold"], spec["unit"]
@@ -1399,8 +1392,8 @@ def library_version() -> str:
         import xstate_statemachine as lib
 
         return getattr(lib, "__version__", "unknown")
-    except Exception as exc:  # noqa: BLE001
-        raise SystemExit(f"[gate] cannot import xstate_statemachine: {exc}")
+    except Exception as exc:
+        raise SystemExit(f"[gate] cannot import xstate_statemachine: {exc}") from exc
 
 
 def library_commit() -> str:
@@ -1415,7 +1408,7 @@ def library_commit() -> str:
         import xstate_statemachine as lib
 
         pkg = os.path.dirname(os.path.abspath(lib.__file__))
-    except Exception:  # noqa: BLE001
+    except Exception:
         return "unknown"
 
     # src/xstate_statemachine -> src -> repo root
@@ -1427,15 +1420,15 @@ def library_commit() -> str:
         if not os.path.isdir(os.path.join(repo, ".git")):
             continue
         try:
-            out = subprocess.run(
-                ["git", "-C", repo, "rev-parse", "HEAD"],
+            out = subprocess.run(  # noqa: S603  # fixed argv, no untrusted input
+                ["git", "-C", repo, "rev-parse", "HEAD"],  # noqa: S607  # git from PATH, matches CI usage
                 capture_output=True,
                 text=True,
                 timeout=30,
             )
             if out.returncode == 0 and out.stdout.strip():
                 return out.stdout.strip()
-        except Exception:  # noqa: BLE001
+        except Exception:
             return "unknown"
     return "unknown"
 
@@ -1458,21 +1451,18 @@ def describe_build(version: str, commit: str) -> str:
     )
 
 
-def print_table(checks: List[Check]) -> None:
+def print_table(checks: list[Check]) -> None:
     w_id = max([len(c.id) for c in checks] + [6])
     w_lb = min(56, max([len(c.label) for c in checks] + [10]))
     print()
     print(f"{'ID':<{w_id}}  {'KIND':<6}  {'STATUS':<8}  {'CHECK':<{w_lb}}  DETAIL")
     print("-" * (w_id + w_lb + 60))
     for c in checks:
-        print(
-            f"{c.id:<{w_id}}  {c.kind:<6}  {c.status:<8}  "
-            f"{c.label[:w_lb]:<{w_lb}}  {c.detail}"
-        )
+        print(f"{c.id:<{w_id}}  {c.kind:<6}  {c.status:<8}  {c.label[:w_lb]:<{w_lb}}  {c.detail}")
 
 
-def summarize(checks: List[Check], version: str, commit: str) -> int:
-    counts: Dict[str, int] = {}
+def summarize(checks: list[Check], version: str, commit: str) -> int:
+    counts: dict[str, int] = {}
     for c in checks:
         counts[c.status] = counts.get(c.status, 0) + 1
     short = commit[:7] if commit != "unknown" else "unknown"
@@ -1504,28 +1494,19 @@ def summarize(checks: List[Check], version: str, commit: str) -> int:
         skipped = f", {sk} skipped (environment)" if sk else ""
         suffix = f"   ({note})" if note else ""
         print(f"  {kind:<6}: {p}/{len(subset) - sk} pass{skipped}{suffix}")
-    print(
-        "  totals: "
-        + ", ".join(f"{k}={v}" for k, v in sorted(counts.items()))
-    )
+    print("  totals: " + ", ".join(f"{k}={v}" for k, v in sorted(counts.items())))
 
     # Only the primary set, probes and benches gate the exit code. A FAIL in the
     # secondary (defaults) set is expected from 0.8.0 onward -- see
     # 20-adoption-gate.md s.9.2 -- and must be triaged in writing, not treated as
     # a gate failure. An ERROR anywhere is always blocking: it invalidates the row.
-    blocking = [
-        c
-        for c in checks
-        if c.status == ERROR or (c.status == FAIL and c.kind != "repro")
-    ]
+    blocking = [c for c in checks if c.status == ERROR or (c.status == FAIL and c.kind != "repro")]
     informational = [c for c in checks if c.kind == "repro" and c.status == FAIL]
 
     # Separate carried-forward `verifyM` partials from genuine regressions.
     # `20-adoption-gate.md` s.9.4 amendment 7: every delta is classified.
     vm_fails = [c for c in checks if c.kind == "verifyM" and c.status == FAIL]
-    vm_expected = [
-        c for c in vm_fails if c.id.split("#")[0] in VERIFYM_BASELINE_FAILURES
-    ]
+    vm_expected = [c for c in vm_fails if c.id.split("#")[0] in VERIFYM_BASELINE_FAILURES]
     vm_regressed = [c for c in vm_fails if c not in vm_expected]
     if vm_fails:
         print()
@@ -1558,9 +1539,7 @@ def summarize(checks: List[Check], version: str, commit: str) -> int:
 
     # `verifyM3` (round 6) has exactly two expected failures at cec108b.
     vm3_fails = [c for c in checks if c.kind == "verifyM3" and c.status == FAIL]
-    vm3_expected = [
-        c for c in vm3_fails if c.id.split("#")[0] in VERIFYM3_BASELINE_FAILURES
-    ]
+    vm3_expected = [c for c in vm3_fails if c.id.split("#")[0] in VERIFYM3_BASELINE_FAILURES]
     vm3_regressed = [c for c in vm3_fails if c not in vm3_expected]
     if vm3_fails:
         print()
@@ -1580,9 +1559,7 @@ def summarize(checks: List[Check], version: str, commit: str) -> int:
 
     # `verifyM4` (round 7) has exactly one expected failure at 221ce7c.
     vm4_fails = [c for c in checks if c.kind == "verifyM4" and c.status == FAIL]
-    vm4_expected = [
-        c for c in vm4_fails if c.id.split("#")[0] in VERIFYM4_BASELINE_FAILURES
-    ]
+    vm4_expected = [c for c in vm4_fails if c.id.split("#")[0] in VERIFYM4_BASELINE_FAILURES]
     vm4_regressed = [c for c in vm4_fails if c not in vm4_expected]
     if vm4_fails:
         print()
@@ -1605,9 +1582,7 @@ def summarize(checks: List[Check], version: str, commit: str) -> int:
     # which was closed DOCUMENTED-ONLY, so its script correctly still reports the
     # behaviour the documentation describes.
     vm5_fails = [c for c in checks if c.kind == "verifyM5" and c.status == FAIL]
-    vm5_expected = [
-        c for c in vm5_fails if c.id.split("#")[0] in VERIFYM5_BASELINE_FAILURES
-    ]
+    vm5_expected = [c for c in vm5_fails if c.id.split("#")[0] in VERIFYM5_BASELINE_FAILURES]
     vm5_regressed = [c for c in vm5_fails if c not in vm5_expected]
     if vm5_fails:
         print()
@@ -1630,9 +1605,7 @@ def summarize(checks: List[Check], version: str, commit: str) -> int:
     # which is genuinely PARTIAL -- the success-shaped send(wait=True) receipt
     # over an empty configuration, carried as R9-08 (Medium).
     vm6_fails = [c for c in checks if c.kind == "verifyM6" and c.status == FAIL]
-    vm6_expected = [
-        c for c in vm6_fails if c.id.split("#")[0] in VERIFYM6_BASELINE_FAILURES
-    ]
+    vm6_expected = [c for c in vm6_fails if c.id.split("#")[0] in VERIFYM6_BASELINE_FAILURES]
     vm6_regressed = [c for c in vm6_fails if c not in vm6_expected]
     if vm6_fails:
         print()
@@ -1743,9 +1716,7 @@ def summarize(checks: List[Check], version: str, commit: str) -> int:
 
     # `verify` (H-2, round 7): five unchanged pre-existing FAILs, allow-listed.
     v_fails = [c for c in checks if c.kind == "verify" and c.status == FAIL]
-    v_regressed = [
-        c for c in v_fails if c.id.split("#")[0] not in VERIFY_BASELINE_FAILURES
-    ]
+    v_regressed = [c for c in v_fails if c.id.split("#")[0] not in VERIFY_BASELINE_FAILURES]
     if v_regressed:
         print()
         print(
@@ -1796,9 +1767,7 @@ def main() -> int:
         action="store_true",
         help="also run the benchmark suite (slow: 20-40 min)",
     )
-    ap.add_argument(
-        "--bench-only", action="store_true", help="run only the benchmarks"
-    )
+    ap.add_argument("--bench-only", action="store_true", help="run only the benchmarks")
     ap.add_argument(
         "--only",
         default="",
@@ -1831,7 +1800,7 @@ def main() -> int:
     print(f"[gate] build               : {describe_build(version, commit)}")
     print(f"[gate] root                : {ROOT}")
 
-    checks: List[Check] = []
+    checks: list[Check] = []
     t0 = time.perf_counter()
     try:
         if not args.bench_only:
@@ -1870,7 +1839,7 @@ def main() -> int:
             print("\n[gate] benchmarks skipped (pass --with-bench to include)")
     except SystemExit:
         raise
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         print(f"[gate] harness error: {type(exc).__name__}: {exc}")
         return 2
 
