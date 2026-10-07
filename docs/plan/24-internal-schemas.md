@@ -484,8 +484,8 @@ class TradeClusterEvent(MarketEvent):      # emitted when a cluster closes
     trade_id_count: int                    # exact member count (== cluster_size)
     first_trade_id: str
     last_trade_id: str
-    trade_ids: tuple[str, ...]             # first 64 members in (ts_event, trade_id) order
-    trade_ids_truncated: bool              # True when trade_id_count > 64
+    trade_ids: tuple[str, ...]             # first CLUSTER_IDS_MAX (64) members in (ts_event, trade_id) order
+    trade_ids_truncated: bool              # True when trade_id_count > CLUSTER_IDS_MAX
     cluster_size: int
     total_qty: Qty
     total_notional: Notional
@@ -494,13 +494,14 @@ class TradeClusterEvent(MarketEvent):      # emitted when a cluster closes
     close_reason: Literal["deadline", "superseded", "evicted", "config_change", "flush"]
     estimated: Literal[True] = True        # SR-E22-12
 
-class BigTradeThresholdEvent(MarketEvent): # config echo, at most one per 5 s per symbol
+class BigTradeThresholdEvent(MarketEvent): # on every change; ≤ 1 per 5 s (print time) while stable
     mode: Literal["absolute_size", "notional", "percentile"]
     value: Decimal                         # percentile => 0..100
     percentile_window_ms: int
     cluster_window_ms: int
     cluster_tolerance_ticks: int
-    effective_threshold_abs: Decimal       # value displayed by the UI (US-BIG-002 scenario 2)
+    effective_threshold_abs: Decimal       # POST-cap value actually applied; displayed by the UI (US-BIG-002 scenario 2)
+    cap_active: bool                       # over-flagging cap in force (recoverable from this stream)
     sample_count: int
     flagged_fraction: Decimal
     estimated: bool                        # True in percentile mode
@@ -514,12 +515,12 @@ class BigTradeAdvisoryEvent(MarketEvent):
     cap_active: bool
 ```
 
-| Event                    | Bus topic (`{env}.md.{symbol}.{detail}`, §2.9 as shipped) | Cadence                         |
-| ------------------------ | --------------------------------------------------------- | ------------------------------- |
-| `BigTradeEvent`          | `…bigtrade`                                               | per flagged print               |
-| `TradeClusterEvent`      | `…cluster`                                                | on cluster close                |
-| `BigTradeThresholdEvent` | `…bigtrade-threshold`                                     | ≤ 1 / 5 s and on config change  |
-| `BigTradeAdvisoryEvent`  | `…bigtrade-advisory`                                      | on entering the over-flag state |
+| Event                    | Bus topic (`{env}.md.{symbol}.{detail}`, §2.9 as shipped) | Cadence                                              |
+| ------------------------ | --------------------------------------------------------- | ---------------------------------------------------- |
+| `BigTradeEvent`          | `…bigtrade`                                               | per flagged print                                    |
+| `TradeClusterEvent`      | `…cluster`                                                | on cluster close                                     |
+| `BigTradeThresholdEvent` | `…bigtrade-threshold`                                     | on every change; ≤ 1 / 5 s (print time) while stable |
+| `BigTradeAdvisoryEvent`  | `…bigtrade-advisory`                                      | on entering the over-flag state                      |
 
 Topic details are flat single segments (`bus/models.py` `_SEGMENT_RE` = `[a-zA-Z0-9_-]+`, at most 4 segments). None of them collides with an existing `md` detail (`trade`, `book`, `ticker`, `gap`).
 
@@ -527,15 +528,17 @@ Topic details are flat single segments (`bus/models.py` `_SEGMENT_RE` = `[a-zA-Z
 
 - `BigTradeEvent`: the triggering print's `ts_event`.
 - `TradeClusterEvent`: the last member's `ts_event` (equal to `last_ts_event`).
-- `BigTradeThresholdEvent` / `BigTradeAdvisoryEvent`: the emit time from the engine's injected clock. In replay this is the replay clock, so live and replay match.
+- `BigTradeThresholdEvent` / `BigTradeAdvisoryEvent`: the `ts_event` of the print that triggered the emission. No wall or injected clock is involved, so the output never depends on batch timing.
+
+**Print-time boundaries (replay determinism).** Every window, deadline and refresh boundary is measured in print time (`ts_event` of the processed prints). The threshold refresh fires when the latest print's `ts_event` crosses the next 5 s boundary (`floor(ts_event / 5_000_000)` increments). The trailing percentile and over-flag windows end at the latest print's `ts_event`. **Replay mode:** with `source="replay"` the same engine runs over the recorded trades and recorded config echoes. It **compares** its threshold/advisory output against the recorded `BigTradeThresholdEvent`/`BigTradeAdvisoryEvent` stream (a mismatch is a determinism defect, counted and logged) and does not republish them (C-2.15).
 
 **Rules (binding).**
 
 - **Cluster key.** A cluster is keyed on `(symbol, side, price_bucket)` only. A print merges into the open cluster for its key if `ts_event <= first_ts_event + cluster_window_ms * 1000` (ms → µs, C4). Otherwise that cluster closes (`deadline`) and a new one opens. There is no separate tolerance check against the anchor price. A cluster belongs to the bar containing its `first_ts_event` (US-BIG-004 scenario 3). `cluster_window_ms = 0` disables clustering. A config change closes all open clusters (`config_change`) and recomputes from the buffered prints.
 - **Over-flagging cap.** When more than 20 % of the prints in the trailing window are flagged, the engine emits `BigTradeAdvisoryEvent` and raises the effective threshold to the trailing p80. The p80 comes from a **second** P² estimator over the same trailing window, so state is still fixed-size (two estimators per symbol). It keeps emitting `BigTradeEvent` with `capped=True` and **never suppresses** them.
-- **Percentile estimator.** P² behind a trimmed wrapper (SR-E22-14), using fixed-size state. It never stores the window's prints. The accuracy target is a **rank** error of ≤ 1 % against the exact quantile over the same window. The effective threshold refreshes at most every 5 s.
-- **State caps (closes threat-model gap G3; SR-E22-05).** Per symbol: `CLUSTER_KEYS_MAX = 4096` open cluster keys and `PRINTS_BUFFER_MAX = 16384` buffered prints. The buffer holds **all** evaluated prints (not only flagged ones) inside the active cluster window, so a config change can recompute without a restart. Its effective size is `max(PRINTS_BUFFER_MAX, cluster_window_ms × 5)`, where 5 = the 5 000 prints/s budget #5 expressed per ms. That means a healthy feed never evicts inside the window: 25 000 at the 5 000 ms REST cap, 10 000 → 16 384 at the 2 000 ms WS cap. It stays bounded because `cluster_window_ms` is capped (SR-E22-04). The oldest entry is evicted (`close_reason="evicted"`) and `bigtrade_state_truncated_total{symbol}` is incremented, never silently. Every bound is imported from `orderflow/limits.py` (E22 threat model §7). No literal copies are allowed elsewhere.
-- **Bounded membership.** `trade_ids` is capped at 64, with `trade_ids_truncated` set when the cap applies. The exact count and the first/last ids are always present, so the event size is O(1) on the bus while still giving tape highlighting and determinism tests concrete members. The full membership stays reconstructible from the tape by `(symbol, side, price_bucket, first_ts_event..last_ts_event)`.
+- **Percentile estimator.** P² behind a trimmed wrapper (SR-E22-14), using fixed-size state. It never stores the window's prints. The accuracy target is a **rank** error of ≤ 1 % against the exact quantile over the same window. The effective threshold refreshes at most every 5 s of print time (above). `BigTradeThresholdEvent` is also emitted immediately on any change of `effective_threshold_abs`, `cap_active` or config. The current, post-cap state is therefore always recoverable from the recorded threshold stream, while `BigTradeAdvisoryEvent` fires on cap entry only.
+- **State caps (closes threat-model gap G3; SR-E22-05).** Per symbol: `CLUSTER_KEYS_MAX = 4096` open cluster keys and `PRINTS_BUFFER_MAX = 16384` buffered prints (a floor). The buffer holds **all** evaluated prints (not only flagged ones) inside the active cluster window, so a config change can recompute without a restart. Its effective bound is the asserted constant expression `PRINTS_BUFFER_EFFECTIVE_MAX = max(PRINTS_BUFFER_MAX, cluster_window_ms × 5)` in `orderflow/limits.py`, where 5 = the 5 000 prints/s budget #5 expressed per ms. That means a healthy feed never evicts inside the window: 25 000 at the 5 000 ms REST cap, 10 000 → 16 384 at the 2 000 ms WS cap. It stays bounded because `cluster_window_ms` is capped (SR-E22-04). The oldest entry is evicted (`close_reason="evicted"`) and `bigtrade_state_truncated_total{symbol}` is incremented, never silently. Every bound is imported from `orderflow/limits.py` (E22 threat model §7). No literal copies are allowed elsewhere.
+- **Bounded membership.** `trade_ids` is capped at `CLUSTER_IDS_MAX = 64` (`orderflow/limits.py`, asserted), with `trade_ids_truncated` set when the cap applies. The exact count and the first/last ids are always present, so the event size is O(1) on the bus while still giving tape highlighting and determinism tests concrete members. The full membership stays reconstructible from the tape by `(symbol, side, price_bucket, first_ts_event..last_ts_event)`.
 - **Input assert (SR-E22-13).** Engine inputs are `Decimal` > 0 and on tick. Anything else is rejected and counted.
 
 ---
