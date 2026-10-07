@@ -137,6 +137,8 @@ Path: user action (click/hotkey) → frontend order-ticket validation → REST/W
 
 ### 6.3 Storage growth (budget #12)
 
+- **Provisional measurement (E16-K01, `docs/plan/notes/e16-storage-measurement.md`; corpus-derived, live 7-day run pending per #1778 A):** depth-200 BTCUSDT-class ≈ 1.2 GB/day/symbol cold (plausible 0.6-2.4), ≈ 14 GB/day hot; depth 50 ≈ 0.5 cold / 3.9 hot. The 0.75 GB/day planning bound looks ~1.6x low; the budget row is not changed until the live run confirms.
+
 - ~0.75GB/day/symbol compressed at 200-depth (research-sourced estimate) is tracked, not just budgeted-and-forgotten: the admin/recorder screen (View 21-adjacent, per views digest) surfaces per-symbol daily growth and a projected "days until disk full" figure, since recording is user-toggled per symbol (locked decision) and retention defaults to 30 days with pin-to-keep — this is the mechanism that keeps storage bounded in practice without a hard code-level cap, and it's an explicit UI requirement, not just a backend metric.
 - **10-symbol worst case** (all symbols recorded continuously, no retention pruning yet triggered): ~7.5GB/day aggregate, ~225GB at 30-day default retention — sized into the capacity plan (§10) as the storage-provisioning basis for the eventual VPS.
 
