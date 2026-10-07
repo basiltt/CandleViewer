@@ -54,7 +54,7 @@ def test_threat_model_epic_key_not_required(tmp_path: Path) -> None:
 
 def test_threat_model_prose_mention_does_not_count(tmp_path: Path) -> None:
     model = "Intro mentions E99-S02.\n\n## 11. Ticket map\nE99-S01\n\n## 12. Other\nE99-S02\n"
-    problems = mod.check(_repo(tmp_path, ["E99-S01", "E99-S02"], model), baseline={})
+    problems = mod.check(_repo(tmp_path, ["E99-S01", "E99-S02"], model))
     assert len(problems) == 1 and "E99-S02" in problems[0]
 
 
@@ -65,29 +65,4 @@ def test_threat_model_retired_ticket_excluded(tmp_path: Path) -> None:
         json.dumps([{"key": "E99-S01"}, {"key": "E99-S02", "labels": ["retired"]}]),
         encoding="utf-8",
     )
-    assert mod.check(root, baseline={}) == []
-
-
-def test_threat_model_baseline_gap_warns(tmp_path: Path) -> None:
-    root = _repo(tmp_path, ["E99-S01", "E99-S02"], "## 11. Ticket map\nE99-S01\n")
-    warnings: list[str] = []
-    assert mod.check(root, {"E99": frozenset({"E99-S02"})}, warnings) == []
-    assert len(warnings) == 1 and "E99-S02" in warnings[0]
-
-
-def test_threat_model_baseline_shrink_must_fail(tmp_path: Path) -> None:
-    root = _repo(
-        tmp_path, ["E99-S01", "E99-S02"], "## 11. Ticket map\nE99-S01 E99-S02\n"
-    )
-    problems = mod.check(root, {"E99": frozenset({"E99-S02"})})
-    assert problems == ["GOV-008 baseline for E99 is stale - remove E99-S02"]
-
-
-def test_threat_model_new_gap_beyond_baseline_fails(tmp_path: Path) -> None:
-    root = _repo(
-        tmp_path, ["E99-S01", "E99-S02", "E99-S03"], "## 11. Ticket map\nE99-S01\n"
-    )
-    problems = mod.check(root, {"E99": frozenset({"E99-S02"})})
-    assert (
-        len(problems) == 1 and "E99-S03" in problems[0] and "E99-S02" not in problems[0]
-    )
+    assert mod.check(root) == []
