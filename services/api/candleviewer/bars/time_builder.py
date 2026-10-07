@@ -133,7 +133,10 @@ class _Draft:
         or reordered trade lands in the right place. `min_delta`/`max_delta` are the extrema
         of the cumulative delta in **arrival** order: exact for in-order input; under reorder
         BI-3's inequality still holds but the path is the arrival path (#1991)."""
-        px, qty, ts, seq = t.price, t.qty, t.ts_event, t.seq
+        self.fold(t.price, t.qty, t.ts_event, t.seq, t.side == "buy")
+
+    def fold(self, px: Decimal, qty: Decimal, ts: int, seq: int, buy: bool) -> None:
+        """`apply` on explicit parts, so a volume-bar split folds a part of a trade (E12-S02)."""
         if self.count == 0:
             self.first_ts = self.last_ts = ts
             self.first_seq = self.last_seq = seq
@@ -147,7 +150,7 @@ class _Draft:
             self.high = px
         elif px < self.low:
             self.low = px
-        if t.side == "buy":
+        if buy:
             self.buy += qty
             self.delta += qty
         else:
