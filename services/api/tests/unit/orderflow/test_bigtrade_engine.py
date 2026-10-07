@@ -193,3 +193,60 @@ def test_dedupe_ring_is_bounded_and_forgets_oldest(monkeypatch: pytest.MonkeyPat
     eng.process([a, b, c])
     again = eng.process([trade(S + 9, "100.0", "1", trade_id="r0")])
     assert [e.trade_id for e in again if isinstance(e, BigTradeEvent)] == ["r0"]
+
+
+def test_all_equal_notional_stream_flags_all_at_threshold_and_caps() -> None:
+    eng = BigTradeEngine("BTCUSDT", TICK, BigTradeConfig(mode="notional", value=Decimal("100")))
+    out = eng.process([trade(S + i * 10_000, "100.0", "1") for i in range(100)])
+    out += eng.process([trade(6 * S, "100.0", "1")])
+    assert len([e for e in out if isinstance(e, BigTradeEvent)]) == 101  # never suppressed
+    assert any(isinstance(e, BigTradeAdvisoryEvent) for e in out)
+
+
+def test_monotone_notional_stream_percentile_threshold_rises() -> None:
+    cfg = BigTradeConfig(mode="percentile", value=Decimal("90"))
+    eng = BigTradeEngine("BTCUSDT", TICK, cfg)
+    prints = [trade(S + i * 50_000, "100.0", f"{1 + i / 100:.2f}") for i in range(1000)]
+    echoes = [e for e in eng.process(prints) if isinstance(e, BigTradeThresholdEvent)]
+    levels = [e.effective_threshold_abs for e in echoes if e.sample_count]
+    assert levels == sorted(levels) and levels[-1] > levels[0]
+
+
+def test_percentile_at_or_below_80_is_never_capped() -> None:
+    eng = BigTradeEngine("BTCUSDT", TICK, BigTradeConfig(mode="percentile", value=Decimal("50")))
+    prints = [trade(S + i * 10_000, "100.0", f"{1 + (i % 10)}") for i in range(2000)]
+    out = eng.process(prints)
+    assert not any(isinstance(e, BigTradeAdvisoryEvent) for e in out)
+    echoes = [e for e in out if isinstance(e, BigTradeThresholdEvent)]
+    assert echoes and not any(e.cap_active for e in echoes)
+
+
+def test_cap_reentry_emits_a_fresh_advisory() -> None:
+    """Leaving the cap and re-entering is a new episode -> a fresh advisory (documented)."""
+    cfg = BigTradeConfig(mode="absolute_size", value=Decimal("2"), percentile_window_ms=60_000)
+    eng = BigTradeEngine("BTCUSDT", TICK, cfg)
+    big = [trade(S + i * 10_000, "100.0", "3") for i in range(50)]  # 100 % flagged
+    calm = [trade(70 * S + i * 10_000, "100.0", "1") for i in range(1000)]  # 60 s rolled
+    again = [trade(200 * S + i * 10_000, "100.0", "3") for i in range(50)]  # calm rolled out
+    tail = [trade(210 * S, "100.0", "3")]
+    out = [*eng.process(big), *eng.process([trade(10 * S, "100.0", "3")])]
+    out += [*eng.process(calm), *eng.process([trade(85 * S, "100.0", "1")])]
+    out += [*eng.process(again), *eng.process(tail)]
+    advisories = [e for e in out if isinstance(e, BigTradeAdvisoryEvent)]
+    caps = [e.cap_active for e in out if isinstance(e, BigTradeThresholdEvent)]
+    assert len(advisories) == 2 and True in caps and False in caps
+
+
+def test_batch_split_exactly_on_5s_boundary_print_is_deterministic() -> None:
+    cfg = BigTradeConfig(mode="percentile", value=Decimal("95"), cluster_window_ms=250)
+    prints = [trade(4 * S + i * 100_000, "100.0", f"{1 + i % 7}") for i in range(30)]
+    boundary = next(i for i, p in enumerate(prints) if p.ts_event == 5 * S)
+    whole = BigTradeEngine("BTCUSDT", TICK, cfg)
+    a = [*whole.process(prints), *whole.flush()]
+    split = BigTradeEngine("BTCUSDT", TICK, cfg)
+    b = [*split.process(prints[:boundary]), *split.process(prints[boundary:]), *split.flush()]
+    c_eng = BigTradeEngine("BTCUSDT", TICK, cfg)
+    c = [*c_eng.process(prints[: boundary + 1]), *c_eng.process(prints[boundary + 1 :])]
+    c += c_eng.flush()
+    assert [e.model_dump_json() for e in a] == [e.model_dump_json() for e in b]
+    assert [e.model_dump_json() for e in a] == [e.model_dump_json() for e in c]

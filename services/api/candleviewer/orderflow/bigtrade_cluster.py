@@ -13,8 +13,9 @@ Plain synchronous code (C-2.20: per-print work is never a statechart). Rules:
 * Bounds (SR-E22-05): at most `CLUSTER_KEYS_MAX` open keys and
   `prints_buffer_effective_max(window)` buffered prints; overflow evicts the oldest cluster
   (`evicted`) and calls `on_truncate` (-> `bigtrade_state_truncated_total`).
-* The buffer holds the members of open clusters (bounded). A config change closes them
-  (`config_change`); `cluster_prints` recomputes history from stored prints (US-BIG-004 sc.2).
+* The buffer holds the prints of the open clusters (bounded). A config change replays them
+  under the new config (`replay`, US-BIG-004 sc.2); `cluster_prints` is the same recompute
+  over an arbitrary stored range (e.g. a REST window).
 * Bar attribution: `TradeClusterEvent.bar_open_us` uses the FIRST print (US-BIG-004 sc.3)."""
 
 from __future__ import annotations
@@ -115,6 +116,34 @@ class Clusterer:
         oldest = next(iter(self._open.values())).first.ts_event
         while self._buffer and self._buffer[0].ts_event < oldest:
             self._buffer.popleft()
+
+    def open_members(self) -> list[TradeEvent]:
+        """Buffered prints that belong to a still-open cluster, in `(ts_event, trade_id)` order.
+        The buffer can also hold late members of clusters that already closed (it is pruned by
+        the oldest open first-print); those were emitted and must not be replayed."""
+        out = []
+        for ev in self._buffer:
+            c = self._open.get((ev.side, self.bucket(ev.price)))
+            if c is not None and ev.ts_event >= c.first.ts_event:
+                out.append(ev)
+        return sorted(out, key=lambda e: (e.ts_event, e.trade_id))
+
+    def replay(self, window_ms: int, tolerance_ticks: int) -> list[Closed]:
+        """§2.10 config change: "closes all open clusters (`config_change`) and recomputes from
+        the buffered prints". The old open clusters are returned first with `config_change`;
+        their prints are then re-clustered under the new config (US-BIG-004 sc.2), print-time
+        deterministic and bounded by `PRINTS_BUFFER_EFFECTIVE_MAX`. A consumer treats a
+        `config_change` close as "replaced by the recompute that follows", never as additive.
+        Clusters that close during the replay carry their normal reason; the rest stay open.
+        With `window_ms == 0` there is nothing to recompute."""
+        members = self.open_members()
+        out: list[Closed] = [(c, "config_change") for c in self._open.values()]
+        self._open.clear()
+        self._buffer.clear()
+        self.window_ms, self.tolerance_ticks = window_ms, tolerance_ticks
+        for ev in members:
+            out.extend(self.add(ev))
+        return out
 
     def flush(self, reason: CloseReason = "flush") -> list[Closed]:
         out: list[Closed] = [(c, reason) for c in self._open.values()]

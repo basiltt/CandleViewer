@@ -117,3 +117,49 @@ def test_windowed_secondary_estimator_tracks_p80() -> None:
         w.add(i, float(i), flagged=False)
     p80 = w.quantile(primary=False)
     assert p80 is not None and 780 <= p80 <= 820
+
+
+@pytest.mark.parametrize("q", [0.5, 0.8, 0.99])
+def test_p2_monotone_increasing_stream_rank_error_within_one_percent(q: float) -> None:
+    values = [float(v) for v in range(1, 5001)]
+    est = P2Quantile(q)
+    for v in values:
+        est.add(v)
+    assert _rank_error(values, est.value(), q) <= 0.01
+
+
+@pytest.mark.parametrize("q", [0.5, 0.99])
+def test_p2_monotone_decreasing_stream_rank_error_within_one_percent(q: float) -> None:
+    values = [float(v) for v in range(5000, 0, -1)]
+    est = P2Quantile(q)
+    for v in values:
+        est.add(v)
+    assert _rank_error(values, est.value(), q) <= 0.01
+
+
+def test_all_equal_stream_returns_that_value_single_and_windowed() -> None:
+    est = P2Quantile(0.99)
+    w = WindowedQuantiles(0.99, window_us=60_000_000, buckets=4)
+    for i in range(3000):
+        est.add(250.0)
+        w.add(i * 10_000, 250.0, flagged=False)
+    assert est.value() == 250.0
+    assert w.quantile(primary=True) == 250.0
+    assert w.quantile(primary=False) == 250.0
+
+
+def test_window_without_primary_tracks_only_cap_quantile() -> None:
+    w = WindowedQuantiles(None, window_us=60_000_000, buckets=4)
+    for i in range(1, 1001):
+        w.add(i, float(i), flagged=False)
+    assert w.quantile(primary=True) is None
+    p80 = w.quantile(primary=False)
+    assert p80 is not None and 780 <= p80 <= 820
+
+
+def test_slot_aligned_window_covers_between_window_minus_width_and_window() -> None:
+    w = WindowedQuantiles(0.5, window_us=3_600_000_000, buckets=12)  # 5 min slots
+    now = 7_380_000_000  # 2 h 3 min
+    w.expire(now)
+    covered = now - w.oldest_ts_us()
+    assert 3_600_000_000 - w.width <= covered <= 3_600_000_000

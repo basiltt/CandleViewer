@@ -13,9 +13,12 @@ Threshold: `absolute_size` compares `qty` with `value`; `notional` compares `pri
 over-flag guard checks the fraction of window prints above the **base** threshold. Above 20 %
 (with at least `OVERFLAG_MIN_SAMPLES` samples) the cap engages: the effective threshold is raised to
 the window p80 (second estimator), prints keep flowing with `capped=True`, and an advisory fires
-on entry. A `BigTradeThresholdEvent` is emitted at each refresh (≤ 1 per 5 s print time) and on
-config change. Replay (`source="replay"`) compares threshold/advisory output against the
-recorded stream instead of re-emitting it (C-2.15)."""
+on entry; leaving the cap and later re-entering emits a fresh advisory (each entry is a new
+episode a user should see; `cap_active` on the threshold stream carries the current state).
+Percentile mode is cap-eligible only above p80 (at or below it, 20 % flagged is the user's own
+choice, not a too-low threshold). A `BigTradeThresholdEvent` is emitted at each refresh
+(≤ 1 per 5 s print time) and on config change. Replay (`source="replay"`) compares
+threshold/advisory output against the recorded stream instead of re-emitting it (C-2.15)."""
 
 from __future__ import annotations
 
@@ -77,32 +80,44 @@ class BigTradeEngine:
         self.replay_mismatches = 0
         self._apply(config.validated())
 
-    def _apply(self, config: BigTradeConfig) -> None:
+    def _apply(self, config: BigTradeConfig, *, clusters: Clusterer | None = None) -> None:
         self.config = config
-        q = float(config.value) / 100 if config.mode == "percentile" else 0.99
+        self._m_flagged = M.bigtrade_flagged_total.labels(self._label, config.mode)  # pre-bound
+        # Absolute/notional modes never read the primary quantile: track only the p80 used by
+        # the over-flag cap (`primary_q=None` skips the second estimator per slot).
+        q = float(config.value) / 100 if config.mode == "percentile" else None
         self._window = WindowedQuantiles(
             q,
             config.percentile_window_ms * 1000,
             L.PERCENTILE_WINDOW_BUCKETS,
             secondary_q=L.OVERFLAG_CAP_QUANTILE,
         )
-        self._clusters = Clusterer(
+        self._clusters = clusters or Clusterer(
             self.tick_size,
             config.cluster_window_ms,
             config.cluster_tolerance_ticks,
             on_truncate=lambda: M.bigtrade_state_truncated_total.labels(self._label).inc(),
         )
+        # Percentile <= p80 flags >= 20 % BY DEFINITION; capping it would silently and
+        # permanently replace the user's choice with p80. The cap guards against a threshold
+        # that is *unexpectedly* low, so it applies to percentile mode only above p80.
+        self._cap_eligible = config.mode != "percentile" or config.value > Decimal(80)
         self._base: Decimal | None = None if config.mode == "percentile" else config.value
         self._effective = self._base
         self._cap = False
         self._slot: int | None = None
 
     def reconfigure(self, config: BigTradeConfig, at: TradeEvent) -> list[BigTradeOutput]:
-        """Immediate recompute on config change (US-BIG-004 sc.2); `at` is the latest print."""
+        """Immediate recompute on config change (US-BIG-004 sc.2); `at` is the latest print.
+        Clustering replays the buffered prints of the open clusters under the new config
+        (`Clusterer.replay`). Threshold state restarts: the window sketch cannot be rebuilt
+        from prints it never stored (fixed-size state, SR-E22-05), so a percentile threshold
+        re-warms over the new window."""
         config.validated()
-        closed = self._clusters.flush("config_change")
+        clusters = self._clusters
+        closed = clusters.replay(config.cluster_window_ms, config.cluster_tolerance_ticks)
         out: list[BigTradeOutput] = [self._cluster_event(c, r) for c, r in closed]
-        self._apply(config)
+        self._apply(config, clusters=clusters)
         self._refresh(at)
         out.extend(self._keep(self._threshold_event(at)))
         return out
@@ -149,7 +164,7 @@ class BigTradeEngine:
         base_hit = self._base is not None and measure >= self._base
         self._window.add(ev.ts_event, float(measure), flagged=base_hit)
         if self._effective is not None and measure >= self._effective:
-            M.bigtrade_flagged_total.labels(self._label, self.config.mode).inc()
+            self._m_flagged.inc()
             out.append(self._bigtrade_event(ev))
         out.extend(self._cluster_event(c, r) for c, r in self._clusters.add(ev))
         return out
@@ -163,7 +178,8 @@ class BigTradeEngine:
         was = self._cap
         p80 = self._window.quantile(primary=False)
         self._cap = (
-            n >= L.OVERFLAG_MIN_SAMPLES
+            self._cap_eligible
+            and n >= L.OVERFLAG_MIN_SAMPLES
             and p80 is not None
             and Decimal(flagged) / n > L.OVERFLAG_FRACTION
         )
@@ -238,9 +254,12 @@ class BigTradeEngine:
         )
 
     def _suggest(self, p80: float) -> Decimal:
-        """Suggested `value` in the configured unit: the window p80 (flags ≤ 20 %)."""
+        """Suggested `value` in the configured mode's unit (§2.10). absolute/notional: the window
+        p80, which flags <= 20 %. Percentile (only cap-eligible above 80): the configured value
+        is kept, since raising it cannot fix a distribution shift inside the window; the cap
+        (p80) is the legibility remedy, and `cap_active` reports it."""
         if self.config.mode == "percentile":
-            return max(self.config.value, Decimal("80"))
+            return self.config.value
         return Decimal(repr(p80)).quantize(_Q8)
 
     def _cluster_event(self, cluster: OpenCluster, reason: CloseReason) -> TradeClusterEvent:

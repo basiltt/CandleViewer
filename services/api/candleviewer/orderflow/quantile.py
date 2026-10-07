@@ -11,7 +11,8 @@ the top cell, so the q-marker's rank error (the ≤ 1 % target) is preserved.
 split into `buckets` print-time slots of `window_us / buckets`, each with its own P² pair
 (primary q + p80 for the over-flagging cap) and counts. Whole slots expire as print time
 advances (O(1) amortised); the window is therefore the last `buckets` slots, aligned to slot
-boundaries (worst case it covers one slot less than `window_us`). Window quantiles invert the
+boundaries: it covers between `window_us - width` and `window_us` of print time (with the
+defaults, 55-60 min of a 1 h window: up to one 5 min slot short). Window quantiles invert the
 count-weighted mixture of each slot's piecewise-linear marker CDF by bisection. Accuracy
 degrades with intra-window non-stationarity across slots; state is fixed at
 `buckets * 2 * (grid + 4)` markers per symbol regardless of print rate."""
@@ -109,7 +110,7 @@ class P2Quantile:
 @dataclass(slots=True)
 class _Slot:
     index: int
-    primary: P2Quantile
+    primary: P2Quantile | None
     secondary: P2Quantile
     count: int = 0
     flagged: int = 0
@@ -117,7 +118,7 @@ class _Slot:
 
 @dataclass(slots=True)
 class WindowedQuantiles:
-    q: float
+    q: float | None  # None: only the secondary (cap) quantile is tracked
     window_us: int
     buckets: int
     trim_factor: float = 4.0
@@ -128,7 +129,8 @@ class WindowedQuantiles:
     def __post_init__(self) -> None:
         if self.buckets < 1 or self.window_us < self.buckets:
             raise ValueError("buckets must be >= 1 and <= window_us")
-        P2Quantile(self.q)
+        if self.q is not None:
+            P2Quantile(self.q)
 
     @property
     def width(self) -> int:
@@ -159,33 +161,36 @@ class WindowedQuantiles:
             self._slots.append(
                 _Slot(
                     idx,
-                    P2Quantile(self.q, trim_factor=t),
+                    None if self.q is None else P2Quantile(self.q, trim_factor=t),
                     P2Quantile(self.secondary_q, trim_factor=t),
                 )
             )
         slot = self._slots[-1]  # late print (bus order guarantee broken): joins newest slot
-        slot.primary.add(value)
+        if slot.primary is not None:
+            slot.primary.add(value)
         slot.secondary.add(value)
         slot.count += 1
         slot.flagged += int(flagged)
 
     def max_marker(self) -> float:
-        return max(s.primary.markers()[-1][0] for s in self._slots)
+        return max(s.secondary.markers()[-1][0] for s in self._slots)
 
     def quantile(self, *, primary: bool) -> float | None:
-        ests = [(s.primary if primary else s.secondary, s.count) for s in self._slots]
-        ests = [(e, c) for e, c in ests if c]
-        if not ests:
-            return None
-        if len(ests) == 1:
-            return ests[0][0].value()
         target = self.q if primary else self.secondary_q
-        total = sum(c for _, c in ests)
-        lo = min(e.markers()[0][0] for e, _ in ests)
-        hi = max(e.markers()[-1][0] for e, _ in ests)
+        if target is None:
+            return None
+        ests = [(s.primary if primary else s.secondary, s.count) for s in self._slots]
+        ests2 = [(e, c) for e, c in ests if c and e is not None]
+        if not ests2:
+            return None
+        if len(ests2) == 1:
+            return ests2[0][0].value()
+        total = sum(c for _, c in ests2)
+        lo = min(e.markers()[0][0] for e, _ in ests2)
+        hi = max(e.markers()[-1][0] for e, _ in ests2)
         for _ in range(60):
             mid = (lo + hi) / 2
-            if sum(e.cdf(mid) * c for e, c in ests) / total < target:
+            if sum(e.cdf(mid) * c for e, c in ests2) / total < target:
                 lo = mid
             else:
                 hi = mid
