@@ -38,6 +38,12 @@ BUILD_VERSIONS: Final[dict[str, int]] = {
 #: `bar_param` SYMBOL CAPACITY (21-database-schema.md §4.8): a hard cardinality budget.
 BAR_PARAM_CAPACITY: Final = 64
 SOURCES: Final = ("tape", "kline", "parquet")
+#: Source precedence (SR-E12-10/BR-07): a lower-ranked source never overwrites a higher one.
+#: Parquet rows are restored tape, so they rank with tape; exchange klines are cross-check only.
+SOURCE_RANK: Final = {"tape": 2, "parquet": 2, "kline": 1}
+#: Unkeyed sha256 prefix: tamper-evidence for naive edits only (no HMAC; see 21-database-schema).
+#: Rows with NULL `source` AND NULL `row_checksum` predate migration 0003 (which is the first
+#: writer of both columns) and are trusted as legacy; any other NULL checksum is "missing".
 _PREFIX: Final = {
     "tick": "tick",
     "volume": "vol",

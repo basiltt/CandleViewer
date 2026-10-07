@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+from collections import OrderedDict
 from collections.abc import Sequence
 from typing import Protocol
 
@@ -24,6 +25,7 @@ from candleviewer.bars.errors import BarsError
 from candleviewer.bars.models import Bar, BarSpec
 from candleviewer.bars.rows import (
     BAR_PARAM_CAPACITY,
+    SOURCE_RANK,
     BarParamCapacityExceeded,
     bar_param_for,
     bar_row,
@@ -47,6 +49,19 @@ bars_write_latency_seconds = Histogram(
 bars_symbol_cardinality = Gauge(
     "bars_symbol_cardinality", "Distinct bar_param values seen per table.", ["table"]
 )
+
+
+bars_source_overwrite_refused_total = Counter(
+    "bars_source_overwrite_refused_total",
+    "Writes refused because a lower-precedence source would overwrite a higher one.",
+    ["from_source", "to_source"],
+)
+#: Bound on the per-process precedence memory (LRU; SR-E12-05).
+MAX_TRACKED_ROWS = 200_000
+
+
+class SourceOverwriteRefused(BarsError):
+    """SR-E12-10/BR-07: a kline row may not overwrite a tape row at the same dedup key."""
 
 
 class BarBufferFull(BarsError):
@@ -83,6 +98,7 @@ class BarWriter:
         self._task: asyncio.Task[None] | None = None
         self._pending: set[asyncio.Task[None]] = set()
         self._failure: Exception | None = None
+        self._sources: OrderedDict[tuple[str, str, int], str] = OrderedDict()
 
     @property
     def healthy(self) -> bool:
@@ -114,11 +130,41 @@ class BarWriter:
         bars_symbol_cardinality.labels(table).set(len(params))
         self._known_specs.add(key)
 
+    def _check_precedence(
+        self, table: str, spec: BarSpec, rows: list[dict[str, object]], source: str
+    ) -> None:
+        for row in rows:
+            prior = self._sources.get(
+                (table, spec.spec_hash + str(row["symbol"]), int(str(row["ts"])))
+            )
+            if prior is not None and SOURCE_RANK[source] < SOURCE_RANK[prior]:
+                bars_source_overwrite_refused_total.labels(source, prior).inc()
+                _log.warning("bars_source_overwrite_refused", table=table, spec_hash=spec.spec_hash)
+                raise SourceOverwriteRefused(
+                    f"A '{source}' bar may not overwrite an existing '{prior}' bar."
+                )
+
+    def _record_sources(
+        self, table: str, spec: BarSpec, rows: list[dict[str, object]], source: str
+    ) -> None:
+        for row in rows:
+            key = (table, spec.spec_hash + str(row["symbol"]), int(str(row["ts"])))
+            self._sources[key] = source
+            self._sources.move_to_end(key)
+        while len(self._sources) > MAX_TRACKED_ROWS:
+            self._sources.popitem(last=False)
+
     async def submit(self, bars: Sequence[Bar], spec: BarSpec, *, source: str = "tape") -> None:
-        """Queue rows (validates all first: one bad/synthetic bar rejects the whole call)."""
+        """Queue rows (validates all first: one bad, synthetic or lower-precedence bar rejects all).
+
+        Precedence is enforced against rows written by this process; a read-side check against
+        the stored row's `source` is the E12-T05 backfill caller's job (it owns the read path).
+        """
         table = table_for(spec)
         rows = [bar_row(b, spec, source=source) for b in bars]
+        self._check_precedence(table, spec, rows, source)
         self._admit_param(table, spec)
+        self._record_sources(table, spec, rows, source)
         for row in rows:
             if self._queue.full():
                 bars_write_saturation_total.inc()

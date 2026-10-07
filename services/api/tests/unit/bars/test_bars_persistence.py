@@ -261,3 +261,112 @@ def test_range_query_is_parameterised_and_bounded() -> None:
     with pytest.raises(ValueError):
         build_range_query("time", "X", "5m", 0, 1, None, 0)
     _ = replace
+
+
+# ---- r2: source precedence, rebuild registry, integrity events -------------------------------
+
+
+class _Sink:
+    def __init__(self) -> None:
+        self.rows: list[dict[str, object]] = []
+
+    async def write_rows(self, t: str, rows: list[dict[str, object]], k: str) -> None:
+        self.rows.extend(rows)
+
+
+@pytest.mark.asyncio
+async def test_kline_may_not_overwrite_tape_but_other_directions_allowed() -> None:
+    from candleviewer.bars.writer import SourceOverwriteRefused, bars_source_overwrite_refused_total
+
+    sink = _Sink()
+    w = BarWriter(sink)
+    await w.start()
+    await w.submit([_bar()], SPEC, source="tape")
+    await w.submit([_bar(close=Decimal("100.9"))], SPEC, source="tape")  # amend: allowed
+    before = bars_source_overwrite_refused_total.labels("kline", "tape")._value.get()
+    with pytest.raises(SourceOverwriteRefused):
+        await w.submit([_bar()], SPEC, source="kline")
+    assert bars_source_overwrite_refused_total.labels("kline", "tape")._value.get() == before + 1
+    other = _bar(index=9, open_time=1_700_000_900_000_000)
+    await w.submit([other], SPEC, source="kline")
+    await w.submit([other], SPEC, source="tape")  # kline -> tape: allowed
+    await w.stop()
+    assert len(sink.rows) == 4
+
+
+@pytest.mark.asyncio
+async def test_rebuild_registry_is_single_flight_bucketed_bounded_and_backs_off() -> None:
+    from candleviewer.bars import reader as rd
+
+    now = [0.0]
+    calls: list[tuple[str, str, int, int]] = []
+    fail = [True]
+
+    async def sched(s: str, h: str, lo: int, hi: int) -> None:
+        calls.append((s, h, lo, hi))
+        if fail[0]:
+            raise ConnectionError("x")
+
+    reg = rd.RebuildRegistry(sched, clock=lambda: now[0])
+    assert not await reg.request("BTC", "h", 5, 10)  # fails -> backoff
+    assert not await reg.request("BTC", "h", 6, 11)  # same bucket, still backing off
+    assert len(calls) == 1
+    now[0] = 10.0
+    fail[0] = False
+    assert await reg.request("BTC", "h", 7, 12)  # retry succeeded
+    assert not await reg.request("BTC", "h", 8, 13)  # done: deduplicated
+    # a client sweeping distinct windows collapses into bounded buckets
+    for i in range(100):
+        await reg.request("BTC", "h", i * rd.WINDOW_GRID_US, (i + 1) * rd.WINDOW_GRID_US)
+    assert len(reg) <= rd.MAX_BUCKETS_PER_SERIES + 1
+    now[0] = 10_000.0  # TTL prune
+    await reg.request("ETH", "h2", 0, 1)
+    assert len(reg) == 1
+
+
+@pytest.mark.asyncio
+async def test_rebuild_registry_global_cap_and_attempt_limit() -> None:
+    from candleviewer.bars import reader as rd
+
+    async def boom(*a: object) -> None:
+        raise ConnectionError
+
+    now = [0.0]
+    reg = rd.RebuildRegistry(boom, clock=lambda: now[0])
+    for _ in range(rd.MAX_ATTEMPTS + 2):
+        now[0] += 20.0  # past every backoff step, inside the TTL
+        await reg.request("BTC", "h", 0, 1)
+    assert reg._entries[("BTC", "h", 0, 0)].attempts == rd.MAX_ATTEMPTS
+    for i in range(rd.MAX_REGISTRY + 10):
+        await reg.request(f"S{i}", "h", 0, 1)
+    assert len(reg) <= rd.MAX_REGISTRY
+
+
+@pytest.mark.asyncio
+async def test_checksum_mismatch_and_missing_are_integrity_events() -> None:
+    from candleviewer.bars.reader import bars_checksum_mismatch_total as m
+
+    good = bar_row(_bar(), SPEC)
+    bad = {**bar_row(_bar(index=4, open_time=1_700_000_000_000_009), SPEC), "close": 1.0}
+    missing = {
+        **bar_row(_bar(index=5, open_time=1_700_000_000_000_010), SPEC),
+        "row_checksum": None,
+    }
+    legacy = {**missing, "source": None, "ts": 1_700_000_000_000_011}
+    b = (
+        m.labels("bars_time", "mismatch")._value.get(),
+        m.labels("bars_time", "missing")._value.get(),
+    )
+    page = await BarReader(_Conn([good, bad, missing, legacy]), _sched_noop).read_bars(
+        "BTCUSDT", SPEC, 0, 2**60, 10
+    )
+    assert page.rows == [good, legacy]  # NULL checksum + non-NULL source is NOT trusted
+    assert page.integrity_degraded and page.dropped == 2
+    assert m.labels("bars_time", "mismatch")._value.get() == b[0] + 1
+    assert m.labels("bars_time", "missing")._value.get() == b[1] + 1
+
+
+def test_checksum_round_trips_through_ilp_floats() -> None:
+    row = bar_row(_bar(), SPEC)
+    assert row_checksum(row) == row["row_checksum"]
+    assert row_checksum({**row, "open": float(repr(row["open"]))}) == row["row_checksum"]
