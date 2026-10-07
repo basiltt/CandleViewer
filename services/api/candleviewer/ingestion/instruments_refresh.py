@@ -37,10 +37,9 @@ from collections.abc import Awaitable, Callable, Mapping, Sequence
 from typing import Any, Protocol
 from uuid import uuid4
 
-import structlog
-
 from candleviewer.domain.events import Instrument
 from candleviewer.exchange.base.instruments import InstrumentsFetcher
+from candleviewer.ingestion._logging import get_logger
 from candleviewer.ingestion.errors import IngestionError
 from candleviewer.ingestion.instruments import (
     CatalogueSnapshot,
@@ -55,8 +54,6 @@ from candleviewer.ingestion.metrics import (
     instruments_refresh_total,
 )
 from candleviewer.observability import spawn
-
-logger = structlog.get_logger(__name__)
 
 _MIN_BACKOFF_S = 1.0
 _MAX_BACKOFF_S = 30.0
@@ -159,7 +156,7 @@ class InstrumentsRefreshScheduler:
                 Instrument.model_validate(row) for row in await self._repository.load_all()
             ]
         except Exception:  # storage tier down or a row fails validation
-            logger.warning("instruments_startup_load_failed")
+            get_logger(__name__).warning("instruments_startup_load_failed")
             persisted = []
         if persisted:
             self.cache.swap(
@@ -174,7 +171,7 @@ class InstrumentsRefreshScheduler:
             # serve; the persisted load above already covered that. A
             # startup fetch failure is not fatal — the periodic task keeps
             # retrying on schedule.
-            logger.warning("instruments_startup_refresh_failed")
+            get_logger(__name__).warning("instruments_startup_refresh_failed")
         self._stopping = False
         self._task = spawn(self._run_periodic(), name="instruments-refresh")
 
@@ -264,8 +261,8 @@ class InstrumentsRefreshScheduler:
         try:
             await self._repository.mark_stale(stale_since_us=stale_since_us)
         except Exception:
-            logger.warning("instruments_mark_stale_persist_failed")
-        logger.warning("instruments_refresh_failed", error=str(last_error))
+            get_logger(__name__).warning("instruments_mark_stale_persist_failed")
+        get_logger(__name__).warning("instruments_refresh_failed", error=str(last_error))
         raise InstrumentRefreshError(
             f"instrument catalogue refresh failed after {self._max_retries} attempts"
         ) from last_error
@@ -276,7 +273,7 @@ class InstrumentsRefreshScheduler:
         current = self.cache.current()
 
         for rejected in result.rejected:
-            logger.warning(
+            get_logger(__name__).warning(
                 "instruments_refresh_skipped_row",
                 symbol=rejected.symbol,
                 error=rejected.reason,
@@ -321,7 +318,7 @@ class InstrumentsRefreshScheduler:
             try:
                 await listener()
             except Exception:  # a consumer fault must not fail the refresh
-                logger.exception("instruments_listener_failed")
+                get_logger(__name__).exception("instruments_listener_failed")
 
     async def _run_periodic(self) -> None:
         while not self._stopping:
@@ -339,7 +336,7 @@ class InstrumentsRefreshScheduler:
             except asyncio.CancelledError:
                 return
             except Exception:
-                logger.exception("instruments_periodic_refresh_unexpected_error")
+                get_logger(__name__).exception("instruments_periodic_refresh_unexpected_error")
             current = self.cache.current()
             if current is not None:
                 instruments_cache_age_seconds.set(current.age_seconds(now_us=self._now_us()))
