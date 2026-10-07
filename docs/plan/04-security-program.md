@@ -1084,6 +1084,7 @@ flowchart TD
 2. Suppress trading affordances for affected symbols (stale flag, SR-038); keep risk-reducing actions enabled.
 3. Verify native SLs still exist on all open positions; if any are missing, remediate (SR-056).
 4. If the condition persists > 5 min with open exposure, escalate to the Owner with a flatten recommendation.
+5. Per-symptom operator steps (metric, expected auto-recovery, manual action) are in the runbook fragments of `services/api/tests/chaos/ingestion/SCENARIOS.md` (E08-Q03).
 
 **IR-06 — Audit chain mismatch or missing events (P1)**
 
