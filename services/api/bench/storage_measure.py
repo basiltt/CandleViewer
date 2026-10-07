@@ -1,6 +1,6 @@
 """Reproducible storage-growth estimator for spike E16-K01 (S6).
 
-Reads the recorded Bybit corpus (no network), builds the QuestDB hot-tier rows each
+Reads the recorded public-feed corpus (`CORPUS`) (no network), builds the QuestDB hot-tier rows each
 stream would produce, and reports (a) wire bytes/day, (b) ILP and modelled on-disk
 bytes per row, (c) real Parquet bytes per row via the E07 cold writer profile, and
 (d) GB/day projections. Run from `services/api`:
@@ -29,6 +29,7 @@ from candleviewer.storage.questdb.ilp_writer import TableSchema, serialize_ilp_l
 from candleviewer.storage.questdb.schemas import ALL_SCHEMAS
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+# nosemgrep: cv-adapter-isolation reason=B5-b-harness owner=@CandleViewer/security review=2026-12-31
 CORPUS = REPO_ROOT / "packages" / "fixtures" / "bybit" / "2026-10-05" / "ws"
 DDL = REPO_ROOT / "backend" / "db" / "questdb" / "0001_core_tables.sql"
 DAY_S = 86_400
