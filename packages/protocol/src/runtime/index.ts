@@ -3,6 +3,8 @@
 // *untrusted* input from the network — flagged as a fuzz target for E03's
 // Schemathesis/contract job (E02-T09).
 
+import { CVWB_HEADER, CVWB_KINDS, CVWB_MAGIC } from "../generated/cvwb/index.js";
+
 /** Result of a sequence-gap check against the last-seen frame sequence number. */
 export type SeqCheckResult = "ok" | "gap" | "duplicate" | "out-of-order";
 
@@ -23,8 +25,15 @@ export function checkSequence(lastSeq: number, incomingSeq: number): SeqCheckRes
 // §3.4 binary payload format (e: "b")
 // ---------------------------------------------------------------------------
 
+// Every offset, stride and format_version below comes from the ONE layout
+// declaration packages/protocol/cvwb-layout.json (E17-T02), compiled to
+// src/generated/cvwb by scripts/generate-cvwb-layout.mjs. The Python
+// encoder/decoder (services/api/candleviewer/ws/binary.py) reads the same file.
+const K = CVWB_KINDS;
+const H = CVWB_HEADER.offsets;
+
 /** `0x43565742` ("CVWB"), the magic number every binary frame body starts with. */
-export const BINARY_FRAME_MAGIC = 0x43565742;
+export const BINARY_FRAME_MAGIC: number = CVWB_MAGIC;
 
 export const BODY_KIND = {
   BOOK_SNAPSHOT: 1,
@@ -60,19 +69,42 @@ export interface BinaryFrameHeader {
   tsBaseMs: bigint;
 }
 
-export const COMMON_HEADER_BYTES = 24;
+export const COMMON_HEADER_BYTES: number = CVWB_HEADER.bytes;
 
 /** body_kind 4 (bars) format_version (#2014/#2018): v2 adds generation + index. */
-export const BARS_FORMAT_VERSION = 2;
+export const BARS_FORMAT_VERSION: number = K.bars.formatVersion;
 
 /** Thrown by every decoder below on any malformed input (§3.4 "Client obligations"). */
 export class BinaryFrameError extends Error {
   constructor(
     message: string,
-    readonly code: "frame_malformed" | "unsupported_body_kind" | "unsupported_format_version" = "frame_malformed",
+    readonly code:
+      | "frame_malformed"
+      | "unsupported_body_kind"
+      | "unsupported_format_version" = "frame_malformed",
   ) {
     super(message);
     this.name = "BinaryFrameError";
+  }
+}
+
+/** Ticket name for {@link BinaryFrameError} (E17-T02); same class. */
+export const FrameMalformedError = BinaryFrameError;
+export type FrameMalformedError = BinaryFrameError;
+
+const FORMAT_VERSION_BY_KIND: Readonly<Record<number, number>> = Object.fromEntries(
+  Object.values(K).map((k) => [k.id, k.formatVersion]),
+);
+
+/**
+ * SR-128: rejects `count` records of `stride` bytes that cannot fit in the
+ * `available` bytes, BEFORE anything sized from `count` is allocated.
+ */
+function assertFits(count: number, stride: number, available: number, what: string): void {
+  if (count * stride > available) {
+    throw new BinaryFrameError(
+      `${what}: count=${count} x ${stride} bytes exceeds the ${available} bytes left in the buffer`,
+    );
   }
 }
 
@@ -98,18 +130,18 @@ export function parseBinaryFrameHeader(buf: ArrayBufferView): BinaryFrameHeader 
     );
   }
   const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
-  const magic = view.getUint32(0, true);
+  const magic = view.getUint32(H.magic, true);
   if (magic !== BINARY_FRAME_MAGIC) {
     throw new BinaryFrameError(
       `bad magic 0x${magic.toString(16)}, expected 0x${BINARY_FRAME_MAGIC.toString(16)} ("CVWB")`,
     );
   }
-  const formatVersion = view.getUint8(4);
-  const rawBodyKind = view.getUint8(5);
-  if (rawBodyKind < 1 || rawBodyKind > 6) {
+  const formatVersion = view.getUint8(H.formatVersion);
+  const rawBodyKind = view.getUint8(H.bodyKind);
+  const expectedVersion = FORMAT_VERSION_BY_KIND[rawBodyKind];
+  if (expectedVersion === undefined) {
     throw new BinaryFrameError(`unknown body_kind ${rawBodyKind}`, "unsupported_body_kind");
   }
-  const expectedVersion = rawBodyKind === 4 ? BARS_FORMAT_VERSION : 1;
   if (formatVersion !== expectedVersion) {
     throw new BinaryFrameError(
       `unsupported (body_kind=${rawBodyKind}, format_version=${formatVersion}); expected format_version ${expectedVersion}`,
@@ -120,12 +152,12 @@ export function parseBinaryFrameHeader(buf: ArrayBufferView): BinaryFrameHeader 
     magic,
     formatVersion,
     bodyKind: rawBodyKind as BodyKind,
-    flags: readFlags(view.getUint8(6)),
-    priceScale: view.getUint8(7),
-    qtyScale: view.getUint8(8),
+    flags: readFlags(view.getUint8(H.flags)),
+    priceScale: view.getUint8(H.priceScale),
+    qtyScale: view.getUint8(H.qtyScale),
     // bytes 9-11 reserved, deliberately skipped.
-    recordCount: view.getUint32(12, true),
-    tsBaseMs: view.getBigUint64(16, true),
+    recordCount: view.getUint32(H.recordCount, true),
+    tsBaseMs: view.getBigUint64(H.tsBaseMs, true),
   };
 }
 
@@ -166,14 +198,16 @@ export interface DecodedBookDelta {
   levels: BookLevel[];
 }
 
-const BOOK_RECORD_BYTES = 17;
-const BOOK_TRAILER_BYTES = 16;
+const BOOK = K.bookDelta.record;
+const BOOK_RECORD_BYTES = BOOK.bytes;
+const BOOK_TRAILER_BYTES = K.bookSnapshot.trailer.bytes;
 
 function decodeBookLevels(
   view: DataView,
   offset: number,
   header: BinaryFrameHeader,
 ): { levels: BookLevel[]; nextOffset: number } {
+  assertFits(header.recordCount, BOOK_RECORD_BYTES, view.byteLength - offset, "book levels");
   const levels: BookLevel[] = [];
   let cursor = offset;
   for (let i = 0; i < header.recordCount; i += 1) {
@@ -182,12 +216,12 @@ function decodeBookLevels(
         `book record ${i} runs past the buffer (record_count=${header.recordCount})`,
       );
     }
-    const sideByte = view.getUint8(cursor);
+    const sideByte = view.getUint8(cursor + BOOK.offsets.side);
     if (sideByte !== 0 && sideByte !== 1) {
       throw new BinaryFrameError(`invalid book side byte ${sideByte} at record ${i}`);
     }
-    const price = view.getBigInt64(cursor + 1, true);
-    const size = view.getBigUint64(cursor + 9, true);
+    const price = view.getBigInt64(cursor + BOOK.offsets.price, true);
+    const size = view.getBigUint64(cursor + BOOK.offsets.size, true);
     levels.push({
       side: sideByte === 0 ? "bid" : "ask",
       price: unscale(price, header.priceScale),
@@ -216,8 +250,8 @@ export function decodeBookSnapshot(buf: ArrayBufferView): DecodedBookSnapshot {
     header,
     levels,
     trailer: {
-      xu: view.getBigUint64(nextOffset, true),
-      xseq: view.getBigUint64(nextOffset + 8, true),
+      xu: view.getBigUint64(nextOffset + K.bookSnapshot.trailer.offsets.xu, true),
+      xseq: view.getBigUint64(nextOffset + K.bookSnapshot.trailer.offsets.xseq, true),
     },
   };
 }
@@ -255,7 +289,8 @@ export interface DecodedTrades {
   trades: DecodedTrade[];
 }
 
-const TRADE_RECORD_BYTES = 22;
+const TRADE = K.trades.record;
+const TRADE_RECORD_BYTES = TRADE.bytes;
 
 /** Decodes a `body_kind: 3` (trades) binary frame body. */
 export function decodeTrades(buf: ArrayBufferView): DecodedTrades {
@@ -267,6 +302,12 @@ export function decodeTrades(buf: ArrayBufferView): DecodedTrades {
     );
   }
   const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  assertFits(
+    header.recordCount,
+    TRADE_RECORD_BYTES,
+    view.byteLength - COMMON_HEADER_BYTES,
+    "trades",
+  );
   const trades: DecodedTrade[] = [];
   let cursor = COMMON_HEADER_BYTES;
   for (let i = 0; i < header.recordCount; i += 1) {
@@ -275,14 +316,14 @@ export function decodeTrades(buf: ArrayBufferView): DecodedTrades {
         `trade record ${i} runs past the buffer (record_count=${header.recordCount})`,
       );
     }
-    const tsOffsetMs = view.getUint32(cursor, true);
-    const price = view.getBigInt64(cursor + 4, true);
-    const size = view.getBigUint64(cursor + 12, true);
-    const sideByte = view.getUint8(cursor + 20);
+    const tsOffsetMs = view.getUint32(cursor + TRADE.offsets.tsOffsetMs, true);
+    const price = view.getBigInt64(cursor + TRADE.offsets.price, true);
+    const size = view.getBigUint64(cursor + TRADE.offsets.size, true);
+    const sideByte = view.getUint8(cursor + TRADE.offsets.side);
     if (sideByte !== 0 && sideByte !== 1) {
       throw new BinaryFrameError(`invalid trade side byte ${sideByte} at record ${i}`);
     }
-    const flagsByte = view.getUint8(cursor + 21);
+    const flagsByte = view.getUint8(cursor + TRADE.offsets.flags);
     trades.push({
       tsMs: header.tsBaseMs + BigInt(tsOffsetMs),
       price: unscale(price, header.priceScale),
@@ -321,7 +362,8 @@ export interface DecodedBars {
   bars: DecodedBar[];
 }
 
-export const BAR_RECORD_BYTES = 85;
+const BAR = K.bars.record;
+export const BAR_RECORD_BYTES: number = BAR.bytes;
 
 /** Decodes a `body_kind: 4` (bars) binary frame body. */
 export function decodeBars(buf: ArrayBufferView): DecodedBars {
@@ -348,24 +390,24 @@ export function decodeBars(buf: ArrayBufferView): DecodedBars {
         `bar record ${i} runs past the buffer (record_count=${header.recordCount})`,
       );
     }
-    const generation = view.getBigUint64(cursor, true);
-    const index = view.getBigUint64(cursor + 8, true);
-    const f = cursor + 16; // v1 fields start after the 16-byte identity
-    const tsOffsetMs = view.getUint32(f, true);
-    const o = view.getBigInt64(f + 4, true);
-    const h = view.getBigInt64(f + 12, true);
-    const l = view.getBigInt64(f + 20, true);
-    const c = view.getBigInt64(f + 28, true);
-    const v = view.getBigUint64(f + 36, true);
-    const turnover = view.getBigUint64(f + 44, true);
-    const tradeCount = view.getUint32(f + 52, true);
-    const delta = view.getBigInt64(f + 56, true);
-    const flagsByte = view.getUint8(f + 64);
+    const o = BAR.offsets;
+    const generation = view.getBigUint64(cursor + o.generation, true);
+    const index = view.getBigUint64(cursor + o.index, true);
+    const tsOffsetMs = view.getUint32(cursor + o.tsOffsetMs, true);
+    const open = view.getBigInt64(cursor + o.open, true);
+    const h = view.getBigInt64(cursor + o.high, true);
+    const l = view.getBigInt64(cursor + o.low, true);
+    const c = view.getBigInt64(cursor + o.close, true);
+    const v = view.getBigUint64(cursor + o.volume, true);
+    const turnover = view.getBigUint64(cursor + o.turnover, true);
+    const tradeCount = view.getUint32(cursor + o.trades, true);
+    const delta = view.getBigInt64(cursor + o.delta, true);
+    const flagsByte = view.getUint8(cursor + o.flags);
     bars.push({
       generation,
       index,
       tsMs: header.tsBaseMs + BigInt(tsOffsetMs),
-      open: unscale(o, header.priceScale),
+      open: unscale(open, header.priceScale),
       high: unscale(h, header.priceScale),
       low: unscale(l, header.priceScale),
       close: unscale(c, header.priceScale),
@@ -405,8 +447,9 @@ export interface DecodedFootprint {
   groups: FootprintGroup[];
 }
 
-const FOOTPRINT_GROUP_PREFIX_BYTES = 8; // u32 ts_offset_ms + u32 cell_count
-const FOOTPRINT_CELL_BYTES = 33;
+const FP = K.footprint;
+const FOOTPRINT_GROUP_PREFIX_BYTES = FP.groupPrefix.bytes;
+const FOOTPRINT_CELL_BYTES = FP.record.bytes;
 
 /**
  * Decodes a `body_kind: 5` (footprint) binary frame body. `record_count` in
@@ -421,6 +464,12 @@ export function decodeFootprint(buf: ArrayBufferView): DecodedFootprint {
     );
   }
   const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  assertFits(
+    header.recordCount,
+    FOOTPRINT_GROUP_PREFIX_BYTES,
+    view.byteLength - COMMON_HEADER_BYTES,
+    "footprint groups",
+  );
   const groups: FootprintGroup[] = [];
   let cursor = COMMON_HEADER_BYTES;
   for (let g = 0; g < header.recordCount; g += 1) {
@@ -429,9 +478,10 @@ export function decodeFootprint(buf: ArrayBufferView): DecodedFootprint {
         `footprint group ${g} prefix runs past the buffer (record_count=${header.recordCount})`,
       );
     }
-    const tsOffsetMs = view.getUint32(cursor, true);
-    const cellCount = view.getUint32(cursor + 4, true);
+    const tsOffsetMs = view.getUint32(cursor + FP.groupPrefix.offsets.tsOffsetMs, true);
+    const cellCount = view.getUint32(cursor + FP.groupPrefix.offsets.cellCount, true);
     cursor += FOOTPRINT_GROUP_PREFIX_BYTES;
+    assertFits(cellCount, FOOTPRINT_CELL_BYTES, view.byteLength - cursor, `footprint group ${g}`);
     const cells: FootprintCell[] = [];
     for (let i = 0; i < cellCount; i += 1) {
       if (cursor + FOOTPRINT_CELL_BYTES > view.byteLength) {
@@ -439,11 +489,12 @@ export function decodeFootprint(buf: ArrayBufferView): DecodedFootprint {
           `footprint cell ${i} in group ${g} runs past the buffer (cell_count=${cellCount})`,
         );
       }
-      const price = view.getBigInt64(cursor, true);
-      const bidVolume = view.getBigUint64(cursor + 8, true);
-      const askVolume = view.getBigUint64(cursor + 16, true);
-      const tradeCount = view.getUint32(cursor + 24, true);
-      const flagsByte = view.getUint8(cursor + 28);
+      const co = FP.record.offsets;
+      const price = view.getBigInt64(cursor + co.price, true);
+      const bidVolume = view.getBigUint64(cursor + co.bidVolume, true);
+      const askVolume = view.getBigUint64(cursor + co.askVolume, true);
+      const tradeCount = view.getUint32(cursor + co.trades, true);
+      const flagsByte = view.getUint8(cursor + co.flags);
       cells.push({
         price: unscale(price, header.priceScale),
         bidVolume: unscale(bidVolume, header.qtyScale),
@@ -476,8 +527,9 @@ export interface DecodedHeatmapColumn {
   rows: HeatmapRow[];
 }
 
-const HEATMAP_COLUMN_PREFIX_BYTES = 24; // u32 ts_offset_ms + i64 price_min + i64 price_step + u32 row_count
-const HEATMAP_ROW_BYTES = 16;
+const HM = K.heatmapColumn;
+const HEATMAP_COLUMN_PREFIX_BYTES = HM.bodyPrefix.bytes;
+const HEATMAP_ROW_BYTES = HM.record.bytes;
 
 /** Decodes a `body_kind: 6` (heatmap_column) binary frame body. */
 export function decodeHeatmapColumn(buf: ArrayBufferView): DecodedHeatmapColumn {
@@ -493,19 +545,26 @@ export function decodeHeatmapColumn(buf: ArrayBufferView): DecodedHeatmapColumn 
     throw new BinaryFrameError("heatmap column body shorter than its fixed prefix");
   }
   let cursor = COMMON_HEADER_BYTES;
-  const tsOffsetMs = view.getUint32(cursor, true);
-  const priceMin = view.getBigInt64(cursor + 4, true);
-  const priceStep = view.getBigInt64(cursor + 12, true);
-  const rowCount = view.getUint32(cursor + 20, true);
+  const tsOffsetMs = view.getUint32(cursor + HM.bodyPrefix.offsets.tsOffsetMs, true);
+  const priceMin = view.getBigInt64(cursor + HM.bodyPrefix.offsets.priceMin, true);
+  const priceStep = view.getBigInt64(cursor + HM.bodyPrefix.offsets.priceStep, true);
+  const rowCount = view.getUint32(cursor + HM.bodyPrefix.offsets.rowCount, true);
   cursor += HEATMAP_COLUMN_PREFIX_BYTES;
+  assertFits(rowCount, HEATMAP_ROW_BYTES, view.byteLength - cursor, "heatmap rows");
   const rows: HeatmapRow[] = [];
   for (let i = 0; i < rowCount; i += 1) {
     if (cursor + HEATMAP_ROW_BYTES > view.byteLength) {
       throw new BinaryFrameError(`heatmap row ${i} runs past the buffer (row_count=${rowCount})`);
     }
     rows.push({
-      bidSize: unscale(view.getBigUint64(cursor, true), header.qtyScale),
-      askSize: unscale(view.getBigUint64(cursor + 8, true), header.qtyScale),
+      bidSize: unscale(
+        view.getBigUint64(cursor + HM.record.offsets.bidSize, true),
+        header.qtyScale,
+      ),
+      askSize: unscale(
+        view.getBigUint64(cursor + HM.record.offsets.askSize, true),
+        header.qtyScale,
+      ),
     });
     cursor += HEATMAP_ROW_BYTES;
   }

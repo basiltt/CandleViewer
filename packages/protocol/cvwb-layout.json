@@ -1,0 +1,272 @@
+{
+  "$comment": "E17-T02: the ONE layout declaration for the CVWB binary frame (docs/plan/23-ws-protocol.md §3.4). Generators: packages/protocol/scripts/generate-cvwb-layout.mjs (TS) and tools/contracts/gen_cvwb_layout.py (Python). Strides are declared AND recomputed from the fields by both generators; a mismatch fails generation. Bars and footprint records end in 4 reserved zero bytes (the §3.4 strides 85/33 exceed their listed fields by 4; matches the pre-existing decoder offsets).",
+  "magic": 1129731906,
+  "endianness": "little",
+  "header_bytes": 24,
+  "header": [
+    {
+      "name": "magic",
+      "type": "u32"
+    },
+    {
+      "name": "format_version",
+      "type": "u8"
+    },
+    {
+      "name": "body_kind",
+      "type": "u8"
+    },
+    {
+      "name": "flags",
+      "type": "u8"
+    },
+    {
+      "name": "price_scale",
+      "type": "u8"
+    },
+    {
+      "name": "qty_scale",
+      "type": "u8"
+    },
+    {
+      "name": "reserved",
+      "type": "pad3"
+    },
+    {
+      "name": "record_count",
+      "type": "u32"
+    },
+    {
+      "name": "ts_base_ms",
+      "type": "u64"
+    }
+  ],
+  "header_flags": ["estimated", "coalesced", "replay", "partial"],
+  "kinds": [
+    {
+      "id": 1,
+      "name": "book_snapshot",
+      "format_version": 1,
+      "length_rule": "min",
+      "record_bytes": 17,
+      "record": [
+        {
+          "name": "side",
+          "type": "u8",
+          "enum": [0, 1]
+        },
+        {
+          "name": "price",
+          "type": "i64"
+        },
+        {
+          "name": "size",
+          "type": "u64"
+        }
+      ],
+      "trailer": [
+        {
+          "name": "xu",
+          "type": "u64"
+        },
+        {
+          "name": "xseq",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "book_delta",
+      "format_version": 1,
+      "length_rule": "min",
+      "record_bytes": 17,
+      "record": [
+        {
+          "name": "side",
+          "type": "u8",
+          "enum": [0, 1]
+        },
+        {
+          "name": "price",
+          "type": "i64"
+        },
+        {
+          "name": "size",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "trades",
+      "format_version": 1,
+      "length_rule": "min",
+      "record_bytes": 22,
+      "record": [
+        {
+          "name": "ts_offset_ms",
+          "type": "u32"
+        },
+        {
+          "name": "price",
+          "type": "i64"
+        },
+        {
+          "name": "size",
+          "type": "u64"
+        },
+        {
+          "name": "side",
+          "type": "u8",
+          "enum": [0, 1]
+        },
+        {
+          "name": "flags",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "bars",
+      "format_version": 2,
+      "length_rule": "exact",
+      "record_bytes": 85,
+      "record": [
+        {
+          "name": "generation",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u64"
+        },
+        {
+          "name": "ts_offset_ms",
+          "type": "u32"
+        },
+        {
+          "name": "open",
+          "type": "i64"
+        },
+        {
+          "name": "high",
+          "type": "i64"
+        },
+        {
+          "name": "low",
+          "type": "i64"
+        },
+        {
+          "name": "close",
+          "type": "i64"
+        },
+        {
+          "name": "volume",
+          "type": "u64"
+        },
+        {
+          "name": "turnover",
+          "type": "u64"
+        },
+        {
+          "name": "trades",
+          "type": "u32"
+        },
+        {
+          "name": "delta",
+          "type": "i64"
+        },
+        {
+          "name": "flags",
+          "type": "u8"
+        },
+        {
+          "name": "reserved",
+          "type": "pad4"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "footprint",
+      "format_version": 1,
+      "length_rule": "min",
+      "record_bytes": 33,
+      "group_prefix": [
+        {
+          "name": "ts_offset_ms",
+          "type": "u32"
+        },
+        {
+          "name": "cell_count",
+          "type": "u32",
+          "count": true
+        }
+      ],
+      "record": [
+        {
+          "name": "price",
+          "type": "i64"
+        },
+        {
+          "name": "bid_volume",
+          "type": "u64"
+        },
+        {
+          "name": "ask_volume",
+          "type": "u64"
+        },
+        {
+          "name": "trades",
+          "type": "u32"
+        },
+        {
+          "name": "flags",
+          "type": "u8"
+        },
+        {
+          "name": "reserved",
+          "type": "pad4"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "heatmap_column",
+      "format_version": 1,
+      "length_rule": "min",
+      "record_bytes": 16,
+      "body_prefix": [
+        {
+          "name": "ts_offset_ms",
+          "type": "u32"
+        },
+        {
+          "name": "price_min",
+          "type": "i64"
+        },
+        {
+          "name": "price_step",
+          "type": "i64"
+        },
+        {
+          "name": "row_count",
+          "type": "u32",
+          "count": true
+        }
+      ],
+      "record": [
+        {
+          "name": "bid_size",
+          "type": "u64"
+        },
+        {
+          "name": "ask_size",
+          "type": "u64"
+        }
+      ]
+    }
+  ]
+}
