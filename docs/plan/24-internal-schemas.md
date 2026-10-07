@@ -661,6 +661,16 @@ An amend re-emits a bar with the same identity `(bar_param/spec_hash, generation
 
 A symbol typically has 3–8 active specs (1 m, 5 m, 1 h time bars plus a footprint tick/volume series). `BarBuilderSet` fans one `TradeEvent` to all builders for that symbol in a single pass; builders never subscribe to the bus individually. Cost is O(specs) per trade with no allocation in the common path (builders mutate an internal mutable draft and only materialize a frozen `Bar` on emit).
 
+As shipped (E12-T03, `bars/builder_set.py`): the set subscribes `{env}.md.{symbol}.trade` once per symbol with `NEVER_DROP`, so a slow consumer backpressures the trade publisher and nothing is dropped. One owned task per symbol folds each trade into the symbol's builders in registration order and routes every emission through a single `EmitRouter` (the QuestDB `BarWriter` sink persists `close` emissions; the WS publisher, E12-T06, is a second `BarSink`), stamped `generation = 0` for live. Specs are leased per consumer and reference-counted; the last release starts a 30 s grace (US-MKT-005), and teardown writes a final blob. Hard caps, enforced on registering a *new* distinct series and refused with `SpecCapExceeded` (`spec_cap_exceeded`, naming the cap and the active specs): 8 per user, 32 per symbol, 512 process-wide (SR-E12-04). State blobs are written every 60 s to `<root>/<symbol>/<spec_hash>.state.json` (both components pattern-validated) by write-temp, fsync, then rename. Each envelope carries the builder's `BuilderState` and the watermark (`ts_event` of the last applied trade plus the trade ids at that timestamp). On restore the set replays only tape trades after the watermark. A blob that is over 8 MiB, unparseable, of an unknown version, for another series, has a watermark past the tape head, or that the builder refuses is deleted, counted in `bars_blob_discarded_total{reason}` and logged with its `spec_hash`; the spec cold-starts (SR-E12-12).
+
+Failure isolation and limits (E12-T03, #2030 review):
+- A builder that raises in `on_trade`/`on_clock` is quarantined: its series is removed, the lane keeps draining for the others, `bar_builder_quarantined_total{reason=builder_error}` is incremented, and health turns DEGRADED (`bar_builder_quarantined`).
+- A lane or ticker task that dies is logged. A dead lane is unsubscribed, so the trade publisher never blocks on a queue nobody drains. Health shows `bar_task_failed`.
+- Each sink call is bounded by 5 s, per the 20 §4.2 `Bus → bars lane → sinks` row. A timeout is counted (`bar_emit_sink_errors_total{reason=<sink>_timeout}`) and turns health DEGRADED.
+- A restored series replays the tape after its watermark and then the lane's bounded recent-trade ring (8192), so trades the lane applied before the async tape write landed are not lost (BI-5).
+- "No allocation" is scoped to the fan-out loop itself, which retains nothing per trade × spec. Each emitted update still allocates its `Bar` and one `BarEmission`.
+- App wiring (start/stop in the lifespan) is #2031. Until then no production path runs the set.
+
 ---
 
 ## 4. Footprint cell model and imbalance algorithms

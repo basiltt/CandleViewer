@@ -348,9 +348,9 @@ below already exist in the ticket text or are requested.
 | `bars_gap_detected_total`                                          | BR-06, BR-35 | E12-T03                     |
 | `exchange_response_invalid_total`                                  | BR-01, BR-02 | E08 / E12-S05               |
 | `bars_row_checksum_mismatch_total`                                 | BR-08        | requested (SR-E12-11)       |
-| `bars_blob_discarded_total{reason}`                                | BR-12        | requested (SR-E12-12)       |
+| `bars_blob_discarded_total{reason}`                                | BR-12        | shipped E12-T03 (#2030)     |
 | `bars_source_overwrite_refused_total`                              | BR-07        | requested (SR-E12-10)       |
-| `bars_spec_cap_rejected_total{cap}`                                | BR-30        | requested (SR-E12-04)       |
+| `bars_spec_cap_rejected_total{reason}` (reason = the cap)          | BR-30        | shipped E12-T03 (#2030)     |
 | `bars_backfill_pages_total`, `bars_backfill_aborted_total{reason}` | BR-33        | requested (SR-E12-08)       |
 
 ## 11. Control-to-ticket map

@@ -113,6 +113,8 @@ class CallableProbe:
 HOT_TIER_WRITE_BEHIND = "hot_tier_write_behind"
 #: #1919: ingestion feed health component / `/readyz` check name.
 INGESTION = "ingestion"
+#: E12-T03: bar builder set health component (`bars_*` state blobs).
+BARS = "bars"
 
 #: Components named by the ticket; unbuilt ones get a `not_deployed` probe.
 REQUIRED_COMPONENTS: tuple[str, ...] = (
@@ -142,6 +144,7 @@ EVENT_COMPONENT: dict[str, str] = {
     "disk": "api",
     "hot_tier_write_behind": "db",
     "ingestion": "exchange",
+    "bars": "bars",
 }
 _SEVERITY: dict[ComponentState, str] = {
     ComponentState.HEALTHY: "info",

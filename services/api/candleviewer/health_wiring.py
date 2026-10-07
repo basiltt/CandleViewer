@@ -21,6 +21,7 @@ from candleviewer.db.models import system_events
 from candleviewer.ingestion.connection import PHASE_OPEN, ConnectionManager
 from candleviewer.observability.health import HealthReport, HealthStatus
 from candleviewer.observability.health_probes import (
+    BARS,
     HOT_TIER_WRITE_BEHIND,
     INGESTION,
     CallableProbe,
@@ -234,6 +235,21 @@ def register_ingestion_probe(registry: HealthRegistry, health: Callable[[], Heal
         return ingestion_state(health())
 
     registry.register(CallableProbe(INGESTION, probe, timeout=1.0))
+
+
+def register_bars_probe(registry: HealthRegistry, health: Callable[[], HealthReport]) -> None:
+    """E12-T03: `bars` component. DEGRADED with a `BarsHealthReason` token when a state blob
+    was discarded and its series cold-started; same mapping as ingestion (#1919)."""
+
+    async def probe() -> ProbeResult:
+        report = health()
+        if report.status is HealthStatus.STOPPED:
+            return ProbeResult(ComponentState.NOT_DEPLOYED, "bars stopped")
+        if report.status is HealthStatus.DEGRADED:
+            return ProbeResult(ComponentState.DEGRADED, report.detail)
+        return ProbeResult(ComponentState.HEALTHY)
+
+    registry.register(CallableProbe(BARS, probe, timeout=1.0))
 
 
 def register_public_ws_probe(

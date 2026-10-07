@@ -97,6 +97,9 @@ class MetricSpec:
     owner_epic: str
     buckets: tuple[float, ...] | None = None
     max_series: int = 200
+    #: Live, but created at module level by its owner and served by a `ReexportCollector`
+    #: (e.g. `bars.metrics.export_bars_metrics`); `register_r0()` must not register it twice.
+    exported: bool = False
 
 
 def _s(
@@ -110,9 +113,10 @@ def _s(
     owner: str,
     buckets: tuple[float, ...] | None = None,
     max_series: int = 200,
+    exported: bool = False,
 ) -> MetricSpec:
     return MetricSpec(
-        name, kind, unit, labels, help_text, alert, status, owner, buckets, max_series
+        name, kind, unit, labels, help_text, alert, status, owner, buckets, max_series, exported
     )
 
 
@@ -227,8 +231,9 @@ CATALOGUE: Final[tuple[MetricSpec, ...]] = (
         ("symbol", "kind"),
         "Bars closed by a builder (24 §3.3, E12-S01).",
         "none",
-        _P,
+        _L,
         "E12",
+        exported=True,
         max_series=400,
     ),
     _s(
@@ -238,8 +243,9 @@ CATALOGUE: Final[tuple[MetricSpec, ...]] = (
         ("symbol",),
         "Closed bars re-emitted after a late trade within 60 s.",
         "none",
-        _P,
+        _L,
         "E12",
+        exported=True,
         max_series=80,
     ),
     _s(
@@ -249,8 +255,9 @@ CATALOGUE: Final[tuple[MetricSpec, ...]] = (
         ("symbol", "reason"),
         "Late trades applied to no bar (older than 60 s, or interval had no bar).",
         "sustained growth = clock/ingest lag",
-        _P,
+        _L,
         "E12",
+        exported=True,
         max_series=80,
     ),
     _s(
@@ -260,8 +267,9 @@ CATALOGUE: Final[tuple[MetricSpec, ...]] = (
         ("symbol",),
         "Trades split across volume bars (24 §3.3, E12-S02).",
         "~100% of trades = misconfigured threshold",
-        _P,
+        _L,
         "E12",
+        exported=True,
         max_series=40,
     ),
     _s(
@@ -271,9 +279,128 @@ CATALOGUE: Final[tuple[MetricSpec, ...]] = (
         ("kind",),
         "Activity-bar series whose first bar is partial (tape starts mid-bar).",
         "none",
-        _P,
+        _L,
         "E12",
+        exported=True,
         max_series=6,
+    ),
+    # --- Bar builder set (E12-T03); served by bars.metrics.export_bars_metrics ------
+    _s(
+        "bar_builder_specs_in_use",
+        "gauge",
+        "specs",
+        ("symbol",),
+        "Active bar specs per symbol (cap 32, SR-E12-04).",
+        "near the cap = a client opening many series",
+        _L,
+        "E12",
+        max_series=40,
+        exported=True,
+    ),
+    _s(
+        "bar_builder_fanout_latency_seconds",
+        "histogram",
+        "seconds",
+        (),
+        "Time to fan one trade to every builder of its symbol.",
+        "p95 > 1 ms eats the US-MKT-006 20 ms budget",
+        _L,
+        "E12",
+        (0.00001, 0.00005, 0.0001, 0.0005, 0.001, 0.005, 0.02),
+        exported=True,
+    ),
+    _s(
+        "bar_builder_cold_start_seconds",
+        "histogram",
+        "seconds",
+        (),
+        "Restore + tape replay time before a spec goes live.",
+        "> 60 s = blob cadence broken",
+        _L,
+        "E12",
+        (0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 30.0),
+        exported=True,
+    ),
+    _s(
+        "bar_state_snapshots_written_total",
+        "counter",
+        "blobs",
+        (),
+        "Builder state blobs written (every 60 s per series).",
+        "flat while specs are active = persistence stalled",
+        _L,
+        "E12",
+        exported=True,
+    ),
+    _s(
+        "bars_blob_discarded_total",
+        "counter",
+        "blobs",
+        ("reason",),
+        "State blobs discarded on restore (corrupt, too_large, version, wrong_series, ...).",
+        "any = cold start; investigate disk",
+        _L,
+        "E12",
+        max_series=10,
+        exported=True,
+    ),
+    _s(
+        "bar_builder_cold_starts_total",
+        "counter",
+        "specs",
+        (),
+        "Specs started without a usable state blob.",
+        "none",
+        _L,
+        "E12",
+        exported=True,
+    ),
+    _s(
+        "bars_spec_cap_rejected_total",
+        "counter",
+        "registrations",
+        ("reason",),
+        "Spec registrations refused by a cap (per-user, per-symbol, process-wide).",
+        "sustained = abuse or caps too low (SR-E12-04)",
+        _L,
+        "E12",
+        max_series=3,
+        exported=True,
+    ),
+    _s(
+        "bar_builder_quarantined_total",
+        "counter",
+        "series",
+        ("reason",),
+        "Series removed after their builder raised (builder_error) or bars tasks that died.",
+        "any = a builder defect; series stopped",
+        _L,
+        "E12",
+        max_series=2,
+        exported=True,
+    ),
+    _s(
+        "bars_restore_gap_total",
+        "counter",
+        "restores",
+        (),
+        "Restores whose tape lag exceeded the 8192-trade catch-up ring (trades missed).",
+        "any = tape writer far behind; series history incomplete",
+        _L,
+        "E12",
+        exported=True,
+    ),
+    _s(
+        "bar_emit_sink_errors_total",
+        "counter",
+        "emissions",
+        ("reason",),
+        "Bar emissions a sink (questdb, ws) failed to accept.",
+        "any = bars missing downstream",
+        _L,
+        "E12",
+        max_series=4,
+        exported=True,
     ),
     _s(
         "book_resync_total",
@@ -993,10 +1120,15 @@ def live_specs() -> tuple[MetricSpec, ...]:
     return tuple(s for s in CATALOGUE if s.status == "live")
 
 
+def registered_specs() -> tuple[MetricSpec, ...]:
+    """Live entries `register_r0()` owns (re-exported ones are served by their module)."""
+    return tuple(s for s in live_specs() if not s.exported)
+
+
 def register_r0(metrics: Metrics) -> dict[str, BoundedMetric]:
     """Register every `live` catalogue entry on `metrics`; idempotent."""
     out: dict[str, BoundedMetric] = {}
-    for spec in live_specs():
+    for spec in registered_specs():
         if spec.kind == "histogram" and spec.buckets is not None:
             out[spec.name] = metrics.histogram(
                 spec.name,

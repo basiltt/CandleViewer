@@ -13,7 +13,7 @@ import pytest
 from prometheus_client.parser import text_string_to_metric_families
 
 from candleviewer.observability.metrics import Metrics, generate_latest
-from candleviewer.observability.metrics_catalogue import live_specs, register_r0
+from candleviewer.observability.metrics_catalogue import register_r0, registered_specs
 from candleviewer.observability.metrics_server import (
     MetricsBindError,
     MetricsRuntime,
@@ -74,7 +74,7 @@ async def test_runtime_serves_live_metrics_and_stops() -> None:
                 except httpx.TransportError:
                     await asyncio.sleep(0.05)
         families = {f.name for f in text_string_to_metric_families(body)}
-        for spec in live_specs():
+        for spec in registered_specs():
             assert spec.name.removesuffix("_total") in families, spec.name
     finally:
         await runtime.stop()
@@ -84,7 +84,7 @@ async def test_runtime_serves_live_metrics_and_stops() -> None:
 def test_scrape_latency_under_50ms_at_max_cardinality() -> None:
     metrics = Metrics("dev", process_collectors=True)
     r0 = register_r0(metrics)
-    for spec in live_specs():
+    for spec in registered_specs():
         if not spec.labels:
             continue
         metric = r0[spec.name]
