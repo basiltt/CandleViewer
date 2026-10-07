@@ -10,7 +10,6 @@ from candleviewer.bars.errors import BarsError, BarSpecError
 from candleviewer.bars.models import BarBuilder, BarSpec, BarUpdate
 from candleviewer.bars.time_builder import (
     TimeBarBuilder,
-    TimeBarUpdate,
     bars_late_trade_dropped_total,
     bucket_bounds,
     validate_time_spec,
@@ -93,7 +92,7 @@ def test_on_trade_late_within_60s_amends_closed_bar_and_reemits_close() -> None:
     out = b.on_trade(trade(us("10:00:05"), px="98", qty="3", side="sell", seq=9))
     assert len(out) == 1
     u = out[0]
-    assert isinstance(u, TimeBarUpdate) and isinstance(u, BarUpdate)
+    assert isinstance(u, BarUpdate)
     assert u.kind == "close" and u.amended and u.bar.index == 0 and u.bar.closed
     bar = u.bar
     # The late trade is OLDER than the bar's only trade: it becomes the open, not the close.

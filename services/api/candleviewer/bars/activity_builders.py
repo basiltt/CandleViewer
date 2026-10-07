@@ -67,7 +67,7 @@ class ActivityBarUpdate(BarUpdate):
     """`BarUpdate` plus `split_from_trade_id`: the id of the trade split by this emission
     (set on the `close` that took the head and on the emission that took the remainder).
 
-    Stop-gap like `TimeBarUpdate` (#1985): the persisted row and wire payload need a
+    Stop-gap (#2012): the persisted row and wire payload need a
     contract change first (21 §4.8, `/market/bars`).
     """
 
