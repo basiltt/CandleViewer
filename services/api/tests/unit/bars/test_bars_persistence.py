@@ -124,6 +124,11 @@ def test_ddl_matches_schema_doc() -> None:
         r"^\s{2}(\w+)\s+(?:TIMESTAMP|SYMBOL|DOUBLE|LONG|INT|BOOLEAN)", block, re.M
     )
     doc_cols += re.findall(r"\b(open|high|low|close)\s+DOUBLE", block)
+    # Dedup keys are doc-derived too, so the strict xfail flips to a loud XPASS failure
+    # exactly when the DDL catches up with §4.8 (migration 0004, #2016).
+    doc_keys_m = re.search(r"DEDUP UPSERT KEYS\(([^)]*)\)", block)
+    assert doc_keys_m is not None
+    doc_keys = tuple(k.strip() for k in doc_keys_m.group(1).split(","))
     tables = {
         t.name: t for t in parse_ddl_dir(ROOT / "backend/db/questdb") if t.name.startswith("bars_")
     }
@@ -135,7 +140,7 @@ def test_ddl_matches_schema_doc() -> None:
         extra = {"open_source_ts"} if name in ("bars_renko", "bars_range") else set()
         assert set(t.columns) - {"source", "row_checksum"} == base | extra, name
         assert t.partition_by == "MONTH" and t.ts_col == "ts"
-        assert t.dedup_keys == ("ts", "symbol", "bar_param")
+        assert t.dedup_keys == doc_keys
         assert {"source", "row_checksum"} <= set(t.columns)
 
 
