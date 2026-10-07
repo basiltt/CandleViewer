@@ -93,6 +93,7 @@ Numeric quality gates (CI-enforced, see §14):
 
 - Bar builders (time/tick/volume/range/delta bars), footprint cell aggregation, volume/delta profile aggregation, CVD, imbalance tracker, Deep Stats rows, and DOM heatmap decay/normalization each have a **golden-file test suite**: a recorded fixture is run through the module, output is serialized (deterministic JSON/Parquet), and compared byte-for-byte (or with an explicit float tolerance, e.g. `1e-9` relative) against a checked-in golden output.
 - Golden files live under `packages/fixtures/golden/<module>/<case>.golden.json` and are regenerated only via an explicit `--update-golden` test-runner flag, which requires the PR to include a human-written rationale in the PR description explaining why the golden output changed (enforced by a PR-template checklist item + CI diff-size warning on golden file changes).
+- Big-trade golden (E22-T04): `packages/fixtures/golden/bigtrade/` (recorded BTCUSDT trades, expected events for three configurations, `algo_version`), compared with an independent DuckDB recompute in `services/api/tests/unit/orderflow/test_bigtrade_golden_parity.py`; regeneration requires an `ALGO_VERSION` bump (see its README).
 - Every golden case has a paired **hand-computed or independently-cross-checked** "canonical case" (small, human-verifiable input, e.g. 5 trades forming 1 footprint cell) in addition to realistic recorded-fixture-derived cases, so golden files are trustworthy from day one, not just self-consistent.
 
 ### 4.3 Property-based tests (hypothesis)
