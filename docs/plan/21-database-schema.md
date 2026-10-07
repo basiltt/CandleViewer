@@ -2501,6 +2501,14 @@ Identical column set (differing only in `bar_param` semantics) for:
 
 `bars_renko` and `bars_range` additionally carry `open_source_ts` (the timestamp of the trade that opened the brick) because their bars are not time-aligned.
 
+All six tables also carry two integrity columns added by `backend/db/questdb/0003_bars_integrity_columns.sql` (E12-T02, requested by the E12-X01 STRIDE model): `source SYMBOL CAPACITY 8 CACHE` (`tape` | `kline` | `parquet`; a kline row is refused over a tape row for rows written by this process; the stored-row check lands with E12-T05, #1996) and `row_checksum LONG` (63-bit sha256 prefix over the value columns, verified on read). `bar_param` is rendered from the validated spec (`5m`, `tick:500`, …), never from client text.
+
+`row_checksum` is an **unkeyed** sha256 prefix: tamper-evidence against naive edits only (an attacker with write access can recompute it); an HMAC is out of scope for E12-T02. A NULL checksum is untrusted on read (integrity event, `reason=missing`) except for pre-0003 legacy rows, which have NULL `source` *and* NULL `row_checksum`. Source precedence: a `kline` row is refused over a `tape`/`parquet` row written by this process (stored-row check: E12-T05, #1996).
+
+Source precedence is enforced in `BarWriter` against rows written by the same process; the stored-row check belongs to the E12-T05 backfill caller (follow-up filed).
+
+**Deviation (E12-T02, BR-25 ask on #345):** the stored `bar_param` is the readable form (`5m`, `tick:500`, …) rather than the `spec_hash`, per the §4.8 table and the ticket's design note (low SYMBOL cardinality, operator-readable queries). The BR-25 proposal to store `spec_hash` is not adopted because specs with non-default options have no readable form and are refused at persistence (`BarPersistError`); `spec_hash` ⇄ `bar_param` is 1:1 via `to_wire`. Revisit if option-bearing specs must be persisted.
+
 ### 4.9 `footprint_cells`
 
 The per-bar, per-price-level aggregation behind the footprint chart. One row per (bar, price level).

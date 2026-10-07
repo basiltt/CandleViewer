@@ -12,6 +12,8 @@ Also performs the column-drift guard: compares the live `tables()`/
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Protocol
 
@@ -122,9 +124,22 @@ def parse_ddl_file_statements(path: Path) -> list[str]:
     return statements
 
 
-async def assert_no_schema_drift(executor: QuestDbExecutor, ddl_dir: Path) -> None:
+#: WAL tables apply `ALTER ... ADD COLUMN` asynchronously (the WAL apply job), so right after a
+#: migration `table_columns()` can briefly lag the DDL that was accepted. The drift guard therefore
+#: re-reads for a bounded time before declaring drift (a real mismatch still raises).
+DRIFT_SETTLE_ATTEMPTS = 20
+DRIFT_SETTLE_DELAY_S = 0.25
+
+
+async def assert_no_schema_drift(
+    executor: QuestDbExecutor,
+    ddl_dir: Path,
+    *,
+    sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+) -> None:
     """Compare the live column set of every DDL-defined table against the
-    parsed `.sql` files; raise `StorageSchemaDrift` on any mismatch.
+    parsed `.sql` files; raise `StorageSchemaDrift` on any mismatch that persists
+    after the WAL-apply settle window.
 
     Uses `table_columns('<name>')`, QuestDB's introspection function, rather
     than string-matching `tables()` output.
@@ -135,10 +150,15 @@ async def assert_no_schema_drift(executor: QuestDbExecutor, ddl_dir: Path) -> No
         # from user input. `column` is a SQL keyword in QuestDB and must be
         # double-quoted when referenced as an identifier in the SELECT list.
         query = f"SELECT \"column\" FROM table_columns('{table.name}')"  # noqa: S608  # nosec B608 - table.name from trusted parsed DDL files, not user input
-        rows = await executor.fetch(query)
-        live_columns = {str(row["column"]).lower() for row in rows}
         expected_columns = set(table.columns)
-        if live_columns != expected_columns:
+        for attempt in range(DRIFT_SETTLE_ATTEMPTS):
+            rows = await executor.fetch(query)
+            live_columns = {str(row["column"]).lower() for row in rows}
+            if live_columns == expected_columns:
+                break
+            if attempt < DRIFT_SETTLE_ATTEMPTS - 1:
+                await sleep(DRIFT_SETTLE_DELAY_S)
+        else:
             missing = expected_columns - live_columns
             extra = live_columns - expected_columns
             raise StorageSchemaDrift(
