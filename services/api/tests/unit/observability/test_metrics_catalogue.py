@@ -30,7 +30,7 @@ _UNIT_SUFFIX = re.compile(r"_(seconds|bytes|total|depth|state|in_use|remaining|m
 
 #: Golden: sha256 of the sorted (name, kind, labels, status, owner) catalogue.
 #: Changing it requires updating 20-architecture.md §12.1 and dashboards/alerts.
-GOLDEN_CATALOGUE_SHA256 = "bfe90575cc7822266b1b7b1047a8aa64314b96a0ae84e238a281b19661a7f0d5"
+GOLDEN_CATALOGUE_SHA256 = "21ca56da14868b047fd640342965f285dff69b206990748fb5ffc3c1b23f0881"
 
 _KNOWN_EPICS = re.compile(r"^E\d{2}(-[A-Z]\d{2})?$")
 

@@ -25,6 +25,10 @@ before commit.
   BTCUSDT; env: public live stream shape (no account data); redaction: derived output of an
   already-redacted corpus, no identifiers. Regenerate from `services/api` with
   `CV_REGEN_GOLDEN=1 pytest tests/unit/bars/test_time_builder_golden.py` and review the diff.
+- `golden/bars/activity_bars_BTCUSDT.jsonl` — E12-S02 tick/volume bars (tick:50, tick:500, vol:5,
+  vol:0.25, one bar per line). Source: same corpus, date, symbol and env as above; redaction: derived
+  output of an already-redacted corpus, no identifiers. Regenerate with
+  `CV_REGEN_GOLDEN=1 pytest tests/unit/bars/test_activity_builders_golden.py` and review the diff.
 
 ## Scripts
 
