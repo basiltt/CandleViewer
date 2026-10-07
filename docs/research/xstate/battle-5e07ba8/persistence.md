@@ -98,8 +98,8 @@ All run from the scripts directory with:
 
 ```
 PYTHONIOENCODING=utf-8 PYTHONUTF8=1 \
-PYTHONPATH=/c/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src \
-"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python" <script>
+PYTHONPATH=/c<workspace>/_ref/xstate-statemachine/src \
+"<workspace>/_ref/xstate-statemachine/.venv-main/Scripts/python" <script>
 ```
 
 | Script | What it does |

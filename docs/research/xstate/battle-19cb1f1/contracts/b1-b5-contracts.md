@@ -50,7 +50,7 @@ Everything lives under `battle-19cb1f1/contracts/`:
 - `z0_build.py`, `z_b1.py`, `z_b2.py`, `z_b3.py`, `z_b45.py`, `z_b18.py`,
   `z_parity.py` — drivers. Outputs in `results/`.
 - `repro/` — STANDALONE (stdlib + `xstate_statemachine` only, every helper
-  inlined, run from neutral cwd `C:/Users/basil`), each parametrised by
+  inlined, run from neutral cwd `<home>`), each parametrised by
   `CV=async|def`, each exiting non-zero on the unsafe outcome:
   `r1_rollback_onDone.py`, `r2_chain_trip.py`, `r3_stranded.py`,
   `r4_b18_priority.py`, `r5_lasterror_kind.py`, `ld01_always_rollforward.py`,

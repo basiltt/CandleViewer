@@ -7,7 +7,7 @@ on the commit).
 Scripts: `battle-de2da4e/concurrency/v1`–`v7`, plus the round-11 suite
 re-run verbatim under `concurrency/rerun-c78ce99/`. Every probe is
 standalone (stdlib + `xstate_statemachine`, helpers inlined, no psutil),
-proven from the neutral cwd `C:/Users/basil`. Every action check runs
+proven from the neutral cwd `<home>`. Every action check runs
 BOTH `def` and `async def`; every engine check runs BOTH engines.
 
 Library suite @ `de2da4e`: **3545 passed, 13 skipped, 92.87 % coverage**
@@ -87,7 +87,7 @@ rate-independent, and the reduction is recorded in §5 as a residual gap.
 
 ```
 PY=…/_ref/xstate-statemachine/.venv-main/Scripts/python
-export PYTHONIOENCODING=utf-8 PYTHONUTF8=1      # from cwd C:/Users/basil
+export PYTHONIOENCODING=utf-8 PYTHONUTF8=1      # from cwd <home>
 D=…/CandleViewer/docs/research/xstate/battle-de2da4e/concurrency
 
 $PY $D/v1_reentrant_wait_matrix.py            # exit 0

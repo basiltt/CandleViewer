@@ -5,7 +5,7 @@ import asyncio, json
 import os, pathlib, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import cv78 as K
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 import z_b1 as Z1, z_b2 as Z2, z_b3 as Z3, z_b45 as Z4, z_b18 as Z8
 
 CASES = [

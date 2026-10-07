@@ -66,5 +66,5 @@ def main():
 
 
 if __name__ == "__main__":
-    os.chdir("C:/Users/basil")
+    os.chdir("<home>")
     main()

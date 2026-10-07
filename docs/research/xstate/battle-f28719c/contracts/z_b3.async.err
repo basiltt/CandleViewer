@@ -1,4 +1,4 @@
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\z_b3.py", line 5, in <module>
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\z_b3.py", line 5, in <module>
     import cvf28 as K
 ModuleNotFoundError: No module named 'cvf28'

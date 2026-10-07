@@ -30,7 +30,7 @@ until you check the source.
 
 ## Minimal reproduction
 
-Run from a neutral cwd (e.g. `C:/Users/basil`) with only `xstate_statemachine`
+Run from a neutral cwd (e.g. `<home>`) with only `xstate_statemachine`
 and stdlib imported. Shows the async engine enforcing a bound under a 40-event
 burst against `SyncInterpreter` silently swallowing the same burst unbounded.
 

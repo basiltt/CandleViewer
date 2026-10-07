@@ -2,7 +2,7 @@
 queue, which drains before the external inbox. Does it overtake events queued
 earlier while the machine was idle?"""
 import sys, asyncio
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter
 def run(src):
     sys.path.insert(0,src)
@@ -28,4 +28,4 @@ def run(src):
     sys.path.pop(0)
 print("expected FIFO: ['EARLY','LATE']")
 run("/tmp/lib3c/src")
-run("C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+run("<workspace>/_ref/xstate-statemachine/src")

@@ -1,8 +1,8 @@
 """Re-run R9-01/R10-01/D11-security-1/R12-03 shape against v0.9.0 (#235).
-STANDALONE: stdlib + xstate_statemachine only. Run from cwd C:/Users/basil.
+STANDALONE: stdlib + xstate_statemachine only. Run from cwd <home>.
 """
 import sys, asyncio
-sys.path.insert(0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0, "<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter
 import xstate_statemachine.events as ev_mod
 from xstate_statemachine.events import is_system_event

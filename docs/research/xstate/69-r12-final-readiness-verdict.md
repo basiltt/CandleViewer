@@ -6,7 +6,7 @@ Date: 2026-09-23. Round 12. Prior decision (round 11, `c78ce99`): **ADOPT WITH C
 
 Method: 5 issue verifications (#218–#222) re-run live (`issues/verify-main-de2da4e/`); full regression sweep — gate (168 checks) plus a **573-script** sweep, every delta re-confirmed **×5 serially** (`65-r12-regression.md`); complete suite + benchmarks (`66-r12-suite-bench.md`, `suite-de2da4e.log`); diff review `c78ce99..de2da4e` (`67-r12-diff-review.md`); 8 battle tracks plus 20 contract machines on both service spellings (`battle-de2da4e/`); triage → dedupe → **independent adversarial refutation of every Blocker and High**, applied below.
 
-**Financial-OMS standard applied throughout:** nothing counted without a standalone repro on a clean interpreter from neutral cwd `C:/Users/basil`, stdlib + `xstate_statemachine` only, and **every service/action check run with both `def` and `async def`**, polled to convergence.
+**Financial-OMS standard applied throughout:** nothing counted without a standalone repro on a clean interpreter from neutral cwd `<home>`, stdlib + `xstate_statemachine` only, and **every service/action check run with both `def` and `async def`**, polled to convergence.
 
 **One behaviour change honoured throughout:** #219 makes an in-step `send(..., wait=True)` on an action's own interpreter raise `ReentrantWaitError` instead of deadlocking. That is a **breaking change for user actions**, and this round treats it as one.
 

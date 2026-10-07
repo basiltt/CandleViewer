@@ -1,7 +1,7 @@
 # R10-C4 adversarial refutation — "kill/cancel deferrable for the full service duration"
 
 Commit 19cb1f1. Repro: `battle-19cb1f1/contracts/b6b10/r10c4_refute.py` (standalone,
-stdlib + `xstate_statemachine`, run from neutral cwd `C:/Users/basil`), plus re-runs of
+stdlib + `xstate_statemachine`, run from neutral cwd `<home>`), plus re-runs of
 `kb_killdefer.py` and `ka_killswitch.py` in both service styles.
 
 ## Verdict: REFUTED (modelling error, documented behaviour) — retain as a Low modelling constraint

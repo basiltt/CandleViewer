@@ -104,7 +104,7 @@ and context per run.
 
 ```
 cd docs/research/xstate/battle-3ed3099/determinism
-PY="C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python"
+PY="<workspace>/_ref/xstate-statemachine/.venv-main/Scripts/python"
 export PYTHONIOENCODING=utf-8 PYTHONUTF8=1
 
 # --- prior-defect battery (re-run) ---

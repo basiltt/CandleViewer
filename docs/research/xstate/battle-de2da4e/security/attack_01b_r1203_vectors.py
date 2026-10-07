@@ -1,7 +1,7 @@
 """R12-03 refutation probe: which forgery vectors need PRIVATE access?
-STANDALONE: stdlib + xstate_statemachine. Run from cwd C:/Users/basil."""
+STANDALONE: stdlib + xstate_statemachine. Run from cwd <home>."""
 import sys, pickle, asyncio
-sys.path.insert(0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0, "<workspace>/_ref/xstate-statemachine/src")
 import xstate_statemachine as X
 from xstate_statemachine import DoneEvent, Event, create_machine, MachineLogic, Interpreter
 from xstate_statemachine.events import is_system_event, restore_event

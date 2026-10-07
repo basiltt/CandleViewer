@@ -12,12 +12,12 @@ PASS [async]B1.reject.local  | ['order.lifecycle.rejected', 'order.protection.no
 PASS [async]B1.reject.set_local
 ERROR:xstate_statemachine.interpreter:💥 Service 'place_order' (ID: 'place') failed: timeout
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2857, in _invoke_service_task
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2857, in _invoke_service_task
     await produced if inspect.isawaitable(produced) else produced
     ^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 170, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 170, in s
     v = resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
     raise v
 RuntimeError: timeout
 PASS [async]B1.unknown.entered  | ['order.lifecycle.unknown', 'order.protection.not_required']
@@ -25,12 +25,12 @@ PASS [async]B1.unknown.alert
 PASS [async]B1.unknown.fault_recorded
 ERROR:xstate_statemachine.interpreter:💥 Service 'place_order' (ID: 'place') failed: t
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2857, in _invoke_service_task
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2857, in _invoke_service_task
     await produced if inspect.isawaitable(produced) else produced
     ^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 170, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 170, in s
     v = resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
     raise v
 RuntimeError: t
 PASS [async]B1.recon.second_miss_rejects  | states=['order.lifecycle.rejected', 'order.protection.not_required'] misses=1
@@ -41,12 +41,12 @@ PASS [async]B1.quarantine.recovers  | ['order.lifecycle.submitted', 'order.prote
 PASS [async]B1.quarantine.critical_alert
 ERROR:xstate_statemachine.interpreter:💥 Service 'attach_native_sl' (ID: 'attach_sl') failed: no sl
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2857, in _invoke_service_task
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2857, in _invoke_service_task
     await produced if inspect.isawaitable(produced) else produced
     ^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 170, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 170, in s
     v = resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 165, in resolve
     raise v
 RuntimeError: no sl
 PASS [async]B1.sl.onError_naked  | ['order.lifecycle.submitted', 'order.protection.sl_missing']
@@ -55,947 +55,947 @@ PASS [async]B1.cancel.cancelled  | ['order.lifecycle.cancelled', 'order.protecti
 PASS [async]B1.cancel.ack_adopted
 ERROR:xstate_statemachine.interpreter:💥 Service 'amend_order' (ID: 'amend') failed: Future() takes at most 1 argument (3 given)
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2857, in _invoke_service_task
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2857, in _invoke_service_task
     await produced if inspect.isawaitable(produced) else produced
     ^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 170, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 170, in s
     v = resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 163, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 163, in resolve
     v = v(interp, ctx, evt)
 TypeError: Future() takes at most 1 argument (3 given)
 PASS [async]B1.amend.observed  | states=['order.lifecycle.unknown', 'order.protection.not_required'] actions_tail=['persist_event', 'raise_unknown_alert', 'arm_recon_deadline']
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'adopt_ack' raised while handling event 'done.invoke.place'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:adopt_ack
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'order.lifecycle.submitting' failed; rolling back to the pre-transition configuration.
@@ -1004,16 +1004,16 @@ PASS [async]B1.R6-03.duplicate_orders_placed  | place_order x86 states=['order.l
 PASS [async]B1.defer.exec_replayed  | states=['order.lifecycle.partially_filled', 'order.protection.not_required'] unhandled=[('EXEC', 'deferred'), ('EXEC', 'deferred'), ('EXEC', 'deferred')]
 ERROR:xstate_statemachine.base_interpreter:🔥 Guard 'ret_code_ok' raised an exception while evaluating event 'done.invoke.place'; guardErrorPolicy='raise'.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 5313, in _is_guard_satisfied
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 5313, in _is_guard_satisfied
     self._call_with_optional_params(
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
         guard_callable, self.context, event, params
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     )
     ^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 5462, in _call_with_optional_params
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 5462, in _call_with_optional_params
     return fn(context, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 153, in g
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 153, in g
     raise RuntimeError("guard:" + n)
 RuntimeError: guard:ret_code_ok
 PASS [async]B1.guard_raise.observable  | ["RuntimeError('guard:ret_code_ok')"]

@@ -4,7 +4,7 @@ D1/D2 guardErrorPolicy=raise: receipt(changed=False, error=ValueError('guard-boo
 D3 deferred replay: r1(LATE, deferred)=True state_ids=['m_defer_replay.a'], r2(ARM) state_ids=['m_defer_replay.b'], final=['m_defer_replay.c']
   -- interpretation: if r2.state_ids already reflects post-replay state 'c', the fold is unchanged; #125 promises replay is its own macrostep, i.e. a *separate* on_transition, which we can't see from Receipt shape alone (see hook order check below).
 D4: TypeError as before: TypeError("SyncInterpreter.__init__() got an unexpected keyword argument 'max_queue_size'")
-C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-19cb1f1\observability\rerun_prior.py:128: DeprecationWarning: Machine 'm_snf' has unresolvable transition targets:
+<workspace>\CandleViewer\docs\research\xstate\battle-19cb1f1\observability\rerun_prior.py:128: DeprecationWarning: Machine 'm_snf' has unresolvable transition targets:
   m_snf.a: on 'GO' -> target 'does.not.exist' does not resolve
   (strict_targets=False: these transitions will be silent no-ops at runtime. This escape hatch is removed in 1.0.)
   machine = create_machine(cfg, logic=MachineLogic(), strict_targets=False)

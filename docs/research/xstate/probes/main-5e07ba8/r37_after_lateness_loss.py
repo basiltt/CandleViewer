@@ -1,7 +1,7 @@
 """persist_event() for kind='after' stores ONLY `type`. AfterEvent's
 `scheduled_for` / `fired_at` (#48 lateness telemetry) are silently zeroed."""
 import sys
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine.events import AfterEvent, persist_event, restore_event
 ev=AfterEvent(type="after.5000.m.pending", scheduled_for=1000.0, fired_at=1007.5)
 print("original  :", ev, "lateness_ms=", getattr(ev,"lateness_ms",None))

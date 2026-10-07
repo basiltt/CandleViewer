@@ -80,5 +80,5 @@ A wrapper attempt counter on every `rollback` + `invoke.onDone` state, plus an o
 - Date: 2026-09-22
 - Python: CPython 3.13.7 (`.venv-main`)
 - Commit: `f28719c` (unreleased 0.8.1; `__version__` reports `0.8.0`)
-- cwd used: `C:\Users\basil` (neutral, outside both repos)
+- cwd used: `<home>` (neutral, outside both repos)
 - Exit codes: `R9-07_rollback_ondone_silent_wedge.py` → **1** (both `def` and `async def` lanes wedged silently at the default `maxIterations`; both correctly raised `RunawayChainError` at `maxIterations=10`)

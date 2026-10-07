@@ -7,7 +7,7 @@ completes (no crash, no duplicate registration, no hang)."""
 from __future__ import annotations
 import asyncio, logging, sys, time
 logging.disable(logging.CRITICAL)
-LIB = "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src"
+LIB = "<workspace>/_ref/xstate-statemachine/src"
 if LIB not in sys.path:
     sys.path.insert(0, LIB)
 from xstate_statemachine import Interpreter, MachineLogic, create_machine  # noqa: E402

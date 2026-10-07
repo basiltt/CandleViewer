@@ -12,13 +12,13 @@
     "note": "__version__ still reports 0.8.0 on this tree. Never key a pin, CI assertion or gate baseline on the version string. Eleventh consecutive round in which the version string is wrong."
   },
   "posted": false,
-  "note": "NOT POSTED. Drafts only. Round-10 fixes #212-#216 verified. Every new-issue body embeds a STANDALONE repro (stdlib + xstate_statemachine only, all helpers inlined) that was executed from neutral cwd C:/Users/basil against this commit BOTH pre-flight (from the repro/ file) and post-flight (re-extracted from the issue-body fenced block). All five post-flight extractions exit 1 on this build. We never reopen closed upstream issues; residuals are filed as new R11 issues or raised as notes on the relevant thread.",
+  "note": "NOT POSTED. Drafts only. Round-10 fixes #212-#216 verified. Every new-issue body embeds a STANDALONE repro (stdlib + xstate_statemachine only, all helpers inlined) that was executed from neutral cwd <home> against this commit BOTH pre-flight (from the repro/ file) and post-flight (re-extracted from the issue-body fenced block). All five post-flight extractions exit 1 on this build. We never reopen closed upstream issues; residuals are filed as new R11 issues or raised as notes on the relevant thread.",
   "environment": {
     "python": "CPython 3.13.7",
     "os": "Windows 11 Pro 10.0.26200",
     "venv": "_ref/xstate-statemachine/.venv-main",
     "env": "PYTHONIOENCODING=utf-8 PYTHONUTF8=1",
-    "neutral_cwd": "C:/Users/basil",
+    "neutral_cwd": "<home>",
     "standard": "Financial-OMS: reproduce before you count; every service/action check runs BOTH def and async def; every repro STANDALONE; poll to convergence before calling anything a hang or a plateau."
   },
   "semantic_reversals_honoured": [

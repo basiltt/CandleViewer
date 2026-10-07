@@ -13,7 +13,7 @@ import asyncio, json
 import sys, pathlib, os
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import cv9 as H
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 from xstate_statemachine import (Interpreter, SyncInterpreter, MachineLogic,
                                  create_machine, OverflowPolicy)
 from xstate_statemachine.clock import SimulatedClock

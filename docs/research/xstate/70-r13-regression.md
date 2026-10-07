@@ -161,7 +161,7 @@ All 39 map to previously-triaged register rows and are unchanged from the
 ## 4. Historical script sweep — 534 scripts
 
 Runner: `gate/sweep_r13.py` (written this round; 6 workers, **120 s cap**,
-neutral cwd `C:/Users/basil`, `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`).
+neutral cwd `<home>`, `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`).
 Raw results: `gate/sweep-r13.json`.
 
 Covered: `issues/verify-*/`, `issues/verify-v0.9.0/`,

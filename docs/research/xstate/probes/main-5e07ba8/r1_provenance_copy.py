@@ -1,6 +1,6 @@
 """R1: does the engine-private provenance sentinel survive copy/pickle?"""
 import copy, pickle, sys
-sys.path.insert(0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0, "<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine.events import system_event, is_system_event, Event
 
 ev = system_event("xstate.init")

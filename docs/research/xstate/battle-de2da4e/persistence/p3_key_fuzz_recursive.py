@@ -230,7 +230,7 @@ def main():
                                  "msg": str(e)[:200]})
         except Exception:
             structural += 1
-    base = ("C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/"
+    base = ("<workspace>/CandleViewer/"
             "docs/research/xstate")
     cat, n_cat = [], 0
     for d in ("battle-c78ce99", "battle-19cb1f1", "battle-3ed3099"):

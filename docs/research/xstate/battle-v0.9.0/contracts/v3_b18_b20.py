@@ -317,5 +317,5 @@ async def main():
     H.dump("results/v3_b18_b20.json")
 
 
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 asyncio.run(main())

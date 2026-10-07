@@ -28,7 +28,7 @@
 - **What:** the function only checks that its *input* is engine-minted. It then applies any field override, including `type` and `src`, and re-mints the result as a trusted engine event.
 - **Effect:** any holder of one genuine completion (an action or plugin that sees `done.invoke.ok`) can produce a trusted `done.invoke.victim` carrying arbitrary `data`. The `victim` invoke's `onDone` then fires even though `victim` never finished. This works with `strict: True`.
 - **Why this contradicts the release notes:** the changelog says re_mint "can carry provenance forward but never create it" and describes the use case as redacting `data`. In practice, provenance for a *different* event identity is created.
-- **Repro:** `battle-v0.9.1/concurrency/n1_re_mint_forge_completion.py` (standalone, stdlib + library only, run from cwd `C:\Users\basil`).
+- **Repro:** `battle-v0.9.1/concurrency/n1_re_mint_forge_completion.py` (standalone, stdlib + library only, run from cwd `<home>`).
   - SyncInterpreter / def: the machine reaches `m.s.p2.victim_done`, so the forgery is **ACCEPTED**.
   - Interpreter / async def: the machine reaches `m.s.p2.victim_done`, so the forgery is **ACCEPTED**.
   - Interpreter / def: no result. The harness never captured an event within 1 s (the blocking thread service interfered). This is a harness gap, not a pass.

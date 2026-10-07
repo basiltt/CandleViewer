@@ -15,7 +15,7 @@ _sys.path.insert(0, str(_pl.Path(__file__).resolve().parent))
 import cv78 as H
 from cv78 import Stub
 rec = H.rec
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 
 def S(c, **kw):
     kw.setdefault("svc_style", STYLE); return Stub(c, **kw)

@@ -1,6 +1,6 @@
 """DE-L5 repro: SyncInterpreter._enqueue_restored ignores the persisted
 priority lane. STANDALONE: stdlib + xstate_statemachine only. Run from cwd
-C:/Users/basil.
+<home>.
 """
 import sys as _xs_sys  # noqa: E402
 from pathlib import Path as _XsPath  # noqa: E402

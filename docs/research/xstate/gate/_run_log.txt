@@ -2,7 +2,7 @@
 [gate] xstate-statemachine : 0.8.0 (reported; NOT the identity)
 [gate] commit              : 19cb1f19fc75575abd85cfa9da738c458f20d015
 [gate] build               : commit 19cb1f1 -- NOT a recorded baseline (reports __version__ 0.8.0); triage every delta in writing
-[gate] root                : C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate
+[gate] root                : <workspace>\CandleViewer\docs\research\xstate
 
 [gate] --- verify (PRIMARY: mandated configuration) ---
 

@@ -413,7 +413,7 @@ trust boundary.
 ### Probes
 
 All standalone (stdlib + `xstate_statemachine`, inline helpers, neutral cwd
-`C:/Users/basil`), under `docs/research/xstate/probes/v0.9.0/`:
+`<home>`), under `docs/research/xstate/probes/v0.9.0/`:
 
 | file | covers |
 |---|---|

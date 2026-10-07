@@ -3,7 +3,7 @@ def-service send() task identity under executor) + #232 RuntimeWarning on
 a never-awaited def-action wait=True guard, observed under -W error inside
 asyncio. STANDALONE."""
 import sys, asyncio, warnings, concurrent.futures
-sys.path.insert(0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0, "<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter
 from xstate_statemachine.exceptions import ReentrantWaitError
 

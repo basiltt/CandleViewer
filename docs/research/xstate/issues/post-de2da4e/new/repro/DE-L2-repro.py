@@ -2,7 +2,7 @@
 `TypeError: unhashable type: 'dict'` from deep inside `logic_loader`,
 instead of a named `InvalidConfigError` from the #220 validator.
 
-STANDALONE: stdlib + xstate_statemachine only. Run from cwd C:/Users/basil.
+STANDALONE: stdlib + xstate_statemachine only. Run from cwd <home>.
 """
 import sys as _xs_sys  # noqa: E402
 from pathlib import Path as _XsPath  # noqa: E402

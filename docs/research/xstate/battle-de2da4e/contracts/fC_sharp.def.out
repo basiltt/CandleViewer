@@ -4,58 +4,58 @@ PASS [def]C-07b/denied RELEASE is fatal  | {"after_denied": ["kill_switch.engage
 PASS [def]C-07b/kill switch BRICKED (valid RELEASE cannot land)  | {"final": ["kill_switch.engaged"], "r3": {"ok": true, "sec": 0.0004335000121500343}, "status": "error"}
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'page_owner' raised while handling event 'done.invoke.fl'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:page_owner
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'kill_switch.flattening' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'page_owner' raised while handling event 'done.invoke.fl'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:page_owner
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'kill_switch.flattening' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'page_owner' raised while handling event 'done.invoke.fl'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:page_owner
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'kill_switch.flattening' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.interpreter:🔁 Exceeded 5 microsteps while settling transient transitions in 'kill_switch'. Aborting to avoid an infinite loop; check for mutually-targeting 'always' transitions or an 'always' into an invoking state.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'page_owner' raised while handling event 'done.invoke.fl'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:page_owner
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'kill_switch.flattening' failed; rolling back to the pre-transition configuration.
 WARNING:xstate_statemachine.interpreter:🛟 Chain budget reached on 'kill_switch' while an engine completion ('done.invoke.fl') was pending; delivering it, then cutting the self-generated tail.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'page_owner' raised while handling event 'done.invoke.fl'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:page_owner
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'kill_switch.flattening' failed; rolling back to the pre-transition configuration.
@@ -65,265 +65,265 @@ PASS [def]#207/B18 rollback+onDone strands observably  | {"plateau": 7, "limit":
 PASS [def]#207/B18 plateau == maxIterations+2 svc calls  | {"plateau": 7, "limit": 5}
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.
@@ -331,12 +331,12 @@ ERROR:xstate_statemachine.interpreter:🔁 Exceeded 25 microsteps while settling
 WARNING:xstate_statemachine.interpreter:🛟 Chain budget reached on 'reconciliation' while an engine completion ('done.invoke.diff') was pending; delivering it, then cutting the self-generated tail.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'store_divergences' raised while handling event 'done.invoke.diff'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3542, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2261, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\contracts\cvf.py", line 142, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:store_divergences
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'reconciliation.diffing' failed; rolling back to the pre-transition configuration.

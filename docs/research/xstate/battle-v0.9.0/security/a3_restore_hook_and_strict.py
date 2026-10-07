@@ -3,7 +3,7 @@
 check) + #233 sync priority lane on restore.
 STANDALONE: stdlib + xstate_statemachine only."""
 import sys, json
-sys.path.insert(0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0, "<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, SyncInterpreter, PluginBase
 
 # --- Part A: #230 plugins= reaches on_invalid_event for a restore refusal ---

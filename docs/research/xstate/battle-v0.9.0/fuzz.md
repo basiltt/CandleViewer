@@ -11,7 +11,7 @@ run here is against the local clone.
 **Date:** 2026-09-23. **Python:** CPython 3.13.7. **OS:** Windows 11 Pro
 10.0.26200. **Interpreter:** `_ref/xstate-statemachine/.venv-main/Scripts/python`
 with `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`. Every script run from the neutral
-cwd `C:/Users/basil`.
+cwd `<home>`.
 
 **Suite baseline** (`suite-v0.9.0.log`, complete): **3577 passed, 13 skipped,
 15 warnings in 597 s**; total coverage **92.86 %** (gate 90 %).
@@ -159,7 +159,7 @@ pre-round-12 carry-forwards on surfaces round 12 did not touch.
 ## 2. New attacks
 
 All scripts are standalone (stdlib + `xstate_statemachine` only), run from
-`C:/Users/basil`, and exit non-zero on any violated property.
+`<home>`, and exit non-zero on any violated property.
 
 ### 2.1 `g1_persistence.py` — #226 latch restarts, #227 property, #230 hooks
 

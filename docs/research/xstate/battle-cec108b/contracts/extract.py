@@ -1,5 +1,5 @@
 import json, re, pathlib
-SRC = pathlib.Path(r"C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/plan/28-statechart-catalogue.md")
+SRC = pathlib.Path(r"<workspace>/CandleViewer/docs/plan/28-statechart-catalogue.md")
 lines = SRC.read_text(encoding="utf-8").splitlines()
 spans = {"B16": (5071, 5232), "B17": (5330, 5437), "B18": (5519, 5656),
          "B19": (5743, 5938), "B20": (6047, 6181)}

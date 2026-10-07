@@ -3,7 +3,7 @@
 **Build.** `_ref/xstate-statemachine` @ `de2da4e` (round-11 fix set
 #218-#222 per CHANGELOG `[Unreleased]`, targeting 0.8.1; `__version__`
 still 0.8.0, keyed on commit). `.venv-main`,
-`PYTHONIOENCODING=utf-8 PYTHONUTF8=1`, cwd `C:/Users/basil`. Full suite
+`PYTHONIOENCODING=utf-8 PYTHONUTF8=1`, cwd `<home>`. Full suite
 (`suite-de2da4e.log`): **3545 passed, 13 skipped**, coverage 92.87%.
 Scripts: `battle-de2da4e/security/attack_0{1..5}*.py` (new this round) plus
 reuse of already-verified de2da4e evidence from sibling tracks in this

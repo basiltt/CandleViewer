@@ -10,7 +10,7 @@ import asyncio, copy, json, os, pathlib, sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import cv9 as K  # noqa: E402
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 
 KILLERS = ["LOGOUT", "IDLE_DEADLINE", "ABSOLUTE_DEADLINE", "REVOKE"]
 

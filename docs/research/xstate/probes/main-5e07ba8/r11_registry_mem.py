@@ -1,5 +1,5 @@
 import sys, tracemalloc
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic
 acts={f"a{i}":(lambda i,c,e,a: None) for i in range(200)}
 guards={f"g{i}":(lambda c,e: True) for i in range(200)}

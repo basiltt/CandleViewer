@@ -1,6 +1,6 @@
 # R11-05 — "#212's timer exemption keys on delay truthiness, not time" — REFUTED
 
-Target: main @ c78ce99. Probes (standalone, neutral cwd C:/Users/basil, both `def` and `async def` lanes):
+Target: main @ c78ce99. Probes (standalone, neutral cwd <home>, both `def` and `async def` lanes):
 - `probes/main-c78ce99/p1_212_escape.py` (reporter's)
 - `probes/main-c78ce99/r11_05_after_parity.py` (new — control against `after`)
 - `probes/main-c78ce99/r11_05_responsive.py` (new — livelock test, polled to convergence)

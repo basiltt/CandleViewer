@@ -1,6 +1,6 @@
 # 18 — Verify `xstate-statemachine` @ main (commit `5327ba6`, unreleased 0.8.1) — full gate + suite + bench
 
-**Build under test:** git clone at `C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine`,
+**Build under test:** git clone at `<workspace>/_ref/xstate-statemachine`,
 `main` @ commit `5327ba6`. CHANGELOG `[Unreleased] — targeting 0.8.1`.
 `__version__` still reports `0.8.0` — **identify this build by commit, not
 version string**, throughout this document and any downstream reference to it.

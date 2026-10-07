@@ -2,7 +2,7 @@
 
 **Library:** `main` @ `19cb1f1` (“Merge pull request #211 from basiltt/fix/0.8.1-round9”); `__version__` still reports 0.8.0, so every result below keys on the **commit**.
 **Scope:** round-9 fixes #203–#210 as they touch persistence, plus the standing persistence surface re-tested adversarially.
-**Scripts:** `docs/research/xstate/battle-19cb1f1/persistence/*.py` — all STANDALONE (stdlib + `xstate_statemachine`), every one proved from the neutral cwd `C:/Users/basil` via `rb.sh`, which runs each script on **both** service kinds (`XS_SVC=async` / `XS_SVC=def`). Raw output in `out/*.txt` (async) and `out/*.DEF.txt` (`def`).
+**Scripts:** `docs/research/xstate/battle-19cb1f1/persistence/*.py` — all STANDALONE (stdlib + `xstate_statemachine`), every one proved from the neutral cwd `<home>` via `rb.sh`, which runs each script on **both** service kinds (`XS_SVC=async` / `XS_SVC=def`). Raw output in `out/*.txt` (async) and `out/*.DEF.txt` (`def`).
 
 ---
 
@@ -34,7 +34,7 @@ Three defects are filed, one of them new and one of them a straight regression:
 |---|---|
 | Interpreter | `Interpreter` (async) and `SyncInterpreter` where parity is the point |
 | Service kinds | **every** result below was produced on both `def` and `async def` (`XS_SVC`); `out/*.DEF.txt` is the `def` lane |
-| Neutral cwd | every script run from `C:/Users/basil` with the library on `PYTHONPATH` only — no script imports a sibling helper |
+| Neutral cwd | every script run from `<home>` with the library on `PYTHONPATH` only — no script imports a sibling helper |
 | Bounds | each script ≤ 120 s except: `s5` 320 machines/lane (≈ 170 s), `u5` 200 storms/lane (≈ 60 s), soak 260 s async / 140 s `def` |
 
 **Reduced-from-brief parameters, all for the 20-minute wall-clock bound, stated rather than silently applied:**

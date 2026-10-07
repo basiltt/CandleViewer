@@ -101,5 +101,5 @@ The bound is solid; only the test's sleep is too short. We mention it here becau
 - Date: 2026-09-22
 - Python: CPython 3.13.7 (`.venv-main`)
 - Commit: `f28719c` (unreleased 0.8.1; `__version__` reports `0.8.0`)
-- cwd used: `C:\Users\basil` (neutral, outside both repos)
+- cwd used: `<home>` (neutral, outside both repos)
 - Exit codes: `R9-09_lap_parity_odd_limit_mismatch.py` → **1** (def-lane/`rollback_ondone` odd-limit mismatch of exactly 2 laps confirmed at mi=1,3,5,7,9,15,25; agreement confirmed at mi=2,4,6,8,10,20; `RunawayChainError` raised on both engines at every row)

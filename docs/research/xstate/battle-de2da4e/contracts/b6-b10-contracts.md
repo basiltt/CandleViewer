@@ -145,7 +145,7 @@ Both lanes. This is the difference between "the alert machine discarded work at 
 
 ## 5. C-04 and C-07b — re-checked, both STILL PRESENT (seventh round)
 
-Both repros re-run **unmodified, from neutral cwd `C:/Users/basil`**, stdlib + `xstate_statemachine` only. Scripts: `repro/de_c04_elevation_survives.py`, `repro/de_c07b_killswitch_bricked.py`. Both exit 0 having reproduced.
+Both repros re-run **unmodified, from neutral cwd `<home>`**, stdlib + `xstate_statemachine` only. Scripts: `repro/de_c04_elevation_survives.py`, `repro/de_c07b_killswitch_bricked.py`. Both exit 0 having reproduced.
 
 ### C-04 (B16 `session`, sha1 `9d8ad9937417`) — OUR-CONTRACT, Blocker
 

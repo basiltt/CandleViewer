@@ -6,7 +6,7 @@ engine completions + self-raised events count)."""
 from __future__ import annotations
 import asyncio, logging, sys
 logging.disable(logging.CRITICAL)
-LIB = "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src"
+LIB = "<workspace>/_ref/xstate-statemachine/src"
 if LIB not in sys.path:
     sys.path.insert(0, LIB)
 from xstate_statemachine import Event, Interpreter, MachineLogic, create_machine  # noqa: E402

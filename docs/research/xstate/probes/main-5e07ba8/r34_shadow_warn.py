@@ -1,6 +1,6 @@
 """#91 shadowed near-duplicates warn; #93 logic_modules ambiguity."""
 import sys, warnings
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic
 CFG={"id":"m","initial":"a","states":{"a":{"entry":["storeUser"]}}}
 a=lambda i,c,e,ad: "A"; b=lambda i,c,e,ad: "B"

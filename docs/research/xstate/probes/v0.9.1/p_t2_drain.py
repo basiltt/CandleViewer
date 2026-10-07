@@ -1,7 +1,7 @@
 """T-2 probe: drain_pending() without stop(): receipt error type and whether the machine keeps running."""
 import asyncio, os
 from xstate_statemachine import create_machine, Interpreter, MachineLogic
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 CFG = {"id": "m", "initial": "a", "states": {"a": {"on": {"GO": "b"}}, "b": {"on": {"GO": "a"}}}}
 async def main():
     it = Interpreter(create_machine(CFG, logic=MachineLogic())); await it.start()

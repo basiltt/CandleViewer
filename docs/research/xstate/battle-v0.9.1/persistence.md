@@ -2,7 +2,7 @@
 
 **Target:** `origin/main` = `801eacd` (the merge of #249; tag `v0.9.1` = `45bb7f3`), `__version__ = 0.9.1`. PyPI wheel sha256 `d832d4d9…87162` matches the PyPI JSON digest.
 **Library suite:** 3601 passed, 13 skipped, coverage 92.93% (`suite-v0.9.1.log`).
-**Scripts:** `battle-v0.9.1/persistence/*.py`. All are STANDALONE and were run from cwd `C:/Users/basil` under `XS_SVC=async` and `XS_SVC=def` through `runall.sh`. Raw output is in `out/`.
+**Scripts:** `battle-v0.9.1/persistence/*.py`. All are STANDALONE and were run from cwd `<home>` under `XS_SVC=async` and `XS_SVC=def` through `runall.sh`. Raw output is in `out/`.
 **Time-box reductions:** the soak ran for **1.5 min, not 12 min**, at 200 machines per kind, because of the 120 s per-script bound. The `re_mint` fuzz is two targeted scripts, not a full random fuzzer.
 
 ## Verdict

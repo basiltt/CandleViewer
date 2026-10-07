@@ -1,11 +1,11 @@
 """Battle de2da4e -- OBSERVABILITY track, round-11 re-verification.
 
 Standalone: stdlib + xstate_statemachine only. Run from neutral cwd
-C:/Users/basil with the pinned venv:
+<home> with the pinned venv:
 
   PYTHONIOENCODING=utf-8 PYTHONUTF8=1 \
-  C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python \
-  C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/research/xstate/battle-de2da4e/observability/attacks.py
+  <workspace>/_ref/xstate-statemachine/.venv-main/Scripts/python \
+  <workspace>/CandleViewer/docs/research/xstate/battle-de2da4e/observability/attacks.py
 
 Each attack prints "ATTACK <name>: PASS/FAIL <detail>" so a grep gives the
 scoreboard. Time-boxed: reduced Ns vs the requested matrix; see report.

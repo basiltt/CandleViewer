@@ -5,7 +5,7 @@ subset of the requested matrix (A–H reduced to A, B, C/D, E, F; G done as a
 quick confirmatory probe rather than a full fuzzer; determinism/soak/most
 security sub-items **not covered** — see below). Script:
 `battle-c78ce99/observability/attacks.py` (standalone, stdlib +
-`xstate_statemachine` only, run from neutral cwd `C:/Users/basil`).
+`xstate_statemachine` only, run from neutral cwd `<home>`).
 
 ## Prior-defect re-run (battle-19cb1f1/observability)
 

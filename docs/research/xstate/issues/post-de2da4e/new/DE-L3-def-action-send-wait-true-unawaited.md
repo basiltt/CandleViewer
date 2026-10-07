@@ -24,19 +24,19 @@ either working or failing loudly.
 
 - `_ref/xstate-statemachine` @ `de2da4e` (targeting 0.8.1; `__version__` still
   0.8.0)
-- `.venv-main`, `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`, cwd `C:/Users/basil`
+- `.venv-main`, `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`, cwd `<home>`
 
 ## Minimal reproduction
 
 ```python
 """DE-L3 repro: a `def` action calling send(wait=True) gets the _Awaitable
 guard unawaited, silently. STANDALONE: stdlib + xstate_statemachine only.
-Run from cwd C:/Users/basil.
+Run from cwd <home>.
 """
 import sys, asyncio
 sys.path.insert(
     0,
-    "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/"
+    "<workspace>/_ref/"
     "xstate-statemachine/src",
 )
 from xstate_statemachine import create_machine, MachineLogic, Interpreter
@@ -161,7 +161,7 @@ least visible with `-W error` or default warning filters.
 
 ## Verification
 
-- Repro run from the neutral cwd `C:/Users/basil` with the `.venv-main`
+- Repro run from the neutral cwd `<home>` with the `.venv-main`
   interpreter: **exit 1**, no `ImportError`, output as quoted above —
   `send(wait=True) returned: {'type': '_Awaitable'}`, `last_error: None`,
   the machine reaching `done` regardless, and `REPRODUCED: True`.

@@ -10,7 +10,7 @@ check), **#221** (parked `scheduled_sends` re-emitted until `start()`) and
 **#222** (sticky chain-trip latch).
 
 **New scripts** (standalone — stdlib + `xstate_statemachine` only, every
-helper inlined, run from neutral cwd `C:/Users/basil`):
+helper inlined, run from neutral cwd `<home>`):
 
 | Script | Attacks |
 |---|---|

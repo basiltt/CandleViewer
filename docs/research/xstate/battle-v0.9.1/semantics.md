@@ -4,7 +4,7 @@ Target: tag v0.9.1 = 45bb7f3, main = 801eacd (merge commit only, `git diff v0.9.
 `__version__` 0.9.1, imported from the clone's `src`. Full test suite (separate run):
 **3601 passed, 13 skipped, coverage 92.93%.**
 Scripts and outputs are in `battle-v0.9.1/semantics/`. Every script runs standalone with
-cwd `C:/Users/basil`.
+cwd `<home>`.
 
 ## 1. Prior scripts re-run (`prior_rerun/*.out`)
 

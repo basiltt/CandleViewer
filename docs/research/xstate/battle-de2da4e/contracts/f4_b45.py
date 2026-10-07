@@ -5,7 +5,7 @@ import asyncio, json
 import os, pathlib, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import cvf as K
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 
 C4, C5 = K.cfg("B4"), K.cfg("B5")
 

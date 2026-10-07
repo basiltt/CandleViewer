@@ -11,7 +11,7 @@ PyPI wheel on this track.
 **Time bound:** this track was cut down to one driver plus two triage probes
 (20-minute task bound). Each script runs in under 30 s.
 
-## 1. Scripts (standalone: stdlib + `xstate_statemachine`, cwd `C:/Users/basil`)
+## 1. Scripts (standalone: stdlib + `xstate_statemachine`, cwd `<home>`)
 
 | Script | What it pins | `async def` | `def` |
 |---|---|---|---|

@@ -9,9 +9,9 @@ import subprocess
 import sys
 import time
 
-PY = r"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python"
-BASE = r"C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/research/xstate"
-NEUTRAL = r"C:/Users/basil"
+PY = r"<workspace>/_ref/xstate-statemachine/.venv-main/Scripts/python"
+BASE = r"<workspace>/CandleViewer/docs/research/xstate"
+NEUTRAL = r"<home>"
 OUT = os.path.join(BASE, "gate", "r11_regression_raw.json")
 LIST = os.path.join(BASE, "gate", "r11_scriptlist.txt")
 

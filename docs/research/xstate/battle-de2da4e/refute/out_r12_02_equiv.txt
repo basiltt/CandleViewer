@@ -1,4 +1,4 @@
-R12-02 equivalence probe, cwd= C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-de2da4e\refute
+R12-02 equivalence probe, cwd= <workspace>\CandleViewer\docs\research\xstate\battle-de2da4e\refute
    A v2 forged after-record           [async] fired=1 states=['vict.expired'] status=done
    A v2 forged after-record           [sync] fired=1 states=['vict.expired'] status=done
    B v3 verbatim state write          [async] fired=1 states=['vict.expired'] status=running

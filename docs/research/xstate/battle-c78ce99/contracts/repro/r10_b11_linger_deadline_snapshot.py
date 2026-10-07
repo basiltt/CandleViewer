@@ -20,7 +20,7 @@ This asserts the round-10 contract:
   4. both engines and both service styles (`def` / `async def`) agree.
 
 stdlib + xstate_statemachine only, inline helpers, neutral cwd.
-Run:  cd C:/Users/basil && python <this file>      exits 0 when correct.
+Run:  cd <home> && python <this file>      exits 0 when correct.
 """
 from __future__ import annotations
 import asyncio, json, sys

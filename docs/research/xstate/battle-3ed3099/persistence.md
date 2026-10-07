@@ -111,7 +111,7 @@ recorded in the prior-defect table below:
 
 ```
 PYTHONIOENCODING=utf-8 PYTHONUTF8=1 \
-PYTHONPATH=/c/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src \
+PYTHONPATH=/c<workspace>/_ref/xstate-statemachine/src \
 "C:/.../.venv-main/Scripts/python" <script>
 ```
 

@@ -2,7 +2,7 @@
 """W1c: STANDALONE. rollback + invoke.onDone whose action raises: is the storm
 cut by maxIterations on BOTH service spellings (docs/api RunawayChainError row)?"""
 import asyncio, os, sys
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 from xstate_statemachine import Interpreter, MachineLogic, create_machine
 from xstate_statemachine.clock import SimulatedClock
 

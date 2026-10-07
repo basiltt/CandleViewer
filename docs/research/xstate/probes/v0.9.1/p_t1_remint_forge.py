@@ -3,7 +3,7 @@ Standalone: stdlib + xstate_statemachine only."""
 import asyncio, os
 from xstate_statemachine import (create_machine, Interpreter, MachineLogic, PluginBase,
                                  re_mint, is_system_event)
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 CFG = {"id": "m", "type": "parallel", "states": {
     "probe": {"initial": "run", "states": {
         "run": {"invoke": {"id": "cheap", "src": "cheap", "onDone": "ok"}}, "ok": {}}},

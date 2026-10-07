@@ -1,629 +1,629 @@
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'mark_unwound' raised while handling event 'done.invoke.unwind'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3264, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2054, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:mark_unwound
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'trade_group.unwinding' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.interpreter:💥 Service 'unwind_machine' (ID: 'unwind') failed: unwind-down
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2956, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2956, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 154, in resolve
     raise v
 RuntimeError: unwind-down
 ERROR:xstate_statemachine.base_interpreter:🔥 Guard 'all_non_skipped_open' raised an exception while evaluating event 'EVALUATE'; guardErrorPolicy='raise'.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 4996, in _is_guard_satisfied
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 4996, in _is_guard_satisfied
     self._call_with_optional_params(
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
         guard_callable, self.context, event, params
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     )
     ^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 5145, in _call_with_optional_params
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 5145, in _call_with_optional_params
     return fn(context, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 142, in g
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 142, in g
     raise RuntimeError("guard:" + n)
 RuntimeError: guard:all_non_skipped_open
 ERROR:xstate_statemachine.interpreter:💥 Error processing event 'EVALUATE' on 'trade_group'; the interpreter remains running. guard:all_non_skipped_open
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1788, in _run_event_loop
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1788, in _run_event_loop
     await self._process_event_and_transient_transitions(event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1950, in _process_event_and_transient_transitions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1950, in _process_event_and_transient_transitions
     await self._process_event(event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 2419, in _process_event
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 2419, in _process_event
     raise guard_error
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 4996, in _is_guard_satisfied
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 4996, in _is_guard_satisfied
     self._call_with_optional_params(
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
         guard_callable, self.context, event, params
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     )
     ^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 5145, in _call_with_optional_params
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 5145, in _call_with_optional_params
     return fn(context, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 142, in g
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-f28719c\contracts\zc\cvz.py", line 142, in g
     raise RuntimeError("guard:" + n)
 RuntimeError: guard:all_non_skipped_open

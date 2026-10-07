@@ -1,7 +1,7 @@
 """The receipt of a DROPPED event: docs promise RunawayChainError; the async
 engine's _fail_receipt hard-codes InterpreterStoppedError."""
 import sys, asyncio
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter, RunawayChainError
 from xstate_statemachine.exceptions import InterpreterStoppedError
 CFG={"id":"m","maxIterations":3,"initial":"a","states":{"a":{"on":{

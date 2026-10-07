@@ -2,7 +2,7 @@
 
 Re-verification pass. Each defect was re-run fresh (separate process, this
 session) and the cited library source lines were re-read. All commands used
-`PY="C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python"`,
+`PY="<workspace>/_ref/xstate-statemachine/.venv-main/Scripts/python"`,
 env `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`, run from
 `docs/research/xstate/battle-5e07ba8/concurrency/`. No library source was
 modified; `git status --porcelain` in the library clone was not touched by

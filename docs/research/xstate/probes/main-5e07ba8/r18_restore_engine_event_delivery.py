@@ -1,7 +1,7 @@
 """#87 claim: an accepted engine event survives the snapshot AND is delivered.
 Compare a pending USER event (known to work, #47) with a pending ErrorEvent."""
 import sys, asyncio, json
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter
 from xstate_statemachine.events import ErrorEvent
 CFG={"id":"m","initial":"a","states":{"a":{"on":{

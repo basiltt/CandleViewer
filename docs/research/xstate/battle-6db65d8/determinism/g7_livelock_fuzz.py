@@ -7,7 +7,7 @@ budget; documented as a reduction here and in the report."""
 from __future__ import annotations
 import asyncio, logging, random, sys, time
 logging.disable(logging.CRITICAL)
-LIB = "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src"
+LIB = "<workspace>/_ref/xstate-statemachine/src"
 if LIB not in sys.path:
     sys.path.insert(0, LIB)
 from xstate_statemachine import Interpreter, SyncInterpreter, MachineLogic, create_machine  # noqa: E402

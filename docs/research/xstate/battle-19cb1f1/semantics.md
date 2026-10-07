@@ -11,7 +11,7 @@ receipt resolution after the in-flight flag drops (#208) and lap parity across
 all three lanes (#209).
 
 **Scripts** (all standalone — stdlib + `xstate_statemachine` only, every
-helper inlined, proven from neutral cwd `C:/Users/basil`):
+helper inlined, proven from neutral cwd `<home>`):
 `battle-19cb1f1/semantics/{p_persistence,c_concurrency,f_fuzz,s_semantics_sec,k_soak}.py`.
 Repro under `repro/`, machine-readable results under `results/`.
 

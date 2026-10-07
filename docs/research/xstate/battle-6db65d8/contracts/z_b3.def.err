@@ -1,1440 +1,1440 @@
 ERROR:xstate_statemachine.interpreter:💥 Service 'lookup_by_link_id' (ID: 'lookup') failed: gone
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: gone
 ERROR:xstate_statemachine.interpreter:💥 Service 'reduce_only_close' (ID: 'cl') failed: no
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: no
 ERROR:xstate_statemachine.interpreter:💥 Service 'reduce_only_close' (ID: 'cl') failed: no
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
-    raise v
-RuntimeError: no
-ERROR:xstate_statemachine.interpreter:💥 Service 'reduce_only_close' (ID: 'cl') failed: no
-Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
-    produced = await handoff
-               ^^^^^^^^^^^^^
-  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
-    result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
-    return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
-    raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
-    produced = await handoff
-               ^^^^^^^^^^^^^
-  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
-    result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
-    return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
-    raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
-    produced = await handoff
-               ^^^^^^^^^^^^^
-  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
-    result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
-    return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: no
 ERROR:xstate_statemachine.interpreter:💥 Service 'reduce_only_close' (ID: 'cl') failed: no
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+    raise v
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+    return resolve(n, interp, ctx, evt)
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+    raise v
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+    return resolve(n, interp, ctx, evt)
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: no
 ERROR:xstate_statemachine.interpreter:💥 Service 'reduce_only_close' (ID: 'cl') failed: no
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
-    raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
-    produced = await handoff
-               ^^^^^^^^^^^^^
-  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
-    result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
-    return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: no
 ERROR:xstate_statemachine.interpreter:💥 Service 'reduce_only_close' (ID: 'cl') failed: no
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+RuntimeError: no
+ERROR:xstate_statemachine.interpreter:💥 Service 'reduce_only_close' (ID: 'cl') failed: no
+Traceback (most recent call last):
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+    raise v
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+    return resolve(n, interp, ctx, evt)
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+    raise v
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+    produced = await handoff
+               ^^^^^^^^^^^^^
+  File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+    return resolve(n, interp, ctx, evt)
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: no
 ERROR:xstate_statemachine.interpreter:💥 Service 'assert_native_sl' (ID: 'vs') failed: no sl
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: no sl
 ERROR:xstate_statemachine.interpreter:💥 Service 'cancel_children_svc' (ID: 'cx') failed: cx
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: cx
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'note_cancel_failure' raised while handling event 'error.platform.cx'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:note_cancel_failure
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'leg.unwinding.cancel_children' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.interpreter:💥 Service 'cancel_children_svc' (ID: 'cx') failed: cx
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: cx
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'note_cancel_failure' raised while handling event 'error.platform.cx'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:note_cancel_failure
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'leg.unwinding.cancel_children' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.interpreter:💥 Service 'cancel_children_svc' (ID: 'cx') failed: cx
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: cx
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'note_cancel_failure' raised while handling event 'error.platform.cx'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:note_cancel_failure
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'leg.unwinding.cancel_children' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.interpreter:💥 Service 'cancel_children_svc' (ID: 'cx') failed: cx
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: cx
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'note_cancel_failure' raised while handling event 'error.platform.cx'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:note_cancel_failure
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'leg.unwinding.cancel_children' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.interpreter:💥 Service 'cancel_children_svc' (ID: 'cx') failed: cx
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: cx
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'note_cancel_failure' raised while handling event 'error.platform.cx'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:note_cancel_failure
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'leg.unwinding.cancel_children' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.interpreter:💥 Service 'cancel_children_svc' (ID: 'cx') failed: cx
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: cx
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'note_cancel_failure' raised while handling event 'error.platform.cx'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:note_cancel_failure
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'leg.unwinding.cancel_children' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.interpreter:💥 Service 'cancel_children_svc' (ID: 'cx') failed: cx
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: cx
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'note_cancel_failure' raised while handling event 'error.platform.cx'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:note_cancel_failure
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'leg.unwinding.cancel_children' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.interpreter:💥 Service 'cancel_children_svc' (ID: 'cx') failed: cx
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: cx
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'note_cancel_failure' raised while handling event 'error.platform.cx'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:note_cancel_failure
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'leg.unwinding.cancel_children' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.interpreter:💥 Service 'cancel_children_svc' (ID: 'cx') failed: cx
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: cx
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'note_cancel_failure' raised while handling event 'error.platform.cx'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:note_cancel_failure
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'leg.unwinding.cancel_children' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.interpreter:💥 Service 'cancel_children_svc' (ID: 'cx') failed: cx
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: cx
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'note_cancel_failure' raised while handling event 'error.platform.cx'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:note_cancel_failure
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'leg.unwinding.cancel_children' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.interpreter:💥 Service 'cancel_children_svc' (ID: 'cx') failed: cx
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: cx
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'note_cancel_failure' raised while handling event 'error.platform.cx'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:note_cancel_failure
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'leg.unwinding.cancel_children' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.interpreter:💥 Service 'cancel_children_svc' (ID: 'cx') failed: cx
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: cx
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'note_cancel_failure' raised while handling event 'error.platform.cx'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:note_cancel_failure
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'leg.unwinding.cancel_children' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.interpreter:💥 Service 'cancel_children_svc' (ID: 'cx') failed: cx
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: cx
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'note_cancel_failure' raised while handling event 'error.platform.cx'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:note_cancel_failure
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'leg.unwinding.cancel_children' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.interpreter:💥 Service 'cancel_children_svc' (ID: 'cx') failed: cx
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: cx
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'note_cancel_failure' raised while handling event 'error.platform.cx'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:note_cancel_failure
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'leg.unwinding.cancel_children' failed; rolling back to the pre-transition configuration.
 ERROR:xstate_statemachine.interpreter:💥 Service 'cancel_children_svc' (ID: 'cx') failed: cx
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2826, in _settle
     produced = await handoff
                ^^^^^^^^^^^^^
   File "C:\Python\Python313\Lib\concurrent\futures\thread.py", line 59, in run
     result = self.fn(*self.args, **self.kwargs)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 168, in s
     return resolve(n, interp, ctx, evt)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 154, in resolve
     raise v
 RuntimeError: cx
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'note_cancel_failure' raised while handling event 'error.platform.cx'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3229, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1975, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-6db65d8\contracts\cv6db.py", line 131, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:note_cancel_failure
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'leg.unwinding.cancel_children' failed; rolling back to the pre-transition configuration.

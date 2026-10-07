@@ -6,7 +6,7 @@ import asyncio, json, os, pathlib, sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import cvf as K  # noqa: E402
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 
 from xstate_statemachine import (
     Interpreter, SyncInterpreter, MachineLogic, create_machine)

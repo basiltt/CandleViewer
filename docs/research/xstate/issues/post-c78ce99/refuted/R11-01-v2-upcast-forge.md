@@ -1,7 +1,7 @@
 # R11-01 — "v2 upcast mints engine provenance onto attacker records" — REFUTED
 
 Behaviour reproduced exactly as reported (probes/main-c78ce99/p3_214_v2_upcast_forge.py,
-neutral cwd C:/Users/basil): v3 forged `after`/`done` records inert; same blob with
+neutral cwd <home>): v3 forged `after`/`done` records inert; same blob with
 `"version": 2` -> `vault.open` / `pay.paid`, TIMER_FIRED / ONDONE_FIRED True.
 So the mechanism is real; the *finding* is not.
 

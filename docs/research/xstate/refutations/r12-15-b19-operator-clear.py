@@ -1,7 +1,7 @@
 import asyncio, json, sys
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, Interpreter, SyncInterpreter, MachineLogic
-M=json.load(open("C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/research/xstate/battle-19cb1f1/contracts/B19.machine.json"))
+M=json.load(open("<workspace>/CandleViewer/docs/research/xstate/battle-19cb1f1/contracts/B19.machine.json"))
 M["states"]["stale_lockout"]["on"]["OPERATOR_RESOLVED"]={"target":"#reconciliation.idle","actions":["unlock_account"]}
 names=set()
 def collect(d):

@@ -4,7 +4,7 @@
 **Not on PyPI.** `pip download xstate-statemachine==0.9.0` fails — the release exists as a tag and a CI workflow, not as a published artefact. Every run here is against the working clone.
 **Scope:** round-12 fixes #225–#235 as they touch persistence, plus the standing persistence surface re-attacked.
 **Suite:** `suite-v0.9.0.log` — **3577 passed, 13 skipped, 15 warnings in 597 s**, total coverage **92.86 %**, gate 90 % met. Clean.
-**Scripts:** `battle-v0.9.0/persistence/n1..n12*.py` + `q0..q2*.py` (new), `repro/d13_p1*.py`, `repro/d13_p2*.py`. All STANDALONE (stdlib + `xstate_statemachine`), every one proved from the neutral cwd `C:/Users/basil`, on **both** service kinds (`XS_SVC=async` / `XS_SVC=def`) where the kind is meaningful. Prior-round scripts re-run from `battle-de2da4e/persistence/` and `battle-c78ce99/persistence/` through the same `runall.sh`. Raw output in `out/`.
+**Scripts:** `battle-v0.9.0/persistence/n1..n12*.py` + `q0..q2*.py` (new), `repro/d13_p1*.py`, `repro/d13_p2*.py`. All STANDALONE (stdlib + `xstate_statemachine`), every one proved from the neutral cwd `<home>`, on **both** service kinds (`XS_SVC=async` / `XS_SVC=def`) where the kind is meaningful. Prior-round scripts re-run from `battle-de2da4e/persistence/` and `battle-c78ce99/persistence/` through the same `runall.sh`. Raw output in `out/`.
 
 ---
 
@@ -276,7 +276,7 @@ Per the round-12 correction, our own `bench_c_timers` is not the right tool; thi
 
 ### 3.1 `D13-persistence-1` — **Medium** — a malformed `chain_trips` escapes `from_snapshot` as a raw `ValueError` / `TypeError`
 
-**Repro:** `battle-v0.9.0/persistence/repro/d13_p1_chain_trips_raw.py` (standalone; stdlib + `xstate_statemachine`; run from `C:/Users/basil`). Exits **1** with 4 raw leaks.
+**Repro:** `battle-v0.9.0/persistence/repro/d13_p1_chain_trips_raw.py` (standalone; stdlib + `xstate_statemachine`; run from `<home>`). Exits **1** with 4 raw leaks.
 
 ```
 envelope version: 3

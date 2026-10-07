@@ -1,6 +1,6 @@
 """Verify #231 on v0.9.0/main: inline-dict invoke.src -> named InvalidConfigError.
 
-STANDALONE: stdlib + xstate_statemachine only. Neutral cwd C:/Users/basil.
+STANDALONE: stdlib + xstate_statemachine only. Neutral cwd <home>.
 """
 import sys as _xs_sys  # noqa: E402
 from pathlib import Path as _XsPath  # noqa: E402

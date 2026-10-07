@@ -1,11 +1,11 @@
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'bump_slices_done' raised while handling event 'SLICE_DUE'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3630, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2363, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\e2_drives.py", line 114, in f
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-v0.9.1\contracts\b6b10\e2_drives.py", line 114, in f
     raise RuntimeError("boom:" + n)
 RuntimeError: boom:bump_slices_done
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'twap.armed' failed; rolling back to the pre-transition configuration.

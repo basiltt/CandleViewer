@@ -12,7 +12,7 @@ import logging
 import sys
 import time
 
-sys.path.insert(0, r"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine")
+sys.path.insert(0, r"<workspace>/_ref/xstate-statemachine")
 
 from src.xstate_statemachine import (  # noqa: E402
     Interpreter,

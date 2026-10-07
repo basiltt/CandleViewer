@@ -222,25 +222,25 @@
         "line": "self._queue.append(item)"
       },
       {
-        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1699",
+        "where": "<workspace>\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1699",
         "size_diff_kib": 21.1,
         "count_diff": 100,
         "line": "await self._wakeup.wait()"
       },
       {
-        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1231",
+        "where": "<workspace>\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1231",
         "size_diff_kib": 21.1,
         "count_diff": 100,
         "line": "config_before = frozenset(self._active_state_nodes)"
       },
       {
-        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1171",
+        "where": "<workspace>\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1171",
         "size_diff_kib": 20.3,
         "count_diff": 100,
         "line": "event, from_inbox = await self._next_event()"
       },
       {
-        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1680",
+        "where": "<workspace>\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1680",
         "size_diff_kib": 19.5,
         "count_diff": 100,
         "line": "event = self._event_queue.get_nowait()"
@@ -252,7 +252,7 @@
         "line": "return futures.Future(loop=self)"
       },
       {
-        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py:1613",
+        "where": "<workspace>\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py:1613",
         "size_diff_kib": 8.6,
         "count_diff": 100,
         "line": "return Event(type=event_or_type, payload=payload)"
@@ -486,25 +486,25 @@
         "line": "self._queue.append(item)"
       },
       {
-        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1699",
+        "where": "<workspace>\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1699",
         "size_diff_kib": 21.1,
         "count_diff": 100,
         "line": "await self._wakeup.wait()"
       },
       {
-        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1231",
+        "where": "<workspace>\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1231",
         "size_diff_kib": 21.1,
         "count_diff": 100,
         "line": "config_before = frozenset(self._active_state_nodes)"
       },
       {
-        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1171",
+        "where": "<workspace>\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1171",
         "size_diff_kib": 20.3,
         "count_diff": 100,
         "line": "event, from_inbox = await self._next_event()"
       },
       {
-        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1680",
+        "where": "<workspace>\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1680",
         "size_diff_kib": 19.5,
         "count_diff": 100,
         "line": "event = self._event_queue.get_nowait()"
@@ -516,7 +516,7 @@
         "line": "return futures.Future(loop=self)"
       },
       {
-        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py:1613",
+        "where": "<workspace>\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py:1613",
         "size_diff_kib": 8.6,
         "count_diff": 100,
         "line": "return Event(type=event_or_type, payload=payload)"
@@ -750,25 +750,25 @@
         "line": "self._queue.append(item)"
       },
       {
-        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1699",
+        "where": "<workspace>\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1699",
         "size_diff_kib": 21.1,
         "count_diff": 100,
         "line": "await self._wakeup.wait()"
       },
       {
-        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1231",
+        "where": "<workspace>\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1231",
         "size_diff_kib": 21.1,
         "count_diff": 100,
         "line": "config_before = frozenset(self._active_state_nodes)"
       },
       {
-        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1171",
+        "where": "<workspace>\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1171",
         "size_diff_kib": 20.3,
         "count_diff": 100,
         "line": "event, from_inbox = await self._next_event()"
       },
       {
-        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1680",
+        "where": "<workspace>\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\interpreter.py:1680",
         "size_diff_kib": 19.5,
         "count_diff": 100,
         "line": "event = self._event_queue.get_nowait()"
@@ -780,7 +780,7 @@
         "line": "return futures.Future(loop=self)"
       },
       {
-        "where": "C:\\Users\\basil\\Desktop\\Projects\\FullStackProjects\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py:777",
+        "where": "<workspace>\\_ref\\xstate-statemachine\\src\\xstate_statemachine\\base_interpreter.py:777",
         "size_diff_kib": 8.6,
         "count_diff": 100,
         "line": "return Event(type=event)"

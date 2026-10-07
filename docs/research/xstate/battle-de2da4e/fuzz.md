@@ -8,7 +8,7 @@ commit **`de2da4e`** ("Merge pull request #223 from basiltt/fix/0.8.1-round11").
 **Date:** 2026-09-23. **Python:** CPython 3.13.7. **OS:** Windows 11 Pro
 10.0.26200. **Interpreter:** `_ref/xstate-statemachine/.venv-main/Scripts/python`
 with `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`. Every script run from the neutral
-cwd `C:/Users/basil`.
+cwd `<home>`.
 
 **Suite baseline** (`suite-de2da4e.log`, complete): **3545 passed, 13 skipped,
 15 warnings in 752 s**; total coverage **92.87 %** (gate 90 %).
@@ -142,7 +142,7 @@ mint / hash / restore-reporting surfaces that round 11 did not touch.
 ## 2. New attacks
 
 All scripts are standalone (stdlib + `xstate_statemachine` only), run from
-`C:/Users/basil`, and exit non-zero on any violated property.
+`<home>`, and exit non-zero on any violated property.
 
 ### 2.1 `f1_parked_chain_latch.py` — #221 parked records, #222 latch vs snapshot
 

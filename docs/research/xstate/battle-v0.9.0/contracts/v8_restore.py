@@ -16,7 +16,7 @@ import asyncio, json, os, pathlib, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import cv9 as K  # noqa: E402
 from cv9 import Stub  # noqa: E402
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 
 GV = {"owner_and_elevated": True, "cancel_working_requested": False,
       "flatten_requested": False}

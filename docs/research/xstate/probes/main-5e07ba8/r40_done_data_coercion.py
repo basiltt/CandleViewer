@@ -2,7 +2,7 @@
 non-JSON value is SILENTLY stringified. On restore the onDone handler receives
 a str where it expects a Decimal/datetime -- no error, no warning."""
 import sys, asyncio, json, decimal
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter
 from xstate_statemachine.events import DoneEvent
 seen={}

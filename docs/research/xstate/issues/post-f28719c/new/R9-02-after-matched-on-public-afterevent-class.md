@@ -210,7 +210,7 @@ sys.exit(asyncio.run(main()))
 
 ## Observed
 
-Verbatim stdout from a fresh run (cwd `C:/Users/basil`, i.e. outside both the library tree and the audit tree):
+Verbatim stdout from a fresh run (cwd `<home>`, i.e. outside both the library tree and the audit tree):
 
 ```
 VECTOR A -- hand-built event, strict=True (send-side check)
@@ -353,7 +353,7 @@ Named tests, all asserting the state does **not** advance to the timer target. N
 - **Library commit:** `f28719c555ef6e9315a71315945a5a4f2965af73` (`main`, merge of PR #202; `__version__` reports `0.8.0`)
 - **Python:** CPython 3.13.7 (tags/v3.13.7:bcee1c3, Aug 14 2025) [MSC v.1944 64 bit (AMD64)], Windows 11 Pro 10.0.26200
 - **Env:** `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`
-- **cwd used:** `C:/Users/basil` — a neutral directory outside both the library tree and the audit tree, proving the script is genuinely standalone (stdlib + `xstate_statemachine` only, no harness or helper module on the path).
+- **cwd used:** `<home>` — a neutral directory outside both the library tree and the audit tree, proving the script is genuinely standalone (stdlib + `xstate_statemachine` only, no harness or helper module on the path).
 - **Script:** `repro/R9-02_after_matched_on_public_class.py`, byte-identical to the block embedded above.
 - **Exit codes:** `1` (defect present) — both vectors fired. Vector A `strict=True`: refused, `UnknownEventError` (correct). Vector A `strict=False`: `['m.expired']` (defect). Vector B `strict=True`: `['m.expired']` (defect). The script returns `0` once both vectors are refused.
 - **Source anchors re-read on this tree:** `base_interpreter.py:4523`, `:4531-4546`, `:1768`, `:2022`, `:2128-2142`, `:66`; `events.py:272-287`, `:326-331`, `:567-590`, `:610`.

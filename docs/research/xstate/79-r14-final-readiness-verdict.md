@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-24 · **Tag under test:** `v0.9.1` = `45bb7f3` · **Tree:** `main` @ `801eacd` (merge of PR #249; `git diff v0.9.1..HEAD --stat` **empty**)
 **Inputs:** `75-r14-regression.md`, `76-r14-suite-bench.md`, `77-r14-diff-review.md`, `78-r14-findings-register.md` (+ the `R14-01` refutation), `battle-v0.9.1/**`, `issues/verify-v0.9.1/**`, `suite-v0.9.1.log`, `20-adoption-gate.md` §7, `74-r13-final-readiness-verdict.md`.
-**Re-run in this session:** the tail of `suite-v0.9.1.log`, and `battle-v0.9.1/r14_01_remint_retarget.py` from cwd `C:/Users/basil` with K=async and K=def. Both kinds printed `['m.a.d', 'm.pay.settled']`, so the defect reproduces.
+**Re-run in this session:** the tail of `suite-v0.9.1.log`, and `battle-v0.9.1/r14_01_remint_retarget.py` from cwd `<home>` with K=async and K=def. Both kinds printed `['m.a.d', 'm.pay.settled']`, so the defect reproduces.
 **Time box:** 20 min. `bench_h_candleviewer_budgets` (BENCH-1/2) was **not re-run**; see §0.
 
 ---

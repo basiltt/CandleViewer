@@ -3,7 +3,7 @@ other mutable state, or that auto-registers BOUND methods, shares that state
 across every machine -- and the copy's bound methods still point at the
 ORIGINAL instance."""
 import sys, copy
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic
 CFG={"id":"m","initial":"a","states":{"a":{"entry":["bump"]}}}
 class L(MachineLogic):

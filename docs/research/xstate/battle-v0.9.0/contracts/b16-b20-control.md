@@ -31,7 +31,7 @@ snapshot→restore→compare with **`chain_trips` asserted `0` and preserved**
 Every driver ran **twice — pass 1 `async def` services, pass 2 `def`** — and
 under **`-W error::RuntimeWarning`** (#232), proving no contract stub drops a
 `wait=True` receipt. All scripts are standalone (stdlib +
-`xstate_statemachine` only) and `os.chdir("C:/Users/basil")`. Library source
+`xstate_statemachine` only) and `os.chdir("<home>")`. Library source
 was never modified or imported-for-patching.
 
 | Driver | What it pins | `async` | `def` |

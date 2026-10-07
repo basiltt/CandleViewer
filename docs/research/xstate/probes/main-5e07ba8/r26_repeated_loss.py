@@ -2,7 +2,7 @@
 Realistic shape: every event does a little async work (an await), and a
 producer keeps sending. Default maxIterations=1000."""
 import sys, asyncio
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter
 async def main():
     got=[]

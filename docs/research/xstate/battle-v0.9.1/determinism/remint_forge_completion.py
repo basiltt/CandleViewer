@@ -1,5 +1,5 @@
 import sys, asyncio
-sys.path.insert(0,"C:/Users/basil/AppData/Local/Temp/xsm091")
+sys.path.insert(0,"<home>/AppData/Local/Temp/xsm091")
 from xstate_statemachine import create_machine, Interpreter
 from xstate_statemachine.events import re_mint, is_system_event
 

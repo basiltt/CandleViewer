@@ -4,7 +4,7 @@
 
 Environment: `.venv-main`, `__version__ == "0.9.1"`, loaded from the clone's `src/`. The full suite log (`suite-v0.9.1.log`) shows **3601 passed, 13 skipped, 92.93% coverage**. The published PyPI wheel was **not** checked against its sha256.
 
-## 1. Prior defects (all six scripts were run from cwd `C:/Users/basil`)
+## 1. Prior defects (all six scripts were run from cwd `<home>`)
 
 | Prior item | Script | v0.9.1 result | Status |
 |---|---|---|---|

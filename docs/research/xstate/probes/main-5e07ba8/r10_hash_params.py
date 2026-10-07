@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic
 from xstate_statemachine.persistence import structure_hash, SNAPSHOT_VERSION
 def cfg(amt):

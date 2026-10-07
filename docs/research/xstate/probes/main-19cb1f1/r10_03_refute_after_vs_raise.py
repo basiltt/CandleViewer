@@ -8,7 +8,7 @@ Both service/action kinds. STANDALONE: stdlib + xstate_statemachine.
 """
 import asyncio, json, sys
 SRC = sys.argv[1] if len(sys.argv) > 1 else (
-    r"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref"
+    r"<workspace>/_ref"
     r"/xstate-statemachine/src")
 sys.path.insert(0, SRC)
 from xstate_statemachine import (Interpreter, MachineLogic, PluginBase,  # noqa

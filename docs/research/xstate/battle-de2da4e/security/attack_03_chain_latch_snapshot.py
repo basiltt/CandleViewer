@@ -3,7 +3,7 @@ unknown-key fuzz (#220), both engines/kinds where relevant.
 STANDALONE: stdlib + xstate_statemachine only.
 """
 import sys, json
-sys.path.insert(0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0, "<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, SyncInterpreter
 from xstate_statemachine.exceptions import RunawayChainError
 

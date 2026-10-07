@@ -72,12 +72,12 @@ ERROR:xstate_statemachine.sync_interpreter:🛑 Exceeded 20 self-generated event
 U5 action-issued priority send charged: last_error=RunawayChainError("Machine 'u5' exceeded 20 chained self-generated events in one macrostep and discarded 1 of them. An action raises or sends the event that triggers it; break the cycle or raise 'maxIterations'.") n_loop_calls=21 (expect RunawayChainError, n_loop_calls bounded near max_iterations, NOT unbounded)
 ERROR:xstate_statemachine.base_interpreter:🔥 Action 'boom' raised while handling event 'GO'; skipping remaining actions in this list.
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3354, in _execute_actions
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\base_interpreter.py", line 3354, in _execute_actions
     await self._run_user_action(impl, action_def, event)
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2102, in _run_user_action
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 2102, in _run_user_action
     impl(self, self.context, event, action_def)
     ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate\battle-19cb1f1\observability\new_attacks_r8.py", line 237, in boom
+  File "<workspace>\CandleViewer\docs\research\xstate\battle-19cb1f1\observability\new_attacks_r8.py", line 237, in boom
     raise RuntimeError("boom")
 RuntimeError: boom
 WARNING:xstate_statemachine.base_interpreter:💥 Transition on 'u6.idle' failed; rolling back to the pre-transition configuration.

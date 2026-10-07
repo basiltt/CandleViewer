@@ -79,5 +79,5 @@ We forbid `priority=True` everywhere and ban delayed self-sends in machine defin
 - Date: 2026-09-22
 - Python: CPython 3.13.7 (`.venv-main`)
 - Commit: `f28719c` (unreleased 0.8.1; `__version__` reports `0.8.0`)
-- cwd used: `C:\Users\basil` (neutral, outside both repos)
+- cwd used: `<home>` (neutral, outside both repos)
 - Exit codes: `R9-06_delayed_selfsend_unbounded.py` → **1** (unbounded; `laps(exits)=659` in 10 s, `raise_depth=0`, `chain_tripped=False`, `status=running`)

@@ -22,7 +22,7 @@ import cv78 as H  # noqa: E402
 from xstate_statemachine import Interpreter  # noqa: E402
 from xstate_statemachine.clock import SimulatedClock  # noqa: E402
 
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 
 
 async def main():

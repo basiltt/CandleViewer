@@ -116,7 +116,7 @@ is an unexpected exception in a task the action spawned — for us, in a
 `broadcast_*` wrapper — not a missed transition.
 
 Repro: `repro/cvde_219_hatch_flaky.py`, standalone (stdlib +
-`xstate_statemachine` only), run from `C:/Users/basil`, carrying both shapes as
+`xstate_statemachine` only), run from `<home>`, carrying both shapes as
 each other's control → `REPRODUCED (timing-dependent)`.
 
 This is **not** an R10-01/R11-01-style trust-boundary case: the docs do not

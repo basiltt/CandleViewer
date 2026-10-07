@@ -4,12 +4,12 @@ ReentrantWaitError matrix: self / after-fired-handler send(wait=True)
 raises, both engines (#219). (C) chain-trip latch survives a benign
 event after the trip (#222): last_chain_error stays set, chain_trips
 monotonic, clear_chain_error() clears it.
-Standalone: stdlib + xstate_statemachine only. Run from C:/Users/basil.
+Standalone: stdlib + xstate_statemachine only. Run from <home>.
 """
 import asyncio
 import sys
 
-sys.path.insert(0, r"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0, r"<workspace>/_ref/xstate-statemachine/src")
 
 from xstate_statemachine import create_machine, Interpreter, SyncInterpreter, MachineLogic
 from xstate_statemachine.exceptions import ReentrantWaitError

@@ -2,7 +2,7 @@
 in flight. This is ordinary production shape -- a handler doing I/O while a
 producer keeps sending."""
 import sys, asyncio
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter
 async def run(n):
     got=set(); dropped=[]

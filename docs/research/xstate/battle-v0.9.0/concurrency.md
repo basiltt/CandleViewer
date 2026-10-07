@@ -17,7 +17,7 @@ Library suite @ this tree: **3577 passed, 13 skipped, 92.86 % coverage**
 Scripts: `battle-v0.9.0/concurrency/w1`–`w5`, plus the round-12 suite
 re-run under `concurrency/rerun-de2da4e/`. Every probe is standalone
 (stdlib + `xstate_statemachine`, helpers inlined), proven from the
-neutral cwd `C:/Users/basil`. Every action check runs BOTH `def` and
+neutral cwd `<home>`. Every action check runs BOTH `def` and
 `async def`; every engine check runs BOTH engines.
 
 ---
@@ -97,7 +97,7 @@ the residual gap in round 12 (150 s vs 720 s) is closed: w5 ran the full
 
 ```
 PY=…/_ref/xstate-statemachine/.venv-main/Scripts/python
-export PYTHONIOENCODING=utf-8 PYTHONUTF8=1      # from cwd C:/Users/basil
+export PYTHONIOENCODING=utf-8 PYTHONUTF8=1      # from cwd <home>
 "$PY" battle-v0.9.0/concurrency/w1_task_identity_matrix.py
 "$PY" battle-v0.9.0/concurrency/w2_persistence_latch_strict_plugins.py
 "$PY" battle-v0.9.0/concurrency/w3_restore_lifecycle_hook.py     # exit 1

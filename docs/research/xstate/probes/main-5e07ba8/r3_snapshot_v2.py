@@ -1,5 +1,5 @@
 import sys, json, asyncio
-sys.path.insert(0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0, "<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter
 from xstate_statemachine.events import persist_event, restore_event, system_event, Event, DoneEvent, ErrorEvent, AfterEvent, is_system_event
 

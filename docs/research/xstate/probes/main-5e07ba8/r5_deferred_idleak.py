@@ -1,5 +1,5 @@
 import sys, gc
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, SyncInterpreter
 CFG={"id":"m","initial":"a","onUnhandled":"defer","states":{
  "a":{"on":{"GO":{"target":"b"}}},

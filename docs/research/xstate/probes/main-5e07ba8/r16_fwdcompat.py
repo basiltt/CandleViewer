@@ -1,7 +1,7 @@
 """Is a v2 snapshot rejected cleanly by older code? Simulate 0.8.0 by setting
 SNAPSHOT_VERSION=1 and checking the error surface."""
 import sys
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import persistence as P
 from xstate_statemachine.exceptions import SnapshotVersionError
 P.SNAPSHOT_VERSION=1

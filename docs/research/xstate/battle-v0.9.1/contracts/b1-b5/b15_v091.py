@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """B1-B5 contract machines end-to-end on xstate-statemachine 0.9.1.
 
-STANDALONE: stdlib + xstate_statemachine only; helpers inline; cwd C:/Users/basil.
+STANDALONE: stdlib + xstate_statemachine only; helpers inline; cwd <home>.
 Usage:  python -W error::RuntimeWarning b15_v091.py async|def
 Mandatory config: strictConfig, rollback, defer, guard raise, strictTargets,
 strict, bounded RAISE inbox, SimulatedClock, plugins= on every restore
@@ -18,7 +18,7 @@ from xstate_statemachine.plugins import PluginBase
 
 HERE = pathlib.Path(__file__).resolve().parent.parent   # contracts/ (JSON)
 STYLE = sys.argv[1] if len(sys.argv) > 1 else "async"
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 RES = {}
 
 

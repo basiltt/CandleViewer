@@ -1,7 +1,7 @@
 """STANDALONE verify -- #225-#228 on xstate_statemachine v0.9.0 / main @ e3a1f22.
 
 Matrix: {def, async def} x {Interpreter, SyncInterpreter} where relevant.
-stdlib + xstate_statemachine only. Neutral cwd C:/Users/basil. Exit 0 == all pass.
+stdlib + xstate_statemachine only. Neutral cwd <home>. Exit 0 == all pass.
 """
 import asyncio
 import json

@@ -1,7 +1,7 @@
 """CHANGELOG/docs: 'the triggering receipt carries RunawayChainError'.
 What does the async engine actually put on the receipt?"""
 import sys, asyncio
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter, SyncInterpreter
 CFG={"id":"m","maxIterations":5,"initial":"a","states":{"a":{"on":{
   "SPIN":{"actions":[{"type":"raise","params":{"event":"SPIN"}}]}}}}}

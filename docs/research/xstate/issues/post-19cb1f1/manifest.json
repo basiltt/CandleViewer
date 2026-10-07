@@ -12,7 +12,7 @@
     "note": "__version__ still reports 0.8.0 on this tree. Never key a pin, CI assertion or gate baseline on the version string."
   },
   "posted": true,
-  "note": "POSTED 2026-09-22. New issues #212-#216 filed, 8 comments posted (#203-#210), meta #26 replaced. GitHub access used gh CLI with authorised write access. We never reopen closed upstream issues; residuals were filed as new R10 issues instead. Every new-issue body embeds a STANDALONE repro (stdlib + xstate_statemachine only) that was executed from neutral cwd C:/Users/basil against this commit both pre-flight (from the draft file) and post-flight (re-fetched from the live issue body).",
+  "note": "POSTED 2026-09-22. New issues #212-#216 filed, 8 comments posted (#203-#210), meta #26 replaced. GitHub access used gh CLI with authorised write access. We never reopen closed upstream issues; residuals were filed as new R10 issues instead. Every new-issue body embeds a STANDALONE repro (stdlib + xstate_statemachine only) that was executed from neutral cwd <home> against this commit both pre-flight (from the draft file) and post-flight (re-fetched from the live issue body).",
   "r10_to_issue": {
     "R10-03": 212,
     "R10-04": 213,

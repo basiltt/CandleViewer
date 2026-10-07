@@ -9,7 +9,7 @@
 [PASS ] A5  #232: a def action that DROPS its wait=True receipt warns; ensure_future/callback/
 Exception ignored in: <function Interpreter._guard_reentrant_await.<locals>._PendingReceipt.__del__ at 0x00000226664EB240>
 Traceback (most recent call last):
-  File "C:\Users\basil\Desktop\Projects\FullStackProjects\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1217, in __del__
+  File "<workspace>\_ref\xstate-statemachine\src\xstate_statemachine\interpreter.py", line 1217, in __del__
     warnings.warn(
 RuntimeWarning: send('P', wait=True) on 'a' was called from inside an action and its receipt was never awaited (#232). A plain `def` action cannot await, so it received this awaitable, not a Receipt. Send without wait=True, or hand the awaitable out (asyncio.ensure_future(...)) to be awaited elsewhere.
         -> {"ok": true, "cells": {"drop": {"runtime_warnings": ["RuntimeWarning: send('P', wait=True) on 'a' was called from inside an action and its receipt was never awaited (#232). A plain"], "n": 1}, "ensure_future": {"runtime_warnings": [], "n": 0}, "add_done_callback": {"runtime_warnings": [], "n": 0}, "await_it": {"runtime_warnings": [], "n": 0}}}

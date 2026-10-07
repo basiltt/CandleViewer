@@ -1,5 +1,5 @@
 """Standalone recheck of #218 (timer handle leak on fire/cancel), both engines.
-Run from neutral cwd C:/Users/basil with the library's venv-main python.
+Run from neutral cwd <home> with the library's venv-main python.
 """
 import sys as _xs_sys  # noqa: E402
 from pathlib import Path as _XsPath  # noqa: E402

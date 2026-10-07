@@ -12,7 +12,7 @@ during this task: **3577 passed, 13 skipped, 92.86% coverage, no
 failures** — consistent with the standalone findings below.
 
 Standalone script: `battle-v0.9.0/observability/attacks.py` (stdlib +
-`xstate_statemachine` only, neutral cwd `C:/Users/basil`, pinned venv).
+`xstate_statemachine` only, neutral cwd `<home>`, pinned venv).
 **Time-boxed severely**: this session had to spend most of its budget on
 environment/diff verification and API-shape discovery (the v0.9.0
 `scheduled_sends` restore record is flat `{"type", "data",

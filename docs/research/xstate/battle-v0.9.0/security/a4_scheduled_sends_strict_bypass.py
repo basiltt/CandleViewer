@@ -4,7 +4,7 @@ refused the same way pending_events is (D-CV-C54 property), and the
 restore leaves a consistent machine (>=300 property runs, both kinds).
 STANDALONE."""
 import sys, json, random
-sys.path.insert(0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0, "<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, SyncInterpreter, Interpreter, PluginBase
 from xstate_statemachine.actions import raise_ as raise_action
 import asyncio

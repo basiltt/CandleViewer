@@ -1,6 +1,6 @@
 # 01 — xstate-statemachine: Core Source Study
 
-Source studied: `C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src/xstate_statemachine/`
+Source studied: `<workspace>/_ref/xstate-statemachine/src/xstate_statemachine/`
 Version: `__version__ = "0.7.0"` (`__init__.py:166`). All file:line refs are relative to that `src/xstate_statemachine/` root.
 
 Scope: every non-CLI `.py` file read in full (models, events, machine_logic, factory, base_interpreter, interpreter, sync_interpreter, actions, helpers, plugins, resolver, logic_loader, task_manager, exceptions, logger, pythonic). The `cli/` subpackage (~5.9k lines, code generation from XState JSON) was surveyed structurally only — it is a codegen tool, not runtime.

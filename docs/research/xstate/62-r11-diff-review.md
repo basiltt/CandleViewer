@@ -2,7 +2,7 @@
 
 **Scope.** 15 files, ~1.3k lines. Library clone @ `c78ce99` (unreleased 0.8.1;
 `__version__` still `0.8.0` — key on the commit). All src/ and tests/ changes
-read. Every finding below was reproduced from neutral cwd `C:/Users/basil`
+read. Every finding below was reproduced from neutral cwd `<home>`
 with a STANDALONE probe (stdlib + `xstate_statemachine` only) under
 `probes/main-c78ce99/`. Both action kinds (`def` / `async def`) exercised
 wherever an action or service is the subject; both engines wherever parity is

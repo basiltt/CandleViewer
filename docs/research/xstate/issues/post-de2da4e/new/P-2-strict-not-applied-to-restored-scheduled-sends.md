@@ -38,7 +38,7 @@ This is a one-line fix and we have a proposed acceptance test below.
 ## Minimal reproduction
 
 Standalone: stdlib + `xstate_statemachine` only, every helper inlined, run
-from the neutral cwd `C:/Users/basil`. **Exit 1 = reproduced.**
+from the neutral cwd `<home>`. **Exit 1 = reproduced.**
 
 ```python
 """STANDALONE repro -- P-2: `strict` is NOT applied to restored
@@ -346,7 +346,7 @@ dropped, so a restore that discarded a deadline is never silent.
 
 ## Verification
 
-- Repro run from the neutral cwd `C:/Users/basil` with the `.venv-main`
+- Repro run from the neutral cwd `<home>` with the `.venv-main`
   interpreter: **exit 1**, no `ImportError`, output as quoted above —
   lane A refuses, lane B admits, and the async engine delivers the
   undeclared event to the run loop.

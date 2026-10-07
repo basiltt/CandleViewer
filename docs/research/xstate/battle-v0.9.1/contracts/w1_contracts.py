@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio, copy, json, os, pathlib, sys
 
 HERE = pathlib.Path(__file__).resolve().parent
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 from xstate_statemachine import (Interpreter, SyncInterpreter, MachineLogic,  # noqa
                                  OverflowPolicy, create_machine, InterpreterStoppedError)
 from xstate_statemachine.actions import is_builtin  # noqa

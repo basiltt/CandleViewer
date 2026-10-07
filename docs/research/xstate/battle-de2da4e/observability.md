@@ -3,7 +3,7 @@
 Library `_ref/xstate-statemachine` @ `de2da4e` (unreleased 0.8.1). Round-11
 fixes #218–#222 per `CHANGELOG.md [Unreleased]`. Standalone script:
 `battle-de2da4e/observability/attacks.py` (stdlib + `xstate_statemachine`
-only, run from neutral cwd `C:/Users/basil`, pinned venv). Whole task
+only, run from neutral cwd `<home>`, pinned venv). Whole task
 time-boxed to 20 min wall clock; each script ≤120 s. **Full run: 15/15
 attacks PASS, 5.9 s wall.** The background pytest+coverage run
 (`suite-de2da4e.log`) completed independently: **3545 passed, 13 skipped,

@@ -2,7 +2,7 @@
 [gate] xstate-statemachine : 0.9.1 (reported; NOT the identity)
 [gate] commit              : 801eacdeef5bda2ba24b75f537ae04cc3527747e
 [gate] build               : commit 801eacd -- NOT a recorded baseline (reports __version__ 0.9.1); triage every delta in writing
-[gate] root                : C:\Users\basil\Desktop\Projects\FullStackProjects\CandleViewer\docs\research\xstate
+[gate] root                : <workspace>\CandleViewer\docs\research\xstate
 
 [gate] --- verify (PRIMARY: mandated configuration) ---
 
@@ -284,5 +284,5 @@ PROBE-03  probe   FAIL      03_context_snapshot_determinism                    1
 ==============================================================================
 
 [gate] elapsed 368.0s
-[gate] wrote C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/research/xstate/gate/result-v0.9.1.json
+[gate] wrote <workspace>/CandleViewer/docs/research/xstate/gate/result-v0.9.1.json
 rc=1

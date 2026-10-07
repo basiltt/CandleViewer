@@ -1,6 +1,6 @@
 # Battle track FUZZ — v0.9.1 (tag 45bb7f3, main 801eacd)
 
-Environment: `.venv-main`, `__version__ == "0.9.1"`, cwd `C:/Users/basil`.
+Environment: `.venv-main`, `__version__ == "0.9.1"`, cwd `<home>`.
 `git diff v0.9.1..HEAD --stat` is empty, so main has the same code as the tag.
 The PyPI wheel sha256 is `d832d4d9…687162`, which matches `/tmp/xsm091` and the PyPI JSON.
 The full suite log (`suite-v0.9.1.log`) shows **3601 passed, 13 skipped, 92.93 % coverage**.

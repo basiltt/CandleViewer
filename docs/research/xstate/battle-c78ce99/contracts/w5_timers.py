@@ -17,7 +17,7 @@ import cv78 as K  # noqa: E402
 from xstate_statemachine import Interpreter, OverflowPolicy  # noqa: E402
 from xstate_statemachine.clock import SimulatedClock  # noqa: E402
 
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 
 
 def graft_after(cfg, dotted, delay, target, actions=None):

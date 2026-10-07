@@ -28,4 +28,4 @@ def run(src, label):
         await i.stop()
     asyncio.run(main()); sys.path.pop(0)
 run("/tmp/lib3c/src","3c527b0")
-run("C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src","5e07ba8")
+run("<workspace>/_ref/xstate-statemachine/src","5e07ba8")

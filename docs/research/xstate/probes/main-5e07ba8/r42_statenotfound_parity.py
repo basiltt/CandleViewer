@@ -1,6 +1,6 @@
 """#31: runtime parity for unresolvable targets under strict_targets=False."""
 import sys, asyncio
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter, SyncInterpreter
 CFG={"id":"m","strictTargets":False,"initial":"a","states":{"a":{"on":{
   "GO":{"target":{"type":"dyn"},"actions":[]}}}}}

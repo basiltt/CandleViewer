@@ -3,7 +3,7 @@ typo-catch pass and a valid-grammar false-positive pass.
 STANDALONE: stdlib + xstate_statemachine only.
 """
 import sys, itertools
-sys.path.insert(0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0, "<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic
 from xstate_statemachine.exceptions import InvalidConfigError
 

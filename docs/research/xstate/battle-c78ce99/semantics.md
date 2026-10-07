@@ -10,7 +10,7 @@ with `scheduled_sends`, strict-on-restore, lane and provenance) — together
 with **#215** (three-lane lap parity) and **#216** (unknown top-level keys).
 
 **Scripts** (all standalone — stdlib + `xstate_statemachine` only, every
-helper inlined, proven from neutral cwd `C:/Users/basil`):
+helper inlined, proven from neutral cwd `<home>`):
 `battle-c78ce99/semantics/{p_persistence,c_concurrency,f_fuzz,s_semantics_sec,k_soak}.py`.
 Repro under `repro/`, machine-readable results under `results/`.
 

@@ -36,7 +36,7 @@
 
 `f28719c` left one library defect open — LD-01, the roll-forward half of #193: a plain `def` service was still *called* when an `always` rolled the machine out of the invoking state before the invoke should run, and `SyncInterpreter` leaked both the rollback and roll-forward halves.
 
-At `c78ce99`, **#204 closes it in all four cells**. The reporter's own standalone repro from `battle-f28719c/contracts/repro/ld01_always_rollforward.py`, run unmodified from neutral cwd `C:/Users/basil`, now **exits 0 with `"leaked": false` in every lane**:
+At `c78ce99`, **#204 closes it in all four cells**. The reporter's own standalone repro from `battle-f28719c/contracts/repro/ld01_always_rollforward.py`, run unmodified from neutral cwd `<home>`, now **exits 0 with `"leaked": false` in every lane**:
 
 | LD-01 case | `async def` / async | `def` / async | `def` / sync |
 |---|---|---|---|

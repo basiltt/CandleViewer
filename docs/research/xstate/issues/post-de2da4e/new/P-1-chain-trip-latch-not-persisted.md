@@ -43,7 +43,7 @@ clears it without anyone calling `clear_chain_error()`.
 ## Minimal reproduction
 
 Standalone: stdlib + `xstate_statemachine` only, every helper inlined, run
-from the neutral cwd `C:/Users/basil`. **Exit 1 = reproduced.**
+from the neutral cwd `<home>`. **Exit 1 = reproduced.**
 
 ```python
 """STANDALONE repro -- P-1: the #222 chain-trip latch is process-local.
@@ -326,7 +326,7 @@ generic snapshot consumer.
 
 ## Verification
 
-- Repro run from the neutral cwd `C:/Users/basil` with the `.venv-main`
+- Repro run from the neutral cwd `<home>` with the `.venv-main`
   interpreter: **exit 1**, no `ImportError`, output as quoted above —
   `REPRODUCED: True` on both engines.
 - The code block under "## Minimal reproduction" is **byte-identical** to

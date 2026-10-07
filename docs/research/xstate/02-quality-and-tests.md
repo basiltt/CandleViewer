@@ -1,6 +1,6 @@
 # xstate-statemachine — Study 2: Tests & Quality
 
-Repo studied: `C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine`
+Repo studied: `<workspace>/_ref/xstate-statemachine`
 Version: `0.7.0` (pyproject.toml). Date of this study: 2026-09-15.
 
 ## Actual test run (verbatim results)
