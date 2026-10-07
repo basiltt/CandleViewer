@@ -452,6 +452,72 @@ declared in `ingestion/metrics.py`, exported with `env`, `exchange`): trades/tic
 `ingest_book_resyncs_total{symbol,reason}`; feed health → `ws_topic_staleness_seconds{topic}`,
 `ingest_ws_up{socket}`; clock → `exchange_clock_drift_ms`, `clock_offset_age_seconds`.
 
+### 2.10 Big-trade events (E22-T01, contract-first)
+
+Produced by M9 `orderflow/bigtrade.py` (`BigTradeEngine`) from `TradeEvent`s processed in `(ts_event, trade_id)` order. Deadlines are evaluated against print timestamps, never the wall clock, so live and replay take the same path. Duplicate `trade_id`s count once. Per-print evaluation is plain synchronous code that publishes enums. It is **not** a statechart (C-2.20). Decisions recorded as owner item Q on #1778 (★ defaults).
+
+```python
+class BigTradeEvent(MarketEvent):          # one per flagged print
+    trade_id: str
+    price: Px
+    qty: Qty
+    side: Side
+    notional: Notional
+    price_ticks: Ticks
+    mode: Literal["absolute_size", "notional", "percentile"]
+    threshold_abs: Decimal                 # effective threshold in the mode's unit (qty for absolute_size, USDT otherwise)
+    capped: bool                           # True while the over-flagging cap is active
+    seq: int                               # copied from the source TradeEvent
+
+class TradeClusterEvent(MarketEvent):      # emitted when a cluster closes
+    cluster_id: str                        # deterministic: f"{side}:{price_bucket}:{first_trade_id}"
+    side: Side
+    price_bucket: int                      # floor(price / (tick_size * max(1, tolerance_ticks)))
+    anchor_price: Px                       # first print's price (display only; not a merge criterion)
+    first_ts_event: int
+    last_ts_event: int
+    trade_ids: tuple[str, ...]             # bounded by PRINTS_BUFFER_MAX
+    cluster_size: int
+    total_qty: Qty
+    total_notional: Notional
+    vwap: Px
+    max_print_qty: Qty
+    close_reason: Literal["deadline", "superseded", "evicted", "config_change", "flush"]
+    estimated: Literal[True] = True        # SR-E22-12
+
+class BigTradeThresholdEvent(MarketEvent): # config echo, at most one per 5 s per symbol
+    mode: Literal["absolute_size", "notional", "percentile"]
+    value: Decimal                         # percentile => 0..100
+    percentile_window_ms: int
+    cluster_window_ms: int
+    cluster_tolerance_ticks: int
+    effective_threshold_abs: Decimal       # value displayed by the UI (US-BIG-002 scenario 2)
+    sample_count: int
+    flagged_fraction: Decimal
+    estimated: bool                        # True in percentile mode
+
+class BigTradeAdvisoryEvent(MarketEvent):
+    reason: Literal["threshold_too_low"]
+    flagged_fraction: Decimal              # > 0.20 over the trailing window
+    suggested_value: Decimal               # in the configured mode's unit
+    cap_active: bool
+```
+
+| Event                    | Bus topic (`{env}.md.{symbol}.{detail}`, §2.9 as shipped) | Cadence                   |
+| ------------------------ | --------------------------------------------------------- | ------------------------- |
+| `BigTradeEvent`          | `…bigtrade`                                               | per flagged print         |
+| `TradeClusterEvent`      | `…cluster`                                                | on cluster close          |
+| `BigTradeThresholdEvent` | `…bigtrade.threshold`                                     | ≤ 1 / 5 s and on config change |
+| `BigTradeAdvisoryEvent`  | `…bigtrade.advisory`                                      | on entering the over-flag state |
+
+**Rules (binding).**
+
+- **Cluster key.** A cluster is keyed on `(symbol, side, price_bucket)` only. A print merges into the open cluster for its key if `ts_event <= first_ts_event + cluster_window_ms`. Otherwise that cluster closes (`deadline`) and a new one opens. There is no separate tolerance check against the anchor price. A cluster belongs to the bar containing its `first_ts_event` (US-BIG-004 scenario 3). `cluster_window_ms = 0` disables clustering. A config change closes all open clusters (`config_change`) and recomputes from the buffered prints.
+- **Over-flagging cap.** When more than 20 % of the prints in the trailing window are flagged, the engine emits `BigTradeAdvisoryEvent` and raises the effective threshold to the trailing p80. It keeps emitting `BigTradeEvent` with `capped=True` and **never suppresses** them.
+- **Percentile estimator.** P² behind a trimmed wrapper (SR-E22-14), using fixed-size state. It never stores the window's prints. The accuracy target is a **rank** error of ≤ 1 % against the exact quantile over the same window. The effective threshold refreshes at most every 5 s.
+- **State caps (closes threat-model gap G3; SR-E22-05).** Per symbol: `CLUSTER_KEYS_MAX = 4096` open cluster keys and `PRINTS_BUFFER_MAX = 16384` buffered prints. The oldest entry is evicted (`close_reason="evicted"`) and `bigtrade_state_truncated_total{symbol}` is incremented, never silently. Every bound is imported from `orderflow/limits.py` (E22 threat model §7). No literal copies are allowed elsewhere.
+- **Input assert (SR-E22-13).** Engine inputs are `Decimal` > 0 and on tick. Anything else is rejected and counted.
+
 ---
 
 ## 3. Bar builders
