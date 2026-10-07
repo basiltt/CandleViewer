@@ -86,3 +86,86 @@ async def test_lifespan_register_publish_shutdown_flushes_blobs_and_rows(
     assert list((tmp_path / "bars").rglob("*.state.json"))
     assert sink.calls and sink.calls[0][0] == "bars_time"
     assert "rows" in order and order.index("stop:set") < len(order)
+
+
+def test_state_root_default_anchors_on_data_dir_not_cwd(tmp_path: Path) -> None:
+    s = Settings(parquet_root=str(tmp_path / "data" / "parquet"))
+    assert Path(s.bars_state_root) == (tmp_path / "data" / "bars" / "state").resolve()
+
+
+def test_state_root_must_be_absolute() -> None:
+    with pytest.raises(ValueError, match="absolute"):
+        Settings(bars_state_root="var/bars")
+
+
+def test_state_root_symlink_rejected(tmp_path: Path) -> None:
+    target = tmp_path / "real"
+    target.mkdir()
+    link = tmp_path / "link"
+    try:
+        link.symlink_to(target, target_is_directory=True)
+    except OSError:
+        pytest.skip("symlinks unavailable on this platform")
+    with pytest.raises(ValueError, match="symlink"):
+        Settings(bars_state_root=str(link))
+
+
+async def test_writer_probe_not_deployed_off_and_degraded_when_writer_degraded(
+    tmp_path: Path,
+) -> None:
+    from candleviewer.app import _bars_writer_state
+    from candleviewer.health_wiring import register_bars_writer_probe
+    from candleviewer.observability.health_probes import (
+        BARS_WRITER,
+        ComponentState,
+        HealthRegistry,
+    )
+
+    ctx = build_app_context(_settings(tmp_path, enabled=False))
+    runtime = wire_bars(ctx, now_us=lambda: T0, inner_sink=None)
+    holder: list[Any] = [None]
+    registry = HealthRegistry()
+    register_bars_writer_probe(registry, lambda: _bars_writer_state(holder[0]))
+    probe = registry._probes[BARS_WRITER]
+    assert (await probe.check()).state is ComponentState.NOT_DEPLOYED
+    holder[0] = runtime
+    assert (await probe.check()).state is ComponentState.HEALTHY
+    runtime.writer.degraded = True
+    result = await probe.check()
+    assert result.state is ComponentState.DEGRADED
+    assert "bars_writer_degraded" in result.detail
+
+
+def test_wire_without_sink_warns_rows_not_persisted(tmp_path: Path) -> None:
+    from structlog.testing import capture_logs
+
+    ctx = build_app_context(_settings(tmp_path, enabled=False))
+    with capture_logs() as logs:
+        wire_bars(ctx, now_us=lambda: T0)
+    assert any(e["event"] == "bars_rows_not_persisted" for e in logs)
+
+
+async def test_tape_narrows_window_when_a_read_returns_too_many_rows() -> None:
+    from types import SimpleNamespace
+
+    from candleviewer.bars_wiring import MAX_WINDOW_ROWS, StorageTape
+    from candleviewer.storage.models import TimeRange
+    from candleviewer.storage.repositories.rows import TradeRow
+
+    widths: list[int] = []
+
+    class Repo:
+        async def read_trades(self, sym: str, rng: TimeRange) -> list[TradeRow]:
+            w = rng.end_us - rng.start_us
+            widths.append(w)
+            n = MAX_WINDOW_ROWS + 1 if w > 150_000_000 else 1
+            return [
+                TradeRow(rng.start_us, sym, "1", "1", "buy", f"{rng.start_us}-{i}")
+                for i in range(n)
+            ]
+
+    ctx = SimpleNamespace(storage=SimpleNamespace(market_data=Repo()))
+    tape = StorageTape(ctx, lambda: T0 + 300_000_000)  # type: ignore[arg-type]
+    got = [t async for t in tape.since(SYM, T0)]
+    assert widths[0] == 300_000_000 and widths[1] == 150_000_000
+    assert got and len(got) < MAX_WINDOW_ROWS

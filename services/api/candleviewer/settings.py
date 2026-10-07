@@ -18,9 +18,10 @@ from __future__ import annotations
 
 import re
 from enum import StrEnum
+from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _REDACT_NAME_RE = re.compile(r"(key|secret|token|password|dsn)", re.IGNORECASE)
@@ -177,10 +178,12 @@ class Settings(BaseSettings):
     ingestion_ws_enabled: bool = False
     # E12 #2031: run the BarBuilderSet + BarWriter in the app (C-4.13: off by default; removal
     # with E12-T05 #398 / E12-T06 #399, the first consumers). Never gates a safety invariant.
-    # `bars_state_root` holds the 60 s state blobs; relative paths resolve against the CWD
-    # (like `audit_wal_path`), created owner-only (0700) where the platform allows.
+    # `bars_state_root` holds the 60 s state blobs, created owner-only (0700) where the platform
+    # allows. Empty (default) = `<data dir>/bars/state`, where the data dir is the parent of
+    # `parquet_root` (the app's only data-dir setting). Otherwise it must be absolute and not a
+    # symlink; it is normalised with expanduser().resolve() at settings load.
     bars_enabled: bool = False
-    bars_state_root: str = "var/bars/state"
+    bars_state_root: str = ""
     # E35-S02-B1 (#1809): run the deterministic rule evaluator in the app (C-4.13: off by
     # default). Never gates a safety invariant (C-4.14): native SL / scope checks stay on.
     rules_evaluator_enabled: bool = False
@@ -224,6 +227,20 @@ class Settings(BaseSettings):
         return frozenset(
             o.strip().rstrip("/") for o in self.allowed_origins.split(",") if o.strip()
         )
+
+    @model_validator(mode="after")
+    def _anchor_bars_state_root(self) -> Settings:
+        raw = self.bars_state_root.strip()
+        if not raw:
+            root = Path(self.parquet_root).expanduser().parent / "bars" / "state"
+        else:
+            root = Path(raw).expanduser()
+            if not root.is_absolute():
+                raise ValueError("CV_BARS_STATE_ROOT must be an absolute path")
+        if root.is_symlink():
+            raise ValueError("CV_BARS_STATE_ROOT must not be a symlink")
+        object.__setattr__(self, "bars_state_root", str(root.resolve()))
+        return self
 
     @field_validator("bind_host")
     @classmethod

@@ -40,11 +40,14 @@ if TYPE_CHECKING:
 
 logger = structlog.get_logger(__name__)
 
-_HOUR_US: Final = 3_600_000_000
 #: `head_us` looks this far back; an older tape reports None (the ahead-of-tape check is skipped).
 HEAD_WINDOW_US: Final = 5 * 60 * 1_000_000
 #: `since` reads the tape in windows of this size so memory stays bounded after a long outage.
-READ_WINDOW_US: Final = _HOUR_US
+READ_WINDOW_US: Final = 5 * 60 * 1_000_000
+#: A window returning more rows than this is re-read narrower (down to MIN_WINDOW_US), so a
+#: busy symbol cannot pull an unbounded window into memory at once.
+MAX_WINDOW_ROWS: Final = 20_000
+MIN_WINDOW_US: Final = 1_000_000
 _FAR_FUTURE_US: Final = 2**62
 
 
@@ -53,7 +56,12 @@ def _permanent(exc: Exception) -> bool:
 
 
 class GuardedRowSink:
-    """`RowSink` that fails closed until a hot-tier ILP writer is injected."""
+    """`RowSink` that fails closed until a hot-tier ILP writer is injected.
+
+    STUB: the real sink (IlpWriter via `build_hot_tier_writer`, transport + PG-wire) is not
+    composed into the app yet - follow-up #2037. Until then, with `bars_enabled` on, every
+    batch fails after the retry limit and is DROPPED (bounded loss, surfaced by the
+    `bars_writer` health probe, `bars_write_*` logs and metrics)."""
 
     def __init__(self, ctx: AppContext, inner: RowSink | None) -> None:
         self._ctx = ctx
@@ -90,11 +98,15 @@ class StorageTape:
         end = self._now() + 1
         start = ts_us
         tick = self._tick_size(symbol)
+        width = READ_WINDOW_US
         while start < end:
-            stop = min(start + READ_WINDOW_US, end)
+            stop = min(start + width, end)
             rows = await self._ctx.storage.market_data.read_trades(
                 symbol, TimeRange(start_us=start, end_us=stop)
             )
+            if len(rows) > MAX_WINDOW_ROWS and width > MIN_WINDOW_US:
+                width = max(MIN_WINDOW_US, width // 2)
+                continue  # too dense: drop this read, retry the same start narrower
             for r in rows:
                 price = Decimal(r.price)
                 qty = Decimal(r.qty)
@@ -127,11 +139,17 @@ class BarsRuntime:
         self._root = state_root
 
     async def start(self) -> None:
+        # `mode` applies to the leaf only; intermediate parents get the umask default. Fine:
+        # the leaf is chmod'd 0700 below and holds everything sensitive (the blobs).
         self._root.mkdir(parents=True, exist_ok=True, mode=0o700)
         if sys.platform != "win32":  # blobs hold trade-derived state: owner-only
             os.chmod(self._root, 0o700)
         await self.writer.start()
         await self.builder_set.start()
+
+    def writer_state(self) -> tuple[bool, str]:
+        degraded = self.writer.degraded or not self.writer.healthy
+        return degraded, "bars_writer_degraded" if degraded else ""
 
     async def stop(self) -> None:
         """Set before writer, so the set's final closes reach the writer's drain."""
@@ -149,6 +167,11 @@ def wire_bars(
     tick_size: Callable[[str], Decimal | None] = lambda _s: None,
 ) -> BarsRuntime:
     """Build the set + writer, attach the set to `ctx.bars`, return the lifecycle owner."""
+    if inner_sink is None:
+        logger.warning(
+            "bars_rows_not_persisted",
+            reason="no hot-tier row sink composed; bar rows will be dropped (follow-up #2037)",
+        )
     writer = BarWriter(GuardedRowSink(ctx, inner_sink), is_permanent=_permanent)
     root = Path(ctx.settings.bars_state_root)
     builder_set = BarBuilderSet(

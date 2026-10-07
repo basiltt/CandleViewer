@@ -107,6 +107,7 @@ from candleviewer.health_wiring import (
     PgSystemEventWriter,
     WriteBehindLike,
     register_bars_probe,
+    register_bars_writer_probe,
     register_ingestion_probe,
     register_public_ws_probe,
     register_real_probes,
@@ -757,6 +758,9 @@ def create_app(
     register_write_behind_probe(health_registry, lambda: _write_behind_buffers(ctx))
     register_ingestion_probe(health_registry, ctx.ingestion.health)
     register_bars_probe(health_registry, ctx.bars.health)
+    register_bars_writer_probe(
+        health_registry, lambda: _bars_writer_state(getattr(app.state, "bars_runtime", None))
+    )
     register_public_ws_probe(health_registry, lambda: ctx.ingestion.ws)
     app.state.health_registry = health_registry
     app.include_router(
@@ -1122,6 +1126,10 @@ def _alert_metric_sink(facade: Metrics) -> Callable[[str, tuple[str, ...]], Any]
         return b.labels(*labels) if labels else b.child()
 
     return _sink
+
+
+def _bars_writer_state(runtime: Any) -> tuple[bool, str] | None:
+    return None if runtime is None else runtime.writer_state()
 
 
 def _catalogue_tick_size(ctx: AppContext, symbol: str) -> Decimal | None:

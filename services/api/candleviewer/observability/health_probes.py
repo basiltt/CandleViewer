@@ -115,6 +115,8 @@ HOT_TIER_WRITE_BEHIND = "hot_tier_write_behind"
 INGESTION = "ingestion"
 #: E12-T03: bar builder set health component (`bars_*` state blobs).
 BARS = "bars"
+#: #2031: bar row writer (`BarWriter.degraded`: rows dropped or buffer saturated).
+BARS_WRITER = "bars_writer"
 
 #: Components named by the ticket; unbuilt ones get a `not_deployed` probe.
 REQUIRED_COMPONENTS: tuple[str, ...] = (
