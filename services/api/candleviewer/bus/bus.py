@@ -31,7 +31,14 @@ from candleviewer.bus.metrics import (
 )
 from candleviewer.bus.models import QueuePolicy, StreamInvalidated, Topic, TopicPattern
 
-logger = structlog.get_logger("candleviewer.bus")
+
+def _log() -> structlog.stdlib.BoundLogger:
+    """Resolved per call: a module-level logger cached under
+    `cache_logger_on_first_use=True` keeps a stale processor chain once any test or
+    `configure_logging()` ran first, so warnings escape `capture_logs()` (#1979; same
+    pitfall as ingestion/rejection.py and ingestion/clock.py)."""
+    return structlog.get_logger("candleviewer.bus")  # type: ignore[no-any-return]  # structlog returns Any
+
 
 DEFAULT_QUEUE_SIZE = 4096
 DEFAULT_LAG_WARN_THRESHOLD = 512
@@ -170,7 +177,7 @@ class Bus:
             sub._high_water = depth
         bus_subscriber_lag.labels(subscriber=sub.name).set(depth)
         if depth >= sub.lag_warn_threshold:
-            logger.warning(
+            _log().warning(
                 "bus subscriber lagging",
                 subscriber=sub.name,
                 topic=topic.key,
@@ -212,5 +219,5 @@ class Bus:
             if sub.qsize():
                 outstanding[sub.name] = sub.qsize()
         if outstanding:
-            logger.warning("bus drain: outstanding never-drop events", outstanding=outstanding)
+            _log().warning("bus drain: outstanding never-drop events", outstanding=outstanding)
         return outstanding

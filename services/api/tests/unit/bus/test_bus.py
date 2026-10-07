@@ -4,6 +4,7 @@ in the E08-T03 ticket body."""
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 import pytest
 from structlog.testing import capture_logs
@@ -15,6 +16,7 @@ from candleviewer.bus.metrics import (
     ingest_queue_full_total,
 )
 from candleviewer.bus.models import QueuePolicy, StreamInvalidated, Topic
+from candleviewer.observability.logging import configure_logging
 
 TRADE_TOPIC = Topic(env="demo", domain="of", symbol="BTCUSDT", detail="trade")
 BOOK_TOPIC = Topic(env="demo", domain="md", symbol="BTCUSDT", detail="delta")
@@ -158,3 +160,29 @@ async def test_drain_stops_accepting_new_publishes() -> None:
 
     with pytest.raises(BusShuttingDownError):
         await bus.publish(TRADE_TOPIC, "late")
+
+
+@pytest.mark.asyncio
+async def test_lag_warning_survives_logging_reconfiguration() -> None:
+    """Regression (#1979): `cache_logger_on_first_use=True` pins a module-level logger to the
+    processor chain live at first use, so once any earlier test used the bus and logging was
+    reconfigured, `capture_logs()` saw nothing. The emit site resolves its logger per call."""
+
+    async def lag_warnings() -> list[Any]:
+        bus = Bus()
+        bus.subscribe(
+            "footprint",
+            "demo.of.BTCUSDT.trade",
+            QueuePolicy.CONFLATE_LATEST,
+            maxsize=100,
+            lag_warn_threshold=1,
+        )
+        with capture_logs() as logs:
+            for i in range(3):
+                await bus.publish(TRADE_TOPIC, f"t{i}")
+        return [e for e in logs if e["log_level"] == "warning"]
+
+    configure_logging(env="demo")
+    await lag_warnings()  # first use binds (and, with a module-level logger, caches) the logger
+    configure_logging(env="demo")
+    assert await lag_warnings()

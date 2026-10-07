@@ -347,7 +347,11 @@ class Rig:
 
     async def call(self, aw: Awaitable[T], *, within_s: float = 120.0) -> T:
         """Run a REST call to completion on virtual time (its retries sleep on it)."""
-        task = asyncio.ensure_future(aw)
+
+        async def _run() -> T:
+            return await aw
+
+        task = spawn(_run(), name="chaos-call")
         await self.clock.run_until(task.done, within_s=within_s, what="rest call")
         return task.result()
 
