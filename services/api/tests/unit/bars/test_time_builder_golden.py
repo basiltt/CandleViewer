@@ -2,7 +2,8 @@
 
 The tape is the corpus `ws/clean_publicTrade_BTCUSDT.jsonl`, read through `tests/_corpus.py`
 (the production parser, C-13.5). Bars are checked two ways:
-1. OHLCV against a small, independent reference aggregation (group by bucket, sort).
+1. OHLCV, delta, turnover and VWAP against a small, independent reference aggregation
+   (group by bucket, sort).
 2. Every field against `packages/fixtures/golden/bars/time_bars_BTCUSDT.jsonl`. Set
    `CV_REGEN_GOLDEN=1` to rewrite that file (review the diff).
 """
@@ -55,14 +56,18 @@ def _build(spec: BarSpec, tape: list[TradeEvent]) -> list[Bar]:
 def _reference_ohlcv(spec: BarSpec, tape: list[TradeEvent]) -> list[tuple[str, ...]]:
     step = int(spec.param_value) * 1000
     groups: dict[int, list[TradeEvent]] = defaultdict(list)
-    for t in sorted(tape, key=lambda t: t.ts_event):
+    for t in sorted(tape, key=lambda t: (t.ts_event, t.seq)):
         groups[t.ts_event // step * step].append(t)
     rows = []
     for start in sorted(groups):
         g = groups[start]
         px = [t.price for t in g]
         vol = sum((t.qty for t in g), Decimal(0))
-        rows.append(tuple(map(str, (start, g[0].price, max(px), min(px), g[-1].price, vol))))
+        delta = sum((t.qty if t.side == "buy" else -t.qty for t in g), Decimal(0))
+        turnover = sum((t.price * t.qty for t in g), Decimal(0))
+        vwap = (turnover / vol).quantize(Decimal("1e-8"))
+        ohlcv = (start, g[0].price, max(px), min(px), g[-1].price, vol)
+        rows.append(tuple(map(str, (*ohlcv, delta, turnover, vwap))))
     return rows
 
 
@@ -71,10 +76,11 @@ def _row(b: Bar) -> dict[str, object]:
 
 
 @pytest.mark.parametrize("label", list(SPECS))
-def test_golden_recorded_tape_matches_reference_ohlcv(label: str) -> None:
+def test_golden_recorded_tape_matches_reference_ohlcv_delta_vwap(label: str) -> None:
     tape = _tape()
     bars = _build(SPECS[label], tape)
-    got = [tuple(map(str, (b.open_time, b.open, b.high, b.low, b.close, b.volume))) for b in bars]
+    fields = ("open_time", "open", "high", "low", "close", "volume", "delta", "turnover", "vwap")
+    got = [tuple(str(getattr(b, f)) for f in fields) for b in bars]
     assert got == _reference_ohlcv(SPECS[label], tape)
     assert all(b.closed for b in bars)
 

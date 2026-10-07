@@ -60,7 +60,7 @@ bars_amended_total = Counter(
 bars_late_trade_dropped_total = Counter(
     "bars_late_trade_dropped_total",
     "Late trades not applied to any bar (older than 60 s, or the interval had no bar).",
-    labelnames=("symbol",),
+    labelnames=("symbol", "reason"),
 )
 _log = structlog.get_logger(__name__)
 
@@ -100,9 +100,13 @@ class _Draft:
         "close_time",
         "count",
         "delta",
+        "first_seq",
+        "first_ts",
         "gap_before",
         "high",
         "index",
+        "last_seq",
+        "last_ts",
         "low",
         "max_d",
         "min_d",
@@ -122,14 +126,27 @@ class _Draft:
         self.min_d = self.max_d = _ZERO
         self.count = 0
         self.partial = self.gap_before = False
+        self.first_ts = self.first_seq = self.last_ts = self.last_seq = 0
 
     def apply(self, t: TradeEvent) -> None:
-        px, qty = t.price, t.qty
+        """Fold one trade in. `open`/`close` follow event order `(ts_event, seq)`, so a late
+        or reordered trade lands in the right place. `min_delta`/`max_delta` are the extrema
+        of the cumulative delta in **arrival** order: exact for in-order input; under reorder
+        BI-3's inequality still holds but the path is the arrival path (#1991)."""
+        px, qty, ts, seq = t.price, t.qty, t.ts_event, t.seq
+        if self.count == 0:
+            self.first_ts = self.last_ts = ts
+            self.first_seq = self.last_seq = seq
+            self.open = self.close = px
+        else:
+            if (ts, seq) < (self.first_ts, self.first_seq):
+                self.first_ts, self.first_seq, self.open = ts, seq, px
+            if (ts, seq) >= (self.last_ts, self.last_seq):
+                self.last_ts, self.last_seq, self.close = ts, seq, px
         if px > self.high:
             self.high = px
         elif px < self.low:
             self.low = px
-        self.close = px
         if t.side == "buy":
             self.buy += qty
             self.delta += qty
@@ -188,7 +205,18 @@ class _Draft:
 _SLOTS: Final = _Draft.__slots__
 #: Slots stored as JSON ints/bools; every other slot is a Decimal rendered as a string.
 _INT_SLOTS: Final = frozenset(
-    {"index", "open_time", "close_time", "count", "partial", "gap_before"}
+    {
+        "index",
+        "open_time",
+        "close_time",
+        "count",
+        "partial",
+        "gap_before",
+        "first_ts",
+        "first_seq",
+        "last_ts",
+        "last_seq",
+    }
 )
 
 
@@ -219,7 +247,10 @@ class TimeBarBuilder:
         self._last_seq: int | None = None
         self._built = bars_built_total.labels(symbol=symbol, kind="time")
         self._amended = bars_amended_total.labels(symbol=symbol)
-        self._dropped = bars_late_trade_dropped_total.labels(symbol=symbol)
+        self._drop_old = bars_late_trade_dropped_total.labels(symbol=symbol, reason="late_window")
+        self._drop_empty = bars_late_trade_dropped_total.labels(
+            symbol=symbol, reason="empty_interval"
+        )
 
     def _emit(self, kind: str, d: _Draft, closed: bool, amended: bool = False) -> TimeBarUpdate:
         bar = d.to_bar(self._hash, self.symbol, closed)
@@ -274,11 +305,16 @@ class TimeBarBuilder:
                     self._amended.inc()
                     return (self._emit("close", d, closed=True, amended=True),)
                 break
-        self._dropped.inc()
+        # reason: `late_window` when the trade's bucket closed > 60 s before the watermark
+        # (no amend possible either way); otherwise the bucket is in-window, and every bar
+        # closed in-window is retained, so it was an `empty_interval`.
+        old = self._watermark - bucket_bounds(self.spec, ts)[1] > LATE_WINDOW_US
+        (self._drop_old if old else self._drop_empty).inc()
         _log.warning(
             "bars_late_trade_dropped",
             symbol=self.symbol,
             spec_hash=self._hash,
+            reason="late_window" if old else "empty_interval",
             lateness_ms=(self._watermark - ts) // 1000,
         )
         return _NONE

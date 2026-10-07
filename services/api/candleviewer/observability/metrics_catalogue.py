@@ -246,7 +246,7 @@ CATALOGUE: Final[tuple[MetricSpec, ...]] = (
         "bars_late_trade_dropped_total",
         "counter",
         "trades",
-        ("symbol",),
+        ("symbol", "reason"),
         "Late trades applied to no bar (older than 60 s, or interval had no bar).",
         "sustained growth = clock/ingest lag",
         _P,

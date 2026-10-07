@@ -25,8 +25,8 @@ def _b(spec: BarSpec = M1) -> TimeBarBuilder:
     return TimeBarBuilder(spec, SYM)
 
 
-def _dropped() -> float:
-    return float(bars_late_trade_dropped_total.labels(symbol=SYM)._value.get())
+def _dropped(reason: str) -> float:
+    return float(bars_late_trade_dropped_total.labels(symbol=SYM, reason=reason)._value.get())
 
 
 def test_time_builder_satisfies_bar_builder_protocol() -> None:
@@ -90,15 +90,39 @@ def test_on_trade_late_within_60s_amends_closed_bar_and_reemits_close() -> None:
     b.on_trade(trade(us("10:00:10"), px="100", qty="2", side="buy"))
     b.on_clock(us("10:01:00"))
     b.on_trade(trade(us("10:01:20"), px="101", qty="1"))
-    out = b.on_trade(trade(us("10:00:40"), px="98", qty="3", side="sell"))
+    out = b.on_trade(trade(us("10:00:05"), px="98", qty="3", side="sell", seq=9))
     assert len(out) == 1
     u = out[0]
     assert isinstance(u, TimeBarUpdate) and isinstance(u, BarUpdate)
     assert u.kind == "close" and u.amended and u.bar.index == 0 and u.bar.closed
     bar = u.bar
-    assert (bar.low, bar.close, bar.volume) == (Decimal("98"), Decimal("98"), Decimal("5"))
+    # The late trade is OLDER than the bar's only trade: it becomes the open, not the close.
+    assert (bar.open, bar.low, bar.close) == (Decimal("98"), Decimal("98"), Decimal("100"))
+    assert bar.volume == Decimal("5")
     assert (bar.delta, bar.min_delta, bar.max_delta) == (Decimal(-1), Decimal(-1), Decimal(2))
     assert bar.volume + Decimal(1) == Decimal(6)  # BI-1: 2 + 3 + 1 traded
+
+
+def test_on_trade_reordered_trades_keep_open_close_in_event_order() -> None:
+    """Review repro: 10:00:10 @100, 10:00:50 @101, then late 10:00:05 @97."""
+    b = _b()
+    b.on_trade(trade(us("10:00:10"), px="100", seq=1))
+    b.on_trade(trade(us("10:00:50"), px="101", seq=2))
+    bar = b.on_trade(trade(us("10:00:05"), px="97", seq=3))[0].bar
+    assert (bar.open, bar.high, bar.low, bar.close) == tuple(
+        map(Decimal, ("97", "101", "97", "101"))
+    )
+    restored = _b()
+    restored.restore(b.snapshot())
+    after = restored.on_clock(us("10:01:00"))[0].bar
+    assert (after.open, after.close) == (Decimal("97"), Decimal("101"))
+
+
+def test_on_trade_equal_timestamps_order_by_seq() -> None:
+    b = _b()
+    b.on_trade(trade(us("10:00:10"), px="100", seq=5))
+    bar = b.on_trade(trade(us("10:00:10"), px="99", seq=4))[0].bar
+    assert (bar.open, bar.close) == (Decimal("99"), Decimal("100"))
 
 
 # --- Scenario: Very late trade is dropped ------------------------------------------------
@@ -109,18 +133,21 @@ def test_on_trade_late_beyond_60s_is_dropped_and_counted() -> None:
     b.on_trade(trade(us("10:00:10")))
     b.on_clock(us("10:01:00"))
     b.on_clock(us("10:02:30"))
-    before = _dropped()
+    before = _dropped("late_window")
     assert b.on_trade(trade(us("10:00:40"))) == ()
-    assert _dropped() == before + 1
+    assert _dropped("late_window") == before + 1
 
 
 def test_on_trade_late_into_empty_interval_is_dropped() -> None:
     b = _b()
     b.on_trade(trade(us("10:00:10")))
-    b.on_trade(trade(us("10:05:10")))
-    before = _dropped()
-    assert b.on_trade(trade(us("10:03:00"))) == ()
-    assert _dropped() == before + 1
+    b.on_trade(trade(us("10:04:30")))  # 10:01-10:04 empty; 10:03 bucket closed 30 s ago
+    before = _dropped("empty_interval")
+    assert b.on_trade(trade(us("10:03:30"))) == ()
+    assert _dropped("empty_interval") == before + 1
+    old = _dropped("late_window")
+    assert b.on_trade(trade(us("10:02:30"))) == ()  # empty AND >60 s: past the window wins
+    assert _dropped("late_window") == old + 1
 
 
 def test_on_trade_out_of_order_inside_open_bar_is_applied() -> None:

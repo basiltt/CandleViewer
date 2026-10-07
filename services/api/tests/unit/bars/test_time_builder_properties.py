@@ -179,3 +179,58 @@ def test_bi1_bulk_seeded_tape_conserves_volume() -> None:
         total += q
         out.append(b.on_trade(trade(ts, Decimal(rng.randrange(9_000, 11_000)), q, "buy", i))[-1])
     assert sum(b.volume for b in final_bars(out)) == total
+
+
+def _reference(spec: BarSpec, kept: list[TradeEvent]) -> dict[int, tuple[Decimal, ...]]:
+    """Time-sorted reference: open_time -> (open, high, low, close, volume, delta, turnover)."""
+    from candleviewer.bars.time_builder import bucket_bounds
+
+    groups: dict[int, list[TradeEvent]] = {}
+    for t in sorted(kept, key=lambda t: (t.ts_event, t.seq)):
+        groups.setdefault(bucket_bounds(spec, t.ts_event)[0], []).append(t)
+    out: dict[int, tuple[Decimal, ...]] = {}
+    for start, g in groups.items():
+        px = [t.price for t in g]
+        signed = sum((t.qty if t.side == "buy" else -t.qty for t in g), Decimal(0))
+        turnover = sum((t.price * t.qty for t in g), Decimal(0))
+        vol = sum((t.qty for t in g), Decimal(0))
+        out[start] = (g[0].price, max(px), min(px), g[-1].price, vol, signed, turnover)
+    return out
+
+
+def _ohlc(b: Bar) -> tuple[Decimal, ...]:
+    return (b.open, b.high, b.low, b.close, b.volume, b.delta, b.turnover)
+
+
+@settings(max_examples=300, deadline=None)
+@given(SPECS, tapes())
+def test_ohlc_follows_event_order_including_late_amends(
+    spec: BarSpec, tape: list[TradeEvent]
+) -> None:
+    bars = final_bars(run(spec, tape, clock_every=3))
+    assert {b.open_time: _ohlc(b) for b in bars} == _reference(spec, applied(spec, tape))
+
+
+@settings(max_examples=200, deadline=None)
+@given(SPECS, tapes(), st.randoms(use_true_random=False))
+def test_ohlc_invariant_under_permutation_within_open_bar(
+    spec: BarSpec, tape: list[TradeEvent], rnd: random.Random
+) -> None:
+    """Shuffling trades inside each bucket (buckets in order, no clock) changes nothing but
+    the arrival-order delta path."""
+    from candleviewer.bars.time_builder import bucket_bounds
+
+    ordered = sorted(tape, key=lambda t: (t.ts_event, t.seq))
+    by_bucket: dict[int, list[TradeEvent]] = {}
+    for t in ordered:
+        by_bucket.setdefault(bucket_bounds(spec, t.ts_event)[0], []).append(t)
+    shuffled: list[TradeEvent] = []
+    for start in sorted(by_bucket):
+        g = by_bucket[start][:]
+        rnd.shuffle(g)
+        shuffled += g
+    a, b = final_bars(run(spec, ordered)), final_bars(run(spec, shuffled))
+    assert [_ohlc(x) for x in a] == [_ohlc(x) for x in b]
+    assert [x.vwap for x in a] == [x.vwap for x in b]
+    for x in b:
+        assert x.min_delta <= x.delta <= x.max_delta  # BI-3 inequality under reorder
