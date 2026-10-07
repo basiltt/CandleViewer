@@ -35,7 +35,7 @@ Legend — **C-13.6**: constitution chaos number. **xfail**: strict xfail on a f
 - `IngestionService.start()` is never called, so the rig registers `prune_unlisted`, the frame
   router and the pump itself.
 
-Parity follow-up: see the PR body (rig parity issue).
+Parity follow-up: #1975.
 
 ## Catalogue
 
