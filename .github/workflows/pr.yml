@@ -80,6 +80,12 @@ jobs:
               # E07-Q04 chaos stack); a compose/healthcheck change must run it (#276).
               - 'infra/compose/**'
               - '.github/workflows/_job-integration.yml'
+              # The lint lane (#1964) checks the xstate gate modules; editing them or the
+              # py job itself must run the lane (PR #2007 merged with `py` skipped otherwise).
+              - '.github/workflows/_job-py.yml'
+              - 'docs/research/xstate/gate/run_gate.py'
+              - 'docs/research/xstate/gate/_paths.py'
+              - 'tools/statechart/nightly_gate.py'
             engine:
               - 'packages/chart-engine/**'
             protocol:
