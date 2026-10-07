@@ -314,6 +314,7 @@ Three things make this acceptable rather than reckless, and all three are condit
 4. All five bar types produce identical results to a reference implementation on a recorded fixture day, byte-for-byte on OHLCV.
 5. Chart state (symbol, timeframe, indicators, drawings, layout) survives reload, app restart, and Electron relaunch with zero loss.
 6. Recorder runs for **≥7 continuous days** on ≥3 symbols; the retention job demonstrably deletes past-retention data and demonstrably does not touch pinned data; disk projection is within ±15% of actual.
+   - _Storage assumption note (E16-K01, provisional):_ the ~0.5–0.75 GB/day/symbol figure in E16 looks ~1.6× low at depth 200 (≈1.22 GB/day cold, plausible 0.6–2.4); retention/disk-cap defaults (hot 7 d, retention 30 d, cap 600 GB for 2 symbols) are provisional until the live run. See `docs/plan/notes/e16-storage-measurement.md`; owner item O on #1778 (accept 1.6× provisional overshoot or revise retention/depth defaults).
 7. WS protocol is frozen: `23-ws-protocol.md` matches the implementation, contract tests pass, and a deliberate breaking change fails CI.
 8. Context-loss recovery: forcing `WEBGL_lose_context` restores a fully correct scene within 2 s with no data loss.
 9. A11y: every chart is operable without a mouse — keyboard data cursor reads OHLCV per bar, drawings can be created and adjusted by keyboard, and a screen-reader pass is signed off by the a11y specialist.

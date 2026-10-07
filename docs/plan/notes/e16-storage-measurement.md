@@ -79,7 +79,11 @@ Sizing basis: 2 symbols (BTC+ETH), depth 200, QuestDB overhead +25 % (WAL, page 
 
 **Gate:** E16-T06/E16-T07 MUST treat the recommended constants as provisional; do not bake them as final defaults until the live 7-day re-measure (#1778 A) lands; the plausible range runs to 2.4 GB/day (1.6x-3.2x budget #12). The margin per ADR-0015 is carried by the 600 GB cap, which stacks a 2x safety margin on top of the +/-2x error-bar top (conservative).
 
-Re-validate all three after the live run; the number most likely to move is the d200 delta row rate (real vs §11.1).
+Re-validate all three after the live run;**Owner decision (item O on #1778):** accept the 1.6× provisional overshoot, or revise retention/depth defaults. Review trigger: live figure ≥1.5 GB/day/symbol cold. Recorded in `32-risk-register.md` (RSK-026) and `30-release-roadmap.md` (E16).
+
+**Raw outputs:** `docs/plan/notes/e16-storage-measurement-raw/storage_measure.{json,md}`, produced by `cd services/api && python bench/storage_measure.py --out-dir ../../docs/plan/notes/e16-storage-measurement-raw` (deterministic, no RNG/seed, corpus only).
+
+ the number most likely to move is the d200 delta row rate (real vs §11.1).
 
 ## 6. Re-run on real QuestDB (staging / PRR checklist)
 
