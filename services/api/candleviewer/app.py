@@ -88,6 +88,7 @@ from candleviewer.auth.scopes import PrincipalSnapshot
 from candleviewer.auth.service import AuthService
 from candleviewer.bars.metrics import export_bars_metrics
 from candleviewer.bars.service import BarsService
+from candleviewer.bars_wiring import wire_bars
 from candleviewer.book.service import BookService
 from candleviewer.bus.models import Topic
 from candleviewer.bus.service import BusService
@@ -649,6 +650,7 @@ def create_app(
     ws_authenticate: Authenticate | None = None,
     auth_clock: Callable[[], datetime] | None = None,
     onboarding_store: Any = None,
+    bars_now_us: Callable[[], int] | None = None,
 ) -> FastAPI:
     """Build the FastAPI application without touching Postgres/QuestDB/network.
 
@@ -679,6 +681,14 @@ def create_app(
     app.state.app_context = ctx
     if resolved.ingestion_ws_enabled:
         wire_public_ws(ctx)
+    # E12 #2031 (flag `bars_enabled`, default off - C-4.13; removal with #398/#399): the set
+    # and its writer are started/stopped by the lifespan (set first, then writer).
+    if resolved.bars_enabled:
+        app.state.bars_runtime = wire_bars(
+            ctx,
+            now_us=bars_now_us or (lambda: time.time_ns() // 1000),
+            tick_size=lambda sym: _catalogue_tick_size(ctx, sym),
+        )
     # E07-X02 (SR-094): supervised weekly scrub; started/stopped by the lifespan.
     app.state.scrub_task = (
         ScrubTask(
@@ -1112,6 +1122,13 @@ def _alert_metric_sink(facade: Metrics) -> Callable[[str, tuple[str, ...]], Any]
         return b.labels(*labels) if labels else b.child()
 
     return _sink
+
+
+def _catalogue_tick_size(ctx: AppContext, symbol: str) -> Decimal | None:
+    scheduler = ctx.ingestion.instruments
+    snap = scheduler.snapshot() if scheduler is not None else None
+    inst = snap.get(symbol) if snap is not None else None
+    return None if inst is None else inst.tick_size
 
 
 def _compose_funding(ctx: AppContext, settings: Settings) -> Any:

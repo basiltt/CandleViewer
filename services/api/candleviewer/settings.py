@@ -175,6 +175,12 @@ class Settings(BaseSettings):
     # E08-T04: public WS ingestion skeleton flag (C-4.13: off by default;
     # removal tracked by E08-T05). Public data only — no credentials.
     ingestion_ws_enabled: bool = False
+    # E12 #2031: run the BarBuilderSet + BarWriter in the app (C-4.13: off by default; removal
+    # with E12-T05 #398 / E12-T06 #399, the first consumers). Never gates a safety invariant.
+    # `bars_state_root` holds the 60 s state blobs; relative paths resolve against the CWD
+    # (like `audit_wal_path`), created owner-only (0700) where the platform allows.
+    bars_enabled: bool = False
+    bars_state_root: str = "var/bars/state"
     # E35-S02-B1 (#1809): run the deterministic rule evaluator in the app (C-4.13: off by
     # default). Never gates a safety invariant (C-4.14): native SL / scope checks stay on.
     rules_evaluator_enabled: bool = False

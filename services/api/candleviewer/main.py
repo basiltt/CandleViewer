@@ -70,6 +70,9 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     funding_task = getattr(app.state, "funding_refresh_task", None)
     if funding_task is not None:
         funding_task.start()
+    bars_runtime = getattr(app.state, "bars_runtime", None)
+    if bars_runtime is not None:
+        await bars_runtime.start()
     alert_tasks = [
         t
         for t in (
@@ -120,6 +123,8 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
             await t.stop()
         if scrub_task is not None:
             await scrub_task.stop()
+        if bars_runtime is not None:
+            await bars_runtime.stop()  # set before writer; both before storage stops
         await ctx.mesh_self_check.stop()
         await supervisor.stop_all()
 
