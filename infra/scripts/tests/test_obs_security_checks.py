@@ -33,14 +33,14 @@ def test_committed_webhook_token_is_detected(tmp_path: Path) -> None:
     (am / "a.yml").write_text(
         "url: https://hooks.slack.com/services/T0000/B0000/abcdEFGH1234\n", encoding="utf-8"
     )
-    assert o.check_no_committed_webhook_secret(tmp_path / "infra")
+    assert o.check_alertmanager_webhook_literals(tmp_path / "infra")
 
 
 def test_runtime_secret_reference_is_clean(tmp_path: Path) -> None:
     am = tmp_path / "infra" / "alertmanager"
     am.mkdir(parents=True)
     (am / "a.yml").write_text("url_file: /run/secrets/alert_webhook\n", encoding="utf-8")
-    assert o.check_no_committed_webhook_secret(tmp_path / "infra") == []
+    assert o.check_alertmanager_webhook_literals(tmp_path / "infra") == []
 
 
 def test_workflow_uploading_logs_is_flagged(tmp_path: Path) -> None:
@@ -108,7 +108,7 @@ def test_webhook_secret_committed_to_alertmanager_config_is_caught(tmp_path: Pat
         f"receivers:\n  - name: page\n    slack_configs:\n      - api_url: https://hooks.slack.com/services/T0/B0/{token}\n",
         encoding="utf-8",
     )
-    assert o.check_no_committed_webhook_secret(infra)
+    assert o.check_alertmanager_webhook_literals(infra)
 
 
 def test_page_alert_payload_carries_no_ids_or_key_material() -> None:
