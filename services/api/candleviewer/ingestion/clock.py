@@ -46,8 +46,6 @@ from candleviewer.ingestion.metrics import (
 )
 from candleviewer.observability.context import spawn
 
-logger = structlog.get_logger(__name__)
-
 
 def _log() -> structlog.stdlib.BoundLogger:
     """Resolved per call: a module-level logger cached under
@@ -377,11 +375,11 @@ class ClockGuard:
     def _log_if_drifted(self, offset_us: int) -> None:
         offset_ms = offset_us / _MICROS_PER_MS
         if abs(offset_ms) > self._hard_threshold_ms:
-            logger.error("clock_drift_critical", offset_ms=offset_ms, severity="critical")
+            _log().error("clock_drift_critical", offset_ms=offset_ms, severity="critical")
         elif abs(offset_ms) > self._warn_threshold_ms:
-            logger.warning("clock_drift_warn", offset_ms=offset_ms, severity="warn")
+            _log().warning("clock_drift_warn", offset_ms=offset_ms, severity="warn")
         else:
-            logger.debug("clock_drift_ok", offset_ms=offset_ms, severity="ok")
+            _log().debug("clock_drift_ok", offset_ms=offset_ms, severity="ok")
 
     # -- signature-failure fallback --------------------------------------
 
@@ -408,7 +406,7 @@ class ClockGuard:
         try:
             await self.measure_once()
         except ClockMeasurementUnavailableError:
-            logger.warning("clock_initial_measurement_failed")
+            _log().warning("clock_initial_measurement_failed")
         self._stopping = False
         self._task = spawn(self._run_periodic(), name="clock-guard-resync")
 
@@ -441,11 +439,11 @@ class ClockGuard:
             try:
                 await self.measure_once()
             except ClockMeasurementUnavailableError as exc:
-                logger.warning("clock_periodic_measurement_failed", error=str(exc))
+                _log().warning("clock_periodic_measurement_failed", error=str(exc))
             except asyncio.CancelledError:
                 return
             except Exception:
-                logger.exception("clock_periodic_measurement_unexpected_error")
+                _log().exception("clock_periodic_measurement_unexpected_error")
             clock_offset_age_seconds.set(self.offset_age_s())
 
 

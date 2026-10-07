@@ -11,6 +11,7 @@ from candleviewer.exchange.base.frame_guard import MAX_FUTURE_SKEW_MS, FrameReje
 from candleviewer.ingestion.clock import ClockGuard
 from candleviewer.ingestion.metrics import clock_resync_triggered_total
 from candleviewer.ingestion.rejection import EventWindow, corrected_now_us
+from candleviewer.observability.logging import configure_logging
 
 _S = 1_000_000
 _VENUE_US = 1_800_000_000 * _S
@@ -292,3 +293,40 @@ async def test_offset_ms_or_none_includes_host_step() -> None:
     await guard.measure_once()
     clocks.step(-10)
     assert guard.offset_ms_or_none() == 10_000
+
+
+async def test_periodic_failure_log_survives_logging_reconfiguration() -> None:
+    """Regression (#1961, mirrors #1921): clock.py resolves its logger per call, so
+    `capture_logs()` still sees periodic-measure events after logging is reconfigured."""
+
+    async def periodic_events() -> list[str]:
+        clocks = _Clocks()
+
+        async def _down() -> tuple[int, float, float]:
+            raise ConnectionError("time endpoint down")
+
+        sleeps = 0
+
+        async def _sleep(_s: float) -> None:
+            nonlocal sleeps
+            sleeps += 1
+            if sleeps > 1:
+                raise asyncio.CancelledError  # second wait ends the loop
+            await asyncio.sleep(0)
+
+        guard = ClockGuard(
+            _down,
+            sample_count=1,
+            wall_ns=clocks.wall,
+            mono_ns=clocks.mono,
+            step_check_interval_ms=0,
+            sleep=_sleep,
+        )
+        with capture_logs() as logs:
+            await guard._run_periodic()
+        return [e["event"] for e in logs]
+
+    configure_logging(env="demo")
+    await periodic_events()  # first use binds (and, with a module-level logger, caches)
+    configure_logging(env="demo")
+    assert "clock_periodic_measurement_failed" in await periodic_events()
