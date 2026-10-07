@@ -45,9 +45,10 @@ from candleviewer.observability.metrics import Counter
 STATE_VERSION: Final = 1
 #: Smallest `tick_count` a builder accepts.
 MIN_TICK_COUNT: Final = 1
-#: Smallest `tick_count` for a subscribable series (E12-T05/T06 enforce it): `tick:1` over
-#: 30 days is one bar per trade, a CPU and storage exhaustion vector (ticket security notes).
-MIN_SUBSCRIBABLE_TICK_COUNT: Final = 10
+#: Smallest `tick_count` for a subscribable series, per the E12 threat model SR-E12-03 / BR-29
+#: (`tick` 100..1 000 000; reject, never clamp). E12-T05/T06 enforce it: `tick:1` over 30 days
+#: is one bar per trade, a CPU and storage exhaustion vector.
+MIN_SUBSCRIBABLE_TICK_COUNT: Final = 100
 _SPLIT_WARN_MIN_TRADES: Final = 1_000
 _ZERO: Final = Decimal(0)
 

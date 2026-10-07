@@ -182,3 +182,9 @@ def test_split_rate_warns_once() -> None:
     for i in range(1001):
         b.on_trade(trade(T0 + i, qty="1.5", seq=i))
     assert b._warned  # every trade overshoots: misconfigured threshold
+
+
+def test_subscribable_tick_floor_matches_sr_e12_03() -> None:
+    from candleviewer.bars.activity_builders import MIN_SUBSCRIBABLE_TICK_COUNT
+
+    assert MIN_SUBSCRIBABLE_TICK_COUNT == 100  # E12 threat model SR-E12-03 / BR-29
