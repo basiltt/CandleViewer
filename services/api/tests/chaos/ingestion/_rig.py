@@ -1,10 +1,25 @@
-"""Production composition over the stub exchange (mirrors `app.wire_public_ws`).
+"""Production composition over the stub exchange (modelled on `app.wire_public_ws`).
 
 `IngestionService` + `ConnectionManager` (B13 chart via the factory) +
 `TradeStream` + `BookStream`, all on one `Bus`, with the stub exchange as the
-socket factory and as the REST transport of a real `BybitRestClient`. The only
-deviations from the composition root are the injected virtual clock/RNG and
-the stub transport - exactly the seams the production classes expose.
+socket factory and as the REST transport of a real `BybitRestClient`.
+
+Deviations from the composition root (keep in sync with SCENARIOS.md):
+
+* Virtual clock/RNG and the stub transport replace the real ones (the seams the
+  production classes expose).
+* s08's signed client wires `on_signature_failure=ClockGuard.resync_after_signature_failure`
+  although production has no signed-client composition yet (#1949 / #1911): s08 proves
+  client + guard, not the app.
+* No `B14BookSupervisor` on the `BookStream`.
+* No ticker stream.
+* The instrument launch-time callback is `lambda _s: None` (no launch-time plausibility).
+* The `ClockGuard` feeds the `EventWindow` but is not attached to `IngestionService`
+  (`attach_clock`), so no stage-latency offset.
+* `BookStream._timeout_loop` is replaced by `check_timeouts()` on the virtual clock.
+* The rig never calls `IngestionService.start()` (it starts the pieces itself), so it
+  registers `prune_unlisted` as the catalogue listener, wires the router and spawns the
+  pump itself.
 """
 
 from __future__ import annotations

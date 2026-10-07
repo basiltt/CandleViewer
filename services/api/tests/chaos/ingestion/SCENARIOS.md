@@ -21,6 +21,22 @@ the same pump.
 Legend — **C-13.6**: constitution chaos number. **xfail**: strict xfail on a filed defect
 (turns red the moment the fix lands, so the marker must be removed in the fix PR).
 
+## Deviations from the composition root
+
+`Rig` is modelled on `app.wire_public_ws`, not identical to it:
+
+- Virtual clock/RNG and the stub transport replace the real ones.
+- s08's signed client wires `on_signature_failure` although production has no signed-client
+  composition yet (#1949, #1911): s08 proves client + guard, not the app.
+- No `B14BookSupervisor`; no ticker stream.
+- Instrument launch-time callback is `lambda _s: None`.
+- `ClockGuard` feeds the `EventWindow` but is not attached to `IngestionService`.
+- The book timeout loop is replaced by `check_timeouts()` on the virtual clock.
+- `IngestionService.start()` is never called, so the rig registers `prune_unlisted`, the frame
+  router and the pump itself.
+
+Parity follow-up: see the PR body (rig parity issue).
+
 ## Catalogue
 
 | #   | C-13.6 | Fault injected                        | Declared degradation → recovery (SLO)                                                                          | User-visible signal                                                                 | Metric                                                                                                                 | Observed       |

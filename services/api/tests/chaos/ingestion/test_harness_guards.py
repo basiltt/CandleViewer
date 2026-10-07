@@ -9,13 +9,15 @@
 from __future__ import annotations
 
 import socket
+from typing import Any
 
 import pytest
 
 from tests._ci_network_guard import NetworkGuardViolation
 from tests._corpus import frames
 from tests.chaos.ingestion._faults import Fault, FaultKind
-from tests.chaos.ingestion._rig import Rig
+from tests.chaos.ingestion._feed import Feeder
+from tests.chaos.ingestion._rig import Rig, metric
 
 pytestmark = pytest.mark.chaos
 
@@ -67,3 +69,35 @@ async def test_drop_duplicate_and_reorder_faults_act_on_the_wire_only(rig: Rig) 
     kinds = [k for _, k, _ in rig.ex.trace.events if k.startswith("fault.")]
     assert kinds == ["fault.reorder", "fault.duplicate"]  # reorder holds frame 1 first
     assert rig.ex.books[topic].u == 4  # the venue's truth is untouched by wire faults
+
+
+async def _scenario_signature(seed: int) -> dict[str, Any]:
+    """Run a reset-and-recover scenario end to end; return everything observable."""
+    from candleviewer.ingestion.metrics import ingest_ws_up
+
+    r = Rig(seed=seed)
+    await r.start()
+    try:
+        feed = Feeder(r.ex)
+        await r.clock.run_until(lambda: r.ws.state() == "open", within_s=5, what="open")
+        await feed.run(2.0)
+        r.ex.inject(Fault(FaultKind.RESET))
+        await feed.run(8.0)
+        seen = r.observe()
+        return {
+            "order": list(seen.order),
+            "feed": [(f.topic, f.state) for f in seen.feed],
+            "trade_ids": [t.trade_id for t in seen.trades if hasattr(t, "trade_id")],
+            "trace": list(r.ex.trace.events),
+            "sockets": len(r.ex.sockets),
+            "ws_up": metric(ingest_ws_up, socket="public"),
+            "book": r.book_levels(),
+        }
+    finally:
+        await r.stop()
+
+
+async def test_same_seed_gives_identical_event_and_metric_sequences() -> None:
+    first, second = await _scenario_signature(11), await _scenario_signature(11)
+    assert first["sockets"] >= 2 and first["order"]  # the scenario actually exercised recovery
+    assert first == second
