@@ -347,6 +347,15 @@ availability-first: unbounded `/market/trades` window, `min_size=0`, extreme `cl
 render storms (High: D14-D19, D21). Controls SR-E22-01..15 (recommended bounds in its section 3) are
 assigned to E22-T01/T02/S02/S03/S05; abuse cases AC1-AC19 go to E22-X02 (see RSK-057).
 
+**E12 bar builders, backfill & `bars` topic** (`docs/security/threat-models/E12-bars.md`, ticket E12-X01) is
+integrity-first (objective O8): kline backfill overwriting tape-built rows (BR-07), silent history change on
+rebuild (BR-09), divergent bars from out-of-order prints (BR-06), pathological prints (BR-11) and unattributable
+builds (BR-17), then availability of the `bar_type`/`param`/window/rebuild surface (BR-28..BR-31, BR-33, BR-34);
+11 High rows in all. Post-write row edits (BR-08) are Medium. Controls SR-E12-01..16 (recommended caps, all
+proposals to be confirmed against real tape density, in its section 3) are requested on
+E12-T02/T03/T05/T06/S04/S05/S12/X03; abuse cases AC-01..AC-14 go to E12-X02/Q05/Q06 (see RSK-058, RSK-059).
+Rebuild controls depend on ADR-0033 (Proposed).
+
 **E35 rule engine** (`docs/security/threat-models/e35-rule-engine.md`, ticket E35-X01) models the IR,
 compiler, rule store, evaluator, executor, `pre_trade_check` hook, `emit_signal` bus, firing log/WS and
 import/export. Critical/High findings: IR resource exhaustion (RE-D1, Critical), permission drift between

@@ -650,16 +650,38 @@ the 30-minute canary meanwhile.
 
 ---
 
+### RSK-058 · A bar served to charts, replay or rules is silently wrong or altered (evidence integrity)
+
+`Risk: R7` · Category **Security** · L 2 · I 4 · **Score 8 — Medium** · Owner **Security engineer** · Epics E12 · Status **Open**
+
+- **Description** — Introduced by E12-X01 (`docs/security/threat-models/E12-bars.md`). Bars feed footprint, CVD, replay, the journal and eventually rule conditions that place orders (security objective O8). Kline backfill overwriting tape-built rows, a rebuild that changes history without a `build_version` bump, divergent bars from out-of-order prints, or a post-write edit of a `bars_*` row would all change decisions without any visible error. The checksum detects an edit but cannot prevent one by an attacker with write access to the trusted host.
+- **Mitigation** — Single writer, per-row `source` tag with kline-never-overwrites-tape, row checksum verified on read, generation-swap rebuild with same-version parity (ADR-0033, Proposed), `build_version`/`spec_hash` on every response, golden conformance (E12-Q02/T04), audit of rebuild triggers (SR-E12-10..14).
+- **Trigger** — Any non-zero `bars_row_checksum_mismatch_total` or `bars_source_overwrite_refused_total`; a rebuild parity failure; a `build_version` served without a matching commit.
+- **Contingency** — Quarantine the affected `(symbol, spec_hash)` generation, rebuild from the tape, list dependants (replay, journal) from the rebuild audit; Owner review.
+
+---
+
+### RSK-059 · Authenticated client exhausts bar-building, backfill or `bars.*` capacity (availability)
+
+`Risk: R2` · Category **Security** · L 3 · I 3 · **Score 9 — Medium** · Owner **Security engineer** · Epics E12 · Status **Open**
+
+- **Description** — Introduced by E12-X01 (`docs/security/threat-models/E12-bars.md`). User-controlled `bar_type`, `param`, `from`, `to`, `limit`, `history` and rebuild requests can drive huge scans (`from=0`), one-bar-per-print specs (`tick:1`), per-trade builder fan-out growth, rebuild storms and Bybit backfill that trips rate limits. The caps are starting values and a legitimate user at the per-user cap on a hot symbol still costs real CPU.
+- **Mitigation** — Validation constants in one module (SR-E12-01..05, 07, 08), spec and rebuild caps, bounded executor and write buffer (C-2.18), backfill in the lowest ingestion lane, abuse cases AC-01..AC-14 executed by E12-X02/Q05/Q06.
+- **Trigger** — Sustained `api_request_rejected_total{reason="limit_exceeded"}` or `bars_spec_cap_rejected_total`; `bar_rebuild_busy` outside load tests; API read p95 above 150 ms with E12 enabled.
+- **Contingency** — Lower the caps via config; disable non-time bar modes; Owner review.
+
+---
+
 ## 10. Register summary
 
-| Score band           | Count  | IDs                                                                                                                                                                                                           |
-| -------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Critical (15–25)** | 8      | RSK-053, RSK-001, RSK-004, RSK-010, RSK-013, RSK-014, RSK-031, RSK-037                                                                                                                                        |
-| **High (10–14)**     | 21     | RSK-056, RSK-002, RSK-011, RSK-016, RSK-017, RSK-018, RSK-019, RSK-020, RSK-022, RSK-023, RSK-026, RSK-028, RSK-029, RSK-032, RSK-036, RSK-039, RSK-041, RSK-043, RSK-046, RSK-047, RSK-049                   |
-| **Medium (5–9)**     | 23     | RSK-003, RSK-005, RSK-012, RSK-015, RSK-021, RSK-024, RSK-025, RSK-027, RSK-030, RSK-033, RSK-034, RSK-035, RSK-038, RSK-040, RSK-042, RSK-044, RSK-048, RSK-050, RSK-051, RSK-052, RSK-054, RSK-055, RSK-057 |
-| **Total entries**    | **52** | RSK-001 … RSK-057 (non-contiguous numbering, grouped by category block; numbers are never reused)                                                                                                             |
+| Score band           | Count  | IDs                                                                                                                                                                                                                             |
+| -------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Critical (15–25)** | 8      | RSK-053, RSK-001, RSK-004, RSK-010, RSK-013, RSK-014, RSK-031, RSK-037                                                                                                                                                          |
+| **High (10–14)**     | 21     | RSK-056, RSK-002, RSK-011, RSK-016, RSK-017, RSK-018, RSK-019, RSK-020, RSK-022, RSK-023, RSK-026, RSK-028, RSK-029, RSK-032, RSK-036, RSK-039, RSK-041, RSK-043, RSK-046, RSK-047, RSK-049                                     |
+| **Medium (5–9)**     | 25     | RSK-003, RSK-005, RSK-012, RSK-015, RSK-021, RSK-024, RSK-025, RSK-027, RSK-030, RSK-033, RSK-034, RSK-035, RSK-038, RSK-040, RSK-042, RSK-044, RSK-048, RSK-050, RSK-051, RSK-052, RSK-054, RSK-055, RSK-057, RSK-058, RSK-059 |
+| **Total entries**    | **54** | RSK-001 … RSK-059 (non-contiguous numbering, grouped by category block; numbers are never reused)                                                                                                                               |
 
-Band arithmetic (corrected by E49-T03; the earlier text said 47 and predated RSK-051…057): 8 Critical + 21 High + 23 Medium = **52**, equal to the 52 `### RSK-nnn` entries in §3–§9 (RSK-053 moved High→Critical on its provisional re-score). There are no Low-band entries: anything that scored ≤4 during drafting was not carried into the register as a tracked risk (see §10.1.2). RSK-012 moved High->Medium in an earlier PR (E07-K01 spike evidence, partial retirement); its narrative was corrected in this PR after QA bug #1562 found the spike's original shape-B result was not reproducible (see §4 entry) — the band/score is unchanged, only the evidence text.
+Band arithmetic (corrected by E49-T03; the earlier text said 47 and predated RSK-051…057): 8 Critical + 21 High + 25 Medium = **54**, equal to the 54 `### RSK-nnn` entries in §3–§9 (RSK-053 moved High→Critical on its provisional re-score). There are no Low-band entries: anything that scored ≤4 during drafting was not carried into the register as a tracked risk (see §10.1.2). RSK-012 moved High->Medium in an earlier PR (E07-K01 spike evidence, partial retirement); its narrative was corrected in this PR after QA bug #1562 found the spike's original shape-B result was not reproducible (see §4 entry) — the band/score is unchanged, only the evidence text.
 
 #### 10.0.1 ID allocation — which numbers exist and which never will
 
