@@ -602,7 +602,7 @@ canonical form bumps it and moves every hash (persisted keys must be migrated); 
 proposes omitting unset fields and would need a coordinated bump. `densify()` index semantics: real bars' `index`
 is strictly increasing and is never renumbered; synthetic fillers repeat the preceding real bar's `index`, are
 view-only (never persisted or sent on the wire), and consumers key densified views by `open_time`, never by `index` alone;
-outside densified views, `index` is the persistence and wire key for every bar kind (21 §4.8, 22 `/market/bars`, 23 §8.2) because `open_time` is not unique for tick/volume/range/renko/delta bars (#2014);
+outside densified views, a bar's persistence and wire identity for every bar kind is `(spec_hash/bar_param, generation, index)` (21 §4.8, 22 `/market/bars`, 23 §8.2; `generation` is ADR-0033's generation/epoch, `0` until ratified, and `index` restarts per generation) because `open_time` is not unique for tick/volume/range/renko/delta bars (#2014);
 golden vectors in `packages/fixtures/golden/bars/`; TS mirror generated into
 `packages/protocol/src/generated/bars/`.
 

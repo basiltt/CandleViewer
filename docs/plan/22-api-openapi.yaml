@@ -2057,12 +2057,18 @@ paths:
         Non-time bars are **not** anchored to wall-clock; each bar carries `open_time` and
         `close_time` derived from its first/last trade.
 
-        **Ordering and identity (#2014).** `bars` is ordered by `index` ascending (`t` as a
-        secondary key). `index` is the bar's identity within a series; `t` MAY repeat for
-        non-time bars (an N-threshold print yields N volume bars or renko bricks with one open
-        time; two tick bars can open in the same ms). Clients MUST key bars by `index`, never by
-        `t`. Pagination follows C3: `next_cursor` is opaque and resumes after the last returned
-        `index`. A request whose window starts before
+        **Ordering and identity (#2014).** A bar's identity is `(series, generation, index)`
+        (21 §4.8, 24 §3.1). The response serves exactly one generation: the series' current
+        generation, pinned for the whole request (ADR-0033 Decision 2), never a mix. `bars` is
+        ordered by `(generation, index)` ascending (`t` as a tiebreak that cannot fire). `t` MAY
+        repeat for non-time bars (an N-threshold print yields N volume bars or renko bricks with
+        one open time; two tick bars can open in the same ms). Clients MUST key bars by
+        `(generation, index)`, never by `t`. Every bar returned here carries `index` and
+        `generation` (they stay optional in the shared `Bar` schema only because
+        `/market/klines` also uses it). Pagination follows C3: `next_cursor` is opaque, encodes
+        the pinned `(generation, index)`, and resumes after the last returned `index` in that
+        generation; if the generation was swapped since, the server returns `invalid_cursor` and
+        the client restarts. A request whose window starts before
         `recording_started_at` returns `no_data_recorded` (422) rather than silently
         substituting REST klines, because tick-accurate construction is impossible there.
       parameters:
@@ -9838,7 +9844,14 @@ components:
             type: integer,
             format: int64,
             minimum: 0,
-            description: "Bar identity, strictly increasing per series (24 §3.1). Present on every /market/bars bar; `t` may repeat for non-time bars (#2014).",
+            description: "Bar index, strictly increasing within (series, generation) (24 §3.1). Always present on /market/bars; `t` may repeat for non-time bars (#2014).",
+          }
+        generation:
+          {
+            type: integer,
+            format: int64,
+            minimum: 0,
+            description: "ADR-0033 series generation (= epoch); 0 until ADR-0033 is ratified. Always present on /market/bars.",
           }
         t:
           {

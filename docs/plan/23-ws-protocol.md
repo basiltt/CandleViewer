@@ -170,7 +170,7 @@ All integers are **little-endian**. Prices and sizes are transported as **scaled
 | Offset | Size | Type  | Field            | Notes                                                                           |
 | ------ | ---- | ----- | ---------------- | ------------------------------------------------------------------------------- |
 | 0      | 4    | `u32` | `magic`          | `0x43565742` (`"CVWB"`). Rejects accidental mis-routing.                        |
-| 4      | 1    | `u8`  | `format_version` | `1`.                                                                            |
+| 4      | 1    | `u8`  | `format_version` | `1`; `2` for body_kind 4 (bars, #2014).                                         |
 | 5      | 1    | `u8`  | `body_kind`      | 1=book_snapshot, 2=book_delta, 3=trades, 4=bars, 5=footprint, 6=heatmap_column. |
 | 6      | 1    | `u8`  | `flags`          | bit0 `estimated`, bit1 `coalesced`, bit2 `replay`, bit3 `partial`.              |
 | 7      | 1    | `u8`  | `price_scale`    | Decimal exponent: real = int / 10^price_scale.                                  |
@@ -199,13 +199,13 @@ Snapshots carry every level within the subscribed depth, bid side descending the
 | 1    | `u8`  | `side` (0 = buy/taker-lift, 1 = sell/taker-hit) — Bybit gives the aggressor side directly |
 | 1    | `u8`  | `flags` (bit0 block trade, bit1 liquidation-origin, bit2 cluster-aggregated)              |
 
-**body_kind 4 — bars.** `record_count` records of 77 bytes: `u64 index` (the §8.2 bar key, #2014), `u32 ts_offset_ms`, `i64 o,h,l,c`, `u64 v`, `u64 turnover`, `u32 trades`, `i64 delta`, `u8 flags` (bit0 `confirm`).
+**body_kind 4 — bars.** Requires header `format_version = 2` (#2014); a `format_version = 1` bars body (69-byte records without identity) is no longer sent. `record_count` records of 85 bytes, little-endian like every field here: `u64 generation`, `u64 index` (the §8.2 bar key), `u32 ts_offset_ms`, `i64 o,h,l,c`, `u64 v`, `u64 turnover`, `u32 trades`, `i64 delta`, `u8 flags` (bit0 `confirm`). The version is bumped rather than the fields appended because records have a fixed stride: a v1 decoder reading 69-byte records from an 85-byte body would misread every record after the first without noticing. Other body kinds stay at `format_version = 1`.
 
 **body_kind 5 — footprint.** Per-bar group: `u32 ts_offset_ms`, `u32 cell_count`, then `cell_count` × 33 bytes: `i64 price`, `u64 bid_volume`, `u64 ask_volume`, `u32 trades`, `u8 flags` (bit0 buy-imbalance, bit1 sell-imbalance, bit2 in-stack, bit3 POC).
 
 **body_kind 6 — heatmap column.** One time-bucket column: `u32 ts_offset_ms`, `i64 price_min`, `i64 price_step`, `u32 row_count`, then `row_count` × 16 bytes: `u64 bid_size`, `u64 ask_size`. The renderer uploads this straight into a texture row.
 
-**Client obligations.** A client MUST validate `magic` and `format_version`, MUST ignore trailing bytes it does not understand (forward compatibility), and MUST treat a body whose length disagrees with `record_count` as a protocol error (`frame_malformed`, §10) and resync.
+**Client obligations.** A client MUST validate `magic` and `format_version` (and MUST reject, as `frame_malformed`, a `(body_kind, format_version)` pair it does not know — e.g. a v1 decoder receiving v2 bars), MUST ignore trailing bytes it does not understand (forward compatibility), and MUST treat a body whose length disagrees with `record_count` as a protocol error (`frame_malformed`, §10) and resync.
 
 ### 3.5 Compression
 
@@ -836,7 +836,7 @@ The server accepts this **only** when it can prove continuity: it holds state co
 | Family                          | Coalescing rule                                                                                                 | Rationale                                                      |
 | ------------------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
 | `book`                          | Per price level, last-write-wins; deletes win over earlier updates at the same level.                           | The book is a map; only the current value matters.             |
-| `bars`                          | Per bar `index`, last-write-wins; a confirmed bar never replaced by an unconfirmed one.                         | The in-progress bar is overwritten many times per second.      |
+| `bars`                          | Per bar `(generation, index)`, last-write-wins; a confirmed bar never replaced by an unconfirmed one.           | The in-progress bar is overwritten many times per second.      |
 | `footprint`                     | Per (bar, price) cell, values summed for the _same_ bar, replaced across bars.                                  | Cells are cumulative within a bar.                             |
 | `heatmap`                       | Per time-bucket column, last-write-wins; whole columns dropped only if the bucket is complete and already sent. | Columns are the atomic render unit.                            |
 | `metrics`                       | Per metric code, last point wins.                                                                               | Scalar time series.                                            |
@@ -844,7 +844,7 @@ The server accepts this **only** when it can prove continuity: it holds state co
 | `trades`, `liquidations`        | **Append, never merge** — throttling batches them into arrays.                                                  | Every print matters for the tape and CVD.                      |
 | `orders`, `executions`          | **Never coalesced, never throttled.**                                                                           | State-machine transitions and fills must be seen individually. |
 
-**Bar key (#2014).** Within a channel (one `spec_hash`) every bar — of every `bar_type`, time bars included — is keyed by its `index` (24 §3.1), never by `t_ms`: non-time bars can share an open time and would otherwise be merged. Clients key their bar stores the same way.
+**Bar key (#2014).** Within a channel (one `spec_hash`) every bar — of every `bar_type`, time bars included — is keyed by `(generation, index)` (24 §3.1), never by `t_ms`: non-time bars can share an open time, and `index` restarts when ADR-0033 starts a new generation/epoch. A channel streams one generation at a time; a generation swap arrives as a new snapshot (ADR-0033 client ingestion). Clients key their bar stores the same way.
 
 A coalesced frame sets `coalesced: true` (structured) or header flag bit1 (binary), and carries `coalesced_count` — the number of source updates merged. The UI uses this to drive the "feed compressed" indicator on the tape-speed widget rather than silently under-reporting activity.
 
@@ -2016,12 +2016,17 @@ result against these schemas, which is what keeps the two representations from d
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["t_ms", "o", "h", "l", "c", "v", "confirm"],
+        "required": ["generation", "index", "t_ms", "o", "h", "l", "c", "v", "confirm"],
         "properties": {
+          "generation": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "ADR-0033 series generation (= epoch); 0 until ratified. Part of the coalescing key (§8.2)."
+          },
           "index": {
             "type": "integer",
             "minimum": 0,
-            "description": "Bar identity, strictly increasing per series; the coalescing key (§8.2). t_ms may repeat for non-time bars."
+            "description": "Bar index, strictly increasing within a generation; with generation, the coalescing key (§8.2). t_ms may repeat for non-time bars."
           },
           "t_ms": {
             "$ref": "cv://ws/v1/common.schema.json#/$defs/epochMs",
