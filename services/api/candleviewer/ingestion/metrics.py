@@ -156,6 +156,12 @@ SPECS: Final[tuple[MetricSpec, ...]] = (
         "interval",
         "result",
     ),
+    _c(
+        "kline_crosscheck_divergence_total",
+        "Kline bars diverging from tape-built bars beyond tolerance.",
+        "symbol",
+        "interval",
+    ),
     # Owned by layers ingestion may not be imported by (declared here, built there).
     _c(
         "exchange_errors_total",
@@ -323,6 +329,7 @@ kline_coverage_holes = _gauge("kline_coverage_holes")
 kline_backfill_rate_limited_total = _counter("kline_backfill_rate_limited_total")
 kline_backfill_pages_rejected_total = _counter("kline_backfill_pages_rejected_total")
 kline_backfill_jobs_total = _counter("kline_backfill_jobs_total")
+kline_crosscheck_divergence_total = _counter("kline_crosscheck_divergence_total")
 
 _EVENT_CHILDREN: dict[tuple[str, str], Counter] = {}
 

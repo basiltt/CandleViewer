@@ -13,6 +13,7 @@ despite `22-api-openapi.yaml`'s `x-rbac: {permissions: [marketdata:read]}`
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import ClassVar
 
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
@@ -215,3 +216,50 @@ class TestGetKlinesAuthorization:
             },
         )
         assert resp.status_code == 200
+
+
+class TestGetKlinesReadService:
+    """E12-S05: tier-merged reads; `meta.sources` and `meta.recording_started_at` on every
+    response (OpenAPI `DataMeta`)."""
+
+    _P: ClassVar[dict[str, str]] = {
+        "symbol": "BTCUSDT", "interval": "1", "from": "1970-01-01T00:00:00Z",
+        "to": "1970-01-01T00:03:00Z",
+    }  # fmt: skip
+
+    def _client_with(self, service: object) -> TestClient:
+        app = FastAPI()
+        app.include_router(
+            make_market_router(
+                lambda: _FakeCache(),
+                principal_resolver=_AUTHORIZED,
+                read_service_provider=lambda: service,  # type: ignore[arg-type,return-value]
+            )
+        )
+        return TestClient(app, client=("127.0.0.1", 50000))
+
+    def test_meta_sources_and_recording_started_at_from_read_service(self) -> None:
+        from candleviewer.ingestion.kline_read import KlineRead
+
+        class _Svc:
+            async def read(self, symbol: str, interval: str, rng: object) -> KlineRead:
+                rows = [_FakeRow(ts_us=0), _FakeRow(ts_us=60_000_000)]
+                return KlineRead(rows, ["parquet", "questdb", "exchange_rest"],  # type: ignore[arg-type]
+                                 120_000_000, [], True)  # fmt: skip
+
+        body = self._client_with(_Svc()).get("/market/klines", params=self._P).json()
+        assert body["meta"]["sources"] == ["parquet", "questdb", "exchange_rest"]
+        assert body["meta"]["recording_started_at"] == "1970-01-01T00:02:00+00:00"
+        assert len(body["bars"]) == 2
+
+    def test_cache_only_meta_is_questdb_and_null_recording_start(self) -> None:
+        cache = _FakeCache(rows=[_FakeRow(ts_us=0)])
+        body = _client(cache).get("/market/klines", params=self._P).json()
+        assert body["meta"]["sources"] == ["questdb"]
+        assert body["meta"]["recording_started_at"] is None
+        empty = _client(_FakeCache()).get("/market/klines", params=self._P).json()
+        assert empty["meta"]["sources"] == [] and "recording_started_at" in empty["meta"]
+
+    def test_provider_returning_none_falls_back_to_cache(self) -> None:
+        body = self._client_with(None).get("/market/klines", params=self._P).json()
+        assert body["meta"]["sources"] == []

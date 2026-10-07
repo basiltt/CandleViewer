@@ -48,6 +48,7 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse
 
 from candleviewer.ingestion.kline_coverage import CoverageIndex, Range
+from candleviewer.ingestion.kline_read import SOURCE_HOT, KlineReadService
 from candleviewer.storage.errors import StorageTierUnavailable
 from candleviewer.storage.models import TierHint, TimeRange
 
@@ -165,9 +166,13 @@ def _parse_time(value: str | None, *, default: datetime | None) -> datetime | No
     return parsed
 
 
+def _iso(ts_us: int) -> str:
+    return datetime.fromtimestamp(ts_us / 1_000_000, tz=UTC).isoformat()
+
+
 def _row_to_bar(row: KlineRowLike) -> dict[str, object]:
     return {
-        "t": datetime.fromtimestamp(row.ts_us / 1_000_000, tz=UTC).isoformat(),
+        "t": _iso(row.ts_us),
         "o": row.open,
         "h": row.high,
         "l": row.low,
@@ -183,6 +188,7 @@ def make_market_router(
     *,
     coverage_index_provider: CoverageIndexProvider | None = None,
     principal_resolver: PrincipalResolver | None = None,
+    read_service_provider: Callable[[], KlineReadService | None] | None = None,
 ) -> APIRouter:
     """Bind `GET /market/klines` to a concrete cache reader.
 
@@ -207,6 +213,10 @@ def make_market_router(
     fail closed with `501` rather than silently serving unauthenticated
     reads (C-12.4, PR #1626 review) — RBAC on this route ("marketdata:read")
     is enforced here, server-side, never left to the UI to hide a button.
+
+    E12-S05: when `read_service_provider` yields a `KlineReadService`, reads go through it
+    (cold + hot tiers merged; exchange backfill started in the background for hot holes and
+    never awaited) and `meta.sources` / `meta.recording_started_at` come from it.
     """
     router = APIRouter(tags=["market-data"])
 
@@ -276,7 +286,18 @@ def make_market_router(
             start_us=int(start_dt.timestamp() * 1_000_000),
             end_us=int(end_dt.timestamp() * 1_000_000),
         )
-        rows = await cache.read_klines(symbol, interval, rng)
+        service = read_service_provider() if read_service_provider is not None else None
+        recording_started: str | None = None
+        rows: list[KlineRowLike]
+        if service is not None:
+            read = await service.read(symbol, interval, Range(rng.start_us, rng.end_us))
+            rows = list[KlineRowLike](read.rows)
+            sources = read.sources
+            if read.recording_started_at_us is not None:
+                recording_started = _iso(read.recording_started_at_us)
+        else:
+            rows = list(await cache.read_klines(symbol, interval, rng))
+            sources = [SOURCE_HOT] if rows else []
         if not include_open:
             rows = [r for r in rows if r.confirmed]
         rows = rows[:limit]
@@ -299,8 +320,8 @@ def make_market_router(
                 "next_cursor": None,
                 "has_more": False,
                 "count": len(rows),
-                "sources": ["questdb"] if rows else [],
-                "recording_started_at": None,
+                "sources": sources,
+                "recording_started_at": recording_started,
                 "generated_at": datetime.now(UTC).isoformat(),
                 "coverage_holes": holes,
             },

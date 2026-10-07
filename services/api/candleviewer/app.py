@@ -23,7 +23,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 import structlog
 from fastapi import Depends, FastAPI, Request
@@ -117,6 +117,9 @@ from candleviewer.ingestion.book_supervisor import B14BookSupervisor
 from candleviewer.ingestion.clock import ClockGuard, ServerTimeFetcher, rest_client_fetcher
 from candleviewer.ingestion.connection import MAX_FRAME_BYTES, ConnectionManager
 from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
+from candleviewer.ingestion.kline_backfill import KlineBackfillService, KlineFetcher
+from candleviewer.ingestion.kline_coverage import Range
+from candleviewer.ingestion.kline_read import KlineReadService
 from candleviewer.ingestion.metrics import export_ingestion_metrics, ingest_enabled
 from candleviewer.ingestion.planner import SubscriptionPlanner
 from candleviewer.ingestion.reconnect import ConnectionRateGuard, ReconnectPolicy
@@ -163,6 +166,7 @@ from candleviewer.statechart.gateway import GatewayOverloadedError
 from candleviewer.storage.cold.layout import DatasetRegistry
 from candleviewer.storage.cold.observability import LoggingSystemEventSink
 from candleviewer.storage.cold.scrub import ScrubTask
+from candleviewer.storage.models import TimeRange
 from candleviewer.storage.repositories.alert_deliveries_sqlalchemy import (
     SqlAlchemyAlertDeliveryRepository,
 )
@@ -185,6 +189,7 @@ from candleviewer.storage.repositories.relational_sqlalchemy import (
 from candleviewer.storage.repositories.rows import (
     BookDeltaRow,
     BookSnapshotRow,
+    KlineRow,
     TickerRow,
     TradeRow,
 )
@@ -930,7 +935,11 @@ def create_app(
     # wired yet) — every request fails closed with `501`, not with a silent
     # unauthenticated read (C-12.4, PR #1626 review finding: this route was
     # previously reachable by any mesh caller with no RBAC check at all).
-    app.include_router(make_market_router(lambda: ctx.storage.market_data))
+    app.include_router(
+        make_market_router(
+            lambda: ctx.storage.market_data, read_service_provider=lambda: ctx.ingestion.klines
+        )
+    )
     # E08-S01-2: served from the scheduler's in-memory snapshot; `503` until
     # `wire_instrument_catalogue()` attaches one (needs a real Postgres +
     # exchange REST client). Resolver `None` -> fail-closed `501` (see above).
@@ -1295,6 +1304,8 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
         inst = snap.get(symbol) if snap is not None else None
         return None if inst is None else int(inst.launch_time)
 
+    _wire_klines(ctx, adapter.kline_fetcher(rest, _tick_size))
+
     # #1892/#1912: wall clock (not the monotonic demand clock) bounds event time,
     # shifted by ClockGuard's measured offset so the exchange clock is truth.
     window = EventWindow(corrected_now_us(guard.offset_us), _launch_us)
@@ -1358,6 +1369,32 @@ def wire_public_ws(ctx: AppContext) -> ConnectionManager:
     # the watchdog on routing, so freshness reflects the venue.
     ctx.ingestion.attach_router(adapter.frame_route, watchdog.touch)
     return manager
+
+
+def _wire_klines(ctx: AppContext, fetch_klines: KlineFetcher) -> None:
+    """E12-S05: cache-first `/market/klines` with background exchange backfill.
+
+    The hot tier is both the backfill cache and the read source; pages are written as
+    `source=rest` kline rows. Persisting kline-sourced `bars_time` rows (`bars.kline_rows`) is
+    wired once a `BarWriter` is composed (E12-T05), so no `kline_sink` here yet.
+    """
+
+    class _HotKlines:
+        async def read_klines(
+            self, sym: str, interval: str, rng: Range, tier: str = "auto"
+        ) -> Sequence[KlineRow]:
+            return await ctx.storage.market_data.read_klines(
+                sym, interval, TimeRange(start_us=rng.start_us, end_us=rng.end_us)
+            )
+
+        async def write_klines(self, rows: Sequence[object]) -> None:
+            await ctx.storage.market_data.write_klines(
+                [KlineRow(**cast(dict[str, Any], r)) for r in rows]
+            )
+
+    hot = _HotKlines()
+    backfill = KlineBackfillService(fetch_klines=fetch_klines, cache=hot)
+    ctx.ingestion.attach_klines(KlineReadService(hot, backfill=backfill), backfill)
 
 
 def wire_clock_offset(ctx: AppContext, fetch_server_time: ServerTimeFetcher) -> ClockGuard:

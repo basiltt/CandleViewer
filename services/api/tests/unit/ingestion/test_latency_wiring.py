@@ -149,4 +149,7 @@ def test_wire_public_ws_attaches_clock_guard_and_closer() -> None:
     wire_public_ws(ctx)
     assert ctx.ingestion.clock is not None
     assert ctx.ingestion.clock_offset_ms() is None  # unmeasured -> exchange stage unavailable
-    assert len(ctx.ingestion._closers) == 1
+    # E12-S05: kline backfill jobs are cancelled before the shared REST client is closed.
+    assert len(ctx.ingestion._closers) == 2
+    assert ctx.ingestion._closers[0].__qualname__ == "KlineBackfillService.aclose"
+    assert ctx.ingestion.klines is not None

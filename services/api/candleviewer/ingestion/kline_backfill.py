@@ -102,8 +102,10 @@ class KlineRowLike(Protocol):
     back from the cache — declared structurally so this module never
     imports `candleviewer.storage`."""
 
-    ts_us: int
-    confirmed: bool
+    @property
+    def ts_us(self) -> int: ...
+    @property
+    def confirmed(self) -> bool: ...
 
 
 class KlineCacheLike(Protocol):
