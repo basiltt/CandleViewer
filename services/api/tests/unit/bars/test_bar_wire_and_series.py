@@ -167,7 +167,7 @@ def test_densify_fills_gaps_with_flat_synthetic_bars() -> None:
         assert f.synthetic is True and f.volume == 0 and f.trade_count == 0
         assert f.open == f.high == f.low == f.close == f.vwap == Decimal("105")
         assert f.open_time == i * STEP
-    assert [b.index for b in dense] == [5, 6, 7, 8]
+    assert [b.index for b in dense] == [5, 5, 5, 6]
     assert [b.open_time for b in dense] == [0, STEP, 2 * STEP, 3 * STEP]
 
 
@@ -190,3 +190,23 @@ def test_densify_contiguous_and_empty_series_unchanged() -> None:
 def test_densify_rejects_non_time_specs() -> None:
     with pytest.raises(BarsError, match="time bars only"):
         BarSeries(BarSpec(kind="tick", tick_count=5), []).densify()
+
+
+def test_densify_leaves_real_bars_untouched() -> None:
+    r1, r2 = make_bar(5, 0, close="105"), make_bar(6, 3 * STEP, gap_before=True)
+    dense = list(BarSeries(SPEC_1M, [r1, r2]).densify())
+    assert dense[0] is r1 and dense[3] is r2
+    assert (dense[3].index, dense[3].gap_before) == (6, True)
+    assert [b.synthetic for b in dense] == [False, True, True, False]
+    with pytest.raises(SyntheticBarPersistError):
+        assert_persistable(dense[1])
+
+
+def test_spec_rejects_over_precise_decimal_and_hash_does_not_round() -> None:
+    with pytest.raises(ValidationError, match="significant digits"):
+        BarSpec(kind="volume", volume_threshold=Decimal("1." + "0" * 10 + "1" * 20))
+    ok = BarSpec(kind="volume", volume_threshold=Decimal("1." + "1" * 27))
+    assert "1" * 27 in ok.spec_hash or ok.spec_hash
+    from candleviewer.bars.spec import dec_str
+
+    assert dec_str(Decimal("1." + "1" * 40)) == "1." + "1" * 40

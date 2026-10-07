@@ -16,7 +16,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from decimal import Decimal
+from decimal import Decimal, localcontext
 from typing import Final, Literal
 
 import structlog
@@ -58,7 +58,9 @@ def dec_str(d: Decimal) -> str:
     """Plain notation, no exponent, no trailing fractional zeros, `-0` -> `0`."""
     if d == 0:
         return "0"
-    return format(d.normalize(), "f")
+    with localcontext() as ctx:
+        ctx.prec = max(len(d.as_tuple().digits), 28)  # never round
+        return format(d.normalize(), "f")
 
 
 def canonical_json(spec: BarSpec) -> str:

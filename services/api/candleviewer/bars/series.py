@@ -1,4 +1,4 @@
-"""`BarSeries` container and `densify()` (`24-internal-schemas.md` §3.3a, E12-T01).
+"""`BarSeries` container and `densify()` (`24-internal-schemas.md` Â§3.3a, E12-T01).
 
 Densified bars are synthetic (`synthetic=True`, `volume=0`, flat at `prev.close`) and exist
 only for consumers that need a continuous index (indicators). They are **never persisted**:
@@ -45,41 +45,37 @@ class BarSeries:
     def densify(self) -> BarSeries:
         """Fill empty time intervals with flat synthetic bars (time specs only).
 
-        The densified view is renumbered contiguously from the first bar's `index` (that is
-        the "continuous index" indicators need); all other real-bar fields are unchanged. The
-        result is for in-memory consumers only — see `assert_persistable`.
+        Real bars are passed through untouched (same objects: `index`, `gap_before` and every
+        other field unchanged), so §3.1 "index monotonic per (symbol, spec_hash)" holds for
+        real keys. Fillers cannot take a fresh index without renumbering real bars, so each
+        filler carries the `index` of the real bar preceding its gap and is identified by
+        `synthetic=True`; the view is non-decreasing in `index`, and consumers needing a
+        contiguous position use the sequence position. Fillers are never persistable.
         """
         if self.spec.kind != "time":
             raise BarsError("densify() applies to time bars only; other kinds have no empty slots.")
         step = int(self.spec.param_value) * 1000
         out: list[Bar] = []
+        prev_real: Bar | None = None
         for bar in self.bars:
-            if out:
+            if prev_real is not None:
                 prev = out[-1]
                 t = prev.open_time + step
                 while t < bar.open_time:
-                    prev = _flat(prev, t, step)
+                    prev = _flat(prev, t, step, prev_real.index)
                     out.append(prev)
                     t += step
             out.append(bar)
-        if not out:
-            return self
-        base = out[0].index
-        return BarSeries(
-            self.spec,
-            [
-                b if b.index == base + i else b.model_copy(update={"index": base + i})
-                for i, b in enumerate(out)
-            ],
-        )
+            prev_real = bar
+        return BarSeries(self.spec, out)
 
 
-def _flat(prev: Bar, open_time: int, step: int) -> Bar:
+def _flat(prev: Bar, open_time: int, step: int, index: int) -> Bar:
     px = prev.close
     return Bar.model_construct(
         spec_hash=prev.spec_hash,
         symbol=prev.symbol,
-        index=prev.index + 1,
+        index=index,
         open_time=open_time,
         close_time=open_time + step,
         open=px,

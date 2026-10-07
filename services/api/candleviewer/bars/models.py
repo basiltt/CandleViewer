@@ -41,6 +41,9 @@ PARAM_FIELDS: tuple[str, ...] = (
 )
 
 
+MAX_SIG_DIGITS = 28  # decimal context precision; instrument tick/lot values are far shorter
+
+
 def _normalise(d: Decimal) -> Decimal:
     """`Decimal("50.00")` -> `Decimal("50")`; never exponent form for integers."""
     return Decimal(format(d.normalize(), "f"))
@@ -82,6 +85,12 @@ class BarSpec(BaseModel):
         for f in ("volume_threshold", "delta_threshold"):
             v = getattr(self, f)
             if v is not None:
+                digits = v.as_tuple().digits
+                sig = len("".join(map(str, digits)).rstrip("0"))
+                if sig > MAX_SIG_DIGITS:
+                    raise BarSpecError(
+                        f"{f} has {sig} significant digits; at most {MAX_SIG_DIGITS} are allowed."
+                    )
                 object.__setattr__(self, f, _normalise(v))
         return self
 
