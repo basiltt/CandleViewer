@@ -21,7 +21,8 @@ SELECT trade_id, ts_event_us AS ts, side,
 FROM read_csv(?, header = true, delim = ',',
               columns = {'trade_id': 'VARCHAR', 'ts_event_us': 'BIGINT', 'side': 'VARCHAR',
                          'price': 'VARCHAR', 'qty': 'VARCHAR', 'is_block_trade': 'INTEGER'})
-"""  # tick 0.1 (BTCUSDT instrument info) => ticks = price * 10
+"""
+# NOTE: the tick is HARD-CODED for BTCUSDT (0.1 => ticks = price * 10); follow-up: parameterise.
 
 _CLUSTERS = """
 WITH RECURSIVE keyed AS (
