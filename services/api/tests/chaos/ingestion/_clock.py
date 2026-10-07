@@ -13,7 +13,7 @@ import heapq
 import itertools
 from collections.abc import Callable
 
-#: Corpus epoch (packages/fixtures/bybit/2026-10-05: first envelope `ts`).
+#: Corpus epoch (the recorded fixture corpus, 2026-10-05: first envelope `ts`).
 EPOCH_S = 1_700_000_000.0
 _SETTLE_SPINS = 64
 

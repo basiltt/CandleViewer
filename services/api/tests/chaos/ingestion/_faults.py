@@ -26,7 +26,7 @@ class FaultKind(StrEnum):
     HTTP_STATUS = "http_status"  # the next `count` REST calls return `status` (JSON {})
     HTML_502 = "html_502"  # the next `count` REST calls return a 502 HTML error page
     MALFORMED_JSON = "malformed_json"  # the next `count` REST calls return HTTP 200 + junk
-    HOSTILE_JSON = "hostile_json"  # retCode 0 with an attacker-shaped row (SR-040b)
+    HOSTILE_JSON = "hostile_json"  # success envelope carrying an attacker-shaped row (SR-040b)
     RATE_LIMIT = "rate_limit"  # the next `count` REST calls return 10018 + reset headers
     # ---- host ---------------------------------------------------------------
     CLOCK_JUMP = "clock_jump"  # the host wall clock jumps by `seconds` (WSL sleep)

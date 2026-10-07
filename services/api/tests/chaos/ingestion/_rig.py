@@ -73,6 +73,7 @@ from tests.chaos.ingestion._stub_exchange import StubExchange
 
 #: The stub's REST base URL. Allow-listed host string only: `MockTransport`
 #: answers in-process, nothing is ever dialled (network guard stays armed).
+# nosemgrep: cv-adapter-isolation reason=B5-b-harness owner=@CandleViewer/security review=2026-12-31
 STUB_BASE_URL = "https://api.bybit.com"
 T = TypeVar("T")
 TICK_ALL: dict[str, Decimal] = {

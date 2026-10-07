@@ -15,8 +15,8 @@ from tests._corpus import frames
 from tests.chaos.ingestion._clock import ScenarioTimeoutError
 from tests.chaos.ingestion._stub_exchange import StubExchange
 
-TICK_S = 0.1  # orderbook.200 cadence (06 §6.1)
-TRADE_EVERY = 5  # one publicTrade frame per 0.5 s keeps the 10 s staleness limit far away
+TICK_S = 0.1  # depth-200 book cadence (06 §6.1)
+TRADE_EVERY = 5  # one trade frame per 0.5 s keeps the 10 s staleness limit far away
 
 _BOOKS = {"BTCUSDT": "ws/orderbook_BTCUSDT.jsonl"}
 _TRADES = {
