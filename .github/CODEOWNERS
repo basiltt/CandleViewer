@@ -226,6 +226,9 @@
 # these two entries are what makes that gate fire in practice.
 /services/api/candleviewer/db/          @CandleViewer/backend @CandleViewer/architecture @CandleViewer/security
 /services/api/candleviewer/migrations/  @CandleViewer/backend @CandleViewer/architecture @CandleViewer/security
+# E22-T01: the SR-E22 constants module at its real path (the `/services/api/orderflow/limits.py`
+# entry above predates the `candleviewer/` package layout). Threat model E22 §7.
+/services/api/candleviewer/orderflow/limits.py  @CandleViewer/backend @CandleViewer/security
 /services/api/pyproject.toml            @CandleViewer/backend @CandleViewer/devsecops @CandleViewer/security
 
 # ---------------------------------------------------------------------------
