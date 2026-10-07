@@ -1,0 +1,263 @@
+"""E12-T02 (#345): row mapping, DDL vs doc, write backpressure, upsert, stale build_version."""
+
+from __future__ import annotations
+
+import asyncio
+import re
+from dataclasses import replace
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from candleviewer.bars.errors import SyntheticBarPersistError
+from candleviewer.bars.models import Bar, BarSpec
+from candleviewer.bars.reader import BarReader, build_range_query
+from candleviewer.bars.rows import (
+    BarPersistError,
+    bar_param_for,
+    bar_row,
+    row_checksum,
+    to_double,
+)
+from candleviewer.bars.writer import BarBufferFull, BarWriter
+from candleviewer.storage.questdb.ddl import parse_ddl_dir
+from candleviewer.storage.questdb.ilp_writer import serialize_ilp_line
+from candleviewer.storage.questdb.schemas import BAR_SCHEMAS_BY_FAMILY
+
+ROOT = Path(__file__).resolve().parents[5]
+SPEC = BarSpec(kind="time", interval_ms=300_000)
+
+
+def _bar(**kw: object) -> Bar:
+    base = dict(
+        spec_hash=SPEC.spec_hash, symbol="BTCUSDT", index=3, open_time=1_700_000_000_000_000,
+        close_time=1_700_000_299_999_999, open=Decimal("100.1"), high=Decimal("101"),
+        low=Decimal("99.5"), close=Decimal("100.5"), volume=Decimal("10"),
+        buy_volume=Decimal("6"), sell_volume=Decimal("4"), delta=Decimal("2"),
+        min_delta=Decimal("-1"), max_delta=Decimal("3"), trade_count=7, turnover=Decimal("1001"),
+        vwap=Decimal("100.3"), closed=True, partial=False, gap_before=False,
+    )  # fmt: skip
+    base.update(kw)
+    return Bar.model_validate(base)
+
+
+def test_to_double_rounds_to_nearest_binary64_and_refuses_non_finite() -> None:
+    assert to_double(Decimal("0.1")) == 0.1
+    assert to_double(Decimal("-0")) == 0.0 and str(to_double(Decimal("-0"))) == "0.0"
+    # exact midpoint of 1.0 and 1+2**-52: ties-to-even picks 1.0; just above it rounds up
+    mid = Decimal("1.00000000000000011102230246251565404236316680908203125")
+    assert to_double(mid) == 1.0
+    assert to_double(mid + Decimal("1e-30")) == 1.0000000000000002
+    assert Decimal(repr(to_double(Decimal("100.1")))) == Decimal("100.1")
+    for bad in (Decimal("NaN"), Decimal("Infinity"), Decimal("1e999")):
+        with pytest.raises(BarPersistError):
+            to_double(bad)
+
+
+@pytest.mark.parametrize(
+    ("spec", "param"),
+    [
+        (BarSpec(kind="time", interval_ms=300_000), "5m"),
+        (BarSpec(kind="time", interval_ms=3_600_000), "1h"),
+        (BarSpec(kind="time", interval_ms=86_400_000), "1d"),
+        (BarSpec(kind="tick", tick_count=500), "tick:500"),
+        (BarSpec(kind="volume", volume_threshold=Decimal(1000)), "vol:1000"),
+        (BarSpec(kind="range", range_ticks=20), "range:20"),
+        (BarSpec(kind="renko", range_ticks=10), "renko:10"),
+        (BarSpec(kind="delta", delta_threshold=Decimal(500)), "delta:500"),
+    ],
+)
+def test_bar_param_is_human_readable_never_the_hash(spec: BarSpec, param: str) -> None:
+    assert bar_param_for(spec) == param
+
+
+def test_unrenderable_spec_is_refused() -> None:
+    with pytest.raises(BarPersistError):
+        bar_param_for(BarSpec(kind="time", interval_ms=60_000, price_source="mark"))
+
+
+def test_row_golden_ilp_line() -> None:
+    row = bar_row(_bar(), SPEC)
+    row["row_checksum"] = 0
+    row.pop("source")
+    line = serialize_ilp_line(
+        BAR_SCHEMAS_BY_FAMILY["time"],
+        {k: v for k, v in row.items() if k != "ts"},
+        int(str(row["ts"])),
+    )
+    assert line == (
+        "bars_time,symbol=BTCUSDT,bar_param=5m close_ts=1700000299999999t,open=100.1,high=101.0,"
+        "low=99.5,close=100.5,volume=10.0,buy_volume=6.0,sell_volume=4.0,delta=2.0,min_delta=-1.0,"
+        "max_delta=3.0,delta_pct=20.0,trade_count=7i,vwap=100.3,is_closed=true,build_version=1i,"
+        "row_checksum=0i 1700000000000000000"
+    )
+
+
+def test_checksum_changes_with_values() -> None:
+    a = bar_row(_bar(), SPEC)
+    b = bar_row(_bar(close=Decimal("100.6")), SPEC)
+    assert a["row_checksum"] == row_checksum(a) != b["row_checksum"]
+
+
+def test_synthetic_bar_is_refused() -> None:
+    with pytest.raises(SyntheticBarPersistError):
+        bar_row(_bar(synthetic=True), SPEC)
+
+
+def test_source_must_be_known() -> None:
+    with pytest.raises(BarPersistError):
+        bar_row(_bar(), SPEC, source="guess")
+
+
+def test_ddl_matches_schema_doc() -> None:
+    doc = (ROOT / "docs/plan/21-database-schema.md").read_text("utf-8")
+    block = doc[doc.index("### 4.8") : doc.index("### 4.9")]
+    doc_cols = re.findall(
+        r"^\s{2}(\w+)\s+(?:TIMESTAMP|SYMBOL|DOUBLE|LONG|INT|BOOLEAN)", block, re.M
+    )
+    doc_cols += re.findall(r"\b(open|high|low|close)\s+DOUBLE", block)
+    tables = {
+        t.name: t for t in parse_ddl_dir(ROOT / "backend/db/questdb") if t.name.startswith("bars_")
+    }
+    assert sorted(tables) == sorted(
+        f"bars_{k}" for k in ("time", "tick", "volume", "range", "renko", "delta")
+    )
+    base = set(doc_cols)
+    for name, t in tables.items():
+        extra = {"open_source_ts"} if name in ("bars_renko", "bars_range") else set()
+        assert set(t.columns) - {"source", "row_checksum"} == base | extra, name
+        assert t.partition_by == "MONTH" and t.ts_col == "ts"
+        assert t.dedup_keys == ("ts", "symbol", "bar_param")
+        assert {"source", "row_checksum"} <= set(t.columns)
+
+
+class _SlowSink:
+    def __init__(self) -> None:
+        self.gate = asyncio.Event()
+        self.rows: list[dict[str, object]] = []
+
+    async def write_rows(self, table: str, rows: list[dict[str, object]], ts_us_key: str) -> None:
+        await self.gate.wait()
+        self.rows.extend(rows)
+
+
+@pytest.mark.asyncio
+async def test_backpressure_awaits_and_drops_nothing() -> None:
+    sink = _SlowSink()
+    w = BarWriter(sink, max_buffered=3, batch_rows=1, max_in_flight=1)
+    await w.start()
+    bars = [_bar(index=i, open_time=1_700_000_000_000_000 + i) for i in range(12)]
+    producer = asyncio.create_task(w.submit(bars, SPEC))
+    await asyncio.sleep(0.05)
+    assert not producer.done()  # blocked, awaiting space
+    assert w.depth <= 3
+    sink.gate.set()
+    await producer
+    await w.stop()
+    assert len(sink.rows) == 12
+
+
+@pytest.mark.asyncio
+async def test_new_spec_refused_when_saturated_but_known_spec_waits() -> None:
+    sink = _SlowSink()
+    w = BarWriter(sink, max_buffered=4, batch_rows=1, max_in_flight=1, refuse_new_specs_at=0.5)
+    await w.start()
+    await w.submit([_bar(index=0)], SPEC)
+    more = [_bar(index=i, open_time=1_700_000_000_000_000 + i) for i in range(1, 5)]
+    await w.submit(more, SPEC)
+    await asyncio.sleep(0.01)
+    other = BarSpec(kind="tick", tick_count=100)
+    assert not w.healthy
+    with pytest.raises(BarBufferFull):
+        await w.submit([_bar(spec_hash=other.spec_hash)], other)
+    sink.gate.set()
+    await w.stop()
+
+
+@pytest.mark.asyncio
+async def test_sink_failure_retries_and_loses_nothing() -> None:
+    calls = 0
+
+    class Flaky:
+        def __init__(self) -> None:
+            self.rows: list[dict[str, object]] = []
+
+        async def write_rows(self, t: str, rows: list[dict[str, object]], k: str) -> None:
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                raise ConnectionError("down")
+            self.rows.extend(rows)
+
+    sink = Flaky()
+    w = BarWriter(sink, retry_s=0)
+    await w.start()
+    await w.submit([_bar()], SPEC)
+    await w.stop()
+    assert len(sink.rows) == 1 and calls == 2
+
+
+@pytest.mark.asyncio
+async def test_amended_close_has_same_dedup_key() -> None:
+    first = bar_row(_bar(), SPEC)
+    amended = bar_row(_bar(close=Decimal("100.9")), SPEC)
+
+    def key(r: dict[str, object]) -> tuple[object, ...]:
+        return (r["ts"], r["symbol"], r["bar_param"])
+
+    assert key(first) == key(amended) and first["close"] != amended["close"]
+    assert amended["row_checksum"] != first["row_checksum"]
+
+
+class _Conn:
+    def __init__(self, rows: list[dict[str, object]]) -> None:
+        self.rows = rows
+        self.sqls: list[tuple[str, tuple[object, ...]]] = []
+
+    async def fetch(self, sql: str, *params: object) -> list[dict[str, object]]:
+        self.sqls.append((sql, params))
+        return self.rows
+
+
+@pytest.mark.asyncio
+async def test_stale_build_version_served_and_rebuild_scheduled_once() -> None:
+    old = bar_row(_bar(), SPEC)
+    old["build_version"] = 0
+    old["row_checksum"] = row_checksum(old)
+    scheduled: list[tuple[str, str, int, int]] = []
+
+    async def sched(sym: str, h: str, lo: int, hi: int) -> None:
+        scheduled.append((sym, h, lo, hi))
+
+    reader = BarReader(_Conn([old]), sched)
+    for _ in range(3):
+        page = await reader.read_bars("BTCUSDT", SPEC, 0, 2**60, 10)
+        assert page.stale and len(page.rows) == 1
+    assert len(scheduled) == 1
+
+
+@pytest.mark.asyncio
+async def test_read_cursor_and_checksum_drop() -> None:
+    good = bar_row(_bar(), SPEC)
+    bad = replace_row(bar_row(_bar(index=4, open_time=1_700_000_000_000_009), SPEC))
+    page = await BarReader(_Conn([good, bad]), _sched_noop).read_bars("BTCUSDT", SPEC, 0, 2**60, 2)
+    assert page.rows == [good] and page.next_cursor == 1_700_000_000_000_009
+
+
+def replace_row(r: dict[str, object]) -> dict[str, object]:
+    return {**r, "close": 1.0}  # value changed after checksum
+
+
+async def _sched_noop(sym: str, h: str, lo: int, hi: int) -> None:
+    return None
+
+
+def test_range_query_is_parameterised_and_bounded() -> None:
+    sql, params = build_range_query("time", "X'; DROP", "5m", 0, 10, 4, 100)
+    assert "DROP" not in sql and params == ("X'; DROP", "5m", 5, 10, 100)
+    with pytest.raises(ValueError):
+        build_range_query("evil", "X", "5m", 0, 1, None, 1)
+    with pytest.raises(ValueError):
+        build_range_query("time", "X", "5m", 0, 1, None, 0)
+    _ = replace

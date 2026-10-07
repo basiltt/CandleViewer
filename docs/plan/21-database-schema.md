@@ -2501,6 +2501,8 @@ Identical column set (differing only in `bar_param` semantics) for:
 
 `bars_renko` and `bars_range` additionally carry `open_source_ts` (the timestamp of the trade that opened the brick) because their bars are not time-aligned.
 
+All six tables also carry two integrity columns added by `backend/db/questdb/0003_bars_integrity_columns.sql` (E12-T02, requested by the E12-X01 STRIDE model): `source SYMBOL CAPACITY 8 CACHE` (`tape` | `kline` | `parquet`; a kline row never overwrites a tape row) and `row_checksum LONG` (63-bit sha256 prefix over the value columns, verified on read). `bar_param` is rendered from the validated spec (`5m`, `tick:500`, …), never from client text.
+
 ### 4.9 `footprint_cells`
 
 The per-bar, per-price-level aggregation behind the footprint chart. One row per (bar, price level).

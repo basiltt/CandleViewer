@@ -10,7 +10,7 @@ This is not a general SQL parser.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 _CREATE_RE = re.compile(
@@ -23,6 +23,14 @@ _CREATE_RE = re.compile(
 #: A column definition line: `name TYPE [CAPACITY n] [CACHE] -- comment`.
 _COLUMN_RE = re.compile(
     r"^\s*(?P<name>\w+)\s+(?P<type>[A-Z0-9_]+)(?:\s+CAPACITY\s+\d+)?(?:\s+CACHE)?\s*$",
+    re.IGNORECASE,
+)
+
+
+#: `ALTER TABLE t ADD COLUMN IF NOT EXISTS name TYPE [CAPACITY n] [CACHE];` (additive batches).
+_ALTER_ADD_RE = re.compile(
+    r"ALTER\s+TABLE\s+(?P<table>\w+)\s+ADD\s+COLUMN\s+(?:IF\s+NOT\s+EXISTS\s+)?"
+    r"(?P<col>\w+)\s+[A-Z0-9_]+(?:\s+CAPACITY\s+\d+)?(?:\s+CACHE)?\s*;",
     re.IGNORECASE,
 )
 
@@ -94,4 +102,20 @@ def parse_ddl_dir(dir_path: Path) -> list[TableDef]:
     tables: list[TableDef] = []
     for sql_path in sorted(dir_path.glob("*.sql")):
         tables.extend(parse_ddl_file(sql_path))
-    return tables
+    return _apply_alters(tables, dir_path)
+
+
+def _apply_alters(tables: list[TableDef], dir_path: Path) -> list[TableDef]:
+    """Fold `ALTER TABLE ... ADD COLUMN` statements (applied in filename order) into the
+    `TableDef`s they extend, so the drift guard sees the live column set."""
+    by_name = {t.name: t for t in tables}
+    for sql_path in sorted(dir_path.glob("*.sql")):
+        text = "\n".join(
+            line.split("--", 1)[0] for line in sql_path.read_text(encoding="utf-8").splitlines()
+        )
+        for m in _ALTER_ADD_RE.finditer(text):
+            table = by_name.get(m.group("table").lower())
+            col = m.group("col").lower()
+            if table is not None and col not in table.columns:
+                by_name[table.name] = replace(table, columns=(*table.columns, col))
+    return [by_name[t.name] for t in tables]
