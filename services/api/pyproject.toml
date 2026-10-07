@@ -173,7 +173,6 @@ omit = [
   "candleviewer/main.py",
   "candleviewer/observability/service.py",
   "candleviewer/oms/*",
-  "candleviewer/orderflow/*",
   "candleviewer/paper/*",
   "candleviewer/recorder/*",
   "candleviewer/replay/*",
