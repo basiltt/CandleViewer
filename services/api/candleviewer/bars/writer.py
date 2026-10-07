@@ -30,6 +30,7 @@ from candleviewer.bars.rows import (
     BAR_PARAM_CAPACITY,
     SOURCE_RANK,
     BarParamCapacityExceeded,
+    BarPersistError,
     bar_param_for,
     bar_row,
     table_for,
@@ -184,8 +185,16 @@ class BarWriter:
         Precedence is enforced against rows written by this process; a read-side check against
         the stored row's `source` is the E12-T05 backfill caller's job (it owns the read path).
         """
+        await self.submit_rows([bar_row(b, spec, source=source) for b in bars], spec, source=source)
+
+    async def submit_rows(
+        self, rows: list[dict[str, object]], spec: BarSpec, *, source: str
+    ) -> None:
+        """Queue pre-mapped rows (E12-S05 kline rows with NULL order-flow columns) through the
+        same precedence, capacity and backpressure path as `submit`."""
+        if source not in SOURCE_RANK or any(r.get("source") != source for r in rows):
+            raise BarPersistError(f"Every row must carry source '{source}'.")
         table = table_for(spec)
-        rows = [bar_row(b, spec, source=source) for b in bars]
         self._check_precedence(table, spec, rows, source)
         self._admit_param(table, spec)
         self._record_sources(table, spec, rows, source)
