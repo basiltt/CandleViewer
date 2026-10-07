@@ -5,6 +5,9 @@ Pure, bounded state: pending bar items are keyed by ``(generation, index)``
 a confirmed bar is never replaced by an unconfirmed one, and a confirmed bar
 is replaced by another confirmed bar only when the incoming item sets
 ``amended`` (late-trade re-close, 24 §3.2).
+
+Unconsumed until the publisher wiring lands (E17 gateway fan-out, epic #32;
+bar emit source #2031).
 """
 
 from __future__ import annotations
@@ -45,9 +48,20 @@ class BarCoalescer:
         self._pending[key] = dict(item)
 
     def flush(self) -> tuple[list[dict[str, Any]], int]:
-        """Return (items ordered by key, coalesced_count) and reset."""
+        """Return (items ordered by key, coalesced_count) and reset pending state."""
         items = [self._pending[k] for k in sorted(self._pending)]
         count = self._count
         self._pending = {}
         self._count = 0
         return items, count
+
+    def take_overflow(self) -> bool:
+        """Return and clear the overflow flag.
+
+        When True, updates were refused: the caller MUST discard the flushed
+        batch, mark the topic ``resnapshot_required`` and send a fresh snapshot
+        (§8.3) — the pending state no longer equals the applied stream.
+        """
+        flag = self.overflowed
+        self.overflowed = False
+        return flag

@@ -266,6 +266,15 @@ describe("decodeBars", () => {
     expect(() => decodeBars(frame)).toThrow(/format_version/);
   });
 
+  it("rejects trailing bytes and a count/length mismatch", () => {
+    const trailing = concatBuffers(barsHeader(1), barRecord(0n, 0n, 1n, 0), new Uint8Array(7));
+    expect(() => decodeBars(trailing)).toThrow(BinaryFrameError);
+    const extra = concatBuffers(barsHeader(0), barRecord(0n, 0n, 1n, 0));
+    expect(() => decodeBars(extra)).toThrow(BinaryFrameError);
+    const huge = concatBuffers(barsHeader(0xffffffff), barRecord(0n, 0n, 1n, 0));
+    expect(() => decodeBars(huge)).toThrow(BinaryFrameError);
+  });
+
   it("rejects a truncated record", () => {
     const frame = concatBuffers(barsHeader(1), new Uint8Array(69));
     expect(() => decodeBars(frame)).toThrow(BinaryFrameError);

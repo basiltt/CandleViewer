@@ -205,7 +205,7 @@ Snapshots carry every level within the subscribed depth, bid side descending the
 
 **body_kind 6 — heatmap column.** One time-bucket column: `u32 ts_offset_ms`, `i64 price_min`, `i64 price_step`, `u32 row_count`, then `row_count` × 16 bytes: `u64 bid_size`, `u64 ask_size`. The renderer uploads this straight into a texture row.
 
-**Client obligations.** A client MUST validate `magic` and `format_version` (and MUST reject, as `frame_malformed`, a `(body_kind, format_version)` pair it does not know — e.g. a v1 decoder receiving v2 bars), MUST ignore trailing bytes it does not understand (forward compatibility), and MUST treat a body whose length disagrees with `record_count` as a protocol error (`frame_malformed`, §10) and resync.
+**Client obligations.** A client MUST validate `magic` and `format_version` (and MUST reject, as `frame_malformed`, a `(body_kind, format_version)` pair it does not know — e.g. a v1 decoder receiving v2 bars; the code is `frame_malformed` on the wire and decoders MAY surface the more specific diagnostic `unsupported_format_version` locally, which maps to `frame_malformed` in §10), and MUST treat a body whose length disagrees with `record_count` as a protocol error (`frame_malformed`, §10) and resync. For fixed-stride bodies (body_kind 4, bars) the rule is exact: body length MUST equal `24 + record_count × record_size`; both a short body and trailing bytes are `frame_malformed`. Forward compatibility is carried by `format_version`, not by trailing bytes. Variable-layout body kinds continue to ignore trailing bytes after the last declared record.
 
 ### 3.5 Compression
 
@@ -3234,7 +3234,7 @@ discarded rather than applied out of order.
 | C7  | Use full-jitter backoff and not auto-reconnect on `1002`/`4400`/`4403`.            |
 | C8  | Throttle to ≥1 000 ms when the window is hidden; unsubscribe collapsed panes.      |
 | C9  | Decouple rendering from frame arrival (`requestAnimationFrame`).                   |
-| C10 | Validate the binary `magic`/`format_version` and ignore trailing unknown bytes.    |
+| C10 | Validate the binary `magic`/`format_version`; bars bodies must match length exactly (§3.4). |
 | C11 | Render replay data in visually distinct chrome.                                    |
 | C12 | Disable order-entry affordances on `kill_switch.engaged` and on `shutdown_notice`. |
 

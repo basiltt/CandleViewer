@@ -333,6 +333,13 @@ export function decodeBars(buf: ArrayBufferView): DecodedBars {
     );
   }
   const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  // Fixed stride (§3.4): exact length, trailing bytes are malformed too.
+  const expected = COMMON_HEADER_BYTES + header.recordCount * BAR_RECORD_BYTES;
+  if (view.byteLength !== expected) {
+    throw new BinaryFrameError(
+      `bars body is ${view.byteLength} bytes, expected ${expected} for record_count=${header.recordCount}`,
+    );
+  }
   const bars: DecodedBar[] = [];
   let cursor = COMMON_HEADER_BYTES;
   for (let i = 0; i < header.recordCount; i += 1) {
