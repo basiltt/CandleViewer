@@ -23,6 +23,10 @@ from candleviewer.storage.questdb.runner import (
 DDL_DIR = Path(__file__).resolve().parents[6] / "backend" / "db" / "questdb"
 
 
+async def _no_sleep(_: float) -> None:
+    return None
+
+
 class _FakeExecutor:
     """An in-memory stand-in for a QuestDB PGWire connection.
 
@@ -104,7 +108,7 @@ async def test_assert_no_schema_drift_raises_on_missing_column() -> None:
     executor = _FakeExecutor()
     executor._table_columns["trades"].discard("notional")
     with pytest.raises(StorageSchemaDrift, match="trades"):
-        await assert_no_schema_drift(executor, DDL_DIR)
+        await assert_no_schema_drift(executor, DDL_DIR, sleep=_no_sleep)
 
 
 @pytest.mark.asyncio
@@ -112,4 +116,61 @@ async def test_assert_no_schema_drift_raises_on_extra_column() -> None:
     executor = _FakeExecutor()
     executor._table_columns["trades"].add("unexpected_column")
     with pytest.raises(StorageSchemaDrift, match="extra"):
-        await assert_no_schema_drift(executor, DDL_DIR)
+        await assert_no_schema_drift(executor, DDL_DIR, sleep=_no_sleep)
+
+
+def test_0003_runner_splits_one_alter_add_column_per_statement() -> None:
+    from candleviewer.storage.questdb.runner import parse_ddl_file_statements
+
+    stmts = parse_ddl_file_statements(DDL_DIR / "0003_bars_integrity_columns.sql")
+    assert len(stmts) == 12  # 6 tables x (source, row_checksum)
+    for stmt in stmts:
+        assert stmt.upper().count("ADD COLUMN") == 1 and "," not in stmt
+    for table in ("time", "tick", "volume", "range", "renko", "delta"):
+        mine = [x for x in stmts if f"bars_{table} " in x]
+        assert sorted(("source" in x, "row_checksum" in x) for x in mine) == [
+            (False, True),
+            (True, False),
+        ]
+
+
+def test_multi_column_add_file_yields_one_alter_per_column(tmp_path: Path) -> None:
+    from candleviewer.storage.questdb.runner import parse_ddl_file_statements
+
+    (tmp_path / "0001.sql").write_text(
+        "ALTER TABLE t ADD COLUMN a LONG;\nALTER TABLE t ADD COLUMN b SYMBOL CAPACITY 8 CACHE;\n",
+        encoding="utf-8",
+    )
+    stmts = parse_ddl_file_statements(tmp_path / "0001.sql")
+    assert stmts == [
+        "ALTER TABLE t ADD COLUMN a LONG;",
+        "ALTER TABLE t ADD COLUMN b SYMBOL CAPACITY 8 CACHE;",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_drift_check_waits_for_wal_apply_then_passes() -> None:
+    executor = _FakeExecutor()
+    executor._table_columns["bars_tick"].discard("row_checksum")
+    reads = 0
+    real_fetch = executor.fetch
+
+    async def lagging_fetch(sql: str, *args: object) -> list[dict[str, object]]:
+        nonlocal reads
+        if "table_columns('bars_tick')" in sql:
+            reads += 1
+            if reads == 3:  # the WAL apply job catches up
+                executor._table_columns["bars_tick"].add("row_checksum")
+        return await real_fetch(sql, *args)
+
+    executor.fetch = lagging_fetch  # type: ignore[method-assign]
+    await assert_no_schema_drift(executor, DDL_DIR, sleep=_no_sleep)
+    assert reads == 3
+
+
+@pytest.mark.asyncio
+async def test_persistent_drift_still_raises_after_settle_window() -> None:
+    executor = _FakeExecutor()
+    executor._table_columns["bars_tick"].discard("row_checksum")
+    with pytest.raises(StorageSchemaDrift, match="row_checksum"):
+        await assert_no_schema_drift(executor, DDL_DIR, sleep=_no_sleep)
