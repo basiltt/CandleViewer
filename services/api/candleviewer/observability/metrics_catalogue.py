@@ -380,6 +380,17 @@ CATALOGUE: Final[tuple[MetricSpec, ...]] = (
         exported=True,
     ),
     _s(
+        "bars_restore_gap_total",
+        "counter",
+        "restores",
+        (),
+        "Restores whose tape lag exceeded the 8192-trade catch-up ring (trades missed).",
+        "any = tape writer far behind; series history incomplete",
+        _L,
+        "E12",
+        exported=True,
+    ),
+    _s(
         "bar_emit_sink_errors_total",
         "counter",
         "emissions",

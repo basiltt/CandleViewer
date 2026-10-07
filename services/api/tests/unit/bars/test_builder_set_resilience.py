@@ -13,10 +13,15 @@ from candleviewer.bars import builder_set
 from candleviewer.bars.builder_set import BarBuilderSet, BarsHealthReason, default_factory
 from candleviewer.bars.emit import EmitRouter
 from candleviewer.bars.errors import BarsError
-from candleviewer.bars.metrics import bar_builder_quarantined_total, bar_emit_sink_errors_total
+from candleviewer.bars.metrics import (
+    bar_builder_quarantined_total,
+    bar_emit_sink_errors_total,
+    bars_restore_gap_total,
+)
 from candleviewer.bars.models import BarBuilder, BarSpec
 from candleviewer.bars.service import BarsService
 from candleviewer.bus.bus import Bus
+from candleviewer.bus.models import QueuePolicy
 from candleviewer.observability.health import HealthStatus
 
 from ._set_harness import M1, T3, TOPIC, V5, Clock, FakeTape, RecordingSink, make_set, settle
@@ -221,3 +226,86 @@ async def test_stop_applies_trades_from_publishers_blocked_on_full_queue(
     closes = [i for _, _, k, i, _ in sink.seen if k == "close"]
     # everything admitted before the unsubscribe was applied, in order, none twice
     assert closes == list(range(len(closes))) and len(closes) >= 2
+
+
+async def test_lane_death_releases_publisher_already_blocked_on_full_queue(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Review re-verdict A: a publisher parked in `queue.put` before the lane dies must be
+    released, or every other subscriber of the topic starves."""
+    monkeypatch.setattr(builder_set, "LANE_QUEUE", 2)
+    bus = Bus()
+    other = bus.subscribe("other", TOPIC.key, QueuePolicy.NEVER_DROP, maxsize=100)
+    s = make_set(tmp_path, bus=bus)
+    await s.register(T3, SYM, "a")
+    lane = s._lanes[SYM]
+    gate = asyncio.Event()
+
+    async def stuck_then_die(_: Any, __: Any) -> None:
+        await gate.wait()
+        raise RuntimeError("lane defect")
+
+    monkeypatch.setattr(s, "_apply", stuck_then_die)
+    for i in range(3):  # 1 taken by the stuck lane, 2 fill the queue
+        await bus.publish(TOPIC, trade(T0 + i, seq=i))
+    blocked = asyncio.ensure_future(bus.publish(TOPIC, trade(T0 + 9, seq=9)))
+    for _ in range(20):
+        await asyncio.sleep(0)
+    assert not blocked.done() and lane.sub.queue.full()  # parked in put before the death
+    gate.set()  # lane dies now
+    await asyncio.wait_for(blocked, 1)  # released promptly by the drain
+    await bus.publish(TOPIC, trade(T0 + 10, seq=10))  # the topic flows for others
+    assert other.qsize() == 5
+    assert BarsHealthReason.TASK_FAILED in s.health_reasons()
+    assert SYM not in s._lanes
+    await s.stop()
+
+
+async def test_restore_gap_beyond_ring_is_counted_and_degrades(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Review re-verdict C: tape lag larger than the ring is detected, never silent."""
+    monkeypatch.setattr(builder_set, "RECENT_RING", 4)
+    trades = [trade(T0 + i * 1000, seq=i) for i in range(20)]
+    b1 = Bus()
+    s1 = make_set(tmp_path, bus=b1)
+    await s1.register(V5, SYM, "a")
+    for t in trades[:3]:
+        await b1.publish(TOPIC, t)
+    await settle(b1, s1)
+    await s1.stop()  # watermark = trade 2
+
+    bus2 = Bus()
+    s2 = make_set(tmp_path, bus=bus2, tape=FakeTape(trades[:5]))  # tape ends at trade 4
+    await s2.register(T3, SYM, "lane")
+    for t in trades[3:15]:  # lane applies 3..14; ring (4) keeps only 11..14
+        await bus2.publish(TOPIC, t)
+    await settle(bus2, s2)
+    before = bars_restore_gap_total._value.get()
+    await s2.register(V5, SYM, "late")  # trades 5..10 are on neither tape nor ring
+    assert bars_restore_gap_total._value.get() == before + 1
+    assert BarsHealthReason.RESTORE_GAP in s2.health_reasons()
+    await s2.stop()
+
+
+async def test_restore_without_gap_does_not_flag(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(builder_set, "RECENT_RING", 4)
+    trades = [trade(T0 + i * 1000, seq=i) for i in range(12)]
+    b1 = Bus()
+    s1 = make_set(tmp_path, bus=b1)
+    await s1.register(V5, SYM, "a")
+    for t in trades[:3]:
+        await b1.publish(TOPIC, t)
+    await settle(b1, s1)
+    await s1.stop()
+    bus2 = Bus()
+    s2 = make_set(tmp_path, bus=bus2, tape=FakeTape(trades[:9]))  # tape covers up to the ring
+    await s2.register(T3, SYM, "lane")
+    for t in trades[3:12]:
+        await bus2.publish(TOPIC, t)
+    await settle(bus2, s2)
+    await s2.register(V5, SYM, "late")
+    assert BarsHealthReason.RESTORE_GAP not in s2.health_reasons()
+    await s2.stop()

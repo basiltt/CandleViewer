@@ -53,6 +53,10 @@ bar_builder_quarantined_total = Counter(
     "Series removed after their builder raised, or bars tasks that died.",
     labelnames=("reason",),
 )
+bars_restore_gap_total = Counter(
+    "bars_restore_gap_total",
+    "Restores whose tape lag exceeded the lane's recent-trade ring (trades missed).",
+)
 bar_emit_sink_errors_total = Counter(
     "bar_emit_sink_errors_total", "Bar emissions a sink failed to accept.", labelnames=("reason",)
 )
@@ -74,6 +78,7 @@ EXPORTED_NAMES: Final[frozenset[str]] = frozenset(
         "bars_spec_cap_rejected_total",
         "bar_emit_sink_errors_total",
         "bar_builder_quarantined_total",
+        "bars_restore_gap_total",
     }
 )
 

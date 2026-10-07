@@ -50,6 +50,7 @@ from candleviewer.bars.metrics import (
     bar_builder_specs_in_use,
     bar_state_snapshots_written_total,
     bars_blob_discarded_total,
+    bars_restore_gap_total,
 )
 from candleviewer.bars.models import BarBuilder, BarSpec, BarUpdate
 from candleviewer.bars.state_store import StateStore, StoredState, Watermark
@@ -77,6 +78,9 @@ class BarsHealthReason(StrEnum):
     #: A lane or the ticker task died unexpectedly; its subscription was removed so the
     #: trade publisher can never block on it.
     TASK_FAILED = "bar_task_failed"
+    #: A restored series could not be caught up: the tape lagged by more than the lane's
+    #: recent-trade ring, so trades between the tape head and the ring were missed.
+    RESTORE_GAP = "bar_restore_gap"
     #: An emit sink missed its `SINK_TIMEOUT_S` bound (emit.py).
     SINK_TIMEOUT = "bar_emit_sink_timeout"
 
@@ -176,6 +180,7 @@ class BarBuilderSet:
         self._lanes: dict[str, _Lane] = {}
         self._ticker: asyncio.Task[None] | None = None
         self._reasons: set[BarsHealthReason] = set()
+        self._drains: set[asyncio.Task[None]] = set()
         self._stopping = False
 
     def health_reasons(self) -> tuple[BarsHealthReason, ...]:
@@ -219,6 +224,8 @@ class BarBuilderSet:
             self._ticker.cancel()
             await asyncio.gather(self._ticker, return_exceptions=True)
             self._ticker = None
+        if self._drains:
+            await asyncio.gather(*self._drains, return_exceptions=True)
         for symbol in list(self._lanes):
             lane = self._lanes.pop(symbol)
             await self._stop_lane(lane)
@@ -248,6 +255,31 @@ class BarBuilderSet:
         if lane.task is not None:
             lane.task.cancel()
             await asyncio.gather(lane.task, return_exceptions=True)
+
+    def _on_lane_death(self, lane: _Lane) -> None:
+        """Unsubscribe (no new deliveries), then drain the orphaned queue in a tracked task so
+        a publisher already blocked in `queue.put` on it is released (#2030 review)."""
+        self._unsubscribe(lane)
+        self._lanes.pop(lane.symbol, None)
+        task = spawn(self._drain_dead(lane), name=f"bars-drain-{lane.symbol}")
+        self._drains.add(task)
+        task.add_done_callback(self._drains.discard)
+
+    @staticmethod
+    async def _drain_dead(lane: _Lane) -> None:
+        """Each `get_nowait` wakes one blocked putter, which then lands its item; loop until two
+        passes in a row find the queue empty, so every blocked publisher has completed. No new
+        putter can arrive (unsubscribed), so this ends. The drained trades are lost for this
+        lane only; the series are quarantined and health reports `bar_task_failed`."""
+        idle = 0
+        while idle < 2:
+            if lane.sub.qsize():
+                idle = 0
+                while lane.sub.qsize():
+                    lane.sub.get_nowait()
+            else:
+                idle += 1
+            await asyncio.sleep(0)
 
     def _unsubscribe(self, lane: _Lane) -> None:
         if lane.sub in self._bus._subscriptions:
@@ -314,7 +346,7 @@ class BarBuilderSet:
             lane = self._lanes[symbol] = _Lane(symbol, sub)
             lane.task = spawn(self._run(lane), name=f"bars-lane-{symbol}")
             # A dead lane must never leave a NEVER_DROP queue for the publisher to block on.
-            self._supervise(lane.task, lambda: self._unsubscribe(lane))
+            self._supervise(lane.task, lambda: self._on_lane_death(lane))
         return lane
 
     # -- restore / replay ------------------------------------------------------------------
@@ -351,7 +383,25 @@ class BarBuilderSet:
             if self._tape is not None:
                 async for t in self._tape.since(symbol, wm.ts_us):
                     await self._catch_up(entry, skip, t)
-            for t in tuple(lane.recent):
+            ring = tuple(lane.recent)
+            if (
+                ring
+                and len(ring) == RECENT_RING
+                and ring[0].ts_event > skip.ts
+                and not skip.covers(ring[0].ts_event, ring[0].trade_id)
+            ):
+                # The ring has evicted trades newer than everything replayed: a gap we cannot
+                # fill. Fail loud; the series still joins (partial history) rather than block.
+                bars_restore_gap_total.inc()
+                self._reasons.add(BarsHealthReason.RESTORE_GAP)
+                _log().warning(
+                    "bars_restore_gap",
+                    symbol=symbol,
+                    spec_hash=h,
+                    replayed_to_us=skip.ts,
+                    ring_oldest_us=ring[0].ts_event,
+                )
+            for t in ring:
                 await self._catch_up(entry, skip, t)
         bar_builder_cold_start_seconds.observe(time.perf_counter() - t0)
         return entry
