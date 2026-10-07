@@ -1,7 +1,7 @@
 """T-3 probe: check_shape on chain_trips edge values."""
 import os
 from xstate_statemachine import create_machine, SyncInterpreter, SnapshotCorruptError
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 m = create_machine({"id": "m", "initial": "a", "states": {"a": {}}})
 it = SyncInterpreter(m).start(); base = it.get_snapshot(); it.stop()
 import json

@@ -11,7 +11,7 @@ Any code that authorises on the `elevated` tag rather than on auth liveness
 grants admin rights on a logged-out session.
 
 stdlib + xstate_statemachine only. Exits 1 while the defect is present.
-Run from any cwd, e.g.  cd C:/Users/basil && python <this file>
+Run from any cwd, e.g.  cd <home> && python <this file>
 """
 from __future__ import annotations
 import asyncio, json, sys

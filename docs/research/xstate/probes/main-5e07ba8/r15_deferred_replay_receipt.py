@@ -1,7 +1,7 @@
 """When a deferred event is later REPLAYED and actually handled, does the
 caller's receipt reflect the replay, or is it stuck at the deferred answer?"""
 import sys, asyncio
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter
 CFG={"id":"m","initial":"a","onUnhandled":"defer","states":{
  "a":{"on":{"GO":{"target":"b"}}},

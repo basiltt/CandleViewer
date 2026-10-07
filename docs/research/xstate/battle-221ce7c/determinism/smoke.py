@@ -1,5 +1,5 @@
 import sys, asyncio, json
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter, SyncInterpreter, PluginBase
 from xstate_statemachine.clock import SimulatedClock
 

@@ -252,3 +252,18 @@ def test_no_gate_script_hard_codes_a_home_directory() -> None:
         if _HOME_DIR.search(value)
     ]
     assert offenders == []
+
+
+_OWNER_PATH = re.compile(rb"(?i)(C:[\/]+Users|(?<![\w.])/Users/|(?<![\w.])/home/[A-Za-z])")
+
+
+def test_no_research_file_contains_an_owner_specific_path() -> None:
+    # #1963: every committed file under docs/research/xstate (results, logs, write-ups)
+    # must use <workspace>/<home> placeholders, never a developer's absolute path.
+    xs = _REPO_ROOT / "docs" / "research" / "xstate"
+    offenders = [
+        str(path.relative_to(xs))
+        for path in sorted(xs.rglob("*"))
+        if path.is_file() and _OWNER_PATH.search(path.read_bytes())
+    ]
+    assert offenders == []

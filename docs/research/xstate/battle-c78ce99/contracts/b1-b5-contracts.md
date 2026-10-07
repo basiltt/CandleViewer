@@ -34,7 +34,7 @@ with sync-engine parity on configuration, action trace and service-call trace.
 | `w8_214_hook.py` | #214 `on_invalid_event` reachability | 4/4 | 4/4 |
 
 Every script is standalone (stdlib + `xstate_statemachine` only, inline
-helpers in `cv78.py`), `chdir`s to the neutral `C:/Users/basil` before doing
+helpers in `cv78.py`), `chdir`s to the neutral `<home>` before doing
 any work, and writes its own `res_*.json`.
 
 **Verdict unchanged from the row-8 ADOPT.** The library side of B1–B5 is clean
@@ -391,7 +391,7 @@ persists.
 ## 11 · Reproducing
 
 ```
-PY=C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python
+PY=<workspace>/_ref/xstate-statemachine/.venv-main/Scripts/python
 set PYTHONIOENCODING=utf-8  PYTHONUTF8=1
 for STYLE in async def:
   CV_SVC_STYLE=$STYLE  $PY w0_build.py
@@ -405,7 +405,7 @@ for STYLE in async def:
   $PY w7_edges.py $STYLE
 ```
 
-Each script `chdir`s to `C:/Users/basil` before touching anything, imports only
+Each script `chdir`s to `<home>` before touching anything, imports only
 the stdlib and `xstate_statemachine`, and never modifies library source. Shared
 helpers live in `cv78.py` (stub logic, `CvErrorHooks` stand-in, `drive` /
 `drive_sync`, and the v3 snapshot round-trip comparator).

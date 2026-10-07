@@ -2,7 +2,7 @@
 
 Commit `de2da4e`. Verdict: **CONFIRMED — Blocker, OUR-CONTRACT-DEFECT** (not a library defect).
 
-## Re-run evidence (this pass, neutral cwd `C:/Users/basil`, stdlib + library only)
+## Re-run evidence (this pass, neutral cwd `<home>`, stdlib + library only)
 
 - `battle-de2da4e/contracts/repro/de_c07b_killswitch_bricked.py` → exit 0,
   `bricked: true` on **both** `async def` and `def` services.

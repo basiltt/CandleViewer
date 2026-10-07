@@ -55,7 +55,7 @@ actually stop increasing.
 ## Standalone repro
 
 `stdlib` + `xstate_statemachine` only, every helper inlined. Run from a
-neutral cwd, e.g. `C:/Users/basil`:
+neutral cwd, e.g. `<home>`:
 
 ```
 python R9-T1_plateau.py def

@@ -6,7 +6,7 @@ on the commit).
 
 Scripts: `battle-c78ce99/concurrency/u1`–`u8`. Every probe is standalone
 (stdlib + `xstate_statemachine` only, helpers inlined), proven from the
-neutral cwd `C:/Users/basil`. Every service/action check runs BOTH `def`
+neutral cwd `<home>`. Every service/action check runs BOTH `def`
 and `async def`; every engine check runs BOTH engines.
 
 ---
@@ -67,7 +67,7 @@ discriminates.
 
 ```
 PY=…/_ref/xstate-statemachine/.venv-main/Scripts/python
-export PYTHONIOENCODING=utf-8 PYTHONUTF8=1      # from cwd C:/Users/basil
+export PYTHONIOENCODING=utf-8 PYTHONUTF8=1      # from cwd <home>
 D=…/CandleViewer/docs/research/xstate/battle-c78ce99/concurrency
 
 $PY $D/u1_v2_upcast_minting.py            # exit 1  -> D11-2

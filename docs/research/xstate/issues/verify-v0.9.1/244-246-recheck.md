@@ -2,7 +2,7 @@
 
 Environment: v0.9.1 checkout (801eacd, tag 45bb7f3 + CI-only merge commit),
 installed wheel `xstate_statemachine-0.9.1-py3-none-any.whl`, fresh venv,
-standalone stdlib+library-only repros run from neutral cwd `C:/Users/basil`.
+standalone stdlib+library-only repros run from neutral cwd `<home>`.
 Full suite (3614 tests) running green in parallel per `suite-v0.9.1.log`
 (observed through test_interpreter_send_receipt.py, no failures/hangs).
 

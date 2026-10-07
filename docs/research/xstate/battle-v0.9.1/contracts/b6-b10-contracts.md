@@ -1,6 +1,6 @@
 # Contract machines end-to-end — B6, B7, B8, B9, B10 @ `v0.9.1`
 
-**Library:** tag `v0.9.1` = `45bb7f3`, `main` = `801eacd`. `git diff v0.9.1..HEAD --stat` is **empty**: the merge commit changes no files. `__version__ == "0.9.1"`. The PyPI wheel at both `/tmp/xsm091/` and `C:/Users/basil/AppData/Local/Temp/xsm091/` has sha256 `d832d4d9…87162`, which matches the brief.
+**Library:** tag `v0.9.1` = `45bb7f3`, `main` = `801eacd`. `git diff v0.9.1..HEAD --stat` is **empty**: the merge commit changes no files. `__version__ == "0.9.1"`. The PyPI wheel at both `/tmp/xsm091/` and `<home>/AppData/Local/Temp/xsm091/` has sha256 `d832d4d9…87162`, which matches the brief.
 **Library suite** (`suite-v0.9.1.log`, the run already in progress, not restarted): **3601 passed, 13 skipped, 92.93 % coverage** (the gate is 90 %).
 **Contracts:** B6–B10 JSON copied **unchanged** from `battle-v0.9.0/contracts/`, with the same sha1 prefixes as last round (`97f57ff035de`, `38ddf600a6f2`, `03586b051082`, `04b1d029b493`, `f0a0aa4824cd`). **No JSON edit was needed.**
 **Workdir:** `battle-v0.9.1/contracts/b6b10/`. The parent directory is shared with another track that deletes files in it, so everything here runs from this isolated subfolder.
@@ -43,7 +43,7 @@ For each Bx the script does: start → enqueue 2 inbox + 1 `send_priority` + 1 `
 | #245 `SyncInterpreter(max_queue_size=8)` → `ValueError`; `None/None` accepted | ✅ |
 | #243 `RestoredChainError` ⊂ `RunawayChainError` and ⊂ `RestoredError` | ✅ |
 
-Standalone repros, stdlib plus the library only, run from `C:/Users/basil`, in `b6b10/repro/`:
+Standalone repros, stdlib plus the library only, run from `<home>`, in `b6b10/repro/`:
 - `s1_drain_both_lanes.py`: drains `['Y'(prio),'X','X']`; the receipt carries `InterpreterStoppedError`.
 - `s2_dropped_receipts.py` (#244): an un-awaited `send(wait=True)` from an action or at top level gives `dropped_receipts=1` and hook `['B']`.
 - `s3_restored_chain_isa.py` (#243): a live trip → persist → restore gives `RestoredChainError` for which `isinstance(…, RunawayChainError)` is True.

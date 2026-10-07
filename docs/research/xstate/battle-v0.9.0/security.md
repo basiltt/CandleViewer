@@ -7,7 +7,7 @@
 equivalent to the tag for this track). `__version__ == "0.9.0"`. **Not yet
 on PyPI** (pip download fails) — installed from the local `src/` checkout
 via `sys.path.insert`. `.venv-main`, `PYTHONIOENCODING=utf-8
-PYTHONUTF8=1`, cwd `C:/Users/basil`. A full pytest+coverage run was
+PYTHONUTF8=1`, cwd `<home>`. A full pytest+coverage run was
 already in flight (`suite-v0.9.0.log`) and not duplicated here. No library
 source modified; no git/gh writes. Scripts:
 `battle-v0.9.0/security/a{1..6}_*.py` (this round), reusing the de2da4e

@@ -1,11 +1,11 @@
 import subprocess, sys, time, json, os
 
-PY = r"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python"
+PY = r"<workspace>/_ref/xstate-statemachine/.venv-main/Scripts/python"
 env = dict(os.environ)
 env["PYTHONIOENCODING"] = "utf-8"
 env["PYTHONUTF8"] = "1"
 
-base = r"C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/research/xstate"
+base = r"<workspace>/CandleViewer/docs/research/xstate"
 scripts = [l.strip() for l in open(os.path.join(base, "gate/tmp_regrun/scriptlist.txt"), encoding="utf-8") if l.strip()]
 
 results = []

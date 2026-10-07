@@ -109,7 +109,7 @@ The one row that moved: **B6 INV-c** (`def` lane) — "`always` roll-forward out
 
 ### D4–D6 — round-9 drives, `g9_drives.py` (new; 44 checks per lane, **0 FAIL in both**)
 
-Standalone (stdlib + `xstate_statemachine` only, B6 arm inlined), proven from neutral cwd `C:/Users/basil`. The catalogued rollback+`onDone` storm — `record_child` raises under `rollback`, so the step rolls back into `submitting_slice`, whose invoke re-arms — driven at `maxIterations` ∈ {4, 5, 8, 12}, on both engines and both service kinds.
+Standalone (stdlib + `xstate_statemachine` only, B6 arm inlined), proven from neutral cwd `<home>`. The catalogued rollback+`onDone` storm — `record_child` raises under `rollback`, so the step rolls back into `submitting_slice`, whose invoke re-arms — driven at `maxIterations` ∈ {4, 5, 8, 12}, on both engines and both service kinds.
 
 **D4 / D6 — where the cycle trips.** Two shapes, two different (and both correct) plateaus:
 
@@ -205,7 +205,7 @@ A *wrong button press* — the right operator without elevation, or the wrong op
 
 ## 7. Scripts
 
-All in `battle-19cb1f1/contracts/b6b10/`. Run with `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`; the two new ones are standalone and were proven from neutral cwd `C:/Users/basil`.
+All in `battle-19cb1f1/contracts/b6b10/`. Run with `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`; the two new ones are standalone and were proven from neutral cwd `<home>`.
 
 | script | what it pins | result |
 |---|---|---|

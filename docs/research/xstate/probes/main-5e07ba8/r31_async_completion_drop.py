@@ -2,7 +2,7 @@
 engines". The async trip handler has no completion sparing at all: it drops
 whatever event is at the head of the queue."""
 import sys, asyncio
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter
 from xstate_statemachine.events import DoneEvent
 import xstate_statemachine.interpreter as I

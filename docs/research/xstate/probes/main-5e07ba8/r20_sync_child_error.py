@@ -1,6 +1,6 @@
 """#99: SyncInterpreter delivers onError for a failed invoked CHILD MACHINE."""
 import sys
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, SyncInterpreter
 CHILD={"id":"c","actionErrorPolicy":"fail","initial":"go","states":{"go":{"entry":["boom"]}}}
 def boom(i,c,e,a): raise RuntimeError("child exploded")

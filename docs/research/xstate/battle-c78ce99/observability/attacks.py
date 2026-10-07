@@ -1,6 +1,6 @@
 """
 Battle c78ce99 -- OBSERVABILITY track. Standalone: stdlib + xstate_statemachine
-only. Run from neutral cwd C:/Users/basil with:
+only. Run from neutral cwd <home> with:
   PYTHONIOENCODING=utf-8 PYTHONUTF8=1 <venv>/python attacks.py
 
 Time-boxed subset (20-min wall clock budget for the whole task). Covers, in

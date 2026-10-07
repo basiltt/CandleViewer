@@ -17,7 +17,7 @@ The `after:` path does this correctly — it registers under `owner_id=state.id`
 
 ## Environment
 
-- CPython 3.13.7, Windows 11 Pro 10.0.26200, fresh venv, neutral working directory (`C:/Users/basil`).
+- CPython 3.13.7, Windows 11 Pro 10.0.26200, fresh venv, neutral working directory (`<home>`).
 - `xstate-statemachine` `main` @ `c78ce99` (merge of PR #217 from `fix/0.8.1-round10`). `__version__` reports `0.8.0` (unreleased 0.8.1) — key on the commit.
 - Both `def` and `async def` action spellings exercised, and **both engines** — the defect is present on all three cells.
 - Every figure below is measured on the container itself (`len(i._timer_handles[i.id])`), not inferred from RSS; RSS is only a corroborating second signal.
@@ -192,7 +192,7 @@ if __name__ == "__main__":
 
 ## Observed
 
-Verbatim fresh run of the block above, from neutral cwd `C:/Users/basil` at `c78ce99`:
+Verbatim fresh run of the block above, from neutral cwd `<home>` at `c78ce99`:
 
 ```
 {
@@ -352,7 +352,7 @@ Named tests, `def` × `async def` × both engines, with the handle count asserte
 
 ## Verification
 
-- Repro executed fresh from neutral cwd `C:/Users/basil` against `c78ce99` (`git rev-parse HEAD` = `c78ce991e23c9cdaaeec99b29351ceb690044c2c`), venv `_ref/xstate-statemachine/.venv-main`, `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`. **Exit code 1.** Output in *Observed* is that run, verbatim.
+- Repro executed fresh from neutral cwd `<home>` against `c78ce99` (`git rev-parse HEAD` = `c78ce991e23c9cdaaeec99b29351ceb690044c2c`), venv `_ref/xstate-statemachine/.venv-main`, `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`. **Exit code 1.** Output in *Observed* is that run, verbatim.
 - The fenced block under *Minimal reproduction* is **byte-identical** to `repro/R11-04_timer_handles_unbounded_leak.py` (diff-checked after extraction), and imports nothing outside the stdlib and `xstate_statemachine`; all helpers are inlined; no `psutil`.
 - Both action spellings (`def`, `async def`) and both engines (`Interpreter`, `SyncInterpreter`) are exercised in a single run, with the `after:` control on every cell.
 - Source lines quoted in *Root cause* re-read at `c78ce99`: `interpreter.py:2354`, `:2557`, `:2748`, `:1514-1517`; `sync_interpreter.py:1198`, `:1488`, `:1546`, `:687-690`.

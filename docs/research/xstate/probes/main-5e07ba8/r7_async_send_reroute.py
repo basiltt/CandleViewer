@@ -2,7 +2,7 @@
 Q1: does `await interp.send(..., wait=True)` inside an action deadlock?
 Q2: ordering -- does a self-send now jump ahead of already-queued external events?"""
 import sys, asyncio
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter
 order=[]
 CFG={"id":"m","initial":"a","states":{"a":{"on":{

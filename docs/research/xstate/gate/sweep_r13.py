@@ -7,9 +7,9 @@ import subprocess
 import sys
 import time
 
-PY = r"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python"
-ROOT = r"C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/research/xstate"
-CWD = r"C:/Users/basil"
+PY = r"<workspace>/_ref/xstate-statemachine/.venv-main/Scripts/python"
+ROOT = r"<workspace>/CandleViewer/docs/research/xstate"
+CWD = r"<home>"
 CAP = 120
 
 PATTERNS = [

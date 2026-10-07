@@ -11,7 +11,7 @@ soak,determinism,observability,contracts}`), the P-1..P-7 set from
 `60-r11-regression.md`.
 
 **Method.** Every record's repro re-run fresh from neutral cwd
-`C:/Users/basil` with the pinned venv, 120 s cap, both action kinds (`def` /
+`<home>` with the pinned venv, 120 s cap, both action kinds (`def` /
 `async def`) and both engines where the record claims them, polled to
 convergence. Source read at every cited line before classification. Records
 sharing a root cause merged into one canonical `R11-nn`.
@@ -94,7 +94,7 @@ checking*. `machine_hash` is no obstacle — it is a structural fingerprint of
 the chart, computable by anyone holding the chart via the public
 `persistence.structure_hash`, not a MAC.
 
-**Re-verified this round** (neutral cwd `C:/Users/basil`, fresh):
+**Re-verified this round** (neutral cwd `<home>`, fresh):
 
     $ python probes/main-c78ce99/p3_214_v2_upcast_forge.py
     baseline version: 3 states: ['vault.locked']

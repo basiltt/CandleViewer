@@ -30,7 +30,7 @@ and `async def` lanes (§4).
    `issues/post-*/new/repro/`, `probes/*.py`, `probes/main-*/*.py`.
    Excluded `refute/` and `__pycache__`. 120 s cap each.
 3. Ran them via `gate/run_r11_regression.py` (new; resumable, 6 workers)
-   from **neutral cwd `C:/Users/basil`** → `gate/r11_regression_raw.json`.
+   from **neutral cwd `<home>`** → `gate/r11_regression_raw.json`.
    Result: **444 PASS / 83 FAIL / 0 TIMEOUT**, 182 s.
 4. The round-10 sweep baseline covers only 238 of these 527 scripts. For
    the 45 failures with no baseline entry, I **re-ran each against a

@@ -2,7 +2,7 @@
 
 **Verdict: REFUTED as a library finding. Stands, unchanged, as OUR catalogue Blocker C-07b (config defect).**
 
-## Reproduced first (19cb1f1, neutral cwd C:/Users/basil)
+## Reproduced first (19cb1f1, neutral cwd <home>)
 `contracts/repro/r7_c07b_b18_release.py`, both lanes, both dispositions:
 
 | CV | UNH | denied RELEASE | subsequent authorised RELEASE |

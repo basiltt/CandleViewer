@@ -58,7 +58,7 @@ import sys
 import time
 
 sys.path.insert(
-    0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src"
+    0, "<workspace>/_ref/xstate-statemachine/src"
 )
 logging.disable(logging.CRITICAL)
 

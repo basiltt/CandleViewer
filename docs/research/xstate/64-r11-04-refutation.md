@@ -2,7 +2,7 @@
 
 **Verdict: CONFIRMED — High.** Every refutation avenue failed.
 
-## Reproduced (commit c78ce99, fresh venv, neutral cwd `C:/Users/basil`)
+## Reproduced (commit c78ce99, fresh venv, neutral cwd `<home>`)
 
 | probe | result |
 |---|---|

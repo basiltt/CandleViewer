@@ -1,6 +1,6 @@
 """Standalone recheck repros for #243, #244, #245, #246 against xstate_statemachine 0.9.1.
 
-Run from a neutral cwd (C:/Users/basil) with the target venv's python:
+Run from a neutral cwd (<home>) with the target venv's python:
   PYTHONIOENCODING=utf-8 PYTHONUTF8=1 <venv>/Scripts/python repro_243_246.py
 
 stdlib + xstate_statemachine only. No project imports.

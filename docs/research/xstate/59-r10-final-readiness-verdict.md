@@ -6,7 +6,7 @@ Date: 2026-09-22. Round 10. Prior decision (round 9, `f28719c`): **ADOPT WITH CO
 
 Method: 8 issue verifications (#203–#210) re-run live (`issues/verify-main-19cb1f1/`); full regression sweep (`55-r10-regression.md`); suite + benchmarks (`56-r10-suite-bench.md`, plus `suite-19cb1f1.log` which **finished after that agent's bound** — see §2); diff review `f28719c..19cb1f1` (`57-r10-diff-review.md`); all 8 battle tracks re-run (`battle-19cb1f1/*.md`); all 20 contract machines driven end-to-end **on both service spellings**; triage → dedupe (`58-r10-findings-register.md`) → **independent adversarial refutation of every Blocker and High**, applied below.
 
-**Financial-OMS standard applied throughout:** nothing counted without a standalone repro on a clean interpreter from neutral cwd `C:/Users/basil`, and **every service/action check run with both `def` and `async def`**.
+**Financial-OMS standard applied throughout:** nothing counted without a standalone repro on a clean interpreter from neutral cwd `<home>`, and **every service/action check run with both `def` and `async def`**.
 
 ---
 

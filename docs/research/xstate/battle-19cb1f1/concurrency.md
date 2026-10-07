@@ -66,7 +66,7 @@ codes are unchanged for that reason and are **not** counted here. `t6`'s
 
 ```
 PY=…/_ref/xstate-statemachine/.venv-main/Scripts/python
-export PYTHONIOENCODING=utf-8 PYTHONUTF8=1      # from cwd C:/Users/basil
+export PYTHONIOENCODING=utf-8 PYTHONUTF8=1      # from cwd <home>
 
 # round-9 corpus, copied forward unmodified
 $PY battle-19cb1f1/concurrency/s6_restore_event_forgery_minimal.py

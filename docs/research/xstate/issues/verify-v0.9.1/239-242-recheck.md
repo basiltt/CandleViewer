@@ -1,7 +1,7 @@
 # Independent recheck: #239-#242 (v0.9.1 @ 801eacd)
 
 Env: fresh standalone repros (stdlib + xstate_statemachine only), run from
-neutral cwd `C:/Users/basil`, against
+neutral cwd `<home>`, against
 `.venv-main` (source checkout = tag v0.9.1 payload, HEAD 801eacd is a
 docs-only merge commit ahead of the fix commit 5c3b25b / tag 45bb7f3).
 `tests/test_round13_findings.py` (24/24 pass, both engines where relevant).

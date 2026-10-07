@@ -139,7 +139,7 @@ index is printed for any digest that moves.
 
 ```
 cd docs/research/xstate/battle-5e07ba8/determinism
-PY="C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python"
+PY="<workspace>/_ref/xstate-statemachine/.venv-main/Scripts/python"
 export PYTHONIOENCODING=utf-8 PYTHONUTF8=1
 
 $PY d1_replay.py --runs 50 --events 10000   # 50x async + 50x sync, full digest

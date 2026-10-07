@@ -2,7 +2,7 @@
 restores it with ENGINE provenance -> it is exempt from strict/onUnhandled.
 A restore launders exactly the events #98 was added to reject."""
 import sys, asyncio, json
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter, SyncInterpreter
 from xstate_statemachine.exceptions import UnknownEventError
 CFG={"id":"m","strict":True,"initial":"a","onUnhandled":"error","states":{"a":{"on":{"GO":"b"}},"b":{}}}

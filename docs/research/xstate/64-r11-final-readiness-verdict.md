@@ -6,7 +6,7 @@ Date: 2026-09-22. Round 11. Prior decision (round 10, `19cb1f1`): **ADOPT WITH C
 
 Method: 5 issue verifications (#212–#216) re-run live (`issues/verify-main-c78ce99/`); full regression sweep — gate (163 checks) plus a 527-script sweep, every delta re-confirmed **serially** (`60-r11-regression.md`); suite + benchmarks (`61-r11-suite-bench.md`, `suite-c78ce99.log`); diff review `19cb1f1..c78ce99` (`62-r11-diff-review.md`); 8 battle tracks plus contracts (`battle-c78ce99/`); triage → dedupe (`63-r11-findings-register.md`) → **independent adversarial refutation of every Blocker and High**, applied below.
 
-**Financial-OMS standard applied throughout:** nothing counted without a standalone repro on a clean interpreter from neutral cwd `C:/Users/basil`, and **every service/action check run with both `def` and `async def`**.
+**Financial-OMS standard applied throughout:** nothing counted without a standalone repro on a clean interpreter from neutral cwd `<home>`, and **every service/action check run with both `def` and `async def`**.
 
 **Two semantic reversals honoured throughout:** (a) **#212 supersedes #206** — a `raise(delay=)` self-send is a timer; a 1 ms self ping-pong is a legal periodic process, not a runaway. (b) **#213 introduces snapshot layout v3** with `scheduled_sends`; **#214** applies `strict` on restore, upcasts v2 `done`/`error`/`after` records as engine-minted, and records carry `lane`.
 

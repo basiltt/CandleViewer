@@ -5,7 +5,7 @@
 the *stated cause* ("clearable only by an event the operator cannot produce")
 is factually wrong. A real but smaller contract defect survives.
 
-## Reproduction (standalone, neutral cwd `C:/Users/basil`, both lanes)
+## Reproduction (standalone, neutral cwd `<home>`, both lanes)
 
 `r10c3/r10c3_repro.py` and `r10c3/p2.py` — stdlib + `xstate_statemachine`
 only, inline helpers, polled to convergence (5 stable samples / 20 ms,

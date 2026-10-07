@@ -1,6 +1,6 @@
 """DE-L3 repro: a `def` action calling send(wait=True) gets the _Awaitable
 guard unawaited, silently. STANDALONE: stdlib + xstate_statemachine only.
-Run from cwd C:/Users/basil.
+Run from cwd <home>.
 """
 import sys as _xs_sys  # noqa: E402
 from pathlib import Path as _XsPath  # noqa: E402

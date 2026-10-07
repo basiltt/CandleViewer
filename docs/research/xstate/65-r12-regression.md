@@ -65,7 +65,7 @@ scheduled; one genuine improvement; two load-sensitive reds addressed in §4.
 ## 3. Script sweep — 573 scripts
 
 `gate/run_r12_regression.py` (a rename of the R11 driver: same 120 s cap,
-same neutral cwd `C:/Users/basil`, same `PYTHONUTF8=1` env), 10 workers.
+same neutral cwd `<home>`, same `PYTHONUTF8=1` env), 10 workers.
 
 ```
 573 scripts: 476 PASS, 94 FAIL, 3 TIMEOUT

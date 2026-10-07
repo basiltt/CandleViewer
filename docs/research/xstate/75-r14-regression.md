@@ -53,7 +53,7 @@ historical script depended on the old behaviour those fixes changed.
 
 - 553 scripts (`gate/r14_scriptlist.txt`). This is the r12/r13 set plus
   `verify-v0.9.1/` and `probes/v0.9.0/`. `refute*/` and `__pycache__` are excluded.
-- Driver: `gate/run_r14_regression.py`, 6 workers, 120 s cap each, cwd `C:/Users/basil`.
+- Driver: `gate/run_r14_regression.py`, 6 workers, 120 s cap each, cwd `<home>`.
 - Result: **468 PASS / 85 FAIL / 0 TIMEOUT**, 212 s. r13 had 452 / 82 / 0 of 534.
 - Compared with r12 raw: **10 FAIL→PASS**. Of the 85 FAILs, 81 match the r13 sweep's
   known-FAIL set. These are old-version repros that correctly report "defect

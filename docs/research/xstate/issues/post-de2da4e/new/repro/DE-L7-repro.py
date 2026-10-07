@@ -1,7 +1,7 @@
 """DE-L7 repro: engine_* factories are unprefixed and importable from a
 public module; _replace on a private engine subclass preserves the
 engine-minted marker rather than downgrading to the public class.
-STANDALONE: stdlib + xstate_statemachine only. Run from cwd C:/Users/basil.
+STANDALONE: stdlib + xstate_statemachine only. Run from cwd <home>.
 """
 import sys as _xs_sys  # noqa: E402
 from pathlib import Path as _XsPath  # noqa: E402

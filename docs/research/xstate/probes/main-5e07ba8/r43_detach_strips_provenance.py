@@ -2,7 +2,7 @@
 replace() DROPS it: an engine-minted Event re-sent with wait=True becomes USER
 traffic -- the exact class of bug #85/#86 was meant to close."""
 import sys, asyncio, dataclasses
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine.events import system_event, is_system_event
 from xstate_statemachine import create_machine, MachineLogic, Interpreter
 from xstate_statemachine.exceptions import UnhandledEventError

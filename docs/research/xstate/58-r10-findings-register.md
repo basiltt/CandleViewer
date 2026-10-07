@@ -5,7 +5,7 @@ verbatim from `battle-f28719c` / `battle-6db65d8`, `O-*` from
 `57-r10-diff-review.md`, regressions from `55-r10-regression.md`.
 
 Method, per the financial-OMS standard: every finding's repro was re-run fresh
-from neutral cwd `C:/Users/basil` with the round-10 venv, 120 s cap, both
+from neutral cwd `<home>` with the round-10 venv, 120 s cap, both
 service spellings (`def` / `async def`) where the finding touches a service or
 action; source read at the cited `file:line`; then classified and merged by
 root cause into `R10-nn`. Nothing is counted that did not reproduce in this
@@ -62,7 +62,7 @@ Merges: `D10-fuzz-1`, `D10-concurrency-1`, `D10-concurrency-3`,
 
 ### What reproduces
 
-All runs from neutral cwd `C:/Users/basil`, both service kinds where a service
+All runs from neutral cwd `<home>`, both service kinds where a service
 is involved, both engines where the probe covers them.
 
 | repro | result this pass |

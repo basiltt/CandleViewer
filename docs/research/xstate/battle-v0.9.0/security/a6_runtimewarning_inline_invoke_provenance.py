@@ -4,7 +4,7 @@ verified inside asyncio under -W error (where must a supervisor catch it?).
 #235 pickle/deepcopy preserve provenance (documented intent, not a hole).
 STANDALONE."""
 import sys, asyncio, warnings, pickle, copy, gc
-sys.path.insert(0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0, "<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter
 from xstate_statemachine.exceptions import InvalidConfigError
 import xstate_statemachine.events as ev_mod

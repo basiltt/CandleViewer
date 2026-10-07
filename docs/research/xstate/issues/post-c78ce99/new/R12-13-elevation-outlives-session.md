@@ -2,7 +2,7 @@
 
 Library: xstate-statemachine @ de2da4e (unreleased 0.8.1).
 Repro: `repro/R12-13_elevation_outlives_session.py` — standalone (stdlib +
-xstate_statemachine), run from neutral cwd `C:/Users/basil`, exit 0, both
+xstate_statemachine), run from neutral cwd `<home>`, exit 0, both
 engines (Interpreter / SyncInterpreter) and both action kinds (`def`,
 `async def`), polled to convergence (5 x 10 ms per event).
 

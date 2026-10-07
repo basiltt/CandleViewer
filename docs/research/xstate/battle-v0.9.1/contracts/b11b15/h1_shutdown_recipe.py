@@ -13,7 +13,7 @@ from xstate_statemachine.plugins import PluginBase
 from xstate_statemachine.actions import is_builtin
 from xstate_statemachine.exceptions import InterpreterStoppedError
 
-CORPUS = pathlib.Path(r"C:/Users/basil/Desktop/Projects/FullStackProjects/"
+CORPUS = pathlib.Path(r"<workspace>/"
                       r"CandleViewer/docs/research/xstate/battle-v0.9.0/contracts")
 STYLE = sys.argv[1] if len(sys.argv) > 1 else "async"
 FAILS, N = [], [0]

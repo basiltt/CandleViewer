@@ -1,7 +1,7 @@
 # Round-9 diff review — `6db65d8..f28719c` (unreleased 0.8.1)
 
 **Scope.** 14 files, ~2.2k lines. All `src/` and `tests/` changes read in full.
-Library at `C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine`
+Library at `<workspace>/_ref/xstate-statemachine`
 @ `f28719c` (`__version__` still `0.8.0`; key on the commit).
 `tests/test_round8_findings.py` (29) + `tests/test_round7_findings.py` (37) — **66 passed** locally.
 

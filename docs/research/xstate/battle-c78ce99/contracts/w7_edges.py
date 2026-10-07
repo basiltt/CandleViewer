@@ -18,7 +18,7 @@ from xstate_statemachine import Interpreter  # noqa: E402
 from xstate_statemachine.clock import SimulatedClock  # noqa: E402
 
 rec = H.rec
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 
 
 def S(c, **kw):

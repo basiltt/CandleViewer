@@ -34,7 +34,7 @@ following only the public docs has no sanctioned route at all.
 
 ## Minimal reproduction
 
-Run from a neutral cwd (e.g. `C:/Users/basil`). Demonstrates the one-way
+Run from a neutral cwd (e.g. `<home>`). Demonstrates the one-way
 demotion and the absence of any public re-mint route.
 
 ```python

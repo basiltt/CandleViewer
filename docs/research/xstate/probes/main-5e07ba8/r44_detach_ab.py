@@ -2,7 +2,7 @@
 machine because _detach() strips provenance? Compare wait=True vs wait=False."""
 import sys, asyncio
 def run(wait):
-    sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+    sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
     from xstate_statemachine import create_machine, MachineLogic, Interpreter
     from xstate_statemachine.events import system_event
     CFG={"id":"m","initial":"a","onUnhandled":"error","states":{"a":{"on":{"GO":"b"}},"b":{}}}

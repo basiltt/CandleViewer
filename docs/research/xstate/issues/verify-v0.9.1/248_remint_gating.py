@@ -2,7 +2,7 @@
 is_system_event inputs, refuses public/demoted events; docs mention the
 one-way demotion + re_mint as the sanctioned route.
 
-Standalone (stdlib + xstate_statemachine only). Neutral cwd C:/Users/basil.
+Standalone (stdlib + xstate_statemachine only). Neutral cwd <home>.
 Exercises both def and async def call sites (re_mint itself is sync, so the
 matrix collapses to: called from sync code, and called from inside an async
 service/action) x {Interpreter, SyncInterpreter}.

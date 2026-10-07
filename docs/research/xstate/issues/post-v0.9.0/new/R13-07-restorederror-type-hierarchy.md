@@ -33,7 +33,7 @@ a supervisor is most likely to be watching.
 
 ## Minimal reproduction
 
-Run from a neutral cwd (e.g. `C:/Users/basil`). Trips the runaway-chain guard
+Run from a neutral cwd (e.g. `<home>`). Trips the runaway-chain guard
 live, persists, restores, and shows the `isinstance` check silently flipping.
 
 ```python

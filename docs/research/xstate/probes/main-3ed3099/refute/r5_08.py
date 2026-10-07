@@ -1,7 +1,7 @@
 """R5-08 adversarial refutation: send_threadsafe self-feed vs maxIterations."""
 from __future__ import annotations
 import asyncio, json, logging, sys, threading, time
-sys.path.insert(0, r"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine")
+sys.path.insert(0, r"<workspace>/_ref/xstate-statemachine")
 from src.xstate_statemachine import Interpreter, MachineLogic, create_machine
 from src.xstate_statemachine.plugins import PluginBase
 

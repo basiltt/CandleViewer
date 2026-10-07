@@ -54,7 +54,7 @@ the exact escape hatch the changelog documents, non-deterministically.
 ## Minimal reproduction
 
 Standalone: stdlib + `xstate_statemachine` only, every helper inlined, run
-from the neutral cwd `C:/Users/basil`. **Exit 1 = reproduced.**
+from the neutral cwd `<home>`. **Exit 1 = reproduced.**
 
 ```python
 """STANDALONE repro — DE-L1: the documented #219 `ensure_future` escape hatch
@@ -377,7 +377,7 @@ narrowed, because the current behaviour is order-dependent.
 
 ## Verification
 
-- Repro run from the neutral cwd `C:/Users/basil` with the `.venv-main`
+- Repro run from the neutral cwd `<home>` with the `.venv-main`
   interpreter (`PYTHONIOENCODING=utf-8 PYTHONUTF8=1`), well inside the 90 s
   bound: **exit 1**, no `ImportError`, output exactly as quoted under
   "## Observed behaviour", `REPRODUCED (both lanes): True`.

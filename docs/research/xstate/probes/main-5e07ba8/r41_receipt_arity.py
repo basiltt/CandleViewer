@@ -1,6 +1,6 @@
 """Receipt gained a 4th field. Unpacking code written against 0.8.0 breaks."""
 import sys
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine.events import Receipt
 r=Receipt(frozenset(), False, None)
 try:

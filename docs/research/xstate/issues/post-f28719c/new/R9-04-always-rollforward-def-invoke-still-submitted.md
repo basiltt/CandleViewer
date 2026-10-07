@@ -243,7 +243,7 @@ if __name__ == "__main__":
 
 ## Observed
 
-Verbatim from a fresh run (cwd `C:/Users/basil`, outside both the library tree and the audit tree). The interleaved library `ERROR`/`WARNING` logs are the case-B rollback machinery working as designed and are elided here for length; the lane verdict lines and the summary are verbatim:
+Verbatim from a fresh run (cwd `<home>`, outside both the library tree and the audit tree). The interleaved library `ERROR`/`WARNING` logs are the case-B rollback machinery working as designed and are elided here for length; the lane verdict lines and the summary are verbatim:
 
 ```
 ok   case A | async service | async engine | states=['m.armed'] ctx={'n': 1} calls=[]
@@ -376,7 +376,7 @@ Named tests, parametrised over **both service spellings** (`def`, `async def`) a
 - **Library commit:** `f28719c555ef6e9315a71315945a5a4f2965af73` (`main`, merge of PR #202; `__version__` reports `0.8.0`)
 - **Python:** CPython 3.13.7 (tags/v3.13.7:bcee1c3, Aug 14 2025) [MSC v.1944 64 bit (AMD64)], Windows 11 Pro 10.0.26200
 - **Env:** `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`
-- **cwd used:** `C:/Users/basil` — a neutral directory outside both the library tree and the audit tree, proving the script is genuinely standalone (stdlib + `xstate_statemachine` only; every helper inlined, no harness import).
+- **cwd used:** `<home>` — a neutral directory outside both the library tree and the audit tree, proving the script is genuinely standalone (stdlib + `xstate_statemachine` only; every helper inlined, no harness import).
 - **Script:** `repro/R9-04_always_rollforward_def_invoke_submitted.py`, byte-identical to the block embedded above.
 - **Exit code:** `1` (defect present). **3/6 lanes leaked**: case A/`def`/async, case A/`def`/sync, case B/`def`/sync. Clean: case A/`async def`/async, case B/`async def`/async, case B/`def`/async (**#193 landing**). Returns `0` once every lane is clean.
 - **Coverage of the required axes:** both service spellings run on the async engine for both cases; the sync engine runs `def` for both cases (it has no `async def` lane). No run approached the 90 s cap; no hang or watchdog timeout.

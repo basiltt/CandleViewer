@@ -4,7 +4,7 @@ Scope: 3 commits, 16 files, ~1.3k lines (`adf1b31` fix #218–#222, `30ae276`
 test determinism pin, `de2da4e` merge). Library is read-only; every claim
 below is reproduced by a STANDALONE probe under
 `docs/research/xstate/probes/main-de2da4e/` (stdlib + `xstate_statemachine`
-only, run from neutral cwd `C:/Users/basil`).
+only, run from neutral cwd `<home>`).
 
 **Suite (pre-existing background run, complete):** `3545 passed, 13 skipped,
 15 warnings in 752.21s`; total coverage **92.87 %** (gate 90 %).
@@ -330,5 +330,5 @@ resolved at release; flagged so it is not missed.
 | `p7_reentrant_false_positive.py` | Q-1 the two false positives |
 
 All probes run in well under the 120 s bound (slowest, `p1`, ≈6 s) from
-neutral cwd `C:/Users/basil` with only stdlib + `xstate_statemachine`
+neutral cwd `<home>` with only stdlib + `xstate_statemachine`
 imported.

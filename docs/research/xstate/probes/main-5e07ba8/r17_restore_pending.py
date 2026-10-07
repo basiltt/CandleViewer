@@ -1,7 +1,7 @@
 """End-to-end: does a pending ErrorEvent/DoneEvent survive snapshot->restore,
 and does the restored machine actually handle it?"""
 import sys, asyncio, json
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter
 from xstate_statemachine.events import ErrorEvent, DoneEvent
 CFG={"id":"m","initial":"a","onUnhandled":"error","states":{"a":{"on":{

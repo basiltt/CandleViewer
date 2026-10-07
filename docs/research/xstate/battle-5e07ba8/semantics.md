@@ -128,8 +128,8 @@ skipped.
 ### 1.4 Exact commands
 
 ```bash
-PY="C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python"
-cd C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/research/xstate/battle-5e07ba8/semantics
+PY="<workspace>/_ref/xstate-statemachine/.venv-main/Scripts/python"
+cd <workspace>/CandleViewer/docs/research/xstate/battle-5e07ba8/semantics
 
 # whole matrix (172 case x engine runs)
 PYTHONIOENCODING=utf-8 PYTHONUTF8=1 "$PY" run_all_groups.py

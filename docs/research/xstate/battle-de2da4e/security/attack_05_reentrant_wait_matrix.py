@@ -3,7 +3,7 @@ after-fired handler. Both engines.
 STANDALONE: stdlib + xstate_statemachine only.
 """
 import sys, asyncio
-sys.path.insert(0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0, "<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter, SyncInterpreter
 from xstate_statemachine.exceptions import ReentrantWaitError
 

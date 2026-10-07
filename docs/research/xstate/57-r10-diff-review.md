@@ -5,7 +5,7 @@ round-9 fixes #203–#210). `__version__` still reads 0.8.0 — key on the commi
 Reviewed: all of `src/` and `tests/` changes, plus `CHANGELOG.md` `[Unreleased]`.
 
 **Verification standard.** Every finding below is reproduced from a neutral cwd
-(`C:/Users/basil`) with a STANDALONE probe (stdlib + `xstate_statemachine` only)
+(`<home>`) with a STANDALONE probe (stdlib + `xstate_statemachine` only)
 under `probes/main-19cb1f1/`. Each probe takes the library `src` as `argv[1]`,
 so every result is a **differential** reading of `19cb1f1` against a `f28719c`
 worktree — the before/after is measured, not asserted. Every service/action

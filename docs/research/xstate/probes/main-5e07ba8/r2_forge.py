@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0, "<workspace>/_ref/xstate-statemachine/src")
 import xstate_statemachine as x
 from xstate_statemachine.events import Event, is_system_event
 print("system_event exported? ", hasattr(x, "system_event"), "in __all__:", "system_event" in getattr(x,"__all__",[]))

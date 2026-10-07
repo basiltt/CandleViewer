@@ -3,7 +3,7 @@
 **Date:** 2026-09-23 · **Library:** `xstate-statemachine` `__version__ = "0.9.0"`
 **Tree tested:** `main` @ `e3a1f22` — `git diff v0.9.0..HEAD --stat` = `.github/workflows/publish.yml` only (+14/−1). **No library source differs between the tag and the tested tree.**
 **Inputs triaged:** 30 round-13 candidate findings (persistence / concurrency / fuzz / determinism / security / soak / contracts tracks) + `S-1`…`S-12` from `72-r13-diff-review.md` + regressions from `70-r13-regression.md`.
-**Method:** every retained row re-ran fresh from neutral cwd `C:/Users/basil`, 120 s cap, both `def` and `async def` service spellings, polled to convergence, against the round-13 venv.
+**Method:** every retained row re-ran fresh from neutral cwd `<home>`, 120 s cap, both `def` and `async def` service spellings, polled to convergence, against the round-13 venv.
 
 ---
 

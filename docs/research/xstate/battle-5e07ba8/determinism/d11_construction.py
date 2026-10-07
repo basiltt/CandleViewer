@@ -21,7 +21,7 @@ import subprocess
 import sys
 
 sys.path.insert(
-    0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src"
+    0, "<workspace>/_ref/xstate-statemachine/src"
 )
 logging.disable(logging.CRITICAL)
 
@@ -104,7 +104,7 @@ if __name__ == "__main__":
 
     me = os.path.abspath(__file__)
     py = (
-        "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/"
+        "<workspace>/_ref/"
         "xstate-statemachine/.venv-main/Scripts/python"
     )
     results = {}

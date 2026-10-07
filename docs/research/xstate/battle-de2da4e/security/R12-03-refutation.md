@@ -1,6 +1,6 @@
 # R12-03 (High) — "Engine provenance classes remain forgeable" — REFUTED (→ Info)
 
-Repros re-run at de2da4e from neutral cwd `C:/Users/basil`:
+Repros re-run at de2da4e from neutral cwd `<home>`:
 `attack_01_r901_engine_done_forgery.py` (reproduces: forged `_EngineDone`
 drives a real `onDone` while the service runs) and new
 `attack_01b_r1203_vectors.py` (vector matrix).

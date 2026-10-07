@@ -243,7 +243,7 @@ audit converts to a cheap lint rather than a code change.
 ## Scripts
 
 All standalone (stdlib + `xstate_statemachine` only, no `psutil`, inline
-helpers, `os.chdir("C:/Users/basil")` to prove from a neutral cwd). Run
+helpers, `os.chdir("<home>")` to prove from a neutral cwd). Run
 each twice with `CV_SVC_STYLE=async` then `def`.
 
 | file | covers |

@@ -1,6 +1,6 @@
 # R10-03 adversarial refutation — DOWNGRADE to Medium
 
-Tree: main @ 19cb1f1. All runs from neutral cwd C:/Users/basil, stdlib-only repros.
+Tree: main @ 19cb1f1. All runs from neutral cwd <home>, stdlib-only repros.
 
 ## Reproduced (claim stands on the facts)
 - `p2_delayed_selfsend_heartbeat.py`: async, `maxIterations=8`, 30 ms self re-arming

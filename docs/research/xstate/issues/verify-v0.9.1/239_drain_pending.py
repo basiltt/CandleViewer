@@ -1,6 +1,6 @@
 """Standalone verify #239: drain_pending drains both lanes, priority first,
 and fails a wait=True receipt on a drained event with InterpreterStoppedError.
-Run from neutral cwd C:/Users/basil.
+Run from neutral cwd <home>.
 """
 import asyncio
 from xstate_statemachine import create_machine, Interpreter

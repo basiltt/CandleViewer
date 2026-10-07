@@ -29,7 +29,7 @@ again" — holds for only one of the two documented input shapes.
 - Commit: `5e07ba8` (post-0.8.0, pre-0.8.1 tag; `__version__` reports `0.8.0`)
 - Python: 3.13.7
 - Install: editable (`pip install -e .`) against
-  `C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine`
+  `<workspace>/_ref/xstate-statemachine`
 
 ## Minimal reproduction
 

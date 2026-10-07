@@ -1,5 +1,5 @@
 import sys, asyncio
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter, SyncInterpreter, RunawayChainError
 CFG={"id":"m","maxIterations":50,"initial":"a","states":{"a":{"on":{
   "SPIN":{"actions":[{"type":"raise","params":{"event":"SPIN"}}]},"WORK":{"actions":["w"]}}}}}

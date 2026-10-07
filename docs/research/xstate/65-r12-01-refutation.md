@@ -9,7 +9,7 @@ directly, bypassing `_admit_restored`, so "the v3 `engine` provenance flag is
 never consulted" and a forged record mints `done.invoke.*` / `after.*` with
 attacker-chosen payload.
 
-## Reproduced (standalone, cwd `C:/Users/basil`, stdlib + xstate_statemachine)
+## Reproduced (standalone, cwd `<home>`, stdlib + xstate_statemachine)
 `battle-de2da4e/fuzz/r12-01_refutation_repro.py`, both `def` and `async def`,
 polled to convergence (60 × 20 ms):
 

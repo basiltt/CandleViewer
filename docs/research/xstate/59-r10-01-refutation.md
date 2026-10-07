@@ -7,7 +7,7 @@ forgeable 7 ways in-process and via `restore_event`".
 
 ## 1. The reported behaviour reproduces exactly as filed
 
-Re-ran every named repro from neutral cwd `C:/Users/basil`, both service kinds
+Re-ran every named repro from neutral cwd `<home>`, both service kinds
 where applicable:
 
 | repro | result |

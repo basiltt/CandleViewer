@@ -4,7 +4,7 @@ mutated snapshot blobs at versions 1 and 2."""
 from __future__ import annotations
 import json, logging, random, sys
 logging.disable(logging.CRITICAL)
-LIB = "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src"
+LIB = "<workspace>/_ref/xstate-statemachine/src"
 if LIB not in sys.path:
     sys.path.insert(0, LIB)
 from xstate_statemachine import Interpreter, SyncInterpreter, MachineLogic, create_machine  # noqa: E402

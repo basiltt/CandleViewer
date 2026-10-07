@@ -172,7 +172,7 @@ only failure". It passes.
 ### 1.5 Exact commands
 
 ```bash
-PY="C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python"
+PY="<workspace>/_ref/xstate-statemachine/.venv-main/Scripts/python"
 export PYTHONIOENCODING=utf-8 PYTHONUTF8=1
 
 # lane 1 — prior-defect re-run (unmodified scripts from the previous round)

@@ -1,11 +1,11 @@
 """Battle v0.9.0 -- OBSERVABILITY track, round-13 re-verification.
 
 Standalone: stdlib + xstate_statemachine only. Run from neutral cwd
-C:/Users/basil with the pinned venv:
+<home> with the pinned venv:
 
   PYTHONIOENCODING=utf-8 PYTHONUTF8=1 \
-  C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python \
-  C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/research/xstate/battle-v0.9.0/observability/attacks.py
+  <workspace>/_ref/xstate-statemachine/.venv-main/Scripts/python \
+  <workspace>/CandleViewer/docs/research/xstate/battle-v0.9.0/observability/attacks.py
 
 Each attack prints "ATTACK <name>: PASS/FAIL <detail>".
 """

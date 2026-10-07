@@ -28,7 +28,7 @@ this yourself" the way the `_Engine*` classes' leading underscore does.
 
 - `_ref/xstate-statemachine` @ `de2da4e` (targeting 0.8.1; `__version__` still
   0.8.0)
-- `.venv-main`, `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`, cwd `C:/Users/basil`
+- `.venv-main`, `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`, cwd `<home>`
 
 ## Current state
 
@@ -36,12 +36,12 @@ this yourself" the way the `_Engine*` classes' leading underscore does.
 """DE-L7 repro: engine_* factories are unprefixed and importable from a
 public module; _replace on a private engine subclass preserves the
 engine-minted marker rather than downgrading to the public class.
-STANDALONE: stdlib + xstate_statemachine only. Run from cwd C:/Users/basil.
+STANDALONE: stdlib + xstate_statemachine only. Run from cwd <home>.
 """
 import sys
 sys.path.insert(
     0,
-    "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/"
+    "<workspace>/_ref/"
     "xstate-statemachine/src",
 )
 import xstate_statemachine as x
@@ -156,7 +156,7 @@ public superclass.
 
 Every factual claim in this issue was checked against the tree at
 `de2da4e`, and the probe script `repro/DE-L7-repro.py` was run from the
-neutral cwd `C:/Users/basil` with the `.venv-main` interpreter (exit 0 —
+neutral cwd `<home>` with the `.venv-main` interpreter (exit 0 —
 this is an observation probe, not a defect assertion):
 
 ```

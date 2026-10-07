@@ -2,7 +2,7 @@
 a snapshot round-trip per #226? Also monotonic-across-N-restarts property.
 STANDALONE: stdlib + xstate_statemachine only."""
 import sys, json
-sys.path.insert(0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0, "<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, SyncInterpreter
 from xstate_statemachine.exceptions import RunawayChainError
 from xstate_statemachine.actions import raise_ as raise_action

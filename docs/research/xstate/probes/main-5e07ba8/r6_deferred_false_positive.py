@@ -1,7 +1,7 @@
 """Deterministic: a HANDLED event reports deferred=True because
 `_deferred_this_step` keeps id()s of dead objects (fire-and-forget defers)."""
 import sys
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, SyncInterpreter
 CFG={"id":"m","initial":"a","onUnhandled":"defer","states":{"a":{"on":{"GO":{"target":"a"}}}}}
 i=SyncInterpreter(create_machine(CFG, logic=MachineLogic())); i.start()

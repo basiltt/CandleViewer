@@ -1,7 +1,7 @@
 # Independent recheck: #218 (delayed-send timer-handle leak on fire/cancel)
 
 ## Method
-Standalone repro (stdlib + xstate_statemachine only), neutral cwd `C:/Users/basil`,
+Standalone repro (stdlib + xstate_statemachine only), neutral cwd `<home>`,
 venv-main python, both engines: 200-beat heartbeat + explicit cancel-before-fire,
 `_timer_handles` counted directly.
 

@@ -121,8 +121,8 @@ Use a dedicated venv, never the ambient interpreter. Record everything.
 ```bash
 # Windows / Git Bash. Adjust the version under test.
 VER=0.8.0
-ROOT="C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/research/xstate"
-VENV="C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-gate-$VER"
+ROOT="<workspace>/CandleViewer/docs/research/xstate"
+VENV="<workspace>/_ref/xstate-statemachine/.venv-gate-$VER"
 
 python -m venv "$VENV"
 "$VENV/Scripts/pip" install --quiet "xstate-statemachine==$VER"
@@ -240,7 +240,7 @@ as a gate failure:
 ## 4. The library's own test suite
 
 ```bash
-cd "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine"
+cd "<workspace>/_ref/xstate-statemachine"
 git fetch --tags && git checkout "v$VER"     # read-only checkout of the tag
 "$VENV/Scripts/pip" install --quiet pytest pytest-cov pytest-asyncio
 "$VENV/Scripts/python" -m pytest -q --cov --cov-branch
@@ -272,7 +272,7 @@ step 2.
 ## 5. Diff the upstream documentation
 
 ```bash
-cd "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine"
+cd "<workspace>/_ref/xstate-statemachine"
 git diff "v0.7.0".."v$VER" -- docs/FEATURE_GAP_ANALYSIS.md
 git diff "v0.7.0".."v$VER" -- CHANGELOG.md
 git diff "v0.7.0".."v$VER" --stat -- src/

@@ -284,5 +284,5 @@ PROBE-03  probe   FAIL      03_context_snapshot_determinism                    1
 ==============================================================================
 
 [gate] elapsed 368.0s
-[gate] wrote C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/research/xstate/gate/result-v0.9.1.json
+[gate] wrote <workspace>/CandleViewer/docs/research/xstate/gate/result-v0.9.1.json
 rc=1

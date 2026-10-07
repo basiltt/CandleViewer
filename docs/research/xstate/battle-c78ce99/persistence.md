@@ -2,7 +2,7 @@
 
 **Library:** `main` @ `c78ce99` ("Merge pull request #217 from basiltt/fix/0.8.1-round10"); `__version__` still reports 0.8.0, so every result keys on the **commit**.
 **Scope:** round-10 fixes #212–#216 as they touch persistence, plus the standing persistence surface re-attacked.
-**Scripts:** `docs/research/xstate/battle-c78ce99/persistence/*.py` — all STANDALONE (stdlib + `xstate_statemachine`), every one proved from the neutral cwd `C:/Users/basil` via `runall.sh`, which runs each on **both** service kinds (`XS_SVC=async` / `XS_SVC=def`). Raw output in `out/*.txt` (async) and `out/*.DEF.txt` (`def`).
+**Scripts:** `docs/research/xstate/battle-c78ce99/persistence/*.py` — all STANDALONE (stdlib + `xstate_statemachine`), every one proved from the neutral cwd `<home>` via `runall.sh`, which runs each on **both** service kinds (`XS_SVC=async` / `XS_SVC=def`). Raw output in `out/*.txt` (async) and `out/*.DEF.txt` (`def`).
 
 ---
 

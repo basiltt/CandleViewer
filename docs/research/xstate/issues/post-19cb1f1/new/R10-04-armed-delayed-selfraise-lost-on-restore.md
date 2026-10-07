@@ -205,6 +205,6 @@ VERDICT: DEFECT PRESENT (2/2 kinds)
 - Python: CPython 3.13.7 (`.venv-main`), `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`
 - Commit: `main` @ `19cb1f1` (verified via `git rev-parse HEAD` = `19cb1f19fc75575abd85cfa9da738c458f20d015`)
 - Command: `python new/repro/R10-04_delayed_selfraise_lost_on_restore.py`
-- cwd: `C:/Users/basil` (neutral)
+- cwd: `<home>` (neutral)
 - Exit code: `1` (defect present, matches "Exit 1 = defect present")
 - `verified: true`

@@ -19,7 +19,7 @@ The shape is **new at this commit**: running the identical chart on a subclass t
 
 ## Environment
 
-- CPython 3.13.7, Windows 11 Pro 10.0.26200, fresh venv, neutral working directory (`C:/Users/basil`).
+- CPython 3.13.7, Windows 11 Pro 10.0.26200, fresh venv, neutral working directory (`<home>`).
 - `xstate-statemachine` `main` @ `c78ce99` (merge of PR #217 from `fix/0.8.1-round10`). `__version__` reports `0.8.0` (unreleased 0.8.1) — key on the commit.
 - Async engine only: the gate is `Interpreter`-specific. `SyncInterpreter` has no run-loop task and no `_descent_done`, so there is nothing to park — its entry actions cannot be `async def` and cannot await a receipt. Both action spellings are nonetheless exercised across the two probes (`async def` on the defect, plain `def` on the control) to show the hang is not a service-kind artefact.
 
@@ -184,7 +184,7 @@ if __name__ == "__main__":
 
 ## Observed
 
-Verbatim fresh run of the block above, from neutral cwd `C:/Users/basil` at `c78ce99`:
+Verbatim fresh run of the block above, from neutral cwd `<home>` at `c78ce99`:
 
 ```
 A) entry action awaits its own receipt (the defect)
@@ -290,7 +290,7 @@ Separately, document that `send(..., wait=True)` is **not reentrant from within 
 
 ## Verification
 
-- Repro executed fresh from neutral cwd `C:/Users/basil` against `c78ce99` (`git rev-parse HEAD` = `c78ce991e23c9cdaaeec99b29351ceb690044c2c`), venv `_ref/xstate-statemachine/.venv-main`, `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`. **Exit code 1.** Output in *Observed* is that run, verbatim.
+- Repro executed fresh from neutral cwd `<home>` against `c78ce99` (`git rev-parse HEAD` = `c78ce991e23c9cdaaeec99b29351ceb690044c2c`), venv `_ref/xstate-statemachine/.venv-main`, `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`. **Exit code 1.** Output in *Observed* is that run, verbatim.
 - The fenced block under *Minimal reproduction* is **byte-identical** to `repro/R11-06_descent_gate_start_hang.py` (diff-checked after extraction), imports nothing outside the stdlib and `xstate_statemachine`, and inlines every helper.
 - Causality established without touching library source: a subclass opening the gate before spawning the loop returns `start()` in 0.00 s on the identical chart (3.01 s → 0.00 s).
 - Control B (`always` self-cycle, plain `def` action) returns bounded with `RunawayChainError` in the same run, so the hang is specific to the receipt cycle and not a general descent-unboundedness claim.

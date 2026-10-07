@@ -4,7 +4,7 @@
 round-10 fix set `#212`–`#216` per CHANGELOG `[Unreleased]`). `__version__`
 still `0.8.0`; keyed on commit. Windows 11, `.venv-main`,
 `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`, every script run from the neutral cwd
-`C:/Users/basil`. Scripts under `battle-c78ce99/security/`: the 21 prior-pass
+`<home>`. Scripts under `battle-c78ce99/security/`: the 21 prior-pass
 files re-run verbatim, plus 11 new ones (`n1`–`n11`). No library source
 modified; no `git`/`gh` writes; no project name in postable text.
 

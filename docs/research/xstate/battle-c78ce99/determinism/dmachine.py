@@ -24,7 +24,7 @@ import sys
 
 logging.disable(logging.CRITICAL)
 
-LIB = "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src"
+LIB = "<workspace>/_ref/xstate-statemachine/src"
 if LIB not in sys.path:
     sys.path.insert(0, LIB)
 

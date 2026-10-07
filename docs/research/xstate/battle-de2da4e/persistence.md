@@ -3,7 +3,7 @@
 **Library:** `main` @ `de2da4e` ("Merge pull request #223 from basiltt/fix/0.8.1-round11"); `__version__` still reports 0.8.0, so every result keys on the **commit**.
 **Scope:** round-11 fixes #218–#222 as they touch persistence, plus the standing persistence surface re-attacked.
 **Suite:** `suite-de2da4e.log` — **3545 passed, 13 skipped, 15 warnings in 752 s**, total coverage **92.87 %** (`persistence.py` 95 %, `validation.py` 99 %, `base_interpreter.py` in the 90s). Clean.
-**Scripts:** `battle-de2da4e/persistence/p1..p5*.py` (new) — all STANDALONE (stdlib + `xstate_statemachine`), every one proved from the neutral cwd `C:/Users/basil` via `runall.sh`, which runs each on **both** service kinds (`XS_SVC=async` / `XS_SVC=def`). Prior-round scripts were re-run from `battle-c78ce99/persistence/` through the same runner. Raw output in `out/*.txt` (async) and `out/*.DEF.txt` (`def`).
+**Scripts:** `battle-de2da4e/persistence/p1..p5*.py` (new) — all STANDALONE (stdlib + `xstate_statemachine`), every one proved from the neutral cwd `<home>` via `runall.sh`, which runs each on **both** service kinds (`XS_SVC=async` / `XS_SVC=def`). Prior-round scripts were re-run from `battle-c78ce99/persistence/` through the same runner. Raw output in `out/*.txt` (async) and `out/*.DEF.txt` (`def`).
 
 ---
 

@@ -1,7 +1,7 @@
 """_deferred_this_step is a plain Set[int] that is only ever discarded via a
 RECEIPT path. Fire-and-forget defers leak an entry each. Unbounded?"""
 import sys, asyncio
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter
 CFG={"id":"m","initial":"a","onUnhandled":"defer","deferLimit":1,"states":{"a":{"on":{"GO":{"target":"a"}}}}}
 async def main():

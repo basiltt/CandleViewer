@@ -18,7 +18,7 @@ task identity), **#226** (chain latch in the v3 envelope), **#227** (`strict`
 priority lane on restore).
 
 **New scripts** (standalone — stdlib + `xstate_statemachine` only, every
-helper inlined, run from neutral cwd `C:/Users/basil`):
+helper inlined, run from neutral cwd `<home>`):
 
 | Script | Attacks |
 |---|---|

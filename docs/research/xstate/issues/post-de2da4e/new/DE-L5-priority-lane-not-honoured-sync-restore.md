@@ -26,19 +26,19 @@ regardless of lane.
 
 - `_ref/xstate-statemachine` @ `de2da4e` (targeting 0.8.1; `__version__` still
   0.8.0)
-- `.venv-main`, `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`, cwd `C:/Users/basil`
+- `.venv-main`, `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`, cwd `<home>`
 
 ## Minimal reproduction
 
 ```python
 """DE-L5 repro: SyncInterpreter._enqueue_restored ignores the persisted
 priority lane. STANDALONE: stdlib + xstate_statemachine only. Run from cwd
-C:/Users/basil.
+<home>.
 """
 import sys, json
 sys.path.insert(
     0,
-    "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/"
+    "<workspace>/_ref/"
     "xstate-statemachine/src",
 )
 from xstate_statemachine import create_machine, MachineLogic, SyncInterpreter
@@ -132,7 +132,7 @@ unconditionally appending.
 
 ## Verification
 
-- Repro run from the neutral cwd `C:/Users/basil` with the `.venv-main`
+- Repro run from the neutral cwd `<home>` with the `.venv-main`
   interpreter: **exit 1**, no `ImportError`, output as quoted above —
   `restored queue order: ['A', 'B']`, i.e. the priority-lane record stayed
   behind the inbox record, and `REPRODUCED: True`.

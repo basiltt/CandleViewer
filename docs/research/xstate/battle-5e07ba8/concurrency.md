@@ -71,7 +71,7 @@ we would need.
 Every command below was run from
 `docs/research/xstate/battle-5e07ba8/concurrency/`, with
 `PYTHONIOENCODING=utf-8 PYTHONUTF8=1` set and
-`PY="C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python"`.
+`PY="<workspace>/_ref/xstate-statemachine/.venv-main/Scripts/python"`.
 
 ```bash
 # (a) bounded inbox, 2,000 interpreters x 500 events x 16 producers, cap 64

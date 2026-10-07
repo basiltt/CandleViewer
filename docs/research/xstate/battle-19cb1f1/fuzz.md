@@ -137,7 +137,7 @@ stated explicitly:**
 
 **Every new script is standalone** — stdlib plus `xstate_statemachine` only,
 every helper inlined, and each was proved from the neutral cwd
-`C:/Users/basil`.
+`<home>`.
 
 ### 1.1 Adaptation for documented-superseded behaviour
 

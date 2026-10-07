@@ -35,7 +35,7 @@ so we merged them rather than open two threads.)*
 - `xstate-statemachine` @ `de2da4e` (main; `__version__` still `0.8.0`,
   `CHANGELOG.md` `[Unreleased]` targets 0.8.1)
 - `.venv-main`, CPython 3.13.7, `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`
-- cwd `C:/Users/basil` (neutral — outside any project tree)
+- cwd `<home>` (neutral — outside any project tree)
 
 ## Minimal reproduction
 
@@ -44,7 +44,7 @@ so we merged them rather than open two threads.)*
 against de2da4e. STANDALONE: stdlib + xstate_statemachine only.
 """
 import sys, json
-sys.path.insert(0, "C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0, "<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, SyncInterpreter, PluginBase
 
 cfg = {
@@ -163,7 +163,7 @@ def from_snapshot(cls, snapshot_str, machine, *, plugins=None, ...):
 
 ## Verification
 
-- Repro run from cwd `C:/Users/basil` with the `.venv-main` interpreter:
+- Repro run from cwd `<home>` with the `.venv-main` interpreter:
   **exit 1**, no `ImportError`, output as quoted above, `REPRODUCED: True`.
 - The block under "## Minimal reproduction" is byte-identical to
   `repro/DE-L4-repro.py`.

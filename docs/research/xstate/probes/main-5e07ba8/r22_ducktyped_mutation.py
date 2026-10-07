@@ -1,7 +1,7 @@
 """#92 claim: create_machine() no longer mutates the caller's MachineLogic.
 But the duck-typed branch still calls setattr on the CALLER'S object."""
 import sys
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic
 CFG={"id":"m","initial":"a","states":{"a":{"entry":["storeUser"]}}}
 class DuckLogic:                       # documented as supported ("duck-typed by contract")

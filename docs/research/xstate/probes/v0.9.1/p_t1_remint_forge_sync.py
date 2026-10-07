@@ -1,7 +1,7 @@
 """T-1 probe (sync engine, def service): re_mint type forgery."""
 import os
 from xstate_statemachine import create_machine, SyncInterpreter, MachineLogic, PluginBase, re_mint
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 CFG = {"id": "m", "type": "parallel", "strict": True, "states": {
     "probe": {"initial": "run", "states": {"run": {"invoke": {"id": "cheap", "src": "cheap", "onDone": "ok"}}, "ok": {}}},
     "pay": {"initial": "idle", "states": {"idle": {"on": {"ARM": "pending"}},

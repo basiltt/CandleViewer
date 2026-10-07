@@ -232,4 +232,4 @@ catalogue that touch no library code. That is still the right problem to have.
 | `repro/cv19_sync_async_svc.py` | sync + `async def` service, STANDALONE, NOT REPRODUCED (loud refusal) |
 
 All three repro scripts are stdlib + `xstate_statemachine` only, inline
-helpers, no harness import, and were run from the neutral cwd `C:/Users/basil`.
+helpers, no harness import, and were run from the neutral cwd `<home>`.

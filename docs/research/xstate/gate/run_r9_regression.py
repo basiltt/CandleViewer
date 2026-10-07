@@ -1,7 +1,7 @@
 import subprocess, sys, os, json, time, glob
 
-PY = r"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/.venv-main/Scripts/python"
-ROOT = r"C:/Users/basil/Desktop/Projects/FullStackProjects/CandleViewer/docs/research/xstate"
+PY = r"<workspace>/_ref/xstate-statemachine/.venv-main/Scripts/python"
+ROOT = r"<workspace>/CandleViewer/docs/research/xstate"
 
 DIRS = [
     "issues/verify-main-6db65d8",

@@ -6,7 +6,7 @@ from __future__ import annotations
 import asyncio, inspect, json, os, pathlib, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import cv9 as K  # noqa: E402
-os.chdir("C:/Users/basil")
+os.chdir("<home>")
 from xstate_statemachine import Interpreter, SyncInterpreter  # noqa: E402
 
 GROUP = ["B11", "B12", "B13", "B14", "B15"]

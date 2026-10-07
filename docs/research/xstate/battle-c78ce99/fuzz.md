@@ -8,7 +8,7 @@ commit **`c78ce99`** ("Merge pull request #217 from basiltt/fix/0.8.1-round10").
 **Date:** 2026-09-22. **Python:** CPython 3.13.7. **OS:** Windows 11 Pro
 10.0.26200. **Interpreter:** `_ref/xstate-statemachine/.venv-main/Scripts/python`
 with `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`. Every script run from the neutral
-cwd `C:/Users/basil`.
+cwd `<home>`.
 
 **Track:** FUZZ, re-run of `battle-19cb1f1/fuzz.md` plus a new attack set aimed
 at round 10's fixes (#212–#216). New scripts under
@@ -179,7 +179,7 @@ this round are **expected reversals, not regressions**:
 ## 2. New attacks
 
 Scripts are standalone (stdlib + `xstate_statemachine` only) and run from
-`C:/Users/basil`.
+`<home>`.
 
 ### 2.1 `p1_v3_roundtrip.py` — v3 round-trip property (#213)
 

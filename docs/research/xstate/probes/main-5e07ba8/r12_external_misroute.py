@@ -3,7 +3,7 @@ flag -- NOT "the caller is an action of this interpreter". Any other coroutine
 that calls send() while the run loop is mid-macrostep is reclassified as
 self-generated: it jumps the external queue AND counts against the chain budget."""
 import sys, asyncio
-sys.path.insert(0,"C:/Users/basil/Desktop/Projects/FullStackProjects/_ref/xstate-statemachine/src")
+sys.path.insert(0,"<workspace>/_ref/xstate-statemachine/src")
 from xstate_statemachine import create_machine, MachineLogic, Interpreter
 seen=[]
 CFG={"id":"m","maxIterations":20,"initial":"a","states":{"a":{"on":{
