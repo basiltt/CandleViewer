@@ -24,18 +24,23 @@ _WEBHOOK_RE = re.compile(
 )
 
 
+def _fingerprint(value: str) -> str:
+    """Non-reversible stand-in for a matched line: length only, never content."""
+    return f"len={len(value)}"
+
+
 def check_gitleaks_covers_infra(config_text: str) -> list[str]:
     """Violations if the gitleaks allowlist paths exempt any observability infra dir."""
     out: list[str] = []
     if "useDefault = true" not in config_text:
         out.append("gitleaks: [extend] useDefault = true missing")
-    for line in config_text.splitlines():
+    for lineno, line in enumerate(config_text.splitlines(), 1):
         s = line.strip()
         if s.startswith("#"):
             continue
         for d in SCANNED_INFRA + ("infra/",):
             if d in s and "'''" in s:
-                out.append(f"gitleaks: allowlist exempts {d}: {s}")
+                out.append(f"gitleaks: allowlist exempts {d} (line {lineno}, {_fingerprint(s)})")
     return out
 
 

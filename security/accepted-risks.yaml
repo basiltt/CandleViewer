@@ -67,6 +67,20 @@ entries:
     approver: "basiltt"
     expires: "2027-03-25"
     ticket: "https://github.com/basiltt/CandleViewer/issues/1551"
+  - id: "py/weak-sensitive-data-hashing:services/api/candleviewer/auth/login_service.py:59"
+    tool: codeql
+    severity: HIGH
+    reason: "Random 256-bit bearer mfa_token hashed with SHA-256 as a storage lookup key (high-entropy input, not a password; slow KDFs are inappropriate); CodeQL's password-hashing heuristic keys on the token name. Standing owner-delegated acceptance (run log 2026-09-25, #1778)"
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "https://github.com/basiltt/CandleViewer/issues/1978"
+  - id: "py/weak-sensitive-data-hashing:services/api/candleviewer/auth/mfa_service.py:67"
+    tool: codeql
+    severity: HIGH
+    reason: "Random 256-bit bearer mfa_token hashed with SHA-256 as a storage lookup key (high-entropy input, not a password; slow KDFs are inappropriate); CodeQL's password-hashing heuristic keys on the token name. Standing owner-delegated acceptance (run log 2026-09-25, #1778)"
+    approver: "basiltt"
+    expires: "2027-03-25"
+    ticket: "https://github.com/basiltt/CandleViewer/issues/1978"
   # E08-X02 (r4): Bybit v5 mandates HMAC-SHA256 request signing; CodeQL's password-hashing
   # heuristic misclassifies the SecretStr-derived key. approval = owner CODEOWNER security-review merge
   - id: "py/weak-sensitive-data-hashing:services/api/candleviewer/exchange/bybit/signer.py:49"
