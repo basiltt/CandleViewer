@@ -1,7 +1,7 @@
 """Seeded 1M-trade symbol-day derived from the recorded corpus (no network, deterministic).
 
-The recorded corpus (`packages/fixtures/bybit/2026-10-05/ws/*publicTrade*`) is a few hundred
-documented-shape prints (see README.trades.md), so it cannot itself be a 1M-row day. We bootstrap
+The recorded public-feed corpus (`CORPUS`) is a few hundred
+documented-shape prints (see its README), so it cannot itself be a 1M-row day. We bootstrap
 its empirical marginals (qty, aggressor side, price step in ticks) with a seeded numpy RNG into a
 random-walk day. This is SYNTHETIC-FROM-CORPUS, not a live capture; the ADR says so.
 """
@@ -16,6 +16,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
+# nosemgrep: cv-adapter-isolation,cv-bybit-vocabulary-leak reason=B5-b-harness owner=@CandleViewer/security review=2026-12-31  # noqa: E501
 CORPUS = REPO_ROOT / "packages" / "fixtures" / "bybit" / "2026-10-05" / "ws"
 FILES = (
     "clean_publicTrade_BTCUSDT.jsonl",
@@ -30,7 +31,7 @@ SEED = 12001
 
 
 def load_corpus() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """(qty_lots, is_buy, price_step_ticks) marginals from the recorded BTCUSDT frames."""
+    """(qty_lots, is_buy, price_step_ticks) marginals from the recorded frames."""
     qty: list[int] = []
     buy: list[bool] = []
     px: list[int] = []

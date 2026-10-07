@@ -54,7 +54,7 @@ costs nothing the roadmap promised for R1 (fixed-size Renko is intact).
 | (d) `BarSpec` fields (see R2 spec design below) | Add `renko_atr_period: int \| None` (2..100), `renko_atr_mult_x100: int` (default 100), `renko_atr_source_interval_ms: int` (default 60000) **and** the resolved `range_ticks`. All are in `spec_hash`; the request supplies the first three, the server fills `range_ticks`. Exactly-one validator: `renko_atr_*` only with `kind=renko`. |
 | Warmup                                          | Fewer than `period + 1` closed 1m bars before the start -> 422 (never a default size).                                                                                                                                                                                                                                                     |
 
-**R2 spec design (request spec vs resolved spec).** `24-internal` §3.1's `_exactly_one` stays true for every
+**R2 spec design (request spec vs resolved spec).** `24-internal` §3.1's `_exactly_one` (merged in E12-T01, `bars/models.py`, renko reuses `range_ticks`) stays true for every
 **resolved** `BarSpec` (what builders, `spec_hash`, storage and snapshots use): a renko spec has exactly one sizing
 field, `range_ticks`, always set. The ATR request is a separate type, `RenkoAtrRequest(period, mult_x100,
 source_interval_ms)`, validated at the API edge, which the bars service resolves into a normal `BarSpec` plus a
@@ -63,8 +63,12 @@ non-hashed **provenance record** (`resolved_from`: request, lookback end timesta
 validator is unchanged. The `renko_atr_*` names in row (d) are the fields of `RenkoAtrRequest`, **not** new
 `BarSpec` fields.
 
-- **`spec_hash` (canonical JSON).** Any field ever added to `BarSpec` MUST be omitted from canonical JSON when
-  `None`/default, so every existing `spec_hash` stays valid (`spec_hash_vectors.json` must not change).
+- **`spec_hash` (canonical JSON).** As merged in E12-T01 (`bars/spec.py`, `SPEC_HASH_VERSION = 1`),
+  canonical JSON includes **every** `BarSpec` field with defaults explicit, so adding any field to `BarSpec`
+  would move every existing hash. This is a second reason ATR lives in `RenkoAtrRequest` and not in `BarSpec`:
+  R2 needs **no** `BarSpec` field and **no** `SPEC_HASH_VERSION` bump. If a `BarSpec` field is ever added, it
+  must either be omitted from canonical JSON when `None`/default (keeping `spec_hash_vectors.json` valid) or
+  ship with a version bump and golden-vector update.
 - **Clients cannot compute the resolved hash.** It depends on server-side lookback trades. The API must echo
   the resolved spec and `spec_hash` (and the request -> resolved mapping) in the response/subscribe ack; clients
   treat `spec_hash` as an opaque server-issued id. The bars service persists the mapping so a re-subscribe with
@@ -191,6 +195,14 @@ no-blocking rule). A2 is the trap: the caller sees "cancelled" but the thread ke
 B is chunk-size-insensitive because the token is also polled inside the batch. The PGWire cursor-close
 behaviour (does `asyncpg` abort a server-side query promptly?) is **not measured**; B does not depend on it
 since it bounds the work per page and closes between pages.
+
+**Round-3 re-run (harness only changed: cancel prototypes now start tasks via `spawn`, semantics unchanged).**
+The machine was busier (baseline renko rebuild 1.28 s vs 1.04 s), so absolute times drifted up, with the same
+ordering and pass/fail: A 8 192 rows p50 11.4 ms (max 49); A 65 536 p50 190 ms (max 245); A 262 144 p50 1 101 ms
+(**fail**); A2 p50 918 ms with the same 809 340 leaked rows (**fail**); B p50 5.7 / 11.6 / 8.5 ms at 8 192 /
+65 536 / 262 144 rows (max 54, pass). Builders re-ran at 0.97-1.61 s each (all pass). The tables above are the
+original quiet-machine run; none of the conclusions change, but tail latency is load-sensitive, so E12-T07
+must assert cancel p95 under load, not only on an idle host.
 
 Invariants on the prototypes (50k trades, 20 random cut points each): BI-1, BI-4, BI-5 true for all six.
 

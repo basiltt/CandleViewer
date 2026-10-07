@@ -25,6 +25,8 @@ from typing import Any
 import psutil
 import pyarrow.parquet as pq
 
+from candleviewer.observability import spawn
+
 from . import atr, builders, corpus
 
 PARAMS = {  # tuned so 1M prints yield a few thousand-100k bars on the synthetic day
@@ -139,7 +141,7 @@ async def strat_a_task_cancel(path: Path, chunk: int, delay: float) -> tuple[flo
         b.finish()
         sink.commit(b.out)
 
-    task = asyncio.ensure_future(run())
+    task = spawn(run(), name="renko-cancel-a")
     due = time.perf_counter() + delay
     await asyncio.sleep(delay)  # wakes only after the on-loop chunk in flight finishes
     t = due  # latency counts from the INTENDED cancel instant, i.e. includes the loop stall
@@ -161,7 +163,7 @@ async def strat_a2_task_cancel_thread(path: Path, chunk: int, delay: float) -> t
         sink.commit(b.out)  # zombie commit: partial/unwanted rows land after cancel
         done.set()
 
-    task = asyncio.ensure_future(asyncio.to_thread(work))
+    task = spawn(asyncio.to_thread(work), name="renko-cancel-thread")
     await asyncio.sleep(delay)
     t = time.perf_counter()
     task.cancel()
@@ -197,7 +199,7 @@ async def strat_b_token(path: Path, chunk: int, delay: float) -> tuple[float, in
         finally:
             stopped.set()
 
-    fut = asyncio.ensure_future(asyncio.to_thread(work))
+    fut = spawn(asyncio.to_thread(work), name="renko-cancel-thread")
     await asyncio.sleep(delay)
     t = time.perf_counter()
     cancel.set()
