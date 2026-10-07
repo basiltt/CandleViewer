@@ -44,28 +44,42 @@ Design, tied to the ticket's Gherkin scenarios:
 from __future__ import annotations
 
 import asyncio
+import functools
 import itertools
 import random
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
+from candleviewer.domain.klines import KlinePageRejected
 from candleviewer.domain.primitives import Symbol, TsUs
+from candleviewer.exchange.base.errors import RateLimitError
 from candleviewer.exchange.base.models import KlineEvent
 from candleviewer.ingestion._logging import get_logger
 from candleviewer.ingestion.errors import IngestionError
 from candleviewer.ingestion.kline_coverage import CoverageIndex, Range
 from candleviewer.ingestion.metrics import (
     kline_backfill_duration_seconds,
+    kline_backfill_jobs_total,
+    kline_backfill_pages_rejected_total,
     kline_backfill_pages_total,
+    kline_backfill_rate_limited_total,
     kline_cache_hit_ratio,
     kline_coverage_holes,
     symbol_label,
 )
+from candleviewer.observability.context import spawn
 
 _MIN_BACKOFF_S = 1.0
-_MAX_BACKOFF_S = 30.0
+#: SR-E12-08: full jitter from 1 s to 60 s.
+_MAX_BACKOFF_S = 60.0
 _PAGE_LIMIT = 1000
+#: SR-E12-08 ceilings (E12 STRIDE model, BR-33).
+MAX_PAGES_PER_JOB = 400
+MAX_CONSECUTIVE_RATE_LIMITS = 5
+#: Progress `status` while a rate-limit backoff is pending: the UI shows "loading older bars…"
+#: over the partial result instead of blocking (E12-S05 "Rate limited").
+STATUS_LOADING_OLDER = "loading_older_bars"
 
 
 class KlineFetcher(Protocol):
@@ -154,25 +168,62 @@ def _split_confirmed(events: Sequence[KlineEvent]) -> tuple[list[KlineEvent], Ts
     return list(events), None
 
 
+KlineSink = Callable[[str, str, Sequence[KlineEvent]], Awaitable[None]]
+"""Optional second sink for confirmed klines: the composition root adapts it to
+`bars.kline_rows.submit_kline_bars` (NULL order-flow columns, `source=kline`, never over tape).
+Declared as a plain callable so `ingestion` never imports `bars` (C-3.1)."""
+
+
 @dataclass(slots=True)
 class BackfillResult:
-    """Outcome of one `backfill_range` call. `partial=True` means at least
-    one page could not be fetched after retries — the rows already fetched
-    are still persisted and included in `fetched` (ticket "Rate limited"
-    scenario)."""
+    """Outcome of one backfill job. `partial=True` means the window was not fully covered;
+    every page fetched before the stop is persisted and included in `fetched` (ticket "Rate
+    limited": the partial result stays usable). `stop_reason` is a bounded label:
+    `""` (complete), `fetch_failed`, `rate_limited`, `page_rejected`, `page_ceiling`."""
 
     fetched: list[KlineEvent]
     partial: bool
+    pages: int = 0
+    stop_reason: str = ""
+
+
+class _Stop(Exception):
+    """Internal: ends the current job, keeping everything already persisted."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
+
+
+@dataclass(slots=True)
+class _Job:
+    """Per-job SR-E12-08 counters (shared across every hole of one request)."""
+
+    pages: int = 0
+    consecutive_limits: int = 0
 
 
 class KlineBackfillService:
-    """Cache-first kline reads with rate-limit-safe, resumable paging.
+    """Cache-first kline reads with rate-limit-safe, resumable, bounded paging.
 
-    Every dependency (fetcher, cache, clock sleep, jitter source, progress
-    callback) is injected so this class is unit-testable without a network
-    call or a database (C-13.2). One `CoverageIndex` per `(symbol,
-    interval)` is kept in memory; `load_coverage_from_cache` rebuilds it
-    from whatever the repository already persisted after a restart."""
+    Every dependency (fetcher, cache, sleep, jitter source, progress callback, kline sink) is
+    injected so this class is unit-testable without a network or a database (C-13.2). One
+    `CoverageIndex` per `(symbol, interval)` is kept in memory; `load_coverage_from_cache`
+    rebuilds it after a restart.
+
+    SR-E12-08 / BR-33: at most `max_pages` pages per job, **one job per (symbol, interval)**
+    (a concurrent request joins the running job), at most `max_concurrent_jobs` jobs at once,
+    and a job stops (keeping its partial result) after `max_consecutive_rate_limits`
+    consecutive rate-limit responses. Fetches use the adapter's `MARKET_DATA` bucket — the
+    lowest REST class, separate from the stop/cancel/SL reserve (C-12.7).
+
+    "Lowest ingestion lane" (SR-E12-08, BR-33): the #1957 `ingestion/dispatch.py` lanes order
+    *inbound WS frames*; this service makes outbound REST calls and emits no frames, so it has
+    no dispatch lane to join. Its priority is enforced instead by the governor's `MARKET_DATA`
+    bucket (never the order/position reserve), at most `max_concurrent_jobs` jobs and the page
+    ceiling. Bar emission onto the bars topic — where a lane would apply — is wired in part 2 /
+    E12-T05 (#2045 / #398); lane assignment is deferred to that wiring.
+    """
 
     def __init__(
         self,
@@ -184,6 +235,11 @@ class KlineBackfillService:
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         random_fn: Callable[[], float] = random.random,
         on_progress: ProgressCallback | None = None,
+        kline_sink: KlineSink | None = None,
+        max_pages: int = MAX_PAGES_PER_JOB,
+        max_consecutive_rate_limits: int = MAX_CONSECUTIVE_RATE_LIMITS,
+        max_concurrent_jobs: int = 2,
+        page_limit: int = _PAGE_LIMIT,
     ) -> None:
         self._fetch_klines = fetch_klines
         self._cache = cache
@@ -192,7 +248,14 @@ class KlineBackfillService:
         self._sleep = sleep
         self._random = random_fn
         self._on_progress = on_progress
+        self._kline_sink = kline_sink
+        self._max_pages = max(1, min(max_pages, MAX_PAGES_PER_JOB))
+        self._max_limits = max(1, min(max_consecutive_rate_limits, MAX_CONSECUTIVE_RATE_LIMITS))
+        self._page_limit = max(1, min(page_limit, _PAGE_LIMIT))
+        self._job_slots = asyncio.Semaphore(max(1, max_concurrent_jobs))
         self._coverage: dict[tuple[str, str], CoverageIndex] = {}
+        self._jobs: dict[tuple[str, str], asyncio.Task[BackfillResult]] = {}
+        self._locks: dict[tuple[str, str], asyncio.Lock] = {}
 
     def _index_for(self, symbol: str, interval: str) -> CoverageIndex:
         key = (symbol, interval)
@@ -200,23 +263,25 @@ class KlineBackfillService:
             self._coverage[key] = CoverageIndex()
         return self._coverage[key]
 
+    def coverage(self, symbol: str, interval: str) -> CoverageIndex | None:
+        """The in-memory coverage index (for `meta.coverage_holes`), if one exists."""
+        return self._coverage.get((symbol, interval))
+
+    def job_running(self, symbol: str, interval: str) -> bool:
+        task = self._jobs.get((symbol, interval))
+        return task is not None and not task.done()
+
     async def load_coverage_from_cache(self, symbol: str, interval: str, rng: Range) -> None:
-        """Rebuild the in-memory coverage index for `(symbol, interval)`
-        from whatever the repository already has in `rng` (ticket
-        "Interrupted backfill resumes" scenario). Cheap/conservative: marks
-        covered only the contiguous confirmed-row span(s) actually present,
-        so a real hole left by an interrupted backfill is never masked."""
+        """Rebuild the coverage index for `(symbol, interval)` from the repository (ticket
+        "Interrupted backfill resumes"). Marks covered only the contiguous confirmed spans
+        actually present, so a hole left by an interrupted backfill is never masked."""
         rows = await self._cache.read_klines(symbol, interval, rng)
         index = self._index_for(symbol, interval)
-        confirmed_rows = [r for r in rows if r.confirmed]
+        confirmed_rows = sorted((r for r in rows if r.confirmed), key=lambda r: r.ts_us)
         if not confirmed_rows:
             return
-        confirmed_rows.sort(key=lambda r: r.ts_us)
-        span_start = confirmed_rows[0].ts_us
-        prev_ts = confirmed_rows[0].ts_us
-        # Bar width is inferred from the smallest gap between consecutive
-        # rows already in the cache; if there is only one row, treat it as
-        # a single-bar span (`end_us = ts_us + 1`).
+        span_start = prev_ts = confirmed_rows[0].ts_us
+        # Bar width = smallest gap between cached rows (a single row is a 1 µs span).
         bar_width_us = 1
         if len(confirmed_rows) > 1:
             bar_width_us = min(b.ts_us - a.ts_us for a, b in itertools.pairwise(confirmed_rows))
@@ -228,138 +293,222 @@ class KlineBackfillService:
         index.mark_covered(Range(span_start, prev_ts + bar_width_us))
 
     async def read_range(self, symbol: str, interval: str, rng: Range) -> BackfillResult:
-        """Cache-first read (ticket "Cache hit" scenario): only the
-        `CoverageIndex` holes for `rng` are fetched from the exchange;
-        already-covered data is read straight back from the cache without
-        touching the exchange at all."""
+        """Cache-first read (ticket "Cache hit"): only the coverage holes of `rng` are fetched;
+        a fully covered request never touches the exchange. Serialised per key (one job)."""
+        lock = self._locks.setdefault((symbol, interval), asyncio.Lock())
+        async with lock, self._job_slots:
+            return await self._run_job(symbol, interval, rng)
+
+    async def backfill_range(self, symbol: str, interval: str, rng: Range) -> BackfillResult:
+        """Scheduled N-day backfill entry point; same semantics as `read_range`."""
+        return await self.read_range(symbol, interval, rng)
+
+    def start_backfill(
+        self, symbol: str, interval: str, rng: Range
+    ) -> asyncio.Task[BackfillResult]:
+        """Run the backfill as a tracked background task so the chart is interactive before
+        paging finishes (ticket "Backfill on chart open"). One job per `(symbol, interval)`:
+        while one runs, the same task is returned instead of starting a second (SR-E12-08)."""
+        key = (symbol, interval)
+        running = self._jobs.get(key)
+        if running is not None and not running.done():
+            return running
+        task = spawn(self.read_range(symbol, interval, rng), name=f"kline-backfill:{symbol}")
+        self._jobs[key] = task
+        task.add_done_callback(functools.partial(self._job_done, key))
+        return task
+
+    def _job_done(self, key: tuple[str, str], task: asyncio.Task[BackfillResult]) -> None:
+        if self._jobs.get(key) is task:
+            del self._jobs[key]
+        if not task.cancelled() and task.exception() is not None:
+            get_logger(__name__).error(
+                "kline_backfill_job_crashed",
+                symbol=key[0],
+                interval=key[1],
+                error=type(task.exception()).__name__,
+            )
+
+    async def aclose(self) -> None:
+        """Cancel and await every running job (C-2.18: no orphaned task)."""
+        tasks = list(self._jobs.values())
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+    async def _run_job(self, symbol: str, interval: str, rng: Range) -> BackfillResult:
         index = self._index_for(symbol, interval)
         holes = index.holes(rng)
         total_us = max(1, rng.end_us - rng.start_us)
         covered_us = total_us - sum(h.end_us - h.start_us for h in holes)
-        kline_cache_hit_ratio.labels(symbol=symbol_label(symbol), interval=interval).set(
-            covered_us / total_us
-        )
+        labels = {"symbol": symbol_label(symbol), "interval": interval}
+        kline_cache_hit_ratio.labels(**labels).set(covered_us / total_us)
         result = BackfillResult(fetched=[], partial=False)
-        if holes:
-            with kline_backfill_duration_seconds.labels(
-                symbol=symbol_label(symbol), interval=interval
-            ).time():
-                for hole in holes:
-                    hole_result = await self._backfill_hole(symbol, interval, hole, rng)
-                    result.fetched.extend(hole_result.fetched)
-                    result.partial = result.partial or hole_result.partial
-        cached_rows = await self._cache.read_klines(symbol, interval, rng)
-        kline_coverage_holes.labels(symbol=symbol_label(symbol), interval=interval).set(
-            len(index.holes(rng))
-        )
-        # Rows already fetched this call are included via `cached_rows`
-        # once persisted; `result.fetched` is kept too so a caller can see
-        # exactly what was newly pulled this call (ticket "Backfill":
-        # "progress reported" wants the delta, not just the final set).
-        _ = cached_rows
+        if not holes:
+            return result
+        log = get_logger(__name__)
+        log.info("kline_backfill_started", symbol=symbol, interval=interval,
+                 start_us=rng.start_us, end_us=rng.end_us, holes=len(holes))  # fmt: skip
+        job = _Job()
+        with kline_backfill_duration_seconds.labels(**labels).time():
+            # Newest hole first: the chart's visible tail fills before older history.
+            for hole in reversed(holes):
+                try:
+                    await self._backfill_hole(symbol, interval, hole, rng, job, result)
+                except _Stop as stop:
+                    result.partial, result.stop_reason = True, stop.reason
+                    break
+                except KlineBackfillError:
+                    result.partial, result.stop_reason = True, "fetch_failed"
+                    break
+        result.pages = job.pages
+        kline_coverage_holes.labels(**labels).set(len(index.holes(rng)))
+        outcome = result.stop_reason or "complete"
+        kline_backfill_jobs_total.labels(**labels, result=outcome).inc()
+        # SR-E12-10 run log: symbol, interval, window, page count, outcome.
+        log.info("kline_backfill_finished", symbol=symbol, interval=interval,
+                 start_us=rng.start_us, end_us=rng.end_us, pages=job.pages,
+                 rows=len(result.fetched), outcome=outcome)  # fmt: skip
+        self._progress(symbol, interval, rng, "partial" if result.partial else "done")
         return result
 
-    async def backfill_range(self, symbol: str, interval: str, rng: Range) -> BackfillResult:
-        """Force-fetch every hole in `rng`, ignoring nothing already
-        covered (used by a scheduled N-day backfill job; `read_range` is
-        the request-time equivalent for a single API call)."""
-        return await self.read_range(symbol, interval, rng)
+    def _progress(self, symbol: str, interval: str, rng: Range, status: str) -> None:
+        if self._on_progress is None:
+            return
+        total_us = max(1, rng.end_us - rng.start_us)
+        remaining = sum(h.end_us - h.start_us for h in self._index_for(symbol, interval).holes(rng))
+        fraction = min(1.0, max(0.0, 1.0 - remaining / total_us))
+        self._on_progress(symbol=symbol, interval=interval, fraction=fraction, status=status)
 
     async def _backfill_hole(
-        self, symbol: str, interval: str, hole: Range, requested: Range
-    ) -> BackfillResult:
+        self,
+        symbol: str,
+        interval: str,
+        hole: Range,
+        requested: Range,
+        job: _Job,
+        result: BackfillResult,
+    ) -> None:
+        """Fill `hole` page by page, newest sub-hole first. Ordering-agnostic: a full page
+        proves coverage only of the span it actually returned (the live port serves the
+        newest `limit` rows of a window, other ports may serve the oldest); a short page
+        proves the whole window. Raises `_Stop` to end the job; everything persisted stays."""
         index = self._index_for(symbol, interval)
-        fetched: list[KlineEvent] = []
-        partial = False
-        cursor = hole.start_us
-        while cursor < hole.end_us:
-            try:
-                page = await self._fetch_page_with_retry(symbol, interval, cursor, hole.end_us)
-            except KlineBackfillError:
-                partial = True
-                break
-            if not page:
-                break
+        while True:
+            pending = index.holes(hole)
+            if not pending:
+                return
+            target = pending[-1]
+            if job.pages >= self._max_pages:
+                raise _Stop("page_ceiling")
+            page = await self._fetch_page_with_retry(
+                symbol, interval, target.start_us, target.end_us - 1, job
+            )
+            job.pages += 1
             confirmed_events, unconfirmed_start = _split_confirmed(page)
-            next_cursor = page[-1].start + 1
             if confirmed_events:
                 rows = [
                     _row_payload(symbol=symbol, interval=interval, event=e, source=self._source)
                     for e in confirmed_events
                 ]
                 await self._cache.write_klines(rows)
-                covered_end = confirmed_events[-1].end + 1
-                index.mark_covered(Range(cursor, min(covered_end, hole.end_us)))
-                fetched.extend(confirmed_events)
-                next_cursor = covered_end
-            if unconfirmed_start is not None:
-                # The trailing in-progress bar is returned to the caller
-                # (ticket "Unconfirmed bar not cached as final": "returned
-                # as in-progress bar") but never marked covered, so a later
-                # call re-fetches it once it has closed.
-                fetched.append(page[-1])
-                break
-            if next_cursor <= cursor:
-                break
-            cursor = next_cursor
-            total_us = max(1, requested.end_us - requested.start_us)
-            remaining = sum(h.end_us - h.start_us for h in index.holes(requested))
-            fraction = min(1.0, max(0.0, 1.0 - remaining / total_us))
-            if self._on_progress is not None:
-                self._on_progress(
-                    symbol=symbol, interval=interval, fraction=fraction, status="fetching"
-                )
-        if self._on_progress is not None:
-            self._on_progress(
-                symbol=symbol,
-                interval=interval,
-                fraction=1.0 if not partial else 0.0,
-                status="partial" if partial else "done",
-            )
-        return BackfillResult(fetched=fetched, partial=partial)
+                if self._kline_sink is not None:
+                    await self._kline_sink(symbol, interval, confirmed_events)
+            if len(page) >= self._page_limit:
+                proven = Range(max(target.start_us, page[0].start), page[-1].end + 1)
+            else:
+                proven = target
+            if unconfirmed_start is not None:  # forming bar: returned, never covered
+                proven = Range(proven.start_us, min(proven.end_us, unconfirmed_start))
+            proven = Range(proven.start_us, min(proven.end_us, target.end_us))
+            if proven.end_us > proven.start_us:
+                index.mark_covered(proven)
+            result.fetched.extend(page)
+            result.fetched.sort(key=lambda e: e.start)
+            self._progress(symbol, interval, requested, "fetching")
+            if unconfirmed_start is not None or index.holes(hole) == pending:
+                return  # reached the forming bar (nothing newer exists yet) or no progress
 
     async def _fetch_page_with_retry(
-        self, symbol: str, interval: str, start_us: TsUs, end_us: TsUs
+        self, symbol: str, interval: str, start_us: TsUs, end_us: TsUs, job: _Job | None = None
     ) -> Sequence[KlineEvent]:
-        """One page fetch, retried with full jitter backoff on any
-        exception (the exchange's rate-limit `10018` included — the adapter's
-        mapping maps it to `RateLimitError`, a plain `Exception` subclass
-        this module treats no differently to any other transient failure,
-        keeping this module free of an exchange adapter package
-        import). Never lets one throttled page fail the whole backfill —
-        see this module's docstring, "Rate limited" scenario."""
+        """One page, retried with full-jitter exponential backoff (1 s .. 60 s).
+
+        - `KlinePageRejected` (SR-E12-09): never retried; the job stops, prior pages kept.
+        - `RateLimitError` (10006/10018/...): counted per job; the UI is told
+          `loading_older_bars` while backing off; `max_consecutive_rate_limits` in a row stops
+          the job (SR-E12-08). The adapter has already applied the shared governor's
+          `hold_ip()` for 10018, so this backoff is on top of — not instead of — that limiter.
+        - anything else: transient, up to `max_retries` attempts, then `fetch_failed`.
+        """
+        job = job if job is not None else _Job()
+        labels = {"symbol": symbol_label(symbol), "interval": interval}
+        log = get_logger(__name__)
+        attempt = 0
         last_error: Exception | None = None
-        for attempt in range(self._max_retries):
+        while attempt < self._max_retries:
             try:
                 page = await self._fetch_klines(
-                    symbol, interval, start_us, end_us, limit=_PAGE_LIMIT
+                    symbol, interval, start_us, end_us, limit=self._page_limit
                 )
-                kline_backfill_pages_total.labels(
-                    symbol=symbol_label(symbol), interval=interval, result="ok"
-                ).inc()
-                return page
-            except Exception as exc:  # see docstring: any failure is transient/retried
+            except KlinePageRejected as exc:
+                kline_backfill_pages_total.labels(**labels, result="rejected").inc()
+                kline_backfill_pages_rejected_total.labels(**labels, reason=exc.reason).inc()
+                log.warning("kline_backfill_page_rejected", symbol=symbol, interval=interval,
+                            reason=exc.reason, start_us=start_us, end_us=end_us)  # fmt: skip
+                raise _Stop("page_rejected") from exc
+            except RateLimitError as exc:
                 last_error = exc
-                kline_backfill_pages_total.labels(
-                    symbol=symbol_label(symbol), interval=interval, result="retry"
-                ).inc()
-                if attempt < self._max_retries - 1:
-                    backoff = min(_MAX_BACKOFF_S, _MIN_BACKOFF_S * (2**attempt))
-                    jitter = backoff * self._random()
-                    get_logger(__name__).warning(
-                        "kline_backfill_page_retry",
-                        symbol=symbol,
-                        interval=interval,
-                        attempt=attempt,
-                        error=str(exc),
-                    )
-                    await self._sleep(jitter)
-        kline_backfill_pages_total.labels(
-            symbol=symbol_label(symbol), interval=interval, result="error"
-        ).inc()
-        get_logger(__name__).warning(
-            "kline_backfill_page_failed", symbol=symbol, interval=interval, error=str(last_error)
-        )
+                job.consecutive_limits += 1
+                kline_backfill_rate_limited_total.labels(**labels).inc()
+                kline_backfill_pages_total.labels(**labels, result="rate_limited").inc()
+                if job.consecutive_limits >= self._max_limits:
+                    log.warning("kline_backfill_rate_limit_abort", symbol=symbol,
+                                interval=interval, consecutive=job.consecutive_limits)  # fmt: skip
+                    raise _Stop("rate_limited") from exc
+                delay = self._backoff(job.consecutive_limits - 1)
+                log.warning("kline_backfill_rate_limited", symbol=symbol, interval=interval,
+                            backoff_s=round(delay, 3),
+                            consecutive=job.consecutive_limits)  # fmt: skip
+                if self._on_progress is not None:
+                    self._on_progress(symbol=symbol, interval=interval,
+                                      fraction=-1.0, status=STATUS_LOADING_OLDER)  # fmt: skip
+                await self._sleep(delay)
+                continue  # a rate limit is governed by its own ceiling, not `max_retries`
+            except Exception as exc:  # transient (5xx, transport): retried, then surfaced
+                last_error = exc
+                attempt += 1
+                kline_backfill_pages_total.labels(**labels, result="retry").inc()
+                log.warning("kline_backfill_page_retry", symbol=symbol, interval=interval,
+                            attempt=attempt, error=type(exc).__name__)  # fmt: skip
+                if attempt < self._max_retries:
+                    await self._sleep(self._backoff(attempt - 1))
+                continue
+            job.consecutive_limits = 0
+            kline_backfill_pages_total.labels(**labels, result="ok").inc()
+            return page
+        kline_backfill_pages_total.labels(**labels, result="error").inc()
+        log.warning("kline_backfill_page_failed", symbol=symbol, interval=interval,
+                    error=type(last_error).__name__)  # fmt: skip
         raise KlineBackfillError(
             f"kline page fetch failed for {symbol}/{interval} after {self._max_retries} attempts"
         ) from last_error
+
+    def _backoff(self, attempt: int) -> float:
+        """Full jitter in `[_MIN_BACKOFF_S, min(_MAX_BACKOFF_S, _MIN_BACKOFF_S * 2**attempt)]`."""
+        cap = min(_MAX_BACKOFF_S, _MIN_BACKOFF_S * (2 ** min(attempt, 16)))
+        return float(_MIN_BACKOFF_S + (cap - _MIN_BACKOFF_S) * self._random())
+
+
+__all__ = [
+    "MAX_CONSECUTIVE_RATE_LIMITS",
+    "MAX_PAGES_PER_JOB",
+    "STATUS_LOADING_OLDER",
+    "BackfillResult",
+    "KlineBackfillError",
+    "KlineBackfillService",
+    "KlineCacheLike",
+    "KlineFetcher",
+    "KlineSink",
+    "ProgressCallback",
+]

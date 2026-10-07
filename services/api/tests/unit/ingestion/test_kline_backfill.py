@@ -128,7 +128,7 @@ class TestCacheHit:
         result = await service.read_range(_SYMBOL, _INTERVAL, Range(0, 60_000_000))
 
         assert result.fetched == []
-        assert fetcher.calls == [(0, 60_000_000)]  # only the first backfill call
+        assert fetcher.calls == [(0, 59_999_999)]  # only the first call (Bybit `end` inclusive)
 
     async def test_partially_covered_range_only_fetches_the_tail(self) -> None:
         fetcher = _FakeFetcher(
@@ -181,6 +181,7 @@ class TestRateLimited:
         service = KlineBackfillService(
             fetch_klines=fetcher,
             cache=cache,
+            page_limit=1,  # a 1-row page is "full": the rest of the window is still a hole
             max_retries=2,
             sleep=_fast_sleep,
             random_fn=lambda: 0.1,
@@ -234,7 +235,7 @@ class TestResume:
         result = await service.read_range(_SYMBOL, _INTERVAL, Range(0, 180_000_000))
 
         assert [e.start for e in result.fetched] == [120_000_000]
-        assert fetcher.calls == [(120_000_000, 180_000_000)]
+        assert fetcher.calls == [(120_000_000, 179_999_999)]
 
 
 async def _noop() -> None:

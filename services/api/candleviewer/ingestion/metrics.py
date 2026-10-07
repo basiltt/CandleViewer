@@ -140,6 +140,22 @@ SPECS: Final[tuple[MetricSpec, ...]] = (
     _h("kline_backfill_duration_seconds", "Kline range backfill time.", "symbol", "interval"),
     _g("kline_cache_hit_ratio", "Cache-covered fraction of a kline range.", "symbol", "interval"),
     _g("kline_coverage_holes", "Uncovered kline sub-ranges after backfill.", "symbol", "interval"),
+    # E12-S05 SR-E12-08/09/10
+    _c("kline_backfill_rate_limited_total", "Rate-limited kline pages.", "symbol", "interval"),
+    _c(
+        "kline_backfill_pages_rejected_total",
+        "Kline pages rejected by strict validation (SR-E12-09).",
+        "symbol",
+        "interval",
+        "reason",
+    ),
+    _c(
+        "kline_backfill_jobs_total",
+        "Finished kline backfill jobs by outcome.",
+        "symbol",
+        "interval",
+        "result",
+    ),
     # Owned by layers ingestion may not be imported by (declared here, built there).
     _c(
         "exchange_errors_total",
@@ -304,6 +320,9 @@ kline_backfill_pages_total = _counter("kline_backfill_pages_total")
 kline_backfill_duration_seconds = _histogram("kline_backfill_duration_seconds")
 kline_cache_hit_ratio = _gauge("kline_cache_hit_ratio")
 kline_coverage_holes = _gauge("kline_coverage_holes")
+kline_backfill_rate_limited_total = _counter("kline_backfill_rate_limited_total")
+kline_backfill_pages_rejected_total = _counter("kline_backfill_pages_rejected_total")
+kline_backfill_jobs_total = _counter("kline_backfill_jobs_total")
 
 _EVENT_CHILDREN: dict[tuple[str, str], Counter] = {}
 
