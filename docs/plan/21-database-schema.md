@@ -2511,6 +2511,8 @@ All six tables also carry two integrity columns added by `backend/db/questdb/000
 
 Source precedence is enforced in `BarWriter` against rows written by the same process; the stored-row check belongs to the E12-T05 backfill caller (follow-up filed).
 
+**Amends (#1985):** a `BarUpdate(kind="close", amended=True)` re-emits a bar with the same identity `(bar_param, generation, index)`; the writer must UPSERT on the table's `DEDUP UPSERT KEYS` so the amended row replaces the earlier one (never appended, never lost). Pending #2016: deployed DEDUP keys are still `(ts, symbol, bar_param)` until migration 0004. A same-source amend replaces the row; `SourceOverwriteRefused` applies only to a lower-ranked source.
+
 **Deviation (E12-T02, BR-25 ask on #345):** the stored `bar_param` is the readable form (`5m`, `tick:500`, …) rather than the `spec_hash`, per the §4.8 table and the ticket's design note (low SYMBOL cardinality, operator-readable queries). The BR-25 proposal to store `spec_hash` is not adopted because specs with non-default options have no readable form and are refused at persistence (`BarPersistError`); `spec_hash` ⇄ `bar_param` is 1:1 via `to_wire`. Revisit if option-bearing specs must be persisted.
 
 ### 4.9 `footprint_cells`

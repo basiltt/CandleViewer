@@ -68,6 +68,7 @@ export interface Bar {
  * A builder emission (§3.2).
  */
 export interface BarUpdate {
+  amended?: boolean;
   bar: Bar;
   kind: "open" | "update" | "close";
 }

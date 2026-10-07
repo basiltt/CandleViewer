@@ -152,6 +152,7 @@ class BarUpdate(BaseModel):
 
     kind: Literal["open", "update", "close"]
     bar: Bar
+    amended: bool = False
 
 
 class BuilderState(BaseModel):

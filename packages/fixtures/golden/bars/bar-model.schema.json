@@ -230,6 +230,11 @@
       "additionalProperties": false,
       "description": "A builder emission (§3.2).",
       "properties": {
+        "amended": {
+          "default": false,
+          "title": "Amended",
+          "type": "boolean"
+        },
         "bar": {
           "$ref": "#/$defs/Bar"
         },

@@ -223,17 +223,6 @@ _INT_SLOTS: Final = frozenset(
 )
 
 
-class TimeBarUpdate(BarUpdate):
-    """`BarUpdate` plus the §3.3c `amended` flag, set on a `close` re-emitted by a late trade.
-
-    Stop-gap until the E12-T01 `BarUpdate` contract carries `amended` (#1985); folds into
-    `BarUpdate` when #1985 lands. It is still a `BarUpdate`, so `BarBuilder` consumers are
-    unaffected.
-    """
-
-    amended: bool = False
-
-
 class TimeBarBuilder:
     """`BarBuilder` for `kind="time"`, one per `(symbol, spec)`. See the module docstring."""
 
@@ -255,11 +244,11 @@ class TimeBarBuilder:
             symbol=symbol, reason="empty_interval"
         )
 
-    def _emit(self, kind: str, d: _Draft, closed: bool, amended: bool = False) -> TimeBarUpdate:
+    def _emit(self, kind: str, d: _Draft, closed: bool, amended: bool = False) -> BarUpdate:
         bar = d.to_bar(self._hash, self.symbol, closed)
-        return TimeBarUpdate.model_construct(kind=kind, bar=bar, amended=amended)
+        return BarUpdate.model_construct(kind=kind, bar=bar, amended=amended)
 
-    def _close(self, d: _Draft) -> TimeBarUpdate:
+    def _close(self, d: _Draft) -> BarUpdate:
         self._cur = None
         self._closed.append(d)
         self._last_close = d.close_time
