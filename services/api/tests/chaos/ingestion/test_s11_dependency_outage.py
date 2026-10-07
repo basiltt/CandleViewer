@@ -14,6 +14,7 @@ import pytest
 from structlog.testing import capture_logs
 
 from candleviewer.book.models import BookPhase
+from candleviewer.ingestion.write_behind import BACKOFF_CAP_S
 from tests.chaos.ingestion._faults import Fault, FaultKind
 from tests.chaos.ingestion._feed import Feeder
 from tests.chaos.ingestion._rig import Rig
@@ -21,7 +22,6 @@ from tests.chaos.ingestion._rig import Rig
 pytestmark = pytest.mark.chaos
 
 OUTAGE_S = 10.0
-DEFECT_LOSS = "#1918"
 
 
 def _ids(events: list[object]) -> set[str]:
@@ -45,12 +45,12 @@ async def test_s11_hot_tier_outage_keeps_ingest_live_and_never_over_acknowledges
     assert len(during) >= OUTAGE_S * 2 - 2  # live publication never waited on storage
     assert rig.book_phase() is BookPhase.LIVE
     assert rig.writer.failed_batches > 0
-    assert any(e.get("event") == "trade write-behind failed" for e in logs)
+    assert any(str(e.get("event", "")).startswith("trade write-behind failed") for e in logs)
     assert _ids(rig.writer.persisted_trades) < during  # never acknowledged what failed
 
     rig.writer.down = False
     marker = len(rig.writer.persisted_trades)
-    await feed.run(3.0)
+    await feed.run(BACKOFF_CAP_S + 2.0)  # the write-behind retries on its 10 s capped backoff
     assert len(rig.writer.persisted_trades) > marker  # writes resume after recovery
 
 
@@ -65,10 +65,9 @@ async def test_s11_catalogue_outage_serves_last_snapshot_marked_stale(rig: Rig) 
     assert rig.is_listed("BTCUSDT")
 
 
-@pytest.mark.xfail(strict=True, reason=f"{DEFECT_LOSS}: failed write-behind batches are dropped")
 async def test_s11_buffered_writes_drain_after_the_outage(rig: Rig) -> None:
     feed, _ = await _outage(rig)
     published = _ids(rig.observe().trades)
     rig.writer.down = False
-    await feed.run(5.0)
+    await feed.run(BACKOFF_CAP_S + 2.0)  # the retry may be parked on its capped backoff
     assert published <= _ids(rig.writer.persisted_trades), "outage-window prints never persisted"

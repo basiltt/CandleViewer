@@ -18,7 +18,6 @@ import asyncio
 import dataclasses
 import json
 import random
-import time
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Any
@@ -131,6 +130,7 @@ class StubExchange:
         self.delisted: set[str] = set()
         self.snapshot_lag_frames = 0
         self.host_skew_s = 0.0  # host wall clock minus exchange wall clock
+        self.venue_skew_s = 0.0  # venue wall clock minus the scenario's nominal time
         self.rest_calls: list[tuple[float, str]] = []
         self.limit_remaining = 50
         self.catalogue: dict[str, Any] = rest("rest/instruments_before.json")
@@ -151,6 +151,9 @@ class StubExchange:
             return
         if fault.kind is FaultKind.CLOCK_JUMP:
             self.host_skew_s += fault.seconds
+            return
+        if fault.kind is FaultKind.VENUE_CLOCK_JUMP:
+            self.venue_skew_s += fault.seconds
             return
         if fault.kind is FaultKind.DELIST and fault.symbol is not None:
             self.delisted.add(fault.symbol)
@@ -249,10 +252,10 @@ class StubExchange:
 
     # ---- REST ----------------------------------------------------------------
     def exchange_now_ms(self) -> int:
-        """Venue wall time. A host clock jump of +S s is modelled as the venue
-        reading S s behind the host's `time.time()` (only the difference is
-        observable to signing and to the server-time probe)."""
-        return int((time.time() - self.host_skew_s) * 1000)
+        """Venue wall time on the scenario's virtual clock. A host clock jump of
+        +S s is modelled by the rig's host clock reading S s ahead of the venue
+        (only the difference is observable to signing and the server-time probe)."""
+        return int((self.clock.wall_s() + self.venue_skew_s) * 1000)
 
     def _handle_rest(self, request: httpx.Request) -> httpx.Response:
         path = request.url.path
@@ -279,7 +282,8 @@ class StubExchange:
         if "X-BAPI-SIGN" in request.headers:
             sent = int(request.headers["X-BAPI-TIMESTAMP"])
             window = int(request.headers["X-BAPI-RECV-WINDOW"])
-            if abs(sent - self.exchange_now_ms()) > window:
+            rejected = self._take(FaultKind.REJECT_SIGNED, path=path) is not None
+            if rejected or abs(sent - self.exchange_now_ms()) > window:
                 self.trace.add(self.clock.now, "rest.10002", path)
                 return httpx.Response(200, json=rest("rest/error_10002.json"))
         self.limit_remaining = min(50, self.limit_remaining + 10)

@@ -30,6 +30,8 @@ class FaultKind(StrEnum):
     RATE_LIMIT = "rate_limit"  # the next `count` REST calls return 10018 + reset headers
     # ---- host ---------------------------------------------------------------
     CLOCK_JUMP = "clock_jump"  # the host wall clock jumps by `seconds` (WSL sleep)
+    VENUE_CLOCK_JUMP = "venue_clock_jump"  # venue time moves `seconds`; the host clock does not
+    REJECT_SIGNED = "reject_signed"  # the next `count` signed calls get 10002 whatever the clock
 
 
 WS_FAULTS = frozenset(

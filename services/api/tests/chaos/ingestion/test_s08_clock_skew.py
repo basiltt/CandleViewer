@@ -23,7 +23,7 @@ from candleviewer.exchange.bybit.rest import BybitRestClient
 
 # nosemgrep: cv-adapter-isolation reason=Q03 owner=@CandleViewer/security review=2026-12-31
 from candleviewer.exchange.bybit.signer import BybitSigner
-from candleviewer.ingestion.clock import ClockGuard, rest_client_fetcher
+from candleviewer.ingestion.clock import ClockGuard
 from candleviewer.ingestion.metrics import (
     clock_resync_triggered_total,
     exchange_clock_drift_ms,
@@ -37,8 +37,6 @@ pytestmark = pytest.mark.chaos
 
 SKEW_S = 10.0
 PATH = "/v5/account/wallet-balance"
-DEFECT_REMEASURE = "#1911"
-DEFECT_WINDOW = "#1912"
 BAR_MS = 60_000
 
 
@@ -53,11 +51,13 @@ def _signed(rig: Rig, guard: ClockGuard) -> BybitRestClient:
         transport=rig.ex.transport,
         sleep=rig.clock.sleep,
         random_fn=rig.rng.random,
+        wall_clock=rig.host_wall_s,
+        on_signature_failure=guard.resync_after_signature_failure,
     )
 
 
 def _guard(rig: Rig) -> ClockGuard:
-    return ClockGuard(rest_client_fetcher(rig.rest), clock=rig.clock, sleep=rig.clock.sleep)
+    return rig.clock_guard  # the same guard the rig's EventWindow runs on
 
 
 @pytest.mark.parametrize("skew", [SKEW_S, -SKEW_S])
@@ -79,8 +79,8 @@ async def test_s08_measured_skew_raises_the_drift_alarm_and_signs_correctly(
 
 async def test_s08_second_consecutive_10002_surfaces_clock_drift_distinctly(rig: Rig) -> None:
     guard = _guard(rig)
-    await rig.call(guard.measure_once())  # offset ~0, then the host jumps
-    rig.ex.inject(Fault(FaultKind.CLOCK_JUMP, seconds=-SKEW_S))
+    await rig.call(guard.measure_once())  # offset ~0, then the venue rejects regardless
+    rig.ex.inject(Fault(FaultKind.REJECT_SIGNED, count=2))
     client = _signed(rig, guard)
     first = len(rig.ex.rest_calls)
     try:
@@ -89,14 +89,15 @@ async def test_s08_second_consecutive_10002_surfaces_clock_drift_distinctly(rig:
     finally:
         await client.aclose()
     assert len(rig.ex.trace.kinds("rest.10002")) == 2  # exactly one retry, never a loop
-    assert len(rig.ex.rest_calls) - first == 2
+    signed = [p for _t, p in rig.ex.rest_calls[first:] if p == PATH]
+    assert len(signed) == 2  # one re-signed retry; the re-measure (#1911) hits /market/time only
 
 
-@pytest.mark.xfail(strict=True, reason=f"{DEFECT_REMEASURE}: 10002 never triggers a re-measure")
 async def test_s08_signature_failure_remeasures_and_the_retry_succeeds(rig: Rig) -> None:
     guard = _guard(rig)
     await rig.call(guard.measure_once())
-    rig.ex.inject(Fault(FaultKind.CLOCK_JUMP, seconds=-SKEW_S))
+    # A venue-side step the host cannot see (no host-step detector) -> only 10002 reveals it.
+    rig.ex.inject(Fault(FaultKind.VENUE_CLOCK_JUMP, seconds=SKEW_S))
     triggered = metric(clock_resync_triggered_total, reason="signature_failure")
     client = _signed(rig, guard)
     try:
@@ -123,7 +124,6 @@ async def test_s08_bar_boundaries_stay_exchange_anchored(rig: Rig, skew: float) 
         assert t.ts_event // 1000 // BAR_MS == venue[t.trade_id] // BAR_MS
 
 
-@pytest.mark.xfail(strict=True, reason=f"{DEFECT_WINDOW}: -10 s host jump rejects live prints")
 async def test_s08_backward_jump_does_not_reject_live_prints(rig: Rig) -> None:
     feed = Feeder(rig.ex)
     await rig.clock.run_until(lambda: rig.ws.state() == "open", within_s=5, what="open")

@@ -78,7 +78,6 @@ async def test_s10_never_drop_backpressures_and_names_the_slow_subscriber(rig: R
     assert all(b == a + 1 for a, b in itertools.pairwise(ids))
 
 
-@pytest.mark.xfail(strict=True, reason="#1916: one NEVER_DROP stall freezes the shared pump")
 async def test_s10_slow_never_drop_consumer_does_not_starve_other_symbols() -> None:
     rig = Rig(seed=10, symbols=("BTCUSDT", "ETHUSDT"))
     await rig.start()

@@ -3,7 +3,8 @@ stop/cancel reserve half belongs to the OMS chaos tickets E29-Q04/E45-T07).
 
 Declared: each 10018 maps to `RateLimitError`, the local bucket is set from
 `X-Bapi-Limit-Status` (headroom gauge dips to 0), `bybit_rate_limited_total`
-counts it, retries wait at least until `X-Bapi-Limit-Reset-Timestamp`, the WS
+counts it, every caller is held for the IP-level backoff (>= 600 s, #1908; retries
+also wait until `X-Bapi-Limit-Reset-Timestamp`), the WS
 is never recycled by a REST rate limit (no reconnect storm), and headroom
 recovers on the next good response.
 """
@@ -30,7 +31,7 @@ PATH = "/v5/market/recent-trade"
 PARAMS = {"category": "linear", "symbol": "BTCUSDT", "limit": 1000}
 RESET_IN_S = 30.0
 ATTEMPTS = 4  # 1 + RestClientConfig.max_retries
-DEFECT_RESET = "#1908"
+IP_HOLD_S = 600.0  # 24-internal-schemas §8.6: 10018 holds the whole IP >= 10 min
 
 
 def _headroom() -> float:
@@ -44,7 +45,9 @@ async def test_s05_burst_drains_bucket_counts_and_headroom_recovers(rig: Rig) ->
     rig.ex.inject(Fault(FaultKind.RATE_LIMIT, count=ATTEMPTS, path=PATH, reset_in_s=RESET_IN_S))
 
     call = spawn(rig.rest.get_public(PATH, params=PARAMS), name="s05-call")
-    await feed.run_while(call, within_s=60)  # the venue keeps streaming meanwhile
+    await feed.run_while(
+        call, within_s=ATTEMPTS * (IP_HOLD_S + 60)
+    )  # the venue keeps streaming meanwhile
     with pytest.raises(RateLimitError):
         call.result()
     assert metric(bybit_rate_limited_total, code="10018") == limited + ATTEMPTS
@@ -52,17 +55,17 @@ async def test_s05_burst_drains_bucket_counts_and_headroom_recovers(rig: Rig) ->
     assert rig.governor.remaining("public", EndpointClass.MARKET_DATA) < 1.0
     assert len(rig.ex.sockets) == 1, "a REST rate limit must never recycle the WS"
 
-    await feed.run(2.0)  # bucket refills on the virtual clock (5 tokens/s) before the next call
+    await feed.run(IP_HOLD_S + 2.0)  # the IP hold lapses and the bucket refills (5 tokens/s)
     ok = spawn(rig.rest.get_public(PATH, params=PARAMS), name="s05-ok")
     await feed.run_while(ok, within_s=10)  # fault exhausted: 200 OK
     assert ok.result()["retCode"] == 0
     assert _headroom() > 1.0  # headroom recovered
 
 
-@pytest.mark.xfail(strict=True, reason=f"{DEFECT_RESET}: X-Bapi-Limit-Reset-Timestamp ignored")
 async def test_s05_retry_waits_for_the_advertised_reset(rig: Rig) -> None:
     rig.ex.inject(Fault(FaultKind.RATE_LIMIT, count=1, path=PATH, reset_in_s=RESET_IN_S))
     start, first = rig.clock.now, len(rig.ex.rest_calls)
-    await rig.call(rig.rest.get_public(PATH, params=PARAMS))
+    await rig.call(rig.rest.get_public(PATH, params=PARAMS), within_s=IP_HOLD_S * 2)
     retry_at = rig.ex.rest_calls[first + 1][0]
-    assert retry_at - start >= RESET_IN_S, f"retried {retry_at - start:.1f}s after 10018"
+    waited = retry_at - start
+    assert waited >= max(RESET_IN_S, IP_HOLD_S), f"retried {waited:.1f}s after 10018"

@@ -17,8 +17,6 @@ from tests.chaos.ingestion._rig import Rig
 
 pytestmark = pytest.mark.chaos
 
-DEFECT_HEALTH = "#1919"
-
 
 async def _refused_forever(rig: Rig, feed: Feeder) -> None:
     rig.ex.inject(Fault(FaultKind.REFUSE, count=10_000))
@@ -56,7 +54,6 @@ async def test_unrecovered_fault_leaves_a_topic_signal(rig: Rig, name: str) -> N
     assert rig.books.view("BTCUSDT", 200) is None or rig.book_phase() is not None
 
 
-@pytest.mark.xfail(strict=True, reason=f"{DEFECT_HEALTH}: ingestion health() ignores feed state")
 @pytest.mark.parametrize("name", sorted(UNRECOVERABLE))
 async def test_unrecovered_fault_reports_degraded_health(rig: Rig, name: str) -> None:
     await _run(rig, name)

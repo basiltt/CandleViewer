@@ -23,7 +23,6 @@ TOPIC = "publicTrade.BTCUSDT"
 BACKFILL_PATH = "/v5/market/recent-trade"
 #: 3 retries x full-jitter backoff capped at 2/4/8 s (rest.py `_retry_after_default`).
 BACKFILL_RETRY_BUDGET_S = 15.0
-DEFECT_PUMP = "#1905"
 
 
 def _gaps(recovered: str) -> float:
@@ -71,7 +70,6 @@ async def test_s04_unrecoverable_gap_raises_an_alert_signal(rig: Rig) -> None:
     assert metric(trade_backfill_rows_total, result="error") == errors + 1
 
 
-@pytest.mark.xfail(strict=True, reason=f"{DEFECT_PUMP}: backfill blocks the shared frame pump")
 async def test_s04_rest_outage_during_backfill_does_not_recycle_the_ws(rig: Rig) -> None:
     """A REST outage must not starve the book / trigger WS reconnects (06 §6.1 isolation)."""
     feed = Feeder(rig.ex)

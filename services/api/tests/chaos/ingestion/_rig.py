@@ -31,7 +31,7 @@ from candleviewer.exchange.bybit.instruments import make_instruments_info_fetche
 from candleviewer.exchange.bybit.orderbook import book_topic, parse_book_frame
 
 # nosemgrep: cv-adapter-isolation reason=Q03 owner=@CandleViewer/security review=2026-12-31
-from candleviewer.exchange.bybit.public_ws import topic_kind
+from candleviewer.exchange.bybit.public_ws import frame_route, topic_kind
 
 # nosemgrep: cv-adapter-isolation reason=Q03 owner=@CandleViewer/security review=2026-12-31
 from candleviewer.exchange.bybit.rate_limit import TokenBucketGovernor
@@ -41,11 +41,12 @@ from candleviewer.exchange.bybit.rest import BybitRestClient
 
 # nosemgrep: cv-adapter-isolation reason=Q03 owner=@CandleViewer/security review=2026-12-31
 from candleviewer.exchange.bybit.trades import parse_trade_frame, recent_trades_fetcher, trade_topic
+from candleviewer.ingestion.clock import ClockGuard, rest_client_fetcher
 from candleviewer.ingestion.connection import ConnectionManager
 from candleviewer.ingestion.instruments_refresh import InstrumentsRefreshScheduler
 from candleviewer.ingestion.planner import SubscriptionPlanner
 from candleviewer.ingestion.reconnect import ConnectionRateGuard, ReconnectPolicy
-from candleviewer.ingestion.rejection import EventWindow
+from candleviewer.ingestion.rejection import EventWindow, corrected_now_us
 from candleviewer.ingestion.service import IngestionService
 from candleviewer.ingestion.trade_stream import GapEvent, TradeStream
 from candleviewer.ingestion.watchdog import FeedHealthEvent, StalenessWatchdog
@@ -145,7 +146,10 @@ class Rig:
         self.writer = FlakyWriter()
         self.seen = Observed()
         self.governor = TokenBucketGovernor(
-            default_capacity=50.0, default_refill_per_s=5.0, clock=self.clock
+            default_capacity=50.0,
+            default_refill_per_s=5.0,
+            clock=self.clock,
+            sleep=self.clock.sleep,  # 10018 IP hold (#1908) runs on virtual time
         )
         self.rest = BybitRestClient(
             RestClientConfig(base_url=STUB_BASE_URL),
@@ -153,6 +157,7 @@ class Rig:
             transport=self.ex.transport,
             sleep=self.clock.sleep,
             random_fn=self.rng.random,
+            wall_clock=self.host_wall_s,
         )
         self.host_skew_s = 0.0  # market-data host clock skew (WSL sleep)
         self.svc = IngestionService()
@@ -177,7 +182,19 @@ class Rig:
             env=self.env,
         )
         self._demand: dict[str, set[str]] = {}
-        window = EventWindow(self.host_now_us, lambda _s: None)
+        # Composition-root parity (`app.wire_public_ws`, #1912): the plausibility
+        # window runs on host clock + ClockGuard offset; the guard sees the same
+        # (skewable) host wall clock and the virtual monotonic clock.
+        self.clock_guard = ClockGuard(
+            rest_client_fetcher(self.rest, wall_clock=self.host_wall_s, monotonic=self.clock),
+            clock=self.clock,
+            sleep=self.clock.sleep,
+            wall_ns=lambda: self.host_now_us() * 1_000,
+            mono_ns=lambda: int(self.clock.now * 1_000_000_000),
+        )
+        window = EventWindow(
+            corrected_now_us(self.clock_guard.offset_us, self.host_now_us), lambda _s: None
+        )
         self.trades = TradeStream(
             bus=self.bus,
             env=self.env,
@@ -192,6 +209,8 @@ class Rig:
             now_us=self.clock.now_us,
             event_window=window,
             writer=self.writer,
+            write_sleep=self.clock.sleep,  # #1918 write-behind backoff on virtual time
+            write_rand=self.rng.random,
         )
         self.books = BookStream(
             bus=self.bus,
@@ -208,6 +227,8 @@ class Rig:
             rand=self.rng.random,
         )
         self.svc.attach_ws(self.ws)
+        self.svc.attach_router(frame_route, self.watchdog.touch)  # #1916 per-topic lanes
+        self.instruments.add_listener(self.svc.prune_unlisted)  # #1913 delist teardown
         self.svc.attach_trades(self.trades)
         self.svc.attach_books(self.books)
         self._ui: Subscription = self.bus.subscribe(
@@ -222,7 +243,12 @@ class Rig:
         return inst is not None and inst.status == "trading"
 
     def host_now_us(self) -> int:
-        return self.clock.now_us() + int(self.host_skew_s * 1_000_000)
+        """The host wall clock: venue time plus every injected host jump."""
+        skew_s = self.host_skew_s + self.ex.host_skew_s
+        return self.clock.now_us() + int(skew_s * 1_000_000)
+
+    def host_wall_s(self) -> float:
+        return self.host_now_us() / 1_000_000
 
     def _set_desired(self, stream: str, topics: set[str]) -> None:
         self._demand[stream] = set(topics)

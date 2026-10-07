@@ -21,7 +21,6 @@ pytestmark = pytest.mark.chaos
 DEAD, ALIVE = "LUNAUSDT", "BTCUSDT"
 DEAD_TOPICS = {f"orderbook.200.{DEAD}", f"publicTrade.{DEAD}"}
 LOOP_WINDOW_S = 60.0
-DEFECT_DELIST = "#1913"
 
 
 async def _two_symbol_rig() -> tuple[Rig, Feeder]:
@@ -53,7 +52,6 @@ async def test_s09_delist_marks_symbol_unlisted_and_refuses_new_demand() -> None
         await rig.stop()
 
 
-@pytest.mark.xfail(strict=True, reason="#1915: demand release raises on a LIVE socket")
 async def test_s09_release_after_delist_tears_topics_down() -> None:
     rig, feed = await _two_symbol_rig()
     try:
@@ -75,7 +73,6 @@ async def test_s09_release_after_delist_tears_topics_down() -> None:
         await rig.stop()
 
 
-@pytest.mark.xfail(strict=True, reason=f"{DEFECT_DELIST}: silent topic recycles the shared WS")
 async def test_s09_silent_delisted_topic_is_not_resubscribed_in_a_loop() -> None:
     rig, feed = await _two_symbol_rig()
     try:
@@ -90,7 +87,6 @@ async def test_s09_silent_delisted_topic_is_not_resubscribed_in_a_loop() -> None
         await rig.stop()
 
 
-@pytest.mark.xfail(strict=True, reason=f"{DEFECT_DELIST}: delist does not tear down live demand")
 async def test_s09_delist_tears_down_held_subscriptions_without_a_release() -> None:
     rig, feed = await _two_symbol_rig()
     try:

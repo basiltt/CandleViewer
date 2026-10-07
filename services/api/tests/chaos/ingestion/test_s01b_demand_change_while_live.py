@@ -14,10 +14,7 @@ from tests.chaos.ingestion._rig import Rig
 
 pytestmark = pytest.mark.chaos
 
-DEFECT_TOPICS_CHANGED = "#1915"
 
-
-@pytest.mark.xfail(strict=True, reason=f"{DEFECT_TOPICS_CHANGED}: set_desired raises while open")
 async def test_s01b_new_demand_on_a_live_socket_is_subscribed_without_reconnect() -> None:
     rig = Rig(seed=11, symbols=("BTCUSDT",))
     await rig.start()

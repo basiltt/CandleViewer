@@ -61,7 +61,7 @@ Legend — **C-13.6**: constitution chaos number. **xfail**: strict xfail on a f
 
 - **Mutation:** with `ConnectionRateGuard.reserve()` neutered, scenario 7 fails with
   `251 dials in a 300 s window > budget 120` (restored; production code is unchanged in this PR).
-- **Flake budget:** 20 consecutive full-suite runs, 20/20 green (`31 passed, 13 xfailed`, 8–14 s).
+- **Flake budget:** 20 consecutive full-suite runs, 20/20 green (`43 passed, 1 xfailed`, ~30 s virtual-time).
 - **Determinism:** same seed ⇒ identical fault trace (`test_harness_guards.py`).
 - **Not covered here (scope):** private-WS / order-path halves of C-13.6 #2, #4, #5, #7–#9, #12
   (E29-Q04, E45-T07); client-WS fan-out (E17); a11y text of SCR-152 (E08-Q05/E47-Q06).
