@@ -18,6 +18,7 @@ from candleviewer.observability.metrics_catalogue import (
     LOOP_LAG_BUCKETS,
     live_specs,
     register_r0,
+    registered_specs,
 )
 from candleviewer.observability.metrics_runtime import (
     run_cardinality_check,
@@ -30,7 +31,7 @@ _UNIT_SUFFIX = re.compile(r"_(seconds|bytes|total|depth|state|in_use|remaining|m
 
 #: Golden: sha256 of the sorted (name, kind, labels, status, owner) catalogue.
 #: Changing it requires updating 20-architecture.md §12.1 and dashboards/alerts.
-GOLDEN_CATALOGUE_SHA256 = "21ca56da14868b047fd640342965f285dff69b206990748fb5ffc3c1b23f0881"
+GOLDEN_CATALOGUE_SHA256 = "9a07ee061b4aebe48c71a4262a6e9e861b967c17bb88dfd80b100e694692b8e4"
 
 _KNOWN_EPICS = re.compile(r"^E\d{2}(-[A-Z]\d{2})?$")
 
@@ -103,7 +104,7 @@ def test_exposition_parses_and_every_live_metric_present_with_env_and_help() -> 
     r["support_bundle_generations_total"].labels("ok").inc()
     text = generate_latest(m.registry).decode()
     families = {f.name: f for f in text_string_to_metric_families(text)}
-    for spec in live_specs():
+    for spec in registered_specs():
         family_name = spec.name.removesuffix("_total")
         fam = families[family_name]
         assert fam.documentation, spec.name
@@ -163,3 +164,22 @@ def test_cardinality_check_logs_breached_metrics() -> None:
         asyncio.run(run_cardinality_check(m, sleep=_no_sleep, iterations=1))
     assert logs[-1]["event"] == "metric_cardinality_at_bound"
     assert logs[-1]["metrics"] == ["x_total"]
+
+
+def test_exported_bars_metrics_served_on_app_registry_with_env() -> None:
+    """E12-T03: the bars series are `live` via `export_bars_metrics`, not `register_r0`."""
+    from candleviewer.bars.metrics import EXPORTED_NAMES, export_bars_metrics
+    from candleviewer.bars.time_builder import bars_built_total
+
+    exported = {s.name for s in live_specs() if s.exported}
+    assert exported == EXPORTED_NAMES
+    m = Metrics("demo")
+    register_r0(m)
+    collector = export_bars_metrics(m.registry, env="demo")
+    try:
+        bars_built_total.labels(symbol="BTCUSDT", kind="time").inc()
+        text = generate_latest(m.registry).decode()
+        assert "# HELP bars_built_total " in text
+        assert 'bars_built_total{env="demo",kind="time",symbol="BTCUSDT"}' in text
+    finally:
+        collector.close()

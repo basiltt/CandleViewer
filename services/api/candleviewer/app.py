@@ -86,6 +86,7 @@ from candleviewer.auth.models import (
 )
 from candleviewer.auth.scopes import PrincipalSnapshot
 from candleviewer.auth.service import AuthService
+from candleviewer.bars.metrics import export_bars_metrics
 from candleviewer.bars.service import BarsService
 from candleviewer.book.service import BookService
 from candleviewer.bus.models import Topic
@@ -829,6 +830,8 @@ def create_app(
     app.state.ingestion_metrics = export_ingestion_metrics(
         ctx.metrics, env=resolved.environment.value, exchange=ctx.exchange_bybit.venue
     )
+    # E12-T03: bars series (builders + BarBuilderSet) on the scraped registry.
+    app.state.bars_metrics = export_bars_metrics(ctx.metrics, env=resolved.environment.value)
     # E40-T01: alert_deliveries retention purge + alert gauges (lifespan-started).
     _alert_pg = SqlAlchemyRelationalRepository(resolved.pg_dsn.get_secret_value(), "alerts")
     _retention = RetentionSchedule.from_settings(resolved)
