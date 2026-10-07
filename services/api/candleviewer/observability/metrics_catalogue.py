@@ -333,7 +333,7 @@ CATALOGUE: Final[tuple[MetricSpec, ...]] = (
         exported=True,
     ),
     _s(
-        "bar_state_restore_failures_total",
+        "bars_blob_discarded_total",
         "counter",
         "blobs",
         ("reason",),
@@ -356,7 +356,7 @@ CATALOGUE: Final[tuple[MetricSpec, ...]] = (
         exported=True,
     ),
     _s(
-        "bar_builder_spec_cap_rejections_total",
+        "bars_spec_cap_rejected_total",
         "counter",
         "registrations",
         ("reason",),
@@ -365,6 +365,18 @@ CATALOGUE: Final[tuple[MetricSpec, ...]] = (
         _L,
         "E12",
         max_series=3,
+        exported=True,
+    ),
+    _s(
+        "bar_builder_quarantined_total",
+        "counter",
+        "series",
+        ("reason",),
+        "Series removed after their builder raised (builder_error) or bars tasks that died.",
+        "any = a builder defect; series stopped",
+        _L,
+        "E12",
+        max_series=2,
         exported=True,
     ),
     _s(

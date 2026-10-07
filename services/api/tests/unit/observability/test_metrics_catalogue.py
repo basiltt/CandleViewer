@@ -31,7 +31,7 @@ _UNIT_SUFFIX = re.compile(r"_(seconds|bytes|total|depth|state|in_use|remaining|m
 
 #: Golden: sha256 of the sorted (name, kind, labels, status, owner) catalogue.
 #: Changing it requires updating 20-architecture.md §12.1 and dashboards/alerts.
-GOLDEN_CATALOGUE_SHA256 = "9a07ee061b4aebe48c71a4262a6e9e861b967c17bb88dfd80b100e694692b8e4"
+GOLDEN_CATALOGUE_SHA256 = "21b61799e060d23050bc050b19b541358acb6680a4502824e4f4678997c754d4"
 
 _KNOWN_EPICS = re.compile(r"^E\d{2}(-[A-Z]\d{2})?$")
 
@@ -168,6 +168,7 @@ def test_cardinality_check_logs_breached_metrics() -> None:
 
 def test_exported_bars_metrics_served_on_app_registry_with_env() -> None:
     """E12-T03: the bars series are `live` via `export_bars_metrics`, not `register_r0`."""
+    import candleviewer.bars.builder_set  # noqa: F401 - owns metric families (via its imports)
     from candleviewer.bars.metrics import EXPORTED_NAMES, export_bars_metrics
     from candleviewer.bars.time_builder import bars_built_total
 
@@ -179,7 +180,12 @@ def test_exported_bars_metrics_served_on_app_registry_with_env() -> None:
     try:
         bars_built_total.labels(symbol="BTCUSDT", kind="time").inc()
         text = generate_latest(m.registry).decode()
-        assert "# HELP bars_built_total " in text
         assert 'bars_built_total{env="demo",kind="time",symbol="BTCUSDT"}' in text
+        # every exported bars family (all 14) is served on the scraped registry
+        families = {f.name for f in text_string_to_metric_families(text)}
+        missing = [n for n in sorted(EXPORTED_NAMES) if n.removesuffix("_total") not in families]
+        assert missing == []
+        for name in EXPORTED_NAMES:
+            assert f"# HELP {name} " in text, name
     finally:
         collector.close()

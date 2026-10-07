@@ -30,8 +30,8 @@ bar_builder_fanout_latency_seconds = Histogram(
 bar_state_snapshots_written_total = Counter(
     "bar_state_snapshots_written_total", "Builder state blobs written."
 )
-bar_state_restore_failures_total = Counter(
-    "bar_state_restore_failures_total",
+bars_blob_discarded_total = Counter(
+    "bars_blob_discarded_total",
     "State blobs discarded on restore.",
     labelnames=("reason",),
 )
@@ -43,9 +43,14 @@ bar_builder_cold_start_seconds = Histogram(
     "Restore + tape replay time before a spec goes live.",
     buckets=(0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 30.0),
 )
-bar_builder_spec_cap_rejections_total = Counter(
-    "bar_builder_spec_cap_rejections_total",
+bars_spec_cap_rejected_total = Counter(
+    "bars_spec_cap_rejected_total",
     "Spec registrations refused by a cap.",
+    labelnames=("reason",),
+)
+bar_builder_quarantined_total = Counter(
+    "bar_builder_quarantined_total",
+    "Series removed after their builder raised, or bars tasks that died.",
     labelnames=("reason",),
 )
 bar_emit_sink_errors_total = Counter(
@@ -63,11 +68,12 @@ EXPORTED_NAMES: Final[frozenset[str]] = frozenset(
         "bar_builder_specs_in_use",
         "bar_builder_fanout_latency_seconds",
         "bar_state_snapshots_written_total",
-        "bar_state_restore_failures_total",
+        "bars_blob_discarded_total",
         "bar_builder_cold_starts_total",
         "bar_builder_cold_start_seconds",
-        "bar_builder_spec_cap_rejections_total",
+        "bars_spec_cap_rejected_total",
         "bar_emit_sink_errors_total",
+        "bar_builder_quarantined_total",
     }
 )
 

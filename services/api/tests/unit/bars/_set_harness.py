@@ -38,11 +38,14 @@ class RecordingSink:
     def __init__(self, name: str = "ws", delay: int = 0) -> None:
         self.name, self.delay = name, delay
         self.seen: list[tuple[str, int, str, int, str]] = []
+        #: Full emissions (spec_hash, kind, Bar) for whole-bar comparisons (BI-5).
+        self.bars: list[tuple[str, str, Bar]] = []
 
     async def emit(self, emission: BarEmission) -> None:
         for _ in range(self.delay):
             await asyncio.sleep(0)
         for u in emission.updates:
+            self.bars.append((emission.spec.spec_hash, u.kind, u.bar))
             self.seen.append(
                 (
                     emission.spec.spec_hash,

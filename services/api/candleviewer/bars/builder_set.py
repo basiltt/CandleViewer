@@ -20,7 +20,7 @@ no catalogue lifecycle (B1-B20), so lease state is plain bookkeeping in `leases.
   Live trades the watermark covers are skipped once, so nothing is applied twice (BI-5). A
   missing or refused blob cold-starts the series (fresh builder, partial first bar). A
   refused blob is also deleted, counted and logged with its `spec_hash`, and it sets
-  `health_reason`. A refused blob never raises.
+  `health_reasons()`. A refused blob never raises.
 - **Emit.** Live and replayed emissions both go through `EmitRouter` (`emit.py`), stamped with
   `generation` 0. An ADR-0033 rebuild would register a series under a new generation; the
   hook is `_Entry.generation` and is not implemented here.
@@ -30,8 +30,10 @@ from __future__ import annotations
 
 import asyncio
 import time
+from collections import deque
 from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import Final, Protocol
 
 import structlog
@@ -44,9 +46,10 @@ from candleviewer.bars.metrics import (
     bar_builder_cold_start_seconds,
     bar_builder_cold_starts_total,
     bar_builder_fanout_latency_seconds,
+    bar_builder_quarantined_total,
     bar_builder_specs_in_use,
-    bar_state_restore_failures_total,
     bar_state_snapshots_written_total,
+    bars_blob_discarded_total,
 )
 from candleviewer.bars.models import BarBuilder, BarSpec, BarUpdate
 from candleviewer.bars.state_store import StateStore, StoredState, Watermark
@@ -59,8 +62,26 @@ from candleviewer.observability.context import spawn
 PERSIST_EVERY_US: Final = 60_000_000
 TICK_S: Final = 1.0
 LANE_QUEUE: Final = 4096
-#: `health_reason` once any state blob was refused and its series cold-started.
-STATE_COLD_STARTED: Final = "bar_state_blob_cold_started"
+#: Trades a lane remembers after applying them, so a series restored mid-stream can catch up
+#: on trades the lane applied that the (asynchronously written) tape does not hold yet.
+RECENT_RING: Final = 8192
+
+
+class BarsHealthReason(StrEnum):
+    """Stable `HealthReport.detail` tokens for the bars module (#1950 `HealthReason` pattern)."""
+
+    #: A state blob was refused and its series cold-started (sticky until restart; SR-E12-12).
+    STATE_BLOB_COLD_STARTED = "bar_state_blob_cold_started"
+    #: A builder raised; its series was quarantined (removed) and the lane kept draining.
+    BUILDER_QUARANTINED = "bar_builder_quarantined"
+    #: A lane or the ticker task died unexpectedly; its subscription was removed so the
+    #: trade publisher can never block on it.
+    TASK_FAILED = "bar_task_failed"
+    #: An emit sink missed its `SINK_TIMEOUT_S` bound (emit.py).
+    SINK_TIMEOUT = "bar_emit_sink_timeout"
+
+
+STATE_COLD_STARTED: Final = BarsHealthReason.STATE_BLOB_COLD_STARTED
 _RESTORE_ERRORS = (BarsError, ValueError, KeyError, TypeError, IndexError, ArithmeticError)
 BuilderFactory = Callable[[BarSpec, str], BarBuilder]
 
@@ -123,11 +144,13 @@ class _Entry:
 
 @dataclass(slots=True)
 class _Lane:
+    symbol: str
     sub: Subscription
     entries: tuple[_Entry, ...] = ()
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     mark: _Mark = field(default_factory=_Mark)
     task: asyncio.Task[None] | None = None
+    recent: deque[TradeEvent] = field(default_factory=lambda: deque(maxlen=RECENT_RING))
 
 
 class BarBuilderSet:
@@ -152,15 +175,46 @@ class BarBuilderSet:
         self._leases = SpecLeases(caps)
         self._lanes: dict[str, _Lane] = {}
         self._ticker: asyncio.Task[None] | None = None
-        self.health_reason: str | None = None
+        self._reasons: set[BarsHealthReason] = set()
+        self._stopping = False
+
+    def health_reasons(self) -> tuple[BarsHealthReason, ...]:
+        """Sticky degraded reasons, sorted (`BarsService.health()` reports them)."""
+        reasons = set(self._reasons)
+        if self._router.timed_out:
+            reasons.add(BarsHealthReason.SINK_TIMEOUT)
+        return tuple(sorted(reasons))
+
+    def _supervise(self, task: asyncio.Task[None], on_death: Callable[[], None]) -> None:
+        """A task that ends other than by cancellation is a defect: log, mark health, clean up."""
+
+        def done(t: asyncio.Task[None]) -> None:
+            if t.cancelled() or t.exception() is None:
+                return
+            exc = t.exception()
+            self._reasons.add(BarsHealthReason.TASK_FAILED)
+            bar_builder_quarantined_total.labels(reason="task_failed").inc()
+            _log().error("bars_task_failed", task=t.get_name(), error_type=type(exc).__name__)
+            on_death()
+
+        task.add_done_callback(done)
 
     # -- lifecycle -------------------------------------------------------------------------
-    def start(self) -> None:
+    async def start(self) -> None:
+        """Clear crash-leftover temp blobs, then start the clock/persistence ticker."""
         if self._ticker is None:
+            await self._store.sweep_tmp()
             self._ticker = spawn(self._tick_loop(), name="bars-set-tick")
+            self._supervise(self._ticker, lambda: None)
 
     async def stop(self) -> None:
-        """Cancel the ticker and lane loops, apply what is already queued, write final blobs."""
+        """Refuse new registrations, cancel the ticker, then per lane: unsubscribe (no new
+        deliveries), cancel the loop, apply everything still queued (including publishers
+        that were blocked on a full queue and wake as it drains), write final blobs.
+
+        Bounded loss: none for trades delivered before the unsubscribe. A publish that starts
+        after it never reaches the set; the restart replays it from the tape."""
+        self._stopping = True
         if self._ticker is not None:
             self._ticker.cancel()
             await asyncio.gather(self._ticker, return_exceptions=True)
@@ -169,8 +223,14 @@ class BarBuilderSet:
             lane = self._lanes.pop(symbol)
             await self._stop_lane(lane)
             async with lane.lock:
-                while lane.sub.qsize():
-                    await self._apply(lane, lane.sub.get_nowait())
+                idle = 0
+                while idle < 2:  # two empty passes: woken blocked putters have landed
+                    if lane.sub.qsize():
+                        idle = 0
+                        await self._apply(lane, lane.sub.get_nowait())
+                    else:
+                        idle += 1
+                        await asyncio.sleep(0)
                 saves = [self._stored(lane, e) for e in lane.entries]
             for stored in saves:
                 await self._save(stored)
@@ -184,15 +244,23 @@ class BarBuilderSet:
             await self._stop_lane(lane)
 
     async def _stop_lane(self, lane: _Lane) -> None:
+        self._unsubscribe(lane)
         if lane.task is not None:
             lane.task.cancel()
             await asyncio.gather(lane.task, return_exceptions=True)
-        self._bus.unsubscribe(lane.sub)
+
+    def _unsubscribe(self, lane: _Lane) -> None:
+        if lane.sub in self._bus._subscriptions:
+            self._bus.unsubscribe(lane.sub)
 
     async def _tick_loop(self) -> None:
         while True:
             await self._sleep(self._tick_s)
-            await self.tick()
+            try:
+                await self.tick()
+            except Exception as exc:  # the ticker must outlive one bad tick
+                self._reasons.add(BarsHealthReason.TASK_FAILED)
+                _log().error("bars_tick_failed", error_type=type(exc).__name__)
 
     # -- leases ----------------------------------------------------------------------------
     async def register(
@@ -200,8 +268,14 @@ class BarBuilderSet:
     ) -> None:
         """Lease `(symbol, spec)` for `consumer`; builds the series on first lease.
 
+        `user` MUST be the authenticated principal id resolved server-side (never a client
+        string), or the per-user cap is meaningless. `None` is reserved for system consumers
+        (recorder, rules) and skips only the per-user cap.
+
         Raises `SpecCapExceeded` (nothing changed) or `BarSpecError` for an unbuildable kind.
         """
+        if self._stopping:
+            raise BarsError("The bar service is shutting down; open the series again later.")
         key = (symbol, spec.spec_hash)
         if not self._leases.acquire(key, consumer, user):
             return
@@ -211,7 +285,7 @@ class BarBuilderSet:
             async with lane.lock:
                 # A series still in teardown (expired, lock not yet taken) is re-adopted.
                 if all(e.spec.spec_hash != key[1] for e in lane.entries):
-                    entry = await self._build(spec, symbol, builder)
+                    entry = await self._build(spec, symbol, builder, lane)
                     lane.entries = (*lane.entries, entry)
         except BaseException:
             self._leases.drop(key)
@@ -237,12 +311,20 @@ class BarBuilderSet:
             sub = self._bus.subscribe(
                 f"bars.{symbol}", topic.key, QueuePolicy.NEVER_DROP, maxsize=LANE_QUEUE
             )
-            lane = self._lanes[symbol] = _Lane(sub)
+            lane = self._lanes[symbol] = _Lane(symbol, sub)
             lane.task = spawn(self._run(lane), name=f"bars-lane-{symbol}")
+            # A dead lane must never leave a NEVER_DROP queue for the publisher to block on.
+            self._supervise(lane.task, lambda: self._unsubscribe(lane))
         return lane
 
     # -- restore / replay ------------------------------------------------------------------
-    async def _build(self, spec: BarSpec, symbol: str, builder: BarBuilder) -> _Entry:
+    async def _build(self, spec: BarSpec, symbol: str, builder: BarBuilder, lane: _Lane) -> _Entry:
+        """Restore or cold-start a series. Runs under `lane.lock`, so no live trade is applied
+        meanwhile. A restored series replays the tape after its watermark, then the lane's
+        recent ring: trades the lane already applied that the async tape writer may not have
+        landed yet. Both are deduped by the advancing watermark, so the series is exactly
+        caught up to `lane.mark` before it joins (BI-5). The replay holds the lane lock; moving
+        it to a staged entry outside the lock is a follow-up."""
         t0 = time.perf_counter()
         h = spec.spec_hash
         stored, reason = await self._store.load(symbol, h)
@@ -257,10 +339,10 @@ class BarBuilderSet:
             except _RESTORE_ERRORS:
                 stored, reason, builder = None, "restore_failed", self._factory(spec, symbol)
         if reason not in ("ok", "missing"):
-            bar_state_restore_failures_total.labels(reason=reason).inc()
+            bars_blob_discarded_total.labels(reason=reason).inc()
             _log().warning("bars_state_blob_discarded", symbol=symbol, spec_hash=h, reason=reason)
             await self._store.delete(symbol, h)
-            self.health_reason = STATE_COLD_STARTED
+            self._reasons.add(STATE_COLD_STARTED)
         entry = _Entry(spec, builder, saved_at=self._now())
         if stored is None:
             bar_builder_cold_starts_total.inc()
@@ -268,11 +350,16 @@ class BarBuilderSet:
             entry.skip = skip = _Mark(wm.ts_us, wm.ids)
             if self._tape is not None:
                 async for t in self._tape.since(symbol, wm.ts_us):
-                    if not skip.covers(t.ts_event, t.trade_id):
-                        await self._emit(entry, builder.on_trade(t))
-                        skip.advance(t.ts_event, t.trade_id)
+                    await self._catch_up(entry, skip, t)
+            for t in tuple(lane.recent):
+                await self._catch_up(entry, skip, t)
         bar_builder_cold_start_seconds.observe(time.perf_counter() - t0)
         return entry
+
+    async def _catch_up(self, entry: _Entry, skip: _Mark, t: TradeEvent) -> None:
+        if not skip.covers(t.ts_event, t.trade_id):
+            await self._emit(entry, entry.builder.on_trade(t))
+            skip.advance(t.ts_event, t.trade_id)
 
     # -- hot path --------------------------------------------------------------------------
     async def _run(self, lane: _Lane) -> None:
@@ -292,11 +379,29 @@ class BarBuilderSet:
                     continue
                 if ts > skip.ts:
                     e.skip = None
-            ups = e.builder.on_trade(t)
+            try:
+                ups = e.builder.on_trade(t)
+            except Exception as exc:  # one bad builder must never stall the symbol's lane
+                self._quarantine(lane, e, exc)
+                continue
             if ups:
                 await self._router.emit(e.spec, ups, e.generation)
         lane.mark.advance(ts, tid)
+        lane.recent.append(t)
         bar_builder_fanout_latency_seconds.observe(time.perf_counter() - t0)
+
+    def _quarantine(self, lane: _Lane, e: _Entry, exc: Exception) -> None:
+        """Remove a failing series from its lane (the loop keeps draining for the others).
+        Its leases stay, so it is not silently rebuilt; health reports the quarantine."""
+        lane.entries = tuple(x for x in lane.entries if x is not e)
+        self._reasons.add(BarsHealthReason.BUILDER_QUARANTINED)
+        bar_builder_quarantined_total.labels(reason="builder_error").inc()
+        _log().error(
+            "bars_builder_quarantined",
+            symbol=lane.symbol,
+            spec_hash=e.spec.spec_hash,
+            error_type=type(exc).__name__,
+        )
 
     async def _emit(self, e: _Entry, ups: Sequence[BarUpdate]) -> None:
         if ups:
@@ -310,10 +415,15 @@ class BarBuilderSet:
         for lane in list(self._lanes.values()):
             async with lane.lock:
                 for e in lane.entries:
-                    await self._emit(e, e.builder.on_clock(now))
-                    if now - e.saved_at >= self._persist_every:
-                        e.saved_at = now
-                        saves.append(self._stored(lane, e))
+                    try:
+                        ups = e.builder.on_clock(now)
+                        if now - e.saved_at >= self._persist_every:
+                            e.saved_at = now
+                            saves.append(self._stored(lane, e))
+                    except Exception as exc:  # one spec must not stop closes for all
+                        self._quarantine(lane, e, exc)
+                        continue
+                    await self._emit(e, ups)
         for symbol, h in self._leases.expired(now):
             lane = self._lanes[symbol]
             async with lane.lock:
@@ -336,7 +446,7 @@ class BarBuilderSet:
     async def _save(self, stored: StoredState) -> None:
         try:
             await self._store.save(stored)
-        except OSError as exc:
+        except (OSError, BarsError) as exc:
             _log().warning(
                 "bars_state_write_failed",
                 spec_hash=stored.state.spec_hash,

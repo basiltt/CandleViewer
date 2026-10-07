@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from typing import Final
 
 from candleviewer.bars.errors import BarsError, SpecCapExceeded
-from candleviewer.bars.metrics import bar_builder_spec_cap_rejections_total
+from candleviewer.bars.metrics import bars_spec_cap_rejected_total
 
 GRACE_US: Final = 30_000_000
 CAP_PER_USER: Final = 8
@@ -64,9 +64,11 @@ class SpecLeases:
     def _user_keys(self, user: str) -> set[Key]:
         return {k for k, s in self._series.items() if user in s.holders.values()}
 
-    def _refuse(self, cap: str, limit: int, active: tuple[str, ...]) -> SpecCapExceeded:
-        bar_builder_spec_cap_rejections_total.labels(reason=cap).inc()
-        return SpecCapExceeded(cap, limit, active)
+    def _refuse(
+        self, cap: str, limit: int, active: int, own: tuple[str, ...] = ()
+    ) -> SpecCapExceeded:
+        bars_spec_cap_rejected_total.labels(reason=cap).inc()
+        return SpecCapExceeded(cap, limit, active, own)
 
     def acquire(self, key: Key, consumer: str, user: str | None) -> bool:
         """Add a lease; returns `True` when `key` is a new series the caller must build.
@@ -78,13 +80,13 @@ class SpecLeases:
             mine = self._user_keys(user)
             if key not in mine and len(mine) >= self._caps.per_user:
                 held = tuple(sorted(h for _, h in mine))
-                raise self._refuse("per-user", self._caps.per_user, held)
+                raise self._refuse("per-user", self._caps.per_user, len(held), held)
         if series is None:
             on_sym = self.on_symbol(key[0])
             if len(on_sym) >= self._caps.per_symbol:
-                raise self._refuse("per-symbol", self._caps.per_symbol, on_sym)
+                raise self._refuse("per-symbol", self._caps.per_symbol, len(on_sym))
             if len(self._series) >= self._caps.global_:
-                raise self._refuse("process-wide", self._caps.global_, ())
+                raise self._refuse("process-wide", self._caps.global_, len(self._series))
             series = self._series[key] = _Series()
             new = True
         else:

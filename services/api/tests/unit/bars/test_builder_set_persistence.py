@@ -15,6 +15,7 @@ from hypothesis import strategies as st
 from candleviewer.bars import state_store
 from candleviewer.bars.builder_set import STATE_COLD_STARTED, BarBuilderSet
 from candleviewer.bars.errors import BarsError
+from candleviewer.bars.models import Bar
 from candleviewer.bars.state_store import StateStore, StoredState, Watermark
 from candleviewer.bus.bus import Bus
 from candleviewer.exchange.base.models import TradeEvent
@@ -53,8 +54,20 @@ async def _run(
     return sink, s
 
 
-def _final(seen: list[tuple[str, int, str, int, str]]) -> dict[tuple[str, int], str]:
-    return {(h, i): px for h, _, _, i, px in seen}
+def _final(sink: RecordingSink) -> dict[tuple[str, int], Bar]:
+    """Last emitted full `Bar` (OHLCV, delta, trade_count, flags) per (spec, index)."""
+    return {(h, b.index): b for h, _, b in sink.bars}
+
+
+def _closes(*sinks: RecordingSink) -> dict[str, list[Bar]]:
+    """Close emissions per spec, in emission order. Per spec, because replay on restart
+    runs spec by spec, so the cross-spec interleaving legitimately differs."""
+    out: dict[str, list[Bar]] = {}
+    for sink in sinks:
+        for h, k, b in sink.bars:
+            if k == "close":
+                out.setdefault(h, []).append(b)
+    return out
 
 
 async def _restart_matches(tmp_path: Path, trades: list[TradeEvent], cut: int, lag: int) -> None:
@@ -71,9 +84,12 @@ async def _restart_matches(tmp_path: Path, trades: list[TradeEvent], cut: int, l
     tape = FakeTape(trades[:cut])
     second, s2 = await _run(root, trades[cut - lag :], tape=tape)
     await s2.stop()
-    merged = _final(first.seen)
-    merged.update(_final(second.seen))
-    assert merged == _final(ref.seen)
+    merged = _final(first)
+    merged.update(_final(second))
+    assert merged == _final(ref)  # every bar identical in full, not just its close price
+    # the emitted close sequence matches too: nothing re-applied, nothing missing, no extra
+    # emission (a double-applied trade shows up as a changed bar or an extra close)
+    assert _closes(first, second) == _closes(ref)
 
 
 async def test_restart_resumes_mid_bar_bi5(tmp_path: Path) -> None:
@@ -81,13 +97,13 @@ async def test_restart_resumes_mid_bar_bi5(tmp_path: Path) -> None:
 
 
 @settings(
-    max_examples=25, deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture]
+    max_examples=100, deadline=None, suppress_health_check=[HealthCheck.function_scoped_fixture]
 )
-@given(seed=st.integers(0, 10_000), cut=st.integers(1, 120), lag=st.integers(0, 30))
+@given(seed=st.integers(0, 10_000), cut=st.integers(1, 900), lag=st.integers(0, 60))
 async def test_restart_any_cut_point_bi5(
     tmp_path_factory: pytest.TempPathFactory, seed: int, cut: int, lag: int
 ) -> None:
-    trades = _tape(150, seed)
+    trades = _tape(1_000, seed)
     await _restart_matches(tmp_path_factory.mktemp("bi5"), trades, cut + 30, min(lag, cut))
 
 
@@ -160,7 +176,7 @@ async def test_corrupt_blob_discarded_cold_start_never_raises(tmp_path: Path, va
     path = tmp_path / SYM / f"{T3.spec_hash}.state.json"
     path.write_bytes(_corrupt_variants(path.read_bytes())[variant])
     sink, s2 = await _run(tmp_path, [trade(us("11:00:00"), seq=999)])
-    assert s2.health_reason == STATE_COLD_STARTED
+    assert STATE_COLD_STARTED in s2.health_reasons()
     assert not path.exists() or variant == "never"
     t3 = [u for u in sink.seen if u[0] == T3.spec_hash]
     assert t3[0][2:4] == ("open", 0)  # cold start: fresh series
@@ -172,7 +188,7 @@ async def test_watermark_past_tape_head_is_refused(tmp_path: Path) -> None:
     _, s1 = await _run(tmp_path, trades)
     await s1.stop()
     _, s2 = await _run(tmp_path, [], tape=FakeTape(trades[:10]))
-    assert s2.health_reason == STATE_COLD_STARTED
+    assert STATE_COLD_STARTED in s2.health_reasons()
     await s2.stop()
 
 

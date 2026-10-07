@@ -105,6 +105,7 @@ from candleviewer.health_wiring import (
     PgSystemEventReader,
     PgSystemEventWriter,
     WriteBehindLike,
+    register_bars_probe,
     register_ingestion_probe,
     register_public_ws_probe,
     register_real_probes,
@@ -745,6 +746,7 @@ def create_app(
     bind_health_metrics(health_registry, ctx.metrics, resolved)
     register_write_behind_probe(health_registry, lambda: _write_behind_buffers(ctx))
     register_ingestion_probe(health_registry, ctx.ingestion.health)
+    register_bars_probe(health_registry, ctx.bars.health)
     register_public_ws_probe(health_registry, lambda: ctx.ingestion.ws)
     app.state.health_registry = health_registry
     app.include_router(

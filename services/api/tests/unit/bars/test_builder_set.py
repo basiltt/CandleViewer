@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from candleviewer.bars import builder_set
+from candleviewer.bars import builder_set, emit
 from candleviewer.bars.builder_set import BarBuilderSet, default_factory
 from candleviewer.bars.emit import EmitRouter, WriterSink
 from candleviewer.bars.errors import BarSpecError, SpecCapExceeded
@@ -118,7 +118,8 @@ async def test_set_per_symbol_cap_refuses_naming_cap_and_active(tmp_path: Path) 
     with pytest.raises(SpecCapExceeded) as ei:
         await s.register(T3, SYM, "c")
     assert ei.value.code == "spec_cap_exceeded" and ei.value.cap == "per-symbol"
-    assert M1.spec_hash in str(ei.value) and "limit of 2" in str(ei.value)
+    assert "limit of 2" in str(ei.value) and "(2 active)" in str(ei.value)
+    assert M1.spec_hash not in str(ei.value) and H1.spec_hash not in str(ei.value)
     await s.register(M1, SYM, "d")  # joining an existing series is not a new one
     await bus.publish(TOPIC, trade(T0, seq=1))
     await settle(bus, s)
@@ -139,10 +140,10 @@ async def test_set_per_user_and_global_caps(tmp_path: Path) -> None:
     await s.stop()
 
 
-def test_cap_error_message_truncates_long_active_list() -> None:
-    err = SpecCapExceeded("per-symbol", 32, tuple(f"h{i}" for i in range(20)))
+def test_cap_error_message_truncates_long_own_list() -> None:
+    err = SpecCapExceeded("per-user", 32, 20, tuple(f"h{i}" for i in range(20)))
     assert "and more" in str(err) and "h8" not in str(err)
-    assert "none" in str(SpecCapExceeded("process-wide", 512, ()))
+    assert "try again later" in str(SpecCapExceeded("process-wide", 512, 512))
 
 
 async def test_set_unbuildable_kind_refused_and_lease_rolled_back(tmp_path: Path) -> None:
@@ -206,8 +207,8 @@ async def test_set_stop_applies_queued_trades_and_leaves_no_tasks(tmp_path: Path
     before = asyncio.all_tasks()
     bus, sink = Bus(), RecordingSink()
     s = make_set(tmp_path, bus=bus, sinks=[sink])
-    s.start()
-    s.start()  # idempotent
+    await s.start()
+    await s.start()  # idempotent
     await s.register(BarSpec(kind="tick", tick_count=1), SYM, "a")
     for i in range(5):
         await bus.publish(TOPIC, trade(T0 + i, seq=i))
@@ -232,7 +233,7 @@ async def test_set_ticker_drives_clock_closes(tmp_path: Path) -> None:
     await bus.publish(TOPIC, trade(T0 + 1, seq=1))
     await settle(bus, s)
     clock.t = T0 + 60_000_000
-    s.start()
+    await s.start()
     await ticks.wait()
     await settle(bus, s)
     await s.stop()
@@ -240,9 +241,10 @@ async def test_set_ticker_drives_clock_closes(tmp_path: Path) -> None:
 
 
 async def test_set_fanout_loop_allocates_nothing_per_spec(tmp_path: Path) -> None:
-    """§3.5 "no allocation in the common path": the set's loop adds no per-trade objects
-    beyond what builders and the emit path create. A builder that emits nothing must
-    leave the fan-out at zero net allocations, whatever the number of specs."""
+    """§3.5 scope (narrowed per review): the set's fan-out loop itself (builder_set + emit)
+    retains nothing per trade x spec once its bounded catch-up ring is full. Builders and
+    each *emitted* update still allocate (a `BarEmission`, the `Bar`); that cost is per
+    emission, not per spec, and is measured by the E12-T04 bench."""
     import tracemalloc
 
     class Quiet:
@@ -274,15 +276,17 @@ async def test_set_fanout_loop_allocates_nothing_per_spec(tmp_path: Path) -> Non
     for spec in _specs(8):
         await s.register(spec, SYM, "a")
     lane = s._lanes[SYM]
-    trades = [trade(T0 + i, seq=i) for i in range(2_000)]
-    await s._apply(lane, trades[0])  # warm-up (metric children, first advance)
+    warm = builder_set.RECENT_RING + 10  # fill the bounded catch-up ring first
+    trades = [trade(T0 + i, seq=i) for i in range(warm + 2_000)]
+    for t in trades[:warm]:
+        await s._apply(lane, t)  # warm-up (metric children, ring at capacity)
     tracemalloc.start()
     snap0 = tracemalloc.take_snapshot()
-    for t in trades[1:]:
+    for t in trades[warm:]:
         await s._apply(lane, t)
     snap1 = tracemalloc.take_snapshot()
     tracemalloc.stop()
-    flt = [tracemalloc.Filter(True, builder_set.__file__)]
+    flt = [tracemalloc.Filter(True, builder_set.__file__), tracemalloc.Filter(True, emit.__file__)]
     grown = sum(
         d.size_diff for d in snap1.filter_traces(flt).compare_to(snap0.filter_traces(flt), "lineno")
     )

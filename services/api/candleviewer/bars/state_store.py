@@ -122,5 +122,17 @@ class StateStore:
             return None, "corrupt"
         return StoredState(state, mark), "ok"
 
+    async def sweep_tmp(self) -> int:
+        """Delete `*.state.json.tmp` leftovers of a crash mid-write; returns the count."""
+        return await run_in_thread(self._sweep)
+
+    def _sweep(self) -> int:
+        n = 0
+        if self._root.is_dir():
+            for tmp in self._root.glob("*/*.state.json.tmp"):
+                tmp.unlink(missing_ok=True)
+                n += 1
+        return n
+
     async def delete(self, symbol: str, spec_hash: str) -> None:
         await run_in_thread(self.path(symbol, spec_hash).unlink, missing_ok=True)
